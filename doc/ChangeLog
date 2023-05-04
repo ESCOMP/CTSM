@@ -1,4 +1,228 @@
 ===============================================================
+Tag name: ctsm5.1.dev123
+Originator(s): sacks (Bill Sacks)
+Date: Mon May  1 11:37:51 MDT 2023
+One-line Summary: Updates needed for pFUnit 4 and other externals updates
+
+Purpose and description of changes
+----------------------------------
+
+(1) Lots of small changes needed for the update to pFUnit4. Note that
+    this is a backwards-incompatible update, so we will require pFUnit 4
+    moving forward.
+
+(2) Externals updates: some of these are needed for the update to pFUnit
+    4; others are included to update externals to those in a recent CESM
+    alpha tag.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- Running the Fortran unit tests now requires pFUnit 4
+- I didn't run the mksurfdata_map unit tests... these will be removed
+  soon anyway with the replacement of mksurfdata_map with mksurfdata_esmf
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+    Note: most testing run on 46968da7b; reran just izumi-nag testing on
+    the latest version (the only difference was in the version of the
+    ccs_config external, and the only diff there was for nag).
+
+  any other testing (give details below):
+  - Fortran unit tests (under src) on izumi and my Mac
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- ccs_config: ccs_config_cesm0.0.58 -> ccs_config_cesm0.0.64
+- cime: cime6.0.100 -> cime6.0.108
+- cmeps: cmeps0.14.17 -> cmeps0.14.21
+- cdeps: cdeps1.0.7 -> cdeps1.0.9
+- cpl7: cpl7.0.14 -> cpl77.0.5
+- share: share1.0.16 -> share1.0.17
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1989
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev122
+Originator(s): sacks (Bill Sacks)
+Date: Sun Apr 23 19:36:37 MDT 2023
+One-line Summary: Rework handling of evaporation constraint in SoilFluxes
+
+Purpose and description of changes
+----------------------------------
+
+Occasionally, h2osoi_ice was going significantly negative in
+UpdateState_TopLayerFluxes - see
+https://github.com/ESCOMP/CTSM/issues/1979. As noted in that issue, this
+seems to be due to h2osoi_ice having a very different magnitude from
+h2osoi_liq, leading to greater-than-roundoff-level differences from zero
+final state in a relative sense (i.e., relative to the magnitude of
+h2osoi_ice) - I think because of the appearance of the sum (h2osoi_ice +
+h2osoi_liq) in the equations that limit fluxes.
+
+To try to deal with this, I have reworked the handling of the
+evaporation constraint to directly limit both the liqevap and solidevap,
+so that both of them should result in the equivalent liq or ice states
+going to 0 within roundoff.
+
+To do that, I needed to move the partitioning of the total flux into
+liquid and solid to earlier in the subroutine and then recalculate those
+partitioning fluxes in conditions where we're applying an evaporation
+constraint.
+
+Note that I applied a max of 0 to the new fluxes because many initial
+conditions files have roundoff-level negative H2OSOI_LIQ, so without
+this limit, we were getting roundoff-level negative fluxes.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1979 (Need some changes to avoid negative h2osoi_ice in UpdateState_TopLayerFluxes)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+    Tests passed, some baseline differences as expected.
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: potentially all
+    - what platforms/compilers: potentially all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      roundoff
+
+   Differences were only observed in a few tests:
+   - ERP_P36x2_Ld30.f45_f45_mg37.I2000Clm51FatesSpCruRsGs.cheyenne_intel.clm-FatesColdSatPhen
+   - ERI_D_Ld9_P48x1.T31_g37.I2000Clm50Sp.izumi_nag.clm-reduceOutput
+   - SMS_D_Ln9_P36x3.f19_g17.IHistClm50Sp.cheyenne_intel.clm-waccmx_offline
+   - SMS_D_Ln9_P36x3_Vmct.f19_g17.IHistClm50Sp.cheyenne_intel.clm-waccmx_offline
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+     Only two tests had greater-than-roundoff-level differences in the
+     cprnc output:
+     SMS_D_Ln9_P36x3.f19_g17.IHistClm50Sp.cheyenne_intel.clm-waccmx_offline
+     and the mct equivalent,
+     SMS_D_Ln9_P36x3_Vmct.f19_g17.IHistClm50Sp.cheyenne_intel.clm-waccmx_offline.
+     To verify that differences were fundamentally no greater than
+     roundoff-level, I introduced temporary code; this minimal diff
+     ended up being enough to give just roundoff-level differences from baseline:
+
+       diff --git a/src/biogeophys/SoilFluxesMod.F90 b/src/biogeophys/SoilFluxesMod.F90
+       index c316d30fe..6a958c0ee 100644
+       --- a/src/biogeophys/SoilFluxesMod.F90
+       +++ b/src/biogeophys/SoilFluxesMod.F90
+       @@ -45,7 +45,7 @@ subroutine SoilFluxes (bounds, num_urbanl, filter_urbanl, &
+            ! Update surface fluxes based on the new ground temperature
+            !
+            ! !USES:
+       -    use clm_time_manager , only : get_step_size_real
+       +    use clm_time_manager , only : get_step_size_real, get_nstep
+            use clm_varcon       , only : hvap, cpair, grav, vkc, tfrz, sb 
+            use landunit_varcon  , only : istsoil, istcrop
+            use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
+       @@ -79,7 +79,9 @@ subroutine SoilFluxes (bounds, num_urbanl, filter_urbanl, &
+            real(r8) :: t_grnd0(bounds%begc:bounds%endc)                   ! t_grnd of previous time step
+            real(r8) :: lw_grnd
+            real(r8) :: evaporation_limit                                  ! top layer moisture available for evaporation
+       -    real(r8) :: evaporation_demand                                   ! evaporative demand 
+       +    real(r8) :: evaporation_demand                                   ! evaporative demand
+       +    real(r8) :: qflx_liqevap_orig
+       +    real(r8) :: qflx_solidevap_orig
+            !-----------------------------------------------------------------------
+        
+            associate(                                                                & 
+       @@ -291,6 +293,7 @@ subroutine SoilFluxes (bounds, num_urbanl, filter_urbanl, &
+                       qflx_evap_soi(p)   = qflx_evap_soi(p) - frac_sno_eff(c)*(evaporation_demand - evaporation_limit)
+                       qflx_liqevap_from_top_layer(p)   = max(h2osoi_liq(c,j)/(frac_sno_eff(c)*dtime), 0._r8)
+                       qflx_solidevap_from_top_layer(p) = max(h2osoi_ice(c,j)/(frac_sno_eff(c)*dtime), 0._r8)
+       +
+                       ! conserve total energy flux
+                       eflx_sh_grnd(p) = eflx_sh_grnd(p) + frac_sno_eff(c)*(evaporation_demand - evaporation_limit)*htvp(c)
+                    endif
+       @@ -307,6 +310,24 @@ subroutine SoilFluxes (bounds, num_urbanl, filter_urbanl, &
+                       qflx_ev_snow(p)    = qflx_evap_soi(p)
+                       qflx_liqevap_from_top_layer(p)   = max(h2osoi_liq(c,j)/dtime, 0._r8)
+                       qflx_solidevap_from_top_layer(p) = max(h2osoi_ice(c,j)/dtime, 0._r8)
+       +
+       +               if (h2osoi_liq(c,j) + h2osoi_ice(c,j) > 0._r8) then
+       +                  qflx_liqevap_orig = max(qflx_evap_soi(p)*(h2osoi_liq(c,j)/ &
+       +                       (h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
+       +               else
+       +                  qflx_liqevap_orig = 0._r8
+       +               end if
+       +               qflx_solidevap_orig = qflx_evap_soi(p) - qflx_liqevap_orig
+       +               if (qflx_solidevap_from_top_layer(p) == 0._r8 .and. &
+       +                    qflx_solidevap_orig < 0._r8 .and. &
+       +                    qflx_solidevap_orig > -1.e-16_r8) then
+       +                  write(iulog,'(a, i0, 1x, i0, 1x, 5e24.17)') &
+       +                       'WJS adj urb: solid orig le 0, new 0: nstep, p, orig, new, qflx_evap_soi, h2osoi_liq, h2osoi_ice = ', &
+       +                       get_nstep(), p, qflx_solidevap_orig, qflx_solidevap_from_top_layer(p), &
+       +                       qflx_evap_soi(p), h2osoi_liq(c,j), h2osoi_ice(c,j)
+       +                  qflx_solidevap_from_top_layer(p) = qflx_solidevap_orig
+       +               end if
+       +
+                       ! conserve total energy flux
+                       eflx_sh_grnd(p) = eflx_sh_grnd(p) +(evaporation_demand -evaporation_limit)*htvp(c)
+                    endif
+
+     (Note that the diffs in
+     ERP_P36x2_Ld30.f45_f45_mg37.I2000Clm51FatesSpCruRsGs.cheyenne_intel.clm-FatesColdSatPhen
+     were ambiguous as to whether they were roundoff-level due to the
+     single-precision output in that test; I reran with double precision
+     for the baseline and the branch and was able to verify that the
+     diffs were only double-precision roundoff-level.)
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1987
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev121
 Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
 Date: Wed Apr  5 13:34:09 MDT 2023

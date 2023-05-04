@@ -1,4 +1,3 @@
-create_pFUnit_test(unittestArray test_unittestArray_exe
-  "test_unittestArray.pf" "")
-
-target_link_libraries(test_unittestArray_exe clm csm_share)
+add_pfunit_ctest(unittestArray
+  TEST_SOURCES "test_unittestArray.pf"
+  LINK_LIBRARIES clm csm_share)
