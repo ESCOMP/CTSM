@@ -105,6 +105,13 @@ unit_test_build
 /tools/mkmapdata/regrid.o*
 /tools/mkmapdata/map*.nc
 
+# run_neon output directories
+/tools/site_and_regional/listing.csv
+/tools/site_and_regional/????/
+/tools/site_and_regional/????.ad/
+/tools/site_and_regional/????.postad/
+/tools/site_and_regional/????.transient/
+
 # build output
 *.o
 *.mod
