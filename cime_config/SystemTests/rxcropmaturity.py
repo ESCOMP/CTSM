@@ -32,7 +32,44 @@ class RXCROPMATURITY(SystemTestsCommon):
     def __init__(self, case):
         # initialize an object interface to the SMS system test
         SystemTestsCommon.__init__(self, case)
+        
+        # Ensure run length is at least 5 years. Minimum to produce one complete growing season (i.e., two complete calendar years) actually 4 years, but that only gets you 1 season usable for GDD generation, so you can't check for season-to-season consistency.
+        stop_n = self._case.get_value("STOP_N")
+        stop_option = self._case.get_value("STOP_OPTION")
+        stop_n_orig = stop_n
+        stop_option_orig = stop_option
+        if "nsecond" in stop_option:
+            stop_n /= 60
+            stop_option = "nminutes"
+        if "nminute" in stop_option:
+            stop_n /= 60
+            stop_option = "nhours"
+        if "nhour" in stop_option:
+            stop_n /= 24
+            stop_option = "ndays"
+        if "nday" in stop_option:
+            stop_n /= 365
+            stop_option = "nyears"
+        if "nmonth" in stop_option:
+            stop_n /= 12
+            stop_option = "nyears"
+        error_message = None
+        if "nyear" not in stop_option:
+            error_message = (
+                f"STOP_OPTION ({stop_option_orig}) must be nsecond(s), nminute(s), "
+                + "nhour(s), nday(s), nmonth(s), or nyear(s)"
+            )
+        if stop_n < 5:
+            error_message = (
+                "RXCROPMATURITY must be run for at least 5 years; you requested "
+                + f"{stop_n_orig} {stop_option_orig[1:]}"
+            )
+        if error_message is not None:
+            logger.error(error_message)
+            raise RuntimeError(error_message)
 
+        # Get the number of complete years that will be run
+        self._run_Nyears = int(stop_n)
 
     def run_phase(self):
         # Modeling this after the SSP test, we create a clone to be the case whose outputs we don't
@@ -140,19 +177,6 @@ class RXCROPMATURITY(SystemTestsCommon):
         run_startdate = self._case.get_value('RUN_STARTDATE')
         self._run_startyear = int(run_startdate.split('-')[0])
         
-        # Minimum 4, but that only gets you 1 season usable for GDD
-        # generation, so you can't check for season-to-season consistency.
-        self._run_Nyears = 5
-
-
-        """
-        Set run length
-        """
-        with self._case as case:
-            case.set_value("STOP_OPTION", "nyears")
-            case.set_value("STOP_N", self._run_Nyears)
-    
-
         """
         Get and set sowing and harvest dates
         """
