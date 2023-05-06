@@ -208,10 +208,8 @@ contains
        if (trim(meshfile_mask) /= trim(meshfile_lnd)) then
           field_lnd = ESMF_FieldCreate(mesh_lndinput, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          print *,__FILE__,__LINE__
           field_ctsm = ESMF_FieldCreate(mesh_ctsm, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          print *,__FILE__,__LINE__
           call ESMF_FieldRedistStore(field_lnd, field_ctsm, routehandle=rhandle_lnd2ctsm, &
                ignoreUnmatchedIndices=.true., rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
