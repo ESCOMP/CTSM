@@ -2,7 +2,7 @@ module test_glc_elevclasses_are_same
 
   ! Tests of initInterpUtils: glc_elevclasses_are_same
 
-  use pfunit_mod
+  use funit
   use initInterpUtils
   use shr_kind_mod , only : r8 => shr_kind_r8
   use ncdio_pio, only : file_desc_t, ncd_set_dim, ncd_set_var
