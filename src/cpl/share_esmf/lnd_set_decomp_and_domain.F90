@@ -466,8 +466,6 @@ contains
     ! Determine if lndfrac/lndmask file exists
     inquire(file=trim(flandfrac), exist=lexist)
 
-    lexist = .false. ! TODO: fix this
-
     if (lexist) then
 
        ! If file exists - read in lndmask and lndfrac
