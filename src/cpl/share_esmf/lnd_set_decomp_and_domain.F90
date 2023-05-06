@@ -113,11 +113,13 @@ contains
        ! Read in mask meshfile if needed
        if (trim(meshfile_mask) /= trim(meshfile_lnd)) then
 #ifdef DEBUG
+          ! This will get added to the ESMF PET files if DEBUG=TRUE and CREATE_ESMF_PET_FILES=TRUE
           call ESMF_VMLogMemInfo("clm: Before lnd mesh create in ")
 #endif
           mesh_maskinput = ESMF_MeshCreate(filename=trim(meshfile_mask), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 #ifdef DEBUG
+          ! This will get added to the ESMF PET files if DEBUG=TRUE and CREATE_ESMF_PET_FILES=TRUE
           call ESMF_VMLogMemInfo("clm: After lnd mesh create in ")
 #endif
           ! Determine lndmask_glob and lndfrac_glob
@@ -127,6 +129,7 @@ contains
                lndfrac_loc_input, rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 #ifdef DEBUG
+          ! This will get added to the ESMF PET files if DEBUG=TRUE and CREATE_ESMF_PET_FILES=TRUE
           call ESMF_VMLogMemInfo("clm: After lnd_set_lndmask_from_maskmesh ")
 #endif
        else
