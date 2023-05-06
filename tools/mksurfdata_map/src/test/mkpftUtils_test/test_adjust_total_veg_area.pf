@@ -2,7 +2,7 @@ module test_adjust_total_veg_area
   
   ! Tests of mkpftUtilsMod: adjust_total_veg_area
 
-  use pfunit_mod
+  use funit
 
   use shr_kind_mod, only : r8 => shr_kind_r8
   use mkpctPftTypeMod, only : pct_pft_type

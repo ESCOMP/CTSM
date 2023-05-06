@@ -3,10 +3,6 @@ set (pfunit_sources
   test_convert_to_logical.pf
   )
 
-set (extra_sources
-  )
-
-create_pFUnit_test(array_utils test_array_utils_exe
-  "${pfunit_sources}" "${extra_sources}")
-
-target_link_libraries(test_array_utils_exe clm csm_share esmf_wrf_timemgr)
+add_pfunit_ctest(array_utils
+  TEST_SOURCES "${pfunit_sources}"
+  LINK_LIBRARIES clm csm_share esmf_wrf_timemgr)
