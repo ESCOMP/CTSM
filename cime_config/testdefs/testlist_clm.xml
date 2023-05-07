@@ -53,6 +53,15 @@
       <option name="comment">We have one C96 test in aux_clm; this is another that uses a different compset. No need to run this additional C96 test with every tag, but include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
+  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="I2000Clm50SpRs" testmods="clm/clm50cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Test that the workhorse mpasa resolution functions for CAM. No need to run this test with every tag, but include it in the less frequent ctsm_sci testing.</option>
+    </options>
+  </test>
   <test name="ERI_D_Ld9" grid="ne30_g17" compset="I2000Clm50BgcCru" testmods="clm/vrtlay">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -1403,6 +1412,15 @@
     <options>
       <option name="wallclock">00:40:00</option>
       <option name="comment"  >Run ne30np4.pg3 to make sure will work for CAM"</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I1850Clm51BgcCrop" testmods="clm/clm50cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment"  >Run mpasa480 to make sure will work for CAM"</option>
     </options>
   </test>
   <test name="SMS_D" grid="f10_f10_mg37" compset="I2000Clm51BgcCrop" testmods="clm/crop">
