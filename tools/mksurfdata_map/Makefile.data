@@ -81,7 +81,7 @@ SUBSETDATA_1X1_URBALPHA    := --lat -37.7308 --lon 0 --site 1x1_urbanc_alpha --o
 # The ne30np4 series (including pg2, pg3, pg4) are standard for SE dycore
 # The variable resolution grids for ARCTIC, ARCTICGRIS and CONUS are also standard
 STANDARD_RES_NO_CROP = 0.9x1.25,1.9x2.5,10x15
-STANDARD_RES = 0.9x1.25,1.9x2.5,10x15,4x5,ne30np4,C96,ne30pg2,ne30pg3,ne30pg4,ne120np4pg3,ne0np4ARCTICGRISne30x8,ne0np4ARCTICne30x4,ne0np4CONUSne30x8
+STANDARD_RES = 0.9x1.25,1.9x2.5,10x15,4x5,ne30np4,C96,ne30pg2,ne30pg3,ne30pg4,ne120np4pg3,ne0np4ARCTICGRISne30x8,ne0np4ARCTICne30x4,ne0np4CONUSne30x8,mpasa480,mpasa120
 
 # For future CMIP6 scenarios: SSP-RCP's
 FUTURE_RES = 0.9x1.25,1.9x2.5,10x15
