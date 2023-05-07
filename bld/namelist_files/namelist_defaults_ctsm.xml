@@ -1177,17 +1177,17 @@ lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_10x15_hist_16pfts_Irrig_CMIP6_s
 <fsurdat hgrid="4x5"          sim_year="1850" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_4x5_hist_16pfts_Irrig_CMIP6_simyr1850_c190214.nc</fsurdat>
 
-<fsurdat hgrid="mpasa480"                  sim_year="1850" use_crop=".true.">
+<fsurdat hgrid="mpasa480"                  sim_year="1850" >
 lnd/clm2/surfdata_map/ctsm5.1.dev052/surfdata_mpasa480_hist_78pfts_CMIP6_simyr1850_c211110.nc</fsurdat>
-<fsurdat hgrid="mpasa240"                  sim_year="1850" use_crop=".true.">
+<fsurdat hgrid="mpasa240"                  sim_year="1850" >
 lnd/clm2/surfdata_map/ctsm5.1.dev052/surfdata_mpasa240_hist_78pfts_CMIP6_simyr1850_c211115.nc</fsurdat>
-<fsurdat hgrid="mpasa120"                  sim_year="1850" use_crop=".true.">
+<fsurdat hgrid="mpasa120"                  sim_year="1850" >
 lnd/clm2/surfdata_map/ctsm5.1.dev052/surfdata_mpasa120_hist_78pfts_CMIP6_simyr1850_c211108.nc</fsurdat>
-<fsurdat hgrid="mpasa60"                   sim_year="1850" use_crop=".true.">
+<fsurdat hgrid="mpasa60"                   sim_year="1850" >
 lnd/clm2/surfdata_map/ctsm5.1.dev052/surfdata_mpasa60_hist_78pfts_CMIP6_simyr1850_c211110.nc</fsurdat>
-<fsurdat hgrid="mpasa30"                   sim_year="1850" use_crop=".true." >
+<fsurdat hgrid="mpasa30"                   sim_year="1850" >
 lnd/clm2/surfdata_map/ctsm5.1.dev052/surfdata_mpasa30_hist_78pfts_CMIP6_simyr1850_c211111.nc</fsurdat>
-<fsurdat hgrid="mpasa15"                   sim_year="1850" use_crop=".ture." >
+<fsurdat hgrid="mpasa15"                   sim_year="1850" >
 lnd/clm2/surfdata_map/ctsm5.1.dev052/surfdata_mpasa15_hist_78pfts_CMIP6_simyr1850_c211111.nc</fsurdat>
 
 <fsurdat hgrid="ne30np4"      sim_year="1850" use_crop=".false." irrigate=".true.">
