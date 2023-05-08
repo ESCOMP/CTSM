@@ -1588,6 +1588,16 @@
       <option name="comment"  >Add at least one test of a NEON site</option>
     </options>
   </test>
+  <test name="SMS_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/NEON/MOAB--clm/PRISM">
+    <machines>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="tput_tolerance">0.5</option>
+      <option name="comment"  >Add at least one test of a NEON site with PRISM precipitation</option>
+    </options>
+  </test>
   <test name="SMS_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Fates" testmods="clm/Fates--clm/NEON/FATES/NIWO">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
@@ -1597,6 +1607,17 @@
       <option name="wallclock">00:20:00</option>
       <option name="tput_tolerance">0.5</option>
       <option name="comment"  >Add at least one test of a FATES NEON site</option>
+    </options>
+  </test>
+  <test name="SMS_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Fates" testmods="clm/FatesPRISM--clm/NEON/FATES/YELL">
+    <machines>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="tput_tolerance">0.5</option>
+      <option name="comment"  >Add at least one test of a FATES NEON site with PRISM precipitation</option>
     </options>
   </test>
   <test name="SMS_D_Vmct_Lm1_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm50SpRs" testmods="clm/USUMB_mct">
