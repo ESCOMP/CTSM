@@ -1414,7 +1414,7 @@
       <option name="comment"  >Run ne30np4.pg3 to make sure will work for CAM"</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I1850Clm51BgcCrop" testmods="clm/clm50cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I1850Clm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
