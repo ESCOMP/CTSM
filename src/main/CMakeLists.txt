@@ -34,9 +34,4 @@ list(APPEND clm_sources
   surfrdUtilsMod.F90
   )
 
-list (APPEND fates_sources 
-  clm_varctl.F90
-  )
-
 sourcelist_to_parent(clm_sources)
-sourcelist_to_parent(fates_sources)
