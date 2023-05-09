@@ -33,7 +33,6 @@ module CLMFatesInterfaceMod
 
    ! Used CLM Modules
 #include "shr_assert.h"
-use FatesGlobals     , only : fates_log
    use PatchType         , only : patch
    use shr_kind_mod      , only : r8 => shr_kind_r8
    use decompMod         , only : bounds_type, subgrid_level_column
@@ -47,7 +46,6 @@ use FatesGlobals     , only : fates_log
    use EnergyFluxType    , only : energyflux_type
    use SoilStateType     , only : soilstate_type
    use CNProductsMod     , only : cn_products_type
-   use clm_varctl        , only : paramfile, fates_paramfile
    use clm_varctl        , only : iulog
    use clm_varctl        , only : fates_parteh_mode
    use clm_varctl        , only : use_fates
@@ -838,8 +836,6 @@ use FatesGlobals     , only : fates_log
       type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
 
       ! !LOCAL VARIABLES:
-      type(fates_patch_type), pointer :: currentPatch
-      integer  :: iv, ic
       integer  :: s                        ! site index
       integer  :: g                        ! grid-cell index (HLM)
       integer  :: c                        ! column index (HLM)
@@ -1129,15 +1125,12 @@ use FatesGlobals     , only : fates_log
      ! is this being called during a read from restart sequence (if so then use the restarted fates
      ! snow depth variable rather than the CLM variable).
      logical                 , intent(in)           :: is_initing_from_restart
-
      integer :: npatch  ! number of patches in each site
      integer :: ifp     ! index FATES patch
      integer :: p       ! HLM patch index
      integer :: s       ! site index
      integer :: c       ! column index
      integer :: g       ! grid cell
-     integer :: ic, ft, iv
-     type(fates_patch_type), pointer  :: currentPatch
 
      real(r8) :: areacheck
      call t_startf('fates_wrap_update_hlmfates_dyn')
@@ -1180,9 +1173,6 @@ use FatesGlobals     , only : fates_log
             this%fates(nc)%sites,  &
             this%f2hmap(nc)%fcolumn, &
             this%fates(nc)%bc_out )
-
-
-            
 
        !------------------------------------------------------------------------
        ! FATES calculation of ligninNratio
@@ -1388,21 +1378,17 @@ use FatesGlobals     , only : fates_log
       integer           :: nclumps
       type(fates_bounds_type) :: fates_bounds
       type(fates_bounds_type) :: fates_clump
-      type(fates_patch_type), pointer :: currentPatch
       integer                 :: c   ! HLM column index
       integer                 :: s   ! Fates site index
       integer                 :: g   ! grid-cell index
       integer                 :: p   ! HLM patch index
       integer                 :: ft  ! plant functional type
-      integer                 :: ic, iv
       integer                 :: dk_index
       integer                 :: nlevsoil
       character(len=fates_long_string_length) :: ioname
       integer                 :: nvar
       integer                 :: ivar
       logical                 :: readvar
-
-
       logical, save           :: initialized = .false.
 
      call t_startf('fates_restart')
