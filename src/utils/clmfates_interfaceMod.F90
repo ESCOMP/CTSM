@@ -848,11 +848,6 @@ use FatesGlobals     , only : fates_log
       integer  :: nlevsoil                 ! number of soil layers at the site
       integer  :: nld_si                   ! site specific number of decomposition layers
       integer  :: ft                       ! plant functional type
-      integer ::&
-      yr,    &! year
-      mon,   &! month
-      day,   &! day of month
-      tod     ! time of day (seconds past 0Z)
       real(r8), pointer :: lnfm24(:)       ! 24-hour averaged lightning data
       real(r8), pointer :: gdp_lf_col(:)          ! gdp data
       integer  :: ier
@@ -1040,30 +1035,6 @@ use FatesGlobals     , only : fates_log
             call ed_update_site(this%fates(nc)%sites(s), &
                   this%fates(nc)%bc_in(s), &
                   this%fates(nc)%bc_out(s))
-
-                  call get_curr_date(yr, mon, day, tod)
-                  if (yr == 2020 .and. mon == 6 .and. day == 1) then 
-                     currentpatch => this%fates(nc)%sites(s)%youngest_patch
-                     do while(associated(currentpatch))
-                        write(fates_log(),*) 'can area is ', currentpatch%total_canopy_area
-                        write(fates_log(),*) '-------------------------------------------------------'
-                        do ic = 1, 2
-                           do ft = 1, 16
-                              do iv = 1, 30
-                                 write(fates_log(),*) 'can area prof is ', currentpatch%canopy_area_profile(ic,ft,iv), ic, ft, iv
-                                 write(fates_log(),*) 'elai prof is ', currentpatch%elai_profile(ic,ft,iv), ic, ft, iv
-                                 write(fates_log(),*) 'esai area prof is ', currentpatch%esai_profile(ic,ft,iv), ic, ft, iv
-                              end do
-                              write(fates_log(),*) '-------------------------------------------------------'
-                              write(fates_log(),*) 'nrad prof is ', currentpatch%nrad(ic,ft), ic, ft
-                              write(fates_log(),*) '-------------------------------------------------------'
-                           end do 
-                        end do
-                        currentPatch => currentpatch%older
-                     enddo
-                  first_time = .false.
-               end if
-
       enddo
 
       ! ---------------------------------------------------------------------------------
