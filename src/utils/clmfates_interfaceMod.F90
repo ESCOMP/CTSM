@@ -1138,7 +1138,6 @@ use FatesGlobals     , only : fates_log
      integer :: c       ! column index
      integer :: g       ! grid cell
      integer :: ic, ft, iv
-     logical, save           :: first_time = .true.
      type(fates_patch_type), pointer  :: currentPatch
 
      real(r8) :: areacheck
