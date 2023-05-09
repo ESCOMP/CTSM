@@ -157,7 +157,17 @@ class RXCROPMATURITY(SystemTestsCommon):
             "generate_crop_gdds = .false.",
             f"stream_fldFileName_cultivar_gdds = '{self._gdds_file}'",
         ])
-        
+
+        # Add extra stuff to help diagnose diffs
+        self._append_to_user_nl_clm([
+            "! (h3) Daily PFT-level outputs to help diagnose diffs",
+            "hist_fincl4 = 'CPHASE'",
+            "hist_nhtfrq(4) = -24",
+            "hist_mfilt(4) = 1",
+            "hist_type1d_pertape(4) = 'PFTS'",
+            "hist_dov2xy(4) = .false.",
+        ])
+
         self.run_indv()
         
         #-------------------------------------------------------------------
