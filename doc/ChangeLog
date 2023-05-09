@@ -1,13 +1,51 @@
 ===============================================================
 Tag name: ctsm5.1.dev124
-Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Tue May  9 01:47:18 MDT 2023
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326) / mvertens / adamrher / MiCurry / jtrusdal / TeaganKing
+Date: Tue May  9 16:52:05 MDT 2023
 One-line Summary: Initialization memory update, new surface datasets for new grids, add option for running NEON with PRISM data
 
 Purpose and description of changes
 ----------------------------------
 
-[Fill this in with details]
+Lower memory usage at initialization:
+
+   Some work by Mariana Vertenstein to lower the memory usage at initiatlization.
+
+New Low Resolutions for SE grids:
+
+  ne3np4.pg3, ne5np4.pg3, ne16np4.pg3
+
+New MPASA Resolutions:
+
+   mpasa480 --------- Course resolution
+   mpasa120 --------- Near 1-degree
+   mpasa60, mpasa30 - High resolution
+   mpasa15 ---------- Very high resolution
+
+   This merge adds the surface data and landuse.timeseries files for the CAM-MPAS dycore. At present, these grids are:
+
+   mpasa480 - 480 km quasi-uniform, global with 2,462 horizontal grid columns
+   mpasa120 - 120 km quasi-uniform, global with 40,962 horizontal grid columns
+   mpasa60 - 60 km quasi-uniform, global with 163,842 horizontal grid columns
+   mpasa30 - 30 km quasi-uniform, global with 655,362 horizontal grid columns
+   mpasa15 - 15 km quasi-uniform, global with 2,621,442 horizontal grid columns
+
+
+Option to Run NEON with PRISM preciption data:
+
+  Some NEON sites have bad or incomplete precitation data. By setting CLM_USRDAT_NAME="NEON.PRISM"
+  the PRISM 4km CONUS ReAnayslis data is used in place of the NEON precipitation data. This
+  is helpful for several NEON sites: 
+     MLBS, MOAB, ONAQ, SJER, NIWO, TEAK, WREF, YELL
+  
+  Allow PRISM precipitation to be used as a new datm stream.
+
+  Updates to cime_config/config_component.xml include additional valid values for PRECIP data stream names. Changes in
+  cime_config/usermods_dirs/NEON/defaults/user_nl_datm_streams specify which input variables are gathered from which streams and
+  specifies file location for PRISM data.
+
+  Using PRISM precipitation instead of NEON precipitation does have a substantial impact on CTSM output (eg. latent heat flux
+  biases).
 
 
 Significant changes to scientifically-supported configurations
@@ -29,106 +67,60 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed or introduced
 ------------------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 CTSM issues fixed (include CTSM Issue #):
-
-Externals issues fixed (include issue #):
-
-Known bugs introduced in this tag (include issue #):
-
-Known bugs found since the previous tag (include issue #):
-
+  Fixes #1969 -- Move dynGrossUnrepMod.F90 from biogeochem to dyn_subgrid subdirectory
+  Fixes #1904 -- Other precipitation streams for NEON
+  Fixes #1927 -- Course SE resolutions support
+  Fixes #1313 -- MPASA resolution support
 
 Notes of particular relevance for users
 ---------------------------------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 Caveats for users (e.g., need to interpolate initial conditions):
+   New resolutions do NOT have specific initial conditions for them, they use the general ones
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   NEON cases will give a warning about spinup data for non default transient cases
+   if you set a NEON case with CLM_USRDAT_NAME=NEON.PRISM, PRISM data will be used for precip
+
+   Two new options to run_neon.py "--prism" and "--experiment"
 
 Changes made to namelist defaults (e.g., changed parameter values):
+   "v3" data option for NEONVERSION
 
 Changes to the datasets (e.g., parameter, surface or initial files):
-
-Substantial timing or memory changes:
-[e.g., check PFS test in the test suite and look at timings, if you
-expect possible significant timing changes]
-
+    New surface and landuse.timeseries datasets for: 
+        ne3np4.pg3, ne5np4.pg3, ne16np4.pg3
+        mpasa480, mpasa120, mpasa60, mpasa30, mpasa15
 
 Notes of particular relevance for developers:
 ---------------------------------------------
-NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+Changes to tests or testing: Add new tests for new resolutions
 
-Changes to tests or testing:
-
-
-Testing summary:
+Testing summary:   regular, tools
 ----------------
-[... Remove before making master tag.
-
-Nearly all CTSM tags should undergo 'regular' (aux_clm) testing.
-However, it occasionally makes sense to do more or less system testing;
-here is guidance on different available levels of system testing:
-    a) no system testing (for use when the only changes are ones that
-                          have absolutely no impact on system runs; this
-                          includes documentation-only tags, tags that
-                          just change the tools or some python code that
-                          does not impact system runs, etc.)
-    b) minimal (for use in rare cases where only a small change with
-                known behavior is added ... eg. a minor bug fix. This
-		might be to just run the "short" test list, or to run
-		a single test. Whatever makes sense for the particular case.)
-    c) python only (for use where the only changes are in the python directory:
-                    run the python testing listed below)
-    d) regular (regular tests on normal machines if CTSM source is modified)
-    e) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
-                and normally all of the ancillary tests (build-namelist, python, ptclm, etc.)
-		would be run as well)
-
-In addition, various other tests of the tools, python and perl
-infrastructure should be run when appropriate, as described below.
-
-...]
-
-[Remove any lines that don't apply.]
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    cheyenne -
+    cheyenne - PASS (81 new tests)
 
   tools-tests (test/tools) (if tools have been changed):
 
-    cheyenne -
+    cheyenne - OK
+    cheyenne - PASS (tests_pretag_nompi_neon)
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    (any machine) -
-
-    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
-     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
-     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
-     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
-     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
-     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
-     separately run the clm_pymods test suite, and you can remove the following line.]
-
-    clm_pymods test suite on cheyenne - 
+    cheyenne - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ----
-    izumi -------
-
-  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    cheyenne ----
-    izumi -------
+    cheyenne ---- OK
+    izumi ------- OK
 
   any other testing (give details below):
 
@@ -138,35 +130,23 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:
-
-  [ If a tag changes answers relative to baseline comparison the
-    following should be filled in (otherwise remove this section).
-    And always remove these three lines and parts that don't apply. ]
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
-    - nature of change (roundoff; larger than roundoff/same climate; new climate):
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename:
-
-   URL for LMWG diagnostics output used to validate new climate:
-
+Changes answers relative to baseline: No bit-for-bit
 
 Other details
 -------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cdeps
+   Update CDEPS to cdeps1.0.12
 
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
+
+  #1998 -- combination of below PR's...
+
+   #1954 -- PRISM
+   #1973 -- SE
+   #1501 -- MPASA
+   #1899 -- memory scaling
 
 ===============================================================
 ===============================================================
