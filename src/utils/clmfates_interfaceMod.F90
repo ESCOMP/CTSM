@@ -854,7 +854,6 @@ use FatesGlobals     , only : fates_log
       integer  :: begg,endg
       real(r8) :: harvest_rates(bounds_clump%begg:bounds_clump%endg,num_harvest_inst)
       logical  :: after_start_of_harvest_ts
-      logical, save :: first_time = .true.
       integer  :: iharv
       !-----------------------------------------------------------------------
 
@@ -1405,7 +1404,6 @@ use FatesGlobals     , only : fates_log
 
 
       logical, save           :: initialized = .false.
-      logical, save           :: first_time = .true.
 
      call t_startf('fates_restart')
 
