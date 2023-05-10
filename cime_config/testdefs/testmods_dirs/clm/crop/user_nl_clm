@@ -7,3 +7,11 @@
 ! This is in the crop testmods because this field is mainly useful in transient crop runs
 ! This is on history tape 2 because this field is not meaningful at the gridcell level
 hist_fincl2  += 'DYN_COL_SOIL_ADJUSTMENTS_C'
+
+
+! Annual crop variables on per-sowing/per-harvest axes, per PFT.
+hist_fincl3 = 'SDATES', 'HDATES'
+hist_nhtfrq(3) = 17520
+hist_mfilt(3) = 1
+hist_type1d_pertape(3) = 'PFTS'
+hist_dov2xy(3) = .false.
