@@ -1783,7 +1783,6 @@ contains
     logical did_plant ! did we plant the crop in this time step?
     logical allow_unprescribed_planting ! should crop be allowed to be planted according to sowing window rules?
     logical do_harvest    ! Are harvest conditions satisfied?
-    logical force_harvest ! Should we harvest today no matter what?
     logical fake_harvest  ! Dealing with incorrect Dec. 31 planting
     logical did_plant_prescribed_today    ! Was the crop sown today?
     logical will_plant_prescribed_tomorrow ! Is tomorrow a prescribed sowing day?
@@ -2138,7 +2137,6 @@ contains
             endif
 
             do_harvest = .false.
-            force_harvest = .false.
             fake_harvest = .false.
             did_plant_prescribed_today = .false.
             if (use_cropcal_rx_sdates .and. sowing_count(p) > 0) then
@@ -2154,13 +2152,11 @@ contains
             if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
                 ! BACKWARDS_COMPATIBILITY(ssr, 2022-02-03): To get rid of crops incorrectly planted in last time step of Dec. 31. That was fixed in commit dadbc62 ("Call CropPhenology regardless of doalb"), but this handles restart files with the old behavior. fake_harvest ensures that outputs aren't polluted.
                 do_harvest = .true.
-                force_harvest = .true.
                 fake_harvest = .true.
                 harvest_reason = HARVEST_REASON_SOWNBADDEC31
             else if (do_plant .and. .not. did_plant) then
                 ! Today was supposed to be the planting day, but the previous crop still hasn't been harvested.
                 do_harvest = .true.
-                force_harvest = .true.
                 harvest_reason = HARVEST_REASON_SOWTODAY
 
             ! If generate_crop_gdds and this patch has prescribed sowing inputs
@@ -2234,10 +2230,8 @@ contains
                    harvest_reason = HARVEST_REASON_MAXSEASLENGTH
                else if (will_plant_prescribed_tomorrow) then
                    harvest_reason = HARVEST_REASON_SOWTOMORROW
-                   force_harvest = .true.
                end if
             endif
-            force_harvest = force_harvest .or. (generate_crop_gdds .and. do_harvest)
 
             ! The following conditionals are similar to those in CropPhase. However, they
             ! differ slightly because here we are potentially setting a new crop phase,
@@ -2245,7 +2239,7 @@ contains
             ! phase. However, despite these differences: if you make changes to the
             ! following conditionals, you should also check to see if you should make
             ! similar changes in CropPhase.
-            if ((.not. force_harvest) .and. leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat) then
+            if ((.not. do_harvest) .and. leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat) then
                cphase(p) = cphase_leafemerge
                if (abs(onset_counter(p)) > 1.e-6_r8) then
                   onset_flag(p)    = 1._r8
