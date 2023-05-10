@@ -415,6 +415,7 @@ def main ():
                     max_match_child = child2
 
         if max_match_child is None:
+            # TODO slevis: Are these if-statements backwards?
             # For years greater than 2015 - mksrf_fvegtyp_ssp must have a match
             if start_year <= 2015:
                 if 'mksrf_fvegtyp_ssp' not in child1.tag:
