@@ -59,7 +59,7 @@ class RXCROPMATURITY(SystemTestsCommon):
                 f"STOP_OPTION ({stop_option_orig}) must be nsecond(s), nminute(s), "
                 + "nhour(s), nday(s), nmonth(s), or nyear(s)"
             )
-        if stop_n < 5:
+        elif stop_n < 5:
             error_message = (
                 "RXCROPMATURITY must be run for at least 5 years; you requested "
                 + f"{stop_n_orig} {stop_option_orig[1:]}"
@@ -74,10 +74,12 @@ class RXCROPMATURITY(SystemTestsCommon):
         # Only allow RXCROPMATURITY to be called with test cropMonthOutput
         casebaseid = self._case.get_value("CASEBASEID")
         if casebaseid.split("-")[-1] != "cropMonthOutput":
-            raise RuntimeError(
+            error_message = (
                     "Only call RXCROPMATURITY with test cropMonthOutput "
                     + "to avoid potentially huge sets of daily outputs."
                     )
+            logger.error(error_message)
+            raise RuntimeError(error_message)
 
     def run_phase(self):
         # Modeling this after the SSP test, we create a clone to be the case whose outputs we don't
@@ -219,14 +221,19 @@ class RXCROPMATURITY(SystemTestsCommon):
                 blessed_crop_dates_dir,
                 "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f19_g17.2000-2000.20230102_175625.fill1.nc")
         else:
-            print("ERROR: RXCROPMATURITY currently only supports 10x15 and 1.9x2.5 resolutions")
-            raise
+            error_message = "ERROR: RXCROPMATURITY currently only supports 10x15 and 1.9x2.5 resolutions"
+            logger.error(error_message)
+            raise RuntimeError(error_message)
+
+        error_message = None
         if not os.path.exists(self._sdatefile):
-            print(f"ERROR: Sowing date file not found: {self._sdatefile}")
-            raise
-        if not os.path.exists(self._hdatefile):
-            print(f"ERROR: Harvest date file not found: {self._sdatefile}")
-            raise
+            error_message = f"ERROR: Sowing date file not found: {self._sdatefile}"
+        elif not os.path.exists(self._hdatefile):
+            error_message = f"ERROR: Harvest date file not found: {self._sdatefile}"
+        if error_message is not None:
+            logger.error(error_message)
+            raise RuntimeError(error_message)
+
         
         # Set sowing dates file (and other crop calendar settings) for all runs
         logger.info("SSRLOG  modify user_nl files: all tests")
@@ -279,8 +286,9 @@ class RXCROPMATURITY(SystemTestsCommon):
                     self._fsurdat_in = fsurdat_in.group(1)
                     break
         if self._fsurdat_in is None:
-            print("fsurdat not defined")
-            raise
+            error_message = "fsurdat not defined"
+            logger.error(error_message)
+            raise RuntimeError(error_message)
         
         # Where we will save the fsurdat version for this test
         self._fsurdat_out = os.path.join(self._path_gddgen, 'fsurdat.nc')
@@ -379,8 +387,9 @@ class RXCROPMATURITY(SystemTestsCommon):
         generated_gdd_files = glob.glob(os.path.join(self._generate_gdds_dir, "gdds_*.nc"))
         generated_gdd_files = [x for x in generated_gdd_files if "fill0" not in x]
         if len(generated_gdd_files) != 1:
-            print(f"ERROR: Expected one matching prescribed maturity requirements file; found {len(generated_gdd_files)}: {generated_gdd_files}")
-            raise
+            error_messsage = f"ERROR: Expected one matching prescribed maturity requirements file; found {len(generated_gdd_files)}: {generated_gdd_files}"
+            logger.error(error_message)
+            raise RuntimeError(error_message)
         self._gdds_file = generated_gdd_files[0]
         
 
