@@ -71,6 +71,14 @@ class RXCROPMATURITY(SystemTestsCommon):
         # Get the number of complete years that will be run
         self._run_Nyears = int(stop_n)
 
+        # Only allow RXCROPMATURITY to be called with test cropMonthOutput
+        casebaseid = self._case.get_value("CASEBASEID")
+        if casebaseid.split("-")[-1] != "cropMonthOutput":
+            raise RuntimeError(
+                    "Only call RXCROPMATURITY with test cropMonthOutput "
+                    + "to avoid potentially huge sets of daily outputs."
+                    )
+
     def run_phase(self):
         # Modeling this after the SSP test, we create a clone to be the case whose outputs we don't
         # want to be saved as baseline.
