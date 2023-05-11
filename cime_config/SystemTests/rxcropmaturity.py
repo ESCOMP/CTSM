@@ -81,6 +81,9 @@ class RXCROPMATURITY(SystemTestsCommon):
             logger.error(error_message)
             raise RuntimeError(error_message)
 
+        # Get files with prescribed sowing and harvest dates
+        self._get_rx_dates()
+
     def run_phase(self):
         # Modeling this after the SSP test, we create a clone to be the case whose outputs we don't
         # want to be saved as baseline.
@@ -187,21 +190,8 @@ class RXCROPMATURITY(SystemTestsCommon):
         self._run_check_rxboth_run()
 
 
-    def _setup_all(self):
-        logger.info("SSRLOG  _setup_all start")
-
-        """
-        Get some info
-        """
-        self._ctsm_root = self._case.get_value('COMP_ROOT_DIR_LND')
-        run_startdate = self._case.get_value('RUN_STARTDATE')
-        self._run_startyear = int(run_startdate.split('-')[0])
-        
-        """
-        Get and set sowing and harvest dates
-        """
-        
-        # Get sowing and harvest dates for this resolution.
+    # Get sowing and harvest dates for this resolution.
+    def _get_rx_dates(self):
         # Eventually, I want to remove these hard-coded resolutions so that this test can generate
         # its own sowing and harvest date files at whatever resolution is requested.
         lnd_grid = self._case.get_value("LND_GRID")
@@ -225,6 +215,7 @@ class RXCROPMATURITY(SystemTestsCommon):
             logger.error(error_message)
             raise RuntimeError(error_message)
 
+        # Ensure files exist
         error_message = None
         if not os.path.exists(self._sdatefile):
             error_message = f"ERROR: Sowing date file not found: {self._sdatefile}"
@@ -234,6 +225,14 @@ class RXCROPMATURITY(SystemTestsCommon):
             logger.error(error_message)
             raise RuntimeError(error_message)
 
+
+    def _setup_all(self):
+        logger.info("SSRLOG  _setup_all start")
+
+        # Get some info
+        self._ctsm_root = self._case.get_value('COMP_ROOT_DIR_LND')
+        run_startdate = self._case.get_value('RUN_STARTDATE')
+        self._run_startyear = int(run_startdate.split('-')[0])
         
         # Set sowing dates file (and other crop calendar settings) for all runs
         logger.info("SSRLOG  modify user_nl files: all tests")
