@@ -405,13 +405,10 @@ class RXCROPMATURITY(SystemTestsCommon):
     
     
     def _append_to_user_nl_clm(self, additions):
-        if not isinstance(additions, list):
-            additions = [additions]
         caseroot = self._get_caseroot()
-        for a in additions:
-            append_to_user_nl_files(caseroot = caseroot,
-                                    component = "clm",
-                                    contents = a)
+        append_to_user_nl_files(caseroot = caseroot,
+                                component = "clm",
+                                contents = additions)
     
     
     def _run_python_script(self, case, command, tool_path):
