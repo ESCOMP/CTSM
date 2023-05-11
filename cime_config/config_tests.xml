@@ -113,9 +113,6 @@ This defines various CTSM-specific system tests
     <HIST_N>$STOP_N</HIST_N>
   </test>
 
-<!--
-SSR 2023-04-28: I just copied everything except DESC from the above. I'm not sure what this XML file actually does, so I don't know what appropriate values are.
--->
   <test NAME="RXCROPMATURITY">
     <DESC>Generate prescribed maturity requirements, then test with them</DESC>
     <INFO_DBUG>1</INFO_DBUG>
