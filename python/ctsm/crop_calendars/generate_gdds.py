@@ -380,9 +380,9 @@ if __name__ == "__main__":
     ###############################
     ### Process input arguments ###
     ###############################
-
-    # Set arguments
     parser = argparse.ArgumentParser(description="ADD DESCRIPTION HERE")
+
+    # Required
     parser.add_argument(
         "-i",
         "--input-dir",
@@ -415,6 +415,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "-hd", "--hdates-file", help="File of prescribed harvest dates", required=True
     )
+    
+    # Optional
     figsgroup = parser.add_mutually_exclusive_group()
     figsgroup.add_argument(
         "--dont-save-figs", help="Do not save figures", action="store_true", default=False
