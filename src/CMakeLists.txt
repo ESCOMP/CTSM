@@ -27,7 +27,7 @@ set (drv_sources_needed_base
   )
 extract_sources("${drv_sources_needed_base}" "${drv_sources}" drv_sources_needed)
 
-# Add CLM source directories (these add their own test directories)
+# Add CLM source directories
 add_subdirectory(${CLM_ROOT}/src/utils clm_utils)
 add_subdirectory(${CLM_ROOT}/src/biogeochem clm_biogeochem)
 add_subdirectory(${CLM_ROOT}/src/soilbiogeochem clm_soilbiogeochem)

@@ -1,4 +1,3 @@
-create_pFUnit_test(unittestSubgrid test_unittestSubgrid_exe
-  "test_unittestSubgrid.pf" "")
-
-target_link_libraries(test_unittestSubgrid_exe clm csm_share)
+add_pfunit_ctest(unittestSubgrid
+  TEST_SOURCES "test_unittestSubgrid.pf"
+  LINK_LIBRARIES clm csm_share)

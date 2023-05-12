@@ -2,7 +2,7 @@ module test_accumul
 
   ! Tests of accumulMod
 
-  use pfunit_mod
+  use funit
   use accumulMod
   use unittestSubgridMod
   use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch

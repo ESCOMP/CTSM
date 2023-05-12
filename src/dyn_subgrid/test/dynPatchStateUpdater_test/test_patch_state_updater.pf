@@ -2,7 +2,7 @@ module test_patch_state_updater
 
   ! Tests of dynPatchStateUpdaterMod
 
-  use pfunit_mod
+  use funit
   use dynPatchStateUpdaterMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestSubgridMod
