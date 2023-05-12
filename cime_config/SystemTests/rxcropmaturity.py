@@ -4,8 +4,8 @@ Python code to generate the maturity requirement file. This is then used
 in a sowing+maturity forced run, which finally is tested to ensure
 correct behavior.
 
-Currently only supports 10x15 and f19_g17 resolutions. Eventually, I want
-this test to be able to generate its own files at whatever resolution it's
+Currently only supports 0.9x1.25, 1.9x2.5, and 10x15 resolutions. Eventually,
+this test should be able to generate its own files at whatever resolution it's
 called at. Well, really, the ultimate goal would be to give CLM the files
 at the original resolution (for GGCMI phase 3, 0.5°) and have the stream
 code do the interpolation. However, that wouldn't act on harvest dates
@@ -210,8 +210,15 @@ class RXCROPMATURITY(SystemTestsCommon):
             self._hdatefile = os.path.join(
                 blessed_crop_dates_dir,
                 "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f19_g17.2000-2000.20230102_175625.fill1.nc")
+        elif lnd_grid == "0.9x1.25":
+            self._sdatefile = os.path.join(
+                blessed_crop_dates_dir,
+                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230510_133957.fill1.nc")
+            self._hdatefile = os.path.join(
+                blessed_crop_dates_dir,
+                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230510_133958.fill1.nc")
         else:
-            error_message = "ERROR: RXCROPMATURITY currently only supports 10x15 and 1.9x2.5 resolutions"
+            error_message = "ERROR: RXCROPMATURITY currently only supports 0.9x1.25, 1.9x2.5, and 10x15 resolutions"
             logger.error(error_message)
             raise RuntimeError(error_message)
 
