@@ -27,6 +27,9 @@ logger = logging.getLogger(__name__)
 #      cf_units caused problems in utils.import_ds().
 this_conda_env = "ctsm_pylib"
 
+# Should GDD-Generating run use fsurdat method?
+gddgen_use_fsurdat = True
+
 class RXCROPMATURITY(SystemTestsCommon):
 
     def __init__(self, case):
@@ -120,27 +123,21 @@ class RXCROPMATURITY(SystemTestsCommon):
         If needed, generate a surface dataset file with no crops missing years
         """
         
-        # Is flanduse_timeseries defined? If so, where is it?
-        case_gddgen.create_namelists(component='lnd')
-        self._lnd_in_path = os.path.join(self._path_gddgen, 'CaseDocs', 'lnd_in')
-        self._flanduse_timeseries_in = None
-        with open (self._lnd_in_path,'r') as lnd_in:
-            for line in lnd_in:
-                flanduse_timeseries_in = re.match(r" *flanduse_timeseries *= *'(.*)'", line)
-                if flanduse_timeseries_in:
-                    self._flanduse_timeseries_in = flanduse_timeseries_in.group(1)
-                    break
-        
         # If flanduse_timeseries is defined, we need to make our own version for
         # this test (if we haven't already).
+        self._get_flanduse_timeseries_in(case_gddgen)
         if self._flanduse_timeseries_in is not None:
             
             # Download files from the server, if needed
             case_gddgen.check_all_input_data()
             
-            # Make custom version of flanduse_timeseries
-            logger.info("SSRLOG  run make_lu_for_gddgen")
-            self._run_make_lu_for_gddgen(case_gddgen)
+            # Make custom version of input file
+            if gddgen_use_fsurdat:
+                logger.info("SSRLOG  run make_surface_for_gddgen")
+                self._run_make_surface_for_gddgen(case_gddgen)
+            else:
+                logger.info("SSRLOG  run make_lu_for_gddgen")
+                self._run_make_lu_for_gddgen(case_gddgen)
         
         #-------------------------------------------------------------------
         # (2) Perform GDD-generating run and generate prescribed GDDs file
@@ -458,3 +455,15 @@ class RXCROPMATURITY(SystemTestsCommon):
         except:
             print(f"ERROR trying to run {tool_name}.")
             raise
+
+    # Is flanduse_timeseries defined? If so, where is it?
+    def _get_flanduse_timeseries_in(self, case):
+        case.create_namelists(component='lnd')
+        self._lnd_in_path = os.path.join(self._path_gddgen, 'CaseDocs', 'lnd_in')
+        self._flanduse_timeseries_in = None
+        with open (self._lnd_in_path,'r') as lnd_in:
+            for line in lnd_in:
+                flanduse_timeseries_in = re.match(r" *flanduse_timeseries *= *'(.*)'", line)
+                if flanduse_timeseries_in:
+                    self._flanduse_timeseries_in = flanduse_timeseries_in.group(1)
+                    break
