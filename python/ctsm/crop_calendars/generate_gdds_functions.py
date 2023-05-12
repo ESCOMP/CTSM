@@ -450,8 +450,6 @@ def import_and_process_1yr(
     else:
         hdates_rx = hdates_rx_orig
 
-    # Determine cells where growing season crosses new year
-    grows_across_newyear = hdates_rx < sdates_rx
 
     log(logger, f"   Importing accumulated GDDs...")
     clm_gdd_var = "GDDACCUM"
