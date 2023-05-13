@@ -3,7 +3,7 @@
 """
 CTSM namelist creator
 """
-import sys, os, shutil
+import sys, os, shutil, re
 
 _CIMEROOT = os.environ.get("CIMEROOT")
 if _CIMEROOT is None:
@@ -41,6 +41,7 @@ def buildnml(case, caseroot, compname):
     configuration = case.get_value("CLM_CONFIGURATION")
     structure = case.get_value("CLM_STRUCTURE")
     ccsm_co2_ppmv = case.get_value("CCSM_CO2_PPMV")
+    casename = case.get_value("CASE")
     clm_co2_type = case.get_value("CLM_CO2_TYPE")
     clm_namelist_opts = case.get_value("CLM_NAMELIST_OPTS")
     clm_bldnml_opts = case.get_value("CLM_BLDNML_OPTS")
@@ -133,6 +134,13 @@ def buildnml(case, caseroot, compname):
         clm_usrdat_name = case.get_value("CLM_USRDAT_NAME")
         lnd_grid = clm_usrdat_name
         clmusr = " -clm_usr_name %s "%clm_usrdat_name
+        # Write warning about initial condition data
+        if "NEON" in clm_usrdat_name and clm_force_coldstart == "off":
+            if ("_transient" in clm_nml_use_case) \
+            and (re.fullmatch(r"\w\w\w\w\.transient",  casename) is None \
+            or clm_usrdat_name is "NEON.PRISM"):
+                logger.warning( "WARNING: Do you have approriprate initial conditions for this simulation?" \
+                + " Check that the finidat file used in the lnd_in namelist is apprporiately spunup for your case" )
 
     if comp_atm != "datm":
         nomeg = "-no-megan"

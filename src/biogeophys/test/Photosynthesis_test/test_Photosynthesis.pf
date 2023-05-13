@@ -2,7 +2,7 @@ module test_Photosynthesis
   
   ! Tests of PhotosynthesisMod.F90
   
-  use pfunit_mod
+  use funit
   use PhotosynthesisMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestSubgridMod, only : unittest_subgrid_teardown, bounds
