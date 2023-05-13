@@ -194,6 +194,31 @@ def get_parser(args, description, valid_neon_sites):
     )
 
     parser.add_argument(
+       "--prism",
+        help="""
+                Uses the PRISM reanaylsis precipitation data for the site instead of the NEON data
+                (only available over Continental US)
+                """,
+        action="store_true",
+        dest="prism",
+        required=False,
+        default=False,
+    )
+
+
+    parser.add_argument(
+       "--experiment",
+        help="""
+                Appends the case name with string for model experiment 
+                """,
+        action="store",
+        dest="experiment",
+        type=str,
+        required=False,
+        default=None,
+    )
+
+    parser.add_argument(
         "--run-length",
         help="""
                 How long to run (modified ISO 8601 duration)
@@ -251,7 +276,7 @@ def get_parser(args, description, valid_neon_sites):
         dest="user_version",
         required = False,
         type = str,
-        choices= ['v1','v2'],
+        choices= ['v1','v2','v3'],
     )
 
 
@@ -294,6 +319,8 @@ def get_parser(args, description, valid_neon_sites):
         neon_sites,
         args.output_root,
         args.run_type,
+        args.experiment,
+        args.prism,
         args.overwrite,
         run_length,
         base_case_root,
@@ -451,12 +478,14 @@ class NeonSite:
         self,
         base_case_root,
         run_type,
+        prism,
         run_length,
         user_version,
         overwrite=False,
         setup_only=False,
         no_batch=False,
         rerun=False,
+        experiment=False,
     ):
         user_mods_dirs = [
             os.path.join(
@@ -475,9 +504,12 @@ class NeonSite:
 
         print ("using this version:", version)
 
+        if experiment != None:
+            self.name = self.name + "." + experiment 
         case_root = os.path.abspath(
-            os.path.join(base_case_root, "..", self.name + "." + run_type)
-        )
+                os.path.join(base_case_root, "..", self.name + "." + run_type)
+            )
+
         rundir = None
         if os.path.isdir(case_root):
             if overwrite:
@@ -538,6 +570,9 @@ class NeonSite:
                  case.set_value("REST_OPTION", "end")
             case.set_value("CONTINUE_RUN", False)
             case.set_value("NEONVERSION", version)
+            if prism:
+                case.set_value("CLM_USRDAT_NAME", "NEON.PRISM")
+
             if run_type == "ad":
                 case.set_value("CLM_FORCE_COLDSTART", "on")
                 case.set_value("CLM_ACCELERATED_SPINUP", "on")
@@ -760,6 +795,8 @@ def main(description):
         site_list,
         output_root,
         run_type,
+        experiment,
+        prism,
         overwrite,
         run_length,
         base_case_root,
@@ -767,7 +804,7 @@ def main(description):
         setup_only,
         no_batch,
         rerun,
-        user_version
+        user_version,
     ) = get_parser(sys.argv, description, valid_neon_sites)
 
     if output_root:
@@ -803,12 +840,14 @@ def main(description):
             neon_site.run_case(
                 base_case_root,
                 run_type,
+                prism,
                 run_length,
                 user_version,
                 overwrite,
                 setup_only,
                 no_batch,
                 rerun,
+                experiment,
             )
 
 
