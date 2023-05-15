@@ -70,7 +70,6 @@ def main(argv):
         myVars=myVars,
         y1=args.first_usable_year,
         yN=args.last_usable_year,
-        incl_irrig=False,
     )
     cc.check_constant_vars(case["ds"], case, ignore_nan=True, verbose=True, throw_error=True)
 
