@@ -293,7 +293,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine initVerticalProfiles (num_filter, filter, &
-  atm2lnd_inst, mlcanopy_inst)
+  atm2lnd_inst, mlcanopy_inst, wateratm2lndbulk_inst)
     !
     ! !DESCRIPTION:
     ! Initialize vertical profiles and canopy states
@@ -303,6 +303,7 @@ contains
     use MLclm_varcon, only : mmh2o, mmdry
     use MLclm_varpar, only : isun, isha
     use atm2lndType, only : atm2lnd_type
+    use Wateratm2lndBulkType, only : wateratm2lndbulk_type
     use MLCanopyFluxesType, only : mlcanopy_type
     !
     ! !ARGUMENTS:
@@ -310,6 +311,7 @@ contains
     integer, intent(in) :: num_filter            ! Number of patches in filter
     integer, intent(in) :: filter(:)             ! Patch filter
     type(atm2lnd_type) , intent(in)    :: atm2lnd_inst
+    type(wateratm2lndbulk_type), intent(in) :: wateratm2lndbulk_inst
     type(mlcanopy_type), intent(inout) :: mlcanopy_inst
     !
     ! !LOCAL VARIABLES:
@@ -326,7 +328,7 @@ contains
     forc_v      => atm2lnd_inst%forc_v_grc               , &  ! CLM: Atmospheric wind speed in north direction (m/s)
     forc_pco2   => atm2lnd_inst%forc_pco2_grc            , &  ! CLM: Atmospheric CO2 partial pressure (Pa)
     forc_t      => atm2lnd_inst%forc_t_downscaled_col    , &  ! CLM: Atmospheric temperature (K)
-    forc_q      => atm2lnd_inst%forc_q_downscaled_col    , &  ! CLM: Atmospheric specific humidity (kg/kg)
+    forc_q      => wateratm2lndbulk_inst%forc_q_downscaled_col, &  ! CLM: Atmospheric specific humidity (kg/kg)
     forc_pbot   => atm2lnd_inst%forc_pbot_downscaled_col , &  ! CLM: Atmospheric pressure (Pa)
     ncan        => mlcanopy_inst%ncan_canopy             , &  ! Number of layers
                                                               ! *** Output ***

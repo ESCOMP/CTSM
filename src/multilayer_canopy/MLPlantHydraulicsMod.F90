@@ -82,7 +82,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SoilResistance (num_filter, filter, &
-  soilstate_inst, waterstate_inst, mlcanopy_inst)
+  soilstate_inst, waterstatebulk_inst, mlcanopy_inst)
     !
     ! !DESCRIPTION:
     ! Calculate soil hydraulic resistance and water uptake from each soil layer
@@ -95,7 +95,7 @@ contains
     use pftconMod, only : pftcon
     use MLclm_varcon, only : mmh2o
     use SoilStateType, only : soilstate_type
-    use WaterStateType, only : waterstate_type
+    use WaterStateBulkType, only : waterstatebulk_type
     use MLCanopyFluxesType, only : mlcanopy_type
     !
     ! !ARGUMENTS:
@@ -103,7 +103,7 @@ contains
     integer, intent(in) :: num_filter            ! Number of patches in filter
     integer, intent(in) :: filter(:)             ! Patch filter
     type(soilstate_type), intent(in) :: soilstate_inst
-    type(waterstate_type), intent(in) :: waterstate_inst
+    type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
     type(mlcanopy_type), intent(inout) :: mlcanopy_inst
     !
     ! !LOCAL VARIABLES:
@@ -135,7 +135,7 @@ contains
     smp_l            => soilstate_inst%smp_l_col          , &  ! CLM: Soil layer matric potential (mm)
     hk_l             => soilstate_inst%hk_l_col           , &  ! CLM: Soil layer hydraulic conductivity (mm H2O/s)
     rootfr           => soilstate_inst%rootfr_patch       , &  ! CLM: Fraction of roots in each soil layer
-    h2osoi_ice       => waterstate_inst%h2osoi_ice_col    , &  ! CLM: Soil layer ice lens (kg H2O/m2)
+    h2osoi_ice       => waterstatebulk_inst%h2osoi_ice_col    , &  ! CLM: Soil layer ice lens (kg H2O/m2)
     lai              => mlcanopy_inst%lai_canopy          , &  ! Leaf area index of canopy (m2/m2)
     root_biomass     => mlcanopy_inst%root_biomass_canopy , &  ! Fine root biomass (g biomass / m2)
                                                                ! *** Output ***

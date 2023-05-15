@@ -21,8 +21,10 @@ module MLCanopyFluxesMod
   use SolarAbsorbedType   , only : solarabs_type
   use SurfaceAlbedoType   , only : surfalb_type
   use TemperatureType     , only : temperature_type
-  use WaterFluxType       , only : waterflux_type
-  use WaterStateType      , only : waterstate_type
+  use WaterFluxBulkType   , only : waterfluxbulk_type
+  use WaterStateBulkType  , only : waterstatebulk_type
+  use Wateratm2lndBulkType, only : wateratm2lndbulk_type
+  use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
   use MLCanopyFluxesType  , only : mlcanopy_type
   !
   ! !PUBLIC TYPES:
@@ -45,9 +47,9 @@ module MLCanopyFluxesMod
 
   !-----------------------------------------------------------------------
   subroutine MLCanopyFluxes (bounds, num_exposedvegp, filter_exposedvegp, &
-  atm2lnd_inst, canopystate_inst, soilstate_inst, temperature_inst, waterstate_inst, &
-  waterflux_inst, energyflux_inst, frictionvel_inst, surfalb_inst, solarabs_inst, &
-  mlcanopy_inst)
+  atm2lnd_inst, canopystate_inst, soilstate_inst, temperature_inst, waterstatebulk_inst, &
+  waterfluxbulk_inst, energyflux_inst, frictionvel_inst, surfalb_inst, solarabs_inst, &
+  mlcanopy_inst, wateratm2lndbulk_inst, waterdiagnosticbulk_inst)
     !
     ! !DESCRIPTION:
     ! Compute fluxes for sunlit and shaded leaves at each level
@@ -81,11 +83,13 @@ module MLCanopyFluxesMod
     integer, intent(in) :: filter_exposedvegp(:)     ! CLM patch filter for non-snow-covered vegetation
 
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
+    type(wateratm2lndbulk_type), intent(in) :: wateratm2lndbulk_inst
+    type(waterdiagnosticbulk_type), intent(in) :: waterdiagnosticbulk_inst
+    type(waterstatebulk_type), intent(in)  :: waterstatebulk_inst
+    type(waterfluxbulk_type) , intent(in)  :: waterfluxbulk_inst
     type(canopystate_type) , intent(inout) :: canopystate_inst
     type(soilstate_type)   , intent(inout) :: soilstate_inst
     type(temperature_type) , intent(inout) :: temperature_inst
-    type(waterstate_type)  , intent(inout) :: waterstate_inst
-    type(waterflux_type)   , intent(inout) :: waterflux_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(frictionvel_type) , intent(inout) :: frictionvel_inst
     type(surfalb_type)     , intent(inout) :: surfalb_inst
@@ -132,11 +136,11 @@ module MLCanopyFluxesMod
     forc_solad     => atm2lnd_inst%forc_solad_grc            , &  ! INPUT: Atmospheric direct beam radiation (W/m2)
     forc_solai     => atm2lnd_inst%forc_solai_grc            , &  ! INPUT: Atmospheric diffuse radiation (W/m2)
     forc_t         => atm2lnd_inst%forc_t_downscaled_col     , &  ! INPUT: Atmospheric temperature (K)
-    forc_q         => atm2lnd_inst%forc_q_downscaled_col     , &  ! INPUT: Atmospheric specific humidity (kg/kg)
+    forc_q         => wateratm2lndbulk_inst%forc_q_downscaled_col, &  ! INPUT: Atmospheric specific humidity (kg/kg)
     forc_pbot      => atm2lnd_inst%forc_pbot_downscaled_col  , &  ! INPUT: Atmospheric pressure (Pa)
     forc_lwrad     => atm2lnd_inst%forc_lwrad_downscaled_col , &  ! INPUT: Atmospheric longwave radiation (W/m2)
-    forc_rain      => atm2lnd_inst%forc_rain_downscaled_col  , &  ! INPUT: Rainfall rate (mm/s)
-    forc_snow      => atm2lnd_inst%forc_snow_downscaled_col  , &  ! INPUT: Snowfall rate (mm/s)
+    forc_rain      => wateratm2lndbulk_inst%forc_rain_downscaled_col, &  ! INPUT: Rainfall rate (mm/s)
+    forc_snow      => wateratm2lndbulk_inst%forc_snow_downscaled_col, &  ! INPUT: Snowfall rate (mm/s)
     elai           => canopystate_inst%elai_patch            , &  ! INPUT: Leaf area index of canopy (m2/m2)
     esai           => canopystate_inst%esai_patch            , &  ! INPUT: Stem area index of canopy (m2/m2)
     snl            => col%snl                                , &  ! INPUT: Number of snow layers
@@ -162,8 +166,8 @@ module MLCanopyFluxesMod
     albd           => surfalb_inst%albd_patch                , &  ! OUTPUT: patch surface albedo (direct)
     albi           => surfalb_inst%albi_patch                , &  ! OUTPUT: patch surface albedo (diffuse)
     t_ref2m        => temperature_inst%t_ref2m_patch         , &  ! OUTPUT: patch 2 m height surface air temperature (K)
-    qflx_evap_tot  => waterflux_inst%qflx_evap_tot_patch     , &  ! OUTPUT: patch total evapotranspiration flux (kg H2O/m2/s)
-    q_ref2m        => waterstate_inst%q_ref2m_patch          , &  ! OUTPUT: patch 2 m height surface specific humidity (kg/kg)
+    qflx_evap_tot  => waterfluxbulk_inst%qflx_evap_tot_patch , &  ! OUTPUT: patch total evapotranspiration flux (kg H2O/m2/s)
+    q_ref2m        => waterdiagnosticbulk_inst%q_ref2m_patch , &  ! OUTPUT: patch 2 m height surface specific humidity (kg/kg)
 
                                                                   ! *** Multilayer canopy variables ***
     zref           => mlcanopy_inst%zref_forcing             , &  ! Atmospheric reference height (m)
@@ -277,7 +281,7 @@ module MLCanopyFluxesMod
        canopystate_inst, frictionvel_inst, mlcanopy_inst)
 
        call initVerticalProfiles (num_mlcan, filter_mlcan, &
-       atm2lnd_inst, mlcanopy_inst)
+       atm2lnd_inst, mlcanopy_inst, wateratm2lndbulk_inst)
 
        if (masterproc) then
           write (iulog,*) 'Successfully initialized multilayer canopy vertical structure'
@@ -421,7 +425,7 @@ module MLCanopyFluxesMod
     ! Plant hydraulics
 
     call SoilResistance (num_mlcan, filter_mlcan, &
-    soilstate_inst, waterstate_inst, mlcanopy_inst)
+    soilstate_inst, waterstatebulk_inst, mlcanopy_inst)
 
     call PlantResistance (num_mlcan, filter_mlcan, mlcanopy_inst)
 

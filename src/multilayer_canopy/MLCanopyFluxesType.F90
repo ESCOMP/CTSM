@@ -609,11 +609,12 @@ contains
        interpinic_flag='interp', readvar=readvar, data=this%taf_canopy)
 
     ! Example for 2-d patch variable
+    ! TODO bonan/slevis: Revisit this call. Doesn't build as written.
 
-    call restartvar(ncid=ncid, flag=flag, varname='lwp_ml', xtype=ncd_double,  &
-       dim1name='pft', dim2name='nlevmlcan', switchdim=.true., &
-       long_name='leaf water potential of canopy layer', units='MPa', &
-       interpinic_flag='interp', readvar=readvar, data=this%lwpveg_profile)
+!   call restartvar_2d(ncid=ncid, flag=flag, varname='lwp_ml', xtype=ncd_double,  &
+!      dim1name='pft', dim2name='nlevmlcan', switchdim=.true., &
+!      long_name='leaf water potential of canopy layer', units='MPa', &
+!      interpinic_flag='interp', readvar=readvar, data=this%lwpveg_profile)
 
   end subroutine Restart
 

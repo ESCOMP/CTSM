@@ -62,7 +62,6 @@ contains
     use initGridCellsMod     , only: initGridCells
     use UrbanParamsType      , only: IsSimpleBuildTemp
     use dynSubgridControlMod , only: dynSubgridControl_init
-    use MLCanopyTurbulenceMod, only : LookupPsihatINI   !!! CLMml !!!
     use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_par_init
     use CropReprPoolsMod         , only: crop_repr_pools_init
     !
@@ -173,6 +172,7 @@ contains
     use CNSharedParamsMod             , only : CNParamsSetSoilDepth
     use NutrientCompetitionFactoryMod , only : create_nutrient_competition_method
     use FATESFireFactoryMod           , only : scalar_lightning
+    use MLCanopyTurbulenceMod         , only : LookupPsihatINI   !!! CLMml !!!
     !
     ! !ARGUMENTS
     integer, intent(in) :: ni, nj                ! global grid sizes

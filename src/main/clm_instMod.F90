@@ -117,7 +117,7 @@ module clm_instMod
   type(solarabs_type), public             :: solarabs_inst
   type(surfalb_type), public              :: surfalb_inst
   type(surfrad_type), public              :: surfrad_inst
-  type(mlcanopy_type)                     :: mlcanopy_inst !!! CLMml !!!
+  type(mlcanopy_type), public             :: mlcanopy_inst !!! CLMml !!!
   type(temperature_type), public          :: temperature_inst
   type(urbanparams_type), public          :: urbanparams_inst
   type(urbantv_type), public              :: urbantv_inst
