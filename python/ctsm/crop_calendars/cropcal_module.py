@@ -6,12 +6,16 @@ import xarray as xr
 from scipy import stats, signal
 import warnings
 import cftime
-import pandas as pd
+import sys
 import os
 import glob
 
 try:
     import cartopy.crs as ccrs
+except:
+    pass
+try:
+    import pandas as pd
 except:
     pass
 
@@ -692,14 +696,12 @@ def convert_axis_time2gs(this_ds, verbose=False, myVars=None, incl_orig=False):
         print(
             f'After "Ignore any harvests that were planted in the final year, because other cells will have incomplete growing seasons for the final year": discrepancy of {discrepancy} patch-seasons'
         )
-        try:
-            import pandas as pd
-
+        if "pandas" in sys.modules:
             bc = np.bincount(np.sum(is_valid, axis=1))
             bc = bc[bc > 0]
             df = pd.DataFrame({"Ngs": unique_Nseasons, "Count": bc})
             print(df)
-        except:
+        else:
             print(f"unique N seasons = {unique_Nseasons}")
         print(" ")
 
@@ -796,6 +798,29 @@ def convert_axis_time2gs(this_ds, verbose=False, myVars=None, incl_orig=False):
 # Was 50 before cropcal runs 2023-01-28
 def default_gdd_min():
     return 1.0
+
+
+# Get information about extreme gridcells (for debugging)
+def get_extreme_info(diff_array, rx_array, mxn, dims, gs, patches1d_lon, patches1d_lat):
+    if mxn == np.min:
+        diff_array = np.ma.masked_array(diff_array, mask=(np.abs(diff_array) == 0))
+    themxn = mxn(diff_array)
+
+    # Find the first patch-gs that has the mxn value
+    matching_indices = np.where(diff_array == themxn)
+    first_indices = [x[0] for x in matching_indices]
+
+    # Get the lon, lat, and growing season of that patch-gs
+    p = first_indices[dims.index("patch")]
+    thisLon = patches1d_lon.values[p]
+    thisLat = patches1d_lat.values[p]
+    s = first_indices[dims.index("gs")]
+    thisGS = gs.values[s]
+
+    # Get the prescribed value for this patch-gs
+    thisRx = rx_array[p][0]
+
+    return round(themxn, 3), round(thisLon, 3), round(thisLat, 3), thisGS, round(thisRx)
 
 
 # Get growing season lengths from a DataArray of hdate-sdate
@@ -1053,6 +1078,164 @@ def import_output(
     if np.any(this_ds_gs["NHARVESTS"] > 2):
         raise RuntimeError("How to get NHARVEST_DISCREP for NHARVESTS > 2?")
     this_ds_gs["NHARVEST_DISCREP"] = (this_ds_gs["NHARVESTS"] == 2).astype(int)
+
+
+# Print information about a patch (for debugging)
+def print_onepatch_wrongNgs(
+    p,
+    this_ds_orig,
+    sdates_ymp,
+    hdates_ymp,
+    sdates_pym,
+    hdates_pym,
+    sdates_pym2,
+    hdates_pym2,
+    sdates_pym3,
+    hdates_pym3,
+    sdates_pg,
+    hdates_pg,
+    sdates_pg2,
+    hdates_pg2,
+):
+    try:
+        import pandas as pd
+    except:
+        print("Couldn't import pandas, so not displaying example bad patch ORIGINAL.")
+
+    print(
+        f"patch {p}: {this_ds_orig.patches1d_itype_veg_str.values[p]}, lon"
+        f" {this_ds_orig.patches1d_lon.values[p]} lat {this_ds_orig.patches1d_lat.values[p]}"
+    )
+
+    print("Original SDATES (per sowing):")
+    print(this_ds_orig.SDATES.values[:, :, p])
+
+    print("Original HDATES (per harvest):")
+    print(this_ds_orig.HDATES.values[:, :, p])
+
+    if "pandas" in sys.modules:
+
+        def print_pandas_ymp(msg, cols, arrs_tuple):
+            print(f"{msg} ({np.sum(~np.isnan(arrs_tuple[0]))})")
+            mxharvests = arrs_tuple[0].shape[1]
+            arrs_list2 = []
+            cols2 = []
+            for h in np.arange(mxharvests):
+                for i, a in enumerate(arrs_tuple):
+                    arrs_list2.append(a[:, h])
+                    cols2.append(cols[i] + str(h))
+            arrs_tuple2 = tuple(arrs_list2)
+            df = pd.DataFrame(np.stack(arrs_tuple2, axis=1))
+            df.columns = cols2
+            print(df)
+
+        print_pandas_ymp(
+            "Original",
+            ["sdate", "hdate"],
+            (this_ds_orig.SDATES_PERHARV.values[:, :, p], this_ds_orig.HDATES.values[:, :, p]),
+        )
+
+        print_pandas_ymp("Masked", ["sdate", "hdate"], (sdates_ymp[:, :, p], hdates_ymp[:, :, p]))
+
+        print_pandas_ymp(
+            'After "Ignore harvests from before this output began"',
+            ["sdate", "hdate"],
+            (
+                np.transpose(sdates_pym, (1, 2, 0))[:, :, p],
+                np.transpose(hdates_pym, (1, 2, 0))[:, :, p],
+            ),
+        )
+
+        print_pandas_ymp(
+            'After "In years with no sowing, pretend the first no-harvest is meaningful"',
+            ["sdate", "hdate"],
+            (
+                np.transpose(sdates_pym2, (1, 2, 0))[:, :, p],
+                np.transpose(hdates_pym2, (1, 2, 0))[:, :, p],
+            ),
+        )
+
+        print_pandas_ymp(
+            (
+                'After "In years with sowing that are followed by inactive years, check whether the'
+                " last sowing was harvested before the patch was deactivated. If not, pretend the"
+                ' LAST no-harvest is meaningful."'
+            ),
+            ["sdate", "hdate"],
+            (
+                np.transpose(sdates_pym3, (1, 2, 0))[:, :, p],
+                np.transpose(hdates_pym3, (1, 2, 0))[:, :, p],
+            ),
+        )
+
+        def print_pandas_pg(msg, cols, arrs_tuple):
+            print(f"{msg} ({np.sum(~np.isnan(arrs_tuple[0]))})")
+            arrs_list = list(arrs_tuple)
+            for i, a in enumerate(arrs_tuple):
+                arrs_list[i] = np.reshape(a, (-1))
+            arrs_tuple2 = tuple(arrs_list)
+            df = pd.DataFrame(np.stack(arrs_tuple2, axis=1))
+            df.columns = cols
+            print(df)
+
+        print_pandas_pg(
+            "Same, but converted to gs axis", ["sdate", "hdate"], (sdates_pg[p, :], hdates_pg[p, :])
+        )
+
+        print_pandas_pg(
+            (
+                'After "Ignore any harvests that were planted in the final year, because some cells'
+                ' will have incomplete growing seasons for the final year"'
+            ),
+            ["sdate", "hdate"],
+            (sdates_pg2[p, :], hdates_pg2[p, :]),
+        )
+    else:
+
+        def print_nopandas(a1, a2, msg):
+            print(msg)
+            if a1.ndim == 1:
+                # I don't know why these aren't side-by-side!
+                print(np.stack((a1, a2), axis=1))
+            else:
+                print(np.concatenate((a1, a2), axis=1))
+
+        print_nopandas(sdates_ymp[:, :, p], hdates_ymp[:, :, p], "Masked:")
+
+        print_nopandas(
+            np.transpose(sdates_pym, (1, 2, 0))[:, :, p],
+            np.transpose(hdates_pym, (1, 2, 0))[:, :, p],
+            'After "Ignore harvests from before this output began"',
+        )
+
+        print_nopandas(
+            np.transpose(sdates_pym2, (1, 2, 0))[:, :, p],
+            np.transpose(hdates_pym2, (1, 2, 0))[:, :, p],
+            'After "In years with no sowing, pretend the first no-harvest is meaningful"',
+        )
+
+        print_nopandas(
+            np.transpose(sdates_pym3, (1, 2, 0))[:, :, p],
+            np.transpose(hdates_pym3, (1, 2, 0))[:, :, p],
+            (
+                'After "In years with sowing that are followed by inactive years, check whether the'
+                " last sowing was harvested before the patch was deactivated. If not, pretend the"
+                ' LAST [easier to implement!] no-harvest is meaningful."'
+            ),
+        )
+
+        print_nopandas(sdates_pg[p, :], hdates_pg[p, :], "Same, but converted to gs axis")
+
+        print_nopandas(
+            sdates_pg2[p, :],
+            hdates_pg2[p, :],
+            (
+                'After "Ignore any harvests that were planted in the final year, because some cells'
+                ' will have incomplete growing seasons for the final year"'
+            ),
+        )
+
+    print("\n\n")
 
 
 # Set up empty Dataset with time axis as "gs" (growing season) instead of what CLM puts out.
