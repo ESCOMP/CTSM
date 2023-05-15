@@ -27,9 +27,6 @@ logger = logging.getLogger(__name__)
 #      cf_units caused problems in utils.import_ds().
 this_conda_env = "ctsm_pylib"
 
-# Should GDD-Generating run use fsurdat method?
-gddgen_use_fsurdat = True
-
 class RXCROPMATURITY(SystemTestsCommon):
 
     def __init__(self, case):
@@ -119,25 +116,17 @@ class RXCROPMATURITY(SystemTestsCommon):
             "use_mxmat = .false.",
         ])
         
-        """
-        If needed, generate a surface dataset file with no crops missing years
-        """
-        
-        # If flanduse_timeseries is defined, we need to make our own version for
-        # this test (if we haven't already).
+        # If flanduse_timeseries is defined, we need to make a static version for this test. This
+        # should have every crop in most of the world.
         self._get_flanduse_timeseries_in(case_gddgen)
         if self._flanduse_timeseries_in is not None:
             
             # Download files from the server, if needed
             case_gddgen.check_all_input_data()
             
-            # Make custom version of input file
-            if gddgen_use_fsurdat:
-                logger.info("SSRLOG  run make_surface_for_gddgen")
-                self._run_make_surface_for_gddgen(case_gddgen)
-            else:
-                logger.info("SSRLOG  run make_lu_for_gddgen")
-                self._run_make_lu_for_gddgen(case_gddgen)
+            # Make custom version of surface file
+            logger.info("SSRLOG  run make_surface_for_gddgen")
+            self._run_make_surface_for_gddgen(case_gddgen)
         
         #-------------------------------------------------------------------
         # (2) Perform GDD-generating run and generate prescribed GDDs file
@@ -243,37 +232,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         self._modify_user_nl_allruns()
         logger.info("SSRLOG  _setup_all done")
 
-         
-    def _run_make_lu_for_gddgen(self, case_gddgen):
-        
-        # Where we will save the flanduse_timeseries version for this test
-        self._flanduse_timeseries_out = os.path.join(self._path_gddgen, 'flanduse_timeseries.nc')
-        
-        # Make flanduse_timeseries for this test, if not already done
-        if not os.path.exists(self._flanduse_timeseries_out):
-            
-            first_fake_year = self._run_startyear
-            last_fake_year = first_fake_year + self._run_Nyears
-            
-            tool_path = os.path.join(self._ctsm_root,
-                                    'python', 'ctsm', 'crop_calendars',
-                                    'make_lu_for_gddgen.py')
-            command = " ".join([
-                    f"python3 {tool_path}",
-                    f"--flanduse-timeseries {self._flanduse_timeseries_in}",
-                    f"-y1 {first_fake_year}",
-                    f"-yN {last_fake_year}",
-                    f"--outfile {self._flanduse_timeseries_out}",
-                    ])
-            self._run_python_script(case_gddgen, command, tool_path)
-        
-        # Modify namelist
-        logger.info("SSRLOG  modify user_nl files: new flanduse_timeseries")
-        self._append_to_user_nl_clm([
-            "flanduse_timeseries = '{}'".format(self._flanduse_timeseries_out),
-        ])
-
-
+    
     # Unused because I couldn't get the GDD-Generating run to work with the fsurdat file generated
     # by make_surface_for_gddgen.py. However, I think it'd be cleaner to just do the GDD-Generating
     # run with a surface file (and no flanduse_timeseries file) since that run relies on land use
