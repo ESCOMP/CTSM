@@ -69,6 +69,98 @@ def check_and_trim_years(y1, yN, ds_in):
     return ds_in
 
 
+def open_lu_ds(filename, y1, yN, existing_ds, ungrid=True):
+    # Open and trim to years of interest
+    dsg = xr.open_dataset(filename).sel(time=slice(y1, yN))
+
+    # Assign actual lon/lat coordinates
+    dsg = dsg.assign_coords(
+        lon=("lsmlon", existing_ds.lon.values), lat=("lsmlat", existing_ds.lat.values)
+    )
+    dsg = dsg.swap_dims({"lsmlon": "lon", "lsmlat": "lat"})
+
+    if "AREA" in dsg:
+        dsg["AREA_CFT"] = dsg.AREA * 1e6 * dsg.LANDFRAC_PFT * dsg.PCT_CROP / 100 * dsg.PCT_CFT / 100
+        dsg["AREA_CFT"].attrs = {"units": "m2"}
+        dsg["AREA_CFT"].load()
+    else:
+        print("Warning: AREA missing from Dataset, so AREA_CFT will not be created")
+
+    if not ungrid:
+        return dsg
+
+    # Un-grid
+    query_ilons = [int(x) - 1 for x in existing_ds["patches1d_ixy"].values]
+    query_ilats = [int(x) - 1 for x in existing_ds["patches1d_jxy"].values]
+    query_ivts = [list(dsg.cft.values).index(x) for x in existing_ds["patches1d_itype_veg"].values]
+
+    ds = xr.Dataset(attrs=dsg.attrs)
+    for v in ["AREA", "LANDFRAC_PFT", "PCT_CFT", "PCT_CROP", "AREA_CFT"]:
+        if v not in dsg:
+            continue
+        if "time" in dsg[v].dims:
+            new_coords = existing_ds["GRAINC_TO_FOOD_ANN"].coords
+        else:
+            new_coords = existing_ds["patches1d_lon"].coords
+        if "cft" in dsg[v].dims:
+            ds[v] = (
+                dsg[v]
+                .isel(
+                    lon=xr.DataArray(query_ilons, dims="patch"),
+                    lat=xr.DataArray(query_ilats, dims="patch"),
+                    cft=xr.DataArray(query_ivts, dims="patch"),
+                    drop=True,
+                )
+                .assign_coords(new_coords)
+            )
+        else:
+            ds[v] = (
+                dsg[v]
+                .isel(
+                    lon=xr.DataArray(query_ilons, dims="patch"),
+                    lat=xr.DataArray(query_ilats, dims="patch"),
+                    drop=True,
+                )
+                .assign_coords(new_coords)
+            )
+    for v in existing_ds:
+        if "patches1d_" in v or "grid1d_" in v:
+            ds[v] = existing_ds[v]
+    ds["lon"] = dsg["lon"]
+    ds["lat"] = dsg["lat"]
+
+    # Which crops are irrigated?
+    is_irrigated = np.full_like(ds["patches1d_itype_veg"], False)
+    for vegtype_str in np.unique(ds["patches1d_itype_veg_str"].values):
+        if "irrigated" not in vegtype_str:
+            continue
+        vegtype_int = utils.ivt_str2int(vegtype_str)
+        is_this_vegtype = np.where(ds["patches1d_itype_veg"].values == vegtype_int)[0]
+        is_irrigated[is_this_vegtype] = True
+    ["irrigated" in x for x in ds["patches1d_itype_veg_str"].values]
+    ds["IRRIGATED"] = xr.DataArray(
+        data=is_irrigated,
+        coords=ds["patches1d_itype_veg_str"].coords,
+        attrs={"long_name": "Is patch irrigated?"},
+    )
+
+    # How much area is irrigated?
+    ds["IRRIGATED_AREA_CFT"] = ds["IRRIGATED"] * ds["AREA_CFT"]
+    ds["IRRIGATED_AREA_CFT"].attrs = {
+        "long name": "CFT area (irrigated types only)",
+        "units": "m^2",
+    }
+    ds["IRRIGATED_AREA_GRID"] = (
+        ds["IRRIGATED_AREA_CFT"]
+        .groupby(ds["patches1d_gi"])
+        .sum()
+        .rename({"patches1d_gi": "gridcell"})
+    )
+    ds["IRRIGATED_AREA_GRID"].attrs = {"long name": "Irrigated area in gridcell", "units": "m^2"}
+
+    return ds
+
+
 def check_constant_vars(
     this_ds, case, ignore_nan, constantGSs=None, verbose=True, throw_error=True
 ):
@@ -1039,7 +1131,7 @@ def import_output(
                 irrig_ds_grid["QIRRIG_FROM_GW_CONFINED"]
                 + irrig_ds_grid["QIRRIG_FROM_GW_UNCONFINED"]
                 > 0
-            ):
+):
                 raise RuntimeError("Unexpectedly found some irrigation using groundwater")
 
             # Rename this variable so that it has a QIRRIG prefix
@@ -1102,10 +1194,10 @@ def import_output(
             if this_ds_gs["AREA_GRID"].attrs["units"] != "m^2":
                 if this_ds_gs["AREA_GRID"].attrs["units"] == "km^2":
                     to_m2 = 1e6
-                else:
+    else:
                     raise RuntimeError(
                         f"Unsure how to convert {this_ds_gs['AREA_GRID'].attrs['units']} to m^2"
-                    )
+        )
                 this_ds_gs["AREA_GRID"] *= to_m2
                 this_ds_gs["AREA_GRID"].attrs["units"] = "m^2"
 
