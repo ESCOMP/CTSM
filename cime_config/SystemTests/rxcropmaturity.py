@@ -259,11 +259,10 @@ class RXCROPMATURITY(SystemTestsCommon):
         if not os.path.exists(self._fsurdat_out):
             tool_path = os.path.join(self._ctsm_root,
                                     'python', 'ctsm', 'crop_calendars',
-                                    'make_surface_for_gddgen.py')
+                                    'make_fsurdat_all_crops_everywhere.py')
             command = f"python3 {tool_path} "\
-                    + f"--flanduse-timeseries {self._flanduse_timeseries_in} "\
-                    + f"--fsurdat {self._fsurdat_in} "\
-                    + f"--outfile {self._fsurdat_out}"
+                    + f"-i {self._flanduse_timeseries_in} "\
+                    + f"-o {self._fsurdat_out}"
             self._run_python_script(case_gddgen, command, tool_path)
         
         # Modify namelist
