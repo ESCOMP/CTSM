@@ -744,7 +744,14 @@ contains
     do c = begc,endc
        ! microtopographic parameter, units are meters (try smooth function of slope)
        slope0 = params_inst%slopemax**(1._r8/params_inst%slopebeta)
-       col%micro_sigma(c) = (col%topo_slope(c) + slope0)**(params_inst%slopebeta)
+
+       if (col%is_hillslope_column(c)) then
+          
+          col%micro_sigma(c) = (atan(col%hill_slope(c)) + slope0)**(params_inst%slopebeta)
+       else
+          col%micro_sigma(c) = (col%topo_slope(c) + slope0)**(params_inst%slopebeta)
+       endif
+
     end do
 
     call ncd_pio_closefile(ncid)

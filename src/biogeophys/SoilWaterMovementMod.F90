@@ -1141,6 +1141,7 @@ contains
     real(r8) :: vLiqRes(bounds%begc:bounds%endc,1:nlevsoi)   ! residual for the volumetric liquid water content (v/v)
 
     real(r8) :: dwat_temp
+    real(r8) :: over_saturation 
     !-----------------------------------------------------------------------
 
     associate(&
@@ -1154,6 +1155,7 @@ contains
          qcharge           =>    soilhydrology_inst%qcharge_col     , & ! Input:  [real(r8) (:)   ]  aquifer recharge rate (mm/s)                      
          zwt               =>    soilhydrology_inst%zwt_col         , & ! Input:  [real(r8) (:)   ]  water table depth (m)                             
 
+         watsat            =>    soilstate_inst%watsat_col          , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)
          smp_l             =>    soilstate_inst%smp_l_col           , & ! Input:  [real(r8) (:,:) ]  soil matrix potential [mm]                      
          hk_l              =>    soilstate_inst%hk_l_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)                   
          h2osoi_ice        =>    waterstatebulk_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice water (kg/m2)                               
@@ -1390,10 +1392,17 @@ contains
 
          end do  ! substep loop
 
-!  save number of adaptive substeps used during time step
+         !  save number of adaptive substeps used during time step
          nsubsteps(c) = nsubstep
 
-! check for negative moisture values
+         ! check for over-saturated layers                                      
+         do j = nlayers,2,-1
+            over_saturation   = max(h2osoi_liq(c,j)-(watsat(c,j)*m_to_mm*dz(c,j)),0._r8)
+            h2osoi_liq(c,j)   = min(watsat(c,j)*m_to_mm*dz(c,j), h2osoi_liq(c,j))
+            h2osoi_liq(c,j-1) = h2osoi_liq(c,j-1) + over_saturation
+         end do
+         
+         ! check for negative moisture values
          do j = 2, nlayers
             if(h2osoi_liq(c,j) < -1e-6_r8) then
                write(*,*) 'layer, h2osoi_liq: ', c,j,h2osoi_liq(c,j)

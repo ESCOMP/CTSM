@@ -65,7 +65,7 @@ module SoilHydrologyMod
      real(r8) :: perched_baseflow_scalar ! Scalar multiplier for perched base flow rate (kg/m2/s)
      real(r8) :: e_ice                   ! Soil ice impedance factor (unitless)
   end type params_type
-  type(params_type), private ::  params_inst
+  type(params_type), public ::  params_inst
   
   !-----------------------------------------------------------------------
   real(r8), private   :: baseflow_scalar = 1.e-2_r8
@@ -1830,10 +1830,11 @@ contains
                       ! bankfull height is defined to be zero
                       head_gradient = (col%hill_elev(c)-zwt_perched(c)) &
                            ! ignore overbankfull storage
-                           - min(max((stream_water_depth - stream_channel_depth), &
-                           (col%hill_elev(c)-frost_table(c))),0._r8)
+                           - max(min((stream_water_depth - stream_channel_depth),0._r8), &
+                           (col%hill_elev(c)-frost_table(c)))
 
                       head_gradient = head_gradient / (col%hill_distance(c))
+
                       ! head_gradient cannot be negative when channel is empty
                       if (stream_water_depth <= 0._r8) then
                          head_gradient = max(head_gradient, 0._r8)
@@ -2172,6 +2173,7 @@ contains
 
           depth              =>    soilhydrology_inst%depth_col          , & ! Input:  [real(r8) (:,:) ] VIC soil depth                                   
           icefrac            =>    soilhydrology_inst%icefrac_col        , & ! Output: [real(r8) (:,:) ] fraction of ice in layer                         
+          frost_table        =>    soilhydrology_inst%frost_table_col    , & ! Input:  [real(r8) (:)   ] frost table depth (m)                             
           zwt                =>    soilhydrology_inst%zwt_col            , & ! Input:  [real(r8) (:)   ] water table depth (m)                             
           stream_water_volume =>    waterstatebulk_inst%stream_water_volume_lun, & ! Input:  [real(r8) (:)   ] stream water volume (m3)
           
@@ -2443,25 +2445,29 @@ contains
          
          if(drainage_tot > 0.) then !rising water table
             do j = jwt(c)+1,1,-1
-               ! analytical expression for specific yield
-               s_y = watsat(c,j) &
-                    * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
-               s_y=max(s_y,params_inst%aq_sp_yield_min)
-               
-               drainage_layer=min(drainage_tot,(s_y*dz(c,j)*1.e3))
-               
-               drainage_layer=max(drainage_layer,0._r8)
-               h2osoi_liq(c,j) = h2osoi_liq(c,j) + drainage_layer
-               
-               drainage_tot = drainage_tot - drainage_layer
-               
-               if (drainage_tot <= 0.) then 
-                  zwt(c) = zwt(c) - drainage_layer/s_y/1000._r8
-                  exit
-               else
-                  zwt(c) = zi(c,j-1)
+
+               ! ensure water is not added to frozen layers
+               if (zi(c,j) < frost_table(c)) then 
+                  ! analytical expression for specific yield
+                  s_y = watsat(c,j) &
+                       * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
+                  s_y=max(s_y,params_inst%aq_sp_yield_min)
+
+                  drainage_layer=min(drainage_tot,(s_y*dz(c,j)*1.e3))
+
+                  drainage_layer=max(drainage_layer,0._r8)
+                  h2osoi_liq(c,j) = h2osoi_liq(c,j) + drainage_layer
+
+                  drainage_tot = drainage_tot - drainage_layer
+
+                  if (drainage_tot <= 0.) then 
+                     zwt(c) = zwt(c) - drainage_layer/s_y/1000._r8
+                     exit
+                  else
+                     zwt(c) = zi(c,j-1)
+                  endif
                endif
-               
+                  
             enddo
             
             !--  remove residual drainage  --------------------------------

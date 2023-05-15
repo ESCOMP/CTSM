@@ -165,7 +165,7 @@ contains
     use SoilWaterMovementMod , only : SoilWater
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use SoilWaterMovementMod , only : use_aquifer_layer
-    use SoilWaterPlantSinkMod , only : Compute_EffecRootFrac_And_VertTranSink
+    use SoilWaterPlantSinkMod, only : Compute_EffecRootFrac_And_VertTranSink
     use SurfaceWaterMod      , only : UpdateH2osfc
 
     !
@@ -325,7 +325,8 @@ contains
       call UpdateH2osfc(bounds, num_hydrologyc, filter_hydrologyc, &
            infiltration_excess_runoff_inst, &
            energyflux_inst, soilhydrology_inst, &
-           b_waterflux_inst, b_waterstate_inst, b_waterdiagnostic_inst)
+           b_waterflux_inst, b_waterstate_inst, b_waterdiagnostic_inst, &
+           soilstate_inst)
 
       call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, &
            b_waterflux_inst)
