@@ -95,16 +95,16 @@ class RXCROPMATURITY(SystemTestsCommon):
         # (1) Set up GDD-generating run
         #-------------------------------------------------------------------
         # Create clone to be GDD-Generating case
-        logger.info("SSRLOG  cloning setup")
+        logger.info("RXCROPMATURITY log:  cloning setup")
         case_rxboth = self._case
         caseroot = self._case.get_value("CASEROOT")
         clone_path = f"{caseroot}.gddgen"
         self._path_gddgen = clone_path
         if os.path.exists(self._path_gddgen):
             shutil.rmtree(self._path_gddgen)
-        logger.info("SSRLOG  cloning")
+        logger.info("RXCROPMATURITY log:  cloning")
         case_gddgen = self._case.create_clone(clone_path, keepexe=True)
-        logger.info("SSRLOG  done cloning")
+        logger.info("RXCROPMATURITY log:  done cloning")
 
         os.chdir(self._path_gddgen)
         self._set_active_case(case_gddgen)
@@ -113,7 +113,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         self._setup_all()
 
         # Add stuff specific to GDD-Generating run
-        logger.info("SSRLOG  modify user_nl files: generate GDDs")
+        logger.info("RXCROPMATURITY log:  modify user_nl files: generate GDDs")
         self._append_to_user_nl_clm([
             "generate_crop_gdds = .true.",
             "use_mxmat = .false.",
@@ -133,16 +133,16 @@ class RXCROPMATURITY(SystemTestsCommon):
             
             # Make custom version of input file
             if gddgen_use_fsurdat:
-                logger.info("SSRLOG  run make_surface_for_gddgen")
+                logger.info("RXCROPMATURITY log:  run make_surface_for_gddgen")
                 self._run_make_surface_for_gddgen(case_gddgen)
             else:
-                logger.info("SSRLOG  run make_lu_for_gddgen")
+                logger.info("RXCROPMATURITY log:  run make_lu_for_gddgen")
                 self._run_make_lu_for_gddgen(case_gddgen)
         
         #-------------------------------------------------------------------
         # (2) Perform GDD-generating run and generate prescribed GDDs file
         #-------------------------------------------------------------------
-        logger.info("SSRLOG  Start GDD-Generating run")
+        logger.info("RXCROPMATURITY log:  Start GDD-Generating run")
         
         # As per SSP test:
         # "No history files expected, set suffix=None to avoid compare error"
@@ -162,7 +162,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         self._setup_all()
 
         # Add stuff specific to Prescribed Calendars run
-        logger.info("SSRLOG  modify user_nl files: Prescribed Calendars")
+        logger.info("RXCROPMATURITY log:  modify user_nl files: Prescribed Calendars")
         self._append_to_user_nl_clm([
             "generate_crop_gdds = .false.",
             f"stream_fldFileName_cultivar_gdds = '{self._gdds_file}'",
@@ -183,7 +183,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         #-------------------------------------------------------------------
         # (4) Check Prescribed Calendars run
         #-------------------------------------------------------------------
-        logger.info("SSRLOG  output check: Prescribed Calendars")
+        logger.info("RXCROPMATURITY log:  output check: Prescribed Calendars")
         self._run_check_rxboth_run()
 
 
@@ -231,7 +231,7 @@ class RXCROPMATURITY(SystemTestsCommon):
 
 
     def _setup_all(self):
-        logger.info("SSRLOG  _setup_all start")
+        logger.info("RXCROPMATURITY log:  _setup_all start")
 
         # Get some info
         self._ctsm_root = self._case.get_value('COMP_ROOT_DIR_LND')
@@ -239,9 +239,9 @@ class RXCROPMATURITY(SystemTestsCommon):
         self._run_startyear = int(run_startdate.split('-')[0])
         
         # Set sowing dates file (and other crop calendar settings) for all runs
-        logger.info("SSRLOG  modify user_nl files: all tests")
+        logger.info("RXCROPMATURITY log:  modify user_nl files: all tests")
         self._modify_user_nl_allruns()
-        logger.info("SSRLOG  _setup_all done")
+        logger.info("RXCROPMATURITY log:  _setup_all done")
 
          
     def _run_make_lu_for_gddgen(self, case_gddgen):
@@ -268,7 +268,7 @@ class RXCROPMATURITY(SystemTestsCommon):
             self._run_python_script(case_gddgen, command, tool_path)
         
         # Modify namelist
-        logger.info("SSRLOG  modify user_nl files: new flanduse_timeseries")
+        logger.info("RXCROPMATURITY log:  modify user_nl files: new flanduse_timeseries")
         self._append_to_user_nl_clm([
             "flanduse_timeseries = '{}'".format(self._flanduse_timeseries_out),
         ])
@@ -308,7 +308,7 @@ class RXCROPMATURITY(SystemTestsCommon):
             self._run_python_script(case_gddgen, command, tool_path)
         
         # Modify namelist
-        logger.info("SSRLOG  modify user_nl files: new fsurdat")
+        logger.info("RXCROPMATURITY log:  modify user_nl files: new fsurdat")
         self._append_to_user_nl_clm([
             "fsurdat = '{}'".format(self._fsurdat_out),
             "do_transient_crops = .false.",
