@@ -261,7 +261,7 @@ class RXCROPMATURITY(SystemTestsCommon):
                                     'python', 'ctsm', 'crop_calendars',
                                     'make_fsurdat_all_crops_everywhere.py')
             command = f"python3 {tool_path} "\
-                    + f"-i {self._flanduse_timeseries_in} "\
+                    + f"-i {self._fsurdat_in} "\
                     + f"-o {self._fsurdat_out}"
             self._run_python_script(case_gddgen, command, tool_path)
         
