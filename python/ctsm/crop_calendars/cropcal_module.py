@@ -439,11 +439,6 @@ def check_v0_le_v1(this_ds, vars, msg_txt=" ", both_nan_ok=False, throw_error=Fa
 
 # Convert time*mxharvests axes to growingseason axis
 def convert_axis_time2gs(this_ds, verbose=False, myVars=None, incl_orig=False):
-    # For backwards compatibility.
-    if "SDATES_PERHARV" not in this_ds:
-        return convert_axis_time2gs_old(this_ds, myVars=myVars)
-    # Otherwise...
-
     # How many non-NaN patch-seasons do we expect to have once we're done organizing things?
     Npatch = this_ds.dims["patch"]
     # Because some patches will be planted in the last year but not complete, we have to ignore any finalyear-planted seasons that do complete.
