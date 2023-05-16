@@ -8,7 +8,6 @@ import argparse
 def main(file_in, file_out):
     # Import
     
-    file_in = "/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_10x15_hist_78pfts_CMIP6_simyr2000_c190214.nc"
     in_ds = xr.open_dataset(file_in)
     
     out_ds = in_ds.copy()
