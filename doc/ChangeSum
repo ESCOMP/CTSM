@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev125   jpalex 05/17/2023 Added cache for clock step_size in clm_time_manager.F90
     ctsm5.1.dev124     erik 05/09/2023 Initialization memory update, new surface datasets for new grids, add option for running NEON with PRISM data
     ctsm5.1.dev123    sacks 05/01/2023 Updates needed for pFUnit 4 and other externals updates
     ctsm5.1.dev122    sacks 04/23/2023 Rework handling of evaporation constraint in SoilFluxes
