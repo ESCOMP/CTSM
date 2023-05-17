@@ -2065,7 +2065,7 @@ If 1, turn on the MEGAN model for BVOC's (Biogenic Volitile Organic Compounds)
 
 <entry id="sim_year" type="char*4" category="default_settings"
        group="default_settings" valid_values=
-"PtVg,1000,850,1100,1350,1600,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1979,1980,1982,1985,1995,2000,2005,2010,2013,2015,2025,2035,2045,2055,2065,2075,2085,2095,2105">
+"PtVg,1000,850,1100,1350,1600,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1979,1980,1982,1985,1995,2000,2005,2010,2013,2015,2018,2025,2035,2045,2055,2065,2075,2085,2095,2105">
 Year to simulate and to provide datasets for (such as surface datasets, initial conditions, aerosol-deposition, Nitrogen deposition rates etc.)
 A sim_year of 1000 corresponds to data used for testing only, NOT corresponding to any real datasets.
 A sim_year greater than 2015 corresponds to ssp_rcp scenario data
@@ -2479,6 +2479,13 @@ If TRUE, apply transient urban from flanduse_timeseries file.
 <entry id="do_harvest" type="logical" category="physics"
        group="dynamic_subgrid" valid_values="" >
 If TRUE, apply harvest from flanduse_timeseries file.
+(Only valid for transient runs, where there is a flanduse_timeseries file.)
+(Also, only valid for use_cn = true.)
+</entry>
+
+<entry id="do_grossunrep" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+If TRUE, apply gross unrepresented landuse/land-cover change from flanduse_timeseries file.
 (Only valid for transient runs, where there is a flanduse_timeseries file.)
 (Also, only valid for use_cn = true.)
 </entry>

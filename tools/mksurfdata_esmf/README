@@ -56,6 +56,10 @@ is not available on cime ported machines.
 Building the executable (working in tools/mksurfdata_esmf)
 =======================
 
+# Before starting, be sure that you have run
+> ./manage_externals/checkout_externals
+# because without it I have come across strange behavior, such as transient
+# file generation (1850-2015) that aborts in the 1870s for no apparent reason.
 > ./gen_mksurfdata_build.sh      # For machines with a cime build
 # Note: The pio_iotype value gets set and written to a simple .txt file
 # by this build script. The value depends on your machine. If not running
@@ -65,6 +69,10 @@ Building the executable (working in tools/mksurfdata_esmf)
 =======================
 Running for a single submission:
 =======================
+# Work in the ctsm_py environment, which requires the following steps:
+> module unload python; module load conda
+> cd ../..; ./py_env_create
+> conda activate ctsm_py; cd tools/mksurfdata_esmf
 # to generate your target namelist:
 > ./gen_mksurfdata_namelist.py --help
 # for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
@@ -97,9 +105,9 @@ Running for the generation of multiple datasets
 NOTES
 ================
 
-------------------------------------------------------------
-slevis HAS RUN THESE CASES and HAS LISTED ISSUES ENCOUNTERED
-------------------------------------------------------------
+------------------------------------
+slevis HAS LISTED ISSUES ENCOUNTERED
+------------------------------------
 REMEMBER TO compare against existing fsurdat files in
 /glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/release-clm5.0.18
 0) New 30-sec raw data for soil texture fails. Try requesting more mem.
@@ -109,10 +117,14 @@ REMEMBER TO compare against existing fsurdat files in
 3) Slope, stddev have chged in the .log bc the old diag. used frac_o
 4) 1x1_brazil min number-of-nodes tested: 4; 10x15 min tested: 3
 
-------------------------------------------------------
-NOT ALL FILES HAVE BEEN TRANSLATED to cdf5 : check last millenium
-------------------------------------------------------
+--------------------------------------
+ALL raw dataset .nc FILES MUST BE cdf5
+--------------------------------------
 > nccopy -k cdf5 oldfile newfile
+-------------------------------------------------------------
+LAI raw dataset .nc FILE MUST HAVE "unlimited" time dimension
+-------------------------------------------------------------
+ncks --mk_rec_dmn time file_with_time_equals_12.nc -o file_with_time_unlimited.nc
 
 --------------------------------------------------------
 Override options removed that need to be placed in fsurdat_modifier
