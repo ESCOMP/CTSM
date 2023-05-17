@@ -256,7 +256,7 @@ contains
           ! lun%gricell(l) is within [begg, endg]
           ig = lun%gridcell(l) - bounds%begg + 1
 
-          ! Since we are within an urban land unit, we know that 
+          ! Since we are within an urban land unit, we know that
           ! lun%itype is within [pisturb_MIN, isturb_MAX]
           this%t_building_max(l) = dataptr2d(ig, lun%itype(l))
        else
