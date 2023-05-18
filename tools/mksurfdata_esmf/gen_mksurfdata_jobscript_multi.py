@@ -164,8 +164,8 @@ def main ():
         "standard_res_no_crop" : ["0.9x1.25","1.9x2.5","10x15"],
         "standard_res"         : ['0.9x1.25','1.9x2.5','10x15','4x5','C96',
             'ne30np4','ne30np4.pg2','ne30np4.pg3','ne30np4.pg4','ne120np4.pg3',
-            'ne0np4.ARCTICGRIS.ne30x8','ne0np4.ARCTIC.ne30x4', 'ne0np4CONUS.ne30x8'],
-            'ne3np4.pg3','ne5np4.pg3','ne16np4.pg3','mpasa480','mpasa120'
+            'ne0np4.ARCTICGRIS.ne30x8','ne0np4.ARCTIC.ne30x4', 'ne0np4CONUS.ne30x8',
+            'ne3np4.pg3','ne5np4.pg3','ne16np4.pg3','mpasa480','mpasa120'],
         "future_res"           : ["0.9x1.25","1.9x2.5","10x15"],
         "trans_res"            : ['0.9x1.25','1.9x2.5','10x15','ne30np4',
             'ne0np4.ARCTICGRIS.ne30x8','ne0np4.ARCTIC.ne30x4','ne0np4CONUS.ne30x8','ne120np4'],
@@ -207,6 +207,21 @@ def main ():
     # --------------------------
 
     # --------------------------
+    # Make sure files exist or exit
+    # --------------------------
+    if not os.path.exists("./tool_bld"):
+        print( "tool_bld directory does NOT exist -- build mksurdata_esmf before running this script")
+        sys.exit(1)
+
+    env_specific_script = "./tool_bld/.env_mach_specific.sh"
+    if not os.path.exists(env_specific_script):
+        print( env_specific_script+" does NOT exist")
+        sys.exit(1)
+    mksurfdata = "./tool_bld/mksurfdata"
+    if not os.path.exists(mksurfdata):
+        print( mksurfdata+" does NOT exist")
+        sys.exit(1)
+    # --------------------------
     # Write run script
     # --------------------------
     with open(jobscript_file, "w",encoding='utf-8') as runfile:
@@ -225,7 +240,7 @@ def main ():
         # Run env_mach_specific.sh to control the machine dependent
         # environment including the paths to compilers and libraries
         # external to cime such as netcdf
-        runfile.write('. ./tool_bld/.env_mach_specific.sh \n')
+        runfile.write('. '+env_specific_script + '\n')
         for target in target_list:
             res_set = dataset_dict[target][1]
             for res in resolution_dict[res_set]:
@@ -242,7 +257,7 @@ def main ():
                 output = run_cmd.stdout.decode('utf-8').strip()
                 namelist = output.split(' ')[-1]
                 print (f"generated namelist {namelist}")
-                output = f"mpiexec_mpt -p \"%g:\" -np {n_p} omplace -tm open64 ./tool_bld/mksurfdata < {namelist}"
+                output = f"mpiexec_mpt -p \"%g:\" -np {n_p} omplace -tm open64 "+mksurfdata+" < {namelist}"
                 runfile.write(f"{output} \n")
 
     print (f"Successfully created jobscript {jobscript_file}")
