@@ -10,20 +10,6 @@
 #
 # NOTE: The default behavior is to parallelize data set creation using
 # the batch system by submitting jobs to the batch queue (on cheyenne).
-# On yellowstone we submit to an interactive queue in the
-# background. Standard out and standard error are redirected to a text
-# file. To change this behavior, you can comment out the BATCHJOBS and
-# BACKGROUND variables and replace them with empty variables.
-#
-# WARNING: Do not put more than one mksurfdata call per rule. output
-# redirection is based on the rule name, and multiple rules will over
-# write the previous output or incomprehensively merge output from
-# simultaneously running jobs.
-#
-# Note that we typically use -no_surfdata in rules for transient files, having
-# separate rules to make the year-1850 and year-2000 surface datasets. This
-# results in extra processes, but ensures that the surface datasets have the
-# correct name (rather than having 'hist' or 'rcpXXX' in their file name).
 #
 
 # Set up special characters
@@ -114,10 +100,14 @@ all-subset : \
 	urban-present urban-alpha
 
 DEBUG:
-	@echo "HOST       := $(HOST)"
-	@echo "PROJECT    := $(PROJECT)"
-	@echo "MKSURFDATA := $(MKSURFDATA)"
-	@echo "BATCHJOBS  := $(BATCHJOBS)"
+	@echo "HOST             := $(HOST)"
+	@echo "PROJECT          := $(PROJECT)"
+	@echo "MKSURFDATA       := $(MKSURFDATA)"
+	@echo "SUBSETDATA_POINT := $(SUBSETDATA_POINT)"
+	@echo "MODIFYSURF       := $(MODIFYSURF)"
+	@echo "BATCHJOBS        := $(BATCHJOBS)"
+	@echo "CDATE            := $(CDATE)"
+	@echo "RM               := $(RM)"
 
 #
 # standard
@@ -285,10 +275,9 @@ urban-alpha : FORCE
 	$(RM) surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000.nc
 
 #
-# landuse timeseries
+# landuse timeseries with subset data
 #
-landuse-timeseries : landuse-timeseries-smallville
-
+#landuse-timeseries : landuse-timeseries-smallville
 # NOTE: TODO: This needs to be chagned to use subset_data when transient configurations are resolved (see Issue #1673
 #landuse-timeseries-smallville : FORCE
 #	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-1855 -r 1x1_smallvilleIA \

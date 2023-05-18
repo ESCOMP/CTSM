@@ -165,6 +165,7 @@ def main ():
         "standard_res"         : ['0.9x1.25','1.9x2.5','10x15','4x5','C96',
             'ne30np4','ne30np4.pg2','ne30np4.pg3','ne30np4.pg4','ne120np4.pg3',
             'ne0np4.ARCTICGRIS.ne30x8','ne0np4.ARCTIC.ne30x4', 'ne0np4CONUS.ne30x8'],
+            'ne3np4.pg3','ne5np4.pg3','ne16np4.pg3','mpasa480','mpasa120'
         "future_res"           : ["0.9x1.25","1.9x2.5","10x15"],
         "trans_res"            : ['0.9x1.25','1.9x2.5','10x15','ne30np4',
             'ne0np4.ARCTICGRIS.ne30x8','ne0np4.ARCTIC.ne30x4','ne0np4CONUS.ne30x8','ne120np4'],
