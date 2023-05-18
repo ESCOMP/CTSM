@@ -97,7 +97,7 @@ ctsm.input_data_list.previous
 /tools/mksurfdata_esmf/mksurfdata_jobscript_single
 /tools/mksurfdata_esmf/pio_iotype.txt
 /tools/mksurfdata_esmf/*.sh
-/tools/mksurfdata_esmf/makesurfdata.o*
+/tools/mksurfdata_esmf/mksrf_*.o*
 /tools/mksurfdata_esmf/tool_bld
 
 # mksurfdata unit tests
