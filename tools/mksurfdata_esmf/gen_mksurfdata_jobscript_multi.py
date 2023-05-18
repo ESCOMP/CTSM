@@ -210,7 +210,7 @@ def main ():
     # Make sure files exist or exit
     # --------------------------
     if not os.path.exists("./tool_bld"):
-        print( "tool_bld directory does NOT exist -- build mksurdata_esmf before running this script")
+        print( "tool_bld directory does NOT exist -- build mksurdata_esmf before running this script -- using ./gen_mksurfdata_build.sh")
         sys.exit(1)
 
     env_specific_script = "./tool_bld/.env_mach_specific.sh"
@@ -228,7 +228,7 @@ def main ():
 
         runfile.write('#!/bin/bash \n')
         runfile.write(f"#PBS -A {account} \n")
-        runfile.write('#PBS -N mksurfdata \n')
+        runfile.write(f'#PBS -N mksrf_{scenario} \n')
         runfile.write('#PBS -j oe \n')
         runfile.write('#PBS -q regular \n')
         runfile.write('#PBS -l walltime=12:00:00 \n')
@@ -257,7 +257,7 @@ def main ():
                 output = run_cmd.stdout.decode('utf-8').strip()
                 namelist = output.split(' ')[-1]
                 print (f"generated namelist {namelist}")
-                output = f"mpiexec_mpt -p \"%g:\" -np {n_p} omplace -tm open64 "+mksurfdata+" < {namelist}"
+                output = f"mpiexec_mpt -p \"%g:\" -np {n_p} omplace -tm open64 {mksurfdata} < {namelist}"
                 runfile.write(f"{output} \n")
 
     print (f"Successfully created jobscript {jobscript_file}")
