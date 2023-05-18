@@ -79,6 +79,14 @@ def get_parser():
         default="12",
     )
     parser.add_argument(
+        "--walltime",
+        help="""Wallclock time for job submission default is 12:00:00)""",
+        action="store",
+        dest="walltime",
+        required=False,
+        default="12:00:00",
+    )
+    parser.add_argument(
         "--scenario",
         help="""scenario""",
         choices=valid_scenarios,
@@ -110,6 +118,7 @@ def main ():
     number_of_nodes = args.number_of_nodes
     tasks_per_node = args.tasks_per_node
     account = args.account
+    walltime = args.walltime
 
     # --------------------------
     # Determine target list
@@ -231,7 +240,7 @@ def main ():
         runfile.write(f'#PBS -N mksrf_{scenario} \n')
         runfile.write('#PBS -j oe \n')
         runfile.write('#PBS -q regular \n')
-        runfile.write('#PBS -l walltime=12:00:00 \n')
+        runfile.write(f'#PBS -l walltime={walltime} \n')
         runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
         runfile.write("\n")
 
