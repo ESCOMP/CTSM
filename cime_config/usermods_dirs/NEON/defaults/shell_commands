@@ -1,5 +1,6 @@
 #!/bin/bash
 ./xmlchange CLM_USRDAT_NAME=NEON
+# CLM_USRDAT_NAME can be set to either NEON or NEON.PRISM
 ./xmlchange CCSM_CO2_PPMV=408.83
 # Set data forcing data to future scenario so will have data from 2018 to present-day
 ./xmlchange DATM_PRESAERO=SSP3-7.0
