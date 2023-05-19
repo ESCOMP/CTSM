@@ -1413,8 +1413,8 @@
   </grid>
   <grid name="l%1.9x2.5|l%0.9x1.25">
     <mach name="betzy">
-      <pes pesize="M" compset="any">
-	<comment>Need at least 4 nodes to default to normal queue</comment>
+      <pes pesize="L" compset="any">
+	<comment>none</comment>
 	<ntasks>
 	  <ntasks_atm>-1</ntasks_atm> 
 	  <ntasks_lnd>-7</ntasks_lnd>           
