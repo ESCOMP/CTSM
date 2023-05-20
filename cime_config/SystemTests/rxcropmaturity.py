@@ -199,10 +199,10 @@ class RXCROPMATURITY(SystemTestsCommon):
         elif lnd_grid == "0.9x1.25":
             self._sdatefile = os.path.join(
                 blessed_crop_dates_dir,
-                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230510_133957.fill1.nc")
+                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230520_134417.fill1.nc")
             self._hdatefile = os.path.join(
                 blessed_crop_dates_dir,
-                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230510_133958.fill1.nc")
+                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230520_134418.fill1.nc")
         else:
             error_message = "ERROR: RXCROPMATURITY currently only supports 0.9x1.25, 1.9x2.5, and 10x15 resolutions"
             logger.error(error_message)
