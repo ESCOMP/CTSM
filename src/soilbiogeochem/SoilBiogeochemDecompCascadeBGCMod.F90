@@ -511,7 +511,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
-       soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
+       soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst, &
+       idop)
     !
     ! !DESCRIPTION:
     !  calculate rate constants and decomposition pathways for the CENTURY decomposition cascade model
@@ -521,6 +522,8 @@ contains
     use clm_time_manager , only : get_average_days_per_year, get_step_size
     use shr_const_mod    , only : SHR_CONST_PI
     use clm_varcon       , only : secspday
+    use TillageMod       , only : get_do_tillage
+    use TillageMod       , only : get_apply_tillage_multipliers
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds          
@@ -530,6 +533,7 @@ contains
     type(temperature_type)               , intent(in)    :: temperature_inst
     type(ch4_type)                       , intent(in)    :: ch4_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
+    integer                              , intent(in)    :: idop(:) ! patch day of planting
     !
     ! !LOCAL VARIABLES:
     real(r8), parameter :: eps = 1.e-6_r8
@@ -895,6 +899,12 @@ contains
                decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_cwd(c)
             end if
+
+            ! Tillage
+            if (get_do_tillage()) then
+               get_apply_tillage_multipliers(idop, num_soilp, filter_soilp, decomp_k)
+            end if
+
             ! Above into soil matrix
             if(use_soil_matrixcn)then
                ! same for cwd but only if fates is not enabled; fates handles CWD
