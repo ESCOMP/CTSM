@@ -116,31 +116,17 @@ class RXCROPMATURITY(SystemTestsCommon):
             "use_mxmat = .false.",
         ])
         
-        """
-        If needed, generate a surface dataset file with no crops missing years
-        """
-        
-        # Is flanduse_timeseries defined? If so, where is it?
-        case_gddgen.create_namelists(component='lnd')
-        self._lnd_in_path = os.path.join(self._path_gddgen, 'CaseDocs', 'lnd_in')
-        self._flanduse_timeseries_in = None
-        with open (self._lnd_in_path,'r') as lnd_in:
-            for line in lnd_in:
-                flanduse_timeseries_in = re.match(r" *flanduse_timeseries *= *'(.*)'", line)
-                if flanduse_timeseries_in:
-                    self._flanduse_timeseries_in = flanduse_timeseries_in.group(1)
-                    break
-        
-        # If flanduse_timeseries is defined, we need to make our own version for
-        # this test (if we haven't already).
+        # If flanduse_timeseries is defined, we need to make a static version for this test. This
+        # should have every crop in most of the world.
+        self._get_flanduse_timeseries_in(case_gddgen)
         if self._flanduse_timeseries_in is not None:
             
             # Download files from the server, if needed
             case_gddgen.check_all_input_data()
             
-            # Make custom version of flanduse_timeseries
-            logger.info("SSRLOG  run make_lu_for_gddgen")
-            self._run_make_lu_for_gddgen(case_gddgen)
+            # Make custom version of surface file
+            logger.info("SSRLOG  run make_surface_for_gddgen")
+            self._run_make_surface_for_gddgen(case_gddgen)
         
         #-------------------------------------------------------------------
         # (2) Perform GDD-generating run and generate prescribed GDDs file
@@ -213,10 +199,10 @@ class RXCROPMATURITY(SystemTestsCommon):
         elif lnd_grid == "0.9x1.25":
             self._sdatefile = os.path.join(
                 blessed_crop_dates_dir,
-                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230510_133957.fill1.nc")
+                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230520_134417.fill1.nc")
             self._hdatefile = os.path.join(
                 blessed_crop_dates_dir,
-                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230510_133958.fill1.nc")
+                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230520_134418.fill1.nc")
         else:
             error_message = "ERROR: RXCROPMATURITY currently only supports 0.9x1.25, 1.9x2.5, and 10x15 resolutions"
             logger.error(error_message)
@@ -246,37 +232,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         self._modify_user_nl_allruns()
         logger.info("SSRLOG  _setup_all done")
 
-         
-    def _run_make_lu_for_gddgen(self, case_gddgen):
-        
-        # Where we will save the flanduse_timeseries version for this test
-        self._flanduse_timeseries_out = os.path.join(self._path_gddgen, 'flanduse_timeseries.nc')
-        
-        # Make flanduse_timeseries for this test, if not already done
-        if not os.path.exists(self._flanduse_timeseries_out):
-            
-            first_fake_year = self._run_startyear
-            last_fake_year = first_fake_year + self._run_Nyears
-            
-            tool_path = os.path.join(self._ctsm_root,
-                                    'python', 'ctsm', 'crop_calendars',
-                                    'make_lu_for_gddgen.py')
-            command = " ".join([
-                    f"python3 {tool_path}",
-                    f"--flanduse-timeseries {self._flanduse_timeseries_in}",
-                    f"-y1 {first_fake_year}",
-                    f"-yN {last_fake_year}",
-                    f"--outfile {self._flanduse_timeseries_out}",
-                    ])
-            self._run_python_script(case_gddgen, command, tool_path)
-        
-        # Modify namelist
-        logger.info("SSRLOG  modify user_nl files: new flanduse_timeseries")
-        self._append_to_user_nl_clm([
-            "flanduse_timeseries = '{}'".format(self._flanduse_timeseries_out),
-        ])
-
-
+    
     # Unused because I couldn't get the GDD-Generating run to work with the fsurdat file generated
     # by make_surface_for_gddgen.py. However, I think it'd be cleaner to just do the GDD-Generating
     # run with a surface file (and no flanduse_timeseries file) since that run relies on land use
@@ -303,11 +259,10 @@ class RXCROPMATURITY(SystemTestsCommon):
         if not os.path.exists(self._fsurdat_out):
             tool_path = os.path.join(self._ctsm_root,
                                     'python', 'ctsm', 'crop_calendars',
-                                    'make_surface_for_gddgen.py')
+                                    'make_fsurdat_all_crops_everywhere.py')
             command = f"python3 {tool_path} "\
-                    + f"--flanduse-timeseries {self._flanduse_timeseries_in} "\
-                    + f"--fsurdat {self._fsurdat_in} "\
-                    + f"--outfile {self._fsurdat_out}"
+                    + f"-i {self._fsurdat_in} "\
+                    + f"-o {self._fsurdat_out}"
             self._run_python_script(case_gddgen, command, tool_path)
         
         # Modify namelist
@@ -393,7 +348,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         generated_gdd_files = glob.glob(os.path.join(self._generate_gdds_dir, "gdds_*.nc"))
         generated_gdd_files = [x for x in generated_gdd_files if "fill0" not in x]
         if len(generated_gdd_files) != 1:
-            error_messsage = f"ERROR: Expected one matching prescribed maturity requirements file; found {len(generated_gdd_files)}: {generated_gdd_files}"
+            error_message = f"ERROR: Expected one matching prescribed maturity requirements file; found {len(generated_gdd_files)}: {generated_gdd_files}"
             logger.error(error_message)
             raise RuntimeError(error_message)
         self._gdds_file = generated_gdd_files[0]
@@ -458,3 +413,15 @@ class RXCROPMATURITY(SystemTestsCommon):
         except:
             print(f"ERROR trying to run {tool_name}.")
             raise
+
+    # Is flanduse_timeseries defined? If so, where is it?
+    def _get_flanduse_timeseries_in(self, case):
+        case.create_namelists(component='lnd')
+        self._lnd_in_path = os.path.join(self._path_gddgen, 'CaseDocs', 'lnd_in')
+        self._flanduse_timeseries_in = None
+        with open (self._lnd_in_path,'r') as lnd_in:
+            for line in lnd_in:
+                flanduse_timeseries_in = re.match(r" *flanduse_timeseries *= *'(.*)'", line)
+                if flanduse_timeseries_in:
+                    self._flanduse_timeseries_in = flanduse_timeseries_in.group(1)
+                    break
