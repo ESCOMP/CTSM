@@ -233,10 +233,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         logger.info("RXCROPMATURITY log:  _setup_all done")
 
     
-    # Unused because I couldn't get the GDD-Generating run to work with the fsurdat file generated
-    # by make_surface_for_gddgen.py. However, I think it'd be cleaner to just do the GDD-Generating
-    # run with a surface file (and no flanduse_timeseries file) since that run relies on land use
-    # staying constant. So it'd be nice to get this working eventually.
+    # Make a surface dataset that has every crop in every gridcell
     def _run_make_surface_for_gddgen(self, case_gddgen):
         
         # fsurdat should be defined. Where is it?
