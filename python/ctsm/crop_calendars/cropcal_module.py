@@ -6,12 +6,16 @@ import xarray as xr
 from scipy import stats, signal
 import warnings
 import cftime
-import pandas as pd
+import sys
 import os
 import glob
 
 try:
     import cartopy.crs as ccrs
+except:
+    pass
+try:
+    import pandas as pd
 except:
     pass
 
@@ -67,6 +71,98 @@ def check_and_trim_years(y1, yN, ds_in):
         )
 
     return ds_in
+
+
+def open_lu_ds(filename, y1, yN, existing_ds, ungrid=True):
+    # Open and trim to years of interest
+    dsg = xr.open_dataset(filename).sel(time=slice(y1, yN))
+
+    # Assign actual lon/lat coordinates
+    dsg = dsg.assign_coords(
+        lon=("lsmlon", existing_ds.lon.values), lat=("lsmlat", existing_ds.lat.values)
+    )
+    dsg = dsg.swap_dims({"lsmlon": "lon", "lsmlat": "lat"})
+
+    if "AREA" in dsg:
+        dsg["AREA_CFT"] = dsg.AREA * 1e6 * dsg.LANDFRAC_PFT * dsg.PCT_CROP / 100 * dsg.PCT_CFT / 100
+        dsg["AREA_CFT"].attrs = {"units": "m2"}
+        dsg["AREA_CFT"].load()
+    else:
+        print("Warning: AREA missing from Dataset, so AREA_CFT will not be created")
+
+    if not ungrid:
+        return dsg
+
+    # Un-grid
+    query_ilons = [int(x) - 1 for x in existing_ds["patches1d_ixy"].values]
+    query_ilats = [int(x) - 1 for x in existing_ds["patches1d_jxy"].values]
+    query_ivts = [list(dsg.cft.values).index(x) for x in existing_ds["patches1d_itype_veg"].values]
+
+    ds = xr.Dataset(attrs=dsg.attrs)
+    for v in ["AREA", "LANDFRAC_PFT", "PCT_CFT", "PCT_CROP", "AREA_CFT"]:
+        if v not in dsg:
+            continue
+        if "time" in dsg[v].dims:
+            new_coords = existing_ds["GRAINC_TO_FOOD_ANN"].coords
+        else:
+            new_coords = existing_ds["patches1d_lon"].coords
+        if "cft" in dsg[v].dims:
+            ds[v] = (
+                dsg[v]
+                .isel(
+                    lon=xr.DataArray(query_ilons, dims="patch"),
+                    lat=xr.DataArray(query_ilats, dims="patch"),
+                    cft=xr.DataArray(query_ivts, dims="patch"),
+                    drop=True,
+                )
+                .assign_coords(new_coords)
+            )
+        else:
+            ds[v] = (
+                dsg[v]
+                .isel(
+                    lon=xr.DataArray(query_ilons, dims="patch"),
+                    lat=xr.DataArray(query_ilats, dims="patch"),
+                    drop=True,
+                )
+                .assign_coords(new_coords)
+            )
+    for v in existing_ds:
+        if "patches1d_" in v or "grid1d_" in v:
+            ds[v] = existing_ds[v]
+    ds["lon"] = dsg["lon"]
+    ds["lat"] = dsg["lat"]
+
+    # Which crops are irrigated?
+    is_irrigated = np.full_like(ds["patches1d_itype_veg"], False)
+    for vegtype_str in np.unique(ds["patches1d_itype_veg_str"].values):
+        if "irrigated" not in vegtype_str:
+            continue
+        vegtype_int = utils.ivt_str2int(vegtype_str)
+        is_this_vegtype = np.where(ds["patches1d_itype_veg"].values == vegtype_int)[0]
+        is_irrigated[is_this_vegtype] = True
+    ["irrigated" in x for x in ds["patches1d_itype_veg_str"].values]
+    ds["IRRIGATED"] = xr.DataArray(
+        data=is_irrigated,
+        coords=ds["patches1d_itype_veg_str"].coords,
+        attrs={"long_name": "Is patch irrigated?"},
+    )
+
+    # How much area is irrigated?
+    ds["IRRIGATED_AREA_CFT"] = ds["IRRIGATED"] * ds["AREA_CFT"]
+    ds["IRRIGATED_AREA_CFT"].attrs = {
+        "long name": "CFT area (irrigated types only)",
+        "units": "m^2",
+    }
+    ds["IRRIGATED_AREA_GRID"] = (
+        ds["IRRIGATED_AREA_CFT"]
+        .groupby(ds["patches1d_gi"])
+        .sum()
+        .rename({"patches1d_gi": "gridcell"})
+    )
+    ds["IRRIGATED_AREA_GRID"].attrs = {"long name": "Irrigated area in gridcell", "units": "m^2"}
+
+    return ds
 
 
 def check_constant_vars(
@@ -439,11 +535,6 @@ def check_v0_le_v1(this_ds, vars, msg_txt=" ", both_nan_ok=False, throw_error=Fa
 
 # Convert time*mxharvests axes to growingseason axis
 def convert_axis_time2gs(this_ds, verbose=False, myVars=None, incl_orig=False):
-    # For backwards compatibility.
-    if "SDATES_PERHARV" not in this_ds:
-        return convert_axis_time2gs_old(this_ds, myVars=myVars)
-    # Otherwise...
-
     # How many non-NaN patch-seasons do we expect to have once we're done organizing things?
     Npatch = this_ds.dims["patch"]
     # Because some patches will be planted in the last year but not complete, we have to ignore any finalyear-planted seasons that do complete.
@@ -605,14 +696,12 @@ def convert_axis_time2gs(this_ds, verbose=False, myVars=None, incl_orig=False):
         print(
             f'After "Ignore any harvests that were planted in the final year, because other cells will have incomplete growing seasons for the final year": discrepancy of {discrepancy} patch-seasons'
         )
-        try:
-            import pandas as pd
-
+        if "pandas" in sys.modules:
             bc = np.bincount(np.sum(is_valid, axis=1))
             bc = bc[bc > 0]
             df = pd.DataFrame({"Ngs": unique_Nseasons, "Count": bc})
             print(df)
-        except:
+        else:
             print(f"unique N seasons = {unique_Nseasons}")
         print(" ")
 
@@ -709,6 +798,29 @@ def convert_axis_time2gs(this_ds, verbose=False, myVars=None, incl_orig=False):
 # Was 50 before cropcal runs 2023-01-28
 def default_gdd_min():
     return 1.0
+
+
+# Get information about extreme gridcells (for debugging)
+def get_extreme_info(diff_array, rx_array, mxn, dims, gs, patches1d_lon, patches1d_lat):
+    if mxn == np.min:
+        diff_array = np.ma.masked_array(diff_array, mask=(np.abs(diff_array) == 0))
+    themxn = mxn(diff_array)
+
+    # Find the first patch-gs that has the mxn value
+    matching_indices = np.where(diff_array == themxn)
+    first_indices = [x[0] for x in matching_indices]
+
+    # Get the lon, lat, and growing season of that patch-gs
+    p = first_indices[dims.index("patch")]
+    thisLon = patches1d_lon.values[p]
+    thisLat = patches1d_lat.values[p]
+    s = first_indices[dims.index("gs")]
+    thisGS = gs.values[s]
+
+    # Get the prescribed value for this patch-gs
+    thisRx = rx_array[p][0]
+
+    return round(themxn, 3), round(thisLon, 3), round(thisLat, 3), thisGS, round(thisRx)
 
 
 # Get growing season lengths from a DataArray of hdate-sdate
@@ -810,7 +922,6 @@ def import_output(
     sdates_rx_ds=None,
     gdds_rx_ds=None,
     verbose=False,
-    incl_irrig=True,
 ):
     # Import
     this_ds = utils.import_ds(filename, myVars=myVars, myVegtypes=myVegtypes)
@@ -968,153 +1079,163 @@ def import_output(
         raise RuntimeError("How to get NHARVEST_DISCREP for NHARVESTS > 2?")
     this_ds_gs["NHARVEST_DISCREP"] = (this_ds_gs["NHARVESTS"] == 2).astype(int)
 
-    # Import irrigation data, if doing so
-    if incl_irrig:
-        # Monthly use and demand
-        pattern = os.path.join(os.path.dirname(filename), "*.h2.*.nc")
-        irrig_file_patches = glob.glob(pattern)
-        if irrig_file_patches:
-            if len(irrig_file_patches) > 1:
-                raise RuntimeError(f"Expected at most 1 *.h2.*.nc; found {len(irrig_file_patches)}")
-            irrig_file_patches = irrig_file_patches[0]
-            irrig_ds_patches = utils.import_ds(
-                irrig_file_patches,
-                myVegtypes=myVegtypes,
-                chunks={"time": 12},
-                myVars=["QIRRIG_DEMAND", "QIRRIG_DRIP", "QIRRIG_SPRINKLER"],
-            )
-            irrig_ds_patches = time_units_and_trim_mth(irrig_ds_patches, y1, yN)
 
-            # Combine drip + sprinkler irrigation
-            irrig_ds_patches["QIRRIG_APPLIED"] = (
-                irrig_ds_patches["QIRRIG_DRIP"] + irrig_ds_patches["QIRRIG_SPRINKLER"]
-            )
-            irrig_ds_patches["QIRRIG_APPLIED"].attrs = irrig_ds_patches["QIRRIG_DEMAND"].attrs
-            irrig_ds_patches["QIRRIG_APPLIED"].attrs[
-                "long_name"
-            ] = "water added via drip or sprinkler irrigation"
+# Print information about a patch (for debugging)
+def print_onepatch_wrongNgs(
+    p,
+    this_ds_orig,
+    sdates_ymp,
+    hdates_ymp,
+    sdates_pym,
+    hdates_pym,
+    sdates_pym2,
+    hdates_pym2,
+    sdates_pym3,
+    hdates_pym3,
+    sdates_pg,
+    hdates_pg,
+    sdates_pg2,
+    hdates_pg2,
+):
+    try:
+        import pandas as pd
+    except:
+        print("Couldn't import pandas, so not displaying example bad patch ORIGINAL.")
 
-            # Calculate unfulfilled demand
-            irrig_ds_patches["QIRRIG_UNFULFILLED"] = (
-                irrig_ds_patches["QIRRIG_DEMAND"] - irrig_ds_patches["QIRRIG_APPLIED"]
-            )
-            irrig_ds_patches["QIRRIG_UNFULFILLED"].attrs = irrig_ds_patches["QIRRIG_DEMAND"].attrs
-            irrig_ds_patches["QIRRIG_UNFULFILLED"].attrs[
-                "long_name"
-            ] = "irrigation demand unable to be filled"
+    print(
+        f"patch {p}: {this_ds_orig.patches1d_itype_veg_str.values[p]}, lon"
+        f" {this_ds_orig.patches1d_lon.values[p]} lat {this_ds_orig.patches1d_lat.values[p]}"
+    )
 
-            vars_to_save = ["QIRRIG_DEMAND", "QIRRIG_APPLIED", "QIRRIG_UNFULFILLED"]
+    print("Original SDATES (per sowing):")
+    print(this_ds_orig.SDATES.values[:, :, p])
 
-            # Append _PATCH to distinguish from eventual gridcell sums (_GRID)
-            rename_dict = {}
-            for v in vars_to_save:
-                rename_dict[v] = v + "_PATCH"
-            irrig_ds_patches = irrig_ds_patches.rename(rename_dict)
-            vars_to_save = [v + "_PATCH" for v in vars_to_save]
+    print("Original HDATES (per harvest):")
+    print(this_ds_orig.HDATES.values[:, :, p])
 
-            # Finish processing
-            this_ds_gs = process_monthly_irrig(this_ds_gs, irrig_ds_patches, vars_to_save)
+    if "pandas" in sys.modules:
 
-        # Monthly withdrawals and availability
-        pattern = os.path.join(os.path.dirname(filename), "*.h3.*.nc")
-        irrig_file_grid = glob.glob(pattern)
-        if irrig_file_grid:
-            if len(irrig_file_grid) > 1:
-                raise RuntimeError(f"Expected at most 1 *.h3.*.nc; found {len(irrig_file_grid)}")
-            irrig_file_grid = irrig_file_grid[0]
-            irrig_ds_grid = utils.import_ds(
-                irrig_file_grid,
-                chunks={"time": 12},
-                myVars=[
-                    "area",
-                    "grid1d_ixy",
-                    "grid1d_jxy",
-                    "grid1d_lon",
-                    "grid1d_lat",
-                    "QIRRIG_FROM_GW_CONFINED",
-                    "QIRRIG_FROM_GW_UNCONFINED",
-                    "QIRRIG_FROM_SURFACE",
-                    "VOLRMCH",
-                ],
-            )
-            irrig_ds_grid = time_units_and_trim_mth(irrig_ds_grid, y1, yN)
+        def print_pandas_ymp(msg, cols, arrs_tuple):
+            print(f"{msg} ({np.sum(~np.isnan(arrs_tuple[0]))})")
+            mxharvests = arrs_tuple[0].shape[1]
+            arrs_list2 = []
+            cols2 = []
+            for h in np.arange(mxharvests):
+                for i, a in enumerate(arrs_tuple):
+                    arrs_list2.append(a[:, h])
+                    cols2.append(cols[i] + str(h))
+            arrs_tuple2 = tuple(arrs_list2)
+            df = pd.DataFrame(np.stack(arrs_tuple2, axis=1))
+            df.columns = cols2
+            print(df)
 
-            # Ensure that no groundwater was used
-            if np.any(
-                irrig_ds_grid["QIRRIG_FROM_GW_CONFINED"]
-                + irrig_ds_grid["QIRRIG_FROM_GW_UNCONFINED"]
-                > 0
-            ):
-                raise RuntimeError("Unexpectedly found some irrigation using groundwater")
+        print_pandas_ymp(
+            "Original",
+            ["sdate", "hdate"],
+            (this_ds_orig.SDATES_PERHARV.values[:, :, p], this_ds_orig.HDATES.values[:, :, p]),
+        )
 
-            # Rename this variable so that it has a QIRRIG prefix
-            irrig_ds_grid = irrig_ds_grid.rename({"VOLRMCH": "IRRIG_SUPPLY"})
-            irrig_ds_grid["IRRIG_SUPPLY"].attrs["long_name"] = (
-                irrig_ds_grid["IRRIG_SUPPLY"].attrs["long_name"] + " (aka VOLRMCH)"
-            )
+        print_pandas_ymp("Masked", ["sdate", "hdate"], (sdates_ymp[:, :, p], hdates_ymp[:, :, p]))
 
-            vars_to_save = ["QIRRIG_FROM_SURFACE", "IRRIG_SUPPLY"]
+        print_pandas_ymp(
+            'After "Ignore harvests from before this output began"',
+            ["sdate", "hdate"],
+            (
+                np.transpose(sdates_pym, (1, 2, 0))[:, :, p],
+                np.transpose(hdates_pym, (1, 2, 0))[:, :, p],
+            ),
+        )
 
-            # Append _GRID to distinguish from patch-level irrigation data
-            rename_dict = {}
-            for v in vars_to_save:
-                rename_dict[v] = v + "_GRID"
-            irrig_ds_grid = irrig_ds_grid.rename(rename_dict)
-            vars_to_save = [v + "_GRID" for v in vars_to_save]
+        print_pandas_ymp(
+            'After "In years with no sowing, pretend the first no-harvest is meaningful"',
+            ["sdate", "hdate"],
+            (
+                np.transpose(sdates_pym2, (1, 2, 0))[:, :, p],
+                np.transpose(hdates_pym2, (1, 2, 0))[:, :, p],
+            ),
+        )
 
-            # Finish processing
-            this_ds_gs = process_monthly_irrig(this_ds_gs, irrig_ds_grid, vars_to_save)
+        print_pandas_ymp(
+            (
+                'After "In years with sowing that are followed by inactive years, check whether the'
+                " last sowing was harvested before the patch was deactivated. If not, pretend the"
+                ' LAST no-harvest is meaningful."'
+            ),
+            ["sdate", "hdate"],
+            (
+                np.transpose(sdates_pym3, (1, 2, 0))[:, :, p],
+                np.transpose(hdates_pym3, (1, 2, 0))[:, :, p],
+            ),
+        )
 
-            # Calculate irrigation as fraction of main river channel volume
-            # (Do it here instead of process_monthly_irrig() because monthly doesn't add to annual.)
-            for t in ["MTH", "ANN"]:
-                this_ds_gs[f"QIRRIG_FROM_SURFACE_FRAC_RIVER_GRID_{t}"] = (
-                    this_ds_gs[f"QIRRIG_FROM_SURFACE_GRID_{t}"]
-                    / this_ds_gs[f"IRRIG_SUPPLY_GRID_{t}"]
-                )
-                this_ds_gs[f"QIRRIG_FROM_SURFACE_FRAC_RIVER_GRID_{t}"] = this_ds_gs[
-                    f"QIRRIG_FROM_SURFACE_FRAC_RIVER_GRID_{t}"
-                ].assign_coords(this_ds_gs[f"QIRRIG_FROM_SURFACE_GRID_{t}"].coords)
+        def print_pandas_pg(msg, cols, arrs_tuple):
+            print(f"{msg} ({np.sum(~np.isnan(arrs_tuple[0]))})")
+            arrs_list = list(arrs_tuple)
+            for i, a in enumerate(arrs_tuple):
+                arrs_list[i] = np.reshape(a, (-1))
+            arrs_tuple2 = tuple(arrs_list)
+            df = pd.DataFrame(np.stack(arrs_tuple2, axis=1))
+            df.columns = cols
+            print(df)
 
-            # Ensure gridcells are same-ordered between patch- and gridcell-level datasets
-            this_ds_gs = this_ds_gs.assign_coords({"gridcell": this_ds_gs["gridcell"] + 1})
-            irrig_ds_grid = irrig_ds_grid.assign_coords({"gridcell": irrig_ds_grid["gridcell"] + 1})
-            test_gi = int(this_ds_gs["gridcell"].shape[0] / 3)  # An arbitrary gridcell to test
-            test_g = irrig_ds_grid["gridcell"].values[test_gi]
-            test_pi = np.where(this_ds_gs["patches1d_gi"] == test_g)[0][0]
-            test_p_lon = this_ds_gs["patches1d_lon"].isel(patch=test_pi)
-            test_p_lat = this_ds_gs["patches1d_lat"].isel(patch=test_pi)
-            test_g_lon = irrig_ds_grid["grid1d_lon"].isel(gridcell=test_gi)
-            test_g_lat = irrig_ds_grid["grid1d_lat"].isel(gridcell=test_gi)
-            if test_p_lon != test_g_lon or test_p_lat != test_g_lat:
-                print(f"{test_p_lon} =? {test_g_lon}")
-                print(f"{test_p_lat} =? {test_g_lat}")
-                raise RuntimeError("Gridcell indexing mismatch")
+        print_pandas_pg(
+            "Same, but converted to gs axis", ["sdate", "hdate"], (sdates_pg[p, :], hdates_pg[p, :])
+        )
 
-            # Save gridcell info
-            for v in irrig_ds_grid:
-                if "grid" in v:
-                    this_ds_gs[v] = irrig_ds_grid[v]
+        print_pandas_pg(
+            (
+                'After "Ignore any harvests that were planted in the final year, because some cells'
+                ' will have incomplete growing seasons for the final year"'
+            ),
+            ["sdate", "hdate"],
+            (sdates_pg2[p, :], hdates_pg2[p, :]),
+        )
+    else:
 
-            # Save gridcell area
-            this_ds_gs["AREA_GRID"] = ungrid(
-                irrig_ds_grid["area"],
-                irrig_ds_grid,
-                target_dim="gridcell",
-                lon="grid1d_ixy",
-                lat="grid1d_jxy",
-            )
-            if this_ds_gs["AREA_GRID"].attrs["units"] != "m^2":
-                if this_ds_gs["AREA_GRID"].attrs["units"] == "km^2":
-                    to_m2 = 1e6
-                else:
-                    raise RuntimeError(
-                        f"Unsure how to convert {this_ds_gs['AREA_GRID'].attrs['units']} to m^2"
-                    )
-                this_ds_gs["AREA_GRID"] *= to_m2
-                this_ds_gs["AREA_GRID"].attrs["units"] = "m^2"
+        def print_nopandas(a1, a2, msg):
+            print(msg)
+            if a1.ndim == 1:
+                # I don't know why these aren't side-by-side!
+                print(np.stack((a1, a2), axis=1))
+            else:
+                print(np.concatenate((a1, a2), axis=1))
 
-    return this_ds_gs
+        print_nopandas(sdates_ymp[:, :, p], hdates_ymp[:, :, p], "Masked:")
+
+        print_nopandas(
+            np.transpose(sdates_pym, (1, 2, 0))[:, :, p],
+            np.transpose(hdates_pym, (1, 2, 0))[:, :, p],
+            'After "Ignore harvests from before this output began"',
+        )
+
+        print_nopandas(
+            np.transpose(sdates_pym2, (1, 2, 0))[:, :, p],
+            np.transpose(hdates_pym2, (1, 2, 0))[:, :, p],
+            'After "In years with no sowing, pretend the first no-harvest is meaningful"',
+        )
+
+        print_nopandas(
+            np.transpose(sdates_pym3, (1, 2, 0))[:, :, p],
+            np.transpose(hdates_pym3, (1, 2, 0))[:, :, p],
+            (
+                'After "In years with sowing that are followed by inactive years, check whether the'
+                " last sowing was harvested before the patch was deactivated. If not, pretend the"
+                ' LAST [easier to implement!] no-harvest is meaningful."'
+            ),
+        )
+
+        print_nopandas(sdates_pg[p, :], hdates_pg[p, :], "Same, but converted to gs axis")
+
+        print_nopandas(
+            sdates_pg2[p, :],
+            hdates_pg2[p, :],
+            (
+                'After "Ignore any harvests that were planted in the final year, because some cells'
+                ' will have incomplete growing seasons for the final year"'
+            ),
+        )
+
+    print("\n\n")
 
 
 # Set up empty Dataset with time axis as "gs" (growing season) instead of what CLM puts out.
