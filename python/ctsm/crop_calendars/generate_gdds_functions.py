@@ -7,7 +7,7 @@ import warnings
 import os
 import glob
 import datetime as dt
-import importlib
+from importlib import util as importlib_util
 
 import cropcal_module as cc
 
@@ -25,7 +25,10 @@ try:
         message="Iteration over multi-part geometries is deprecated and will be removed in Shapely 2.0. Use the `geoms` property to access the constituent parts of a multi-part geometry.",
     )
 
+    print("Will (attempt to) produce harvest requirement maps.")
+
 except:
+    print("Will NOT produce harvest requirement maps.")
     can_plot = False
 
 
@@ -203,7 +206,7 @@ def import_and_process_1yr(
     log(logger, dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     # Without dask, this can take a LONG time at resolutions finer than 2-deg
-    if importlib.util.find_spec(dask):
+    if importlib_util.find_spec("dask"):
         chunks = {"time": 1}
     else:
         chunks = None
