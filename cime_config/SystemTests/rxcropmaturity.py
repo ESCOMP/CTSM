@@ -110,6 +110,13 @@ class RXCROPMATURITY(SystemTestsCommon):
         self._append_to_user_nl_clm([
             "generate_crop_gdds = .true.",
             "use_mxmat = .false.",
+            " ",
+            "! (h2) Daily outputs for GDD generation and figure-making",
+            "hist_fincl3 = 'GDDACCUM', 'GDDHARV'",
+            "hist_nhtfrq(3) = -24",
+            "hist_mfilt(3) = 365",
+            "hist_type1d_pertape(3) = 'PFTS'",
+            "hist_dov2xy(3) = .false.",
         ])
         
         # If flanduse_timeseries is defined, we need to make a static version for this test. This
@@ -151,16 +158,6 @@ class RXCROPMATURITY(SystemTestsCommon):
         self._append_to_user_nl_clm([
             "generate_crop_gdds = .false.",
             f"stream_fldFileName_cultivar_gdds = '{self._gdds_file}'",
-        ])
-
-        # Add extra stuff to help diagnose diffs
-        self._append_to_user_nl_clm([
-            "! (h3) Daily PFT-level outputs to help diagnose diffs",
-            "hist_fincl4 = 'CPHASE'",
-            "hist_nhtfrq(4) = -24",
-            "hist_mfilt(4) = 1",
-            "hist_type1d_pertape(4) = 'PFTS'",
-            "hist_dov2xy(4) = .false.",
         ])
 
         self.run_indv()
@@ -294,19 +291,12 @@ class RXCROPMATURITY(SystemTestsCommon):
             "stream_year_last_cropcal = 2000",
             "model_year_align_cropcal = 2000",
             " ",
-            "! (h1) Annual outputs for GDD generation (checks)",
+            "! (h1) Annual outputs on sowing or harvest axis
             "hist_fincl2 = 'GRAINC_TO_FOOD_PERHARV', 'GRAINC_TO_FOOD_ANN', 'SDATES', 'SDATES_PERHARV', 'SYEARS_PERHARV', 'HDATES', 'GDDHARV_PERHARV', 'GDDACCUM_PERHARV', 'HUI_PERHARV', 'SOWING_REASON_PERHARV', 'HARVEST_REASON_PERHARV'",
             "hist_nhtfrq(2) = 17520",
             "hist_mfilt(2) = 999",
             "hist_type1d_pertape(2) = 'PFTS'",
             "hist_dov2xy(2) = .false.",
-            " ",
-            "! (h2) Daily outputs for GDD generation and figure-making",
-            "hist_fincl3 = 'GDDACCUM', 'GDDHARV'",
-            "hist_nhtfrq(3) = -24",
-            "hist_mfilt(3) = 365",
-            "hist_type1d_pertape(3) = 'PFTS'",
-            "hist_dov2xy(3) = .false.",
         ]
         self._append_to_user_nl_clm(nl_additions)
 
