@@ -109,7 +109,6 @@ def main(
                     skip_patches_for_isel_nan_lastyear,
                     lastYear_active_patch_indices_list,
                     incorrectly_daily,
-                    gddharv_in_h3,
                     save_figs,
                     incl_vegtypes_str,
                     incl_patches1d_itype_veg,
@@ -120,7 +119,6 @@ def main(
         else:
             incorrectly_daily = False
             skip_patches_for_isel_nan_lastyear = np.ndarray([])
-            gddharv_in_h3 = False
             pickle_year = -np.inf
             gddaccum_yp_list = []
             gddharv_yp_list = []
@@ -147,7 +145,6 @@ def main(
                 skip_patches_for_isel_nan_lastyear,
                 lastYear_active_patch_indices_list,
                 incorrectly_daily,
-                gddharv_in_h3,
                 incl_vegtypes_str,
                 incl_patches1d_itype_veg,
                 mxsowings,
@@ -163,7 +160,6 @@ def main(
                 skip_patches_for_isel_nan_lastyear,
                 lastYear_active_patch_indices_list,
                 incorrectly_daily,
-                gddharv_in_h3,
                 input_dir,
                 incl_vegtypes_str,
                 h1_ds_file,
@@ -184,7 +180,6 @@ def main(
                         skip_patches_for_isel_nan_lastyear,
                         lastYear_active_patch_indices_list,
                         incorrectly_daily,
-                        gddharv_in_h3,
                         save_figs,
                         incl_vegtypes_str,
                         incl_patches1d_itype_veg,

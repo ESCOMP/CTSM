@@ -193,7 +193,6 @@ def import_and_process_1yr(
     skip_patches_for_isel_nan_lastyear,
     lastYear_active_patch_indices_list,
     incorrectly_daily,
-    gddharv_in_h3,
     indir,
     incl_vegtypes_str_in,
     h1_ds_file,
@@ -464,9 +463,7 @@ def import_and_process_1yr(
 
     log(logger, f"   Importing accumulated GDDs...")
     clm_gdd_var = "GDDACCUM"
-    myVars = [clm_gdd_var]
-    if not gddharv_in_h3:
-        myVars.append("GDDHARV")
+    myVars = [clm_gdd_var, "GDDHARV"]
     pattern = os.path.join(indir, f"*h1.{thisYear-1}-01-01*.nc")
     h1_files = glob.glob(pattern)
     if not h1_files:
@@ -478,34 +475,8 @@ def import_and_process_1yr(
         h1_files,
         myVars=myVars,
         myVegtypes=utils.define_mgdcrop_list(),
-        myVars_missing_ok=["GDDHARV"],
         chunks=chunks,
     )
-    if "GDDHARV" not in h1_ds:
-        if not gddharv_in_h3:
-            log(logger, "Trying to get GDDHARV from h3 file(s) instead.")
-        try:
-            pattern = os.path.join(indir, f"*h3.{thisYear-1}-01-01*.nc")
-            h3_files = glob.glob(pattern)
-            if not h3_files:
-                pattern = os.path.join(indir, f"*h3.{thisYear-1}-01-01*.nc.base")
-                h3_files = glob.glob(pattern)
-                if not h3_files:
-                    error(
-                        logger,
-                        f"No files found matching pattern '*h3.{thisYear-1}-01-01*.nc(.base)'",
-                    )
-            h3_ds = utils.import_ds(
-                h3_files, myVars=["GDDHARV"], myVegtypes=utils.define_mgdcrop_list(),
-                chunks=chunks,
-            )
-            h1_ds["GDDHARV"] = h3_ds["GDDHARV"]
-            if not gddharv_in_h3:
-                log(logger, "Success! Will look in h3 files from now on.")
-                gddharv_in_h3 = True
-        except:
-            log(logger, "Unable to import GDDHARV from h1 or h3 files. Disabling save_figs.")
-            save_figs = False
 
     # Restrict to patches we're including
     if skipping_patches_for_isel_nan:
@@ -709,7 +680,6 @@ def import_and_process_1yr(
         skip_patches_for_isel_nan_lastyear,
         lastYear_active_patch_indices_list,
         incorrectly_daily,
-        gddharv_in_h3,
         incl_vegtypes_str,
         incl_patches1d_itype_veg,
         mxsowings,
