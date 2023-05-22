@@ -2808,17 +2808,17 @@ use case.)
 <!-- ========================================================================================  -->
 
 <entry id="do_tillage_low" type="logical" category="physics"
-       group="clm_inparm" valid_values="" value=".false.">
+       group="tillage_inparm" valid_values="" value=".false.">
 Toggle to turn on low-intensity tillage
 </entry>
 
 <entry id="do_tillage_high" type="logical" category="physics"
-       group="clm_inparm" valid_values="" value=".false.">
+       group="tillage_inparm" valid_values="" value=".false.">
 Toggle to turn on high-intensity tillage
 </entry>
 
 <entry id="use_original_tillage" type="logical" category="physics"
-       group="clm_inparm" valid_values="" value=".false.">
+       group="tillage_inparm" valid_values="" value=".false.">
 Toggle to use original tillage logic
 </entry>
 

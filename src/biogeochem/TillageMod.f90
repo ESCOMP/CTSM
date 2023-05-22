@@ -50,7 +50,7 @@ contains
     integer                :: mpicom       ! MPI communicator
     character(*), parameter :: subname = "('tillage_init')"
 
-    namelist /tillage_nml/    &
+    namelist /tillage_inparm/    &
         do_tillage_low,       &
         do_tillage_high,      &
         use_original_tillage
@@ -63,9 +63,9 @@ contains
     ! Read tillage namelist
     if (masterproc) then
         open(newunit=nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
-        call find_nlgroup_name(nu_nml, 'tillage_nml', status=nml_error)
+        call find_nlgroup_name(nu_nml, 'tillage_inparm', status=nml_error)
         if (nml_error == 0) then
-           read(nu_nml, nml=tillage_nml, iostat=nml_error)
+           read(nu_nml, nml=tillage_inparm, iostat=nml_error)
            if (nml_error /= 0) then
               call endrun(subname // ':: ERROR reading tillage namelist')
            end if
