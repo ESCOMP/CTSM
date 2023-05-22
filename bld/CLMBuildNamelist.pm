@@ -1597,6 +1597,11 @@ sub process_namelist_inline_logic {
   setup_logic_crop($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ###############################
+  # namelist group: tillage     #
+  ###############################
+  setup_logic_tillage($opts,  $nl_flags, $definition, $defaults, $nl);
+
+  ###############################
   # namelist group: ch4par_in   #
   ###############################
   setup_logic_methane($opts, $nl_flags, $definition, $defaults, $nl);
@@ -2137,6 +2142,27 @@ sub setup_logic_crop {
   } else {
      error_if_set( $nl, "Can NOT be set without crop on", "baset_mapping", "baset_latvary_slope", "baset_latvary_intercept" );
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'crop_fsat_equals_zero' );
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_tillage {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  if ( &value_is_true($nl->get_value('do_tillage_low')) and &value_is_true($nl->get_value('do_tillage_high')) ) {
+      $log->fatal_error( "do_tillage_low and do_tillage_high are mutually exclusive" );
+  }
+
+  if ( &value_is_true($nl->get_value('do_tillage_low')) or &value_is_true($nl->get_value('do_tillage_high')) ) {
+
+      if ( not &value_is_true($nl->get_value('use_crop')) ) {
+          $log->fatal_error( "It doesn't make sense to use tillage with use_crop false" );
+      }
+
+      if ( &value_is_true($nl->get_value('use_fates')) ) {
+          $log->fatal_error( "Tillage can't be used with FATES" );
+      }
   }
 }
 
