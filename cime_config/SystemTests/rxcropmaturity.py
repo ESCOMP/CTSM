@@ -295,7 +295,7 @@ class RXCROPMATURITY(SystemTestsCommon):
             "model_year_align_cropcal = 2000",
             " ",
             "! (h1) Daily outputs for GDD generation and figure-making",
-            "hist_fincl2 = 'HUI', 'GDDACCUM', 'GDDHARV'",
+            "hist_fincl2 = 'GDDACCUM', 'GDDHARV'",
             "hist_nhtfrq(2) = -24",
             "hist_mfilt(2) = 365",
             "hist_type1d_pertape(2) = 'PFTS'",
