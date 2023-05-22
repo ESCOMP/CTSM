@@ -178,6 +178,12 @@ class SysTestMeshMaker(unittest.TestCase):
             self.mesh_out,
         ]
         main()
+        expected_mesh = os.path.join(
+            self._testinputs_path, "ESMF_mesh_fv0.9x1.25_gx1v7_f09_58x45_SouthAmerica_from_domain_c230522.nc"
+        )
+        mesh_out = xr.open_dataset(self.mesh_out)
+        expected = xr.open_dataset(expected_mesh)
+        self.compare_mesh_files(mesh_out, expected)
 
     def test_domainfile_f10_warea(self):
         """
