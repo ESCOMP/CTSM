@@ -512,7 +512,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
        soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst, &
-       idop)
+       idop, num_soilp, filter_soilp)
     !
     ! !DESCRIPTION:
     !  calculate rate constants and decomposition pathways for the CENTURY decomposition cascade model
@@ -533,7 +533,9 @@ contains
     type(temperature_type)               , intent(in)    :: temperature_inst
     type(ch4_type)                       , intent(in)    :: ch4_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
-    integer                              , intent(in)    :: idop(:) ! patch day of planting
+    integer, optional                    , intent(in)    :: idop(:) ! patch day of planting
+    integer, optional                    , intent(in)    :: num_soilp       ! number of soil patches in filter
+    integer, optional                    , intent(in)    :: filter_soilp(:) ! filter for soil patches
     !
     ! !LOCAL VARIABLES:
     real(r8), parameter :: eps = 1.e-6_r8
@@ -902,7 +904,11 @@ contains
 
             ! Tillage
             if (get_do_tillage()) then
-               get_apply_tillage_multipliers(idop, num_soilp, filter_soilp, decomp_k)
+               ! TODO: Throw error during namelist build if tillage is called with FATES
+               if (.not. (present(idop) .and. present(num_soilp) .and. present(filter_soilp))) then
+                   call endrun("Do not call tillage without providing idop, num_soilp, and filter_soilp. (Maybe you called with FATES?)")
+               end if
+               call get_apply_tillage_multipliers(idop, num_soilp, filter_soilp, num_soilc, filter_soilc, decomp_k, i_act_som, i_slo_som, i_pas_som)
             end if
 
             ! Above into soil matrix
