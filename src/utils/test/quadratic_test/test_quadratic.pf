@@ -2,7 +2,7 @@ module test_quadratic
 
   ! Tests of quadratic
 
-  use pfunit_mod
+  use funit
   use quadraticMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestUtils, only : endrun_msg
@@ -176,8 +176,6 @@ contains
     b = 4.0_r8
     c = 4.0_r8 + 100.0_r8*epsilon(b)
     call quadratic (a, b, c, r1, r2)
-    call check_root(a, b, c, r1)
-    call check_root(a, b, c, r2)
     expected_msg = endrun_msg( &
          'quadratic ERROR: Quadratic solution error: b^2 - 4ac is negative')
     @assertExceptionRaised(expected_msg)

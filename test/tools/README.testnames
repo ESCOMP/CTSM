@@ -43,11 +43,12 @@ m is the resolution
 9 -- 4x5
 a -- NEON YELL
 b -- NEON KONA
-c -- single point from the 0.9x1.25 grid
+c -- NEON OSBS
 d -- SouthAmerica
 e -- 1850PanTropics
 f -- PanBoreal
 g -- AlaskaTananaValley
+h -- single point from the 0.9x1.25 grid (Township SD)
 y -- 1.9x2.5 with transient 1850-2100 for rcp=2.6 and glacier-MEC on
 T -- 1x1_numaIA
 Z -- 10x15 with crop on
