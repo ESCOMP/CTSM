@@ -23,10 +23,6 @@ import shutil, glob
 
 logger = logging.getLogger(__name__)
 
-# SSR: This was originally ctsm_pylib, but the fact that it's missing
-#      cf_units caused problems in utils.import_ds().
-this_conda_env = "ctsm_pylib"
-
 class RXCROPMATURITY(SystemTestsCommon):
 
     def __init__(self, case):
@@ -351,7 +347,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         self._gdds_file = generated_gdd_files[0]
         
 
-    def _get_conda_env(self):
+    def _get_conda_env(self, conda_setup_commands):
         #
         # Add specific commands needed on different machines to get conda available
         # Use semicolon here since it's OK to fail
@@ -360,15 +356,22 @@ class RXCROPMATURITY(SystemTestsCommon):
         # eg on cheyenne
         try:
             subprocess.run( "which conda", shell=True, check=True)
-            conda_env = " "
         except subprocess.CalledProcessError:
             # Remove python and add conda to environment for cheyennne
-            conda_env = "module unload python; module load conda;"
+            conda_setup_commands += "module unload python; module load conda; "
+
+        # If npl conda environment is available, use that (It has dask, which
+        # enables chunking, which makes reading daily 1-degree netCDF files
+        # much more efficient.
+        if "npl " in os.popen(conda_setup_commands + "conda env list").read():
+            this_conda_env = "npl"
+        else:
+            this_conda_env = "ctsm_pylib"
 
         ## Run in the correct python environment
-        conda_env += f" conda run -n {this_conda_env} "
+        conda_setup_commands += f" conda run -n {this_conda_env} "
         
-        return( conda_env )
+        return conda_setup_commands, this_conda_env
     
     
     def _append_to_user_nl_clm(self, additions):
@@ -383,9 +386,9 @@ class RXCROPMATURITY(SystemTestsCommon):
         case.load_env(reset=True)
         
         # Prepend the commands to get the conda environment for python first
-        conda_env = ". "+self._get_caseroot()+"/.env_mach_specific.sh; "
-        conda_env += self._get_conda_env()
-        command = conda_env + command
+        conda_setup_commands = ". "+self._get_caseroot()+"/.env_mach_specific.sh; "
+        conda_setup_commands, this_conda_env = self._get_conda_env(conda_setup_commands)
+        command = conda_setup_commands + command
         print(f"command: {command}")
         
         # Run
