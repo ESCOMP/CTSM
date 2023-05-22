@@ -7,6 +7,7 @@ import warnings
 import os
 import glob
 import datetime as dt
+import importlib
 
 import cropcal_module as cc
 
@@ -201,6 +202,12 @@ def import_and_process_1yr(
     log(logger, f"netCDF year {thisYear}...")
     log(logger, dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
+    # Without dask, this can take a LONG time at resolutions finer than 2-deg
+    if importlib.util.find_spec(dask):
+        chunks = {"time": 1}
+    else:
+        chunks = None
+
     # Get h2 file (list)
     h2_pattern = os.path.join(indir, "*h2.*.nc")
     h2_filelist = glob.glob(h2_pattern)
@@ -215,6 +222,7 @@ def import_and_process_1yr(
         myVars=["SDATES", "HDATES"],
         myVegtypes=utils.define_mgdcrop_list(),
         timeSlice=slice(f"{thisYear}-01-01", f"{thisYear}-12-31"),
+        chunks=chunks,
     )
 
     if dates_ds.dims["time"] > 1:
@@ -468,6 +476,7 @@ def import_and_process_1yr(
         myVars=myVars,
         myVegtypes=utils.define_mgdcrop_list(),
         myVars_missing_ok=["GDDHARV"],
+        chunks=chunks,
     )
     if "GDDHARV" not in h1_ds:
         if not gddharv_in_h3:
@@ -484,7 +493,8 @@ def import_and_process_1yr(
                         f"No files found matching pattern '*h3.{thisYear-1}-01-01*.nc(.base)'",
                     )
             h3_ds = utils.import_ds(
-                h3_files, myVars=["GDDHARV"], myVegtypes=utils.define_mgdcrop_list()
+                h3_files, myVars=["GDDHARV"], myVegtypes=utils.define_mgdcrop_list(),
+                chunks=chunks,
             )
             h1_ds["GDDHARV"] = h3_ds["GDDHARV"]
             if not gddharv_in_h3:
