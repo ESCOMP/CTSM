@@ -156,6 +156,29 @@ class SysTestMeshMaker(unittest.TestCase):
         expected = xr.open_dataset(expected_mesh)
         self.compare_mesh_files(mesh_out, expected)
 
+    def test_domainfile_SAmerica_region_warea(self):
+        """
+        Do a basic test for a South America regional grid with a domain file
+        rather than a surfdata file including area
+        """
+        infile = os.path.join(self._testinputs_path, "domain.lnd.fv0.9x1.25_gx1v7_f09_58x45_SouthAmerica_c230522.nc")
+        sys.argv = [
+            "mesh_maker",
+            "--input",
+            infile,
+            "--lat",
+            "yc",
+            "--lon",
+            "xc",
+            "--mask",
+            "mask",
+            "--area",
+            "area",
+            "--output",
+            self.mesh_out,
+        ]
+        main()
+
     def test_domainfile_f10_warea(self):
         """
         Do a test of converting the f10 domain file
