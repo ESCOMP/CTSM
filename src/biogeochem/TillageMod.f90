@@ -3,13 +3,21 @@ module TillageMod
   ! !DESCRIPTION:
   ! Module for soil tillage.
   !
+  ! As described in ChangeLog:
+  !     history field name change as follows...
+  !     LITR1 becomes MET_LIT (metabolic)
+  !     LITR2 becomes CEL_LIT (cellulosic)
+  !     LITR3 becomes LIG_LIT (lignin)
+  !     SOIL1 becomes ACT_SOM (active)
+  !     SOIL2 becomes SLO_SOM (slow)
+  !     SOIL3 becomes PAS_SOM (passive)
+  !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
-  ! TODO: Confirm that i_soil1->i_act_som, i_soil2->i_slo_som, i_soil3->i_pas_som
-  use clm_varpar     , only : i_litr2, i_litr3, ndecomp_pools
+  use clm_varpar     , only : ndecomp_pools
   !
   implicit none
   private
@@ -110,7 +118,7 @@ contains
   end function get_do_tillage
 
 
-  subroutine get_tillage_multipliers_orig(idop, num_soilp, filter_soilp, i_act_som, i_slo_som, i_pas_som)
+  subroutine get_tillage_multipliers_orig(idop, num_soilp, filter_soilp, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
     ! !DESCRIPTION:
     !
     !  Get the cultivation effective multiplier if prognostic crops are on and
@@ -126,6 +134,7 @@ contains
     integer          , intent(in) :: num_soilp          ! number of soil pfts in filter
     integer          , intent(in) :: filter_soilp(:)    ! filter for soil pfts
     integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
+    integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
     !
     ! !LOCAL VARIABLES:
     !
@@ -165,8 +174,8 @@ contains
         else if (day >= idop(p) .and. day < idop(p)+15) then ! based on Point Chisel Tandem Disk multipliers
             tillage_mults(c,:) = 1._r8
             if (patch%itype(p) >= npcropmin) then
-                tillage_mults(c,i_litr2) = 1.50_r8 !high 1.80,low 1.50
-                tillage_mults(c,i_litr3) = 1.50_r8 !high 1.80,low 1.50
+                tillage_mults(c,i_cel_lit) = 1.50_r8 !high 1.80,low 1.50
+                tillage_mults(c,i_lig_lit) = 1.50_r8 !high 1.80,low 1.50
                 tillage_mults(c,i_act_som) = 1.00_r8 !high 1.20,low 1.00
                 tillage_mults(c,i_slo_som) = 3.00_r8 !high 4.80,low 3.00
                 tillage_mults(c,i_pas_som) = 3.00_r8 !high 4.80,low 3.00
@@ -174,8 +183,8 @@ contains
         else if (day >= idop(p)+15 .and. day < idop(p)+45) then ! based on Field and Row Cultivator multipliers
             tillage_mults(c,:) = 1._r8
             if (patch%itype(p) >= npcropmin) then
-                tillage_mults(c,i_litr2) = 1.50_r8 !high 1.50,low 1.50
-                tillage_mults(c,i_litr3) = 1.50_r8 !high 1.50,low 1.50
+                tillage_mults(c,i_cel_lit) = 1.50_r8 !high 1.50,low 1.50
+                tillage_mults(c,i_lig_lit) = 1.50_r8 !high 1.50,low 1.50
                 tillage_mults(c,i_act_som) = 1.00_r8 !high 1.00,low 1.00
                 tillage_mults(c,i_slo_som) = 1.60_r8 !high 3.50,low 1.60
                 tillage_mults(c,i_pas_som) = 1.60_r8 !high 3.50,low 1.60
@@ -183,8 +192,8 @@ contains
         else if (day >= idop(p)+45 .and. day <idop(p)+75) then ! based on Rod Weed Row Planter
             tillage_mults(c,:) = 1._r8
             if (patch%itype(p) >= npcropmin) then
-                tillage_mults(c,i_litr2) = 1.10_r8 !high 1.10,low 1.10
-                tillage_mults(c,i_litr3) = 1.10_r8 !high 1.10,low 1.10
+                tillage_mults(c,i_cel_lit) = 1.10_r8 !high 1.10,low 1.10
+                tillage_mults(c,i_lig_lit) = 1.10_r8 !high 1.10,low 1.10
                 tillage_mults(c,i_act_som) = 1.00_r8 !high 1.00,low 1.00
                 tillage_mults(c,i_slo_som) = 1.30_r8 !high 2.50,low 1.30
                 tillage_mults(c,i_pas_som) = 1.30_r8 !high 2.50,low 1.30
@@ -195,8 +204,8 @@ contains
               patch%itype(p) == nirrig_tmp_corn .or. &
               patch%itype(p) == ntmp_soybean   .or. &
               patch%itype(p) == nirrig_tmp_soybean      ) then
-                tillage_mults(c,i_litr2) = 1.00_r8
-                tillage_mults(c,i_litr3) = 1.00_r8
+                tillage_mults(c,i_cel_lit) = 1.00_r8
+                tillage_mults(c,i_lig_lit) = 1.00_r8
                 tillage_mults(c,i_act_som) = 1.00_r8
                 tillage_mults(c,i_slo_som) = 1.00_r8
                 tillage_mults(c,i_pas_som) = 1.00_r8
@@ -209,7 +218,7 @@ contains
   end subroutine get_tillage_multipliers_orig
 
 
-  subroutine get_tillage_multipliers_new(idop, num_soilp, filter_soilp, i_act_som, i_slo_som, i_pas_som)
+  subroutine get_tillage_multipliers_new(idop, num_soilp, filter_soilp, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
     ! !DESCRIPTION:
     !
     !  Get the cultivation effective multiplier if prognostic crops are on and
@@ -226,6 +235,7 @@ contains
     integer          , intent(in) :: num_soilp          ! number of soil pfts in filter
     integer          , intent(in) :: filter_soilp(:)    ! filter for soil pfts
     integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
+    integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
     !
     ! !LOCAL VARIABLES:
     !
@@ -264,8 +274,8 @@ contains
         else if (idpp < 15) then ! based on Point Chisel Tandem Disk multipliers
             tillage_mults(c,:) = 1._r8
             if (patch%itype(p) >= npcropmin) then
-                tillage_mults(c,i_litr2) = 1.50_r8 !high 1.80,low 1.50
-                tillage_mults(c,i_litr3) = 1.50_r8 !high 1.80,low 1.50
+                tillage_mults(c,i_cel_lit) = 1.50_r8 !high 1.80,low 1.50
+                tillage_mults(c,i_lig_lit) = 1.50_r8 !high 1.80,low 1.50
                 tillage_mults(c,i_act_som) = 1.00_r8 !high 1.20,low 1.00
                 tillage_mults(c,i_slo_som) = 3.00_r8 !high 4.80,low 3.00
                 tillage_mults(c,i_pas_som) = 3.00_r8 !high 4.80,low 3.00
@@ -273,8 +283,8 @@ contains
         else if (idpp < 45) then ! based on Field and Row Cultivator multipliers
             tillage_mults(c,:) = 1._r8
             if (patch%itype(p) >= npcropmin) then
-                tillage_mults(c,i_litr2) = 1.50_r8 !high 1.50,low 1.50
-                tillage_mults(c,i_litr3) = 1.50_r8 !high 1.50,low 1.50
+                tillage_mults(c,i_cel_lit) = 1.50_r8 !high 1.50,low 1.50
+                tillage_mults(c,i_lig_lit) = 1.50_r8 !high 1.50,low 1.50
                 tillage_mults(c,i_act_som) = 1.00_r8 !high 1.00,low 1.00
                 tillage_mults(c,i_slo_som) = 1.60_r8 !high 3.50,low 1.60
                 tillage_mults(c,i_pas_som) = 1.60_r8 !high 3.50,low 1.60
@@ -282,8 +292,8 @@ contains
         else if (idpp < 75) then ! based on Rod Weed Row Planter
             tillage_mults(c,:) = 1._r8
             if (patch%itype(p) >= npcropmin) then
-                tillage_mults(c,i_litr2) = 1.10_r8 !high 1.10,low 1.10
-                tillage_mults(c,i_litr3) = 1.10_r8 !high 1.10,low 1.10
+                tillage_mults(c,i_cel_lit) = 1.10_r8 !high 1.10,low 1.10
+                tillage_mults(c,i_lig_lit) = 1.10_r8 !high 1.10,low 1.10
                 tillage_mults(c,i_act_som) = 1.00_r8 !high 1.00,low 1.00
                 tillage_mults(c,i_slo_som) = 1.30_r8 !high 2.50,low 1.30
                 tillage_mults(c,i_pas_som) = 1.30_r8 !high 2.50,low 1.30
@@ -294,8 +304,8 @@ contains
               patch%itype(p) == nirrig_tmp_corn .or. &
               patch%itype(p) == ntmp_soybean    .or. &
               patch%itype(p) == nirrig_tmp_soybean      ) then
-                tillage_mults(c,i_litr2) = 1.00_r8
-                tillage_mults(c,i_litr3) = 1.00_r8
+                tillage_mults(c,i_cel_lit) = 1.00_r8
+                tillage_mults(c,i_lig_lit) = 1.00_r8
                 tillage_mults(c,i_act_som) = 1.00_r8
                 tillage_mults(c,i_slo_som) = 1.00_r8
                 tillage_mults(c,i_pas_som) = 1.00_r8
@@ -309,7 +319,7 @@ contains
 
 
   ! Public interface to choose between and call either get_tillage_multipliers_orig() or get_tillage_multipliers_new()
-  subroutine get_tillage_multipliers(idop, num_soilp, filter_soilp, i_act_som, i_slo_som, i_pas_som)
+  subroutine get_tillage_multipliers(idop, num_soilp, filter_soilp, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
     ! !DESCRIPTION:
     !
     !  Public interface to choose between and call either original (buggy) or
@@ -320,17 +330,18 @@ contains
     integer          , intent(in) :: num_soilp          ! number of soil pfts in filter
     integer          , intent(in) :: filter_soilp(:)    ! filter for soil pfts
     integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
+    integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
 
     if (use_original_tillage) then
-        call get_tillage_multipliers_orig(idop, num_soilp, filter_soilp, i_act_som, i_slo_som, i_pas_som)
+        call get_tillage_multipliers_orig(idop, num_soilp, filter_soilp, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
     else
-        call get_tillage_multipliers_new(idop, num_soilp, filter_soilp, i_act_som, i_slo_som, i_pas_som)
+        call get_tillage_multipliers_new(idop, num_soilp, filter_soilp, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
     end if
 
   end subroutine get_tillage_multipliers
 
 
-  subroutine get_apply_tillage_multipliers(idop, num_soilp, filter_soilp, num_soilc, filter_soilc, decomp_k, i_act_som, i_slo_som, i_pas_som)
+  subroutine get_apply_tillage_multipliers(idop, num_soilp, filter_soilp, num_soilc, filter_soilc, decomp_k, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
     ! !DESCRIPTION:
     !
     ! Multiply decomposition rate constants by tillage coefficients.
@@ -346,11 +357,12 @@ contains
     integer          , intent(in) :: filter_soilc(:)    ! filter for soil columns
     real(r8)         , intent(inout) :: decomp_k(:,:,:) ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
     integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
+    integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
     !
     ! !LOCAL VARIABLES
     integer :: j, fc, c
 
-    call get_tillage_multipliers(idop, num_soilp, filter_soilp, i_act_som, i_slo_som, i_pas_som)
+    call get_tillage_multipliers(idop, num_soilp, filter_soilp, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
 
     ! Top 5 layers (instead of all nlevdecomp) so that model only tills the top 26-40 cm
     ! of the soil surface, rather than whole soil - MWGraham
@@ -358,8 +370,8 @@ contains
         do fc = 1,num_soilc
            c = filter_soilc(fc)
            ! TODO: Loop through ALL pools, not just the ones that currently have non-1 values
-           decomp_k(c,j,i_litr2) = decomp_k(c,j,i_litr2) * tillage_mults(c,i_litr2)
-           decomp_k(c,j,i_litr3) = decomp_k(c,j,i_litr3) * tillage_mults(c,i_litr3) 
+           decomp_k(c,j,i_cel_lit) = decomp_k(c,j,i_cel_lit) * tillage_mults(c,i_cel_lit)
+           decomp_k(c,j,i_lig_lit) = decomp_k(c,j,i_lig_lit) * tillage_mults(c,i_lig_lit) 
            decomp_k(c,j,i_act_som) = decomp_k(c,j,i_act_som) * tillage_mults(c,i_act_som)
            decomp_k(c,j,i_slo_som) = decomp_k(c,j,i_slo_som) * tillage_mults(c,i_slo_som)
            decomp_k(c,j,i_pas_som) = decomp_k(c,j,i_pas_som) * tillage_mults(c,i_pas_som)
