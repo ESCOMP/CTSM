@@ -1641,6 +1641,15 @@
       <option name="comment"  >Make sure the CLM_USRDAT universal resolution works</option>
     </options>
   </test>
+  <test name="SMS_P360x1" grid="CLM_USRDAT" compset="I2000Clm51BgcCrop" testmods="clm/default--clm/f09_38x288pt_PanBoreal">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Make sure a regional resolution using subset_data works</option>
+    </options>
+  </test>
   <test name="ERS_D_Ld5" grid="f10_f10_mg37" compset="IHistClm50BgcQian" testmods="clm/ciso_bombspike1963DecStart">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
