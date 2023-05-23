@@ -1,0 +1,8 @@
+
+# Change below line if you move the subset data directory
+
+./xmlchange CLM_USRDAT_DIR='$DIN_LOC_ROOT/lnd/clm2/regional_datasets/f09_38x288pt_PanBoreal'
+
+./xmlchange ATM_DOMAIN_MESH='$CLM_USRDAT_DIR/surfdata_f09_38x288pt_PanBoreal_hist_16pfts_Irrig_CMIP6_simyr2000_c230523_ESMF_UNSTRUCTURED_MESH.nc'
+./xmlchange LND_DOMAIN_MESH='$CLM_USRDAT_DIR/surfdata_f09_38x288pt_PanBoreal_hist_16pfts_Irrig_CMIP6_simyr2000_c230523_ESMF_UNSTRUCTURED_MESH.nc'
+./xmlchange MASK_MESH='$CLM_USRDAT_DIR/surfdata_f09_38x288pt_PanBoreal_hist_16pfts_Irrig_CMIP6_simyr2000_c230523_ESMF_UNSTRUCTURED_MESH.nc'
