@@ -265,7 +265,8 @@ class RegionalCase(BaseCase):
                 self.write_to_file(line, nl_clm)
         if self.create_mesh:
             logger.info("creating mesh file from surface_dataset: %s", wfile)
-            self.extract_mesh_at_reg(f_out)
+            ds = xr.open_dataset(wfile, mask_and_scale=False, decode_times=False).transpose()
+            self.extract_mesh_at_reg(ds)
 
     def extract_mesh_at_reg(self, ds_in):
         """
@@ -273,14 +274,15 @@ class RegionalCase(BaseCase):
         """
         logger.info("Creating meshfile for  at region: %s", self.tag)
 
-        lat_name = "lsmlat"
-        lon_name = "lsmlon"
+        lat_name = "LATIXY"
+        lon_name = "LONGXY"
 
         lats = ds_in[lat_name].astype(np.float32)
         lons = ds_in[lon_name].astype(np.float32)
 
         this_mesh = MeshType(lats, lons)
         this_mesh.calculate_corners()
+        this_mesh.calculate_nodes()
         this_mesh.create_esmf(self.mesh)
 
     def create_landuse_at_reg(self, indir, file, user_mods_dir):
