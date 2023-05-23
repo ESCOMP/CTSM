@@ -161,7 +161,9 @@ class SysTestMeshMaker(unittest.TestCase):
         Do a basic test for a South America regional grid with a domain file
         rather than a surfdata file including area
         """
-        infile = os.path.join(self._testinputs_path, "domain.lnd.fv0.9x1.25_gx1v7_f09_58x45_SouthAmerica_c230522.nc")
+        infile = os.path.join(
+            self._testinputs_path, "domain.lnd.fv0.9x1.25_gx1v7_f09_58x45_SouthAmerica_c230522.nc"
+        )
         sys.argv = [
             "mesh_maker",
             "--input",
@@ -179,7 +181,8 @@ class SysTestMeshMaker(unittest.TestCase):
         ]
         main()
         expected_mesh = os.path.join(
-            self._testinputs_path, "ESMF_mesh_fv0.9x1.25_gx1v7_f09_58x45_SouthAmerica_from_domain_c230522.nc"
+            self._testinputs_path,
+            "ESMF_mesh_fv0.9x1.25_gx1v7_f09_58x45_SouthAmerica_from_domain_c230522.nc",
         )
         mesh_out = xr.open_dataset(self.mesh_out)
         expected = xr.open_dataset(expected_mesh)
