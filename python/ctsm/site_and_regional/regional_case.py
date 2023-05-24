@@ -16,6 +16,7 @@ import xarray as xr
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR
 from ctsm.site_and_regional.mesh_type import MeshType
 from ctsm.utils import add_tag_to_filename
+from ctsm.utils import abort
 
 logger = logging.getLogger(__name__)
 
@@ -215,6 +216,11 @@ class RegionalCase(BaseCase):
         f_in.close()
         f_out.close()
 
+        if self.create_mesh:
+            logger.info("creating mesh file from domain file: %s", wfile)
+            ds = xr.open_dataset(wfile, mask_and_scale=False, decode_times=False).transpose()
+            self.extract_mesh_at_reg(ds)
+
     def create_surfdata_at_reg(self, indir, file, user_mods_dir, specify_fsurf_out):
         """
         Create surface data file for this RegionalCase class.
@@ -265,10 +271,6 @@ class RegionalCase(BaseCase):
             with open(os.path.join(user_mods_dir, "user_nl_clm"), "a") as nl_clm:
                 line = "fsurdat = '${}'".format(os.path.join(USRDAT_DIR, fsurf_out))
                 self.write_to_file(line, nl_clm)
-        if self.create_mesh:
-            logger.info("creating mesh file from surface_dataset: %s", wfile)
-            ds = xr.open_dataset(wfile, mask_and_scale=False, decode_times=False).transpose()
-            self.extract_mesh_at_reg(ds)
 
     def extract_mesh_at_reg(self, ds_in):
         """
@@ -282,7 +284,11 @@ class RegionalCase(BaseCase):
         lats = ds_in[lat_name].astype(np.float32)
         lons = ds_in[lon_name].astype(np.float32)
 
-        this_mesh = MeshType(lats, lons)
+        mask = ds_in["mask"].astype(np.float32)
+        if mask.max() > 1.0 or mask.min() < 0.0:
+            abort("Mask variable is not within 0 to 1")
+
+        this_mesh = MeshType(lats, lons, mask=mask)
         this_mesh.calculate_corners()
         this_mesh.calculate_nodes()
         this_mesh.create_esmf(self.mesh)
