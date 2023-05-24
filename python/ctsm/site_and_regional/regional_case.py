@@ -278,8 +278,8 @@ class RegionalCase(BaseCase):
         """
         logger.info("Creating meshfile for  at region: %s", self.tag)
 
-        lat_name = "LATIXY"
-        lon_name = "LONGXY"
+        lat_name = "yc"
+        lon_name = "xc"
 
         lats = ds_in[lat_name].astype(np.float32)
         lons = ds_in[lon_name].astype(np.float32)
