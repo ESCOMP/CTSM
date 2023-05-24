@@ -166,6 +166,17 @@ class TestSubsetData(unittest.TestCase):
         ):
             check_args(self.args)
 
+    def test_create_mesh_without_domain(self):
+        """
+        Test that you can't run create mesh without domain
+        """
+        sys.argv = ["subset_data", "region", "--create-user-mods", "--create-surface", "--create-mesh"]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentError, "--create-domain option is required when --create-mesh is choosen"
+        ):
+            check_args(self.args)
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
