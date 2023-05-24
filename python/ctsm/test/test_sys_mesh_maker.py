@@ -208,10 +208,7 @@ class SysTestMeshMaker(unittest.TestCase):
             "--output",
             self.mesh_out,
         ]
-        with self.assertRaisesRegex(
-            SystemExit,
-            "mesh_type currently can NOT work on global grids, but should for regional",
-        ):
+        with self.assertRaisesRegex(SystemExit, "Expected size for element connections is wrong"):
             main()
 
     def test_readfile(self):

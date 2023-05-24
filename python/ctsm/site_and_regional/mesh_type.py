@@ -385,25 +385,18 @@ class MeshType:
         nlon = dims[0]
         nlat = dims[1]
         elem_conn_size = (nlon * nlat) + nlon
-        size = len(corner_pairs)
-        # Test if a regional or global grid
-        global_grid = bool(corner_pairs[0, 1] <= -90.0 and corner_pairs[size - 1, 1] >= 90.0)
-
-        if not global_grid:
-            elem_conn_size = elem_conn_size + nlat + 1
-        else:
-            abort("mesh_type currently can NOT work on global grids, but should for regional")
+        elem_conn_size = elem_conn_size + nlat + 1
 
         self.node_coords = node_coords
 
         # -- error check to avoid issues later
         if self.node_coords.shape[0] != elem_conn_size:
-            logger.warning(
+            logger.error(
                 "The size of unique coordinate pairs is %d but expected size is %d!",
                 self.node_coords.shape[0],
                 elem_conn_size,
             )
-            logger.warning("This may result your simulation to crash later.")
+            logger.error("Including a pole point in your grid is the usual reason for this problem")
             abort("Expected size for element connections is wrong")
 
     def are_corners_set(self):
