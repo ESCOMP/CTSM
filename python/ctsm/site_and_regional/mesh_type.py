@@ -307,6 +307,11 @@ class MeshType:
             ],
             axis=1,
         )
+        # Corners don't go beyond the poles
+        indx = np.argwhere(self.corner_lats > 90.0)
+        self.corner_lats[indx] = 90.0
+        indx2 = np.argwhere(self.corner_lats < -90.0)
+        self.corner_lats[indx2] = 90.0
 
         # -- calculate corner lons for each grid
         north_east = (
@@ -344,6 +349,12 @@ class MeshType:
             ],
             axis=1,
         )
+        # Corners don't go beyond longitude edges
+        indx = np.argwhere(self.corner_lons > 360.0)
+        self.corner_lons[indx] = 360.0
+        indx2 = np.argwhere(self.corner_lons < 0.0)
+        self.corner_lons[indx2] = 0.0
+
         self.unit = unit
 
     def calculate_node_coords(self):
