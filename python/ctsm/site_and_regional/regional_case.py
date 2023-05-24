@@ -39,6 +39,8 @@ class RegionalCase(BaseCase):
         Region's name
     create_domain : bool
         flag for creating domain file
+    create_mesh : bool
+        flag for creating mesh file
     create_surfdata : bool
         flag for creating surface dataset
     create_landuse : bool
@@ -74,7 +76,7 @@ class RegionalCase(BaseCase):
         Create surface dataset at this region
 
     extract_mesh_at_reg
-        Extract mesh from surface dataset created by create_surfdata_at_reg
+        Extract mesh from the domain dataset created by create_domain_at_reg
 
     create_landuse_at_reg
         Create landuse file at this region

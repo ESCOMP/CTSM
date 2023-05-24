@@ -425,6 +425,19 @@ def check_args(args):
             )
             raise argparse.ArgumentError(None, err_msg)
 
+    if args.run_type == "region" and args.create_mesh:
+        if not args.create_domain:
+            err_msg = textwrap.dedent(
+                """\
+                      \n ------------------------------------
+                      \nERROR: For regional cases, you can not create mesh files
+                      \nwithout creating the domain file.
+
+                      \nPlease rerun the script adding --create-domain to subset the domain file."
+                      """
+            )
+            raise argparse.ArgumentError(None, err_msg)
+
 
 def setup_user_mods(user_mods_dir, cesmroot):
     """

@@ -170,10 +170,16 @@ class TestSubsetData(unittest.TestCase):
         """
         Test that you can't run create mesh without domain
         """
-        sys.argv = ["subset_data", "region", "--create-user-mods", "--create-surface", "--create-mesh"]
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-user-mods",
+            "--create-surface",
+            "--create-mesh",
+        ]
         self.args = self.parser.parse_args()
         with self.assertRaisesRegex(
-            argparse.ArgumentError, "--create-domain option is required when --create-mesh is choosen"
+            argparse.ArgumentError, "For regional cases, you can not create mesh files"
         ):
             check_args(self.args)
 
