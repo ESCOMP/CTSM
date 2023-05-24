@@ -217,6 +217,11 @@ class RegionalCase(BaseCase):
         f_out.close()
 
         if self.create_mesh:
+            mesh_out = os.path.join(
+                self.out_dir,
+                os.path.splitext(fdomain_out)[0] + "_ESMF_UNSTRUCTURED_MESH.nc",
+            )
+            self.mesh = mesh_out
             logger.info("creating mesh file from domain file: %s", wfile)
             ds = xr.open_dataset(wfile, mask_and_scale=False, decode_times=False).transpose()
             self.extract_mesh_at_reg(ds)
@@ -237,13 +242,6 @@ class RegionalCase(BaseCase):
 
         logger.info("fsurf_in:  %s", fsurf_in)
         logger.info("fsurf_out: %s", os.path.join(self.out_dir, fsurf_out))
-
-        if self.create_mesh:
-            mesh_out = os.path.join(
-                self.out_dir,
-                os.path.splitext(fsurf_out)[0] + "_ESMF_UNSTRUCTURED_MESH.nc",
-            )
-            self.mesh = mesh_out
 
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
