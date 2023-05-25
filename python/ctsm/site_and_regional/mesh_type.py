@@ -349,11 +349,11 @@ class MeshType:
             ],
             axis=1,
         )
-        # Corners don't go beyond longitude edges
+        # Longitudes should stay within 0 to 360
         indx = np.argwhere(self.corner_lons > 360.0)
-        self.corner_lons[indx] = 360.0
+        self.corner_lons[indx2] = self.corner_lons[indx2] - 360.0
         indx2 = np.argwhere(self.corner_lons < 0.0)
-        self.corner_lons[indx2] = 0.0
+        self.corner_lons[indx2] = self.corner_lons[indx2] + 360.0
 
         self.unit = unit
 
