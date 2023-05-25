@@ -211,16 +211,17 @@ def import_and_process_1yr(
         chunks = None
 
     # Get h2 file (list)
-    h2_pattern = os.path.join(indir, "*h2.*.nc")
-    h2_filelist = glob.glob(h2_pattern)
-    if not h2_filelist:
-        h2_pattern = os.path.join(indir, "*h2.*.nc.base")
-        h2_filelist = glob.glob(h2_pattern)
-        if not h2_filelist:
-            error(logger, "No files found matching pattern '*h2.*.nc(.base)'")
+    h1_pattern = os.path.join(indir, "*h1.*.nc")
+    h1_filelist = glob.glob(h1_pattern)
+    if not h1_filelist:
+        h1_pattern = os.path.join(indir, "*h1.*.nc.base")
+        h1_filelist = glob.glob(h1_pattern)
+        if not h1_filelist:
+            error(logger, "No files found matching pattern '*h1.*.nc(.base)'")
 
+    print(h1_filelist)
     dates_ds = utils.import_ds(
-        h2_filelist,
+        h1_filelist,
         myVars=["SDATES", "HDATES"],
         myVegtypes=utils.define_mgdcrop_list(),
         timeSlice=slice(f"{thisYear}-01-01", f"{thisYear}-12-31"),
