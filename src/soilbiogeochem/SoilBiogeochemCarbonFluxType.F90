@@ -746,7 +746,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Summary(this, bounds, &
-                     num_soilc, filter_soilc, num_soilp, filter_soilp, &
+                     num_bgc_soilc, filter_bgc_soilc, num_soilp, filter_soilp, &
                      soilbiogeochem_decomp_cascade_ctransfer_col, &
                      soilbiogeochem_cwdc_col, soilbiogeochem_cwdn_col, &
                      leafc_to_litter_patch, frootc_to_litter_patch)
@@ -761,8 +761,8 @@ contains
     ! !ARGUMENTS:
     class(soilbiogeochem_carbonflux_type)           :: this
     type(bounds_type)               , intent(in)    :: bounds          
-    integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                         , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    integer                         , intent(in)    :: num_bgc_soilc       ! number of soil columns in filter
+    integer                         , intent(in)    :: filter_bgc_soilc(:) ! filter for soil columns
     integer, intent(in), optional :: num_soilp  ! number of patches in filter
     integer, intent(in), optional :: filter_soilp(:)  ! filter for patches
     real(r8), intent(in), optional :: soilbiogeochem_cwdc_col(bounds%begc:)
@@ -785,16 +785,16 @@ contains
 
     !-----------------------------------------------------------------------
 
-    do fc = 1,num_soilc
-       c = filter_soilc(fc)
+    do fc = 1,num_bgc_soilc
+       c = filter_bgc_soilc(fc)
        this%som_c_leached_col(c) = 0._r8
     end do
 
     ! vertically integrate HR and decomposition cascade fluxes
     do k = 1, ndecomp_cascade_transitions
        do j = 1,nlevdecomp
-          do fc = 1,num_soilc
-             c = filter_soilc(fc)
+          do fc = 1,num_bgc_soilc
+             c = filter_bgc_soilc(fc)
              this%decomp_cascade_hr_col(c,k) = &
                   this%decomp_cascade_hr_col(c,k) + &
                   this%decomp_cascade_hr_vr_col(c,j,k) * dzsoi_decomp(j) 
@@ -808,15 +808,15 @@ contains
 
     ! total heterotrophic respiration, vertically resolved (HR)
     do j = 1,nlevdecomp
-       do fc = 1,num_soilc
-          c = filter_soilc(fc)
+       do fc = 1,num_bgc_soilc
+          c = filter_bgc_soilc(fc)
           this%hr_vr_col(c,j) = 0._r8
        end do
     end do
     do k = 1, ndecomp_cascade_transitions
        do j = 1,nlevdecomp
-          do fc = 1,num_soilc
-             c = filter_soilc(fc)
+          do fc = 1,num_bgc_soilc
+             c = filter_bgc_soilc(fc)
              this%hr_vr_col(c,j) = &
                   this%hr_vr_col(c,j) + &
                   this%decomp_cascade_hr_vr_col(c,j,k)
@@ -826,19 +826,19 @@ contains
 
     ! add up all vertical transport tendency terms and calculate total som leaching loss as the sum of these
     do l = 1, ndecomp_pools
-       do fc = 1,num_soilc
-          c = filter_soilc(fc)
+       do fc = 1,num_bgc_soilc
+          c = filter_bgc_soilc(fc)
           this%decomp_cpools_leached_col(c,l) = 0._r8
        end do
        do j = 1, nlevdecomp
-          do fc = 1,num_soilc
-             c = filter_soilc(fc)
+          do fc = 1,num_bgc_soilc
+             c = filter_bgc_soilc(fc)
              this%decomp_cpools_leached_col(c,l) = this%decomp_cpools_leached_col(c,l) + &
                   this%decomp_cpools_transport_tendency_col(c,j,l) * dzsoi_decomp(j)
           end do
        end do
-       do fc = 1,num_soilc
-          c = filter_soilc(fc)
+       do fc = 1,num_bgc_soilc
+          c = filter_bgc_soilc(fc)
           this%som_c_leached_col(c) = this%som_c_leached_col(c) + this%decomp_cpools_leached_col(c,l)
        end do
     end do
@@ -847,8 +847,8 @@ contains
        associate(is_soil => decomp_cascade_con%is_soil) ! TRUE => pool is a soil pool  
          do k = 1, ndecomp_cascade_transitions
             if ( is_soil(decomp_cascade_con%cascade_donor_pool(k)) ) then
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
                   this%somhr_col(c) = this%somhr_col(c) + this%decomp_cascade_hr_col(c,k)
                end do
             end if
@@ -859,8 +859,8 @@ contains
        associate(is_litter => decomp_cascade_con%is_litter) ! TRUE => pool is a litter pool
          do k = 1, ndecomp_cascade_transitions
             if ( is_litter(decomp_cascade_con%cascade_donor_pool(k)) ) then
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
                   this%lithr_col(c) = this%lithr_col(c) + this%decomp_cascade_hr_col(c,k)
                end do
             end if
@@ -871,8 +871,8 @@ contains
     associate(is_cwd => decomp_cascade_con%is_cwd)  ! TRUE => pool is a cwd pool
       do k = 1, ndecomp_cascade_transitions
          if ( is_cwd(decomp_cascade_con%cascade_donor_pool(k)) ) then
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                this%cwdhr_col(c) = this%cwdhr_col(c) + this%decomp_cascade_hr_col(c,k)
             end do
          end if
@@ -883,8 +883,8 @@ contains
     associate(is_microbe => decomp_cascade_con%is_microbe)  ! TRUE => pool is a microbial pool
       do k = 1, ndecomp_cascade_transitions
          if ( is_microbe(decomp_cascade_con%cascade_donor_pool(k)) ) then
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                this%michr_col(c) = this%michr_col(c) + this%decomp_cascade_hr_col(c,k)
             end do
          end if
@@ -892,8 +892,8 @@ contains
     end associate
 
     ! total heterotrophic respiration (HR)
-    do fc = 1,num_soilc
-       c = filter_soilc(fc)
+    do fc = 1,num_bgc_soilc
+       c = filter_bgc_soilc(fc)
        
        this%hr_col(c) = &
             this%michr_col(c) + &
@@ -920,24 +920,24 @@ contains
              end associate
           end do
           
-          call p2c(bounds, num_soilc, filter_soilc, &
+          call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
                ligninNratio_leaf_patch(bounds%begp:bounds%endp), &
                ligninNratio_leaf_col(bounds%begc:bounds%endc))
-          call p2c(bounds, num_soilc, filter_soilc, &
+          call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
                ligninNratio_froot_patch(bounds%begp:bounds%endp), &
                ligninNratio_froot_col(bounds%begc:bounds%endc))
-          call p2c(bounds, num_soilc, filter_soilc, &
+          call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
                leafc_to_litter_patch(bounds%begp:bounds%endp), &
                leafc_to_litter_col(bounds%begc:bounds%endc))
-          call p2c(bounds, num_soilc, filter_soilc, &
+          call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
                frootc_to_litter_patch(bounds%begp:bounds%endp), &
                frootc_to_litter_col(bounds%begc:bounds%endc))
           
        end if
 
        ! Calculate ligninNratioAve
-       do fc = 1,num_soilc
-          c = filter_soilc(fc)
+       do fc = 1,num_bgc_soilc
+          c = filter_bgc_soilc(fc)
           if(.not.col%is_fates(c)) then
              if (soilbiogeochem_cwdn_col(c) > 0._r8) then
                 ligninNratio_cwd = CNParamsShareInst%cwd_flig * &

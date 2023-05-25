@@ -805,14 +805,14 @@ contains
 
   !-----------------------------------------------------------------------
 
-  subroutine Summary(this, bounds, num_soilc, filter_soilc, cnveg_nitrogenstate_inst)
+  subroutine Summary(this, bounds, num_bgc_soilc, filter_bgc_soilc, cnveg_nitrogenstate_inst)
 
     !
     ! !ARGUMENTS:
     class (soilbiogeochem_nitrogenstate_type) :: this
     type(bounds_type) , intent(in) :: bounds  
-    integer           , intent(in) :: num_soilc       ! number of columns in soilc filter
-    integer           , intent(in) :: filter_soilc(:) ! filter for all active columns
+    integer           , intent(in) :: num_bgc_soilc       ! number of bgc columns in soilc filter
+    integer           , intent(in) :: filter_bgc_soilc(:) ! filter for bgc columns
     type(cnveg_nitrogenstate_type)    , intent(inout) :: cnveg_nitrogenstate_inst
 
     !
@@ -826,14 +826,14 @@ contains
 
    ! vertically integrate NO3 NH4 N2O pools
    if (use_nitrif_denitrif) then
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
          this%smin_no3_col(c) = 0._r8
          this%smin_nh4_col(c) = 0._r8
       end do
       do j = 1, nlevdecomp
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             this%smin_no3_col(c) = &
                  this%smin_no3_col(c) + &
                  this%smin_no3_vr_col(c,j) * dzsoi_decomp(j)
@@ -848,15 +848,15 @@ contains
 
    ! vertically integrate each of the decomposing N pools
    do l = 1, ndecomp_pools
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
          this%decomp_npools_col(c,l) = 0._r8
          if(use_soil_matrixcn)then
          end if
       end do
       do j = 1, nlevdecomp
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             this%decomp_npools_col(c,l) = &
                  this%decomp_npools_col(c,l) + &
                  this%decomp_npools_vr_col(c,j,l) * dzsoi_decomp(j)
@@ -870,8 +870,8 @@ contains
    if ( nlevdecomp > 1) then
 
       do l = 1, ndecomp_pools
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             this%decomp_npools_1m_col(c,l) = 0._r8
          end do
       end do
@@ -881,15 +881,15 @@ contains
       do l = 1, ndecomp_pools
          do j = 1, nlevdecomp
             if ( zisoi(j) <= maxdepth ) then
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
                   this%decomp_npools_1m_col(c,l) = &
                        this%decomp_npools_1m_col(c,l) + &
                        this%decomp_npools_vr_col(c,j,l) * dzsoi_decomp(j)
                end do
             elseif ( zisoi(j-1) < maxdepth ) then
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
                   this%decomp_npools_1m_col(c,l) = &
                        this%decomp_npools_1m_col(c,l) + &
                        this%decomp_npools_vr_col(c,j,l) * (maxdepth - zisoi(j-1))
@@ -901,16 +901,16 @@ contains
       ! Add soil nitrogen pools together to produce vertically-resolved decomposing total soil N pool
       if ( nlevdecomp_full > 1 ) then
          do j = 1, nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                this%decomp_soiln_vr_col(c,j) = 0._r8
             end do
          end do
          do l = 1, ndecomp_pools
             if ( decomp_cascade_con%is_soil(l) ) then
                do j = 1, nlevdecomp
-                  do fc = 1,num_soilc
-                     c = filter_soilc(fc)
+                  do fc = 1,num_bgc_soilc
+                     c = filter_bgc_soilc(fc)
                      this%decomp_soiln_vr_col(c,j) = this%decomp_soiln_vr_col(c,j) + &
                           this%decomp_npools_vr_col(c,j,l)
                   end do
@@ -920,14 +920,14 @@ contains
       end if
       
       ! total litter nitrogen to 1 meter (TOTLITN_1m)
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
          this%totlitn_1m_col(c) = 0._r8
       end do
       do l = 1, ndecomp_pools
          if ( decomp_cascade_con%is_litter(l) ) then
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                this%totlitn_1m_col(c) = &
                     this%totlitn_1m_col(c) + &
                     this%decomp_npools_1m_col(c,l)
@@ -936,14 +936,14 @@ contains
       end do
       
       ! total soil organic matter nitrogen to 1 meter (TOTSOMN_1m)
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
          this%totsomn_1m_col(c) = 0._r8
       end do
       do l = 1, ndecomp_pools
          if ( decomp_cascade_con%is_soil(l) ) then
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                this%totsomn_1m_col(c) = this%totsomn_1m_col(c) + &
                     this%decomp_npools_1m_col(c,l)
             end do
@@ -953,14 +953,14 @@ contains
    endif
    
    ! total litter nitrogen (TOTLITN)
-   do fc = 1,num_soilc
-      c = filter_soilc(fc)
+   do fc = 1,num_bgc_soilc
+      c = filter_bgc_soilc(fc)
       this%totlitn_col(c)    = 0._r8
    end do
    do l = 1, ndecomp_pools
       if ( decomp_cascade_con%is_litter(l) ) then
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             this%totlitn_col(c) = &
                  this%totlitn_col(c) + &
                  this%decomp_npools_col(c,l)
@@ -969,14 +969,14 @@ contains
    end do
    
    ! total microbial nitrogen (TOTMICN)
-   do fc = 1,num_soilc
-      c = filter_soilc(fc)
+   do fc = 1,num_bgc_soilc
+      c = filter_bgc_soilc(fc)
       this%totmicn_col(c) = 0._r8
    end do
    do l = 1, ndecomp_pools
       if ( decomp_cascade_con%is_microbe(l) ) then
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             this%totmicn_col(c) = &
                  this%totmicn_col(c) + &
                  this%decomp_npools_col(c,l)
@@ -985,14 +985,14 @@ contains
    end do
 
    ! total soil organic matter nitrogen (TOTSOMN)
-   do fc = 1,num_soilc
-      c = filter_soilc(fc)
+   do fc = 1,num_bgc_soilc
+      c = filter_bgc_soilc(fc)
       this%totsomn_col(c)    = 0._r8
    end do
    do l = 1, ndecomp_pools
       if ( decomp_cascade_con%is_soil(l) ) then
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             this%totsomn_col(c) = this%totsomn_col(c) + &
                  this%decomp_npools_col(c,l)
          end do
@@ -1000,34 +1000,34 @@ contains
    end do
    
    ! total sminn
-   do fc = 1,num_soilc
-      c = filter_soilc(fc)
+   do fc = 1,num_bgc_soilc
+      c = filter_bgc_soilc(fc)
       this%sminn_col(c)      = 0._r8
    end do
    do j = 1, nlevdecomp
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
          this%sminn_col(c) = this%sminn_col(c) + &
               this%sminn_vr_col(c,j) * dzsoi_decomp(j)
       end do
    end do
 
    ! total col_ntrunc
-   do fc = 1,num_soilc
-      c = filter_soilc(fc)
+   do fc = 1,num_bgc_soilc
+      c = filter_bgc_soilc(fc)
       this%ntrunc_col(c) = 0._r8
    end do
    do j = 1, nlevdecomp
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
          this%ntrunc_col(c) = this%ntrunc_col(c) + &
               this%ntrunc_vr_col(c,j) * dzsoi_decomp(j)
       end do
    end do
 
    ! total cwdn
-   do fc = 1,num_soilc
-      c = filter_soilc(fc)
+   do fc = 1,num_bgc_soilc
+      c = filter_bgc_soilc(fc)
       this%cwdn_col(c) = 0._r8
 
       if(col%is_fates(c)) then

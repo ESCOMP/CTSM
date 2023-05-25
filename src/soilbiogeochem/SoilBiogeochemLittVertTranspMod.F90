@@ -81,7 +81,7 @@ contains
    end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine SoilBiogeochemLittVertTransp(bounds, num_soilc, filter_soilc,      &
+  subroutine SoilBiogeochemLittVertTransp(bounds, num_bgc_soilc, filter_bgc_soilc,      &
        active_layer_inst, soilbiogeochem_state_inst,                     &
        soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst, &
        c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst, &
@@ -105,8 +105,8 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds 
-    integer                                 , intent(in)    :: num_soilc        ! number of soil columns in filter
-    integer                                 , intent(in)    :: filter_soilc(:)  ! filter for soil columns
+    integer                                 , intent(in)    :: num_bgc_soilc        ! number of soil columns in filter
+    integer                                 , intent(in)    :: filter_bgc_soilc(:)  ! filter for soil columns
     type(active_layer_type)                 , intent(in)    :: active_layer_inst
     type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
@@ -187,8 +187,8 @@ contains
 
       !------ first get diffusivity / advection terms -------!
       ! use different mixing rates for bioturbation and cryoturbation, with fixed bioturbation and cryoturbation set to a maximum depth
-      do fc = 1, num_soilc
-         c = filter_soilc (fc)
+      do fc = 1, num_bgc_soilc
+         c = filter_bgc_soilc (fc)
          if  (( max(altmax(c), altmax_lastyear(c)) <= max_altdepth_cryoturbation ) .and. &
               ( max(altmax(c), altmax_lastyear(c)) > 0._r8) ) then
             ! use mixing profile modified slightly from Koven et al. (2009): constant through active layer, linear decrease from base of active layer to zero at a fixed depth
@@ -275,8 +275,8 @@ contains
             if ( .not. is_cwd(s) ) then
                if(.not. use_soil_matrixcn .or. s .eq. 1)then
                   do j = 1,nlevdecomp+1
-                     do fc = 1, num_soilc
-                     c = filter_soilc (fc)
+                     do fc = 1, num_bgc_soilc
+                     c = filter_bgc_soilc (fc)
                      !
                      if ( spinup_state >= 1 ) then
                         ! increase transport (both advection and diffusion) by the same factor as accelerated decomposition for a given pool
@@ -306,16 +306,16 @@ contains
 
                   ! Set Pe (Peclet #) and D/dz throughout column
 
-                  do fc = 1, num_soilc ! dummy terms here
-                     c = filter_soilc (fc)
+                  do fc = 1, num_bgc_soilc ! dummy terms here
+                     c = filter_bgc_soilc (fc)
                      conc_trcr(c,0) = 0._r8
                      conc_trcr(c,col%nbedrock(c)+1:nlevdecomp+1) = 0._r8
                   end do
 
 
                   do j = 1,nlevdecomp+1
-                     do fc = 1, num_soilc
-                     c = filter_soilc (fc)
+                     do fc = 1, num_bgc_soilc
+                     c = filter_bgc_soilc (fc)
 
                      conc_trcr(c,j) = conc_ptr(c,j,s)
                
@@ -379,8 +379,8 @@ contains
 
                ! Calculate the tridiagonal coefficients
                do j = 0,nlevdecomp +1
-                  do fc = 1, num_soilc
-                     c = filter_soilc (fc)
+                  do fc = 1, num_bgc_soilc
+                     c = filter_bgc_soilc (fc)
                      ! g = cgridcell(c)
 
                      if (j > 0 .and. j < nlevdecomp+1) then
@@ -428,14 +428,14 @@ contains
                   enddo ! fc; column
                enddo ! j; nlevdecomp
 
-               do fc = 1, num_soilc
-                  c = filter_soilc (fc)
+               do fc = 1, num_bgc_soilc
+                  c = filter_bgc_soilc (fc)
                   jtop(c) = 0
                enddo
 
                ! subtract initial concentration and source terms for tendency calculation
-               do fc = 1, num_soilc
-                  c = filter_soilc (fc)
+               do fc = 1, num_bgc_soilc
+                  c = filter_bgc_soilc (fc)
                   do j = 1, nlevdecomp
                      if (.not. use_soil_matrixcn) then
                         trcr_tendency_ptr(c,j,s) = 0.-(conc_trcr(c,j) + source(c,j,s))
@@ -449,15 +449,15 @@ contains
                   ! Solve for the concentration profile for this time step
                   call Tridiagonal(bounds, 0, nlevdecomp+1, &
                     jtop(bounds%begc:bounds%endc), &
-                    num_soilc, filter_soilc, &
+                    num_bgc_soilc, filter_bgc_soilc, &
                     a_tri(bounds%begc:bounds%endc, :), &
                     b_tri(bounds%begc:bounds%endc, :), &
                     c_tri(bounds%begc:bounds%endc, :), &
                     r_tri(bounds%begc:bounds%endc, :), &
                     conc_trcr(bounds%begc:bounds%endc,0:nlevdecomp+1))
                   ! add post-transport concentration to calculate tendency term
-                  do fc = 1, num_soilc
-                     c = filter_soilc (fc)
+                  do fc = 1, num_bgc_soilc
+                     c = filter_bgc_soilc (fc)
                      do j = 1, nlevdecomp
                         trcr_tendency_ptr(c,j,s) = trcr_tendency_ptr(c,j,s) + conc_trcr(c,j)
                         trcr_tendency_ptr(c,j,s) = trcr_tendency_ptr(c,j,s) / dtime
@@ -466,16 +466,16 @@ contains
                else
                ! For matrix solution set the matrix input array
                   do j = 1,nlevdecomp
-                     do fc =1,num_soilc
-                        c = filter_soilc(fc)
+                     do fc =1,num_bgc_soilc
+                        c = filter_bgc_soilc(fc)
                      end do
                   end do
                end if  !soil_matrix
             else
                ! for CWD pools, just add
                do j = 1,nlevdecomp
-                  do fc = 1, num_soilc
-                     c = filter_soilc (fc)
+                  do fc = 1, num_bgc_soilc
+                     c = filter_bgc_soilc (fc)
                      if(.not. use_soil_matrixcn)then
                         conc_trcr(c,j) = conc_ptr(c,j,s) + source(c,j,s)
                      else
@@ -493,8 +493,8 @@ contains
 
             if (.not. use_soil_matrixcn) then
                do j = 1,nlevdecomp
-                  do fc = 1, num_soilc
-                     c = filter_soilc (fc)
+                  do fc = 1, num_bgc_soilc
+                     c = filter_bgc_soilc (fc)
                      conc_ptr(c,j,s) = conc_trcr(c,j) 
                      ! Correct for small amounts of carbon that leak into bedrock
                      if (j > col%nbedrock(c)) then 

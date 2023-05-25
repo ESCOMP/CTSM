@@ -138,7 +138,7 @@ contains
   end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine SoilBiogeochemNitrifDenitrif(bounds, num_soilc, filter_soilc, &
+  subroutine SoilBiogeochemNitrifDenitrif(bounds, num_bgc_soilc, filter_bgc_soilc, &
        soilstate_inst, waterstatebulk_inst, temperature_inst, ch4_inst, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
     !
@@ -151,8 +151,8 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
-    integer                                 , intent(in)    :: num_soilc         ! number of soil columns in filter
-    integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
+    integer                                 , intent(in)    :: num_bgc_soilc         ! number of soil columns in filter
+    integer                                 , intent(in)    :: filter_bgc_soilc(:)   ! filter for soil columns
     type(soilstate_type)                    , intent(in)    :: soilstate_inst
     type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
     type(temperature_type)                  , intent(in)    :: temperature_inst
@@ -261,8 +261,8 @@ contains
       co2diff_con(2) =   0.0009_r8
 
       do j = 1, nlevdecomp
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
 
             !---------------- calculate soil anoxia state
             ! calculate gas diffusivity of soil at field capacity here

@@ -22,7 +22,7 @@ module CNAnnualUpdateMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNAnnualUpdate(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+  subroutine CNAnnualUpdate(bounds, num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
        cnveg_state_inst, cnveg_carbonflux_inst)
     !
     ! !DESCRIPTION:
@@ -35,10 +35,10 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)           , intent(in)    :: bounds  
-    integer                     , intent(in)    :: num_soilc         ! number of soil columns in filter
-    integer                     , intent(in)    :: filter_soilc(:)   ! filter for soil columns
-    integer                     , intent(in)    :: num_soilp         ! number of soil patches in filter
-    integer                     , intent(in)    :: filter_soilp(:)   ! filter for soil patches
+    integer                     , intent(in)    :: num_bgc_soilc         ! number of bgc soil columns in filter
+    integer                     , intent(in)    :: filter_bgc_soilc(:)   ! filter for bgc soil columns
+    integer                     , intent(in)    :: num_bgc_vegp         ! number of bgc veg patches in filter
+    integer                     , intent(in)    :: filter_bgc_vegp(:)   ! filter for bgc veg patches
     type(cnveg_state_type)      , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonflux_type) , intent(inout) :: cnveg_carbonflux_inst
     !
@@ -54,8 +54,8 @@ contains
     dt = get_step_size_real()
     secspyear = get_curr_days_per_year() * secspday
 
-    do fc = 1,num_soilc
-       c = filter_soilc(fc)
+    do fc = 1,num_bgc_soilc
+       c = filter_bgc_soilc(fc)
        if(.not.col%is_fates(c))then
           cnveg_state_inst%annsum_counter_col(c) = cnveg_state_inst%annsum_counter_col(c) + dt
           if (cnveg_state_inst%annsum_counter_col(c) >= secspyear) then
@@ -68,8 +68,8 @@ contains
     end do
     
 
-    do fp = 1,num_soilp
-       p = filter_soilp(fp)
+    do fp = 1,num_bgc_vegp
+       p = filter_bgc_vegp(fp)
        c = patch%column(p)
 
        if (end_of_year(c) .and. .not.col%is_fates(c)) then
@@ -98,11 +98,11 @@ contains
     end do
 
     ! Get column-level averages, just for the columns that have reached their personal end-of-year
-    if(num_soilp>0)then
+    if(num_bgc_vegp>0)then
        filter_endofyear_c = col_filter_from_filter_and_logical_array( &
             bounds = bounds, &
-            num_orig = num_soilc, &
-            filter_orig = filter_soilc, &
+            num_orig = num_bgc_soilc, &
+            filter_orig = filter_bgc_soilc, &
             logical_col = end_of_year(bounds%begc:bounds%endc))
        
        call p2c(bounds, filter_endofyear_c%num, filter_endofyear_c%indices, &

@@ -67,7 +67,7 @@ contains
   end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine SoilBiogeochemDecomp (bounds, num_soilc, filter_soilc,                                &
+  subroutine SoilBiogeochemDecomp (bounds, num_bgc_soilc, filter_bgc_soilc,                                &
        soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst, &
        soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, &
        cn_decomp_pools, p_decomp_cpool_loss, pmnf_decomp_cascade, &
@@ -78,8 +78,8 @@ contains
     !
     ! !ARGUMENT:
     type(bounds_type)                       , intent(in)    :: bounds   
-    integer                                 , intent(in)    :: num_soilc          ! number of soil columns in filter
-    integer                                 , intent(in)    :: filter_soilc(:)    ! filter for soil columns
+    integer                                 , intent(in)    :: num_bgc_soilc          ! number of soil columns in filter
+    integer                                 , intent(in)    :: filter_bgc_soilc(:)    ! filter for soil columns
     type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonstate_type)   , intent(in)    :: soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
@@ -141,8 +141,8 @@ contains
       do l = 1, ndecomp_pools
          if ( floating_cn_ratio_decomp_pools(l) ) then
             do j = 1,nlevdecomp
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
                   if ( decomp_npools_vr(c,j,l) > 0._r8 ) then
                      cn_decomp_pools(c,j,l) = decomp_cpools_vr(c,j,l) / decomp_npools_vr(c,j,l)
                   end if
@@ -150,8 +150,8 @@ contains
             end do
          else
             do j = 1,nlevdecomp
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
                   cn_decomp_pools(c,j,l) = initial_cn_ratio(l)
                end do
             end do
@@ -169,8 +169,8 @@ contains
 
       do k = 1, ndecomp_cascade_transitions
          do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
 
                if (decomp_cpools_vr(c,j,cascade_donor_pool(k)) > 0._r8) then
                   if ( pmnf_decomp_cascade(c,j,k) > 0._r8 ) then
@@ -226,15 +226,15 @@ contains
       if (use_lch4) then
          ! Calculate total fraction of potential HR, for methane code
          do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                hrsum(c,j) = 0._r8
             end do
          end do
          do k = 1, ndecomp_cascade_transitions
             do j = 1,nlevdecomp
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
                   hrsum(c,j) = hrsum(c,j) + rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
                end do
             end do
@@ -243,8 +243,8 @@ contains
 
         ! Nitrogen limitation / (low)-moisture limitation                                                                    
          do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                if (phr_vr(c,j) > 0._r8) then
                   fphr(c,j) = hrsum(c,j) / phr_vr(c,j) * w_scalar(c,j)
                   fphr(c,j) = max(fphr(c,j), 0.01_r8) ! Prevent overflow errors for 0 respiration                          
@@ -258,8 +258,8 @@ contains
       
       ! vertically integrate net and gross mineralization fluxes for diagnostic output                                     
 
-     do fc = 1,num_soilc
-       c = filter_soilc(fc)
+     do fc = 1,num_bgc_soilc
+       c = filter_bgc_soilc(fc)
          do j = 1,nlevdecomp
               net_nmin(c) = net_nmin(c) + net_nmin_vr(c,j) * dzsoi_decomp(j)
               gross_nmin(c) = gross_nmin(c) + gross_nmin_vr(c,j) * dzsoi_decomp(j)

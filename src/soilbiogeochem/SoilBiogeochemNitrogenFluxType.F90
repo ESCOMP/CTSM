@@ -1050,7 +1050,7 @@ contains
   end subroutine SetValues
 
   !-----------------------------------------------------------------------
-  subroutine Summary(this, bounds, num_soilc, filter_soilc)
+  subroutine Summary(this, bounds, num_bgc_soilc, filter_bgc_soilc)
     !
     ! !USES:
     use clm_varpar , only: nlevdecomp, ndecomp_cascade_transitions,ndecomp_pools
@@ -1059,16 +1059,16 @@ contains
     ! !ARGUMENTS:
     class (soilbiogeochem_nitrogenflux_type) :: this
     type(bounds_type) , intent(in) :: bounds  
-    integer           , intent(in) :: num_soilc       ! number of soil columns in filter
-    integer           , intent(in) :: filter_soilc(:) ! filter for soil columns
+    integer           , intent(in) :: num_bgc_soilc       ! number of soil columns in filter
+    integer           , intent(in) :: filter_bgc_soilc(:) ! filter for soil columns
     !
     ! !LOCAL VARIABLES:
     integer  :: c,j,k,l   ! indices
     integer  :: fc        ! filter indices
     !-----------------------------------------------------------------------
 
-    do fc = 1,num_soilc
-       c = filter_soilc(fc)
+    do fc = 1,num_bgc_soilc
+       c = filter_bgc_soilc(fc)
        this%denit_col(c) = 0._r8
        this%supplement_to_sminn_col(c) = 0._r8
        this%som_n_leached_col(c)       = 0._r8
@@ -1077,8 +1077,8 @@ contains
     ! vertically integrate decomposing N cascade fluxes and soil mineral N fluxes associated with decomposition cascade
     do k = 1, ndecomp_cascade_transitions
        do j = 1,nlevdecomp
-          do fc = 1,num_soilc
-             c = filter_soilc(fc)
+          do fc = 1,num_bgc_soilc
+             c = filter_bgc_soilc(fc)
 
              this%decomp_cascade_ntransfer_col(c,k) = &
                   this%decomp_cascade_ntransfer_col(c,k) + &
@@ -1096,8 +1096,8 @@ contains
        ! vertically integrate each denitrification flux
        do l = 1, ndecomp_cascade_transitions
           do j = 1, nlevdecomp
-             do fc = 1,num_soilc
-                c = filter_soilc(fc)
+             do fc = 1,num_bgc_soilc
+                c = filter_bgc_soilc(fc)
                 this%sminn_to_denit_decomp_cascade_col(c,l) = &
                      this%sminn_to_denit_decomp_cascade_col(c,l) + &
                      this%sminn_to_denit_decomp_cascade_vr_col(c,j,l) * dzsoi_decomp(j)
@@ -1107,8 +1107,8 @@ contains
 
        ! vertically integrate bulk denitrification and  leaching flux
        do j = 1, nlevdecomp
-          do fc = 1,num_soilc
-             c = filter_soilc(fc)
+          do fc = 1,num_bgc_soilc
+             c = filter_bgc_soilc(fc)
              this%sminn_to_denit_excess_col(c) = &
                   this%sminn_to_denit_excess_col(c) + &
                   this%sminn_to_denit_excess_vr_col(c,j) * dzsoi_decomp(j)
@@ -1121,16 +1121,16 @@ contains
 
        ! total N denitrification (DENIT)
        do l = 1, ndecomp_cascade_transitions
-          do fc = 1,num_soilc
-             c = filter_soilc(fc)
+          do fc = 1,num_bgc_soilc
+             c = filter_bgc_soilc(fc)
              this%denit_col(c) = &
                   this%denit_col(c) + &
                   this%sminn_to_denit_decomp_cascade_col(c,l)
           end do
        end do
 
-       do fc = 1,num_soilc
-          c = filter_soilc(fc)
+       do fc = 1,num_bgc_soilc
+          c = filter_bgc_soilc(fc)
           this%denit_col(c) =  &
                this%denit_col(c) + &
                this%sminn_to_denit_excess_col(c)
@@ -1140,8 +1140,8 @@ contains
 
        ! vertically integrate NO3 NH4 N2O fluxes and pools
        do j = 1, nlevdecomp
-          do fc = 1,num_soilc
-             c = filter_soilc(fc)
+          do fc = 1,num_bgc_soilc
+             c = filter_bgc_soilc(fc)
 
              ! nitrification and denitrification fluxes
              this%f_nit_col(c) = &
@@ -1180,8 +1180,8 @@ contains
           end do
        end do
 
-       do fc = 1,num_soilc
-          c = filter_soilc(fc)
+       do fc = 1,num_bgc_soilc
+          c = filter_bgc_soilc(fc)
           this%denit_col(c) = this%f_denit_col(c)
        end do
 
@@ -1189,8 +1189,8 @@ contains
 
     ! supplementary N supplement_to_sminn
     do j = 1, nlevdecomp
-       do fc = 1,num_soilc
-          c = filter_soilc(fc)
+       do fc = 1,num_bgc_soilc
+          c = filter_bgc_soilc(fc)
           this%supplement_to_sminn_col(c) = &
                this%supplement_to_sminn_col(c) + &
                this%supplement_to_sminn_vr_col(c,j) * dzsoi_decomp(j)
@@ -1199,22 +1199,22 @@ contains
 
     ! add up all vertical transport tendency terms and calculate total som leaching loss as the sum of these
     do l = 1, ndecomp_pools
-       do fc = 1,num_soilc
-          c = filter_soilc(fc)
+       do fc = 1,num_bgc_soilc
+          c = filter_bgc_soilc(fc)
           this%decomp_npools_leached_col(c,l) = 0._r8
        end do
 
        do j = 1, nlevdecomp
-          do fc = 1,num_soilc
-             c = filter_soilc(fc)
+          do fc = 1,num_bgc_soilc
+             c = filter_bgc_soilc(fc)
              this%decomp_npools_leached_col(c,l) = &
                   this%decomp_npools_leached_col(c,l) + &
                   this%decomp_npools_transport_tendency_col(c,j,l) * dzsoi_decomp(j)
           end do
        end do
 
-       do fc = 1,num_soilc
-          c = filter_soilc(fc)
+       do fc = 1,num_bgc_soilc
+          c = filter_bgc_soilc(fc)
           this%som_n_leached_col(c) = &
                this%som_n_leached_col(c) + &
                this%decomp_npools_leached_col(c,l)

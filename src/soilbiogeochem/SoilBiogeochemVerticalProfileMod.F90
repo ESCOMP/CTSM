@@ -24,7 +24,7 @@ module SoilBiogeochemVerticalProfileMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine SoilBiogeochemVerticalProfile(bounds, num_soilc,filter_soilc,num_soilp,filter_soilp, &
+  subroutine SoilBiogeochemVerticalProfile(bounds, num_bgc_soilc,filter_bgc_soilc,num_bgc_vegp,filter_bgc_vegp, &
        active_layer_inst, soilstate_inst, soilbiogeochem_state_inst)
     !
     ! !DESCRIPTION:
@@ -57,10 +57,10 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds  
-    integer                         , intent(in)    :: num_soilc                               ! number of soil columns in filter
-    integer                         , intent(in)    :: filter_soilc(:)                         ! filter for soil columns
-    integer                         , intent(in)    :: num_soilp                               ! number of soil patches in filter
-    integer                         , intent(in)    :: filter_soilp(:)                         ! filter for soil patches
+    integer                         , intent(in)    :: num_bgc_soilc                               ! number of soil columns in filter
+    integer                         , intent(in)    :: filter_bgc_soilc(:)                         ! filter for soil columns
+    integer                         , intent(in)    :: num_bgc_vegp                               ! number of soil patches in filter
+    integer                         , intent(in)    :: filter_bgc_vegp(:)                         ! filter for soil patches
     type(active_layer_type)         , intent(in)    :: active_layer_inst
     type(soilstate_type)            , intent(in)    :: soilstate_inst				    
     type(soilbiogeochem_state_type) , intent(inout) :: soilbiogeochem_state_inst
@@ -124,8 +124,8 @@ contains
       cinput_rootfr(begp:endp, :)     = 0._r8
       col_cinput_rootfr(begc:endc, :) = 0._r8
 
-      do fp = 1,num_soilp
-         p = filter_soilp(fp)
+      do fp = 1,num_bgc_vegp
+         p = filter_bgc_vegp(fp)
          c = patch%column(p)
          if (patch%itype(p) /= noveg) then
             do j = 1, nlevdecomp
@@ -136,8 +136,8 @@ contains
          endif
       end do
 
-      do fp = 1,num_soilp
-         p = filter_soilp(fp)
+      do fp = 1,num_bgc_vegp
+         p = filter_bgc_vegp(fp)
          c = patch%column(p)
          ! integrate rootfr over active layer of soil column
          rootfr_tot = 0._r8
@@ -175,9 +175,9 @@ contains
       !      col_cinput_rootfr(bounds%begc:bounds%endc, :), &
       !      'unity')
 
-      !if(num_soilp>0)then
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
+      !if(num_bgc_vegp>0)then
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
          if(.not.col%is_fates(c))then
             do pi = 1,col%npatches(c))  !maxsoil_patches
                !if (pi <=  col%npatches(c)) then
@@ -192,8 +192,8 @@ contains
       !end if
 
       ! repeat for column-native profiles: Ndep and Nfix
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
          rootfr_tot = 0._r8
          surface_prof_tot = 0._r8
          if_fates: if(col%is_fates(c))then
@@ -231,8 +231,8 @@ contains
       end do
 
       ! check to make sure integral of all profiles = 1.
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
          ndep_prof_sum = 0.
          nfixation_prof_sum = 0.
          do j = 1, nlevdecomp
@@ -258,8 +258,8 @@ contains
          endif
       end do
 
-      do fp = 1,num_soilp
-         p = filter_soilp(fp)
+      do fp = 1,num_bgc_vegp
+         p = filter_bgc_vegp(fp)
          froot_prof_sum = 0.
          croot_prof_sum = 0.
          leaf_prof_sum = 0.

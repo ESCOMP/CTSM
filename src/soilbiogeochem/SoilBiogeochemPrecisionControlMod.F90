@@ -60,7 +60,7 @@ contains
   end subroutine SoilBiogeochemPrecisionControlInit
 
   !-----------------------------------------------------------------------
-  subroutine SoilBiogeochemPrecisionControl(num_soilc, filter_soilc, &
+  subroutine SoilBiogeochemPrecisionControl(num_bgc_soilc, filter_bgc_soilc, &
        soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst)
 
@@ -75,8 +75,8 @@ contains
     use CNSharedParamsMod, only: use_fun
     !
     ! !ARGUMENTS:
-    integer                                 , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                                 , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    integer                                 , intent(in)    :: num_bgc_soilc       ! number of bgc soil columns in filter
+    integer                                 , intent(in)    :: filter_bgc_soilc(:) ! filter for bgc soil columns
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
@@ -106,8 +106,8 @@ contains
          )
 
       ! column loop
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
 
          do j = 1,nlevdecomp
             ! initialize the column-level C and N truncation terms
@@ -165,8 +165,8 @@ contains
       if (use_nitrif_denitrif) then
          ! remove small negative perturbations for stability purposes, if any should arise.
         
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             do j = 1,nlevdecomp
                if (abs(ns%smin_no3_vr_col(c,j)) < ncrit/1e4_r8) then
                   if ( ns%smin_no3_vr_col(c,j)  < 0._r8 ) then

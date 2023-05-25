@@ -2587,7 +2587,7 @@ contains
   end subroutine ZeroDwt
 
   !-----------------------------------------------------------------------
-  subroutine Summary_carbonstate(this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
+  subroutine Summary_carbonstate(this, bounds, num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp)
 
     !
     ! !USES:
@@ -2601,10 +2601,10 @@ contains
     ! !ARGUMENTS:
     class(cnveg_carbonstate_type)  :: this
     type(bounds_type) , intent(in) :: bounds          
-    integer           , intent(in) :: num_soilc       ! number of soil columns in filter
-    integer           , intent(in) :: filter_soilc(:) ! filter for soil columns
-    integer           , intent(in) :: num_soilp       ! number of soil patches in filter
-    integer           , intent(in) :: filter_soilp(:) ! filter for soil patches
+    integer           , intent(in) :: num_bgc_soilc       ! number of bgc soil columns in filter
+    integer           , intent(in) :: filter_bgc_soilc(:) ! filter for bgc soil columns
+    integer           , intent(in) :: num_bgc_vegp       ! number of soil patches in filter
+    integer           , intent(in) :: filter_bgc_vegp(:) ! filter for soil patches
 
     !
     ! !LOCAL VARIABLES:
@@ -2613,8 +2613,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! calculate patch -level summary of carbon state
-    do fp = 1,num_soilp
-       p = filter_soilp(fp)
+    do fp = 1,num_bgc_vegp
+       p = filter_bgc_vegp(fp)
 
        ! displayed vegetation carbon, excluding storage and cpool (DISPVEGC)
        this%dispvegc_patch(p) =        &
@@ -2685,11 +2685,11 @@ contains
     ! column level summary
     ! --------------------------------------------
     if(associated(this%totvegc_patch))then
-       call p2c(bounds, num_soilc, filter_soilc, &
+       call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
             this%totvegc_patch(bounds%begp:bounds%endp), &
             this%totvegc_col(bounds%begc:bounds%endc))
        
-       call p2c(bounds, num_soilc, filter_soilc, &
+       call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
             this%totc_patch(bounds%begp:bounds%endp), &
             this%totc_p2c_col(bounds%begc:bounds%endc))
     end if

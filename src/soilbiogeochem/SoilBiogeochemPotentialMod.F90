@@ -68,7 +68,7 @@ contains
   end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine SoilBiogeochemPotential (bounds, num_soilc, filter_soilc, &
+  subroutine SoilBiogeochemPotential (bounds, num_bgc_soilc, filter_bgc_soilc, &
        soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,  &
        soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, &
        cn_decomp_pools, p_decomp_cpool_loss, p_decomp_cn_gain, &
@@ -80,8 +80,8 @@ contains
     !
     ! !ARGUMENT:
     type(bounds_type)                       , intent(in)    :: bounds   
-    integer                                 , intent(in)    :: num_soilc          ! number of soil columns in filter
-    integer                                 , intent(in)    :: filter_soilc(:)    ! filter for soil columns
+    integer                                 , intent(in)    :: num_bgc_soilc          ! number of soil columns in filter
+    integer                                 , intent(in)    :: filter_bgc_soilc(:)    ! filter for soil columns
     type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonstate_type)   , intent(in)    :: soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
@@ -149,8 +149,8 @@ contains
       do l = 1, ndecomp_pools
          if ( floating_cn_ratio_decomp_pools(l) ) then
             do j = 1,nlevdecomp
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
                   if ( decomp_npools_vr(c,j,l) > 0._r8 ) then
                      cn_decomp_pools(c,j,l) = decomp_cpools_vr(c,j,l) / decomp_npools_vr(c,j,l)
                   end if
@@ -158,8 +158,8 @@ contains
             end do
          else
             do j = 1,nlevdecomp
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
                   cn_decomp_pools(c,j,l) = initial_cn_ratio(l)
                end do
             end do
@@ -173,8 +173,8 @@ contains
 
       do k = 1, ndecomp_cascade_transitions
          do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
 
                if (decomp_cpools_vr(c,j,cascade_donor_pool(k)) > 0._r8 .and. &
                     decomp_k(c,j,cascade_donor_pool(k)) > 0._r8 ) then
@@ -236,8 +236,8 @@ contains
       ! transitions loop).
       if (decomp_method == mimics_decomp) then
          do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                ! Sum C & N fluxes from all transitions into m1 & m2 pools.
                ! Had to form a new loop for the summation due to the order
                ! necessary, ie do k as the innermost loop.
@@ -293,15 +293,15 @@ contains
       ! Sum up all the potential immobilization fluxes (positive pmnf flux)
       ! and all the mineralization fluxes (negative pmnf flux)
       do j = 1,nlevdecomp
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             immob(c,j) = 0._r8
          end do
       end do
       do k = 1, ndecomp_cascade_transitions
          do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                if (pmnf_decomp_cascade(c,j,k) > 0._r8) then
                   immob(c,j) = immob(c,j) + pmnf_decomp_cascade(c,j,k)
                else
@@ -315,23 +315,23 @@ contains
       end do
 
       do j = 1,nlevdecomp
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             potential_immob_vr(c,j) = immob(c,j)
          end do
       end do
 
       ! Add up potential hr for methane calculations
       do j = 1,nlevdecomp
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             phr_vr(c,j) = 0._r8
          end do
       end do
       do k = 1, ndecomp_cascade_transitions
          do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                phr_vr(c,j) = phr_vr(c,j) + rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
             end do
          end do
