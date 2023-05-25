@@ -1078,6 +1078,8 @@ def import_output(
     if np.any(this_ds_gs["NHARVESTS"] > 2):
         raise RuntimeError("How to get NHARVEST_DISCREP for NHARVESTS > 2?")
     this_ds_gs["NHARVEST_DISCREP"] = (this_ds_gs["NHARVESTS"] == 2).astype(int)
+    
+    return this_ds_gs
 
 
 # Print information about a patch (for debugging)
