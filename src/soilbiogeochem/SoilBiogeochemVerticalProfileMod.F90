@@ -174,28 +174,29 @@ contains
       !      cinput_rootfr(bounds%begp:bounds%endp, :), &
       !      col_cinput_rootfr(bounds%begc:bounds%endc, :), &
       !      'unity')
-      if(num_soilp>0)then
-         do pi = 1,maxsoil_patches
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               if(.not.col%is_fates(c))then
-                  if (pi <=  col%npatches(c)) then
-                     p = col%patchi(c) + pi - 1
-                     do j = 1,nlevdecomp
-                        col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * patch%wtcol(p)
-                     end do
-                  end if
-               end if
-            end do
+
+      !if(num_soilp>0)then
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
+         if(.not.col%is_fates(c))then
+            do pi = 1,col%npatches(c))  !maxsoil_patches
+               !if (pi <=  col%npatches(c)) then
+                  p = col%patchi(c) + pi - 1
+                  do j = 1,nlevdecomp
+                     col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * patch%wtcol(p)
+                  end do
+               !end if
+            end if
          end do
-      end if
+      end do
+      !end if
 
       ! repeat for column-native profiles: Ndep and Nfix
       do fc = 1,num_soilc
          c = filter_soilc(fc)
          rootfr_tot = 0._r8
          surface_prof_tot = 0._r8
-         if(col%is_fates(c))then
+         if_fates: if(col%is_fates(c))then
             ! For FATES, we just use the e-folding depth for both fixation and deposition
             ! partially because the fixation may be free-living depending on FATES-side
             ! fixation choices, and partially for simplicity
@@ -226,7 +227,7 @@ contains
                nfixation_prof(c,1) = 1./dzsoi_decomp(1)
                ndep_prof(c,1) = 1./dzsoi_decomp(1)
             endif
-         end if
+         end if if_fates
       end do
 
       ! check to make sure integral of all profiles = 1.

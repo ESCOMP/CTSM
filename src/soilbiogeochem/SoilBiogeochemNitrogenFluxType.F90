@@ -128,7 +128,9 @@ module SoilBiogeochemNitrogenFluxType
      real(r8), pointer :: decomp_npools_sourcesink_col              (:,:,:) ! col (gN/m3) change in decomposing n pools 
                                                                             ! (sum of all additions and subtractions from stateupdate1).  
      real(r8), pointer :: sminn_to_plant_fun_vr_col                 (:,:)   ! col total layer soil N uptake of FUN  (gN/m2/s)
-     real(r8), pointer :: fates_litter_flux                         (:)     ! (gN/m2/s) Litter flux passed in from FATES
+     real(r8), pointer :: fates_litter_flux                         (:)     ! (gN/m2/s) A summary of the total litter
+                                                                            ! flux passed in from FATES.
+                                                                            ! This is a diagnostic for balance checks only
      ! track tradiagonal matrix  
 
    contains

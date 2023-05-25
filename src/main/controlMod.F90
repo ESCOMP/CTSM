@@ -473,6 +473,11 @@ contains
                   errMsg(sourcefile, __LINE__))
           end if
 
+          if (use_c13 .or. use_c14) then
+             call endrun(msg=' ERROR: C13 and C14 dynamics are not compatible with FATES.'//&
+                  errMsg(sourcefile, __LINE__))
+          end if
+          
        else
           
           ! These do default to false anyway, but this emphasizes they

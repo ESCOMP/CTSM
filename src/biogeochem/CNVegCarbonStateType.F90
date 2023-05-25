@@ -82,8 +82,9 @@ module CNVegCarbonStateType
      real(r8), pointer :: dispvegc_patch                      (:) ! (gC/m2) displayed veg carbon, excluding storage and cpool
      real(r8), pointer :: storvegc_patch                      (:) ! (gC/m2) stored vegetation carbon, excluding cpool
      
-     logical, private  :: dribble_crophrv_xsmrpool_2atm
-
+     logical, private  :: dribble_crophrv_xsmrpool_2atm           ! Flag to indicate if should harvest xsmrpool to the atmosphere
+                                                                  ! it originates and is defined in CNVegetationFacade.F90
+     
      ! Total C pools
      real(r8), pointer :: totc_patch                          (:) ! (gC/m2) total patch-level carbon, including cpool
      real(r8), pointer :: totvegc_patch                       (:) ! (gC/m2) total vegetation carbon, excluding cpool

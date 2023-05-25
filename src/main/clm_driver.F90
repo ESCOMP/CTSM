@@ -288,6 +288,8 @@ contains
        call active_layer_inst%alt_calc(filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc, &
             temperature_inst)
 
+       ! Filter bgc_soilc operates on all non-sp soil columns
+       ! Filter bgc_vegp  operates on all non-fates, non-sp patches (use_cn) on soil
        if ((use_cn .or. use_fates_bgc) .and. decomp_method /= no_soil_decomp) then
           call SoilBiogeochemVerticalProfile(bounds_clump                                       , &
                filter_inactive_and_active(nc)%num_bgc_soilc, filter_inactive_and_active(nc)%bgc_soilc   , &
@@ -1080,6 +1082,7 @@ contains
 
        call t_stopf('hydro2_drainage')
 
+       
        if (use_cn .or. use_fates_bgc) then
           call t_startf('EcosysDynPostDrainage')
           call bgc_vegetation_inst%EcosystemDynamicsPostDrainage(bounds_clump, &

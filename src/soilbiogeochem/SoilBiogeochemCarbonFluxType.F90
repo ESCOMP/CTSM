@@ -58,7 +58,10 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: lithr_col                                 (:)     ! (gC/m2/s) litter heterotrophic respiration: donor-pool based definition
      real(r8), pointer :: somhr_col                                 (:)     ! (gC/m2/s) soil organic matter heterotrophic res: donor-pool based definition
      real(r8), pointer :: soilc_change_col                          (:)     ! (gC/m2/s) FUN used soil C
-     real(r8), pointer :: fates_litter_flux                         (:)     ! (gC/m2/s) Litter flux passed in from FATES
+     real(r8), pointer :: fates_litter_flux                         (:)     ! (gC/m2/s) A summary of the total litter
+                                                                            ! flux passed in from FATES.
+                                                                            ! This is a diagnostic for balance checks only
+
      
    contains
 
@@ -950,7 +953,9 @@ contains
                   frootc_to_litter_col(c) + &
                   soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2))
           !else
-             ! Alternative place to hook in fates litr lignan
+             ! For FATES:
+             ! this array is currently updated here:
+             ! clmfates_interfaceMod.F90:wrap_update_hlmfates_dyn()
           end if
        end do
     end if if_mimics

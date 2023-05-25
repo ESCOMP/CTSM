@@ -1204,15 +1204,6 @@ module CLMFatesInterfaceMod
           cf_soil%fates_litter_flux = 0._r8
        end if
           
-       ! This is a diagnostic for carbon accounting (NOT IN CLM, ONLY ELM)
-       !col_cf%litfall(c) = &
-       !     sum(this%fates(ci)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp) * &
-       !         this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
-       !     sum(this%fates(ci)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp) * &
-       !         this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp)) + &
-       !     sum(this%fates(ci)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp) * ^
-       !         this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
-
      end associate
 
      return
