@@ -195,7 +195,7 @@ def import_and_process_1yr(
     incorrectly_daily,
     indir,
     incl_vegtypes_str_in,
-    h1_ds_file,
+    h2_ds_file,
     mxmats,
     get_gs_len_da,
     logger,
@@ -465,15 +465,15 @@ def import_and_process_1yr(
     log(logger, f"   Importing accumulated GDDs...")
     clm_gdd_var = "GDDACCUM"
     myVars = [clm_gdd_var, "GDDHARV"]
-    pattern = os.path.join(indir, f"*h1.{thisYear-1}-01-01*.nc")
-    h1_files = glob.glob(pattern)
-    if not h1_files:
-        pattern = os.path.join(indir, f"*h1.{thisYear-1}-01-01*.nc.base")
-        h1_files = glob.glob(pattern)
-        if not h1_files:
-            error(logger, f"No files found matching pattern '*h1.{thisYear-1}-01-01*.nc(.base)'")
-    h1_ds = utils.import_ds(
-        h1_files,
+    pattern = os.path.join(indir, f"*h2.{thisYear-1}-01-01*.nc")
+    h2_files = glob.glob(pattern)
+    if not h2_files:
+        pattern = os.path.join(indir, f"*h2.{thisYear-1}-01-01*.nc.base")
+        h2_files = glob.glob(pattern)
+        if not h2_files:
+            error(logger, f"No files found matching pattern '*h2.{thisYear-1}-01-01*.nc(.base)'")
+    h2_ds = utils.import_ds(
+        h2_files,
         myVars=myVars,
         myVegtypes=utils.define_mgdcrop_list(),
         chunks=chunks,
@@ -481,36 +481,36 @@ def import_and_process_1yr(
 
     # Restrict to patches we're including
     if skipping_patches_for_isel_nan:
-        if not np.array_equal(dates_ds.patch.values, h1_ds.patch.values):
-            error(logger, "dates_ds and h1_ds don't have the same patch list!")
-        h1_incl_ds = h1_ds.isel(patch=incl_patches_for_isel_nan)
+        if not np.array_equal(dates_ds.patch.values, h2_ds.patch.values):
+            error(logger, "dates_ds and h2_ds don't have the same patch list!")
+        h2_incl_ds = h2_ds.isel(patch=incl_patches_for_isel_nan)
     else:
-        h1_incl_ds = h1_ds
+        h2_incl_ds = h2_ds
 
-    if not np.any(h1_incl_ds[clm_gdd_var].values != 0):
+    if not np.any(h2_incl_ds[clm_gdd_var].values != 0):
         error(logger, f"All {clm_gdd_var} values are zero!")
 
     # Get standard datetime axis for outputs
     Nyears = yN - y1 + 1
 
     if len(gddaccum_yp_list) == 0:
-        lastYear_active_patch_indices_list = [None for vegtype_str in h1_incl_ds.vegtype_str.values]
-        gddaccum_yp_list = [None for vegtype_str in h1_incl_ds.vegtype_str.values]
+        lastYear_active_patch_indices_list = [None for vegtype_str in h2_incl_ds.vegtype_str.values]
+        gddaccum_yp_list = [None for vegtype_str in h2_incl_ds.vegtype_str.values]
         if save_figs:
-            gddharv_yp_list = [None for vegtype_str in h1_incl_ds.vegtype_str.values]
+            gddharv_yp_list = [None for vegtype_str in h2_incl_ds.vegtype_str.values]
 
     incl_vegtype_indices = []
-    for v, vegtype_str in enumerate(h1_incl_ds.vegtype_str.values):
+    for v, vegtype_str in enumerate(h2_incl_ds.vegtype_str.values):
         # Skipping Miscanthus because it seems to never be harvested even though it is sown. This causes problems in NaN mask check.
         if "miscanthus" in vegtype_str:
             log(logger, f"      SKIPPING {vegtype_str}")
             continue
 
         vegtype_int = utils.vegtype_str2int(vegtype_str)[0]
-        thisCrop_full_patchlist = list(utils.xr_flexsel(h1_ds, vegtype=vegtype_str).patch.values)
+        thisCrop_full_patchlist = list(utils.xr_flexsel(h2_ds, vegtype=vegtype_str).patch.values)
 
         # Get time series for each patch of this type
-        thisCrop_ds = utils.xr_flexsel(h1_incl_ds, vegtype=vegtype_str)
+        thisCrop_ds = utils.xr_flexsel(h2_incl_ds, vegtype=vegtype_str)
         thisCrop_gddaccum_da = thisCrop_ds[clm_gdd_var]
         if save_figs:
             thisCrop_gddharv_da = thisCrop_ds["GDDHARV"]
@@ -669,11 +669,11 @@ def import_and_process_1yr(
     skip_patches_for_isel_nan_lastyear = skip_patches_for_isel_nan
 
     # Could save space by only saving variables needed for gridding
-    log(logger, "   Saving h1_ds...")
-    h1_ds.to_netcdf(h1_ds_file)
+    log(logger, "   Saving h2_ds...")
+    h2_ds.to_netcdf(h2_ds_file)
 
     return (
-        h1_ds,
+        h2_ds,
         sdates_rx,
         hdates_rx,
         gddaccum_yp_list,
