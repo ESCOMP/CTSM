@@ -1,5 +1,5 @@
 # Import the CTSM Python utilities
-import utils
+import cropcal_utils as utils
 
 import numpy as np
 import xarray as xr
