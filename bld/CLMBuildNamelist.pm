@@ -757,26 +757,12 @@ sub setup_cmdl_fates_mode {
           }
        }
 
-      # The following variables may be set by the user and are compatible with use_fates
-      # no need to set defaults, covered in a different routine
-      my @list  = (  "use_lch4", "use_nitrif_denitrif" );
-      foreach my $var ( @list ) {
-	  if ( defined($nl->get_value($var))  ) {
-	      $nl_flags->{$var} = $nl->get_value($var);
-	      $val = $nl_flags->{$var};
-	      my $group = $definition->get_group_name($var);
-	      $nl->set_variable_value($group, $var, $val);
-	      if (  ! $definition->is_valid_value( $var, $val ) ) {
-		  my @valid_values   = $definition->get_valid_values( $var );
-		  $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
-	      }
-	  }
-      }
     } else {
        # dis-allow fates specific namelist items with non-fates runs
        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
-                      "use_fates_cohort_age_tracking",
-                      "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging","fates_parteh_mode","use_fates_tree_damage" );
+                      "use_fates_cohort_age_tracking","use_fates_inventory_init","use_fates_fixed_biogeog",
+		      "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging",
+		      "fates_parteh_mode","use_fates_tree_damage" );
        # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
           if ( defined($nl->get_value($var)) ) {
@@ -2890,13 +2876,14 @@ sub setup_logic_supplemental_nitrogen {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   if ( $nl_flags->{'bgc_mode'} ne "sp" && $nl_flags->{'bgc_mode'} ne "fates" && &value_is_true($nl_flags->{'use_crop'}) ) {
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                'suplnitro', 'use_cn'=>$nl_flags->{'use_cn'}, 'use_crop'=>$nl_flags->{'use_crop'});
-  }
+      # If this is non-fates, non-sp and crop is active
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+		  'suplnitro', 'use_cn'=>$nl_flags->{'use_cn'}, 'use_crop'=>$nl_flags->{'use_crop'});
 
-  if ( $nl_flags->{'bgc_mode'} ne "sp" && $nl_flags->{'bgc_mode'} eq "fates" ) {
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                'suplnitro', 'use_fates'=>$nl_flags->{'use_fates'});
+  } elsif ( $nl_flags->{'bgc_mode'} eq "fates" && not &value_is_true( $nl_flags->{'use_fates_sp'})  ) {
+      # Or... if its fates but not fates-sp
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+		  'suplnitro', 'use_fates'=>$nl_flags->{'use_fates'});
   }
   
   #
