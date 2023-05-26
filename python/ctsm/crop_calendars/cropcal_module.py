@@ -3,17 +3,11 @@ import utils
 
 import numpy as np
 import xarray as xr
-from scipy import stats, signal
 import warnings
-import cftime
 import sys
 import os
 import glob
 
-try:
-    import cartopy.crs as ccrs
-except:
-    pass
 try:
     import pandas as pd
 except:
