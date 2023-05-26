@@ -1,11 +1,10 @@
 module PrigentRoughnessStreamType
-!dmleung modified based on ch4FInundatedStreamType on 17 Nov 2022
-#include "shr_assert.h"             ! What is this? In many modules but not dust module
+#include "shr_assert.h"
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Contains methods for reading in the Prigent et al. (1997) roughness length streams file. dmleung 22 Nov 2022
-  !
+  ! Contains methods for reading in the Prigent et al. (1997) roughness length streams file
+  ! Created by Danny M. Leung 22 Nov 2022
   ! !USES
   use ESMF                         
   use dshr_strdata_mod , only : shr_strdata_type
@@ -83,11 +82,11 @@ contains
    character(len=*), parameter    :: stream_name = 'prigentroughness'
    !-----------------------------------------------------------------------
 
-   !if ( finundation_mtd /= finundation_mtd_h2osfc )then     ! how should I change this? comment out for now
+   !if ( finundation_mtd /= finundation_mtd_h2osfc )then
       call this%InitAllocate( bounds )
       call control%ReadNML( bounds, NLFileName )
 
-      if ( this%useStreams() )then     ! is this a namelist input and is it set in namelist default
+      if ( this%useStreams() )then
 
             allocate(stream_varnames(1))
             stream_varnames = (/"Z0a"/)  ! varname in cdf5_Z0a_Prigent-Globe-025x025-09262022.nc, in centimeter
@@ -97,7 +96,7 @@ contains
          end if
 
          ! Initialize the cdeps data type sdat_rghn
-         call shr_strdata_init_from_inline(sdat_rghn,                                  &     ! what is this function and where does it come from?
+         call shr_strdata_init_from_inline(sdat_rghn,                                  &
               my_task             = iam,                                                &
               logunit             = iulog,                                              &
               compname            = 'LND',                                              &
@@ -132,7 +131,7 @@ contains
          sec  = 0
          mcdate = year*10000 + mon*100 + day
 
-         call shr_strdata_advance(sdat_rghn, ymd=mcdate, tod=sec, logunit=iulog, istr='prigentrghn', rc=rc)   ! what is istr and do I need to change elsewhere because the change of istr here
+         call shr_strdata_advance(sdat_rghn, ymd=mcdate, tod=sec, logunit=iulog, istr='prigentrghn', rc=rc)
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
             call ESMF_Finalize(endflag=ESMF_END_ABORT)
          end if
@@ -146,7 +145,7 @@ contains
             if (trim(stream_varnames(n)) == 'Z0a') then
                ig = 0
                do g = bounds%begg,bounds%endg
-                  ig = ig+1                   ! not sure why +1 is needed but it's okay
+                  ig = ig+1
                   this%prigent_rghn(g) = dataptr1d(ig)
                end do
 
@@ -154,7 +153,7 @@ contains
 
          end do
       end if
-   !end if         !comment out for now
+   !end if         !commented out
 
   end subroutine Init
 
@@ -172,7 +171,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     if ( trim(control%stream_fldFileName_prigentroughness) == '' )then
-       UseStreams = .false.  ! dmleung: this won't happen and UseStreams will always be true
+       UseStreams = .false.  ! this won't happen and UseStreams will always be true
     else
        UseStreams = .true.
     end if
@@ -193,11 +192,9 @@ contains
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    !integer  :: begc, endc
     integer  :: begg, endg
     !---------------------------------------------------------------------
 
-    !begc = bounds%begc; endc = bounds%endc
     begg = bounds%begg; endg = bounds%endg
 
     allocate(this%prigent_rghn     (begg:endg))            ;  this%prigent_rghn     (:)   = nan
@@ -205,13 +202,10 @@ contains
   end subroutine InitAllocate
 
   !==============================================================================
-  !subroutine CalcFinundated(this, bounds, num_soilc, filter_soilc, soilhydrology_inst, &
-  !                          waterdiagnosticbulk_inst, qflx_surf_lag_col, finundated )
-  !subroutine CalcDragPartition(this, bounds, num_nolakep, filter_nolakep, dpfct_rock)
   subroutine CalcDragPartition(this, bounds, dpfct_rock)
     !
     ! !DESCRIPTION:
-    ! Commented below by dmleung 31 Dec 2022
+    ! Commented below by Danny M. Leung 31 Dec 2022
     ! Calculate the drag partition effect of friction velocity due to surface roughness following 
     ! Leung et al. (2022).  This module is used in the dust emission module DUSTMod.F90 for 
     ! calculating drag partitioning. The drag partition equation comes from Marticorena and 
@@ -222,9 +216,7 @@ contains
     ! subroutine is used in the InitCold subroutine of DUSTMod.F90.
     !
     ! !USES:
-    !use ColumnType              , only : col
     use PatchType               , only : patch
-    !USES dmleung added 31 Dec 2022
     use landunit_varcon         , only : istdlak
     use LandunitType            , only : lun
     !
@@ -235,7 +227,6 @@ contains
     real(r8)                       , intent(inout) :: dpfct_rock(bounds%begp:)      ! [fraction] rock drag partition factor (roughness effect)
     !
     ! !LOCAL VARIABLES:
-    !integer  :: g, c, fc    ! Indices
     integer  :: g, p, fp, l    ! Indices
     real(r8) :: z0s         ! smooth roughness length (m)
     
@@ -244,17 +235,11 @@ contains
     real(r8), parameter :: X = 10_r8                 ! [m] distance downwind of the roughness element (rock). Assume estimating roughness effect at a distance of 10 m following Leung et al. (2022)
     !---------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(dpfct_rock)        == (/bounds%endp/)), sourcefile, __LINE__) !what's the use of this
-
-    !associate(                                                     &
-         !z           =>   col%z                                   & ! Input:  [real(r8) (:,:) ]  layer depth (m) (-nlevsno+1:nlevsoi)
-    !)
+    SHR_ASSERT_ALL_FL((ubound(dpfct_rock)        == (/bounds%endp/)), sourcefile, __LINE__)
 
 
     ! dmleung: this loop calculates the drag partition effect (or roughness effect) of rocks. We save the drag partition factor as a patch level quantity.
     z0s = 2_r8 * D_p / 30_r8 ! equation from Frank M. White (2006). Here we assume soil medium size is a global constant, and so is smooth roughness length.
-    !do fp = 1,num_nolakep
-       !p = filter_nolakep(fp)
     do p = bounds%begp,bounds%endp
        g = patch%gridcell(p)
        l = patch%landunit(p)
@@ -262,8 +247,6 @@ contains
           dpfct_rock(p) = 1._r8 - ( log(this%prigent_rghn(g)*0.01_r8/z0s) / log(0.7_r8*(X/z0s)**0.8_r8) ) ! Calculating rock drag partition factor using Marticorena and Bergametti (1995). 0.01 is used to convert Z0a from centimeter to meter.
        end if
     end do
-
-    !end associate
 
   end subroutine CalcDragPartition
 
@@ -289,7 +272,7 @@ contains
    character(len=CL)  :: stream_fldFileName_prigentroughness = ' '
    character(len=CL)  :: stream_meshfile_prigentroughness = ' '
    character(len=CL)  :: prigentroughnessmapalgo = 'bilinear'
-   character(len=*), parameter :: namelist_name = 'prigentroughness'    ! MUST agree with group name in namelist definition to read. dmleung commented
+   character(len=*), parameter :: namelist_name = 'prigentroughness'    ! MUST agree with group name in namelist definition to read.
    character(len=*), parameter :: subName = "('prigentroughness::ReadNML')"
    !-----------------------------------------------------------------------
 

@@ -2526,8 +2526,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 
 <!-- =========================================  -->
 <!-- Defaults for Prigent's roughness data      -->
-<!-- dmleung only specified def resolution      -->
-<!-- 31 Dec 2022                                -->
 <!-- =========================================  -->
 
 <stream_fldfilename_prigentroughness

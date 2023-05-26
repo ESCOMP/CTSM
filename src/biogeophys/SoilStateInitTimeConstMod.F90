@@ -703,8 +703,8 @@ contains
     do c = begc,endc
        g = col%gridcell(c)
 
-       soilstate_inst%gwc_thr_col(c) = 0.01_r8*(0.17_r8*clay3d(g,1) + 0.0014_r8*clay3d(g,1)*clay3d(g,1))  !Fecan et al. (1999) -jfk, dmleung coded 27 Nov 2021 for CLM clay fraction
-       !soilstate_inst%gwc_thr_col(c) = 0.17_r8 + 0.14_r8 * clay3d(g,1) * 0.01_r8 -dmleung commented 27 Nov 2021
+       soilstate_inst%gwc_thr_col(c) = 0.01_r8*(0.17_r8*clay3d(g,1) + 0.0014_r8*clay3d(g,1)*clay3d(g,1))  ! Danny M. Leung modified the equation of soil moisture effect for dust emissions using a scale factor of 1. 0.01 is to convert from % to fraction.
+       !soilstate_inst%gwc_thr_col(c) = 0.17_r8 + 0.14_r8 * clay3d(g,1) * 0.01_r8 ! This was the original equation with 1 / (clay fraction) being the scaling factor.
        soilstate_inst%mss_frc_cly_vld_col(c) = min(clay3d(g,1) * 0.01_r8, 0.20_r8)
     end do
 

@@ -1695,7 +1695,6 @@ Mapping method from Nitrogen deposition input file to the model resolution
 
 <!-- ========================================================================================  -->
 <!-- Prigent roughness stream -->
-<!-- dmleung added 31 Dec 2022 -->
 <!-- ========================================================================================  -->
 
 <entry id="stream_fldfilename_prigentroughness" type="char*256" category="datasets"
