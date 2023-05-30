@@ -55,7 +55,7 @@ def main(argv):
         "HARVEST_REASON_PERHARV",
     ]
 
-    h2files = glob.glob(os.path.join(args.directory, "*.clm2.h2.*.nc"))
+    annual_outfiles = glob.glob(os.path.join(args.directory, "*.clm2.h1.*.nc"))
 
     # These should be constant in a Prescribed Calendars (rxboth) run, as long as the inputs were
     # static.
@@ -66,7 +66,7 @@ def main(argv):
     }
 
     case["ds"] = cc.import_output(
-        h2files,
+        annual_outfiles,
         myVars=myVars,
         y1=args.first_usable_year,
         yN=args.last_usable_year,
