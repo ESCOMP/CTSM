@@ -178,24 +178,24 @@ class RXCROPMATURITY(SystemTestsCommon):
         if lnd_grid == "10x15":
             self._sdatefile = os.path.join(
                 blessed_crop_dates_dir,
-                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f10_f10_mg37.2000-2000.20230330_165301.fill1.nc")
+                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f10_f10_mg37.2000-2000.20230330_165301.nc")
             self._hdatefile = os.path.join(
                 blessed_crop_dates_dir,
-                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f10_f10_mg37.2000-2000.20230330_165301.fill1.nc")
+                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f10_f10_mg37.2000-2000.20230330_165301.nc")
         elif lnd_grid == "1.9x2.5":
             self._sdatefile = os.path.join(
                 blessed_crop_dates_dir,
-                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f19_g17.2000-2000.20230102_175625.fill1.nc")
+                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f19_g17.2000-2000.20230102_175625.nc")
             self._hdatefile = os.path.join(
                 blessed_crop_dates_dir,
-                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f19_g17.2000-2000.20230102_175625.fill1.nc")
+                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f19_g17.2000-2000.20230102_175625.nc")
         elif lnd_grid == "0.9x1.25":
             self._sdatefile = os.path.join(
                 blessed_crop_dates_dir,
-                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230520_134417.fill1.nc")
+                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230520_134417.nc")
             self._hdatefile = os.path.join(
                 blessed_crop_dates_dir,
-                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230520_134418.fill1.nc")
+                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230520_134418.nc")
         else:
             error_message = "ERROR: RXCROPMATURITY currently only supports 0.9x1.25, 1.9x2.5, and 10x15 resolutions"
             logger.error(error_message)
@@ -291,7 +291,7 @@ class RXCROPMATURITY(SystemTestsCommon):
             "stream_year_last_cropcal = 2000",
             "model_year_align_cropcal = 2000",
             " ",
-            "! (h1) Annual outputs on sowing or harvest axis
+            "! (h1) Annual outputs on sowing or harvest axis",
             "hist_fincl2 = 'GRAINC_TO_FOOD_PERHARV', 'GRAINC_TO_FOOD_ANN', 'SDATES', 'SDATES_PERHARV', 'SYEARS_PERHARV', 'HDATES', 'GDDHARV_PERHARV', 'GDDACCUM_PERHARV', 'HUI_PERHARV', 'SOWING_REASON_PERHARV', 'HARVEST_REASON_PERHARV'",
             "hist_nhtfrq(2) = 17520",
             "hist_mfilt(2) = 999",
