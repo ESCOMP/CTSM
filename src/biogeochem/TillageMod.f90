@@ -166,44 +166,25 @@ contains
     ! temp. cereals: P 30 d bef, C 15 d bef, D on day of planting
     ! corn, soy    : P           C           D           & HW-7 30 d aftr
 
-    if (day < idop(p)) then
-        tillage_mults(:) = 1._r8
-    else if (day >= idop(p) .and. day < idop(p)+15) then ! based on Point Chisel Tandem Disk multipliers
-        tillage_mults(:) = 1._r8
+    tillage_mults(:) = 1._r8
+    if (day >= idop(p) .and. day < idop(p)+15) then ! based on Point Chisel Tandem Disk multipliers
         tillage_mults(i_cel_lit) = 1.50_r8 !high 1.80,low 1.50
         tillage_mults(i_lig_lit) = 1.50_r8 !high 1.80,low 1.50
         tillage_mults(i_act_som) = 1.00_r8 !high 1.20,low 1.00
         tillage_mults(i_slo_som) = 3.00_r8 !high 4.80,low 3.00
         tillage_mults(i_pas_som) = 3.00_r8 !high 4.80,low 3.00
     else if (day >= idop(p)+15 .and. day < idop(p)+45) then ! based on Field and Row Cultivator multipliers
-        tillage_mults(:) = 1._r8
         tillage_mults(i_cel_lit) = 1.50_r8 !high 1.50,low 1.50
         tillage_mults(i_lig_lit) = 1.50_r8 !high 1.50,low 1.50
         tillage_mults(i_act_som) = 1.00_r8 !high 1.00,low 1.00
         tillage_mults(i_slo_som) = 1.60_r8 !high 3.50,low 1.60
         tillage_mults(i_pas_som) = 1.60_r8 !high 3.50,low 1.60
     else if (day >= idop(p)+45 .and. day <idop(p)+75) then ! based on Rod Weed Row Planter
-        tillage_mults(:) = 1._r8
         tillage_mults(i_cel_lit) = 1.10_r8 !high 1.10,low 1.10
         tillage_mults(i_lig_lit) = 1.10_r8 !high 1.10,low 1.10
         tillage_mults(i_act_som) = 1.00_r8 !high 1.00,low 1.00
         tillage_mults(i_slo_som) = 1.30_r8 !high 2.50,low 1.30
         tillage_mults(i_pas_som) = 1.30_r8 !high 2.50,low 1.30
-    else if (day >= idop(p)+75 .and. day < idop(p)+80) then ! June 14
-        tillage_mults(:) = 1._r8
-        ! TODO(ssr): Check with Mike and Danica: Why this extra code? These should already all be 1.
-        if (patch%itype(p) == ntmp_corn      .or. &
-            patch%itype(p) == nirrig_tmp_corn .or. &
-            patch%itype(p) == ntmp_soybean   .or. &
-            patch%itype(p) == nirrig_tmp_soybean      ) then
-            tillage_mults(i_cel_lit) = 1.00_r8
-            tillage_mults(i_lig_lit) = 1.00_r8
-            tillage_mults(i_act_som) = 1.00_r8
-            tillage_mults(i_slo_som) = 1.00_r8
-            tillage_mults(i_pas_som) = 1.00_r8
-        end if
-    else if (day >= idop(p)+80) then ! July 14
-        tillage_mults(:) = 1._r8
     end if
     
   end subroutine get_tillage_multipliers_orig
@@ -255,44 +236,25 @@ contains
     ! temp. cereals: P 30 d bef, C 15 d bef, D on day of planting
     ! corn, soy    : P           C           D           & HW-7 30 d aftr
 
-    if (idpp < 0) then
-        tillage_mults(:) = 1._r8
-    else if (idpp < 15) then ! based on Point Chisel Tandem Disk multipliers
-        tillage_mults(:) = 1._r8
+    tillage_mults(:) = 1._r8
+    if (idpp < 15) then ! based on Point Chisel Tandem Disk multipliers
         tillage_mults(i_cel_lit) = 1.50_r8 !high 1.80,low 1.50
         tillage_mults(i_lig_lit) = 1.50_r8 !high 1.80,low 1.50
         tillage_mults(i_act_som) = 1.00_r8 !high 1.20,low 1.00
         tillage_mults(i_slo_som) = 3.00_r8 !high 4.80,low 3.00
         tillage_mults(i_pas_som) = 3.00_r8 !high 4.80,low 3.00
     else if (idpp < 45) then ! based on Field and Row Cultivator multipliers
-        tillage_mults(:) = 1._r8
         tillage_mults(i_cel_lit) = 1.50_r8 !high 1.50,low 1.50
         tillage_mults(i_lig_lit) = 1.50_r8 !high 1.50,low 1.50
         tillage_mults(i_act_som) = 1.00_r8 !high 1.00,low 1.00
         tillage_mults(i_slo_som) = 1.60_r8 !high 3.50,low 1.60
         tillage_mults(i_pas_som) = 1.60_r8 !high 3.50,low 1.60
     else if (idpp < 75) then ! based on Rod Weed Row Planter
-        tillage_mults(:) = 1._r8
         tillage_mults(i_cel_lit) = 1.10_r8 !high 1.10,low 1.10
         tillage_mults(i_lig_lit) = 1.10_r8 !high 1.10,low 1.10
         tillage_mults(i_act_som) = 1.00_r8 !high 1.00,low 1.00
         tillage_mults(i_slo_som) = 1.30_r8 !high 2.50,low 1.30
         tillage_mults(i_pas_som) = 1.30_r8 !high 2.50,low 1.30
-    else if (idpp < 80) then ! June 14
-        tillage_mults(:) = 1._r8
-        ! TODO(ssr): Check with Mike and Danica: Why this extra code? These should already all be 1.
-        if (patch%itype(p) == ntmp_corn     .or. &
-            patch%itype(p) == nirrig_tmp_corn .or. &
-            patch%itype(p) == ntmp_soybean    .or. &
-            patch%itype(p) == nirrig_tmp_soybean      ) then
-            tillage_mults(i_cel_lit) = 1.00_r8
-            tillage_mults(i_lig_lit) = 1.00_r8
-            tillage_mults(i_act_som) = 1.00_r8
-            tillage_mults(i_slo_som) = 1.00_r8
-            tillage_mults(i_pas_som) = 1.00_r8
-        end if
-    else ! July 14
-        tillage_mults(:) = 1._r8
     end if
     
   end subroutine get_tillage_multipliers_new
