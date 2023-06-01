@@ -177,6 +177,9 @@ contains
     ! !DESCRIPTION:
     ! Set the time step number
     !
+!KO
+    ! Comment not needed now?
+!KO
     ! Note that the starting time step number is 0, so calling this with nstep = 1
     ! advances the time step beyond the starting time step.
     !

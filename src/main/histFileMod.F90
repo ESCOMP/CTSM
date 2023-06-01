@@ -2606,7 +2606,10 @@ contains
     ! !DESCRIPTION:
     ! Write time constant 3D variables to history tapes.
     ! Only write out when this subroutine is called (normally only for
-    ! primary history files at very first time-step, nstep=0).
+!KO    ! primary history files at very first time-step, nstep=0).
+!KO
+    ! primary history files at very first time-step, nstep=1).
+!KO
     ! Issue the required netcdf wrapper calls to define the history file
     ! contents.
     !
@@ -4009,11 +4012,12 @@ contains
           cycle
        end if
 
-       ! Skip nstep=0 if monthly average
-
-       if (nstep==0 .and. tape(t)%nhtfrq==0) then
-          cycle
-       end if
+!KO    ! Should no longer be needed
+!KO       ! Skip nstep=0 if monthly average
+!KO
+!KO       if (nstep==0 .and. tape(t)%nhtfrq==0) then
+!KO          cycle
+!KO       end if
 
        ! Determine if end of history interval
        tape(t)%is_endhist = .false.

@@ -378,7 +378,11 @@ contains
        ! all restart files having been generated with
        ! https://github.com/ESCOMP/CTSM/issues/1623 resolved, or we stop having a time
        ! step 0 (https://github.com/ESCOMP/CTSM/issues/925).
-       if (num_pcropp > 0 .and. .not. is_first_step()) then
+!KO       if (num_pcropp > 0 .and. .not. is_first_step()) then
+!KO
+       ! Unknown if all restart files have been generated with 1623 resolved but we no longer have a time step 0
+       if (num_pcropp > 0) then
+!KO
           call CropPhenology(num_pcropp, filter_pcropp, &
                waterdiagnosticbulk_inst, temperature_inst, crop_inst, canopystate_inst, cnveg_state_inst, &
                cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &

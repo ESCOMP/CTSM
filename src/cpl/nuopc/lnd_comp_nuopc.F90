@@ -823,9 +823,10 @@ contains
        ! TODO: This is currently hard-wired - is there a better way for nuopc?
        ! Note that the model clock is updated at the end of the time step not at the beginning
        nstep = get_nstep()
-       if (nstep > 0) then
+!KO    ! I don't think this is necessary anymore since there is no longer an nstep=0
+!KO       if (nstep > 0) then
           dosend = .true.
-       end if
+!KO       end if
 
        !--------------------------------
        ! Determine doalb based on nextsw_cday sent from atm model
@@ -833,13 +834,21 @@ contains
 
        caldayp1 = get_curr_calday(offset=dtime, reuse_day_365_for_day_366=.true.)
 
-       if (nstep == 0) then
-          doalb = .false.
-       else if (nstep == 1) then
+!KO       if (nstep == 0) then
+!KO          doalb = .false.
+!KO       else if (nstep == 1) then
+!KO          doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
+!KO       else
+!KO          doalb = (nextsw_cday >= -0.5_r8)
+!KO       end if
+!KO
+!KO    ! Removed the nstep=0 check
+       if (nstep == 1) then
           doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
        else
           doalb = (nextsw_cday >= -0.5_r8)
        end if
+!KO
        call update_rad_dtime(doalb)
 
        !--------------------------------

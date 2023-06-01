@@ -652,6 +652,7 @@ contains
 
     ! If initial run -- ensure that water is properly bounded (read only)
     if (flag == 'read' ) then
+!KO    ! I think leaving this in here is still necessary even though is_first_step is now based on nstep=1
        if ( is_first_step() .and. bound_h2osoi) then
           do c = bounds%begc, bounds%endc
              l = col%landunit(c)

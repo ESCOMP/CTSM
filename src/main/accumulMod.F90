@@ -583,7 +583,12 @@ contains
     ! time average field: reset every accumulation period; normalize at end of
     ! accumulation period
 
-    if ((mod(nstep,this%period) == 1 .or. this%period == 1) .and. (nstep /= 0))then
+!KO ! Since this is equivalent to .not. is_first_step when it was keyed off of nstep=0
+!KO ! I think this can be removed. It seems to be related to the "real" first time step
+!KO    if ((mod(nstep,this%period) == 1 .or. this%period == 1) .and. (nstep /= 0))then
+!KO
+    if (mod(nstep,this%period) == 1 .or. this%period == 1)then
+!KO
        do k = begi,endi
           if (this%active(k)) then
              this%val(k,level) = 0._r8
