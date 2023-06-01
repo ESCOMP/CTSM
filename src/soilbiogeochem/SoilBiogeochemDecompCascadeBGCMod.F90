@@ -902,7 +902,7 @@ contains
             end if
 
             ! Tillage
-            if (get_do_tillage() .and. col%lun_itype(c) == istcrop) then
+            if (get_do_tillage()) then
                ! TODO(ssr): Throw error during namelist build if tillage is called with FATES
                if (.not. present(idop)) then
                    call endrun("Do not call tillage without providing idop. (Maybe you called with FATES?)")

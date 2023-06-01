@@ -337,7 +337,7 @@ contains
     integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
     !
     ! !LOCAL VARIABLES
-    integer :: p, this_patch, j
+    integer :: p, this_patch, j, n_noncrop
 
     if (.not. col%active(c)) then
         return
@@ -345,6 +345,7 @@ contains
 
     ! This subroutine should only ever be called for crop columns...
     this_patch = 0
+    n_noncrop = 0
     do p = col%patchi(c),col%patchf(c)
         if (patch%active(p)) then
             if (patch%itype(p) >= npcropmin) then
@@ -353,12 +354,17 @@ contains
                 end if
                 this_patch = p
             else
-                call endrun('ERROR active non-crop patch found in this column')
+                n_noncrop = n_noncrop + 1
             end if
         end if
     end do
-    if (this_patch == 0) then
-        call endrun('ERROR no active patches found in this active column')
+    if (n_noncrop > 0) then
+        if (this_patch > 0) then
+            call endrun('ERROR Active crop and non-crop patches found in this active column')
+        end if
+        return
+    elseif (this_patch == 0) then
+        call endrun('ERROR No active patches found (crop OR non-crop)')
     end if
 
     call get_tillage_multipliers(idop, this_patch, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
