@@ -343,7 +343,9 @@ contains
         return
     end if
 
-    ! This subroutine should only ever be called for crop columns...
+    ! TODO: Figure out why adding ".and. col%lun_itype(c) == istcrop" to conditional
+    !       controlling call of this subroutine didn't properly exclude non-crop columns.
+    !       That working would allow simplification here.
     this_patch = 0
     n_noncrop = 0
     do p = col%patchi(c),col%patchf(c)
