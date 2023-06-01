@@ -512,7 +512,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
        soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst, &
-       idop, num_soilp, filter_soilp)
+       idop)
     !
     ! !DESCRIPTION:
     !  calculate rate constants and decomposition pathways for the CENTURY decomposition cascade model
@@ -524,6 +524,7 @@ contains
     use clm_varcon       , only : secspday
     use TillageMod       , only : get_do_tillage
     use TillageMod       , only : get_apply_tillage_multipliers
+    use landunit_varcon  , only : istcrop
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds          
@@ -534,8 +535,6 @@ contains
     type(ch4_type)                       , intent(in)    :: ch4_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
     integer, optional                    , intent(in)    :: idop(:) ! patch day of planting
-    integer, optional                    , intent(in)    :: num_soilp       ! number of soil patches in filter
-    integer, optional                    , intent(in)    :: filter_soilp(:) ! filter for soil patches
     !
     ! !LOCAL VARIABLES:
     real(r8), parameter :: eps = 1.e-6_r8
@@ -903,12 +902,12 @@ contains
             end if
 
             ! Tillage
-            if (get_do_tillage()) then
-               ! TODO: Throw error during namelist build if tillage is called with FATES
-               if (.not. (present(idop) .and. present(num_soilp) .and. present(filter_soilp))) then
-                   call endrun("Do not call tillage without providing idop, num_soilp, and filter_soilp. (Maybe you called with FATES?)")
+            if (get_do_tillage() .and. col%lun_itype(c) == istcrop) then
+               ! TODO(ssr): Throw error during namelist build if tillage is called with FATES
+               if (.not. present(idop)) then
+                   call endrun("Do not call tillage without providing idop. (Maybe you called with FATES?)")
                end if
-               call get_apply_tillage_multipliers(idop, num_soilp, filter_soilp, c, decomp_k, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+               call get_apply_tillage_multipliers(idop, c, decomp_k, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
             end if
 
             ! Above into soil matrix
