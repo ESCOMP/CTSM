@@ -337,19 +337,31 @@ contains
     integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
     !
     ! !LOCAL VARIABLES
-    integer :: p, j
+    integer :: p, this_patch, j
+
+    if (.not. col%active(c)) then
+        return
+    end if
 
     ! This subroutine should only ever be called for crop columns...
-    p = col%patchi(c)
-    if (patch%itype(p) < npcropmin) then
-        call endrun('ERROR tillage code should only be called for crops')
-    end if
-    ! ... and those should only ever have one patch.
-    if (p /= col%patchf(c)) then
-        call endrun('ERROR tillage code assumes one patch per column')
+    this_patch = 0
+    do p = col%patchi(c),col%patchf(c)
+        if (patch%active(p)) then
+            if (patch%itype(p) >= npcropmin) then
+                if (this_patch > 0) then
+                    call endrun('ERROR multiple active crop patches found in this column')
+                end if
+                this_patch = p
+            else
+                call endrun('ERROR active non-crop patch found in this column')
+            end if
+        end if
+    end do
+    if (this_patch == 0) then
+        call endrun('ERROR no active patches found in this active column')
     end if
 
-    call get_tillage_multipliers(idop, p, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+    call get_tillage_multipliers(idop, this_patch, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
 
     ! Top 5 layers (instead of all nlevdecomp) so that model only tills the top 26-40 cm
     ! of the soil surface, rather than whole soil - MWGraham
