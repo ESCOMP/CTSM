@@ -1400,13 +1400,13 @@
 	</nthrds>
 	<rootpe>
 	  <rootpe_atm>0</rootpe_atm> 
-	  <rootpe_lnd>-3</rootpe_lnd> 
-	  <rootpe_rof>-3</rootpe_rof> 
-	  <rootpe_ice>-3</rootpe_ice>    
-	  <rootpe_ocn>-3</rootpe_ocn>   
-	  <rootpe_glc>-3</rootpe_glc> 
-	  <rootpe_wav>-3</rootpe_wav> 
-	  <rootpe_cpl>-3</rootpe_cpl>                         
+	  <rootpe_lnd>-1</rootpe_lnd> 
+	  <rootpe_rof>-1</rootpe_rof> 
+	  <rootpe_ice>-1</rootpe_ice>    
+	  <rootpe_ocn>-1</rootpe_ocn>   
+	  <rootpe_glc>-1</rootpe_glc> 
+	  <rootpe_wav>-1</rootpe_wav> 
+	  <rootpe_cpl>-1</rootpe_cpl>                         
 	</rootpe>
       </pes>
     </mach>
