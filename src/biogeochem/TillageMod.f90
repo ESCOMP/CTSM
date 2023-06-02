@@ -32,7 +32,9 @@ module TillageMod
   logical  :: do_tillage_low   ! Do low-intensity tillage?
   logical  :: do_tillage_high  ! Do high-intensity tillage?
   logical  :: use_original_tillage ! Use get_tillage_multipliers_orig?
-  real(r8), pointer :: tillage_mults(:)
+  real(r8), pointer :: tillage_mults(:) ! (ndecomp_pools)
+  real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, nphases)
+  integer, parameter :: nphases = 3 ! How many different tillage phases are there? (Not including all-1 phases.)
 
 
 !==============================================================================
@@ -105,9 +107,10 @@ contains
         call endrun(subname // ':: ERROR high-intensity tillage not yet set up')
      endif
 
-     ! Allocate variables
+     ! Allocate tillage multipliers
      if (get_do_tillage()) then
-        allocate(tillage_mults(ndecomp_pools)) ; tillage_mults(:) = 1.0_r8
+        allocate(tillage_mults(ndecomp_pools)); tillage_mults(:) = 1.0_r8
+        allocate(tillage_mults_allphases(ndecomp_pools, nphases)); tillage_mults_allphases(:,:) = 1.0_r8
      end if
 
   end subroutine tillage_init
@@ -139,6 +142,7 @@ contains
     !
     integer :: day                  ! julian day
     integer :: idpp                 ! days past planting
+    integer :: phase                ! which tillage phase are we in?
     real(r8) dayspyr                ! days per year
     !-----------------------------------------------------------------------
         
@@ -162,25 +166,21 @@ contains
     ! temp. cereals: P 30 d bef, C 15 d bef, D on day of planting
     ! corn, soy    : P           C           D           & HW-7 30 d aftr
 
-    tillage_mults(:) = 1._r8
+    phase = 0
     if (day >= idop(p) .and. day < idop(p)+15) then ! based on Point Chisel Tandem Disk multipliers
-        tillage_mults(i_cel_lit) = 1.50_r8 !high 1.80,low 1.50
-        tillage_mults(i_lig_lit) = 1.50_r8 !high 1.80,low 1.50
-        tillage_mults(i_act_som) = 1.00_r8 !high 1.20,low 1.00
-        tillage_mults(i_slo_som) = 3.00_r8 !high 4.80,low 3.00
-        tillage_mults(i_pas_som) = 3.00_r8 !high 4.80,low 3.00
+        phase = 1
     else if (day >= idop(p)+15 .and. day < idop(p)+45) then ! based on Field and Row Cultivator multipliers
-        tillage_mults(i_cel_lit) = 1.50_r8 !high 1.50,low 1.50
-        tillage_mults(i_lig_lit) = 1.50_r8 !high 1.50,low 1.50
-        tillage_mults(i_act_som) = 1.00_r8 !high 1.00,low 1.00
-        tillage_mults(i_slo_som) = 1.60_r8 !high 3.50,low 1.60
-        tillage_mults(i_pas_som) = 1.60_r8 !high 3.50,low 1.60
+        phase = 2
     else if (day >= idop(p)+45 .and. day <idop(p)+75) then ! based on Rod Weed Row Planter
-        tillage_mults(i_cel_lit) = 1.10_r8 !high 1.10,low 1.10
-        tillage_mults(i_lig_lit) = 1.10_r8 !high 1.10,low 1.10
-        tillage_mults(i_act_som) = 1.00_r8 !high 1.00,low 1.00
-        tillage_mults(i_slo_som) = 1.30_r8 !high 2.50,low 1.30
-        tillage_mults(i_pas_som) = 1.30_r8 !high 2.50,low 1.30
+        phase = 3
+    end if
+
+    tillage_mults(:) = 1._r8
+    if (phase > 0) then
+        if (phase > nphases) then
+            call endrun(msg='Tillage phase > nphases')
+        end if
+        tillage_mults = tillage_mults_allphases(:, phase)
     end if
     
   end subroutine get_tillage_multipliers_orig
@@ -207,6 +207,7 @@ contains
     !
     integer :: day                  ! julian day
     integer :: idpp                 ! days past planting
+    integer :: phase                ! which tillage phase are we in?
     real(r8) dayspyr                ! days per year
     !-----------------------------------------------------------------------
     
@@ -229,25 +230,21 @@ contains
     ! temp. cereals: P 30 d bef, C 15 d bef, D on day of planting
     ! corn, soy    : P           C           D           & HW-7 30 d aftr
 
-    tillage_mults(:) = 1._r8
+    phase = 0
     if (idpp < 15) then ! based on Point Chisel Tandem Disk multipliers
-        tillage_mults(i_cel_lit) = 1.50_r8 !high 1.80,low 1.50
-        tillage_mults(i_lig_lit) = 1.50_r8 !high 1.80,low 1.50
-        tillage_mults(i_act_som) = 1.00_r8 !high 1.20,low 1.00
-        tillage_mults(i_slo_som) = 3.00_r8 !high 4.80,low 3.00
-        tillage_mults(i_pas_som) = 3.00_r8 !high 4.80,low 3.00
+        phase = 1
     else if (idpp < 45) then ! based on Field and Row Cultivator multipliers
-        tillage_mults(i_cel_lit) = 1.50_r8 !high 1.50,low 1.50
-        tillage_mults(i_lig_lit) = 1.50_r8 !high 1.50,low 1.50
-        tillage_mults(i_act_som) = 1.00_r8 !high 1.00,low 1.00
-        tillage_mults(i_slo_som) = 1.60_r8 !high 3.50,low 1.60
-        tillage_mults(i_pas_som) = 1.60_r8 !high 3.50,low 1.60
+        phase = 2
     else if (idpp < 75) then ! based on Rod Weed Row Planter
-        tillage_mults(i_cel_lit) = 1.10_r8 !high 1.10,low 1.10
-        tillage_mults(i_lig_lit) = 1.10_r8 !high 1.10,low 1.10
-        tillage_mults(i_act_som) = 1.00_r8 !high 1.00,low 1.00
-        tillage_mults(i_slo_som) = 1.30_r8 !high 2.50,low 1.30
-        tillage_mults(i_pas_som) = 1.30_r8 !high 2.50,low 1.30
+        phase = 3
+    end if
+
+    tillage_mults(:) = 1._r8
+    if (phase > 0) then
+        if (phase > nphases) then
+            call endrun(msg='Tillage phase > nphases')
+        end if
+        tillage_mults = tillage_mults_allphases(:, phase)
     end if
     
   end subroutine get_tillage_multipliers_new
@@ -323,6 +320,16 @@ contains
     elseif (this_patch == 0) then
         call endrun('ERROR No active patches found (crop OR non-crop)')
     end if
+
+    ! Set up tillage multipliers
+    ! (It would be better to do this in tillage_init, but that can't happen
+    ! because these indices are private members of SoilBiogeochemDecompCascadeBGCMod.
+    tillage_mults_allphases(:,:) = 1.0_r8
+    tillage_mults_allphases(i_cel_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
+    tillage_mults_allphases(i_lig_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
+    tillage_mults_allphases(i_act_som,:) = (/ 1.0_r8, 1.0_r8, 1.0_r8 /)
+    tillage_mults_allphases(i_slo_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
+    tillage_mults_allphases(i_pas_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
 
     call get_tillage_multipliers(idop, this_patch, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
 
