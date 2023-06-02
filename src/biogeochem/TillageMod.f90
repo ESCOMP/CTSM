@@ -122,12 +122,13 @@ contains
   end function get_do_tillage
 
 
-  subroutine get_tillage_multipliers_orig(idop, p, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+  subroutine get_tillage_multipliers(idop, p, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
     ! !DESCRIPTION:
     !
     !  Get the cultivation effective multiplier if prognostic crops are on and
-    !  cultivation is turned on. Created by Sam Levis, modified by Michael Graham
-    !  to use days past planting.
+    !  cultivation is turned on. Created by Sam Levis. Modified by Michael Graham
+    !  to use days past planting. Modified by Sam Rabin to include "new" version
+    !  that *actually* uses days past planting.
     !
     ! !USES:
     use clm_time_manager, only : get_curr_calday, get_curr_days_per_year
@@ -151,7 +152,6 @@ contains
     dayspyr = get_curr_days_per_year()               !Add by MWG for IDPP-based routine
 
     ! days past planting may determine harvest/tillage
-    ! SSR: Unused!
     if (day >= idop(p)) then
         idpp = day - idop(p)
     else
@@ -167,108 +167,33 @@ contains
     ! corn, soy    : P           C           D           & HW-7 30 d aftr
 
     phase = 0
-    if (day >= idop(p) .and. day < idop(p)+15) then ! based on Point Chisel Tandem Disk multipliers
-        phase = 1
-    else if (day >= idop(p)+15 .and. day < idop(p)+45) then ! based on Field and Row Cultivator multipliers
-        phase = 2
-    else if (day >= idop(p)+45 .and. day <idop(p)+75) then ! based on Rod Weed Row Planter
-        phase = 3
-    end if
-
-    tillage_mults(:) = 1._r8
-    if (phase > 0) then
-        if (phase > nphases) then
-            call endrun(msg='Tillage phase > nphases')
-        end if
-        tillage_mults = tillage_mults_allphases(:, phase)
-    end if
-    
-  end subroutine get_tillage_multipliers_orig
-
-
-  subroutine get_tillage_multipliers_new(idop, p, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
-    ! !DESCRIPTION:
-    !
-    !  Get the cultivation effective multiplier if prognostic crops are on and
-    !  cultivation is turned on. Based on get_tillage_multipliers_orig().
-    !  Changed by Sam Rabin:
-    !  - Actually use idpp (corrected for crossing new year) instead of idop+N
-    !
-    ! !USES:
-    use clm_time_manager, only : get_curr_calday, get_curr_days_per_year
-    use pftconMod       , only : ntmp_corn, nirrig_tmp_corn, ntmp_soybean, nirrig_tmp_soybean
-    ! !ARGUMENTS:
-    integer          , intent(in) :: idop(:) ! patch day of planting
-    integer          , intent(in) :: p       ! index of patch this is being called for
-    integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
-    integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
-    !
-    ! !LOCAL VARIABLES:
-    !
-    integer :: day                  ! julian day
-    integer :: idpp                 ! days past planting
-    integer :: phase                ! which tillage phase are we in?
-    real(r8) dayspyr                ! days per year
-    !-----------------------------------------------------------------------
-    
-    !get info from externals
-    day = get_curr_calday()
-    dayspyr = get_curr_days_per_year()               !Add by MWG for IDPP-based routine
-
-    ! days past planting may determine harvest/tillage
-    if (day >= idop(p)) then
-        idpp = day - idop(p)
-    else
-        idpp = int(dayspyr) + day - idop(p)
-    end if
-
-    ! -----------------------------------------------------
-    ! 3) assigning cultivation practices and mapping to the
-    !    effect on soil C decomposition
-    ! -----------------------------------------------------
-    ! info from DAYCENT (Melannie Hartman CSU)
-    ! temp. cereals: P 30 d bef, C 15 d bef, D on day of planting
-    ! corn, soy    : P           C           D           & HW-7 30 d aftr
-
-    phase = 0
-    if (idpp < 15) then ! based on Point Chisel Tandem Disk multipliers
-        phase = 1
-    else if (idpp < 45) then ! based on Field and Row Cultivator multipliers
-        phase = 2
-    else if (idpp < 75) then ! based on Rod Weed Row Planter
-        phase = 3
-    end if
-
-    tillage_mults(:) = 1._r8
-    if (phase > 0) then
-        if (phase > nphases) then
-            call endrun(msg='Tillage phase > nphases')
-        end if
-        tillage_mults = tillage_mults_allphases(:, phase)
-    end if
-    
-  end subroutine get_tillage_multipliers_new
-
-
-  ! Public interface to choose between and call either get_tillage_multipliers_orig() or get_tillage_multipliers_new()
-  subroutine get_tillage_multipliers(idop, p, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
-    ! !DESCRIPTION:
-    !
-    !  Public interface to choose between and call either original (buggy) or
-    !  new (fixed), depending on use_original_tillage true or false.
-    !
-    ! !ARGUMENTS:
-    integer          , intent(in) :: idop(:) ! patch day of planting
-    integer          , intent(in) :: p        ! index of patch this is being called for
-    integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
-    integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
 
     if (use_original_tillage) then
-        call get_tillage_multipliers_orig(idop, p, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+        if (day >= idop(p) .and. day < idop(p)+15) then ! based on Point Chisel Tandem Disk multipliers
+            phase = 1
+        else if (day >= idop(p)+15 .and. day < idop(p)+45) then ! based on Field and Row Cultivator multipliers
+            phase = 2
+        else if (day >= idop(p)+45 .and. day <idop(p)+75) then ! based on Rod Weed Row Planter
+            phase = 3
+        end if
     else
-        call get_tillage_multipliers_new(idop, p, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+        if (idpp < 15) then ! based on Point Chisel Tandem Disk multipliers
+            phase = 1
+        else if (idpp < 45) then ! based on Field and Row Cultivator multipliers
+            phase = 2
+        else if (idpp < 75) then ! based on Rod Weed Row Planter
+            phase = 3
+        end if
     end if
 
+    tillage_mults(:) = 1._r8
+    if (phase > 0) then
+        if (phase > nphases) then
+            call endrun(msg='Tillage phase > nphases')
+        end if
+        tillage_mults = tillage_mults_allphases(:, phase)
+    end if
+    
   end subroutine get_tillage_multipliers
 
 
