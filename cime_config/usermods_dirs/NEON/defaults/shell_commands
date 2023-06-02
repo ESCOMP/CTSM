@@ -11,6 +11,7 @@
 # Set years to run forcing data over
 ./xmlchange DATM_YR_ALIGN=2018,DATM_YR_END=2021,DATM_YR_START=2018
 compset=`./xmlquery COMPSET --value`
+CLM_USRDAT_NAME=`./xmlquery CLM_USRDAT_NAME --value`
 # For a transient case run the whole length and don't cycle
 if  [[ $compset =~ ^HIST ]]; then
   ./xmlchange DATM_YR_END=2022

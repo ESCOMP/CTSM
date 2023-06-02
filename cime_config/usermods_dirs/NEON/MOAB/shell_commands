@@ -4,7 +4,7 @@
 ./xmlchange PTS_LAT=38.25136
 # NEON precipitation data for this site is bad so end early
 # If CLM_USRDAT_NAME is NEON.PRISM you can run to the end of the data
-if [$CLM_USRDAT_NAME=='NEON']; then
+if [$CLM_USRDAT_NAME == 'NEON' ]; then
   ./xmlchange DATM_YR_END=2020
   # Different default number of months to run for transient case
   if  [[ $compset =~ ^HIST ]]; then
