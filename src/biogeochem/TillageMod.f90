@@ -51,10 +51,11 @@ contains
     use decompMod      , only : bounds_type
     !
     ! !ARGUMENTS
+    ! SSR: Not sure why this is necessary, but without it, CTSM stalls out
+    !      (although it seems to successfully complete this subroutine).
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES
-    integer                :: begp, endp   ! indices for allocating patch dimension
     integer                :: nu_nml       ! unit for namelist file
     integer                :: nml_error    ! namelist i/o error flag
     integer                :: mpicom       ! MPI communicator
@@ -106,8 +107,6 @@ contains
 
      ! Allocate variables
      if (get_do_tillage()) then
-        begp = bounds%begp
-        endp = bounds%endp
         allocate(tillage_mults(ndecomp_pools)) ; tillage_mults(:) = 1.0_r8
      end if
 
