@@ -108,10 +108,6 @@ contains
         write(iulog,*) '  use_original_tillage   = ',use_original_tillage
      endif
 
-     if (do_tillage_low .and. do_tillage_high) then
-        call endrun(subname // ':: ERROR do_tillage_low and do_tillage_high are mutually exclusive')
-     endif
-
      ! Assign these
      do_tillage_low_private = do_tillage_low
      do_tillage_high_private = do_tillage_high
