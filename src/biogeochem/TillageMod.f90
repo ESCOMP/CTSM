@@ -261,12 +261,7 @@ contains
     ! Top 5 layers (instead of all nlevdecomp) so that model only tills the top 26-40 cm
     ! of the soil surface, rather than whole soil - MWGraham
     do j = 1,5
-        ! TODO(ssr): Loop through ALL pools, not just the ones that currently have non-1 values
-        decomp_k(c,j,i_cel_lit) = decomp_k(c,j,i_cel_lit) * tillage_mults(i_cel_lit)
-        decomp_k(c,j,i_lig_lit) = decomp_k(c,j,i_lig_lit) * tillage_mults(i_lig_lit) 
-        decomp_k(c,j,i_act_som) = decomp_k(c,j,i_act_som) * tillage_mults(i_act_som)
-        decomp_k(c,j,i_slo_som) = decomp_k(c,j,i_slo_som) * tillage_mults(i_slo_som)
-        decomp_k(c,j,i_pas_som) = decomp_k(c,j,i_pas_som) * tillage_mults(i_pas_som)
+        decomp_k(c,j,:) = decomp_k(c,j,:) * tillage_mults(:)
     end do
 
   end subroutine get_apply_tillage_multipliers
