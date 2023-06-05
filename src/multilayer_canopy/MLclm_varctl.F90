@@ -29,6 +29,6 @@ module MLclm_varctl
 
   ! Archival or permanent disk full pathname for RSL psihat look-up tables
 
-  character(len=256), save :: rslfile = '../rsl_lookup_tables/psihat.nc'
+  character(len=256), save :: rslfile = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/rsl_lookup_tables/psihat.nc'
 
 end module MLclm_varctl
