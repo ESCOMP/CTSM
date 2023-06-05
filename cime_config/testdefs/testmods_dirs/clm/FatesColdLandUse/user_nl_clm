@@ -1,2 +1,2 @@
-flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/landuse.timeseries_4x5_hist_simyr1850-2015_200311.nc'
+flanduse_timeseries = '$DIN_LOC_ROOTlnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_10x15_hist_78_CMIP6_1850-2000_c230517.nc'
 do_harvest = .true.
