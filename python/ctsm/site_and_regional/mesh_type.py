@@ -350,10 +350,14 @@ class MeshType:
             axis=1,
         )
         # Longitudes should stay within 0 to 360
-        indx = np.argwhere(self.corner_lons > 360.0)
-        self.corner_lons[indx2] = self.corner_lons[indx2] - 360.0
-        indx2 = np.argwhere(self.corner_lons < 0.0)
-        self.corner_lons[indx2] = self.corner_lons[indx2] + 360.0
+        if np.any(self.corner_lons > 360.0):
+            abort("Corners have longitudes greater than 360")
+        if np.any(self.corner_lons < 0.0):
+            logger.warning(
+                "Corners have longitudes less than zero -- %s %s",
+                "this will work, but may result in answers",
+                "different to roundoff to corners within 0 to 360",
+            )
 
         self.unit = unit
 
