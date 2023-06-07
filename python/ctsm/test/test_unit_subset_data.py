@@ -126,6 +126,33 @@ class TestSubsetData(unittest.TestCase):
         ):
             check_args(self.args)
 
+    def test_check_args_fails_for_timeseries_without_correct_surface_year(self):
+        """
+        Test that check args does not allow landuse-timeseries to be used
+        without providing the correct start surface year
+        """
+        sys.argv = ["subset_data", "point", "--create-landuse", "--create-surface"]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentError,
+            "--create-landuse is given without a surface dataset year of 1850",
+        ):
+            check_args(self.args)
+
+
+    def test_check_args_fails_bad_surface_year(self):
+        """
+        Test that check args does not allow --surf-year to be bad
+        """
+        sys.argv = ["subset_data", "point", "--create-surface", "--surf-year", "2305"]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentError,
+            "Bad year for option --surf-year, can only be 1850 or 2000"
+        ):
+            check_args(self.args)
+
+
     def test_check_args_outsurfdat_fails_without_overwrite(self):
         """
         Test that check args does not allow an output surface dataset to be specified
@@ -182,6 +209,16 @@ class TestSubsetData(unittest.TestCase):
             argparse.ArgumentError, "For regional cases, you can not create mesh files"
         ):
             check_args(self.args)
+
+    def test_complex_option_works(self):
+        """
+        Test that check_args won't flag a set of complex options that is valid
+        Do user-mods, surface and landuse-timeseries, as well as DATM, for verbose with crop
+        """
+        sys.argv = ["subset_data", "region", "--reg", "testname", "--create-user-mods", "--create-surface", "--create-landuse", "--surf-year", "1850", "--create-mesh", "--create-domain", "--create-datm", "--verbose", "--crop" ]
+        self.args = self.parser.parse_args()
+        check_args(self.args)
+
 
 
 if __name__ == "__main__":
