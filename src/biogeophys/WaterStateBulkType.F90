@@ -153,8 +153,8 @@ contains
     call hist_addfld1d ( &
          fname=this%info%fname('SNOW_PERSISTENCE'),  &
          units='seconds',  &
-         avgflag='I', &
-         long_name=this%info%lname('Length of time of continuous snow cover (nat. veg. landunits only)'), &
+         avgflag='A', &
+         long_name=this%info%lname('Length of time of continuous snow cover (nat. veg. landunits only); consider viewing as instantaneous field'), &
          ptr_col=this%snow_persistence_col, l2g_scale_type='natveg') 
 
 

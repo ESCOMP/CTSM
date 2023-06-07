@@ -873,7 +873,7 @@ contains
           if (ff > 0) then
 
              ! if field is in include list, ff > 0 and htape_addfld
-             ! will not be called for field
+             ! will be called for field
 
              avgflag = getflag (fincl(ff,t))
              call htape_addfld (t, f, avgflag)
