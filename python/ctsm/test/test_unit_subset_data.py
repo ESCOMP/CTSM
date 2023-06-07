@@ -193,22 +193,6 @@ class TestSubsetData(unittest.TestCase):
         ):
             check_args(self.args)
 
-    def test_create_domain_for_singlept(self):
-        """
-        Test that you can't run create domain for a single-point
-        """
-        sys.argv = [
-            "subset_data",
-            "point",
-            "--create-domain",
-        ]
-        self.args = self.parser.parse_args()
-        with self.assertRaisesRegex(
-            argparse.ArgumentError, "For single point cases, you can not create domain files"
-        ):
-            check_args(self.args)
-
-
     def test_create_mesh_without_domain(self):
         """
         Test that you can't run create mesh without domain

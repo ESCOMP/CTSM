@@ -221,22 +221,31 @@ def get_parser():
         dest="create_mesh",
         required=False,
     )
+    rg_parser.add_argument(
+        "--create-domain",
+        help="Create CLM domain file for a region. \
+        Domain files are not needed for NUOPC cases, but are needed to create mesh files that are needed for NUOPC cases.",
+        action="store_true",
+        dest="create_domain",
+        required=False,
+    )
 
     # -- common options between both subparsers
     for subparser in [pt_parser, rg_parser]:
-        subparser.add_argument(
-            "--create-domain",
-            help="Create CLM domain file at single point/region. \
-            Domain files are not needed for NUOPC cases.",
-            action="store_true",
-            dest="create_domain",
-            required=False,
-        )
         subparser.add_argument(
             "--create-surface",
             help="Create surface data file at single point/region.",
             action="store_true",
             dest="create_surfdata",
+            required=False,
+        )
+        subparser.add_argument(
+            "--surf-year",
+            help="Year for surface data file at single point/region (and start year for land-use timeseries).",
+            action="store",
+            dest="surf_year",
+            type=int,
+            default=2000,
             required=False,
         )
         subparser.add_argument(
@@ -371,7 +380,6 @@ def check_args(args):
     if not any(
         [
             args.create_surfdata,
-            args.create_domain,
             args.create_landuse,
             args.create_datm,
         ]
@@ -592,10 +600,6 @@ def subset_point(args, file_dict: dict):
     )
 
     logger.debug(single_point)
-
-    # --  Create CTSM domain file
-    if single_point.create_domain:
-        single_point.create_domain_at_point(file_dict["main_dir"], file_dict["fdomain_in"])
 
     # --  Create CTSM surface data file
     if single_point.create_surfdata:
