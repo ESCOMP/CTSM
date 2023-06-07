@@ -43,6 +43,11 @@ module CNProductsMod
      real(r8), pointer :: dwt_prod100_gain_grc(:) ! (g[C or N]/m2/s) dynamic landcover addition to 100-year wood product pool
      real(r8), pointer :: dwt_woodprod_gain_grc(:) ! (g[C or N]/m2/s) dynamic landcover addition to wood product pools
      real(r8), pointer :: dwt_cropprod1_gain_grc(:) ! (g[C or N]/m2/s) dynamic landcover addition to 1-year crop product pool
+     real(r8), pointer :: gru_prod10_gain_patch(:)  ! (g[C or N]/m2/s) gross unrepresented landcover addition to 10-year wood product pool
+     real(r8), pointer :: gru_prod10_gain_grc(:)  ! (g[C or N]/m2/s) gross unrepresented landcover addition to 10-year wood product pool
+     real(r8), pointer :: gru_prod100_gain_patch(:) ! (g[C or N]/m2/s) gross unrepresented landcover addition to 100-year wood product pool
+     real(r8), pointer :: gru_prod100_gain_grc(:) ! (g[C or N]/m2/s) gross unrepresented landcover addition to 100-year wood product pool
+     real(r8), pointer :: gru_woodprod_gain_grc(:) ! (g[C or N]/m2/s) gross unrepresented landcover addition to wood product pools
      real(r8), pointer :: hrv_deadstem_to_prod10_patch(:)  ! (g[C or N]/m2/s) dead stem harvest to 10-year wood product pool
      real(r8), pointer :: hrv_deadstem_to_prod10_grc(:)  ! (g[C or N]/m2/s) dead stem harvest to 10-year wood product pool
      real(r8), pointer :: hrv_deadstem_to_prod100_patch(:) ! (g[C or N]/m2/s) dead stem harvest to 100-year wood product pool
@@ -135,9 +140,14 @@ contains
 
     allocate(this%dwt_cropprod1_gain_grc(begg:endg)) ; this%dwt_cropprod1_gain_grc(:) = nan
 
+    allocate(this%gru_prod10_gain_patch(begp:endp)) ; this%gru_prod10_gain_patch(:) = nan
+    allocate(this%gru_prod10_gain_grc(begg:endg)) ; this%gru_prod10_gain_grc(:) = nan
+    allocate(this%gru_prod100_gain_patch(begp:endp)) ; this%gru_prod100_gain_patch(:) = nan
+    allocate(this%gru_prod100_gain_grc(begg:endg)) ; this%gru_prod100_gain_grc(:) = nan
+    allocate(this%gru_woodprod_gain_grc(begg:endg)) ; this%gru_woodprod_gain_grc(:) = nan
+
     allocate(this%hrv_deadstem_to_prod10_patch(begp:endp)) ; this%hrv_deadstem_to_prod10_patch(:) = nan
     allocate(this%hrv_deadstem_to_prod10_grc(begg:endg)) ; this%hrv_deadstem_to_prod10_grc(:) = nan
-
     allocate(this%hrv_deadstem_to_prod100_patch(begp:endp)) ; this%hrv_deadstem_to_prod100_patch(:) = nan
     allocate(this%hrv_deadstem_to_prod100_grc(begg:endg)) ; this%hrv_deadstem_to_prod100_grc(:) = nan
 
@@ -265,6 +275,22 @@ contains
          long_name = 'landcover change-driven addition to 1-year crop product pool', &
          ptr_gcell = this%dwt_cropprod1_gain_grc, default=active_if_non_isotope)
 
+    this%gru_prod10_gain_grc(begg:endg) = spval
+    call hist_addfld1d( &
+         fname = this%species%hist_fname('GRU_PROD10', suffix='_GAIN'), &
+         units = 'g' // this%species%get_species() // '/m^2/s', &
+         avgflag = 'A', &
+         long_name = 'gross unrepresented landcover change addition to 10-yr wood product pool', &
+         ptr_gcell = this%gru_prod10_gain_grc, default='inactive')
+
+    this%gru_prod100_gain_grc(begg:endg) = spval
+    call hist_addfld1d( &
+         fname = this%species%hist_fname('GRU_PROD100', suffix='_GAIN'), &
+         units = 'g' // this%species%get_species() // '/m^2/s', &
+         avgflag = 'A', &
+         long_name = 'gross unrepresented landcover change addition to 100-yr wood product pool', &
+         ptr_gcell = this%gru_prod100_gain_grc, default='inactive')
+
     this%cropprod1_loss_grc(begg:endg) = spval
     call hist_addfld1d( &
          fname = this%species%hist_fname('CROPPROD1', suffix='_LOSS'), &
@@ -323,6 +349,8 @@ contains
     do p = bounds%begp, bounds%endp
        this%hrv_deadstem_to_prod10_patch(p) = 0._r8
        this%hrv_deadstem_to_prod100_patch(p) = 0._r8
+       this%gru_prod10_gain_patch(p) = 0._r8
+       this%gru_prod100_gain_patch(p) = 0._r8
        this%crop_harvest_to_cropprod1_patch(p) = 0._r8
     end do
 
@@ -464,6 +492,7 @@ contains
   subroutine UpdateProducts(this, bounds, &
        num_soilp, filter_soilp, &
        dwt_wood_product_gain_patch, &
+       gru_wood_product_gain_patch, &
        wood_harvest_patch, &
        dwt_crop_product_gain_patch, &
        crop_harvest_to_cropprod_patch)
@@ -483,6 +512,9 @@ contains
     ! a patch-level flux, it is expressed per unit GRIDCELL area
     real(r8), intent(in) :: dwt_wood_product_gain_patch(bounds%begp:)
 
+    ! gross unrepresented landcover addition to wood product pools (g/m2/s) [patch]
+    real(r8), intent(in) :: gru_wood_product_gain_patch( bounds%begp: )
+
     ! wood harvest addition to wood product pools (g/m2/s) [patch]
     real(r8), intent(in) :: wood_harvest_patch(bounds%begp:)
 
@@ -492,10 +524,10 @@ contains
 
     ! crop harvest to crop product pool (g/m2/s) [patch]
     real(r8), intent(in) :: crop_harvest_to_cropprod_patch( bounds%begp: )
-    !
 
 
     SHR_ASSERT_ALL_FL((ubound(dwt_wood_product_gain_patch) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(gru_wood_product_gain_patch) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(wood_harvest_patch) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(dwt_crop_product_gain_patch) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(crop_harvest_to_cropprod_patch) == (/bounds%endp/)), sourcefile, __LINE__)
@@ -503,12 +535,13 @@ contains
     call this%PartitionWoodFluxes(bounds, &
          num_soilp, filter_soilp, &
          dwt_wood_product_gain_patch(bounds%begp:bounds%endp), &
+         gru_wood_product_gain_patch(bounds%begp:bounds%endp), &
          wood_harvest_patch(bounds%begp:bounds%endp))
     
     call this%PartitionCropFluxes(bounds, &
          num_soilp, filter_soilp, &
          dwt_crop_product_gain_patch(bounds%begp:bounds%endp), &
-            crop_harvest_to_cropprod_patch(bounds%begp:bounds%endp))
+         crop_harvest_to_cropprod_patch(bounds%begp:bounds%endp))
 
     return
   end subroutine UpdateProducts
@@ -518,6 +551,7 @@ contains
   subroutine PartitionWoodFluxes(this, bounds, &
        num_soilp, filter_soilp, &
        dwt_wood_product_gain_patch, &
+       gru_wood_product_gain_patch, &
        wood_harvest_patch)
     !
     ! !DESCRIPTION:
@@ -537,6 +571,9 @@ contains
     ! a patch-level flux, it is expressed per unit GRIDCELL area
     real(r8), intent(in) :: dwt_wood_product_gain_patch( bounds%begp: )
 
+    ! gross unrepresented landcover addition to wood product pools (g/m2/s) [patch]
+    real(r8), intent(in) :: gru_wood_product_gain_patch( bounds%begp: )
+
     ! wood harvest addition to wood product pools (g/m2/s) [patch]
     real(r8), intent(in) :: wood_harvest_patch( bounds%begp: )
 
@@ -553,6 +590,44 @@ contains
 
     character(len=*), parameter :: subname = 'PartitionWoodFluxes'
     !-----------------------------------------------------------------------
+
+    ! Partition patch-level gross unrepresented fluxes to 10 and 100-year product pools
+    do fp = 1, num_soilp
+       p = filter_soilp(fp)
+
+       pprod10 = pftcon%pprod10(patch%itype(p))
+       pprod100 = pftcon%pprod100(patch%itype(p))
+       pprod_tot = pprod10 + pprod100
+       if (pprod_tot > 0) then
+          pprod10_frac = pprod10 / pprod_tot
+          pprod100_frac = pprod100 / pprod_tot
+       else
+          ! Avoid divide by 0
+          pprod10_frac = 0._r8
+          pprod100_frac = 0._r8
+       end if
+
+       this%gru_prod10_gain_patch(p) = &
+            gru_wood_product_gain_patch(p) * pprod10_frac
+       this%gru_prod100_gain_patch(p) = &
+            gru_wood_product_gain_patch(p) * pprod100_frac
+
+    end do
+
+    ! Average gross unrepresented fluxes from patch to gridcell
+    call p2g(bounds, &
+         this%gru_prod10_gain_patch(bounds%begp:bounds%endp), &
+         this%gru_prod10_gain_grc(bounds%begg:bounds%endg), &
+         p2c_scale_type = 'unity', &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+
+    call p2g(bounds, &
+         this%gru_prod100_gain_patch(bounds%begp:bounds%endp), &
+         this%gru_prod100_gain_grc(bounds%begg:bounds%endg), &
+         p2c_scale_type = 'unity', &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
 
     ! Partition patch-level harvest fluxes to 10 and 100-year product pools
     do fp = 1, num_soilp
@@ -599,6 +674,7 @@ contains
                dwt_wood_product_gain_patch(p) * pprod10_frac
           this%dwt_prod100_gain_grc(g) = this%dwt_prod100_gain_grc(g) + &
                dwt_wood_product_gain_patch(p) * pprod100_frac
+          
        else if (dwt_wood_product_gain_patch(p) > 0) then
           call endrun(&
                msg='ERROR: dwt_wood_product_gain_patch(p) > 0' // &
@@ -719,6 +795,10 @@ contains
        this%prod10_grc(g)    = this%prod10_grc(g)    + this%hrv_deadstem_to_prod10_grc(g)*dt
        this%prod100_grc(g)   = this%prod100_grc(g)   + this%hrv_deadstem_to_prod100_grc(g)*dt
 
+       ! fluxes into wood & grain product pools, from gross unrepresented landcover change
+       this%prod10_grc(g)    = this%prod10_grc(g)    + this%gru_prod10_gain_grc(g)*dt
+       this%prod100_grc(g)   = this%prod100_grc(g)   + this%gru_prod100_gain_grc(g)*dt
+       
        ! fluxes out of wood & crop product pools, from decomposition
        this%cropprod1_grc(g) = this%cropprod1_grc(g) - this%cropprod1_loss_grc(g)*dt
        this%prod10_grc(g)    = this%prod10_grc(g)    - this%prod10_loss_grc(g)*dt
@@ -767,6 +847,10 @@ contains
        this%dwt_woodprod_gain_grc(g) = &
             this%dwt_prod100_gain_grc(g) + &
             this%dwt_prod10_gain_grc(g)
+
+       this%gru_woodprod_gain_grc(g) = &
+            this%gru_prod100_gain_grc(g) + &
+            this%gru_prod10_gain_grc(g)
     end do
 
   end subroutine ComputeSummaryVars
