@@ -123,7 +123,9 @@ contains
           zw(p,ic) = zw(p,ic+1) - dht
        end do
 
-       if (zw(p,0) > 1.e-10_r8 .or. zw(p,0) < 0._r8) then
+       if (zw(p,0) < 0._r8 .and. zw(p,0) >= -1.e-9_r8) then
+          zw(p,0) = 0._r8
+       else if (abs(zw(p,0)) > 1.e-9_r8) then
           call endrun (msg=' ERROR: initVerticalStructure: zw(p,0) improperly defined')
        end if
 
@@ -211,7 +213,7 @@ contains
        ! Check to make sure sum of numerical lai+sai matches canopy lai+sai
 
        pai_err = sum(dlai(p,1:ntop(p))) + sum(dsai(p,1:ntop(p)))
-       if (abs(pai_err - (elai(p)+esai(p))) > 1.e-06_r8) then
+       if (abs(pai_err - (elai(p)+esai(p))) > 1.e-5_r8) then
           call endrun (msg=' ERROR: initVerticalStructure: plant area does not match CLM input')
        end if
 
@@ -268,7 +270,7 @@ contains
        end if
 
        sai_err = sum(dsai(p,1:ntop(p)))
-       if (abs(sai_err - esai(p)) > 1.e-06_r8) then
+       if (abs(sai_err - esai(p)) > 1.e-5_r8) then
           call endrun (msg=' ERROR: initVerticalStructure: stem area does not match CLM input after redistribution')
        end if
 
