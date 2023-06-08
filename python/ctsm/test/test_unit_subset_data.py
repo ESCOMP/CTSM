@@ -118,7 +118,7 @@ class TestSubsetData(unittest.TestCase):
         Test that check args does not allow an output surface dataset to be specified
         when create-surface is not on
         """
-        sys.argv = ["subset_data", "point", "--create-landuse", "--out-surface", "outputsurface.nc"]
+        sys.argv = ["subset_data", "point", "--create-datm", "--out-surface", "outputsurface.nc"]
         self.args = self.parser.parse_args()
         with self.assertRaisesRegex(
             argparse.ArgumentError,
@@ -135,7 +135,34 @@ class TestSubsetData(unittest.TestCase):
         self.args = self.parser.parse_args()
         with self.assertRaisesRegex(
             argparse.ArgumentError,
-            "surf_year option is NOT set to 1850 and the --create-landuse option",
+            "--surf-year option is NOT set to 1850 and the --create-landuse option",
+        ):
+            check_args(self.args)
+
+    def test_check_args_fails_for_surf_year_without_surface(self):
+        """
+        Test that check args does not allow surf_year to be set
+        without the create-surface option
+        """
+        sys.argv = ["subset_data", "point", "--create-datm", "--surf-year", "1850"]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentError,
+            "--surf-year option is being set to something besides 2000, without the \
+            --create-surface option. Add the --create-surface option and rerun",
+        ):
+            check_args(self.args)
+
+    def test_check_args_fails_for_landuse_without_surface(self):
+        """
+        Test that check args does not allow landuse to be set
+        without the create-surface option
+        """
+        sys.argv = ["subset_data", "point", "--create-landuse"]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentError,
+            "--create-landuse option requires that the --create-surface be used at the same time",
         ):
             check_args(self.args)
 
@@ -146,7 +173,7 @@ class TestSubsetData(unittest.TestCase):
         sys.argv = ["subset_data", "point", "--create-surface", "--surf-year", "2305"]
         self.args = self.parser.parse_args()
         with self.assertRaisesRegex(
-            argparse.ArgumentError, "surf_year option can only be set to 1850 or 2000"
+            argparse.ArgumentError, "--surf-year option can only be set to 1850 or 2000"
         ):
             check_args(self.args)
 

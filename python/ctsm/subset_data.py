@@ -417,7 +417,7 @@ def check_args(args):
         err_msg = textwrap.dedent(
             """\
                 \n ------------------------------------
-                \n surf_year option is set to something besides the default of 2000
+                \n --surf-year option is set to something besides the default of 2000
                 \n without the --create-surface option"
                 """
         )
@@ -427,7 +427,7 @@ def check_args(args):
         err_msg = textwrap.dedent(
             """\
                 \n ------------------------------------
-                \n surf_year option is NOT set to 1850 and the --create-landuse option
+                \n --surf-year option is NOT set to 1850 and the --create-landuse option
                 \n is selected which requires it to be 1850
                 """
         )
@@ -437,7 +437,7 @@ def check_args(args):
         err_msg = textwrap.dedent(
             """\
                 \n ------------------------------------
-                \n surf_year option can only be set to 1850 or 2000
+                \n --surf-year option can only be set to 1850 or 2000
                 """
         )
         raise argparse.ArgumentError(None, err_msg)
