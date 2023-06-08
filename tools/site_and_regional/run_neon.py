@@ -460,6 +460,7 @@ class NeonSite:
                 return case_path
 
             print("---- base case build ------")
+            print("--- This may take a while and you may see WARNING messages ---")
             # always walk through the build process to make sure it's up to date.
             t0 = time.time()
             build.case_build(case_path, case=case)
@@ -534,6 +535,9 @@ class NeonSite:
                     elif not setup_only:
                         print("Resubmitting case {}".format(case_root))
                         case.submit(no_batch=no_batch)
+                        logger.info("-----------------------------------")
+                        logger.info("Successfully submitted case!")
+                        logger.info("Use 'qstat -u <user-name>' to check its run status")
                     return
             else:
                 logger.warning(
@@ -564,7 +568,7 @@ class NeonSite:
                 )
 
         with Case(case_root, read_only=False) as case:
-            if run_type is not "transient":
+            if run_type != "transient":
                  # in order to avoid the complication of leap years we always set the run_length in units of days.
                  case.set_value("STOP_OPTION", "ndays")
                  case.set_value("REST_OPTION", "end")
@@ -611,6 +615,9 @@ class NeonSite:
             case.check_all_input_data()
             if not setup_only:
                 case.submit(no_batch=no_batch)
+                logger.info("-----------------------------------")
+                logger.info("Successfully submitted case!")
+                logger.info("Use 'qstat -u <user-name>' to check its run status")
 
     def set_ref_case(self, case):
         rundir = case.get_value("RUNDIR")
@@ -747,7 +754,7 @@ def parse_neon_listing(listing_file, valid_neon_sites):
 
             tmp_df = tmp_df[tmp_df[7].str.contains(latest_version)]
             # -- remove .nc from the file names
-            tmp_df[9] = tmp_df[9].str.replace(".nc", "")
+            tmp_df[9] = tmp_df[9].str.replace(".nc", "", regex=False)
 
 
             tmp_df2 = tmp_df[9].str.split("-", expand=True)
@@ -849,6 +856,7 @@ def main(description):
                 rerun,
                 experiment,
             )
+            
 
 
 if __name__ == "__main__":
