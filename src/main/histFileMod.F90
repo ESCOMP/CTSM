@@ -503,7 +503,8 @@ contains
     character(len=*),parameter :: subname = 'masterlist_addfld'
     !------------------------------------------------------------------------
 
-    if (.not. avgflag_valid(avgflag, blank_valid=.true.)) then
+    if (.not. avgflag_valid(avgflag, blank_valid=.true., &
+                            instantaneous_valid=.false.)) then
        write(iulog,*) trim(subname),' ERROR: unknown averaging flag=', avgflag
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
@@ -712,7 +713,8 @@ contains
     end if
 
     if (present(avgflag)) then
-       if (.not. avgflag_valid(avgflag, blank_valid=.true.)) then
+       if (.not. avgflag_valid(avgflag, blank_valid=.true., &
+                               instantaneous_valid=.false.)) then
           write(iulog,*) trim(subname),' ERROR: unknown averaging flag=', avgflag
           call endrun(msg=errMsg(sourcefile, __LINE__))
        endif
@@ -757,7 +759,8 @@ contains
     !-----------------------------------------------------------------------
 
     avgflag = hist_avgflag_pertape(t)
-    if (.not. avgflag_valid(avgflag, blank_valid = .false.)) then
+    if (.not. avgflag_valid(avgflag, blank_valid = .false., &
+                            instantaneous_valid=.true.)) then
        write(iulog,*) trim(subname),' ERROR: unknown avgflag=',avgflag
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
@@ -1243,7 +1246,8 @@ contains
     ! Set time averaging flag based on masterlist setting or
     ! override the default averaging flag with namelist setting
 
-    if (.not. avgflag_valid(avgflag, blank_valid=.true.)) then
+    if (.not. avgflag_valid(avgflag, blank_valid=.true., &
+                            instantaneous_valid=.false.)) then
        write(iulog,*) trim(subname),' ERROR: unknown avgflag=', avgflag
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
@@ -1252,6 +1256,12 @@ contains
        tape(t)%hlist(n)%avgflag = masterlist(f)%avgflag(t)
     else
        tape(t)%hlist(n)%avgflag = avgflag
+    end if
+
+    ! Override this field's avgflag if the namelist has set this tape to
+    ! instantaneous
+    if (hist_avgflag_pertape(t) == 'I') then
+       tape(t)%hlist(n)%avgflag = 'I'
     end if
 
   end subroutine htape_addfld
@@ -5898,7 +5908,7 @@ contains
   end subroutine hist_do_disp
 
   !-----------------------------------------------------------------------
-  function avgflag_valid(avgflag, blank_valid) result(valid)
+  function avgflag_valid(avgflag, blank_valid, instantaneous_valid) result(valid)
     !
     ! !DESCRIPTION:
     ! Returns true if the given avgflag is a valid option, false if not
@@ -5911,6 +5921,7 @@ contains
     logical :: valid  ! function result
     character(len=*), intent(in) :: avgflag
     logical, intent(in) :: blank_valid  ! whether ' ' is a valid avgflag in this context
+    logical, intent(in) :: instantaneous_valid  ! is 'I' a valid avgflag or not
     !
     ! !LOCAL VARIABLES:
 
@@ -5926,8 +5937,9 @@ contains
 
     else if (avgflag == ' ' .and. blank_valid) then
        valid = .true.
-    else if (avgflag == 'A' .or. avgflag == 'I' .or. &
-         avgflag == 'X' .or. avgflag == 'M' .or. &
+    else if (avgflag == 'I' .and. instantaneous_valid) then
+       valid = .true.
+    else if (avgflag == 'A' .or. avgflag == 'X' .or. avgflag == 'M' .or. &
          avgflag == 'SUM') then
        valid = .true.
     else if (avgflag(1:1) == 'L') then
