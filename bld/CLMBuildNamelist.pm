@@ -3444,17 +3444,19 @@ sub setup_logic_nitrogen_deposition {
   #
   if ( ($nl_flags->{'bgc_mode'} =~/bgc/)  or  ($nl_flags->{'bgc_mode'} =~/fates/) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo', 'phys'=>$nl_flags->{'phys'},
-                'hgrid'=>$nl_flags->{'res'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_taxmode', 'phys'=>$nl_flags->{'phys'},
+		'use_cn'=>$nl_flags->{'use_cn'}, 
 		'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_varlist', 'phys'=>$nl_flags->{'phys'},
+		'use_cn'=>$nl_flags->{'use_cn'}, 
 		'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_ndep', 'phys'=>$nl_flags->{'phys'},
-                'sim_year'=>$nl_flags->{'sim_year'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_ndep', 'phys'=>$nl_flags->{'phys'},
-                'sim_year'=>$nl_flags->{'sim_year'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
     # Set align year, if first and last years are different
     if ( $nl->get_value('stream_year_first_ndep') != $nl->get_value('stream_year_last_ndep') ) {
@@ -3462,12 +3464,12 @@ sub setup_logic_nitrogen_deposition {
                   'sim_year_range'=>$nl_flags->{'sim_year_range'});
     }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
-                'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                 'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
     if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
         # Also check at f19 resolution
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
-                    'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                    'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                     'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
         # If not found report an error
         if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
@@ -3479,12 +3481,12 @@ sub setup_logic_nitrogen_deposition {
     }
     if ($opts->{'driver'} eq "nuopc" ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_ndep', 'phys'=>$nl_flags->{'phys'},
-                    'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                    'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                     'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
         if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
             # Also check at f19 resolution
             add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_ndep', 'phys'=>$nl_flags->{'phys'},
-                        'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                        'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                         'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
             # If not found report an error
             if ( ! defined($nl->get_value('stream_meshfile_ndep') ) ) {
