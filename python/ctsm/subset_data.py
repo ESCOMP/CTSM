@@ -224,7 +224,8 @@ def get_parser():
     rg_parser.add_argument(
         "--create-domain",
         help="Create CLM domain file for a region. \
-        Domain files are not needed for NUOPC cases, but are needed to create mesh files that are needed for NUOPC cases.",
+        Domain files are not needed for NUOPC cases, \
+        but are needed to create mesh files that are needed for NUOPC cases.",
         action="store_true",
         dest="create_domain",
         required=False,
@@ -241,7 +242,8 @@ def get_parser():
         )
         subparser.add_argument(
             "--surf-year",
-            help="Year for surface data file at single point/region (and start year for land-use timeseries).",
+            help="Year for surface data file at single point/region \
+            (and start year for land-use timeseries).",
             action="store",
             dest="surf_year",
             type=int,
@@ -388,7 +390,7 @@ def check_args(args):
             """\
                 \n ------------------------------------
                 \n Must supply one of:
-                \n --create-surface \n --create-landuse \n --create-datm \n --create-domain \n
+                \n --create-surface \n --create-landuse \n --create-datm \n \n
                 """
         )
         raise argparse.ArgumentError(None, err_msg)
@@ -407,6 +409,35 @@ def check_args(args):
             """\
                 \n ------------------------------------
                 \n out-surface option is given without the --create-surface option"
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
+    if args.surf_year != 2000 and not args.create_surfdata:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n surf_year option is set to something besides the default of 2000
+                \n without the --create-surface option"
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
+    if args.surf_year != 1850 and args.create_landuse:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n surf_year option is NOT set to 1850 and the --create-landuse option
+                \n is selected which requires it to be 1850
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
+    if args.surf_year != 1850 and args.surf_year != 2000:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n surf_year option can only be set to 1850 or 2000
                 """
         )
         raise argparse.ArgumentError(None, err_msg)
