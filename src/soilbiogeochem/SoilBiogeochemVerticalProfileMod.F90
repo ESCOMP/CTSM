@@ -175,21 +175,21 @@ contains
       !      col_cinput_rootfr(bounds%begc:bounds%endc, :), &
       !      'unity')
 
-      !if(num_bgc_vegp>0)then
+
       do fc = 1,num_bgc_soilc
          c = filter_bgc_soilc(fc)
          if(.not.col%is_fates(c))then
-            do pi = 1,col%npatches(c))  !maxsoil_patches
+            do pi = 1,col%npatches(c)  !maxsoil_patches
                !if (pi <=  col%npatches(c)) then
                   p = col%patchi(c) + pi - 1
                   do j = 1,nlevdecomp
                      col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * patch%wtcol(p)
                   end do
                !end if
-            end if
-         end do
+            end do
+         end if
       end do
-      !end if
+
 
       ! repeat for column-native profiles: Ndep and Nfix
       do fc = 1,num_bgc_soilc
