@@ -931,7 +931,7 @@ contains
   end subroutine SetValues
 
   !-----------------------------------------------------------------------
-  subroutine Summary(this, bounds, num_bgc_soilc, filter_bgc_soilc, cnveg_carbonstate_inst)
+  subroutine Summary(this, bounds, num_allc, filter_allc, cnveg_carbonstate_inst)
     !
     ! !DESCRIPTION:
     ! Perform column-level carbon summary calculations
@@ -939,8 +939,8 @@ contains
     ! !ARGUMENTS:
     class(soilbiogeochem_carbonstate_type)          :: this
     type(bounds_type)               , intent(in)    :: bounds          
-    integer                         , intent(in)    :: num_bgc_soilc       ! number of columns in soil filter
-    integer                         , intent(in)    :: filter_bgc_soilc(:) ! filter for all active columns
+    integer                         , intent(in)    :: num_allc       ! number of columns in soil filter
+    integer                         , intent(in)    :: filter_allc(:) ! filter for all active columns
     type(cnveg_carbonstate_type)    , intent(inout) :: cnveg_carbonstate_inst
     
     !
@@ -954,8 +954,8 @@ contains
 
     ! vertically integrate each of the decomposing C pools
     do l = 1, ndecomp_pools
-       do fc = 1,num_bgc_soilc
-          c = filter_bgc_soilc(fc)
+       do fc = 1,num_allc
+          c = filter_allc(fc)
           this%decomp_cpools_col(c,l) = 0._r8
           if(use_soil_matrixcn)then
           end if
@@ -963,8 +963,8 @@ contains
     end do
     do l = 1, ndecomp_pools
        do j = 1, nlevdecomp
-          do fc = 1,num_bgc_soilc
-             c = filter_bgc_soilc(fc)
+          do fc = 1,num_allc
+             c = filter_allc(fc)
              this%decomp_cpools_col(c,l) = &
                   this%decomp_cpools_col(c,l) + &
                   this%decomp_cpools_vr_col(c,j,l) * dzsoi_decomp(j)
@@ -979,23 +979,23 @@ contains
        ! vertically integrate each of the decomposing C pools to 1 meter
        maxdepth = 1._r8
        do l = 1, ndecomp_pools
-          do fc = 1,num_bgc_soilc
-             c = filter_bgc_soilc(fc)
+          do fc = 1,num_allc
+             c = filter_allc(fc)
              this%decomp_cpools_1m_col(c,l) = 0._r8
           end do
        end do
        do l = 1, ndecomp_pools
           do j = 1, nlevdecomp
              if ( zisoi(j) <= maxdepth ) then
-                do fc = 1,num_bgc_soilc
-                   c = filter_bgc_soilc(fc)
+                do fc = 1,num_allc
+                   c = filter_allc(fc)
                    this%decomp_cpools_1m_col(c,l) = &
                         this%decomp_cpools_1m_col(c,l) + &
                         this%decomp_cpools_vr_col(c,j,l) * dzsoi_decomp(j)
                 end do
              elseif ( zisoi(j-1) < maxdepth ) then
-                do fc = 1,num_bgc_soilc
-                   c = filter_bgc_soilc(fc)
+                do fc = 1,num_allc
+                   c = filter_allc(fc)
                    this%decomp_cpools_1m_col(c,l) = &
                         this%decomp_cpools_1m_col(c,l) + &
                         this%decomp_cpools_vr_col(c,j,l) * (maxdepth - zisoi(j-1))
@@ -1009,16 +1009,16 @@ contains
     ! Add soil carbon pools together to produce vertically-resolved decomposing total soil c pool
     if ( nlevdecomp_full > 1 ) then
        do j = 1, nlevdecomp
-          do fc = 1,num_bgc_soilc
-             c = filter_bgc_soilc(fc)
+          do fc = 1,num_allc
+             c = filter_allc(fc)
              this%decomp_soilc_vr_col(c,j) = 0._r8
           end do
        end do
        do l = 1, ndecomp_pools
           if ( decomp_cascade_con%is_soil(l) ) then
              do j = 1, nlevdecomp
-                do fc = 1,num_bgc_soilc
-                   c = filter_bgc_soilc(fc)
+                do fc = 1,num_allc
+                   c = filter_allc(fc)
                    this%decomp_soilc_vr_col(c,j) = this%decomp_soilc_vr_col(c,j) + &
                         this%decomp_cpools_vr_col(c,j,l)
                 end do
@@ -1028,13 +1028,13 @@ contains
     end if
 
     ! truncation carbon
-    do fc = 1,num_bgc_soilc
-       c = filter_bgc_soilc(fc)
+    do fc = 1,num_allc
+       c = filter_allc(fc)
        this%ctrunc_col(c) = 0._r8
     end do
     do j = 1, nlevdecomp
-       do fc = 1,num_bgc_soilc
-          c = filter_bgc_soilc(fc)
+       do fc = 1,num_allc
+          c = filter_allc(fc)
           this%ctrunc_col(c) = &
                this%ctrunc_col(c) + &
                this%ctrunc_vr_col(c,j) * dzsoi_decomp(j)
@@ -1043,14 +1043,14 @@ contains
 
     ! total litter carbon in the top meter (TOTLITC_1m)
     if ( nlevdecomp > 1) then
-       do fc = 1,num_bgc_soilc
-          c = filter_bgc_soilc(fc)
+       do fc = 1,num_allc
+          c = filter_allc(fc)
           this%totlitc_1m_col(c) = 0._r8
        end do
        do l = 1, ndecomp_pools
           if ( decomp_cascade_con%is_litter(l) ) then
-             do fc = 1,num_bgc_soilc
-                c = filter_bgc_soilc(fc)
+             do fc = 1,num_allc
+                c = filter_allc(fc)
                 this%totlitc_1m_col(c) = this%totlitc_1m_col(c) + &
                      this%decomp_cpools_1m_col(c,l)
              end do
@@ -1060,14 +1060,14 @@ contains
 
     ! total soil organic matter carbon in the top meter (TOTSOMC_1m)
     if ( nlevdecomp > 1) then
-       do fc = 1,num_bgc_soilc
-          c = filter_bgc_soilc(fc)
+       do fc = 1,num_allc
+          c = filter_allc(fc)
           this%totsomc_1m_col(c) = 0._r8
        end do
        do l = 1, ndecomp_pools
           if ( decomp_cascade_con%is_soil(l) ) then
-             do fc = 1,num_bgc_soilc
-                c = filter_bgc_soilc(fc)
+             do fc = 1,num_allc
+                c = filter_allc(fc)
                 this%totsomc_1m_col(c) = this%totsomc_1m_col(c) + this%decomp_cpools_1m_col(c,l)
              end do
           end if
@@ -1075,42 +1075,42 @@ contains
     end if
 
     ! total microbial carbon (TOTMICC)
-    do fc = 1,num_bgc_soilc
-       c = filter_bgc_soilc(fc)
+    do fc = 1,num_allc
+       c = filter_allc(fc)
        this%totmicc_col(c) = 0._r8
     end do
     do l = 1, ndecomp_pools
        if ( decomp_cascade_con%is_microbe(l) ) then
-          do fc = 1,num_bgc_soilc
-             c = filter_bgc_soilc(fc)
+          do fc = 1,num_allc
+             c = filter_allc(fc)
              this%totmicc_col(c) = this%totmicc_col(c) + this%decomp_cpools_col(c,l)
           end do
        endif
     end do
 
     ! total litter carbon (TOTLITC)
-    do fc = 1,num_bgc_soilc
-       c = filter_bgc_soilc(fc)
+    do fc = 1,num_allc
+       c = filter_allc(fc)
        this%totlitc_col(c) = 0._r8
     end do
     do l = 1, ndecomp_pools
        if ( decomp_cascade_con%is_litter(l) ) then
-          do fc = 1,num_bgc_soilc
-             c = filter_bgc_soilc(fc)
+          do fc = 1,num_allc
+             c = filter_allc(fc)
              this%totlitc_col(c) = this%totlitc_col(c) + this%decomp_cpools_col(c,l)
           end do
        endif
     end do
 
     ! total soil organic matter carbon (TOTSOMC)
-    do fc = 1,num_bgc_soilc
-       c = filter_bgc_soilc(fc)
+    do fc = 1,num_allc
+       c = filter_allc(fc)
        this%totsomc_col(c) = 0._r8
     end do
     do l = 1, ndecomp_pools
        if ( decomp_cascade_con%is_soil(l) ) then
-          do fc = 1,num_bgc_soilc
-             c = filter_bgc_soilc(fc)
+          do fc = 1,num_allc
+             c = filter_allc(fc)
              this%totsomc_col(c) = this%totsomc_col(c) + this%decomp_cpools_col(c,l)
           end do
        end if
@@ -1118,8 +1118,8 @@ contains
 
     
 
-    do fc = 1,num_bgc_soilc
-       c = filter_bgc_soilc(fc)
+    do fc = 1,num_allc
+       c = filter_allc(fc)
 
        ! coarse woody debris carbon
        this%cwdc_col(c) = 0._r8
