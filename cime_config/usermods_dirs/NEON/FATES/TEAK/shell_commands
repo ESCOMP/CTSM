@@ -2,9 +2,14 @@
 ./xmlchange NEONSITE=TEAK
 ./xmlchange PTS_LON=240.99424199999999
 ./xmlchange PTS_LAT=37.006472
-./xmlchange DATM_YR_ALIGN=2019,DATM_YR_START=2019 
-# Different default start date and number of months to run for transient case
-if  [[ $compset =~ ^HIST ]]; then
-  ./xmlchange RUN_STARTDATE=2019-01-01
-  ./xmlchange STOP_N=39
+./xmlchange DATM_YR_ALIGN=2019
+# NEON precipitation data for this site is bad so end early
+# If CLM_USRDAT_NAME is NEON.PRISM you can run to the end of the data
+if [[ $CLM_USRDAT_NAME == 'NEON' ]]; then
+  ./xmlchange DATM_YR_START=2019
+  # Different default start date and number of months to run for transient case
+  if  [[ $compset =~ ^HIST ]]; then
+    ./xmlchange RUN_STARTDATE=2019-01-01
+    ./xmlchange STOP_N=39
+  fi
 fi
