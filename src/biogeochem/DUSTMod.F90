@@ -432,14 +432,14 @@ contains
     !
     real(r8), parameter :: cst_slt = 2.61_r8           ! [frc] Saltation constant
     real(r8), parameter :: flx_mss_fdg_fct = 5.0e-4_r8 ! [frc] Empir. mass flx tuning eflx_lh_vegt
-    !real(r8), parameter :: vai_mbl_thr = 0.3_r8        ! [m2 m-2] VAI threshold quenching dust mobilization
+    !real(r8), parameter :: vai_mbl_thr = 0.3_r8       ! [m2 m-2] VAI threshold quenching dust mobilization
     !####### added by dmleung 27 Nov 2021 ###########################################################################
     character(len=*),parameter :: subname = 'DUSTEmission'
     real(r8), parameter :: vai_mbl_thr = 1.0_r8        ! [m2 m-2] new VAI threshold; dmleung suggests 1 or 0.5, and the default 0.3 seems a bit too small -dmleung 27 Nov 2021
     real(r8), parameter :: Cd0 = 4.4e-5_r8             ! [dimless] proportionality constant in calculation of dust emission coefficient -jfk
     real(r8), parameter :: Ca = 2.7_r8                 ! [dimless] proportionality constant in scaling of dust emission exponent -jfk
     real(r8), parameter :: Ce = 2.0_r8                 ! [dimless] proportionality constant scaling exponential dependence of dust emission coefficient on standardized soil threshold friction speed -jfk
-    real(r8), parameter :: C_tune = 0.05_r8             ! [dimless] global tuning constant for vertical dust flux; set to produce ~same global dust flux in control sim (I_2000) as old parameterization -jfk
+    real(r8), parameter :: C_tune = 0.05_r8            ! [dimless] global tuning constant for vertical dust flux; set to produce ~same global dust flux in control sim (I_2000) as old parameterization -jfk
     real(r8), parameter :: wnd_frc_thr_slt_std_min = 0.16_r8 ! [m/s] minimum standardized soil threshold friction speed -jfk
     real(r8), parameter :: forc_rho_std = 1.2250_r8    ! [kg/m3] density of air at standard pressure (101325) and temperature (293 K) -jfk
     real(r8), parameter :: dns_slt = 2650.0_r8         ! [kg m-3] Density of optimal saltation particles, dml 23 May 2020
@@ -448,7 +448,9 @@ contains
     real(r8), parameter :: k = 0.4_r8                  ! [dimless] von Karman constant -dml
     !####### added by dmleung 2 Dec 2021 for Okin (2008) drag partition for plants ##########################################################
     real(r8), parameter :: f_0 = 0.32_r8               ! [dimless] SSR in the immediate lee of a plant, dimensionless
-    real(r8), parameter :: c_e = 4.8_r8                  ! [dimless] e-folding distance velocity recovery, dimensionless
+    real(r8), parameter :: c_e = 4.8_r8                ! [dimless] e-folding distance velocity recovery, dimensionless
+    real(r8) :: numer                                  ! Numerator term for threshold crossing rate
+    real(r8) :: denom                                  ! Denominator term for threshold crossing rate
     !################################################################################################################
     !################################################################################################################
     !------------------------------------------------------------------------
@@ -866,7 +868,14 @@ contains
             u_impct_thr(p) = (wnd_frc_thr_slt_it/k) * log(0.1_r8 / 1e-4_r8)  ! to avoid model error
 
             ! threshold crossing rate
-            thr_crs_rate(p) = (exp((u_fld_thr(p)**2_r8 - u_impct_thr(p)**2_r8 - 2_r8 * u_mean_slt(p) * (u_fld_thr(p) - u_impct_thr(p))) / (2_r8 * u_sd_slt(p)**2_r8)) + 1_r8)**(-1_r8)
+            numer = (u_fld_thr(p)**2_r8 - u_impct_thr(p)**2_r8 - 2_r8 * u_mean_slt(p) * (u_fld_thr(p) - u_impct_thr(p)))
+            denom = (2_r8 * u_sd_slt(p)**2_r8)
+            ! Truncate to zero if the expression inside exp is becoming too large
+            if ( numer/denom < 30._r8 )then
+               thr_crs_rate(p) = (exp((u_fld_thr(p)**2_r8 - u_impct_thr(p)**2_r8 - 2_r8 * u_mean_slt(p) * (u_fld_thr(p) - u_impct_thr(p))) / (2_r8 * u_sd_slt(p)**2_r8)) + 1_r8)**(-1_r8)
+            else
+               thr_crs_rate(p) = 0.0_r8
+            end if
 
             ! probability that lowpass-filtered wind speed does not exceed u_ft
             prb_crs_fld_thr(p) = 0.5_r8 * (1_r8 + erf((u_fld_thr(p) - u_mean_slt(p)) / (1.414_r8 * u_sd_slt(p))))
