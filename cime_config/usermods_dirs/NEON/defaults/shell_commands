@@ -24,5 +24,25 @@ else
   ./xmlchange CLM_NML_USE_CASE="2018_control"
 fi
 
+# If needed for SP simulations: turn off lightning & set history file variables
+if  [[ $compset == *'SP_SICE'* ]]; then
+  ./xmlchange STOP_OPTION=nyears
+  ./xmlchange CLM_FORCE_COLDSTART=on
+  # comment out lightning file
+  :> user_nl_clm.tmp
+  while read line; do
+    if [[ $line != *"_lightng"* ]]; then
+        echo $line>>user_nl_clm.tmp
+    else
+  echo '!'$line>>user_nl_clm.tmp
+    fi
+  done<user_nl_clm
+  mv user_nl_clm.tmp user_nl_clm
+
+  echo "hist_mfilt(2) = 48" >> user_nl_clm
+  echo "hist_nhtfrq(2) = 1" >> user_nl_clm
+  echo "hist_fincl2 = 'FCEV','FCTR','FGEV','FIRA','FSA','FSH','FPSN','H2OSOI','SNOW_DEPTH','TBOT','TSOI'" >> user_nl_clm 
+fi
+
 # Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
 ./xmlchange PIO_TYPENAME=netcdf
