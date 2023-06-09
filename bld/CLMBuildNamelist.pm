@@ -1560,7 +1560,7 @@ sub process_namelist_inline_logic {
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_misc($opts, $nl_flags, $definition, $defaults, $nl);
-  setup_logic_prigent_roughness($opts, $nl_flags, $definition, $defaults, $nl); # dmleung added 31 Dec 2022
+  setup_logic_prigent_roughness($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
   # namelist group: atm2lnd_inparm
@@ -4185,7 +4185,6 @@ sub setup_logic_misc {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_prigent_roughness {
-  # dmleung added on 31 Dec 2022 for reading Prigent's roughness stream file
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_prigentroughness' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_prigentroughness' );
@@ -4241,7 +4240,7 @@ sub write_output_files {
   push @groups, "ch4finundated";
   push @groups, "soilbgc_decomp";
   push @groups, "clm_canopy_inparm";
-  push @groups, "prigentroughness"; # dmleung 31 Dec 2022
+  push @groups, "prigentroughness";
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
      push @groups, "scf_swenson_lawrence_2012_inparm";
   }
