@@ -413,6 +413,14 @@ def check_args(args):
         )
         raise argparse.ArgumentError(None, err_msg)
 
+    if args.create_landuse and not args.create_surfdata:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n --create-landuse option requires the --create-surface option:
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
     if args.surf_year != 2000 and not args.create_surfdata:
         err_msg = textwrap.dedent(
             """\

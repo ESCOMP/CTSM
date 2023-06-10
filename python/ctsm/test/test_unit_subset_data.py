@@ -148,8 +148,7 @@ class TestSubsetData(unittest.TestCase):
         self.args = self.parser.parse_args()
         with self.assertRaisesRegex(
             argparse.ArgumentError,
-            "--surf-year option is being set to something besides 2000, without the \
-            --create-surface option. Add the --create-surface option and rerun",
+            "--surf-year option is set to something besides the default of 2000",
         ):
             check_args(self.args)
 
@@ -162,7 +161,7 @@ class TestSubsetData(unittest.TestCase):
         self.args = self.parser.parse_args()
         with self.assertRaisesRegex(
             argparse.ArgumentError,
-            "--create-landuse option requires that the --create-surface be used at the same time",
+            "--create-landuse option requires the --create-surface option",
         ):
             check_args(self.args)
 
