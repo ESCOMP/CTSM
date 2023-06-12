@@ -477,7 +477,7 @@ contains
     fl  = 0
     fnl = 0
     do p = bounds%begp,bounds%endp
-       if (patch%active(p) .or. include_inactive) then
+       if ((patch%active(p) .or. include_inactive) .and. .not. patch%is_fates(p)) then
           if (patch%itype(p) >= npcropmin) then !skips 2 generic crop types
              fl = fl + 1
              this_filter(nc)%pcropp(fl) = p

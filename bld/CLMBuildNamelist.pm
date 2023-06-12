@@ -3442,7 +3442,7 @@ sub setup_logic_nitrogen_deposition {
   #
   # Nitrogen deposition for bgc=CN or fates
   #
-  if ( ($nl_flags->{'bgc_mode'} =~/bgc/)  or  ($nl_flags->{'bgc_mode'} =~/fates/) ) {
+  if ( ($nl_flags->{'bgc_mode'} =~/bgc/) ) {   # or  ($nl_flags->{'bgc_mode'} =~/fates/) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );

@@ -445,7 +445,7 @@ contains
     ! re-written to go inside.
     ! ============================================================================
 
-    if (use_cn .or. use_fates_bgc) then
+    if (use_cn) then ! .or. use_fates_bgc) then (ndep with fates will be added soon)
        if (.not. ndep_from_cpl) then
           call ndep_interp(bounds_proc, atm2lnd_inst)
        end if

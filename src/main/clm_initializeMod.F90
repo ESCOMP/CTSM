@@ -626,7 +626,7 @@ contains
     !$OMP END PARALLEL DO
 
     ! Initialize nitrogen deposition
-    if (use_cn .or. use_fates_bgc) then
+    if (use_cn ) then !.or. use_fates_bgc) then (ndep with fates will be added soon RGK)
        call t_startf('init_ndep')
        if (.not. ndep_from_cpl) then
           call ndep_init(bounds_proc, NLFilename)

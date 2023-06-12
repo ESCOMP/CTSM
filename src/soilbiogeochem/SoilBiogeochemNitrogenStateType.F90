@@ -805,7 +805,7 @@ contains
 
   !-----------------------------------------------------------------------
 
-  subroutine Summary(this, bounds, num_allc, filter_allc, cnveg_nitrogenstate_inst)
+  subroutine Summary(this, bounds, num_allc, filter_allc, num_bgc_soilc, filter_bgc_soilc, cnveg_nitrogenstate_inst)
 
     !
     ! !ARGUMENTS:
@@ -813,6 +813,8 @@ contains
     type(bounds_type) , intent(in) :: bounds  
     integer           , intent(in) :: num_allc       ! number of bgc columns in soilc filter
     integer           , intent(in) :: filter_allc(:) ! filter for bgc columns
+    integer           , intent(in) :: num_bgc_soilc       ! number of bgc columns in soilc filter
+    integer           , intent(in) :: filter_bgc_soilc(:) ! filter for bgc columns
     type(cnveg_nitrogenstate_type)    , intent(inout) :: cnveg_nitrogenstate_inst
 
     !
@@ -1029,6 +1031,12 @@ contains
    do fc = 1,num_allc
       c = filter_allc(fc)
       this%cwdn_col(c) = 0._r8
+      this%totecosysn_col(c) = 0._r8
+      this%totn_col(c) = 0._r8
+   end do
+
+   do fc = 1,num_bgc_soilc
+      c = filter_bgc_soilc(fc)
 
       if(col%is_fates(c)) then
          totvegn_col = 0._r8

@@ -931,7 +931,7 @@ contains
   end subroutine SetValues
 
   !-----------------------------------------------------------------------
-  subroutine Summary(this, bounds, num_allc, filter_allc, cnveg_carbonstate_inst)
+  subroutine Summary(this, bounds, num_allc, filter_allc, num_bgc_soilc, filter_bgc_soilc,cnveg_carbonstate_inst)
     !
     ! !DESCRIPTION:
     ! Perform column-level carbon summary calculations
@@ -941,6 +941,8 @@ contains
     type(bounds_type)               , intent(in)    :: bounds          
     integer                         , intent(in)    :: num_allc       ! number of columns in soil filter
     integer                         , intent(in)    :: filter_allc(:) ! filter for all active columns
+    integer                         , intent(in)    :: num_bgc_soilc       ! number of columns in soil filter
+    integer                         , intent(in)    :: filter_bgc_soilc(:) ! filter for all active columns
     type(cnveg_carbonstate_type)    , intent(inout) :: cnveg_carbonstate_inst
     
     !
@@ -1081,8 +1083,8 @@ contains
     end do
     do l = 1, ndecomp_pools
        if ( decomp_cascade_con%is_microbe(l) ) then
-          do fc = 1,num_allc
-             c = filter_allc(fc)
+          do fc = 1,num_bgc_soilc
+             c = filter_bgc_soilc(fc)
              this%totmicc_col(c) = this%totmicc_col(c) + this%decomp_cpools_col(c,l)
           end do
        endif
@@ -1123,6 +1125,13 @@ contains
 
        ! coarse woody debris carbon
        this%cwdc_col(c) = 0._r8
+       this%totecosysc_col(c) = 0._r8
+       this%totc_col(c) = 0._r8
+
+    end do
+
+    do fc = 1,num_bgc_soilc
+       c = filter_bgc_soilc(fc)
 
        if(col%is_fates(c)) then
           totvegc_col = 0._r8

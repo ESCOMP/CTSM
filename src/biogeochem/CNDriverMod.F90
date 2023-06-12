@@ -1173,12 +1173,15 @@ contains
     !            cnveg summary, swapped call order
     ! ----------------------------------------------
 
-    call soilbiogeochem_carbonstate_inst%summary(bounds, num_allc, filter_allc, cnveg_carbonstate_inst)
+    call soilbiogeochem_carbonstate_inst%summary(bounds, num_allc, filter_allc, &
+         num_bgc_soilc, filter_bgc_soilc, cnveg_carbonstate_inst)
     if ( use_c13 ) then
-       call c13_soilbiogeochem_carbonstate_inst%summary(bounds, num_allc, filter_allc, c13_cnveg_carbonstate_inst)
+       call c13_soilbiogeochem_carbonstate_inst%summary(bounds, num_allc, filter_allc, &
+            num_bgc_soilc, filter_bgc_soilc, c13_cnveg_carbonstate_inst)
     end if
     if ( use_c14 ) then
-       call c14_soilbiogeochem_carbonstate_inst%summary(bounds, num_allc, filter_allc, c14_cnveg_carbonstate_inst)
+       call c14_soilbiogeochem_carbonstate_inst%summary(bounds, num_allc, filter_allc, &
+            num_bgc_soilc, filter_bgc_soilc, c14_cnveg_carbonstate_inst)
     end if
     
     
@@ -1189,7 +1192,8 @@ contains
     call cnveg_nitrogenstate_inst%Summary(bounds, num_bgc_soilc, filter_bgc_soilc, &
          num_bgc_vegp, filter_bgc_vegp)
 
-    call soilbiogeochem_nitrogenstate_inst%summary(bounds, num_allc, filter_allc,cnveg_nitrogenstate_inst)
+    call soilbiogeochem_nitrogenstate_inst%summary(bounds, num_allc, filter_allc, &
+         num_bgc_soilc, filter_bgc_soilc, cnveg_nitrogenstate_inst)
     
 
     call t_stopf('CNsum')
