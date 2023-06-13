@@ -903,9 +903,8 @@ contains
 
             ! Tillage
             if (get_do_tillage()) then
-               ! TODO(ssr): Throw error during namelist build if tillage is called with FATES
                if (.not. present(idop)) then
-                   call endrun("Do not call tillage without providing idop. (Maybe you called with FATES?)")
+                   call endrun("Do not call tillage without providing idop.")
                end if
                call get_apply_tillage_multipliers(idop, c, decomp_k, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
             end if
