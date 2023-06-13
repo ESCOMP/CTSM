@@ -516,13 +516,14 @@ contains
        ! Don't by default output this rate limiting step as only makes sense if you are outputing
        ! the others each time-step
        ! and viewing this as an instantaneous field. To view as instantaneous:
-       ! 1) We have removed the ability to set avgflag='I' in the code.
+       ! 1) Users now cannot set avgflag='I' or 'L' in the code.
        ! 2) Instead add lines like these to the user_nl_clm of a case. The
        ! last two lines will look different according to each user's needs:
        ! hist_fincl2 = 'FPSN_WC','FPSN_WJ','FPSN_WP'
-       ! hist_avgflag_pertape = 'A','I'
-       ! hist_nhtfrq = -24,-24
-       ! hist_mfilt = 1,1
+       ! hist_fincl3 = 'FPSN_WC','FPSN_WJ','FPSN_WP'
+       ! hist_avgflag_pertape = 'A','I','L180000'
+       ! hist_nhtfrq = -24,-24,-24
+       ! hist_mfilt = 1,1,1
        this%fpsn_wc_patch(begp:endp) = spval
        call hist_addfld1d (fname='FPSN_WC', units='umol m-2 s-1',  &
             avgflag='A', long_name='Rubisco-limited photosynthesis; consider viewing as instantaneous field', &

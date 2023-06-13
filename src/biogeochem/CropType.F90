@@ -273,13 +273,14 @@ contains
     end if
 
     ! SDATES, HDATES make sense as instantaneous fields; to view as such:
-    ! 1) We have removed the ability to set avgflag='I' in the code.
+    ! 1) Users now cannot set avgflag='I' or 'L' in the code.
     ! 2) Instead add lines like these to the user_nl_clm of a case. The
     ! last two lines will look different according to each user's needs:
     ! hist_fincl2 = 'SDATES','HDATES'
-    ! hist_avgflag_pertape = 'A','I'
-    ! hist_nhtfrq = -24,-24
-    ! hist_mfilt = 1,1
+    ! hist_fincl3 = 'SDATES','HDATES'
+    ! hist_avgflag_pertape = 'A','I','L180000'
+    ! hist_nhtfrq = -24,-24,-24
+    ! hist_mfilt = 1,1,1
     this%sdates_thisyr(begp:endp,:) = spval
     call hist_addfld2d (fname='SDATES', units='day of year', type2d='mxsowings', &
          avgflag='A', long_name='actual crop sowing dates; should only be output annually; consider viewing as instantaneous field', &
