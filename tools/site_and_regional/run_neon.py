@@ -5,17 +5,17 @@
 |---------------------  Instructions  -----------------------------|
 |------------------------------------------------------------------|
 This is a wrapper script for running CTSM simulation for one or more
-neon sites. 
+neon sites.
 
 This script is only for neon site and we will develop a more general
 code later.
 
-This script first creates and builds a generic base case. 
+This script first creates and builds a generic base case.
 Next, it will clone the base_case for different neon sites and run
-types to reduce the need to build ctsm everytime. 
+types to reduce the need to build ctsm everytime.
 
 This script will do the following:
-    1) Create a generic base case for cloning. 
+    1) Create a generic base case for cloning.
     2) Make the case for the specific neon site(s).
     3) Make changes to the case, for:
         a. AD spinup
@@ -24,13 +24,13 @@ This script will do the following:
     	#---------------
     	d. SASU or Matrix spinup
     4) Build and submit the case.
- 
+
 -------------------------------------------------------------------
 Instructions for running using conda python environments:
 
 ../../py_env_create
 conda activate ctsm_py
- 
+
 -------------------------------------------------------------------
 To see the available options:
     ./run_neon.py --help
@@ -113,7 +113,7 @@ def get_parser(args, description, valid_neon_sites):
         "--base-case",
         help="""
                 Root Directory of base case build
-                [default: %(default)s] 
+                [default: %(default)s]
                 """,
         action="store",
         dest="base_case_root",
@@ -126,7 +126,7 @@ def get_parser(args, description, valid_neon_sites):
         "--output-root",
         help="""
                 Root output directory of cases
-                [default: %(default)s] 
+                [default: %(default)s]
                 """,
         action="store",
         dest="output_root",
@@ -162,7 +162,7 @@ def get_parser(args, description, valid_neon_sites):
     parser.add_argument(
         "--rerun",
         help="""
-                If the case exists but does not appear to be complete, restart it. 
+                If the case exists but does not appear to be complete, restart it.
                 [default: %(default)s]
                 """,
         action="store_true",
@@ -209,7 +209,7 @@ def get_parser(args, description, valid_neon_sites):
     parser.add_argument(
        "--experiment",
         help="""
-                Appends the case name with string for model experiment 
+                Appends the case name with string for model experiment
                 """,
         action="store",
         dest="experiment",
@@ -231,7 +231,7 @@ def get_parser(args, description, valid_neon_sites):
 
     parser.add_argument(
         "--start-date",
-        help="""           
+        help="""
                 Start date for running CTSM simulation in ISO format.
                 [default: %(default)s]
                 (currently non-functional)
@@ -355,6 +355,22 @@ def parse_isoduration(s):
     # Convert all to timedelta
     dt = datetime.timedelta(days=int(days) + 365 * int(years) + 30 * int(months))
     return int(dt.total_seconds() / 86400)
+
+def get_queue_command(batch_system):
+    match batch_system.lower():
+        'pbs':
+            queue_command = 'qstat -u <user_name>'
+        'slurm':
+            queue_command = 'squeue -u <user_name>'
+        'cobalt':
+            queue_command = 'qstat -u <user_name>'
+        'lsf':
+            queue_command = 'bqueues -u <user_name>'
+        case _:
+        queue_command = ''
+
+    return queue_command
+
 
 
 class NeonSite:
@@ -506,7 +522,7 @@ class NeonSite:
         print ("using this version:", version)
 
         if experiment != None:
-            self.name = self.name + "." + experiment 
+            self.name = self.name + "." + experiment
         case_root = os.path.abspath(
                 os.path.join(base_case_root, "..", self.name + "." + run_type)
             )
@@ -604,7 +620,7 @@ class NeonSite:
                 case.set_value("CALENDAR", "GREGORIAN")
                 case.set_value("RESUBMIT", 0)
                 case.set_value("STOP_OPTION", "nmonths")
-            
+
             if not rundir:
                 rundir = case.get_value("RUNDIR")
 
@@ -856,7 +872,7 @@ def main(description):
                 rerun,
                 experiment,
             )
-            
+
 
 
 if __name__ == "__main__":
