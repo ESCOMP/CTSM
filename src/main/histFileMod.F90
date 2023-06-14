@@ -138,7 +138,6 @@ module histFileMod
   public :: hist_addfld1d        ! Add a 1d single-level field to the master field list
   public :: hist_addfld2d        ! Add a 2d multi-level field to the master field list
   public :: hist_addfld_decomp   ! Add a 2d multi-level field to the master field list
-  public :: hist_add_subscript   ! Add a 2d subscript dimension
   public :: hist_printflds       ! Print summary of master field list
   public :: hist_htapes_build    ! Initialize history file handler for initial or continue run
   public :: hist_update_hbuf     ! Updates history buffer for all fields and tapes
@@ -5805,31 +5804,6 @@ contains
     endif
 
   end function pointer_index
-
-  !-----------------------------------------------------------------------
-  subroutine hist_add_subscript(name, dim)
-    !
-    ! !DESCRIPTION:
-    ! Add a history variable to the output history tape.
-    !
-    ! !ARGUMENTS:
-    character(len=*), intent(in) :: name ! name of subscript
-    integer         , intent(in) :: dim  ! dimension of subscript
-    !
-    ! !LOCAL VARIABLES:
-    character(len=*),parameter :: subname = 'hist_add_subscript'
-    !-----------------------------------------------------------------------
-
-    num_subs = num_subs + 1
-    if (num_subs > max_subs) then
-       write(iulog,*) trim(subname),' ERROR: ',&
-            ' num_subs = ',num_subs,' greater than max_subs= ',max_subs
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    endif
-    subs_name(num_subs) = name
-    subs_dim(num_subs) =  dim
-
-  end subroutine hist_add_subscript
 
   !-----------------------------------------------------------------------
 
