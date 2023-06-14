@@ -439,7 +439,7 @@ contains
              use_fates_bgc = .true.
           end if
           
-          if (fates_parteh_mode == 1 .and. suplnitro == suplnNon)then
+          if (fates_parteh_mode == 1 .and. suplnitro == suplnNon .and. use_fates_bgc )then
              write(iulog,*) ' When FATES with fates_parteh_mode == 1 (ie carbon only mode),'
              write(iulog,*) '  you must have supplemental nitrogen turned on, there will be'
              write(iulog,*) '  no nitrogen dynamics with the plants, and therefore no'
