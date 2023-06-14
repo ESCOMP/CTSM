@@ -1514,6 +1514,11 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <flanduse_timeseries hgrid="10x15"         sim_year_range="1850-2100" ssp_rcp="SSP5-3.4"
  use_crop=".false."   >lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_10x15_SSP5-3.4_16pfts_Irrig_CMIP6_simyr1850-2100_c190228.nc</flanduse_timeseries>
 
+<!-- Land Use Harmonization unified data sets for dynamic FATES land use change -->
+
+<fluh_timeseries hgrid="4x5" sim_year_range="1850-2015" use_cn=".false."
+ use_crop=".false." >lnd/clm2/luh/LUH2_states_transitions_management.timeseries_4x5_hist_simyr1850-2015_c230415.nc</fluh_timeseries>
+
 <!-- Fixation and Uptake of Nitrogen Model (FUN2.0) -->
 <use_fun phys="clm5_1"  use_cn=".true." use_nitrif_denitrif=".true.">.true.</use_fun>
 <use_fun phys="clm5_0"  use_cn=".true." use_nitrif_denitrif=".true.">.true.</use_fun>
@@ -2669,6 +2674,7 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <use_fates_logging             use_fates=".true.">.false.</use_fates_logging>
 <use_fates_inventory_init      use_fates=".true.">.false.</use_fates_inventory_init>
 <use_fates_sp                  use_fates=".true.">.false.</use_fates_sp>
+<use_fates_luh                 use_fates=".true.">.false.</use_fates_luh>
 <fates_parteh_mode             use_fates=".true.">1</fates_parteh_mode>
 
 <use_fates_nocomp              use_fates=".true." use_fates_sp=".true.">.true.</use_fates_nocomp>
