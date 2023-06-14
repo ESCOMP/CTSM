@@ -88,6 +88,11 @@ module histFileMod
                                          ! only exist on history tape 1). Use hist_fincl1 to enable
                                          ! select fields on top of this.
 
+  logical, public :: &
+       hist_all_htapes  = .false.        ! namelist: enable all possible history fields on history
+                                         ! tape 1. Use hist_fexcl1 to remove select fields on top
+                                         ! of this.
+
   character(len=max_namlen+2), public :: &
        hist_fincl1(max_flds) = ' '       ! namelist: list of fields to include in history tape 1
   character(len=max_namlen+2), public :: &
@@ -898,28 +903,21 @@ contains
           mastername = masterlist(f)%field%name
           call list_index (fincl(1,t), mastername, ff)
 
+          ! if field is in include list, ff > 0
           if (ff > 0) then
-
-             ! if field is in include list, ff > 0 and htape_addfld
-             ! will be called for field
 
              avgflag = getflag (fincl(ff,t))
              call htape_addfld (t, f, avgflag)
 
           else if (.not. hist_empty_htapes) then
 
-             ! find index of field in exclude list
+             ! field not explicitly included. check exclude list
 
              call list_index (fexcl(1,t), mastername, ff)
 
-             ! if field is in exclude list, ff > 0 and htape_addfld
-             ! will not be called for field
-             ! if field is not in exclude list, ff =0 and htape_addfld
-             ! will be called for field (note that htape_addfld will be
-             ! called below only if field is not in exclude list OR in
-             ! include list
+             ! if field is in exclude list, ff > 0.
 
-             if (ff == 0 .and. masterlist(f)%actflag(t)) then
+             if (ff == 0 .and. (masterlist(f)%actflag(t) .or. hist_all_htapes)) then
                 call htape_addfld (t, f, ' ')
              end if
 
