@@ -5,6 +5,7 @@ module histFileMod
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Module containing methods to for CLM history file handling.
+  ! See 'history_tape' type for more details.
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
@@ -84,8 +85,8 @@ module histFileMod
 
   logical, public :: &
        hist_empty_htapes  = .false.      ! namelist: disable default-active history fields (which
-                                         ! only exist on history tape 1). Overridden by hist_fincl1 
-                                         ! flag.
+                                         ! only exist on history tape 1). Use hist_fincl1 to enable
+                                         ! select fields on top of this.
 
   character(len=max_namlen+2), public :: &
        hist_fincl1(max_flds) = ' '       ! namelist: list of fields to include in history tape 1
@@ -117,21 +118,21 @@ module histFileMod
   character(len=max_namlen+2), public :: &
        hist_fexcl2(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 2
   character(len=max_namlen+2), public :: &
-       hist_fexcl3(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 2
+       hist_fexcl3(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 3
   character(len=max_namlen+2), public :: &
-       hist_fexcl4(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 2
+       hist_fexcl4(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 4
   character(len=max_namlen+2), public :: &
-       hist_fexcl5(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 2
+       hist_fexcl5(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 5
   character(len=max_namlen+2), public :: &
-       hist_fexcl6(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 2
+       hist_fexcl6(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 6
   character(len=max_namlen+2), public :: &
-       hist_fexcl7(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 2
+       hist_fexcl7(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 7
   character(len=max_namlen+2), public :: &
-       hist_fexcl8(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 2
+       hist_fexcl8(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 8
   character(len=max_namlen+2), public :: &
-       hist_fexcl9(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 2
+       hist_fexcl9(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 9
   character(len=max_namlen+2), public :: &
-       hist_fexcl10(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 2
+       hist_fexcl10(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 10
 
   character(len=max_namlen+2), public :: &
        fexcl(max_flds,max_tapes)         ! copy of hist_fexcl* fields in 2-D format. Note Fortran
@@ -260,7 +261,8 @@ module histFileMod
   ! at a given time frequency and precision.  The first ('primary') tape defaults to a non-empty set
   ! of active fields (see hist_addfld* methods), overridable by namelist flags,  while the other 
   ! tapes are entirely manually configured via namelist flags. The set of active fields across all
-  ! tapes is assembled in the 'masterlist' variable.
+  ! tapes is assembled in the 'masterlist' variable. Note that the first history tape is index 1 in
+  ! the code but contains 'h0' in its output filenames (see set_hist_filename method).
   type history_tape
      integer  :: nflds                         ! number of active fields on tape
      integer  :: ntimes                        ! current number of time samples on tape
@@ -315,7 +317,7 @@ module histFileMod
   !
   character(len=max_length_filename) :: locfnh(max_tapes)  ! local history file names
   character(len=max_length_filename) :: locfnhr(max_tapes) ! local history restart file names
-  logical :: htapes_defined = .false.        ! flag indicates history output fields have been selected
+  logical :: htapes_defined = .false.        ! flag indicates history output fields have been defined
   !
   ! NetCDF  Id's
   !
@@ -5112,6 +5114,8 @@ contains
      !
      ! !DESCRIPTION:
      ! Determine history dataset filenames.
+     ! Note that the first history tape is index 1 in the code but contains 'h0' in its output
+     ! filenames.
      !
      ! !USES:
      use clm_varctl, only : caseid, inst_suffix
