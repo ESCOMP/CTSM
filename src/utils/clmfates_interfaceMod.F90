@@ -60,6 +60,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : use_fates_nocomp
    use clm_varctl        , only : use_fates_sp
+   use clm_varctl        , only : use_fates_luh
    use clm_varctl        , only : fates_inventory_ctrl_filename
    use clm_varctl        , only : use_nitrif_denitrif
    use clm_varctl        , only : use_lch4
@@ -129,6 +130,7 @@ module CLMFatesInterfaceMod
    use PRTGenericMod         , only : num_elements
    use FatesInterfaceTypesMod, only : hlm_stepsize
    use FatesInterfaceTypesMod, only : fates_maxPatchesPerSite
+   use FatesInterfaceTypesMod, only : hlm_num_luh2_states
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
    use EDInitMod             , only : zero_site
@@ -159,6 +161,12 @@ module CLMFatesInterfaceMod
    use FatesConstantsMod      , only : hlm_harvest_area_fraction
    use FatesConstantsMod      , only : hlm_harvest_carbon
    use perf_mod               , only : t_startf, t_stopf
+
+   use dynFATESLandUseChangeMod, only : num_landuse_transition_vars, num_landuse_state_vars
+   use dynFATESLandUseChangeMod, only : landuse_transitions, landuse_states
+   use dynFATESLandUseChangeMod, only : landuse_transition_varnames, landuse_state_varnames
+   use dynFATESLandUseChangeMod, only : dynFatesLandUseInterp
+
    implicit none
 
    type, public :: f2hmap_type
@@ -353,6 +361,9 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_is_restart
      integer                                        :: pass_cohort_age_tracking
      integer                                        :: pass_tree_damage
+     integer                                        :: pass_use_luh
+     integer                                        :: pass_num_luh_states
+     integer                                        :: pass_num_luh_transitions
 
      call t_startf('fates_globals2')
 
@@ -490,6 +501,19 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('use_lu_harvest',ival=pass_lu_harvest)
         call set_fates_ctrlparms('num_lu_harvest_cats',ival=pass_num_lu_harvest_cats)
         call set_fates_ctrlparms('use_logging',ival=pass_logging)
+
+        if(use_fates_luh) then
+           pass_use_luh = 1
+           pass_num_luh_states = num_landuse_state_vars
+           pass_num_luh_transitions = num_landuse_transition_vars
+        else
+           pass_use_luh = 0
+           pass_num_luh_states = 0
+           pass_num_luh_transitions = 0
+        end if
+        call set_fates_ctrlparms('use_luh2',ival=pass_use_luh)
+        call set_fates_ctrlparms('num_luh2_states',ival=pass_num_luh_states)
+        call set_fates_ctrlparms('num_luh2_transitions',ival=pass_num_luh_transitions)
 
         if(use_fates_inventory_init) then
            pass_inventory_init = 1
@@ -693,7 +717,9 @@ module CLMFatesInterfaceMod
 
             ndecomp = col%nbedrock(c)
 
-            call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp, num_harvest_inst,surfpft_lb,surfpft_ub)
+            call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp, &
+                               num_harvest_inst, num_landuse_state_vars, num_landuse_transition_vars, &
+                               surfpft_lb,surfpft_ub)
             call allocate_bcout(this%fates(nc)%bc_out(s),col%nbedrock(c),ndecomp)
             call zero_bcs(this%fates(nc),s)
 
@@ -996,9 +1022,14 @@ module CLMFatesInterfaceMod
                write(iulog,*) harvest_units
                call endrun(msg=errMsg(sourcefile, __LINE__))
            end if
-
-
          endif
+
+         if (use_fates_luh) then
+               this%fates(nc)%bc_in(s)%hlm_luh_states = landuse_states(:,g)
+               this%fates(nc)%bc_in(s)%hlm_luh_state_names = landuse_state_varnames
+               this%fates(nc)%bc_in(s)%hlm_luh_transitions = landuse_transitions(:,g)
+               this%fates(nc)%bc_in(s)%hlm_luh_transition_names = landuse_transition_varnames
+         end if
 
       end do
 
@@ -1703,9 +1734,9 @@ module CLMFatesInterfaceMod
      real(r8) :: vol_ice
      real(r8) :: eff_porosity
      integer :: nlevsoil  ! Number of soil layers at each site
-     integer :: j
+     integer :: i, j
      integer :: s
-     integer :: c
+     integer :: c, g
      integer :: p   ! HLM patch index
      integer :: ft  ! plant functional type
 
@@ -1794,6 +1825,18 @@ module CLMFatesInterfaceMod
 
               call HydrSiteColdStart(this%fates(nc)%sites,this%fates(nc)%bc_in)
            end if
+
+           do s = 1,this%fates(nc)%nsites
+              c = this%f2hmap(nc)%fcolumn(s)
+              g = col_pp%gridcell(c)
+
+              if (use_fates_luh) then
+                    this%fates(nc)%bc_in(s)%hlm_luh_states = landuse_states(:,g)
+                    this%fates(nc)%bc_in(s)%hlm_luh_state_names = landuse_state_varnames
+                    this%fates(nc)%bc_in(s)%hlm_luh_transitions = landuse_transitions(:,g)
+                    this%fates(nc)%bc_in(s)%hlm_luh_transition_names = landuse_transition_varnames
+              end if
+           end do
 
            ! Newly initialized patches need a starting temperature
            call init_patches(this%fates(nc)%nsites, this%fates(nc)%sites, &
@@ -2750,6 +2793,7 @@ module CLMFatesInterfaceMod
    use FatesIOVariableKindMod, only : site_height_r8, site_elem_r8, site_elpft_r8
    use FatesIOVariableKindMod, only : site_elcwd_r8, site_elage_r8, site_agefuel_r8
    use FatesIOVariableKindMod, only : site_cdpf_r8, site_cdsc_r8, site_clscpf_r8
+   use FatesIOVariableKindMod, only : site_landuse_r8, site_lulu_r8
    use FatesIODimensionsMod, only : fates_bounds_type
 
 
@@ -2852,7 +2896,8 @@ module CLMFatesInterfaceMod
              site_can_r8,site_cnlf_r8, site_cnlfpft_r8, site_scag_r8, &
              site_scagpft_r8, site_agepft_r8, site_elem_r8, site_elpft_r8, &
              site_elcwd_r8, site_elage_r8, site_agefuel_r8, &
-             site_cdsc_r8, site_cdpf_r8)
+             site_cdsc_r8, site_cdpf_r8, &
+             site_landuse_r8, site_lulu_r8)
 
 
            d_index = fates_hist%dim_kinds(dk_index)%dim2_index
@@ -3145,7 +3190,8 @@ module CLMFatesInterfaceMod
    use FatesLitterMod,    only : ncwd
    use EDtypesMod,        only : nlevleaf, nclmax
    use FatesInterfaceTypesMod, only : numpft_fates => numpft
-   
+   use FatesConstantsMod, only : n_landuse_cats
+
 
    implicit none
 
@@ -3234,7 +3280,12 @@ module CLMFatesInterfaceMod
 
    fates%clscpf_begin = 1
    fates%clscpf_end = numpft_fates * nlevsclass * nclmax
-   
+
+   fates%landuse_begin = 1
+   fates%landuse_end   = n_landuse_cats
+
+   fates%lulu_begin = 1
+   fates%lulu_end   = n_landuse_cats * n_landuse_cats
    
    call t_stopf('fates_hlm2fatesbnds')
 
