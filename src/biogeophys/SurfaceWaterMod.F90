@@ -473,7 +473,7 @@ contains
 
        if (h2osfcflag==1) then
 	   ! for rice we set the runoff at 0
-		  if (col%itype(c)==(200+cft_lb+46) .or. col%itype(c) == (200+cft_lb+47)) then
+        if (col%itype(c)==(200+cft_lb+46) .or. col%itype(c) == (200+cft_lb+47)) then
              frac_infclust=0.0_r8																			  			 
           else if (frac_h2osfc_nosnow(c) <= params_inst%pc) then
              frac_infclust=0.0_r8
@@ -484,7 +484,7 @@ contains
 
        ! limit runoff to value of storage above S(pc)
 	   ! if surface water exceeds 10cm, then do drainage in the next step
-	   if (col%itype(c)==(200+cft_lb+46) .or. col%itype(c)==(200+cft_lb+47)) then
+       if (col%itype(c)==(200+cft_lb+46) .or. col%itype(c)==(200+cft_lb+47)) then
           if (h2osfc(c) > 100) then
              qflx_h2osfc_surf(c) = (h2osfc(c) - 100) / dtime
           else
