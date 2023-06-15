@@ -478,7 +478,7 @@ class NeonSite:
     def get_batch_query(self, case):
         """
         Function for querying the batch queue query command for a case, depending on the 
-        user's batch system. If no batch system, empty string is returned
+        user's batch system. 
 
         Args:
         case:
@@ -486,7 +486,7 @@ class NeonSite:
         """
         
         if case.get_value("BATCH_SYSTEM") == "none":
-          return ""
+          return "none"
         else:
           return case.get_value("batch_query")
           
@@ -552,7 +552,9 @@ class NeonSite:
                         case.submit(no_batch=no_batch)
                         logger.info("-----------------------------------")
                         logger.info("Successfully submitted case!")
-                        logger.info(f"Use {self.get_batch_query(case)} to check its run status")
+                        batch_query = self.get_batch_query(case)
+                        if batch_query != "none":
+                            logger.info(f"Use {batch_query} to check its run status")
                     return
             else:
                 logger.warning(
@@ -632,7 +634,9 @@ class NeonSite:
                 case.submit(no_batch=no_batch)
                 logger.info("-----------------------------------")
                 logger.info("Successfully submitted case!")
-                logger.info(f"Use {self.get_batch_query(case)} to check its run status")
+                batch_query = self.get_batch_query(case)
+                if batch_query != "none":
+                    logger.info(f"Use {batch_query} to check its run status")
 
     def set_ref_case(self, case):
         rundir = case.get_value("RUNDIR")
