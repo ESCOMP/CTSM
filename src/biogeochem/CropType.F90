@@ -283,12 +283,12 @@ contains
     ! hist_mfilt = 1,1,1
     this%sdates_thisyr(begp:endp,:) = spval
     call hist_addfld2d (fname='SDATES', units='day of year', type2d='mxsowings', &
-         avgflag='A', long_name='actual crop sowing dates; should only be output annually; consider viewing as instantaneous field', &
+         avgflag='A', long_name='actual crop sowing dates; should only be output annually; should be output as an instantaneous field', &
          ptr_patch=this%sdates_thisyr, default='inactive')
 
     this%hdates_thisyr(begp:endp,:) = spval
     call hist_addfld2d (fname='HDATES', units='day of year', type2d='mxharvests', &
-         avgflag='A', long_name='actual crop harvest dates; should only be output annually; consider viewing as instantaneous field', &
+         avgflag='A', long_name='actual crop harvest dates; should only be output annually; should be output as an instantaneous field', &
          ptr_patch=this%hdates_thisyr, default='inactive')
 
   end subroutine InitHistory
