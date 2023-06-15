@@ -481,7 +481,7 @@ contains
          irrig_method_default_int = irrig_method_drip
       case ('sprinkler')
          irrig_method_default_int = irrig_method_sprinkler
-	  case ('flood')
+	   case ('flood')
          irrig_method_default_int = irrig_method_flood													  
       case default
          write(iulog,*) 'ERROR: unknown irrig_method_default: ', trim(irrig_method_default)
@@ -1321,7 +1321,7 @@ contains
           waterflux_inst%qflx_irrig_drip_patch(p)      = qflx_irrig_tot
        else if(this%irrig_method_patch(p) == irrig_method_sprinkler) then
           waterflux_inst%qflx_irrig_sprinkler_patch(p) = qflx_irrig_tot
-	   else if(this%irrig_method_patch(p) == irrig_method_flood) then
+	    else if(this%irrig_method_patch(p) == irrig_method_flood) then
           waterflux_inst%qflx_irrig_drip_patch(p) = qflx_irrig_tot																 														  
        else
           call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, &
@@ -1428,7 +1428,7 @@ contains
 
     ! target soil moisture for this layer [kg/m2] (target for drip and spri; target_satu for flood and paddy)
     real(r8) :: h2osoi_liq_target
-	real(r8) :: h2osoi_liq_target_satu							   
+	 real(r8) :: h2osoi_liq_target_satu							   
 
     ! soil moisture at wilting point for this layer [kg/m2]
     real(r8) :: h2osoi_liq_wilting_point
@@ -1438,7 +1438,7 @@ contains
 
     ! Total of h2osoi_liq_target down to the depth of irrigation in each column [kg/m2]
     real(r8) :: h2osoi_liq_target_tot(bounds%begc:bounds%endc)
-	real(r8) :: h2osoi_liq_target_satu_tot(bounds%begc:bounds%endc)															
+	 real(r8) :: h2osoi_liq_target_satu_tot(bounds%begc:bounds%endc)															
 
     ! Total of h2osoi_liq at wilting point down to the depth of irrigation in each column
     ! [kg/m2]
@@ -1449,15 +1449,15 @@ contains
 
     ! difference between desired soil moisture level for each column and current soil
     ! moisture level [kg/m2] [i.e., mm]
-	! deficit_satu is for flood irrigation, deficit_pool for paddy irrigation
-	! Currently they are same but I separate them in case in future we want to make it different - contact yi.yao@vub.be
+	 ! deficit_satu is for flood irrigation, deficit_pool for paddy irrigation
+	 ! Currently they are same but I separate them in case in future we want to make it different - contact yi.yao@vub.be
     real(r8) :: deficit(bounds%begc:bounds%endc)
-	real(r8) :: deficit_satu(bounds%begc:bounds%endc)											  
-	real(r8) :: deficit_pool(bounds%begc:bounds%endc)												  
+	 real(r8) :: deficit_satu(bounds%begc:bounds%endc)											  
+	 real(r8) :: deficit_pool(bounds%begc:bounds%endc)												  
 
     ! deficit limited by river volume [kg/m2] [i.e., mm]
     real(r8) :: deficit_volr_limited(bounds%begc:bounds%endc)
-	real(r8) :: deficit_satu_volr_limited(bounds%begc:bounds%endc)
+	 real(r8) :: deficit_satu_volr_limited(bounds%begc:bounds%endc)
     real(r8) :: deficit_pool_volr_limited(bounds%begc:bounds%endc)															  
 
     ! where do we need to check soil moisture to see if we need to irrigate?
@@ -1510,7 +1510,7 @@ contains
        reached_max_depth(c) = .false.
        h2osoi_liq_tot(c) = 0._r8
        h2osoi_liq_target_tot(c) = 0._r8
-	   h2osoi_liq_target_satu_tot(c) = 0._r8										
+	    h2osoi_liq_target_satu_tot(c) = 0._r8										
        h2osoi_liq_wilting_point_tot(c) = 0._r8
     end do
 
@@ -1537,8 +1537,8 @@ contains
                      dz = col%dz(c,j))
                 h2osoi_liq_target_tot(c) = h2osoi_liq_target_tot(c) + &
                      h2osoi_liq_target
-				! Here we calculate the saturated target value
-				h2osoi_liq_target_satu = this%RelsatToH2osoi( &
+                ! Here we calculate the saturated target value
+                h2osoi_liq_target_satu = this%RelsatToH2osoi( &
                      relsat = 1._r8, &
                      eff_porosity = eff_porosity(c,j), &
                      dz = col%dz(c,j))
@@ -1559,7 +1559,7 @@ contains
     ! Compute deficits
     ! First initialize deficits to 0 everywhere; this is needed for later averaging up to gridcell
     deficit(bounds%begc:bounds%endc) = 0._r8
-	deficit_satu(bounds%begc:bounds%endc) = 0._r8
+	 deficit_satu(bounds%begc:bounds%endc) = 0._r8
     deficit_pool(bounds%begc:bounds%endc) = 0._r8											 
     do fc = 1, check_for_irrig_col_filter%num
        c = check_for_irrig_col_filter%indices(fc)
@@ -1569,7 +1569,7 @@ contains
             (h2osoi_liq_target_tot(c) - h2osoi_liq_wilting_point_tot(c))
        if (h2osoi_liq_tot(c) < h2osoi_liq_at_threshold) then
           deficit(c) = h2osoi_liq_target_tot(c) - h2osoi_liq_tot(c)
-		  deficit_satu(c) = h2osoi_liq_target_satu_tot(c) - h2osoi_liq_tot(c)   
+		    deficit_satu(c) = h2osoi_liq_target_satu_tot(c) - h2osoi_liq_tot(c)   
           deficit_pool(c) = h2osoi_liq_target_satu_tot(c) - h2osoi_liq_tot(c) 
           ! deficit shouldn't be less than 0: if it is, that implies that the
           ! irrigation target is less than the irrigation threshold, which is not
@@ -1582,12 +1582,12 @@ contains
                   errMsg(sourcefile, __LINE__))
           end if
 	   ! For paddy, irrigation is acctivated once soil water is not saturated
-	   else if (h2osoi_liq_tot(c) < h2osoi_liq_target_satu_tot(c)) then 
+	    else if (h2osoi_liq_tot(c) < h2osoi_liq_target_satu_tot(c)) then 
          deficit_pool(c) = h2osoi_liq_target_satu_tot(c) - h2osoi_liq_tot(c) 
        else																				  
           ! We're above the threshold - so don't irrigate
           deficit(c) = 0._r8
-		  deficit_satu(c) = 0._r8
+		    deficit_satu(c) = 0._r8
           deficit_pool(c) = 0._r8						
        end if
     end do
@@ -1621,8 +1621,8 @@ contains
             deficit_volr_limited = deficit_pool_volr_limited(bounds%begc:bounds%endc))
     else
        deficit_volr_limited(bounds%begc:bounds%endc) = deficit(bounds%begc:bounds%endc)
-	   deficit_satu_volr_limited(bounds%begc:bounds%endc) = deficit_satu(bounds%begc:bounds%endc)
-	   deficit_pool_volr_limited(bounds%begc:bounds%endc) = deficit_pool(bounds%begc:bounds%endc)
+	    deficit_satu_volr_limited(bounds%begc:bounds%endc) = deficit_satu(bounds%begc:bounds%endc)
+	    deficit_pool_volr_limited(bounds%begc:bounds%endc) = deficit_pool(bounds%begc:bounds%endc)
     end if
 
     ! Convert deficits to irrigation rate
@@ -1633,30 +1633,26 @@ contains
        if (check_for_irrig_patch(p)) then
 
           ! Convert units from mm to mm/sec
-	      ! This is for irrigated rice column
-		  if (col%itype(c)==(200+cft_lb+47)) then
-			 this%sfc_irrig_rate_patch(p) = deficit_pool_volr_limited(c) / &
-				 (this%dtime*this%irrig_nsteps_per_day)
-			 this%irrig_rate_demand_patch(p) = deficit_pool(c) / &
+	       ! This is for irrigated rice column
+		    if (col%itype(c)==(200+cft_lb+47)) then
+			   this%sfc_irrig_rate_patch(p) = deficit_pool_volr_limited(c) / &
+				    (this%dtime*this%irrig_nsteps_per_day)
+			   this%irrig_rate_demand_patch(p) = deficit_pool(c) / &
 					 (this%dtime*this%irrig_nsteps_per_day)
-		  else if(this%irrig_method_patch(p) == irrig_method_drip  .or.  this%irrig_method_patch(p) == irrig_method_sprinkler) then
-			 this%sfc_irrig_rate_patch(p) = deficit_volr_limited(c) / &
-				 (this%dtime*this%irrig_nsteps_per_day)
-			 this%irrig_rate_demand_patch(p) = deficit(c) / &
+		    else if(this%irrig_method_patch(p) == irrig_method_drip  .or.  this%irrig_method_patch(p) == irrig_method_sprinkler) then
+			   this%sfc_irrig_rate_patch(p) = deficit_volr_limited(c) / &
+				    (this%dtime*this%irrig_nsteps_per_day)
+			   this%irrig_rate_demand_patch(p) = deficit(c) / &
 					 (this%dtime*this%irrig_nsteps_per_day)
-		  else if(this%irrig_method_patch(p) == irrig_method_flood) then
-			 this%sfc_irrig_rate_patch(p) = deficit_satu_volr_limited(c) / &
-				 (this%dtime*this%irrig_nsteps_per_day)
-			 this%irrig_rate_demand_patch(p) = deficit_satu(c) / &
+		    else if(this%irrig_method_patch(p) == irrig_method_flood) then
+			   this%sfc_irrig_rate_patch(p) = deficit_satu_volr_limited(c) / &
+				    (this%dtime*this%irrig_nsteps_per_day)
+			   this%irrig_rate_demand_patch(p) = deficit_satu(c) / &
 					 (this%dtime*this%irrig_nsteps_per_day)
-		  else
-			 call endrun(msg=' ERROR: irrig_method_patch set to invalid value ' // &
-				errMsg(sourcefile, __LINE__))
+		    else
+			   call endrun(msg=' ERROR: irrig_method_patch set to invalid value ' // &
+				    errMsg(sourcefile, __LINE__))
           endif									  
-          this%sfc_irrig_rate_patch(p) = deficit_volr_limited(c) / &
-               (this%dtime*this%irrig_nsteps_per_day)
-          this%irrig_rate_demand_patch(p) = deficit(c) / &
-               (this%dtime*this%irrig_nsteps_per_day)
 
           ! n_irrig_steps_left(p) > 0 is ok even if irrig_rate(p) ends up = 0
           ! in this case, we'll irrigate by 0 for the given number of time steps
