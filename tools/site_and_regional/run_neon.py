@@ -356,22 +356,6 @@ def parse_isoduration(s):
     dt = datetime.timedelta(days=int(days) + 365 * int(years) + 30 * int(months))
     return int(dt.total_seconds() / 86400)
 
-def get_queue_command(batch_system):
-    match batch_system.lower():
-        'pbs':
-            queue_command = 'qstat -u <user_name>'
-        'slurm':
-            queue_command = 'squeue -u <user_name>'
-        'cobalt':
-            queue_command = 'qstat -u <user_name>'
-        'lsf':
-            queue_command = 'bqueues -u <user_name>'
-        case _:
-        queue_command = ''
-
-    return queue_command
-
-
 
 class NeonSite:
     """
@@ -490,7 +474,22 @@ class NeonSite:
         d1 = datetime.datetime(self.end_year, self.end_month, 1)
         d2 = datetime.datetime(self.start_year, self.start_month, 1)
         return (d1.year - d2.year) * 12 + d1.month - d2.month
+    
+    def get_batch_query(self, case):
+        """
+        Function for querying the batch queue query command for a case, depending on the 
+        user's batch system. If no batch system, empty string is returned
 
+        Args:
+        case:
+            case object
+        """
+        
+        if case.get_value("BATCH_SYSTEM") == "none":
+          return ""
+        else:
+          return case.get_value("batch_query")
+          
     def run_case(
         self,
         base_case_root,
@@ -553,7 +552,7 @@ class NeonSite:
                         case.submit(no_batch=no_batch)
                         logger.info("-----------------------------------")
                         logger.info("Successfully submitted case!")
-                        logger.info("Use 'qstat -u <user-name>' to check its run status")
+                        logger.info(f"Use {self.get_batch_query(case)} to check its run status")
                     return
             else:
                 logger.warning(
@@ -633,7 +632,7 @@ class NeonSite:
                 case.submit(no_batch=no_batch)
                 logger.info("-----------------------------------")
                 logger.info("Successfully submitted case!")
-                logger.info("Use 'qstat -u <user-name>' to check its run status")
+                logger.info(f"Use {self.get_batch_query(case)} to check its run status")
 
     def set_ref_case(self, case):
         rundir = case.get_value("RUNDIR")
