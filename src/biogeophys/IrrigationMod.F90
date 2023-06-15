@@ -1438,7 +1438,7 @@ contains
 
     ! Total of h2osoi_liq_target down to the depth of irrigation in each column [kg/m2]
     real(r8) :: h2osoi_liq_target_tot(bounds%begc:bounds%endc)
-	 real(r8) :: h2osoi_liq_target_satu_tot(bounds%begc:bounds%endc)															
+    real(r8) :: h2osoi_liq_target_satu_tot(bounds%begc:bounds%endc)															
 
     ! Total of h2osoi_liq at wilting point down to the depth of irrigation in each column
     ! [kg/m2]
@@ -1635,23 +1635,23 @@ contains
           ! Convert units from mm to mm/sec
 	       ! This is for irrigated rice column
           if (col%itype(c)==(200+cft_lb+47)) then
-          this%sfc_irrig_rate_patch(p) = deficit_pool_volr_limited(c) / &
-               (this%dtime*this%irrig_nsteps_per_day)
-          this%irrig_rate_demand_patch(p) = deficit_pool(c) / &
-               (this%dtime*this%irrig_nsteps_per_day)
+            this%sfc_irrig_rate_patch(p) = deficit_pool_volr_limited(c) / &
+                  (this%dtime*this%irrig_nsteps_per_day)
+            this%irrig_rate_demand_patch(p) = deficit_pool(c) / &
+                  (this%dtime*this%irrig_nsteps_per_day)
           else if(this%irrig_method_patch(p) == irrig_method_drip  .or.  this%irrig_method_patch(p) == irrig_method_sprinkler) then
-          this%sfc_irrig_rate_patch(p) = deficit_volr_limited(c) / &
-               (this%dtime*this%irrig_nsteps_per_day)
-          this%irrig_rate_demand_patch(p) = deficit(c) / &
-               (this%dtime*this%irrig_nsteps_per_day)
+            this%sfc_irrig_rate_patch(p) = deficit_volr_limited(c) / &
+                  (this%dtime*this%irrig_nsteps_per_day)
+            this%irrig_rate_demand_patch(p) = deficit(c) / &
+                  (this%dtime*this%irrig_nsteps_per_day)
           else if(this%irrig_method_patch(p) == irrig_method_flood) then
-          this%sfc_irrig_rate_patch(p) = deficit_satu_volr_limited(c) / &
-               (this%dtime*this%irrig_nsteps_per_day)
-          this%irrig_rate_demand_patch(p) = deficit_satu(c) / &
-               (this%dtime*this%irrig_nsteps_per_day)
+            this%sfc_irrig_rate_patch(p) = deficit_satu_volr_limited(c) / &
+                  (this%dtime*this%irrig_nsteps_per_day)
+            this%irrig_rate_demand_patch(p) = deficit_satu(c) / &
+                  (this%dtime*this%irrig_nsteps_per_day)
           else
-          call endrun(msg=' ERROR: irrig_method_patch set to invalid value ' // &
-               errMsg(sourcefile, __LINE__))
+            call endrun(msg=' ERROR: irrig_method_patch set to invalid value ' // &
+                  errMsg(sourcefile, __LINE__))
           endif									  
 
           ! n_irrig_steps_left(p) > 0 is ok even if irrig_rate(p) ends up = 0

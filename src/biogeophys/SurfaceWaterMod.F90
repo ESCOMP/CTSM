@@ -473,13 +473,13 @@ contains
 
        if (h2osfcflag==1) then
 	   ! for rice we set the runoff at 0
-        if (col%itype(c)==(200+cft_lb+46) .or. col%itype(c) == (200+cft_lb+47)) then
+         if (col%itype(c)==(200+cft_lb+46) .or. col%itype(c) == (200+cft_lb+47)) then
              frac_infclust=0.0_r8																			  			 
-          else if (frac_h2osfc_nosnow(c) <= params_inst%pc) then
-             frac_infclust=0.0_r8
-          else
-             frac_infclust=(frac_h2osfc_nosnow(c)-params_inst%pc)**params_inst%mu
-          endif
+         else if (frac_h2osfc_nosnow(c) <= params_inst%pc) then
+            frac_infclust=0.0_r8
+         else
+            frac_infclust=(frac_h2osfc_nosnow(c)-params_inst%pc)**params_inst%mu
+         endif
        endif
 
        ! limit runoff to value of storage above S(pc)
