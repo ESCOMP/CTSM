@@ -550,11 +550,11 @@ class NeonSite:
                     elif not setup_only:
                         print("Resubmitting case {}".format(case_root))
                         case.submit(no_batch=no_batch)
-                        logger.info("-----------------------------------")
-                        logger.info("Successfully submitted case!")
+                        print("-----------------------------------")
+                        print("Successfully submitted case!")
                         batch_query = self.get_batch_query(case)
                         if batch_query != "none":
-                            logger.info(f"Use {batch_query} to check its run status")
+                            print(f"Use {batch_query} to check its run status")
                     return
             else:
                 logger.warning(
@@ -632,11 +632,11 @@ class NeonSite:
             case.check_all_input_data()
             if not setup_only:
                 case.submit(no_batch=no_batch)
-                logger.info("-----------------------------------")
-                logger.info("Successfully submitted case!")
+                print("-----------------------------------")
+                print("Successfully submitted case!")
                 batch_query = self.get_batch_query(case)
                 if batch_query != "none":
-                    logger.info(f"Use {batch_query} to check its run status")
+                    print(f"Use {batch_query} to check its run status")
 
     def set_ref_case(self, case):
         rundir = case.get_value("RUNDIR")
