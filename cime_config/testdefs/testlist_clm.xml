@@ -2646,4 +2646,15 @@
       </machine>
     </machines>
   </test>
+
+  <test name="RXCROPMATURITY_Lm61" grid="f09_g17" compset="IHistClm50BgcCrop">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci">
+        <options>
+          <option name="wallclock">12:00:00</option>
+          <option name="comment">This test is designed to test the ability to prescribe crop sowing dates and maturity requirements. It first performs a GDD-generating run, then calls Python code to generate the maturity requirement file. This is then used in a sowing+maturity forced run, which finally is tested to ensure correct behavior.</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
 </testlist>

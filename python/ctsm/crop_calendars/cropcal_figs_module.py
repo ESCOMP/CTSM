@@ -1,19 +1,10 @@
 import numpy as np
-import xarray as xr
-import cftime
 
-try:
-    import cartopy.crs as ccrs
-    import cartopy.feature as cfeature
-    import matplotlib.pyplot as plt
-    import matplotlib.colors as mcolors
-    from matplotlib import cm
-    import matplotlib.collections as mplcol
-except:
-    pass
-
-# Import the CTSM Python utilities
-import utils
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+from matplotlib import cm
+import matplotlib.collections as mplcol
 
 
 # Colormaps (maps)

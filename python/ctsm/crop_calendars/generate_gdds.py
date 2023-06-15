@@ -97,7 +97,7 @@ def main(
         )
 
         pickle_file = os.path.join(output_dir, f"{first_season}-{last_season}.pickle")
-        h1_ds_file = os.path.join(output_dir, f"{first_season}-{last_season}.h1_ds.nc")
+        h2_ds_file = os.path.join(output_dir, f"{first_season}-{last_season}.h2_ds.nc")
         if os.path.exists(pickle_file):
             with open(pickle_file, "rb") as f:
                 (
@@ -109,18 +109,16 @@ def main(
                     skip_patches_for_isel_nan_lastyear,
                     lastYear_active_patch_indices_list,
                     incorrectly_daily,
-                    gddharv_in_h3,
                     save_figs,
                     incl_vegtypes_str,
                     incl_patches1d_itype_veg,
                     mxsowings,
                 ) = pickle.load(f)
             print(f"Will resume import at {pickle_year+1}")
-            h1_ds = None
+            h2_ds = None
         else:
             incorrectly_daily = False
             skip_patches_for_isel_nan_lastyear = np.ndarray([])
-            gddharv_in_h3 = False
             pickle_year = -np.inf
             gddaccum_yp_list = []
             gddharv_yp_list = []
@@ -139,7 +137,7 @@ def main(
                 continue
 
             (
-                h1_ds,
+                h2_ds,
                 sdates_rx,
                 hdates_rx,
                 gddaccum_yp_list,
@@ -147,7 +145,6 @@ def main(
                 skip_patches_for_isel_nan_lastyear,
                 lastYear_active_patch_indices_list,
                 incorrectly_daily,
-                gddharv_in_h3,
                 incl_vegtypes_str,
                 incl_patches1d_itype_veg,
                 mxsowings,
@@ -163,10 +160,9 @@ def main(
                 skip_patches_for_isel_nan_lastyear,
                 lastYear_active_patch_indices_list,
                 incorrectly_daily,
-                gddharv_in_h3,
                 input_dir,
                 incl_vegtypes_str,
-                h1_ds_file,
+                h2_ds_file,
                 mxmats,
                 cc.get_gs_len_da,
                 logger,
@@ -184,7 +180,6 @@ def main(
                         skip_patches_for_isel_nan_lastyear,
                         lastYear_active_patch_indices_list,
                         incorrectly_daily,
-                        gddharv_in_h3,
                         save_figs,
                         incl_vegtypes_str,
                         incl_patches1d_itype_veg,
@@ -202,8 +197,8 @@ def main(
 
         gddfn.log(logger, "Done")
 
-        if not h1_ds:
-            h1_ds = xr.open_dataset(h1_ds_file)
+        if not h2_ds:
+            h2_ds = xr.open_dataset(h2_ds_file)
 
     ######################################################
     ### Get and grid mean GDDs in GGCMI growing season ###
@@ -219,10 +214,10 @@ def main(
 
         gddfn.log(logger, "Getting and gridding mean GDDs...")
         gdd_maps_ds = gddfn.yp_list_to_ds(
-            gddaccum_yp_list, h1_ds, incl_vegtypes_str, sdates_rx, longname_prefix, logger
+            gddaccum_yp_list, h2_ds, incl_vegtypes_str, sdates_rx, longname_prefix, logger
         )
         gddharv_maps_ds = gddfn.yp_list_to_ds(
-            gddharv_yp_list, h1_ds, incl_vegtypes_str, sdates_rx, longname_prefix, logger
+            gddharv_yp_list, h2_ds, incl_vegtypes_str, sdates_rx, longname_prefix, logger
         )
 
         # Fill NAs with dummy values
@@ -380,9 +375,9 @@ if __name__ == "__main__":
     ###############################
     ### Process input arguments ###
     ###############################
-
-    # Set arguments
     parser = argparse.ArgumentParser(description="ADD DESCRIPTION HERE")
+
+    # Required
     parser.add_argument(
         "-i",
         "--input-dir",
@@ -415,6 +410,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "-hd", "--hdates-file", help="File of prescribed harvest dates", required=True
     )
+    
+    # Optional
     figsgroup = parser.add_mutually_exclusive_group()
     figsgroup.add_argument(
         "--dont-save-figs", help="Do not save figures", action="store_true", default=False

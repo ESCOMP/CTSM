@@ -614,7 +614,7 @@ def import_ds(
     chunks=None,
 ):
     # Convert myVegtypes here, if needed, to avoid repeating the process each time you read a file in xr.open_mfdataset().
-    if myVegtypes != None:
+    if myVegtypes is not None:
         if not isinstance(myVegtypes, list):
             myVegtypes = [myVegtypes]
         if isinstance(myVegtypes[0], str):

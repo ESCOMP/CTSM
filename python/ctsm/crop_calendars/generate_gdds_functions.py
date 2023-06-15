@@ -1,5 +1,5 @@
 # Import the CTSM Python utilities
-import utils
+import cropcal_utils as utils
 
 import numpy as np
 import xarray as xr
@@ -7,6 +7,7 @@ import warnings
 import os
 import glob
 import datetime as dt
+from importlib import util as importlib_util
 
 import cropcal_module as cc
 
@@ -24,7 +25,10 @@ try:
         message="Iteration over multi-part geometries is deprecated and will be removed in Shapely 2.0. Use the `geoms` property to access the constituent parts of a multi-part geometry.",
     )
 
+    print("Will (attempt to) produce harvest requirement maps.")
+
 except:
+    print("Will NOT produce harvest requirement maps.")
     can_plot = False
 
 
@@ -189,10 +193,9 @@ def import_and_process_1yr(
     skip_patches_for_isel_nan_lastyear,
     lastYear_active_patch_indices_list,
     incorrectly_daily,
-    gddharv_in_h3,
     indir,
     incl_vegtypes_str_in,
-    h1_ds_file,
+    h2_ds_file,
     mxmats,
     get_gs_len_da,
     logger,
@@ -201,20 +204,28 @@ def import_and_process_1yr(
     log(logger, f"netCDF year {thisYear}...")
     log(logger, dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-    # Get h2 file (list)
-    h2_pattern = os.path.join(indir, "*h2.*.nc")
-    h2_filelist = glob.glob(h2_pattern)
-    if not h2_filelist:
-        h2_pattern = os.path.join(indir, "*h2.*.nc.base")
-        h2_filelist = glob.glob(h2_pattern)
-        if not h2_filelist:
-            error(logger, "No files found matching pattern '*h2.*.nc(.base)'")
+    # Without dask, this can take a LONG time at resolutions finer than 2-deg
+    if importlib_util.find_spec("dask"):
+        chunks = {"time": 1}
+    else:
+        chunks = None
 
+    # Get h2 file (list)
+    h1_pattern = os.path.join(indir, "*h1.*.nc")
+    h1_filelist = glob.glob(h1_pattern)
+    if not h1_filelist:
+        h1_pattern = os.path.join(indir, "*h1.*.nc.base")
+        h1_filelist = glob.glob(h1_pattern)
+        if not h1_filelist:
+            error(logger, "No files found matching pattern '*h1.*.nc(.base)'")
+
+    print(h1_filelist)
     dates_ds = utils.import_ds(
-        h2_filelist,
+        h1_filelist,
         myVars=["SDATES", "HDATES"],
         myVegtypes=utils.define_mgdcrop_list(),
         timeSlice=slice(f"{thisYear}-01-01", f"{thisYear}-12-31"),
+        chunks=chunks,
     )
 
     if dates_ds.dims["time"] > 1:
@@ -450,84 +461,56 @@ def import_and_process_1yr(
     else:
         hdates_rx = hdates_rx_orig
 
-    # Determine cells where growing season crosses new year
-    grows_across_newyear = hdates_rx < sdates_rx
 
     log(logger, f"   Importing accumulated GDDs...")
     clm_gdd_var = "GDDACCUM"
-    myVars = [clm_gdd_var]
-    if not gddharv_in_h3:
-        myVars.append("GDDHARV")
-    pattern = os.path.join(indir, f"*h1.{thisYear-1}-01-01*.nc")
-    h1_files = glob.glob(pattern)
-    if not h1_files:
-        pattern = os.path.join(indir, f"*h1.{thisYear-1}-01-01*.nc.base")
-        h1_files = glob.glob(pattern)
-        if not h1_files:
-            error(logger, f"No files found matching pattern '*h1.{thisYear-1}-01-01*.nc(.base)'")
-    h1_ds = utils.import_ds(
-        h1_files,
+    myVars = [clm_gdd_var, "GDDHARV"]
+    pattern = os.path.join(indir, f"*h2.{thisYear-1}-01-01*.nc")
+    h2_files = glob.glob(pattern)
+    if not h2_files:
+        pattern = os.path.join(indir, f"*h2.{thisYear-1}-01-01*.nc.base")
+        h2_files = glob.glob(pattern)
+        if not h2_files:
+            error(logger, f"No files found matching pattern '*h2.{thisYear-1}-01-01*.nc(.base)'")
+    h2_ds = utils.import_ds(
+        h2_files,
         myVars=myVars,
         myVegtypes=utils.define_mgdcrop_list(),
-        myVars_missing_ok=["GDDHARV"],
+        chunks=chunks,
     )
-    if "GDDHARV" not in h1_ds:
-        if not gddharv_in_h3:
-            log(logger, "Trying to get GDDHARV from h3 file(s) instead.")
-        try:
-            pattern = os.path.join(indir, f"*h3.{thisYear-1}-01-01*.nc")
-            h3_files = glob.glob(pattern)
-            if not h3_files:
-                pattern = os.path.join(indir, f"*h3.{thisYear-1}-01-01*.nc.base")
-                h3_files = glob.glob(pattern)
-                if not h3_files:
-                    error(
-                        logger,
-                        f"No files found matching pattern '*h3.{thisYear-1}-01-01*.nc(.base)'",
-                    )
-            h3_ds = utils.import_ds(
-                h3_files, myVars=["GDDHARV"], myVegtypes=utils.define_mgdcrop_list()
-            )
-            h1_ds["GDDHARV"] = h3_ds["GDDHARV"]
-            if not gddharv_in_h3:
-                log(logger, "Success! Will look in h3 files from now on.")
-                gddharv_in_h3 = True
-        except:
-            log(logger, "Unable to import GDDHARV from h1 or h3 files. Disabling save_figs.")
-            save_figs = False
 
     # Restrict to patches we're including
     if skipping_patches_for_isel_nan:
-        if not np.array_equal(dates_ds.patch.values, h1_ds.patch.values):
-            error(logger, "dates_ds and h1_ds don't have the same patch list!")
-        h1_incl_ds = h1_ds.isel(patch=incl_patches_for_isel_nan)
+        if not np.array_equal(dates_ds.patch.values, h2_ds.patch.values):
+            error(logger, "dates_ds and h2_ds don't have the same patch list!")
+        h2_incl_ds = h2_ds.isel(patch=incl_patches_for_isel_nan)
     else:
-        h1_incl_ds = h1_ds
+        h2_incl_ds = h2_ds
 
-    if not np.any(h1_incl_ds[clm_gdd_var].values != 0):
+    if not np.any(h2_incl_ds[clm_gdd_var].values != 0):
         error(logger, f"All {clm_gdd_var} values are zero!")
 
     # Get standard datetime axis for outputs
     Nyears = yN - y1 + 1
 
     if len(gddaccum_yp_list) == 0:
-        lastYear_active_patch_indices_list = [None for vegtype_str in h1_incl_ds.vegtype_str.values]
-        gddaccum_yp_list = [None for vegtype_str in h1_incl_ds.vegtype_str.values]
+        lastYear_active_patch_indices_list = [None for vegtype_str in h2_incl_ds.vegtype_str.values]
+        gddaccum_yp_list = [None for vegtype_str in h2_incl_ds.vegtype_str.values]
         if save_figs:
-            gddharv_yp_list = [None for vegtype_str in h1_incl_ds.vegtype_str.values]
+            gddharv_yp_list = [None for vegtype_str in h2_incl_ds.vegtype_str.values]
 
     incl_vegtype_indices = []
-    for v, vegtype_str in enumerate(h1_incl_ds.vegtype_str.values):
+    for v, vegtype_str in enumerate(h2_incl_ds.vegtype_str.values):
         # Skipping Miscanthus because it seems to never be harvested even though it is sown. This causes problems in NaN mask check.
         if "miscanthus" in vegtype_str:
             log(logger, f"      SKIPPING {vegtype_str}")
             continue
 
         vegtype_int = utils.vegtype_str2int(vegtype_str)[0]
-        thisCrop_full_patchlist = list(utils.xr_flexsel(h1_ds, vegtype=vegtype_str).patch.values)
+        thisCrop_full_patchlist = list(utils.xr_flexsel(h2_ds, vegtype=vegtype_str).patch.values)
 
         # Get time series for each patch of this type
-        thisCrop_ds = utils.xr_flexsel(h1_incl_ds, vegtype=vegtype_str)
+        thisCrop_ds = utils.xr_flexsel(h2_incl_ds, vegtype=vegtype_str)
         thisCrop_gddaccum_da = thisCrop_ds[clm_gdd_var]
         if save_figs:
             thisCrop_gddharv_da = thisCrop_ds["GDDHARV"]
@@ -686,11 +669,11 @@ def import_and_process_1yr(
     skip_patches_for_isel_nan_lastyear = skip_patches_for_isel_nan
 
     # Could save space by only saving variables needed for gridding
-    log(logger, "   Saving h1_ds...")
-    h1_ds.to_netcdf(h1_ds_file)
+    log(logger, "   Saving h2_ds...")
+    h2_ds.to_netcdf(h2_ds_file)
 
     return (
-        h1_ds,
+        h2_ds,
         sdates_rx,
         hdates_rx,
         gddaccum_yp_list,
@@ -698,7 +681,6 @@ def import_and_process_1yr(
         skip_patches_for_isel_nan_lastyear,
         lastYear_active_patch_indices_list,
         incorrectly_daily,
-        gddharv_in_h3,
         incl_vegtypes_str,
         incl_patches1d_itype_veg,
         mxsowings,

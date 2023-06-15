@@ -124,19 +124,6 @@ This defines various CTSM-specific system tests
   </test>
 
 <!--
-SSR 2023-04-28: I just copied everything except DESC from the above. I'm not sure what this XML file actually does, so I don't know what appropriate values are.
--->
-  <test NAME="RXCROPMATURITY">
-    <DESC>Generate prescribed maturity requirements, then test with them</DESC>
-    <INFO_DBUG>1</INFO_DBUG>
-    <DOUT_S>FALSE</DOUT_S>
-    <CONTINUE_RUN>FALSE</CONTINUE_RUN>
-    <REST_OPTION>never</REST_OPTION>
-    <HIST_OPTION>$STOP_OPTION</HIST_OPTION>
-    <HIST_N>$STOP_N</HIST_N>
-  </test>
-
-<!--
 SSP    smoke CLM spinup test (only valid for CLM compsets with CLM45)
        do an initial spin test (setting CLM_ACCELERATED_SPINUP to on)
          write restarts at the end of the run
