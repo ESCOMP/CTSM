@@ -24,7 +24,7 @@ module SurfaceWaterMod
   use WaterStateBulkType          , only : waterstatebulk_type
   use WaterDiagnosticBulkType     , only : waterdiagnosticbulk_type
   use WaterTracerUtils            , only : CalcTracerFromBulk
-
+  use clm_varpar, only: cft_lb
   implicit none
   save
   private
@@ -472,7 +472,10 @@ contains
        c = filter_hydrologyc(fc)
 
        if (h2osfcflag==1) then
-          if (frac_h2osfc_nosnow(c) <= params_inst%pc) then
+	   ! for rice we set the runoff at 0
+		  if (col%itype(c)==(200+cft_lb+46) .or. col%itype(c) == (200+cft_lb+47)) then
+             frac_infclust=0.0_r8																			  			 
+          else if (frac_h2osfc_nosnow(c) <= params_inst%pc) then
              frac_infclust=0.0_r8
           else
              frac_infclust=(frac_h2osfc_nosnow(c)-params_inst%pc)**params_inst%mu
@@ -480,7 +483,14 @@ contains
        endif
 
        ! limit runoff to value of storage above S(pc)
-       if(h2osfc(c) > h2osfc_thresh(c) .and. h2osfcflag/=0) then
+	   ! if surface water exceeds 10cm, then do drainage in the next step
+	   if (col%itype(c)==(200+cft_lb+46) .or. col%itype(c)==(200+cft_lb+47)) then
+          if (h2osfc(c) > 100) then
+             qflx_h2osfc_surf(c) = (h2osfc(c) - 100) / dtime
+          else
+             qflx_h2osfc_surf(c) = 0
+          end if																			 
+       else if(h2osfc(c) > h2osfc_thresh(c) .and. h2osfcflag/=0) then
           ! spatially variable k_wet
           k_wet=1.0e-4_r8 * sin((rpi/180._r8) * topo_slope(c))
           qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))
