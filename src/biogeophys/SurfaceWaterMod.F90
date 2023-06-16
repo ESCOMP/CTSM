@@ -26,6 +26,8 @@ module SurfaceWaterMod
   use WaterTracerUtils            , only : CalcTracerFromBulk
   use PatchType                   , only : patch
   use pftconMod                   , only : nrice, nirrig_rice, npcropmin
+  use landunit_varcon             , only : istcrop
+  use abortutils                  , only : endrun
   implicit none
   save
   private
@@ -453,11 +455,11 @@ contains
     real(r8)          , intent(inout) :: qflx_h2osfc_surf( bounds%begc: )   ! surface water runoff (mm H2O /s)
     !
     ! !LOCAL VARIABLES:
-    integer  :: fc, c
+    integer  :: fc, c, p
     real(r8) :: dtime         ! land model time step (sec)
     real(r8) :: frac_infclust ! fraction of submerged area that is connected
     real(r8) :: k_wet         ! linear reservoir coefficient for h2osfc
-    integer  :: vegtype_thiscol, n_non_crop ! used to detect the crop type for column
+    integer  :: vegtype_thiscol, n_noncrop ! used to detect the crop type for column
 
     character(len=*), parameter :: subname = 'QflxH2osfcSurf'
     !-----------------------------------------------------------------------
@@ -474,12 +476,12 @@ contains
        c = filter_hydrologyc(fc)
 
        if (h2osfcflag==1) then
-	   ! for bith rainfed and irrigated rice we set the runoff at 0
+      ! for bith rainfed and irrigated rice we set the runoff at 0
       ! as farmers always change the microtopography to hold the water in the field
       ! Firstly check if this column is crop, then check if it is rice and irrig_rice
          vegtype_thiscol = 0
          if (col%itype(c) == istcrop) then 
-            n_non_crop = 0
+            n_noncrop = 0
             do p = col%patchi(c),col%patchf(c)
                if (patch%active(p)) then
                   if (patch%itype(p) >= npcropmin) then
@@ -546,7 +548,7 @@ contains
          else
             qflx_h2osfc_surf(c)= 0._r8
          end if
-       else if(h2osfc(c) > h2osfc_thresh(c) .and. h2osfcflag/=0) the
+       else if(h2osfc(c) > h2osfc_thresh(c) .and. h2osfcflag/=0) then
          ! spatially variable k_wet
          k_wet=1.0e-4_r8 * sin((rpi/180._r8) * topo_slope(c))
          qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))
