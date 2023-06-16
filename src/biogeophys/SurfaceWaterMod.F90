@@ -25,7 +25,7 @@ module SurfaceWaterMod
   use WaterDiagnosticBulkType     , only : waterdiagnosticbulk_type
   use WaterTracerUtils            , only : CalcTracerFromBulk
   use PatchType                   , only : patch
-  use pftconMod                   , only : nrice, nirrig_rice
+  use pftconMod                   , only : nrice, nirrig_rice, npcropmin
   implicit none
   save
   private
@@ -457,6 +457,7 @@ contains
     real(r8) :: dtime         ! land model time step (sec)
     real(r8) :: frac_infclust ! fraction of submerged area that is connected
     real(r8) :: k_wet         ! linear reservoir coefficient for h2osfc
+    integer  :: vegtype_thiscol, n_non_crop ! used to detect the crop type for column
 
     character(len=*), parameter :: subname = 'QflxH2osfcSurf'
     !-----------------------------------------------------------------------
@@ -473,9 +474,35 @@ contains
        c = filter_hydrologyc(fc)
 
        if (h2osfcflag==1) then
-	   ! for rice we set the runoff at 0
-         if (patch%itype(col%patch(bounds%begp))==nirrig_rice .or. patch%itype(col%patch(bounds%begp))==nrice ) then
-             frac_infclust=0.0_r8																			  			 
+	   ! for bith rainfed and irrigated rice we set the runoff at 0
+      ! as farmers always change the microtopography to hold the water in the field
+      ! Firstly check if this column is crop, then check if it is rice and irrig_rice
+         vegtype_thiscol = 0
+         if (col%itype(c) == istcrop) then 
+            n_non_crop = 0
+            do p = col%patchi(c),col%patchf(c)
+               if (patch%active(p)) then
+                  if (patch%itype(p) >= npcropmin) then
+                     if (vegtype_thiscol > 0) then
+                        call endrun('ERROR multiple active crop patches found in this column')
+                     end if
+                     vegtype_thiscol = patch%itype(p)
+                  else
+                     n_noncrop = n_noncrop + 1
+                  end if
+               end if
+            end do
+            ! Check
+            if (n_noncrop > 0 .and. vegtype_thiscol > 0) then
+               call endrun('ERROR Active crop and non-crop patches found in this active column')
+            end if
+            if (vegtype_thiscol==nirrig_rice .or. vegtype_thiscol==nrice ) then
+               frac_infclust=0.0_r8
+            else if (frac_h2osfc_nosnow(c) <= params_inst%pc) then
+               frac_infclust=0.0_r8
+            else
+               frac_infclust=(frac_h2osfc_nosnow(c)-params_inst%pc)**params_inst%mu
+            end if         																			  			 
          else if (frac_h2osfc_nosnow(c) <= params_inst%pc) then
             frac_infclust=0.0_r8
          else
@@ -484,22 +511,50 @@ contains
        endif
 
        ! limit runoff to value of storage above S(pc)
-	   ! if surface water exceeds 10cm, then do drainage in the next step
-       if (patch%itype(col%patch(bounds%begp))==nirrig_rice .or. patch%itype(col%patch(bounds%begp))==nrice) then
-          if (h2osfc(c) > 100) then
-             qflx_h2osfc_surf(c) = (h2osfc(c) - 100) / dtime
-          else
-             qflx_h2osfc_surf(c) = 0
-          end if																			 
-       else if(h2osfc(c) > h2osfc_thresh(c) .and. h2osfcflag/=0) then
-          ! spatially variable k_wet
-          k_wet=1.0e-4_r8 * sin((rpi/180._r8) * topo_slope(c))
-          qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))
+	    ! for rice and irrig_rice, if surface water exceeds 10cm, then do drainage in the next step
+       vegtype_thiscol = 0
+       if (col%itype(c) == istcrop) then 
+          do p = col%patchi(c),col%patchf(c)
+            if (patch%active(p)) then
+               if (patch%itype(p) >= npcropmin) then
+                  if (vegtype_thiscol > 0) then
+                     call endrun('ERROR multiple active crop patches found in this column')
+                  end if
+                  vegtype_thiscol = patch%itype(p)
+               else
+                  n_noncrop = n_noncrop + 1
+               end if
+            end if
+         end do
+         ! Check
+         if (n_noncrop > 0 .and. vegtype_thiscol > 0) then
+            call endrun('ERROR Active crop and non-crop patches found in this active column')
+         end if
 
-          qflx_h2osfc_surf(c)=min(qflx_h2osfc_surf(c),(h2osfc(c) - h2osfc_thresh(c))/dtime)
+         if (vegtype_thiscol==nirrig_rice .or. vegtype_thiscol==nrice ) then
+            if (h2osfc(c) > 100) then
+               qflx_h2osfc_surf(c) = (h2osfc(c) - 100) / dtime
+            else
+               qflx_h2osfc_surf(c) = 0
+            end if																			 
+         else if(h2osfc(c) > h2osfc_thresh(c) .and. h2osfcflag/=0) then
+            ! spatially variable k_wet
+            k_wet=1.0e-4_r8 * sin((rpi/180._r8) * topo_slope(c))
+            qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))
+
+            qflx_h2osfc_surf(c)=min(qflx_h2osfc_surf(c),(h2osfc(c) - h2osfc_thresh(c))/dtime)
+         else
+            qflx_h2osfc_surf(c)= 0._r8
+         end if
+       else if(h2osfc(c) > h2osfc_thresh(c) .and. h2osfcflag/=0) the
+         ! spatially variable k_wet
+         k_wet=1.0e-4_r8 * sin((rpi/180._r8) * topo_slope(c))
+         qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))
+
+         qflx_h2osfc_surf(c)=min(qflx_h2osfc_surf(c),(h2osfc(c) - h2osfc_thresh(c))/dtime)
        else
-          qflx_h2osfc_surf(c)= 0._r8
-       endif
+         qflx_h2osfc_surf(c)= 0._r8
+       end if
 
        ! cutoff lower limit
        if ( qflx_h2osfc_surf(c) < 1.0e-8) then
