@@ -97,7 +97,7 @@ module IrrigationMod
   use PatchType        , only : patch                
   use subgridAveMod    , only : p2c, c2g
   use filterColMod     , only : filter_col_type, col_filter_from_logical_array
-  use clm_varpar       , only : cft_lb									  
+  use pftconMod        , only : nirrig_rice								  
   !
   implicit none
   private
@@ -1634,7 +1634,7 @@ contains
 
           ! Convert units from mm to mm/sec
 	       ! This is for irrigated rice column
-          if (col%itype(c)==(200+cft_lb+47)) then
+          if (patch%itype(p)==nirrig_rice) then
             this%sfc_irrig_rate_patch(p) = deficit_pool_volr_limited(c) / &
                   (this%dtime*this%irrig_nsteps_per_day)
             this%irrig_rate_demand_patch(p) = deficit_pool(c) / &
