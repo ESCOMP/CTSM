@@ -378,6 +378,10 @@ contains
 
        call soilbiogeochem_state_inst%Init(bounds)
 
+       ! Initialize tillage
+       ! Must be called before init_decompcascade*
+       call tillage_init(bounds)
+
        ! Initialize decompcascade constants
        ! Note that init_decompcascade_bgc need 
        ! soilbiogeochem_state_inst to be initialized
@@ -390,9 +394,6 @@ contains
           call init_decompcascade_mimics(bounds, soilbiogeochem_state_inst, &
                                          soilstate_inst)
        end if
-
-       ! Initialize tillage
-       call tillage_init(bounds)
 
        ! Initalize soilbiogeochem carbon types
 

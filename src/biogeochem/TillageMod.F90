@@ -25,6 +25,7 @@ module TillageMod
   private
   ! !PUBLIC MEMBER PROCEDURES
   public :: tillage_init
+  public :: tillage_init_century
   public :: get_do_tillage
   public :: get_apply_tillage_multipliers
   !
@@ -49,7 +50,8 @@ contains
 
   subroutine tillage_init(bounds)
     !
-    ! Read namelist parameters and allocate variables related to tillage
+    ! Read namelist parameters related to tillage. Allocation of variables happens
+    ! in separate subroutines written specifically for decomposition mode of choice.
     !
     ! !USES:
     use spmdMod        , only : masterproc
@@ -113,13 +115,47 @@ contains
      do_tillage_high_private = do_tillage_high
      use_original_tillage_private = use_original_tillage
 
-     ! Allocate tillage multipliers
-     if (get_do_tillage()) then
-        allocate(tillage_mults(ndecomp_pools)); tillage_mults(:) = 1.0_r8
-        allocate(tillage_mults_allphases(ndecomp_pools, nphases)); tillage_mults_allphases(:,:) = 1.0_r8
-     end if
 
   end subroutine tillage_init
+
+
+  subroutine tillage_init_century(i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+    ! !DESCRIPTION:
+    !
+    ! Allocate multiplier arrays to be used in tillage. Call during initialization of CENTURY decomposition.
+    ! Written by Sam Rabin.
+    !
+    ! !USES
+    use pftconMod , only : npcropmin
+    !
+    ! !ARGUMENTS:
+    integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
+    integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
+
+    if (.not. get_do_tillage()) then
+        return
+    end if
+
+    ! Allocate tillage multipliers
+    allocate(tillage_mults(ndecomp_pools)); tillage_mults(:) = 1.0_r8
+    allocate(tillage_mults_allphases(ndecomp_pools, nphases)); tillage_mults_allphases(:,:) = 1.0_r8
+
+    ! Fill tillage_mults_allphases
+    if (do_tillage_low_private) then
+        tillage_mults_allphases(i_cel_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
+        tillage_mults_allphases(i_lig_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
+        tillage_mults_allphases(i_act_som,:) = (/ 1.0_r8, 1.0_r8, 1.0_r8 /)
+        tillage_mults_allphases(i_slo_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
+        tillage_mults_allphases(i_pas_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
+    else 
+        tillage_mults_allphases(i_cel_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
+        tillage_mults_allphases(i_lig_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
+        tillage_mults_allphases(i_act_som,:) = (/ 1.2_r8, 1.0_r8, 1.0_r8 /)
+        tillage_mults_allphases(i_slo_som,:) = (/ 4.8_r8, 3.5_r8, 2.5_r8 /)
+        tillage_mults_allphases(i_pas_som,:) = (/ 4.8_r8, 3.5_r8, 2.5_r8 /)
+    end if
+
+  end subroutine tillage_init_century
 
 
   function get_do_tillage()
@@ -250,24 +286,6 @@ contains
         return
     elseif (this_patch == 0) then
         call endrun('ERROR No active patches found (crop OR non-crop)')
-    end if
-
-    ! Set up tillage multipliers
-    ! (It would be better to do this in tillage_init, but that can't happen
-    ! because these indices are private members of SoilBiogeochemDecompCascadeBGCMod.
-    tillage_mults_allphases(:,:) = 1.0_r8
-    if (do_tillage_low_private) then
-        tillage_mults_allphases(i_cel_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
-        tillage_mults_allphases(i_lig_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
-        tillage_mults_allphases(i_act_som,:) = (/ 1.0_r8, 1.0_r8, 1.0_r8 /)
-        tillage_mults_allphases(i_slo_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
-        tillage_mults_allphases(i_pas_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
-    else 
-        tillage_mults_allphases(i_cel_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
-        tillage_mults_allphases(i_lig_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
-        tillage_mults_allphases(i_act_som,:) = (/ 1.2_r8, 1.0_r8, 1.0_r8 /)
-        tillage_mults_allphases(i_slo_som,:) = (/ 4.8_r8, 3.5_r8, 2.5_r8 /)
-        tillage_mults_allphases(i_pas_som,:) = (/ 4.8_r8, 3.5_r8, 2.5_r8 /)
     end if
 
     call get_tillage_multipliers(idop, this_patch, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)

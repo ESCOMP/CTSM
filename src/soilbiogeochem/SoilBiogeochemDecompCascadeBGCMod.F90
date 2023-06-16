@@ -230,6 +230,7 @@ contains
     !  written by C. Koven 
     !
     ! !USES:
+    use TillageMod, only : tillage_init_century
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds  
@@ -504,6 +505,9 @@ contains
       if(use_soil_matrixcn) call InitSoilTransfer()
 
       deallocate(params_inst%bgc_initial_Cstocks)
+
+      ! Allocate tillage variables
+      call tillage_init_century(i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
 
     end associate
 
