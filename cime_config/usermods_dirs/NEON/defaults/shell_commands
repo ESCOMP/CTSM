@@ -29,8 +29,6 @@ if  [[ $compset == *'SP_SICE'* ]]; then
   ./xmlchange STOP_OPTION=nyears
   ./xmlchange CLM_FORCE_COLDSTART=on
 
-  echo "hist_mfilt(2) = 48" >> user_nl_clm
-  echo "hist_nhtfrq(2) = 1" >> user_nl_clm
   echo "hist_fincl2 = 'FCEV','FCTR','FGEV','FIRA','FSA','FSH','FPSN','H2OSOI','SNOW_DEPTH','TBOT','TSOI'" >> user_nl_clm 
 fi
 

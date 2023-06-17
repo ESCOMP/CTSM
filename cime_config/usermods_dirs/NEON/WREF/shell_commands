@@ -3,7 +3,7 @@
 ./xmlchange PTS_LON=238.04162
 ./xmlchange PTS_LAT=45.81637
 ./xmlchange DATM_YR_ALIGN=2019 
-# NEON precipitation data for this site is bad so end early
+# NEON precipitation data for this site is missing so end early
 # If CLM_USRDAT_NAME is NEON.PRISM you can run to the end of the data
 if [[ $CLM_USRDAT_NAME == 'NEON' ]]; then
   # Different default start date and number of months to run for transient case

@@ -2,7 +2,7 @@
 ./xmlchange NEONSITE=NIWO
 ./xmlchange PTS_LON=254.41676
 ./xmlchange PTS_LAT=40.05236
-# NEON precipitation data for this site is bad so end early
+# NEON precipitation data for this site is missing so end early
 # If CLM_USRDAT_NAME is NEON.PRISM you can run to the end of the data
 if [[ $CLM_USRDAT_NAME == "NEON" ]]; then
   ./xmlchange DATM_YR_END=2018
