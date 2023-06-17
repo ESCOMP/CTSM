@@ -168,7 +168,8 @@ OPTIONS
                               (default is 0) (standard option with land-ice model is 10)
      -glc_use_antarctica      Set defaults appropriate for runs that include Antarctica
      -help [or -h]            Print usage to STDOUT.
-     -light_res <value>       Resolution of lightning dataset to use for CN fire (360x720 or 94x192)
+     -light_res <value>       Resolution of lightning dataset to use for CN or FATES fire (360x720, 106x174, or 94x192)
+                              106x174 can only be used for NEON sites
      -lilac                   If CTSM is being run through LILAC (normally not used)
                               (LILAC is the Lightweight Infrastructure for Land-Atmosphere Coupling)
      -ignore_ic_date          Ignore the date on the initial condition files
@@ -955,6 +956,7 @@ sub setup_cmdl_fire_light_res {
   if ( $val eq "default" ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                  'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'},
+                 'neon'=>$nl_flags->{'neon'},
                  'fates_spitfire_mode'=>$nl->get_value('fates_spitfire_mode'),
                  'use_fates'=>$nl_flags->{'use_fates'}, fire_method=>$nl->get_value('fire_method') );
      $val              = remove_leading_and_trailing_quotes( $nl->get_value($var) );
@@ -1433,6 +1435,13 @@ sub process_namelist_commandline_clm_usr_name {
       $settings{'csmdata'}     = $ENV{'DIN_LOC_ROOT'};
     } else {
       $settings{'csmdata'}     = $nl_flags->{'inputdata_rootdir'};
+    }
+
+    # For NEON sites
+    if ($opts->{'clm_usr_name'} =~ /NEON/) {
+      $nl_flags->{'neon'} = ".true."
+    } else {
+      $nl_flags->{'neon'} = ".false."
     }
 
     my $nvars = 0;

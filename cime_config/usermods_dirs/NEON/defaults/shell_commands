@@ -28,16 +28,6 @@ fi
 if  [[ $compset == *'SP_SICE'* ]]; then
   ./xmlchange STOP_OPTION=nyears
   ./xmlchange CLM_FORCE_COLDSTART=on
-  # comment out lightning file
-  :> user_nl_clm.tmp
-  while read line; do
-    if [[ $line != *"_lightng"* ]]; then
-        echo $line>>user_nl_clm.tmp
-    else
-  echo '!'$line>>user_nl_clm.tmp
-    fi
-  done<user_nl_clm
-  mv user_nl_clm.tmp user_nl_clm
 
   echo "hist_mfilt(2) = 48" >> user_nl_clm
   echo "hist_nhtfrq(2) = 1" >> user_nl_clm
