@@ -163,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1958;
+my $ntests = 1971;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1335;
+   $ntests += 1344;
 }
 plan( tests=>$ntests );
 
@@ -466,6 +466,9 @@ foreach my $options (
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
                       "-res 0.9x1.25 -bgc sp -use_case 1850_noanthro_control -drydep -fire_emis",
                       "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res 360x720",
+                      "--bgc bgc --light_res none --namelist \"&a fire_method='nofire'/\"",
+                      "--bgc fates --light_res 360x720 --namelist \"&a fates_spitfire_mode=2/\"",
+                      "--bgc fates --light_res none --namelist \"&a fates_spitfire_mode=1/\"",
                      ) {
    my $file = $startfile;
    &make_env_run();
@@ -968,6 +971,11 @@ my %failtest = (
                                    },
      "FireNoneButFATESfireon"    =>{ options=>"-bgc fates -envxml_dir . -no-megan -light_res none",
                                      namelst=>"fates_spitfire_mode=4",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "FATESwspitfireOffLigtOn"    =>{ options=>"-bgc fates -envxml_dir . -no-megan -light_res 360x720",
+                                     namelst=>"fates_spitfire_mode=0",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                    },
