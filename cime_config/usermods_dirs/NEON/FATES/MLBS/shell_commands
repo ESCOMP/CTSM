@@ -2,9 +2,13 @@
 ./xmlchange NEONSITE=MLBS
 ./xmlchange PTS_LON=279.47575
 ./xmlchange PTS_LAT=37.37783
-./xmlchange DATM_YR_END=2019
-# Different default number of months to run for transient case
-if  [[ $compset =~ ^HIST ]]; then
-  ./xmlchange DATM_YR_END=2020
-  ./xmlchange STOP_N=24
+# NEON precipitation data for this site is missing so end early
+# If CLM_USRDAT_NAME is NEON.PRISM you can run to the end of the data
+if [[ $CLM_USRDAT_NAME == 'NEON' ]]; then
+  ./xmlchange DATM_YR_END=2019  
+  # Different default number of months to run for transient case
+  if  [[ $compset =~ ^HIST ]]; then
+    ./xmlchange DATM_YR_END=2020
+    ./xmlchange STOP_N=24
+  fi
 fi

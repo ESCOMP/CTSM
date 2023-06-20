@@ -11,6 +11,7 @@
 # Set years to run forcing data over
 ./xmlchange DATM_YR_ALIGN=2018,DATM_YR_END=2021,DATM_YR_START=2018
 compset=`./xmlquery COMPSET --value`
+CLM_USRDAT_NAME=`./xmlquery CLM_USRDAT_NAME --value`
 # For a transient case run the whole length and don't cycle
 if  [[ $compset =~ ^HIST ]]; then
   ./xmlchange DATM_YR_END=2022
@@ -21,6 +22,14 @@ if  [[ $compset =~ ^HIST ]]; then
   ./xmlchange CLM_NML_USE_CASE="2018-PD_transient"
 else
   ./xmlchange CLM_NML_USE_CASE="2018_control"
+fi
+
+# If needed for SP simulations: turn off lightning & set history file variables
+if  [[ $compset == *'SP_SICE'* ]]; then
+  ./xmlchange STOP_OPTION=nyears
+  ./xmlchange CLM_FORCE_COLDSTART=on
+
+  echo "hist_fincl2 = 'FCEV','FCTR','FGEV','FIRA','FSA','FSH','FPSN','H2OSOI','SNOW_DEPTH','TBOT','TSOI'" >> user_nl_clm 
 fi
 
 # Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
