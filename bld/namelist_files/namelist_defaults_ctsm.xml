@@ -1669,10 +1669,10 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 
 <light_res    use_cn=".false."                     >none</light_res>
 <light_res    use_cn=".true." fire_method="nofire" >none</light_res>
+<light_res    use_cn=".true." neon=".true."        >106x174</light_res>
 <light_res    use_cn=".true." phys="clm4_5"        >94x192</light_res>
 <light_res    use_cn=".true." phys="clm5_0"        >94x192</light_res>
 <light_res    use_cn=".true." phys="clm5_1"        >360x720</light_res>
-<light_res    use_cn=".true." neon=".true."        >106x174</light_res>
 <light_res    use_fates=".true."                         >none</light_res>
 <light_res    use_fates=".true." fates_spitfire_mode="0" >none</light_res>
 <light_res    use_fates=".true." fates_spitfire_mode="1" >none</light_res>
