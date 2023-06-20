@@ -976,13 +976,37 @@ sub setup_cmdl_fire_light_res {
         $log->fatal_error("-$var option used while also explicitly setting stream_fldfilename_lightng filename which is a contradiction. Use one or the other not both.");
      }
      if ( ! &value_is_true($nl->get_value('use_cn')) ) {
-        $log->fatal_error("-$var option used CN is NOT on. -$var can only be used when CN is on (with bgc: cn or bgc)");
-     }
-     if ( &value_is_true($nl->get_value('use_cn')) && $val eq "none" ) {
-        $log->fatal_error("-$var option is set to none, but CN is on (with bgc: cn or bgc) which is a contradiction");
+        if ( &value_is_true($nl_flags->{'use_fates'}) ) {
+           if ( $nl->get_value('fates_spitfire_mode') < 2) {
+              if ( $val ne "none" ) {
+                  $log->fatal_error("-$var option used when FATES is on, but fates_spitfire_mode does NOT use lightning data");
+              }
+           } else {
+              if ( $val eq "none" ) {
+                 $log->fatal_error("-$var option is set to none, but FATES is on and fates_spitfire_mode requires lightning data");
+              }
+           }
+        } else {
+           $log->fatal_error("-$var option used when FATES off and CN is NOT on. -$var can only be used when BGC is set to bgc or fates");
+        }
+     } else {
+        if ( $val eq "none" and $fire_method ne "nofire" ) {
+           $log->fatal_error("-$var option is set to none, but CN is on (with bgc: cn or bgc) which is a contradiction");
+        }
      }
      $nl_flags->{$var} = $val;
   }
+  # Check that NEON data is only used for NEON sites
+  if ( $val eq "106x174" ) {
+     if ( ! &value_is_true($nl_flags->{'neon'}) ) {
+         if ( defined($opts->{'clm_usr_name'}) ) {
+            $log->warning("The NEON lightning dataset does NOT cover the entire globe, make sure it covers the region for your grid");
+         } else { 
+            $log->fatal_error("The NEON lightning dataset can NOT be used for global grids or regions or points outside of its area as it does NOT cover the entire globe.");
+         }
+     }
+  }
+  # check for valid values...
   my $group = $definition->get_group_name($var);
   $nl->set_variable_value($group, $var, quote_string($nl_flags->{$var}) );
   if (  ! $definition->is_valid_value( $var, $nl_flags->{$var}, 'noquotes'=>1 ) ) {
@@ -991,7 +1015,7 @@ sub setup_cmdl_fire_light_res {
   }
   $log->verbose_message("Using $nl_flags->{$var} for $var.");
   #
-  # Set flag if cn-fires are on or not
+  # Set flag if cn-fires are on or not, only for BGC (not FATES)
   #
   $var = "cnfireson";
   my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );

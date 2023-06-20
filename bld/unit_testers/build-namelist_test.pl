@@ -467,8 +467,8 @@ foreach my $options (
                       "-res 0.9x1.25 -bgc sp -use_case 1850_noanthro_control -drydep -fire_emis",
                       "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res 360x720",
                       "--bgc bgc --light_res none --namelist \"&a fire_method='nofire'/\"",
-                      "--bgc fates --light_res 360x720 --namelist \"&a fates_spitfire_mode=2/\"",
-                      "--bgc fates --light_res none --namelist \"&a fates_spitfire_mode=1/\"",
+                      "--bgc fates --light_res 360x720 --no-megan --namelist \"&a fates_spitfire_mode=2/\"",
+                      "--bgc fates --light_res none --no-megan --namelist \"&a fates_spitfire_mode=1/\"",
                      ) {
    my $file = $startfile;
    &make_env_run();
