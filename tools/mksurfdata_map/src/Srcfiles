@@ -6,6 +6,7 @@ fileutils.F90
 mkglacierregionMod.F90
 mkglcmecMod.F90
 mkharvestMod.F90
+mkirrigation_methodMod.F90
 mklaiMod.F90
 mklanwatMod.F90
 mkpftConstantsMod.F90

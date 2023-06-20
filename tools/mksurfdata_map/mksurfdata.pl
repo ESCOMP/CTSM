@@ -338,6 +338,7 @@ sub write_namelist_file {
  map_fmax         = '$map->{'fmx'}'
  map_forganic     = '$map->{'org'}'
  map_flai         = '$map->{'lai'}'
+ map_firrigation_method         = '$map->{'irrigation_method'}'															   
  map_fharvest     = '$map->{'hrv'}'
  map_flakwat      = '$map->{'lak'}'
  map_fwetlnd      = '$map->{'wet'}'
@@ -358,6 +359,7 @@ sub write_namelist_file {
  mksrf_fvocef     = '$datfil->{'voc'}'
  mksrf_furbtopo   = '$datfil->{'utp'}'
  mksrf_fgdp       = '$datfil->{'gdp'}'
+ mksrf_firrigation_method       = '$datfil->{'irrigation_method'}'																  
  mksrf_fpeat      = '$datfil->{'peat'}'
  mksrf_fsoildepth = '$datfil->{'soildepth'}'
  mksrf_fabm       = '$datfil->{'abm'}'
@@ -646,7 +648,7 @@ EOF
       my $mopts  = "$queryopts -namelist default_settings $usrnam";
       my $mkopts = "-csmdata $CSMDATA -silent -justvalue -namelist clmexp $usrnam";
       my @typlist = ( "lak", "veg", "voc", "tex", "col", "hrv",
-                        "fmx", "lai", "urb", "org", "glc", "glcregion", "utp", "wet",
+                        "fmx", "lai", "irrigation_method", "urb", "org", "glc", "glcregion", "utp", "wet",
 		        "gdp", "peat","soildepth","abm");
       if ( $opts{'vic'} ) {
          push( @typlist, "vic" );

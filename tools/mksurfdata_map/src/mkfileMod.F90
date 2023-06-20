@@ -173,6 +173,9 @@ contains
     str = get_filename(mksrf_fgdp)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'gdp_raw_data_file_name', len_trim(str), trim(str)), subname)
+	str = get_filename(mksrf_firrigation_method)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'irrigation_method_raw_data_file_name', len_trim(str), trim(str)), subname)										 													 
 
     str = get_filename(mksrf_fpeat)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
@@ -259,7 +262,9 @@ contains
     str = get_filename(map_fgdp)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'map_gdp_file', len_trim(str), trim(str)), subname)
-
+	str = get_filename(map_firrigation_method)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'map_irrigation_method_file', len_trim(str), trim(str)), subname)									   
     str = get_filename(map_fpeat)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'map_peatland_file', len_trim(str), trim(str)), subname)
@@ -523,6 +528,9 @@ contains
        call ncd_def_spatial_var(ncid=ncid, varname='PCT_URBAN', xtype=xtype, &
             lev1name='numurbl', &
             long_name='percent urban for each density type', units='unitless')
+	   call ncd_def_spatial_var(ncid=ncid, varname='irrigation_method', xtype=nf_int, &
+            lev1name='cft', &
+            long_name='irrigation method applied for each cft type', units='unitless')																							
 
        call ncd_def_spatial_var(ncid=ncid, varname='URBAN_REGION_ID', xtype=nf_int, &
             long_name='urban region ID', units='unitless')

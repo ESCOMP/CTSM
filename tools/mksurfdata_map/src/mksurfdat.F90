@@ -44,7 +44,7 @@ program mksurfdat
     use mkagfirepkmonthMod , only : mkagfirepkmon
     use mktopostatsMod     , only : mktopostats
     use mkVICparamsMod     , only : mkVICparams
-!
+!   use mkirrigation_methodMod       , only :  mkirrigation_method
 ! !ARGUMENTS:
     implicit none
 
@@ -166,6 +166,7 @@ program mksurfdat
          mksrf_fmax,               &
          mksrf_furban,             &
          mksrf_flai,               &
+		 mksrf_firrigation_method, &									
          mksrf_fdynuse,            &
          mksrf_fgdp,               &
          mksrf_fpeat,              &
@@ -197,6 +198,7 @@ program mksurfdat
          map_forganic,             &
          map_fvocef,               &
          map_flai,                 &
+		 map_firrigation_method,   &									
          map_fharvest,             &
          map_fgdp,                 &
          map_fpeat,                &
@@ -230,6 +232,7 @@ program mksurfdat
     !    mksrf_fglacier - Glacier dataset
     !    mksrf_fglacierregion - Glacier region ID dataset
     !    mksrf_flai ----- Leaf Area Index dataset
+	!	 mksrf_firrigation_method ----- Irrigation method dataset														
     !    mksrf_flakwat -- Lake water dataset
     !    mksrf_fwetlnd -- Wetland water dataset
     !    mksrf_forganic - Organic soil carbon dataset
@@ -263,6 +266,7 @@ program mksurfdat
     !    map_forganic ---- Mapping for mksrf_forganic
     !    map_fvocef ------ Mapping for mksrf_fvocef
     !    map_flai -------- Mapping for mksrf_flai
+	!    map_firrigation_method -------- Mapping for mksrf_firrigation_method																	  
     !    map_fharvest ---- Mapping for mksrf_flai harvesting
     !    map_fgdp -------- Mapping for mksrf_fgdp
     !    map_fpeat ------- Mapping for mksrf_fpeat
@@ -528,6 +532,7 @@ program mksurfdat
     write(ndiag,*) 'soil color from:             ',trim(mksrf_fsoicol)
     write(ndiag,*) 'VOC emission factors from:   ',trim(mksrf_fvocef)
     write(ndiag,*) 'gdp from:                    ',trim(mksrf_fgdp)
+	write(ndiag,*) 'irrigation method from:      ',trim(mksrf_firrigation_method)																						
     write(ndiag,*) 'peat from:                   ',trim(mksrf_fpeat)
     write(ndiag,*) 'soil depth from:             ',trim(mksrf_fsoildepth)
     write(ndiag,*) 'abm from:                    ',trim(mksrf_fabm)
@@ -546,6 +551,7 @@ program mksurfdat
     write(ndiag,*)' mapping for VOC pct emis     ',trim(map_fvocef)
     write(ndiag,*)' mapping for harvest          ',trim(map_fharvest)
     write(ndiag,*)' mapping for lai/sai          ',trim(map_flai)
+	write(ndiag,*)' mapping for irrigation method',trim(map_firrigation_method)																				  
     write(ndiag,*)' mapping for urb topography   ',trim(map_furbtopo)
     write(ndiag,*)' mapping for GDP              ',trim(map_fgdp)
     write(ndiag,*)' mapping for peatlands        ',trim(map_fpeat)
@@ -1045,6 +1051,9 @@ program mksurfdat
        call mklai(ldomain, mapfname=map_flai, datfname=mksrf_flai, &
                ndiag=ndiag, ncido=ncid )
 
+	   write(6,*)'calling mkirrigation_method'
+       call mkirrigation_method(ldomain, mapfname=map_firrigation_method, datfname=mksrf_firrigation_method, &
+            ndiag=ndiag, ncido=ncid )										  
        ! Close surface dataset
 
        call check_ret(nf_close(ncid), subname)

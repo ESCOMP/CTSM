@@ -1404,6 +1404,10 @@ Topography statistics dataset for mksurfdata
 VIC parameters dataset for mksurfdata
 </entry>
 
+<entry id="mksrf_firrigation_method" type="integer" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="0, 1, 2, 3" >
+Irrigation method dataset for mksurfdata
+</entry>																		 
 <entry id="outnc_double" type="logical" category="mksurfdata"
        group="clmexp" value=".true.">
 If TRUE, output variables in double precision for mksurfdata
