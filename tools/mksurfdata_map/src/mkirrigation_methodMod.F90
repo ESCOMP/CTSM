@@ -2,13 +2,13 @@ module mkirrigation_methodMod
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: mklai
+! !MODULE: mkirrigation_method
 !
 ! !DESCRIPTION:
-! Make LAI/SAI/height data
+! Make irrigation method data
 !
 ! !REVISION HISTORY:
-! Author: Sam Levis
+! Author: Yi Yao
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -35,9 +35,7 @@ contains
 subroutine mkirrigation_method(ldomain, mapfname, datfname, ndiag, ncido)
 !
 ! !DESCRIPTION:
-! Make LAI/SAI/height data
-! Portions of this code could be moved out of the month loop
-! for improved efficiency
+! Make irrigation_method data
 !
 ! !USES:
   use mkdomainMod, only : domain_type, domain_clean, domain_read
@@ -58,7 +56,7 @@ subroutine mkirrigation_method(ldomain, mapfname, datfname, ndiag, ncido)
 ! subroutine mksrfdat in module mksrfdatMod
 !
 ! !REVISION HISTORY:
-! Author: Mariana Vertenstein
+! Author: 
 !
 !
 ! !LOCAL VARIABLES:
@@ -76,9 +74,9 @@ subroutine mkirrigation_method(ldomain, mapfname, datfname, ndiag, ncido)
   
   
   
-  real(r8), allocatable :: flood_fraction_i(:,:)      ! monthly lai in
-  real(r8), allocatable :: sprinkler_fraction_i(:,:)      ! monthly sai in
-  real(r8), allocatable :: drip_fraction_i(:,:)     ! monthly height (top) in
+  real(r8), allocatable :: flood_fraction_i(:,:)      ! flood fraction in
+  real(r8), allocatable :: sprinkler_fraction_i(:,:)      ! sprinkler fraction in
+  real(r8), allocatable :: drip_fraction_i(:,:)     ! drip fraction in
   
   real(r8), allocatable :: mask_src(:)      ! input grid: mask (0, 1)
 
@@ -148,19 +146,18 @@ subroutine mkirrigation_method(ldomain, mapfname, datfname, ndiag, ncido)
 		   
            irrig_method_o(ns_o,num_cft), &
 		   stat=ier )
-           !laimask(ns_i,0:num_cft), stat=ier )
   if (ier /= 0) then
      write(6,*)'mkirrigation_method allocation error'; call abort()
   end if
   ! Determine mapping weights and map
 
-  call gridmap_mapread(tgridmap, mapfname)	!确定重新分布的权重以及地图名
+  call gridmap_mapread(tgridmap, mapfname)
 
   ! Error checks for domain and map consistencies
   
   call domain_checksame( tdomain, ldomain, tgridmap )					
 
-  ! Determine number of dimensions in input by querying MONTHLY_LAI
+  ! Determine number of dimensions in input by IRRIGATION_METHOD_FRACTION
 
   call check_ret(nf_inq_varid(ncidi, 'IRRIGATION_METHOD_FRACTION', varid), subname)
   call check_ret(nf_inq_vardimid(ncidi, varid, dimids), subname)
@@ -219,7 +216,7 @@ subroutine mkirrigation_method(ldomain, mapfname, datfname, ndiag, ncido)
   
   irrig_method_o(:,:) = 0.
   
-     ! Loop over cft types to do mapping
+  ! Loop over cft types to do mapping
 
   do l = 1, num_cft_i
      mask_src(:) = 1._r8 
@@ -229,6 +226,7 @@ subroutine mkirrigation_method(ldomain, mapfname, datfname, ndiag, ncido)
   end do
   
   
+  ! Determine the irrigation method based on the dominant irrigation method
   do k = 1, ns_o
 	 do l = 1, num_cft_i
 		if (flood_fraction_o(k, l) > sprinkler_fraction_o(k, l) .and. flood_fraction_o(k, l) > drip_fraction_o(k, l)) then
@@ -250,8 +248,6 @@ subroutine mkirrigation_method(ldomain, mapfname, datfname, ndiag, ncido)
   
   call check_ret(nf_close(ncidi), subname)
 
-  ! consistency check that PFT and LAI+SAI make sense
-  !call pft_laicheck( ni_s, pft_i, laimask )
 
   ! Deallocate dynamic memory
   deallocate(flood_fraction_i)
