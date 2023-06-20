@@ -23,6 +23,7 @@ module MLclm_varcon
   real(r8) :: dh0 = 18.9e-06_r8                        ! Molecular diffusivity (heat) at 0C and 1013.25 hPa (m2/s)
   real(r8) :: dv0 = 21.8e-06_r8                        ! Molecular diffusivity (H2O) at 0C and 1013.25 hPa (m2/s)
   real(r8) :: dc0 = 13.8e-06_r8                        ! Molecular diffusivity (CO2) at 0C and 1013.25 hPa (m2/s)
+  real(r8) :: lapse_rate = 0.0098_r8                   ! Temperature lapse rate (K/m)
 
   ! Adjustable parameters for multilayer canopy
 
@@ -43,8 +44,6 @@ module MLclm_varcon
   real(r8) :: vcmaxse_noacclim = 490._r8               ! Entropy term for vcmax without acclimation (J/mol/K)
   real(r8) :: vcmaxse_acclim   = spval                 ! Entropy term for vcmax with acclimation (J/mol/K)
 
-  real(r8) :: jmax25_to_vcmax25_noacclim = 1.67_r8     ! Ratio of jmax to vcmax at 25C without acclimation (umol/umol)
-  real(r8) :: jmax25_to_vcmax25_acclim   = spval       ! Ratio of jmax to vcmax at 25C with acclimation (umol/umol)
   real(r8) :: jmaxha_noacclim = 43540._r8              ! Activation energy for jmax without acclimation (J/mol)
   real(r8) :: jmaxha_acclim   = 50000._r8              ! Activation energy for jmax with acclimation (J/mol)
   real(r8) :: jmaxhd_noacclim = 150000._r8             ! Deactivation energy for jmax without acclimation (J/mol)
@@ -52,18 +51,20 @@ module MLclm_varcon
   real(r8) :: jmaxse_noacclim = 490._r8                ! Entropy term for jmax without acclimation (J/mol/K)
   real(r8) :: jmaxse_acclim   = spval                  ! Entropy term for jmax with acclimation (J/mol/K)
 
-  real(r8) :: rd25_to_vcmax25_c3 = 0.015_r8            ! Ratio of rd to vcmax at 25C (C3) (umol/umol)
-  real(r8) :: rd25_to_vcmax25_c4 = 0.025_r8            ! Ratio of rd to vcmax at 25C (C4) (umol/umol)
   real(r8) :: rdha = 46390._r8                         ! Activation energy for rd (J/mol)
   real(r8) :: rdhd = 150000._r8                        ! Deactivation energy for rd (J/mol)
   real(r8) :: rdse = 490._r8                           ! Entropy term for rd (J/mol/K)
 
+  real(r8) :: jmax25_to_vcmax25_noacclim = 1.67_r8     ! Ratio of jmax to vcmax at 25C without acclimation (umol/umol)
+  real(r8) :: jmax25_to_vcmax25_acclim   = spval       ! Ratio of jmax to vcmax at 25C with acclimation (umol/umol)
+  real(r8) :: rd25_to_vcmax25_c3 = 0.015_r8            ! Ratio of rd to vcmax at 25C (C3) (umol/umol)
+  real(r8) :: rd25_to_vcmax25_c4 = 0.025_r8            ! Ratio of rd to vcmax at 25C (C4) (umol/umol)
   real(r8) :: kp25_to_vcmax25_c4 = 0.02_r8             ! Ratio of kp to vcmax at 25C (C4) (mol/umol)
 
-  real(r8) :: qe_c4 = 0.05_r8                          ! C4 quantum yield (mol CO2 / mol photons)
-  real(r8) :: phi_psII = 0.70_r8                       ! Quantum yield of PS II
-! real(r8) :: phi_psII = 0.85_r8                       ! Quantum yield of PS II
-  real(r8) :: theta_j = 0.90_r8                        ! Empirical curvature parameter for electron transport rate
+  real(r8) :: phi_psII = 0.70_r8                       ! C3: quantum yield of PS II
+! real(r8) :: phi_psII = 0.85_r8                       ! C3: quantum yield of PS II
+  real(r8) :: theta_j = 0.90_r8                        ! C3: empirical curvature parameter for electron transport rate
+  real(r8) :: qe_c4 = 0.05_r8                          ! C4: quantum yield (mol CO2 / mol photons)
 
   real(r8) :: colim_c3a = 0.98_r8                      ! Empirical curvature parameter for C3 co-limitation (Ac, Aj)
   real(r8) :: colim_c3b = spval                        ! Empirical curvature parameter for C3 co-limitation (Ap)
@@ -73,9 +74,9 @@ module MLclm_varcon
   !----------------------------------------------------!
   ! Stomatal conductance
   !----------------------------------------------------!
+  real(r8) :: dh2o_to_dco2 = 1.6_r8                    ! Diffusivity H2O / Diffusivity CO2
   real(r8) :: rh_min_BB = 0.2_r8                       ! Minimum relative humidity of air for Ball-Berry stomatal conductance (fraction)
   real(r8) :: vpd_min_MED = 100._r8                    ! Minimum vapor pressure deficit for Medlyn stomatal conductance (Pa)
-  real(r8) :: gsmin_SPA = 0.002_r8                     ! SPA minimum stomatal conductance (mol H2O/m2/s)
 
   !----------------------------------------------------!
   ! Leaf heat capacity
@@ -87,13 +88,25 @@ module MLclm_varcon
   !----------------------------------------------------!
   ! Leaf boundary layer conductance
   !----------------------------------------------------!
-  real(r8) :: b1 = 1.5_r8                              ! Empirical correction factor for Nu
+  real(r8) :: gb_factor = 1.5_r8                       ! Empirical correction factor for Nu
 
   !----------------------------------------------------!
   ! Canopy interception
   !----------------------------------------------------!
   real(r8) :: dewmx = 0.1_r8                           ! Maximum allowed interception (kg H2O/m2 leaf)
-  real(r8) :: maximum_leaf_wetted_fraction = 0.05_r8   ! Maximum fraction of leaf that may be wet
+  real(r8) :: maximum_leaf_wetted_fraction = 0.05_r8   ! Maximum fraction of leaf that can be wet
+  real(r8) :: interception_fraction = 1.0_r8           ! Fraction of intercepted precipitation
+  real(r8) :: fwet_exponent = 0.67_r8                  ! Exponent for wetted canopy fraction
+  real(r8) :: clm45_interception_p1 = 0.25_r8          ! CLM4.5: Interception parameter
+  real(r8) :: clm45_interception_p2 = -0.50_r8         ! CLM4.5: Interception parameter
+
+  !----------------------------------------------------!
+  ! Solar radiation
+  !----------------------------------------------------!
+  real(r8) :: chil_min = -0.4_r8                       ! Minimum value for xl leaf angle orientation parameter
+  real(r8) :: chil_max = 0.6_r8                        ! Maximum value for xl leaf angle orientation parameter
+  real(r8) :: kb_max = 40._r8                          ! Maximum value for direct beam extinction coefficient
+  real(r8) :: J_to_umol = 4.6_r8                       ! PAR conversion from W/m2 to umol/m2/s (umol/J)
 
   !----------------------------------------------------!
   ! Longwave radiation
@@ -103,7 +116,7 @@ module MLclm_varcon
   !----------------------------------------------------!
   ! Roughness sublayer parameterization
   !----------------------------------------------------!
-  real(r8) :: cd = 0.25_r8                             ! RSL - leaf drag coefficient (dimensionless)
+  real(r8) :: cd = 0.25_r8                             ! RSL - drag coefficient for canopy elements (dimensionless)
   real(r8) :: beta_neutral_max = 0.35_r8               ! RSL - maximum value for beta in neutral conditions
   real(r8) :: cr = 0.3_r8                              ! RSL - parameter to calculate beta_neutral
   real(r8) :: c2 = 0.5_r8                              ! RSL - depth scale multiplier
@@ -112,13 +125,16 @@ module MLclm_varcon
   real(r8) :: Pr2 = 2.0_r8                             ! RSL - scale of variation of Pr (Sc) with stability
   real(r8) :: z0mg = 0.01_r8                           ! RSL - roughness length of ground (m)
 
-  !----------------------------------------------------!
-  ! Number of canopy layers
-  !----------------------------------------------------!
-  real(r8) :: dpai_min = 0.01_r8                       ! Minimum plant area to be considered a vegetation layer (m2/m2)
-  real(r8) :: dht_tall = 0.5_r8                        ! Height increment for tall canopies > dht_param (m)
-  real(r8) :: dht_short = 0.1_r8                       ! Height increment for short canopies <= dht_param (m)
-  real(r8) :: dht_param = 2._r8                        ! Height above which a canopy is tall (m)
+  ! Limits placed on various variables
+
+  real(r8) :: wind_forc_min = 1.0_r8                   ! Minimum wind speed at forcing height (m/s)
+  real(r8) :: eta_max = 20._r8                         ! Maximum value for "eta" parameter (used to constrain lm/beta)
+  real(r8) :: zeta_min = -2.0_r8                       ! Minimum value for Monin-Obukhov zeta parameter
+  real(r8) :: zeta_max = 1.0_r8                        ! Maximum value for Monin-Obukhov zeta parameter
+  real(r8) :: beta_min = 0.2_r8                        ! Minimum value for H&F beta parameter
+  real(r8) :: beta_max = 0.5_r8                        ! Maximum value for H&F beta parameter
+  real(r8) :: wind_min = 0.1_r8                        ! Minimum wind speed in canopy (m/s)
+  real(r8) :: ra_max = 500._r8                         ! Maximum aerodynamic resistance (s/m)
 
   !----------------------------------------------------!
   ! Constants used in the RSL psihat look-up tables

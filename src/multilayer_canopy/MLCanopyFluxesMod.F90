@@ -5,34 +5,34 @@ module MLCanopyFluxesMod
   ! Calculate  multilayer canopy fluxes
   !
   ! !USES:
-  use shr_kind_mod        , only : r8 => shr_kind_r8
-  use abortutils          , only : endrun
-  use clm_varctl          , only : iulog
-  use decompMod           , only : bounds_type
-  use atm2lndType         , only : atm2lnd_type
-  use CanopyStateType     , only : canopystate_type
-  use ColumnType          , only : col
-  use EnergyFluxType      , only : energyflux_type
-  use FrictionVelocityMod , only : frictionvel_type
-  use GridcellType        , only : grc
-  use PatchType           , only : patch
-  use pftconMod           , only : pftcon
-  use SoilStateType       , only : soilstate_type
-  use SolarAbsorbedType   , only : solarabs_type
-  use SurfaceAlbedoType   , only : surfalb_type
-  use TemperatureType     , only : temperature_type
-  use WaterFluxBulkType   , only : waterfluxbulk_type
-  use WaterStateBulkType  , only : waterstatebulk_type
-  use Wateratm2lndBulkType, only : wateratm2lndbulk_type
+  use shr_kind_mod           , only : r8 => shr_kind_r8
+  use abortutils             , only : endrun
+  use clm_varctl             , only : iulog
+  use decompMod              , only : bounds_type
+  use atm2lndType            , only : atm2lnd_type
+  use CanopyStateType        , only : canopystate_type
+  use ColumnType             , only : col
+  use EnergyFluxType         , only : energyflux_type
+  use FrictionVelocityMod    , only : frictionvel_type
+  use GridcellType           , only : grc
+  use PatchType              , only : patch
+  use pftconMod              , only : pftcon
+  use SoilStateType          , only : soilstate_type
+  use SolarAbsorbedType      , only : solarabs_type
+  use SurfaceAlbedoType      , only : surfalb_type
+  use TemperatureType        , only : temperature_type
+  use Wateratm2lndBulkType   , only : wateratm2lndbulk_type
   use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
-  use MLCanopyFluxesType  , only : mlcanopy_type
+  use WaterFluxBulkType      , only : waterfluxbulk_type
+  use WaterStateBulkType     , only : waterstatebulk_type
+  use MLCanopyFluxesType     , only : mlcanopy_type
   !
   ! !PUBLIC TYPES:
   implicit none
   !
   ! !PRIVATE TYPES:
   integer, parameter :: nvar1d = 12     ! Number of single-level fluxes to accumulate over sub-time steps
-  integer, parameter :: nvar2d = 4      ! Number of multi-level profile fluxes to accumulate over sub-time steps
+  integer, parameter :: nvar2d = 5      ! Number of multi-level profile fluxes to accumulate over sub-time steps
   integer, parameter :: nvar3d = 10     ! Number of multi-level leaf fluxes to accumulate over sub-time steps
   !
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -40,7 +40,7 @@ module MLCanopyFluxesMod
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: SubTimeStepFluxIntegration ! Integrate fluxes over model sub-time steps
-  private :: CanopyFluxesSum            ! Sum leaf and soil fluxes
+  private :: CanopyFluxesDiagnostics    ! Sum leaf and soil fluxes and other canopy diagnostics
   !-----------------------------------------------------------------------
 
   contains
@@ -62,8 +62,8 @@ module MLCanopyFluxesMod
     use clm_varpar, only : ivis, inir
     use shr_orb_mod, only : shr_orb_decl, shr_orb_cosz
     use spmdMod, only : masterproc
-    use MLclm_varcon, only : mmh2o, mmdry, cpd, cpw, rgas
-    use MLclm_varctl, only : mlcan_to_clm, dtime_substep, ml_vert_init
+    use MLclm_varcon, only : mmh2o, mmdry, cpd, cpw, rgas, wind_forc_min, lapse_rate
+    use MLclm_varctl, only : mlcan_to_clm, dtime_substep, ml_vert_init, fracdir
     use MLclm_varpar, only : isun, isha, nlevmlcan, nleaf
     use MLCanopyNitrogenProfileMod, only : CanopyNitrogenProfile
     use MLCanopyTurbulenceMod, only : CanopyTurbulence
@@ -73,28 +73,28 @@ module MLCanopyFluxesMod
     use MLLeafHeatCapacityMod, only : LeafHeatCapacity
     use MLLeafPhotosynthesisMod, only : LeafPhotosynthesis
     use MLLongwaveRadiationMod, only : LongwaveRadiation
-    use MLPlantHydraulicsMod, only: SoilResistance, PlantResistance
+    use MLPlantHydraulicsMod, only: SoilResistance, PlantResistance, LeafWaterPotential
     use MLSolarRadiationMod, only: SolarRadiation
     !
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in) :: bounds
-    integer, intent(in) :: num_exposedvegp           ! Number of non-snow-covered veg points in CLM patch filter
+    integer, intent(in) :: num_exposedvegp           ! Number of non-snow-covered veg patches in CLM patch filter
     integer, intent(in) :: filter_exposedvegp(:)     ! CLM patch filter for non-snow-covered vegetation
 
-    type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
-    type(wateratm2lndbulk_type), intent(in) :: wateratm2lndbulk_inst
-    type(waterdiagnosticbulk_type), intent(in) :: waterdiagnosticbulk_inst
-    type(waterstatebulk_type), intent(in)  :: waterstatebulk_inst
-    type(waterfluxbulk_type) , intent(in)  :: waterfluxbulk_inst
-    type(canopystate_type) , intent(inout) :: canopystate_inst
-    type(soilstate_type)   , intent(inout) :: soilstate_inst
-    type(temperature_type) , intent(inout) :: temperature_inst
-    type(energyflux_type)  , intent(inout) :: energyflux_inst
-    type(frictionvel_type) , intent(inout) :: frictionvel_inst
-    type(surfalb_type)     , intent(inout) :: surfalb_inst
-    type(solarabs_type)    , intent(inout) :: solarabs_inst
-    type(mlcanopy_type)    , intent(inout) :: mlcanopy_inst
+    type(atm2lnd_type)            , intent(in)    :: atm2lnd_inst
+    type(canopystate_type)        , intent(inout) :: canopystate_inst
+    type(soilstate_type)          , intent(inout) :: soilstate_inst
+    type(temperature_type)        , intent(inout) :: temperature_inst
+    type(waterstatebulk_type)     , intent(inout) :: waterstatebulk_inst
+    type(waterfluxbulk_type)      , intent(inout) :: waterfluxbulk_inst
+    type(energyflux_type)         , intent(inout) :: energyflux_inst
+    type(frictionvel_type)        , intent(inout) :: frictionvel_inst
+    type(surfalb_type)            , intent(inout) :: surfalb_inst
+    type(solarabs_type)           , intent(inout) :: solarabs_inst
+    type(mlcanopy_type)           , intent(inout) :: mlcanopy_inst
+    type(wateratm2lndbulk_type)   , intent(in)    :: wateratm2lndbulk_inst
+    type(waterdiagnosticbulk_type), intent(inout) :: waterdiagnosticbulk_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: num_mlcan                               ! Number of vegetated patches for multilayer canopy
@@ -114,6 +114,7 @@ module MLCanopyFluxesMod
     real(r8) :: coszen                                  ! Cosine solar zenith angle
     real(r8) :: lat, lon                                ! Latitude and longitude (radians)
     real(r8) :: totpai                                  ! Canopy lai+sai for error check (m2/m2)
+    real(r8) :: totrad                                  ! Direct beam + diffuse solar radiation (W/m2)
 
     ! These are used to accumulate flux variables over the model sub-time step.
     ! The last dimension is the number of variables
@@ -124,50 +125,49 @@ module MLCanopyFluxesMod
     !---------------------------------------------------------------------
 
     ! Variables used in this subroutine. See README.txt for a complete list of
-    ! required CLM variables, and also required CLM files. See MLCanopyFluxesType.F90
+    ! required CLM variables and also required CLM files. See MLCanopyFluxesType.F90
     ! for a complete list of multilayer canopy variables.
 
     associate ( &
-                                                                  ! *** CLM variables ***
-    forc_u         => atm2lnd_inst%forc_u_grc                , &  ! INPUT: Atmospheric wind speed in east direction (m/s)
-    forc_v         => atm2lnd_inst%forc_v_grc                , &  ! INPUT: Atmospheric wind speed in north direction (m/s)
-    forc_pco2      => atm2lnd_inst%forc_pco2_grc             , &  ! INPUT: Atmospheric CO2 partial pressure (Pa)
-    forc_po2       => atm2lnd_inst%forc_po2_grc              , &  ! INPUT: Atmospheric O2 partial pressure (Pa)
-    forc_solad     => atm2lnd_inst%forc_solad_grc            , &  ! INPUT: Atmospheric direct beam radiation (W/m2)
-    forc_solai     => atm2lnd_inst%forc_solai_grc            , &  ! INPUT: Atmospheric diffuse radiation (W/m2)
-    forc_t         => atm2lnd_inst%forc_t_downscaled_col     , &  ! INPUT: Atmospheric temperature (K)
-    forc_q         => wateratm2lndbulk_inst%forc_q_downscaled_col, &  ! INPUT: Atmospheric specific humidity (kg/kg)
-    forc_pbot      => atm2lnd_inst%forc_pbot_downscaled_col  , &  ! INPUT: Atmospheric pressure (Pa)
-    forc_lwrad     => atm2lnd_inst%forc_lwrad_downscaled_col , &  ! INPUT: Atmospheric longwave radiation (W/m2)
+                                                                         ! *** CLM variables ***
+    forc_u         => atm2lnd_inst%forc_u_grc                       , &  ! INPUT: Atmospheric wind speed in east direction (m/s)
+    forc_v         => atm2lnd_inst%forc_v_grc                       , &  ! INPUT: Atmospheric wind speed in north direction (m/s)
+    forc_pco2      => atm2lnd_inst%forc_pco2_grc                    , &  ! INPUT: Atmospheric CO2 partial pressure (Pa)
+    forc_po2       => atm2lnd_inst%forc_po2_grc                     , &  ! INPUT: Atmospheric O2 partial pressure (Pa)
+    forc_solad     => atm2lnd_inst%forc_solad_grc                   , &  ! INPUT: Atmospheric direct beam radiation (W/m2)
+    forc_solai     => atm2lnd_inst%forc_solai_grc                   , &  ! INPUT: Atmospheric diffuse radiation (W/m2)
+    forc_t         => atm2lnd_inst%forc_t_downscaled_col            , &  ! INPUT: Atmospheric temperature (K)
+    forc_q         => wateratm2lndbulk_inst%forc_q_downscaled_col   , &  ! INPUT: Atmospheric specific humidity (kg/kg)
+    forc_pbot      => atm2lnd_inst%forc_pbot_downscaled_col         , &  ! INPUT: Atmospheric pressure (Pa)
+    forc_lwrad     => atm2lnd_inst%forc_lwrad_downscaled_col        , &  ! INPUT: Atmospheric longwave radiation (W/m2)
     forc_rain      => wateratm2lndbulk_inst%forc_rain_downscaled_col, &  ! INPUT: Rainfall rate (mm/s)
     forc_snow      => wateratm2lndbulk_inst%forc_snow_downscaled_col, &  ! INPUT: Snowfall rate (mm/s)
-    elai           => canopystate_inst%elai_patch            , &  ! INPUT: Leaf area index of canopy (m2/m2)
-    esai           => canopystate_inst%esai_patch            , &  ! INPUT: Stem area index of canopy (m2/m2)
-    snl            => col%snl                                , &  ! INPUT: Number of snow layers
-    z              => col%z                                  , &  ! INPUT: Soil layer depth (m)
-    zi             => col%zi                                 , &  ! INPUT: Soil layer depth at layer interface (m)
-    btran_patch    => energyflux_inst%btran_patch            , &  ! INPUT: Transpiration wetness factor (0 to 1)
-    minlwp_SPA     => pftcon%minlwp_SPA                      , &  ! INPUT: Minimum leaf water potential (MPa)
-    soilresis      => soilstate_inst%soilresis_col           , &  ! INPUT: Soil evaporative resistance (s/m)
-    thk            => soilstate_inst%thk_col                 , &  ! INPUT: Soil layer thermal conductivity (W/m/K)
-    smp_l          => soilstate_inst%smp_l_col               , &  ! INPUT: Soil layer matric potential (mm)
-    albgrd         => surfalb_inst%albgrd_col                , &  ! INPUT: Direct beam albedo of ground (soil)
-    albgri         => surfalb_inst%albgri_col                , &  ! INPUT: Diffuse albedo of ground (soil)
-    t_a10_patch    => temperature_inst%t_a10_patch           , &  ! INPUT: 10-day running mean of the 2-m temperature (K)
-    t_soisno       => temperature_inst%t_soisno_col          , &  ! INPUT: Soil temperature (K)
-    eflx_lh_tot    => energyflux_inst%eflx_lh_tot_patch      , &  ! OUTPUT: patch total latent heat flux (W/m2)
-    eflx_sh_tot    => energyflux_inst%eflx_sh_tot_patch      , &  ! OUTPUT: patch total sensible heat flux (W/m2)
-    eflx_lwrad_out => energyflux_inst%eflx_lwrad_out_patch   , &  ! OUTPUT: patch emitted infrared (longwave) radiation (W/m2)
-    taux           => energyflux_inst%taux_patch             , &  ! OUTPUT: patch wind (shear) stress: e-w (kg/m/s2)
-    tauy           => energyflux_inst%tauy_patch             , &  ! OUTPUT: patch wind (shear) stress: n-s (kg/m/s2)
-    fv             => frictionvel_inst%fv_patch              , &  ! OUTPUT: patch friction velocity (m/s)
-    u10_clm        => frictionvel_inst%u10_clm_patch         , &  ! OUTPUT: patch 10-m wind (m/s)
-    fsa            => solarabs_inst%fsa_patch                , &  ! OUTPUT: patch solar radiation absorbed (total) (W/m2)
-    albd           => surfalb_inst%albd_patch                , &  ! OUTPUT: patch surface albedo (direct)
-    albi           => surfalb_inst%albi_patch                , &  ! OUTPUT: patch surface albedo (diffuse)
-    t_ref2m        => temperature_inst%t_ref2m_patch         , &  ! OUTPUT: patch 2 m height surface air temperature (K)
-    qflx_evap_tot  => waterfluxbulk_inst%qflx_evap_tot_patch , &  ! OUTPUT: patch total evapotranspiration flux (kg H2O/m2/s)
-    q_ref2m        => waterdiagnosticbulk_inst%q_ref2m_patch , &  ! OUTPUT: patch 2 m height surface specific humidity (kg/kg)
+    elai           => canopystate_inst%elai_patch                   , &  ! INPUT: Leaf area index of canopy (m2/m2)
+    esai           => canopystate_inst%esai_patch                   , &  ! INPUT: Stem area index of canopy (m2/m2)
+    htop           => canopystate_inst%htop_patch                   , &  ! INPUT: Canopy height (m)
+    snl            => col%snl                                       , &  ! INPUT: Number of snow layers
+    z              => col%z                                         , &  ! INPUT: Soil layer depth (m)
+    zi             => col%zi                                        , &  ! INPUT: Soil layer depth at layer interface (m)
+    soilresis      => soilstate_inst%soilresis_col                  , &  ! INPUT: Soil evaporative resistance (s/m)
+    thk            => soilstate_inst%thk_col                        , &  ! INPUT: Soil layer thermal conductivity (W/m/K)
+    smp_l          => soilstate_inst%smp_l_col                      , &  ! INPUT: Soil layer matric potential (mm)
+    albgrd         => surfalb_inst%albgrd_col                       , &  ! INPUT: Direct beam albedo of ground (soil)
+    albgri         => surfalb_inst%albgri_col                       , &  ! INPUT: Diffuse albedo of ground (soil)
+    t_a10_patch    => temperature_inst%t_a10_patch                  , &  ! INPUT: 10-day running mean of the 2-m temperature (K)
+    t_soisno       => temperature_inst%t_soisno_col                 , &  ! INPUT: Soil temperature (K)
+    eflx_lh_tot    => energyflux_inst%eflx_lh_tot_patch             , &  ! OUTPUT: patch total latent heat flux (W/m2)
+    eflx_sh_tot    => energyflux_inst%eflx_sh_tot_patch             , &  ! OUTPUT: patch total sensible heat flux (W/m2)
+    eflx_lwrad_out => energyflux_inst%eflx_lwrad_out_patch          , &  ! OUTPUT: patch emitted infrared (longwave) radiation (W/m2)
+    taux           => energyflux_inst%taux_patch                    , &  ! OUTPUT: patch wind (shear) stress: e-w (kg/m/s2)
+    tauy           => energyflux_inst%tauy_patch                    , &  ! OUTPUT: patch wind (shear) stress: n-s (kg/m/s2)
+    fv             => frictionvel_inst%fv_patch                     , &  ! OUTPUT: patch friction velocity (m/s)
+    u10_clm        => frictionvel_inst%u10_clm_patch                , &  ! OUTPUT: patch 10-m wind (m/s)
+    fsa            => solarabs_inst%fsa_patch                       , &  ! OUTPUT: patch solar radiation absorbed (total) (W/m2)
+    albd           => surfalb_inst%albd_patch                       , &  ! OUTPUT: patch surface albedo (direct)
+    albi           => surfalb_inst%albi_patch                       , &  ! OUTPUT: patch surface albedo (diffuse)
+    t_ref2m        => temperature_inst%t_ref2m_patch                , &  ! OUTPUT: patch 2 m height surface air temperature (K)
+    qflx_evap_tot  => waterfluxbulk_inst%qflx_evap_tot_patch        , &  ! OUTPUT: patch total evapotranspiration flux (kg H2O/m2/s)
+    q_ref2m        => waterdiagnosticbulk_inst%q_ref2m_patch        , &  ! OUTPUT: patch 2 m height surface specific humidity (kg/kg)
 
                                                                   ! *** Multilayer canopy variables ***
     zref           => mlcanopy_inst%zref_forcing             , &  ! Atmospheric reference height (m)
@@ -191,9 +191,7 @@ module MLCanopyFluxesMod
     qflx_rain      => mlcanopy_inst%qflx_rain_forcing        , &  ! Rainfall (mm H2O/s = kg H2O/m2/s)
     qflx_snow      => mlcanopy_inst%qflx_snow_forcing        , &  ! Snowfall (mm H2O/s = kg H2O/m2/s)
     tacclim        => mlcanopy_inst%tacclim_forcing          , &  ! Average air temperature for acclimation (K)
-    ncan           => mlcanopy_inst%ncan_canopy              , &  ! Number of layers
-    ntop           => mlcanopy_inst%ntop_canopy              , &  ! Index for top leaf layer
-    nbot           => mlcanopy_inst%nbot_canopy              , &  ! Index for bottom leaf layer
+    ncan           => mlcanopy_inst%ncan_canopy              , &  ! Number of aboveground layers
     lai            => mlcanopy_inst%lai_canopy               , &  ! Leaf area index of canopy (m2/m2)
     sai            => mlcanopy_inst%sai_canopy               , &  ! Stem area index of canopy (m2/m2)
     swveg          => mlcanopy_inst%swveg_canopy             , &  ! Absorbed solar radiation: vegetation (W/m2)
@@ -202,8 +200,6 @@ module MLCanopyFluxesMod
     lhflx          => mlcanopy_inst%lhflx_canopy             , &  ! Total latent heat flux, including soil (W/m2)
     etflx          => mlcanopy_inst%etflx_canopy             , &  ! Total water vapor flux, including soil (mol H2O/m2/s)
     ustar          => mlcanopy_inst%ustar_canopy             , &  ! Friction velocity (m/s)
-    fracminlwp     => mlcanopy_inst%fracminlwp_canopy        , &  ! Fraction of canopy that is water-stressed
-    btran          => mlcanopy_inst%btran_soil               , &  ! Soil wetness factor for stomatal conductance (-)
     albsoib        => mlcanopy_inst%albsoib_soil             , &  ! Direct beam albedo of ground (-)
     albsoid        => mlcanopy_inst%albsoid_soil             , &  ! Diffuse albedo of ground (-)
     swsoi          => mlcanopy_inst%swsoi_soil               , &  ! Absorbed solar radiation: ground (W/m2)
@@ -219,7 +215,6 @@ module MLCanopyFluxesMod
     dlai           => mlcanopy_inst%dlai_profile             , &  ! Canopy layer leaf area index (m2/m2)
     dsai           => mlcanopy_inst%dsai_profile             , &  ! Canopy layer stem area index (m2/m2)
     dpai           => mlcanopy_inst%dpai_profile             , &  ! Canopy layer plant area index (m2/m2)
-    sumpai         => mlcanopy_inst%sumpai_profile           , &  ! Canopy layer cumulative plant area index (m2/m2)
     dlai_frac      => mlcanopy_inst%dlai_frac_profile        , &  ! Canopy layer leaf area index (fraction of canopy total)
     dsai_frac      => mlcanopy_inst%dsai_frac_profile        , &  ! Canopy layer stem area index (fraction of canopy total)
     fracsun        => mlcanopy_inst%fracsun_profile          , &  ! Canopy layer sunlit fraction (-)
@@ -229,13 +224,14 @@ module MLCanopyFluxesMod
     tair_bef       => mlcanopy_inst%tair_bef_profile         , &  ! Canopy layer air temperature for previous timestep (K)
     eair_bef       => mlcanopy_inst%eair_bef_profile         , &  ! Canopy layer vapor pressure for previous timestep (Pa)
     cair_bef       => mlcanopy_inst%cair_bef_profile         , &  ! Canopy layer atmospheric CO2 for previous timestep (umol/mol)
-    lwpveg         => mlcanopy_inst%lwpveg_profile           , &  ! Canopy layer leaf water potential (MPa)
     swleaf         => mlcanopy_inst%swleaf_leaf              , &  ! Leaf absorbed solar radiation (W/m2 leaf)
     lwleaf         => mlcanopy_inst%lwleaf_leaf              , &  ! Leaf absorbed longwave radiation (W/m2 leaf)
     rnleaf         => mlcanopy_inst%rnleaf_leaf              , &  ! Leaf net radiation (W/m2 leaf)
     tleaf          => mlcanopy_inst%tleaf_leaf               , &  ! Leaf temperature (K)
     tleaf_bef      => mlcanopy_inst%tleaf_bef_leaf           , &  ! Leaf temperature for previous timestep (K)
-    lwpleaf        => mlcanopy_inst%lwpleaf_leaf               &  ! Leaf water potential (MPa)
+    tleaf_hist     => mlcanopy_inst%tleaf_hist_leaf          , &  ! Leaf temperature (not sun/shade average) for history files (K)
+    lwp            => mlcanopy_inst%lwp_leaf                 , &  ! Leaf water potential (MPa)
+    lwp_hist       => mlcanopy_inst%lwp_hist_leaf              &  ! Leaf water potential (not sun/shade average) for history files (MPa)
     )
 
     ! Get current step counter (nstep) and step size (dtime)
@@ -247,7 +243,8 @@ module MLCanopyFluxesMod
 
     num_sub_steps = int(dtime / dtime_substep)
 
-    ! Build filter of patches to process with multilayer canopy
+    ! Build filter of patches to process with multilayer canopy.
+    ! For now only process tall canopies > 0.5 m
 
     num_mlcan = 0
     do fp = 1, num_exposedvegp
@@ -255,8 +252,10 @@ module MLCanopyFluxesMod
        g = patch%gridcell(fp)
 !      if (grc%latdeg(g) .gt. -2.9_r8 .and. grc%latdeg(g) .lt. -2.7_r8) then
 !      if (grc%londeg(g) .gt. 294.5_r8 .and. grc%londeg(g) .lt. 295.5_r8) then
-       num_mlcan = num_mlcan + 1
-       filter_mlcan(num_mlcan) = p
+       if (htop(p) .ge. 0.5) then
+          num_mlcan = num_mlcan + 1
+          filter_mlcan(num_mlcan) = p
+       end if
 !      end if
 !      end if
     end do
@@ -281,7 +280,7 @@ module MLCanopyFluxesMod
        canopystate_inst, frictionvel_inst, mlcanopy_inst)
 
        call initVerticalProfiles (num_mlcan, filter_mlcan, &
-       atm2lnd_inst, mlcanopy_inst, wateratm2lndbulk_inst)
+       atm2lnd_inst, wateratm2lndbulk_inst, mlcanopy_inst)
 
        if (masterproc) then
           write (iulog,*) 'Successfully initialized multilayer canopy vertical structure'
@@ -299,9 +298,22 @@ module MLCanopyFluxesMod
 
        ! Atmospheric forcing: CLM grid cell (g) variables -> patch (p) variables
 
-       uref(p) = max (1.0_r8, sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
-       swskyb(p,ivis) = forc_solad(g,ivis) ; swskyb(p,inir) = forc_solad(g,inir)
-       swskyd(p,ivis) = forc_solai(g,ivis) ; swskyd(p,inir) = forc_solai(g,inir)
+       uref(p) = max (wind_forc_min, sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
+       swskyb(p,ivis) = forc_solad(g,ivis)
+       swskyd(p,ivis) = forc_solai(g,ivis)
+       swskyb(p,inir) = forc_solad(g,inir)
+       swskyd(p,inir) = forc_solai(g,inir)
+
+       ! Re-partition direct and diffuse radiation if desired
+
+       if (fracdir >= 0._r8) then
+          totrad = swskyb(p,ivis) + swskyd(p,ivis)
+          swskyb(p,ivis) = totrad * fracdir
+          swskyd(p,ivis) = totrad * (1._r8 - fracdir)
+          totrad = swskyb(p,inir) + swskyd(p,inir)
+          swskyb(p,inir) = totrad * fracdir
+          swskyd(p,inir) = totrad * (1._r8 - fracdir)
+       end if
 
        ! Atmospheric forcing: CLM column (c) variables -> patch (p) variables
 
@@ -312,14 +324,14 @@ module MLCanopyFluxesMod
        qflx_rain(p) = forc_rain(c)
        qflx_snow(p) = forc_snow(c)
 
-       ! CO2 and O2: CLM grid cell (g) -> patch (p). Note the unit conversion
+       ! CO2 and O2: CLM grid cell (g) -> patch (p). Note that the units
+       ! conversion requires pbot.
 
        co2ref(p) = forc_pco2(g) / forc_pbot(c) * 1.e06_r8  ! Pa -> umol/mol
        o2ref(p)  = forc_po2(g) / forc_pbot(c) * 1.e03_r8   ! Pa -> mmol/mol
 
        ! Miscellaneous
 
-       btran(p) = btran_patch(p)
        tacclim(p) = t_a10_patch(p)
 
        ! Ground (soil) albedos: CLM column (c) -> patch (p)
@@ -358,8 +370,11 @@ module MLCanopyFluxesMod
        ! Compare coszen to that expected from CLM
 
        if (abs(coszen-surfalb_inst%coszen_col(c)) .gt. 1.e-03_r8) then
-          write (iulog,*) nstep, coszen, surfalb_inst%coszen_col(c)
-          call endrun (msg=' ERROR: MLCanopyFluxes: coszen error')
+          write (iulog,*) 'ERROR: MLCanopyFluxes: coszen diagnostic timestepping error'
+          write (iulog,*) 'nstep: ',nstep
+          write (iulog,*) 'coszen: ',coszen
+          write (iulog,*) 'CLM coszen: ',surfalb_inst%coszen_col(c)
+!         call endrun (msg=' MLCanopyFluxes: stopping on coszen error')
        end if
     end do
 
@@ -372,7 +387,7 @@ module MLCanopyFluxesMod
        rhoair(p) = rhomol(p) * mmdry * (1._r8 - (1._r8 - mmh2o/mmdry) * eref(p) / pref(p))
        mmair(p) = rhoair(p) / rhomol(p)
        cpair(p) = cpd * (1._r8 + (cpw/cpd - 1._r8) * qref(p)) * mmair(p)
-       thref(p) = tref(p) + 0.0098_r8 * zref(p)
+       thref(p) = tref(p) + lapse_rate * zref(p)
        thvref(p) = thref(p) * (1._r8 + 0.61_r8 * qref(p))
     end do
 
@@ -381,7 +396,7 @@ module MLCanopyFluxesMod
     do fp = 1, num_mlcan
        p = filter_mlcan(fp)
 
-       ! Values for current time step from CLM
+       ! Get values for current time step from CLM
 
        lai(p) = elai(p)
        sai(p) = esai(p)
@@ -398,23 +413,6 @@ module MLCanopyFluxesMod
        if (abs(totpai - (lai(p)+sai(p))) > 1.e-06_r8) then
           call endrun (msg=' ERROR: MLCanopyFluxes: plant area index not updated correctly')
        end if
-
-       ! Cumulative plant area index: Fill in canopy layers
-       ! (at the midpoint) starting from the top
-
-       do ic = ntop(p), 1, -1
-          if (ic == ntop(p)) then
-             sumpai(p,ic) = 0.5_r8 * dpai(p,ic)
-          else
-             sumpai(p,ic) = sumpai(p,ic+1) + 0.5_r8 * (dpai(p,ic+1) + dpai(p,ic))
-          end if
-       end do
-
-       ! Layers above the canopy have no vegetation
-
-       do ic = ntop(p)+1, ncan(p)
-          sumpai(p,ic) = 0._r8
-       end do
 
     end do
 
@@ -455,7 +453,7 @@ module MLCanopyFluxesMod
 
        call CanopyInterception (num_mlcan, filter_mlcan, mlcanopy_inst)
 
-       ! Longwave radiation transfer through canopy
+       ! Longwave radiation transfer through the canopy
 
        call LongwaveRadiation (bounds, num_mlcan, filter_mlcan, mlcanopy_inst)
 
@@ -492,11 +490,15 @@ module MLCanopyFluxesMod
           rhg(p) = exp(grav * mmh2o * smp_l(c,1)*1.e-03_r8 / (rgas * t_soisno(c,1)))
        end do
 
-       ! Canopy turbulence, scalar source/sink fluxes for leaves and soil, and scalar
-       ! profiles using above- and within-canopy coupling with the roughness sublayer
-       ! (RSL) parameterization
+       ! Canopy turbulence, scalar source/sink fluxes for leaves and soil, and
+       ! scalar profiles above and within the canopy
 
        call CanopyTurbulence (niter, num_mlcan, filter_mlcan, mlcanopy_inst)
+
+       ! Update leaf water potential for the current transpiration rate
+
+       call LeafWaterPotential (num_mlcan, filter_mlcan, isun, mlcanopy_inst)
+       call LeafWaterPotential (num_mlcan, filter_mlcan, isha, mlcanopy_inst)
 
        ! Update canopy intercepted water for evaporation and dew
 
@@ -510,37 +512,39 @@ module MLCanopyFluxesMod
 
     end do    ! End sub-stepping loop
 
-    ! Sum leaf and soil fluxes over canopy
+    ! Sum leaf and soil fluxes and other canopy diagnostics
 
-    call CanopyFluxesSum (num_mlcan, filter_mlcan, mlcanopy_inst)
+    call CanopyFluxesDiagnostics (num_mlcan, filter_mlcan, mlcanopy_inst)
 
-    ! Need to merge temperature and leaf water potential for sunlit and
-    ! shaded leaves because sun/shade fractions change over time
-
-    do fp = 1, num_mlcan
-       p = filter_mlcan(fp)
-       do ic = nbot(p), ntop(p)
-          tleaf(p,ic,isun) = tleaf(p,ic,isun) * fracsun(p,ic) + tleaf(p,ic,isha) * (1._r8 - fracsun(p,ic))
-          tleaf(p,ic,isha) = tleaf(p,ic,isun)
-          lwpveg(p,ic) = lwpleaf(p,ic,isun) * fracsun(p,ic) + lwpleaf(p,ic,isha) * (1._r8 - fracsun(p,ic))
-       end do
-    end do
-
-    ! Diagnose fraction of the canopy that is water stressed
+    ! Leaf temperature and leaf water potential are prognostic variables
+    ! for sunlit and shaded leaves. But sun/shade fractions change over
+    ! time. Merge temperature and leaf water potential for sunlit and
+    ! shaded leaves to layer-average value, which is used at next time step.
+    ! Use this method (rather than retaining sun/shade states) because some
+    ! shade leaf becomes sun leaf (and vice versa) between time steps as fsun
+    ! changes.
 
     do fp = 1, num_mlcan
        p = filter_mlcan(fp)
-       fracminlwp(p) = 0._r8
+       do ic = 1, ncan(p)
 
-       do ic = nbot(p), ntop(p)
-          if (lwpveg(p,ic) <= minlwp_SPA(patch%itype(p))) then
-             fracminlwp(p) = fracminlwp(p) + dpai(p,ic)
+          ! First save sun/shade leaves for model output
+
+          tleaf_hist(p,ic,isun) = tleaf(p,ic,isun)
+          tleaf_hist(p,ic,isha) = tleaf(p,ic,isha)
+          lwp_hist(p,ic,isun) = lwp(p,ic,isun)
+          lwp_hist(p,ic,isha) = lwp(p,ic,isha)
+
+          ! Now merge sun/shade leaves
+
+          if (dpai(p,ic) > 0._r8) then
+             tleaf(p,ic,isun) = tleaf(p,ic,isun) * fracsun(p,ic) + tleaf(p,ic,isha) * (1._r8 - fracsun(p,ic))
+             tleaf(p,ic,isha) = tleaf(p,ic,isun)
+             lwp(p,ic,isun) = lwp(p,ic,isun) * fracsun(p,ic) + lwp(p,ic,isha) * (1._r8 - fracsun(p,ic))
+             lwp(p,ic,isha) = lwp(p,ic,isun)
           end if
-       end do
 
-       if ((lai(p) + sai(p)) > 0._r8) then
-          fracminlwp(p) = fracminlwp(p) / (lai(p) + sai(p))
-       end if
+       end do
     end do
 
     ! Copy multilayer canopy variables to CLM variables. These are
@@ -598,32 +602,33 @@ module MLCanopyFluxesMod
     !---------------------------------------------------------------------
 
     associate ( &
-    ustar       => mlcanopy_inst%ustar_canopy     , &  ! Friction velocity (m/s)
-    lwup        => mlcanopy_inst%lwup_canopy      , &  ! Upward longwave radiation above canopy (W/m2)
-    lwsoi       => mlcanopy_inst%lwsoi_soil       , &  ! Absorbed longwave radiation: ground (W/m2)
-    rnsoi       => mlcanopy_inst%rnsoi_soil       , &  ! Net radiation: ground (W/m2)
-    shsoi       => mlcanopy_inst%shsoi_soil       , &  ! Sensible heat flux: ground (W/m2)
-    lhsoi       => mlcanopy_inst%lhsoi_soil       , &  ! Latent heat flux: ground (W/m2)
-    etsoi       => mlcanopy_inst%etsoi_soil       , &  ! Water vapor flux: ground (mol H2O/m2/s)
-    gsoi        => mlcanopy_inst%gsoi_soil        , &  ! Soil heat flux (W/m2)
-    gac0        => mlcanopy_inst%gac0_soil        , &  ! Aerodynamic conductance for soil fluxes (mol/m2/s)
-    qflx_intr   => mlcanopy_inst%qflx_intr_canopy , &  ! Intercepted precipitation (kg H2O/m2/s)
+    ustar       => mlcanopy_inst%ustar_canopy         , &  ! Friction velocity (m/s)
+    lwup        => mlcanopy_inst%lwup_canopy          , &  ! Upward longwave radiation above canopy (W/m2)
+    qflx_intr   => mlcanopy_inst%qflx_intr_canopy     , &  ! Intercepted precipitation (kg H2O/m2/s)
     qflx_tflrain => mlcanopy_inst%qflx_tflrain_canopy , &  ! Total rain throughfall onto ground (kg H2O/m2/s)
     qflx_tflsnow => mlcanopy_inst%qflx_tflsnow_canopy , &  ! Total snow throughfall onto ground (kg H2O/m2/s)
-    shair       => mlcanopy_inst%shair_profile    , &  ! Canopy layer air sensible heat flux (W/m2)
-    etair       => mlcanopy_inst%etair_profile    , &  ! Canopy layer air water vapor flux (mol H2O/m2/s)
-    stair       => mlcanopy_inst%stair_profile    , &  ! Canopy layer air storage heat flux (W/m2)
-    gac         => mlcanopy_inst%gac_profile      , &  ! Canopy layer aerodynamic conductance for scalars (mol/m2/s)
-    lwleaf      => mlcanopy_inst%lwleaf_leaf      , &  ! Leaf absorbed longwave radiation (W/m2 leaf)
-    rnleaf      => mlcanopy_inst%rnleaf_leaf      , &  ! Leaf net radiation (W/m2 leaf)
-    shleaf      => mlcanopy_inst%shleaf_leaf      , &  ! Leaf sensible heat flux (W/m2 leaf)
-    lhleaf      => mlcanopy_inst%lhleaf_leaf      , &  ! Leaf latent heat flux (W/m2 leaf)
-    trleaf      => mlcanopy_inst%trleaf_leaf      , &  ! Leaf transpiration flux (mol H2O/m2 leaf/s)
-    evleaf      => mlcanopy_inst%evleaf_leaf      , &  ! Leaf evaporation flux (mol H2O/m2 leaf/s)
-    stleaf      => mlcanopy_inst%stleaf_leaf      , &  ! Leaf storage heat flux (W/m2 leaf)
-    an          => mlcanopy_inst%an_leaf          , &  ! Leaf net photosynthesis (umol CO2/m2 leaf/s)
-    ag          => mlcanopy_inst%ag_leaf          , &  ! Leaf gross photosynthesis (umol CO2/m2 leaf/s)
-    gs          => mlcanopy_inst%gs_leaf            &  ! Leaf stomatal conductance (mol H2O/m2 leaf/s)
+    lwsoi       => mlcanopy_inst%lwsoi_soil           , &  ! Absorbed longwave radiation: ground (W/m2)
+    rnsoi       => mlcanopy_inst%rnsoi_soil           , &  ! Net radiation: ground (W/m2)
+    shsoi       => mlcanopy_inst%shsoi_soil           , &  ! Sensible heat flux: ground (W/m2)
+    lhsoi       => mlcanopy_inst%lhsoi_soil           , &  ! Latent heat flux: ground (W/m2)
+    etsoi       => mlcanopy_inst%etsoi_soil           , &  ! Water vapor flux: ground (mol H2O/m2/s)
+    gsoi        => mlcanopy_inst%gsoi_soil            , &  ! Soil heat flux (W/m2)
+    gac0        => mlcanopy_inst%gac0_soil            , &  ! Aerodynamic conductance for soil fluxes (mol/m2/s)
+    shair       => mlcanopy_inst%shair_profile        , &  ! Canopy layer air sensible heat flux (W/m2)
+    etair       => mlcanopy_inst%etair_profile        , &  ! Canopy layer air water vapor flux (mol H2O/m2/s)
+    stair       => mlcanopy_inst%stair_profile        , &  ! Canopy layer air storage heat flux (W/m2)
+    mflx        => mlcanopy_inst%mflx_profile         , &  ! Canopy layer momentum flux (m2/s2)
+    gac         => mlcanopy_inst%gac_profile          , &  ! Canopy layer aerodynamic conductance for scalars (mol/m2/s)
+    lwleaf      => mlcanopy_inst%lwleaf_leaf          , &  ! Leaf absorbed longwave radiation (W/m2 leaf)
+    rnleaf      => mlcanopy_inst%rnleaf_leaf          , &  ! Leaf net radiation (W/m2 leaf)
+    shleaf      => mlcanopy_inst%shleaf_leaf          , &  ! Leaf sensible heat flux (W/m2 leaf)
+    lhleaf      => mlcanopy_inst%lhleaf_leaf          , &  ! Leaf latent heat flux (W/m2 leaf)
+    trleaf      => mlcanopy_inst%trleaf_leaf          , &  ! Leaf transpiration flux (mol H2O/m2 leaf/s)
+    evleaf      => mlcanopy_inst%evleaf_leaf          , &  ! Leaf evaporation flux (mol H2O/m2 leaf/s)
+    stleaf      => mlcanopy_inst%stleaf_leaf          , &  ! Leaf storage heat flux (W/m2 leaf)
+    anet        => mlcanopy_inst%anet_leaf            , &  ! Leaf net photosynthesis (umol CO2/m2 leaf/s)
+    agross      => mlcanopy_inst%agross_leaf          , &  ! Leaf gross photosynthesis (umol CO2/m2 leaf/s)
+    gs          => mlcanopy_inst%gs_leaf                &  ! Leaf stomatal conductance (mol H2O/m2 leaf/s)
     )
 
     do fp = 1, num_filter
@@ -657,6 +662,7 @@ module MLCanopyFluxesMod
        j = j + 1; flux_accumulator_profile(p,:,j) = flux_accumulator_profile(p,:,j) + shair(p,:)
        j = j + 1; flux_accumulator_profile(p,:,j) = flux_accumulator_profile(p,:,j) + etair(p,:)
        j = j + 1; flux_accumulator_profile(p,:,j) = flux_accumulator_profile(p,:,j) + stair(p,:)
+       j = j + 1; flux_accumulator_profile(p,:,j) = flux_accumulator_profile(p,:,j) + mflx(p,:)
        j = j + 1; flux_accumulator_profile(p,:,j) = flux_accumulator_profile(p,:,j) + gac(p,:)
 
        k = 0
@@ -667,8 +673,8 @@ module MLCanopyFluxesMod
        k = k + 1; flux_accumulator_leaf(p,:,:,k) = flux_accumulator_leaf(p,:,:,k) + trleaf(p,:,:)
        k = k + 1; flux_accumulator_leaf(p,:,:,k) = flux_accumulator_leaf(p,:,:,k) + evleaf(p,:,:)
        k = k + 1; flux_accumulator_leaf(p,:,:,k) = flux_accumulator_leaf(p,:,:,k) + stleaf(p,:,:)
-       k = k + 1; flux_accumulator_leaf(p,:,:,k) = flux_accumulator_leaf(p,:,:,k) + an(p,:,:)
-       k = k + 1; flux_accumulator_leaf(p,:,:,k) = flux_accumulator_leaf(p,:,:,k) + ag(p,:,:)
+       k = k + 1; flux_accumulator_leaf(p,:,:,k) = flux_accumulator_leaf(p,:,:,k) + anet(p,:,:)
+       k = k + 1; flux_accumulator_leaf(p,:,:,k) = flux_accumulator_leaf(p,:,:,k) + agross(p,:,:)
        k = k + 1; flux_accumulator_leaf(p,:,:,k) = flux_accumulator_leaf(p,:,:,k) + gs(p,:,:)
 
        if (i > nvar1d .or. j > nvar2d .or. k > nvar3d) then
@@ -705,6 +711,7 @@ module MLCanopyFluxesMod
           j = j + 1; shair(p,:) = flux_accumulator_profile(p,:,j)
           j = j + 1; etair(p,:) = flux_accumulator_profile(p,:,j)
           j = j + 1; stair(p,:) = flux_accumulator_profile(p,:,j)
+          j = j + 1; mflx(p,:) = flux_accumulator_profile(p,:,j)
           j = j + 1; gac(p,:) = flux_accumulator_profile(p,:,j)
 
           k = 0
@@ -715,8 +722,8 @@ module MLCanopyFluxesMod
           k = k + 1; trleaf(p,:,:) = flux_accumulator_leaf(p,:,:,k)
           k = k + 1; evleaf(p,:,:) = flux_accumulator_leaf(p,:,:,k)
           k = k + 1; stleaf(p,:,:) = flux_accumulator_leaf(p,:,:,k)
-          k = k + 1; an(p,:,:) = flux_accumulator_leaf(p,:,:,k)
-          k = k + 1; ag(p,:,:) = flux_accumulator_leaf(p,:,:,k)
+          k = k + 1; anet(p,:,:) = flux_accumulator_leaf(p,:,:,k)
+          k = k + 1; agross(p,:,:) = flux_accumulator_leaf(p,:,:,k)
           k = k + 1; gs(p,:,:) = flux_accumulator_leaf(p,:,:,k)
 
           if (i > nvar1d .or. j > nvar2d .or. k > nvar3d) then
@@ -731,10 +738,11 @@ module MLCanopyFluxesMod
   end subroutine SubTimeStepFluxIntegration
 
   !-----------------------------------------------------------------------
-  subroutine CanopyFluxesSum (num_filter, filter, mlcanopy_inst)
+  subroutine CanopyFluxesDiagnostics (num_filter, filter, mlcanopy_inst)
     !
     ! !DESCRIPTION:
-    ! Sum leaf and soil fluxes to get canopy fluxes
+    ! Sum leaf and soil fluxes to get canopy fluxes and calculate
+    ! other canopy diagnostics
     !
     ! !USES:
     use clm_varpar, only : ivis, inir
@@ -758,70 +766,118 @@ module MLCanopyFluxesMod
     real(r8) :: avail                   ! Available energy (W/m2)
     real(r8) :: flux                    ! Turbulent fluxes + storage (W/m2)
     real(r8) :: fracgreen               ! Green fraction of plant area index: lai/(lai+sai)
+    real(r8) :: minlwp                  ! Minimum leaf water potential for canopy water stress diagnostic (MPa)
     !---------------------------------------------------------------------
 
     associate ( &
-    tref        => mlcanopy_inst%tref_forcing     , &  ! Air temperature at reference height (K)
-    swskyb      => mlcanopy_inst%swskyb_forcing   , &  ! Atmospheric direct beam solar radiation (W/m2)
-    swskyd      => mlcanopy_inst%swskyd_forcing   , &  ! Atmospheric diffuse solar radiation (W/m2)
-    lwsky       => mlcanopy_inst%lwsky_forcing    , &  ! Atmospheric longwave radiation (W/m2)
-    ncan        => mlcanopy_inst%ncan_canopy      , &  ! Number of layers
-    ntop        => mlcanopy_inst%ntop_canopy      , &  ! Index for top leaf layer
-    swveg       => mlcanopy_inst%swveg_canopy     , &  ! Absorbed solar radiation: vegetation (W/m2)
-    albcan      => mlcanopy_inst%albcan_canopy    , &  ! Albedo above canopy (-)
-    lwup        => mlcanopy_inst%lwup_canopy      , &  ! Upward longwave radiation above canopy (W/m2)
-    shsoi       => mlcanopy_inst%shsoi_soil       , &  ! Sensible heat flux: ground (W/m2)
-    lhsoi       => mlcanopy_inst%lhsoi_soil       , &  ! Latent heat flux: ground (W/m2)
-    gsoi        => mlcanopy_inst%gsoi_soil        , &  ! Soil heat flux (W/m2)
-    swsoi       => mlcanopy_inst%swsoi_soil       , &  ! Absorbed solar radiation: ground (W/m2)
-    lwsoi       => mlcanopy_inst%lwsoi_soil       , &  ! Absorbed longwave radiation: ground (W/m2)
-    etsoi       => mlcanopy_inst%etsoi_soil       , &  ! Water vapor flux: ground (mol H2O/m2/s)
-    dpai        => mlcanopy_inst%dpai_profile     , &  ! Canopy layer plant area index (m2/m2)
-    fwet        => mlcanopy_inst%fwet_profile     , &  ! Canopy layer fraction of plant area index that is wet
-    fdry        => mlcanopy_inst%fdry_profile     , &  ! Canopy layer fraction of plant area index that is green and dry
-    shair       => mlcanopy_inst%shair_profile    , &  ! Canopy layer air sensible heat flux (W/m2)
-    etair       => mlcanopy_inst%etair_profile    , &  ! Canopy layer air water vapor flux (mol H2O/m2/s)
-    stair       => mlcanopy_inst%stair_profile    , &  ! Canopy layer air storage heat flux (W/m2)
-    fracsun     => mlcanopy_inst%fracsun_profile  , &  ! Canopy layer sunlit fraction (-)
-    lwleaf      => mlcanopy_inst%lwleaf_leaf      , &  ! Leaf absorbed longwave radiation (W/m2 leaf)
-    rnleaf      => mlcanopy_inst%rnleaf_leaf      , &  ! Leaf net radiation (W/m2 leaf)
-    stleaf      => mlcanopy_inst%stleaf_leaf      , &  ! Leaf storage heat flux (W/m2 leaf)
-    shleaf      => mlcanopy_inst%shleaf_leaf      , &  ! Leaf sensible heat flux (W/m2 leaf)
-    lhleaf      => mlcanopy_inst%lhleaf_leaf      , &  ! Leaf latent heat flux (W/m2 leaf)
-    trleaf      => mlcanopy_inst%trleaf_leaf      , &  ! Leaf transpiration flux (mol H2O/m2 leaf/s)
-    evleaf      => mlcanopy_inst%evleaf_leaf      , &  ! Leaf evaporation flux (mol H2O/m2 leaf/s)
-    swleaf      => mlcanopy_inst%swleaf_leaf      , &  ! Leaf absorbed solar radiation (W/m2 leaf)
-    an          => mlcanopy_inst%an_leaf          , &  ! Leaf net photosynthesis (umol CO2/m2 leaf/s)
-    ag          => mlcanopy_inst%ag_leaf          , &  ! Leaf gross photosynthesis (umol CO2/m2 leaf/s)
-                                                       ! *** Output ***
-    rnet        => mlcanopy_inst%rnet_canopy      , &  ! Total net radiation, including soil (W/m2)
-    stflx       => mlcanopy_inst%stflx_canopy     , &  ! Canopy storage heat flux (W/m2)
-    shflx       => mlcanopy_inst%shflx_canopy     , &  ! Total sensible heat flux, including soil (W/m2)
-    lhflx       => mlcanopy_inst%lhflx_canopy     , &  ! Total latent heat flux, including soil (W/m2)
-    etflx       => mlcanopy_inst%etflx_canopy     , &  ! Total water vapor flux, including soil (mol H2O/m2/s)
-    lwveg       => mlcanopy_inst%lwveg_canopy     , &  ! Absorbed longwave radiation: vegetation (W/m2)
-    lwvegsun    => mlcanopy_inst%lwvegsun_canopy  , &  ! Absorbed longwave radiation: sunlit canopy (W/m2)
-    lwvegsha    => mlcanopy_inst%lwvegsha_canopy  , &  ! Absorbed longwave radiation: shaded canopy (W/m2)
-    shveg       => mlcanopy_inst%shveg_canopy     , &  ! Sensible heat flux: vegetation (W/m2)
-    shvegsun    => mlcanopy_inst%shvegsun_canopy  , &  ! Sensible heat flux: sunlit canopy (W/m2)
-    shvegsha    => mlcanopy_inst%shvegsha_canopy  , &  ! Sensible heat flux: shaded canopy (W/m2)
-    lhveg       => mlcanopy_inst%lhveg_canopy     , &  ! Latent heat flux: vegetation (W/m2)
-    lhvegsun    => mlcanopy_inst%lhvegsun_canopy  , &  ! Latent heat flux: sunlit canopy (W/m2)
-    lhvegsha    => mlcanopy_inst%lhvegsha_canopy  , &  ! Latent heat flux: shaded canopy (W/m2)
-    etveg       => mlcanopy_inst%etveg_canopy     , &  ! Water vapor flux: vegetation (mol H2O/m2/s)
-    etvegsun    => mlcanopy_inst%etvegsun_canopy  , &  ! Water vapor flux: sunlit canopy (mol H2O/m2/s)
-    etvegsha    => mlcanopy_inst%etvegsha_canopy  , &  ! Water vapor flux: shaded canopy (mol H2O/m2/s)
-    gppveg      => mlcanopy_inst%gppveg_canopy    , &  ! Gross primary production: vegetation (umol CO2/m2/s)
-    gppvegsun   => mlcanopy_inst%gppvegsun_canopy , &  ! Gross primary production: sunlit canopy (umol CO2/m2/s)
-    gppvegsha   => mlcanopy_inst%gppvegsha_canopy , &  ! Gross primary production: shaded canopy (umol CO2/m2/s)
-    swsrc       => mlcanopy_inst%swsrc_profile    , &  ! Canopy layer source/sink flux: absorbed solar radiation (W/m2)
-    lwsrc       => mlcanopy_inst%lwsrc_profile    , &  ! Canopy layer source/sink flux: absorbed longwave radiation (W/m2)
-    rnsrc       => mlcanopy_inst%rnsrc_profile    , &  ! Canopy layer source/sink flux: net radiation (W/m2)
-    stsrc       => mlcanopy_inst%stsrc_profile    , &  ! Canopy layer source/sink flux: storage heat flux (W/m2)
-    shsrc       => mlcanopy_inst%shsrc_profile    , &  ! Canopy layer source/sink flux: sensible heat (W/m2)
-    lhsrc       => mlcanopy_inst%lhsrc_profile    , &  ! Canopy layer source/sink flux: latent heat (W/m2)
-    etsrc       => mlcanopy_inst%etsrc_profile    , &  ! Canopy layer source/sink flux: water vapor (mol H2O/m2/s)
-    fco2src     => mlcanopy_inst%fco2src_profile    &  ! Canopy layer source/sink flux: CO2 (umol CO2/m2/s)
+                                                         ! *** Input ***
+    tref        => mlcanopy_inst%tref_forcing       , &  ! Air temperature at reference height (K)
+    swskyb      => mlcanopy_inst%swskyb_forcing     , &  ! Atmospheric direct beam solar radiation (W/m2)
+    swskyd      => mlcanopy_inst%swskyd_forcing     , &  ! Atmospheric diffuse solar radiation (W/m2)
+    lwsky       => mlcanopy_inst%lwsky_forcing      , &  ! Atmospheric longwave radiation (W/m2)
+    ncan        => mlcanopy_inst%ncan_canopy        , &  ! Number of aboveground layers
+    ntop        => mlcanopy_inst%ntop_canopy        , &  ! Index for top leaf layer
+    lai         => mlcanopy_inst%lai_canopy         , &  ! Leaf area index of canopy (m2/m2)
+    sai         => mlcanopy_inst%sai_canopy         , &  ! Stem area index of canopy (m2/m2)
+    swveg       => mlcanopy_inst%swveg_canopy       , &  ! Absorbed solar radiation: vegetation (W/m2)
+    albcan      => mlcanopy_inst%albcan_canopy      , &  ! Albedo above canopy (-)
+    lwup        => mlcanopy_inst%lwup_canopy        , &  ! Upward longwave radiation above canopy (W/m2)
+    shsoi       => mlcanopy_inst%shsoi_soil         , &  ! Sensible heat flux: ground (W/m2)
+    lhsoi       => mlcanopy_inst%lhsoi_soil         , &  ! Latent heat flux: ground (W/m2)
+    gsoi        => mlcanopy_inst%gsoi_soil          , &  ! Soil heat flux (W/m2)
+    swsoi       => mlcanopy_inst%swsoi_soil         , &  ! Absorbed solar radiation: ground (W/m2)
+    lwsoi       => mlcanopy_inst%lwsoi_soil         , &  ! Absorbed longwave radiation: ground (W/m2)
+    etsoi       => mlcanopy_inst%etsoi_soil         , &  ! Water vapor flux: ground (mol H2O/m2/s)
+    dpai        => mlcanopy_inst%dpai_profile       , &  ! Canopy layer plant area index (m2/m2)
+    fwet        => mlcanopy_inst%fwet_profile       , &  ! Canopy layer fraction of plant area index that is wet
+    fdry        => mlcanopy_inst%fdry_profile       , &  ! Canopy layer fraction of plant area index that is green and dry
+    tair        => mlcanopy_inst%tair_profile       , &  ! Canopy layer air temperature (K)
+    wind        => mlcanopy_inst%wind_profile       , &  ! Canopy layer wind speed (m/s)
+    shair       => mlcanopy_inst%shair_profile      , &  ! Canopy layer air sensible heat flux (W/m2)
+    etair       => mlcanopy_inst%etair_profile      , &  ! Canopy layer air water vapor flux (mol H2O/m2/s)
+    stair       => mlcanopy_inst%stair_profile      , &  ! Canopy layer air storage heat flux (W/m2)
+    fracsun     => mlcanopy_inst%fracsun_profile    , &  ! Canopy layer sunlit fraction (-)
+    vcmax25_profile => mlcanopy_inst%vcmax25_profile, &  ! Canopy layer leaf maximum carboxylation rate at 25C (umol/m2/s)
+    lwleaf      => mlcanopy_inst%lwleaf_leaf        , &  ! Leaf absorbed longwave radiation (W/m2 leaf)
+    rnleaf      => mlcanopy_inst%rnleaf_leaf        , &  ! Leaf net radiation (W/m2 leaf)
+    stleaf      => mlcanopy_inst%stleaf_leaf        , &  ! Leaf storage heat flux (W/m2 leaf)
+    shleaf      => mlcanopy_inst%shleaf_leaf        , &  ! Leaf sensible heat flux (W/m2 leaf)
+    lhleaf      => mlcanopy_inst%lhleaf_leaf        , &  ! Leaf latent heat flux (W/m2 leaf)
+    trleaf      => mlcanopy_inst%trleaf_leaf        , &  ! Leaf transpiration flux (mol H2O/m2 leaf/s)
+    evleaf      => mlcanopy_inst%evleaf_leaf        , &  ! Leaf evaporation flux (mol H2O/m2 leaf/s)
+    swleaf      => mlcanopy_inst%swleaf_leaf        , &  ! Leaf absorbed solar radiation (W/m2 leaf)
+    agross      => mlcanopy_inst%agross_leaf        , &  ! Leaf gross photosynthesis (umol CO2/m2 leaf/s)
+    apar        => mlcanopy_inst%apar_leaf          , &  ! Leaf absorbed PAR (umol photon/m2 leaf/s)
+    anet        => mlcanopy_inst%anet_leaf          , &  ! Leaf net photosynthesis (umol CO2/m2 leaf/s)
+    gs          => mlcanopy_inst%gs_leaf            , &  ! Leaf stomatal conductance (mol H2O/m2 leaf/s)
+    tleaf       => mlcanopy_inst%tleaf_leaf         , &  ! Leaf temperature (K)
+    lwp         => mlcanopy_inst%lwp_leaf           , &  ! Leaf water potential (MPa)
+    vcmax25_leaf=> mlcanopy_inst%vcmax25_leaf       , &  ! Leaf maximum carboxylation rate at 25C (umol/m2/s)
+                                                         ! *** Output ***
+    rnet        => mlcanopy_inst%rnet_canopy        , &  ! Total net radiation, including soil (W/m2)
+    stflx       => mlcanopy_inst%stflx_canopy       , &  ! Canopy storage heat flux (W/m2)
+    shflx       => mlcanopy_inst%shflx_canopy       , &  ! Total sensible heat flux, including soil (W/m2)
+    lhflx       => mlcanopy_inst%lhflx_canopy       , &  ! Total latent heat flux, including soil (W/m2)
+    etflx       => mlcanopy_inst%etflx_canopy       , &  ! Total water vapor flux, including soil (mol H2O/m2/s)
+    lwveg       => mlcanopy_inst%lwveg_canopy       , &  ! Absorbed longwave radiation: vegetation (W/m2)
+    lwvegsun    => mlcanopy_inst%lwvegsun_canopy    , &  ! Absorbed longwave radiation: sunlit canopy (W/m2)
+    lwvegsha    => mlcanopy_inst%lwvegsha_canopy    , &  ! Absorbed longwave radiation: shaded canopy (W/m2)
+    shveg       => mlcanopy_inst%shveg_canopy       , &  ! Sensible heat flux: vegetation (W/m2)
+    shvegsun    => mlcanopy_inst%shvegsun_canopy    , &  ! Sensible heat flux: sunlit canopy (W/m2)
+    shvegsha    => mlcanopy_inst%shvegsha_canopy    , &  ! Sensible heat flux: shaded canopy (W/m2)
+    lhveg       => mlcanopy_inst%lhveg_canopy       , &  ! Latent heat flux: vegetation (W/m2)
+    lhvegsun    => mlcanopy_inst%lhvegsun_canopy    , &  ! Latent heat flux: sunlit canopy (W/m2)
+    lhvegsha    => mlcanopy_inst%lhvegsha_canopy    , &  ! Latent heat flux: shaded canopy (W/m2)
+    etveg       => mlcanopy_inst%etveg_canopy       , &  ! Water vapor flux: vegetation (mol H2O/m2/s)
+    etvegsun    => mlcanopy_inst%etvegsun_canopy    , &  ! Water vapor flux: sunlit canopy (mol H2O/m2/s)
+    etvegsha    => mlcanopy_inst%etvegsha_canopy    , &  ! Water vapor flux: shaded canopy (mol H2O/m2/s)
+    trveg       => mlcanopy_inst%trveg_canopy       , &  ! Water vapor flux: transpiration (mol H2O/m2/s)
+    evveg       => mlcanopy_inst%evveg_canopy       , &  ! Water vapor flux: canopy evaporation (mol H2O/m2/s)
+    gppveg      => mlcanopy_inst%gppveg_canopy      , &  ! Gross primary production: vegetation (umol CO2/m2/s)
+    gppvegsun   => mlcanopy_inst%gppvegsun_canopy   , &  ! Gross primary production: sunlit canopy (umol CO2/m2/s)
+    gppvegsha   => mlcanopy_inst%gppvegsha_canopy   , &  ! Gross primary production: shaded canopy (umol CO2/m2/s)
+    vcmax25veg  => mlcanopy_inst%vcmax25veg_canopy  , &  ! Vcmax at 25C: total canopy (umol/m2/s)
+    vcmax25sun  => mlcanopy_inst%vcmax25sun_canopy  , &  ! Vcmax at 25C: sunlit canopy (umol/m2/s)
+    vcmax25sha  => mlcanopy_inst%vcmax25sha_canopy  , &  ! Vcmax at 25C: shaded canopy (umol/m2/s)
+    gsveg       => mlcanopy_inst%gsveg_canopy       , &  ! Stomatal conductance: canopy (mol H2O/m2/s)
+    gsvegsun    => mlcanopy_inst%gsvegsun_canopy    , &  ! Stomatal conductance: sunlit canopy (mol H2O/m2/s)
+    gsvegsha    => mlcanopy_inst%gsvegsha_canopy    , &  ! Stomatal conductance: shaded canopy (mol H2O/m2/s)
+    windveg     => mlcanopy_inst%windveg_canopy     , &  ! Wind speed: canopy (m/s)
+    windvegsun  => mlcanopy_inst%windvegsun_canopy  , &  ! Wind speed: sunlit canopy (m/s)
+    windvegsha  => mlcanopy_inst%windvegsha_canopy  , &  ! Wind speed: shaded canopy (m/s)
+    tlveg       => mlcanopy_inst%tlveg_canopy       , &  ! Leaf temperature: canopy (K)
+    tlvegsun    => mlcanopy_inst%tlvegsun_canopy    , &  ! Leaf temperature: sunlit canopy (K)
+    tlvegsha    => mlcanopy_inst%tlvegsha_canopy    , &  ! Leaf temperature: shaded canopy (K)
+    taveg       => mlcanopy_inst%taveg_canopy       , &  ! Air temperature: canopy (K)
+    tavegsun    => mlcanopy_inst%tavegsun_canopy    , &  ! Air temperature: sunlit canopy (K)
+    tavegsha    => mlcanopy_inst%tavegsha_canopy    , &  ! Air temperature: shaded canopy (K)
+    laisun      => mlcanopy_inst%laisun_canopy      , &  ! Canopy plant area index (lai+sai): sunlit canopy (m2/m2) 
+    laisha      => mlcanopy_inst%laisha_canopy      , &  ! Canopy plant area index (lai+sai): shaded canopy (m2/m2) 
+    fracminlwp  => mlcanopy_inst%fracminlwp_canopy  , &  ! Fraction of canopy that is water-stressed
+    swsrc       => mlcanopy_inst%swsrc_profile      , &  ! Canopy layer source/sink flux: absorbed solar radiation (W/m2)
+    lwsrc       => mlcanopy_inst%lwsrc_profile      , &  ! Canopy layer source/sink flux: absorbed longwave radiation (W/m2)
+    rnsrc       => mlcanopy_inst%rnsrc_profile      , &  ! Canopy layer source/sink flux: net radiation (W/m2)
+    stsrc       => mlcanopy_inst%stsrc_profile      , &  ! Canopy layer source/sink flux: storage heat flux (W/m2)
+    shsrc       => mlcanopy_inst%shsrc_profile      , &  ! Canopy layer source/sink flux: sensible heat (W/m2)
+    lhsrc       => mlcanopy_inst%lhsrc_profile      , &  ! Canopy layer source/sink flux: latent heat (W/m2)
+    etsrc       => mlcanopy_inst%etsrc_profile      , &  ! Canopy layer source/sink flux: water vapor (mol H2O/m2/s)
+    trsrc       => mlcanopy_inst%trsrc_profile      , &  ! Canopy layer source/sink flux: transpiration water vapor (mol H2O/m2/s)
+    evsrc       => mlcanopy_inst%evsrc_profile      , &  ! Canopy layer source/sink flux: evaporation water vapor (mol H2O/m2/s)
+    fco2src     => mlcanopy_inst%fco2src_profile    , &  ! Canopy layer source/sink flux: CO2 (umol CO2/m2/s)
+    swleaf_mean => mlcanopy_inst%swleaf_mean_profile, &  ! Canopy layer weighted mean: leaf absorbed solar radiation (W/m2 leaf)
+    lwleaf_mean => mlcanopy_inst%lwleaf_mean_profile, &  ! Canopy layer weighted mean: leaf absorbed longwave radiation (W/m2 leaf)
+    rnleaf_mean => mlcanopy_inst%rnleaf_mean_profile, &  ! Canopy layer weighted mean: leaf net radiation (W/m2 leaf)
+    stleaf_mean => mlcanopy_inst%stleaf_mean_profile, &  ! Canopy layer weighted mean: leaf storage heat flux (W/m2 leaf)
+    shleaf_mean => mlcanopy_inst%shleaf_mean_profile, &  ! Canopy layer weighted mean: leaf sensible heat flux (W/m2 leaf)
+    lhleaf_mean => mlcanopy_inst%lhleaf_mean_profile, &  ! Canopy layer weighted mean: leaf latent heat flux (W/m2 leaf)
+    etleaf_mean => mlcanopy_inst%etleaf_mean_profile, &  ! Canopy layer weighted mean: leaf water vapor flux (mol H2O/m2 leaf/s)
+    trleaf_mean => mlcanopy_inst%trleaf_mean_profile, &  ! Canopy layer weighted mean: leaf transpiration flux (mol H2O/m2 leaf/s)
+    evleaf_mean => mlcanopy_inst%evleaf_mean_profile, &  ! Canopy layer weighted mean: leaf evaporation flux (mol H2O/m2 leaf/s)
+    fco2_mean   => mlcanopy_inst%fco2_mean_profile  , &  ! Canopy layer weighted mean: leaf net photosynthesis (umol CO2/m2 leaf/s)
+    apar_mean   => mlcanopy_inst%apar_mean_profile  , &  ! Canopy layer weighted mean: leaf absorbed PAR (umol photon/m2 leaf/s)
+    gs_mean     => mlcanopy_inst%gs_mean_profile    , &  ! Canopy layer weighted mean: leaf stomatal conductance (mol H2O/m2 leaf/s)
+    tleaf_mean  => mlcanopy_inst%tleaf_mean_profile , &  ! Canopy layer weighted mean: leaf temperature (K)
+    lwp_mean    => mlcanopy_inst%lwp_mean_profile     &  ! Canopy layer weighted mean: leaf water potential (MPa)
     )
 
     do fp = 1, num_filter
@@ -831,18 +887,61 @@ module MLCanopyFluxesMod
 
        do ic = 1, ncan(p)
           if (dpai(p,ic) > 0._r8) then
-             lwsrc(p,ic) = (lwleaf(p,ic,isun)*fracsun(p,ic) + lwleaf(p,ic,isha)*(1._r8 - fracsun(p,ic))) * dpai(p,ic)
-             swsrc(p,ic,ivis) = (swleaf(p,ic,isun,ivis)*fracsun(p,ic) + swleaf(p,ic,isha,ivis)*(1._r8 - fracsun(p,ic))) * dpai(p,ic)
-             swsrc(p,ic,inir) = (swleaf(p,ic,isun,inir)*fracsun(p,ic) + swleaf(p,ic,isha,inir)*(1._r8 - fracsun(p,ic))) * dpai(p,ic)
-             rnsrc(p,ic) = (rnleaf(p,ic,isun)*fracsun(p,ic) + rnleaf(p,ic,isha)*(1._r8 - fracsun(p,ic))) * dpai(p,ic)
-             stsrc(p,ic) = (stleaf(p,ic,isun)*fracsun(p,ic) + stleaf(p,ic,isha)*(1._r8 - fracsun(p,ic))) * dpai(p,ic)
-             shsrc(p,ic) = (shleaf(p,ic,isun)*fracsun(p,ic) + shleaf(p,ic,isha)*(1._r8 - fracsun(p,ic))) * dpai(p,ic)
-             lhsrc(p,ic) = (lhleaf(p,ic,isun)*fracsun(p,ic) + lhleaf(p,ic,isha)*(1._r8 - fracsun(p,ic))) * dpai(p,ic)
-             etsrc(p,ic) = (evleaf(p,ic,isun) + trleaf(p,ic,isun)) * fracsun(p,ic) * dpai(p,ic) &
-                         + (evleaf(p,ic,isha) + trleaf(p,ic,isha)) * (1._r8 - fracsun(p,ic)) * dpai(p,ic)
+
+             ! Leaf fluxes/states (per unit leaf area)
+
+             lwleaf_mean(p,ic) = lwleaf(p,ic,isun)*fracsun(p,ic) + lwleaf(p,ic,isha)*(1._r8 - fracsun(p,ic))
+             swleaf_mean(p,ic,ivis) = swleaf(p,ic,isun,ivis)*fracsun(p,ic) + swleaf(p,ic,isha,ivis)*(1._r8 - fracsun(p,ic))
+             swleaf_mean(p,ic,inir) = swleaf(p,ic,isun,inir)*fracsun(p,ic) + swleaf(p,ic,isha,inir)*(1._r8 - fracsun(p,ic))
+             rnleaf_mean(p,ic) = rnleaf(p,ic,isun)*fracsun(p,ic) + rnleaf(p,ic,isha)*(1._r8 - fracsun(p,ic))
+             stleaf_mean(p,ic) = stleaf(p,ic,isun)*fracsun(p,ic) + stleaf(p,ic,isha)*(1._r8 - fracsun(p,ic))
+             shleaf_mean(p,ic) = shleaf(p,ic,isun)*fracsun(p,ic) + shleaf(p,ic,isha)*(1._r8 - fracsun(p,ic))
+             lhleaf_mean(p,ic) = lhleaf(p,ic,isun)*fracsun(p,ic) + lhleaf(p,ic,isha)*(1._r8 - fracsun(p,ic))
+             etleaf_mean(p,ic) = (evleaf(p,ic,isun) + trleaf(p,ic,isun)) * fracsun(p,ic) &
+                               + (evleaf(p,ic,isha) + trleaf(p,ic,isha)) * (1._r8 - fracsun(p,ic))
+             trleaf_mean(p,ic) = trleaf(p,ic,isun)*fracsun(p,ic) + trleaf(p,ic,isha)*(1._r8 - fracsun(p,ic))
+             evleaf_mean(p,ic) = evleaf(p,ic,isun)*fracsun(p,ic) + evleaf(p,ic,isha)*(1._r8 - fracsun(p,ic))
+             fco2_mean(p,ic) = anet(p,ic,isun)*fracsun(p,ic) + anet(p,ic,isha)*(1._r8 - fracsun(p,ic))
+
+             apar_mean(p,ic) = apar(p,ic,isun)*fracsun(p,ic) + apar(p,ic,isha)*(1._r8 - fracsun(p,ic))
+             gs_mean(p,ic) = gs(p,ic,isun)*fracsun(p,ic) + gs(p,ic,isha)*(1._r8 - fracsun(p,ic))
+             tleaf_mean(p,ic) = tleaf(p,ic,isun)*fracsun(p,ic) + tleaf(p,ic,isha)*(1._r8 - fracsun(p,ic))
+             lwp_mean(p,ic) = lwp(p,ic,isun)*fracsun(p,ic) + lwp(p,ic,isha)*(1._r8 - fracsun(p,ic))
+
+             ! Source fluxes (per unit ground area)
+
+             lwsrc(p,ic) = lwleaf_mean(p,ic) * dpai(p,ic)
+             swsrc(p,ic,ivis) = swleaf_mean(p,ic,ivis) * dpai(p,ic)
+             swsrc(p,ic,inir) = swleaf_mean(p,ic,inir) * dpai(p,ic)
+             rnsrc(p,ic) = rnleaf_mean(p,ic) * dpai(p,ic)
+             stsrc(p,ic) = stleaf_mean(p,ic) * dpai(p,ic)
+             shsrc(p,ic) = shleaf_mean(p,ic) * dpai(p,ic)
+             lhsrc(p,ic) = lhleaf_mean(p,ic) * dpai(p,ic)
+             etsrc(p,ic) = etleaf_mean(p,ic) * dpai(p,ic)
+             trsrc(p,ic) = trleaf_mean(p,ic) * dpai(p,ic)
+             evsrc(p,ic) = evleaf_mean(p,ic) * dpai(p,ic)
              fracgreen = fdry(p,ic) / (1._r8 - fwet(p,ic))
-             fco2src(p,ic) = (an(p,ic,isun)*fracsun(p,ic) + an(p,ic,isha)*(1._r8 - fracsun(p,ic))) * dpai(p,ic) * fracgreen
+             fco2src(p,ic) = (anet(p,ic,isun)*fracsun(p,ic) + anet(p,ic,isha)*(1._r8 - fracsun(p,ic))) * dpai(p,ic) * fracgreen
+
           else
+
+             lwleaf_mean(p,ic) = 0._r8
+             swleaf_mean(p,ic,ivis) = 0._r8
+             swleaf_mean(p,ic,inir) = 0._r8
+             rnleaf_mean(p,ic) = 0._r8
+             stleaf_mean(p,ic) = 0._r8
+             shleaf_mean(p,ic) = 0._r8
+             lhleaf_mean(p,ic) = 0._r8
+             etleaf_mean(p,ic) = 0._r8
+             trleaf_mean(p,ic) = 0._r8
+             evleaf_mean(p,ic) = 0._r8
+             fco2_mean(p,ic) = 0._r8
+
+             apar_mean(p,ic) = 0._r8
+             gs_mean(p,ic) = 0._r8
+             tleaf_mean(p,ic) = 0._r8
+             lwp_mean(p,ic) = 0._r8
+
              lwsrc(p,ic) = 0._r8
              swsrc(p,ic,ivis) = 0._r8
              swsrc(p,ic,inir) = 0._r8
@@ -851,6 +950,8 @@ module MLCanopyFluxesMod
              shsrc(p,ic) = 0._r8
              lhsrc(p,ic) = 0._r8
              etsrc(p,ic) = 0._r8
+             trsrc(p,ic) = 0._r8
+             evsrc(p,ic) = 0._r8
              fco2src(p,ic) = 0._r8
           end if
        end do
@@ -862,7 +963,11 @@ module MLCanopyFluxesMod
        shveg(p) = 0._r8
        lhveg(p) = 0._r8
        etveg(p) = 0._r8
+       trveg(p) = 0._r8
+       evveg(p) = 0._r8
        gppveg(p) = 0._r8
+       vcmax25veg(p) = 0._r8
+       gsveg(p) = 0._r8
 
        do ic = 1, ncan(p)
           lwveg(p) = lwveg(p) + lwsrc(p,ic)
@@ -870,39 +975,44 @@ module MLCanopyFluxesMod
           shveg(p) = shveg(p) + shsrc(p,ic)
           lhveg(p) = lhveg(p) + lhsrc(p,ic)
           etveg(p) = etveg(p) + etsrc(p,ic)
+          trveg(p) = trveg(p) + trsrc(p,ic)
+          evveg(p) = evveg(p) + evsrc(p,ic)
           if (dpai(p,ic) > 0._r8) then
              fracgreen = fdry(p,ic) / (1._r8 - fwet(p,ic))
-             gppveg(p) = gppveg(p) + (ag(p,ic,isun)*fracsun(p,ic) + ag(p,ic,isha)*(1._r8 - fracsun(p,ic))) * dpai(p,ic) * fracgreen
+             gppveg(p) = gppveg(p) &
+                       + (agross(p,ic,isun)*fracsun(p,ic) + agross(p,ic,isha)*(1._r8 - fracsun(p,ic))) * dpai(p,ic) * fracgreen
+             gsveg(p) = gsveg(p) + gs_mean(p,ic) * dpai(p,ic)
           end if
+          vcmax25veg(p) = vcmax25veg(p) + vcmax25_profile(p,ic) * dpai(p,ic)
        end do
 
        ! Check energy balance for conservation
 
        err = swveg(p,ivis) + swveg(p,inir) + lwveg(p) - shveg(p) - lhveg(p) - stflx(p)
        if (abs(err) >= 1.e-03_r8) then
-          call endrun (msg=' ERROR: CanopyFluxesSum: energy conservation error (1)')
+          call endrun (msg=' ERROR: CanopyFluxesDiagnostics: energy conservation error (1)')
        end if
 
        ! Turbulent fluxes
 
        select case (turb_type)
-       case (0)
-          ! Sum of layer fluxes
+       case (0, -1)
+          ! Sum of vegetation and soil fluxes
           shflx(p) = shveg(p) + shsoi(p)
           etflx(p) = etveg(p) + etsoi(p)
           lhflx(p) = lhveg(p) + lhsoi(p)
        case (1)
-          ! Turbulent fluxes are at the top of the canopy
-          shflx(p) = shair(p,ntop(p))
-          etflx(p) = etair(p,ntop(p))
-          lhflx(p) = etair(p,ntop(p)) * LatVap(tref(p))
+          ! Turbulent fluxes are at the top layer
+          shflx(p) = shair(p,ncan(p))
+          etflx(p) = etair(p,ncan(p))
+          lhflx(p) = etair(p,ncan(p)) * LatVap(tref(p))
        case default
-          call endrun (msg=' ERROR: CanopyFluxesSum: turbulence type not valid')
+          call endrun (msg=' ERROR: CanopyFluxesDiagnostics: turbulence type not valid')
        end select
 
-       ! Add canopy air heat storage to storage flux
+       ! Add air heat storage to storage flux
 
-       do ic = 1, ntop(p)
+       do ic = 1, ncan(p)
           stflx(p) = stflx(p) + stair(p,ic)
        end do
 
@@ -915,26 +1025,31 @@ module MLCanopyFluxesMod
 
        err = rnet(p) - (radin - radout)
        if (abs(err) > 0.01_r8) then
-          call endrun (msg=' ERROR: CanopyFluxesSum: energy conservation error (2)')
+          call endrun (msg=' ERROR: CanopyFluxesDiagnostics: energy conservation error (2)')
        end if
 
        avail = radin - radout - gsoi(p)
        flux = shflx(p) + lhflx(p) + stflx(p)
        err = avail - flux
        if (abs(err) > 0.01_r8) then
-          call endrun (msg=' ERROR: CanopyFluxesSum: energy conservation error (3)')
+          call endrun (msg=' ERROR: CanopyFluxesDiagnostics: energy conservation error (3)')
        end if
 
        ! Sunlit and shaded canopy fluxes
 
+       laisun(p) = 0._r8 ; laisha(p) = 0._r8
        lwvegsun(p) = 0._r8 ; lwvegsha(p) = 0._r8
        shvegsun(p) = 0._r8 ; shvegsha(p) = 0._r8
        lhvegsun(p) = 0._r8 ; lhvegsha(p) = 0._r8
        etvegsun(p) = 0._r8 ; etvegsha(p) = 0._r8
        gppvegsun(p) = 0._r8 ; gppvegsha(p) = 0._r8
+       vcmax25sun(p) = 0._r8 ; vcmax25sha(p) = 0._r8
+       gsvegsun(p) = 0._r8 ; gsvegsha(p) = 0._r8
 
        do ic = 1, ncan(p)
           if (dpai(p,ic) > 0._r8) then
+             laisun(p) = laisun(p) + fracsun(p,ic) * dpai(p,ic)
+             laisha(p) = laisha(p) + (1._r8 - fracsun(p,ic)) * dpai(p,ic)
              lwvegsun(p) = lwvegsun(p) + lwleaf(p,ic,isun) * fracsun(p,ic) * dpai(p,ic)
              lwvegsha(p) = lwvegsha(p) + lwleaf(p,ic,isha) * (1._r8 - fracsun(p,ic)) * dpai(p,ic)
              shvegsun(p) = shvegsun(p) + shleaf(p,ic,isun) * fracsun(p,ic) * dpai(p,ic)
@@ -944,14 +1059,56 @@ module MLCanopyFluxesMod
              etvegsun(p) = etvegsun(p) + (evleaf(p,ic,isun) + trleaf(p,ic,isun)) * fracsun(p,ic) * dpai(p,ic)
              etvegsha(p) = etvegsha(p) + (evleaf(p,ic,isha) + trleaf(p,ic,isha)) * (1._r8 - fracsun(p,ic)) * dpai(p,ic)
              fracgreen = fdry(p,ic) / (1._r8 - fwet(p,ic))
-             gppvegsun(p) = gppvegsun(p) + ag(p,ic,isun) * fracsun(p,ic) * dpai(p,ic) * fracgreen
-             gppvegsha(p) = gppvegsha(p) + ag(p,ic,isha) * (1._r8 - fracsun(p,ic)) * dpai(p,ic) * fracgreen
+             gppvegsun(p) = gppvegsun(p) + agross(p,ic,isun) * fracsun(p,ic) * dpai(p,ic) * fracgreen
+             gppvegsha(p) = gppvegsha(p) + agross(p,ic,isha) * (1._r8 - fracsun(p,ic)) * dpai(p,ic) * fracgreen
+             vcmax25sun(p) = vcmax25sun(p) + vcmax25_leaf(p,ic,isun) * fracsun(p,ic) * dpai(p,ic)
+             vcmax25sha(p) = vcmax25sha(p) + vcmax25_leaf(p,ic,isha) * (1._r8 - fracsun(p,ic)) * dpai(p,ic)
+             gsvegsun(p) = gsvegsun(p) + gs(p,ic,isun) * fracsun(p,ic) * dpai(p,ic)
+             gsvegsha(p) = gsvegsha(p) + gs(p,ic,isha) * (1._r8 - fracsun(p,ic)) * dpai(p,ic)
           end if
        end do
+
+       ! Sunlit and shaded canopy temperatures and wind speed are weighted for sun/shade leaf area
+
+       windveg(p) = 0._r8 ; windvegsun(p) = 0._r8 ; windvegsha(p) = 0._r8
+       tlveg(p) = 0._r8 ; tlvegsun(p) = 0._r8 ; tlvegsha(p) = 0._r8
+       taveg(p) = 0._r8 ; tavegsun(p) = 0._r8 ; tavegsha(p) = 0._r8
+       do ic = 1, ncan(p)
+          if (dpai(p,ic) > 0._r8) then
+             windveg(p) = windveg(p) + wind(p,ic) * dpai(p,ic) / (laisun(p) + laisha(p))
+             windvegsun(p) = windvegsun(p) + wind(p,ic) * fracsun(p,ic) * dpai(p,ic) / laisun(p)
+             windvegsha(p) = windvegsha(p) + wind(p,ic) * (1._r8 - fracsun(p,ic)) * dpai(p,ic) / laisha(p)
+
+             tlveg(p) = tlveg(p) + tleaf_mean(p,ic) * dpai(p,ic) / (laisun(p) + laisha(p))
+             tlvegsun(p) = tlvegsun(p) + tleaf(p,ic,isun) * fracsun(p,ic) * dpai(p,ic) / laisun(p)
+             tlvegsha(p) = tlvegsha(p) + tleaf(p,ic,isha) * (1._r8 - fracsun(p,ic)) * dpai(p,ic) / laisha(p)
+
+             taveg(p) = taveg(p) + tair(p,ic) * dpai(p,ic) / (laisun(p) + laisha(p))
+             tavegsun(p) = tavegsun(p) + tair(p,ic) * fracsun(p,ic) * dpai(p,ic) / laisun(p)
+             tavegsha(p) = tavegsha(p) + tair(p,ic) * (1._r8 - fracsun(p,ic)) * dpai(p,ic) / laisha(p)
+          end if
+       end do
+
+       ! Diagnose fraction of the canopy that is water stressed
+
+       minlwp = -2._r8
+       fracminlwp(p) = 0._r8
+
+       do ic = 1, ncan(p)
+          if (dpai(p,ic) > 0._r8) then
+             if (lwp_mean(p,ic) <= minlwp) then
+                fracminlwp(p) = fracminlwp(p) + dpai(p,ic)
+             end if
+          end if
+       end do
+
+       if ((lai(p) + sai(p)) > 0._r8) then
+          fracminlwp(p) = fracminlwp(p) / (lai(p) + sai(p))
+       end if
 
     end do
 
     end associate
-  end subroutine CanopyFluxesSum
+  end subroutine CanopyFluxesDiagnostics
 
 end module MLCanopyFluxesMod

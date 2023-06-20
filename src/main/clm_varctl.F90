@@ -117,6 +117,10 @@ module clm_varctl
   character(len=fname_len), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
                                                               ! only needed for LILAC and MCT drivers
 
+  ! RSL psihat look-up tables
+
+  character(len=256), public :: rslfile = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/rsl_lookup_tables/psihat.nc'
+
   !----------------------------------------------------------
   ! Flag to read ndep rather than obtain it from coupler
   !----------------------------------------------------------

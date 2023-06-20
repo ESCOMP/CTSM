@@ -26,8 +26,9 @@ contains
     ! Interception and throughfall
     !
     ! !USES:
-    use MLclm_varcon, only : dewmx, maximum_leaf_wetted_fraction
-    use MLclm_varctl, only : dtime_substep
+    use MLclm_varcon, only : dewmx, maximum_leaf_wetted_fraction, interception_fraction, fwet_exponent
+    use MLclm_varcon, only : clm45_interception_p1, clm45_interception_p2
+    use MLclm_varctl, only : dtime_substep, fpi_type
     use MLCanopyFluxesType, only : mlcanopy_type
     !
     ! !ARGUMENTS:
@@ -43,7 +44,6 @@ contains
     real(r8) :: dtime                            ! Model time step (s)
     real(r8) :: fracrain                         ! Fraction of precipitation that is rain
     real(r8) :: fracsnow                         ! Fraction of precipitation that is snow
-    real(r8) :: interception_fraction            ! Fraction of intercepted precipitation
     real(r8) :: fpi                              ! Fraction of precipitation intercepted
     real(r8) :: qflx_through_rain                ! Rain precipitation direct through canopy (kg H2O/m2/s)
     real(r8) :: qflx_through_snow                ! Snow precipitation direct through canopy (kg H2O/m2/s)
@@ -58,7 +58,7 @@ contains
     qflx_snow    => mlcanopy_inst%qflx_snow_forcing   , &  ! Snowfall (mm H2O/s = kg H2O/m2/s)
     lai          => mlcanopy_inst%lai_canopy          , &  ! Leaf area index of canopy (m2/m2)
     sai          => mlcanopy_inst%sai_canopy          , &  ! Stem area index of canopy (m2/m2)
-    ncan         => mlcanopy_inst%ncan_canopy         , &  ! Number of layers
+    ncan         => mlcanopy_inst%ncan_canopy         , &  ! Number of aboveground layers
     dlai         => mlcanopy_inst%dlai_profile        , &  ! Canopy layer leaf area index (m2/m2)
     dpai         => mlcanopy_inst%dpai_profile        , &  ! Canopy layer plant area index (m2/m2)
                                                            ! *** Input/Output ***
@@ -90,9 +90,14 @@ contains
 
        ! Fraction of precipitation that is intercepted
 
-!      fpi = 0.25_r8 * (1._r8 - exp(-0.5_r8*(lai(p) + sai(p))))   ! CLM4.5
-       interception_fraction = 1._r8
-       fpi = interception_fraction * tanh(lai(p) + sai(p))        ! CLM5
+       select case (fpi_type)
+       case (1) ! CLM4.5
+          fpi = clm45_interception_p1 * (1._r8 - exp(clm45_interception_p2*(lai(p) + sai(p))))
+       case (2) ! CLM5
+          fpi = interception_fraction * tanh(lai(p) + sai(p))
+       case default
+          call endrun (msg=' ERROR: CanopyInterception: fpi_type not valid')
+       end select
 
        ! Direct throughfall
 
@@ -138,7 +143,7 @@ contains
 
              ! Wetted fraction of canopy
 
-             fwet(p,ic) = max((h2ocan(p,ic)/h2ocanmx),0._r8)**0.67_r8
+             fwet(p,ic) = max((h2ocan(p,ic)/h2ocanmx),0._r8)**fwet_exponent
              fwet(p,ic) = min (fwet(p,ic), maximum_leaf_wetted_fraction)
 
              ! Fraction of canopy that is green and dry 
@@ -192,7 +197,7 @@ contains
 
     associate ( &
                                                     ! *** Input ***
-    ncan      => mlcanopy_inst%ncan_canopy     , &  ! Number of layers
+    ncan      => mlcanopy_inst%ncan_canopy     , &  ! Number of aboveground layers
     dpai      => mlcanopy_inst%dpai_profile    , &  ! Canopy layer plant area index (m2/m2)
     fracsun   => mlcanopy_inst%fracsun_profile , &  ! Canopy layer sunlit fraction (-)
     trleaf    => mlcanopy_inst%trleaf_leaf     , &  ! Leaf transpiration flux (mol H2O/m2 leaf/s)

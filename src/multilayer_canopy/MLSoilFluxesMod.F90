@@ -38,14 +38,11 @@ contains
     real(r8) :: gws                           ! Soil conductance for water vapor (mol H2O/m2/s)
     real(r8) :: gw                            ! Total conductance for water vapor (mol H2O/m2/s)
     real(r8) :: esat                          ! Saturation vapor pressure (Pa)
-    real(r8) :: desat                         ! Derivative of saturation vapor pressure (Pa/K)
+    real(r8) :: desat                         ! Temperature derivative of saturation vapor pressure (Pa/K)
     real(r8) :: qsat                          ! Saturation vapor pressure of air (mol/mol)
     real(r8) :: dqsat                         ! Temperature derivative of saturation vapor pressure (mol/mol/K)
     real(r8) :: num1, num2, num3, num4, den   ! Intermediate terms
     real(r8) :: err                           ! Surface energy imbalance (W/m2)
-
-    real(r8) ::  shsoi_inst(1), etsoi_inst(1)
-    common /xxx/ shsoi_inst, etsoi_inst
     !---------------------------------------------------------------------
 
     associate ( &
@@ -109,7 +106,7 @@ contains
     ! Soil heat flux
 
     gsoi(p) = soil_tk(p) * (tg(p) - soil_t(p)) / soil_dz(p)
-       
+
     ! Error check
 
     err = rnsoi(p) - shsoi(p) - lhsoi(p) - gsoi(p)
@@ -120,10 +117,6 @@ contains
     ! Water vapor flux: W/m2 -> mol H2O/m2/s
 
     etsoi(p) = lhsoi(p) / lambda
-
-    ! DEBUG
-    shsoi_inst(p) = shsoi(p)
-    etsoi_inst(p) = etsoi(p)
 
     end associate
   end subroutine SoilFluxes

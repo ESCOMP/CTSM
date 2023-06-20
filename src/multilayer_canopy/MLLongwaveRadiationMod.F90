@@ -7,13 +7,18 @@ module MLLongwaveRadiationMod
   ! !USES:
   use abortutils, only : endrun
   use clm_varctl, only : iulog
+  use decompMod, only : bounds_type
   use shr_kind_mod, only : r8 => shr_kind_r8
+  use MLCanopyFluxesType, only : mlcanopy_type
   !
   ! !PUBLIC TYPES:
   implicit none
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: LongwaveRadiation
+  public :: LongwaveRadiation     ! Main driver for radiative transfer
+  !
+  ! !PRIVATE MEMBER FUNCTIONS:
+  private :: Norman               ! Norman radiative transfer
   !-----------------------------------------------------------------------
 
 contains
@@ -22,11 +27,36 @@ contains
   subroutine LongwaveRadiation (bounds, num_filter, filter, mlcanopy_inst)
     !
     ! !DESCRIPTION:
+    ! Longwave radiation transfer through canopy
+    !
+    ! !USES:
+    use MLclm_varctl, only : longwave_type
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_filter           ! Number of patches in filter
+    integer, intent(in) :: filter(:)            ! Patch filter
+    type(mlcanopy_type), intent(inout) :: mlcanopy_inst
+    !---------------------------------------------------------------------
+
+    select case (longwave_type)
+    case (1)
+       call Norman (bounds, num_filter, filter, mlcanopy_inst)
+    case default
+       call endrun (msg=' ERROR: LongwaveRadiation: longwave_type not valid')
+    end select
+
+  end subroutine LongwaveRadiation
+
+  !-----------------------------------------------------------------------
+  subroutine Norman (bounds, num_filter, filter, mlcanopy_inst)
+    !
+    ! !DESCRIPTION:
     ! Longwave radiation transfer through canopy using Norman (1979)
     !
     ! !USES:
     use clm_varcon, only : sb
-    use decompMod, only : bounds_type
     use PatchType, only : patch
     use pftconMod, only : pftcon
     use MLclm_varcon, only : emg
@@ -64,15 +94,13 @@ contains
     real(r8) :: ctri(neq), dtri(neq)            ! Entries in tridiagonal matrix
     real(r8) :: utri(neq)                       ! Tridiagonal solution
     real(r8) :: lwabs                           ! Absorbed longwave flux (W/m2 ground)
-    real(r8) :: lwup_layer(bounds%begp:bounds%endp,0:nlevmlcan) ! Upward longwave flux above canopy layer (W/m2 ground)
-    real(r8) :: lwdn_layer(bounds%begp:bounds%endp,0:nlevmlcan) ! Downward longwave flux onto canopy layer (W/m2 ground)
     !---------------------------------------------------------------------
 
     associate ( &
                                                    ! *** Input ***
-    emleaf   => pftcon%emleaf                 , &  ! CLM (new): Leaf emissivity (-)
+    emleaf   => pftcon%emleaf                 , &  ! CLMml: Leaf emissivity (-)
     lwsky    => mlcanopy_inst%lwsky_forcing   , &  ! Atmospheric longwave radiation (W/m2)
-    ncan     => mlcanopy_inst%ncan_canopy     , &  ! Number of layers
+    ncan     => mlcanopy_inst%ncan_canopy     , &  ! Number of aboveground layers
     ntop     => mlcanopy_inst%ntop_canopy     , &  ! Index for top leaf layer
     nbot     => mlcanopy_inst%nbot_canopy     , &  ! Index for bottom leaf layer
     tg       => mlcanopy_inst%tg_soil         , &  ! Soil surface temperature (K)
@@ -84,7 +112,9 @@ contains
     lwup     => mlcanopy_inst%lwup_canopy     , &  ! Upward longwave radiation above canopy (W/m2)
     lwveg    => mlcanopy_inst%lwveg_canopy    , &  ! Absorbed longwave radiation: vegetation (W/m2)
     lwsoi    => mlcanopy_inst%lwsoi_soil      , &  ! Absorbed longwave radiation: ground (W/m2)
-    lwleaf   => mlcanopy_inst%lwleaf_leaf       &  ! Leaf absorbed longwave radiation (W/m2 leaf)
+    lwleaf   => mlcanopy_inst%lwleaf_leaf     , &  ! Leaf absorbed longwave radiation (W/m2 leaf)
+    lwupw    => mlcanopy_inst%lwupw_profile   , &  ! Upward longwave flux above canopy layer (W/m2)
+    lwdwn    => mlcanopy_inst%lwdwn_profile     &  ! Downward longwave flux above canopy layer (W/m2)
     )
 
     do fp = 1, num_filter
@@ -92,12 +122,12 @@ contains
 
        ! Zero out radiative fluxes for all layers
 
-       lwup_layer(p,0) = 0._r8
-       lwdn_layer(p,0) = 0._r8
+       lwupw(p,0) = 0._r8
+       lwdwn(p,0) = 0._r8
 
        do ic = 1, ncan(p)
-          lwup_layer(p,ic) = 0._r8
-          lwdn_layer(p,ic) = 0._r8
+          lwupw(p,ic) = 0._r8
+          lwdwn(p,ic) = 0._r8
           lwleaf(p,ic,isun) = 0._r8
           lwleaf(p,ic,isha) = 0._r8
        end do
@@ -111,12 +141,6 @@ contains
 
        rho = omega 
        tau = 0._r8
-
-       ! Terms for longwave radiation reflected and transmitted by a layer:
-       ! intercepted radiation is both reflected and transmitted
-
-!      rho = omega * 0.5_r8
-!      tau = omega * 0.5_r8
 
        ! Emitted longwave radiation is weighted average of sunlit and shaded leaves
 
@@ -213,32 +237,32 @@ contains
 
        call tridiag (atri, btri, ctri, dtri, utri, m)
 
-       ! Now copy the solution (utri) to the upward (lwup_layer) and downward (lwdn_layer)
+       ! Now copy the solution (utri) to the upward (lwupw) and downward (lwdwn)
        ! fluxes for each layer:
-       ! lwup_layer = Upward longwave flux above layer
-       ! lwdn_layer = Downward longwave flux onto layer
+       ! lwupw = Upward longwave flux above layer
+       ! lwdwn = Downward longwave flux onto layer
 
        m = 0
 
        ! Soil fluxes
 
        m = m + 1
-       lwup_layer(p,0) = utri(m)
+       lwupw(p,0) = utri(m)
        m = m + 1
-       lwdn_layer(p,0) = utri(m)
+       lwdwn(p,0) = utri(m)
 
        ! Leaf layer fluxes
 
        do ic = nbot(p), ntop(p)
           m = m + 1
-          lwup_layer(p,ic) = utri(m)
+          lwupw(p,ic) = utri(m)
           m = m + 1
-          lwdn_layer(p,ic) = utri(m)
+          lwdwn(p,ic) = utri(m)
        end do
 
        ! Absorbed longwave radiation for ground (soil)
 
-       lwsoi(p) = lwdn_layer(p,0) - lwup_layer(p,0)
+       lwsoi(p) = lwdwn(p,0) - lwupw(p,0)
 
        ! Leaf layer fluxes
 
@@ -249,14 +273,15 @@ contains
           ! Absorbed longwave radiation for layer. Note special case for first
           ! leaf layer, where the upward flux from below is from the ground.
           ! The ground is ic=0, but nbot-1 will not equal 0 if there are lower
-          ! canopy layers without leaves.
+          ! canopy layers without leaves. This coding accommodates open
+          ! layers beneath the bottom of the canopy.
 
           if (ic == nbot(p)) then
              icm1 = 0
           else
              icm1 = ic - 1
           end if
-          lwabs = emleaf(patch%itype(p)) * (lwdn_layer(p,ic)+lwup_layer(p,icm1)) * (1._r8 - td(p,ic)) &
+          lwabs = emleaf(patch%itype(p)) * (lwdwn(p,ic)+lwupw(p,icm1)) * (1._r8 - td(p,ic)) &
                 - 2._r8 * lw_source(ic)
           lwleaf(p,ic, isun) = lwabs / dpai(p,ic)
           lwleaf(p,ic, isha) = lwabs / dpai(p,ic)
@@ -269,19 +294,19 @@ contains
 
        ! Canopy emitted longwave radiation
 
-       lwup(p) = lwup_layer(p,ntop(p))
+       lwup(p) = lwupw(p,ntop(p))
 
        ! Conservation check for total radiation balance: absorbed = incoming - outgoing
 
        sumabs = lwsky(p) - lwup(p)
        err = sumabs - (lwveg(p) + lwsoi(p))
        if (abs(err) > 1.e-03_r8) then
-          call endrun (msg='ERROR: LongwaveRadiation: total longwave conservation error')
+          call endrun (msg='ERROR: Norman: total longwave conservation error')
        end if
 
     end do
 
     end associate
-  end subroutine LongwaveRadiation
+  end subroutine Norman
 
 end module MLLongwaveRadiationMod

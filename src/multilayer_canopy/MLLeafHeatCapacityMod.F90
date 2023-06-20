@@ -50,7 +50,7 @@ contains
     associate ( &
                                                  ! *** Input ***
     slatop    => pftcon%slatop              , &  ! CLM: Specific leaf area at top of canopy (m2/gC)
-    ncan      => mlcanopy_inst%ncan_canopy  , &  ! Number of layers
+    ncan      => mlcanopy_inst%ncan_canopy  , &  ! Number of aboveground layers
     dpai      => mlcanopy_inst%dpai_profile , &  ! Canopy layer plant area index (m2/m2)
                                                  ! *** Output ***
     cpleaf    => mlcanopy_inst%cpleaf_profile &  ! Canopy layer leaf heat capacity (J/m2 leaf/K)

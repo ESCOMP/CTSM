@@ -33,7 +33,8 @@ module MLCanopyFluxesType
 
     ! Vegetation input variables: dimension is (patch)
 
-    real(r8), pointer :: ztop_canopy(:)          ! Canopy height (m)
+    real(r8), pointer :: ztop_canopy(:)          ! Canopy foliage top height (m)
+    real(r8), pointer :: zbot_canopy(:)          ! Canopy foliage bottom height (m)
     real(r8), pointer :: lai_canopy(:)           ! Leaf area index of canopy (m2/m2)
     real(r8), pointer :: sai_canopy(:)           ! Stem area index of canopy (m2/m2)
     real(r8), pointer :: root_biomass_canopy(:)  ! Fine root biomass (g biomass / m2)
@@ -86,10 +87,35 @@ module MLCanopyFluxesType
     real(r8), pointer :: etveg_canopy(:)         ! Water vapor flux: vegetation (mol H2O/m2/s)
     real(r8), pointer :: etvegsun_canopy(:)      ! Water vapor flux: sunlit canopy (mol H2O/m2/s)
     real(r8), pointer :: etvegsha_canopy(:)      ! Water vapor flux: shaded canopy (mol H2O/m2/s)
+    real(r8), pointer :: trveg_canopy(:)         ! Water vapor flux: transpiration (mol H2O/m2/s)
+    real(r8), pointer :: evveg_canopy(:)         ! Water vapor flux: canopy evaporation (mol H2O/m2/s)
 
     real(r8), pointer :: gppveg_canopy(:)        ! Gross primary production: vegetation (umol CO2/m2/s)
     real(r8), pointer :: gppvegsun_canopy(:)     ! Gross primary production: sunlit canopy (umol CO2/m2/s)
     real(r8), pointer :: gppvegsha_canopy(:)     ! Gross primary production: shaded canopy (umol CO2/m2/s)
+
+    real(r8), pointer :: vcmax25veg_canopy(:)    ! Vcmax at 25C: total canopy (umol/m2/s)
+    real(r8), pointer :: vcmax25sun_canopy(:)    ! Vcmax at 25C: sunlit canopy (umol/m2/s)
+    real(r8), pointer :: vcmax25sha_canopy(:)    ! Vcmax at 25C: shaded canopy (umol/m2/s)
+
+    real(r8), pointer :: gsveg_canopy(:)         ! Stomatal conductance: canopy (mol H2O/m2/s)
+    real(r8), pointer :: gsvegsun_canopy(:)      ! Stomatal conductance: sunlit canopy (mol H2O/m2/s)
+    real(r8), pointer :: gsvegsha_canopy(:)      ! Stomatal conductance: shaded canopy (mol H2O/m2/s)
+
+    real(r8), pointer :: windveg_canopy(:)       ! Wind speed: canopy (m/s)
+    real(r8), pointer :: windvegsun_canopy(:)    ! Wind speed: sunlit canopy (m/s)
+    real(r8), pointer :: windvegsha_canopy(:)    ! Wind speed: shaded canopy (m/s)
+
+    real(r8), pointer :: tlveg_canopy(:)         ! Leaf temperature: canopy (K)
+    real(r8), pointer :: tlvegsun_canopy(:)      ! Leaf temperature: sunlit canopy (K)
+    real(r8), pointer :: tlvegsha_canopy(:)      ! Leaf temperature: shaded canopy (K)
+
+    real(r8), pointer :: taveg_canopy(:)         ! Air temperature: canopy (K)
+    real(r8), pointer :: tavegsun_canopy(:)      ! Air temperature: sunlit canopy (K)
+    real(r8), pointer :: tavegsha_canopy(:)      ! Air temperature: shaded canopy (K)
+
+    real(r8), pointer :: laisun_canopy(:)        ! Canopy plant area index (lai+sai): sunlit canopy (m2/m2)
+    real(r8), pointer :: laisha_canopy(:)        ! Canopy plant area index (lai+sai): shaded canopy (m2/m2)
 
     real(r8), pointer :: albcan_canopy(:,:)      ! Albedo above canopy (-) [for numrad wavebands]
     real(r8), pointer :: lwup_canopy(:)          ! Upward longwave radiation above canopy (W/m2)
@@ -150,14 +176,14 @@ module MLCanopyFluxesType
 
     ! Soil moisture variables: dimension is (patch)
 
-    real(r8), pointer :: btran_soil(:)           ! Soil wetness factor for stomatal conductance (-)
+    real(r8), pointer :: btran_soil(:)           ! Soil wetness factor for photosynthesis (-)
     real(r8), pointer :: psis_soil(:)            ! Weighted soil water potential (MPa)
     real(r8), pointer :: rsoil_soil(:)           ! Soil hydraulic resistance (MPa.s.m2/mmol H2O)
     real(r8), pointer :: soil_et_loss_soil(:,:)  ! Fraction of total transpiration from each soil layer (-) [for nlevgrnd layers]
 
     ! Canopy layer indices: dimension is (patch)
 
-    integer , pointer :: ncan_canopy(:)          ! Number of layers
+    integer , pointer :: ncan_canopy(:)          ! Number of aboveground layers
     integer , pointer :: ntop_canopy(:)          ! Index for top leaf layer
     integer , pointer :: nbot_canopy(:)          ! Index for bottom leaf layer
 
@@ -168,8 +194,8 @@ module MLCanopyFluxesType
     real(r8), pointer :: dlai_profile(:,:)       ! Canopy layer leaf area index (m2/m2)
     real(r8), pointer :: dsai_profile(:,:)       ! Canopy layer stem area index (m2/m2)
     real(r8), pointer :: dpai_profile(:,:)       ! Canopy layer plant area index (m2/m2)
-    real(r8), pointer :: sumpai_profile(:,:)     ! Canopy layer cumulative plant area index (m2/m2)
     real(r8), pointer :: zs_profile(:,:)         ! Canopy layer height for scalar concentration and source (m)
+    real(r8), pointer :: zw_profile(:,:)         ! Canopy height at interface between two adjacent layers (m)
     real(r8), pointer :: dz_profile(:,:)         ! Canopy layer thickness (m)
 
     real(r8), pointer :: vcmax25_profile(:,:)    ! Canopy layer leaf maximum carboxylation rate at 25C (umol/m2/s)
@@ -179,8 +205,15 @@ module MLCanopyFluxesType
     real(r8), pointer :: cpleaf_profile(:,:)     ! Canopy layer leaf heat capacity (J/m2 leaf/K)
 
     real(r8), pointer :: fracsun_profile(:,:)    ! Canopy layer sunlit fraction (-)
+    real(r8), pointer :: kb_profile(:,:)         ! Direct beam extinction coefficient (-)
     real(r8), pointer :: tb_profile(:,:)         ! Canopy layer transmittance of direct beam radiation (-)
     real(r8), pointer :: td_profile(:,:)         ! Canopy layer transmittance of diffuse radiation (-)
+    real(r8), pointer :: tbi_profile(:,:)        ! Cumulative transmittance of direct beam onto canopy layer (-)
+    real(r8), pointer :: swbeam_profile(:,:,:)   ! Direct beam solar flux above canopy layer (W/m2) [for numrad wavebands]
+    real(r8), pointer :: swupw_profile(:,:,:)    ! Upward diffuse solar flux above canopy layer (W/m2) [for numrad wavebands]
+    real(r8), pointer :: swdwn_profile(:,:,:)    ! Downward diffuse solar flux above canopy layer (W/m2) [for numrad wavebands]
+    real(r8), pointer :: lwupw_profile(:,:)      ! Upward longwave flux above canopy layer (W/m2)
+    real(r8), pointer :: lwdwn_profile(:,:)      ! Downward longwave flux above canopy layer (W/m2)
 
     real(r8), pointer :: swsrc_profile(:,:,:)    ! Canopy layer source/sink flux: absorbed solar radiation (W/m2) [for numrad wavebands]
     real(r8), pointer :: lwsrc_profile(:,:)      ! Canopy layer source/sink flux: absorbed longwave radiation (W/m2)
@@ -189,6 +222,8 @@ module MLCanopyFluxesType
     real(r8), pointer :: shsrc_profile(:,:)      ! Canopy layer source/sink flux: sensible heat (W/m2)
     real(r8), pointer :: lhsrc_profile(:,:)      ! Canopy layer source/sink flux: latent heat (W/m2)
     real(r8), pointer :: etsrc_profile(:,:)      ! Canopy layer source/sink flux: water vapor (mol H2O/m2/s)
+    real(r8), pointer :: trsrc_profile(:,:)      ! Canopy layer source/sink flux: transpiration water vapor (mol H2O/m2/s)
+    real(r8), pointer :: evsrc_profile(:,:)      ! Canopy layer source/sink flux: evaporation water vapor (mol H2O/m2/s)
     real(r8), pointer :: fco2src_profile(:,:)    ! Canopy layer source/sink flux: CO2 (umol CO2/m2/s)
 
     real(r8), pointer :: wind_profile(:,:)       ! Canopy layer wind speed (m/s)
@@ -198,13 +233,31 @@ module MLCanopyFluxesType
     real(r8), pointer :: tair_bef_profile(:,:)   ! Canopy layer air temperature for previous timestep (K)
     real(r8), pointer :: eair_bef_profile(:,:)   ! Canopy layer vapor pressure for previous timestep (Pa)
     real(r8), pointer :: cair_bef_profile(:,:)   ! Canopy layer atmospheric CO2 for previous timestep (umol/mol)
+    real(r8), pointer :: wind_data_profile(:,:)  ! Canopy layer wind speed FROM DATASET (m/s)
+    real(r8), pointer :: tair_data_profile(:,:)  ! Canopy layer air temperature FROM DATASET (K)
+    real(r8), pointer :: eair_data_profile(:,:)  ! Canopy layer vapor pressure FROM DATASET (Pa)
 
     real(r8), pointer :: shair_profile(:,:)      ! Canopy layer air sensible heat flux (W/m2)
     real(r8), pointer :: etair_profile(:,:)      ! Canopy layer air water vapor flux (mol H2O/m2/s)
     real(r8), pointer :: stair_profile(:,:)      ! Canopy layer air storage heat flux (W/m2)
+    real(r8), pointer :: mflx_profile(:,:)       ! Canopy layer momentum flux (m2/s2)
     real(r8), pointer :: gac_profile(:,:)        ! Canopy layer aerodynamic conductance for scalars (mol/m2/s)
 
-    real(r8), pointer :: lwpveg_profile(:,:)     ! Canopy layer leaf water potential (MPa)
+    real(r8), pointer :: swleaf_mean_profile(:,:,:) ! Canopy layer weighted mean: leaf absorbed solar radiation (W/m2 leaf)
+    real(r8), pointer :: lwleaf_mean_profile(:,:)   ! Canopy layer weighted mean: leaf absorbed longwave radiation (W/m2 leaf)
+    real(r8), pointer :: rnleaf_mean_profile(:,:)   ! Canopy layer weighted mean: leaf net radiation (W/m2 leaf)
+    real(r8), pointer :: stleaf_mean_profile(:,:)   ! Canopy layer weighted mean: leaf storage heat flux (W/m2 leaf)
+    real(r8), pointer :: shleaf_mean_profile(:,:)   ! Canopy layer weighted mean: leaf sensible heat flux (W/m2 leaf)
+    real(r8), pointer :: lhleaf_mean_profile(:,:)   ! Canopy layer weighted mean: leaf latent heat flux (W/m2 leaf)
+    real(r8), pointer :: etleaf_mean_profile(:,:)   ! Canopy layer weighted mean: leaf water vapor flux (mol H2O/m2 leaf/s)
+    real(r8), pointer :: trleaf_mean_profile(:,:)   ! Canopy layer weighted mean: leaf transpiration flux (mol H2O/m2 leaf/s)
+    real(r8), pointer :: evleaf_mean_profile(:,:)   ! Canopy layer weighted mean: leaf evaporation flux (mol H2O/m2 leaf/s)
+    real(r8), pointer :: fco2_mean_profile(:,:)     ! Canopy layer weighted mean: leaf net photosynthesis (umol CO2/m2 leaf/s)
+    real(r8), pointer :: apar_mean_profile(:,:)     ! Canopy layer weighted mean: absorbed PAR (umol photon/m2 leaf/s)
+    real(r8), pointer :: gs_mean_profile(:,:)       ! Canopy layer weighted mean: stomatal conductance (mol H2O/m2 leaf/s)
+    real(r8), pointer :: tleaf_mean_profile(:,:)    ! Canopy layer weighted mean: leaf temperature (K)
+    real(r8), pointer :: lwp_mean_profile(:,:)      ! Canopy layer weighted mean: leaf water potential (MPa)
+
     real(r8), pointer :: lsc_profile(:,:)        ! Canopy layer leaf-specific conductance (mmol H2O/m2 leaf/s/MPa)
     real(r8), pointer :: h2ocan_profile(:,:)     ! Canopy layer intercepted water (kg H2O/m2)
     real(r8), pointer :: fwet_profile(:,:)       ! Canopy layer fraction of plant area index that is wet
@@ -214,6 +267,7 @@ module MLCanopyFluxesType
 
     real(r8), pointer :: tleaf_leaf(:,:,:)       ! Leaf temperature (K)
     real(r8), pointer :: tleaf_bef_leaf(:,:,:)   ! Leaf temperature for previous timestep (K)
+    real(r8), pointer :: tleaf_hist_leaf(:,:,:)  ! Leaf temperature (not sun/shade average) for history files (K)
     real(r8), pointer :: swleaf_leaf(:,:,:,:)    ! Leaf absorbed solar radiation (W/m2 leaf) [for numrad wavebands]
     real(r8), pointer :: lwleaf_leaf(:,:,:)      ! Leaf absorbed longwave radiation (W/m2 leaf)
     real(r8), pointer :: rnleaf_leaf(:,:,:)      ! Leaf net radiation (W/m2 leaf)
@@ -226,6 +280,11 @@ module MLCanopyFluxesType
     real(r8), pointer :: gbh_leaf(:,:,:)         ! Leaf boundary layer conductance: heat (mol/m2 leaf/s)
     real(r8), pointer :: gbv_leaf(:,:,:)         ! Leaf boundary layer conductance: H2O (mol H2O/m2 leaf/s)
     real(r8), pointer :: gbc_leaf(:,:,:)         ! Leaf boundary layer conductance: CO2 (mol CO2/m2 leaf/s)
+
+    real(r8), pointer :: vcmax25_leaf(:,:,:)     ! Leaf maximum carboxylation rate at 25C (umol/m2/s)
+    real(r8), pointer :: jmax25_leaf(:,:,:)      ! Leaf C3 maximum electron transport rate at 25C (umol/m2/s)
+    real(r8), pointer :: kp25_leaf(:,:,:)        ! Leaf C4 initial slope of CO2 response curve at 25C (mol/m2/s)
+    real(r8), pointer :: rd25_leaf(:,:,:)        ! Leaf respiration rate at 25C (umol/m2/s)
 
     real(r8), pointer :: kc_leaf(:,:,:)          ! Leaf Michaelis-Menten constant for CO2 (umol/mol)
     real(r8), pointer :: ko_leaf(:,:,:)          ! Leaf Michaelis-Menten constant for O2 (mmol/mol)
@@ -241,16 +300,18 @@ module MLCanopyFluxesType
     real(r8), pointer :: ac_leaf(:,:,:)          ! Leaf rubisco-limited gross photosynthesis (umol CO2/m2 leaf/s)
     real(r8), pointer :: aj_leaf(:,:,:)          ! Leaf RuBP regeneration-limited gross photosynthesis (umol CO2/m2 leaf/s)
     real(r8), pointer :: ap_leaf(:,:,:)          ! Leaf product-limited (C3) or CO2-limited (C4) gross photosynthesis (umol CO2/m2 leaf/s)
-    real(r8), pointer :: ag_leaf(:,:,:)          ! Leaf gross photosynthesis (umol CO2/m2 leaf/s)
-    real(r8), pointer :: an_leaf(:,:,:)          ! Leaf net photosynthesis (umol CO2/m2 leaf/s)
+    real(r8), pointer :: agross_leaf(:,:,:)      ! Leaf gross photosynthesis (umol CO2/m2 leaf/s)
+    real(r8), pointer :: anet_leaf(:,:,:)        ! Leaf net photosynthesis (umol CO2/m2 leaf/s)
     real(r8), pointer :: rd_leaf(:,:,:)          ! Leaf respiration rate (umol CO2/m2 leaf/s)
     real(r8), pointer :: ci_leaf(:,:,:)          ! Leaf intercellular CO2 (umol/mol)
     real(r8), pointer :: cs_leaf(:,:,:)          ! Leaf surface CO2 (umol/mol)
 
-    real(r8), pointer :: lwpleaf_leaf(:,:,:)     ! Leaf water potential (MPa)
+    real(r8), pointer :: lwp_leaf(:,:,:)         ! Leaf water potential (MPa)
+    real(r8), pointer :: lwp_hist_leaf(:,:,:)    ! Leaf water potential (not sun/shade average) for history files (MPa)
     real(r8), pointer :: hs_leaf(:,:,:)          ! Leaf fractional humidity at leaf surface (-)
     real(r8), pointer :: vpd_leaf(:,:,:)         ! Leaf vapor pressure deficit (Pa)
     real(r8), pointer :: gs_leaf(:,:,:)          ! Leaf stomatal conductance (mol H2O/m2 leaf/s)
+    real(r8), pointer :: gspot_leaf(:,:,:)       ! Leaf stomatal conductance without water stress (mol H2O/m2 leaf/s)
     real(r8), pointer :: alphapsn_leaf(:,:,:)    ! Leaf 13C fractionation factor for photosynthesis (-)
 
   contains
@@ -303,6 +364,7 @@ contains
     ! Vegetation input variables
 
     allocate (this%ztop_canopy         (begp:endp))                              ; this%ztop_canopy         (:)       = spval
+    allocate (this%zbot_canopy         (begp:endp))                              ; this%zbot_canopy         (:)       = spval
     allocate (this%lai_canopy          (begp:endp))                              ; this%lai_canopy          (:)       = spval
     allocate (this%sai_canopy          (begp:endp))                              ; this%sai_canopy          (:)       = spval
     allocate (this%root_biomass_canopy (begp:endp))                              ; this%root_biomass_canopy (:)       = spval
@@ -351,9 +413,28 @@ contains
     allocate (this%etveg_canopy        (begp:endp))                              ; this%etveg_canopy        (:)       = spval
     allocate (this%etvegsun_canopy     (begp:endp))                              ; this%etvegsun_canopy     (:)       = spval
     allocate (this%etvegsha_canopy     (begp:endp))                              ; this%etvegsha_canopy     (:)       = spval
+    allocate (this%trveg_canopy        (begp:endp))                              ; this%trveg_canopy        (:)       = spval
+    allocate (this%evveg_canopy        (begp:endp))                              ; this%evveg_canopy        (:)       = spval
     allocate (this%gppveg_canopy       (begp:endp))                              ; this%gppveg_canopy       (:)       = spval
     allocate (this%gppvegsun_canopy    (begp:endp))                              ; this%gppvegsun_canopy    (:)       = spval
     allocate (this%gppvegsha_canopy    (begp:endp))                              ; this%gppvegsha_canopy    (:)       = spval
+    allocate (this%vcmax25veg_canopy   (begp:endp))                              ; this%vcmax25veg_canopy   (:)       = spval
+    allocate (this%vcmax25sun_canopy   (begp:endp))                              ; this%vcmax25sun_canopy   (:)       = spval
+    allocate (this%vcmax25sha_canopy   (begp:endp))                              ; this%vcmax25sha_canopy   (:)       = spval
+    allocate (this%gsveg_canopy        (begp:endp))                              ; this%gsveg_canopy        (:)       = spval
+    allocate (this%gsvegsun_canopy     (begp:endp))                              ; this%gsvegsun_canopy     (:)       = spval
+    allocate (this%gsvegsha_canopy     (begp:endp))                              ; this%gsvegsha_canopy     (:)       = spval
+    allocate (this%windveg_canopy      (begp:endp))                              ; this%windveg_canopy      (:)       = spval
+    allocate (this%windvegsun_canopy   (begp:endp))                              ; this%windvegsun_canopy   (:)       = spval
+    allocate (this%windvegsha_canopy   (begp:endp))                              ; this%windvegsha_canopy   (:)       = spval
+    allocate (this%tlveg_canopy        (begp:endp))                              ; this%tlveg_canopy        (:)       = spval
+    allocate (this%tlvegsun_canopy     (begp:endp))                              ; this%tlvegsun_canopy     (:)       = spval
+    allocate (this%tlvegsha_canopy     (begp:endp))                              ; this%tlvegsha_canopy     (:)       = spval
+    allocate (this%taveg_canopy        (begp:endp))                              ; this%taveg_canopy        (:)       = spval
+    allocate (this%tavegsun_canopy     (begp:endp))                              ; this%tavegsun_canopy     (:)       = spval
+    allocate (this%tavegsha_canopy     (begp:endp))                              ; this%tavegsha_canopy     (:)       = spval
+    allocate (this%laisun_canopy       (begp:endp))                              ; this%laisun_canopy       (:)       = spval
+    allocate (this%laisha_canopy       (begp:endp))                              ; this%laisha_canopy       (:)       = spval
     allocate (this%albcan_canopy       (begp:endp,1:numrad))                     ; this%albcan_canopy       (:,:)     = spval
     allocate (this%lwup_canopy         (begp:endp))                              ; this%lwup_canopy         (:)       = spval
     allocate (this%rnet_canopy         (begp:endp))                              ; this%rnet_canopy         (:)       = spval
@@ -430,8 +511,8 @@ contains
     allocate (this%dlai_profile        (begp:endp,1:nlevmlcan))                  ; this%dlai_profile        (:,:)     = spval
     allocate (this%dsai_profile        (begp:endp,1:nlevmlcan))                  ; this%dsai_profile        (:,:)     = spval
     allocate (this%dpai_profile        (begp:endp,1:nlevmlcan))                  ; this%dpai_profile        (:,:)     = spval
-    allocate (this%sumpai_profile      (begp:endp,1:nlevmlcan))                  ; this%sumpai_profile      (:,:)     = spval
     allocate (this%zs_profile          (begp:endp,1:nlevmlcan))                  ; this%zs_profile          (:,:)     = spval
+    allocate (this%zw_profile          (begp:endp,0:nlevmlcan))                  ; this%zw_profile          (:,:)     = spval
     allocate (this%dz_profile          (begp:endp,1:nlevmlcan))                  ; this%dz_profile          (:,:)     = spval
 
     allocate (this%vcmax25_profile     (begp:endp,1:nlevmlcan))                  ; this%vcmax25_profile     (:,:)     = spval
@@ -441,8 +522,15 @@ contains
     allocate (this%cpleaf_profile      (begp:endp,1:nlevmlcan))                  ; this%cpleaf_profile      (:,:)     = spval
 
     allocate (this%fracsun_profile     (begp:endp,1:nlevmlcan))                  ; this%fracsun_profile     (:,:)     = spval
+    allocate (this%kb_profile          (begp:endp,1:nlevmlcan))                  ; this%kb_profile          (:,:)     = spval
     allocate (this%tb_profile          (begp:endp,1:nlevmlcan))                  ; this%tb_profile          (:,:)     = spval
     allocate (this%td_profile          (begp:endp,1:nlevmlcan))                  ; this%td_profile          (:,:)     = spval
+    allocate (this%tbi_profile         (begp:endp,0:nlevmlcan))                  ; this%tbi_profile         (:,:)     = spval
+    allocate (this%swbeam_profile      (begp:endp,0:nlevmlcan,1:numrad))         ; this%swbeam_profile      (:,:,:)   = spval
+    allocate (this%swupw_profile       (begp:endp,0:nlevmlcan,1:numrad))         ; this%swupw_profile       (:,:,:)   = spval
+    allocate (this%swdwn_profile       (begp:endp,0:nlevmlcan,1:numrad))         ; this%swdwn_profile       (:,:,:)   = spval
+    allocate (this%lwupw_profile       (begp:endp,0:nlevmlcan))                  ; this%lwupw_profile       (:,:)     = spval
+    allocate (this%lwdwn_profile       (begp:endp,0:nlevmlcan))                  ; this%lwdwn_profile       (:,:)     = spval
 
     allocate (this%swsrc_profile       (begp:endp,1:nlevmlcan,1:numrad))         ; this%swsrc_profile       (:,:,:)   = spval
     allocate (this%lwsrc_profile       (begp:endp,1:nlevmlcan))                  ; this%lwsrc_profile       (:,:)     = spval
@@ -451,6 +539,8 @@ contains
     allocate (this%shsrc_profile       (begp:endp,1:nlevmlcan))                  ; this%shsrc_profile       (:,:)     = spval
     allocate (this%lhsrc_profile       (begp:endp,1:nlevmlcan))                  ; this%lhsrc_profile       (:,:)     = spval
     allocate (this%etsrc_profile       (begp:endp,1:nlevmlcan))                  ; this%etsrc_profile       (:,:)     = spval
+    allocate (this%trsrc_profile       (begp:endp,1:nlevmlcan))                  ; this%trsrc_profile       (:,:)     = spval
+    allocate (this%evsrc_profile       (begp:endp,1:nlevmlcan))                  ; this%evsrc_profile       (:,:)     = spval
     allocate (this%fco2src_profile     (begp:endp,1:nlevmlcan))                  ; this%fco2src_profile     (:,:)     = spval
 
     allocate (this%wind_profile        (begp:endp,1:nlevmlcan))                  ; this%wind_profile        (:,:)     = spval
@@ -460,13 +550,31 @@ contains
     allocate (this%tair_bef_profile    (begp:endp,1:nlevmlcan))                  ; this%tair_bef_profile    (:,:)     = spval
     allocate (this%eair_bef_profile    (begp:endp,1:nlevmlcan))                  ; this%eair_bef_profile    (:,:)     = spval
     allocate (this%cair_bef_profile    (begp:endp,1:nlevmlcan))                  ; this%cair_bef_profile    (:,:)     = spval
+    allocate (this%wind_data_profile   (begp:endp,1:nlevmlcan))                  ; this%wind_data_profile   (:,:)     = spval
+    allocate (this%tair_data_profile   (begp:endp,1:nlevmlcan))                  ; this%tair_data_profile   (:,:)     = spval
+    allocate (this%eair_data_profile   (begp:endp,1:nlevmlcan))                  ; this%eair_data_profile   (:,:)     = spval
 
     allocate (this%shair_profile       (begp:endp,1:nlevmlcan))                  ; this%shair_profile       (:,:)     = spval
     allocate (this%etair_profile       (begp:endp,1:nlevmlcan))                  ; this%etair_profile       (:,:)     = spval
     allocate (this%stair_profile       (begp:endp,1:nlevmlcan))                  ; this%stair_profile       (:,:)     = spval
+    allocate (this%mflx_profile        (begp:endp,1:nlevmlcan))                  ; this%mflx_profile        (:,:)     = spval
     allocate (this%gac_profile         (begp:endp,1:nlevmlcan))                  ; this%gac_profile         (:,:)     = spval
 
-    allocate (this%lwpveg_profile      (begp:endp,1:nlevmlcan))                  ; this%lwpveg_profile      (:,:)     = spval
+    allocate (this%swleaf_mean_profile (begp:endp,1:nlevmlcan,1:numrad))         ; this%swleaf_mean_profile (:,:,:)   = spval
+    allocate (this%lwleaf_mean_profile (begp:endp,1:nlevmlcan))                  ; this%lwleaf_mean_profile (:,:)     = spval
+    allocate (this%rnleaf_mean_profile (begp:endp,1:nlevmlcan))                  ; this%rnleaf_mean_profile (:,:)     = spval
+    allocate (this%stleaf_mean_profile (begp:endp,1:nlevmlcan))                  ; this%stleaf_mean_profile (:,:)     = spval
+    allocate (this%shleaf_mean_profile (begp:endp,1:nlevmlcan))                  ; this%shleaf_mean_profile (:,:)     = spval
+    allocate (this%lhleaf_mean_profile (begp:endp,1:nlevmlcan))                  ; this%lhleaf_mean_profile (:,:)     = spval
+    allocate (this%etleaf_mean_profile (begp:endp,1:nlevmlcan))                  ; this%etleaf_mean_profile (:,:)     = spval
+    allocate (this%trleaf_mean_profile (begp:endp,1:nlevmlcan))                  ; this%trleaf_mean_profile (:,:)     = spval
+    allocate (this%evleaf_mean_profile (begp:endp,1:nlevmlcan))                  ; this%evleaf_mean_profile (:,:)     = spval
+    allocate (this%fco2_mean_profile   (begp:endp,1:nlevmlcan))                  ; this%fco2_mean_profile   (:,:)     = spval
+    allocate (this%apar_mean_profile   (begp:endp,1:nlevmlcan))                  ; this%apar_mean_profile   (:,:)     = spval
+    allocate (this%gs_mean_profile     (begp:endp,1:nlevmlcan))                  ; this%gs_mean_profile     (:,:)     = spval
+    allocate (this%tleaf_mean_profile  (begp:endp,1:nlevmlcan))                  ; this%tleaf_mean_profile  (:,:)     = spval
+    allocate (this%lwp_mean_profile    (begp:endp,1:nlevmlcan))                  ; this%lwp_mean_profile    (:,:)     = spval
+
     allocate (this%lsc_profile         (begp:endp,1:nlevmlcan))                  ; this%lsc_profile         (:,:)     = spval
     allocate (this%h2ocan_profile      (begp:endp,1:nlevmlcan))                  ; this%h2ocan_profile      (:,:)     = spval
     allocate (this%fwet_profile        (begp:endp,1:nlevmlcan))                  ; this%fwet_profile        (:,:)     = spval
@@ -476,6 +584,7 @@ contains
 
     allocate (this%tleaf_leaf          (begp:endp,1:nlevmlcan,1:nleaf))          ; this%tleaf_leaf          (:,:,:)   = spval
     allocate (this%tleaf_bef_leaf      (begp:endp,1:nlevmlcan,1:nleaf))          ; this%tleaf_bef_leaf      (:,:,:)   = spval
+    allocate (this%tleaf_hist_leaf     (begp:endp,1:nlevmlcan,1:nleaf))          ; this%tleaf_hist_leaf     (:,:,:)   = spval
     allocate (this%swleaf_leaf         (begp:endp,1:nlevmlcan,1:nleaf,1:numrad)) ; this%swleaf_leaf         (:,:,:,:) = spval
     allocate (this%lwleaf_leaf         (begp:endp,1:nlevmlcan,1:nleaf))          ; this%lwleaf_leaf         (:,:,:)   = spval
     allocate (this%rnleaf_leaf         (begp:endp,1:nlevmlcan,1:nleaf))          ; this%rnleaf_leaf         (:,:,:)   = spval
@@ -488,6 +597,11 @@ contains
     allocate (this%gbh_leaf            (begp:endp,1:nlevmlcan,1:nleaf))          ; this%gbh_leaf            (:,:,:)   = spval
     allocate (this%gbv_leaf            (begp:endp,1:nlevmlcan,1:nleaf))          ; this%gbv_leaf            (:,:,:)   = spval
     allocate (this%gbc_leaf            (begp:endp,1:nlevmlcan,1:nleaf))          ; this%gbc_leaf            (:,:,:)   = spval
+
+    allocate (this%vcmax25_leaf        (begp:endp,1:nlevmlcan,1:nleaf))          ; this%vcmax25_leaf        (:,:,:)   = spval
+    allocate (this%jmax25_leaf         (begp:endp,1:nlevmlcan,1:nleaf))          ; this%jmax25_leaf         (:,:,:)   = spval
+    allocate (this%kp25_leaf           (begp:endp,1:nlevmlcan,1:nleaf))          ; this%kp25_leaf           (:,:,:)   = spval
+    allocate (this%rd25_leaf           (begp:endp,1:nlevmlcan,1:nleaf))          ; this%rd25_leaf           (:,:,:)   = spval
 
     allocate (this%kc_leaf             (begp:endp,1:nlevmlcan,1:nleaf))          ; this%kc_leaf             (:,:,:)   = spval
     allocate (this%ko_leaf             (begp:endp,1:nlevmlcan,1:nleaf))          ; this%ko_leaf             (:,:,:)   = spval
@@ -503,16 +617,18 @@ contains
     allocate (this%ac_leaf             (begp:endp,1:nlevmlcan,1:nleaf))          ; this%ac_leaf             (:,:,:)   = spval
     allocate (this%aj_leaf             (begp:endp,1:nlevmlcan,1:nleaf))          ; this%aj_leaf             (:,:,:)   = spval
     allocate (this%ap_leaf             (begp:endp,1:nlevmlcan,1:nleaf))          ; this%ap_leaf             (:,:,:)   = spval
-    allocate (this%ag_leaf             (begp:endp,1:nlevmlcan,1:nleaf))          ; this%ag_leaf             (:,:,:)   = spval
-    allocate (this%an_leaf             (begp:endp,1:nlevmlcan,1:nleaf))          ; this%an_leaf             (:,:,:)   = spval
+    allocate (this%agross_leaf         (begp:endp,1:nlevmlcan,1:nleaf))          ; this%agross_leaf         (:,:,:)   = spval
+    allocate (this%anet_leaf           (begp:endp,1:nlevmlcan,1:nleaf))          ; this%anet_leaf           (:,:,:)   = spval
     allocate (this%rd_leaf             (begp:endp,1:nlevmlcan,1:nleaf))          ; this%rd_leaf             (:,:,:)   = spval
     allocate (this%ci_leaf             (begp:endp,1:nlevmlcan,1:nleaf))          ; this%ci_leaf             (:,:,:)   = spval
     allocate (this%cs_leaf             (begp:endp,1:nlevmlcan,1:nleaf))          ; this%cs_leaf             (:,:,:)   = spval
 
-    allocate (this%lwpleaf_leaf        (begp:endp,1:nlevmlcan,1:nleaf))          ; this%lwpleaf_leaf        (:,:,:)   = spval
+    allocate (this%lwp_leaf            (begp:endp,1:nlevmlcan,1:nleaf))          ; this%lwp_leaf            (:,:,:)   = spval
+    allocate (this%lwp_hist_leaf       (begp:endp,1:nlevmlcan,1:nleaf))          ; this%lwp_hist_leaf       (:,:,:)   = spval
     allocate (this%hs_leaf             (begp:endp,1:nlevmlcan,1:nleaf))          ; this%hs_leaf             (:,:,:)   = spval
     allocate (this%vpd_leaf            (begp:endp,1:nlevmlcan,1:nleaf))          ; this%vpd_leaf            (:,:,:)   = spval
     allocate (this%gs_leaf             (begp:endp,1:nlevmlcan,1:nleaf))          ; this%gs_leaf             (:,:,:)   = spval
+    allocate (this%gspot_leaf          (begp:endp,1:nlevmlcan,1:nleaf))          ; this%gspot_leaf          (:,:,:)   = spval
     allocate (this%alphapsn_leaf       (begp:endp,1:nlevmlcan,1:nleaf))          ; this%alphapsn_leaf       (:,:,:)   = spval
 
   end subroutine InitAllocate
@@ -541,10 +657,10 @@ contains
          avgflag='A', long_name='Gross primary production', &
          ptr_patch=this%gppveg_canopy, set_lake=spval, set_urb=spval)
 
-    this%lwpveg_profile(begp:endp,1:nlevmlcan) = spval
+    this%lwp_mean_profile(begp:endp,1:nlevmlcan) = spval
     call hist_addfld2d (fname='LWP_ML', units='MPa', type2d='nlevmlcan', &
-         avgflag='A', long_name='Leaf water potential of canopy layer', &
-         ptr_patch=this%lwpveg_profile, set_lake=spval, set_urb=spval)
+         avgflag='A', long_name='Weighted maean leaf water potential of canopy layer', &
+         ptr_patch=this%lwp_mean_profile, set_lake=spval, set_urb=spval)
 
   end subroutine InitHistory
 
@@ -555,7 +671,7 @@ contains
     ! Cold-start initialization for multilayer canopy
     !
     ! !USES:
-    use MLclm_varpar, only : nlevmlcan
+    use MLclm_varpar, only : nlevmlcan, isun, isha
     !
     ! !ARGUMENTS:
     class(mlcanopy_type) :: this
@@ -575,7 +691,8 @@ contains
 
     do p = bounds%begp, bounds%endp
        do ic = 1, nlevmlcan
-          this%lwpveg_profile(p,ic) = -0.1_r8
+          this%lwp_leaf(p,ic,isun) = -0.1_r8
+          this%lwp_leaf(p,ic,isha) = -0.1_r8
           this%h2ocan_profile(p,ic) = 0._r8
        end do
     end do
@@ -611,10 +728,10 @@ contains
     ! Example for 2-d patch variable
     ! TODO bonan/slevis: Revisit this call. Doesn't build as written.
 
-!   call restartvar_2d(ncid=ncid, flag=flag, varname='lwp_ml', xtype=ncd_double,  &
+!   call restartvar(ncid=ncid, flag=flag, varname='lwp_ml', xtype=ncd_double,  &
 !      dim1name='pft', dim2name='nlevmlcan', switchdim=.true., &
 !      long_name='leaf water potential of canopy layer', units='MPa', &
-!      interpinic_flag='interp', readvar=readvar, data=this%lwpveg_profile)
+!      interpinic_flag='interp', readvar=readvar, data=this%lwp_mean_profile)
 
   end subroutine Restart
 

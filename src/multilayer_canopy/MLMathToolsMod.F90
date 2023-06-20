@@ -14,12 +14,16 @@ module MLMathToolsMod
   implicit none
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: hybrid             ! Solve for the root of a function using secant and Brent's methods
-  public :: zbrent             ! Use Brent's method to find the root of a function
-  public :: quadratic          ! Solve a quadratic equation for its two roots
-  public :: tridiag            ! Solve a tridiagonal system of equations
-  public :: beta_function      ! Evaluate the beta function at p and q: B(p,q)
-  public :: log_gamma_function ! Evaluate the log natural of the gamma function at x: ln(G(x))
+  public  :: hybrid                       ! Solve for the root of a function using secant and Brent's methods
+  public  :: zbrent                       ! Use Brent's method to find the root of a function
+  public  :: quadratic                    ! Solve a quadratic equation for its two roots
+  public  :: tridiag                      ! Solve a tridiagonal system of equations
+  public  :: tridiag_2eq                  ! Solve a tridiagonal system of equations with two coupled equations
+  public  :: log_gamma_function           ! Evaluate the log natural of the gamma function: ln(G(x))
+  public  :: beta_function                ! Evaluate the beta function: B(a,b)
+  public  :: beta_distribution_pdf        ! Evaluate the beta distribution PDF at x: f(x;a,b)
+  public  :: beta_distribution_cdf        ! Evaluate the beta distribution CDF at x: F(x;a,b)
+  private :: beta_function_incomplete_cf  ! Evaluate continued fraction for incomplete beta function
 
   interface
     subroutine func (p, ic, il, mlcanopy_inst, x, val)
@@ -38,8 +42,9 @@ contains
   function hybrid (msg, p, ic, il, mlcanopy_inst, func, xa, xb, tol) result(root)
     !
     ! !DESCRIPTION:
-    ! Solve for the root of a function, given initial estimates xa and xb.
-    ! The root is updated until its accuracy is tol.
+    ! Solve for the root of a function given initial estimates xa and xb.
+    ! Use the secant and Brent's methods. The root is updated until its
+    ! accuracy is tol.
     !
     ! !USES:
     !
@@ -55,11 +60,11 @@ contains
     type(mlcanopy_type), intent(inout) :: mlcanopy_inst
     !
     ! !LOCAL VARIABLES:
+    real(r8) :: root                  ! Returned value for root
     real(r8) :: x0, x1                ! Estimates of root
     real(r8) :: f0, f1                ! Function value for x0 and x1
     real(r8) :: minx                  ! x0 or x1 that gives smallest function value
     real(r8) :: minf                  ! Smallest function value obtained using x0 or x1
-    real(r8) :: root                  ! Value for root
     real(r8) :: dx                    ! Change in root
     real(r8) :: x                     ! Updated root
     integer :: iter                   ! Iteration loop index
@@ -88,7 +93,7 @@ contains
        minf = f0
     end if
 
-    ! First use the secant method, and then use the brent method as a backup
+    ! First use the secant method, and then use Brent's method as a backup
 
     iter = 0
     do
@@ -151,11 +156,12 @@ contains
     type(mlcanopy_type), intent(inout) :: mlcanopy_inst
     !
     ! !LOCAL VARIABLES:
-    integer, parameter :: itmax = 50          ! Maximum number of iterations
-    real(r8), parameter :: eps = 1.e-08_r8    ! Relative error tolerance
+    real(r8) :: root                          ! Returned value for root
     integer  :: iter                          ! Iteration loop index
     real(r8) :: a,b,c,d,e,fa,fb,fc,pp,q,r,s,tol1,xm
-    real(r8) :: root
+
+    integer, parameter :: itmax = 50          ! Maximum number of iterations
+    real(r8), parameter :: eps = 1.e-08_r8    ! Relative error tolerance
     !---------------------------------------------------------------------
 
     a = xa
@@ -431,31 +437,10 @@ contains
   end subroutine tridiag_2eq
 
   !-----------------------------------------------------------------------
-  function beta_function (p, q) result(beta)
-    !
-    ! !DESCRIPTION:
-    ! Return the value of the beta function evaluated at p and q: B(p,q)
-    !
-    ! !USES:
-    !
-    ! !ARGUMENTS:
-    implicit none
-    real(r8), intent(in) :: p      ! Input argument
-    real(r8), intent(in) :: q      ! Input argument
-    !
-    ! !LOCAL VARIABLES:
-    real(r8) :: beta               ! Beta function: B(p,q)
-    !---------------------------------------------------------------------
-
-    beta = exp(log_gamma_function(p) + log_gamma_function(q) - log_gamma_function(p+q))
-  
-  end function beta_function
-
-  !-----------------------------------------------------------------------
   function log_gamma_function (x) result(gammaln)
     !
     ! !DESCRIPTION:
-    ! Return the value of the log natural of the gamma function evaluated at x: ln(G(x)) 
+    ! Return the value of the log natural of the gamma function: ln(G(x)) 
     !
     ! !USES:
     !
@@ -464,7 +449,7 @@ contains
     real(r8), intent(in) :: x     ! Input argument
     !
     ! !LOCAL VARIABLES:
-    real(r8) :: gammaln           ! ln(G(x))
+    real(r8) :: gammaln           ! Returned value: ln(G(x))
     real(r8) :: y, tmp, ser
     integer :: j
 
@@ -484,5 +469,141 @@ contains
     gammaln = tmp + log(stp * ser / x)
 
   end function log_gamma_function
+
+  !-----------------------------------------------------------------------
+  function beta_function (a, b) result(beta)
+    !
+    ! !DESCRIPTION:
+    ! Return the value of the beta function: B(a,b)
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    implicit none
+    real(r8), intent(in) :: a      ! Input argument
+    real(r8), intent(in) :: b      ! Input argument
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: beta               ! Returned value: B(a,b)
+    !---------------------------------------------------------------------
+
+    beta = exp(log_gamma_function(a) + log_gamma_function(b) - log_gamma_function(a+b))
+  
+  end function beta_function
+
+  !-----------------------------------------------------------------------
+  function beta_distribution_pdf (a, b, x) result(beta_pdf)
+    !
+    ! !DESCRIPTION:
+    ! Return the value of the beta distribution PDF at x: f(x;a,b)
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    implicit none
+    real(r8), intent(in) :: a      ! Input argument
+    real(r8), intent(in) :: b      ! Input argument
+    real(r8), intent(in) :: x      ! Input argument
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: beta_pdf           ! Returned value: f(x;a,b)
+    !---------------------------------------------------------------------
+
+    beta_pdf = (1._r8 / beta_function(a,b)) * x**(a-1._r8) * (1._r8 - x)**(b-1._r8)
+
+  end function beta_distribution_pdf
+
+  !-----------------------------------------------------------------------
+  function beta_distribution_cdf (a, b, x) result(beta_cdf)
+    !
+    ! !DESCRIPTION:
+    ! Return the value of the beta distribution CDF [F(x;a,b)] using the
+    ! incomplete beta function: I_x(a,b)
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    implicit none
+    real(r8), intent(in) :: a      ! Input argument
+    real(r8), intent(in) :: b      ! Input argument
+    real(r8), intent(in) :: x      ! Input argument
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: beta_cdf           ! Returned value: I_x(a,b)
+    real(r8) :: bt
+    !---------------------------------------------------------------------
+
+    if (x == 0._r8 .or. x == 1._r8) then
+       bt = 0._r8
+    else
+       bt = exp(log_gamma_function(a+b) - log_gamma_function(a) - log_gamma_function(b) &
+          + a * log(x) + b * log(1._r8-x))
+    end if
+    if (x < (a+1._r8)/(a+b+2._r8)) then
+       beta_cdf = bt * beta_function_incomplete_cf(a,b,x) / a
+    else
+       beta_cdf = 1._r8 - bt * beta_function_incomplete_cf(b,a,1._r8-x) / b
+    end if
+
+  end function beta_distribution_cdf
+
+  !-----------------------------------------------------------------------
+  function beta_function_incomplete_cf (a, b, x) result(betacf)
+    !
+    ! !DESCRIPTION:
+    ! Evaluate continued fraction for incomplete beta function
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    implicit none
+    real(r8), intent(in) :: a      ! Input argument
+    real(r8), intent(in) :: b      ! Input argument
+    real(r8), intent(in) :: x      ! Input argument
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: betacf             ! Returned value
+    integer  :: m, m2
+    real(r8) :: qab, qap, qam
+    real(r8) :: c, d, h, aa, del
+
+    integer , parameter :: maxit = 100
+    real(r8), parameter :: eps = 3.e-07_r8
+    real(r8), parameter :: fpmin = 1.e-30_r8
+    !---------------------------------------------------------------------
+
+    qab = a + b
+    qap = a + 1._r8
+    qam = a - 1._r8
+    c = 1._r8
+    d = 1._r8 - qab * x / qap
+    if (abs(d) < fpmin) d = fpmin
+    d = 1._r8 / d
+    h = d
+    do m = 1, maxit
+       m2 = 2 * m
+       aa = float(m) * (b-float(m)) * x / ((qam+float(m2))*(a+float(m2)))
+       d = 1._r8 + aa * d
+       if (abs(d) < fpmin) d = fpmin
+       c = 1._r8 + aa / c
+       if (abs(c) < fpmin) c = fpmin
+       d = 1._r8 / d
+       h = h * d * c
+       aa = -(a+float(m)) * (qab+float(m)) * x / ((qap+float(m2))*(a+float(m2)))
+       d = 1._r8 + aa * d
+       if (abs(d) < fpmin) d = fpmin
+       c = 1._r8 + aa / c
+       if (abs(c) < fpmin) c = fpmin
+       d = 1._r8 / d
+       del = d * c
+       h = h * del
+       if (abs(del-1._r8) < eps) then
+          betacf = h
+          return
+       end if
+    end do
+    call endrun (msg=' ERROR: beta_function_incomplete_cf error')
+
+  end function beta_function_incomplete_cf
 
 end module MLMathToolsMod
