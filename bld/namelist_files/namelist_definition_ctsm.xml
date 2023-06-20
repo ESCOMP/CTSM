@@ -731,6 +731,8 @@ If TRUE, enable use of land use state and transition data from luh_timeseries fi
        input_pathname="abs" group="elm_inparm" valid_values="" >
 Full pathname of unified land use harmonization data file. This causes the land-use
 types to vary over time.
+(Required, if use_fates_luh=T)
+(Only relevant if FATES is on).
 </entry>
 
 <entry id="use_luna" type="logical" category="physics"
