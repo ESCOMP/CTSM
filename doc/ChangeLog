@@ -1,4 +1,116 @@
 ===============================================================
+Tag name: ctsm5.1.dev129
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue Jun 20 09:59:12 MDT 2023
+One-line Summary: NEON fixes for TOOL and user-mods, add SP for NEON, some history file updates, black refactor for buildlib/buildnml
+
+Purpose and description of changes
+----------------------------------
+
+[Fill this in with details]
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+   Fixes #2013 -- Incorrest PFT at TOOL
+   Fixes #2014 -- NEON usermods not working as intended
+   Fixes #2029 -- fire_method is used before it's set and hence fire_res isn't set to none
+   Fixes #2030 -- Logic in build-namelist not functioning correctly for FATES with light_res
+   Updates conda environment so that #1974 works
+
+Known bugs found since the previous tag (include issue #):
+   #2017 -- subset_data does not function for regional grids that span across Greenwich longitude zero 
+   #2024 -- snow fraction is uninitialized when passed to fates during cold-starts
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+Changes made to namelist defaults (e.g., changed parameter values): 
+
+Changes to the datasets (e.g., parameter, surface or initial files): New NEON surface datasets
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+
+Testing summary: regular NEON-tools
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS (57 tests different from baseline)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - PASS (NEON test list passes)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: bit-for-bit (except NEON-TOOL site)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Just NEON TOOL site
+    - what platforms/compilers: all
+    - nature of change: new climate
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #2031 -- Merge of below...
+   #2015 -- Address NEON bugs
+   #2021 -- Small changes to fix warnings, add print statements for clarity
+   #2023 -- Document side effects of htapes_fieldlist
+   #2022 -- Delete unued hist_add_subscript
+   #2020 -- Add more documentation to history tape code
+   #2007 -- black reformat python files for consistancy across cesm
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev128
 Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
 Date: Thu Jun  1 15:31:52 MDT 2023
