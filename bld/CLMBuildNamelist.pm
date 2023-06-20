@@ -953,16 +953,19 @@ sub setup_cmdl_fire_light_res {
 
   my $var = "light_res";
   my $val = $opts->{$var};
+  if ( &value_is_true($nl->get_value('use_cn')) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
+  }
+  my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
   if ( $val eq "default" ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                  'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'},
                  'neon'=>$nl_flags->{'neon'},
                  'fates_spitfire_mode'=>$nl->get_value('fates_spitfire_mode'),
-                 'use_fates'=>$nl_flags->{'use_fates'}, fire_method=>$nl->get_value('fire_method') );
+                 'use_fates'=>$nl_flags->{'use_fates'}, fire_method=>$fire_method );
      $val              = remove_leading_and_trailing_quotes( $nl->get_value($var) );
      $nl_flags->{$var} = $val;
   } else {
-     my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
      if ( defined($fire_method) && $val ne "none" ) {
         if ( $fire_method eq "nofire" ) {
            $log->fatal_error("-$var option used with fire_method='nofire'. -$var can ONLY be used without the nofire option");
@@ -991,9 +994,6 @@ sub setup_cmdl_fire_light_res {
     # Set flag if cn-fires are on or not
     #
     $var = "cnfireson";
-    if ( &value_is_true($nl->get_value('use_cn')) ) {
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
-    }
     my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
     if ( defined($fire_method) && ! &value_is_true($nl_flags->{'use_cn'}) && ! &value_is_true($nl_flags->{'use_fates'}) ) {
        $log->fatal_error("fire_method is being set while use_cn and use_fates are both false.");
