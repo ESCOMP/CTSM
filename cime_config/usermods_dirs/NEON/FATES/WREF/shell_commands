@@ -10,6 +10,8 @@ if [[ $CLM_USRDAT_NAME == 'NEON' ]]; then
   ./xmlchange DATM_YR_START=2019
   if  [[ $compset =~ ^HIST ]]; then
     ./xmlchange RUN_STARTDATE=2019-01-01
-    ./xmlchange STOP_N=39
+    if [[ $TEST != "TRUE" ]]; then
+      ./xmlchange STOP_N=39
+    fi
   fi
 fi

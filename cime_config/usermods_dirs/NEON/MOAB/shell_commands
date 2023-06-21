@@ -9,6 +9,8 @@ if [[ $CLM_USRDAT_NAME == 'NEON' ]]; then
   # Different default number of months to run for transient case
   if  [[ $compset =~ ^HIST ]]; then
     ./xmlchange DATM_YR_END=2021
-    ./xmlchange STOP_N=36
+    if [[ $TEST != "TRUE" ]]; then
+      ./xmlchange STOP_N=36
+    fi
   fi
 fi

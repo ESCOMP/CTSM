@@ -12,7 +12,9 @@ then
   if  [[ $compset =~ ^HIST ]]
   then
     ./xmlchange RUN_STARTDATE=2019-01-01
-    ./xmlchange STOP_N=39
+    if [[ $TEST != "TRUE" ]]; then
+      ./xmlchange STOP_N=39
+    fi
   fi
 fi
 
