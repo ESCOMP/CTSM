@@ -1,4 +1,252 @@
 ===============================================================
+Tag name: ctsm5.1.dev128
+Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Date: Thu Jun  1 15:31:52 MDT 2023
+One-line Summary: Update FATES tests to double precision
+
+Purpose and description of changes
+----------------------------------
+
+This pull request updates the fates tests to set the output
+precision to double precision.  The usermod fates_sp is similarly
+updated.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+- Resolves https://github.com/ESCOMP/CTSM/issues/1986
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+  FATES tests run against fates-sci.1.65.6_api.25.4.0-ctsm5.1.dev127 baseline
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, but only for fates tests and compsets
+
+  Summarize any changes to answers, i.e.,
+    - Differences are due to changing hist_ndens to 1 (double precision)
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/2010
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev127
+Originator(s): sacks (Bill Sacks)
+Date: Fri May 19 04:48:30 MDT 2023
+One-line Summary: Fix nuopc cplhist test
+
+Purpose and description of changes
+----------------------------------
+
+Make some changes to the cplhist testmod that fix the cplhist test,
+based on testing done by Keith Oleson:
+- Point to new cplhist forcing data generated and used by Adam
+  Herrington and Keith Oleson
+- Use DATM_PRESNDEP=none until
+  https://github.com/escomp/ctsm/issues/1844 is resolved
+
+Also, remove mct cplhist test.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Takes steps towards addressing ESCOMP/CTSM#1844 (Create new auxiliary
+  history file for cplhist test with ndep data)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+- Changes cplhist test; new test is
+  SMS_D_Ld1.ne30pg3_t061.I1850Clm50BgcSpinup.cheyenne_intel.clm-cplhist
+- Removes mct cplhist test
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+    Note that there were no baselines for the new test
+    (SMS_D_Ld1.ne30pg3_t061.I1850Clm50BgcSpinup.cheyenne_intel.clm-cplhist)
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cdeps: cdeps1.0.12 -> cdeps1.0.13
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1999
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev126
+Originator(s): jpalex (John Alex)
+Date: Thu May 18 17:21:59 MDT 2023
+One-line Summary: Clean up some loops in UrbanTimeVarType
+
+Purpose and description of changes
+----------------------------------
+
+Refactor some inefficient and confusing looping structures in
+UrbanTimeVarType.F90
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1514 (Inefficient and confusing looping structures in UrbanTimeVarType.F90)
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/2005
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev125
+Originator(s): jpalex (John Alex)
+Date: Wed May 17 08:56:41 MDT 2023
+One-line Summary: Added cache for clock step_size in clm_time_manager.F90
+
+Purpose and description of changes
+----------------------------------
+
+Added cache for clock step_size in clm_time_manager.F90 to improve
+performance.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#207 (Improve performance of get_step_size)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/2004
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev124
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326) / mvertens / adamrher / MiCurry / jtrusdal / TeaganKing
 Date: Tue May  9 16:52:05 MDT 2023
