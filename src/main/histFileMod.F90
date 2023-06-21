@@ -90,6 +90,7 @@ module histFileMod
 
   character(len=max_namlen+2), public :: &
        hist_fincl1(max_flds) = ' '       ! namelist: list of fields to include in history tape 1
+                                         !            aka 'h0' history file.
   character(len=max_namlen+2), public :: &
        hist_fincl2(max_flds) = ' '       ! namelist: list of fields to include in history tape 2
   character(len=max_namlen+2), public :: &
@@ -115,6 +116,7 @@ module histFileMod
 
   character(len=max_namlen+2), public :: &
        hist_fexcl1(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 1
+                                   !           aka 'h0' history file.
   character(len=max_namlen+2), public :: &
        hist_fexcl2(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 2
   character(len=max_namlen+2), public :: &
