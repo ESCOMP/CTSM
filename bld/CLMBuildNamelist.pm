@@ -689,6 +689,13 @@ sub setup_cmdl_resolution {
       }
     }
   }
+  # For NEON sites
+  if ($nl_flags->{'res'} =~ /NEON/) {
+    $nl_flags->{'neon'} = ".true."
+  } else {
+    $nl_flags->{'neon'} = ".false."
+  }
+
 }
 
 #-------------------------------------------------------------------------------
@@ -1459,13 +1466,6 @@ sub process_namelist_commandline_clm_usr_name {
       $settings{'csmdata'}     = $ENV{'DIN_LOC_ROOT'};
     } else {
       $settings{'csmdata'}     = $nl_flags->{'inputdata_rootdir'};
-    }
-
-    # For NEON sites
-    if ($opts->{'clm_usr_name'} =~ /NEON/) {
-      $nl_flags->{'neon'} = ".true."
-    } else {
-      $nl_flags->{'neon'} = ".false."
     }
 
     my $nvars = 0;
