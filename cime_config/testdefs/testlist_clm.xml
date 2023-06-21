@@ -1569,7 +1569,7 @@
       <option name="comment">Want to keep a little single-point testing on cheyenne</option>
     </options>
   </test>
-  <test name="SMS_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/default--clm/NEON/NIWO">
+  <test name="SMS_L10d_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/default--clm/NEON/NIWO">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
     </machines>
@@ -1579,7 +1579,7 @@
       <option name="comment"  >Add at least one test of a NEON site</option>
     </options>
   </test>
-  <test name="SMS_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51SpRs" testmods="clm/default--clm/NEON/TOOL">
+  <test name="SMS_L10d_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51SpRs" testmods="clm/default--clm/NEON/TOOL">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
     </machines>
@@ -1589,7 +1589,7 @@
       <option name="comment"  >Add at least one test of a NEON site with SP</option>
     </options>
   </test>
-  <test name="SMS_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/NEON/MOAB--clm/PRISM">
+  <test name="SMS_L10d_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/NEON/MOAB--clm/PRISM">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
     </machines>
@@ -1599,7 +1599,7 @@
       <option name="comment"  >Add at least one test of a NEON site with PRISM precipitation</option>
     </options>
   </test>
-  <test name="SMS_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Fates" testmods="clm/FatesFireLightningPopDens--clm/NEON/FATES/NIWO">
+  <test name="SMS_L10d_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Fates" testmods="clm/FatesFireLightningPopDens--clm/NEON/FATES/NIWO">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="fates"/>
@@ -1610,7 +1610,7 @@
       <option name="comment"  >Add at least one test of a FATES NEON site that needs lightning data</option>
     </options>
   </test>
-  <test name="SMS_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Fates" testmods="clm/FatesPRISM--clm/NEON/FATES/YELL">
+  <test name="SMS_L10d_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Fates" testmods="clm/FatesPRISM--clm/NEON/FATES/YELL">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="fates"/>
