@@ -25,7 +25,7 @@ else
 fi
 
 # If needed for SP simulations: & set history file variables
-if [[ $compset =~ ".*CLM[0-9]%.*SP.*" ]]; then
+if [[ $compset =~ .*CLM[0-9]+%.*SP.* ]]; then
   ./xmlchange STOP_OPTION=nyears
   ./xmlchange CLM_FORCE_COLDSTART=on
 
