@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev129
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Tue Jun 20 14:44:32 MDT 2023
+Date: Wed Jun 21 16:28:05 MDT 2023
 One-line Summary: NEON fixes for TOOL and user-mods, add SP for NEON, some history file updates, black refactor for buildlib/buildnml
 
 Purpose and description of changes
@@ -53,6 +53,7 @@ CTSM issues fixed (include CTSM Issue #):
    Updates conda environment so that #1974 works
 
 Known bugs found since the previous tag (include issue #):
+   #2036 -- Remove setting of STOP options in user-mod directories
    #2017 -- subset_data does not function for regional grids that span across Greenwich longitude zero 
    #2024 -- snow fraction is uninitialized when passed to fates during cold-starts
 
@@ -100,6 +101,9 @@ Testing summary: regular NEON-tools
 
     cheyenne ---- OK
     izumi ------- OK
+
+  other testing:
+    izumi -- PASS (tests of changed NEON sites, see list in #2031)
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
