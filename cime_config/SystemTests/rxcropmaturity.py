@@ -174,7 +174,8 @@ class RXCROPMATURITY(SystemTestsCommon):
         # Eventually, I want to remove these hard-coded resolutions so that this test can generate
         # its own sowing and harvest date files at whatever resolution is requested.
         lnd_grid = self._case.get_value("LND_GRID")
-        processed_crop_dates_dir="/glade/p/cesmdata/cseg/inputdata/lnd/clm2/cropdata/calendars/processed"
+        input_data_root = self._case.get_value("DIN_LOC_ROOT")
+        processed_crop_dates_dir = f"{input_data_root}/lnd/clm2/cropdata/calendars/processed"
         if lnd_grid == "10x15":
             self._sdatefile = os.path.join(
                 processed_crop_dates_dir,
