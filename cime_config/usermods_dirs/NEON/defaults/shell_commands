@@ -24,8 +24,8 @@ else
   ./xmlchange CLM_NML_USE_CASE="2018_control"
 fi
 
-# If needed for SP simulations: turn off lightning & set history file variables
-if  [[ $compset == *'SP_SICE'* ]]; then
+# If needed for SP simulations: & set history file variables
+if [[ $compset =~ ".*CLM[0-9]%.*SP.*" ]]; then
   ./xmlchange STOP_OPTION=nyears
   ./xmlchange CLM_FORCE_COLDSTART=on
 
