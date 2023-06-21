@@ -291,7 +291,7 @@ contains
     end if
 
     if (use_fates_luh) then
-       call dynFatesLandUseInterp
+       call dynFatesLandUseInterp(bounds_proc)
     end if
 
     ! ==========================================================================

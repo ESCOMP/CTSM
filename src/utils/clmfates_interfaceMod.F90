@@ -1828,7 +1828,7 @@ module CLMFatesInterfaceMod
 
            do s = 1,this%fates(nc)%nsites
               c = this%f2hmap(nc)%fcolumn(s)
-              g = col_pp%gridcell(c)
+              g = col%gridcell(c)
 
               if (use_fates_luh) then
                     this%fates(nc)%bc_in(s)%hlm_luh_states = landuse_states(:,g)
