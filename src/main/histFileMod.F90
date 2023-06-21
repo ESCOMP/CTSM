@@ -182,10 +182,6 @@ module histFileMod
                                                   ! is 255. But this can't be increased until all hard
                                                   ! coded values throughout the i/o stack are updated.
   integer, parameter :: max_chars = 199        ! max chars for char variables
-  integer, parameter :: max_subs = 100         ! max number of subscripts
-  integer            :: num_subs = 0           ! actual number of subscripts
-  character(len=32)  :: subs_name(max_subs)    ! name of subscript
-  integer            :: subs_dim(max_subs)     ! dimension of subscript
   !
   type field_info
      character(len=max_namlen) :: name         ! field name
@@ -2434,9 +2430,6 @@ contains
     ! (although on the history file it will go 1:(nec+1) rather than 0:nec)
     call ncd_defdim(lnfid, 'elevclas' , maxpatch_glc + 1, dimid)
 
-    do n = 1,num_subs
-       call ncd_defdim(lnfid, subs_name(n), subs_dim(n), dimid)
-    end do
     call ncd_defdim(lnfid, 'string_length', hist_dim_name_length, strlen_dimid)
     call ncd_defdim(lnfid, 'scale_type_string_length', scale_type_strlen, dimid)
     call ncd_defdim( lnfid, 'levdcmp', nlevdecomp_full, dimid)
