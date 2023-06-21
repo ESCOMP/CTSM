@@ -239,8 +239,11 @@ module histFileMod
   end interface
 
   ! Additional per-field metadata. See also history_entry. 
-  ! These values are specified in hist_addfld* calls but then can be
-  ! overridden by namelist params like hist_fincl1.
+  ! For the primary history tape, some fields are enabled here (inside hist_addfld* 
+  ! call)  but then can be overridden by namelist params (like hist_fincl1). The
+  ! fields for other history tapes are theoretically settable here but in
+  ! practice are all disabled.  Fields for those tapes have to be specified
+  ! explicitly and manually via hist_fincl2 et al.
   type, extends(entry_base) :: master_entry
      logical :: actflag(max_tapes)  ! which history tapes to write to. 
      character(len=avgflag_strlen) :: avgflag(max_tapes)  ! type of time averaging
@@ -290,8 +293,8 @@ module histFileMod
   type (clmpoint_ra) :: clmptr_ra(max_mapflds) ! Real array data (2D)
   !
   ! History field metadata including which history tapes (if any) it should be output to, and
-  ! type of accumulation to perform. The field ordering is arbitrary, depending on the order of
-  ! hist_addfld* calls in the code.
+  ! type of accumulation to perform. This list contains all possible fields, and their field ordering 
+  ! is arbitrary, as it depends on the order of hist_addfld* calls in the code.
   ! For the field data itself, see 'tape'.
   !
   type (master_entry) :: masterlist(max_flds)  ! master field list
