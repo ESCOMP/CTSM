@@ -794,10 +794,16 @@ If TRUE, implies output data on a 2D latitude/longitude grid. False means
 output in 1D vector format.  One setting per history tape series.
 </entry>
 
+<entry id="hist_all_htapes" type="logical" category="history"
+       group="clm_inparm" valid_values="" >
+If TRUE, indicates output ALL history fields on the primary tape.
+</entry>
+
 <entry id="hist_empty_htapes" type="logical" category="history"
        group="clm_inparm" valid_values="" >
 If TRUE, indicates do NOT output any default history fields (requires you to use
-hist_fincl* to set the exact output fields to use)..
+hist_fincl1 to set the exact output fields to use). Note only the
+primary tape has default history fields.
 </entry>
 
 <entry id="hist_fexcl1" type="char*64(1000)" category="history"
