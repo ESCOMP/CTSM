@@ -1641,6 +1641,19 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <soilm_tintalgo>linear</soilm_tintalgo>
 <soilm_offset  >0</soilm_offset>
 
+<!-- Irrigation streams namelist defaults -->
+<!-- This is if you want to prescribe the irrigation from input datasets rather than model it -->
+<use_irrigation_streams>.false.</use_irrigation_streams>
+<stream_year_first_irrig  >1997</stream_year_first_irrig>
+<stream_year_last_irrig   >1997</stream_year_last_irrig>
+<model_year_align_irrig   >1997</model_year_align_irrig>
+
+<stream_fldfilename_irrig hgrid="0.9x1.25">lnd/clm2/prescribed_data/LFMIP-pdLC-SST.H2OSOI.0.9x1.25.20levsoi.natveg.1980-2014.MONS_climo.c190716.nc</stream_fldfilename_irrig>
+
+<irrig_mapalgo>nn</irrig_mapalgo>
+<irrig_tintalgo>nearest</irrig_tintalgo>
+<irrig_offset  >0</irrig_offset>
+
 <!-- LAI streams namelist defaults -->
 <use_lai_streams        >.false.</use_lai_streams>
 <stream_year_first_lai  >2001</stream_year_first_lai>

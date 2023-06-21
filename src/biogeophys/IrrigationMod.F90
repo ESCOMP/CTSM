@@ -175,8 +175,8 @@ module IrrigationMod
      integer , pointer :: irrig_method_patch          (:) ! patch irrigation application method
 
      ! Private data members; time-varying:
-     real(r8), pointer :: sfc_irrig_rate_patch        (:) ! current irrigation rate from surface water [mm/s]
-     real(r8), pointer :: irrig_rate_demand_patch     (:) ! current irrigation rate, neglecting surface water source limitation [mm/s]
+     real(r8), pointer, public :: sfc_irrig_rate_patch        (:) ! current irrigation rate from surface water [mm/s]
+     real(r8), pointer, public :: irrig_rate_demand_patch     (:) ! current irrigation rate, neglecting surface water source limitation [mm/s]
      integer , pointer :: n_irrig_steps_left_patch    (:) ! number of time steps for which we still need to irrigate today (if 0, ignore)
      real(r8), pointer :: qflx_irrig_demand_patch     (:) ! irrigation flux neglecting surface water source limitation [mm/s]
 

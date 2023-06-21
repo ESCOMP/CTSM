@@ -14,7 +14,7 @@ module clm_initializeMod
   use clm_varctl            , only : is_cold_start
   use clm_varctl            , only : iulog
   use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
-  use clm_varctl            , only : use_soil_moisture_streams
+  use clm_varctl            , only : use_soil_moisture_streams, use_irrigation_streams
   use clm_instur            , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft
   use clm_instur            , only : irrig_method, wt_glc_mec, topo_glc_mec, haslake, pct_urban_max
   use perf_mod              , only : t_startf, t_stopf
@@ -31,6 +31,7 @@ module clm_initializeMod
   use dynSubgridControlMod  , only : dynSubgridControl_init, get_reset_dynbal_baselines
   use SelfTestDriver        , only : self_test_driver
   use SoilMoistureStreamMod , only : PrescribedSoilMoistureInit
+  use IrrigationStreamMod   , only : PrescribedIrrigationInit
   use clm_instMod
   !
   implicit none
@@ -466,7 +467,9 @@ contains
     if (use_soil_moisture_streams) then
        call PrescribedSoilMoistureInit(bounds_proc)
     endif
-
+    if(use_irrigation_streams) then 
+       call PrescribedIrrigationInit(bounds_proc)
+    endif
     ! On restart only - process the history namelist.
     ! Later the namelist from the restart file will be used.  This allows basic
     ! checking to make sure you didn't try to change the history namelist on restart.

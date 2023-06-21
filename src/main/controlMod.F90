@@ -241,6 +241,8 @@ contains
     namelist /clm_nitrogen/ MM_Nuptake_opt, &
          CNratio_floating, lnc_opt, reduce_dayl_factor, vcmax_opt, &
          CN_evergreen_phenology_opt, carbon_resp_opt
+		 
+	namelist /clm_inparm/ use_irrigation_streams
 
     namelist /clm_inparm/ use_soil_moisture_streams
 
@@ -730,6 +732,8 @@ contains
     call mpi_bcast (carbon_resp_opt, 1, MPI_INTEGER, 0, mpicom, ier)
 
     call mpi_bcast (use_luna, 1, MPI_LOGICAL, 0, mpicom, ier)
+	
+	call mpi_bcast (use_irrigation_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_soil_moisture_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 
