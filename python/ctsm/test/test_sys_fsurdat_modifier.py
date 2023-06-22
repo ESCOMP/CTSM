@@ -45,7 +45,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._testinputs_path = testinputs_path
         self._fsurdat_in = os.path.join(
             testinputs_path,
-            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc",
+            "surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517.nc",
         )
         self._tempdir = tempfile.mkdtemp()
         self._cfg_file_path = os.path.join(self._tempdir, "modify_fsurdat.cfg")
@@ -77,7 +77,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         sys.argv = ["fsurdat_modifier", self._cfg_file_path]
         parser = fsurdat_modifier_arg_process()
         fsurdat_out = (
-            "ctsm/test/testinputs/surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_out.nc"
+            "ctsm/test/testinputs/surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517_out.nc"
         )
         if os.path.exists(fsurdat_out):
             os.remove(fsurdat_out)
@@ -134,14 +134,14 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_opt_sections.cfg")
         outfile = os.path.join(
             self._tempdir,
-            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_output_urban.nc",
+            "surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517_output_urban.nc",
         )
         sys.argv = [
             "fsurdat_modifier",
             self._cfg_file_path,
             "-i",
             os.path.join(
-                self._testinputs_path, "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc"
+                self._testinputs_path, "surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517.nc"
             ),
             "-o",
             outfile,
