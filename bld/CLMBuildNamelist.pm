@@ -1560,7 +1560,7 @@ sub process_namelist_inline_logic {
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_misc($opts, $nl_flags, $definition, $defaults, $nl);
-  setup_logic_zender_soilerod($opts, $nl_flags, $definition, $defaults, $nl); # dmleung added 11 Mar 2023
+  setup_logic_zender_soilerod($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
   # namelist group: atm2lnd_inparm
@@ -4247,7 +4247,9 @@ sub setup_logic_misc {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_zender_soilerod {
-  # dmleung added on 31 Dec 2022 for reading Prigent's roughness stream file
+  #
+  # Handle the Zender soil eroditability file
+  #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_zendersoilerod' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_zendersoilerod' );
@@ -4303,8 +4305,7 @@ sub write_output_files {
   push @groups, "ch4finundated";
   push @groups, "soilbgc_decomp";
   push @groups, "clm_canopy_inparm";
-  push @groups, "zendersoilerod"; # dmleung added 11 Mar 2023
-  #push @groups, "dust_nl"; # dmleung added 11 Mar 2023
+  push @groups, "zendersoilerod";
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
      push @groups, "scf_swenson_lawrence_2012_inparm";
   }

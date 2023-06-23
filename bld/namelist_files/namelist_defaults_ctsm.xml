@@ -2540,8 +2540,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- ===========================================  -->
 <!-- Defaults for dust namelist items             -->
 <!-- Defaults for Zender's soil erodibility data  -->
-<!-- dmleung                                      -->
-<!-- 11 Mar 2023                                  -->
 <!-- ===========================================  -->
 
 <stream_fldfilename_zendersoilerod

@@ -30,8 +30,7 @@ module DUSTMod
   use LandunitType         , only : lun
   use ColumnType           , only : col
   use PatchType            , only : patch
-  use ZenderSoilErodStreamType,  only : zendersoilerodstream_type   ! dmleung added 11 Mar 2023
-  !use spmdMod              , only : masterproc, mpicom, MPI_REAL8  ! dmleung added 11 Mar 2023
+  use ZenderSoilErodStreamType,  only : zendersoilerodstream_type
   !  
   ! !PUBLIC TYPES
   implicit none
@@ -49,7 +48,6 @@ module DUSTMod
   real(r8) , allocatable :: stk_crc(:) ![frc] Correction to Stokes settling velocity
   real(r8) tmp1                        !Factor in saltation computation (named as in Charlie's code)
   real(r8) dns_aer                     ![kg m-3] Aerosol density
-  !real(r8) dust_emis_fact              ! dmleung added 11 Mar 2023
   !
   ! !PUBLIC DATA TYPES:
   !
@@ -62,8 +60,7 @@ module DUSTMod
      real(r8), pointer, private :: vlc_trb_2_patch           (:)   ! turbulent deposition velocity 2(m/s)
      real(r8), pointer, private :: vlc_trb_3_patch           (:)   ! turbulent deposition velocity 3(m/s)
      real(r8), pointer, private :: vlc_trb_4_patch           (:)   ! turbulent deposition velocity 4(m/s)
-     !########### added by dmleung 11 Mar 2023 ########################################################################
-     type(zendersoilerodstream_type), private :: zendersoilerodstream      ! Zender soil erodibility stream data
+     type(zendersoilerodstream_type), private :: zendersoilerodstream ! Zender soil erodibility stream data
      real(r8), pointer, private :: mbl_bsn_fct_col           (:)   ! [dimensionless] basin factor, or soil erodibility, time-constant
 
    contains
@@ -84,16 +81,15 @@ contains
 
   !------------------------------------------------------------------------
   !subroutine Init(this, bounds)
-  !##### dmleung edited for initializing stream files 11 Mar 2023  ########
   subroutine Init(this, bounds, NLFilename)
 
     class(dust_type) :: this
     type(bounds_type), intent(in) :: bounds  
-    character(len=*),  intent(in) :: NLFilename   ! dmleung added 11 Mar 2023
+    character(len=*),  intent(in) :: NLFilename
 
     call this%InitAllocate (bounds)
     call this%InitHistory  (bounds)
-    call this%zendersoilerodstream%Init( bounds, NLFilename )  ! dmleung added 11 Mar 2023
+    call this%zendersoilerodstream%Init( bounds, NLFilename )
     call this%InitCold     (bounds)
     call this%InitDustVars (bounds)
 
@@ -138,7 +134,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp,endp
-    integer :: begc,endc  ! dmleung added 11 Mar 2023
+    integer :: begc,endc
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
@@ -169,12 +165,10 @@ contains
          avgflag='A', long_name='turbulent deposition velocity 4', &
          ptr_patch=this%vlc_trb_4_patch, default='inactive')
 
-    !#####added by dmleung 11 Mar 2023 ########################################
     !this%mbl_bsn_fct_col(begc:endc) = spval
     !call hist_addfld1d (fname='LND_MBL', units='fraction',  &
     !     avgflag='A', long_name='Soil erodibility factor', &
     !     ptr_col=this%mbl_bsn_fct_col)
-    !##########################################################################
 
   end subroutine InitHistory
 
@@ -187,7 +181,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: c,l
-    !integer ier  ! error code, dmleung added 11 Mar 2023
+    !integer ier
     !-----------------------------------------------------------------------
 
     !#### dmleung added 11 Mar 2023 ####################################
@@ -311,7 +305,7 @@ contains
          fv                  => frictionvel_inst%fv_patch            , & ! Input:  [real(r8) (:)   ]  friction velocity (m/s) (for dust model)          
          u10                 => frictionvel_inst%u10_patch           , & ! Input:  [real(r8) (:)   ]  10-m wind (m/s) (created for dust model)          
          
-         mbl_bsn_fct         => dust_inst%mbl_bsn_fct_col            , & ! Input:  [real(r8) (:)   ]  basin factor  ; dmleung changed the value in InitCold 11 Mar 2023       
+         mbl_bsn_fct         => dust_inst%mbl_bsn_fct_col            , & ! Input:  [real(r8) (:)   ]  basin factor
          flx_mss_vrt_dst     => dust_inst%flx_mss_vrt_dst_patch      , & ! Output: [real(r8) (:,:) ]  surface dust emission (kg/m**2/s)               
          flx_mss_vrt_dst_tot => dust_inst%flx_mss_vrt_dst_tot_patch    & ! Output: [real(r8) (:)   ]  total dust flux back to atmosphere (pft)
          )
@@ -485,7 +479,7 @@ contains
 
             dst_slt_flx_rat_ttl = 100.0_r8 * exp( log(10.0_r8) * (13.4_r8 * mss_frc_cly_vld(c) - 6.0_r8) )
             flx_mss_vrt_dst_ttl(p) = flx_mss_hrz_slt_ttl * dst_slt_flx_rat_ttl
-            !flx_mss_vrt_dst_ttl(p) = flx_mss_hrz_slt_ttl * dst_slt_flx_rat_ttl / dust_emis_fact  ! dmleung added 11 Mar 2023
+            !flx_mss_vrt_dst_ttl(p) = flx_mss_hrz_slt_ttl * dst_slt_flx_rat_ttl / dust_emis_fact
 
          end if   ! lnd_frc_mbl > 0.0
 

@@ -1,5 +1,4 @@
 module ZenderSoilErodStreamType
-!dmleung modified based on PrigetnRoughnessStreamType.F90 on 11 Mar 2023
 #include "shr_assert.h"             ! What is this? In many modules but not dust module
 
   !-----------------------------------------------------------------------
@@ -232,7 +231,7 @@ contains
     ! !USES:
     use ColumnType              , only : col
     !use PatchType               , only : patch
-    !USES dmleung added 31 Dec 2022
+    !USES
     use landunit_varcon         , only : istdlak
     use LandunitType            , only : lun
     !
@@ -259,9 +258,6 @@ contains
 
 
     ! dmleung: this loop truncates soil erodibility values smaller than a threshold value (set as 0.1). We save the drag partition factor as a grid level quantity.
-    !do p = bounds%begp,bounds%endp
-       !g = patch%gridcell(p)
-       !l = patch%landunit(p)
     do c = bounds%begc,bounds%endc
         g = col%gridcell(c)
         l = col%landunit(c)
@@ -302,7 +298,7 @@ contains
    character(len=CL)  :: stream_fldFileName_zendersoilerod = ' '
    character(len=CL)  :: stream_meshfile_zendersoilerod = ' '
    character(len=CL)  :: zendersoilerodmapalgo = 'bilinear'
-   character(len=*), parameter :: namelist_name = 'zendersoilerod'    ! MUST agree with group name in namelist definition to read. dmleung commented
+   character(len=*), parameter :: namelist_name = 'zendersoilerod'    ! MUST agree with group name in namelist definition to read.
    character(len=*), parameter :: subName = "('zendersoilerod::ReadNML')"
    !-----------------------------------------------------------------------
 

@@ -1694,8 +1694,7 @@ Mapping method from Nitrogen deposition input file to the model resolution
 </entry>
 
 <!-- ========================================================================================  -->
-<!-- Dust namelist and Zender soil erodibility stream -->
-<!-- dmleung added 11 Mar 2023 -->
+<!-- Dust namelist and Zender soil erodibility stream                                          -->
 <!-- ========================================================================================  -->
 
 <!-- <entry id="dust_emis_fact" type="real" category="dataset" -->
