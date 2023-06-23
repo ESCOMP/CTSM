@@ -68,6 +68,7 @@ def add_logging_args(parser):
     logging_level.add_argument(
         "-v", "--verbose", action="store_true", help="Output extra logging info"
     )
+    logging_level.add_argument("--silent", action="store_true", help="Only output errors")
 
     logging_level.add_argument(
         "--debug",
@@ -84,6 +85,8 @@ def process_logging_args(args):
         root_logger.setLevel(logging.DEBUG)
     elif args.verbose:
         root_logger.setLevel(logging.INFO)
+    elif args.silent:
+        root_logger.setLevel(logging.ERROR)
     else:
         root_logger.setLevel(logging.WARNING)
 

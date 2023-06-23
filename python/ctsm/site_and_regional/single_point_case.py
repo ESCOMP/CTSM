@@ -450,7 +450,7 @@ class SinglePointCase(BaseCase):
 
         return f_mod
 
-    def create_surfdata_at_point(self, indir, file, user_mods_dir):
+    def create_surfdata_at_point(self, indir, file, user_mods_dir, specify_fsurf_out):
         """
         Create surface data file at a single point.
         """
@@ -464,7 +464,10 @@ class SinglePointCase(BaseCase):
 
         # specify file
         fsurf_in = os.path.join(indir, file)
-        fsurf_out = add_tag_to_filename(fsurf_in, self.tag, replace_res=True)
+        if specify_fsurf_out is None:
+            fsurf_out = add_tag_to_filename(fsurf_in, self.tag, replace_res=True)
+        else:
+            fsurf_out = specify_fsurf_out
         logger.info("fsurf_in:  %s", fsurf_in)
         logger.info("fsurf_out: %s", os.path.join(self.out_dir, fsurf_out))
 

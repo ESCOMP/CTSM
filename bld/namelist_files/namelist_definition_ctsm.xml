@@ -1992,9 +1992,9 @@ to use for methane model
 </entry>
        
 <entry id="light_res" type="char*10" category="default_settings"
-       group="default_settings" valid_values="none,360x720,94x192">
-Resolution of Lightning dataset to use for CN fire model
-(only applies when CN and the CN fire model are turned on)
+       group="default_settings" valid_values="none,360x720,106x174,94x192">
+Resolution of Lightning dataset to use for CN or FATES fire model
+(only applies when CN or FATES and the fire model is turned on)
 </entry>
 
 <entry id="chk_res" type="integer"  category="default_settings"
@@ -2020,7 +2020,7 @@ CLM run type.
 
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
-       valid_values="512x1024,360x720cru,128x256,64x128,48x96,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,0.125nldas2,5x5_amazon,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.25x0.25,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,0.125x0.125,ne4np4,ne16np4,ne30np4.pg2,ne30np4.pg3,ne30np4,ne60np4,ne120np4,ne120np4.pg2,ne120np4.pg3,ne0np4CONUS.ne30x8,ne0np4.ARCTIC.ne30x4,ne0np4.ARCTICGRIS.ne30x8,ne240np4,1km-merge-10min,C24,C48,C96,C192,C384">
+       valid_values="512x1024,360x720cru,128x256,64x128,48x96,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,0.125nldas2,5x5_amazon,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.25x0.25,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,0.125x0.125,ne3np4.pg3,ne4np4,ne5np4.pg3,ne16np4,ne16np4.pg3,ne30np4.pg2,ne30np4.pg3,ne30np4,ne60np4,ne120np4,ne120np4.pg2,ne120np4.pg3,ne0np4CONUS.ne30x8,ne0np4.ARCTIC.ne30x4,ne0np4.ARCTICGRIS.ne30x8,ne240np4,1km-merge-10min,C24,C48,C96,C192,C384,mpasa480,mpasa240,mpasa120,mpasa60,mpasa30,mpasa15">
 Horizontal resolutions
 Note: 0.25x0.25, 0.5x0.5, 5x5min, 10x10min, 3x3min, 1km-merge-10min and 0.33x0.33 are only used for CLM toolsI
 </entry> 
@@ -2471,6 +2471,13 @@ If TRUE, apply transient urban from flanduse_timeseries file.
 <entry id="do_harvest" type="logical" category="physics"
        group="dynamic_subgrid" valid_values="" >
 If TRUE, apply harvest from flanduse_timeseries file.
+(Only valid for transient runs, where there is a flanduse_timeseries file.)
+(Also, only valid for use_cn = true.)
+</entry>
+
+<entry id="do_grossunrep" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+If TRUE, apply gross unrepresented landuse/land-cover change from flanduse_timeseries file.
 (Only valid for transient runs, where there is a flanduse_timeseries file.)
 (Also, only valid for use_cn = true.)
 </entry>

@@ -15,7 +15,7 @@ module WaterStateType
   use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_gridcell
   use clm_varctl     , only : use_bedrock, use_excess_ice, iulog
   use spmdMod        , only : masterproc
-  use clm_varctl     , only : use_fates_planthydro
+  use clm_varctl     , only : use_fates
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevmaxurbgrnd, nlevsno   
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
@@ -375,7 +375,7 @@ contains
                   if (j > nbedrock) then
                      this%h2osoi_vol_col(c,j) = 0.0_r8
                   else
-                     if(use_fates_planthydro) then
+                     if(use_fates) then
                          this%h2osoi_vol_col(c,j) = 0.75_r8*watsat_col(c,j)*ratio
                      else
                          this%h2osoi_vol_col(c,j) = 0.15_r8*ratio
