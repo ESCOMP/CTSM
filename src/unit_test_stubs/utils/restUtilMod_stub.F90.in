@@ -23,6 +23,8 @@ module restUtilMod
 
   public :: set_missing_from_template
 
+  public :: CallRestartvarDimOK
+
 contains
 
   !-----------------------------------------------------------------------
