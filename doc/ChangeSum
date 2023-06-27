@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev129     erik 06/22/2023 NEON fixes for TOOL and user-mods, add SP for NEON, some history file updates, black refactor for buildlib/buildnml
     ctsm5.1.dev128 glemieux 06/01/2023 Update FATES tests to double precision
     ctsm5.1.dev127    sacks 05/19/2023 Fix nuopc cplhist test
     ctsm5.1.dev126   jpalex 05/18/2023 Clean up some loops in UrbanTimeVarType
