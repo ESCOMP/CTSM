@@ -15,6 +15,7 @@ those, but this would cause a potential inconsistency.
 
 import os
 import re
+import systemtest_utils as stu
 import subprocess
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
 from CIME.XML.standard_module_setup import *
@@ -79,6 +80,9 @@ class RXCROPMATURITY(SystemTestsCommon):
 
         # Get files with prescribed sowing and harvest dates
         self._get_rx_dates()
+
+        # Which conda environment should we use?
+        self._get_conda_env()
 
     def run_phase(self):
         # Modeling this after the SSP test, we create a clone to be the case whose outputs we don't
@@ -254,7 +258,12 @@ class RXCROPMATURITY(SystemTestsCommon):
             command = f"python3 {tool_path} "\
                     + f"-i {self._fsurdat_in} "\
                     + f"-o {self._fsurdat_out}"
-            self._run_python_script(case_gddgen, command, tool_path)
+            stu.run_python_script(
+                    self._get_caseroot(),
+                    self._this_conda_env,
+                    command,
+                    tool_path,
+                    )
         
         # Modify namelist
         logger.info("RXCROPMATURITY log:  modify user_nl files: new fsurdat")
@@ -281,7 +290,12 @@ class RXCROPMATURITY(SystemTestsCommon):
                 + f"-yN {last_usable_year} "\
                 + f"--rx-sdates-file {self._sdatefile} "\
                 + f"--rx-gdds-file {self._gdds_file} "
-        self._run_python_script(self._case, command, tool_path)                
+        stu.run_python_script(
+                self._get_caseroot(),
+                self._this_conda_env,
+                command,
+                tool_path,
+                )
     
     
     def _modify_user_nl_allruns(self):
@@ -326,7 +340,12 @@ class RXCROPMATURITY(SystemTestsCommon):
                 f"--sdates-file {sdates_file}",
                 f"--hdates-file {hdates_file}",
                 f"--output-dir generate_gdds_out"])
-        self._run_python_script(case_gddgen, command, tool_path)
+        stu.run_python_script(
+                self._get_caseroot(),
+                self._this_conda_env,
+                command,
+                tool_path,
+                )
         
         # Where were the prescribed maturity requirements saved?
         generated_gdd_files = glob.glob(os.path.join(self._generate_gdds_dir, "gdds_*.nc"))
@@ -338,72 +357,24 @@ class RXCROPMATURITY(SystemTestsCommon):
         self._gdds_file = generated_gdd_files[0]
         
 
-    def _get_conda_env(self, conda_setup_commands):
-        #
-        # Add specific commands needed on different machines to get conda available
-        # Use semicolon here since it's OK to fail
-        #
-        # Execute the module unload/load when "which conda" fails
-        # eg on cheyenne
-        try:
-            subprocess.run( "which conda", shell=True, check=True)
-        except subprocess.CalledProcessError:
-            # Remove python and add conda to environment for cheyennne
-            conda_setup_commands += "module unload python; module load conda; "
+    def _get_conda_env(self):
+        conda_setup_commands = stu.cmds_to_setup_conda(self._get_caseroot())
 
         # If npl conda environment is available, use that (It has dask, which
         # enables chunking, which makes reading daily 1-degree netCDF files
         # much more efficient.
         if "npl " in os.popen(conda_setup_commands + "conda env list").read():
-            this_conda_env = "npl"
+            self._this_conda_env = "npl"
         else:
-            this_conda_env = "ctsm_pylib"
+            self._this_conda_env = "ctsm_pylib"
 
-        ## Run in the correct python environment
-        conda_setup_commands += f" conda run -n {this_conda_env} "
-        
-        return conda_setup_commands, this_conda_env
-    
-    
+
     def _append_to_user_nl_clm(self, additions):
         caseroot = self._get_caseroot()
         append_to_user_nl_files(caseroot = caseroot,
                                 component = "clm",
                                 contents = additions)
     
-    
-    def _run_python_script(self, case, command, tool_path):
-        tool_name = os.path.split(tool_path)[-1]
-        case.load_env(reset=True)
-        
-        # Prepend the commands to get the conda environment for python first
-        conda_setup_commands = ". "+self._get_caseroot()+"/.env_mach_specific.sh; "
-        conda_setup_commands, this_conda_env = self._get_conda_env(conda_setup_commands)
-        command = conda_setup_commands + command
-        print(f"command: {command}")
-        
-        # Run
-        try:
-            with open(tool_name + ".log", "w") as f:
-                subprocess.run(command, shell=True, check=True, text=True,
-                    stdout=f, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError as error:
-            print("ERROR while getting the conda environment and/or ")
-            print(f"running the {tool_name} tool: ")
-            print(f"(1) If your {this_conda_env} environment is out of date or you ")
-            print(f"have not created the {this_conda_env} environment, yet, you may ")
-            print("get past this error by running ./py_env_create ")
-            print("in your ctsm directory and trying this test again. ")
-            print("(2) If conda is not available, install and load conda, ")
-            print("run ./py_env_create, and then try this test again. ")
-            print("(3) If (1) and (2) are not the issue, then you may be ")
-            print(f"getting an error within {tool_name} itself. ")
-            print("Default error message: ")
-            print(error.output)
-            raise
-        except:
-            print(f"ERROR trying to run {tool_name}.")
-            raise
 
     # Is flanduse_timeseries defined? If so, where is it?
     def _get_flanduse_timeseries_in(self, case):
