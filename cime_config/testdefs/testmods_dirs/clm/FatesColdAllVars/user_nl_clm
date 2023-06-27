@@ -3,6 +3,7 @@ hist_mfilt        = 365
 hist_nhtfrq       = -24
 hist_empty_htapes = .false.
 fates_spitfire_mode = 1
+hist_ndens = 1
 hist_fincl1       = 'FATES_CROWNAREA_PF', 'FATES_CANOPYCROWNAREA_PF',
 'FATES_NCL_AP', 'FATES_NPATCH_AP', 'FATES_VEGC_AP',
 'FATES_SECONDARY_FOREST_FRACTION', 'FATES_WOOD_PRODUCT',
