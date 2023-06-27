@@ -35,16 +35,14 @@ jobs:
             CIME_TEST_PLATFORM: ubuntu-latest
           run: |
               ./py_env_create --read-spec
-              conda activate ctsm_pylib
               cd python
-              make test
+              conda run -n ctsm_pylib make test
               if [ $? != 0 ] exit -1
           continue-on-error: False
         - name: Run pylint
           shell: bash -l {0}
           run: |
-              conda activate ctsm_pylib
               cd python
-              make lint
+              conda run -n ctsm_pylib make lint
               if [ $? != 0 ] exit -1
           continue-on-error: False
