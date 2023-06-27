@@ -13,7 +13,7 @@ module clm_initializeMod
   use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch, use_fates_sp
   use clm_varctl            , only : is_cold_start
   use clm_varctl            , only : iulog
-  use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
+  use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates, use_fates_nocomp
   use clm_varctl            , only : use_soil_moisture_streams
   use clm_instur            , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft
   use clm_instur            , only : irrig_method, wt_glc_mec, topo_glc_mec, haslake, pct_urban_max
@@ -451,9 +451,14 @@ contains
 
        ! For SP FATES-SP Initialize SP
        ! Also for FATES with Dry-Deposition on as well (see above)
-       !if(use_fates_sp .or. (.not.use_cn) .or. (n_drydep > 0) )then  !  Replace with this when we have dry-deposition working
-       ! For now don't allow for dry-deposition because of issues in #1044 EBK Jun/17/2022
-       if( use_fates_sp .or. .not. use_fates )then
+       ! Replace with this when we have dry-deposition working
+       ! if (use_fates_sp .or. use_fates_nocomp .or. (n_drydep > 0) )then  
+       ! For now don't allow for dry-deposition with full fates 
+       ! because of issues in #1044 EBK Jun/17/2022
+       if( use_fates_sp .or. use_fates_nocomp .or. (.not. use_fates )) then
+          if (masterproc) then
+             write(iulog,'(a)')'Initializing Satellite Phenology'
+          end if
           call SatellitePhenologyInit(bounds_proc)
        end if
 
