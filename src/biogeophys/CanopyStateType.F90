@@ -225,22 +225,6 @@ contains
               avgflag='A', long_name='canopy top', &
               ptr_patch=this%htop_patch)
        endif
-
-    this%displa_patch(begp:endp) = spval
-    call hist_addfld1d (fname='DISPLA', units='m', &
-         avgflag='A', long_name='displacement height', &
-         ptr_patch=this%displa_patch, default='inactive')
-
-    if(use_fates_sp)then
-       this%htop_hist_patch(begp:endp) = spval
-       call hist_addfld1d (fname='HTOP', units='m', &
-           avgflag='A', long_name='HTOP weights for SP mode', &
-           ptr_patch=this%htop_hist_patch)
-    else
-       this%htop_patch(begp:endp) = spval
-       call hist_addfld1d (fname='HTOP', units='m', &
-           avgflag='A', long_name='canopy top', &
-           ptr_patch=this%htop_patch)
     endif
 
     if(use_fates_sp)then

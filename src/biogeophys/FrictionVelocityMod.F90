@@ -342,6 +342,7 @@ contains
        call hist_addfld1d (fname='KBM1', units='unitless', &
             avgflag='A', long_name='natural logarithm of Z0MG_P/Z0HG_P', &
             ptr_patch=this%kbm1_patch, default='inactive')
+    end if
 
     if (use_luna) then
        call hist_addfld1d (fname='RB10', units='s/m', &
