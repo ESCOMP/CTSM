@@ -868,7 +868,7 @@ contains
          bounds = bounds, &
          name = 'hrv_xsmrpool_to_atm_' // carbon_type_suffix, &
          units = 'gC/m^2', &
-         allows_non_annual_delta = allows_non_annual_delta)
+         allows_non_annual_delta = .false.)
 
   end subroutine InitAllocate
 
