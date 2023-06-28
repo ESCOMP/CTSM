@@ -84,15 +84,15 @@ contains
   !------------------------------------------------------------------------
   subroutine Init(this, bounds)
 
-    use clm_varctl     , only : use_fates, use_fates_sp, use_fates_nocomp
+    use clm_varctl, only : use_fates, use_fates_nocomp
     class(vocemis_type) :: this
     type(bounds_type), intent(in)    :: bounds  
 
 
     if ( shr_megan_mechcomps_n > 0) then
        if (use_fates) then
-          if (( .not. use_fates_sp) .and. (.not. use_fates_nocomp)) then
-             call endrun( msg='ERROR: MEGAN currently only works with when FATES is in SP or NOCOMP mode '//&
+          if (.not. use_fates_nocomp) then
+             call endrun( msg='ERROR: MEGAN currently only works with when FATES is in SP and/or NOCOMP mode '//&
                   errMsg(sourcefile, __LINE__))
           end if
        end if
