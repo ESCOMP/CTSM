@@ -5,6 +5,7 @@ import os
 import subprocess
 from ctsm.utils import abort
 
+
 def run_cmd_output_on_error(cmd, errmsg, cwd=None):
     """Run the given command; suppress output but print it if there is an error
 
@@ -17,25 +18,23 @@ def run_cmd_output_on_error(cmd, errmsg, cwd=None):
     cwd: string or None - path from which the command should be run
     """
     try:
-        _ = subprocess.check_output(cmd,
-                                    stderr=subprocess.STDOUT,
-                                    universal_newlines=True,
-                                    cwd=cwd)
+        _ = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, cwd=cwd)
     except subprocess.CalledProcessError as error:
-        print('ERROR while running:')
-        print(' '.join(cmd))
+        print("ERROR while running:")
+        print(" ".join(cmd))
         if cwd is not None:
-            print('From {}'.format(cwd))
-        print('')
+            print("From {}".format(cwd))
+        print("")
         print(error.output)
-        print('')
+        print("")
         abort(errmsg)
     except:
-        print('ERROR trying to run:')
-        print(' '.join(cmd))
+        print("ERROR trying to run:")
+        print(" ".join(cmd))
         if cwd is not None:
-            print('From {}'.format(cwd))
+            print("From {}".format(cwd))
         raise
+
 
 def make_link(src, dst):
     """Makes a link pointing to src named dst

@@ -198,15 +198,33 @@ contains
          avgflag='A', long_name='Aboveground leaf biomass', &
          ptr_patch=this%leaf_biomass_patch, default='inactive')
 
-    this%fsun_patch(begp:endp) = spval
-    call hist_addfld1d (fname='FSUN', units='proportion', &
-         avgflag='A', long_name='sunlit fraction of canopy', &
-         ptr_patch=this%fsun_patch, default='inactive')
+    if (use_cn .or. use_fates) then
+       this%fsun_patch(begp:endp) = spval
+       call hist_addfld1d (fname='FSUN', units='proportion', &
+            avgflag='A', long_name='sunlit fraction of canopy', &
+            ptr_patch=this%fsun_patch, default='inactive')
 
-    this%hbot_patch(begp:endp) = spval
-    call hist_addfld1d (fname='HBOT', units='m', &
-         avgflag='A', long_name='canopy bottom', &
-         ptr_patch=this%hbot_patch, default='inactive')
+       this%hbot_patch(begp:endp) = spval
+       call hist_addfld1d (fname='HBOT', units='m', &
+            avgflag='A', long_name='canopy bottom', &
+            ptr_patch=this%hbot_patch, default='inactive')
+
+       this%displa_patch(begp:endp) = spval
+       call hist_addfld1d (fname='DISPLA', units='m', &
+            avgflag='A', long_name='displacement height (vegetated landunits only)', &
+            ptr_patch=this%displa_patch, default='inactive', l2g_scale_type='veg')
+
+       if(use_fates_sp)then
+          this%htop_hist_patch(begp:endp) = spval
+          call hist_addfld1d (fname='HTOP', units='m', &
+              avgflag='A', long_name='HTOP weights for SP mode', &
+              ptr_patch=this%htop_hist_patch)
+       else
+          this%htop_patch(begp:endp) = spval
+          call hist_addfld1d (fname='HTOP', units='m', &
+              avgflag='A', long_name='canopy top', &
+              ptr_patch=this%htop_patch)
+       endif
 
     this%displa_patch(begp:endp) = spval
     call hist_addfld1d (fname='DISPLA', units='m', &
@@ -250,9 +268,9 @@ contains
     endif !FATES_SP
 
     this%z0m_patch(begp:endp) = spval
-    call hist_addfld1d (fname='Z0M', units='m', &
-         avgflag='A', long_name='momentum roughness length', &
-          ptr_patch=this%z0m_patch, default='inactive')
+    call hist_addfld1d (fname='Z0MV_DENSE', units='m', &
+         avgflag='A', long_name='roughness length over vegetation, momentum, for dense canopy', &
+          ptr_patch=this%z0m_patch, default='inactive', l2g_scale_type='veg')
 
     ! Accumulated fields
     this%fsun24_patch(begp:endp) = spval

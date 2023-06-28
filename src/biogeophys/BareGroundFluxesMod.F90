@@ -20,6 +20,7 @@ module BareGroundFluxesMod
   use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
   use Wateratm2lndBulkType       , only : wateratm2lndbulk_type
   use HumanIndexMod        , only : humanindex_type
+  use CanopyStateType      , only : canopystate_type
   use LandunitType         , only : lun                
   use ColumnType           , only : col                
   use PatchType            , only : patch                
@@ -110,13 +111,13 @@ contains
     type(photosyns_type)   , intent(inout) :: photosyns_inst
     type(humanindex_type)  , intent(inout) :: humanindex_inst
     type(canopystate_type) , intent(inout) :: canopystate_inst
-    
     !
     ! !LOCAL VARIABLES:
     integer, parameter  :: niters = 3            ! maximum number of iterations for surface temperature
     integer  :: p,c,g,f,j,l                      ! indices
     integer  :: iter                             ! iteration index
     real(r8) :: zldis(bounds%begp:bounds%endp)   ! reference height "minus" zero displacement height [m]
+    real(r8) :: zeta                             ! dimensionless height used in Monin-Obukhov theory
     real(r8) :: wc                               ! convective velocity [m/s]
     real(r8) :: dth(bounds%begp:bounds%endp)     ! diff of virtual temp. between ref. height and surface
     real(r8) :: dthv                             ! diff of vir. poten. temp. between ref. height and surface
@@ -236,6 +237,7 @@ contains
          forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Output: [real(r8) (:)   ] observational height of wind at patch level [m]
          forc_hgt_t_patch       => frictionvel_inst%forc_hgt_t_patch            , & ! Output: [real(r8) (:)   ] observational height of temperature at patch level [m]
          forc_hgt_q_patch       => frictionvel_inst%forc_hgt_q_patch            , & ! Output: [real(r8) (:)   ] observational height of specific humidity at patch level [m]
+         displa                 => canopystate_inst%displa_patch                , & ! Input:  [real(r8) (:)   ]  displacement height (m)
          u10_clm                => frictionvel_inst%u10_clm_patch               , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
          zetamax                => frictionvel_inst%zetamaxstable               , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
          zeta                   => frictionvel_inst%zeta_patch                  , & ! Output: [real(r8) (:)   ]  dimensionless stability parameter
@@ -297,6 +299,9 @@ contains
          ! Initialization variables
 
          displa(p) = 0._r8
+         z0mv(p)   = 0._r8
+         z0hv(p)   = 0._r8
+         z0qv(p)   = 0._r8
          dlrad(p)  = 0._r8
          ulrad(p)  = 0._r8
          dhsdt_canopy(p) = 0._r8
@@ -471,6 +476,12 @@ contains
          end if
 
          kbm1(p) = log(z0mg_patch(p) / z0hg_patch(p))
+
+         ! Copy local patch ground roughness back to column arrays for history output which
+         ! uses the column arrays. z0mg is unchanged so only need to copy z0hg and z0qg
+
+         z0hg_col(c) = z0hg_patch(p)
+         z0qg_col(c) = z0qg_patch(p)
 
          ! Human Heat Stress
          if ( all_human_stress_indices .or. fast_human_stress_indices ) then

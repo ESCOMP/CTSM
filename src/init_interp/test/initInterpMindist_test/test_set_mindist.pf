@@ -2,7 +2,7 @@ module test_set_mindist
 
   ! Tests of initInterpMindist: set_mindist
 
-  use pfunit_mod
+  use funit
   use initInterpMindist
   use initInterpMindistTestUtils, only : create_subgrid_info, create_glc_behavior
   use initInterpMindistTestUtils, only : subgrid_special_indices, ilun_special

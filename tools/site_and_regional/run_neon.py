@@ -5,17 +5,17 @@
 |---------------------  Instructions  -----------------------------|
 |------------------------------------------------------------------|
 This is a wrapper script for running CTSM simulation for one or more
-neon sites. 
+neon sites.
 
 This script is only for neon site and we will develop a more general
 code later.
 
-This script first creates and builds a generic base case. 
+This script first creates and builds a generic base case.
 Next, it will clone the base_case for different neon sites and run
-types to reduce the need to build ctsm everytime. 
+types to reduce the need to build ctsm everytime.
 
 This script will do the following:
-    1) Create a generic base case for cloning. 
+    1) Create a generic base case for cloning.
     2) Make the case for the specific neon site(s).
     3) Make changes to the case, for:
         a. AD spinup
@@ -24,17 +24,13 @@ This script will do the following:
     	#---------------
     	d. SASU or Matrix spinup
     4) Build and submit the case.
- 
+
 -------------------------------------------------------------------
-Instructions for running on Cheyenne/Casper:
- 
-load the following into your local environment
-    module load python
-    ncar_pylib
- 
-To remove NPL from your environment on Cheyenne/Casper:
-    deactivate
- 
+Instructions for running using conda python environments:
+
+../../py_env_create
+conda activate ctsm_py
+
 -------------------------------------------------------------------
 To see the available options:
     ./run_neon.py --help
@@ -83,7 +79,7 @@ from ctsm.download_utils import download_file
 import CIME.build as build
 from standard_script_setup import *
 from CIME.case import Case
-from CIME.utils import safe_copy, expect, symlink_force
+from CIME.utils import safe_copy, expect, symlink_force, run_cmd_no_fail
 from argparse import RawTextHelpFormatter
 from CIME.locked_files import lock_file, unlock_file
 
@@ -117,7 +113,7 @@ def get_parser(args, description, valid_neon_sites):
         "--base-case",
         help="""
                 Root Directory of base case build
-                [default: %(default)s] 
+                [default: %(default)s]
                 """,
         action="store",
         dest="base_case_root",
@@ -130,7 +126,7 @@ def get_parser(args, description, valid_neon_sites):
         "--output-root",
         help="""
                 Root output directory of cases
-                [default: %(default)s] 
+                [default: %(default)s]
                 """,
         action="store",
         dest="output_root",
@@ -166,7 +162,7 @@ def get_parser(args, description, valid_neon_sites):
     parser.add_argument(
         "--rerun",
         help="""
-                If the case exists but does not appear to be complete, restart it. 
+                If the case exists but does not appear to be complete, restart it.
                 [default: %(default)s]
                 """,
         action="store_true",
@@ -198,6 +194,31 @@ def get_parser(args, description, valid_neon_sites):
     )
 
     parser.add_argument(
+       "--prism",
+        help="""
+                Uses the PRISM reanaylsis precipitation data for the site instead of the NEON data
+                (only available over Continental US)
+                """,
+        action="store_true",
+        dest="prism",
+        required=False,
+        default=False,
+    )
+
+
+    parser.add_argument(
+       "--experiment",
+        help="""
+                Appends the case name with string for model experiment
+                """,
+        action="store",
+        dest="experiment",
+        type=str,
+        required=False,
+        default=None,
+    )
+
+    parser.add_argument(
         "--run-length",
         help="""
                 How long to run (modified ISO 8601 duration)
@@ -210,9 +231,10 @@ def get_parser(args, description, valid_neon_sites):
 
     parser.add_argument(
         "--start-date",
-        help="""           
+        help="""
                 Start date for running CTSM simulation in ISO format.
                 [default: %(default)s]
+                (currently non-functional)
                 """,
         action="store",
         dest="start_date",
@@ -244,6 +266,19 @@ def get_parser(args, description, valid_neon_sites):
         required=False,
         default=False,
     )
+    parser.add_argument(
+        "--neon-version",
+        help="""
+                Neon data version to use for this simulation.
+                [default: use the latest data available]
+                """,
+        action="store",
+        dest="user_version",
+        required = False,
+        type = str,
+        choices= ['v1','v2','v3'],
+    )
+
 
     args = CIME.utils.parse_args_and_handle_standard_logging_options(args, parser)
 
@@ -260,13 +295,15 @@ def get_parser(args, description, valid_neon_sites):
 
     if args.run_length == "0Y":
         if args.run_type == "ad":
-            run_length = "200Y"
+            run_length = "100Y"
         elif args.run_type == "postad":
-            run_length = "50Y"
+            run_length = "100Y"
         else:
             # The transient run length is set by cdeps atm buildnml to the last date of the available tower data
             # this value is not used
             run_length = "4Y"
+    else:
+        run_length = args.run_length
 
     run_length = parse_isoduration(run_length)
     base_case_root = None
@@ -282,6 +319,8 @@ def get_parser(args, description, valid_neon_sites):
         neon_sites,
         args.output_root,
         args.run_type,
+        args.experiment,
+        args.prism,
         args.overwrite,
         run_length,
         base_case_root,
@@ -289,6 +328,7 @@ def get_parser(args, description, valid_neon_sites):
         args.setup_only,
         args.no_batch,
         args.rerun,
+        args.user_version,
     )
 
 
@@ -402,10 +442,17 @@ class NeonSite:
 
                 # --change any config for base_case:
                 # case.set_value("RUN_TYPE","startup")
-
                 print("---- base case setup ------")
                 case.case_setup()
             else:
+                # For existing case check that the compset name is correct
+                existingcompname = case.get_value("COMPSET")
+                match = re.search("^HIST", existingcompname, flags=re.IGNORECASE)
+                if re.search("^HIST", compset, flags=re.IGNORECASE) is None:
+                    expect( match == None, "Existing base case is a historical type and should not be  -- rerun with the --orverwrite option" )
+                else:
+                    expect( match != None, "Existing base case should be a historical type and is not -- rerun with the --orverwrite option" )
+                # reset the case
                 case.case_setup(reset=True)
             case_path = case.get_value("CASEROOT")
 
@@ -413,6 +460,7 @@ class NeonSite:
                 return case_path
 
             print("---- base case build ------")
+            print("--- This may take a while and you may see WARNING messages ---")
             # always walk through the build process to make sure it's up to date.
             t0 = time.time()
             build.case_build(case_path, case=case)
@@ -426,16 +474,34 @@ class NeonSite:
         d1 = datetime.datetime(self.end_year, self.end_month, 1)
         d2 = datetime.datetime(self.start_year, self.start_month, 1)
         return (d1.year - d2.year) * 12 + d1.month - d2.month
+    
+    def get_batch_query(self, case):
+        """
+        Function for querying the batch queue query command for a case, depending on the 
+        user's batch system. 
 
+        Args:
+        case:
+            case object
+        """
+        
+        if case.get_value("BATCH_SYSTEM") == "none":
+          return "none"
+        else:
+          return case.get_value("batch_query")
+          
     def run_case(
         self,
         base_case_root,
         run_type,
+        prism,
         run_length,
+        user_version,
         overwrite=False,
         setup_only=False,
         no_batch=False,
         rerun=False,
+        experiment=False,
     ):
         user_mods_dirs = [
             os.path.join(
@@ -446,9 +512,20 @@ class NeonSite:
             os.path.isdir(base_case_root),
             "Error base case does not exist in {}".format(base_case_root),
         )
+        # -- if user gives a version:
+        if user_version:
+            version = user_version
+        else:
+            version = 'latest'
+
+        print ("using this version:", version)
+
+        if experiment != None:
+            self.name = self.name + "." + experiment
         case_root = os.path.abspath(
-            os.path.join(base_case_root, "..", self.name + "." + run_type)
-        )
+                os.path.join(base_case_root, "..", self.name + "." + run_type)
+            )
+
         rundir = None
         if os.path.isdir(case_root):
             if overwrite:
@@ -457,6 +534,13 @@ class NeonSite:
             elif rerun:
                 with Case(case_root, read_only=False) as case:
                     rundir = case.get_value("RUNDIR")
+                    # For existing case check that the compset name is correct
+                    existingcompname = case.get_value("COMPSET")
+                    match = re.search("^HIST", existingcompname, flags=re.IGNORECASE)
+                    if re.search("^HIST", compset, flags=re.IGNORECASE) is None:
+                        expect( match == None, "Existing base case is a historical type and should not be  -- rerun with the --orverwrite option" )
+                    else:
+                        expect( match != None, "Existing base case should be a historical type and is not -- rerun with the --orverwrite option" )
                     if os.path.isfile(os.path.join(rundir, "ESMF_Profile.summary")):
                         print(
                             "Case {} appears to be complete, not rerunning.".format(
@@ -466,6 +550,11 @@ class NeonSite:
                     elif not setup_only:
                         print("Resubmitting case {}".format(case_root))
                         case.submit(no_batch=no_batch)
+                        print("-----------------------------------")
+                        print("Successfully submitted case!")
+                        batch_query = self.get_batch_query(case)
+                        if batch_query != "none":
+                            print(f"Use {batch_query} to check its run status")
                     return
             else:
                 logger.warning(
@@ -485,22 +574,34 @@ class NeonSite:
             # read_only = False should not be required here
             with Case(base_case_root, read_only=False) as basecase:
                 print("---- cloning the base case in {}".format(case_root))
+                #
+                # EBK: 11/05/2022 -- Note keeping the user_mods_dirs argument is important. Although
+                # it causes some of the user_nl_* files to have duplicated inputs. It also ensures
+                # that the shell_commands file is copied, as well as taking care of the DATM inputs.
+                # See https://github.com/ESCOMP/CTSM/pull/1872#pullrequestreview-1169407493
+                #
                 basecase.create_clone(
                     case_root, keepexe=True, user_mods_dirs=user_mods_dirs
                 )
 
         with Case(case_root, read_only=False) as case:
-            # in order to avoid the complication of leap years we always set the run_length in units of days.
-            case.set_value("STOP_OPTION", "ndays")
-            case.set_value("STOP_N", run_length)
-            case.set_value("REST_OPTION", "end")
+            if run_type != "transient":
+                 # in order to avoid the complication of leap years we always set the run_length in units of days.
+                 case.set_value("STOP_OPTION", "ndays")
+                 case.set_value("REST_OPTION", "end")
             case.set_value("CONTINUE_RUN", False)
+            case.set_value("NEONVERSION", version)
+            if prism:
+                case.set_value("CLM_USRDAT_NAME", "NEON.PRISM")
 
             if run_type == "ad":
                 case.set_value("CLM_FORCE_COLDSTART", "on")
                 case.set_value("CLM_ACCELERATED_SPINUP", "on")
                 case.set_value("RUN_REFDATE", "0018-01-01")
                 case.set_value("RUN_STARTDATE", "0018-01-01")
+                case.set_value("RESUBMIT", 1)
+                case.set_value("STOP_N", run_length)
+
             else:
                 case.set_value("CLM_FORCE_COLDSTART", "off")
                 case.set_value("CLM_ACCELERATED_SPINUP", "off")
@@ -508,31 +609,18 @@ class NeonSite:
 
             if run_type == "postad":
                 self.set_ref_case(case)
+                case.set_value("STOP_N", run_length)
 
+            # For transient cases STOP will be set in the user_mod_directory
             if run_type == "transient":
                 if self.finidat:
                     case.set_value("RUN_TYPE", "startup")
                 else:
                     if not self.set_ref_case(case):
                         return
-                case.set_value("STOP_OPTION", "nmonths")
-                case.set_value("STOP_N", self.diff_month())
-                case.set_value("DATM_YR_ALIGN", self.start_year)
-                case.set_value("DATM_YR_START", self.start_year)
-                case.set_value("DATM_YR_END", self.end_year)
                 case.set_value("CALENDAR", "GREGORIAN")
-            else:
-                # for the spinup we want the start and end on year boundaries
-                if self.start_month == 1:
-                    case.set_value("DATM_YR_ALIGN", self.start_year)
-                    case.set_value("DATM_YR_START", self.start_year)
-                elif self.start_year + 1 <= self.end_year:
-                    case.set_value("DATM_YR_ALIGN", self.start_year + 1)
-                    case.set_value("DATM_YR_START", self.start_year + 1)
-                if self.end_month == 12:
-                    case.set_value("DATM_YR_END", self.end_year)
-                else:
-                    case.set_value("DATM_YR_END", self.end_year - 1)
+                case.set_value("RESUBMIT", 0)
+                case.set_value("STOP_OPTION", "nmonths")
 
             if not rundir:
                 rundir = case.get_value("RUNDIR")
@@ -544,6 +632,11 @@ class NeonSite:
             case.check_all_input_data()
             if not setup_only:
                 case.submit(no_batch=no_batch)
+                print("-----------------------------------")
+                print("Successfully submitted case!")
+                batch_query = self.get_batch_query(case)
+                if batch_query != "none":
+                    print(f"Use {batch_query} to check its run status")
 
     def set_ref_case(self, case):
         rundir = case.get_value("RUNDIR")
@@ -591,11 +684,7 @@ class NeonSite:
         case.set_value("RUN_REFDATE", refdate)
         if case_root.endswith(".postad"):
             case.set_value("RUN_STARTDATE", refdate)
-        else:
-            case.set_value(
-                "RUN_STARTDATE",
-                "{yr:04d}-{mo:02d}-01".format(yr=self.start_year, mo=self.start_month),
-            )
+        # NOTE: if start options are set, RUN_STARTDATE should be modified here
         return True
 
     def modify_user_nl(self, case_root, run_type, rundir):
@@ -628,7 +717,7 @@ def check_neon_listing(valid_neon_sites):
     A function to download and parse neon listing file.
     """
     listing_file = "listing.csv"
-    url = "https://neon-ncar.s3.data.neonscience.org/listing.csv"
+    url = "https://storage.neonscience.org/neon-ncar/listing.csv"
 
     download_file(url, listing_file)
     available_list = parse_neon_listing(listing_file, valid_neon_sites)
@@ -666,31 +755,39 @@ def parse_neon_listing(listing_file, valid_neon_sites):
     df = df["object"].str.split("/", expand=True)
 
     # -- groupby site name
-    grouped_df = df.groupby(7)
+    grouped_df = df.groupby(8)
     for key, item in grouped_df:
         # -- check if it is a valid neon site
         if any(key in x for x in valid_neon_sites):
             site_name = key
-
             tmp_df = grouped_df.get_group(key)
 
             # -- filter files only ending with YYYY-MM.nc
-            tmp_df = tmp_df[tmp_df[8].str.contains("\d\d\d\d-\d\d.nc")]
-            latest_version = tmp_df[6].iloc[-1]
-            tmp_df = tmp_df[tmp_df[6].str.contains(latest_version)]
-            # -- remove .nc from the file names
-            tmp_df[8] = tmp_df[8].str.replace(".nc", "")
+            tmp_df = tmp_df[tmp_df[9].str.contains("\d\d\d\d-\d\d.nc")]
 
-            tmp_df2 = tmp_df[8].str.split("-", expand=True)
+            # -- find all the data versions
+            versions = tmp_df[7].unique()
+            #print ("all versions available for ", site_name,":", *versions)
+            latest_version = tmp_df[7].iloc[-1]
+            #print ("latests version available for ", site_name,":", latest_version)
+
+            tmp_df = tmp_df[tmp_df[7].str.contains(latest_version)]
+            # -- remove .nc from the file names
+            tmp_df[9] = tmp_df[9].str.replace(".nc", "", regex=False)
+
+
+            tmp_df2 = tmp_df[9].str.split("-", expand=True)
+
             # ignore any prefix in file name and just get year
             tmp_df2[0] = tmp_df2[0].str.slice(-4)
+
             # -- figure out start_year and end_year
-            start_year = int(tmp_df2[0].iloc[0])
-            end_year = int(tmp_df2[0].iloc[-1])
+            start_year = tmp_df2[0].iloc[0]
+            end_year = tmp_df2[0].iloc[-1]
 
             # -- figure out start_month and end_month
-            start_month = int(tmp_df2[1].iloc[0])
-            end_month = int(tmp_df2[1].iloc[-1])
+            start_month = tmp_df2[1].iloc[0]
+            end_month = tmp_df2[1].iloc[-1]
 
             logger.debug("Valid neon site " + site_name + " found!")
             logger.debug("File version {}".format(latest_version))
@@ -724,6 +821,8 @@ def main(description):
         site_list,
         output_root,
         run_type,
+        experiment,
+        prism,
         overwrite,
         run_length,
         base_case_root,
@@ -731,6 +830,7 @@ def main(description):
         setup_only,
         no_batch,
         rerun,
+        user_version,
     ) = get_parser(sys.argv, description, valid_neon_sites)
 
     if output_root:
@@ -746,7 +846,10 @@ def main(description):
     # -- so no need to define a base_case for every site.
 
     res = "CLM_USRDAT"
-    compset = "I1PtClm51Bgc"
+    if run_type == "transient":
+       compset = "IHist1PtClm51Bgc"
+    else:
+       compset = "I1PtClm51Bgc"
 
     # --  Looping over neon sites
 
@@ -763,12 +866,16 @@ def main(description):
             neon_site.run_case(
                 base_case_root,
                 run_type,
+                prism,
                 run_length,
+                user_version,
                 overwrite,
                 setup_only,
                 no_batch,
                 rerun,
+                experiment,
             )
+
 
 
 if __name__ == "__main__":

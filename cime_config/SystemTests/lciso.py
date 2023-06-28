@@ -14,24 +14,28 @@ from CIME.SystemTests.test_utils.user_nl_utils import append_to_user_nl_files
 
 logger = logging.getLogger(__name__)
 
-class LCISO(SystemTestsCompareTwo):
 
+class LCISO(SystemTestsCompareTwo):
     def __init__(self, case):
         self.comp = case.get_value("COMP_LND")
-        SystemTestsCompareTwo.__init__(self, case,
-                                       separate_builds = False,
-                                       run_two_suffix = 'cisoallon',
-                                       run_one_description = 'carbon isotopes off',
-                                       run_two_description = 'c13 and c14 isotopes on as well as C isotope time series',
-                                       ignore_fieldlist_diffs = True)
+        SystemTestsCompareTwo.__init__(
+            self,
+            case,
+            separate_builds=False,
+            run_two_suffix="cisoallon",
+            run_one_description="carbon isotopes off",
+            run_two_description="c13 and c14 isotopes on as well as C isotope time series",
+            ignore_fieldlist_diffs=True,
+        )
 
     def _case_one_setup(self):
-        append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = self.comp,
-                                contents = "use_c13=F, use_c14=F")
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(), component=self.comp, contents="use_c13=F, use_c14=F"
+        )
 
     def _case_two_setup(self):
-        append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = self.comp,
-                                contents = "use_c13=.true.,use_c14=.true.,use_c13_timeseries=.true.,use_c14_bombspike=.true." )
-
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(),
+            component=self.comp,
+            contents="use_c13=.true.,use_c14=.true.,use_c13_timeseries=.true.,use_c14_bombspike=.true.",
+        )

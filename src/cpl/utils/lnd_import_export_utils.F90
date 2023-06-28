@@ -140,12 +140,13 @@ contains
 
   !=============================================================================
 
-  subroutine check_for_nans(array, fname, begg)
+  subroutine check_for_nans(array, fname, begg, direction)
 
     ! input/output variables
     real(r8)         , intent(in) :: array(:)
     character(len=*) , intent(in) :: fname
     integer          , intent(in) :: begg
+    character(len=*) , intent(in) :: direction
 
     ! local variables
     integer :: i
@@ -161,7 +162,7 @@ contains
              write(iulog,*) "NaN found in field ", trim(fname), ' at gridcell index ',begg+i-1
           end if
        end do
-       call shr_sys_abort(' ERROR: One or more of the output from CLM to the coupler are NaN ' )
+       call shr_sys_abort(' ERROR: One or more of the CTSM cap '//direction//' fields are NaN ' )
     end if
   end subroutine check_for_nans
 

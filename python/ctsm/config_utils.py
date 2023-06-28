@@ -63,9 +63,7 @@ def get_config_value(
     try:
         val = config.get(section, item)
     except configparser.NoSectionError:
-        abort(
-            "ERROR: Config file {} must contain section '{}'".format(file_path, section)
-        )
+        abort("ERROR: Config file {} must contain section '{}'".format(file_path, section))
     except configparser.NoOptionError:
         abort(
             "ERROR: Config file {} must contain item '{}' in section '{}'".format(
@@ -74,9 +72,7 @@ def get_config_value(
         )
 
     if val == _CONFIG_PLACEHOLDER:
-        abort(
-            "Error: {} needs to be specified in config file {}".format(item, file_path)
-        )
+        abort("Error: {} needs to be specified in config file {}".format(item, file_path))
 
     val = _handle_config_value(
         var=val,
@@ -86,6 +82,40 @@ def get_config_value(
         convert_to_type=convert_to_type,
         can_be_unset=can_be_unset,
         allowed_values=allowed_values,
+    )
+    return val
+
+
+def get_config_value_or_array(
+    config,
+    section,
+    item,
+    convert_to_type=None,
+):
+    """Get a config value as a single value or as an array if it's expressed as an array
+    for cases when you don't know how it's going to be expressed"""
+    val = config.get(section, item)
+    vallist = val.split()
+    if convert_to_type is not None:
+        if (
+            convert_to_type is not float
+            and convert_to_type is not int
+            and convert_to_type is not str
+        ):
+            abort(
+                "get_config_value_or_array can only have convert_to_type as float, int or str not "
+                + str(convert_to_type)
+            )
+    is_list = bool(len(vallist) > 1)
+
+    val = _handle_config_value(
+        var=val,
+        default=None,
+        item=item,
+        is_list=is_list,
+        convert_to_type=convert_to_type,
+        can_be_unset=False,
+        allowed_values=None,
     )
     return val
 
