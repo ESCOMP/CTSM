@@ -8,7 +8,6 @@ ccs_config
 /libraries/
 /share/
 /doc/doc-builder/
-/python/ctsm_py_gallery/
 
 # ignore svn directories
 **/.svn/**
