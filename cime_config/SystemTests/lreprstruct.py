@@ -22,31 +22,40 @@ from CIME.SystemTests.test_utils.user_nl_utils import append_to_user_nl_files
 
 logger = logging.getLogger(__name__)
 
-class LREPRSTRUCT(SystemTestsCompareTwo):
 
+class LREPRSTRUCT(SystemTestsCompareTwo):
     def __init__(self, case):
-        SystemTestsCompareTwo.__init__(self, case,
-                                       separate_builds = False,
-                                       run_two_suffix = 'grain1',
-                                       run_one_description = 'use a reproductive structure pool',
-                                       run_two_description = 'use a single grain pool',
-                                       ignore_fieldlist_diffs = True)
+        SystemTestsCompareTwo.__init__(
+            self,
+            case,
+            separate_builds=False,
+            run_two_suffix="grain1",
+            run_one_description="use a reproductive structure pool",
+            run_two_description="use a single grain pool",
+            ignore_fieldlist_diffs=True,
+        )
 
     def _case_one_setup(self):
         # We don't really need a second grain pool for this test, but we might as well do
         # this to further exercise the looping over different reproductive components.
-        append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
-                                contents = "for_testing_use_second_grain_pool=.true.")
-        append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
-                                contents = "for_testing_use_repr_structure_pool=.true.")
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(),
+            component="clm",
+            contents="for_testing_use_second_grain_pool=.true.",
+        )
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(),
+            component="clm",
+            contents="for_testing_use_repr_structure_pool=.true.",
+        )
 
     def _case_two_setup(self):
         # This is needed in the nearly-standard case to prevent grain from being used to
         # replenish crop seed deficits, thus making grain act like the reproductive
         # structure pools. (It wouldn't hurt to do this in case one as well, but it
         # shouldn't be needed there, since we shouldn't have any grain there anyway.)
-        append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
-                                contents = "for_testing_no_crop_seed_replenishment=.true.")
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(),
+            component="clm",
+            contents="for_testing_no_crop_seed_replenishment=.true.",
+        )
