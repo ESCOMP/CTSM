@@ -20,6 +20,8 @@ module CNProductsMod
   ! !PUBLIC TYPES:
   type, public :: cn_products_type
 
+     private   ! Default these procedures to private, unless specified otherwise
+
      ! ------------------------------------------------------------------------
      ! Public instance variables
      ! ------------------------------------------------------------------------
