@@ -555,8 +555,8 @@ contains
     call soilHydReadNML(   NLFilename )
 
     if( use_cn ) then
-       call CNPrecisionControlReadNML( NLFilename )
        call CNFireReadNML(             NLFilename )
+       call CNPrecisionControlReadNML( NLFilename )
        call CNNDynamicsReadNML       ( NLFilename )
        call CNPhenologyReadNML       ( NLFilename )
     end if
