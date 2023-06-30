@@ -66,8 +66,14 @@ Changes answers relative to baseline: YES for FATES tests only
 
    If this tag changes climate describe the run(s) done to evaluate the new
    climate (put details of the simulations in the experiment database)
-      See FATES #958 for discussion.  Note that this FATES update also incorporates
-      a number of additional science updates.
+
+      See FATES #958 for discussion.  The update increased the dimensions of
+      some FATES history output from site-level to pft-level.  As such, these
+      have been removed from some test cases to keep the test light weight and
+      added to the AllVars test to maintain coverage.
+
+      Note that this FATES update also incorporates a number of additional science updates
+      since the previous tag.
 
 Other details
 -------------
