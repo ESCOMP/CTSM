@@ -29,6 +29,11 @@ Does this tag change answers significantly for any of the following physics conf
 
 [ ] clm4_5
 
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+   Fixes #2043 -- Five izumi NEON tests fail (for me) because the testnames include L10d instead of Ld10
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -44,11 +49,11 @@ Testing summary:
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     cheyenne ---- OK
-    izumi ------- TBD
+    izumi ------- OK
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
     cheyenne ---- OK
-    izumi ------- TBD
+    izumi ------- OK
 
 Answer changes
 --------------
