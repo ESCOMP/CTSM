@@ -7,7 +7,7 @@ module SoilBiogeochemCarbonStateType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi, zsoi, c3_r2
-  use clm_varctl                         , only : iulog, spinup_state
+  use clm_varctl                         , only : iulog, spinup_state, use_fates_bgc
   use landunit_varcon                    , only : istcrop, istsoil
   use abortutils                         , only : endrun
   use spmdMod                            , only : masterproc 
@@ -1083,8 +1083,8 @@ contains
     end do
     do l = 1, ndecomp_pools
        if ( decomp_cascade_con%is_microbe(l) ) then
-          do fc = 1,num_bgc_soilc
-             c = filter_bgc_soilc(fc)
+          do fc = 1,num_allc
+             c = filter_allc(fc)
              this%totmicc_col(c) = this%totmicc_col(c) + this%decomp_cpools_col(c,l)
           end do
        endif
@@ -1118,54 +1118,73 @@ contains
        end if
     end do
 
-    
-
     do fc = 1,num_allc
        c = filter_allc(fc)
-
        ! coarse woody debris carbon
        this%cwdc_col(c) = 0._r8
-       this%totecosysc_col(c) = 0._r8
-       this%totc_col(c) = 0._r8
-
     end do
-
-    do fc = 1,num_bgc_soilc
-       c = filter_bgc_soilc(fc)
-
-       if(col%is_fates(c)) then
-          totvegc_col = 0._r8
-          ecovegc_col = 0._r8
-       else
+    
+    if (use_fates_bgc) then
+       do fc = 1,num_bgc_soilc
+          c = filter_bgc_soilc(fc)
+          if(col%is_fates(c)) then
+             totvegc_col = 0._r8
+             ecovegc_col = 0._r8
+          else
+             do l = 1, ndecomp_pools
+                if ( decomp_cascade_con%is_cwd(l) ) then
+                   this%cwdc_col(c) = this%cwdc_col(c) + this%decomp_cpools_col(c,l)
+                end if
+             end do
+             totvegc_col = cnveg_carbonstate_inst%totc_p2c_col(c)
+             ecovegc_col = cnveg_carbonstate_inst%totvegc_col(c)
+          end if
+          ! total ecosystem carbon, including veg but excluding cpool (TOTECOSYSC)
+          this%totecosysc_col(c) =   &
+               this%cwdc_col(c)    + &
+               this%totmicc_col(c) + &
+               this%totlitc_col(c) + &
+               this%totsomc_col(c) + &
+               ecovegc_col
+          ! total column carbon, including veg and cpool (TOTCOLC)
+          this%totc_col(c) =         &
+               this%cwdc_col(c)    + &
+               this%totmicc_col(c) + &
+               this%totlitc_col(c) + &
+               this%totsomc_col(c) + &
+               this%ctrunc_col(c)  + &
+               totvegc_col
+       end do
+    else
+       do fc = 1,num_allc
+          c = filter_allc(fc)
           do l = 1, ndecomp_pools
              if ( decomp_cascade_con%is_cwd(l) ) then
                 this%cwdc_col(c) = this%cwdc_col(c) + this%decomp_cpools_col(c,l)
              end if
           end do
-          
           totvegc_col = cnveg_carbonstate_inst%totc_p2c_col(c)
           ecovegc_col = cnveg_carbonstate_inst%totvegc_col(c)
-       end if
        
-       ! total ecosystem carbon, including veg but excluding cpool (TOTECOSYSC)
-       this%totecosysc_col(c) =   &
-            this%cwdc_col(c)    + &
-            this%totmicc_col(c) + &
-            this%totlitc_col(c) + &
-            this%totsomc_col(c) + &
-            ecovegc_col
-
-       ! total column carbon, including veg and cpool (TOTCOLC)
-       this%totc_col(c) =         &
-            this%cwdc_col(c)    + &
-            this%totmicc_col(c) + &
-            this%totlitc_col(c) + &
-            this%totsomc_col(c) + &
-            this%ctrunc_col(c)  + &
-            totvegc_col
-    end do
-
-    
+          ! total ecosystem carbon, including veg but excluding cpool (TOTECOSYSC)
+          this%totecosysc_col(c) =   &
+               this%cwdc_col(c)    + &
+               this%totmicc_col(c) + &
+               this%totlitc_col(c) + &
+               this%totsomc_col(c) + &
+               ecovegc_col
+          
+          ! total column carbon, including veg and cpool (TOTCOLC)
+          this%totc_col(c) =         &
+               this%cwdc_col(c)    + &
+               this%totmicc_col(c) + &
+               this%totlitc_col(c) + &
+               this%totsomc_col(c) + &
+               this%ctrunc_col(c)  + &
+               totvegc_col
+       end do
+    end if
+       
   end subroutine Summary
 
   !------------------------------------------------------------------------

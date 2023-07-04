@@ -51,9 +51,9 @@ module CNProductsMod
      real(r8), pointer :: gru_prod100_gain_grc(:) ! (g[C or N]/m2/s) gross unrepresented landcover addition to 100-year wood product pool
      real(r8), pointer :: gru_woodprod_gain_grc(:) ! (g[C or N]/m2/s) gross unrepresented landcover addition to wood product pools
      real(r8), pointer :: hrv_deadstem_to_prod10_patch(:)  ! (g[C or N]/m2/s) dead stem harvest to 10-year wood product pool
-     real(r8), pointer :: hrv_deadstem_to_prod10_grc(:)  ! (g[C or N]/m2/s) dead stem harvest to 10-year wood product pool
+     real(r8), pointer,public :: hrv_deadstem_to_prod10_grc(:)  ! (g[C or N]/m2/s) dead stem harvest to 10-year wood product pool
      real(r8), pointer :: hrv_deadstem_to_prod100_patch(:) ! (g[C or N]/m2/s) dead stem harvest to 100-year wood product pool
-     real(r8), pointer :: hrv_deadstem_to_prod100_grc(:) ! (g[C or N]/m2/s) dead stem harvest to 100-year wood product pool
+     real(r8), pointer,public :: hrv_deadstem_to_prod100_grc(:) ! (g[C or N]/m2/s) dead stem harvest to 100-year wood product pool
      real(r8), pointer :: crop_harvest_to_cropprod1_patch(:) ! (g[C or N]/m2/s) crop harvest to 1-year crop product pool
      real(r8), pointer :: crop_harvest_to_cropprod1_grc(:) ! (g[C or N]/m2/s) crop harvest to 1-year crop product pool
 
