@@ -163,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1850;
+my $ntests = 1975;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1254;
+   $ntests += 1344;
 }
 plan( tests=>$ntests );
 
@@ -466,6 +466,9 @@ foreach my $options (
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
                       "-res 0.9x1.25 -bgc sp -use_case 1850_noanthro_control -drydep -fire_emis",
                       "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res 360x720",
+                      "--bgc bgc --light_res none --namelist \"&a fire_method='nofire'/\"",
+                      "--bgc fates --light_res 360x720 --no-megan --namelist \"&a fates_spitfire_mode=2/\"",
+                      "--bgc fates --light_res none --no-megan --namelist \"&a fates_spitfire_mode=1/\"",
                      ) {
    my $file = $startfile;
    &make_env_run();
@@ -685,6 +688,11 @@ my %failtest = (
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
+                                   },
+     "NEONlightresButGlobal"     =>{ options=>"--res 4x5 --bgc bgc --envxml_dir . --light_res 106x740",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
                                    },
      "spno-fire"                 =>{ options=>"-bgc sp -envxml_dir . -use_case 2000_control",
                                      namelst=>"fire_method='nofire'",
@@ -971,6 +979,11 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                    },
+     "FATESwspitfireOffLigtOn"    =>{ options=>"-bgc fates -envxml_dir . -no-megan -light_res 360x720",
+                                     namelst=>"fates_spitfire_mode=0",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
      "FireNoneButBGCfireon"    =>{ options=>"-bgc bgc -envxml_dir . -light_res none",
                                      namelst=>"fire_method='li2021gswpfrc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1224,6 +1237,11 @@ my %warntest = (
                                    },
      "FUN_wo_flexCN"             =>{ options=>"-envxml_dir . -bgc bgc",
                                      namelst=>"use_fun=.true.,use_flexiblecn=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "NotNEONbutNEONlightres"    =>{ options=>"--res CLM_USRDAT --clm_usr_name regional --envxml_dir . --bgc bgc --light_res 106x174",
+                                     namelst=>"fsurdat='build-namelist_test.pl'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                    },

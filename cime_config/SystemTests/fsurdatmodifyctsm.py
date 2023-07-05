@@ -12,33 +12,33 @@ from CIME.SystemTests.test_utils.user_nl_utils import append_to_user_nl_files
 
 logger = logging.getLogger(__name__)
 
-class FSURDATMODIFYCTSM(SystemTestsCommon):
 
+class FSURDATMODIFYCTSM(SystemTestsCommon):
     def __init__(self, case):
         """
         initialize an object interface to the SMS system test
         """
         SystemTestsCommon.__init__(self, case)
 
-        if not os.path.exists(os.path.join(self._get_caseroot(),
-            'done_FSURDATMODIFYCTSM_setup.txt')):
+        if not os.path.exists(
+            os.path.join(self._get_caseroot(), "done_FSURDATMODIFYCTSM_setup.txt")
+        ):
             # Create out-of-the-box lnd_in to obtain fsurdat_in
-            case.create_namelists(component='lnd')
+            case.create_namelists(component="lnd")
             # If fsurdat_in does not exist, download it from the server
             case.check_all_input_data()
 
-            lnd_in_path = os.path.join(self._get_caseroot(), 'CaseDocs/lnd_in')
-            with open (lnd_in_path,'r') as lnd_in:
+            lnd_in_path = os.path.join(self._get_caseroot(), "CaseDocs/lnd_in")
+            with open(lnd_in_path, "r") as lnd_in:
                 for line in lnd_in:
                     fsurdat_in = re.match(r" *fsurdat *= *'(.*)'", line)
                     if fsurdat_in:
                         self._fsurdat_in = fsurdat_in.group(1)
                         break
 
-            self._fsurdat_out = os.path.join(self._get_caseroot(), 'fsurdat.nc')
-            self._ctsm_root = self._case.get_value( 'COMP_ROOT_DIR_LND')
-            self._cfg_file_path = os.path.join(self._get_caseroot(),
-                                               'modify_fsurdat.cfg')
+            self._fsurdat_out = os.path.join(self._get_caseroot(), "fsurdat.nc")
+            self._ctsm_root = self._case.get_value("COMP_ROOT_DIR_LND")
+            self._cfg_file_path = os.path.join(self._get_caseroot(), "modify_fsurdat.cfg")
 
             logger.info("  create config file to modify")
             self._create_config_file()
@@ -46,36 +46,39 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
             self._run_modify_fsurdat()
             logger.info("  modify user_nl files")
             self._modify_user_nl()
-            with open('done_FSURDATMODIFYCTSM_setup.txt', 'w') as fp:
+            with open("done_FSURDATMODIFYCTSM_setup.txt", "w") as fp:
                 pass
 
     def _create_config_file(self):
-        cfg_template_path = os.path.join(self._ctsm_root,
-            'tools/modify_input_files/modify_fsurdat_template.cfg')
+        cfg_template_path = os.path.join(
+            self._ctsm_root, "tools/modify_input_files/modify_fsurdat_template.cfg"
+        )
 
-        with open (self._cfg_file_path,'w') as cfg_out:
-            with open (cfg_template_path,'r') as cfg_in:
+        with open(self._cfg_file_path, "w") as cfg_out:
+            with open(cfg_template_path, "r") as cfg_in:
                 for line in cfg_in:
-                    if re.match(r' *fsurdat_in *=', line):
-                        line = 'fsurdat_in = {}'.format(self._fsurdat_in)
-                    elif re.match(r' *fsurdat_out *=', line):
-                        line = 'fsurdat_out = {}'.format(self._fsurdat_out)
-                    elif re.match(r' *idealized *=', line):
-                        line = 'idealized = True'
+                    if re.match(r" *fsurdat_in *=", line):
+                        line = "fsurdat_in = {}".format(self._fsurdat_in)
+                    elif re.match(r" *fsurdat_out *=", line):
+                        line = "fsurdat_out = {}".format(self._fsurdat_out)
+                    elif re.match(r" *idealized *=", line):
+                        line = "idealized = True"
                     cfg_out.write(line)
 
-
     def _run_modify_fsurdat(self):
-        tool_path = os.path.join(self._ctsm_root,
-                                 'tools/modify_input_files/fsurdat_modifier')
+        tool_path = os.path.join(self._ctsm_root, "tools/modify_input_files/fsurdat_modifier")
 
         self._case.load_env(reset=True)
-        conda_env = ". "+self._get_caseroot()+"/.env_mach_specific.sh; "
+        conda_env = ". " + self._get_caseroot() + "/.env_mach_specific.sh; "
         # Preprend the commands to get the conda environment for python first
         conda_env += self._get_conda_env()
         # Source the env
         try:
-            subprocess.run( conda_env+"python3 "+tool_path+" "+self._cfg_file_path, shell=True, check=True)
+            subprocess.run(
+                conda_env + "python3 " + tool_path + " " + self._cfg_file_path,
+                shell=True,
+                check=True,
+            )
         except subprocess.CalledProcessError as error:
             print("ERROR while getting the conda environment and/or ")
             print("running the fsurdat_modifier tool: ")
@@ -95,9 +98,11 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
             raise
 
     def _modify_user_nl(self):
-        append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
-                                contents = "fsurdat = '{}'".format(self._fsurdat_out))
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(),
+            component="clm",
+            contents="fsurdat = '{}'".format(self._fsurdat_out),
+        )
 
     def _get_conda_env(self):
         #
@@ -107,7 +112,7 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
         # Execute the module unload/load when "which conda" fails
         # eg on cheyenne
         try:
-            subprocess.run( "which conda", shell=True, check=True)
+            subprocess.run("which conda", shell=True, check=True)
             conda_env = " "
         except subprocess.CalledProcessError:
             # Remove python and add conda to environment for cheyennne
@@ -118,4 +123,4 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
         # End above to get to actual command
         conda_env += " && "
 
-        return( conda_env )
+        return conda_env

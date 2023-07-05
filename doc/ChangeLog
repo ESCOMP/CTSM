@@ -1,4 +1,595 @@
 ===============================================================
+Tag name: ctsm5.1.dev129
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu Jun 22 01:21:56 MDT 2023
+One-line Summary: NEON fixes for TOOL and user-mods, add SP for NEON, some history file updates, black refactor for buildlib/buildnml
+
+Purpose and description of changes
+----------------------------------
+
+Merge the NEON fixes for TOOL and allowing SP mode, as well as a few simple history PR's, and a black reformat.
+
+Fixes NEON bug identified at the NCAR-NEON workshop. Corrects the dominant PFT at TOOL site & usermods_dirs
+Some small changes for quality of life improvements for the run_neon script. Some documentation and code
+cleanup type changes regarding history code (delete a unused subroutine). Do a black reformat of python files
+buildlib/buildnml (and CTSM SystemTests) for consistency across CESM. Also add running them through black in the python
+
+Specific notes:
+
+ - fixed a couple lines so that python will stop complaining about deprecated things
+ - added print statements about warning messages being not an issue, and that building/running may take a while
+ - added a "success" print statement - I'm not sure this will actually only print if "successful"
+ - Add more documentation to history tape code
+ - Add more breadcrumbs between related variables and methods
+ - Put related history namelist flags/methods together
+ - Update some out of date comments in history code
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+   Fixes #2013 -- Incorrect PFT at TOOL
+   Fixes #2014 -- NEON usermods not working as intended
+   Fixes #2029 -- fire_method is used before it's set and hence fire_res isn't set to none
+   Fixes #2030 -- Logic in build-namelist not functioning correctly for FATES with light_res
+   Updates conda environment so that #1974 works
+
+Known bugs found since the previous tag (include issue #):
+   #2037 -- shell_commands for tests with two testmods listed don't concatenate both together
+   #2036 -- Remove setting of STOP options in user-mod directories
+   #2017 -- subset_data does not function for regional grids that span across Greenwich longitude zero 
+   #2024 -- snow fraction is uninitialized when passed to fates during cold-starts
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  Ability to run for SP sites was added for NEON, but run-neon.py doesn't have an option for it
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New --light_res option for 106x74 for NEON lightning data added (can be set in CLM_BLDNML_OPTS)
+   This is the default for NEON sites (with $CLM_USRDAT_NAME == NEON or NEON.PRISM)
+   It fails for non CLM_USRDAT resolutions and gives a warning for non-NEON CLM_USRDAT resolutions)
+
+Changes made to namelist defaults (e.g., changed parameter values): 
+  Add NEON 106x74 lightning dataset
+
+Changes to the datasets (e.g., parameter, surface or initial files): New NEON surface datasets
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+   Add a NEON case that runs in SP mode
+   Change one of the FATES tests to turn fire on and require lightning data
+
+Testing summary: regular NEON-tools
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS (57 tests different from baseline)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - PASS (NEON test list passes)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  other testing:
+    izumi -- PASS (tests of changed NEON sites, see list in #2031)
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: bit-for-bit (except some NEON sites)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NEON TOOL site and other NEON sites with namelist changes
+    - what platforms/compilers: all
+    - nature of change: new climate
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #2031 -- Merge of below...
+   #2015 -- Address NEON bugs
+   #2021 -- Small changes to fix warnings, add print statements for clarity
+   #2023 -- Document side effects of htapes_fieldlist
+   #2022 -- Delete unued hist_add_subscript
+   #2020 -- Add more documentation to history tape code
+   #2007 -- black reformat python files for consistancy across cesm
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev128
+Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Date: Thu Jun  1 15:31:52 MDT 2023
+One-line Summary: Update FATES tests to double precision
+
+Purpose and description of changes
+----------------------------------
+
+This pull request updates the fates tests to set the output
+precision to double precision.  The usermod fates_sp is similarly
+updated.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+- Resolves https://github.com/ESCOMP/CTSM/issues/1986
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+  FATES tests run against fates-sci.1.65.6_api.25.4.0-ctsm5.1.dev127 baseline
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, but only for fates tests and compsets
+
+  Summarize any changes to answers, i.e.,
+    - Differences are due to changing hist_ndens to 1 (double precision)
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/2010
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev127
+Originator(s): sacks (Bill Sacks)
+Date: Fri May 19 04:48:30 MDT 2023
+One-line Summary: Fix nuopc cplhist test
+
+Purpose and description of changes
+----------------------------------
+
+Make some changes to the cplhist testmod that fix the cplhist test,
+based on testing done by Keith Oleson:
+- Point to new cplhist forcing data generated and used by Adam
+  Herrington and Keith Oleson
+- Use DATM_PRESNDEP=none until
+  https://github.com/escomp/ctsm/issues/1844 is resolved
+
+Also, remove mct cplhist test.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Takes steps towards addressing ESCOMP/CTSM#1844 (Create new auxiliary
+  history file for cplhist test with ndep data)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+- Changes cplhist test; new test is
+  SMS_D_Ld1.ne30pg3_t061.I1850Clm50BgcSpinup.cheyenne_intel.clm-cplhist
+- Removes mct cplhist test
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+    Note that there were no baselines for the new test
+    (SMS_D_Ld1.ne30pg3_t061.I1850Clm50BgcSpinup.cheyenne_intel.clm-cplhist)
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cdeps: cdeps1.0.12 -> cdeps1.0.13
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1999
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev126
+Originator(s): jpalex (John Alex)
+Date: Thu May 18 17:21:59 MDT 2023
+One-line Summary: Clean up some loops in UrbanTimeVarType
+
+Purpose and description of changes
+----------------------------------
+
+Refactor some inefficient and confusing looping structures in
+UrbanTimeVarType.F90
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1514 (Inefficient and confusing looping structures in UrbanTimeVarType.F90)
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/2005
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev125
+Originator(s): jpalex (John Alex)
+Date: Wed May 17 08:56:41 MDT 2023
+One-line Summary: Added cache for clock step_size in clm_time_manager.F90
+
+Purpose and description of changes
+----------------------------------
+
+Added cache for clock step_size in clm_time_manager.F90 to improve
+performance.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#207 (Improve performance of get_step_size)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/2004
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev124
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326) / mvertens / adamrher / MiCurry / jtrusdal / TeaganKing
+Date: Tue May  9 16:52:05 MDT 2023
+One-line Summary: Initialization memory update, new surface datasets for new grids, add option for running NEON with PRISM data
+
+Purpose and description of changes
+----------------------------------
+
+Lower memory usage at initialization:
+
+   Some work by Mariana Vertenstein to lower the memory usage at initiatlization.
+
+New Low Resolutions for SE grids:
+
+  ne3np4.pg3, ne5np4.pg3, ne16np4.pg3
+
+New MPASA Resolutions:
+
+   mpasa480 --------- Course resolution
+   mpasa120 --------- Near 1-degree
+   mpasa60, mpasa30 - High resolution
+   mpasa15 ---------- Very high resolution
+
+   This merge adds the surface data and landuse.timeseries files for the CAM-MPAS dycore. At present, these grids are:
+
+   mpasa480 - 480 km quasi-uniform, global with 2,462 horizontal grid columns
+   mpasa120 - 120 km quasi-uniform, global with 40,962 horizontal grid columns
+   mpasa60 - 60 km quasi-uniform, global with 163,842 horizontal grid columns
+   mpasa30 - 30 km quasi-uniform, global with 655,362 horizontal grid columns
+   mpasa15 - 15 km quasi-uniform, global with 2,621,442 horizontal grid columns
+
+
+Option to Run NEON with PRISM preciption data:
+
+  Some NEON sites have bad or incomplete precitation data. By setting CLM_USRDAT_NAME="NEON.PRISM"
+  the PRISM 4km CONUS ReAnayslis data is used in place of the NEON precipitation data. This
+  is helpful for several NEON sites: 
+     MLBS, MOAB, ONAQ, SJER, NIWO, TEAK, WREF, YELL
+  
+  Allow PRISM precipitation to be used as a new datm stream.
+
+  Updates to cime_config/config_component.xml include additional valid values for PRECIP data stream names. Changes in
+  cime_config/usermods_dirs/NEON/defaults/user_nl_datm_streams specify which input variables are gathered from which streams and
+  specifies file location for PRISM data.
+
+  Using PRISM precipitation instead of NEON precipitation does have a substantial impact on CTSM output (eg. latent heat flux
+  biases).
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+  Fixes #1969 -- Move dynGrossUnrepMod.F90 from biogeochem to dyn_subgrid subdirectory
+  Fixes #1904 -- Other precipitation streams for NEON
+  Fixes #1927 -- Course SE resolutions support
+  Fixes #1313 -- MPASA resolution support
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   New resolutions do NOT have specific initial conditions for them, they use the general ones
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   NEON cases will give a warning about spinup data for non default transient cases
+   if you set a NEON case with CLM_USRDAT_NAME=NEON.PRISM, PRISM data will be used for precip
+
+   Two new options to run_neon.py "--prism" and "--experiment"
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   "v3" data option for NEONVERSION
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+    New surface and landuse.timeseries datasets for: 
+        ne3np4.pg3, ne5np4.pg3, ne16np4.pg3
+        mpasa480, mpasa120, mpasa60, mpasa30, mpasa15
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing: Add new tests for new resolutions
+
+Testing summary:   regular, tools
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS (81 new tests)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK
+    cheyenne - PASS (tests_pretag_nompi_neon)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cdeps
+   Update CDEPS to cdeps1.0.12
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #1998 -- combination of below PR's...
+
+   #1954 -- PRISM
+   #1973 -- SE
+   #1501 -- MPASA
+   #1899 -- memory scaling
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev123
+Originator(s): sacks (Bill Sacks)
+Date: Mon May  1 11:37:51 MDT 2023
+One-line Summary: Updates needed for pFUnit 4 and other externals updates
+
+Purpose and description of changes
+----------------------------------
+
+(1) Lots of small changes needed for the update to pFUnit4. Note that
+    this is a backwards-incompatible update, so we will require pFUnit 4
+    moving forward.
+
+(2) Externals updates: some of these are needed for the update to pFUnit
+    4; others are included to update externals to those in a recent CESM
+    alpha tag.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- Running the Fortran unit tests now requires pFUnit 4
+- I didn't run the mksurfdata_map unit tests... these will be removed
+  soon anyway with the replacement of mksurfdata_map with mksurfdata_esmf
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+    Note: most testing run on 46968da7b; reran just izumi-nag testing on
+    the latest version (the only difference was in the version of the
+    ccs_config external, and the only diff there was for nag).
+
+  any other testing (give details below):
+  - Fortran unit tests (under src) on izumi and my Mac
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- ccs_config: ccs_config_cesm0.0.58 -> ccs_config_cesm0.0.64
+- cime: cime6.0.100 -> cime6.0.108
+- cmeps: cmeps0.14.17 -> cmeps0.14.21
+- cdeps: cdeps1.0.7 -> cdeps1.0.9
+- cpl7: cpl7.0.14 -> cpl77.0.5
+- share: share1.0.16 -> share1.0.17
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1989
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev122
 Originator(s): sacks (Bill Sacks)
 Date: Sun Apr 23 19:36:37 MDT 2023

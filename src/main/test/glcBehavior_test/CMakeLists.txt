@@ -1,4 +1,3 @@
-create_pFUnit_test(glcBehavior test_glcBehavior_exe
-  "test_glcBehavior.pf" "")
-
-target_link_libraries(test_glcBehavior_exe clm csm_share)
+add_pfunit_ctest(glcBehavior
+  TEST_SOURCES "test_glcBehavior.pf"
+  LINK_LIBRARIES clm csm_share)
