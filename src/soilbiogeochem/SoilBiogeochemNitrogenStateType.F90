@@ -11,7 +11,7 @@ module SoilBiogeochemNitrogenStateType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, dzsoi_decomp, zisoi
-  use clm_varctl                         , only : use_nitrif_denitrif
+  use clm_varctl                         , only : use_nitrif_denitrif, use_fates_bgc
   use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, century_decomp, decomp_method, use_soil_matrixcn
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump, spinup_state
   use landunit_varcon                    , only : istcrop, istsoil 
@@ -821,6 +821,9 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: c,j,k,l     ! indices
     integer  :: fc          ! lake filter indices
+    integer  :: num_local   ! we do summary on different set when fates is
+                            ! active becuase the CN variables aren't allocated
+                            ! this preserves B4B
     real(r8) :: maxdepth    ! depth to integrate soil variables
     real(r8) :: totvegn_col ! local total ecosys veg N, allows 0 for fates
     real(r8) :: ecovegn_col ! local total veg N, allows 0 for fates
@@ -1031,18 +1034,25 @@ contains
    do fc = 1,num_allc
       c = filter_allc(fc)
       this%cwdn_col(c) = 0._r8
-      this%totecosysn_col(c) = 0._r8
-      this%totn_col(c) = 0._r8
    end do
 
-   do fc = 1,num_bgc_soilc
-      c = filter_bgc_soilc(fc)
-
+   if(use_fates_bgc)then
+      num_local = num_bgc_soilc
+   else
+      num_local = num_allc
+   end if
+   
+   do fc = 1,num_local
+      if(use_fates_bgc) then
+         c = filter_bgc_soilc(fc)
+      else
+         c = filter_allc(fc)
+      end if
+      
       if(col%is_fates(c)) then
          totvegn_col = 0._r8
          ecovegn_col = 0._r8
       else
-         
          do l = 1, ndecomp_pools
             if ( decomp_cascade_con%is_cwd(l) ) then
                this%cwdn_col(c) = this%cwdn_col(c) + &
@@ -1051,9 +1061,8 @@ contains
          end do
          totvegn_col = cnveg_nitrogenstate_inst%totn_p2c_col(c)
          ecovegn_col = cnveg_nitrogenstate_inst%totvegn_col(c)
-         
       end if
-
+      
       ! total ecosystem nitrogen, including veg (TOTECOSYSN)
       this%totecosysn_col(c) =    &
            this%cwdn_col(c)    + &

@@ -950,6 +950,9 @@ contains
     integer  :: c,j,k,l       ! indices
     integer  :: fc            ! filter indices
     real(r8) :: maxdepth      ! depth to integrate soil variables
+    integer  :: num_local     ! Either num_bgc_soilc or num_allc, depending
+                              ! on if its a fates run, its different because
+                              ! the cnveg variables are not allocated w/ fates
     real(r8) :: ecovegc_col
     real(r8) :: totvegc_col
     !-----------------------------------------------------------------------
@@ -1125,39 +1128,20 @@ contains
     end do
     
     if (use_fates_bgc) then
-       do fc = 1,num_bgc_soilc
-          c = filter_bgc_soilc(fc)
-          if(col%is_fates(c)) then
-             totvegc_col = 0._r8
-             ecovegc_col = 0._r8
-          else
-             do l = 1, ndecomp_pools
-                if ( decomp_cascade_con%is_cwd(l) ) then
-                   this%cwdc_col(c) = this%cwdc_col(c) + this%decomp_cpools_col(c,l)
-                end if
-             end do
-             totvegc_col = cnveg_carbonstate_inst%totc_p2c_col(c)
-             ecovegc_col = cnveg_carbonstate_inst%totvegc_col(c)
-          end if
-          ! total ecosystem carbon, including veg but excluding cpool (TOTECOSYSC)
-          this%totecosysc_col(c) =   &
-               this%cwdc_col(c)    + &
-               this%totmicc_col(c) + &
-               this%totlitc_col(c) + &
-               this%totsomc_col(c) + &
-               ecovegc_col
-          ! total column carbon, including veg and cpool (TOTCOLC)
-          this%totc_col(c) =         &
-               this%cwdc_col(c)    + &
-               this%totmicc_col(c) + &
-               this%totlitc_col(c) + &
-               this%totsomc_col(c) + &
-               this%ctrunc_col(c)  + &
-               totvegc_col
-       end do
+       num_local = num_bgc_soilc
     else
-       do fc = 1,num_allc
+       num_local = num_allc
+    end if
+    do fc = 1,num_local
+       if(use_fates_bgc) then
+          c = filter_bgc_soilc(fc)
+       else
           c = filter_allc(fc)
+       end if
+       if(col%is_fates(c)) then
+          totvegc_col = 0._r8
+          ecovegc_col = 0._r8
+       else
           do l = 1, ndecomp_pools
              if ( decomp_cascade_con%is_cwd(l) ) then
                 this%cwdc_col(c) = this%cwdc_col(c) + this%decomp_cpools_col(c,l)
@@ -1165,25 +1149,24 @@ contains
           end do
           totvegc_col = cnveg_carbonstate_inst%totc_p2c_col(c)
           ecovegc_col = cnveg_carbonstate_inst%totvegc_col(c)
+       end if
        
-          ! total ecosystem carbon, including veg but excluding cpool (TOTECOSYSC)
-          this%totecosysc_col(c) =   &
-               this%cwdc_col(c)    + &
-               this%totmicc_col(c) + &
-               this%totlitc_col(c) + &
-               this%totsomc_col(c) + &
-               ecovegc_col
-          
-          ! total column carbon, including veg and cpool (TOTCOLC)
-          this%totc_col(c) =         &
-               this%cwdc_col(c)    + &
-               this%totmicc_col(c) + &
-               this%totlitc_col(c) + &
-               this%totsomc_col(c) + &
-               this%ctrunc_col(c)  + &
-               totvegc_col
-       end do
-    end if
+       ! total ecosystem carbon, including veg but excluding cpool (TOTECOSYSC)
+       this%totecosysc_col(c) =   &
+            this%cwdc_col(c)    + &
+            this%totmicc_col(c) + &
+            this%totlitc_col(c) + &
+            this%totsomc_col(c) + &
+            ecovegc_col
+       ! total column carbon, including veg and cpool (TOTCOLC)
+       this%totc_col(c) =         &
+            this%cwdc_col(c)    + &
+            this%totmicc_col(c) + &
+            this%totlitc_col(c) + &
+            this%totsomc_col(c) + &
+            this%ctrunc_col(c)  + &
+            totvegc_col
+    end do
        
   end subroutine Summary
 
