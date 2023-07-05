@@ -1934,6 +1934,7 @@
   <test name="ERS_Lm13" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdNoComp">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
