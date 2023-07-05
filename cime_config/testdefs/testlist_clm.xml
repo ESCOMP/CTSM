@@ -1309,6 +1309,7 @@
   <test name="SMS" grid="f45_f45_mg37" compset="I2000Clm51FatesSpRsGs" testmods="clm/FatesColdSatPhen">
     <machines>
       <machine name="cheyenne" compiler="nvhpc" category="aux_clm"/>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1886,6 +1887,7 @@
   <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTreeDamage">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1895,6 +1897,7 @@
   <test name="ERS_D_Ld3_PS" grid="f09_g17" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
