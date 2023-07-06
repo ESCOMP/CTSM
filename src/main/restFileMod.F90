@@ -610,6 +610,8 @@ contains
          writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
          issue_num = lake_dynbal_baseline_issue)
     ! If running with execess ice then mark the restart file as having excess ice fixed
+    ! This is a permanent feature, i.e. not expected to be removed from here.
+    ! It would only be removed if we decided to make use_excess_ice = .true. the default.
     if ( use_excess_ice ) then
        call write_issue_fixed_metadata( &
             ncid = ncid, &
