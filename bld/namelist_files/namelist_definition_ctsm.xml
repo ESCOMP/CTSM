@@ -2807,14 +2807,9 @@ use case.)
 <!-- Namelist items controlling tillage                                                        -->
 <!-- ========================================================================================  -->
 
-<entry id="do_tillage_low" type="logical" category="physics"
-       group="tillage_inparm" valid_values="" value=".false.">
-Toggle to turn on low-intensity tillage
-</entry>
-
-<entry id="do_tillage_high" type="logical" category="physics"
-       group="tillage_inparm" valid_values="" value=".false.">
-Toggle to turn on high-intensity tillage
+<entry id="tillage_mode" type="char*8" category="physics"
+       group="tillage_inparm" valid_values="off,low,high">
+Whether to till crop soil, and if so, with what intensity.
 </entry>
 
 <entry id="use_original_tillage" type="logical" category="physics"

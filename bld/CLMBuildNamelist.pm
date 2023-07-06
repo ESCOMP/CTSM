@@ -2150,11 +2150,8 @@ sub setup_logic_crop {
 sub setup_logic_tillage {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  if ( &value_is_true($nl->get_value('do_tillage_low')) and &value_is_true($nl->get_value('do_tillage_high')) ) {
-      $log->fatal_error( "do_tillage_low and do_tillage_high are mutually exclusive" );
-  }
-
-  if ( &value_is_true($nl->get_value('do_tillage_low')) or &value_is_true($nl->get_value('do_tillage_high')) ) {
+  my $tillage_mode = remove_leading_and_trailing_quotes( $nl->get_value( "tillage_mode" ) );
+  if ( $tillage_mode ne "off" ) {
 
       if ( not &value_is_true($nl->get_value('use_crop')) ) {
           $log->fatal_error( "It doesn't make sense to use tillage with use_crop false" );

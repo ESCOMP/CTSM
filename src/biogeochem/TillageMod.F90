@@ -36,8 +36,8 @@ module TillageMod
   ! work if these variables were private, but instead, I just appended the
   ! _private suffix here and use the non-"_private" variable names for local
   ! variables in tillage_init().
-  logical  :: do_tillage_low_private   ! Do low-intensity tillage?
-  logical  :: do_tillage_high_private  ! Do high-intensity tillage?
+  logical  :: do_tillage_low   ! Do low-intensity tillage?
+  logical  :: do_tillage_high  ! Do high-intensity tillage?
   logical  :: use_original_tillage_private ! Use get_tillage_multipliers_orig?
   real(r8), pointer :: tillage_mults(:) ! (ndecomp_pools)
   real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, nphases)
@@ -70,18 +70,15 @@ contains
     integer                :: nml_error    ! namelist i/o error flag
     integer                :: mpicom       ! MPI communicator
     character(*), parameter :: subname = "('tillage_init')"
-    logical  :: do_tillage_low   ! Do low-intensity tillage?
-    logical  :: do_tillage_high  ! Do high-intensity tillage?
+    character(len=8) :: tillage_mode     ! off, low, high
     logical  :: use_original_tillage ! Use get_tillage_multipliers_orig?
 
     namelist /tillage_inparm/    &
-        do_tillage_low,       &
-        do_tillage_high,      &
+        tillage_mode,            &
         use_original_tillage
 
     ! Default values
-    do_tillage_low = .false.
-    do_tillage_high = .false.
+    tillage_mode = "off"
     use_original_tillage = .false.
 
     ! Read tillage namelist
@@ -98,21 +95,26 @@ contains
         end if
         close(nu_nml)
      endif
-     call shr_mpi_bcast(do_tillage_low, mpicom)
-     call shr_mpi_bcast(do_tillage_high , mpicom)
+     call shr_mpi_bcast(tillage_mode, mpicom)
      call shr_mpi_bcast(use_original_tillage , mpicom)
 
      if (masterproc) then
         write(iulog,*) ' '
         write(iulog,*) 'tillage settings:'
-        write(iulog,*) '  do_tillage_low  = ',do_tillage_low
-        write(iulog,*) '  do_tillage_high   = ',do_tillage_high
+        write(iulog,*) '  tillage_mode  = ',tillage_mode
         write(iulog,*) '  use_original_tillage   = ',use_original_tillage
      endif
 
      ! Assign these
-     do_tillage_low_private = do_tillage_low
-     do_tillage_high_private = do_tillage_high
+     do_tillage_low = .false.
+     do_tillage_high = .false.
+     if (tillage_mode == "low") then
+        do_tillage_low = .true.
+     else if (tillage_mode == "high") then
+        do_tillage_high = .true.
+     else
+        call endrun(subname // ':: ERROR Unrecognized tillage_mode')
+     end if
      use_original_tillage_private = use_original_tillage
 
 
@@ -141,18 +143,20 @@ contains
     allocate(tillage_mults_allphases(ndecomp_pools, nphases)); tillage_mults_allphases(:,:) = 1.0_r8
 
     ! Fill tillage_mults_allphases
-    if (do_tillage_low_private) then
+    if (do_tillage_low) then
         tillage_mults_allphases(i_cel_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
         tillage_mults_allphases(i_lig_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
         tillage_mults_allphases(i_act_som,:) = (/ 1.0_r8, 1.0_r8, 1.0_r8 /)
         tillage_mults_allphases(i_slo_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
         tillage_mults_allphases(i_pas_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
-    else 
+    else if (do_tillage_high) then
         tillage_mults_allphases(i_cel_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
         tillage_mults_allphases(i_lig_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
         tillage_mults_allphases(i_act_som,:) = (/ 1.2_r8, 1.0_r8, 1.0_r8 /)
         tillage_mults_allphases(i_slo_som,:) = (/ 4.8_r8, 3.5_r8, 2.5_r8 /)
         tillage_mults_allphases(i_pas_som,:) = (/ 4.8_r8, 3.5_r8, 2.5_r8 /)
+    else
+        call endrun('ERROR Unrecognized tillage setting in tillage_init_century()')
     end if
 
   end subroutine tillage_init_century
@@ -160,7 +164,7 @@ contains
 
   function get_do_tillage()
     logical :: get_do_tillage
-    get_do_tillage = do_tillage_low_private .or. do_tillage_high_private
+    get_do_tillage = do_tillage_low .or. do_tillage_high
   end function get_do_tillage
 
 

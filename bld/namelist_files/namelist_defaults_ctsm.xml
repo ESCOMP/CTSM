@@ -2703,8 +2703,7 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <!-- Defaults for tillage                       -->
 <!-- =========================================  -->
 
-<do_tillage_low>.false.</do_tillage_low>
-<do_tillage_high>.false.</do_tillage_high>
+<tillage_mode>off</tillage_mode>
 <use_original_tillage>.false.</use_original_tillage>
 
 </namelist_defaults>
