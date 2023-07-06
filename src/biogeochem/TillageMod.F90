@@ -30,15 +30,9 @@ module TillageMod
   public :: get_apply_tillage_multipliers
   !
   ! !PRIVATE DATA MEMBERS
-  ! SSR: I want to keep these logical input parameters private, since there's
-  ! no obvious need for them to be public. However, that results in segfaults
-  ! (SIGSEGV(11)) when tillage_init() calls shr_mpi_bcast. I think it would
-  ! work if these variables were private, but instead, I just appended the
-  ! _private suffix here and use the non-"_private" variable names for local
-  ! variables in tillage_init().
   logical  :: do_tillage_low   ! Do low-intensity tillage?
   logical  :: do_tillage_high  ! Do high-intensity tillage?
-  logical  :: use_original_tillage_private ! Use get_tillage_multipliers_orig?
+  logical  :: use_original_tillage ! Use get_tillage_multipliers_orig?
   real(r8), pointer :: tillage_mults(:) ! (ndecomp_pools)
   real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, nphases)
   integer, parameter :: nphases = 3 ! How many different tillage phases are there? (Not including all-1 phases.)
@@ -71,7 +65,6 @@ contains
     integer                :: mpicom       ! MPI communicator
     character(*), parameter :: subname = "('tillage_init')"
     character(len=8) :: tillage_mode     ! off, low, high
-    logical  :: use_original_tillage ! Use get_tillage_multipliers_orig?
 
     namelist /tillage_inparm/    &
         tillage_mode,            &
@@ -115,7 +108,6 @@ contains
      else
         call endrun(subname // ':: ERROR Unrecognized tillage_mode')
      end if
-     use_original_tillage_private = use_original_tillage
 
 
   end subroutine tillage_init
@@ -214,7 +206,7 @@ contains
 
     phase = 0
 
-    if (use_original_tillage_private) then
+    if (use_original_tillage) then
         if (day >= idop(p) .and. day < idop(p)+15) then ! based on Point Chisel Tandem Disk multipliers
             phase = 1
         else if (day >= idop(p)+15 .and. day < idop(p)+45) then ! based on Field and Row Cultivator multipliers
