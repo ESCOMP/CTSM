@@ -32,7 +32,7 @@ module TillageMod
   ! !PRIVATE DATA MEMBERS
   ! SSR: I want to keep these logical input parameters private, since there's
   ! no obvious need for them to be public. However, that results in segfaults
-  ! (SIGSEGV(11)) when tillage_innit() calls shr_mpi_bcast. I think it would
+  ! (SIGSEGV(11)) when tillage_init() calls shr_mpi_bcast. I think it would
   ! work if these variables were private, but instead, I just appended the
   ! _private suffix here and use the non-"_private" variable names for local
   ! variables in tillage_init().
