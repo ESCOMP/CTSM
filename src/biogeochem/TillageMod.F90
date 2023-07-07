@@ -253,6 +253,9 @@ contains
         return
     end if
 
+    ! TODO: Call get_tillage_multipliers for each crop patch in column, then outside patch
+    !       loop save their weighted average to the column-level decomp_k. See p2c_1d() for
+    !       how to get patch weights.
     ! TODO: Figure out why adding ".and. col%lun_itype(c) == istcrop" to conditional
     !       controlling call of this subroutine didn't properly exclude non-crop columns.
     !       That working would allow simplification here.
