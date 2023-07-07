@@ -27,6 +27,7 @@ module restFileMod
   use glcBehaviorMod   , only : glc_behavior_type
   use reweightMod      , only : reweight_wrapup
   use IssueFixedMetadataHandler, only : write_issue_fixed_metadata, read_issue_fixed_metadata
+  use restUtilMod      , only : excess_ice_issue
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -62,7 +63,6 @@ module restFileMod
 
   ! Issue numbers for issue-fixed metadata
   integer, parameter :: lake_dynbal_baseline_issue = 1140
-  integer, parameter :: excess_ice_issue = 1787
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__

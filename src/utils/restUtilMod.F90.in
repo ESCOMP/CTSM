@@ -19,6 +19,7 @@ module restUtilMod
   implicit none
   save
   private
+  integer, parameter, public :: excess_ice_issue = 1787
   ! save
   !
   !-----------------------------------------------------------------------
@@ -762,7 +763,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: attribute_value
-    integer, parameter :: excess_ice_issue = 1787
 
 
     character(len=*), parameter :: subname = 'RestartExcessIceIssue'
