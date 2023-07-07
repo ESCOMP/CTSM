@@ -26,7 +26,6 @@ module TillageMod
   logical  :: do_tillage_low   ! Do low-intensity tillage?
   logical  :: do_tillage_high  ! Do high-intensity tillage?
   logical  :: use_original_tillage ! Use get_tillage_multipliers_orig?
-  real(r8), pointer :: tillage_mults(:) ! (ndecomp_pools)
   real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, nphases)
   integer, parameter :: nphases = 3 ! How many different tillage phases are there? (Not including all-1 phases.)
 
@@ -122,7 +121,6 @@ contains
     end if
 
     ! Allocate tillage multipliers
-    allocate(tillage_mults(ndecomp_pools)); tillage_mults(:) = 1.0_r8
     allocate(tillage_mults_allphases(ndecomp_pools, nphases)); tillage_mults_allphases(:,:) = 1.0_r8
 
     ! Fill tillage_mults_allphases
@@ -151,7 +149,7 @@ contains
   end function get_do_tillage
 
 
-  subroutine get_tillage_multipliers(idop, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+  subroutine get_tillage_multipliers(tillage_mults, idop, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
     ! !DESCRIPTION:
     !
     !  Get the cultivation effective multiplier if prognostic crops are on and
@@ -167,6 +165,7 @@ contains
     use clm_time_manager, only : get_curr_calday, get_curr_days_per_year
     use pftconMod       , only : ntmp_corn, nirrig_tmp_corn, ntmp_soybean, nirrig_tmp_soybean
     ! !ARGUMENTS:
+    real(r8)         , intent(inout) :: tillage_mults(:) ! tillage multipliers for this patch
     integer          , intent(in) :: idop    ! patch day of planting
     integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
     integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
@@ -237,6 +236,7 @@ contains
     !
     ! !USES
     use pftconMod , only : npcropmin
+    use PatchType , only : patch
     !
     ! !ARGUMENTS:
     integer       , intent(in) :: idop(:) ! patch day of planting
@@ -247,28 +247,34 @@ contains
     !
     ! !LOCAL VARIABLES
     integer :: p, this_patch, j, n_noncrop
-    integer :: idop_thispatch
+    real    :: sumwt ! sum of all patch weights, to check
+    real(r8), dimension(ndecomp_pools) :: tillage_mults
+    real(r8), dimension(ndecomp_pools) :: tillage_mults_1patch
 
     if (.not. col%active(c)) then
         return
     end if
+    
+    ! Initialize tillage multipliers to 0. We will loop through all patches in column,
+    ! adding patch-weighted multipliers to this.
+    tillage_mults(:) = 0.0_r8
 
-    ! TODO: Call get_tillage_multipliers for each crop patch in column, then outside patch
-    !       loop save their weighted average to the column-level decomp_k. See p2c_1d() for
-    !       how to get patch weights.
     ! TODO: Figure out why adding ".and. col%lun_itype(c) == istcrop" to conditional
     !       controlling call of this subroutine didn't properly exclude non-crop columns.
-    !       That working would allow simplification here.
+    !       That working would allow some simplification here.
     this_patch = 0
     n_noncrop = 0
+    sumwt = 0.0_r8
     do p = col%patchi(c),col%patchf(c)
-        if (patch%active(p)) then
+        if (patch%active(p) .and. patch%wtcol(p) /= 0._r8) then
             if (patch%itype(p) >= npcropmin) then
                 if (this_patch > 0) then
                     call endrun('ERROR multiple active crop patches found in this column')
                 end if
                 this_patch = p
-                idop_thispatch = idop(p)
+                call get_tillage_multipliers(tillage_mults_1patch, idop(p), i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+                tillage_mults = tillage_mults + tillage_mults_1patch * patch%wtcol(p)
+                sumwt = sumwt + patch%wtcol(p)
             else
                 n_noncrop = n_noncrop + 1
             end if
@@ -276,14 +282,14 @@ contains
     end do
     if (n_noncrop > 0) then
         if (this_patch > 0) then
-            call endrun('ERROR Active crop and non-crop patches found in this active column')
+            call endrun('ERROR Active, non-zero-weight crop AND non-crop patches found')
         end if
         return
     elseif (this_patch == 0) then
-        call endrun('ERROR No active patches found (crop OR non-crop)')
+        call endrun('ERROR No active, non-zero-weight patches found (crop OR non-crop)')
+    elseif (sumwt > 1.0_r8 + 1.e-6_r8) then
+        call endrun('ERROR Active crop patch weights does not sum to 1')
     end if
-
-    call get_tillage_multipliers(idop_thispatch, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
 
     ! Top 5 layers (instead of all nlevdecomp) so that model only tills the top 26-40 cm
     ! of the soil surface, rather than whole soil - MWGraham
