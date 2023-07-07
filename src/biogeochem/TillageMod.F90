@@ -151,7 +151,7 @@ contains
   end function get_do_tillage
 
 
-  subroutine get_tillage_multipliers(idop, p, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+  subroutine get_tillage_multipliers(idop, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
     ! !DESCRIPTION:
     !
     !  Get the cultivation effective multiplier if prognostic crops are on and
@@ -167,8 +167,7 @@ contains
     use clm_time_manager, only : get_curr_calday, get_curr_days_per_year
     use pftconMod       , only : ntmp_corn, nirrig_tmp_corn, ntmp_soybean, nirrig_tmp_soybean
     ! !ARGUMENTS:
-    integer          , intent(in) :: idop(:) ! patch day of planting
-    integer          , intent(in) :: p       ! index of patch this is being called for
+    integer          , intent(in) :: idop    ! patch day of planting
     integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
     integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
     !
@@ -185,10 +184,10 @@ contains
     dayspyr = get_curr_days_per_year()               !Add by MWG for IDPP-based routine
 
     ! days past planting may determine harvest/tillage
-    if (day >= idop(p)) then
-        idpp = day - idop(p)
+    if (day >= idop) then
+        idpp = day - idop
     else
-        idpp = int(dayspyr) + day - idop(p)
+        idpp = int(dayspyr) + day - idop
     end if
 
     ! -----------------------------------------------------
@@ -202,11 +201,11 @@ contains
     phase = 0
 
     if (use_original_tillage) then
-        if (day >= idop(p) .and. day < idop(p)+15) then ! based on Point Chisel Tandem Disk multipliers
+        if (day >= idop .and. day < idop+15) then ! based on Point Chisel Tandem Disk multipliers
             phase = 1
-        else if (day >= idop(p)+15 .and. day < idop(p)+45) then ! based on Field and Row Cultivator multipliers
+        else if (day >= idop+15 .and. day < idop+45) then ! based on Field and Row Cultivator multipliers
             phase = 2
-        else if (day >= idop(p)+45 .and. day <idop(p)+75) then ! based on Rod Weed Row Planter
+        else if (day >= idop+45 .and. day <idop+75) then ! based on Rod Weed Row Planter
             phase = 3
         end if
     else
@@ -248,6 +247,7 @@ contains
     !
     ! !LOCAL VARIABLES
     integer :: p, this_patch, j, n_noncrop
+    integer :: idop_thispatch
 
     if (.not. col%active(c)) then
         return
@@ -268,6 +268,7 @@ contains
                     call endrun('ERROR multiple active crop patches found in this column')
                 end if
                 this_patch = p
+                idop_thispatch = idop(p)
             else
                 n_noncrop = n_noncrop + 1
             end if
@@ -282,7 +283,7 @@ contains
         call endrun('ERROR No active patches found (crop OR non-crop)')
     end if
 
-    call get_tillage_multipliers(idop, this_patch, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+    call get_tillage_multipliers(idop_thispatch, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
 
     ! Top 5 layers (instead of all nlevdecomp) so that model only tills the top 26-40 cm
     ! of the soil surface, rather than whole soil - MWGraham
