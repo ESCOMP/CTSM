@@ -200,7 +200,6 @@ contains
      integer  :: i     ! index of water tracer or bulk
      real(r8) :: dtime ! land model time step (sec)
 
-     real(r8) :: snocan_baseline(bounds%begp:bounds%endp)                    ! baseline of snocan variable for use in truncate_small_values function
      real(r8) :: qflx_liq_above_canopy_patch(bounds%begp:bounds%endp)        ! liquid water input above canopy (rain plus irrigation) [mm/s]
      real(r8) :: tracer_qflx_liq_above_canopy_patch(bounds%begp:bounds%endp) ! For one tracer: liquid water input above canopy (rain plus irrigation) [mm/s]
      real(r8) :: forc_snow_patch(bounds%begp:bounds%endp)                    ! atm snow, patch-level [mm/s]
