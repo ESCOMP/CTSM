@@ -33,7 +33,6 @@ module CanopyHydrologyMod
   use WaterTracerUtils        , only : CalcTracerFromBulk
   use ColumnType      , only : col, column_type
   use PatchType       , only : patch, patch_type
-  use NumericsMod     , only : truncate_small_values, rel_epsilon
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -198,7 +197,7 @@ contains
      type(water_type)       , intent(inout) :: water_inst
      !
      ! !LOCAL VARIABLES:
-     integer  :: i, p  ! index of water tracer or bulk, index of patch-level
+     integer  :: i     ! index of water tracer or bulk
      real(r8) :: dtime ! land model time step (sec)
 
      real(r8) :: snocan_baseline(bounds%begp:bounds%endp)                    ! baseline of snocan variable for use in truncate_small_values function
@@ -303,23 +302,6 @@ contains
      ! Update snocan and liqcan based on interception, for bulk water and each tracer
      do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
         associate(w => water_inst%bulk_and_tracers(i))
-        ! Get rid of tiny snocan (tracer and bulk)
-        ! Very small snocan (< rel_epsilon**2) will be set to zero
-        ! See NumericsMod for rel_epsilon value
-        snocan_baseline(bounds%begp:bounds%endp) = rel_epsilon  ! this gets multiplied by rel_epsilon in truncate_small_values
-        call truncate_small_values(num_soilp, filter_soilp, begp, endp, &
-           snocan_baseline(begp:endp), b_waterstate_inst%snocan_patch(begp:endp))
-        ! Explanation for why we use this do-loop instead of call
-        ! truncate_small_values for w%waterstate_inst%snocan_patch:
-        ! call truncate_small_values would set w%waterstate_inst%snocan_patch
-        ! to zero only when w%waterstate_inst%snocan_patch < rel_epsilon**2
-        ! while it needs to be zero every time that
-        ! b_waterstate_inst%snocan_patch is zero
-        do p = begp, endp
-           if (b_waterstate_inst%snocan_patch(p) == 0._r8) then
-              w%waterstate_inst%snocan_patch(p) = b_waterstate_inst%snocan_patch(p)
-           end if
-        end do
         call UpdateState_AddInterceptionToCanopy(bounds, num_soilp, filter_soilp, &
              ! Inputs
              dtime                 = dtime, &
