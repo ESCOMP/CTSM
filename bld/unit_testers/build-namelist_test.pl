@@ -163,21 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-<<<<<<< HEAD
-my $ntests = 1863;
-||||||| 17e2acb6a
-my $ntests = 1846;
-=======
 my $ntests = 1975;
->>>>>>> escomp/master
 if ( defined($opts{'compare'}) ) {
-<<<<<<< HEAD
-   $ntests += 1263;
-||||||| 17e2acb6a
-   $ntests += 1254;
-=======
    $ntests += 1344;
->>>>>>> escomp/master
 }
 plan( tests=>$ntests );
 
