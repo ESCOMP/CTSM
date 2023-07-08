@@ -280,22 +280,22 @@ contains
       !--------------------------------------------------------------
       ! Vertical coordinates adjustment for excess ice calculations
       !--------------------------------------------------------------
-      if ( use_excess_ice )then
+      if ( use_excess_ice ) then
          ! Save original soil depth to get put them back in et the end 
-         dz_0(begc:endc,-nlevsno+1:nlevmaxurbgrnd)=dz(begc:endc,-nlevsno+1:nlevmaxurbgrnd)
-         zi_0(begc:endc,-nlevsno+0:nlevmaxurbgrnd)=zi(begc:endc,-nlevsno+0:nlevmaxurbgrnd)
-         z_0(begc:endc,-nlevsno+1:nlevmaxurbgrnd)=z(begc:endc,-nlevsno+1:nlevmaxurbgrnd)
+         dz_0(begc:endc,-nlevsno+1:nlevmaxurbgrnd) = dz(begc:endc,-nlevsno+1:nlevmaxurbgrnd)
+         zi_0(begc:endc,-nlevsno+0:nlevmaxurbgrnd) = zi(begc:endc,-nlevsno+0:nlevmaxurbgrnd)
+         z_0(begc:endc,-nlevsno+1:nlevmaxurbgrnd) = z(begc:endc,-nlevsno+1:nlevmaxurbgrnd)
          ! Adjust column depth for excess ice thickness 
-         do fc = 1,num_nolakec
-           c = filter_nolakec(fc)
-           l = col%landunit(c)
-           if( lun%itype(l) == istsoil .or. lun%itype(l) == istcrop ) then
-             dz(c,1:nlevmaxurbgrnd)=dz(c,1:nlevmaxurbgrnd)+excess_ice(c,1:nlevmaxurbgrnd)/denice ! add extra layer thickness
-             do j=1,nlevmaxurbgrnd ! if excess ice amount dropped to zero there will be no adjustment
-               zi(c,j) = zi(c,j) + sum(excess_ice(c,1:j)) / denice
-               z(c,j) = (zi(c,j-1) + zi(c,j)) * 0.5_r8
-             end do
-           endif
+         do fc = 1, num_nolakec
+            c = filter_nolakec(fc)
+            l = col%landunit(c)
+            if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+               dz(c,1:nlevmaxurbgrnd) = dz(c,1:nlevmaxurbgrnd) + excess_ice(c,1:nlevmaxurbgrnd) / denice  ! add extra layer thickness
+               do j = 1, nlevmaxurbgrnd ! if excess ice amount dropped to zero there will be no adjustment
+                  zi(c,j) = zi(c,j) + sum(excess_ice(c,1:j)) / denice
+                  z(c,j) = (zi(c,j-1) + zi(c,j)) * 0.5_r8
+               end do
+            end if
          end do
       end if
 
@@ -520,19 +520,18 @@ contains
       ! Vertical coordinates adjustment for excess ice calculations
       !--------------------------------------------------------------
       ! bringing back the soil depth to the original state
-      if ( use_excess_ice )then
+      if (use_excess_ice) then
          ! Adjust column depth for excess ice thickness 
-         do fc = 1,num_nolakec
-           c = filter_nolakec(fc)
-           l = col%landunit(c)
-           if( lun%itype(l) == istsoil .or. lun%itype(l) == istcrop ) then
-             dz(c,1:nlevmaxurbgrnd)=dz_0(c,1:nlevmaxurbgrnd)
-             zi(c,1:nlevmaxurbgrnd)=zi_0(c,1:nlevmaxurbgrnd)
-             z(c,1:nlevmaxurbgrnd)=z_0(c,1:nlevmaxurbgrnd)
-           endif
+         do fc = 1, num_nolakec
+            c = filter_nolakec(fc)
+            l = col%landunit(c)
+            if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+               dz(c,1:nlevmaxurbgrnd)=dz_0(c,1:nlevmaxurbgrnd)
+               zi(c,1:nlevmaxurbgrnd)=zi_0(c,1:nlevmaxurbgrnd)
+               z(c,1:nlevmaxurbgrnd)=z_0(c,1:nlevmaxurbgrnd)
+            end if
          end do
       end if
-     
 
 
       if ( IsProgBuildTemp() )then
@@ -1207,13 +1206,13 @@ contains
                imelt(c,j) = 0
                hm(c,j) = 0._r8
                xm(c,j) = 0._r8
-               xm2(c,j)=0._r8
+               xm2(c,j) = 0._r8
                wice0(c,j) = h2osoi_ice(c,j)
                wliq0(c,j) = h2osoi_liq(c,j)
-               wexice0(c,j)=excess_ice(c,j)
+               wexice0(c,j) = excess_ice(c,j)
                wmass0(c,j) = h2osoi_ice(c,j) + h2osoi_liq(c,j) + wexice0(c,j)
-               if (j>=1) then
-                  exice_subs_col(c,j)=0._r8
+               if (j >= 1) then
+                  exice_subs_col(c,j) = 0._r8
                endif
             endif   ! end of snow layer if-block
 
@@ -1233,7 +1232,7 @@ contains
 
                ! Melting identification
                ! If ice exists above melt point, melt some to liquid.
-               if (h2osoi_ice(c,j) > 0._r8 .AND. t_soisno(c,j) > tfrz) then
+               if (h2osoi_ice(c,j) > 0._r8 .and. t_soisno(c,j) > tfrz) then
                   imelt(c,j) = 1
                   !                tinc(c,j) = t_soisno(c,j) - tfrz 
                   tinc(c,j) = tfrz - t_soisno(c,j) 
@@ -1406,11 +1405,11 @@ contains
                         if (j <= 0) then
                            h2osoi_ice(c,j) = min(wmass0(c,j), wice0(c,j)-xm(c,j))  ! snow
                         else
-                          if (wmass0(c,j) - wexice0(c,j) < supercool(c,j)) then !even if excess ice is present, it cannot refreeze
-                             h2osoi_ice(c,j) = 0._r8
-                          else
-                             h2osoi_ice(c,j) = min(wmass0(c,j) - wexice0(c,j) - supercool(c,j),wice0(c,j)-xm(c,j))
-                          endif
+                           if (wmass0(c,j) - wexice0(c,j) < supercool(c,j)) then  ! even if excess ice is present, it cannot refreeze
+                              h2osoi_ice(c,j) = 0._r8
+                           else
+                              h2osoi_ice(c,j) = min(wmass0(c,j) - wexice0(c,j) - supercool(c,j),wice0(c,j)-xm(c,j))
+                           endif
                         endif
                         heatr = hm(c,j) - hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
                      endif

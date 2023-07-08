@@ -287,8 +287,8 @@ contains
     ! Add excess ice fields to history
 
     if (use_excess_ice) then
-      data2dptr => this%excess_ice_col(begc:endc,1:nlevsoi)
-      call hist_addfld2d (fname='EXCESS_ICE',  units='kg/m2', type2d='levsoi', &
+       data2dptr => this%excess_ice_col(begc:endc,1:nlevsoi)
+       call hist_addfld2d (fname='EXCESS_ICE',  units='kg/m2', type2d='levsoi', &
            avgflag='A', long_name='excess soil ice (vegetated landunits only)', &
            ptr_col=this%excess_ice_col, l2g_scale_type='veg', default = 'inactive')
     end if
@@ -744,7 +744,7 @@ contains
                    nbedrock = col%nbedrock(c)
                 else
                    nbedrock = nlevsoi
-                endif
+                end if
                 do j = 2, nlevmaxurbgrnd ! ignore first layer
                    if(altmax_lastyear_indx(c) < nbedrock) then
                       if (j>altmax_lastyear_indx(c) .and. j<nbedrock &
@@ -752,15 +752,15 @@ contains
                          this%excess_ice_col(c,j) = col%dz(c,j)*denice*(this%exice_bulk_init(c)) ! exice_bulk_init should be already read from the stream during InitCold
                       else
                          this%excess_ice_col(c,j) = 0.0_r8
-                      endif
+                      end if
                    else
                       this%excess_ice_col(c,j) = 0.0_r8
                    end if
                 end do
              else
                 this%excess_ice_col(c,-nlevsno+1:nlevmaxurbgrnd) = 0.0_r8
-             endif
-          endif
+             end if
+          end if
           end do ! end of column loop
        endif! end of old file restart
     endif ! end of exice restart

@@ -291,23 +291,23 @@ contains
          ptr_col=this%h2osoi_ice_tot_col, l2g_scale_type='veg')
     ! excess ice vars
     if (use_excess_ice) then
-      this%exice_vol_tot_col(begc:endc) = 0.0_r8
-      call hist_addfld1d ( &
-           fname=this%info%fname('TOTEXICE_VOL'),  &
-           units='m3/m3',  &
-           avgflag='A', &
-           l2g_scale_type='veg', &
-           long_name=this%info%lname('vertically averaged volumetric excess ice concentration (veg landunits only)'), &
-           ptr_col=this%exice_vol_tot_col)
+       this%exice_vol_tot_col(begc:endc) = 0.0_r8
+       call hist_addfld1d ( &
+            fname=this%info%fname('TOTEXICE_VOL'),  &
+            units='m3/m3',  &
+            avgflag='A', &
+            l2g_scale_type='veg', &
+            long_name=this%info%lname('vertically averaged volumetric excess ice concentration (veg landunits only)'), &
+            ptr_col=this%exice_vol_tot_col)
 
-      this%exice_subs_tot_col(begc:endc) = 0.0_r8
-      call hist_addfld1d ( &
-           fname=this%info%fname('SUBSIDENCE'),  &
-           units='m',  &
-           avgflag='SUM', &
-           l2g_scale_type='veg', &
-           long_name=this%info%lname('subsidence due to excess ice melt (veg landunits only)'), &
-           ptr_col=this%exice_subs_tot_col)
+       this%exice_subs_tot_col(begc:endc) = 0.0_r8
+       call hist_addfld1d ( &
+            fname=this%info%fname('SUBSIDENCE'),  &
+            units='m',  &
+            avgflag='SUM', &
+            l2g_scale_type='veg', &
+            long_name=this%info%lname('subsidence due to excess ice melt (veg landunits only)'), &
+            ptr_col=this%exice_subs_tot_col)
     end if
 
     this%iwue_ln_patch(begp:endp) = spval
@@ -928,14 +928,14 @@ contains
             units='m', &
             interpinic_flag='interp', readvar=readvar, data=this%exice_subs_tot_col)
        if (flag == 'read' .and. ((.not. readvar) .or. (.not. excess_ice_on_restart)) ) then ! when reading restart that does not have excess ice in it
-         if (nsrest == nsrContinue) then
-            call endrun(msg = "On a continue run, excess ice fields MUST be on the restart file "// & 
-            errMsg(sourcefile, __LINE__))
-         else if ( .not. UseExcessIceStreams() )then
-            call endrun(msg = "This input initial conditions file does NOT include excess ice fields" // &
-                        ", and use_excess_ice_streams is off, one or the other needs to be changed  "// & 
-                        errMsg(sourcefile, __LINE__))
-         end if
+          if (nsrest == nsrContinue) then
+             call endrun(msg = "On a continue run, excess ice fields MUST be on the restart file "// & 
+             errMsg(sourcefile, __LINE__))
+          else if ( .not. UseExcessIceStreams() )then
+             call endrun(msg = "This input initial conditions file does NOT include excess ice fields" // &
+                         ", and use_excess_ice_streams is off, one or the other needs to be changed  "// & 
+                         errMsg(sourcefile, __LINE__))
+          end if
          this%exice_subs_tot_col(bounds%begc:bounds%endc)=0.0_r8
          this%exice_vol_tot_col(bounds%begc:bounds%endc)=0.0_r8
          this%exice_subs_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
@@ -947,10 +947,10 @@ contains
             units='m3/m3', &
             interpinic_flag='interp', readvar=readvar, data=this%exice_vol_tot_col)
        if (flag == 'read' .and. ((.not. readvar) .or. (.not. excess_ice_on_restart)) ) then ! when reading restart that does not have excess ice in it
-         if (nsrest == nsrContinue) then
-            call endrun(msg = "On a continue run, excess ice fields MUST be on the restart file "// & 
-            errMsg(sourcefile, __LINE__))
-         end if
+          if (nsrest == nsrContinue) then
+             call endrun(msg = "On a continue run, excess ice fields MUST be on the restart file "// & 
+             errMsg(sourcefile, __LINE__))
+          end if
        end if
     endif
 
