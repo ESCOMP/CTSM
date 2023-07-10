@@ -2371,7 +2371,7 @@
       <option name="comment"  >Run a test with MEGAN on and FATES-SP</option>
     </options>
   </test>
-<!--    Don't active this test until #1722 is fixed
+
   <test name="SMS_Ld3" grid="f09_f09_mg17" compset="I2000Clm51FatesCruRsGs" testmods="clm/FatesColdSatPhen_prescribed">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
@@ -2381,7 +2381,6 @@
       <option name="comment">Test with prescribed LAI and soil-moisture with FatesSP mode, has to be at f09 and 2000</option>
     </options>
   </test>
--->
   <test name="SMS_Lm1" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdBasic">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
