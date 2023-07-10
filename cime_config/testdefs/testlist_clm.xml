@@ -2372,7 +2372,7 @@
     </options>
   </test>
 
-  <test name="SMS_Ld3" grid="f09_f09_mg17" compset="I2000Clm51FatesCruRsGs" testmods="clm/FatesColdSatPhen_prescribed">
+  <test name="SMS_Ld3" grid="f09_f09_mg17" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdSatPhen_prescribed">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
