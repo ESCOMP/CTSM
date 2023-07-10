@@ -462,8 +462,8 @@ contains
 
     ! When LAI streams are being used
     ! NOTE: This call needs to happen outside loops over nclumps (as streams are not threadsafe)
-    if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb) .and. use_lai_streams) then
-       call lai_advance( bounds_proc )
+    if (doalb .and. use_lai_streams) then
+       call lai_advance(bounds_proc)
     endif
 
     ! ============================================================================
