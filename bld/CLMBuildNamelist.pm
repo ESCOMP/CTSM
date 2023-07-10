@@ -3845,8 +3845,8 @@ sub setup_logic_lai_streams {
   if ( &value_is_true($nl_flags->{'use_crop'}) && &value_is_true($nl->get_value('use_lai_streams'))  ) {
     $log->fatal_error("turning use_lai_streams on is incompatable with use_crop set to true.");
   }
-  if ( $nl_flags->{'bgc_mode'} .eq. "sp" || $nl_flags->{'bgc_mode'} = "fates" ) {
-     if ($nl_flags->{'bgc_mode'} .eq. "fates" && ! &value_is_true($nl->get_value('use_fates_sp'))) { 
+  if ( $nl_flags->{'bgc_mode'} .eq. "sp" || $nl_flags->{'bgc_mode'} .eq. "fates" ) {
+     if ( $nl_flags->{'bgc_mode'} .eq. "fates" && ! &value_is_true($nl->get_value('use_fates_sp')) ) { 
           $log->fatal_error("Must have use_fates_sp turned on to run FATES with LAI streams.");
       }
      if ( &value_is_true($nl->get_value('use_lai_streams')) ) {
