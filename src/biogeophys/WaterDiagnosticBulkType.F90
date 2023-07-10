@@ -17,7 +17,7 @@ module WaterDiagnosticBulkType
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
   use clm_varctl     , only : use_cn, iulog, use_luna
-  use clm_varpar     , only : nlevgrnd, nlevsno, nlevcan
+  use clm_varpar     , only : nlevgrnd, nlevsno, nlevcan, nlevsoi
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
@@ -201,7 +201,7 @@ contains
     allocate(this%swe_old_col            (begc:endc,-nlevsno+1:0))        ; this%swe_old_col            (:,:) = nan   
     allocate(this%exice_subs_tot_col     (begc:endc))                     ; this%exice_subs_tot_col     (:)   = 0.0_r8
     allocate(this%exice_subs_col         (begc:endc, 1:nlevmaxurbgrnd))   ; this%exice_subs_col         (:,:) = 0.0_r8
-    allocate(this%exice_vol_col          (begc:endc, 1:nlevgrnd))         ; this%exice_vol_col          (:,:) = 0.0_r8
+    allocate(this%exice_vol_col          (begc:endc, 1:nlevsoi))          ; this%exice_vol_col          (:,:) = 0.0_r8
     allocate(this%exice_vol_tot_col      (begc:endc))                     ; this%exice_vol_tot_col      (:)   = 0.0_r8
 
     allocate(this%snw_rds_col            (begc:endc,-nlevsno+1:0))        ; this%snw_rds_col            (:,:) = nan
@@ -912,11 +912,11 @@ contains
        this%exice_subs_tot_col(bounds%begc:bounds%endc)=0.0_r8
        this%exice_vol_tot_col(bounds%begc:bounds%endc)=0.0_r8
        this%exice_subs_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
-       this%exice_vol_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
+       this%exice_vol_col(bounds%begc:bounds%endc,1:nlevsoi)=0.0_r8
     else
        ! initialization of these to zero is ok, since they might not be in the restart file
        this%exice_subs_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
-       this%exice_vol_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
+       this%exice_vol_col(bounds%begc:bounds%endc,1:nlevsoi)=0.0_r8
        call RestartExcessIceIssue( &
             ncid = ncid, &
             flag = flag, &
@@ -939,7 +939,7 @@ contains
          this%exice_subs_tot_col(bounds%begc:bounds%endc)=0.0_r8
          this%exice_vol_tot_col(bounds%begc:bounds%endc)=0.0_r8
          this%exice_subs_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
-         this%exice_vol_col(bounds%begc:bounds%endc,1:nlevgrnd)=0.0_r8
+         this%exice_vol_col(bounds%begc:bounds%endc,1:nlevsoi)=0.0_r8
        endif
        call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('TOTEXICE_VOL'),  &
             dim1name='column', xtype=ncd_double, &
@@ -1058,7 +1058,6 @@ contains
     ! Compute end-of-timestep summaries of water diagnostic terms
     !
     ! !USES:
-    use clm_varpar     , only : nlevsoi
     use clm_varcon     , only : denice
     use landunit_varcon, only : istsoil, istcrop
     ! !ARGUMENTS:
