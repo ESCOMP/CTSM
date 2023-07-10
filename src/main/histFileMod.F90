@@ -3301,7 +3301,8 @@ contains
 
        dim2id(1) = hist_interval_dimid;  dim2id(2) = time_dimid
        call ncd_defvar(nfid(t), 'time_bounds', ncd_double, 2, dim2id, varid, &
-          long_name = 'time interval endpoints')
+          long_name = 'time interval endpoints', &
+          units = str)
 
        dim2id(1) = strlen_dimid;  dim2id(2) = time_dimid
        call ncd_defvar(nfid(t), 'date_written', ncd_char, 2, dim2id, varid)
