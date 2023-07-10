@@ -1,7 +1,7 @@
 ===============================================================
-Tag name: ctsm5.2.dev130
+Tag name: ctsm5.1.dev130
 Originator(s): glemieux (Greg Lemieux,LBL/NGEET,510-486-5049)
-Date: Fri Jun 30 12:00:00 MDT 2023
+Date: Sun Jul  9 23:24:29 MDT 2023
 One-line Summary: FATES parameter file and test definition update
 
 Purpose and description of changes
@@ -35,6 +35,11 @@ Bugs fixed or introduced
 CTSM issues fixed (include CTSM Issue #):
    Fixes #2043 -- Five izumi NEON tests fail (for me) because the testnames include L10d instead of Ld10
 
+Known bugs found since the previous tag (include issue #):
+   #2049 -- Use of 0.01_r8 as a magic number
+   #2042 -- Issue running SystemTests due to "conda activate" error
+   #2039 -- Conditional for NEON usermods is too broad
+
 Notes of particular relevance for users
 ---------------------------------------
 Changes made to namelist defaults (e.g., changed parameter values):
@@ -60,10 +65,6 @@ Answer changes
 
 Changes answers relative to baseline: YES for FATES tests only
 
-  [ If a tag changes answers relative to baseline comparison the
-    following should be filled in (otherwise remove this section).
-    And always remove these three lines and parts that don't apply. ]
-
   Summarize any changes to answers, i.e.,
     - what code configurations: FATES
     - what platforms/compilers: ALL
@@ -82,7 +83,7 @@ Changes answers relative to baseline: YES for FATES tests only
 
 Other details
 -------------
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates
   fates: sci.1.65.3_api.25.4.0 -> fates-sci.1.66.0_api.25.5.0
 
 Pull Requests that document the changes (include PR ids):
