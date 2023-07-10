@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev125
 Originator(s): jpalex (John Alex)
-Date: Wed May 17 08:56:41 MDT 2023
+Date: Sun Jul  9 21:04:13 MDT 2023
 One-line Summary: Added cache for clock step_size in clm_time_manager.F90
 
 Purpose and description of changes
