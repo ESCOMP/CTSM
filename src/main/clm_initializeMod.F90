@@ -670,7 +670,7 @@ contains
     elseif ( use_fates_sp ) then
        call interpMonthlyVeg(bounds_proc, canopystate_inst)
     end if
-
+    
     ! Determine gridcell averaged properties to send to atm
     if (nsrest == nsrStartup) then
        call t_startf('init_map2gc')
@@ -706,6 +706,7 @@ contains
           !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
           do nc = 1,nclumps
              call get_clump_bounds(nc, bounds_clump)
+	     if (masterproc) write(iulog,*) "inside the loop"
 
              ! FATES satellite phenology mode needs to include all active and inactive patch-level soil
              ! filters due to the translation between the hlm pfts and the fates pfts.
@@ -719,10 +720,18 @@ contains
           end do
           !$OMP END PARALLEL DO
        end if
+       if (masterproc) then 
+       write(iulog,*) "made it past SP"
+       end if 
        call clm_fates%init_coldstart(water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
             soilstate_inst, soilbiogeochem_carbonflux_inst)
     end if
+    
+    if (masterproc) then 
+    write(iulog,*) "made it to fates initialize"
+    end if 
+
 
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through
     ! initialize2 because it is used to initialize other variables; now it can be deallocated

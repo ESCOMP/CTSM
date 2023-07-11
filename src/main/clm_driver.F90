@@ -224,6 +224,10 @@ contains
     ! Specified phenology
     ! Done in SP mode, FATES-SP mode and also when dry-deposition is active
     ! ============================================================================
+    
+    if ( masterproc ) then
+      write(iulog,*)  'made it to here'
+    end if
 
     if (use_cn) then
        ! For dry-deposition need to call CLMSP so that mlaidiff is obtained
@@ -263,6 +267,9 @@ contains
        end if
 
     end if
+    
+
+    
 
     ! ==================================================================================
     ! Determine decomp vertical profiles

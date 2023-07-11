@@ -54,7 +54,7 @@ contains
     type(bounds_type), intent(in) :: bounds          ! bounds
     !
     ! !LOCAL VARIABLES:
-    integer                 :: i,n                        ! index
+    integer                 :: i,n, ig, g                 ! index
     integer                 :: stream_year_first_lai      ! first year in Lai stream to use
     integer                 :: stream_year_last_lai       ! last year in Lai stream to use
     integer                 :: model_year_align_lai       ! align stream_year_first_lai with
@@ -151,6 +151,15 @@ contains
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
     end if
+    
+    if ( .not. allocated(g_to_ig) )then
+       allocate (g_to_ig(bounds%begg:bounds%endg) )
+       ig = 0
+       do g = bounds%begg,bounds%endg
+          ig = ig+1
+          g_to_ig(g) = ig
+       end do
+    end if
 
   end subroutine lai_init
 
@@ -219,6 +228,8 @@ contains
 
     SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
+    
+    if (masterproc) write(iulog,*) "inside laiinterp"
 
     ! Get pointer for stream data that is time and spatially interpolate to model time and grid
     ! Place all lai data from each type into a temporary 2d array
@@ -236,19 +247,29 @@ contains
           dataptr2d(g,n) = dataptr1d(g)
        end do
     end do
+    
+    if (masterproc) write(iulog,*) "finished first loop"
 
     do p = bounds%begp, bounds%endp
        ivt = patch%itype(p)
        ! Set lai for each gridcell/patch combination
        if (ivt /= noveg) then
           ! vegetated pft
+	   if (masterproc) write(iulog,*) "vegetated"
+	  if (masterproc) write(iulog,*) patch%gridcell(p)
+	  if (masterproc) write(iulog,*) bounds%begp, bounds%endp, "bounds"
           ig = g_to_ig(patch%gridcell(p))
           canopystate_inst%tlai_patch(p) = dataptr2d(ig,ivt)
+	  if (masterproc) write(iulog,*) "filled the patch"
        else
           ! non-vegetated pft
           canopystate_inst%tlai_patch(p) = 0._r8
        endif
+       if (masterproc) write(iulog,*) "inside loop"
     end do
+    
+    if(masterproc) write(iulog,*) "second loop"
+    
     deallocate(dataptr2d)
 
   end subroutine lai_interp
