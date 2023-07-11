@@ -3264,6 +3264,7 @@ contains
        dim1id(1) = time_dimid
        call ncd_defvar(nfid(t) , 'mcdate', ncd_int, 1, dim1id , varid, &
           long_name = 'current date (YYYYMMDD)')
+       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
        !
        ! add global attribute time_period_freq
        !
@@ -3292,10 +3293,13 @@ contains
 
        call ncd_defvar(nfid(t) , 'mcsec' , ncd_int, 1, dim1id , varid, &
           long_name = 'current seconds of current date', units='s')
+       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
        call ncd_defvar(nfid(t) , 'mdcur' , ncd_int, 1, dim1id , varid, &
           long_name = 'current day (from base day)')
+       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
        call ncd_defvar(nfid(t) , 'mscur' , ncd_int, 1, dim1id , varid, &
           long_name = 'current seconds of current day')
+       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
        call ncd_defvar(nfid(t) , 'nstep' , ncd_int, 1, dim1id , varid, &
           long_name = 'time step')
 
