@@ -1992,9 +1992,9 @@ to use for methane model
 </entry>
        
 <entry id="light_res" type="char*10" category="default_settings"
-       group="default_settings" valid_values="none,360x720,94x192">
-Resolution of Lightning dataset to use for CN fire model
-(only applies when CN and the CN fire model are turned on)
+       group="default_settings" valid_values="none,360x720,106x174,94x192">
+Resolution of Lightning dataset to use for CN or FATES fire model
+(only applies when CN or FATES and the fire model is turned on)
 </entry>
 
 <entry id="chk_res" type="integer"  category="default_settings"
