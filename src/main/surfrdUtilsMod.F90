@@ -45,7 +45,7 @@ contains
     character(len=*), intent(in) :: name         ! name of array
     character(len=*), intent(in) :: caller       ! identifier of caller, for more meaningful error messages
     integer, optional, intent(out):: ier         ! Return an error code rather than abort
-    real(r8), optional, intent(out):: sumto(lb:)  ! The value the array should sum to (1.0 if not provided)
+    real(r8), optional, intent(in):: sumto(lb:)  ! The value the array should sum to (1.0 if not provided)
     !
     ! !LOCAL VARIABLES:
     logical :: found
@@ -58,12 +58,15 @@ contains
 
     ub = ubound(arr, 1)
     allocate(TotalSum(lb:ub))
-    TotalSum = 1._r8
-    if ( present(sumto) ) TotalSum = sumto
     if( present(ier) ) ier = 0
     found = .false.
 
-    do nl = lbound(arr, 1), ub
+    do nl = lb, ub
+       if ( present(sumto) ) then
+          TotalSum(nl) = sumto(nl)
+       else
+          TotalSum(nl) = 1._r8
+       end if
        if (abs(sum(arr(nl,:)) - TotalSum(nl)) > eps) then
           found = .true.
           nindx = nl
