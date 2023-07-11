@@ -1373,9 +1373,6 @@ bioms:   do f = 1, fn
       fn = fnorig
       filterp(1:fn) = fporig(1:fn)
 
-      ! save before updating
-      snocan_baseline(begp:endp) = snocan(begp:endp)
-
       do f = 1, fn
          p = filterp(f)
          c = patch%column(p)
@@ -1524,6 +1521,9 @@ bioms:   do f = 1, fn
          cgrnds(p) = cgrnds(p) + cpair*forc_rho(c)*wtg(p)*wtal(p)
          cgrndl(p) = cgrndl(p) + forc_rho(c)*wtgq(p)*wtalq(p)*dqgdT(c)
          cgrnd(p)  = cgrnds(p) + cgrndl(p)*htvp(c)
+
+         ! save before updating
+         snocan_baseline(p) = snocan(p)
 
          ! Update dew accumulation (kg/m2)
          if (t_veg(p) > tfrz ) then ! above freezing, update accumulation in liqcan
