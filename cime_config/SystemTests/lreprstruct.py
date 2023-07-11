@@ -49,6 +49,21 @@ class LREPRSTRUCT(SystemTestsCompareTwo):
             contents="for_testing_use_repr_structure_pool=.true.",
         )
 
+        # Replace any GRAIN outputs with the same outputs for REPRODUCTIVE1 and REPRODUCTIVE2
+        user_nl_clm_path = os.path.join(self._get_caseroot(), "user_nl_clm")
+        with open(user_nl_clm_path) as f:
+            user_nl_clm_text = f.read()
+        for grain_output in re.findall("GRAIN\w*", user_nl_clm_text):
+            user_nl_clm_text = user_nl_clm_text.replace(
+                grain_output,
+                grain_output.replace('GRAIN', 'REPRODUCTIVE1') 
+                + "', '"
+                + grain_output.replace('GRAIN', 'REPRODUCTIVE2')
+                )
+        with open(user_nl_clm_path, "w") as f:
+            f.write(user_nl_clm_text)
+
+
     def _case_two_setup(self):
         # This is needed in the nearly-standard case to prevent grain from being used to
         # replenish crop seed deficits, thus making grain act like the reproductive

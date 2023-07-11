@@ -2154,7 +2154,7 @@ contains
                 do_harvest = .true.
                 fake_harvest = .true.
                 harvest_reason = HARVEST_REASON_SOWNBADDEC31
-            else if (do_plant .and. .not. did_plant) then
+            else if (use_cropcal_streams .and. do_plant .and. .not. did_plant) then
                 ! Today was supposed to be the planting day, but the previous crop still hasn't been harvested.
                 do_harvest = .true.
                 harvest_reason = HARVEST_REASON_SOWTODAY
@@ -2170,8 +2170,8 @@ contains
                   ! which would invoke the "manually setting sowing_count and 
                   ! sdates_thisyr" code. This would lead to crops never getting
                   ! harvested. Instead, always harvest the day before idop.
-                  if ((.not. do_harvest) .and. \
-                      (idop(p) > 1 .and. jday == idop(p) - 1) .or. \
+                  if ((.not. do_harvest) .and. &
+                      (idop(p) > 1 .and. jday == idop(p) - 1) .or. &
                       (idop(p) == 1 .and. jday == dayspyr)) then
                       do_harvest = .true.
                       if (do_harvest) then
@@ -2217,8 +2217,8 @@ contains
                ! sowing dates.
                ! WARNING: This implementation assumes that all patches use prescribed sowing dates.
                if (use_cropcal_rx_sdates) then
-                  will_plant_prescribed_tomorrow = (jday == next_rx_sdate(p) - 1) .or. \
-                                              (crop_inst%sdates_thisyr_patch(p,1) == 1 .and. \
+                  will_plant_prescribed_tomorrow = (jday == next_rx_sdate(p) - 1) .or. &
+                                              (crop_inst%sdates_thisyr_patch(p,1) == 1 .and. &
                                                jday == dayspyr)
                else
                   will_plant_prescribed_tomorrow = .false.
