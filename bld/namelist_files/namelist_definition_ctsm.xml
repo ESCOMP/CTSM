@@ -1090,20 +1090,20 @@ Toggle to turn on the 1-year grain product pool in the crop model
 </entry>
 
 <entry id="baset_mapping" type="char*20" category="physics"
-       group="crop" valid_values="constant,varytropicsbylat" value="constant">
+       group="crop_inparm" valid_values="constant,varytropicsbylat" value="constant">
 Type of mapping to use for base temperature for prognostic crop model
 constant = Just use baset from the PFT parameter file
 varytropicsbylat = Vary the tropics by latitude 
 </entry>
 
 <entry id="baset_latvary_slope" type="real" category="physics"
-       group="crop" valid_values="" value="0.4d00">
+       group="crop_inparm" valid_values="" value="0.4d00">
 Only used when baset_mapping == varytropicsbylat
 Slope with latitude in degrees to vary tropical baset by
 </entry>
 
 <entry id="baset_latvary_intercept" type="real" category="physics"
-       group="crop" valid_values="" value="12.0d00">
+       group="crop_inparm" valid_values="" value="12.0d00">
 Only used when baset_mapping == varytropicsbylat
 Intercept at zero latitude to add to baset from the PFT parameter file
 </entry>

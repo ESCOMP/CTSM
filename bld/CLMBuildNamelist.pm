@@ -1625,9 +1625,9 @@ sub process_namelist_inline_logic {
   setup_logic_urban($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ###############################
-  # namelist group: crop        #
+  # namelist group: crop_inparm #
   ###############################
-  setup_logic_crop($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_crop_inparm($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ###############################
   # namelist group: ch4par_in   #
@@ -2154,7 +2154,7 @@ sub setup_logic_urban {
 
 #-------------------------------------------------------------------------------
 
-sub setup_logic_crop {
+sub setup_logic_crop_inparm {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   if ( &value_is_true($nl->get_value('use_crop')) ) {
@@ -4343,7 +4343,7 @@ sub write_output_files {
                soilwater_movement_inparm rooting_profile_inparm
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
-               cnprecision_inparm clm_glacier_behavior crop irrigation_inparm
+               cnprecision_inparm clm_glacier_behavior crop_inparm irrigation_inparm
                surfacealbedo_inparm water_tracers_inparm);
 
   #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm

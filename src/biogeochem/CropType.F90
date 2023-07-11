@@ -73,7 +73,7 @@ module CropType
      procedure, public  :: InitAccBuffer
      procedure, public  :: InitAccVars
      procedure, public  :: Restart
-     procedure, public  :: ReadNML            ! Read in the crop namelist
+     procedure, public  :: ReadNML            ! Read in the crop_inparm namelist
 
      ! NOTE(wjs, 2014-09-29) need to rename this from UpdateAccVars to CropUpdateAccVars
      ! to prevent cryptic error messages with pgi (v. 13.9 on yellowstone)
@@ -143,12 +143,12 @@ contains
     integer :: unitn                ! unit for namelist file
 
     character(len=*), parameter :: subname = 'Crop::ReadNML'
-    character(len=*), parameter :: nmlname = 'crop'
+    character(len=*), parameter :: nmlname = 'crop_inparm'
     !-----------------------------------------------------------------------
     character(len=20) :: baset_mapping
     real(r8) :: baset_latvary_intercept
     real(r8) :: baset_latvary_slope
-    namelist /crop/ baset_mapping, baset_latvary_intercept, baset_latvary_slope
+    namelist /crop_inparm/ baset_mapping, baset_latvary_intercept, baset_latvary_slope
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -162,7 +162,7 @@ contains
        call opnfil (NLFilename, unitn, 'F')
        call shr_nl_find_group_name(unitn, nmlname, status=ierr)
        if (ierr == 0) then
-          read(unitn, nml=crop, iostat=ierr)
+          read(unitn, nml=crop_inparm, iostat=ierr)
           if (ierr /= 0) then
              call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
           end if
@@ -190,7 +190,7 @@ contains
     if (masterproc) then
        write(iulog,*) ' '
        write(iulog,*) nmlname//' settings:'
-       write(iulog,nml=crop)
+       write(iulog,nml=crop_inparm)
        write(iulog,*) ' '
     end if
 
