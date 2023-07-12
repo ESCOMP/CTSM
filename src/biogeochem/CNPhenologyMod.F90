@@ -352,7 +352,7 @@ contains
 
 
     if ( phase == 1 ) then
-       call CNPhenologyClimate(num_soilp, filter_soilp, num_pcropp, filter_pcropp, &
+       call CNPhenologyClimate(num_soilp, filter_soilp, &
             temperature_inst, cnveg_state_inst, crop_inst)
    
        call CNEvergreenPhenology(num_soilp, filter_soilp, &
@@ -513,7 +513,7 @@ contains
   end subroutine CNPhenologyInit
 
   !-----------------------------------------------------------------------
-  subroutine CNPhenologyClimate (num_soilp, filter_soilp, num_pcropp, filter_pcropp, &
+  subroutine CNPhenologyClimate (num_soilp, filter_soilp, &
        temperature_inst, cnveg_state_inst, crop_inst)
     !
     ! !DESCRIPTION:
@@ -526,8 +526,6 @@ contains
     ! !ARGUMENTS:
     integer                , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    integer                , intent(in)    :: num_pcropp      ! number of prognostic crops in filter
-    integer                , intent(in)    :: filter_pcropp(:)! filter for prognostic crop patches
     type(temperature_type) , intent(inout) :: temperature_inst
     type(cnveg_state_type) , intent(inout) :: cnveg_state_inst
     type(crop_type)        , intent(inout) :: crop_inst
@@ -536,24 +534,12 @@ contains
     integer  :: p       ! indices
     integer  :: fp      ! lake filter patch index
     real(r8) :: dayspyr ! days per year (days)
-    integer  :: kyr     ! current year
-    integer  :: kmo     ! month of year  (1, ..., 12)
-    integer  :: kda     ! day of month   (1, ..., 31)
-    integer  :: mcsec   ! seconds of day (0, ..., seconds/day)
-    real(r8), parameter :: yravg   = 20.0_r8      ! length of years to average for gdd
-    real(r8), parameter :: yravgm1 = yravg-1.0_r8 ! minus 1 of above
     !-----------------------------------------------------------------------
 
     associate(                                                & 
          nyrs_crop_active => crop_inst%nyrs_crop_active_patch,   & ! InOut:  [integer (:)  ]  number of years this crop patch has been active
          
          t_ref2m        => temperature_inst%t_ref2m_patch ,   & ! Input:  [real(r8) (:) ]  2m air temperature (K)
-         gdd0           => temperature_inst%gdd0_patch    ,   & ! Output: [real(r8) (:) ]  growing deg. days base 0 deg C (ddays)            
-         gdd8           => temperature_inst%gdd8_patch    ,   & ! Output: [real(r8) (:) ]     "     "    "    "   8  "  "    "               
-         gdd10          => temperature_inst%gdd10_patch   ,   & ! Output: [real(r8) (:) ]     "     "    "    "  10  "  "    "               
-         gdd020         => temperature_inst%gdd020_patch  ,   & ! Output: [real(r8) (:) ]  20-yr mean of gdd0 (ddays)                        
-         gdd820         => temperature_inst%gdd820_patch  ,   & ! Output: [real(r8) (:) ]  20-yr mean of gdd8 (ddays)                        
-         gdd1020        => temperature_inst%gdd1020_patch ,   & ! Output: [real(r8) (:) ]  20-yr mean of gdd10 (ddays)                       
          
          tempavg_t2m    => cnveg_state_inst%tempavg_t2m_patch & ! Output: [real(r8) (:) ]  temp. avg 2m air temperature (K)                  
          )
@@ -565,41 +551,6 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
          tempavg_t2m(p) = tempavg_t2m(p) + t_ref2m(p) * (fracday/dayspyr)
-      end do
-
-      !
-      ! The following crop related steps are done here rather than CropPhenology
-      ! so that they will be completed each time-step rather than with doalb.
-      !
-      ! NOTE(wjs, 2022-02-03) The above comment about doalb no longer applies, because
-      ! there is no longer a doalb conditional around the CropPhenology call. Therefore,
-      ! we could move these calculations into CropPhenology if it made sense to do so.
-      !
-      ! The following lines come from ibis's climate.f + stats.f
-      ! gdd SUMMATIONS ARE RELATIVE TO THE PLANTING DATE (see subr. updateAccFlds)
-
-      if (num_pcropp > 0) then
-         ! get time-related info
-         call get_curr_date(kyr, kmo, kda, mcsec)
-      end if
-
-      do fp = 1,num_pcropp
-         p = filter_pcropp(fp)
-         if (kmo == 1 .and. kda == 1 .and. nyrs_crop_active(p) == 0) then ! YR 1:
-            gdd020(p)  = 0._r8                             ! set gdd..20 variables to 0
-            gdd820(p)  = 0._r8                             ! and crops will not be planted
-            gdd1020(p) = 0._r8
-         end if
-         if (kmo == 1 .and. kda == 1 .and. mcsec == 0) then        ! <-- END of EVERY YR:
-            if (nyrs_crop_active(p) == 1) then                     ! <-- END of YR 1
-               gdd020(p)  = gdd0(p)                                ! <-- END of YR 1
-               gdd820(p)  = gdd8(p)                                ! <-- END of YR 1
-               gdd1020(p) = gdd10(p)                               ! <-- END of YR 1
-            end if                                                 ! <-- END of YR 1
-            gdd020(p)  = (yravgm1* gdd020(p)  + gdd0(p))  / yravg  ! gdd..20 must be long term avgs
-            gdd820(p)  = (yravgm1* gdd820(p)  + gdd8(p))  / yravg  ! so ignore results for yrs 1 & 2
-            gdd1020(p) = (yravgm1* gdd1020(p) + gdd10(p)) / yravg 
-         end if
       end do
 
     end associate

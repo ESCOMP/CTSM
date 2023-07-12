@@ -609,17 +609,17 @@ contains
             avgflag='A', long_name='Growing degree days base 10C from planting', &
             ptr_patch=this%gdd10_patch, default='inactive')
 
-       this%gdd020_patch(begp:endp) = spval
+       this%gdd020_patch(begp:endp) = nan
        call hist_addfld1d (fname='GDD020', units='ddays', &
             avgflag='A', long_name='Twenty year average of growing degree days base  0C from planting', &
             ptr_patch=this%gdd020_patch, default='inactive')
 
-       this%gdd820_patch(begp:endp) = spval
+       this%gdd820_patch(begp:endp) = nan
        call hist_addfld1d (fname='GDD820', units='ddays', &
             avgflag='A', long_name='Twenty year average of growing degree days base  8C from planting', &
             ptr_patch=this%gdd820_patch, default='inactive')
 
-       this%gdd1020_patch(begp:endp) = spval
+       this%gdd1020_patch(begp:endp) = nan
        call hist_addfld1d (fname='GDD1020', units='ddays', &
             avgflag='A', long_name='Twenty year average of growing degree days base 10C from planting', &
             ptr_patch=this%gdd1020_patch, default='inactive')
@@ -1213,6 +1213,17 @@ contains
        call init_accum_field (name='GDD10', units='K', &
             desc='growing degree-days base 10C from planting', accum_type='runaccum', accum_period=not_used,  &
             subgrid_type='pft', numlev=1, init_value=0._r8)
+       
+       ! 20-year running means (20*365 days)
+       call init_accum_field (name='GDD020', units='K', &
+            desc='20-year running mean of growing degree days base 0C from planting', accum_type='runmean', accum_period=-20*365, &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
+       call init_accum_field (name='GDD820', units='K', &
+            desc='20-year running mean of growing degree days base 8C from planting', accum_type='runmean', accum_period=-20*365, &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
+       call init_accum_field (name='GDD1020', units='K', &
+            desc='20-year running mean of growing degree days base 10C from planting', accum_type='runmean', accum_period=-20*365, &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
 
     end if
 
@@ -1327,6 +1338,15 @@ contains
 
        call extract_accum_field ('GDD10', rbufslp, nstep)
        this%gdd10_patch(begp:endp) = rbufslp(begp:endp)
+
+       call extract_accum_field ('GDD020', rbufslp, nstep)
+       this%gdd020_patch(begp:endp) = rbufslp(begp:endp)
+
+       call extract_accum_field ('GDD820', rbufslp, nstep)
+       this%gdd820_patch(begp:endp) = rbufslp(begp:endp)
+
+       call extract_accum_field ('GDD1020', rbufslp, nstep)
+       this%gdd1020_patch(begp:endp) = rbufslp(begp:endp)
 
     end if
 
@@ -1574,11 +1594,40 @@ contains
        call update_accum_field  ('GDD10', rbufslp, nstep)
        call extract_accum_field ('GDD10', this%gdd10_patch, nstep)
 
+       ! Accumulate and extract running 20-year means
+       call update_accum_field  ('GDD020', this%gdd0_patch, nstep)
+       call extract_accum_field ('GDD020', this%gdd020_patch, nstep)
+       call update_accum_field  ('GDD820', this%gdd8_patch, nstep)
+       call extract_accum_field ('GDD820', this%gdd820_patch, nstep)
+       call update_accum_field  ('GDD1020', this%gdd10_patch, nstep)
+       call extract_accum_field ('GDD1020', this%gdd1020_patch, nstep)
+
     end if
 
     deallocate(rbufslp)
     deallocate(rbufslc)
 
   end subroutine UpdateAccVars
+
+  subroutine Clean(this)
+     !
+     ! !DESCRIPTION:
+     ! Finalize this instance
+     !
+     ! !USES:
+     !
+     ! !ARGUMENTS:
+     class(temperature_type), intent(inout) :: this
+     !
+     ! !LOCAL VARIABLES:
+ 
+     character(len=*), parameter :: subname = 'Clean'
+     !-----------------------------------------------------------------------
+ 
+     deallocate(this%gdd020_patch)
+     deallocate(this%gdd820_patch)
+     deallocate(this%gdd1020_patch)
+  
+   end subroutine Clean
 
 end module TemperatureType
