@@ -228,7 +228,6 @@ contains
 
     SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
-    
 
     ! Get pointer for stream data that is time and spatially interpolate to model time and grid
     ! Place all lai data from each type into a temporary 2d array
@@ -246,7 +245,7 @@ contains
           dataptr2d(g,n) = dataptr1d(g)
        end do
     end do
-    
+
     do p = bounds%begp, bounds%endp
        ivt = patch%itype(p)
        ! Set lai for each gridcell/patch combination
@@ -259,7 +258,6 @@ contains
           canopystate_inst%tlai_patch(p) = 0._r8
        endif
     end do
-    
     deallocate(dataptr2d)
 
   end subroutine lai_interp
