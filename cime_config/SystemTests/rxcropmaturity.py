@@ -24,12 +24,12 @@ import shutil, glob
 
 logger = logging.getLogger(__name__)
 
-class RXCROPMATURITY(SystemTestsCommon):
 
+class RXCROPMATURITY(SystemTestsCommon):
     def __init__(self, case):
         # initialize an object interface to the SMS system test
         SystemTestsCommon.__init__(self, case)
-        
+
         # Ensure run length is at least 5 years. Minimum to produce one complete growing season (i.e., two complete calendar years) actually 4 years, but that only gets you 1 season usable for GDD generation, so you can't check for season-to-season consistency.
         stop_n = self._case.get_value("STOP_N")
         stop_option = self._case.get_value("STOP_OPTION")
@@ -72,9 +72,9 @@ class RXCROPMATURITY(SystemTestsCommon):
         casebaseid = self._case.get_value("CASEBASEID")
         if casebaseid.split("-")[-1] != "cropMonthOutput":
             error_message = (
-                    "Only call RXCROPMATURITY with test cropMonthOutput "
-                    + "to avoid potentially huge sets of daily outputs."
-                    )
+                "Only call RXCROPMATURITY with test cropMonthOutput "
+                + "to avoid potentially huge sets of daily outputs."
+            )
             logger.error(error_message)
             raise RuntimeError(error_message)
 
@@ -88,9 +88,9 @@ class RXCROPMATURITY(SystemTestsCommon):
         # Modeling this after the SSP test, we create a clone to be the case whose outputs we don't
         # want to be saved as baseline.
 
-        #-------------------------------------------------------------------
+        # -------------------------------------------------------------------
         # (1) Set up GDD-generating run
-        #-------------------------------------------------------------------
+        # -------------------------------------------------------------------
         # Create clone to be GDD-Generating case
         logger.info("RXCROPMATURITY log:  cloning setup")
         case_rxboth = self._case
@@ -111,46 +111,48 @@ class RXCROPMATURITY(SystemTestsCommon):
 
         # Add stuff specific to GDD-Generating run
         logger.info("RXCROPMATURITY log:  modify user_nl files: generate GDDs")
-        self._append_to_user_nl_clm([
-            "generate_crop_gdds = .true.",
-            "use_mxmat = .false.",
-            " ",
-            "! (h2) Daily outputs for GDD generation and figure-making",
-            "hist_fincl3 = 'GDDACCUM', 'GDDHARV'",
-            "hist_nhtfrq(3) = -24",
-            "hist_mfilt(3) = 365",
-            "hist_type1d_pertape(3) = 'PFTS'",
-            "hist_dov2xy(3) = .false.",
-        ])
-        
+        self._append_to_user_nl_clm(
+            [
+                "generate_crop_gdds = .true.",
+                "use_mxmat = .false.",
+                " ",
+                "! (h2) Daily outputs for GDD generation and figure-making",
+                "hist_fincl3 = 'GDDACCUM', 'GDDHARV'",
+                "hist_nhtfrq(3) = -24",
+                "hist_mfilt(3) = 365",
+                "hist_type1d_pertape(3) = 'PFTS'",
+                "hist_dov2xy(3) = .false.",
+            ]
+        )
+
         # If flanduse_timeseries is defined, we need to make a static version for this test. This
         # should have every crop in most of the world.
         self._get_flanduse_timeseries_in(case_gddgen)
         if self._flanduse_timeseries_in is not None:
-            
+
             # Download files from the server, if needed
             case_gddgen.check_all_input_data()
-            
+
             # Make custom version of surface file
             logger.info("RXCROPMATURITY log:  run make_surface_for_gddgen")
             self._run_make_surface_for_gddgen(case_gddgen)
-        
-        #-------------------------------------------------------------------
+
+        # -------------------------------------------------------------------
         # (2) Perform GDD-generating run and generate prescribed GDDs file
-        #-------------------------------------------------------------------
+        # -------------------------------------------------------------------
         logger.info("RXCROPMATURITY log:  Start GDD-Generating run")
-        
+
         # As per SSP test:
         # "No history files expected, set suffix=None to avoid compare error"
         # We *do* expect history files here, but anyway. This works.
         self._skip_pnl = False
         self.run_indv(suffix=None, st_archive=True)
-        
+
         self._run_generate_gdds(case_gddgen)
-        
-        #-------------------------------------------------------------------
+
+        # -------------------------------------------------------------------
         # (3) Set up and perform Prescribed Calendars run
-        #-------------------------------------------------------------------
+        # -------------------------------------------------------------------
         os.chdir(caseroot)
         self._set_active_case(case_rxboth)
 
@@ -159,19 +161,20 @@ class RXCROPMATURITY(SystemTestsCommon):
 
         # Add stuff specific to Prescribed Calendars run
         logger.info("RXCROPMATURITY log:  modify user_nl files: Prescribed Calendars")
-        self._append_to_user_nl_clm([
-            "generate_crop_gdds = .false.",
-            f"stream_fldFileName_cultivar_gdds = '{self._gdds_file}'",
-        ])
+        self._append_to_user_nl_clm(
+            [
+                "generate_crop_gdds = .false.",
+                f"stream_fldFileName_cultivar_gdds = '{self._gdds_file}'",
+            ]
+        )
 
         self.run_indv()
-        
-        #-------------------------------------------------------------------
+
+        # -------------------------------------------------------------------
         # (4) Check Prescribed Calendars run
-        #-------------------------------------------------------------------
+        # -------------------------------------------------------------------
         logger.info("RXCROPMATURITY log:  output check: Prescribed Calendars")
         self._run_check_rxboth_run()
-
 
     # Get sowing and harvest dates for this resolution.
     def _get_rx_dates(self):
@@ -183,24 +186,30 @@ class RXCROPMATURITY(SystemTestsCommon):
         if lnd_grid == "10x15":
             self._sdatefile = os.path.join(
                 processed_crop_dates_dir,
-                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f10_f10_mg37.2000-2000.20230330_165301.nc")
+                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f10_f10_mg37.2000-2000.20230330_165301.nc",
+            )
             self._hdatefile = os.path.join(
                 processed_crop_dates_dir,
-                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f10_f10_mg37.2000-2000.20230330_165301.nc")
+                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f10_f10_mg37.2000-2000.20230330_165301.nc",
+            )
         elif lnd_grid == "1.9x2.5":
             self._sdatefile = os.path.join(
                 processed_crop_dates_dir,
-                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f19_g17.2000-2000.20230102_175625.nc")
+                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f19_g17.2000-2000.20230102_175625.nc",
+            )
             self._hdatefile = os.path.join(
                 processed_crop_dates_dir,
-                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f19_g17.2000-2000.20230102_175625.nc")
+                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f19_g17.2000-2000.20230102_175625.nc",
+            )
         elif lnd_grid == "0.9x1.25":
             self._sdatefile = os.path.join(
                 processed_crop_dates_dir,
-                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230520_134417.nc")
+                "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230520_134417.nc",
+            )
             self._hdatefile = os.path.join(
                 processed_crop_dates_dir,
-                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230520_134418.nc")
+                "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17.2000-2000.20230520_134418.nc",
+            )
         else:
             error_message = "ERROR: RXCROPMATURITY currently only supports 0.9x1.25, 1.9x2.5, and 10x15 resolutions"
             logger.error(error_message)
@@ -216,27 +225,25 @@ class RXCROPMATURITY(SystemTestsCommon):
             logger.error(error_message)
             raise RuntimeError(error_message)
 
-
     def _setup_all(self):
         logger.info("RXCROPMATURITY log:  _setup_all start")
 
         # Get some info
-        self._ctsm_root = self._case.get_value('COMP_ROOT_DIR_LND')
-        run_startdate = self._case.get_value('RUN_STARTDATE')
-        self._run_startyear = int(run_startdate.split('-')[0])
-        
+        self._ctsm_root = self._case.get_value("COMP_ROOT_DIR_LND")
+        run_startdate = self._case.get_value("RUN_STARTDATE")
+        self._run_startyear = int(run_startdate.split("-")[0])
+
         # Set sowing dates file (and other crop calendar settings) for all runs
         logger.info("RXCROPMATURITY log:  modify user_nl files: all tests")
         self._modify_user_nl_allruns()
         logger.info("RXCROPMATURITY log:  _setup_all done")
 
-    
     # Make a surface dataset that has every crop in every gridcell
     def _run_make_surface_for_gddgen(self, case_gddgen):
-        
+
         # fsurdat should be defined. Where is it?
         self._fsurdat_in = None
-        with open (self._lnd_in_path,'r') as lnd_in:
+        with open(self._lnd_in_path, "r") as lnd_in:
             for line in lnd_in:
                 fsurdat_in = re.match(r" *fsurdat *= *'(.*)'", line)
                 if fsurdat_in:
@@ -246,58 +253,64 @@ class RXCROPMATURITY(SystemTestsCommon):
             error_message = "fsurdat not defined"
             logger.error(error_message)
             raise RuntimeError(error_message)
-        
+
         # Where we will save the fsurdat version for this test
-        self._fsurdat_out = os.path.join(self._path_gddgen, 'fsurdat.nc')
-        
+        self._fsurdat_out = os.path.join(self._path_gddgen, "fsurdat.nc")
+
         # Make fsurdat for this test, if not already done
         if not os.path.exists(self._fsurdat_out):
-            tool_path = os.path.join(self._ctsm_root,
-                                    'python', 'ctsm', 'crop_calendars',
-                                    'make_fsurdat_all_crops_everywhere.py')
-            command = f"python3 {tool_path} "\
-                    + f"-i {self._fsurdat_in} "\
-                    + f"-o {self._fsurdat_out}"
+            tool_path = os.path.join(
+                self._ctsm_root,
+                "python",
+                "ctsm",
+                "crop_calendars",
+                "make_fsurdat_all_crops_everywhere.py",
+            )
+            command = (
+                f"python3 {tool_path} " + f"-i {self._fsurdat_in} " + f"-o {self._fsurdat_out}"
+            )
             stu.run_python_script(
-                    self._get_caseroot(),
-                    self._this_conda_env,
-                    command,
-                    tool_path,
-                    )
-        
-        # Modify namelist
-        logger.info("RXCROPMATURITY log:  modify user_nl files: new fsurdat")
-        self._append_to_user_nl_clm([
-            "fsurdat = '{}'".format(self._fsurdat_out),
-            "do_transient_crops = .false.",
-            "flanduse_timeseries = ''",
-            "use_init_interp = .true.",
-        ])
-        
-    
-    def _run_check_rxboth_run(self):
-        
-        output_dir = os.path.join(self._get_caseroot(), "run")
-        first_usable_year = self._run_startyear + 2
-        last_usable_year = self._run_startyear + self._run_Nyears - 2
-                
-        tool_path = os.path.join(self._ctsm_root,
-                                'python', 'ctsm', 'crop_calendars',
-                                'check_rxboth_run.py')
-        command = f"python3 {tool_path} "\
-                + f"--directory {output_dir} "\
-                + f"-y1 {first_usable_year} "\
-                + f"-yN {last_usable_year} "\
-                + f"--rx-sdates-file {self._sdatefile} "\
-                + f"--rx-gdds-file {self._gdds_file} "
-        stu.run_python_script(
                 self._get_caseroot(),
                 self._this_conda_env,
                 command,
                 tool_path,
-                )
-    
-    
+            )
+
+        # Modify namelist
+        logger.info("RXCROPMATURITY log:  modify user_nl files: new fsurdat")
+        self._append_to_user_nl_clm(
+            [
+                "fsurdat = '{}'".format(self._fsurdat_out),
+                "do_transient_crops = .false.",
+                "flanduse_timeseries = ''",
+                "use_init_interp = .true.",
+            ]
+        )
+
+    def _run_check_rxboth_run(self):
+
+        output_dir = os.path.join(self._get_caseroot(), "run")
+        first_usable_year = self._run_startyear + 2
+        last_usable_year = self._run_startyear + self._run_Nyears - 2
+
+        tool_path = os.path.join(
+            self._ctsm_root, "python", "ctsm", "crop_calendars", "check_rxboth_run.py"
+        )
+        command = (
+            f"python3 {tool_path} "
+            + f"--directory {output_dir} "
+            + f"-y1 {first_usable_year} "
+            + f"-yN {last_usable_year} "
+            + f"--rx-sdates-file {self._sdatefile} "
+            + f"--rx-gdds-file {self._gdds_file} "
+        )
+        stu.run_python_script(
+            self._get_caseroot(),
+            self._this_conda_env,
+            command,
+            tool_path,
+        )
+
     def _modify_user_nl_allruns(self):
         nl_additions = [
             "stream_meshfile_cropcal = '{}'".format(self._case.get_value("LND_DOMAIN_MESH")),
@@ -315,7 +328,6 @@ class RXCROPMATURITY(SystemTestsCommon):
         ]
         self._append_to_user_nl_clm(nl_additions)
 
-
     def _run_generate_gdds(self, case_gddgen):
         self._generate_gdds_dir = os.path.join(self._path_gddgen, "generate_gdds_out")
         os.makedirs(self._generate_gdds_dir)
@@ -329,24 +341,27 @@ class RXCROPMATURITY(SystemTestsCommon):
         hdates_file = self._hdatefile
 
         # It'd be much nicer to call generate_gdds.main(), but I can't import generate_gdds.
-        tool_path = os.path.join(self._ctsm_root,
-                                 'python', 'ctsm', 'crop_calendars',
-                                 'generate_gdds.py')
-        command = " ".join([
+        tool_path = os.path.join(
+            self._ctsm_root, "python", "ctsm", "crop_calendars", "generate_gdds.py"
+        )
+        command = " ".join(
+            [
                 f"python3 {tool_path}",
                 f"--input-dir {input_dir}",
                 f"--first-season {first_season}",
                 f"--last-season {last_season}",
                 f"--sdates-file {sdates_file}",
                 f"--hdates-file {hdates_file}",
-                f"--output-dir generate_gdds_out"])
+                f"--output-dir generate_gdds_out",
+            ]
+        )
         stu.run_python_script(
-                self._get_caseroot(),
-                self._this_conda_env,
-                command,
-                tool_path,
-                )
-        
+            self._get_caseroot(),
+            self._this_conda_env,
+            command,
+            tool_path,
+        )
+
         # Where were the prescribed maturity requirements saved?
         generated_gdd_files = glob.glob(os.path.join(self._generate_gdds_dir, "gdds_*.nc"))
         generated_gdd_files = [x for x in generated_gdd_files if "fill0" not in x]
@@ -355,7 +370,6 @@ class RXCROPMATURITY(SystemTestsCommon):
             logger.error(error_message)
             raise RuntimeError(error_message)
         self._gdds_file = generated_gdd_files[0]
-        
 
     def _get_conda_env(self):
         conda_setup_commands = stu.cmds_to_setup_conda(self._get_caseroot())
@@ -368,20 +382,16 @@ class RXCROPMATURITY(SystemTestsCommon):
         else:
             self._this_conda_env = "ctsm_pylib"
 
-
     def _append_to_user_nl_clm(self, additions):
         caseroot = self._get_caseroot()
-        append_to_user_nl_files(caseroot = caseroot,
-                                component = "clm",
-                                contents = additions)
-    
+        append_to_user_nl_files(caseroot=caseroot, component="clm", contents=additions)
 
     # Is flanduse_timeseries defined? If so, where is it?
     def _get_flanduse_timeseries_in(self, case):
-        case.create_namelists(component='lnd')
-        self._lnd_in_path = os.path.join(self._path_gddgen, 'CaseDocs', 'lnd_in')
+        case.create_namelists(component="lnd")
+        self._lnd_in_path = os.path.join(self._path_gddgen, "CaseDocs", "lnd_in")
         self._flanduse_timeseries_in = None
-        with open (self._lnd_in_path,'r') as lnd_in:
+        with open(self._lnd_in_path, "r") as lnd_in:
             for line in lnd_in:
                 flanduse_timeseries_in = re.match(r" *flanduse_timeseries *= *'(.*)'", line)
                 if flanduse_timeseries_in:

@@ -410,7 +410,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-hd", "--hdates-file", help="File of prescribed harvest dates", required=True
     )
-    
+
     # Optional
     figsgroup = parser.add_mutually_exclusive_group()
     figsgroup.add_argument(

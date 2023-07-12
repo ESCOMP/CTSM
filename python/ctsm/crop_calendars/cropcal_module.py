@@ -344,7 +344,18 @@ def check_constant_vars(
         if not np.array_equal(incl_patches, np.unique(incl_patches)):
             raise RuntimeError("Patch(es) checked more than once!")
         incl_patches = list(incl_patches)
-        incl_patches += list(np.where(np.all(np.isnan(ra_sp[:-1,]), axis=0))[0])
+        incl_patches += list(
+            np.where(
+                np.all(
+                    np.isnan(
+                        ra_sp[
+                            :-1,
+                        ]
+                    ),
+                    axis=0,
+                )
+            )[0]
+        )
         incl_patches = np.sort(incl_patches)
         if not np.array_equal(incl_patches, np.unique(incl_patches)):
             raise RuntimeError("Patch(es) checked but also all-NaN??")
@@ -1072,7 +1083,7 @@ def import_output(
     if np.any(this_ds_gs["NHARVESTS"] > 2):
         raise RuntimeError("How to get NHARVEST_DISCREP for NHARVESTS > 2?")
     this_ds_gs["NHARVEST_DISCREP"] = (this_ds_gs["NHARVESTS"] == 2).astype(int)
-    
+
     return this_ds_gs
 
 

@@ -50,7 +50,6 @@ def weighted_annual_mean(array, time_in="time", time_out="time"):
     return array
 
 
-
 # List of PFTs used in CLM
 def define_pftlist():
     pftlist = [
@@ -862,4 +861,3 @@ def safer_timeslice(ds, timeSlice, timeVar="time"):
             raise
 
     return ds
-

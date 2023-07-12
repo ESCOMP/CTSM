@@ -4,6 +4,7 @@ Reduce code duplication by putting reused functions here.
 
 import os, subprocess
 
+
 def cmds_to_setup_conda(caseroot):
     # Add specific commands needed on different machines to get conda available
     # Use semicolon here since it's OK to fail
@@ -12,7 +13,7 @@ def cmds_to_setup_conda(caseroot):
     # Execute the module unload/load when "which conda" fails
     # eg on cheyenne
     try:
-        subprocess.run( "which conda", shell=True, check=True)
+        subprocess.run("which conda", shell=True, check=True)
     except subprocess.CalledProcessError:
         # Remove python and add conda to environment for cheyennne
         conda_setup_commands += " module unload python; module load conda;"
@@ -34,8 +35,9 @@ def run_python_script(caseroot, this_conda_env, command, tool_path):
     tool_name = os.path.split(tool_path)[-1]
     try:
         with open(tool_name + ".log", "w") as f:
-            subprocess.run(command, shell=True, check=True, text=True,
-                stdout=f, stderr=subprocess.STDOUT)
+            subprocess.run(
+                command, shell=True, check=True, text=True, stdout=f, stderr=subprocess.STDOUT
+            )
     except subprocess.CalledProcessError as error:
         print("ERROR while getting the conda environment and/or ")
         print(f"running the {tool_name} tool: ")

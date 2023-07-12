@@ -461,7 +461,6 @@ def import_and_process_1yr(
     else:
         hdates_rx = hdates_rx_orig
 
-
     log(logger, f"   Importing accumulated GDDs...")
     clm_gdd_var = "GDDACCUM"
     myVars = [clm_gdd_var, "GDDHARV"]

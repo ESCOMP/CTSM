@@ -67,15 +67,15 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
 
     def _run_modify_fsurdat(self):
         tool_path = os.path.join(self._ctsm_root, "tools/modify_input_files/fsurdat_modifier")
-        
+
         self._case.load_env(reset=True)
         command = f"python3 {tool_path} {self._cfg_file_path}"
         stu.run_python_script(
-                self._get_caseroot(),
-                "ctsm_pylib",
-                command,
-                tool_path,
-                )
+            self._get_caseroot(),
+            "ctsm_pylib",
+            command,
+            tool_path,
+        )
 
     def _modify_user_nl(self):
         append_to_user_nl_files(
