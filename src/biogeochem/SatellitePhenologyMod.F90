@@ -128,11 +128,9 @@ contains
          frac_veg_nosno_alb => canopystate_inst%frac_veg_nosno_alb_patch & ! Output: [integer  (:) ] fraction of vegetation not covered by snow (0 OR 1) [-]
          )
 
-       if (masterproc) write(iulog,*) "inside the subroutine"
       if (use_lai_streams) then
          call lai_interp(bounds, canopystate_inst)
       endif
-      if (masterproc) write(iulog,*) "after interp"
 
       do fp = 1, num_filter
          p = filter(fp)

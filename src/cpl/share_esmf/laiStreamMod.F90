@@ -229,7 +229,6 @@ contains
     SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
     
-    if (masterproc) write(iulog,*) "inside laiinterp"
 
     ! Get pointer for stream data that is time and spatially interpolate to model time and grid
     ! Place all lai data from each type into a temporary 2d array
@@ -248,27 +247,18 @@ contains
        end do
     end do
     
-    if (masterproc) write(iulog,*) "finished first loop"
-
     do p = bounds%begp, bounds%endp
        ivt = patch%itype(p)
        ! Set lai for each gridcell/patch combination
        if (ivt /= noveg) then
           ! vegetated pft
-	   if (masterproc) write(iulog,*) "vegetated"
-	  if (masterproc) write(iulog,*) patch%gridcell(p)
-	  if (masterproc) write(iulog,*) bounds%begp, bounds%endp, "bounds"
           ig = g_to_ig(patch%gridcell(p))
           canopystate_inst%tlai_patch(p) = dataptr2d(ig,ivt)
-	  if (masterproc) write(iulog,*) "filled the patch"
        else
           ! non-vegetated pft
           canopystate_inst%tlai_patch(p) = 0._r8
        endif
-       if (masterproc) write(iulog,*) "inside loop"
     end do
-    
-    if(masterproc) write(iulog,*) "second loop"
     
     deallocate(dataptr2d)
 
