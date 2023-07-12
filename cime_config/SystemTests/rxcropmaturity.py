@@ -371,10 +371,9 @@ class RXCROPMATURITY(SystemTestsCommon):
 
     def _append_to_user_nl_clm(self, additions):
         caseroot = self._get_caseroot()
-        for line in additions:
-            append_to_user_nl_files(caseroot = caseroot,
-                                    component = "clm",
-                                    contents = line)
+        append_to_user_nl_files(caseroot = caseroot,
+                                component = "clm",
+                                contents = additions)
     
 
     # Is flanduse_timeseries defined? If so, where is it?
