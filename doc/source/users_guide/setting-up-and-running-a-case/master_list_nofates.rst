@@ -426,12 +426,16 @@ GDD1020                             Twenty year average of growing degree days b
 GDD8                                Growing degree days base  8C from planting                                                     ddays                                                                  F
 GDD820                              Twenty year average of growing degree days base  8C from planting                              ddays                                                                  F
 GDDACCUM                            Accumulated growing degree days past planting date for crop                                    ddays                                                                  F
+GDDACCUM_PERHARV                    For each crop harvest in a calendar year, accumulated growing degree days past planting date   ddays                                                                  F
 GDDHARV                             Growing degree days (gdd) needed to harvest                                                    ddays                                                                  F
+GDDHARV_PERHARV                     For each harvest in a calendar year,For each harvest in a calendar year,  growing degree days (gdd) needed to harvest               ddays                                                                  F
 GDDTSOI                             Growing degree-days from planting (top two soil layers)                                        ddays                                                                  F
 GPP                                 gross primary production                                                                       gC/m^2/s                                                               T
 GR                                  total growth respiration                                                                       gC/m^2/s                                                               T
 GRAINC                              grain C (does not equal yield)                                                                 gC/m^2                                                                 T
 GRAINC_TO_FOOD                      grain C to food                                                                                gC/m^2/s                                                               T
+GRAINC_TO_FOOD_ANN                  total grain C to food in all harvests in a calendar year                                       gC/m^2                                                                 F
+GRAINC_TO_FOOD_PERHARV              grain C to food for each harvest in a calendar year                                            gC/m^2                                                                 F
 GRAINC_TO_SEED                      grain C to seed                                                                                gC/m^2/s                                                               T
 GRAINN                              grain N                                                                                        gN/m^2                                                                 T
 GRESP_STORAGE                       growth respiration storage                                                                     gC/m^2                                                                 F
@@ -449,6 +453,7 @@ H2OSNO                              snow depth (liquid water)                   
 H2OSNO_ICE                          snow depth (liquid water, ice landunits only)                                                  mm                                                                     F
 H2OSNO_TOP                          mass of snow in top snow layer                                                                 kg/m2                                                                  T
 H2OSOI                              volumetric soil water (natural vegetated and crop landunits only)                              mm3/mm3                                                                T
+HARVEST_REASON_PERHARV              For each harvest in a calendar year, the reason the crop was harvested                         categorical                                                            F
 HBOT                                canopy bottom                                                                                  m                                                                      F
 HEAT_CONTENT1                       initial gridcell total heat content                                                            J/m^2                                                                  T
 HEAT_CONTENT1_VEG                   initial gridcell total heat content - natural vegetated and crop landunits only                J/m^2                                                                  F
@@ -462,6 +467,7 @@ HR                                  total heterotrophic respiration             
 HR_vr                               total vertically resolved heterotrophic respiration                                            gC/m^3/s                                                               T
 HTOP                                canopy top                                                                                     m                                                                      T
 HUI                                 crop heat unit index                                                                           ddays                                                                  F
+HUI_PERHARV                         For each harvest in a calendar year, crop heat unit index                                      ddays                                                                  F
 HUMIDEX                             2 m Humidex                                                                                    C                                                                      T
 HUMIDEX_R                           Rural 2 m Humidex                                                                              C                                                                      T
 HUMIDEX_U                           Urban 2 m Humidex                                                                              C                                                                      T
@@ -977,6 +983,8 @@ Rnet                                net radiation                               
 SABG                                solar rad absorbed by ground                                                                   W/m^2                                                                  T
 SABG_PEN                            Rural solar rad penetrating top soil or snow layer                                             watt/m^2                                                               T
 SABV                                solar rad absorbed by veg                                                                      W/m^2                                                                  T
+SDATES                              Crop sowing dates in each calendar year                                                        day of year (julian day)                                               F
+SDATES_PERHARV                      For each harvest in a calendar year, the Julian day the crop was sown                          day of year (julian day)                                               F
 SEEDC                               pool for seeding new PFTs via dynamic landcover                                                gC/m^2                                                                 T
 SEEDN                               pool for seeding new PFTs via dynamic landcover                                                gN/m^2                                                                 T
 SLASH_HARVESTC                      slash harvest carbon (to litter)                                                               gC/m^2/s                                                               T
@@ -1106,6 +1114,8 @@ SOM_ADV_COEF                        advection term for vertical SOM translocatio
 SOM_C_LEACHED                       total flux of C from SOM pools due to leaching                                                 gC/m^2/s                                                               T
 SOM_DIFFUS_COEF                     diffusion coefficient for vertical SOM translocation                                           m^2/s                                                                  F
 SOM_N_LEACHED                       total flux of N from SOM pools due to leaching                                                 gN/m^2/s                                                               F
+SOWING_REASON                       For each sowing in a calendar year, the reason the crop was sown                               categorical                                                            F
+SOWING_REASON_PERHARV               For each harvest in a calendar year, the reason the crop was sown                              categorical                                                            F
 SR                                  total soil respiration (HR + root resp)                                                        gC/m^2/s                                                               T
 SSRE_FSR                            surface snow effect on reflected solar radiation                                               W/m^2                                                                  T
 SSRE_FSRND                          surface snow effect on direct nir reflected solar radiation                                    W/m^2                                                                  T
@@ -1122,6 +1132,7 @@ STORVEGC                            stored vegetation carbon, excluding cpool   
 STORVEGN                            stored vegetation nitrogen                                                                     gN/m^2                                                                 T
 SUPPLEMENT_TO_SMINN                 supplemental N supply                                                                          gN/m^2/s                                                               T
 SUPPLEMENT_TO_SMINN_vr              supplemental N supply                                                                          gN/m^3/s                                                               F
+SYEARS_PERHARV                      For each harvest in a calendar year, the year the crop was sown                                year                                                                   F
 SWBGT                               2 m Simplified Wetbulb Globe Temp                                                              C                                                                      T
 SWBGT_R                             Rural 2 m Simplified Wetbulb Globe Temp                                                        C                                                                      T
 SWBGT_U                             Urban 2 m Simplified Wetbulb Globe Temp                                                        C                                                                      T
