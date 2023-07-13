@@ -936,7 +936,7 @@ contains
                 eflx_urban_ac_sat(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_max(l) &
                                      - (ht_roof(l) * rho_dair(l) * cpair / dtime) * t_building_bef_hac(l) )
                 t_building(l) = t_building_max(l) + ( 1._r8 - p_ac(l) ) * eflx_urban_ac_sat(l) &
-                              * dtime / (ht_roof(l) * rho_dair(l) * cpair)
+                              * dtime / (ht_roof(l) * rho_dair(l) * cpair * wtlunit_roof(l))
                 eflx_urban_ac(l) = p_ac(l) * eflx_urban_ac_sat(l)
               else
                 ! Cathy [orig] 
