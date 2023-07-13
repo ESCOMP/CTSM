@@ -681,7 +681,7 @@ contains
 
     call t_startf('CNGapMortality')
 
-    call CNGapMortality (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp,                                &
+    call CNGapMortality (bounds, num_soilp, filter_soilp,                                                         &
          dgvs_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst,  soilbiogeochem_nitrogenflux_inst,          &
          cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,  canopystate_inst,                                       &   
          !cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,                                                         &  
@@ -703,14 +703,14 @@ contains
 
     ! Set the carbon isotopic fluxes for gap mortality
     if ( use_c13 ) then
-       call CIsoFlux2(num_soilc, filter_soilc, num_soilp, filter_soilp,               &
+       call CIsoFlux2(num_soilp, filter_soilp,                                        &
             soilbiogeochem_state_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
             iso_cnveg_carbonflux_inst=c13_cnveg_carbonflux_inst,                      &
             iso_cnveg_carbonstate_inst=c13_cnveg_carbonstate_inst,                    &
             isotope='c13')
     end if
     if ( use_c14 ) then
-       call CIsoFlux2(num_soilc, filter_soilc, num_soilp, filter_soilp,               &
+       call CIsoFlux2(num_soilp, filter_soilp,                                        &
             soilbiogeochem_state_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
             iso_cnveg_carbonflux_inst=c14_cnveg_carbonflux_inst,                      &
             iso_cnveg_carbonstate_inst=c14_cnveg_carbonstate_inst,                    &
@@ -746,20 +746,20 @@ contains
 
     ! Set harvest mortality routine 
     if (get_do_harvest()) then
-       call CNHarvest(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       call CNHarvest(num_soilp, filter_soilp, &
             soilbiogeochem_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
             cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
     end if
 
     if ( use_c13 ) then
-       call CIsoFlux2h(num_soilc, filter_soilc, num_soilp, filter_soilp,   &
+       call CIsoFlux2h(num_soilp, filter_soilp,                            &
             soilbiogeochem_state_inst,                                     &
             cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
             c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,         &                         
             isotope='c13')
     end if
     if ( use_c14 ) then
-       call CIsoFlux2h(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       call CIsoFlux2h(num_soilp, filter_soilp,                            &
             soilbiogeochem_state_inst,                                     &
             cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
             c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst,         &                         
@@ -790,20 +790,20 @@ contains
 
     ! Set gross unrepresented landcover change mortality routine 
     if (get_do_grossunrep()) then
-       call CNGrossUnrep(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       call CNGrossUnrep(num_soilp, filter_soilp, &
             soilbiogeochem_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
             cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
     end if
 
     if ( use_c13 ) then
-       call CIsoFlux2g(num_soilc, filter_soilc, num_soilp, filter_soilp,   &
+       call CIsoFlux2g(num_soilp, filter_soilp,                            &
             soilbiogeochem_state_inst,                                     &
             cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
             c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,         &                         
             isotope='c13')
     end if
     if ( use_c14 ) then
-       call CIsoFlux2g(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       call CIsoFlux2g(num_soilp, filter_soilp,                            &
             soilbiogeochem_state_inst,                                     &
             cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
             c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst,         &                         
@@ -915,7 +915,7 @@ contains
 
     call t_startf('CNUpdate3')
     if ( use_c13 ) then
-       call CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       call CIsoFlux3(num_soilp, filter_soilp,                                   &
             soilbiogeochem_state_inst , soilbiogeochem_carbonstate_inst,         &
             cnveg_carbonflux_inst, cnveg_carbonstate_inst,                       &
             c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,               &
@@ -923,7 +923,7 @@ contains
             isotope='c13')
     end if
     if ( use_c14 ) then
-       call CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       call CIsoFlux3(num_soilp, filter_soilp,                                   &
             soilbiogeochem_state_inst , soilbiogeochem_carbonstate_inst,         &
             cnveg_carbonflux_inst, cnveg_carbonstate_inst,                       &
             c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst,               &

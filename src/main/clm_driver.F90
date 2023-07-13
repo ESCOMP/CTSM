@@ -831,6 +831,7 @@ contains
        call SoilTemperature(bounds_clump,                                                      &
             filter(nc)%num_urbanl  , filter(nc)%urbanl,                                        &
             filter(nc)%num_urbanc  , filter(nc)%urbanc,                                        &
+            filter(nc)%num_nolakep , filter(nc)%nolakep,                                       &
             filter(nc)%num_nolakec , filter(nc)%nolakec,                                       &
             atm2lnd_inst, urbanparams_inst, canopystate_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst, &

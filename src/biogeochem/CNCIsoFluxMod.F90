@@ -577,7 +577,7 @@ contains
   end subroutine CIsoFlux1
 
   !-----------------------------------------------------------------------
-  subroutine CIsoFlux2(num_soilc, filter_soilc, num_soilp  , filter_soilp, &
+  subroutine CIsoFlux2(num_soilp, filter_soilp, &
        soilbiogeochem_state_inst, &
        cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
        iso_cnveg_carbonflux_inst, iso_cnveg_carbonstate_inst, isotope)
@@ -586,8 +586,6 @@ contains
     ! On the radiation time step, set the carbon isotopic fluxes for gap mortality
     !
     ! !ARGUMENTS:
-    integer                         , intent(in)    :: num_soilc       ! number of soil columns filter
-    integer                         , intent(in)    :: filter_soilc(:) ! filter for soil columns
     integer                         , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                         , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(soilbiogeochem_state_type) , intent(in)    :: soilbiogeochem_state_inst
@@ -718,7 +716,7 @@ contains
   end subroutine CIsoFlux2
 
   !-----------------------------------------------------------------------
-  subroutine CIsoFlux2h(num_soilc , filter_soilc, num_soilp  , filter_soilp, &
+  subroutine CIsoFlux2h(num_soilp, filter_soilp,                             &
        soilbiogeochem_state_inst,                                            &
        cnveg_carbonflux_inst, cnveg_carbonstate_inst,                        &
        iso_cnveg_carbonflux_inst, iso_cnveg_carbonstate_inst, isotope) 
@@ -727,8 +725,6 @@ contains
     ! set the carbon isotopic fluxes for harvest mortality
     !
     ! !ARGUMENTS:
-    integer                           , intent(in)    :: num_soilc       ! number of soil columns filter
-    integer                           , intent(in)    :: filter_soilc(:) ! filter for soil columns
     integer                           , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                           , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(soilbiogeochem_state_type)   , intent(in)    :: soilbiogeochem_state_inst
@@ -864,7 +860,7 @@ contains
   end subroutine CIsoFlux2h
 
   !-----------------------------------------------------------------------
-  subroutine CIsoFlux2g(num_soilc , filter_soilc, num_soilp  , filter_soilp, &
+  subroutine CIsoFlux2g(num_soilp, filter_soilp,                             &
        soilbiogeochem_state_inst,                                            &
        cnveg_carbonflux_inst, cnveg_carbonstate_inst,                        &
        iso_cnveg_carbonflux_inst, iso_cnveg_carbonstate_inst, isotope) 
@@ -873,8 +869,6 @@ contains
     ! set the carbon isotopic fluxes for gross unrepresented landcover change mortality
     !
     ! !ARGUMENTS:
-    integer                           , intent(in)    :: num_soilc       ! number of soil columns filter
-    integer                           , intent(in)    :: filter_soilc(:) ! filter for soil columns
     integer                           , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                           , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(soilbiogeochem_state_type)   , intent(in)    :: soilbiogeochem_state_inst
@@ -1015,7 +1009,7 @@ contains
   end subroutine CIsoFlux2g
 
   !-----------------------------------------------------------------------
-  subroutine CIsoFlux3(num_soilc , filter_soilc, num_soilp  , filter_soilp, &
+  subroutine CIsoFlux3(num_soilp, filter_soilp,                             &
        soilbiogeochem_state_inst , soilbiogeochem_carbonstate_inst,         &
        cnveg_carbonflux_inst, cnveg_carbonstate_inst,                       &
        iso_cnveg_carbonflux_inst, iso_cnveg_carbonstate_inst,               &
@@ -1025,8 +1019,6 @@ contains
     ! On the radiation time step, set the carbon isotopic fluxes for fire mortality
     !
     ! !ARGUMENTS:
-    integer                               , intent(in)    :: num_soilc       ! number of soil columns filter
-    integer                               , intent(in)    :: filter_soilc(:) ! filter for soil columns
     integer                               , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                               , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(soilbiogeochem_state_type)       , intent(in)    :: soilbiogeochem_state_inst

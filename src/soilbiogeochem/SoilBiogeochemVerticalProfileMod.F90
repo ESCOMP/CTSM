@@ -71,7 +71,7 @@ contains
     real(r8) :: rootfr_tot
     real(r8) :: cinput_rootfr(bounds%begp:bounds%endp, 1:nlevdecomp_full)      ! pft-native root fraction used for calculating inputs
     real(r8) :: col_cinput_rootfr(bounds%begc:bounds%endc, 1:nlevdecomp_full)  ! col-native root fraction used for calculating inputs
-    integer  :: c, j, fc, p, fp, pi
+    integer  :: c, j, fc, p, fp
     integer  :: alt_ind
     ! debugging temp variables
     real(r8) :: froot_prof_sum
@@ -131,7 +131,6 @@ contains
             do j = 1, nlevdecomp
                cinput_rootfr(p,j) = crootfr(p,j) / dzsoi_decomp(j)
             end do
-
          else
             cinput_rootfr(p,1) = 0.
          endif
@@ -176,15 +175,11 @@ contains
       !      cinput_rootfr(bounds%begp:bounds%endp, :), &
       !      col_cinput_rootfr(bounds%begc:bounds%endc, :), &
       !      'unity')
-      do pi = 1,maxsoil_patches
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
-            if (pi <=  col%npatches(c)) then
-               p = col%patchi(c) + pi - 1
-               do j = 1,nlevdecomp
-                  col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * patch%wtcol(p)
-               end do
-            end if
+      do fp = 1,num_soilp  ! TODO slevis: Should it be num_soilp_with_inactive?
+         p = filter_soilp(fp)              ! ...and filter_soilp_with_inactive?
+         c = patch%column(p)
+         do j = 1,nlevdecomp
+            col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * patch%wtcol(p)
          end do
       end do
 
