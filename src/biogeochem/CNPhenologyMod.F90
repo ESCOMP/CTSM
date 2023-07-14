@@ -585,13 +585,13 @@ contains
 
       do fp = 1,num_pcropp
          p = filter_pcropp(fp)
-         if (kmo == 1 .and. kda == 1 .and. nyrs_crop_active(p) == 0) then ! YR 1:
+         if (kmo == 1 .and. kda == 1 .and. nyrs_crop_active(p) == 0.0_r8) then ! YR 1:
             gdd020(p)  = 0._r8                             ! set gdd..20 variables to 0
             gdd820(p)  = 0._r8                             ! and crops will not be planted
             gdd1020(p) = 0._r8
          end if
          if (kmo == 1 .and. kda == 1 .and. mcsec == 0) then        ! <-- END of EVERY YR:
-            if (nyrs_crop_active(p) == 1) then                     ! <-- END of YR 1
+            if (nyrs_crop_active(p) == 1.0_r8) then                ! <-- END of YR 1
                gdd020(p)  = gdd0(p)                                ! <-- END of YR 1
                gdd820(p)  = gdd8(p)                                ! <-- END of YR 1
                gdd1020(p) = gdd10(p)                               ! <-- END of YR 1
