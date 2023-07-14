@@ -579,9 +579,9 @@ contains
           if (frac_sno(c) > 0._r8) then
              if(use_z0m_snowmelt) then
                 if ( snomelt_accum(c) < 1.e-5_r8 )then
-                    z0mg(c) = exp(b1_param * (-rpi / 2.0_r8) + b4_param) / 1000._r8
+                    z0mg(c) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8
                 else
-                    z0mg(c) = exp(b1_param * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8)) + b4_param) / 1000._r8
+                    z0mg(c) = exp(b1_param * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8)) + b4_param) * 1.e-3_r8
                 end if
              else
                 z0mg(c) = this%zsno
@@ -594,9 +594,9 @@ contains
           if (frac_sno(c) > 0._r8) then ! Do snow first because ice could be snow-covered
              if(use_z0m_snowmelt) then
                 if ( snomelt_accum(c) < 1.e-5_r8 )then
-                    z0mg(c) = exp(-b1_param * rpi / 2.0_r8 + b4_param) / 1000._r8
+                    z0mg(c) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8
                 else
-                    z0mg(c) = exp(b1_param * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8)) + b4_param) / 1000._r8
+                    z0mg(c) = exp(b1_param * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8)) + b4_param) * 1.e-3_r8
                 end if
              else
                 z0mg(c) = this%zsno
