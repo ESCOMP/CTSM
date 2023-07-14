@@ -1,0 +1,2 @@
+./xmlchange CLM_FORCE_COLDSTART="on"
+./xmlchange CLM_BLDNML_OPTS="-ignore_warnings" --append

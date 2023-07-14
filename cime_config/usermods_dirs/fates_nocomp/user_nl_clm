@@ -1,0 +1,2 @@
+! Turn FATES-NOCOMP mode on
+use_fates_nocomp = .true.

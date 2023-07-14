@@ -16,7 +16,7 @@
   <description modifier_mode="1">
     <desc lnd="CLM45[%SP][%SP-VIC][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                  >clm4.5:</desc>
     <desc lnd="CLM50[%SP][%SP-VIC][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP][%NWP-BGC-CROP]">clm5.0:</desc>
-    <desc lnd="CLM51[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%FATES-SP][%NWP-SP][%NWP-BGC-CROP]">clm5.1:</desc>
+    <desc lnd="CLM51[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%FATES-SP][%FATES-NOCOMP][%NWP-SP][%NWP-BGC-CROP]">clm5.1:</desc>
     <desc option="SP"              >Satellite phenology:</desc>
 
     <desc option="SP-VIC"          >Satellite phenology with VIC hydrology:</desc>
@@ -26,6 +26,7 @@
     <desc option="BGC-NOANTHRO"    >BGC (vert. resol. CN and methane) without anthropomorphic influences:</desc>
     <desc option="FATES"           >FATES (Functionally Assembled Terrestrial Ecosystem Simulator) Ecosystem Demography model: </desc>
     <desc option="FATES-SP"        >Satellite phenology with FATES (Functionally Assembled Terrestrial Ecosystem Simulator) Ecosystem Demography model: </desc>
+    <desc option="FATES-NOCOMP"    >No Competition mode with FATES (Functionally Assembled Terrestrial Ecosystem Simulator) Ecosystem Demography model: </desc>
     <desc option="BGCDV"           >BGC (vert. resol. CN and methane) with dynamic vegetation:</desc>
     <desc option="BGCDV-CROP"      >BGC (vert. resol. CN and methane) with dynamic vegetation and prognostic crop:</desc>
     <desc option="BGC-CROP-CMIP6DECK">BGC (vert. resol. CN and methane) with prognostic crop, with modifications appropriate for CMIP6 DECK experiments:</desc>
@@ -173,6 +174,7 @@
       <value compset="_CLM[^_]*BGC-CROP"  >-bgc bgc -crop</value>
       <value compset="_CLM[^_]*FATES"     >-bgc fates -no-megan</value>
       <value compset="_CLM[^_]*FATES-SP"  >-bgc fates -no-megan</value>
+      <value compset="_CLM[^_]*FATES-NOCOMP">-bgc fates</value>
 
       <!-- Options specific for CLM4.5 -->
       <value compset="_CLM45%[^_]*BGCDV"	 >-bgc bgc -dynamic_vegetation</value>
@@ -282,6 +284,7 @@
     <values match="last">
       <value                  compset="_CLM50%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_deck</value>
       <value                  compset="_CLM51%[^_]*FATES-SP[%_]"      >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/fates_sp</value>
+      <value                  compset="_CLM51%[^_]*FATES-NOCOMP[%_]"  >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/fates_nocomp</value>
       <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_nociso_deck</value>
       <value                  compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_deck</value>
       <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_nociso_deck</value>
