@@ -35,7 +35,7 @@ module CropType
   ! Crop state variables structure
   type, public :: crop_type
 
-     integer , pointer :: nyrs_crop_active_patch  (:)   ! number of years this crop patch has been active (0 for non-crop patches)
+     real(r8), pointer :: nyrs_crop_active_patch  (:)   ! number of years this crop patch has been active (0 for non-crop patches)
      logical , pointer :: croplive_patch          (:)   ! patch Flag, true if planted, not harvested
      integer , pointer :: harvdate_patch          (:)   ! most recent patch harvest date; 999 if currently (or never) planted
      real(r8), pointer :: fertnitro_patch         (:)   ! patch fertilizer nitrogen
@@ -205,7 +205,7 @@ contains
 
     begp = bounds%begp; endp = bounds%endp
 
-    allocate(this%nyrs_crop_active_patch(begp:endp)) ; this%nyrs_crop_active_patch(:) = 0
+    allocate(this%nyrs_crop_active_patch(begp:endp)) ; this%nyrs_crop_active_patch(:) = 0.0_r8
     allocate(this%croplive_patch (begp:endp)) ; this%croplive_patch (:) = .false.
     allocate(this%harvdate_patch (begp:endp)) ; this%harvdate_patch (:) = huge(1)
     allocate(this%fertnitro_patch (begp:endp)) ; this%fertnitro_patch (:) = spval
@@ -282,6 +282,11 @@ contains
          avgflag='I', long_name='actual crop harvest dates; should only be output annually', &
          ptr_patch=this%hdates_thisyr, default='inactive')
 
+    this%nyrs_crop_active_patch(begp:endp) = spval
+    call hist_addfld1d (fname='NYRS_CROP_ACTIVE', units='year', &
+         avgflag='I', long_name='number of years crop active', &
+         ptr_patch=this%nyrs_crop_active_patch, default='inactive')
+
   end subroutine InitHistory
 
   subroutine InitCold(this, bounds)
@@ -308,7 +313,7 @@ contains
        g   = patch%gridcell(p)
        ivt = patch%itype(p)
 
-       this%nyrs_crop_active_patch(p) = 0
+       this%nyrs_crop_active_patch(p) = 0.0_r8
 
        if ( grc%latdeg(g) >= 0.0_r8 .and. grc%latdeg(g) <= 30.0_r8) then
           this%latbaset_patch(p)=pftcon%baset(ivt)+12._r8-0.4_r8*grc%latdeg(g)
@@ -497,7 +502,7 @@ contains
     !-----------------------------------------------------------------------
 
     if (use_crop) then
-       call restartvar(ncid=ncid, flag=flag, varname='nyrs_crop_active', xtype=ncd_int, &
+       call restartvar(ncid=ncid, flag=flag, varname='nyrs_crop_active', xtype=ncd_double, &
             dim1name='pft', &
             long_name='Number of years this crop patch has been active (0 for non-crop patches)', &
             units='years', &
@@ -516,7 +521,7 @@ contains
              do p = bounds%begp, bounds%endp
                 if (patch%itype(p) >= npcropmin .and. patch%itype(p) <= npcropmax .and. &
                      patch%active(p)) then
-                   this%nyrs_crop_active_patch(p) = restyear
+                   this%nyrs_crop_active_patch(p) = real(restyear, r8)
                 end if
              end do
           end if
@@ -767,7 +772,7 @@ contains
        do fp = 1, num_pcropp
           p = filter_pcropp(fp)
 
-          this%nyrs_crop_active_patch(p) = this%nyrs_crop_active_patch(p) + 1
+          this%nyrs_crop_active_patch(p) = this%nyrs_crop_active_patch(p) + 1.0_r8
        end do
     end if
 
