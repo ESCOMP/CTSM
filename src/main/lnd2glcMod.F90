@@ -204,7 +204,7 @@ contains
       ! Make sure we haven't already assigned the coupling fields for this point
       ! (this could happen, for example, if there were multiple columns in the
       ! istsoil landunit, which we aren't prepared to handle)
-      if (1==2) then
+      if (fields_assigned(g,n)) then
          write(iulog,*) subname//' ERROR: attempt to assign coupling fields twice for the same index.'
          write(iulog,*) 'One possible cause is having multiple columns in the istsoil landunit,'
          write(iulog,*) 'which this routine cannot handle.'
