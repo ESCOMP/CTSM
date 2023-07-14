@@ -2747,8 +2747,8 @@ contains
          this%totc_patch(bounds%begp:bounds%endp), &
          this%totc_p2c_col(bounds%begc:bounds%endc))
 
-    do fc = 1,num_allc
-       c = filter_allc(fc)
+    do fc = 1,num_soilc
+       c = filter_soilc(fc)
 
        ! total ecosystem carbon, including veg but excluding cpool (TOTECOSYSC)
        this%totecosysc_col(c) =    &
