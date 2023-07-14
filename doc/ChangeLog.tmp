@@ -50,6 +50,10 @@ Testing summary:
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     cheyenne ---- OK
