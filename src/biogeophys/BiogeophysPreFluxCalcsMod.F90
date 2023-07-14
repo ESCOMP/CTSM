@@ -127,6 +127,7 @@ contains
     !
     ! !USES:
     use clm_time_manager, only : is_first_step, get_nstep, is_beg_curr_year
+    use clm_varcon      , only : cd1_param
     use decompMod       , only : subgrid_level_patch
     use BalanceCheckMod , only : GetBalanceCheckSkipSteps
     ! !ARGUMENTS:
@@ -191,8 +192,8 @@ contains
 
             else
                ! Compute as if elai+esai = LAImax in CanopyFluxes
-               displa(p) = htop(p) * (1._r8 - (1._r8 - exp(-(7.5_r8 * (pftcon%z0v_LAImax(patch%itype(p))))**0.5_r8)) &
-                           / (7.5_r8*(pftcon%z0v_LAImax(patch%itype(p)) ))**0.5_r8)
+               displa(p) = htop(p) * (1._r8 - (1._r8 - exp(-(cd1_param * (pftcon%z0v_LAImax(patch%itype(p))))**0.5_r8)) &
+                           / (cd1_param*(pftcon%z0v_LAImax(patch%itype(p)) ))**0.5_r8)
 
                U_ustar = 4._r8 * (pftcon%z0v_Cs(patch%itype(p)) + pftcon%z0v_Cr(patch%itype(p)) *  (pftcon%z0v_LAImax(patch%itype(p))) & 
                          / 2._r8)**(-0.5_r8) /  (pftcon%z0v_LAImax(patch%itype(p))) / pftcon%z0v_c(patch%itype(p))

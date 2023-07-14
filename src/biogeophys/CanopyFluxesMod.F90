@@ -229,6 +229,7 @@ contains
     use clm_varcon         , only : denh2o, tfrz, tlsai_crit, alpha_aero
     use clm_varcon         , only : c14ratio, spval
     use clm_varcon         , only : c_water, c_dry_biomass, c_to_b
+    use clm_varcon         , only : nu_param, cd1_param
     use perf_mod           , only : t_startf, t_stopf
     use QSatMod            , only : QSat
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
@@ -238,6 +239,7 @@ contains
                                     SwampCoolEff, KtoC, VaporPres
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use LunaMod            , only : is_time_to_run_LUNA
+
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)            :: bounds 
@@ -893,7 +895,7 @@ bioms:   do f = 1, fn
 
          case ('Meier2022')
             lt = max(0.00001_r8,elai(p)+esai(p))
-            displa(p) = htop(p) * (1._r8 - (1._r8 - exp(-(7.5_r8 * lt)**0.5_r8)) / (7.5_r8*lt)**0.5_r8)
+            displa(p) = htop(p) * (1._r8 - (1._r8 - exp(-(cd1_param * lt)**0.5_r8)) / (cd1_param*lt)**0.5_r8)
 
             lt = min(lt,z0v_LAImax(patch%itype(p)))
             delt = 2._r8
@@ -1066,9 +1068,9 @@ bioms:   do f = 1, fn
             ! just for readability of the code (from line 680)
             ! RM: Does this need to be updated if Ya08 is used too? Proposed formulation (definitely double-check!)
             ! , interpreting the statement below as csoilb = vkc / ln(z0mg/z0hg):
-            ! csoilb = vkc / log( z0mg(c) / ( 70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) *
+            ! csoilb = vkc / log( z0mg(c) / ( 70._r8 * nu_param / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) *
             ! (abs(temp1(p)*dth(p)))**(0.25_r8)) ) ) 
-            csoilb = vkc / (params_inst%a_coef * (z0mg(c) * uaf(p) / 1.5e-5_r8)**params_inst%a_exp)
+            csoilb = vkc / (params_inst%a_coef * (z0mg(c) * uaf(p) / nu_param)**params_inst%a_exp)
             
 
             !compute the stability parameter for ricsoilc  ("S" in Sakaguchi&Zeng,2008)

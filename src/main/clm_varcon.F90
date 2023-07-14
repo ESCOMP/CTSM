@@ -155,6 +155,15 @@ module clm_varcon
   ! real(r8) :: c14ratio = 1._r8  ! debug lets set to 1 to try to avoid numerical errors
 
   !------------------------------------------------------------------
+  ! Surface roughness constants
+  !------------------------------------------------------------------
+  real(r8), public, parameter :: beta_param = 7.2_r8  ! Meier et al. (2022) https://doi.org/10.5194/gmd-15-2365-2022
+  real(r8), public, parameter :: nu_param = 1.5e-5_r8  ! Meier et al. (2022) kinematic viscosity of air
+  real(r8), public, parameter :: b1_param = 1.4_r8  ! Meier et al. (2022) empirical constant
+  real(r8), public, parameter :: b4_param = -0.31_r8  ! Meier et al. (2022) empirical constant
+  real(r8), public, parameter :: cd1_param = 7.5_r8  ! Meier et al. (2022) originally from Raupach (1994)
+
+  !------------------------------------------------------------------
   ! Urban building temperature constants
   !------------------------------------------------------------------
   real(r8), public :: ht_wasteheat_factor = 0.2_r8   ! wasteheat factor for urban heating (-)
