@@ -2388,7 +2388,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Test with prescribed LAI and soil-moisture with FatesSP mode, has to be at f09 and 2000</option>
+      <option name="comment">Test with prescribed LAI with FatesSP mode</option>
     </options>
   </test>
   <test name="SMS_Lm1" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdBasic">
