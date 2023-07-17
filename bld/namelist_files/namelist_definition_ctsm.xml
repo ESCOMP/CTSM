@@ -1136,7 +1136,7 @@ Set to .true. in order to override crop harvesting logic and to instead harvest 
 
 <entry id="use_mxmat" type="logical" category="physics"
         group="cnphenology" valid_values="" value=".true.">
-Set to .true. in order to ignore crop PFT parameter for maximum growing season length (mxmat). Must be set to .false. when generate_crop_gdds is .true.
+Set to .false. in order to ignore crop PFT parameter for maximum growing season length (mxmat). Must be set to .false. when generate_crop_gdds is .true.
 </entry>
 
 <entry id="min_critical_dayl_method" type="char*25" category="physics"
