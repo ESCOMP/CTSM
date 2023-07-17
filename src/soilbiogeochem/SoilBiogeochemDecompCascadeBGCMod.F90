@@ -230,7 +230,7 @@ contains
     !  written by C. Koven 
     !
     ! !USES:
-    use TillageMod, only : get_do_tillage, tillage_init_century
+    use TillageMod, only : get_do_tillage, tillage_init_decompcascade
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds  
@@ -508,7 +508,7 @@ contains
 
       ! Allocate tillage variables
       if (get_do_tillage()) then
-         call tillage_init_century(i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+         call tillage_init_decompcascade(i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
       end if
 
     end associate

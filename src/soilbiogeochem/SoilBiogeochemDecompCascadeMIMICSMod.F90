@@ -342,6 +342,7 @@ contains
     !
     ! !USES:
     use clm_varcon, only: pct_to_frac
+    use TillageMod, only: get_do_tillage, tillage_init_decompcascade
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds  
@@ -732,6 +733,11 @@ contains
          cascade_donor_pool(i_cwdl2) = i_cwd
          cascade_receiver_pool(i_cwdl2) = i_str_lit
          nue_decomp_cascade(i_cwdl2) = 1.0_r8
+      end if
+
+      ! Allocate tillage variables
+      if (get_do_tillage()) then
+         call tillage_init_decompcascade(i_avl_som, i_chem_som, i_phys_som, i_str_lit)
       end if
 
       deallocate(params_inst%mimics_mge)

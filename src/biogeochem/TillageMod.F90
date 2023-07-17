@@ -16,7 +16,7 @@ module TillageMod
   private
   ! !PUBLIC MEMBER PROCEDURES
   public :: tillage_init
-  public :: tillage_init_century
+  public :: tillage_init_decompcascade
   public :: get_do_tillage
   public :: get_apply_tillage_multipliers
   ! !PUBLIC DATA MEMBERS
@@ -30,13 +30,12 @@ module TillageMod
   real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, nphases)
   integer, parameter :: nphases = 3 ! How many different tillage phases are there? (Not including all-1 phases.)
   ! Indices for soil organic matter pools
-  integer  :: i_act_som
-  integer  :: i_slo_som
-  integer  :: i_pas_som
+  integer  :: i_act_som  ! MIMICS: i_avl_som
+  integer  :: i_slo_som  ! MIMICS: i_chem_som
+  integer  :: i_pas_som  ! MIMICS: i_phys_som
   ! Indices for litter pools
-  integer  :: i_cel_lit
-  integer  :: i_lig_lit
-
+  integer  :: i_cel_lit  ! MIMICS: i_str_lit
+  integer  :: i_lig_lit  ! MIMICS: none (just the one structural litter pool)
 
 !==============================================================================
 contains
@@ -111,18 +110,25 @@ contains
   end subroutine tillage_init
 
 
-  subroutine tillage_init_century(i_act_som_in, i_slo_som_in, i_pas_som_in, i_cel_lit_in, i_lig_lit_in)
+  subroutine tillage_init_decompcascade(i_act_som_in, i_slo_som_in, i_pas_som_in, i_cel_lit_in, i_lig_lit_in)
     ! !DESCRIPTION:
     !
-    ! Allocate multiplier arrays to be used in tillage. Call during initialization of CENTURY decomposition.
+    ! Allocate multiplier arrays to be used in tillage. Call during initialization of CENTURY or MIMICS decomposition.
     ! Written by Sam Rabin.
     !
     ! !USES
     use pftconMod , only : npcropmin
     !
     ! !ARGUMENTS:
-    integer          , intent(in) :: i_act_som_in, i_slo_som_in, i_pas_som_in  ! indices for soil organic matter pools
-    integer          , intent(in) :: i_cel_lit_in, i_lig_lit_in  ! indices for litter pools
+    ! All soil pool indices use CENTURY index names. Comments indicate corresponding MIMICS names, if any.
+    !
+    ! Indices for soil organic matter pools
+    integer          , intent(in) :: i_act_som_in
+    integer          , intent(in) :: i_slo_som_in
+    integer          , intent(in) :: i_pas_som_in
+    ! Indices for structural litter pools
+    integer          , intent(in) :: i_cel_lit_in
+    integer, optional, intent(in) :: i_lig_lit_in  ! Do not specify for MIMICS
 
     if (.not. get_do_tillage()) then
         return
@@ -137,7 +143,11 @@ contains
     i_slo_som = i_slo_som_in
     i_pas_som = i_pas_som_in
     i_cel_lit = i_cel_lit_in
-    i_lig_lit = i_lig_lit_in
+    if (present(i_lig_lit)) then
+        i_lig_lit = i_lig_lit_in
+    else
+        i_lig_lit = -1
+    end if
 
     ! Fill tillage_mults_allphases
     if (do_tillage_low) then
@@ -145,18 +155,22 @@ contains
         tillage_mults_allphases(i_slo_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
         tillage_mults_allphases(i_pas_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
         tillage_mults_allphases(i_cel_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
-        tillage_mults_allphases(i_lig_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
+        if (i_lig_lit > 0) then
+            tillage_mults_allphases(i_lig_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
+        end if
     else if (do_tillage_high) then
         tillage_mults_allphases(i_act_som,:) = (/ 1.2_r8, 1.0_r8, 1.0_r8 /)
         tillage_mults_allphases(i_slo_som,:) = (/ 4.8_r8, 3.5_r8, 2.5_r8 /)
         tillage_mults_allphases(i_pas_som,:) = (/ 4.8_r8, 3.5_r8, 2.5_r8 /)
         tillage_mults_allphases(i_cel_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
-        tillage_mults_allphases(i_lig_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
+        if (i_lig_lit > 0) then
+            tillage_mults_allphases(i_lig_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
+        end if
     else
-        call endrun('ERROR Unrecognized tillage setting in tillage_init_century()')
+        call endrun('ERROR Unrecognized tillage setting in tillage_init_decompcascade()')
     end if
 
-  end subroutine tillage_init_century
+  end subroutine tillage_init_decompcascade
 
 
   function get_do_tillage()
