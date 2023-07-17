@@ -1,0 +1,62 @@
+===============================================================
+Tag name: ctsm5.1.dev131
+Originator(s): samrabin (Sam Rabin,UCAR/TSS)
+Date: Mon Jul 17 13:40:04 MDT 2023
+One-line Summary: Resolve some users' errors with Python tests.
+
+Purpose and description of changes
+----------------------------------
+
+Fixes two issues some users encountered:
+* `conda activate` error in FSURDATMODIFYCTSM
+* FileNotFoundError for 15 tests in run_ctsm_py_tests
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+    Fixes #2042: Issue running SystemTests due to "conda activate" error
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing: Fixes for some tests.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+    clm_pymods test suite on cheyenne - PASS
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+    https://github.com/ESCOMP/CTSM/issues/2042
+
+===============================================================
