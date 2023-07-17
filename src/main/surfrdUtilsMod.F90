@@ -58,15 +58,12 @@ contains
 
     ub = ubound(arr, 1)
     allocate(TotalSum(lb:ub))
+    TotalSum = 1._r8
+    if ( present(sumto) ) TotalSum = sumto
     if( present(ier) ) ier = 0
     found = .false.
 
     do nl = lb, ub
-       if ( present(sumto) ) then
-          TotalSum(nl) = sumto(nl)
-       else
-          TotalSum(nl) = 1._r8
-       end if
        if (abs(sum(arr(nl,:)) - TotalSum(nl)) > eps) then
           found = .true.
           nindx = nl
