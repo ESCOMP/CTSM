@@ -1,8 +1,8 @@
 ===============================================================
-Tag name: ctsm5.1.dev???
-Originator(s): samsrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
-Date: ???
-One-line Summary: Prescribed crop calendars
+Tag name: ctsm5.1.dev131
+Originator(s): samrabin (Sam Rabin,UCAR/TSS)
+Date: Mon Jul 17 13:58:49 MDT 2023
+One-line Summary: Enable prescribed crop calendars.
 
 Purpose and description of changes
 ----------------------------------
@@ -41,9 +41,28 @@ Known bugs found since the previous tag (include issue #):
 
 Notes of particular relevance for users
 ---------------------------------------
-Changes made to namelist defaults (e.g., changed parameter values):
 
-   None
+Caveats for users:
+    Untested:
+    * Time-varying inputs
+    * Running at any resolution other than one matching the crop calendar inputs
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+    Adds optional namelist variables:
+    * stream_fldfilename_sdate: Filename of input stream data for sowing dates
+    * stream_fldfilename_cultivar_gdds: Filename of input stream data for cultivar growing degree-day targets
+    * stream_meshfile_cropcal: Filename of input stream data for crop calendar inputs
+    * stream_year_first_cropcal: First year to loop over for crop calendar data
+    * stream_year_last_cropcal: Last year to loop over for crop calendar data
+    * model_year_align_cropcal: Simulation year that aligns with stream_year_first_cropcal value
+    * generate_crop_gdds: Set to .true. in order to override crop harvesting logic and to instead harvest the day before the next sowing date. Used to generate growing-degree day outputs that can be used with an external script to generate new GDD requirement ("cultivar") files.
+    * use_mxmat: Set to .false. in order to ignore crop PFT parameter for maximum growing season length (mxmat). Must be set to .false. when generate_crop_gdds is .true.
+
+Notes of particular relevance for developers:                                                                                                                 ---------------------------------------------
+
+Changes to tests or testing:
+    * Adds RXCROPMATURITY SystemTest, with an example added to ctsm_sci test suite.
+    * Removes 12 MCT tests from testlist_clm.xml, as discussed in CTSM SE standup 2023-06-26.
 
 Testing summary:
 ----------------
@@ -58,6 +77,10 @@ Testing summary:
 
     cheyenne ---- OK
     izumi ------- OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
 
 Answer changes
 --------------
@@ -187,9 +210,9 @@ Changes answers relative to baseline: YES for Clm45BgcCrop compsets only
 Other details
 -------------
 List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime
-  cime: cime6.0.108 -> cime6.0.136
+    cime: cime6.0.108 -> cime6.0.136
 
 Pull Requests that document the changes (include PR ids):
-  https://github.com/ESCOMP/CTSM/pull/1863
+    https://github.com/ESCOMP/CTSM/pull/1863
 
 ===============================================================
