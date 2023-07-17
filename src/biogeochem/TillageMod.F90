@@ -136,17 +136,17 @@ contains
 
     ! Fill tillage_mults_allphases
     if (do_tillage_low) then
-        tillage_mults_allphases(i_cel_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
-        tillage_mults_allphases(i_lig_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
         tillage_mults_allphases(i_act_som,:) = (/ 1.0_r8, 1.0_r8, 1.0_r8 /)
         tillage_mults_allphases(i_slo_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
         tillage_mults_allphases(i_pas_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
+        tillage_mults_allphases(i_cel_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
+        tillage_mults_allphases(i_lig_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
     else if (do_tillage_high) then
-        tillage_mults_allphases(i_cel_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
-        tillage_mults_allphases(i_lig_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
         tillage_mults_allphases(i_act_som,:) = (/ 1.2_r8, 1.0_r8, 1.0_r8 /)
         tillage_mults_allphases(i_slo_som,:) = (/ 4.8_r8, 3.5_r8, 2.5_r8 /)
         tillage_mults_allphases(i_pas_som,:) = (/ 4.8_r8, 3.5_r8, 2.5_r8 /)
+        tillage_mults_allphases(i_cel_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
+        tillage_mults_allphases(i_lig_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
     else
         call endrun('ERROR Unrecognized tillage setting in tillage_init_century()')
     end if
