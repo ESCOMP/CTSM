@@ -13,7 +13,7 @@ module TillageMod
   !     SOIL3 becomes PAS_SOM (passive)
   !
   ! !USES:
-  use shr_kind_mod   , only : r8 => shr_kind_r8
+  use shr_kind_mod   , only : r8 => shr_kind_r8, CS => shr_kind_CS
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
@@ -28,6 +28,8 @@ module TillageMod
   public :: tillage_init_century
   public :: get_do_tillage
   public :: get_apply_tillage_multipliers
+  ! !PUBLIC DATA MEMBERS
+  character(len=CS), public :: tillage_mode     ! off, low, high
   !
   ! !PRIVATE DATA MEMBERS
   logical  :: do_tillage_low   ! Do low-intensity tillage?
@@ -48,7 +50,7 @@ contains
     ! in separate subroutines written specifically for decomposition mode of choice.
     !
     ! !USES:
-    use spmdMod        , only : masterproc
+    use spmdMod        , only : masterproc, mpicom
     use controlMod     , only : NLFilename
     use clm_nlUtilsMod , only : find_nlgroup_name
     use shr_mpi_mod    , only : shr_mpi_bcast
@@ -62,16 +64,14 @@ contains
     ! !LOCAL VARIABLES
     integer                :: nu_nml       ! unit for namelist file
     integer                :: nml_error    ! namelist i/o error flag
-    integer                :: mpicom       ! MPI communicator
     character(*), parameter :: subname = "('tillage_init')"
-    character(len=8) :: tillage_mode     ! off, low, high
 
     namelist /tillage_inparm/    &
         tillage_mode,            &
         use_original_tillage
 
     ! Default values
-    tillage_mode = "off"
+    tillage_mode = 'off'
     use_original_tillage = .false.
 
     ! Read tillage namelist
@@ -105,7 +105,7 @@ contains
         do_tillage_low = .true.
      else if (tillage_mode == "high") then
         do_tillage_high = .true.
-     else
+     else if (tillage_mode /= "off") then
         call endrun(subname // ':: ERROR Unrecognized tillage_mode')
      end if
 
