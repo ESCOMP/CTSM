@@ -9,7 +9,7 @@ module CNVegComputeSeedMod
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
-  use pftconMod      , only : pftcon, noveg
+  use pftconMod      , only : pftcon, noveg, npcropmin
   use clm_varcon     , only : c3_r2, c4_r2, c14ratio
   use clm_varctl     , only : iulog
   use PatchType      , only : patch
@@ -133,7 +133,7 @@ contains
           if (pft_type /= noveg) then
              my_leaf_seed = leafc_seed * &
                   SpeciesTypeMultiplier(species, pft_type, COMPONENT_LEAF)
-             if (pftcon%woody(pft_type) == 1._r8) then
+             if (pftcon%woody(pft_type) == 1._r8 .and. patch%itype(p) < npcropmin) then
                 my_deadstem_seed = deadstemc_seed * &
                      SpeciesTypeMultiplier(species, pft_type, COMPONENT_DEADWOOD)
              end if

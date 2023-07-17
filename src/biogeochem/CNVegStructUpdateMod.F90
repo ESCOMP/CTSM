@@ -63,7 +63,6 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: p,c,g      ! indices
     integer  :: fp         ! lake filter indices
-    real(r8) :: taper      ! ratio of height:radius_breast_height (tree allometry)
     real(r8) :: stocking   ! #stems / ha (stocking density)
     real(r8) :: ol         ! thickness of canopy layer covered by snow (m)
     real(r8) :: fb         ! fraction of canopy layer covered by snow
@@ -90,6 +89,7 @@ contains
          ivt                =>  patch%itype                               , & ! Input:  [integer  (:) ] patch vegetation type                                
 
          woody              =>  pftcon%woody                            , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
+         perennial          =>  pftcon%perennial                        , & ! Input:  binary flag for perennial crop types
          slatop             =>  pftcon%slatop                           , & ! Input:  specific leaf area at top of canopy, projected area basis [m^2/gC]
          dsladlai           =>  pftcon%dsladlai                         , & ! Input:  dSLA/dLAI, projected area basis [m^2/gC]           
          z0mr               =>  pftcon%z0mr                             , & ! Input:  ratio of momentum roughness length to canopy top height (-)
@@ -97,7 +97,9 @@ contains
          dwood              =>  pftcon%dwood                            , & ! Input:  density of wood (gC/m^3)                          
          ztopmx             =>  pftcon%ztopmx                           , & ! Input:
          laimx              =>  pftcon%laimx                            , & ! Input:
-         
+         nstem              =>  pftcon%nstem                            , & ! Input:  Tree number density (#ind/m2) (introduced by E.Kluzek (2020, unreleased code) and adopted here by O.Dombrowski)
+         taper              =>  pftcon%taper                            , & ! Input:  ratio of height:radius_breast_height (tree allometry) (introduced by E.Kluzek (2020, unreleased code) and adopted here by O.Dombrowski)         
+
          allom2             =>  dgv_ecophyscon%allom2                   , & ! Input:  [real(r8) (:) ] ecophys const                                     
          allom3             =>  dgv_ecophyscon%allom3                   , & ! Input:  [real(r8) (:) ] ecophys const                                     
 
@@ -114,7 +116,7 @@ contains
          farea_burned       =>  cnveg_state_inst%farea_burned_col       , & ! Input:  [real(r8) (:) ] F. Li and S. Levis                                 
          htmx               =>  cnveg_state_inst%htmx_patch             , & ! Output: [real(r8) (:) ] max hgt attained by a crop during yr (m)          
          peaklai            =>  cnveg_state_inst%peaklai_patch          , & ! Output: [integer  (:) ] 1: max allowed lai; 0: not at max                  
-
+         dormant_flag       =>  cnveg_state_inst%dormant_flag_patch     , & ! Output: [real(r8) (:) ] dormancy flag
          harvdate           =>  crop_inst%harvdate_patch                , & ! Input:  [integer  (:) ] harvest date                                       
 
          ! *** Key Output from CN***
@@ -128,13 +130,6 @@ contains
          )
 
       dt = real( get_rad_step_size(), r8 )
-
-      ! constant allometric parameters
-      taper = 200._r8
-      stocking = 1000._r8
-
-      ! convert from stems/ha -> stems/m^2
-      stocking = stocking / 10000._r8
 
       ! patch loop
       do fp = 1,num_soilp
@@ -177,25 +172,23 @@ contains
 
             if (woody(ivt(p)) == 1._r8) then
 
-               ! trees and shrubs
-
-               ! if shrubs have a squat taper 
-               if (ivt(p) >= nbrdlf_evr_shrub .and. ivt(p) <= nbrdlf_dcd_brl_shrub) then
-                  taper = 10._r8
-                  ! otherwise have a tall taper
-               else
-                  taper = 200._r8
+               if (perennial(ivt(p)) == 1._r8) then
+                  if (dormant_flag(p) == 0._r8) then
+                     if (tlai(p) >= laimx(ivt(p))) peaklai(p) = 1
+                  else if (dormant_flag(p) == 1._r8) then
+                     peaklai(p) = 0
+                  end if
                end if
 
-               ! trees and shrubs for now have a very simple allometry, with hard-wired
-               ! stem taper (height:radius) and hard-wired stocking density (#individuals/area)
+               ! trees and shrubs for now have a very simple allometry, with 
+               ! stem taper (height:radius) and nstem from PFT parameter file
                if (use_cndv) then
 
                   if (fpcgrid(p) > 0._r8 .and. nind(p) > 0._r8) then
 
                      stocking = nind(p)/fpcgrid(p) !#ind/m2 nat veg area -> #ind/m2 patch area
                      htop(p) = allom2(ivt(p)) * ( (24._r8 * deadstemc(p) / &
-                          (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
+                          (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper(ivt(p))))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
 
                   else
                      htop(p) = 0._r8
@@ -203,12 +196,20 @@ contains
 
                else
                   !correct height calculation if doing accelerated spinup
-                  if (spinup_state == 2) then
-                    htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper * taper)/ &
-                         (SHR_CONST_PI * stocking * dwood(ivt(p))))**(1._r8/3._r8)
+                  if (spinup_state == 2) then                    
+                    if (perennial(ivt(p)) == 1._r8 .and. dormant_flag(p) == 1._r8 .and.  deadstemc(p)== 0._r8) then
+                        htop(p) =  0.01_r8                    
+                    else
+                       htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper(ivt(p)) * taper(ivt(p)))/ &
+                            (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
+                    end if
                   else
-                    htop(p) = ((3._r8 * deadstemc(p) * taper * taper)/ &
-                         (SHR_CONST_PI * stocking * dwood(ivt(p))))**(1._r8/3._r8)
+                    if (perennial(ivt(p)) == 1._r8 .and. dormant_flag(p) == 1._r8 .and.  deadstemc(p)== 0._r8) then
+                        htop(p) = 0.01_r8
+                    else
+                       htop(p) = ((3._r8 * deadstemc(p) * taper(ivt(p)) * taper(ivt(p)))/ &
+                            (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
+                    end if
                   end if
 
                endif
@@ -217,12 +218,15 @@ contains
                ! Adding test to keep htop from getting too close to forcing height for windspeed
                ! Also added for grass, below, although it is not likely to ever be an issue.
                htop(p) = min(htop(p),(forc_hgt_u_patch(p)/(displar(ivt(p))+z0mr(ivt(p))))-3._r8)
-
                ! Peter Thornton, 8/11/2004
                ! Adding constraint to keep htop from going to 0.0.
                ! This becomes an issue when fire mortality is pushing deadstemc
                ! to 0.0.
                htop(p) = max(htop(p), 0.01_r8)
+               ! for fruit trees restrict height to maximum pruned tree height
+               if (perennial(ivt(p)) == 1._r8) then
+                  htop(p) = min(htop(p), ztopmx(ivt(p)))
+               end if
 
                hbot(p) = max(0._r8, min(3._r8, htop(p)-1._r8))
 

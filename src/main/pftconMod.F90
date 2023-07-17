@@ -163,9 +163,11 @@ module pftconMod
      real(r8), allocatable :: bfact         (:)   ! parameter used in CNAllocation
      real(r8), allocatable :: aleaff        (:)   ! parameter used in CNAllocation
      real(r8), allocatable :: arootf        (:)   ! parameter used in CNAllocation
+     real(r8), allocatable :: arootf2       (:)   ! parameter used in CNAllocation
      real(r8), allocatable :: astemf        (:)   ! parameter used in CNAllocation
      real(r8), allocatable :: arooti        (:)   ! parameter used in CNAllocation
      real(r8), allocatable :: fleafi        (:)   ! parameter used in CNAllocation
+     real(r8), allocatable :: aleafstor     (:)   ! parameter used in CNAllocation
      real(r8), allocatable :: allconsl      (:)   ! parameter used in CNAllocation
      real(r8), allocatable :: allconss      (:)   ! parameter used in CNAllocation
      real(r8), allocatable :: ztopmx        (:)   ! parameter used in CNVegStructUpdate
@@ -175,13 +177,21 @@ module pftconMod
      real(r8), allocatable :: lfemerg       (:)   ! parameter used in CNPhenology
      real(r8), allocatable :: grnfill       (:)   ! parameter used in CNPhenology
      integer , allocatable :: mxmat         (:)   ! parameter used in CNPhenology
+     real(r8), allocatable :: transplant    (:)   ! parameter used in CNPhenology (added by O.Dombrowski)
+     real(r8), allocatable :: lfmat         (:)   ! parameter used in CNPhenology (added by O.Dombrowski)
+     real(r8), allocatable :: grnrp         (:)   ! parameter used in CNPhenology (added by O.Dombrowski)
+     real(r8), allocatable :: crequ         (:)   ! Chill requirements for fruit tree crops (added by O.Dombrowski)
+     real(r8), allocatable :: crit_temp     (:)   ! Critical temperature to initiate leaf offset for fruit tree crops (added by O.Dombrowski)
+     real(r8), allocatable :: ndays_stor    (:)   ! Length of period for storage growth for fruit tree crops (added by O.Dombrowski)
      real(r8), allocatable :: mbbopt        (:)   ! Ball-Berry equation slope used in Photosynthesis
      real(r8), allocatable :: medlynslope   (:)   ! Medlyn equation slope used in Photosynthesis
      real(r8), allocatable :: medlynintercept(:)  ! Medlyn equation intercept used in Photosynthesis
      integer , allocatable :: mnNHplantdate (:)   ! minimum planting date for NorthHemisphere (YYYYMMDD)
      integer , allocatable :: mxNHplantdate (:)   ! maximum planting date for NorthHemisphere (YYYYMMDD)
+     integer , allocatable :: mxNHharvdate  (:)   ! maximum harvest date for NorthHemishere (YYYYMMDD) (added by O.Dombrowski)
      integer , allocatable :: mnSHplantdate (:)   ! minimum planting date for SouthHemisphere (YYYYMMDD)
      integer , allocatable :: mxSHplantdate (:)   ! maximum planting date for SouthHemisphere (YYYYMMDD)
+     integer , allocatable :: mxSHharvdate  (:)   ! maximum harvest date for SouthHemishere (YYYYMMDD) (added by O.Dombrowski)
      real(r8), allocatable :: planttemp     (:)   ! planting temperature used in CNPhenology (K)
      real(r8), allocatable :: minplanttemp  (:)   ! mininum planting temperature used in CNPhenology (K)
      real(r8), allocatable :: froot_leaf    (:)   ! allocation parameter: new fine root C per new leaf C (gC/gC) 
@@ -200,11 +210,15 @@ module pftconMod
      real(r8), allocatable :: evergreen     (:)   ! binary flag for evergreen leaf habit (0 or 1)
      real(r8), allocatable :: stress_decid  (:)   ! binary flag for stress-deciduous leaf habit (0 or 1)
      real(r8), allocatable :: season_decid  (:)   ! binary flag for seasonal-deciduous leaf habit (0 or 1)
+     real(r8), allocatable :: perennial     (:)   ! binary flag for perennial crop phenology (0 or 1) (added by O.Dombrowski)
+     real(r8), allocatable :: mulch_pruning (:)   ! binary flag for mulching or exporting pruning material (0 or 1) (added by O.Dombrowski)
      real(r8), allocatable :: pconv         (:)   ! proportion of deadstem to conversion flux
      real(r8), allocatable :: pprod10       (:)   ! proportion of deadstem to 10-yr product pool
      real(r8), allocatable :: pprod100      (:)   ! proportion of deadstem to 100-yr product pool
      real(r8), allocatable :: pprodharv10   (:)   ! harvest mortality proportion of deadstem to 10-yr pool
-
+     real(r8), allocatable :: prune_fr      (:)   ! fraction of deadstem that is pruned (added by O.Dombrowski)
+     real(r8), allocatable :: nstem         (:)   ! stem density (#/m2) (added by O.Dombrowski)
+     real(r8), allocatable :: taper         (:)   ! tapering ratio of height:radius_breast_height (added by O.Dombrowski)
      ! pft paraemeters for fire code
      real(r8), allocatable :: cc_leaf       (:)
      real(r8), allocatable :: cc_lstem      (:)
@@ -372,9 +386,11 @@ contains
     allocate( this%bfact         (0:mxpft) )        
     allocate( this%aleaff        (0:mxpft) )       
     allocate( this%arootf        (0:mxpft) )       
+    allocate( this%arootf2       (0:mxpft) )
     allocate( this%astemf        (0:mxpft) )       
     allocate( this%arooti        (0:mxpft) )       
     allocate( this%fleafi        (0:mxpft) )       
+    allocate( this%aleafstor     (0:mxpft) )
     allocate( this%allconsl      (0:mxpft) )     
     allocate( this%allconss      (0:mxpft) )     
     allocate( this%ztopmx        (0:mxpft) )       
@@ -386,11 +402,19 @@ contains
     allocate( this%mbbopt        (0:mxpft) )      
     allocate( this%medlynslope   (0:mxpft) )      
     allocate( this%medlynintercept(0:mxpft) )      
-    allocate( this%mxmat         (0:mxpft) )        
+    allocate( this%mxmat         (0:mxpft) )
+    allocate( this%transplant    (0:mxpft) ) 
+    allocate( this%lfmat         (0:mxpft) ) 
+    allocate( this%grnrp         (0:mxpft) )
+    allocate( this%crequ         (0:mxpft) ) 
+    allocate( this%crit_temp     (0:mxpft) ) 
+    allocate( this%ndays_stor    (0:mxpft) ) 
     allocate( this%mnNHplantdate (0:mxpft) )
     allocate( this%mxNHplantdate (0:mxpft) )
+    allocate( this%mxNHharvdate  (0:mxpft) ) 
     allocate( this%mnSHplantdate (0:mxpft) )
     allocate( this%mxSHplantdate (0:mxpft) )
+    allocate( this%mxSHharvdate  (0:mxpft) ) 
     allocate( this%planttemp     (0:mxpft) )    
     allocate( this%minplanttemp  (0:mxpft) ) 
     allocate( this%froot_leaf    (0:mxpft) )   
@@ -409,6 +433,8 @@ contains
     allocate( this%evergreen     (0:mxpft) )    
     allocate( this%stress_decid  (0:mxpft) ) 
     allocate( this%season_decid  (0:mxpft) ) 
+    allocate( this%perennial     (0:mxpft) ) 
+    allocate( this%mulch_pruning (0:mxpft) ) 
     allocate( this%dwood         (0:mxpft) )
     allocate( this%root_density  (0:mxpft) )
     allocate( this%root_radius   (0:mxpft) )
@@ -416,6 +442,9 @@ contains
     allocate( this%pprod10       (0:mxpft) )      
     allocate( this%pprod100      (0:mxpft) )     
     allocate( this%pprodharv10   (0:mxpft) )  
+    allocate( this%prune_fr      (0:mxpft) ) 
+    allocate( this%nstem         (0:mxpft) )
+    allocate( this%taper         (0:mxpft) )
     allocate( this%cc_leaf       (0:mxpft) )
     allocate( this%cc_lstem      (0:mxpft) )
     allocate( this%cc_dstem      (0:mxpft) )
@@ -739,6 +768,12 @@ contains
     call ncd_io('season_decid', this%season_decid, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
+    call ncd_io('perennial', this%perennial, 'read', ncid, readvar=readv, posNOTonfile=.true.) 
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('mulch_pruning', this%mulch_pruning, 'read', ncid, readvar=readv, posNOTonfile=.true.) 
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
     call ncd_io('pftpar20', this%pftpar20, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
@@ -849,6 +884,9 @@ contains
 
     call ncd_io('arootf', this%arootf, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    
+    call ncd_io('arootf2', this%arootf2, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('astemf', this%astemf, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
@@ -857,6 +895,9 @@ contains
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('fleafi', this%fleafi, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('aleafstor', this%aleafstor, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('allconsl', this%allconsl, 'read', ncid, readvar=readv)  
@@ -904,6 +945,33 @@ contains
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('mxmat', this%mxmat, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('transplant', this%transplant, 'read', ncid, readvar=readv)                                   
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('lfmat', this%lfmat, 'read', ncid, readvar=readv)                                   
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('grnrp', this%grnrp, 'read', ncid, readvar=readv)                                     
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('crequ', this%crequ, 'read', ncid, readvar=readv) 
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('crit_temp', this%crit_temp, 'read', ncid, readvar=readv) 
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('ndays_stor', this%ndays_stor, 'read', ncid, readvar=readv) 
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('prune_fr', this%prune_fr, 'read', ncid, readvar=readv) 
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('nstem', this%nstem, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('taper', this%taper, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('cc_leaf', this% cc_leaf, 'read', ncid, readvar=readv)  
@@ -958,6 +1026,12 @@ contains
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('max_NH_planting_date', this%mxNHplantdate, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('max_NH_harvest_date', this%mxNHharvdate, 'read', ncid, readvar=readv)                              
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('max_SH_harvest_date', this%mxSHharvdate, 'read', ncid, readvar=readv)                              
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('max_SH_planting_date', this%mxSHplantdate, 'read', ncid, readvar=readv)  
@@ -1287,9 +1361,11 @@ contains
     deallocate( this%bfact)
     deallocate( this%aleaff)
     deallocate( this%arootf)
+    deallocate( this%arootf2)    
     deallocate( this%astemf)
     deallocate( this%arooti)
     deallocate( this%fleafi)
+    deallocate( this%aleafstor)  
     deallocate( this%allconsl)
     deallocate( this%allconss)
     deallocate( this%ztopmx)
@@ -1302,10 +1378,21 @@ contains
     deallocate( this%medlynslope)
     deallocate( this%medlynintercept)
     deallocate( this%mxmat)
+    deallocate( this%transplant) 
+    deallocate( this%lfmat)      
+    deallocate( this%grnrp)      
+    deallocate( this%crequ)      
+    deallocate( this%crit_temp)  
+    deallocate( this%ndays_stor) 
+    deallocate( this%prune_fr)   
+    deallocate( this%nstem)
+    deallocate( this%taper)
     deallocate( this%mnNHplantdate)
     deallocate( this%mxNHplantdate)
+    deallocate( this%mxNHharvdate) 
     deallocate( this%mnSHplantdate)
     deallocate( this%mxSHplantdate)
+    deallocate( this%mxSHharvdate) 
     deallocate( this%planttemp)
     deallocate( this%minplanttemp)
     deallocate( this%froot_leaf)
@@ -1324,6 +1411,8 @@ contains
     deallocate( this%evergreen)
     deallocate( this%stress_decid)
     deallocate( this%season_decid)
+    deallocate( this%perennial) 
+    deallocate( this%mulch_pruning) 
     deallocate( this%dwood)
     deallocate( this%root_density)
     deallocate( this%root_radius)

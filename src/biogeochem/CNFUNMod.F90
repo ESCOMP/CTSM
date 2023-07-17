@@ -510,6 +510,7 @@ module CNFUNMod
          ! -deciduous leaf habit (0 or 1)
          stress_decid           => pftcon%stress_decid                                  , & ! Input:   binary flag for stress
          ! -deciduous leaf habit (0 or 1)
+         perennial              => pftcon%perennial                                     , & ! Input:  binary flag for perennial crop types (0 or 1)
          a_fix                  => pftcon%a_fix                                         , & ! Input:   A BNF parameter
          b_fix                  => pftcon%b_fix                                         , & ! Input:   A BNF parameter
          c_fix                  => pftcon%c_fix                                         , & ! Input:   A BNF parameter
@@ -1194,7 +1195,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                !           Calculate appropriate degree of retranslocation
                !-------------------------------------------------------------------------------
       
-               if(leafc(p).gt.0.0_r8.and.litterfall_n_step(p,istp)* fixerfrac>0.0_r8.and.ivt(p) <npcropmin)then
+               if(leafc(p).gt.0.0_r8.and.litterfall_n_step(p,istp)* fixerfrac>0.0_r8.and. (ivt(p) <npcropmin .or. perennial(ivt(p)) == 1.0_r8)) then ! include perennial woody crops (added by O.Dombrowski)
                   call fun_retranslocation(p,dt,npp_to_spend,&
                                 litterfall_c_step(p,istp)* fixerfrac,&
                                 litterfall_n_step(p,istp)* fixerfrac,&
@@ -1229,6 +1230,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                  if(local_use_flexiblecn)then   
                      if (leafn(p) == 0.0_r8) then   ! to avoid division by zero
                        delta_CN = fun_cn_flex_c(ivt(p))   ! Max CN ratio over standard
+                       write(iulog,*) 'fun_cn_flex_c is used no1'
                      else
                        delta_CN = (leafc(p)+leafc_storage(p))/(leafn(p)+leafn_storage(p)) - leafcn(ivt(p)) ! leaf CN ratio                                                              
                      end if
@@ -1237,12 +1239,14 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                      ! then, if the plant is very much in need of N, the C used for uptake is increased accordingly.                  
                      if(delta_CN .gt.0.and. frac_ideal_C_use.lt.1.0)then           
                        frac_ideal_C_use = frac_ideal_C_use + (1.0_r8-frac_ideal_C_use)*min(1.0_r8, delta_CN/fun_cn_flex_c(ivt(p)))
+                       write(iulog,*) 'fun_cn_flex_c is used no2',fun_cn_flex_c(ivt(p))
                      end if    
                      ! If we have too much N (e.g. from free N retranslocation) then make frac_ideal_c_use even lower.    
                      ! For a CN delta of fun_cn_flex_c, then we reduce C expendiure to the minimum of 0.5. 
                      ! This seems a little intense? 
                      if(delta_CN.lt.0.0)then
                         frac_ideal_C_use = frac_ideal_C_use + 0.5_r8*(1.0_r8*delta_CN/fun_cn_flex_c(ivt(p)))
+                        write(iulog,*) 'fun_cn_flex_c is used no3'
                      endif 
                      frac_ideal_C_use = max(min(1.0_r8,frac_ideal_C_use),0.5_r8) 
                      ! don't let this go above 1 or below an arbirtray minimum (to prevent zero N uptake). 
@@ -1519,8 +1523,6 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
       npp_Nuptake(p)            = soilc_change(p)
       ! how much carbon goes to growth of tissues?  
       npp_growth(p)             = (Nuptake(p)- free_retransn_to_npool(p))*plantCN(p)+(excess_carbon_acc/dt) !does not include gresp, since this is calculated from growth
-
-
      
       !-----------------------Diagnostic Fluxes------------------------------!
       if(availc(p).gt.0.0_r8)then !what happens in the night? 

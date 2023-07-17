@@ -32,6 +32,7 @@ module CropType
      logical , pointer :: croplive_patch          (:)   ! patch Flag, true if planted, not harvested
      logical , pointer :: cropplant_patch         (:)   ! patch Flag, true if planted
      integer , pointer :: harvdate_patch          (:)   ! patch harvest date
+     integer , pointer :: yrop_patch              (:)   ! patch year of planting of crop (added by O.Dombrowski)
      real(r8), pointer :: fertnitro_patch         (:)   ! patch fertilizer nitrogen
      real(r8), pointer :: gddplant_patch          (:)   ! patch accum gdd past planting date for crop       (ddays)
      real(r8), pointer :: gddtsoi_patch           (:)   ! patch growing degree-days from planting (top two soil layers) (ddays)
@@ -192,7 +193,8 @@ contains
     allocate(this%nyrs_crop_active_patch(begp:endp)) ; this%nyrs_crop_active_patch(:) = 0
     allocate(this%croplive_patch (begp:endp)) ; this%croplive_patch (:) = .false.
     allocate(this%cropplant_patch(begp:endp)) ; this%cropplant_patch(:) = .false.
-    allocate(this%harvdate_patch (begp:endp)) ; this%harvdate_patch (:) = huge(1) 
+    allocate(this%harvdate_patch (begp:endp)) ; this%harvdate_patch (:) = huge(1)
+    allocate(this%yrop_patch     (begp:endp)) ; this%yrop_patch     (:) = huge(1)   
     allocate(this%fertnitro_patch (begp:endp)) ; this%fertnitro_patch (:) = spval
     allocate(this%gddplant_patch (begp:endp)) ; this%gddplant_patch (:) = spval
     allocate(this%gddtsoi_patch  (begp:endp)) ; this%gddtsoi_patch  (:) = spval
@@ -497,6 +499,10 @@ contains
             dim1name='pft', long_name='harvest date', units='jday', nvalid_range=(/1,366/), & 
             interpinic_flag='interp', readvar=readvar, data=this%harvdate_patch)
 
+       call restartvar(ncid=ncid, flag=flag,  varname='yrop', xtype=ncd_int, &                      
+            dim1name='pft', long_name='year of planting', units='years', nvalid_range=(/1,9999/), &
+            interpinic_flag='interp', readvar=readvar, data=this%yrop_patch)
+
        call restartvar(ncid=ncid, flag=flag,  varname='vf', xtype=ncd_double,  &
             dim1name='pft', long_name='vernalization factor', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%vf_patch)
@@ -527,7 +533,7 @@ contains
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep
     use clm_varpar       , only : nlevsno, nlevgrnd
-    use pftconMod        , only : nswheat, nirrig_swheat, pftcon
+    use pftconMod        , only : nswheat, nirrig_swheat, ncitrus, nirrig_citrus, pftcon
     use pftconMod        , only : nwwheat, nirrig_wwheat
     use pftconMod        , only : nsugarcane, nirrig_sugarcane
     use ColumnType       , only : col
@@ -582,6 +588,7 @@ contains
           ivt = patch%itype(p)
           if ( (trim(this%baset_mapping) == baset_map_latvary) .and. &
              ((ivt == nswheat) .or. (ivt == nirrig_swheat) .or. &
+              (ivt == ncitrus) .or. (ivt == nirrig_citrus) .or. & ! added by Olga
               (ivt == nsugarcane) .or. (ivt == nirrig_sugarcane)) ) then
              rbufslp(p) = max(0._r8, min(pftcon%mxtmp(ivt), &
              t_ref2m_patch(p)-(SHR_CONST_TKFRZ + this%latbaset_patch(p)))) &

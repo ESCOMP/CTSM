@@ -135,7 +135,7 @@ contains
            iso_cnveg_cf%frootc_to_litter_patch              , cnveg_cf%frootc_to_litter_patch, &
            iso_cnveg_cs%frootc_patch                        , cnveg_cs%frootc_patch, &
            num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
-
+ 
       call CIsoFluxCalc(&
            iso_cnveg_cf%livestemc_to_deadstemc_patch        , cnveg_cf%livestemc_to_deadstemc_patch, &
            iso_cnveg_cs%livestemc_patch                     , cnveg_cs%livestemc_patch, &
@@ -413,6 +413,17 @@ contains
               iso_cnveg_cf%crop_seedc_to_leaf_patch            , cnveg_cf%crop_seedc_to_leaf_patch, &
               iso_cnveg_cs%totvegc_patch                       , cnveg_cs%totvegc_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%crop_seedc_to_froot_patch            , cnveg_cf%crop_seedc_to_froot_patch, &
+              iso_cnveg_cs%totvegc_patch                       , cnveg_cs%totvegc_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%crop_seedc_to_deadstem_patch        , cnveg_cf%crop_seedc_to_deadstem_patch, &
+              iso_cnveg_cs%totvegc_patch                       , cnveg_cs%totvegc_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
 
          call CIsoFluxCalc(&
               iso_cnveg_cf%grain_curmr_patch                   , cnveg_cf%grain_curmr_patch, &
@@ -1222,7 +1233,7 @@ contains
                           + frootc_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
                      phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
                           + frootc_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
-
+                     
 !DML
                      if (ivt(p) >= npcropmin) then ! add livestemc to litter
                         ! stem litter carbon fluxes
@@ -1492,7 +1503,6 @@ contains
                            hrv_livecrootc_to_litter(p) * wtcol(p) * croot_prof(p,j)
                       harvest_c_to_cwdc(c,j) = harvest_c_to_cwdc(c,j) + &
                            hrv_deadcrootc_to_litter(p) * wtcol(p) * croot_prof(p,j)
-
                       ! storage harvest mortality carbon fluxes
                       harvest_c_to_litr_met_c(c,j)      = harvest_c_to_litr_met_c(c,j)      + &
                            hrv_leafc_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j)

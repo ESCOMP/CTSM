@@ -51,6 +51,8 @@ module CNVegNitrogenStateType
      real(r8), pointer :: deadstemn_patch          (:) ! (gN/m2) dead stem N
      real(r8), pointer :: deadstemn_storage_patch  (:) ! (gN/m2) dead stem N storage
      real(r8), pointer :: deadstemn_xfer_patch     (:) ! (gN/m2) dead stem N transfer
+     real(r8), pointer :: deadstemn_soy_patch      (:) ! (gN/m2) dead stem N at the start of season
+     real(r8), pointer :: deadstemn_storage_soy_patch     (:) ! (gN/m2) dead stem N at the start of season
      real(r8), pointer :: livecrootn_patch         (:) ! (gN/m2) live coarse root N
      real(r8), pointer :: livecrootn_storage_patch (:) ! (gN/m2) live coarse root N storage
      real(r8), pointer :: livecrootn_xfer_patch    (:) ! (gN/m2) live coarse root N transfer
@@ -147,6 +149,8 @@ contains
     allocate(this%deadstemn_patch          (begp:endp)) ; this%deadstemn_patch          (:) = nan
     allocate(this%deadstemn_storage_patch  (begp:endp)) ; this%deadstemn_storage_patch  (:) = nan
     allocate(this%deadstemn_xfer_patch     (begp:endp)) ; this%deadstemn_xfer_patch     (:) = nan
+    allocate(this%deadstemn_soy_patch      (begp:endp)) ; this%deadstemn_soy_patch     (:) = nan
+    allocate(this%deadstemn_storage_soy_patch     (begp:endp)) ; this%deadstemn_storage_soy_patch     (:) = nan
     allocate(this%livecrootn_patch         (begp:endp)) ; this%livecrootn_patch         (:) = nan
     allocate(this%livecrootn_storage_patch (begp:endp)) ; this%livecrootn_storage_patch (:) = nan
     allocate(this%livecrootn_xfer_patch    (begp:endp)) ; this%livecrootn_xfer_patch    (:) = nan
@@ -282,6 +286,16 @@ contains
     call hist_addfld1d (fname='DEADSTEMN_XFER', units='gN/m^2', &
          avgflag='A', long_name='dead stem N transfer', &
          ptr_patch=this%deadstemn_xfer_patch, default='inactive')    
+
+    this%deadstemn_soy_patch(begp:endp) = spval
+    call hist_addfld1d (fname='DEADSTEMN_SOY', units='gN/m^2', &
+         avgflag='A', long_name='dead stem N at start of year', &
+         ptr_patch=this%deadstemn_soy_patch, default='inactive')
+
+    this%deadstemn_storage_soy_patch(begp:endp) = spval
+    call hist_addfld1d (fname='DEADSTEMN_STORAGE_SOY', units='gN/m^2', &
+         avgflag='A', long_name='dead stem N storage at start of year', &
+         ptr_patch=this%deadstemn_storage_soy_patch, default='inactive')
 
     this%livecrootn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVECROOTN', units='gN/m^2', &
@@ -471,13 +485,19 @@ contains
           ! roughness length is not zero in canopy flux calculation
 
           if (pftcon%woody(patch%itype(p)) == 1._r8) then
-             this%deadstemn_patch(p) = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+             if (patch%itype(p) < npcropmin) then
+                this%deadstemn_patch(p) = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+             else
+                this%deadstemn_patch(p) =  0._r8
+             end if
           else
              this%deadstemn_patch(p) = 0._r8
           end if
 
           this%deadstemn_storage_patch(p)  = 0._r8
           this%deadstemn_xfer_patch(p)     = 0._r8
+          this%deadstemn_soy_patch(p)      = 0._r8
+          this%deadstemn_storage_soy_patch(p)     = 0._r8
           this%livecrootn_patch(p)         = 0._r8
           this%livecrootn_storage_patch(p) = 0._r8
           this%livecrootn_xfer_patch(p)    = 0._r8
@@ -630,6 +650,14 @@ contains
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%deadstemn_xfer_patch) 
 
+    call restartvar(ncid=ncid, flag=flag, varname='deadstemn_soy', xtype=ncd_double,  &
+         dim1name='pft', long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%deadstemn_soy_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='deadstemn_storage_soy', xtype=ncd_double,  &         
+         dim1name='pft', long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%deadstemn_storage_soy_patch)
+
     call restartvar(ncid=ncid, flag=flag, varname='livecrootn', xtype=ncd_double,  &
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%livecrootn_patch) 
@@ -781,13 +809,19 @@ contains
              ! roughness length is not zero in canopy flux calculation
    
              if (pftcon%woody(patch%itype(p)) == 1._r8) then
-                this%deadstemn_patch(p) = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+                if (patch%itype(p) < npcropmin) then   
+                   this%deadstemn_patch(p) = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+                else
+                   this%deadstemn_patch(p) = 0._r8  
+                end if
              else
                 this%deadstemn_patch(p) = 0._r8
              end if
 
              this%deadstemn_storage_patch(p)  = 0._r8
              this%deadstemn_xfer_patch(p)     = 0._r8
+             this%deadstemn_soy_patch(p)      = 0._r8
+             this%deadstemn_storage_soy_patch(p)     = 0._r8
              this%livecrootn_patch(p)         = 0._r8
              this%livecrootn_storage_patch(p) = 0._r8
              this%livecrootn_xfer_patch(p)    = 0._r8
@@ -876,6 +910,8 @@ contains
        this%deadstemn_patch(i)          = value_patch
        this%deadstemn_storage_patch(i)  = value_patch
        this%deadstemn_xfer_patch(i)     = value_patch
+       this%deadstemn_soy_patch(i)      = value_patch
+       this%deadstemn_storage_soy_patch(i)     = value_patch
        this%livecrootn_patch(i)         = value_patch
        this%livecrootn_storage_patch(i) = value_patch
        this%livecrootn_xfer_patch(i)    = value_patch
