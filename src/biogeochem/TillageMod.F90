@@ -168,6 +168,10 @@ contains
     !  to use days past planting. Modified by Sam Rabin to include "new" version
     !  that *actually* uses days past planting.
     !
+    !  Original code had two versions depending on cell's GDP, but this seems to
+    !  have been only an initial effort that was (a) never published and (b) not
+    !  completely developed.
+    !
     ! !USES:
     use clm_time_manager, only : get_curr_calday, get_curr_days_per_year
     use pftconMod       , only : ntmp_corn, nirrig_tmp_corn, ntmp_soybean, nirrig_tmp_soybean
