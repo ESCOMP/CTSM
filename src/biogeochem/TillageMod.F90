@@ -29,6 +29,13 @@ module TillageMod
   real(r8), pointer :: tillage_mults(:) ! (ndecomp_pools)
   real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, nphases)
   integer, parameter :: nphases = 3 ! How many different tillage phases are there? (Not including all-1 phases.)
+  ! Indices for soil organic matter pools
+  integer  :: i_act_som
+  integer  :: i_slo_som
+  integer  :: i_pas_som
+  ! Indices for litter pools
+  integer  :: i_cel_lit
+  integer  :: i_lig_lit
 
 
 !==============================================================================
@@ -104,7 +111,7 @@ contains
   end subroutine tillage_init
 
 
-  subroutine tillage_init_century(i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+  subroutine tillage_init_century(i_act_som_in, i_slo_som_in, i_pas_som_in, i_cel_lit_in, i_lig_lit_in)
     ! !DESCRIPTION:
     !
     ! Allocate multiplier arrays to be used in tillage. Call during initialization of CENTURY decomposition.
@@ -114,8 +121,8 @@ contains
     use pftconMod , only : npcropmin
     !
     ! !ARGUMENTS:
-    integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
-    integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
+    integer          , intent(in) :: i_act_som_in, i_slo_som_in, i_pas_som_in  ! indices for soil organic matter pools
+    integer          , intent(in) :: i_cel_lit_in, i_lig_lit_in  ! indices for litter pools
 
     if (.not. get_do_tillage()) then
         return
@@ -124,6 +131,13 @@ contains
     ! Allocate tillage multipliers
     allocate(tillage_mults(ndecomp_pools)); tillage_mults(:) = 1.0_r8
     allocate(tillage_mults_allphases(ndecomp_pools, nphases)); tillage_mults_allphases(:,:) = 1.0_r8
+
+    ! Save soil pool indices
+    i_act_som = i_act_som_in
+    i_slo_som = i_slo_som_in
+    i_pas_som = i_pas_som_in
+    i_cel_lit = i_cel_lit_in
+    i_lig_lit = i_lig_lit_in
 
     ! Fill tillage_mults_allphases
     if (do_tillage_low) then
@@ -151,7 +165,7 @@ contains
   end function get_do_tillage
 
 
-  subroutine get_tillage_multipliers(idop, p, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+  subroutine get_tillage_multipliers(idop, p)
     ! !DESCRIPTION:
     !
     !  Get the cultivation effective multiplier if prognostic crops are on and
@@ -169,8 +183,6 @@ contains
     ! !ARGUMENTS:
     integer          , intent(in) :: idop(:) ! patch day of planting
     integer          , intent(in) :: p       ! index of patch this is being called for
-    integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
-    integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
     !
     ! !LOCAL VARIABLES:
     !
@@ -230,7 +242,7 @@ contains
   end subroutine get_tillage_multipliers
 
 
-  subroutine get_apply_tillage_multipliers(idop, c, decomp_k, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+  subroutine get_apply_tillage_multipliers(idop, c, decomp_k)
     ! !DESCRIPTION:
     !
     ! Multiply decomposition rate constants by tillage coefficients.
@@ -243,8 +255,6 @@ contains
     integer       , intent(in) :: idop(:) ! patch day of planting
     integer       , intent(in) :: c       ! index of column this is being called for
     real(r8), dimension(:,:,:), intent(inout) :: decomp_k ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
-    integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
-    integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
     !
     ! !LOCAL VARIABLES
     integer :: p, this_patch, j, n_noncrop
@@ -279,7 +289,7 @@ contains
         call endrun('ERROR No active patches found (crop OR non-crop)')
     end if
 
-    call get_tillage_multipliers(idop, this_patch, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+    call get_tillage_multipliers(idop, this_patch)
 
     ! Top 5 layers (instead of all nlevdecomp) so that model only tills the top 26-40 cm
     ! of the soil surface, rather than whole soil - MWGraham

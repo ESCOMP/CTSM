@@ -923,7 +923,7 @@ contains
          end if
          do fc = 1,num_soilc
             c = filter_soilc(fc)
-            call get_apply_tillage_multipliers(idop, c, decomp_k, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+            call get_apply_tillage_multipliers(idop, c, decomp_k)
          end do
       end if
 
