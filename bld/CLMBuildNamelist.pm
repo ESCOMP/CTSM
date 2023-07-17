@@ -168,7 +168,8 @@ OPTIONS
                               (default is 0) (standard option with land-ice model is 10)
      -glc_use_antarctica      Set defaults appropriate for runs that include Antarctica
      -help [or -h]            Print usage to STDOUT.
-     -light_res <value>       Resolution of lightning dataset to use for CN fire (360x720 or 94x192)
+     -light_res <value>       Resolution of lightning dataset to use for CN or FATES fire (360x720, 106x174, or 94x192)
+                              106x174 can only be used for NEON sites
      -lilac                   If CTSM is being run through LILAC (normally not used)
                               (LILAC is the Lightweight Infrastructure for Land-Atmosphere Coupling)
      -ignore_ic_date          Ignore the date on the initial condition files
@@ -688,6 +689,13 @@ sub setup_cmdl_resolution {
       }
     }
   }
+  # For NEON sites
+  if ($nl_flags->{'res'} =~ /NEON/) {
+    $nl_flags->{'neon'} = ".true."
+  } else {
+    $nl_flags->{'neon'} = ".false."
+  }
+
 }
 
 #-------------------------------------------------------------------------------
@@ -952,59 +960,84 @@ sub setup_cmdl_fire_light_res {
 
   my $var = "light_res";
   my $val = $opts->{$var};
+  if ( &value_is_true($nl->get_value('use_cn')) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
+  }
+  my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
   if ( $val eq "default" ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                  'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'},
+                 'neon'=>$nl_flags->{'neon'},
                  'fates_spitfire_mode'=>$nl->get_value('fates_spitfire_mode'),
-                 'use_fates'=>$nl_flags->{'use_fates'}, fire_method=>$nl->get_value('fire_method') );
+                 'use_fates'=>$nl_flags->{'use_fates'}, fire_method=>$fire_method );
      $val              = remove_leading_and_trailing_quotes( $nl->get_value($var) );
      $nl_flags->{$var} = $val;
   } else {
-     my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
      if ( defined($fire_method) && $val ne "none" ) {
         if ( $fire_method eq "nofire" ) {
            $log->fatal_error("-$var option used with fire_method='nofire'. -$var can ONLY be used without the nofire option");
-         }
-       }
-       my $stream_fldfilename_lightng = remove_leading_and_trailing_quotes( $nl->get_value('stream_fldfilename_lightng') );
-       if ( defined($stream_fldfilename_lightng) && $val ne "none" ) {
-          $log->fatal_error("-$var option used while also explicitly setting stream_fldfilename_lightng filename which is a contradiction. Use one or the other not both.");
-       }
-       if ( ! &value_is_true($nl->get_value('use_cn')) ) {
-          $log->fatal_error("-$var option used CN is NOT on. -$var can only be used when CN is on (with bgc: cn or bgc)");
-       }
-       if ( &value_is_true($nl->get_value('use_cn')) && $val eq "none" ) {
-          $log->fatal_error("-$var option is set to none, but CN is on (with bgc: cn or bgc) which is a contradiction");
-       }
-       $nl_flags->{$var} = $val;
-    }
-    my $group = $definition->get_group_name($var);
-    $nl->set_variable_value($group, $var, quote_string($nl_flags->{$var}) );
-    if (  ! $definition->is_valid_value( $var, $nl_flags->{$var}, 'noquotes'=>1 ) ) {
-      my @valid_values   = $definition->get_valid_values( $var );
-      $log->fatal_error("$var has a value (".$nl_flags->{$var}.") that is NOT valid. Valid values are: @valid_values");
-    }
-    $log->verbose_message("Using $nl_flags->{$var} for $var.");
-    #
-    # Set flag if cn-fires are on or not
-    #
-    $var = "cnfireson";
-    if ( &value_is_true($nl->get_value('use_cn')) ) {
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
-    }
-    my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
-    if ( defined($fire_method) && ! &value_is_true($nl_flags->{'use_cn'}) && ! &value_is_true($nl_flags->{'use_fates'}) ) {
-       $log->fatal_error("fire_method is being set while use_cn and use_fates are both false.");
-    }
-    if ( defined($fire_method) && $fire_method eq "nofire" ) {
-       $nl_flags->{$var} = ".false.";
-#   } elsif ( &value_is_true($nl->get_value('use_cn')) || $nl_flags->{'fates_spitfire_mode'} > 1 ) {
-    } elsif ( &value_is_true($nl->get_value('use_cn')) || &value_is_true($nl->get_value('use_fates')) ) {
-       $nl_flags->{$var} = ".true.";
-    } else {
-       $nl_flags->{$var} = ".false.";
-    }
+        }
+     }
+     my $stream_fldfilename_lightng = remove_leading_and_trailing_quotes( $nl->get_value('stream_fldfilename_lightng') );
+     if ( defined($stream_fldfilename_lightng) && $val ne "none" ) {
+        $log->fatal_error("-$var option used while also explicitly setting stream_fldfilename_lightng filename which is a contradiction. Use one or the other not both.");
+     }
+     if ( ! &value_is_true($nl->get_value('use_cn')) ) {
+        if ( &value_is_true($nl_flags->{'use_fates'}) ) {
+           if ( $nl->get_value('fates_spitfire_mode') < 2) {
+              if ( $val ne "none" ) {
+                  $log->fatal_error("-$var option used when FATES is on, but fates_spitfire_mode does NOT use lightning data");
+              }
+           } else {
+              if ( $val eq "none" ) {
+                 $log->fatal_error("-$var option is set to none, but FATES is on and fates_spitfire_mode requires lightning data");
+              }
+           }
+        } else {
+           $log->fatal_error("-$var option used when FATES off and CN is NOT on. -$var can only be used when BGC is set to bgc or fates");
+        }
+     } else {
+        if ( $val eq "none" and $fire_method ne "nofire" ) {
+           $log->fatal_error("-$var option is set to none, but CN is on (with bgc: cn or bgc) which is a contradiction");
+        }
+     }
+     $nl_flags->{$var} = $val;
   }
+  # Check that NEON data is only used for NEON sites
+  if ( $val eq "106x174" ) {
+     if ( ! &value_is_true($nl_flags->{'neon'}) ) {
+         if ( defined($opts->{'clm_usr_name'}) ) {
+            $log->warning("The NEON lightning dataset does NOT cover the entire globe, make sure it covers the region for your grid");
+         } else { 
+            $log->fatal_error("The NEON lightning dataset can NOT be used for global grids or regions or points outside of its area as it does NOT cover the entire globe.");
+         }
+     }
+  }
+  # check for valid values...
+  my $group = $definition->get_group_name($var);
+  $nl->set_variable_value($group, $var, quote_string($nl_flags->{$var}) );
+  if (  ! $definition->is_valid_value( $var, $nl_flags->{$var}, 'noquotes'=>1 ) ) {
+    my @valid_values   = $definition->get_valid_values( $var );
+    $log->fatal_error("$var has a value (".$nl_flags->{$var}.") that is NOT valid. Valid values are: @valid_values");
+  }
+  $log->verbose_message("Using $nl_flags->{$var} for $var.");
+  #
+  # Set flag if cn-fires are on or not, only for BGC (not FATES)
+  #
+  $var = "cnfireson";
+  my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
+  if ( defined($fire_method) && ! &value_is_true($nl_flags->{'use_cn'}) && ! &value_is_true($nl_flags->{'use_fates'}) ) {
+     $log->fatal_error("fire_method is being set while use_cn and use_fates are both false.");
+  }
+  if ( defined($fire_method) && $fire_method eq "nofire" ) {
+     $nl_flags->{$var} = ".false.";
+# } elsif ( &value_is_true($nl->get_value('use_cn')) || $nl_flags->{'fates_spitfire_mode'} > 1 ) {
+  } elsif ( &value_is_true($nl->get_value('use_cn')) || &value_is_true($nl->get_value('use_fates')) ) {
+     $nl_flags->{$var} = ".true.";
+  } else {
+     $nl_flags->{$var} = ".false.";
+  }
+}
 
 #-------------------------------------------------------------------------------
 
@@ -1592,9 +1625,9 @@ sub process_namelist_inline_logic {
   setup_logic_urban($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ###############################
-  # namelist group: crop        #
+  # namelist group: crop_inparm #
   ###############################
-  setup_logic_crop($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_crop_inparm($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ###############################
   # namelist group: ch4par_in   #
@@ -2121,7 +2154,7 @@ sub setup_logic_urban {
 
 #-------------------------------------------------------------------------------
 
-sub setup_logic_crop {
+sub setup_logic_crop_inparm {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   if ( &value_is_true($nl->get_value('use_crop')) ) {
@@ -4310,7 +4343,7 @@ sub write_output_files {
                soilwater_movement_inparm rooting_profile_inparm
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
-               cnprecision_inparm clm_glacier_behavior crop irrigation_inparm
+               cnprecision_inparm clm_glacier_behavior crop_inparm irrigation_inparm
                surfacealbedo_inparm water_tracers_inparm);
 
   #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm

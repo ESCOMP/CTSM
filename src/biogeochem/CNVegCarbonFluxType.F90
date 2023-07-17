@@ -868,7 +868,7 @@ contains
          bounds = bounds, &
          name = 'hrv_xsmrpool_to_atm_' // carbon_type_suffix, &
          units = 'gC/m^2', &
-         allows_non_annual_delta = allows_non_annual_delta)
+         allows_non_annual_delta = .false.)
 
   end subroutine InitAllocate
 
@@ -940,7 +940,8 @@ contains
                   type2d='mxharvests', &
                   avgflag='I', &
                   long_name=get_repr_longname(k)//' C to food per harvest; should only be output annually', &
-                  ptr_patch=data2dptr)
+                  ptr_patch=data2dptr, &
+                  default='inactive')
           end do
 
           this%repr_grainc_to_food_thisyr_patch(begp:endp,:) = spval
@@ -952,7 +953,8 @@ contains
                   units='gC/m^2', &
                   avgflag='I', &
                   long_name=get_repr_longname(k)//' C to food harvested per calendar year; should only be output annually', &
-                  ptr_patch=data1dptr)
+                  ptr_patch=data1dptr, &
+                  default='inactive')
           end do
           
           this%leafc_to_biofuelc_patch(begp:endp) = spval

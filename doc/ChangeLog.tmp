@@ -1,0 +1,218 @@
+===============================================================
+Tag name: ctsm5.1.dev131
+Originator(s): samrabin (Sam Rabin,UCAR/TSS)
+Date: Mon Jul 17 13:58:49 MDT 2023
+One-line Summary: Enable prescribed crop calendars.
+
+Purpose and description of changes
+----------------------------------
+
+This tag introduces the ability to prescribe crop sowing dates
+and/or maturity requirements.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[???] clm4_5
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+   Resolves #281  -- Clean up CropPhenology logic
+   Resolves #519  -- Read in crop planting and harvest dates
+   Fixes    #2042 -- Issue running SystemTests due to "conda activate" error
+
+   Some on  #1649 -- Additional "annual" (per growing season) crop outputs
+
+Known bugs found since the previous tag (include issue #):
+   None???
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users:
+    Untested:
+    * Time-varying inputs
+    * Running at any resolution other than one matching the crop calendar inputs
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+    Adds optional namelist variables:
+    * stream_fldfilename_sdate: Filename of input stream data for sowing dates
+    * stream_fldfilename_cultivar_gdds: Filename of input stream data for cultivar growing degree-day targets
+    * stream_meshfile_cropcal: Filename of input stream data for crop calendar inputs
+    * stream_year_first_cropcal: First year to loop over for crop calendar data
+    * stream_year_last_cropcal: Last year to loop over for crop calendar data
+    * model_year_align_cropcal: Simulation year that aligns with stream_year_first_cropcal value
+    * generate_crop_gdds: Set to .true. in order to override crop harvesting logic and to instead harvest the day before the next sowing date. Used to generate growing-degree day outputs that can be used with an external script to generate new GDD requirement ("cultivar") files.
+    * use_mxmat: Set to .false. in order to ignore crop PFT parameter for maximum growing season length (mxmat). Must be set to .false. when generate_crop_gdds is .true.
+
+Notes of particular relevance for developers:                                                                                                                 ---------------------------------------------
+
+Changes to tests or testing:
+    * Adds RXCROPMATURITY SystemTest, with an example added to ctsm_sci test suite.
+    * Removes 12 MCT tests from testlist_clm.xml, as discussed in CTSM SE standup 2023-06-26.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES for Clm45BgcCrop compsets only
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Clm45BgcCrop
+    - what platforms/compilers: Cheyenne intel and gnu, Izumi intel and nag
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): ???
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+
+      ???
+
+   5 tests in aux_clm showed true DIFFs (i.e., not just field list differences / new output files):
+     - SMS_D_Ly6_Mmpi-serial.1x1_smallvilleIA.IHistClm45BgcCropQianRs.izumi_intel.clm-cropMonthOutput
+     - ERP_D_P36x2_Ld3.f10_f10_mg37.I2000Clm45BgcCrop.cheyenne_gnu.clm-no_subgrid_fluxes
+     - LGRAIN2_Ly2_P72x1.f10_f10_mg37.I1850Clm45BgcCrop.cheyenne_gnu.clm-ciso--clm-cropMonthOutput
+     - ERS_Ly5_P72x1.f10_f10_mg37.IHistClm45BgcCrop.cheyenne_intel.clm-cropMonthOutput
+     - SMS_D_Ld1_P48x1.f10_f10_mg37.I2000Clm45BgcCrop.izumi_nag.clm-oldhyd
+   
+   The first four were likely due to an order-of-operations change in CNOffsetLitterfall(), as they resolve with the following patch:
+        --- a/src/biogeochem/CNPhenologyMod.F90
+        +++ b/src/biogeochem/CNPhenologyMod.F90
+        @@ -2978,7 +2978,6 @@ contains
+            real(r8) :: cropseedn_deficit_remaining  ! remaining amount of crop seed N deficit that still needs to be restored (gN/m2) (positive, in contrast to the negative cropseedn_deficit)
+            real(r8) :: cropseedc_deficit_to_restore ! amount of crop seed C deficit that will be restored from this grain pool (gC/m2)
+            real(r8) :: cropseedn_deficit_to_restore ! amount of crop seed N deficit that will be restored from this grain pool (gN/m2)
+        -    real(r8) :: repr_grainc_to_food_thispool ! amount added to / subtracted from repr_grainc_to_food for the pool in question (gC/m2/s)
+            !-----------------------------------------------------------------------
+
+            associate(                                                                           &
+        @@ -3096,15 +3095,14 @@ contains
+                            repr_grainn_to_seed(p,k) = t1 * cropseedn_deficit_to_restore
+
+                            ! Send the remaining grain to the food product pool
+        -                     repr_grainc_to_food_thispool = cpool_to_reproductivec(p,k) - repr_grainc_to_seed(p,k)
+                            repr_grainc_to_food(p,k) = t1 * reproductivec(p,k) &
+        -                          + repr_grainc_to_food_thispool
+        -                     if (reproductivec(p,k) + repr_grainc_to_food_thispool * dt .gt. 0) then
+        +                          + cpool_to_reproductivec(p,k) - repr_grainc_to_seed(p,k)
+        +                     if (reproductivec(p,k) + (cpool_to_reproductivec(p,k) - repr_grainc_to_seed(p,k)) * dt .gt. 0) then
+                                if (h .le. 0) then
+                                    call endrun(msg="CNOffsetLitterfall(): Invalid harvest_count")
+                                end if
+                                repr_grainc_to_food_perharv(p,h,k) = reproductivec(p,k) &
+        -                             + repr_grainc_to_food_thispool * dt
+        +                             + (cpool_to_reproductivec(p,k) - repr_grainc_to_seed(p,k)) * dt
+                                repr_grainc_to_food_thisyr(p,k) = repr_grainc_to_food_thisyr(p,k) &
+                                    + repr_grainc_to_food_perharv(p,h,k)
+                            end if
+
+   The last is resolved with an additional patch that removes all my changes to CNOffsetLitterfall()---changes which *should* only affect new diagnostic variables:
+        --- a/src/biogeochem/CNPhenologyMod.F90
+        +++ b/src/biogeochem/CNPhenologyMod.F90
+        @@ -408,8 +408,7 @@ contains
+                    cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+
+                call CNOffsetLitterfall(num_soilp, filter_soilp, &
+        -            cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+        -            crop_inst)
+        +            cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+
+                call CNBackgroundLitterfall(num_soilp, filter_soilp, &
+                    cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+        @@ -2942,8 +2941,7 @@ contains
+
+        !-----------------------------------------------------------------------
+        subroutine CNOffsetLitterfall (num_soilp, filter_soilp, &
+        -       cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+        -       crop_inst)
+        +       cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+            !
+            ! !DESCRIPTION:
+            ! Determines the flux of C and N from displayed pools to litter
+        @@ -2964,10 +2962,9 @@ contains
+            type(cnveg_nitrogenstate_type), intent(in)    :: cnveg_nitrogenstate_inst
+            type(cnveg_carbonflux_type)   , intent(inout) :: cnveg_carbonflux_inst
+            type(cnveg_nitrogenflux_type) , intent(inout) :: cnveg_nitrogenflux_inst
+        -    type(crop_type)               , intent(in)    :: crop_inst
+            !
+            ! !LOCAL VARIABLES:
+        -    integer :: p, c, k, h   ! indices
+        +    integer :: p, c, k      ! indices
+            integer :: fp           ! lake filter patch index
+            real(r8):: t1           ! temporary variable
+            real(r8):: denom        ! temporary variable for divisor
+        @@ -3015,8 +3012,6 @@ contains
+                frootc_to_litter      =>    cnveg_carbonflux_inst%frootc_to_litter_patch      , & ! Output: [real(r8) (:) ]  fine root C litterfall (gC/m2/s)
+                livestemc_to_litter   =>    cnveg_carbonflux_inst%livestemc_to_litter_patch   , & ! Output: [real(r8) (:) ]  live stem C litterfall (gC/m2/s)
+                repr_grainc_to_food   =>    cnveg_carbonflux_inst%repr_grainc_to_food_patch   , & ! Output: [real(r8) (:,:) ]  grain C to food (gC/m2/s)
+        -         repr_grainc_to_food_perharv => cnveg_carbonflux_inst%repr_grainc_to_food_perharv_patch, & ! Output: [real(r8) (:,:,:) ]  grain C to food per harvest (gC/m2)
+        -         repr_grainc_to_food_thisyr => cnveg_carbonflux_inst%repr_grainc_to_food_thisyr_patch, & ! Output: [real(r8) (:,:) ]  grain C to food harvested this calendar year (gC/m2)
+                repr_grainc_to_seed   =>    cnveg_carbonflux_inst%repr_grainc_to_seed_patch   , & ! Output: [real(r8) (:,:) ]  grain C to seed (gC/m2/s)
+                repr_structurec_to_cropprod => cnveg_carbonflux_inst%repr_structurec_to_cropprod_patch, & ! Output: [real(r8) (:,:) ] reproductive structure C to crop product pool (gC/m2/s)
+                repr_structurec_to_litter   => cnveg_carbonflux_inst%repr_structurec_to_litter_patch,   & ! Output: [real(r8) (:,:) ] reproductive structure C to litter (gC/m2/s)
+        @@ -3069,9 +3064,6 @@ contains
+                        ! if this were ever changed, we'd need to add code to the "else"
+                        if (ivt(p) >= npcropmin) then
+
+        -                  ! How many harvests have occurred?
+        -                  h = crop_inst%harvest_count(p)
+        -
+                        ! Replenish the seed deficits from grain, if there is enough available
+                        ! grain. (If there is not enough available grain, the seed deficits will
+                        ! accumulate until there is eventually enough grain to replenish them.)
+        @@ -3097,15 +3089,6 @@ contains
+                            ! Send the remaining grain to the food product pool
+                            repr_grainc_to_food(p,k) = t1 * reproductivec(p,k) &
+                                + cpool_to_reproductivec(p,k) - repr_grainc_to_seed(p,k)
+        -                     if (reproductivec(p,k) + (cpool_to_reproductivec(p,k) - repr_grainc_to_seed(p,k)) * dt .gt. 0) then
+        -                         if (h .le. 0) then
+        -                             call endrun(msg="CNOffsetLitterfall(): Invalid harvest_count")
+        -                         end if
+        -                         repr_grainc_to_food_perharv(p,h,k) = reproductivec(p,k) &
+        -                             + (cpool_to_reproductivec(p,k) - repr_grainc_to_seed(p,k)) * dt
+        -                         repr_grainc_to_food_thisyr(p,k) = repr_grainc_to_food_thisyr(p,k) &
+        -                             + repr_grainc_to_food_perharv(p,h,k)
+        -                     end if
+                            repr_grainn_to_food(p,k) = t1 * reproductiven(p,k) &
+                                + npool_to_reproductiven(p,k) - repr_grainn_to_seed(p,k)
+                        end do
+
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime
+    cime: cime6.0.108 -> cime6.0.136
+
+Pull Requests that document the changes (include PR ids):
+    https://github.com/ESCOMP/CTSM/pull/1863
+
+===============================================================

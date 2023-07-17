@@ -1783,7 +1783,6 @@ contains
     logical did_plant ! did we plant the crop in this time step?
     logical allow_unprescribed_planting ! should crop be allowed to be planted according to sowing window rules?
     logical do_harvest    ! Are harvest conditions satisfied?
-    logical force_harvest ! Should we harvest today no matter what?
     logical fake_harvest  ! Dealing with incorrect Dec. 31 planting
     logical did_plant_prescribed_today    ! Was the crop sown today?
     logical will_plant_prescribed_tomorrow ! Is tomorrow a prescribed sowing day?
@@ -2103,6 +2102,7 @@ contains
          offset_flag(p) = 0._r8 ! carbon and nitrogen transfers
 
          if (croplive(p)) then
+            cphase(p) = cphase_planted
 
             ! call vernalization if winter temperate cereal planted, living, and the
             ! vernalization factor is not 1;
@@ -2137,7 +2137,6 @@ contains
             endif
 
             do_harvest = .false.
-            force_harvest = .false.
             fake_harvest = .false.
             did_plant_prescribed_today = .false.
             if (use_cropcal_rx_sdates .and. sowing_count(p) > 0) then
@@ -2153,13 +2152,11 @@ contains
             if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
                 ! BACKWARDS_COMPATIBILITY(ssr, 2022-02-03): To get rid of crops incorrectly planted in last time step of Dec. 31. That was fixed in commit dadbc62 ("Call CropPhenology regardless of doalb"), but this handles restart files with the old behavior. fake_harvest ensures that outputs aren't polluted.
                 do_harvest = .true.
-                force_harvest = .true.
                 fake_harvest = .true.
                 harvest_reason = HARVEST_REASON_SOWNBADDEC31
-            else if (do_plant .and. .not. did_plant) then
+            else if (use_cropcal_streams .and. do_plant .and. .not. did_plant) then
                 ! Today was supposed to be the planting day, but the previous crop still hasn't been harvested.
                 do_harvest = .true.
-                force_harvest = .true.
                 harvest_reason = HARVEST_REASON_SOWTODAY
 
             ! If generate_crop_gdds and this patch has prescribed sowing inputs
@@ -2173,8 +2170,8 @@ contains
                   ! which would invoke the "manually setting sowing_count and 
                   ! sdates_thisyr" code. This would lead to crops never getting
                   ! harvested. Instead, always harvest the day before idop.
-                  if ((.not. do_harvest) .and. \
-                      (idop(p) > 1 .and. jday == idop(p) - 1) .or. \
+                  if ((.not. do_harvest) .and. &
+                      (idop(p) > 1 .and. jday == idop(p) - 1) .or. &
                       (idop(p) == 1 .and. jday == dayspyr)) then
                       do_harvest = .true.
                       if (do_harvest) then
@@ -2207,6 +2204,9 @@ contains
                ! Do not harvest on the day this growing season began;
                ! would create challenges for postprocessing.
                do_harvest = .false.
+            else if (vernalization_forces_harvest) then
+               do_harvest = .true.
+               harvest_reason = HARVEST_REASON_VERNFREEZEKILL
             else
                ! Original harvest rule
                do_harvest = hui(p) >= gddmaturity(p) .or. idpp >= mxmat
@@ -2217,26 +2217,22 @@ contains
                ! sowing dates.
                ! WARNING: This implementation assumes that all patches use prescribed sowing dates.
                if (use_cropcal_rx_sdates) then
-                  will_plant_prescribed_tomorrow = (jday == next_rx_sdate(p) - 1) .or. \
-                                              (crop_inst%sdates_thisyr_patch(p,1) == 1 .and. \
+                  will_plant_prescribed_tomorrow = (jday == next_rx_sdate(p) - 1) .or. &
+                                              (crop_inst%sdates_thisyr_patch(p,1) == 1 .and. &
                                                jday == dayspyr)
                else
                   will_plant_prescribed_tomorrow = .false.
                end if
                do_harvest = do_harvest .or. will_plant_prescribed_tomorrow
 
-               if (vernalization_forces_harvest) then
-                   harvest_reason = HARVEST_REASON_VERNFREEZEKILL
-               else if (hui(p) >= gddmaturity(p)) then
+               if (hui(p) >= gddmaturity(p)) then
                    harvest_reason = HARVEST_REASON_MATURE
                else if (idpp >= mxmat) then
                    harvest_reason = HARVEST_REASON_MAXSEASLENGTH
                else if (will_plant_prescribed_tomorrow) then
                    harvest_reason = HARVEST_REASON_SOWTOMORROW
-                   force_harvest = .true.
                end if
             endif
-            force_harvest = force_harvest .or. (generate_crop_gdds .and. do_harvest)
 
             ! The following conditionals are similar to those in CropPhase. However, they
             ! differ slightly because here we are potentially setting a new crop phase,
@@ -2244,7 +2240,7 @@ contains
             ! phase. However, despite these differences: if you make changes to the
             ! following conditionals, you should also check to see if you should make
             ! similar changes in CropPhase.
-            if ((.not. force_harvest) .and. leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat) then
+            if ((.not. do_harvest) .and. leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat) then
                cphase(p) = cphase_leafemerge
                if (abs(onset_counter(p)) > 1.e-6_r8) then
                   onset_flag(p)    = 1._r8
@@ -2318,11 +2314,9 @@ contains
                ! AgroIBIS uses a complex formula for lai decline.
                ! Use CN's simple formula at least as a place holder (slevis)
 
-            else if (hui(p) >= huigrain(p) .and. cphase(p) >= cphase_leafemerge) then
+            else if (hui(p) >= huigrain(p)) then
                cphase(p) = cphase_grainfill
                bglfr(p) = 1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday)
-            else
-                cphase(p) = cphase_planted
             end if
 
             ! continue fertilizer application while in phase 2;
@@ -2401,15 +2395,16 @@ contains
        p = filter_pcropp(fp)
 
        if (croplive(p)) then
+          ! Start with cphase_planted, but this might get changed in the later
+          ! conditional blocks.
+          crop_phase(p) = cphase_planted
           if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p)) then
              crop_phase(p) = cphase_leafemerge
-          else if (hui(p) >= huigrain(p) .and. crop_inst%cphase_patch(p) >= cphase_leafemerge) then
+          else if (hui(p) >= huigrain(p)) then
              ! Since we know croplive is true, any hui greater than huigrain implies that
              ! we're in the grainfill stage: if we were passt gddmaturity then croplive
              ! would be false.
              crop_phase(p) = cphase_grainfill
-          else
-             crop_phase(p) = cphase_planted
           end if
        end if
     end do
@@ -2711,8 +2706,6 @@ contains
 
          hdidx       => cnveg_state_inst%hdidx_patch       , & ! Output: [real(r8) (:) ]  cold hardening index?                             
          cumvd       => cnveg_state_inst%cumvd_patch       , & ! Output: [real(r8) (:) ]  cumulative vernalization d?ependence?             
-         gddmaturity => cnveg_state_inst%gddmaturity_patch , & ! Output: [real(r8) (:) ]  gdd needed to harvest                             
-         huigrain    => cnveg_state_inst%huigrain_patch    , & ! Output: [real(r8) (:) ]  heat unit index needed to reach vegetative maturity
 
          vf          => crop_inst%vf_patch                   & ! Output: [real(r8) (:) ]  vernalization factor for cereal
          )
@@ -2802,9 +2795,13 @@ contains
          if (tkil >= tcrown) then
             if ((0.95_r8 - 0.02_r8 * (tcrown - tkil)**2) >= 0.02_r8) then
                write (iulog,*)  'crop damaged by cold temperatures at p,c =', p,c
-            else if (tlai(p) > 0._r8) then ! slevis: kill if past phase1
-               gddmaturity(p) = 0._r8      !         by forcing through
-               huigrain(p)    = 0._r8      !         harvest
+            else if (tlai(p) > 0._r8) then
+               ! slevis: kill if past phase1 by forcing through harvest
+               ! srabin: do this with force_harvest instead of setting
+               !         gddmaturity = huigrain = 0, since gddmaturity==0 can
+               !         lead to 0/0 when the crop isn't actually harvested based
+               !         on "maturity." This can occur when generate_crop_gdds
+               !         is true.
                force_harvest = .true.
                write (iulog,*)  '95% of crop killed by cold temperatures at p,c =', p,c
             end if

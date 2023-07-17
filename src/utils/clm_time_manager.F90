@@ -97,10 +97,11 @@ module clm_time_manager
         ref_ymd       = uninit_int,  &! reference date for time coordinate in yearmmdd format
         ref_tod       = 0             ! reference time of day for time coordinate in seconds
    type(ESMF_Calendar), target, save   :: tm_cal       ! calendar
-   type(ESMF_Clock),    save   :: tm_clock     ! model clock   
+   type(ESMF_Clock),    save   :: tm_clock     ! model clock
+   integer,             save   :: tm_clock_step_size_sec ! Cache of clock timestep.
    type(ESMF_Time),     save   :: tm_perp_date ! perpetual date
 
-   ! Data required to restart time manager:
+   ! Data required to restart time manager (only set if timemgr_restart_io is called):
    integer, save :: rst_step_sec          = uninit_int ! timestep size seconds
    integer, save :: rst_start_ymd         = uninit_int ! start date
    integer, save :: rst_start_tod         = uninit_int ! start time of day
@@ -309,6 +310,12 @@ contains
        call ESMF_ClockGet(tm_clock, currTime=current )
        call chkrc(rc, sub//': error return from ESMF_ClockGet')
     end do
+
+
+    ! Cache step size, we query it a lot.
+    call ESMF_TimeIntervalGet(step_size, s=tm_clock_step_size_sec, rc=rc)
+    call chkrc(rc, sub//': error return from ESMF_ClockTimeIntervalGet')
+
   end subroutine init_clock
 
   !=========================================================================================
@@ -696,16 +703,10 @@ contains
     ! Return the step size in seconds.
 
     character(len=*), parameter :: sub = 'clm::get_step_size'
-    type(ESMF_TimeInterval) :: step_size       ! timestep size
-    integer :: rc
 
     if ( .not. check_timemgr_initialized(sub) ) return
 
-    call ESMF_ClockGet(tm_clock, timeStep=step_size, rc=rc)
-    call chkrc(rc, sub//': error return from ESMF_ClockGet')
-
-    call ESMF_TimeIntervalGet(step_size, s=get_step_size, rc=rc)
-    call chkrc(rc, sub//': error return from ESMF_ClockTimeIntervalGet')
+    get_step_size = tm_clock_step_size_sec
 
   end function get_step_size
 
