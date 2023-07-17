@@ -2020,17 +2020,17 @@ contains
                             if (tlai(p) <= 0._r8 .and. harvest_flag(p) == 0._r8) then ! plant never emerged or died
                                croplive(p) = .false.
                                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
-                               crop_seedc_to_leaf(c)   = crop_seedc_to_leaf(c) - leafc_xfer(p)/dt
-                               crop_seedc_to_froot(c)  = crop_seedc_to_froot(c) - frootc_xfer(p)/dt
-                               crop_seedn_to_leaf(c)   = crop_seedn_to_leaf(c) - leafn_xfer(p)/dt
-                               crop_seedn_to_froot(c)  = crop_seedn_to_froot(c) - frootn_xfer(p)/dt
+                               crop_seedc_to_leaf(p)   = crop_seedc_to_leaf(p) - leafc_xfer(p)/dt
+                               crop_seedc_to_froot(p)  = crop_seedc_to_froot(p) - frootc_xfer(p)/dt
+                               crop_seedn_to_leaf(p)   = crop_seedn_to_leaf(p) - leafn_xfer(p)/dt
+                               crop_seedn_to_froot(p)  = crop_seedn_to_froot(p) - frootn_xfer(p)/dt
                                leafc_xfer(p)  = 0._r8  ! revert planting transfers
                                frootc_xfer(p) = 0._r8
                                leafn_xfer(p)  = leafc_xfer(p) / leafcn(ivt(p))
                                frootn_xfer(p) = frootc_xfer(p) / frootcn(ivt(p))
                                if (woody(ivt(p)) == 1._r8) then
-                                  crop_seedc_to_deadstem(c) = crop_seedc_to_deadstem(c) - deadstemc_xfer(p)/dt
-                                  crop_seedn_to_deadstem(c) = crop_seedn_to_deadstem(c) - deadstemn_xfer(p)/dt
+                                  crop_seedc_to_deadstem(p) = crop_seedc_to_deadstem(p) - deadstemc_xfer(p)/dt
+                                  crop_seedn_to_deadstem(p) = crop_seedn_to_deadstem(p) - deadstemn_xfer(p)/dt
                                   deadstemc_xfer(p) = 0._r8
                                   deadstemn_xfer(p) = deadstemc_xfer(p) / deadwdcn(ivt(p))
                                end if
@@ -2050,16 +2050,16 @@ contains
                                offset2_flag(p) = 1._r8
                             else      ! plant never emerged from ground
                                crop_seedc_to_leaf(p) = crop_seedc_to_leaf(p) - leafc_xfer(p)/dt
-                               crop_seedc_to_froot(c)  = crop_seedc_to_froot(c) - frootc_xfer(p)/dt
+                               crop_seedc_to_froot(p)  = crop_seedc_to_froot(p) - frootc_xfer(p)/dt
                                crop_seedn_to_leaf(p) = crop_seedn_to_leaf(p) - leafn_xfer(p)/dt
-                               crop_seedn_to_froot(c)  = crop_seedn_to_froot(c) - frootn_xfer(p)/dt
+                               crop_seedn_to_froot(p)  = crop_seedn_to_froot(p) - frootn_xfer(p)/dt
                                leafc_xfer(p) = 0._r8
                                frootc_xfer(p) = 0._r8
                                leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p))
                                frootn_xfer(p) = frootc_xfer(p) / frootcn(ivt(p))
                                if (woody(ivt(p)) == 1._r8) then
-                                  crop_seedc_to_deadstem(c) = crop_seedc_to_deadstem(c) - deadstemc_xfer(p)/dt
-                                  crop_seedn_to_deadstem(c) = crop_seedn_to_deadstem(c) - deadstemn_xfer(p)/dt
+                                  crop_seedc_to_deadstem(p) = crop_seedc_to_deadstem(p) - deadstemc_xfer(p)/dt
+                                  crop_seedn_to_deadstem(p) = crop_seedn_to_deadstem(p) - deadstemn_xfer(p)/dt
                                   deadstemc_xfer(p) = 0._r8
                                   deadstemn_xfer(p) = deadstemc_xfer(p) / deadwdcn(ivt(p))
                                end if
@@ -2094,16 +2094,16 @@ contains
                     ! code in the same time step where the planting transfer originally
                     ! occurred.
                     crop_seedc_to_leaf(p) = crop_seedc_to_leaf(p) - leafc_xfer(p)/dt
-                    crop_seedc_to_froot(c)  = crop_seedc_to_froot(c) - frootc_xfer(p)/dt
+                    crop_seedc_to_froot(p)  = crop_seedc_to_froot(p) - frootc_xfer(p)/dt
                     crop_seedn_to_leaf(p) = crop_seedn_to_leaf(p) - leafn_xfer(p)/dt
-                    crop_seedn_to_froot(c)  = crop_seedn_to_froot(c) - frootn_xfer(p)/dt
+                    crop_seedn_to_froot(p)  = crop_seedn_to_froot(p) - frootn_xfer(p)/dt
                     leafc_xfer(p) = 0._r8
                     frootc_xfer(p) = 0._r8
                     leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p))
                     frootn_xfer(p) = frootc_xfer(p) / frootcn(ivt(p))
                     if (woody(ivt(p)) == 1._r8) then
-                       crop_seedc_to_deadstem(c) = crop_seedc_to_deadstem(c) - deadstemc_xfer(p)/dt
-                       crop_seedn_to_deadstem(c) = crop_seedn_to_deadstem(c) - deadstemn_xfer(p)/dt
+                       crop_seedc_to_deadstem(p) = crop_seedc_to_deadstem(p) - deadstemc_xfer(p)/dt
+                       crop_seedn_to_deadstem(p) = crop_seedn_to_deadstem(p) - deadstemn_xfer(p)/dt
                        deadstemc_xfer(p) = 0._r8
                        deadstemn_xfer(p) = deadstemc_xfer(p) / deadwdcn(ivt(p))
                     end if
