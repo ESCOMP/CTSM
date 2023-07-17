@@ -3,15 +3,6 @@ module TillageMod
   ! !DESCRIPTION:
   ! Module for soil tillage.
   !
-  ! As described in ChangeLog:
-  !     history field name change as follows...
-  !     LITR1 becomes MET_LIT (metabolic)
-  !     LITR2 becomes CEL_LIT (cellulosic)
-  !     LITR3 becomes LIG_LIT (lignin)
-  !     SOIL1 becomes ACT_SOM (active)
-  !     SOIL2 becomes SLO_SOM (slow)
-  !     SOIL3 becomes PAS_SOM (passive)
-  !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8, CS => shr_kind_CS
   use shr_log_mod    , only : errMsg => shr_log_errMsg
