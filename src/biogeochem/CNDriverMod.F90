@@ -343,11 +343,11 @@ contains
             soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst, &
             cnveg_state_inst%idop_patch)
     else if (decomp_method == mimics_decomp) then
-       ! TODO(ssr): Add tillage to MIMICS?
        call decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
             num_soilp, filter_soilp, clm_fates, &
             soilstate_inst, temperature_inst, cnveg_carbonflux_inst, ch4_inst, &
-            soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
+            soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
+            cnveg_state_inst%idop_patch)
     end if
     call t_stopf('DecompRate')
 

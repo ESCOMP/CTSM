@@ -761,7 +761,8 @@ contains
   subroutine decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
        num_soilp, filter_soilp, clm_fates, &
        soilstate_inst, temperature_inst, cnveg_carbonflux_inst, &
-       ch4_inst, soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
+       ch4_inst, soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
+       idop)
     !
     ! !DESCRIPTION:
     ! Calculate rates and decomposition pathways for the MIMICS
@@ -774,6 +775,8 @@ contains
     use subgridAveMod    , only : p2c
     use PatchType        , only : patch
     use pftconMod        , only : pftname
+    use TillageMod       , only : get_do_tillage
+    use TillageMod       , only : get_apply_tillage_multipliers
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds          
@@ -788,6 +791,7 @@ contains
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type), intent(in)    :: soilbiogeochem_carbonstate_inst
     type(hlm_fates_interface_type)       , intent(inout) :: clm_fates
+    integer, optional                    , intent(in)    :: idop(:) ! patch day of planting
     !
     ! !LOCAL VARIABLES:
     real(r8), parameter :: eps = 1.e-6_r8
@@ -1309,6 +1313,17 @@ contains
             end if
          end do
       end do
+
+      ! Tillage
+      if (get_do_tillage()) then
+         if (.not. present(idop)) then
+            call endrun("Do not call tillage without providing idop.")
+         end if
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            call get_apply_tillage_multipliers(idop, c, decomp_k)
+         end do
+      end if
 
       ! pathfrac terms not calculated in the previous loop
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = 1.0_r8
