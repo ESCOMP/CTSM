@@ -2706,7 +2706,6 @@ contains
     use clm_varpar        , only : nlevsoi
     use pftconMod         , only : nbrdlf_dcd_tmp_shrub, npcropmin
     use ColumnType        , only : col
-    use shr_infnan_mod    , only : shr_infnan_isnan
 
     !
     ! !ARGUMENTS:
@@ -3477,6 +3476,7 @@ contains
                else
                   gsminsun = nan
                   gsminsha = nan
+                  call endrun( 'ERROR:: Photosynthesis::PhotosynthesisHydraulicStress must choose stomatalcond_mtd method' )
                end if
                call calcstress(p,c,vegwp(p,:),bsun(p),bsha(p),gb_mol(p),gsminsun, gsminsha, &
                     qsatl(p),qaf(p), atm2lnd_inst,canopystate_inst,waterdiagnosticbulk_inst, &
@@ -4064,8 +4064,8 @@ contains
     real(r8), intent(in)    :: lmr_z_sun, lmr_z_sha ! canopy layer: leaf maintenance respiration rate (umol CO2/m**2/s)
     real(r8), intent(in)    :: par_z_sun, par_z_sha ! par absorbed per unit lai for canopy layer (w/m**2)
     real(r8), intent(in)    :: rh_can               ! inside canopy relative humidity
-    real(r8), intent(out)   :: gs_mol_sun           ! sunlit leaf stomatal conductance (umol H2O/m**2/s)
-    real(r8), intent(out)   :: gs_mol_sha           ! shaded leaf stomatal conductance (umol H2O/m**2/s)
+    real(r8), intent(inout) :: gs_mol_sun           ! sunlit leaf stomatal conductance (umol H2O/m**2/s)
+    real(r8), intent(inout) :: gs_mol_sha           ! shaded leaf stomatal conductance (umol H2O/m**2/s)
     real(r8), intent(inout) :: bsun                 ! sunlit canopy transpiration wetness factor (0 to 1)
     real(r8), intent(inout) :: bsha                 ! shaded canopy transpiration wetness factor (0 to 1)
     real(r8), intent(in)    :: qsatl                ! leaf specific humidity [kg/kg]
@@ -4344,6 +4344,7 @@ contains
           gs_mol_sun = bbb(p)
        else
           gs_mol_sun = nan
+          call endrun( 'ERROR:: Photosynthesis::ci_func_PHS must choose stomatalcond_mtd method' )
        end if
        gs_mol_sun = max( bsun*gs_mol_sun, 1._r8)
        fvalsun = 0._r8  ! really tho? zqz
@@ -4355,6 +4356,7 @@ contains
           gs_mol_sha = bbb(p)
        else
           gs_mol_sha = nan
+          call endrun( 'ERROR:: Photosynthesis::ci_func_PHS must choose stomatalcond_mtd method' )
        end if
        gs_mol_sha = max( bsha*gs_mol_sha, 1._r8)
        fvalsha = 0._r8
