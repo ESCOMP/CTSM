@@ -349,33 +349,23 @@ contains
             end select
             z0qg(p) = z0hg(p)
          else                          ! use roughness over snow as in Biogeophysics1
+            if(use_z0m_snowmelt) then
+               if ( snomelt_accum(c) < 1.e-5_r8 ) then
+                  z0mg(p) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8
+               else
+                  z0mg(p) = exp(b1_param * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8)) + b4_param) * 1.e-3_r8
+               end if
+            else
+               z0mg(p) = params_inst%zsno
+            end if
+
             select case (z0param_method)
             case ('Meier2022') 
-               if(use_z0m_snowmelt) then
-                  if ( snomelt_accum(c) < 1.e-5_r8 )then
-                     z0mg(p) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8
-                  else
-                     z0mg(p) = exp(b1_param * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8)) + b4_param) * 1.e-3_r8
-                  end if
-                  
-               else
-                  z0mg(p) = params_inst%zsno
-                  
-               end if                       
                z0hg(p) = 70._r8 * nu_param / ust_lake(c) ! For initial guess assume tstar = 0
-
             case ('ZengWang2007')
-               if(use_z0m_snowmelt) then
-                  if ( snomelt_accum(c) < 1.e-5_r8 ) then
-                     z0mg(p) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8
-                  else
-                     z0mg(p) = exp(b1_param * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8)) + b4_param) * 1.e-3_r8
-                  end if
-               else
-                  z0mg(p) = params_inst%zsno
-               end if                      
                z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / nu_param)**params_inst%a_exp) ! Consistent with BareGroundFluxes
             end select
+
             z0qg(p) = z0hg(p)
          end if
 
