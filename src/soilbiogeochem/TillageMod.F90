@@ -141,7 +141,7 @@ contains
     i_slo_som = i_slo_som_in
     i_pas_som = i_pas_som_in
     i_cel_lit = i_cel_lit_in
-    if (present(i_lig_lit)) then
+    if (present(i_lig_lit_in)) then
         i_lig_lit = i_lig_lit_in
     else
         i_lig_lit = -1
@@ -296,7 +296,7 @@ contains
                     call endrun('ERROR multiple active crop patches found in this column')
                 end if
                 this_patch = p
-                call get_tillage_multipliers(tillage_mults_1patch, idop(p), i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+                call get_tillage_multipliers(tillage_mults_1patch, idop(p))
                 tillage_mults = tillage_mults + tillage_mults_1patch * patch%wtcol(p)
                 sumwt = sumwt + patch%wtcol(p)
             else
