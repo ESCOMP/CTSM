@@ -498,8 +498,8 @@ contains
             iso_cnveg_cf%crop_harvestc_to_cropprodc_patch(p) = &
                  iso_cnveg_cf%leafc_to_biofuelc_patch(p) + &
                  iso_cnveg_cf%livestemc_to_biofuelc_patch(p) + &
-                 0._r8 + &
-                 0._r8
+                 iso_cnveg_cf%leafc_to_removedresiduec_patch(p) + &
+                 iso_cnveg_cf%livestemc_to_removedresiduec_patch(p)
          end do
 
          if (use_grainproduct) then
