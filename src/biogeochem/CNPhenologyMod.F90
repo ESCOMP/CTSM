@@ -2753,6 +2753,8 @@ contains
          repr_structurec_to_litter   => cnveg_carbonflux_inst%repr_structurec_to_litter_patch,   & ! Output: [real(r8) (:,:) ] reproductive structure C to litter (gC/m2/s)
          leafc_to_biofuelc     =>    cnveg_carbonflux_inst%leafc_to_biofuelc_patch     , & ! Output: [real(r8) (:) ]  leaf C to biofuel C (gC/m2/s)
          livestemc_to_biofuelc =>    cnveg_carbonflux_inst%livestemc_to_biofuelc_patch , & ! Output: [real(r8) (:) ]  livestem C to biofuel C (gC/m2/s)
+         leafc_to_removedresiduec     => cnveg_carbonflux_inst%leafc_to_removedresiduec_patch     , & ! Output: [real(r8) (:) ]  leaf C to removed residue C (gC/m2/s)
+         livestemc_to_removedresiduec => cnveg_carbonflux_inst%livestemc_to_removedresiduec_patch , & ! Output: [real(r8) (:) ]  livestem C to removed residue C (gC/m2/s)
          leafn                 =>    cnveg_nitrogenstate_inst%leafn_patch              , & ! Input:  [real(r8) (:) ]  (gN/m2) leaf N      
          frootn                =>    cnveg_nitrogenstate_inst%frootn_patch             , & ! Input:  [real(r8) (:) ]  (gN/m2) fine root N                        
 
@@ -2763,6 +2765,8 @@ contains
          repr_structuren_to_litter   => cnveg_nitrogenflux_inst%repr_structuren_to_litter_patch,   & ! Output: [real(r8) (:,:) ] reproductive structure N to litter (gN/m2/s)
          leafn_to_biofueln     =>    cnveg_nitrogenflux_inst%leafn_to_biofueln_patch   , & ! Output: [real(r8) (:) ]  leaf N to biofuel N (gN/m2/s)
          livestemn_to_biofueln =>    cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch, & ! Output: [real(r8) (:) ]  livestem N to biofuel N (gN/m2/s)     
+         leafn_to_removedresiduen     => cnveg_nitrogenflux_inst%leafn_to_removedresiduen_patch    , & ! Output: [real(r8) (:) ]  leaf N to removed residue N (gN/m2/s)
+         livestemn_to_removedresiduen => cnveg_nitrogenflux_inst%livestemn_to_removedresiduen_patch, & ! Output: [real(r8) (:) ]  livestem N to removed residue N (gN/m2/s)     
          leafn_to_litter       =>    cnveg_nitrogenflux_inst%leafn_to_litter_patch     , & ! Output: [real(r8) (:) ]  leaf N litterfall (gN/m2/s)                       
          leafn_to_retransn     =>    cnveg_nitrogenflux_inst%leafn_to_retransn_patch   , & ! Input: [real(r8) (:) ]  leaf N to retranslocated N pool (gN/m2/s)         
          free_retransn_to_npool=>    cnveg_nitrogenflux_inst%free_retransn_to_npool_patch  , & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
