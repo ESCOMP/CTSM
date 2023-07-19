@@ -510,6 +510,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_luna phys="clm5_0"  >.true.</use_luna>
 <use_luna phys="clm5_0"  use_fates=".true." >.false.</use_luna>
 <use_luna phys="clm4_5"  >.false.</use_luna>
+<use_luna phys="clm4_5"  use_fates=".true." >.false.</use_luna>
 
 <!-- Flexible CN options -->
 <MM_Nuptake_opt             use_flexibleCN=".true." >.true.</MM_Nuptake_opt>

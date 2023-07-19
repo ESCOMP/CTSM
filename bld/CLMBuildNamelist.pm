@@ -3307,6 +3307,12 @@ sub setup_logic_luna {
                  'use_cn'=>$nl_flags->{'use_cn'} );
   }
   $nl_flags->{'use_luna'} = $nl->get_value('use_luna');
+
+  # LUNA can NOT be on with FATES
+  if ( &value_is_true( $nl_flags->{'use_luna'} ) && &value_is_true( $nl_flags->{'use_fates'} )) {
+     $log->fatal_error("Cannot turn use_luna to true when bgc=fates" );
+  }
+
   my $vcmax_opt= $nl->get_value('vcmax_opt');
   # lnc_opt only applies if luna is on or for vcmax_opt=3/4
   if ( &value_is_true( $nl_flags->{'use_luna'} ) || $vcmax_opt == 3 || $vcmax_opt == 4 ) {
