@@ -3620,13 +3620,13 @@ ptch: do fp = 1,num_soilp
           cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) = &
                cnveg_carbonflux_inst%leafc_to_biofuelc_patch(p) + &
                cnveg_carbonflux_inst%livestemc_to_biofuelc_patch(p) + &
-               0._r8 + &
-               0._r8
+               cnveg_carbonflux_inst%leafc_to_removedresiduec_patch(p) + &
+               cnveg_carbonflux_inst%livestemc_to_removedresiduec_patch(p)
           cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) = &
                cnveg_nitrogenflux_inst%leafn_to_biofueln_patch(p) + &
                cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch(p) + &
-               0._r8 + &
-               0._r8
+               cnveg_nitrogenflux_inst%leafn_to_removedresiduen_patch(p) + &
+               cnveg_nitrogenflux_inst%livestemn_to_removedresiduen_patch(p)
        end do
 
        if (use_grainproduct) then
