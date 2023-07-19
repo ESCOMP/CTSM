@@ -477,8 +477,7 @@ contains
     fl  = 0
     fnl = 0
     do p = bounds%begp,bounds%endp
-       if(.not.use_fates)then
-       if ((patch%active(p) .or. include_inactive)) then
+       if (patch%active(p) .or. include_inactive) then
           if (patch%itype(p) >= npcropmin) then !skips 2 generic crop types
              fl = fl + 1
              this_filter(nc)%pcropp(fl) = p
@@ -490,7 +489,6 @@ contains
              end if
           end if
        end if
-    end if
     end do
     this_filter(nc)%num_pcropp   = fl
     this_filter(nc)%num_soilnopcropp = fnl   ! This wasn't being set before...
