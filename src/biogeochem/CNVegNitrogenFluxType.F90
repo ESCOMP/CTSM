@@ -136,6 +136,8 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: repr_structuren_to_litter_patch         (:,:)     ! patch reproductive structure N to litter for prognostic crop (gN/m2/s) [patch, repr_structure_min:repr_structure_max]
      real(r8), pointer :: leafn_to_biofueln_patch                   (:)     ! patch leaf N to biofuel N (gN/m2/s)
      real(r8), pointer :: livestemn_to_biofueln_patch               (:)     ! patch livestem N to biofuel N (gN/m2/s)
+     real(r8), pointer :: leafn_to_removedresiduen_patch            (:)     ! patch leaf N to removed residue N (gN/m2/s)
+     real(r8), pointer :: livestemn_to_removedresiduen_patch        (:)     ! patch livestem N to removed residue N (gN/m2/s)
      real(r8), pointer :: repr_grainn_to_seed_patch               (:,:)     ! patch grain N to seed for prognostic crop (gN/m2/s) [patch, repr_grain_min:repr_grain_max]
      real(r8), pointer :: leafn_to_litter_patch                     (:)     ! patch leaf N litterfall (gN/m2/s)
      real(r8), pointer :: leafn_to_retransn_patch                   (:)     ! patch leaf N to retranslocated N pool (gN/m2/s)
@@ -471,6 +473,8 @@ contains
     this%repr_structuren_to_litter_patch(:,:) = nan
     allocate(this%leafn_to_biofueln_patch                   (begp:endp)) ; this%leafn_to_biofueln_patch                   (:) = nan
     allocate(this%livestemn_to_biofueln_patch               (begp:endp)) ; this%livestemn_to_biofueln_patch               (:) = nan
+    allocate(this%leafn_to_removedresiduen_patch            (begp:endp)) ; this%leafn_to_removedresiduen_patch            (:) = nan
+    allocate(this%livestemn_to_removedresiduen_patch        (begp:endp)) ; this%livestemn_to_removedresiduen_patch        (:) = nan
     allocate(this%repr_grainn_to_seed_patch(begp:endp, repr_grain_min:repr_grain_max)) ; this%repr_grainn_to_seed_patch (:,:) = nan
     allocate(this%reproductiven_xfer_to_reproductiven_patch(begp:endp, nrepr))
     this%reproductiven_xfer_to_reproductiven_patch(:,:) = nan
@@ -1825,6 +1829,8 @@ contains
           this%livestemn_to_litter_patch(i)              = value_patch
           this%leafn_to_biofueln_patch(i)                = value_patch
           this%livestemn_to_biofueln_patch(i)            = value_patch
+          this%leafn_to_removedresiduen_patch(i)         = value_patch
+          this%livestemn_to_removedresiduen_patch(i)     = value_patch
           this%soyfixn_patch(i)                          = value_patch
           this%frootn_to_retransn_patch(i)               = value_patch
        end do
