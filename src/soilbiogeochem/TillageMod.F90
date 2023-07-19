@@ -16,7 +16,7 @@ module TillageMod
   private
   ! !PUBLIC MEMBER PROCEDURES
   public :: tillage_init
-  public :: tillage_init_century
+  public :: tillage_init_decompcascade
   public :: get_do_tillage
   public :: get_apply_tillage_multipliers
   ! !PUBLIC DATA MEMBERS
@@ -28,7 +28,13 @@ module TillageMod
   logical  :: use_original_tillage ! Use get_tillage_multipliers_orig?
   real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, nphases)
   integer, parameter :: nphases = 3 ! How many different tillage phases are there? (Not including all-1 phases.)
-
+  ! Indices for soil organic matter pools
+  integer  :: i_act_som  ! MIMICS: i_avl_som
+  integer  :: i_slo_som  ! MIMICS: i_chem_som
+  integer  :: i_pas_som  ! MIMICS: i_phys_som
+  ! Indices for litter pools
+  integer  :: i_cel_lit  ! MIMICS: i_str_lit
+  integer  :: i_lig_lit  ! MIMICS: none (just the one structural litter pool)
 
 !==============================================================================
 contains
@@ -103,18 +109,25 @@ contains
   end subroutine tillage_init
 
 
-  subroutine tillage_init_century(i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+  subroutine tillage_init_decompcascade(i_act_som_in, i_slo_som_in, i_pas_som_in, i_cel_lit_in, i_lig_lit_in)
     ! !DESCRIPTION:
     !
-    ! Allocate multiplier arrays to be used in tillage. Call during initialization of CENTURY decomposition.
+    ! Allocate multiplier arrays to be used in tillage. Call during initialization of CENTURY or MIMICS decomposition.
     ! Written by Sam Rabin.
     !
     ! !USES
     use pftconMod , only : npcropmin
     !
     ! !ARGUMENTS:
-    integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
-    integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
+    ! All soil pool indices use CENTURY index names. Comments indicate corresponding MIMICS names, if any.
+    !
+    ! Indices for soil organic matter pools
+    integer          , intent(in) :: i_act_som_in
+    integer          , intent(in) :: i_slo_som_in
+    integer          , intent(in) :: i_pas_som_in
+    ! Indices for structural litter pools
+    integer          , intent(in) :: i_cel_lit_in
+    integer, optional, intent(in) :: i_lig_lit_in  ! Do not specify for MIMICS
 
     if (.not. get_do_tillage()) then
         return
@@ -123,24 +136,39 @@ contains
     ! Allocate tillage multipliers
     allocate(tillage_mults_allphases(ndecomp_pools, nphases)); tillage_mults_allphases(:,:) = 1.0_r8
 
+    ! Save soil pool indices
+    i_act_som = i_act_som_in
+    i_slo_som = i_slo_som_in
+    i_pas_som = i_pas_som_in
+    i_cel_lit = i_cel_lit_in
+    if (present(i_lig_lit_in)) then
+        i_lig_lit = i_lig_lit_in
+    else
+        i_lig_lit = -1
+    end if
+
     ! Fill tillage_mults_allphases
     if (do_tillage_low) then
         tillage_mults_allphases(i_act_som,:) = (/ 1.0_r8, 1.0_r8, 1.0_r8 /)
         tillage_mults_allphases(i_slo_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
         tillage_mults_allphases(i_pas_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
         tillage_mults_allphases(i_cel_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
-        tillage_mults_allphases(i_lig_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
+        if (i_lig_lit > 0) then
+            tillage_mults_allphases(i_lig_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
+        end if
     else if (do_tillage_high) then
         tillage_mults_allphases(i_act_som,:) = (/ 1.2_r8, 1.0_r8, 1.0_r8 /)
         tillage_mults_allphases(i_slo_som,:) = (/ 4.8_r8, 3.5_r8, 2.5_r8 /)
         tillage_mults_allphases(i_pas_som,:) = (/ 4.8_r8, 3.5_r8, 2.5_r8 /)
         tillage_mults_allphases(i_cel_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
-        tillage_mults_allphases(i_lig_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
+        if (i_lig_lit > 0) then
+            tillage_mults_allphases(i_lig_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
+        end if
     else
-        call endrun('ERROR Unrecognized tillage setting in tillage_init_century()')
+        call endrun('ERROR Unrecognized tillage setting in tillage_init_decompcascade()')
     end if
 
-  end subroutine tillage_init_century
+  end subroutine tillage_init_decompcascade
 
 
   function get_do_tillage()
@@ -149,7 +177,7 @@ contains
   end function get_do_tillage
 
 
-  subroutine get_tillage_multipliers(tillage_mults, idop, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+  subroutine get_tillage_multipliers(tillage_mults, idop)
     ! !DESCRIPTION:
     !
     !  Get the cultivation effective multiplier if prognostic crops are on and
@@ -167,8 +195,6 @@ contains
     ! !ARGUMENTS:
     real(r8)         , intent(inout) :: tillage_mults(:) ! tillage multipliers for this patch
     integer          , intent(in) :: idop    ! patch day of planting
-    integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
-    integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
     !
     ! !LOCAL VARIABLES:
     !
@@ -228,7 +254,7 @@ contains
   end subroutine get_tillage_multipliers
 
 
-  subroutine get_apply_tillage_multipliers(idop, c, decomp_k, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+  subroutine get_apply_tillage_multipliers(idop, c, decomp_k)
     ! !DESCRIPTION:
     !
     ! Multiply decomposition rate constants by tillage coefficients.
@@ -242,8 +268,6 @@ contains
     integer       , intent(in) :: idop(:) ! patch day of planting
     integer       , intent(in) :: c       ! index of column this is being called for
     real(r8), dimension(:,:,:), intent(inout) :: decomp_k ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
-    integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
-    integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
     !
     ! !LOCAL VARIABLES
     integer :: p, this_patch, j, n_noncrop
@@ -272,7 +296,7 @@ contains
                     call endrun('ERROR multiple active crop patches found in this column')
                 end if
                 this_patch = p
-                call get_tillage_multipliers(tillage_mults_1patch, idop(p), i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+                call get_tillage_multipliers(tillage_mults_1patch, idop(p))
                 tillage_mults = tillage_mults + tillage_mults_1patch * patch%wtcol(p)
                 sumwt = sumwt + patch%wtcol(p)
             else
