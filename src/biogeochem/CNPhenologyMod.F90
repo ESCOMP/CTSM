@@ -2784,9 +2784,6 @@ contains
                t1 = 1.0_r8 / dt
                frootc_to_litter(p) = t1 * frootc(p) + cpool_to_frootc(p)
                
-               ! biofuel_harvfrac is only non-zero for prognostic crops.
-               leafc_to_litter(p)  = t1 * leafc(p)*(1._r8-biofuel_harvfrac(ivt(p)))  + cpool_to_leafc(p)
-
                ! leafc_litter and frootc_to_litter for matrix
                if (use_matrixcn) then
                else
@@ -2847,6 +2844,8 @@ contains
                   livestemc_to_litter(p)   = t1 * livestemc(p)*(1._r8-biofuel_harvfrac(ivt(p)))  + cpool_to_livestemc(p)
                   livestemc_to_biofuelc(p) = t1 * livestemc(p) * biofuel_harvfrac(ivt(p))
                   livestemn_to_biofueln(p) = t1 * livestemn(p) * biofuel_harvfrac(ivt(p))
+
+                  leafc_to_litter(p)  = t1 * leafc(p)*(1._r8-biofuel_harvfrac(ivt(p)))  + cpool_to_leafc(p)
 
                   ! Matrix for grain, livestem to litter and biofuel
                   if(use_matrixcn)then
