@@ -2709,6 +2709,7 @@ contains
     real(r8) :: cropseedn_deficit_remaining  ! remaining amount of crop seed N deficit that still needs to be restored (gN/m2) (positive, in contrast to the negative cropseedn_deficit)
     real(r8) :: cropseedc_deficit_to_restore ! amount of crop seed C deficit that will be restored from this grain pool (gC/m2)
     real(r8) :: cropseedn_deficit_to_restore ! amount of crop seed N deficit that will be restored from this grain pool (gN/m2)
+    real(r8) :: leafc_remaining
     !-----------------------------------------------------------------------
 
     associate(                                                                           & 
@@ -2837,6 +2838,7 @@ contains
                   ! Cut a certain fraction (i.e., biofuel_harvfrac(ivt(p))) (e.g., biofuel_harvfrac(ivt(p)=70% for bioenergy crops) of leaf C
                   ! and move this fration of leaf C to biofuel C, rather than move it to litter
                   leafc_to_biofuelc(p) = t1 * leafc(p) * biofuel_harvfrac(ivt(p))
+                  leafc_remaining = leafc(p)*(1._r8-biofuel_harvfrac(ivt(p)))
                   leafn_to_biofueln(p) = t1 * leafn(p) * biofuel_harvfrac(ivt(p))
 
                   ! Cut a certain fraction (i.e., biofuel_harvfrac(ivt(p))) (e.g., biofuel_harvfrac(ivt(p)=70% for bioenergy crops) of livestem C
@@ -2845,7 +2847,7 @@ contains
                   livestemc_to_biofuelc(p) = t1 * livestemc(p) * biofuel_harvfrac(ivt(p))
                   livestemn_to_biofueln(p) = t1 * livestemn(p) * biofuel_harvfrac(ivt(p))
 
-                  leafc_to_litter(p)  = t1 * leafc(p)*(1._r8-biofuel_harvfrac(ivt(p)))  + cpool_to_leafc(p)
+                  leafc_to_litter(p)  = t1 * leafc_remaining  + cpool_to_leafc(p)
 
                   ! Matrix for grain, livestem to litter and biofuel
                   if(use_matrixcn)then
