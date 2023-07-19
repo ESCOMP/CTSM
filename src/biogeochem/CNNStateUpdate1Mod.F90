@@ -257,8 +257,10 @@ contains
                ns_veg%frootn_patch(p)       = ns_veg%frootn_patch(p)     - nf_veg%frootn_to_retransn_patch(p)*dt
                ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%frootn_to_retransn_patch(p)*dt
                ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_litter_patch(p)*dt
-               ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_biofueln_patch(p)*dt
-               ns_veg%leafn_patch(p)        = ns_veg%leafn_patch(p)      - nf_veg%leafn_to_biofueln_patch(p)*dt
+               ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - &
+                  (nf_veg%livestemn_to_biofueln_patch(p) + 0._r8)*dt
+               ns_veg%leafn_patch(p)        = ns_veg%leafn_patch(p)      - &
+                  (nf_veg%leafn_to_biofueln_patch(p) + 0._r8)*dt
                ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_retransn_patch(p)*dt
                ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livestemn_to_retransn_patch(p)*dt
             !
