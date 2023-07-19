@@ -90,12 +90,7 @@ Changes answers relative to baseline: YES for Clm45BgcCrop compsets only
   Summarize any changes to answers, i.e.,
     - what code configurations: Clm45BgcCrop
     - what platforms/compilers: Cheyenne intel and gnu, Izumi intel and nag
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): ???
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-
-      ???
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff
 
    5 tests in aux_clm showed true DIFFs (i.e., not just field list differences / new output files):
      - SMS_D_Ly6_Mmpi-serial.1x1_smallvilleIA.IHistClm45BgcCropQianRs.izumi_intel.clm-cropMonthOutput
