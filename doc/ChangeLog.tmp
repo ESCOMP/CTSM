@@ -43,7 +43,7 @@ Notes of particular relevance for users
 ---------------------------------------
 
 Caveats for users:
-    Untested:
+    Untested but theoretically possible:
     * Time-varying inputs
     * Running at any resolution other than one matching the crop calendar inputs
 
