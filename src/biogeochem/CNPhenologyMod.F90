@@ -2709,8 +2709,8 @@ contains
     real(r8) :: cropseedn_deficit_remaining  ! remaining amount of crop seed N deficit that still needs to be restored (gN/m2) (positive, in contrast to the negative cropseedn_deficit)
     real(r8) :: cropseedc_deficit_to_restore ! amount of crop seed C deficit that will be restored from this grain pool (gC/m2)
     real(r8) :: cropseedn_deficit_to_restore ! amount of crop seed N deficit that will be restored from this grain pool (gN/m2)
-    real(r8) :: leafc_remaining
-    real(r8) :: livestemc_remaining
+    real(r8) :: leafc_remaining, livestemc_remaining
+    real(r8) :: leafn_remaining, livestemn_remaining
     !-----------------------------------------------------------------------
 
     associate(                                                                           & 
@@ -2847,6 +2847,7 @@ contains
                   livestemc_to_biofuelc(p) = t1 * livestemc(p) * biofuel_harvfrac(ivt(p))
                   livestemn_to_biofueln(p) = t1 * livestemn(p) * biofuel_harvfrac(ivt(p))
                   livestemc_remaining = livestemc(p)*(1._r8-biofuel_harvfrac(ivt(p)))
+                  livestemn_remaining = livestemn(p)*(1._r8-biofuel_harvfrac(ivt(p)))
 
                   leafc_to_litter(p)  = t1 * leafc_remaining  + cpool_to_leafc(p)
                   livestemc_to_litter(p)   = t1 * livestemc_remaining  + cpool_to_livestemc(p)
