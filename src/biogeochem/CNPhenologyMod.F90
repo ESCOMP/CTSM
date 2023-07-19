@@ -2781,7 +2781,7 @@ contains
       ! The litterfall transfer rate starts at 0.0 and increases linearly
       ! over time, with displayed growth going to 0.0 on the last day of litterfall
 
-      removedresidue_fraction = 0._r8
+      removedresidue_fraction = 0.5_r8
       
       do fp = 1,num_soilp
          p = filter_soilp(fp)
