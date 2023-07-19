@@ -280,7 +280,7 @@ contains
          use_lch4, use_nitrif_denitrif, use_extralakelayers, &
          use_vichydro, use_cn, use_cndv, use_crop, use_fertilizer, o3_veg_stress_method, &
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
-         use_nguardrail
+         use_nguardrail, remove_crop_residues
 
 
     ! ----------------------------------------------------------------------
@@ -630,6 +630,7 @@ contains
     call mpi_bcast (use_crop, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fertilizer, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_grainproduct, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (remove_crop_residues, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (o3_veg_stress_method, len(o3_veg_stress_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (use_snicar_frc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vancouver, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -872,6 +873,7 @@ contains
     write(iulog,*) '    use_crop = ', use_crop
     write(iulog,*) '    use_fertilizer = ', use_fertilizer
     write(iulog,*) '    use_grainproduct = ', use_grainproduct
+    write(iulog,*) '    remove_crop_residues = ', remove_crop_residues
     write(iulog,*) '    o3_veg_stress_method = ', o3_veg_stress_method
     write(iulog,*) '    use_snicar_frc = ', use_snicar_frc
     write(iulog,*) '    use_vancouver = ', use_vancouver

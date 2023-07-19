@@ -157,6 +157,9 @@ module clm_varctl
 
   ! set saturated excess runoff to zero for crops
   logical, public :: crop_fsat_equals_zero = .false.
+
+  ! remove crop residues to a 1-year product pool (instead of going to litter)
+  logical, public :: remove_crop_residues = .false.
   
   !----------------------------------------------------------
   ! Other subgrid logic

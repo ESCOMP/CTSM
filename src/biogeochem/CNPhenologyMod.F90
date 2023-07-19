@@ -2686,7 +2686,7 @@ contains
     use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
     
     use CNSharedParamsMod, only : use_fun
-    use clm_varctl       , only : CNratio_floating    
+    use clm_varctl       , only : CNratio_floating, remove_crop_residues
     !
     ! !ARGUMENTS:
     integer                       , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -2781,7 +2781,11 @@ contains
       ! The litterfall transfer rate starts at 0.0 and increases linearly
       ! over time, with displayed growth going to 0.0 on the last day of litterfall
 
-      removedresidue_fraction = 0.5_r8
+      if (remove_crop_residues) then
+         removedresidue_fraction = 0.5_r8
+      else
+         removedresidue_fraction = 0.0_r8
+      end if
       
       do fp = 1,num_soilp
          p = filter_soilp(fp)
