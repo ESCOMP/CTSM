@@ -3099,7 +3099,7 @@ contains
                      repr_grainc_to_food_thispool = cpool_to_reproductivec(p,k) - repr_grainc_to_seed(p,k)
                      repr_grainc_to_food(p,k) = t1 * reproductivec(p,k) &
                           + repr_grainc_to_food_thispool
-                     if (reproductivec(p,k) + repr_grainc_to_food_thispool * dt .gt. 0) then
+                     if (reproductivec(p,k) + repr_grainc_to_food_thispool * dt > 0._r8) then
                          repr_grainc_to_food_perharv(p,h,k) = reproductivec(p,k) &
                              + repr_grainc_to_food_thispool * dt
                          repr_grainc_to_food_thisyr(p,k) = repr_grainc_to_food_thisyr(p,k) &
