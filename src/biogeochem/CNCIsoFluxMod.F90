@@ -497,7 +497,9 @@ contains
             p = filter_soilp(fp)
             iso_cnveg_cf%crop_harvestc_to_cropprodc_patch(p) = &
                  iso_cnveg_cf%leafc_to_biofuelc_patch(p) + &
-                 iso_cnveg_cf%livestemc_to_biofuelc_patch(p)
+                 iso_cnveg_cf%livestemc_to_biofuelc_patch(p) + &
+                 0._r8 + &
+                 0._r8
          end do
 
          if (use_grainproduct) then
