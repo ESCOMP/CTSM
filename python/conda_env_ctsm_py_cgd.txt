@@ -1,0 +1,25 @@
+# NOTE: This version is just for cgd.ucar.edu systems, where conda limits python to version 3.7.0
+#       See issue https://github.com/ESCOMP/CTSM/issues/1792
+#
+#       This should be coordinated with the main python environment file!
+#
+# To install this on cheyenne with conda loaded in modules
+# use the top level bash script:
+# ../py_env_create                                           # Do this each time you update your CTSM Version
+# conda activate ctsm_pylib                                  # Do this anytime you want to run a CTSM python script
+# Or the individual conda commands:
+# conda create  -n ctsm_pylib                                # Do this one time for each machine
+# conda install -n ctsm_pylib --file conda_env_ctsm_py.txt   # Do this each time you update your CTSM Version
+# conda activate ctsm_pylib                                  # Do this anytime you want to run a CTSM python script
+#
+python=3.7.0     # The python version MUST match the python version available on CGD systems through modules exactly
+pandas
+tqdm
+scipy
+netcdf4
+requests
+packaging
+numpy=1.18.5
+xarray=0.17.0
+pylint=2.8.3
+black=22.3.0       # NOTE: The version here needs to be coordinated with the black github action under ../.github/workflows

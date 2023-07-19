@@ -16,7 +16,7 @@
   <description modifier_mode="1">
     <desc lnd="CLM45[%SP][%SP-VIC][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                  >clm4.5:</desc>
     <desc lnd="CLM50[%SP][%SP-VIC][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP][%NWP-BGC-CROP]">clm5.0:</desc>
-    <desc lnd="CLM51[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%NWP-SP][%NWP-BGC-CROP]">clm5.1:</desc>
+    <desc lnd="CLM51[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%FATES-SP][%NWP-SP][%NWP-BGC-CROP]">clm5.1:</desc>
     <desc option="SP"              >Satellite phenology:</desc>
 
     <desc option="SP-VIC"          >Satellite phenology with VIC hydrology:</desc>
@@ -24,7 +24,8 @@
     <desc option="BGC"             >BGC (vert. resol. CN and methane):</desc>
     <desc option="BGC-CROP"        >BGC (vert. resol. CN and methane) with prognostic crop:</desc>
     <desc option="BGC-NOANTHRO"    >BGC (vert. resol. CN and methane) without anthropomorphic influences:</desc>
-    <desc option="FATES"           >FATES (Functionally Assembled Terrestrial Ecosystem Simulator) Ecosystem Demography model: (experimental)</desc>
+    <desc option="FATES"           >FATES (Functionally Assembled Terrestrial Ecosystem Simulator) Ecosystem Demography model: </desc>
+    <desc option="FATES-SP"        >Satellite phenology with FATES (Functionally Assembled Terrestrial Ecosystem Simulator) Ecosystem Demography model: </desc>
     <desc option="BGCDV"           >BGC (vert. resol. CN and methane) with dynamic vegetation:</desc>
     <desc option="BGCDV-CROP"      >BGC (vert. resol. CN and methane) with dynamic vegetation and prognostic crop:</desc>
     <desc option="BGC-CROP-CMIP6DECK">BGC (vert. resol. CN and methane) with prognostic crop, with modifications appropriate for CMIP6 DECK experiments:</desc>
@@ -68,10 +69,12 @@
       <value compset="DATM%CRUv7.+_CLM45" >clm4_5_CRUv7</value>
       <value compset="DATM%GSWP3.+_CLM45" >clm4_5_GSWP3v1</value>
       <value compset="CAM.+_CLM45"        >clm4_5_cam6.0</value>
+      <value compset="DATM%CPLHIST.*_CLM45" >clm4_5_cam6.0</value>
       <value compset=             "CLM50" >clm5_0_CRUv7</value>
       <value compset="DATM%CRUv7.+_CLM50" >clm5_0_CRUv7</value>
       <value compset="DATM%GSWP3.+_CLM50" >clm5_0_GSWP3v1</value>
       <value compset="CAM.+_CLM50"        >clm5_0_cam6.0</value>
+      <value compset="DATM%CPLHIST.*_CLM50" >clm5_0_cam6.0</value>
       <value compset=            "_CLM51" >clm5_1_GSWP3v1</value>
     </values>
   </entry>
@@ -169,6 +172,7 @@
       <value compset="_CLM[^_]*BGC"       >-bgc bgc</value>
       <value compset="_CLM[^_]*BGC-CROP"  >-bgc bgc -crop</value>
       <value compset="_CLM[^_]*FATES"     >-bgc fates -no-megan</value>
+      <value compset="_CLM[^_]*FATES-SP"  >-bgc fates -no-megan</value>
 
       <!-- Options specific for CLM4.5 -->
       <value compset="_CLM45%[^_]*BGCDV"	 >-bgc bgc -dynamic_vegetation</value>
@@ -237,10 +241,25 @@
     <default_value>UNSET</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Dataset name for user-created datasets. This is used as the argument
-      in Buildconf/clm.buildnml to build-namelist -clm_usr_name. An example of
-      such a dataset would be 1x1pt_boulderCO_c090722. The default value is UNSET.
-      This is an advanced flag and should only be used by expert users.</desc>
+    <desc>Resolution name for user-created resolutions. This is especially used
+      for single point and regional resolutions created via subset_data from
+      the global datasets. This should be set when you use CLM_USRDAT as the grid
+      to create_newcase.  The default value is UNSET.
+      For NEON cases, this can be set to either NEON or NEON.PRISM, the latter of which would
+      use PRISM precipitation instead of the default NEON precipitation. NEON cases then also
+      use the variable NEONSITE to specify the exact site.</desc>
+  </entry>
+
+  <entry id="CLM_USRDAT_DIR">
+    <type>char</type>
+    <default_value>UNSET</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Directory name for user-created surface, landuse, and datm datasets.
+      This is used as an argument in user_mods namelists (e.g. user_nl_clm,
+      user_nl_datm_streams) generated with the subset_data script. Users
+      should modify this variable (in shell_commands or elsewhere) to set the
+      location of user-created data. The default value is UNSET.</desc>
   </entry>
 
   <entry id="CLM_FORCE_COLDSTART">
@@ -262,6 +281,7 @@
     <default_value></default_value>
     <values match="last">
       <value                  compset="_CLM50%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_deck</value>
+      <value                  compset="_CLM51%[^_]*FATES-SP[%_]"      >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/fates_sp</value>
       <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_nociso_deck</value>
       <value                  compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_deck</value>
       <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_nociso_deck</value>
@@ -271,19 +291,49 @@
     <desc>User mods to apply to specific compset matches. </desc>
   </entry>
 
-  <entry id="NEONSITE">                                                                                    
+  <entry id="NEONSITE">
     <type>char</type>
-    <valid_values>                                                                                      
+    <!-- NOTE: Be sure to have a comma at the last site-name - otherwise there will be issues see CTSM github issue #1901 -->
+    <valid_values>
       ABBY,BLAN,CPER,DEJU,GRSM,HEAL,KONA,LENO,NIWO,ONAQ,PUUM,SERC,SRER,TALL,TREE,WOOD,
       BARR,BONA,DCFS,DELA,GUAN,JERC,KONZ,MLBS,NOGP,ORNL,RMNP,SJER,STEI,TEAK,UKFS,WREF,
-      BART,CLBJ,DSNY,HARV,JORN,LAJA,MOAB,OAES,OSBS,SCBI,SOAP,STER,TOOL,UNDE,YELL
-    </valid_values>                                                                                        
-    <default_value/>                                                                                       
-    <group>run_component_ctsm</group>                                                                      
-    <file>env_run.xml</file>                                                                               
-    <desc>Name of site for NEON tower data</desc>                                                          
-  </entry>                                                                                                 
-                   
+      BART,CLBJ,DSNY,HARV,JORN,LAJA,MOAB,OAES,OSBS,SCBI,SOAP,STER,TOOL,UNDE,YELL,
+      NEON_PRECIP.ABBY,NEON_PRECIP.BLAN,NEON_PRECIP.CPER,NEON_PRECIP.DEJU,NEON_PRECIP.GRSM,
+      NEON_PRECIP.HEAL,NEON_PRECIP.KONA,NEON_PRECIP.LENO,NEON_PRECIP.NIWO,NEON_PRECIP.ONAQ,
+      NEON_PRECIP.PUUM,NEON_PRECIP.SERC,NEON_PRECIP.SRER,NEON_PRECIP.TALL,NEON_PRECIP.TREE,
+      NEON_PRECIP.WOOD,NEON_PRECIP.BARR,NEON_PRECIP.BONA,NEON_PRECIP.DCFS,NEON_PRECIP.DELA,
+      NEON_PRECIP.GUAN,NEON_PRECIP.JERC,NEON_PRECIP.KONZ,NEON_PRECIP.MLBS,NEON_PRECIP.NOGP,
+      NEON_PRECIP.ORNL,NEON_PRECIP.RMNP,NEON_PRECIP.SJER,NEON_PRECIP.STEI,NEON_PRECIP.TEAK,
+      NEON_PRECIP.UKFS,NEON_PRECIP.WREF,NEON_PRECIP.BART,NEON_PRECIP.CLBJ,NEON_PRECIP.DSNY,
+      NEON_PRECIP.HARV,NEON_PRECIP.JORN,NEON_PRECIP.LAJA,NEON_PRECIP.MOAB,NEON_PRECIP.OAES,
+      NEON_PRECIP.OSBS,NEON_PRECIP.SCBI,NEON_PRECIP.SOAP,NEON_PRECIP.STER,NEON_PRECIP.TOOL,
+      NEON_PRECIP.UNDE,NEON_PRECIP.YELL,
+      PRISM_PRECIP.ABBY,PRISM_PRECIP.BLAN,PRISM_PRECIP.CPER,PRISM_PRECIP.GRSM,
+      PRISM_PRECIP.KONA,PRISM_PRECIP.LENO,PRISM_PRECIP.NIWO,PRISM_PRECIP.ONAQ,
+      PRISM_PRECIP.SERC,PRISM_PRECIP.SRER,PRISM_PRECIP.TALL,PRISM_PRECIP.TREE,
+      PRISM_PRECIP.WOOD,PRISM_PRECIP.DCFS,PRISM_PRECIP.DELA,PRISM_PRECIP.JERC,
+      PRISM_PRECIP.KONZ,PRISM_PRECIP.MLBS,PRISM_PRECIP.NOGP,PRISM_PRECIP.ORNL,
+      PRISM_PRECIP.RMNP,PRISM_PRECIP.SJER,PRISM_PRECIP.STEI,PRISM_PRECIP.TEAK,
+      PRISM_PRECIP.UKFS,PRISM_PRECIP.WREF,PRISM_PRECIP.BART,PRISM_PRECIP.CLBJ,
+      PRISM_PRECIP.DSNY,PRISM_PRECIP.HARV,PRISM_PRECIP.JORN,PRISM_PRECIP.MOAB,
+      PRISM_PRECIP.OAES,PRISM_PRECIP.OSBS,PRISM_PRECIP.SCBI,PRISM_PRECIP.SOAP,
+      PRISM_PRECIP.STER,PRISM_PRECIP.UNDE,PRISM_PRECIP.YELL,
+    </valid_values>
+    <default_value/>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Name of site for NEON tower data</desc>
+  </entry>
+
+  <entry id="NEONVERSION">
+    <type>char</type>
+    <valid_values>v1,v2,v3,latest</valid_values>
+    <default_value>latest</default_value>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Version id of Neon data</desc>
+  </entry>
+
 <help>
     =========================================
     CLM naming conventions

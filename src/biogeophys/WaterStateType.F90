@@ -14,7 +14,7 @@ module WaterStateType
   use decompMod      , only : bounds_type
   use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_gridcell
   use clm_varctl     , only : use_bedrock, iulog
-  use clm_varctl     , only : use_fates_planthydro
+  use clm_varctl     , only : use_fates
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevmaxurbgrnd, nlevsno   
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
@@ -348,7 +348,7 @@ contains
                   if (j > nbedrock) then
                      this%h2osoi_vol_col(c,j) = 0.0_r8
                   else
-                     if(use_fates_planthydro) then
+                     if(use_fates) then
                          this%h2osoi_vol_col(c,j) = 0.75_r8*watsat_col(c,j)*ratio
                      else
                          this%h2osoi_vol_col(c,j) = 0.15_r8*ratio
@@ -554,7 +554,7 @@ contains
     end if
 
     call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('H2OSNO_NO_LAYERS:H2OSNO'), &
+         varname=this%info%fname('H2OSNO_NO_LAYERS')//':'//this%info%fname('H2OSNO'), &
          xtype=ncd_double,  &
          dim1name='column', &
          long_name=this%info%lname('snow that is not resolved into layers'), &

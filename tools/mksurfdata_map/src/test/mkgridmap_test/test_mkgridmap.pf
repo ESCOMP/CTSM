@@ -2,7 +2,7 @@ module test_mkgridmap
 
   ! Tests of mkgridmapMod
 
-  use pfunit_mod
+  use funit
   use mkgridmapMod
   use shr_kind_mod , only : r8 => shr_kind_r8
 

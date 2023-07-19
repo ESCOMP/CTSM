@@ -22,8 +22,16 @@ PYLINT=pylint
 PYLINT_ARGS=-j 4 --rcfile=ctsm/.pylintrc
 PYLINT_SRC = \
 	ctsm
+#  NOTE: These don't pass pylint checking and should be added when we put into effort to get them to pass
+#       ../cime_config/SystemTests \
+#       ../cime_config/buildlib \
+#       ../cime_config/buildnml
 
 all: test lint black
+	@echo
+	@echo
+	@echo "Successfully ran all standard tests"
+
 test: utest stest
 
 .PHONY: utest
@@ -39,10 +47,16 @@ lint: FORCE
 	$(PYLINT) $(PYLINT_ARGS) $(PYLINT_SRC)
 
 .PHONY: black
-# Run black on all of the python files here and undeneath.
+# Run the black check on all of the python files here and undeneath.
 # Use the black configure file to explicitly set a few things and specifiy the exact files.
 black: FORCE
-	black --check --config pyproject.toml .
+	black --check --config pyproject.toml . ../cime_config/SystemTests ../cime_config/buildlib ../cime_config/buildnml
+
+.PHONY: run_black
+# Run black on all of the python files here and undeneath.
+# Use the black configure file to explicitly set a few things and specifiy the exact files.
+run_black: FORCE
+	black --config pyproject.toml . ../cime_config/SystemTests ../cime_config/buildlib ../cime_config/buildnml
 
 .PHONY: clean
 clean: FORCE

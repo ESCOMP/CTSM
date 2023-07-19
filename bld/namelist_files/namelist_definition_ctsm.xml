@@ -8,16 +8,6 @@
 <!-- CLM Namelist -->
 <!-- ========================================================================================  -->
 
-<entry id="finidat_interp_dest" 
-       type="char*256" 
-       category="datasets"
-       input_pathname="abs" 
-       group="clm_inparm" 
-       valid_values="" >
-If use_init_interp is set to .true., interpinic will be called to interpolate
-the file given by finidat, creating the output file specified by finidat_interp_dest.
-</entry>
-
 <entry id="finidat" 
        type="char*256" 
        category="datasets"
@@ -698,6 +688,12 @@ Switch deciding which nutrient model to use in FATES.
 (Only relevant if FATES is on)
 </entry>
 
+<entry id="use_fates_tree_damage" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false."> 
+Toggle to turn on the tree damage module in FATES
+(Only relevant if FATES is on)
+</entry>
+
 <entry id="fates_spitfire_mode" type="integer" category="physics"
         group="clm_inparm" valid_values="0,1,2,3,4,5" value=".false.">
 Turn on spitfire module to simulate fire by setting fates_spitfire_mode > 0.
@@ -1041,6 +1037,36 @@ Whether snow on the vegetation canopy affects the radiation/albedo calculations
        group="clm_inparm" >
 Whether to run some tests of ncdio_pio as part of the model run. This is
 typically only used in automated tests.
+</entry>
+
+<entry id="for_testing_use_second_grain_pool" type="logical" category="default_settings"
+       group="clm_inparm" >
+If true, allocate memory for and use a second crop grain pool. This is
+meant only for software testing of infrastructure to support the AgSys
+crop model integration. This option can be dropped once AgSys is
+integrated and we have tests of it.
+</entry>
+
+<entry id="for_testing_use_repr_structure_pool" type="logical" category="default_settings"
+       group="clm_inparm" >
+If true, allocate memory for two crop reproductive structure pools and
+send all reproductive C and N to the second reproductive structure pool
+instead of the grain pool. This is meant only for software testing of
+infrastructure to support the AgSys crop model integration. This option
+can be dropped once AgSys is integrated and we have tests of it.
+</entry>
+
+<entry id="for_testing_no_crop_seed_replenishment" type="logical" category="default_settings"
+       group="clm_inparm" >
+If true, do NOT use grain C/N to replenish the crop seed deficits. This
+is needed when doing software testing to verify that we can get
+bit-for-bit identical answers when using a reproductive structure pool
+as when using a grain pool (in conjunction with
+for_testing_use_repr_structure_pool). We do this testing to have some
+tests of the infrastructure to support the AgSys crop model integration.
+This option can be dropped if/when we stop doing this software testing,
+e.g., because we have integrated AgSys and have tests of it that make
+these software infrastructure tests obsolete.
 </entry>
 
 <!-- ========================================================================================  -->
@@ -2022,9 +2048,9 @@ to use for methane model
 </entry>
        
 <entry id="light_res" type="char*10" category="default_settings"
-       group="default_settings" valid_values="none,360x720,94x192">
-Resolution of Lightning dataset to use for CN fire model
-(only applies when CN and the CN fire model are turned on)
+       group="default_settings" valid_values="none,360x720,106x174,94x192">
+Resolution of Lightning dataset to use for CN or FATES fire model
+(only applies when CN or FATES and the fire model is turned on)
 </entry>
 
 <entry id="chk_res" type="integer"  category="default_settings"
@@ -2050,7 +2076,7 @@ CLM run type.
 
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
-       valid_values="512x1024,360x720cru,128x256,64x128,48x96,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,0.125nldas2,5x5_amazon,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.25x0.25,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,0.125x0.125,ne4np4,ne16np4,ne30np4.pg2,ne30np4.pg3,ne30np4,ne60np4,ne120np4,ne120np4.pg2,ne120np4.pg3,ne0np4CONUS.ne30x8,ne0np4.ARCTIC.ne30x4,ne0np4.ARCTICGRIS.ne30x8,ne240np4,1km-merge-10min,C24,C48,C96,C192,C384">
+       valid_values="512x1024,360x720cru,128x256,64x128,48x96,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,0.125nldas2,5x5_amazon,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.25x0.25,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,0.125x0.125,ne3np4.pg3,ne4np4,ne5np4.pg3,ne16np4,ne16np4.pg3,ne30np4.pg2,ne30np4.pg3,ne30np4,ne60np4,ne120np4,ne120np4.pg2,ne120np4.pg3,ne0np4CONUS.ne30x8,ne0np4.ARCTIC.ne30x4,ne0np4.ARCTICGRIS.ne30x8,ne240np4,1km-merge-10min,C24,C48,C96,C192,C384,mpasa480,mpasa240,mpasa120,mpasa60,mpasa30,mpasa15">
 Horizontal resolutions
 Note: 0.25x0.25, 0.5x0.5, 5x5min, 10x10min, 3x3min, 1km-merge-10min and 0.33x0.33 are only used for CLM toolsI
 </entry> 
@@ -2087,7 +2113,7 @@ If 1, turn on the MEGAN model for BVOC's (Biogenic Volitile Organic Compounds)
 
 <entry id="sim_year" type="char*4" category="default_settings"
        group="default_settings" valid_values=
-"PtVg,1000,850,1100,1350,1600,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1979,1980,1982,1985,1995,2000,2005,2010,2013,2015,2025,2035,2045,2055,2065,2075,2085,2095,2105">
+"PtVg,1000,850,1100,1350,1600,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1979,1980,1982,1985,1995,2000,2005,2010,2013,2015,2018,2025,2035,2045,2055,2065,2075,2085,2095,2105">
 Year to simulate and to provide datasets for (such as surface datasets, initial conditions, aerosol-deposition, Nitrogen deposition rates etc.)
 A sim_year of 1000 corresponds to data used for testing only, NOT corresponding to any real datasets.
 A sim_year greater than 2015 corresponds to ssp_rcp scenario data
@@ -2150,7 +2176,7 @@ Command line arguement for biogeochemistry mode for CLM4.5
         Nitrification/De-nitrification
         Methane model
         Vertically resolved Carbon
-   fates = FATES/ED ecosystem demography model with below ground BGC:
+   fates = FATES Functionally Assembled Terrestrial Ecosystem Simulator (ecosystem demography model with below ground BGC):
 </entry>
 
 <!-- ========================================================================================  -->
@@ -2181,12 +2207,6 @@ Base advective flux (downwards) for SOM.
 <entry id="max_depth_cryoturb" type="real" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
 Maximum depth to mix soils to by croturbation, in permafrost soils.
-</entry>
-
-<!-- turnover time modifications    -->
-<entry id="decomp_depth_efolding" type="real" category="clm_vertcn"
-       group="bgc_shared" valid_values="" >
-E-folding depth over which decomposition is slowed with depth in all soils.
 </entry>
 
 <entry id="anoxia" type="logical" category="clm_vertcn"
@@ -2225,10 +2245,11 @@ Number of days over which to use exponential relaxation of NPP in N fixation cal
 
 <!-- Soil decomposition options  -->
 <entry id="soil_decomp_method" type="char*20" category="clm_physics"
-       group="soilbgc_decomp" valid_values="None,CENTURYKoven2013" >
+       group="soilbgc_decomp" valid_values="None,CENTURYKoven2013,MIMICSWieder2015" >
 Soil decomposition method
   None --  No soil decomposition is done
   CENTURYKoven2013 -- CENTURY model in CTSM from Koven et. al. 2013
+  MIMICSWieder2015 -- MIMICS model in CTSM from Wieder et. al. 2015
 
 An active soil decomposition method requires the BGC or FATES model to work 
 And both BGC and FATES models require an active soil decomposition model
@@ -2332,36 +2353,6 @@ Allow the CN ratio to flexibly change with the simulation, rather than being fix
 How much Carbon to initialize vegetation pools (leafc/frootc and storage) to when -- Michaelis Menten nitrogen uptake kinetics is on
 </entry>
 
-<entry id="downreg_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".false.">
-   GPP downregulation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="plant_ndemand_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1,2,3">
-   Plant nitrogen demand for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="substrate_term_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".true.">
-   Michaelis Menten substrate limitation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="nscalar_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".true.">
-   Michaelis Menten nitrogen limitation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="temp_scalar_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".true.">
-   Michaelis Menten temperature limitation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
 <entry id="CNratio_floating" type="logical" category="clm_nitrogen"
        group="clm_nitrogen" value=".false.">
    Flexible CN ratio used for Phenology
@@ -2380,19 +2371,6 @@ Vcmax calculation for Photosynthesis
     vcmax_opt = 4 As for vcmax_opt=0, but using leafN, and exponential if tree  (EXPERIMENTAL NOT TESTED!)
     vcmax_opt = 3 Based on leafN and VCAD (used with Luna for crop and C4 vegetation)
     vcmax_opt = 0 Based on canopy top and foilage Nitrogen limitation factor from params file (clm4.5)
-</entry>
-
-<entry id="CN_residual_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1">
-Residual option for flexible-CN
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="CN_partition_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1">
-Partition option for flexible-CN
-   CN_partition_opt = 1
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="CN_evergreen_phenology_opt" type="integer" category="clm_nitrogen"
@@ -2549,6 +2527,13 @@ If TRUE, apply transient urban from flanduse_timeseries file.
 <entry id="do_harvest" type="logical" category="physics"
        group="dynamic_subgrid" valid_values="" >
 If TRUE, apply harvest from flanduse_timeseries file.
+(Only valid for transient runs, where there is a flanduse_timeseries file.)
+(Also, only valid for use_cn = true.)
+</entry>
+
+<entry id="do_grossunrep" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+If TRUE, apply gross unrepresented landuse/land-cover change from flanduse_timeseries file.
 (Only valid for transient runs, where there is a flanduse_timeseries file.)
 (Also, only valid for use_cn = true.)
 </entry>

@@ -11,7 +11,6 @@ module lilac_mod
   use mct_mod        , only : mct_world_init
 
   ! shr code routines
-  use shr_pio_mod   , only : shr_pio_init1, shr_pio_init2
   use shr_sys_mod   , only : shr_sys_abort
   use shr_kind_mod  , only : r8 => shr_kind_r8
 
@@ -25,6 +24,7 @@ module lilac_mod
   use lilac_history , only : lilac_history_write
   use lilac_methods , only : chkerr
   use lilac_constants, only : logunit
+  use lilac_driver_pio_mod, only : lilac_driver_pio_init1, lilac_driver_pio_init2
   use ctsm_LilacCouplingFields, only : create_a2l_field_list, create_l2a_field_list
   use ctsm_LilacCouplingFields, only : complete_a2l_field_list, complete_l2a_field_list
   use ctsm_LilacCouplingFields, only : a2l_fields
@@ -199,7 +199,7 @@ contains
     ! AFTER call to MPI_init (which is in the host atm driver) and
     ! BEFORE call to ESMF_Initialize
     !-------------------------------------------------------------------------
-    call shr_pio_init1(ncomps=1, nlfilename="lilac_in", Global_Comm=mpicom)
+    call lilac_driver_pio_init1(ncomps=1, nlfilename="lilac_in", Global_Comm=mpicom)
 
     !-------------------------------------------------------------------------
     ! Initialize ESMF, set the default calendar and log type.
@@ -231,8 +231,8 @@ contains
     !-------------------------------------------------------------------------
     ! Initialize PIO with second initialization
     !-------------------------------------------------------------------------
-    call shr_pio_init2(compids, compLabels, comp_iamin, (/mpicom/), (/mytask/))
-    call ESMF_LogWrite(subname//"initialized shr_pio_init2 ...", ESMF_LOGMSG_INFO)
+    call lilac_driver_pio_init2(compids, compLabels, comp_iamin, (/mpicom/), (/mytask/))
+    call ESMF_LogWrite(subname//"initialized lilac_driver_pio_init2 ...", ESMF_LOGMSG_INFO)
 
     !-------------------------------------------------------------------------
     ! Initial lilac atmosphere cap module variables

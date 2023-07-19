@@ -1,8 +1,8 @@
 # directories checked out by manage_externals, and other files created
 # by manage_externals
 manage_externals.log
+ccs_config
 /src/fates/
-/tools/site_and_regional/PTCLM/
 /cime/
 /components/
 /libraries/
@@ -21,6 +21,7 @@ manage_externals.log
 # editor files
 *.swp
 *~
+.vscode/
 
 # vim files (from https://github.com/github/gitignore/blob/master/Global/Vim.gitignore)
 # Swap
@@ -103,6 +104,13 @@ unit_test_build
 /tools/mkmapdata/regrid.*.err
 /tools/mkmapdata/regrid.o*
 /tools/mkmapdata/map*.nc
+
+# run_neon output directories
+/tools/site_and_regional/listing.csv
+/tools/site_and_regional/????/
+/tools/site_and_regional/????.ad/
+/tools/site_and_regional/????.postad/
+/tools/site_and_regional/????.transient/
 
 # build output
 *.o

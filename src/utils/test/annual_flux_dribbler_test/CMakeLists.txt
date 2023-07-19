@@ -1,4 +1,3 @@
-create_pFUnit_test(annual_flux_dribbler test_annual_flux_dribbler_exe
-  "test_annual_flux_dribbler.pf" "")
-
-target_link_libraries(test_annual_flux_dribbler_exe clm csm_share esmf_wrf_timemgr)
+add_pfunit_ctest(annual_flux_dribbler
+  TEST_SOURCES "test_annual_flux_dribbler.pf"
+  LINK_LIBRARIES clm csm_share esmf_wrf_timemgr)
