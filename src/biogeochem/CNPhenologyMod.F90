@@ -2711,6 +2711,7 @@ contains
     real(r8) :: cropseedn_deficit_to_restore ! amount of crop seed N deficit that will be restored from this grain pool (gN/m2)
     real(r8) :: leafc_remaining, livestemc_remaining
     real(r8) :: leafn_remaining, livestemn_remaining
+    real(r8) :: removedresidue_fraction
     !-----------------------------------------------------------------------
 
     associate(                                                                           & 
@@ -2779,6 +2780,8 @@ contains
 
       ! The litterfall transfer rate starts at 0.0 and increases linearly
       ! over time, with displayed growth going to 0.0 on the last day of litterfall
+
+      removedresidue_fraction = 0._r8
       
       do fp = 1,num_soilp
          p = filter_soilp(fp)
@@ -2853,6 +2856,14 @@ contains
                   livestemc_remaining = livestemc(p)*(1._r8-biofuel_harvfrac(ivt(p)))
                   livestemn_remaining = livestemn(p)*(1._r8-biofuel_harvfrac(ivt(p)))
 
+                  ! Remove residues
+                  leafc_to_removedresiduec(p) = t1 * leafc_remaining * removedresidue_fraction
+                  leafn_to_removedresiduen(p) = t1 * leafn_remaining * removedresidue_fraction
+                  livestemc_to_removedresiduec(p) = t1 * livestemc_remaining * removedresidue_fraction
+                  livestemn_to_removedresiduen(p) = t1 * livestemn_remaining * removedresidue_fraction
+                  leafc_remaining     = leafc_remaining     * (1._r8 - removedresidue_fraction)
+                  livestemc_remaining = livestemc_remaining * (1._r8 - removedresidue_fraction)
+                  
                   leafc_to_litter(p)  = t1 * leafc_remaining  + cpool_to_leafc(p)
                   livestemc_to_litter(p)   = t1 * livestemc_remaining  + cpool_to_livestemc(p)
 
@@ -2996,7 +3007,7 @@ contains
                ! NOTE(slevis, 2014-12) results in -ve livestemn and -ve totpftn
                !X! livestemn_to_litter(p) = livestemc_to_litter(p) / livewdcn(ivt(p))
                ! NOTE(slevis, 2014-12) Beth Drewniak suggested this instead
-               livestemn_to_litter(p) = livestemn(p) / dt * (1._r8 - biofuel_harvfrac(ivt(p)))
+               livestemn_to_litter(p) = livestemn(p) / dt * (1._r8 - biofuel_harvfrac(ivt(p))) * (1._r8 - removedresidue_fraction)
 
                ! Matrix update for livestemn to litter
                if(use_matrixcn)then
