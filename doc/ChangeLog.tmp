@@ -109,7 +109,7 @@ Changes answers relative to baseline: YES for Clm45BgcCrop compsets only
 Other details
 -------------
 List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime
-    cime: cime6.0.108 -> cime6.0.118
+    cime: cime6.0.108 -> cime6.0.125
 
 Pull Requests that document the changes (include PR ids):
     https://github.com/ESCOMP/CTSM/pull/1863
