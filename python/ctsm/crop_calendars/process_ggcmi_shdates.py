@@ -6,10 +6,19 @@ import datetime as dt
 import cftime
 import sys
 import argparse
+
 import cropcal_utils as utils
+from regrid_ggcmi_shdates import main as regrid_ggcmi_shdates
+
 
 def main(input_directory, output_directory, template_file, file_specifier, author, first_year,
          last_year, verbose, ggcmi_author):
+
+    ############################################################
+    ### Regrid original GGCMI files to target CLM resolution ###
+    ############################################################
+    
+    regrid_ggcmi_shdates()
 
     
     ###########################
