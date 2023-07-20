@@ -1,3 +1,11 @@
+import numpy as np
+import xarray as xr
+import shutil
+import os
+import datetime as dt
+import cftime
+import cropcal_utils as utils
+
 def main():
 
     # %% Options
@@ -13,18 +21,6 @@ def main():
         "author_original": "Jonas Jägermeyr (jaegermeyr@uchicago.edu)",
         "comment": "Day of year is 1-indexed (i.e., Jan. 1 = 1). Filled using cdo -remapnn,$original -setmisstonn"
     }
-
-
-    # %% Imports
-
-    import numpy as np
-    import xarray as xr
-    import shutil
-    import os
-    import datetime as dt
-    import cftime
-
-    import cropcal_utils as utils
 
 
     # %% Setup
