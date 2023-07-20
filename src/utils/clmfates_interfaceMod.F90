@@ -159,6 +159,7 @@ module CLMFatesInterfaceMod
    use dynHarvestMod          , only : dynHarvest_interp_resolve_harvesttypes
    use FatesConstantsMod      , only : hlm_harvest_area_fraction
    use FatesConstantsMod      , only : hlm_harvest_carbon
+   use FatesConstantsMod      , only : area_error
    use perf_mod               , only : t_startf, t_stopf
    implicit none
 
@@ -713,10 +714,10 @@ module CLMFatesInterfaceMod
                this%fates(nc)%bc_in(s)%pft_areafrac(ft)=wt_nat_patch(g,m)
             end do
 
-            if(abs(sum(this%fates(nc)%bc_in(s)%pft_areafrac(surfpft_lb:surfpft_ub))-1.0_r8).gt.1.0e-9)then
-               write(iulog,*) 'pft_area error in interfc ',s, sum(this%fates(nc)%bc_in(s)%pft_areafrac(:))-1.0_r8
+            if (abs(sum(this%fates(nc)%bc_in(s)%pft_areafrac(surfpft_lb:surfpft_ub)) - 1.0_r8) > area_error) then
+               write(iulog,*) 'pft_area error in interfc ', s, sum(this%fates(nc)%bc_in(s)%pft_areafrac(:)) - 1.0_r8
                call endrun(msg=errMsg(sourcefile, __LINE__))
-              endif
+              end if
           end do !site
 
         ! Initialize site-level static quantities dictated by the HLM
