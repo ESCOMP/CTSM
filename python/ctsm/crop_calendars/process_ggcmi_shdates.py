@@ -14,9 +14,6 @@ def main():
         "comment": "Day of year is 1-indexed (i.e., Jan. 1 = 1). Filled using cdo -remapnn,$original -setmisstonn"
     }
 
-    # Your path to ctsm_py directory (i.e., where utils.py lives)
-    my_ctsm_python_gallery = "/Users/sam/Documents/git_repos/ctsm_python_gallery_myfork/ctsm_py/"
-
 
     # %% Imports
 
@@ -27,9 +24,7 @@ def main():
     import datetime as dt
     import cftime
 
-    import sys
-    sys.path.append(my_ctsm_python_gallery)
-    import utils
+    import cropcal_utils as utils
 
 
     # %% Setup
