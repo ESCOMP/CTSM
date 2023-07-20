@@ -4220,6 +4220,13 @@ sub setup_logic_fates {
  	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
                       'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
         }
+        my $suplnitro = $nl->get_value('suplnitro');
+        my $parteh_mode = $nl->get_value('fates_parteh_mode');
+        if ( ($parteh_mode == 1) &&  ($suplnitro !~ /ALL/) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
+          $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to ALL, FATES is on, " . 
+                            "but and FATES-SP is not active, but fates_parteh_mode is 1, so Nitrogen is not active" . 
+                            "Change suplnitro back to ALL");
+        }
         #
         # For FATES SP mode make sure no-competetiion, and fixed-biogeography are also set
         # And also check for other settings that can't be trigged on as well
