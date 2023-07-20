@@ -9,7 +9,7 @@ import argparse
 import cropcal_utils as utils
 
 def main(input_directory, output_directory, template_file, file_specifier, author, first_year,
-         last_year, verbose):
+         last_year, verbose, ggcmi_author):
 
     # %% Options
 
@@ -17,7 +17,7 @@ def main(input_directory, output_directory, template_file, file_specifier, autho
     out_attrs = {
         "title": "GGCMI crop calendar for Phase 3, v1.01",
         "author_thisfile": author,
-        "author_original": "Jonas Jägermeyr (jaegermeyr@uchicago.edu)",
+        "author_original": ggcmi_author,
         "comment": "Day of year is 1-indexed (i.e., Jan. 1 = 1). Filled using cdo -remapnn,$original -setmisstonn",
         "created": dt.datetime.now().replace(microsecond=0).astimezone().isoformat(),
     }
@@ -392,6 +392,12 @@ if __name__ == "__main__":
         type=bool,
         default=False,
     )
+    parser.add_argument(
+        "--ggcmi-author",
+        help="Author of original GGCMI files",
+        type=str,
+        default="Jonas Jägermeyr (jonas.jaegermeyr@columbia.edu)",
+    )
 
     # Get arguments
     args = parser.parse_args(sys.argv[1:])
@@ -401,4 +407,4 @@ if __name__ == "__main__":
     ### Run ###
     ###########
     main(args.input_directory, args.output_directory, args.template_file, args.author,
-         args.file_specifier, args.first_year, args.last_year, args.verbose)
+         args.file_specifier, args.first_year, args.last_year, args.verbose, args.ggcmi_author)
