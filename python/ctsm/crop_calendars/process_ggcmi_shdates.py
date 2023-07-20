@@ -11,18 +11,7 @@ import cropcal_utils as utils
 def main(input_directory, output_directory, template_file, file_specifier, author, first_year,
          last_year, verbose, ggcmi_author):
 
-    # %% Options
-
-    # Global attributes for output files
-    out_attrs = {
-        "title": "GGCMI crop calendar for Phase 3, v1.01",
-        "author_thisfile": author,
-        "author_original": ggcmi_author,
-        "comment": "Day of year is 1-indexed (i.e., Jan. 1 = 1). Filled using cdo -remapnn,$original -setmisstonn",
-        "created": dt.datetime.now().replace(microsecond=0).astimezone().isoformat(),
-    }
-
-
+    
     ###########################
     ### Define dictionaries ###
     ###########################
@@ -118,14 +107,22 @@ def main(input_directory, output_directory, template_file, file_specifier, autho
     ################################
     ### Instantiate output files ###
     ################################
+    
+    # Global attributes for output files
+    out_attrs = {
+        "title": "GGCMI crop calendar for Phase 3, v1.01",
+        "author_thisfile": author,
+        "author_original": ggcmi_author,
+        "comment": "Day of year is 1-indexed (i.e., Jan. 1 = 1). Filled using cdo -remapnn,$original -setmisstonn",
+        "created": dt.datetime.now().replace(microsecond=0).astimezone().isoformat(),
+    }
 
+    # Open and time-slice template dataset
     def slice_yr(y):
         if y == None:
             return None
         else:
             return str(y)
-
-    # Open and time-slice template dataset
     template_ds = xr.open_dataset(template_file, decode_times=True).sel(time=slice(slice_yr(first_year), slice_yr(last_year)))
     # template_ds = template_ds.sel(time=slice(slice_yr(y1), slice_yr(yN)))
     if np.size(template_ds.time) == 0:
