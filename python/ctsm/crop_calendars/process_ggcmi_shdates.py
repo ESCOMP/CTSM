@@ -23,10 +23,13 @@ def main(input_directory, output_directory, template_file, file_specifier, first
     }
 
 
-    # %% Setup
-
-    # Define crop dictionary
-    # As "CLMname: [number, GGCMIname]"
+    ###########################
+    ### Define dictionaries ###
+    ###########################
+    
+    # First, we associate CLM crop names with (1) their integer counterpart and (2) their GGCMI counterpart.
+    # Some notes:
+    # - As "CLMname: [number, GGCMIname]"
     # - CLM names and numbers taken from commit `3dcbc7499a57904750a994672fc36b4221b9def5`
     # - Using one global GGCMI value for both temperate and tropical versions of corn and soybean.
     # - There is no GGCMI equivalent of CLM's winter barley and rye. Using winter wheat instead.
@@ -34,7 +37,6 @@ def main(input_directory, output_directory, template_file, file_specifier, first
     # - Only using GGCMI `ri1` for rice; ignoring `ri2`.
     def set_crop_dict(thisnum, thisname):
         return {"clm_num": thisnum, "thiscrop_ggcmi": thisname}
-        
     crop_dict = {
         "temperate_corn": set_crop_dict(17, "mai_rf"),
         "irrigated_temperate_corn": set_crop_dict(18, "mai_ir"),
@@ -103,16 +105,19 @@ def main(input_directory, output_directory, template_file, file_specifier, first
     }
 
 
-    # %% Define variable dictionary and output files
-    # As "CLM: [GGCMI, outfile]"
-
+    # Next, we associate CLM variable names with their GGCMI counterparts. We also save a placeholder for output file paths associated with each variable.
+    # As CLMname: {GGCMIname, output_file}
     def set_var_dict(name_ggcmi, outfile):
         return {"name_ggcmi": name_ggcmi, "outfile": outfile}
-
     variable_dict = {
         "sdate": set_var_dict("planting_day", ""),
         "hdate": set_var_dict("maturity_day", "")
     }
+    
+    
+    ################################
+    ### Instantiate output files ###
+    ################################
 
     def slice_yr(y):
         if y == None:
@@ -166,8 +171,9 @@ def main(input_directory, output_directory, template_file, file_specifier, first
     template_ds.close()
 
 
-    # %% Process all crops
-
+    #########################
+    ### Process all crops ###
+    #########################
 
     for thiscrop_clm in crop_dict:
 
@@ -349,6 +355,8 @@ if __name__ == "__main__":
         type=str,
         required=True,
     )
+    
+    # Optional
     parser.add_argument(
         "--file-specifier",
         help="String following CROP_IRR in input filenames. E.g., mai_irFILESPECIFIER.nc4. Will also be saved to output filenames.",
