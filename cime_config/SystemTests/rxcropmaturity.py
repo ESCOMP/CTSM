@@ -134,8 +134,8 @@ class RXCROPMATURITY(SystemTestsCommon):
             case_gddgen.check_all_input_data()
 
             # Make custom version of surface file
-            logger.info("RXCROPMATURITY log:  run make_surface_for_gddgen")
-            self._run_make_surface_for_gddgen(case_gddgen)
+            logger.info("RXCROPMATURITY log:  run make_fsurdat_all_crops_everywhere")
+            self._run_make_fsurdat_all_crops_everywhere(case_gddgen)
 
         # -------------------------------------------------------------------
         # (2) Perform GDD-generating run and generate prescribed GDDs file
@@ -239,7 +239,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         logger.info("RXCROPMATURITY log:  _setup_all done")
 
     # Make a surface dataset that has every crop in every gridcell
-    def _run_make_surface_for_gddgen(self, case_gddgen):
+    def _run_make_fsurdat_all_crops_everywhere(self, case_gddgen):
 
         # fsurdat should be defined. Where is it?
         self._fsurdat_in = None
