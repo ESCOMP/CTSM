@@ -8,17 +8,17 @@ import sys
 import argparse
 
 import cropcal_utils as utils
-from regrid_ggcmi_shdates import main as regrid_ggcmi_shdates
+import regrid_ggcmi_shdates
 
 
 def main(input_directory, output_directory, template_file, file_specifier, author, first_year,
-         last_year, verbose, ggcmi_author):
+         last_year, verbose, ggcmi_author, regrid_resolution, regrid_template_file):
 
     ############################################################
     ### Regrid original GGCMI files to target CLM resolution ###
     ############################################################
     
-    regrid_ggcmi_shdates()
+    regrid_ggcmi_shdates.main(regrid_resolution, regrid_template_file, input_directory)
 
     
     ###########################
@@ -404,6 +404,9 @@ if __name__ == "__main__":
         type=str,
         default="Jonas Jägermeyr (jonas.jaegermeyr@columbia.edu)",
     )
+    
+    # Arguments for regridding
+    parser = regrid_ggcmi_shdates.define_arguments(parser)
 
     # Get arguments
     args = parser.parse_args(sys.argv[1:])
@@ -413,4 +416,5 @@ if __name__ == "__main__":
     ### Run ###
     ###########
     main(args.input_directory, args.output_directory, args.template_file, args.author,
-         args.file_specifier, args.first_year, args.last_year, args.verbose, args.ggcmi_author)
+         args.file_specifier, args.first_year, args.last_year, args.verbose, args.ggcmi_author,
+         args.regrid_resolution, args.regrid_template_file)
