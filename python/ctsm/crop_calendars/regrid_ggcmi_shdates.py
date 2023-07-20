@@ -34,18 +34,25 @@ def define_arguments(parser):
     )
     return parser
 
-def main(regrid_resolution, regrid_template_file, input_directory):
+def main(regrid_resolution, regrid_template_file_in, regrid_input_directory, regrid_output_directory):
+    
+    os.chdir(regrid_input_directory)
+    if not os.path.exists(regrid_output_directory):
+        os.makedirs(regrid_output_directory)
 
     # Ensure we can call necessary shell scripts
     for cmd in ["ncks", "ncrename", "ncpdq", "cdo"]:
         run_and_check(f"{cmd} --help")
     
-    templatefile = "template.nc"
+    templatefile = os.path.join(regrid_output_directory, "template.nc")
     
     # For some reason, doing ncks -v directly doesn't work. Have to copy it over first.
-    shutil.copyfile(regrid_template_file, os.path.basename(regrid_template_file))
-    regrid_template_file = os.path.basename(regrid_template_file)
-
+    regrid_template_file = os.path.join(
+        regrid_output_directory,
+        os.path.basename(regrid_template_file_in),
+        )
+    shutil.copyfile(regrid_template_file_in, regrid_template_file)
+    
     if os.path.exists(templatefile):
         os.remove(templatefile)
 
@@ -56,13 +63,12 @@ def main(regrid_resolution, regrid_template_file, input_directory):
     run_and_check(f"ncpdq -O -h -a -lat '{templatefile}' '{templatefile}'")
 
 
-    input_files = glob.glob(os.path.join(input_directory, "*nc4"))
+    input_files = glob.glob("*nc4")
     input_files.sort()
     for f in input_files:
-
-        f2 = os.path.basename(f)
+        print(f[0:6])
+        f2 = os.path.join(regrid_output_directory, f)
         f3 = f2.replace(".nc4", f"_nninterp-{regrid_resolution}.nc4")
-        print(f3)
 
         if os.path.exists(f3):
             os.remove(f3)
@@ -83,8 +89,15 @@ if __name__ == "__main__":
     parser = define_arguments(parser)
     parser.add_argument(
         "-i",
-        "--input-directory",
-        help="Target CLM resolution, to be saved in output filenames.",
+        "--regrid-input-directory",
+        help="Directory containing the raw GGCMI sowing/harvest date files.",
+        type=str,
+        required=True
+    )
+    parser.add_argument(
+        "-o",
+        "--regrid-output-directory",
+        help="Directory where regridded output files should be saved.",
         type=str,
         required=True
     )
@@ -96,4 +109,5 @@ if __name__ == "__main__":
     ###########
     ### Run ###
     ###########
-    main(args.regrid_resolution, args.regrid_template_file, args.input_directory)
+    main(args.regrid_resolution, args.regrid_template_file, args.regrid_input_directory,
+         args.regrid_output_directory)

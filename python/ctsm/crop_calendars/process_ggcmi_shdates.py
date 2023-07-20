@@ -18,7 +18,10 @@ def main(input_directory, output_directory, template_file, file_specifier, autho
     ### Regrid original GGCMI files to target CLM resolution ###
     ############################################################
     
-    regrid_ggcmi_shdates.main(regrid_resolution, regrid_template_file, input_directory)
+    regridded_ggcmi_files_dir = os.path.join(output_directory, "regridded_ggcmi_files")
+    
+    regrid_ggcmi_shdates.main(regrid_resolution, regrid_template_file, input_directory,
+                              regridded_ggcmi_files_dir)
 
     
     ###########################
