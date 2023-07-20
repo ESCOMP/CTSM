@@ -8,7 +8,8 @@ import sys
 import argparse
 import cropcal_utils as utils
 
-def main(input_directory, output_directory, template_file, file_specifier, first_year, last_year):
+def main(input_directory, output_directory, template_file, file_specifier, first_year, last_year,
+         verbose):
 
     # %% Options
 
@@ -167,7 +168,6 @@ def main(input_directory, output_directory, template_file, file_specifier, first
 
     # %% Process all crops
 
-    verbose = True
 
     for thiscrop_clm in crop_dict:
 
@@ -369,6 +369,13 @@ if __name__ == "__main__":
         type=int,
         default=2000,
     )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        help="Whether to print verbose messages",
+        type=bool,
+        default=False,
+    )
 
     # Get arguments
     args = parser.parse_args(sys.argv[1:])
@@ -378,4 +385,4 @@ if __name__ == "__main__":
     ### Run ###
     ###########
     main(args.input_directory, args.output_directory, args.template_file, args.file_specifier,
-         args.first_year, args.last_year)
+         args.first_year, args.last_year, args.verbose)
