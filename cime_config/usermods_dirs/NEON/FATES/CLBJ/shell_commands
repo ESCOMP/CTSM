@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=CLBJ
+./xmlchange PTS_LON=262.43275
+./xmlchange PTS_LAT=33.40143

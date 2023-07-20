@@ -97,6 +97,7 @@ module CLMFatesInterfaceMod
                                   get_clump_bounds
    use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, decomp_method
    use SoilBiogeochemDecompCascadeConType , only : no_soil_decomp, century_decomp
+   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
    use GridCellType      , only : grc
    use ColumnType        , only : col
    use LandunitType      , only : lun
@@ -808,7 +809,8 @@ module CLMFatesInterfaceMod
    subroutine dynamics_driv(this, nc, bounds_clump,      &
          atm2lnd_inst, soilstate_inst, temperature_inst, active_layer_inst, &
          waterstatebulk_inst, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
-         canopystate_inst, soilbiogeochem_carbonflux_inst, frictionvel_inst)
+         canopystate_inst, soilbiogeochem_carbonflux_inst, frictionvel_inst, &
+         soil_water_retention_curve)
 
       ! This wrapper is called daily from clm_driver
       ! This wrapper calls ed_driver, which is the daily dynamics component of FATES
@@ -834,11 +836,13 @@ module CLMFatesInterfaceMod
       type(canopystate_type)  , intent(inout)        :: canopystate_inst
       type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
       type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
+      class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
 
       ! !LOCAL VARIABLES:
       integer  :: s                        ! site index
       integer  :: g                        ! grid-cell index (HLM)
       integer  :: c                        ! column index (HLM)
+      integer  :: j                        ! Soil layer index
       integer  :: ifp                      ! patch index ft
       integer  :: p                        ! HLM patch index
       integer  :: nlevsoil                 ! number of soil layers at the site
@@ -849,6 +853,7 @@ module CLMFatesInterfaceMod
       integer  :: ier
       integer  :: begg,endg
       real(r8) :: harvest_rates(bounds_clump%begg:bounds_clump%endg,num_harvest_inst)
+      real(r8) :: s_node, smp_node         ! local for relative water content and potential
       logical  :: after_start_of_harvest_ts
       integer  :: iharv
       !-----------------------------------------------------------------------
@@ -933,6 +938,24 @@ module CLMFatesInterfaceMod
          this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
               min(nlevsoil, active_layer_inst%altmax_lastyear_indx_col(c))
 
+         nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
+         do j = 1,nlevsoil
+            this%fates(nc)%bc_in(s)%tempk_sl(j) = temperature_inst%t_soisno_col(c,j)
+         end do
+
+         call get_active_suction_layers(this%fates(nc)%nsites, &
+             this%fates(nc)%sites,  &
+             this%fates(nc)%bc_in,  &
+             this%fates(nc)%bc_out)
+
+         do j = 1,nlevsoil
+            if(this%fates(nc)%bc_out(s)%active_suction_sl(j)) then
+               s_node = max(waterstatebulk_inst%h2osoi_vol_col(c,j)/soilstate_inst%eff_porosity_col(c,j) ,0.01_r8)
+               call soil_water_retention_curve%soil_suction(c,j,s_node, soilstate_inst, smp_node)
+               this%fates(nc)%bc_in(s)%smp_sl(j)           = smp_node
+            end if
+         end do
+
 
          do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno !for vegetated patches
             ! Mapping between  IFP space (1,2,3) and HLM P space (looping by IFP)
@@ -1014,6 +1037,7 @@ module CLMFatesInterfaceMod
       ! ---------------------------------------------------------------------------------
       call fates_hist%flush_hvars(nc,upfreq_in=1)
 
+      call fates_hist%flush_hvars(nc,upfreq_in=5)
 
       ! ---------------------------------------------------------------------------------
       ! Part II: Call the FATES model now that input boundary conditions have been
@@ -1088,7 +1112,8 @@ module CLMFatesInterfaceMod
       ! ---------------------------------------------------------------------------------
       call fates_hist%update_history_dyn( nc,                    &
                                           this%fates(nc)%nsites, &
-                                          this%fates(nc)%sites)
+                                          this%fates(nc)%sites,  &
+                                          this%fates(nc)%bc_in)
 
       if (masterproc) then
          write(iulog, *) 'clm: leaving fates model', bounds_clump%begg, &
@@ -1659,12 +1684,13 @@ module CLMFatesInterfaceMod
                ! ------------------------------------------------------------------------
                call fates_hist%flush_hvars(nc,upfreq_in=1)
                do s = 1,this%fates(nc)%nsites
-                  call fates_hist%zero_site_hvars(this%fates(nc)%sites(s),     &
+                  call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
                      upfreq_in=1)
                end do
-               call fates_hist%update_history_dyn( nc, &
-                                                   this%fates(nc)%nsites,                 &
-                                                   this%fates(nc)%sites)
+               call fates_hist%update_history_dyn( nc,                     &
+                                                   this%fates(nc)%nsites,  &
+                                                   this%fates(nc)%sites,   &
+                                                   this%fates(nc)%bc_in)
 
 
             end if
@@ -1831,12 +1857,13 @@ module CLMFatesInterfaceMod
            ! ------------------------------------------------------------------------
             call fates_hist%flush_hvars(nc,upfreq_in=1)
             do s = 1,this%fates(nc)%nsites
-               call fates_hist%zero_site_hvars(this%fates(nc)%sites(s),        &
+               call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
                   upfreq_in=1)
             end do
-            call fates_hist%update_history_dyn( nc, &
-                this%fates(nc)%nsites,                 &
-                this%fates(nc)%sites)
+            call fates_hist%update_history_dyn( nc,                     &
+                this%fates(nc)%nsites,                                  &
+                this%fates(nc)%sites,                                   &
+                this%fates(nc)%bc_in) 
 
 
 
@@ -1993,8 +2020,6 @@ module CLMFatesInterfaceMod
       ! This subroutine also calculates rootr
       !
       ! ---------------------------------------------------------------------------------
-
-      use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
 
       implicit none
 
@@ -2745,7 +2770,7 @@ module CLMFatesInterfaceMod
    use FatesIOVariableKindMod, only : site_can_r8, site_cnlf_r8, site_cnlfpft_r8
    use FatesIOVariableKindMod, only : site_height_r8, site_elem_r8, site_elpft_r8
    use FatesIOVariableKindMod, only : site_elcwd_r8, site_elage_r8, site_agefuel_r8
-   use FatesIOVariableKindMod, only : site_cdpf_r8, site_cdsc_r8
+   use FatesIOVariableKindMod, only : site_cdpf_r8, site_cdsc_r8, site_clscpf_r8
    use FatesIODimensionsMod, only : fates_bounds_type
 
 
@@ -2844,7 +2869,7 @@ module CLMFatesInterfaceMod
 
         case(site_soil_r8, site_size_pft_r8, site_size_r8, site_pft_r8, &
              site_age_r8, site_height_r8, site_coage_r8,site_coage_pft_r8, &
-             site_fuel_r8, site_cwdsc_r8, &
+             site_fuel_r8, site_cwdsc_r8, site_clscpf_r8, &
              site_can_r8,site_cnlf_r8, site_cnlfpft_r8, site_scag_r8, &
              site_scagpft_r8, site_agepft_r8, site_elem_r8, site_elpft_r8, &
              site_elcwd_r8, site_elage_r8, site_agefuel_r8, &
@@ -3227,6 +3252,10 @@ module CLMFatesInterfaceMod
 
    fates%cdam_begin = 1
    fates%cdam_end = nlevdamage
+
+   fates%clscpf_begin = 1
+   fates%clscpf_end = numpft_fates * nlevsclass * nclmax
+   
    
    call t_stopf('fates_hlm2fatesbnds')
 

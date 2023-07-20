@@ -40,8 +40,8 @@ Options that are more than a single character should be formatted as ``--some-va
 
 2. Standard options: verbose, silent, help and debug:
 
-Scripts should support ``--verbose`` / ``-v`` and ``--debug`` options. See comments at the top of ``ctsm_logging.py`` for details.
-Also the options silent and help are recommended as well.
+Scripts should support ``--verbose`` / ``-v``, ''--silent'',  and ``--debug`` options. See comments at the top of ``ctsm_logging.py`` for details.
+Also the help option is highly recommended as well.
 
 3. Value flags:
 

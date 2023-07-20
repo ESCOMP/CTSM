@@ -1,3 +1,5 @@
 #!/bin/bash
 ./xmlchange CLM_FORCE_COLDSTART="on"
 
+# We use this testmod in a _Ln1 test; this requires forcing the ROF coupling frequency to every time step
+./xmlchange ROF_NCPL=48

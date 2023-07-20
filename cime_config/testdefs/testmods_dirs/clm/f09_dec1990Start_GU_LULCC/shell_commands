@@ -1,0 +1,3 @@
+./xmlchange RUN_STARTDATE=1990-12-30
+# Ignore warnings because we are using crop, but starting from a different date than the initial conditions were for
+./xmlchange CLM_BLDNML_OPTS=-ignore_warnings --append

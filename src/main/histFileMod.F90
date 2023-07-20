@@ -5,6 +5,7 @@ module histFileMod
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Module containing methods to for CLM history file handling.
+  ! See 'history_tape' type for more details.
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
@@ -69,8 +70,6 @@ module histFileMod
   ! Namelist
   !
   integer :: ni                          ! implicit index below
-  logical, public :: &
-       hist_empty_htapes  = .false.      ! namelist: flag indicates no default history fields
   integer, public :: &
        hist_ndens(max_tapes) = 2         ! namelist: output density of netcdf history files
   integer, public :: &
@@ -84,75 +83,86 @@ module histFileMod
   character(len=max_namlen), public :: &
        hist_type1d_pertape(max_tapes)  = (/(' ',ni=1,max_tapes)/)   ! namelist: per tape type1d
 
-  character(len=max_namlen+2), public :: &
-       fincl(max_flds,max_tapes)         ! namelist-equivalence list of fields to add
+  logical, public :: &
+       hist_empty_htapes  = .false.      ! namelist: disable default-active history fields (which
+                                         ! only exist on history tape 1). Use hist_fincl1 to enable
+                                         ! select fields on top of this.
 
   character(len=max_namlen+2), public :: &
-       hist_fincl1(max_flds) = ' '       ! namelist: list of fields to add
+       hist_fincl1(max_flds) = ' '       ! namelist: list of fields to include in history tape 1
   character(len=max_namlen+2), public :: &
-       hist_fincl2(max_flds) = ' '       ! namelist: list of fields to add
+       hist_fincl2(max_flds) = ' '       ! namelist: list of fields to include in history tape 2
   character(len=max_namlen+2), public :: &
-       hist_fincl3(max_flds) = ' '       ! namelist: list of fields to add
+       hist_fincl3(max_flds) = ' '       ! namelist: list of fields to include in history tape 3
   character(len=max_namlen+2), public :: &
-       hist_fincl4(max_flds) = ' '       ! namelist: list of fields to add
+       hist_fincl4(max_flds) = ' '       ! namelist: list of fields to include in history tape 4
   character(len=max_namlen+2), public :: &
-       hist_fincl5(max_flds) = ' '       ! namelist: list of fields to add
+       hist_fincl5(max_flds) = ' '       ! namelist: list of fields to include in history tape 5
   character(len=max_namlen+2), public :: &
-       hist_fincl6(max_flds) = ' '       ! namelist: list of fields to add
+       hist_fincl6(max_flds) = ' '       ! namelist: list of fields to include in history tape 6
   character(len=max_namlen+2), public :: &
-       hist_fincl7(max_flds) = ' '       ! namelist: list of fields to add
+       hist_fincl7(max_flds) = ' '       ! namelist: list of fields to include in history tape 7
   character(len=max_namlen+2), public :: &
-       hist_fincl8(max_flds) = ' '       ! namelist: list of fields to add
+       hist_fincl8(max_flds) = ' '       ! namelist: list of fields to include in history tape 8
   character(len=max_namlen+2), public :: &
-       hist_fincl9(max_flds) = ' '       ! namelist: list of fields to add
+       hist_fincl9(max_flds) = ' '       ! namelist: list of fields to include in history tape 9
   character(len=max_namlen+2), public :: &
-       hist_fincl10(max_flds) = ' '       ! namelist: list of fields to add
+       hist_fincl10(max_flds) = ' '      ! namelist: list of fields to include in history tape 10
 
   character(len=max_namlen+2), public :: &
-       fexcl(max_flds,max_tapes)         ! namelist-equivalence list of fields to remove
+       fincl(max_flds,max_tapes)         ! copy of hist_fincl* fields in 2-D format. Note Fortran
+                                         ! used to have a bug in 2-D namelists, thus this workaround.
 
   character(len=max_namlen+2), public :: &
-       hist_fexcl1(max_flds) = ' ' ! namelist: list of fields to remove
+       hist_fexcl1(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 1
   character(len=max_namlen+2), public :: &
-       hist_fexcl2(max_flds) = ' ' ! namelist: list of fields to remove
+       hist_fexcl2(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 2
   character(len=max_namlen+2), public :: &
-       hist_fexcl3(max_flds) = ' ' ! namelist: list of fields to remove
+       hist_fexcl3(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 3
   character(len=max_namlen+2), public :: &
-       hist_fexcl4(max_flds) = ' ' ! namelist: list of fields to remove
+       hist_fexcl4(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 4
   character(len=max_namlen+2), public :: &
-       hist_fexcl5(max_flds) = ' ' ! namelist: list of fields to remove
+       hist_fexcl5(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 5
   character(len=max_namlen+2), public :: &
-       hist_fexcl6(max_flds) = ' ' ! namelist: list of fields to remove
+       hist_fexcl6(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 6
   character(len=max_namlen+2), public :: &
-       hist_fexcl7(max_flds) = ' ' ! namelist: list of fields to remove
+       hist_fexcl7(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 7
   character(len=max_namlen+2), public :: &
-       hist_fexcl8(max_flds) = ' ' ! namelist: list of fields to remove
+       hist_fexcl8(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 8
   character(len=max_namlen+2), public :: &
-       hist_fexcl9(max_flds) = ' ' ! namelist: list of fields to remove
+       hist_fexcl9(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 9
   character(len=max_namlen+2), public :: &
-       hist_fexcl10(max_flds) = ' ' ! namelist: list of fields to remove
+       hist_fexcl10(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 10
+
+  character(len=max_namlen+2), public :: &
+       fexcl(max_flds,max_tapes)         ! copy of hist_fexcl* fields in 2-D format. Note Fortran
+                                         ! used to have a bug in 2-D namelists, thus this workaround.
 
   logical, private :: if_disphist(max_tapes)   ! restart, true => save history file
   !
-  ! !PUBLIC MEMBER FUNCTIONS:
+  ! !PUBLIC MEMBER FUNCTIONS:  (in rough call order)
   public :: hist_addfld1d        ! Add a 1d single-level field to the master field list
   public :: hist_addfld2d        ! Add a 2d multi-level field to the master field list
-  public :: hist_addfld_decomp   ! Add a 2d multi-level field to the master field list
+  public :: hist_addfld_decomp   ! Add a 1d/2d field based on patch or column data
   public :: hist_add_subscript   ! Add a 2d subscript dimension
+
   public :: hist_printflds       ! Print summary of master field list
-  public :: hist_htapes_build    ! Initialize history file handler for initial or continue run
-  public :: hist_update_hbuf     ! Updates history buffer for all fields and tapes
+  public :: htapes_fieldlist     ! Finalize history file field lists, intersecting masterlist with
+                                 ! namelist params.
+
+  public :: hist_htapes_build    ! Initialize history file handler (for initial or continued run)
+  public :: hist_update_hbuf     ! Accumulate into history buffer (all fields and tapes)
   public :: hist_htapes_wrapup   ! Write history tape(s)
+
   public :: hist_restart_ncd     ! Read/write history file restart data
-  public :: htapes_fieldlist     ! Define the contents of each history file based on namelist
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: is_mapping_upto_subgrid   ! Is this field being mapped up to a higher subgrid level?
-  private :: masterlist_make_active    ! Add a field to a history file default "on" list
+  private :: masterlist_make_active    ! Declare a single field active for a single tape
   private :: masterlist_addfld         ! Add a field to the master field list
   private :: masterlist_change_timeavg ! Override default history tape contents for specific tape
-  private :: htape_addfld              ! Add a field to the active list for a history tape
-  private :: htape_create              ! Define contents of history file t
+  private :: htape_addfld              ! Transfer field metadata from masterlist to a history tape.
+  private :: htape_create              ! Define netcdf metadata of history file t
   private :: htape_add_ltype_metadata  ! Add global metadata defining landunit types
   private :: htape_add_ctype_metadata  ! Add global metadata defining column types
   private :: htape_add_natpft_metadata ! Add global metadata defining natpft types
@@ -171,7 +181,7 @@ module histFileMod
   private :: set_hist_filename         ! Determine history dataset filenames
   private :: getname                   ! Retrieve name portion of input "inname"
   private :: getflag                   ! Retrieve flag
-  private :: pointer_index             ! Track data pointer indices
+  private :: next_history_pointer_index ! Latest index into raw history data (clmptr_r*) arrays
   private :: max_nFields               ! The max number of fields on any tape
   private :: avgflag_valid             ! Whether a given avgflag is a valid option
   private :: add_landunit_mask_metadata ! Add landunit_mask metadata for the given history field
@@ -205,13 +215,14 @@ module histFileMod
                                                ! for 2D arrays, where the second dimension is allowed
                                                ! to be 1
      integer :: num2d                          ! size of hbuf second dimension (e.g. number of vertical levels)
-     integer :: hpindex                        ! history pointer index
+     integer :: hpindex                        ! index into raw history data (clmptr_r*) arrays
      character(len=scale_type_strlen) :: p2c_scale_type       ! scale factor when averaging patch to column
      character(len=scale_type_strlen) :: c2l_scale_type       ! scale factor when averaging column to landunit
      character(len=scale_type_strlen) :: l2g_scale_type       ! scale factor when averaging landunit to gridcell
      integer :: no_snow_behavior               ! for multi-layer snow fields, flag saying how to treat times when a given snow layer is absent
   end type field_info
 
+  ! Metadata about a single history field.
   type, abstract :: entry_base
      type (field_info) :: field                ! field information
   contains
@@ -227,13 +238,17 @@ module histFileMod
      end subroutine copy_entry_interface
   end interface
 
+  ! Additional per-field metadata. See also history_entry. 
+  ! These values are specified in hist_addfld* calls but then can be
+  ! overridden by namelist params like hist_fincl1.
   type, extends(entry_base) :: master_entry
-     logical :: actflag(max_tapes)  ! active/inactive flag
-     character(len=avgflag_strlen) :: avgflag(max_tapes)  ! time averaging flag
+     logical :: actflag(max_tapes)  ! which history tapes to write to. 
+     character(len=avgflag_strlen) :: avgflag(max_tapes)  ! type of time averaging
   contains
      procedure :: copy => copy_master_entry
   end type master_entry
 
+  ! Actual per-field history data, accumulated from clmptr_r* vars. See also master_entry.
   type, extends(entry_base) :: history_entry
      character(len=avgflag_strlen) :: avgflag  ! time averaging flag ("X","A","M","I","SUM")
      real(r8), pointer :: hbuf(:,:)            ! history buffer (dimensions: dim1d x num2d)
@@ -242,6 +257,12 @@ module histFileMod
      procedure :: copy => copy_history_entry
   end type history_entry
 
+  ! Each 'history tape' accumulates output values for a set of fields marked 'active' for this run,
+  ! at a given time frequency and precision.  The first ('primary') tape defaults to a non-empty set
+  ! of active fields (see hist_addfld* methods), overridable by namelist flags,  while the other 
+  ! tapes are entirely manually configured via namelist flags. The set of active fields across all
+  ! tapes is assembled in the 'masterlist' variable. Note that the first history tape is index 1 in
+  ! the code but contains 'h0' in its output filenames (see set_hist_filename method).
   type history_tape
      integer  :: nflds                         ! number of active fields on tape
      integer  :: ntimes                        ! current number of time samples on tape
@@ -251,7 +272,8 @@ module histFileMod
      logical  :: dov2xy                        ! true => do xy average for all fields
      logical  :: is_endhist                    ! true => current time step is end of history interval
      real(r8) :: begtime                       ! time at beginning of history averaging interval
-     type (history_entry) :: hlist(max_flds)   ! array of active history tape entries
+     type (history_entry) :: hlist(max_flds)   ! array of active history tape entries.
+                                               ! The ordering matches the masterlist's.
   end type history_tape
 
   type clmpoint_rs                             ! Pointer to real scalar data (1D)
@@ -261,12 +283,16 @@ module histFileMod
      real(r8), pointer :: ptr(:,:)
   end type clmpoint_ra
 
-  ! Pointers into datatype  arrays
+  ! Raw history field data (not accumulated). One entry per history field, indexed by 'hpindex'
+  ! aka the history pointer index. For accumulated values see 'tape'.  
   integer, parameter :: max_mapflds = 2500     ! Maximum number of fields to track
   type (clmpoint_rs) :: clmptr_rs(max_mapflds) ! Real scalar data (1D)
   type (clmpoint_ra) :: clmptr_ra(max_mapflds) ! Real array data (2D)
   !
-  ! Master list: an array of master_entry entities
+  ! History field metadata including which history tapes (if any) it should be output to, and
+  ! type of accumulation to perform. The field ordering is arbitrary, depending on the order of
+  ! hist_addfld* calls in the code.
+  ! For the field data itself, see 'tape'.
   !
   type (master_entry) :: masterlist(max_flds)  ! master field list
   !
@@ -275,9 +301,11 @@ module histFileMod
   !
   logical :: history_tape_in_use(max_tapes)  ! whether each history tape is in use in this run
   !
-  ! History tape: an array of history_tape entities (only active fields)
-  !
-  type (history_tape) :: tape(max_tapes)       ! array history tapes
+  ! The actual (accumulated) history data for all active fields in each in-use tape. See
+  ! 'history_tape_in_use' for in-use tapes, and 'masterlist' for active fields. See also
+  ! clmptr_r* variables for raw history data.
+  ! 
+  type (history_tape) :: tape(max_tapes)       ! array of history tapes
   !
   ! Namelist input
   !
@@ -289,7 +317,7 @@ module histFileMod
   !
   character(len=max_length_filename) :: locfnh(max_tapes)  ! local history file names
   character(len=max_length_filename) :: locfnhr(max_tapes) ! local history restart file names
-  logical :: htapes_defined = .false.            ! flag indicates history contents have been defined
+  logical :: htapes_defined = .false.        ! flag indicates history output fields have been defined
   !
   ! NetCDF  Id's
   !
@@ -485,7 +513,7 @@ contains
     character(len=*), intent(in)  :: units            ! units of field
     character(len=*), intent(in)  :: avgflag          ! time averaging flag
     character(len=*), intent(in)  :: long_name        ! long name of field
-    integer         , intent(in)  :: hpindex          ! data type index for history buffer output
+    integer         , intent(in)  :: hpindex          ! index into raw history data (clmptr_r*) arrays
     character(len=*), intent(in)  :: p2c_scale_type   ! scale type for subgrid averaging of pfts to column
     character(len=*), intent(in)  :: c2l_scale_type   ! scale type for subgrid averaging of columns to landunits
     character(len=*), intent(in)  :: l2g_scale_type   ! scale type for subgrid averaging of landunits to gridcells
@@ -774,8 +802,11 @@ contains
     ! !DESCRIPTION:
     ! Define the contents of each history file based on namelist
     ! input for initial or branch run, and restart data if a restart run.
-    ! Use arrays fincl and fexcl to modify default history tape contents.
+    ! Fill and use arrays fincl and fexcl to modify default history tape contents.
     ! Then sort the result alphanumerically.
+    !
+    ! Sets history_tape_in_use and htapes_defined. Fills fields in 'tape' array.
+    ! Optionally updates masterlist avgflag.
     !
     ! !ARGUMENTS:
     !
@@ -873,7 +904,7 @@ contains
           if (ff > 0) then
 
              ! if field is in include list, ff > 0 and htape_addfld
-             ! will not be called for field
+             ! will be called for field
 
              avgflag = getflag (fincl(ff,t))
              call htape_addfld (t, f, avgflag)
@@ -1102,8 +1133,7 @@ contains
   subroutine htape_addfld (t, f, avgflag)
     !
     ! !DESCRIPTION:
-    ! Add a field to the active list for a history tape. Copy the data from
-    ! the master field list to the active list for the tape.
+    ! Add a field to a history tape, copying metadata from the master field list
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t                 ! history tape index
@@ -1127,7 +1157,7 @@ contains
     character(len=*),parameter :: subname = 'htape_addfld'
     !-----------------------------------------------------------------------
 
-    ! Ensure that it is not to late to add a field to the history tape
+    ! Ensure that it is not too late to add a field to the history tape
 
     if (htapes_defined) then
        write(iulog,*) trim(subname),' ERROR: attempt to add field ', &
@@ -1315,7 +1345,7 @@ contains
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer  :: hpindex                 ! history pointer index
+    integer  :: hpindex                 ! index into raw history data (clmptr_r*) arrays
     integer  :: k                       ! gridcell, landunit, column or patch index
     integer  :: beg1d,end1d             ! beginning and ending indices
     integer  :: beg1d_out,end1d_out     ! beginning and ending indices on output grid
@@ -1680,7 +1710,7 @@ contains
     integer, intent(in) :: num2d        ! size of second dimension
     !
     ! !LOCAL VARIABLES:
-    integer  :: hpindex                 ! history pointer index
+    integer  :: hpindex                 ! index into raw history data (clmptr_r*) arrays
     integer  :: k                       ! gridcell, landunit, column or patch index
     integer  :: j                       ! level index
     integer  :: beg1d,end1d             ! beginning and ending indices
@@ -2275,8 +2305,7 @@ contains
   subroutine htape_create (t, histrest)
     !
     ! !DESCRIPTION:
-    ! Define contents of history file t. Issue the required netcdf
-    ! wrapper calls to define the history file contents.
+    ! Define netcdf metadata of history file t.
     !
     ! !USES:
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, nlevmaxurbgrnd, numrad, nlevcan, nvegwcs,nlevsoi
@@ -2472,6 +2501,7 @@ contains
        call ncd_defdim(lnfid, 'fates_levelcwd', num_elements_fates * ncwd, dimid)
        call ncd_defdim(lnfid, 'fates_levelage', num_elements_fates * nlevage, dimid)
        call ncd_defdim(lnfid, 'fates_levagefuel', nlevage * nfsc, dimid)
+       call ncd_defdim(lnfid, 'fates_levclscpf', nclmax*nlevsclass*numpft_fates, dimid)
     end if
 
     if ( .not. lhistrest )then
@@ -5170,6 +5200,8 @@ contains
      !
      ! !DESCRIPTION:
      ! Determine history dataset filenames.
+     ! Note that the first history tape is index 1 in the code but contains 'h0' in its output
+     ! filenames.
      !
      ! !USES:
      use clm_varctl, only : caseid, inst_suffix
@@ -5228,14 +5260,12 @@ contains
                         set_noglc, set_spec, default)
     !
     ! !DESCRIPTION:
-    ! Initialize a single level history field. The pointer, ptrhist,
-    ! is a pointer to the data type array that the history buffer will use.
+    ! Initialize a single level history field. The pointer inputs, ptr\_*,
+    ! point to the appropriate-type array storing the raw history data points.
     ! The value of type1d passed to masterlist\_add\_fld determines which of the
     ! 1d type of the output and the beginning and ending indices the history
-    ! buffer field). Default history contents for given field on all tapes
-    ! are set by calling [masterlist\_make\_active] for the appropriate tape.
-    ! After the masterlist is built, routine [htapes\_build] is called for an
-    ! initial or branch run to initialize the actual history tapes.
+    ! buffer field). All fields default to being written to the first history tape
+    ! unless 'default' is set to 'inactive'.
     !
     ! !ARGUMENTS:
     character(len=*), intent(in)           :: fname          ! field name
@@ -5279,7 +5309,7 @@ contains
 
     ! History buffer pointer
 
-    hpindex = pointer_index()
+    hpindex = next_history_pointer_index()
 
     if (present(ptr_lnd)) then
        l_type1d = grlnd
@@ -5448,14 +5478,12 @@ contains
                         no_snow_behavior, default)
     !
     ! !DESCRIPTION:
-    ! Initialize a single level history field. The pointer, ptrhist,
-    ! is a pointer to the data type array that the history buffer will use.
+    ! Initialize a single level history field. The pointer inputs, ptr\_*,
+    ! point to the appropriate-type array storing the raw history data points.
     ! The value of type1d passed to masterlist\_add\_fld determines which of the
     ! 1d type of the output and the beginning and ending indices the history
-    ! buffer field). Default history contents for given field on all tapes
-    ! are set by calling [masterlist\_make\_active] for the appropriatae tape.
-    ! After the masterlist is built, routine [htapes\_build] is called for an
-    ! initial or branch run to initialize the actual history tapes.
+    ! buffer field). All fields default to being written to the first history tape
+    ! unless 'default' is set to 'inactive'.
     !
     ! !USES:
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, numrad, nlevdecomp_full, nlevcan, nvegwcs,nlevsoi
@@ -5595,6 +5623,8 @@ contains
        num2d = num_elements_fates*nlevage
     case ('fates_levagefuel')
        num2d = nlevage*nfsc
+    case('fates_levclscpf')
+       num2d = nclmax * nclmax * numpft_fates
     case('cft')
        if (cft_size > 0) then
           num2d = cft_size
@@ -5623,7 +5653,7 @@ contains
     end select
 
     ! History buffer pointer
-    hpindex = pointer_index()
+    hpindex = next_history_pointer_index()
 
 
     if (present(ptr_lnd)) then
@@ -5706,7 +5736,7 @@ contains
        l_type1d = namep
        l_type1d_out = namep
        clmptr_ra(hpindex)%ptr => ptr_patch
-
+       
        if (present(set_lake)) then
           do p = bounds%begp,bounds%endp
              l =patch%landunit(p)
@@ -5781,6 +5811,10 @@ contains
        ptr_patch, l2g_scale_type, default)
 
     !
+    ! !DESCRIPTION:
+    ! Adds 1-D or 2-D history field based on column data (if ptr_col is present),
+    ! patch data (otherwise).
+    ! 
     ! !USES:
     use clm_varpar  , only : nlevdecomp_full
     use clm_varctl  , only : iulog
@@ -5789,7 +5823,7 @@ contains
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: fname                    ! field name
-    character(len=*), intent(in) :: type2d                   ! 2d output type
+    character(len=*), intent(in) :: type2d                   ! 2d output type, if 2d output is chosen
     character(len=*), intent(in) :: units                    ! units of field
     character(len=*), intent(in) :: avgflag                  ! time averaging flag
     character(len=*), intent(in) :: long_name                ! long name of field
@@ -5865,18 +5899,19 @@ contains
   end subroutine hist_addfld_decomp
 
   !-----------------------------------------------------------------------
-  integer function pointer_index ()
+  integer function next_history_pointer_index ()
     !
     ! !DESCRIPTION:
-    ! Set the current pointer index and increment the value of the index.
+    ! Return the next free index in clmptr_r* arrays (for a new history field to write to)
+    ! Aka 'hpindex', e.g. field_info.hpindex.
     !
     ! !ARGUMENTS:
     !
     integer, save :: lastindex = 1
-    character(len=*),parameter :: subname = 'pointer_index'
+    character(len=*),parameter :: subname = 'next_history_pointer_index'
     !-----------------------------------------------------------------------
 
-    pointer_index = lastindex
+    next_history_pointer_index = lastindex
     lastindex = lastindex + 1
     if (lastindex > max_mapflds) then
        write(iulog,*) trim(subname),' ERROR: ',&
@@ -5884,7 +5919,7 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
-  end function pointer_index
+  end function next_history_pointer_index
 
   !-----------------------------------------------------------------------
   subroutine hist_add_subscript(name, dim)

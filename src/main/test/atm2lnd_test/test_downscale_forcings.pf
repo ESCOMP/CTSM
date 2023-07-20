@@ -2,7 +2,7 @@ module test_downscale_forcings
 
   ! Tests of atm2lndMod: downscale_forcings
 
-  use pfunit_mod
+  use funit
   use atm2lndMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestSubgridMod
