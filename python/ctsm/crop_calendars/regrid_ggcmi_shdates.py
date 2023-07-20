@@ -35,14 +35,14 @@ def define_arguments(parser):
     return parser
 
 def main(regrid_resolution, regrid_template_file_in, regrid_input_directory, regrid_output_directory):
-    
-    os.chdir(regrid_input_directory)
-    if not os.path.exists(regrid_output_directory):
-        os.makedirs(regrid_output_directory)
 
     # Ensure we can call necessary shell scripts
     for cmd in ["ncks", "ncrename", "ncpdq", "cdo"]:
         run_and_check(f"{cmd} --help")
+    
+    os.chdir(regrid_input_directory)
+    if not os.path.exists(regrid_output_directory):
+        os.makedirs(regrid_output_directory)
     
     templatefile = os.path.join(regrid_output_directory, "template.nc")
     
