@@ -4,15 +4,13 @@ import shutil
 import os
 import datetime as dt
 import cftime
+import sys
+import argparse
 import cropcal_utils as utils
 
-def main():
+def main(input_directory, output_directory, template_file, file_specifier, first_year, last_year):
 
     # %% Options
-
-    # Years to include (set to None to leave that edge unbounded)
-    y1 = 2000
-    yN = 2000
 
     # Global attributes for output files
     out_attrs = {
@@ -24,28 +22,6 @@ def main():
 
 
     # %% Setup
-
-    # Where to save output files
-    outdir = "/Users/Shared/CESM_work/crop_dates_mostrice/"
-
-    # Files/directories to use for inputs
-    ### f10_f10_mg37
-    # templatefile = "/Users/Shared/CESM_runs/f10_f10_mg37/2021-11-23/f10_f10_mg37.clm2.h3.2000-01-01-00000.nc"
-    # indir = "/Users/Shared/GGCMI/AgMIP.input/phase3/ISIMIP3/crop_calendar-nninterp-f10_f10_mg37/"
-    # file_specifier = "_ggcmi_crop_calendar_phase3_v1.01_nninterp-f10_f10_mg37" # In name of input and output files
-    ## half degree
-    templatefile = "/Users/Shared/CESM_runs/halfdeg_test/2022-04-22/halfdeg_test.clm2.h1.1850-01-01-00000.nc"
-    indir = "/Users/Shared/GGCMI/AgMIP.input/phase3/ISIMIP3/crop_calendar/"
-    file_specifier = "_ggcmi_crop_calendar_phase3_v1.01" # In name of input and output files
-    ### f19_g17 ("2-degree", actually 2.5° lon x 1.875° lat; i.e., 144x96)
-    # templatefile = "/Users/Shared/CESM_runs/spinup_ctsm5.1.dev092_I1850Clm50BgcCrop_f19-g17_pt2/lnd/hist/spinup_ctsm5.1.dev092_I1850Clm50BgcCrop_f19-g17_pt2.clm2.h0.1801-12.nc"
-    # indir = "/Users/Shared/GGCMI/AgMIP.input/phase3/ISIMIP3/crop_calendar-nninterp-f19_g17/"
-    # file_specifier = "_ggcmi_crop_calendar_phase3_v1.01_nninterp-f19_g17" # In name of input and output files
-    # ### f09_g17 ("1-degree", actually ???° lon x ???° lat; i.e., 288x192)
-    # templatefile = "/Users/Shared/CESM_work/f09_g17.shdates_template.nc"
-    # indir = "/Users/Shared/GGCMI/AgMIP.input/phase3/ISIMIP3/crop_calendar-nninterp-f09_g17/"
-    # file_specifier = "_ggcmi_crop_calendar_phase3_v1.01_nninterp-f09_g17" # In name of input and output files
-
 
     # Add current date/time to output attributes
     out_attrs["created"] = dt.datetime.now().replace(microsecond=0).astimezone().isoformat()
@@ -146,18 +122,18 @@ def main():
             return str(y)
 
     # Open and time-slice template dataset
-    template_ds = xr.open_dataset(templatefile, decode_times=True).sel(time=slice(slice_yr(y1), slice_yr(yN)))
+    template_ds = xr.open_dataset(template_file, decode_times=True).sel(time=slice(slice_yr(first_year), slice_yr(last_year)))
     # template_ds = template_ds.sel(time=slice(slice_yr(y1), slice_yr(yN)))
     if np.size(template_ds.time) == 0:
-        print(f"Time slice {y1}-{yN} not found in template dataset. Faking.")
-        if y1 != yN:
+        print(f"Time slice {first_year}-{last_year} not found in template dataset. Faking.")
+        if first_year != last_year:
             raise RuntimeError("Not sure how to fake time axis when y1 != yN")
-        template_ds = xr.open_dataset(templatefile, decode_times=True)
+        template_ds = xr.open_dataset(template_file, decode_times=True)
         template_ds = template_ds.isel(time=slice(0,1)) # Get the first timestep. Just using .values[0] causes trouble.
         val0 = template_ds.time.values[0]
         if not isinstance(template_ds.time.values[0], cftime.datetime):
             raise TypeError(f"Template file time axis is type {type(template_ds.time.values[0])}, which isn't a cftime.datetime subclass; not sure that next line (assigning fake value) will work.")
-        template_ds.time.values[0] = type(val0)(y1, 1, 1, 0, 0, 0, 0, has_year_zero=val0.has_year_zero)
+        template_ds.time.values[0] = type(val0)(first_year, 1, 1, 0, 0, 0, 0, has_year_zero=val0.has_year_zero)
         template_ds.time_bounds.values[0] = np.array([template_ds.time.values[0,], template_ds.time.values[0]])
         if "mcdate" in template_ds:
             template_ds.mcdate.values = np.array([20000101,]).astype(type(template_ds.mcdate.values[0]))
@@ -171,8 +147,8 @@ def main():
             template_ds.nstep.values = np.array([0,]).astype(type(template_ds.nstep.values[0]))
     else:
         raise RuntimeError("Try using just a normal, unprocessed output file that doesn't include year 2000")
-    y1 = template_ds.time.values[0].year
-    yN = template_ds.time.values[-1].year
+    first_year = template_ds.time.values[0].year
+    last_year = template_ds.time.values[-1].year
     template_ds.attrs = out_attrs
 
     #  Remove variable(s) we don't need (hdm, or any all-uppercase variables)
@@ -182,7 +158,7 @@ def main():
 
     # Create output files
     for v in variable_dict:
-        outfile = "%s%ss%s.%d-%d.%s.nc" % (outdir, v, file_specifier, y1, yN, dt.datetime.now().strftime("%Y%m%d_%H%M%S"))
+        outfile = "%s%ss%s.%d-%d.%s.nc" % (output_directory, v, file_specifier, first_year, last_year, dt.datetime.now().strftime("%Y%m%d_%H%M%S"))
         variable_dict[v]["outfile"] = outfile
         variable_dict[v]["outfile_fill1"] = outfile.replace(".nc", ".fill1.nc")
         template_ds.to_netcdf(path=variable_dict[v]["outfile"])
@@ -224,7 +200,7 @@ def main():
                     c, 
                     len(crop_dict)))
             
-            file_ggcmi = indir + thiscrop_ggcmi + file_specifier + ".nc4"
+            file_ggcmi = input_directory + thiscrop_ggcmi + file_specifier + ".nc4"
             if not os.path.exists(file_ggcmi):
                 raise Exception("Input file not found: " + file_ggcmi)
             cropcal_ds = xr.open_dataset(file_ggcmi)
@@ -346,7 +322,62 @@ def main():
     print("Done!")
     
 if __name__ == "__main__":
+    ###############################
+    ### Process input arguments ###
+    ###############################
+    parser = argparse.ArgumentParser(
+        description="Converts raw sowing and harvest date files provided by GGCMI into a format that CLM can read."
+    )
+
+    # Required
+    parser.add_argument(
+        "-i",
+        "--input-directory",
+        help="Directory containing the GGCMI sowing/harvest date files",
+        type=str,
+        required=True,
+    )
+    parser.add_argument(
+        "-o",
+        "--output-directory",
+        help="Where to save the CLM-compatible sowing and harvest date files",
+        type=str,
+        required=True,
+    )
+    parser.add_argument(
+        "-t",
+        "--template-file",
+        help="A CLM output file to be used as a template for input files, especially for grid and time",
+        type=str,
+        required=True,
+    )
+    parser.add_argument(
+        "--file-specifier",
+        help="String following CROP_IRR in input filenames. E.g., mai_irFILESPECIFIER.nc4. Will also be saved to output filenames.",
+        type=str,
+        default = "_ggcmi_crop_calendar_phase3_v1.01",
+    )
+    parser.add_argument(
+        "-y1",
+        "--first-year",
+        help="First year in output files. Must be present in template file.",
+        type=int,
+        default=2000,
+    )
+    parser.add_argument(
+        "-yN",
+        "--last-year",
+        help="Last year in output files. Must be present in template file.",
+        type=int,
+        default=2000,
+    )
+
+    # Get arguments
+    args = parser.parse_args(sys.argv[1:])
+    
+    
     ###########
     ### Run ###
     ###########
-    main()
+    main(args.input_directory, args.output_directory, args.template_file, args.file_specifier,
+         args.first_year, args.last_year)
