@@ -2266,7 +2266,7 @@ contains
     real(r8), intent(in) :: cair               ! Atmospheric CO2 partial pressure (Pa)
     real(r8), intent(in) :: oair               ! Atmospheric O2 partial pressure (Pa)
     integer,  intent(in) :: p, iv, c           ! pft, c3/c4, and column index
-    real(r8), intent(out) :: gs_mol            ! leaf stomatal conductance (umol H2O/m**2/s)
+    real(r8), intent(inout) :: gs_mol          ! leaf stomatal conductance (umol H2O/m**2/s)
     integer,  intent(out) :: iter              !number of iterations used, for record only
     type(atm2lnd_type)  , intent(in)    :: atm2lnd_inst
     type(photosyns_type), intent(inout) :: photosyns_inst
@@ -2378,7 +2378,7 @@ contains
     real(r8), intent(in) :: oair              ! Atmospheric O2 partial pressure (Pa)
     real(r8), intent(in) :: rh_can            ! inside canopy relative humidity
     integer,  intent(in) :: ip, iv, ic        ! pft, c3/c4, and column index
-    real(r8), intent(out) :: gs_mol           ! leaf stomatal conductance (umol H2O/m**2/s)
+    real(r8), intent(inout) :: gs_mol         ! leaf stomatal conductance (umol H2O/m**2/s)
     type(atm2lnd_type)  , intent(in)    :: atm2lnd_inst
     type(photosyns_type), intent(inout) :: photosyns_inst
     !
@@ -2568,7 +2568,7 @@ contains
     real(r8)             , intent(in)    :: rh_can   ! canopy air realtive humidity
     integer              , intent(in)    :: p, iv, c ! pft, vegetation type and column indexes
     real(r8)             , intent(out)   :: fval     ! return function of the value f(ci)
-    real(r8)             , intent(out)   :: gs_mol   ! leaf stomatal conductance (umol H2O/m**2/s)
+    real(r8)             , intent(inout) :: gs_mol   ! leaf stomatal conductance (umol H2O/m**2/s)
     type(atm2lnd_type)   , intent(in)    :: atm2lnd_inst
     type(photosyns_type) , intent(inout) :: photosyns_inst
     !
