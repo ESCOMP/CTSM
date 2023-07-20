@@ -337,14 +337,14 @@ if __name__ == "__main__":
     ### Process input arguments ###
     ###############################
     parser = argparse.ArgumentParser(
-        description="Converts raw sowing and harvest date files provided by GGCMI into a format that CLM can read."
+        description="Converts raw sowing and harvest date files provided by GGCMI into a format that CLM can read, optionally at a target resolution."
     )
 
     # Required
     parser.add_argument(
         "-i",
         "--input-directory",
-        help="Directory containing the GGCMI sowing/harvest date files",
+        help="Directory containing the raw GGCMI sowing/harvest date files",
         type=str,
         required=True,
     )
