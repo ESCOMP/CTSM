@@ -17,14 +17,12 @@ def main(input_directory, output_directory, template_file, file_specifier, first
         "title": "GGCMI crop calendar for Phase 3, v1.01",
         "author_thisfile": "Sam Rabin (sam.rabin@gmail.com)",
         "author_original": "Jonas Jägermeyr (jaegermeyr@uchicago.edu)",
-        "comment": "Day of year is 1-indexed (i.e., Jan. 1 = 1). Filled using cdo -remapnn,$original -setmisstonn"
+        "comment": "Day of year is 1-indexed (i.e., Jan. 1 = 1). Filled using cdo -remapnn,$original -setmisstonn",
+        "created": dt.datetime.now().replace(microsecond=0).astimezone().isoformat(),
     }
 
 
     # %% Setup
-
-    # Add current date/time to output attributes
-    out_attrs["created"] = dt.datetime.now().replace(microsecond=0).astimezone().isoformat()
 
     # Define crop dictionary
     # As "CLMname: [number, GGCMIname]"
