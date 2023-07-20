@@ -8,15 +8,15 @@ import sys
 import argparse
 import cropcal_utils as utils
 
-def main(input_directory, output_directory, template_file, file_specifier, first_year, last_year,
-         verbose):
+def main(input_directory, output_directory, template_file, file_specifier, author, first_year,
+         last_year, verbose):
 
     # %% Options
 
     # Global attributes for output files
     out_attrs = {
         "title": "GGCMI crop calendar for Phase 3, v1.01",
-        "author_thisfile": "Sam Rabin (sam.rabin@gmail.com)",
+        "author_thisfile": author,
         "author_original": "Jonas Jägermeyr (jaegermeyr@uchicago.edu)",
         "comment": "Day of year is 1-indexed (i.e., Jan. 1 = 1). Filled using cdo -remapnn,$original -setmisstonn",
         "created": dt.datetime.now().replace(microsecond=0).astimezone().isoformat(),
@@ -304,6 +304,7 @@ def main(input_directory, output_directory, template_file, file_specifier, first
             # Save
             if verbose:
                 print("    Saving %s..." % varname_ggcmi)
+            raise RuntimeError("Stopping")
             # start = time.time()
             # Can't overwrite file_clm while you have it open (as out_ds), so first copy it to a temporary file...
             shutil.copyfile(file_clm, file_clm_tmp)
@@ -355,6 +356,13 @@ if __name__ == "__main__":
         type=str,
         required=True,
     )
+    parser.add_argument(
+        "-a",
+        "--author",
+        help="String to be saved in author_thisfile attribute of output files. E.g., 'Author Name (authorname@ucar.edu)'",
+        type=str,
+        required=True
+    )
     
     # Optional
     parser.add_argument(
@@ -392,5 +400,5 @@ if __name__ == "__main__":
     ###########
     ### Run ###
     ###########
-    main(args.input_directory, args.output_directory, args.template_file, args.file_specifier,
-         args.first_year, args.last_year, args.verbose)
+    main(args.input_directory, args.output_directory, args.template_file, args.author,
+         args.file_specifier, args.first_year, args.last_year, args.verbose)
