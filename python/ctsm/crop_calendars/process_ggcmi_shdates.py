@@ -22,10 +22,8 @@ def main():
 
     import numpy as np
     import xarray as xr
-    import matplotlib.pyplot as plt
     import shutil
     import os
-    import time
     import datetime as dt
     import cftime
 
