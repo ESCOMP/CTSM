@@ -2382,13 +2382,13 @@
     </options>
   </test>
 
-  <test name="SMS_Ld3" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdSatPhen_prescribed">
+  <test name="SMS_Ld3" grid="f09_g17" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdSatPhen_prescribed">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Test with prescribed LAI with FatesSP mode</option>
+      <option name="comment">Test with prescribed LAI and soil moisture with FatesSP mode</option>
     </options>
   </test>
   <test name="SMS_Lm1" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdBasic">

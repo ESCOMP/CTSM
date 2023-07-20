@@ -1,3 +1,0 @@
-This testmod currently only works with lai streams (not soil moisture), because of FATES issue #845
- 
-See https://github.com/NGEET/fates/issues/845
