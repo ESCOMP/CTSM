@@ -296,7 +296,6 @@ def main(input_directory, output_directory, template_file, author, file_specifie
             # Save
             if verbose:
                 print("    Saving %s..." % varname_ggcmi)
-            raise RuntimeError("Stopping")
             # start = time.time()
             # Can't overwrite file_clm while you have it open (as out_ds), so first copy it to a temporary file...
             shutil.copyfile(file_clm, file_clm_tmp)
