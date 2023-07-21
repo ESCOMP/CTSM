@@ -385,14 +385,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "-y1",
         "--first-year",
-        help="First year in output files. Must be present in template file.",
+        help="First year in output files. Must be present in template file, unless it's the same as the last year.",
         type=int,
         default=2000,
     )
     parser.add_argument(
         "-yN",
         "--last-year",
-        help="Last year in output files. Must be present in template file.",
+        help="Last year in output files. Must be present in template file, unless it's the same as the first year.",
         type=int,
         default=2000,
     )
