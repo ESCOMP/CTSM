@@ -420,6 +420,6 @@ if __name__ == "__main__":
     ###########
     ### Run ###
     ###########
-    main(args.input_directory, args.output_directory, args.template_file, args.author,
-         args.file_specifier, args.first_year, args.last_year, args.verbose, args.ggcmi_author,
-         args.regrid_resolution, args.regrid_template_file)
+    main(os.path.realpath(args.input_directory), os.path.realpath(args.output_directory),
+         args.template_file, args.author, args.file_specifier, args.first_year, args.last_year,
+         args.verbose, args.ggcmi_author, args.regrid_resolution, args.regrid_template_file)

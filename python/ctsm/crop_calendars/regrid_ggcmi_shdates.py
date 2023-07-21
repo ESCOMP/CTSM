@@ -117,5 +117,7 @@ if __name__ == "__main__":
     ###########
     ### Run ###
     ###########
-    main(args.regrid_resolution, args.regrid_template_file, args.regrid_input_directory,
-         args.regrid_output_directory)
+    main(args.regrid_resolution, 
+         os.path.realpath(args.regrid_template_file),
+         os.path.realpath(args.regrid_input_directory),
+         os.path.realpath(args.regrid_output_directory))
