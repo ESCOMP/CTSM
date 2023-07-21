@@ -222,7 +222,6 @@ def main(
 
         # Fill NAs with dummy values
         dummy_fill = -1
-        gdd_fill0_maps_ds = gdd_maps_ds.fillna(0)
         gdd_maps_ds = gdd_maps_ds.fillna(dummy_fill)
         gddfn.log(logger, "Done getting and gridding means.")
 
@@ -250,10 +249,8 @@ def main(
 
         for v in gdd_maps_ds:
             thisCrop_gridded = gdd_maps_ds[v].copy()
-            thisCrop_fill0_gridded = gdd_fill0_maps_ds[v].copy()
             break
         dummy_gridded = make_dummy(thisCrop_gridded, -1)
-        dummy_gridded0 = make_dummy(thisCrop_fill0_gridded, 0)
 
         for v, thisVar in enumerate(dummy_vars):
             if thisVar in gdd_maps_ds:
@@ -263,9 +260,6 @@ def main(
             dummy_gridded.name = thisVar
             dummy_gridded.attrs["long_name"] = dummy_longnames[v]
             gdd_maps_ds[thisVar] = dummy_gridded
-            dummy_gridded0.name = thisVar
-            dummy_gridded0.attrs["long_name"] = dummy_longnames[v]
-            gdd_fill0_maps_ds[thisVar] = dummy_gridded0
 
         # Add lon/lat attributes
         def add_lonlat_attrs(ds):
@@ -274,7 +268,6 @@ def main(
             return ds
 
         gdd_maps_ds = add_lonlat_attrs(gdd_maps_ds)
-        gdd_fill0_maps_ds = add_lonlat_attrs(gdd_fill0_maps_ds)
         gddharv_maps_ds = add_lonlat_attrs(gddharv_maps_ds)
 
         gddfn.log(logger, "Done.")
@@ -289,7 +282,6 @@ def main(
         # Get output file path
         datestr = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
         outfile = os.path.join(output_dir, "gdds_" + datestr + ".nc")
-        outfile_fill0 = os.path.join(output_dir, "gdds_fill0_" + datestr + ".nc")
 
         def save_gdds(sdates_file, hdates_file, outfile, gdd_maps_ds, sdates_rx):
             # Set up output file from template (i.e., prescribed sowing dates).
@@ -315,7 +307,6 @@ def main(
             gdd_maps_ds.to_netcdf(outfile, mode="w", format="NETCDF3_CLASSIC")
 
         save_gdds(sdates_file, hdates_file, outfile, gdd_maps_ds, sdates_rx)
-        save_gdds(sdates_file, hdates_file, outfile_fill0, gdd_fill0_maps_ds, sdates_rx)
 
         gddfn.log(logger, "Done saving.")
 

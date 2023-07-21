@@ -364,7 +364,6 @@ class RXCROPMATURITY(SystemTestsCommon):
 
         # Where were the prescribed maturity requirements saved?
         generated_gdd_files = glob.glob(os.path.join(self._generate_gdds_dir, "gdds_*.nc"))
-        generated_gdd_files = [x for x in generated_gdd_files if "fill0" not in x]
         if len(generated_gdd_files) != 1:
             error_message = f"ERROR: Expected one matching prescribed maturity requirements file; found {len(generated_gdd_files)}: {generated_gdd_files}"
             logger.error(error_message)
