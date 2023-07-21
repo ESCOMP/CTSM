@@ -213,7 +213,9 @@ def main(input_directory, output_directory, template_file, author, file_specifie
                     c, 
                     len(crop_dict)))
             
-            file_ggcmi = input_directory + thiscrop_ggcmi + file_specifier + ".nc4"
+            file_ggcmi = os.path.join(
+                regridded_ggcmi_files_dir,
+                thiscrop_ggcmi + file_specifier + ".nc4")
             if not os.path.exists(file_ggcmi):
                 raise Exception("Input file not found: " + file_ggcmi)
             cropcal_ds = xr.open_dataset(file_ggcmi)
