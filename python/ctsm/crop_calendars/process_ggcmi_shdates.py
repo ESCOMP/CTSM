@@ -11,7 +11,18 @@ import cropcal_utils as utils
 import regrid_ggcmi_shdates
 
 
-def main(input_directory, output_directory, template_file, author, file_specifier, first_year,
+def get_cft(y):
+    return cftime.DatetimeNoLeap(y, 1, 1, 0, 0, 0, 0, has_year_zero=True)
+    
+def get_dayssince_jan1y1(y1, y):
+    cft_y1 = get_cft(y1)
+    cft_y  = get_cft(y)
+    time_delta = cft_y - cft_y1
+    time_delta_secs = time_delta.total_seconds()
+    return time_delta_secs / (60*60*24)
+
+
+def main(input_directory, output_directory, author, file_specifier, first_year,
          last_year, verbose, ggcmi_author, regrid_resolution, regrid_template_file):
 
     ############################################################
@@ -128,44 +139,20 @@ def main(input_directory, output_directory, template_file, author, file_specifie
         "comment": "Day of year is 1-indexed (i.e., Jan. 1 = 1). Filled using cdo -remapnn,$original -setmisstonn",
         "created": dt.datetime.now().replace(microsecond=0).astimezone().isoformat(),
     }
-
-    # Open and time-slice template dataset
-    def slice_yr(y):
-        if y == None:
-            return None
-        else:
-            return str(y)
-    template_ds = xr.open_dataset(template_file, decode_times=True).sel(time=slice(slice_yr(first_year), slice_yr(last_year)))
-    # template_ds = template_ds.sel(time=slice(slice_yr(y1), slice_yr(yN)))
-    if np.size(template_ds.time) == 0:
-        print(f"Time slice {first_year}-{last_year} not found in template dataset. Faking.")
-        if first_year != last_year:
-            raise RuntimeError("Not sure how to fake time axis when y1 != yN")
-        template_ds = xr.open_dataset(template_file, decode_times=True)
-        template_ds = template_ds.isel(time=slice(0,1)) # Get the first timestep. Just using .values[0] causes trouble.
-        val0 = template_ds.time.values[0]
-        if not isinstance(template_ds.time.values[0], cftime.datetime):
-            raise TypeError(f"Template file time axis is type {type(template_ds.time.values[0])}, which isn't a cftime.datetime subclass; not sure that next line (assigning fake value) will work.")
-        template_ds.time.values[0] = type(val0)(first_year, 1, 1, 0, 0, 0, 0, has_year_zero=val0.has_year_zero)
-        template_ds.time_bounds.values[0] = np.array([template_ds.time.values[0,], template_ds.time.values[0]])
-        if "mcdate" in template_ds:
-            template_ds.mcdate.values = np.array([20000101,]).astype(type(template_ds.mcdate.values[0]))
-        if "mcsec" in template_ds:
-            template_ds.mcsec.values = np.array([0,]).astype(type(template_ds.mcsec.values[0]))
-        if "mdcur" in template_ds:
-            template_ds.mdcur.values = np.array([0,]).astype(type(template_ds.mdcur.values[0]))
-        if "mscur" in template_ds:
-            template_ds.mscur.values = np.array([0,]).astype(type(template_ds.mscur.values[0]))
-        if "nstep" in template_ds:
-            template_ds.nstep.values = np.array([0,]).astype(type(template_ds.nstep.values[0]))
-    first_year = template_ds.time.values[0].year
-    last_year = template_ds.time.values[-1].year
-    template_ds.attrs = out_attrs
-
-    #  Remove variable(s) we don't need (hdm, or any all-uppercase variables)
-    for v in template_ds:
-        if v == "hdm" or v.upper()==v:
-            template_ds = template_ds.drop(v)
+    
+    # Create template dataset
+    time_array = np.array([get_dayssince_jan1y1(first_year, y) for y in np.arange(first_year, last_year+1)])
+    time_coord = xr.IndexVariable(
+        "time",
+        data = time_array,
+        attrs = {
+            "long_name": "time",
+            "units": f"days since {first_year}-01-01",
+            "calendar": "noleap",
+            }
+        )
+    template_ds = xr.Dataset(coords = {"time": time_coord},
+                             attrs = out_attrs)
 
     # Create output files
     datetime_string = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -173,8 +160,6 @@ def main(input_directory, output_directory, template_file, author, file_specifie
         outfile = os.path.join(output_directory, f"{v}s_{file_specifier}.{first_year}-{last_year}.{datetime_string}.nc")
         variable_dict[v]["outfile"] = outfile
         template_ds.to_netcdf(path=variable_dict[v]["outfile"])
-
-    template_ds.close()
 
 
     #########################
@@ -336,13 +321,6 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument(
-        "-t",
-        "--template-file",
-        help="A CLM output file to be used as a template for input files, especially for grid and time",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
         "-a",
         "--author",
         help="String to be saved in author_thisfile attribute of output files. E.g., 'Author Name (authorname@ucar.edu)'",
@@ -396,5 +374,5 @@ if __name__ == "__main__":
     ### Run ###
     ###########
     main(os.path.realpath(args.input_directory), os.path.realpath(args.output_directory),
-         args.template_file, args.author, args.file_specifier, args.first_year, args.last_year,
+         args.author, args.file_specifier, args.first_year, args.last_year,
          args.verbose, args.ggcmi_author, args.regrid_resolution, args.regrid_template_file)
