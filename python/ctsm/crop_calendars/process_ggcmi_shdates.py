@@ -158,8 +158,6 @@ def main(input_directory, output_directory, template_file, author, file_specifie
             template_ds.mscur.values = np.array([0,]).astype(type(template_ds.mscur.values[0]))
         if "nstep" in template_ds:
             template_ds.nstep.values = np.array([0,]).astype(type(template_ds.nstep.values[0]))
-    else:
-        raise RuntimeError("Try using just a normal, unprocessed output file that doesn't include year 2000")
     first_year = template_ds.time.values[0].year
     last_year = template_ds.time.values[-1].year
     template_ds.attrs = out_attrs
