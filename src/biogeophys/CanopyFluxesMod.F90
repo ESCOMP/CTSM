@@ -899,8 +899,8 @@ bioms:   do f = 1, fn
 
             lt = min(lt,z0v_LAImax(patch%itype(p)))
             delt = 2._r8
-            U_ustar_ini = (z0v_Cs(patch%itype(p)) + z0v_Cr(patch%itype(p)) * lt / 2._r8)**(-0.5_r8) &
-                      *z0v_c(patch%itype(p)) * lt / 4._r8
+            U_ustar_ini = (z0v_Cs(patch%itype(p)) + z0v_Cr(patch%itype(p)) * lt * 0.5_r8)**(-0.5_r8) &
+                      *z0v_c(patch%itype(p)) * lt * 0.25_r8
             U_ustar = U_ustar_ini
 
             do while (delt > 0.0001_r8)

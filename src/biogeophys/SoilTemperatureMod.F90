@@ -1382,7 +1382,7 @@ contains
                      if (imelt(c,j) == 1 .AND. j < 1) then
                         qflx_snomelt_lyr(c,j) = max(0._r8,(wice0(c,j)-h2osoi_ice(c,j)))/dtime
                         qflx_snomelt(c)       = qflx_snomelt(c) + qflx_snomelt_lyr(c,j)
-                        snomelt_accum(c)      = snomelt_accum(c) + qflx_snomelt_lyr(c,j) * dtime/1000._r8  
+                        snomelt_accum(c)      = snomelt_accum(c) + qflx_snomelt_lyr(c,j) * dtime * 1.e-3_r8  
                      endif
 
                      ! layer freezing mass flux (positive):
