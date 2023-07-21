@@ -13,7 +13,7 @@ def run_and_check(cmd):
         text = True,
         )
     if result.returncode != 0:
-        raise RuntimeError(f"Trouble running `{result.args}` in shell:\n{result.stderr}")
+        raise RuntimeError(f"Trouble running `{result.args}` in shell:\n{result.stdout}\n{result.stderr}")
     
 # Functionized because these are shared by process_ggcmi_shdates
 def define_arguments(parser):
