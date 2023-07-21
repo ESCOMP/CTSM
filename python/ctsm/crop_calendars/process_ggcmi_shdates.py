@@ -30,7 +30,7 @@ def main(input_directory, output_directory, template_file, author, file_specifie
     
     # First, we associate CLM crop names with (1) their integer counterpart and (2) their GGCMI counterpart.
     # Some notes:
-    # - As "CLMname: [number, GGCMIname]"
+    # - As "CLMname: {clm_num, thiscrop_ggcmi}"
     # - CLM names and numbers taken from commit `3dcbc7499a57904750a994672fc36b4221b9def5`
     # - Using one global GGCMI value for both temperate and tropical versions of corn and soybean.
     # - There is no GGCMI equivalent of CLM's winter barley and rye. Using winter wheat instead.
