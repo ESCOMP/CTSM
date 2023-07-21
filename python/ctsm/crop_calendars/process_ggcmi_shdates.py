@@ -173,9 +173,7 @@ def main(input_directory, output_directory, template_file, author, file_specifie
     for v in variable_dict:
         outfile = "%s%ss%s.%d-%d.%s.nc" % (output_directory, v, file_specifier, first_year, last_year, dt.datetime.now().strftime("%Y%m%d_%H%M%S"))
         variable_dict[v]["outfile"] = outfile
-        variable_dict[v]["outfile_fill1"] = outfile.replace(".nc", ".fill1.nc")
         template_ds.to_netcdf(path=variable_dict[v]["outfile"])
-        template_ds.to_netcdf(path=variable_dict[v]["outfile_fill1"])
 
     template_ds.close()
 
@@ -236,14 +234,9 @@ def main(input_directory, output_directory, template_file, author, file_specifie
             if not os.path.exists(file_clm):
                 raise Exception("Output file not found: " + file_clm)
             file_clm_tmp = file_clm + ".tmp"
-            file_clm_fill1 = variable_dict[thisvar_clm]["outfile_fill1"]
-            if not os.path.exists(file_clm_fill1):
-                raise Exception("Output file not found: " + file_clm_fill1)
-            file_clm_fill1_tmp = file_clm_fill1 + ".tmp"
             
             # "Read" the file (doesn't actually bring anything into memory yet)
             out_ds = xr.open_dataset(file_clm)
-            out_fill1_ds = xr.open_dataset(file_clm_fill1)
             
             # Strip dataset to just this variable
             droplist = []
@@ -252,33 +245,24 @@ def main(input_directory, output_directory, template_file, author, file_specifie
                     droplist.append(i)
             thisvar_ds = cropcal_ds.drop(droplist)
             thisvar_ds = thisvar_ds.load()
-            thisvar_fill1_ds = thisvar_ds.copy()
 
             # Convert to integer
             new_fillvalue = -1
             dummyvalue = -1
             thisvar_ds.variables[varname_ggcmi].encoding["_FillValue"] \
                 = new_fillvalue
-            thisvar_fill1_ds.variables[varname_ggcmi].encoding["_FillValue"] \
-                = new_fillvalue
             if thiscrop_ggcmi == None:
                 thisvar_ds.variables[varname_ggcmi].values.fill(dummyvalue)
-                thisvar_fill1_ds.variables[varname_ggcmi].values.fill(1)
             else:
                 thisvar_ds.variables[varname_ggcmi].values[np.isnan(thisvar_ds.variables[varname_ggcmi].values)] \
                     = new_fillvalue
                 thisvar_ds.variables[varname_ggcmi].values \
                     = thisvar_ds.variables[varname_ggcmi].values.astype("int16")
-                thisvar_fill1_ds.variables[varname_ggcmi].values[np.isnan(thisvar_fill1_ds.variables[varname_ggcmi].values)] \
-                    = 1
-                thisvar_fill1_ds.variables[varname_ggcmi].values \
-                    = thisvar_fill1_ds.variables[varname_ggcmi].values.astype("int16")
             
             # Add time dimension (https://stackoverflow.com/a/62862440)
             # (Repeats original map for every timestep)
             # Probably not necessary to use this method, since I only end up extracting thisvar_ds.values anyway---I could probably use some numpy method instead.
             thisvar_ds = thisvar_ds.expand_dims(time = template_ds.time)
-            thisvar_fill1_ds = thisvar_fill1_ds.expand_dims(time = template_ds.time)
             # "True" here shows that the time dimension was created by just repeating the one map.
             # tmp = thisvar_ds[varname_ggcmi]
             # np.all((np.diff(tmp.values, axis=0) == 0.0) | np.isnan(np.diff(tmp.values, axis=0)))
@@ -286,8 +270,6 @@ def main(input_directory, output_directory, template_file, author, file_specifie
             # Add variable to output dataset
             out_ds[varname_clm]=(thisvar_ds[varname_ggcmi].dims,
                                 thisvar_ds[varname_ggcmi].values)
-            out_fill1_ds[varname_clm]=(thisvar_fill1_ds[varname_ggcmi].dims,
-                                thisvar_fill1_ds[varname_ggcmi].values)
 
             # Edit/add variable attributes etc.
             longname = thisvar_ds[varname_ggcmi].attrs["long_name"]
@@ -310,7 +292,6 @@ def main(input_directory, output_directory, template_file, author, file_specifie
                 out_ds[varname_clm].attrs["add_offset"] = np.int16(0)
                 return out_ds
             out_ds = set_var_attrs(out_ds, varname_clm, longname, thiscrop_clm, thiscrop_ggcmi, varname_ggcmi, new_fillvalue)
-            out_fill1_ds = set_var_attrs(out_fill1_ds, varname_clm, longname, thiscrop_clm, thiscrop_ggcmi, varname_ggcmi, new_fillvalue)
 
             # Save
             if verbose:
@@ -319,16 +300,12 @@ def main(input_directory, output_directory, template_file, author, file_specifie
             # start = time.time()
             # Can't overwrite file_clm while you have it open (as out_ds), so first copy it to a temporary file...
             shutil.copyfile(file_clm, file_clm_tmp)
-            shutil.copyfile(file_clm_fill1, file_clm_fill1_tmp)
             # ... then save out_ds to the temporary file...
             out_ds.to_netcdf(file_clm_tmp, format="NETCDF3_CLASSIC")
-            out_fill1_ds.to_netcdf(file_clm_fill1_tmp, format="NETCDF3_CLASSIC")
             # ... then close out_ds...
             out_ds.close()
-            out_fill1_ds.close()
             # ... and finally replace the original file with the new temporary file (deleting the temporary file in the process)
             os.replace(file_clm_tmp, file_clm)
-            os.replace(file_clm_fill1_tmp, file_clm_fill1)
             # end = time.time()
             # print(end - start)
             ### NOTE: This method gets slower and slower as the file gets bigger! (The entire process, but also the out_ds.to_netcdf() step.) Is there a better way?
