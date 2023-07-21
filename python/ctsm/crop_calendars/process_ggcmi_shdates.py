@@ -172,7 +172,7 @@ def main(input_directory, output_directory, template_file, author, file_specifie
     # Create output files
     datetime_string = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
     for v in variable_dict:
-        outfile = os.path.join(output_directory, f"{v}s{file_specifier}.{first_year}-{last_year}.{datetime_string}.nc")
+        outfile = os.path.join(output_directory, f"{v}s_{file_specifier}.{first_year}-{last_year}.{datetime_string}.nc")
         variable_dict[v]["outfile"] = outfile
         template_ds.to_netcdf(path=variable_dict[v]["outfile"])
 
@@ -214,7 +214,7 @@ def main(input_directory, output_directory, template_file, author, file_specifie
             
             file_ggcmi = os.path.join(
                 regridded_ggcmi_files_dir,
-                thiscrop_ggcmi + file_specifier + ".nc4")
+                f"{thiscrop_ggcmi}_{file_specifier}.nc4")
             if not os.path.exists(file_ggcmi):
                 raise Exception("Input file not found: " + file_ggcmi)
             cropcal_ds = xr.open_dataset(file_ggcmi)
@@ -355,9 +355,9 @@ if __name__ == "__main__":
     # Optional
     parser.add_argument(
         "--file-specifier",
-        help="String following CROP_IRR in input filenames. E.g., mai_irFILESPECIFIER.nc4. Will also be saved to output filenames.",
+        help="String following CROP_IRR_ in input filenames. E.g., mai_ir_FILESPECIFIER.nc4. Will also be saved to output filenames.",
         type=str,
-        default = "_ggcmi_crop_calendar_phase3_v1.01",
+        default = "ggcmi_crop_calendar_phase3_v1.01",
     )
     parser.add_argument(
         "-y1",
