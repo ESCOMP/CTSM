@@ -11,7 +11,7 @@ import cropcal_utils as utils
 import regrid_ggcmi_shdates
 
 
-def main(input_directory, output_directory, template_file, file_specifier, author, first_year,
+def main(input_directory, output_directory, template_file, author, file_specifier, first_year,
          last_year, verbose, ggcmi_author, regrid_resolution, regrid_template_file):
 
     ############################################################
