@@ -399,7 +399,7 @@ if __name__ == "__main__":
         "--verbose",
         help="Whether to print verbose messages",
         type=bool,
-        default=False,
+        default=True,
     )
     parser.add_argument(
         "--ggcmi-author",
