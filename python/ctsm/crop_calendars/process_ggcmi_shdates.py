@@ -248,9 +248,6 @@ def main(input_directory, output_directory, author, file_specifier, first_year,
             # (Repeats original map for every timestep)
             # Probably not necessary to use this method, since I only end up extracting thisvar_ds.values anyway---I could probably use some numpy method instead.
             thisvar_ds = thisvar_ds.expand_dims(time = template_ds.time)
-            # "True" here shows that the time dimension was created by just repeating the one map.
-            # tmp = thisvar_ds[varname_ggcmi]
-            # np.all((np.diff(tmp.values, axis=0) == 0.0) | np.isnan(np.diff(tmp.values, axis=0)))
 
             # Add variable to output dataset
             out_ds[varname_clm]=(thisvar_ds[varname_ggcmi].dims,
