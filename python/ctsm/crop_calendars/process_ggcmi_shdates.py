@@ -218,10 +218,6 @@ def main(input_directory, output_directory, author, file_specifier, first_year,
             file_clm = variable_dict[thisvar_clm]["outfile"]
             if not os.path.exists(file_clm):
                 raise Exception("Output file not found: " + file_clm)
-            file_clm_tmp = file_clm + ".tmp"
-            
-            # "Read" the file (doesn't actually bring anything into memory yet)
-            out_ds = xr.open_dataset(file_clm)
             
             # Strip dataset to just this variable
             droplist = []
@@ -248,48 +244,40 @@ def main(input_directory, output_directory, author, file_specifier, first_year,
             # (Repeats original map for every timestep)
             # Probably not necessary to use this method, since I only end up extracting thisvar_ds.values anyway---I could probably use some numpy method instead.
             thisvar_ds = thisvar_ds.expand_dims(time = template_ds.time)
-
-            # Add variable to output dataset
-            out_ds[varname_clm]=(thisvar_ds[varname_ggcmi].dims,
-                                thisvar_ds[varname_ggcmi].values)
+            thisvar_da_tmp = thisvar_ds[varname_ggcmi]
+            thisvar_da = xr.DataArray(data = thisvar_da_tmp.values.astype("int16"),
+                                      attrs = thisvar_da_tmp.attrs,
+                                      coords = thisvar_da_tmp.coords,
+                                      name = varname_clm)
+            
 
             # Edit/add variable attributes etc.
-            longname = thisvar_ds[varname_ggcmi].attrs["long_name"]
+            longname = thisvar_da.attrs["long_name"]
             longname = longname.replace("rainfed", thiscrop_clm).replace("irrigated", thiscrop_clm)
-            def set_var_attrs(out_ds, varname_clm, longname, thiscrop_clm, thiscrop_ggcmi, varname_ggcmi, new_fillvalue):
-                out_ds[varname_clm].attrs["long_name"] = longname
+            def set_var_attrs(thisvar_da, longname, thiscrop_clm, thiscrop_ggcmi, varname_ggcmi, new_fillvalue):
+                thisvar_da.attrs["long_name"] = longname
                 if thiscrop_ggcmi == None:
-                    out_ds[varname_clm].attrs["crop_name_clm"] = "none"
-                    out_ds[varname_clm].attrs["crop_name_ggcmi"] = "none"
+                   thisvar_da.attrs["crop_name_clm"] = "none"
+                   thisvar_da.attrs["crop_name_ggcmi"] = "none"
                 else:
-                    out_ds[varname_clm].attrs["crop_name_clm"] = thiscrop_clm
-                    out_ds[varname_clm].attrs["crop_name_ggcmi"] = thiscrop_ggcmi
-                out_ds[varname_clm].attrs["short_name_ggcmi"] = varname_ggcmi
-                out_ds[varname_clm].attrs["units"] = "day of year"
-                out_ds[varname_clm].encoding["_FillValue"] = new_fillvalue
+                   thisvar_da.attrs["crop_name_clm"] = thiscrop_clm
+                   thisvar_da.attrs["crop_name_ggcmi"] = thiscrop_ggcmi
+                thisvar_da.attrs["short_name_ggcmi"] = varname_ggcmi
+                thisvar_da.attrs["units"] = "day of year"
+                thisvar_da.encoding["_FillValue"] = new_fillvalue
+                thisvar_da.encoding["missing_value"] = new_fillvalue
                 # scale_factor and add_offset are required by I/O library for short data
                 # From https://www.unidata.ucar.edu/software/netcdf/workshops/2010/bestpractices/Packing.html:
                 #    unpacked_value = packed_value * scale_factor + add_offset
-                out_ds[varname_clm].attrs["scale_factor"] = np.int16(1)
-                out_ds[varname_clm].attrs["add_offset"] = np.int16(0)
-                return out_ds
-            out_ds = set_var_attrs(out_ds, varname_clm, longname, thiscrop_clm, thiscrop_ggcmi, varname_ggcmi, new_fillvalue)
+                thisvar_da.attrs["scale_factor"] = np.int16(1)
+                thisvar_da.attrs["add_offset"] = np.int16(0)
+                return thisvar_da
+            thisvar_da = set_var_attrs(thisvar_da, longname, thiscrop_clm, thiscrop_ggcmi, varname_ggcmi, new_fillvalue)
 
             # Save
             if verbose:
                 print("    Saving %s..." % varname_ggcmi)
-            # start = time.time()
-            # Can't overwrite file_clm while you have it open (as out_ds), so first copy it to a temporary file...
-            shutil.copyfile(file_clm, file_clm_tmp)
-            # ... then save out_ds to the temporary file...
-            out_ds.to_netcdf(file_clm_tmp, format="NETCDF3_CLASSIC")
-            # ... then close out_ds...
-            out_ds.close()
-            # ... and finally replace the original file with the new temporary file (deleting the temporary file in the process)
-            os.replace(file_clm_tmp, file_clm)
-            # end = time.time()
-            # print(end - start)
-            ### NOTE: This method gets slower and slower as the file gets bigger! (The entire process, but also the out_ds.to_netcdf() step.) Is there a better way?
+            thisvar_da.to_netcdf(file_clm, mode="a", format="NETCDF3_CLASSIC")
         
         cropcal_ds.close()
 
