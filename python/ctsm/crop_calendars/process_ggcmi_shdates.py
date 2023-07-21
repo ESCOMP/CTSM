@@ -171,7 +171,7 @@ def main(input_directory, output_directory, template_file, author, file_specifie
 
     # Create output files
     for v in variable_dict:
-        outfile = "%s%ss%s.%d-%d.%s.nc" % (output_directory, v, file_specifier, first_year, last_year, dt.datetime.now().strftime("%Y%m%d_%H%M%S"))
+        outfile = os.path.join(output_directory, f"{v}s{file_specifier}.{first_year}-{last_year}.{dt.datetime.now().strftime('%Y%m%d_%H%M%S')}.nc")
         variable_dict[v]["outfile"] = outfile
         template_ds.to_netcdf(path=variable_dict[v]["outfile"])
 
