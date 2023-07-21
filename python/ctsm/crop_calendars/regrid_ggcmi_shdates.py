@@ -72,7 +72,15 @@ def main(regrid_resolution, regrid_template_file_in, regrid_input_directory, reg
 
         if os.path.exists(f3):
             os.remove(f3)
-        run_and_check(f"cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
+        
+        # Sometimes cdo fails for no apparent reason. In testing this never happened more than twice in a row.
+        try:
+            run_and_check(f"cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
+        except:
+            try:
+                run_and_check(f"cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
+            except:
+                run_and_check(f"cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
 
     os.remove(templatefile)
 
