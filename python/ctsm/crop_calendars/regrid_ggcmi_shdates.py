@@ -28,7 +28,7 @@ def define_arguments(parser):
     parser.add_argument(
         "-rt",
         "--regrid-template-file",
-        help="Template file to be used in regridding of .",
+        help="Template file to be used in regridding of inputs.",
         type=str,
         required=True
     )
