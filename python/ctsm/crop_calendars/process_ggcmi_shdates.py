@@ -160,7 +160,8 @@ def main(input_directory, output_directory, author, file_specifier, first_year,
     for v in variable_dict:
         outfile = os.path.join(output_directory, f"{v}s_{file_specifier}.{first_year}-{last_year}.{datetime_string}.nc")
         variable_dict[v]["outfile"] = outfile
-        template_ds.to_netcdf(path=variable_dict[v]["outfile"])
+        template_ds.to_netcdf(path=variable_dict[v]["outfile"],
+                              format="NETCDF3_CLASSIC",)
 
 
     #########################
