@@ -2266,7 +2266,7 @@ contains
     real(r8), intent(in) :: cair               ! Atmospheric CO2 partial pressure (Pa)
     real(r8), intent(in) :: oair               ! Atmospheric O2 partial pressure (Pa)
     integer,  intent(in) :: p, iv, c           ! pft, c3/c4, and column index
-    real(r8), intent(inout) :: gs_mol          ! leaf stomatal conductance (umol H2O/m**2/s)
+    real(r8), intent(inout) :: gs_mol          ! leaf stomatal conductance (umol H2O/m**2/s) (inout instead of out to prevent returning nan)
     integer,  intent(out) :: iter              !number of iterations used, for record only
     type(atm2lnd_type)  , intent(in)    :: atm2lnd_inst
     type(photosyns_type), intent(inout) :: photosyns_inst
@@ -2378,7 +2378,7 @@ contains
     real(r8), intent(in) :: oair              ! Atmospheric O2 partial pressure (Pa)
     real(r8), intent(in) :: rh_can            ! inside canopy relative humidity
     integer,  intent(in) :: ip, iv, ic        ! pft, c3/c4, and column index
-    real(r8), intent(inout) :: gs_mol         ! leaf stomatal conductance (umol H2O/m**2/s)
+    real(r8), intent(inout) :: gs_mol         ! leaf stomatal conductance (umol H2O/m**2/s) (inout instead of out to prevent returning nan)
     type(atm2lnd_type)  , intent(in)    :: atm2lnd_inst
     type(photosyns_type), intent(inout) :: photosyns_inst
     !
@@ -2568,7 +2568,7 @@ contains
     real(r8)             , intent(in)    :: rh_can   ! canopy air realtive humidity
     integer              , intent(in)    :: p, iv, c ! pft, vegetation type and column indexes
     real(r8)             , intent(out)   :: fval     ! return function of the value f(ci)
-    real(r8)             , intent(inout) :: gs_mol   ! leaf stomatal conductance (umol H2O/m**2/s)
+    real(r8)             , intent(inout) :: gs_mol   ! leaf stomatal conductance (umol H2O/m**2/s) (inout instead of out to prevent returning nan)
     type(atm2lnd_type)   , intent(in)    :: atm2lnd_inst
     type(photosyns_type) , intent(inout) :: photosyns_inst
     !
@@ -4064,8 +4064,8 @@ contains
     real(r8), intent(in)    :: lmr_z_sun, lmr_z_sha ! canopy layer: leaf maintenance respiration rate (umol CO2/m**2/s)
     real(r8), intent(in)    :: par_z_sun, par_z_sha ! par absorbed per unit lai for canopy layer (w/m**2)
     real(r8), intent(in)    :: rh_can               ! inside canopy relative humidity
-    real(r8), intent(inout) :: gs_mol_sun           ! sunlit leaf stomatal conductance (umol H2O/m**2/s)
-    real(r8), intent(inout) :: gs_mol_sha           ! shaded leaf stomatal conductance (umol H2O/m**2/s)
+    real(r8), intent(inout) :: gs_mol_sun           ! sunlit leaf stomatal conductance (umol H2O/m**2/s) (inout instead of out to prevent returning nan)
+    real(r8), intent(inout) :: gs_mol_sha           ! shaded leaf stomatal conductance (umol H2O/m**2/s) (inout instead of out to prevent returning nan)
     real(r8), intent(inout) :: bsun                 ! sunlit canopy transpiration wetness factor (0 to 1)
     real(r8), intent(inout) :: bsha                 ! shaded canopy transpiration wetness factor (0 to 1)
     real(r8), intent(in)    :: qsatl                ! leaf specific humidity [kg/kg]
