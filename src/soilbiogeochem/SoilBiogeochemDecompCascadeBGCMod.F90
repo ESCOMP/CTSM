@@ -229,9 +229,6 @@ contains
     !  initialize rate constants and decomposition pathways following the decomposition cascade of the BGC model.
     !  written by C. Koven 
     !
-    ! !USES:
-    use TillageMod, only : get_do_tillage, tillage_init_decompcascade
-    !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds  
     type(soilbiogeochem_state_type) , intent(inout) :: soilbiogeochem_state_inst
@@ -505,11 +502,6 @@ contains
       if(use_soil_matrixcn) call InitSoilTransfer()
 
       deallocate(params_inst%bgc_initial_Cstocks)
-
-      ! Allocate tillage variables
-      if (get_do_tillage()) then
-         call tillage_init_decompcascade(i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
-      end if
 
     end associate
 

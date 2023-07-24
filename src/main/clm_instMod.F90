@@ -200,7 +200,6 @@ contains
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
     use BalanceCheckMod                    , only : GetBalanceCheckSkipSteps
-    use TillageMod                         , only : tillage_init
     !
     ! !ARGUMENTS    
     type(bounds_type), intent(in) :: bounds  ! processor bounds
@@ -377,10 +376,6 @@ contains
        ! Initialize soilbiogeochem_state_inst
 
        call soilbiogeochem_state_inst%Init(bounds)
-
-       ! Initialize tillage
-       ! Must be called before init_decompcascade*
-       call tillage_init(bounds)
 
        ! Initialize decompcascade constants
        ! Note that init_decompcascade_bgc need 

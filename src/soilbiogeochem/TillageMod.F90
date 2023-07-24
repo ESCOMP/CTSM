@@ -15,8 +15,7 @@ module TillageMod
   implicit none
   private
   ! !PUBLIC MEMBER PROCEDURES
-  public :: tillage_init
-  public :: tillage_init_decompcascade
+  public :: readParams
   public :: get_do_tillage
   public :: get_apply_tillage_multipliers
   ! !PUBLIC DATA MEMBERS
@@ -28,39 +27,25 @@ module TillageMod
   logical  :: use_original_tillage ! Use get_tillage_multipliers_orig?
   real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, nphases)
   integer, parameter :: nphases = 3 ! How many different tillage phases are there? (Not including all-1 phases.)
-  ! Indices for soil organic matter pools
-  integer  :: i_act_som  ! MIMICS: i_avl_som
-  integer  :: i_slo_som  ! MIMICS: i_chem_som
-  integer  :: i_pas_som  ! MIMICS: i_phys_som
-  ! Indices for litter pools
-  integer  :: i_cel_lit  ! MIMICS: i_str_lit
-  integer  :: i_lig_lit  ! MIMICS: none (just the one structural litter pool)
 
 !==============================================================================
 contains
 !==============================================================================
 
-  subroutine tillage_init(bounds)
+  subroutine readParams_namelist()
     !
-    ! Read namelist parameters related to tillage. Allocation of variables happens
-    ! in separate subroutines written specifically for decomposition mode of choice.
+    ! Read namelist parameters related to tillage.
     !
     ! !USES:
     use spmdMod        , only : masterproc, mpicom
     use controlMod     , only : NLFilename
     use clm_nlUtilsMod , only : find_nlgroup_name
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use decompMod      , only : bounds_type
-    !
-    ! !ARGUMENTS
-    ! SSR: Not sure why this is necessary, but without it, CTSM stalls out
-    !      (although it seems to successfully complete this subroutine).
-    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES
     integer                :: nu_nml       ! unit for namelist file
     integer                :: nml_error    ! namelist i/o error flag
-    character(*), parameter :: subname = "('tillage_init')"
+    character(*), parameter :: subname = "('readParams_namelist')"
 
     namelist /tillage_inparm/    &
         tillage_mode,            &
@@ -105,70 +90,79 @@ contains
         call endrun(subname // ':: ERROR Unrecognized tillage_mode')
      end if
 
+  end subroutine readParams_namelist
 
-  end subroutine tillage_init
 
-
-  subroutine tillage_init_decompcascade(i_act_som_in, i_slo_som_in, i_pas_som_in, i_cel_lit_in, i_lig_lit_in)
+  subroutine readParams_netcdf(ncid)
     ! !DESCRIPTION:
     !
-    ! Allocate multiplier arrays to be used in tillage. Call during initialization of CENTURY or MIMICS decomposition.
-    ! Written by Sam Rabin.
+    ! Read paramfile parameters to be used in tillage.
     !
     ! !USES
     use pftconMod , only : npcropmin
+    use ncdio_pio , only : file_desc_t, ncd_io
+    use clm_varpar, only : ndecomp_pools_max
+    use SoilBiogeochemDecompCascadeConType, only : no_soil_decomp, century_decomp, mimics_decomp, decomp_method
     !
     ! !ARGUMENTS:
-    ! All soil pool indices use CENTURY index names. Comments indicate corresponding MIMICS names, if any.
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
-    ! Indices for soil organic matter pools
-    integer          , intent(in) :: i_act_som_in
-    integer          , intent(in) :: i_slo_som_in
-    integer          , intent(in) :: i_pas_som_in
-    ! Indices for structural litter pools
-    integer          , intent(in) :: i_cel_lit_in
-    integer, optional, intent(in) :: i_lig_lit_in  ! Do not specify for MIMICS
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'readParams_netcdf'
+    character(len=100) :: errCode = 'Error reading tillage params '
+    logical            :: readv   ! has variable been read in or not
+    real(r8), allocatable :: tempr(:,:,:)   ! temporary to read in constant
+    character(len=100) :: tString ! temp. var for reading
+    character(len=3)   :: decomp_method_str
 
-    if (.not. get_do_tillage()) then
+    ! Initialize tillage multipliers as all 1, and exit if not tilling
+    allocate(tillage_mults_allphases(ndecomp_pools, nphases))
+    tillage_mults_allphases(:,:) = 1.0_r8
+    if (tillage_mode == "off") then
         return
     end if
 
-    ! Allocate tillage multipliers
-    allocate(tillage_mults_allphases(ndecomp_pools, nphases)); tillage_mults_allphases(:,:) = 1.0_r8
+    ! Handle decomposition method
+    select case( decomp_method )
+    case( no_soil_decomp ) 
+       return
+    case( century_decomp ) 
+        tString = 'till_decompk_multipliers'
+    case( mimics_decomp )
+        tString = 'mimics_till_decompk_multipliers'
+    case default
+       write(decomp_method_str, '(I3)') decomp_method
+       call endrun('Bad decomp_method = '//decomp_method_str )
+    end select
 
-    ! Save soil pool indices
-    i_act_som = i_act_som_in
-    i_slo_som = i_slo_som_in
-    i_pas_som = i_pas_som_in
-    i_cel_lit = i_cel_lit_in
-    if (present(i_lig_lit_in)) then
-        i_lig_lit = i_lig_lit_in
-    else
-        i_lig_lit = -1
+    ! Read off of netcdf file
+    allocate(tempr(2,ndecomp_pools_max,nphases))
+    call ncd_io(trim(tString), tempr, 'read', ncid, readvar = readv)
+    if (.not. readv) then
+        call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     end if
 
-    ! Fill tillage_mults_allphases
+    ! Save
     if (do_tillage_low) then
-        tillage_mults_allphases(i_act_som,:) = (/ 1.0_r8, 1.0_r8, 1.0_r8 /)
-        tillage_mults_allphases(i_slo_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
-        tillage_mults_allphases(i_pas_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
-        tillage_mults_allphases(i_cel_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
-        if (i_lig_lit > 0) then
-            tillage_mults_allphases(i_lig_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
-        end if
+        tillage_mults_allphases = tempr(1,1:ndecomp_pools,:)
     else if (do_tillage_high) then
-        tillage_mults_allphases(i_act_som,:) = (/ 1.2_r8, 1.0_r8, 1.0_r8 /)
-        tillage_mults_allphases(i_slo_som,:) = (/ 4.8_r8, 3.5_r8, 2.5_r8 /)
-        tillage_mults_allphases(i_pas_som,:) = (/ 4.8_r8, 3.5_r8, 2.5_r8 /)
-        tillage_mults_allphases(i_cel_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
-        if (i_lig_lit > 0) then
-            tillage_mults_allphases(i_lig_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
-        end if
-    else
-        call endrun('ERROR Unrecognized tillage setting in tillage_init_decompcascade()')
+        tillage_mults_allphases = tempr(2,1:ndecomp_pools,:)
     end if
 
-  end subroutine tillage_init_decompcascade
+  end subroutine readParams_netcdf
+
+
+  subroutine readParams(ncid)
+    ! !USES
+    use ncdio_pio , only : file_desc_t
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+
+    call readParams_namelist()
+    call readParams_netcdf(ncid)
+
+  end subroutine readParams
 
 
   function get_do_tillage()
