@@ -266,7 +266,6 @@ def main(input_directory, output_directory, author, file_specifier, first_year,
                 thisvar_da.attrs["short_name_ggcmi"] = varname_ggcmi
                 thisvar_da.attrs["units"] = "day of year"
                 thisvar_da.encoding["_FillValue"] = new_fillvalue
-                thisvar_da.encoding["missing_value"] = new_fillvalue
                 # scale_factor and add_offset are required by I/O library for short data
                 # From https://www.unidata.ucar.edu/software/netcdf/workshops/2010/bestpractices/Packing.html:
                 #    unpacked_value = packed_value * scale_factor + add_offset
