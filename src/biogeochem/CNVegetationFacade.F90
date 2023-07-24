@@ -511,13 +511,6 @@ contains
 
     if (use_cn .or. use_fates_bgc) then
 
-       if(use_fates_bgc)then
-          call this%c_products_inst%SetValues(bounds, 0._r8)
-          if (use_c13) call this%c13_products_inst%SetValues(bounds, 0._r8)
-          if (use_c14) call this%c14_products_inst%SetValues(bounds, 0._r8)
-          call this%n_products_inst%SetValues(bounds, 0._r8)
-       end if
-
        call this%c_products_inst%restart(bounds, ncid, flag)
        if (use_c13) then
           call this%c13_products_inst%restart(bounds, ncid, flag, &

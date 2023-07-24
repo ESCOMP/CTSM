@@ -2684,7 +2684,7 @@ contains
     ! --------------------------------------------
     ! column level summary
     ! --------------------------------------------
-    if(associated(this%totvegc_patch))then
+    if(num_bgc_vegp>0)then
        call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
             this%totvegc_patch(bounds%begp:bounds%endp), &
             this%totvegc_col(bounds%begc:bounds%endc))
