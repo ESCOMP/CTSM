@@ -3243,7 +3243,9 @@ contains
           caldesc = "gregorian"
        end if
        call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
-       call ncd_putatt(nfid(t), varid, 'bounds', 'time_bounds')
+       if (tape(t)%hlist(1)%avgflag /= 'I') then  ! NOT instantaneous fields tape
+          call ncd_putatt(nfid(t), varid, 'bounds', 'time_bounds')
+       end if
 
        dim1id(1) = time_dimid
        call ncd_defvar(nfid(t) , 'mcdate', ncd_int, 1, dim1id , varid, &
@@ -3284,8 +3286,10 @@ contains
           long_name = 'time step')
 
        dim2id(1) = hist_interval_dimid;  dim2id(2) = time_dimid
-       call ncd_defvar(nfid(t), 'time_bounds', ncd_double, 2, dim2id, varid, &
-          long_name = 'history time interval endpoints')
+       if (tape(t)%hlist(1)%avgflag /= 'I') then  ! NOT instantaneous fields tape
+          call ncd_defvar(nfid(t), 'time_bounds', ncd_double, 2, dim2id, varid, &
+             long_name = 'history time interval endpoints')
+       end if
 
        dim2id(1) = strlen_dimid;  dim2id(2) = time_dimid
        call ncd_defvar(nfid(t), 'date_written', ncd_char, 2, dim2id, varid)
@@ -3313,12 +3317,15 @@ contains
        call ncd_io('mscur' , mscur , 'write', nfid(t), nt=tape(t)%ntimes)
        call ncd_io('nstep' , nstep , 'write', nfid(t), nt=tape(t)%ntimes)
 
-       time = mdcur + mscur/secspday
+       timedata(1) = tape(t)%begtime  ! beginning time
+       timedata(2) = mdcur + mscur/secspday  ! end time
+       if (tape(t)%hlist(1)%avgflag /= 'I') then  ! NOT instantaneous fields tape
+          time = (timedata(1) + timedata(2)) * 0.5_r8
+          call ncd_io('time_bounds', timedata, 'write', nfid(t), nt=tape(t)%ntimes)
+       else
+          time = timedata(2)
+       end if
        call ncd_io('time'  , time  , 'write', nfid(t), nt=tape(t)%ntimes)
-
-       timedata(1) = tape(t)%begtime
-       timedata(2) = time
-       call ncd_io('time_bounds', timedata, 'write', nfid(t), nt=tape(t)%ntimes)
 
        call getdatetime (cdate, ctime)
        call ncd_io('date_written', cdate, 'write', nfid(t), nt=tape(t)%ntimes)
