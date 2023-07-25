@@ -159,7 +159,7 @@ module clm_varctl
   logical, public :: crop_fsat_equals_zero = .false.
 
   ! remove crop residues to a 1-year product pool (instead of going to litter)
-  logical, public :: remove_crop_residues = .false.
+  real(r8), public :: crop_residue_removal_frac = 0.0
   
   !----------------------------------------------------------
   ! Other subgrid logic
