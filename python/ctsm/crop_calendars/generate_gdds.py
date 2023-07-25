@@ -311,7 +311,8 @@ def main(
             }
 
             # Add time_bounds
-            gdd_maps_ds["time_bounds"] = sdates_rx.time_bounds
+            if "time_bounds" in sdates_rx:
+                gdd_maps_ds["time_bounds"] = sdates_rx.time_bounds
 
             # Save cultivar GDDs
             gdd_maps_ds.to_netcdf(outfile, mode="w", format="NETCDF3_CLASSIC")
