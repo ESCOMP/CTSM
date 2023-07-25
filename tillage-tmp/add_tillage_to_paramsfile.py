@@ -2,9 +2,28 @@
 
 import xarray as xr
 import numpy as np
+import os
+import subprocess
 
 file_in = "/Users/Shared/CESM_inputdata/lnd/clm2/paramdata/ctsm51_params.c211112.nc"
 file_out = "/Users/sam/Documents/git_repos/CTSM_myfork/ctsm51_params.c211112.tillage.nc"
+
+# Get git info
+thisDir = os.path.dirname(__file__)
+git_status = subprocess.run(
+    ["git", "status"],
+    capture_output=True,
+)
+git_status = git_status.stdout.decode()
+repo_is_clean = "working tree clean" in git_status
+if not repo_is_clean:
+    print("WARNING: Repo not clean; will not save params file.")
+    print(git_status)
+git_log = subprocess.run(
+    ["git", "log", "-1"],
+    capture_output=True,
+)
+git_log = git_log.stdout.decode()
 
 
 # %% Set up dimensions
@@ -113,10 +132,14 @@ tillage_mimics_da = make_dataarray(
 
 # %% Save to output file
 
+if not repo_is_clean:
+    raise RuntimeError("Clean up git repo before trying to save!")
+
 ds1 = ds0.copy()
 ds0.close()
 
 ds1[tillage_century_da.name] = tillage_century_da
 ds1[tillage_mimics_da.name] = tillage_mimics_da
+ds1.attrs['latest_git_log'] = git_log
 
 ds1.to_netcdf(file_out)
