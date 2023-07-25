@@ -141,14 +141,6 @@ contains
 
     use_cropcal_rx_sdates = stream_fldFileName_sdate /= ''
     use_cropcal_rx_cultivar_gdds = stream_fldFileName_cultivar_gdds /= ''
-    if (use_cropcal_rx_cultivar_gdds .and. generate_crop_gdds) then
-        write(iulog,*) 'Do not specify both generate_crop_gdds=.true. and stream_fldFileName_cultivar_gdds'
-        call ESMF_Finalize(endflag=ESMF_END_ABORT)
-    end if
-    if (generate_crop_gdds .and. .not. use_cropcal_rx_sdates) then
-        write(iulog,*) 'ERROR If using generate_crop_gdds, you must specify stream_fldFileName_sdate'
-        call ESMF_Finalize(endflag=ESMF_END_ABORT)
-    endif
     use_cropcal_streams = use_cropcal_rx_sdates .or. use_cropcal_rx_cultivar_gdds
 
     ! Initialize the cdeps data type sdat_cropcal_sdate
