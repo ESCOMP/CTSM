@@ -43,6 +43,7 @@ def main(
     first_land_use_year=None,
     last_land_use_year=None,
     unlimited_season_length=False,
+    skip_crops=None,
     logger=None,
 ):
     # Directories to save output files and figures
@@ -81,6 +82,12 @@ def main(
 
     # Print some info
     gddfn.log(logger, f"Saving to {output_dir}")
+    
+    # Parse list of crops to skip
+    if "," in skip_crops:
+        skip_crops = skip_crops.split(",")
+    else:
+        skip_crops = skip_crops.split(" ")
 
     ##########################
     ### Import and process ###
@@ -113,6 +120,7 @@ def main(
                     incl_vegtypes_str,
                     incl_patches1d_itype_veg,
                     mxsowings,
+                    skip_crops,
                 ) = pickle.load(f)
             print(f"Will resume import at {pickle_year+1}")
             h2_ds = None
@@ -165,6 +173,7 @@ def main(
                 h2_ds_file,
                 mxmats,
                 cc.get_gs_len_da,
+                skip_crops,
                 logger,
             )
 
@@ -184,6 +193,7 @@ def main(
                         incl_vegtypes_str,
                         incl_patches1d_itype_veg,
                         mxsowings,
+                        skip_crops,
                     ],
                     f,
                     protocol=-1,
@@ -441,6 +451,12 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
     )
+    parser.add_argument(
+        "--skip-crops",
+        help="Skip processing of these crops. Comma- or space-separated list.",
+        type=str,
+        default="",
+    )
 
     # Get arguments
     args = parser.parse_args(sys.argv[1:])
@@ -464,6 +480,7 @@ if __name__ == "__main__":
         first_land_use_year=args.first_land_use_year,
         last_land_use_year=args.last_land_use_year,
         unlimited_season_length=args.unlimited_season_length,
+        skip_crops=args.skip_crops,
     )
 
 # main(input_dir="/Users/Shared/CESM_runs/tests_10x15_20230329_gddgen/202303301820",
