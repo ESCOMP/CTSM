@@ -90,6 +90,7 @@ module clm_varcon
 
   integer, public, parameter  :: fun_period  = 1            ! A FUN parameter, and probably needs to be changed for testing
   real(r8),public, parameter  :: smallValue  = 1.e-12_r8    ! A small values used by FUN
+  real(r8),public, parameter  :: sum_to_1_tol = 1.e-13_r8   ! error tolerance 
 
   ! ------------------------------------------------------------------------
   ! Special value flags

@@ -67,6 +67,7 @@ module CLMFatesInterfaceMod
    use clm_varcon        , only : spval
    use clm_varcon        , only : denice
    use clm_varcon        , only : ispval
+   use clm_varcon        , only : sum_to_1_tol
    use clm_varpar        , only : surfpft_lb,surfpft_ub
    use clm_varpar        , only : numrad
    use clm_varpar        , only : ivis
@@ -159,7 +160,6 @@ module CLMFatesInterfaceMod
    use dynHarvestMod          , only : dynHarvest_interp_resolve_harvesttypes
    use FatesConstantsMod      , only : hlm_harvest_area_fraction
    use FatesConstantsMod      , only : hlm_harvest_carbon
-   use FatesConstantsMod      , only : area_error
    use perf_mod               , only : t_startf, t_stopf
    implicit none
 
@@ -714,7 +714,7 @@ module CLMFatesInterfaceMod
                this%fates(nc)%bc_in(s)%pft_areafrac(ft)=wt_nat_patch(g,m)
             end do
 
-            if (abs(sum(this%fates(nc)%bc_in(s)%pft_areafrac(surfpft_lb:surfpft_ub)) - 1.0_r8) > area_error) then
+            if (abs(sum(this%fates(nc)%bc_in(s)%pft_areafrac(surfpft_lb:surfpft_ub)) - 1.0_r8) > sum_to_1_tol) then
                write(iulog,*) 'pft_area error in interfc ', s, sum(this%fates(nc)%bc_in(s)%pft_areafrac(:)) - 1.0_r8
                call endrun(msg=errMsg(sourcefile, __LINE__))
               end if
