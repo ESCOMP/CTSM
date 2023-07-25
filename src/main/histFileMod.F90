@@ -3052,6 +3052,7 @@ contains
     integer :: mcdate                     ! current date
     integer :: yr,mon,day,nbsec           ! year,month,day,seconds components of a date
     integer :: hours,minutes,secs         ! hours,minutes,seconds of hh:mm:ss
+    character(len= 12) :: step_or_bounds  ! string used in long_name of several time variables
     character(len= 10) :: basedate        ! base date (yyyymmdd)
     character(len=  8) :: basesec         ! base seconds
     character(len=  8) :: cdate           ! system date
@@ -3234,8 +3235,18 @@ contains
 
        dim1id(1) = time_dimid
        str = 'days since ' // basedate // " " // basesec
-       call ncd_defvar(nfid(t), 'time', tape(t)%ncprec, 1, dim1id, varid, &
-            long_name='time',units=str)
+       if (tape(t)%hlist(1)%avgflag /= 'I') then  ! NOT instantaneous fields tape
+          step_or_bounds = 'time_bounds'
+          long_name = 'time at exact middle of ' // step_or_bounds
+          call ncd_defvar(nfid(t), 'time', tape(t)%ncprec, 1, dim1id, varid, &
+               long_name=long_name, units=str)
+          call ncd_putatt(nfid(t), varid, 'bounds', 'time_bounds')
+       else  ! instantaneous fields tape
+          step_or_bounds = 'time step'
+          long_name = 'time at end of ' // step_or_bounds
+          call ncd_defvar(nfid(t), 'time', tape(t)%ncprec, 1, dim1id, varid, &
+               long_name=long_name, units=str)
+       end if
        cal = get_calendar()
        if (      trim(cal) == NO_LEAP_C   )then
           caldesc = "noleap"
@@ -3243,13 +3254,11 @@ contains
           caldesc = "gregorian"
        end if
        call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
-       if (tape(t)%hlist(1)%avgflag /= 'I') then  ! NOT instantaneous fields tape
-          call ncd_putatt(nfid(t), varid, 'bounds', 'time_bounds')
-       end if
 
        dim1id(1) = time_dimid
+       long_name = 'current date (YYYYMMDD) at end of ' // step_or_bounds
        call ncd_defvar(nfid(t) , 'mcdate', ncd_int, 1, dim1id , varid, &
-          long_name = 'current date (YYYYMMDD)')
+          long_name = long_name)
        !
        ! add global attribute time_period_freq
        !
@@ -3276,12 +3285,15 @@ contains
        call ncd_putatt(nfid(t), ncd_global, 'time_period_freq',          &
                           trim(time_period_freq))
 
+       long_name = 'current seconds of current date at end of ' // step_or_bounds
        call ncd_defvar(nfid(t) , 'mcsec' , ncd_int, 1, dim1id , varid, &
-          long_name = 'current seconds of current date', units='s')
+          long_name = long_name, units='s')
+       long_name = 'current day (from base day) at end of ' // step_or_bounds
        call ncd_defvar(nfid(t) , 'mdcur' , ncd_int, 1, dim1id , varid, &
-          long_name = 'current day (from base day)')
+          long_name = long_name)
+       long_name = 'current seconds of current day at end of ' // step_or_bounds
        call ncd_defvar(nfid(t) , 'mscur' , ncd_int, 1, dim1id , varid, &
-          long_name = 'current seconds of current day')
+          long_name = long_name)
        call ncd_defvar(nfid(t) , 'nstep' , ncd_int, 1, dim1id , varid, &
           long_name = 'time step')
 
