@@ -823,7 +823,10 @@ contains
        ! TODO: This is currently hard-wired - is there a better way for nuopc?
        ! Note that the model clock is updated at the end of the time step not at the beginning
        nstep = get_nstep()
+!KO    ! TODO (KWO 07-25-2023)
 !KO    ! I don't think this is necessary anymore since there is no longer an nstep=0
+!KO    ! In fact, according to the following comment in src/cpl/lilac/lnd_comp_esmf.F90 we should
+!KO    ! be able to remove this do while loop and the dosend variable.
 !KO       if (nstep > 0) then
           dosend = .true.
 !KO       end if

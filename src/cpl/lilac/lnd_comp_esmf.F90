@@ -631,9 +631,13 @@ contains
        !
        ! See also https://github.com/ESCOMP/CTSM/issues/925
        nstep = get_nstep()
-       if (nstep > 0) then
+!KO    ! TODO (KWO 07-25-2023)
+!KO    ! I don't think this is necessary anymore since there is no longer an nstep=0
+!KO    ! In fact, according to the comment above we should be able to remove this 
+!KO    ! do while loop and the dosend variable.
+!KO       if (nstep > 0) then
           dosend = .true.
-       end if
+!KO       end if
 
        !--------------------------------
        ! Determine calendar day info
@@ -680,15 +684,23 @@ contains
        ! Determine doalb based on nextsw_cday sent from atm model
        !--------------------------------
 
-       if (nstep == 0) then
-          doalb = .false.
-          nextsw_cday = caldayp1
-       else if (nstep == 1) then
+!KO       if (nstep == 0) then
+!KO          doalb = .false.
+!KO          nextsw_cday = caldayp1
+!KO       else if (nstep == 1) then
+!KO          !doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
+!KO          doalb = .false.
+!KO       else
+!KO          doalb = (nextsw_cday >= -0.5_r8)
+!KO       end if
+!KO    ! Removed the nstep=0 check
+       if (nstep == 1) then
           !doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
           doalb = .false.
        else
           doalb = (nextsw_cday >= -0.5_r8)
        end if
+!KO
 
        if (masterproc) then
           write(iulog,*) '------------  LILAC  ----------------'
