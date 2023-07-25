@@ -554,7 +554,7 @@ contains
     integer                :: nstep          ! time step index
     logical                :: rstwr          ! .true. ==> write restart file before returning
     logical                :: nlend          ! .true. ==> last time-step
-    logical                :: dosend         ! true => send data back to driver
+!KO    logical                :: dosend         ! true => send data back to driver
     logical                :: doalb          ! .true. ==> do albedo calculation on this time step
     real(r8)               :: nextsw_cday    ! calday from clock of next radiation computation
     real(r8)               :: caldayp1       ! ctsm calday plus dtime offset
@@ -621,22 +621,24 @@ contains
     !--------------------------------
 
     dtime = get_step_size()
-    dosend = .false.
-    do while(.not. dosend)
+!KO    dosend = .false.
+!KO    do while(.not. dosend)
 
-       ! We assume that the land model time step matches the coupling interval. However,
-       ! we still need this while loop to handle the initial time step (time 0). We may
-       ! want to get rid of this time step 0 in the lilac coupling, at which point we
-       ! should be able to remove this while loop and dosend variable.
+!KO       ! We assume that the land model time step matches the coupling interval. However,
+!KO       ! we still need this while loop to handle the initial time step (time 0). We may
+!KO       ! want to get rid of this time step 0 in the lilac coupling, at which point we
+!KO       ! should be able to remove this while loop and dosend variable.
+!KO
+       ! We assume that the land model time step matches the coupling interval.
+!KO
        !
-       ! See also https://github.com/ESCOMP/CTSM/issues/925
+!KO       ! See also https://github.com/ESCOMP/CTSM/issues/925
        nstep = get_nstep()
-!KO    ! TODO (KWO 07-25-2023)
 !KO    ! I don't think this is necessary anymore since there is no longer an nstep=0
 !KO    ! In fact, according to the comment above we should be able to remove this 
-!KO    ! do while loop and the dosend variable.
+!KO    ! do while loop and the dosend variable. I've done that here.
 !KO       if (nstep > 0) then
-          dosend = .true.
+!KO          dosend = .true.
 !KO       end if
 
        !--------------------------------
@@ -787,7 +789,7 @@ contains
 
        call advance_timestep()
 
-    end do
+!KO    end do
 
     !--------------------------------
     ! Check that internal clock is in sync with lilac driver clock

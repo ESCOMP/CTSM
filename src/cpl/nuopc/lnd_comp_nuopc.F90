@@ -741,7 +741,7 @@ contains
     integer                :: localPeCount   ! Number of local Processors
     logical                :: rstwr          ! .true. ==> write restart file before returning
     logical                :: nlend          ! .true. ==> last time-step
-    logical                :: dosend         ! true => send data back to driver
+!KO    logical                :: dosend         ! true => send data back to driver
     logical                :: doalb          ! .true. ==> do albedo calculation on this time step
     real(r8)               :: nextsw_cday    ! calday from clock of next radiation computation
     real(r8)               :: caldayp1       ! ctsm calday plus dtime offset
@@ -817,18 +817,17 @@ contains
     !--------------------------------
 
     dtime = get_step_size()
-    dosend = .false.
-    do while(.not. dosend)
+!KO    dosend = .false.
+!KO    do while(.not. dosend)
 
        ! TODO: This is currently hard-wired - is there a better way for nuopc?
        ! Note that the model clock is updated at the end of the time step not at the beginning
        nstep = get_nstep()
-!KO    ! TODO (KWO 07-25-2023)
 !KO    ! I don't think this is necessary anymore since there is no longer an nstep=0
 !KO    ! In fact, according to the following comment in src/cpl/lilac/lnd_comp_esmf.F90 we should
-!KO    ! be able to remove this do while loop and the dosend variable.
+!KO    ! be able to remove this do while loop and the dosend variable. I've done that here.
 !KO       if (nstep > 0) then
-          dosend = .true.
+!KO          dosend = .true.
 !KO       end if
 
        !--------------------------------
@@ -934,7 +933,7 @@ contains
        call advance_timestep()
        call t_stopf ('lc_ctsm2_adv_timestep')
 
-    end do
+!KO    end do
 
     ! Check that internal clock is in sync with master clock
     ! Note that the driver clock has not been updated yet - so at this point
