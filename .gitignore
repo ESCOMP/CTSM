@@ -80,6 +80,7 @@ test_driver_*.sh
 # mksurfdata output
 surfdata_*.log
 surfdata_*.namelist
+mksurfdata.o*
 landuse.timeseries_*.namelist
 landuse.timeseries_*.log
 landuse_timeseries_*.txt
