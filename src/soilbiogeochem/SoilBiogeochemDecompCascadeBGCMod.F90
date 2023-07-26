@@ -902,6 +902,12 @@ contains
                decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_cwd(c)
             end if
+
+            ! Tillage
+            if (get_do_tillage()) then
+               call get_apply_tillage_multipliers(idop, c, j, decomp_k)
+            end if
+
             ! Above into soil matrix
             if(use_soil_matrixcn)then
                ! same for cwd but only if fates is not enabled; fates handles CWD
@@ -911,14 +917,6 @@ contains
             end if !use_soil_matrixcn
          end do
       end do
-
-      ! Tillage
-      if (get_do_tillage()) then
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
-            call get_apply_tillage_multipliers(idop, c, decomp_k)
-         end do
-      end if
 
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = 1.0_r8
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1) = 1.0_r8

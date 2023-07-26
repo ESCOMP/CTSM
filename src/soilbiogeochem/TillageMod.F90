@@ -246,7 +246,7 @@ contains
   end subroutine get_tillage_multipliers
 
 
-  subroutine get_apply_tillage_multipliers(idop, c, decomp_k)
+  subroutine get_apply_tillage_multipliers(idop, c, j, decomp_k)
     ! !DESCRIPTION:
     !
     ! Multiply decomposition rate constants by tillage coefficients.
@@ -259,15 +259,18 @@ contains
     ! !ARGUMENTS:
     integer       , intent(in) :: idop(:) ! patch day of planting
     integer       , intent(in) :: c       ! index of column this is being called for
+    integer       , intent(in) :: j       ! index of soil layer this is being called for
     real(r8), dimension(:,:,:), intent(inout) :: decomp_k ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
     !
     ! !LOCAL VARIABLES
-    integer :: p, this_patch, j, n_noncrop
+    integer :: p, this_patch, n_noncrop
     real    :: sumwt ! sum of all patch weights, to check
     real(r8), dimension(ndecomp_pools) :: tillage_mults
     real(r8), dimension(ndecomp_pools) :: tillage_mults_1patch
 
-    if (.not. col%active(c)) then
+    if (.not. col%active(c) .or. j > 5) then
+        ! Top 5 layers (instead of all nlevdecomp) so that model only tills
+        ! the top 26-40 cm of the soil surface, rather than whole soil - MWGraham
         return
     end if
     
@@ -307,11 +310,8 @@ contains
         call endrun('ERROR Active crop patch weights does not sum to 1')
     end if
 
-    ! Top 5 layers (instead of all nlevdecomp) so that model only tills the top 26-40 cm
-    ! of the soil surface, rather than whole soil - MWGraham
-    do j = 1,5
-        decomp_k(c,j,:) = decomp_k(c,j,:) * tillage_mults(:)
-    end do
+    ! Apply
+    decomp_k(c,j,:) = decomp_k(c,j,:) * tillage_mults(:)
 
   end subroutine get_apply_tillage_multipliers
 

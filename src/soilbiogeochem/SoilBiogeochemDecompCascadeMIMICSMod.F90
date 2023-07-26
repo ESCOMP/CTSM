@@ -1309,16 +1309,13 @@ contains
             if (.not. use_fates) then
                decomp_k(c,j,i_cwd) = k_frag * w_d_o_scalars  ! * spinup_geogterm_cwd(c)
             end if
+
+            ! Tillage
+            if (get_do_tillage()) then
+               call get_apply_tillage_multipliers(idop, c, j, decomp_k)
+            end if
          end do
       end do
-
-      ! Tillage
-      if (get_do_tillage()) then
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
-            call get_apply_tillage_multipliers(idop, c, decomp_k)
-         end do
-      end if
 
       ! pathfrac terms not calculated in the previous loop
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = 1.0_r8
