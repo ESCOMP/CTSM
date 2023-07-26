@@ -14,7 +14,7 @@ module CNVegNitrogenFluxType
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use dynSubgridControlMod               , only : get_do_grossunrep
   use CropReprPoolsMod                   , only : nrepr, repr_grain_min, repr_grain_max, repr_structure_min, repr_structure_max
-  use CropReprPoolsMod                   , only : get_repr_rest_fname, get_repr_longname
+  use CropReprPoolsMod                   , only : get_repr_hist_fname, get_repr_rest_fname, get_repr_longname
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
@@ -1024,6 +1024,18 @@ contains
        call hist_addfld1d (fname='NFERTILIZATION', units='gN/m^2/s', &
             avgflag='A', long_name='fertilizer added', &
             ptr_patch=this%fert_patch)
+       
+       this%repr_grainn_to_food_patch(begp:endp,:) = spval
+          do k = repr_grain_min, repr_grain_max
+             data1dptr => this%repr_grainn_to_food_patch(:,k)
+             call hist_addfld1d ( &
+                  ! e.g., GRAINN_TO_FOOD
+                  fname=get_repr_hist_fname(k)//'N_TO_FOOD', &
+                  units='gN/m^2/s', &
+                  avgflag='A', &
+                  long_name=get_repr_longname(k)//' N to food', &
+                  ptr_patch=data1dptr)
+          end do
     end if
 
     if (use_crop .and. .not. use_fun) then
