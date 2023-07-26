@@ -1,4 +1,231 @@
 ===============================================================
+Tag name: ctsm5.1.dev130
+Originator(s): glemieux (Greg Lemieux,LBL/NGEET,510-486-5049)
+Date: Sun Jul  9 23:24:29 MDT 2023
+One-line Summary: FATES parameter file and test definition update
+
+Purpose and description of changes
+----------------------------------
+
+This tag incorporates updates to the FATES parameter file and test
+definitions to be consistent with updates to the drought deciduous
+phenology model in FATES.  This also updates the external FATES
+pointer to the tag associated with the drought deciduous phenology
+update.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+   Fixes #2043 -- Five izumi NEON tests fail (for me) because the testnames include L10d instead of Ld10
+
+Known bugs found since the previous tag (include issue #):
+   #2049 -- Use of 0.01_r8 as a magic number
+   #2042 -- Issue running SystemTests due to "conda activate" error
+   #2039 -- Conditional for NEON usermods is too broad
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+
+   FATES parameter file default updated to fates_params_api.25.5.0_12pft_c230628.nc
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES for FATES tests only
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: FATES
+    - what platforms/compilers: ALL
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+
+      See FATES #958 for discussion.  The update increased the dimensions of
+      some FATES history output from site-level to pft-level.  As such, these
+      have been removed from some test cases to keep the test light weight and
+      added to the AllVars test to maintain coverage.
+
+      Note that this FATES update also incorporates a number of additional science updates
+      since the previous tag.
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates
+  fates: sci.1.65.3_api.25.4.0 -> fates-sci.1.66.0_api.25.5.0
+
+Pull Requests that document the changes (include PR ids):
+  https://github.com/ESCOMP/ctsm/pull/2009
+  https://github.com/NGEET/fates/pull/958
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev129
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu Jun 22 01:21:56 MDT 2023
+One-line Summary: NEON fixes for TOOL and user-mods, add SP for NEON, some history file updates, black refactor for buildlib/buildnml
+
+Purpose and description of changes
+----------------------------------
+
+Merge the NEON fixes for TOOL and allowing SP mode, as well as a few simple history PR's, and a black reformat.
+
+Fixes NEON bug identified at the NCAR-NEON workshop. Corrects the dominant PFT at TOOL site & usermods_dirs
+Some small changes for quality of life improvements for the run_neon script. Some documentation and code
+cleanup type changes regarding history code (delete a unused subroutine). Do a black reformat of python files
+buildlib/buildnml (and CTSM SystemTests) for consistency across CESM. Also add running them through black in the python
+
+Specific notes:
+
+ - fixed a couple lines so that python will stop complaining about deprecated things
+ - added print statements about warning messages being not an issue, and that building/running may take a while
+ - added a "success" print statement - I'm not sure this will actually only print if "successful"
+ - Add more documentation to history tape code
+ - Add more breadcrumbs between related variables and methods
+ - Put related history namelist flags/methods together
+ - Update some out of date comments in history code
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+   Fixes #2013 -- Incorrect PFT at TOOL
+   Fixes #2014 -- NEON usermods not working as intended
+   Fixes #2029 -- fire_method is used before it's set and hence fire_res isn't set to none
+   Fixes #2030 -- Logic in build-namelist not functioning correctly for FATES with light_res
+   Updates conda environment so that #1974 works
+
+Known bugs found since the previous tag (include issue #):
+   #2037 -- shell_commands for tests with two testmods listed don't concatenate both together
+   #2036 -- Remove setting of STOP options in user-mod directories
+   #2017 -- subset_data does not function for regional grids that span across Greenwich longitude zero 
+   #2024 -- snow fraction is uninitialized when passed to fates during cold-starts
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  Ability to run for SP sites was added for NEON, but run-neon.py doesn't have an option for it
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New --light_res option for 106x74 for NEON lightning data added (can be set in CLM_BLDNML_OPTS)
+   This is the default for NEON sites (with $CLM_USRDAT_NAME == NEON or NEON.PRISM)
+   It fails for non CLM_USRDAT resolutions and gives a warning for non-NEON CLM_USRDAT resolutions)
+
+Changes made to namelist defaults (e.g., changed parameter values): 
+  Add NEON 106x74 lightning dataset
+
+Changes to the datasets (e.g., parameter, surface or initial files): New NEON surface datasets
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+   Add a NEON case that runs in SP mode
+   Change one of the FATES tests to turn fire on and require lightning data
+
+Testing summary: regular NEON-tools
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS (57 tests different from baseline)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - PASS (NEON test list passes)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  other testing:
+    izumi -- PASS (tests of changed NEON sites, see list in #2031)
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: bit-for-bit (except some NEON sites)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NEON TOOL site and other NEON sites with namelist changes
+    - what platforms/compilers: all
+    - nature of change: new climate
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #2031 -- Merge of below...
+   #2015 -- Address NEON bugs
+   #2021 -- Small changes to fix warnings, add print statements for clarity
+   #2023 -- Document side effects of htapes_fieldlist
+   #2022 -- Delete unued hist_add_subscript
+   #2020 -- Add more documentation to history tape code
+   #2007 -- black reformat python files for consistancy across cesm
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev128
 Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
 Date: Thu Jun  1 15:31:52 MDT 2023
@@ -195,7 +422,7 @@ https://github.com/ESCOMP/CTSM/pull/2005
 ===============================================================
 Tag name: ctsm5.1.dev125
 Originator(s): jpalex (John Alex)
-Date: Wed May 17 08:56:41 MDT 2023
+Date: Sun Jul  9 21:04:13 MDT 2023
 One-line Summary: Added cache for clock step_size in clm_time_manager.F90
 
 Purpose and description of changes

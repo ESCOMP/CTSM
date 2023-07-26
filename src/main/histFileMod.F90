@@ -807,8 +807,11 @@ contains
     ! !DESCRIPTION:
     ! Define the contents of each history file based on namelist
     ! input for initial or branch run, and restart data if a restart run.
-    ! Use arrays fincl and fexcl to modify default history tape contents.
+    ! Fill and use arrays fincl and fexcl to modify default history tape contents.
     ! Then sort the result alphanumerically.
+    !
+    ! Sets history_tape_in_use and htapes_defined. Fills fields in 'tape' array.
+    ! Optionally updates masterlist avgflag.
     !
     ! !ARGUMENTS:
     !
