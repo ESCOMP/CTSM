@@ -1312,7 +1312,7 @@ contains
 
             ! Tillage
             if (get_do_tillage()) then
-               call get_apply_tillage_multipliers(idop, c, j, decomp_k)
+               call get_apply_tillage_multipliers(idop, c, j, decomp_k(c,j,:))
             end if
          end do
       end do

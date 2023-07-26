@@ -260,7 +260,7 @@ contains
     integer       , intent(in) :: idop(:) ! patch day of planting
     integer       , intent(in) :: c       ! index of column this is being called for
     integer       , intent(in) :: j       ! index of soil layer this is being called for
-    real(r8), dimension(:,:,:), intent(inout) :: decomp_k ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
+    real(r8), dimension(:), intent(inout) :: decomp_k ! Output: [real(r8) (:) ]  rate constant for decomposition (1./sec)
     !
     ! !LOCAL VARIABLES
     integer :: p, this_patch, n_noncrop
@@ -311,7 +311,7 @@ contains
     end if
 
     ! Apply
-    decomp_k(c,j,:) = decomp_k(c,j,:) * tillage_mults(:)
+    decomp_k = decomp_k * tillage_mults(:)
 
   end subroutine get_apply_tillage_multipliers
 
