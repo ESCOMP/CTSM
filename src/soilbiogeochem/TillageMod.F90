@@ -28,8 +28,8 @@ module TillageMod
   integer, parameter  :: tillage_low = 1
   integer, parameter  :: tillage_high = 2
   logical  :: use_original_tillage ! Use get_tillage_multipliers_orig?
-  real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, nphases)
-  integer, parameter :: nphases = 3 ! How many different tillage phases are there? (Not including all-1 phases.)
+  real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, ntill_stages_max)
+  integer, parameter :: ntill_stages_max = 3 ! How many different tillage phases are there? (Not including all-1 phases.)
 
 !==============================================================================
 contains
@@ -118,7 +118,7 @@ contains
     character(len=3)   :: decomp_method_str
 
     ! Initialize tillage multipliers as all 1, and exit if not tilling
-    allocate(tillage_mults_allphases(ndecomp_pools, nphases))
+    allocate(tillage_mults_allphases(ndecomp_pools, ntill_stages_max))
     tillage_mults_allphases(:,:) = 1.0_r8
     if (tillage_mode == "off") then
         return
@@ -138,7 +138,7 @@ contains
     end select
 
     ! Read off of netcdf file
-    allocate(tempr(2,ndecomp_pools_max,nphases))
+    allocate(tempr(2,ndecomp_pools_max,ntill_stages_max))
     call ncd_io(trim(tString), tempr, 'read', ncid, readvar = readv)
     if (.not. readv) then
         call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
@@ -237,8 +237,8 @@ contains
 
     tillage_mults(:) = 1._r8
     if (phase > 0) then
-        if (phase > nphases) then
-            call endrun(msg='Tillage phase > nphases')
+        if (phase > ntill_stages_max) then
+            call endrun(msg='Tillage phase > ntill_stages_max')
         end if
         tillage_mults = tillage_mults_allphases(:, phase)
     end if
