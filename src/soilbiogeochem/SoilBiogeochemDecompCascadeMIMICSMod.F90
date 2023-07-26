@@ -887,6 +887,10 @@ contains
          spinup_factor  => decomp_cascade_con%spinup_factor              & ! Input:  [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
          )
 
+      if (get_do_tillage() .and. .not. present(idop)) then
+         call endrun("Do not enable tillage without providing idop to decomp_rate_constants_mimics().")
+      end if
+
       mino2lim = CNParamsShareInst%mino2lim
 
       days_per_year = get_average_days_per_year()
@@ -1310,9 +1314,6 @@ contains
 
       ! Tillage
       if (get_do_tillage()) then
-         if (.not. present(idop)) then
-            call endrun("Do not call tillage without providing idop.")
-         end if
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             call get_apply_tillage_multipliers(idop, c, decomp_k)

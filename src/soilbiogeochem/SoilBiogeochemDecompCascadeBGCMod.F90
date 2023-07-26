@@ -598,6 +598,10 @@ contains
               errMsg(sourcefile, __LINE__))
       endif
 
+      if (get_do_tillage() .and. .not. present(idop)) then
+         call endrun("Do not enable tillage without providing idop to decomp_rate_constants_bgc().")
+      end if
+
       days_per_year = get_average_days_per_year()
       dt = real( get_step_size(), r8 )
 
@@ -910,9 +914,6 @@ contains
 
       ! Tillage
       if (get_do_tillage()) then
-         if (.not. present(idop)) then
-            call endrun("Do not call tillage without providing idop.")
-         end if
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             call get_apply_tillage_multipliers(idop, c, decomp_k)
