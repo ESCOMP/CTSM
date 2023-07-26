@@ -36,9 +36,6 @@ CTSM issues fixed (include CTSM Issue #):
 
    Some on  #1649 -- Additional "annual" (per growing season) crop outputs
 
-Known bugs found since the previous tag (include issue #):
-   None???
-
 Notes of particular relevance for users
 ---------------------------------------
 
@@ -90,7 +87,7 @@ Changes answers relative to baseline: YES for Clm45BgcCrop compsets only
   Summarize any changes to answers, i.e.,
     - what code configurations: Clm45BgcCrop
     - what platforms/compilers: Cheyenne intel and gnu, Izumi intel and nag
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): roundoff
 
    5 tests in aux_clm showed true DIFFs (i.e., not just field list differences / new output files):
      - SMS_D_Ly6_Mmpi-serial.1x1_smallvilleIA.IHistClm45BgcCropQianRs.izumi_intel.clm-cropMonthOutput
@@ -109,7 +106,7 @@ Changes answers relative to baseline: YES for Clm45BgcCrop compsets only
 Other details
 -------------
 List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime
-    cime: cime6.0.108 -> cime6.0.118
+    cime: cime6.0.108 -> cime6.0.125
 
 Pull Requests that document the changes (include PR ids):
     https://github.com/ESCOMP/CTSM/pull/1863

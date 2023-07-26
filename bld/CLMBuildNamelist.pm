@@ -3948,11 +3948,25 @@ sub setup_logic_cropcal_streams {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'generate_crop_gdds');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_mxmat');
 
-  # Consistency checking: Do not generate_crop_gdds without use_mxmat false
+  # Option checks
   my $generate_crop_gdds = $nl->get_value('generate_crop_gdds') ;
   my $use_mxmat = $nl->get_value('use_mxmat') ;
-  if ( $generate_crop_gdds eq '.true.' and $use_mxmat eq '.true.' ) {
-     $log->fatal_error("If generate_crop_gdds is true, you must also set use_mxmat to false" );
+  my $sdate_file = $nl->get_value('stream_fldFileName_sdate') ;
+  my $gdd_file = $nl->get_value('stream_fldFileName_cultivar_gdds') ;
+  my $mesh_file = $nl->get_value('stream_meshfile_cropcal') ;
+  if ( $generate_crop_gdds eq '.true.' ) {
+      if ( $use_mxmat eq '.true.' ) {
+          $log->fatal_error("If generate_crop_gdds is true, you must also set use_mxmat to false" );
+      }
+      if ( $sdate_file eq '' ) {
+          $log->fatal_error("If generate_crop_gdds is true, you must specify stream_fldFileName_sdate")
+      }
+      if ( $gdd_file ne '' ) {
+          $log->fatal_error("If generate_crop_gdds is true, do not specify stream_fldFileName_cultivar_gdds")
+      }
+  }
+  if ( $mesh_file eq '' and ( $sdate_file ne '' or $gdd_file ne '' ) ) {
+      $log->fatal_error("If prescribing crop sowing dates and/or maturity requirements, you must specify stream_meshfile_cropcal")
   }
 }
 
