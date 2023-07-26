@@ -1026,6 +1026,7 @@ contains
             ptr_patch=this%fert_patch)
        
        this%repr_grainn_to_food_patch(begp:endp,:) = spval
+       this%repr_grainn_to_seed_patch(begp:endp,:) = spval
           do k = repr_grain_min, repr_grain_max
              data1dptr => this%repr_grainn_to_food_patch(:,k)
              call hist_addfld1d ( &
@@ -1034,6 +1035,14 @@ contains
                   units='gN/m^2/s', &
                   avgflag='A', &
                   long_name=get_repr_longname(k)//' N to food', &
+                  ptr_patch=data1dptr)
+             data1dptr => this%repr_grainn_to_seed_patch(:,k)
+             call hist_addfld1d ( &
+                  ! e.g., GRAINN_TO_SEED
+                  fname=get_repr_hist_fname(k)//'N_TO_SEED', &
+                  units='gN/m^2/s', &
+                  avgflag='A', &
+                  long_name=get_repr_longname(k)//' N to seed', &
                   ptr_patch=data1dptr)
           end do
     end if
