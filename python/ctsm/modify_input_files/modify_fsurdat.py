@@ -414,7 +414,6 @@ class ModifyFsurdat:
         self.setvar_lev0("SLOPE", slope)
         self.setvar_lev0("zbedrock", zbedrock)
         self.setvar_lev0("SOIL_COLOR", soil_color)
-        self.setvar_lev0("PFTDATA_MASK", pftdata_mask)
         self.setvar_lev0("LANDFRAC_PFT", landfrac_pft)
         self.setvar_lev0("PCT_WETLAND", pct_not_nat_veg)
         self.setvar_lev0("PCT_CROP", pct_not_nat_veg)

@@ -14,22 +14,18 @@ valid_scenarios=["all",
                  "global-present",
                  "global-present-T42",
                  "global-present-nldas",
+                 "global-hist-4x5",
                  "tropics",
                  "crop-tropics-present",
-                 "crop-tropics-historical",
-                 "crop-tropics-transient",
                  "crop",
                  "crop-global-present",
                  "crop-global-present-ne16np4",
                  "crop-global-present-ne120np4",
                  "crop-global-present-0.125",
                  "crop-global-present-f05",
-                 "crop-global-historical",
-                 "crop-global-historical-f05",
-                 "crop-global-historical-ne120np4",
-                 "crop-global-transient",
-                 "crop-global-transient-ne120np4",
-                 "crop-global-transient-f05",
+                 "crop-global-1850",
+                 "crop-global-1850-ne120np4",
+                 "crop-global-hist",
                  "crop-global-future",
                  "crop-global-SSP1-2.6",
                  "crop-global-SSP3-7.0",
@@ -38,7 +34,8 @@ valid_scenarios=["all",
                  "crop-global-SSP1-1.9",
                  "crop-global-SSP4-3.4",
                  "crop-global-SSP4-6.0",
-                 "crop-global-SSP5-8.5"]
+                 "crop-global-SSP5-8.5",
+                 "crop-global-SSP5-8.5-other"]
 
 def get_parser():
     """
@@ -128,11 +125,12 @@ def main ():
         target_list = ["global-present",
                        "global-present-T42",
                        "global-present-nldas",
+                       "global-hist-4x5",
                        "crop-global-present",
                        "crop-global-present-ne16np4",
                        "crop-global-present-ne120np4",
-                       "crop-global-historical",
-                       "crop-global-transient",
+                       "crop-global-1850",
+                       "crop-global-hist",
                        "crop-tropics-present",
                        "crop-global-SSP1-2.6",
                        "crop-global-SSP3-7.0",
@@ -141,17 +139,19 @@ def main ():
                        "crop-global-SSP1-1.9",
                        "crop-global-SSP4-3.4",
                        "crop-global-SSP4-6.0",
-                       "crop-global-SSP5-8.5"]
+                       "crop-global-SSP5-8.5",
+                       "crop-global-SSP5-8.5-other"]
     elif scenario == 'standard':
         target_list = ["global-present",
                        "global-present-T42",
-                       "global-present-nldas"]
+                       "global-present-nldas",
+                       "global-hist-4x5"]
     elif scenario == "crop":
         target_list = ["crop-global-present",
                        "crop-global-present-ne16np4",
                        "crop-global-present-ne120np4",
-                       "crop-global-historical",
-                       "crop-global-transient"]
+                       "crop-global-1850",
+                       "crop-global-hist"]
     elif scenario == "crop-global-future":
         target_list = ["crop-global-SSP1-2.6",
                        "crop-global-SSP3-7.0",
@@ -160,7 +160,8 @@ def main ():
                        "crop-global-SSP1-1.9",
                        "crop-global-SSP4-3.4",
                        "crop-global-SSP4-6.0",
-                       "crop-global-SSP5-8.5"]
+                       "crop-global-SSP5-8.5",
+                       "crop-global-SSP5-8.5-other"]
     elif scenario == "tropics":
         target_list = ["crop-tropics-present"]
     else:
@@ -170,14 +171,15 @@ def main ():
     # Determine resolution sets that are referenced in commands
     # --------------------------
     resolution_dict = {
-        "standard_res_no_crop" : ["0.9x1.25","1.9x2.5","10x15"],
-        "standard_res"         : ['0.9x1.25','1.9x2.5','10x15','4x5','C96',
+        "standard_res_no_crop" : ["0.9x1.25","1.9x2.5","10x15","4x5"],
+        "most_res"             : ['0.9x1.25','1.9x2.5','10x15','4x5','C96',
             'ne30np4','ne30np4.pg2','ne30np4.pg3','ne30np4.pg4','ne120np4.pg3',
             'ne0np4.ARCTICGRIS.ne30x8','ne0np4.ARCTIC.ne30x4', 'ne0np4CONUS.ne30x8',
             'ne3np4.pg3','ne5np4.pg3','ne16np4.pg3','mpasa480','mpasa120'],
-        "future_res"           : ["0.9x1.25","1.9x2.5","10x15"],
-        "trans_res"            : ['0.9x1.25','1.9x2.5','10x15','ne30np4',
-            'ne0np4.ARCTICGRIS.ne30x8','ne0np4.ARCTIC.ne30x4','ne0np4CONUS.ne30x8','ne120np4'],
+        "standard_res"         : ["0.9x1.25","1.9x2.5","10x15"],
+        "ssp585_res"           : ['C96','ne30np4','ne0np4.ARCTICGRIS.ne30x8',
+            'ne0np4.ARCTIC.ne30x4','ne0np4CONUS.ne30x8','ne120np4'],
+        "4x5_res"              : ['4x5'],
         "T42_res"              : ['T42'],
         "nldas_res"            : ['0.125nldas2'],
         "5x5_amazon_res"       : ['5x5_amazon'],
@@ -191,23 +193,24 @@ def main ():
     dataset_dict={"global-present"                  : ("--start-year 2000 --end-year 2000 --nocrop --vic                  --res", "standard_res_no_crop"),
                   "global-present-T42"              : ("--start-year 2000 --end-year 2000 --nocrop --vic                  --res", "T42_res"),
                   "global-present-nldas"            : ("--start-year 2000 --end-year 2000 --nocrop --vic                  --res", "nldas_res"),
+                  "global-hist-4x5"                 : ("--start-year 1850 --end-year 2015 --nocrop                        --res", "4x5_res"),
                   "crop-tropics-present"            : ("--start-year 2000 --end-year 2000                                 --res", "5x5_amazon_res"),
-                  "crop-global-present"             : ("--start-year 2000 --end-year 2000                                 --res", "standard_res"),
+                  "crop-global-present"             : ("--start-year 2000 --end-year 2000                                 --res", "most_res"),
                   "crop-global-present-ne16np4"     : ("--start-year 2000 --end-year 2000                                 --res", "ne16np4_res"),
                   "crop-global-present-ne120np4"    : ("--start-year 2000 --end-year 2000                                 --res", "ne120np4_res"),
                   "crop-global-present-0.125"       : ("--start-year 2000 --end-year 2000 --hirespft                      --res", "nldas_res"),
-                  "crop-global-historical"          : ("--start-year 1850 --end-year 1850 --ssp-rcp SSP5-8.5              --res", "standard_res"),
-                  "crop-global-historical-ne120np4" : ("--start-year 1850 --end-year 1850 --ssp-rcp SSP5-8.5              --res", "ne120np4_res"),
-                  "crop-global-transient"           : ("--start-year 1850 --end-year 2000 --nosurfdata                    --res", "trans_res"),
-                  "crop-global-transient-ne120np4"  : ("--start-year 1850 --end-year 2000 --nosurfdata                    --res", "ne120np4_res"),
-                  "crop-global-SSP1-1.9"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-1.9 --res", "future_res"),
-                  "crop-global-SSP1-2.6"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-2.6 --res", "future_res"),
-                  "crop-global-SSP2-4.5"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res", "future_res"),
-                  "crop-global-SSP3-7.0"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP3-7.0 --res", "future_res"),
-                  "crop-global-SSP4-3.4"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-3.4 --res", "future_res"),
-                  "crop-global-SSP4-6.0"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-6.0 --res", "future_res"),
-                  "crop-global-SSP5-3.4"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP5-3.4 --res", "future_res"),
-                  "crop-global-SSP5-8.5"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP5-8.5 --res", "future_res")
+                  "crop-global-1850"                : ("--start-year 1850 --end-year 1850                                 --res", "most_res"),
+                  "crop-global-1850-ne120np4"       : ("--start-year 1850 --end-year 1850                                 --res", "ne120np4_res"),
+                  "crop-global-hist"                : ("--start-year 1850 --end-year 2015 --nosurfdata                    --res", "standard_res"),
+                  "crop-global-SSP1-1.9"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-1.9 --res", "standard_res"),
+                  "crop-global-SSP1-2.6"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-2.6 --res", "standard_res"),
+                  "crop-global-SSP2-4.5"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res", "standard_res"),
+                  "crop-global-SSP3-7.0"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP3-7.0 --res", "standard_res"),
+                  "crop-global-SSP4-3.4"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-3.4 --res", "standard_res"),
+                  "crop-global-SSP4-6.0"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-6.0 --res", "standard_res"),
+                  "crop-global-SSP5-3.4"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP5-3.4 --res", "standard_res"),
+                  "crop-global-SSP5-8.5"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP5-8.5 --res", "standard_res"),
+                  "crop-global-SSP5-8.5-other"      : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP5-8.5 --res", "ssp585_res")
                   }
 
     # --------------------------
