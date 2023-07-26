@@ -102,7 +102,6 @@ contains
     ! Read paramfile parameters to be used in tillage.
     !
     ! !USES
-    use pftconMod , only : npcropmin
     use ncdio_pio , only : file_desc_t, ncd_io
     use clm_varpar, only : ndecomp_pools_max
     use SoilBiogeochemDecompCascadeConType, only : no_soil_decomp, century_decomp, mimics_decomp, decomp_method
