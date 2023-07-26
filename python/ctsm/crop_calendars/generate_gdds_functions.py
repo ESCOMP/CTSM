@@ -198,6 +198,7 @@ def import_and_process_1yr(
     h2_ds_file,
     mxmats,
     get_gs_len_da,
+    skip_crops,
     logger,
 ):
     save_figs = True
@@ -219,11 +220,17 @@ def import_and_process_1yr(
         if not h1_filelist:
             error(logger, "No files found matching pattern '*h1.*.nc(.base)'")
 
+    # Get list of crops to include
+    if skip_crops is not None:
+        crops_to_read = [c for c in utils.define_mgdcrop_list() if c not in skip_crops]
+    else:
+        crops_to_read = utils.define_mgdcrop_list()
+
     print(h1_filelist)
     dates_ds = utils.import_ds(
         h1_filelist,
         myVars=["SDATES", "HDATES"],
-        myVegtypes=utils.define_mgdcrop_list(),
+        myVegtypes=crops_to_read,
         timeSlice=slice(f"{thisYear}-01-01", f"{thisYear}-12-31"),
         chunks=chunks,
     )
@@ -281,7 +288,7 @@ def import_and_process_1yr(
     incl_patches1d_itype_veg = dates_incl_ds.patches1d_itype_veg
 
     if y == 0:
-        incl_vegtypes_str = dates_incl_ds.vegtype_str.values
+        incl_vegtypes_str = [c for c in dates_incl_ds.vegtype_str.values if c not in skip_crops]
     else:
         incl_vegtypes_str = incl_vegtypes_str_in
         if isinstance(incl_vegtypes_str, xr.DataArray):
@@ -474,7 +481,7 @@ def import_and_process_1yr(
     h2_ds = utils.import_ds(
         h2_files,
         myVars=myVars,
-        myVegtypes=utils.define_mgdcrop_list(),
+        myVegtypes=crops_to_read,
         chunks=chunks,
     )
 
@@ -493,15 +500,14 @@ def import_and_process_1yr(
     Nyears = yN - y1 + 1
 
     if len(gddaccum_yp_list) == 0:
-        lastYear_active_patch_indices_list = [None for vegtype_str in h2_incl_ds.vegtype_str.values]
-        gddaccum_yp_list = [None for vegtype_str in h2_incl_ds.vegtype_str.values]
+        lastYear_active_patch_indices_list = [None for vegtype_str in incl_vegtypes_str]
+        gddaccum_yp_list = [None for vegtype_str in incl_vegtypes_str]
         if save_figs:
-            gddharv_yp_list = [None for vegtype_str in h2_incl_ds.vegtype_str.values]
+            gddharv_yp_list = [None for vegtype_str in incl_vegtypes_str]
 
     incl_vegtype_indices = []
-    for v, vegtype_str in enumerate(h2_incl_ds.vegtype_str.values):
-        # Skipping Miscanthus because it seems to never be harvested even though it is sown. This causes problems in NaN mask check.
-        if "miscanthus" in vegtype_str:
+    for v, vegtype_str in enumerate(incl_vegtypes_str):
+        if vegtype_str in skip_crops:
             log(logger, f"      SKIPPING {vegtype_str}")
             continue
 

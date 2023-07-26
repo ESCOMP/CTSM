@@ -134,8 +134,8 @@ class RXCROPMATURITY(SystemTestsCommon):
             case_gddgen.check_all_input_data()
 
             # Make custom version of surface file
-            logger.info("RXCROPMATURITY log:  run make_surface_for_gddgen")
-            self._run_make_surface_for_gddgen(case_gddgen)
+            logger.info("RXCROPMATURITY log:  run make_fsurdat_all_crops_everywhere")
+            self._run_make_fsurdat_all_crops_everywhere()
 
         # -------------------------------------------------------------------
         # (2) Perform GDD-generating run and generate prescribed GDDs file
@@ -239,7 +239,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         logger.info("RXCROPMATURITY log:  _setup_all done")
 
     # Make a surface dataset that has every crop in every gridcell
-    def _run_make_surface_for_gddgen(self, case_gddgen):
+    def _run_make_fsurdat_all_crops_everywhere(self):
 
         # fsurdat should be defined. Where is it?
         self._fsurdat_in = None
@@ -353,6 +353,7 @@ class RXCROPMATURITY(SystemTestsCommon):
                 f"--sdates-file {sdates_file}",
                 f"--hdates-file {hdates_file}",
                 f"--output-dir generate_gdds_out",
+                f"--skip-crops miscanthus,irrigated_miscanthus"
             ]
         )
         stu.run_python_script(
@@ -364,7 +365,6 @@ class RXCROPMATURITY(SystemTestsCommon):
 
         # Where were the prescribed maturity requirements saved?
         generated_gdd_files = glob.glob(os.path.join(self._generate_gdds_dir, "gdds_*.nc"))
-        generated_gdd_files = [x for x in generated_gdd_files if "fill0" not in x]
         if len(generated_gdd_files) != 1:
             error_message = f"ERROR: Expected one matching prescribed maturity requirements file; found {len(generated_gdd_files)}: {generated_gdd_files}"
             logger.error(error_message)

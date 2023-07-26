@@ -861,3 +861,74 @@ def safer_timeslice(ds, timeSlice, timeVar="time"):
             raise
 
     return ds
+
+
+# Convert a longitude axis that's -180 to 180 around the international date line to one that's 0 to 360 around the prime meridian. If you pass in a Dataset or DataArray, the "lon" coordinates will be changed. Otherwise, it assumes you're passing in numeric data.
+def lon_idl2pm(lons_in, fail_silently=False):
+    def check_ok(tmp, fail_silently):
+        msg = ""
+
+        if np.any(tmp > 180):
+            msg = f"Maximum longitude is already > 180 ({np.max(tmp)})"
+        elif np.any(tmp < -180):
+            msg = f"Minimum longitude is < -180 ({np.min(tmp)})"
+
+        if msg == "":
+            return True
+        elif fail_silently:
+            return False
+        else:
+            raise ValueError(msg)
+
+    def do_it(tmp):
+        tmp = tmp + 360
+        tmp = np.mod(tmp, 360)
+        return tmp
+
+    if isinstance(lons_in, (xr.DataArray, xr.Dataset)):
+        if not check_ok(lons_in.lon.values, fail_silently):
+            return lons_in
+        lons_out = lons_in
+        lons_out = lons_out.assign_coords(lon=do_it(lons_in.lon.values))
+        lons_out = make_lon_increasing(lons_out)
+    else:
+        if not check_ok(lons_in, fail_silently):
+            return lons_in
+        lons_out = do_it(lons_in)
+        if not is_strictly_increasing(lons_out):
+            print(
+                "WARNING: You passed in numeric longitudes to lon_idl2pm() and these have been"
+                " converted, but they're not strictly increasing."
+            )
+        print(
+            "To assign the new longitude coordinates to an Xarray object, use"
+            " xarrayobject.assign_coordinates()! (Pass the object directly in to lon_idl2pm() in"
+            " order to suppress this message.)"
+        )
+
+    return lons_out
+
+
+# Helper function to check that a list is strictly increasing
+def is_strictly_increasing(L):
+    # https://stackoverflow.com/a/4983359/2965321
+    return all(x < y for x, y in zip(L, L[1:]))
+
+
+# Ensure that longitude axis coordinates are monotonically increasing
+def make_lon_increasing(xr_obj):
+    if not "lon" in xr_obj.dims:
+        return xr_obj
+
+    lons = xr_obj.lon.values
+    if is_strictly_increasing(lons):
+        return xr_obj
+
+    shift = 0
+    while not is_strictly_increasing(lons) and shift < lons.size:
+        shift = shift + 1
+        lons = np.roll(lons, 1, axis=0)
+    if not is_strictly_increasing(lons):
+        raise RuntimeError("Unable to rearrange longitude axis so it's monotonically increasing")
+
+    return xr_obj.roll(lon=shift, roll_coords=True)
