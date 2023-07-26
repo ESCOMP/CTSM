@@ -229,9 +229,6 @@ contains
     !  initialize rate constants and decomposition pathways following the decomposition cascade of the BGC model.
     !  written by C. Koven 
     !
-    ! !USES:
-    use TillageMod, only : tillage_init_century
-    !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds  
     type(soilbiogeochem_state_type) , intent(inout) :: soilbiogeochem_state_inst
@@ -506,9 +503,6 @@ contains
 
       deallocate(params_inst%bgc_initial_Cstocks)
 
-      ! Allocate tillage variables
-      call tillage_init_century(i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
-
     end associate
 
   end subroutine init_decompcascade_bgc
@@ -603,6 +597,10 @@ contains
          call endrun(msg='ERROR: cannot have both use_century_tfunc and normalize_q10_to_century_tfunc set as true'//&
               errMsg(sourcefile, __LINE__))
       endif
+
+      if (get_do_tillage() .and. .not. present(idop)) then
+         call endrun("Do not enable tillage without providing idop to decomp_rate_constants_bgc().")
+      end if
 
       days_per_year = get_average_days_per_year()
       dt = real( get_step_size(), r8 )
@@ -904,6 +902,12 @@ contains
                decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_cwd(c)
             end if
+
+            ! Tillage
+            if (get_do_tillage()) then
+               call get_apply_tillage_multipliers(idop, c, j, decomp_k(c,j,:))
+            end if
+
             ! Above into soil matrix
             if(use_soil_matrixcn)then
                ! same for cwd but only if fates is not enabled; fates handles CWD
@@ -913,17 +917,6 @@ contains
             end if !use_soil_matrixcn
          end do
       end do
-
-      ! Tillage
-      if (get_do_tillage()) then
-         if (.not. present(idop)) then
-            call endrun("Do not call tillage without providing idop.")
-         end if
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
-            call get_apply_tillage_multipliers(idop, c, decomp_k, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
-         end do
-      end if
 
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = 1.0_r8
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1) = 1.0_r8

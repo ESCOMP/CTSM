@@ -755,7 +755,8 @@ contains
   subroutine decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
        num_soilp, filter_soilp, clm_fates, &
        soilstate_inst, temperature_inst, cnveg_carbonflux_inst, &
-       ch4_inst, soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
+       ch4_inst, soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
+       idop)
     !
     ! !DESCRIPTION:
     ! Calculate rates and decomposition pathways for the MIMICS
@@ -768,6 +769,8 @@ contains
     use subgridAveMod    , only : p2c
     use PatchType        , only : patch
     use pftconMod        , only : pftname
+    use TillageMod       , only : get_do_tillage
+    use TillageMod       , only : get_apply_tillage_multipliers
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds          
@@ -782,6 +785,7 @@ contains
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type), intent(in)    :: soilbiogeochem_carbonstate_inst
     type(hlm_fates_interface_type)       , intent(inout) :: clm_fates
+    integer, optional                    , intent(in)    :: idop(:) ! patch day of planting
     !
     ! !LOCAL VARIABLES:
     real(r8), parameter :: eps = 1.e-6_r8
@@ -882,6 +886,10 @@ contains
          decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col , & ! Output: [real(r8) (:,:,:) ]  rate for decomposition (1./sec)
          spinup_factor  => decomp_cascade_con%spinup_factor              & ! Input:  [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
          )
+
+      if (get_do_tillage() .and. .not. present(idop)) then
+         call endrun("Do not enable tillage without providing idop to decomp_rate_constants_mimics().")
+      end if
 
       mino2lim = CNParamsShareInst%mino2lim
 
@@ -1300,6 +1308,11 @@ contains
             ! TODO This shows how BGC applies the spinup coefficients
             if (.not. use_fates) then
                decomp_k(c,j,i_cwd) = k_frag * w_d_o_scalars  ! * spinup_geogterm_cwd(c)
+            end if
+
+            ! Tillage
+            if (get_do_tillage()) then
+               call get_apply_tillage_multipliers(idop, c, j, decomp_k(c,j,:))
             end if
          end do
       end do

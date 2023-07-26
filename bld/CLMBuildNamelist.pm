@@ -2151,20 +2151,8 @@ sub setup_logic_tillage {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   my $tillage_mode = remove_leading_and_trailing_quotes( $nl->get_value( "tillage_mode" ) );
-  if ( $tillage_mode ne "off" ) {
-
-      if ( not &value_is_true($nl->get_value('use_crop')) ) {
-          $log->fatal_error( "It doesn't make sense to use tillage with use_crop false" );
-      }
-
-      if ( &value_is_true($nl->get_value('use_fates')) ) {
-          $log->fatal_error( "Tillage can't be used with FATES" );
-      }
-
-      my $soil_decomp_method = remove_leading_and_trailing_quotes( $nl->get_value( "soil_decomp_method" ) );
-      if ( $soil_decomp_method ne "CENTURYKoven2013" ) {
-          $log->fatal_error( "Tillage can only be used with soil_decomp_method 'CENTURYKoven2013'" );
-      }
+  if ( $tillage_mode ne "off" && not &value_is_true($nl->get_value('use_crop')) ) {
+      $log->fatal_error( "It doesn't make sense to use tillage with use_crop false" );
   }
 }
 

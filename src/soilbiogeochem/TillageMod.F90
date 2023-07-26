@@ -3,17 +3,8 @@ module TillageMod
   ! !DESCRIPTION:
   ! Module for soil tillage.
   !
-  ! As described in ChangeLog:
-  !     history field name change as follows...
-  !     LITR1 becomes MET_LIT (metabolic)
-  !     LITR2 becomes CEL_LIT (cellulosic)
-  !     LITR3 becomes LIG_LIT (lignin)
-  !     SOIL1 becomes ACT_SOM (active)
-  !     SOIL2 becomes SLO_SOM (slow)
-  !     SOIL3 becomes PAS_SOM (passive)
-  !
   ! !USES:
-  use shr_kind_mod   , only : r8 => shr_kind_r8
+  use shr_kind_mod   , only : r8 => shr_kind_r8, CS => shr_kind_CS
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
@@ -24,54 +15,47 @@ module TillageMod
   implicit none
   private
   ! !PUBLIC MEMBER PROCEDURES
-  public :: tillage_init
-  public :: tillage_init_century
+  public :: readParams
   public :: get_do_tillage
   public :: get_apply_tillage_multipliers
+  ! !PUBLIC DATA MEMBERS
+  character(len=CS), public :: tillage_mode     ! off, low, high
+  integer, parameter, public :: ntill_intensities_max = 2
   !
   ! !PRIVATE DATA MEMBERS
-  logical  :: do_tillage_low   ! Do low-intensity tillage?
-  logical  :: do_tillage_high  ! Do high-intensity tillage?
+  integer             :: tillage_intensity
+  integer, parameter  :: tillage_off = 0
+  integer, parameter  :: tillage_low = 1
+  integer, parameter  :: tillage_high = 2
   logical  :: use_original_tillage ! Use get_tillage_multipliers_orig?
-  real(r8), pointer :: tillage_mults(:) ! (ndecomp_pools)
-  real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, nphases)
-  integer, parameter :: nphases = 3 ! How many different tillage phases are there? (Not including all-1 phases.)
-
+  real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, ntill_stages_max)
+  integer, parameter :: ntill_stages_max = 3 ! How many different tillage phases are there? (Not including all-1 phases.)
 
 !==============================================================================
 contains
 !==============================================================================
 
-  subroutine tillage_init(bounds)
+  subroutine readParams_namelist()
     !
-    ! Read namelist parameters related to tillage. Allocation of variables happens
-    ! in separate subroutines written specifically for decomposition mode of choice.
+    ! Read namelist parameters related to tillage.
     !
     ! !USES:
-    use spmdMod        , only : masterproc
+    use spmdMod        , only : masterproc, mpicom
     use controlMod     , only : NLFilename
     use clm_nlUtilsMod , only : find_nlgroup_name
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use decompMod      , only : bounds_type
-    !
-    ! !ARGUMENTS
-    ! SSR: Not sure why this is necessary, but without it, CTSM stalls out
-    !      (although it seems to successfully complete this subroutine).
-    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES
     integer                :: nu_nml       ! unit for namelist file
     integer                :: nml_error    ! namelist i/o error flag
-    integer                :: mpicom       ! MPI communicator
-    character(*), parameter :: subname = "('tillage_init')"
-    character(len=8) :: tillage_mode     ! off, low, high
+    character(*), parameter :: subname = "('readParams_namelist')"
 
     namelist /tillage_inparm/    &
         tillage_mode,            &
         use_original_tillage
 
     ! Default values
-    tillage_mode = "off"
+    tillage_mode = 'off'
     use_original_tillage = .false.
 
     ! Read tillage namelist
@@ -99,68 +83,93 @@ contains
      endif
 
      ! Assign these
-     do_tillage_low = .false.
-     do_tillage_high = .false.
-     if (tillage_mode == "low") then
-        do_tillage_low = .true.
+     if (tillage_mode == "off") then
+         tillage_intensity = tillage_off
+     else if (tillage_mode == "low") then
+         tillage_intensity = tillage_low
      else if (tillage_mode == "high") then
-        do_tillage_high = .true.
+         tillage_intensity = tillage_high
      else
         call endrun(subname // ':: ERROR Unrecognized tillage_mode')
      end if
 
+  end subroutine readParams_namelist
 
-  end subroutine tillage_init
 
-
-  subroutine tillage_init_century(i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+  subroutine readParams_netcdf(ncid)
     ! !DESCRIPTION:
     !
-    ! Allocate multiplier arrays to be used in tillage. Call during initialization of CENTURY decomposition.
-    ! Written by Sam Rabin.
+    ! Read paramfile parameters to be used in tillage.
     !
     ! !USES
-    use pftconMod , only : npcropmin
+    use ncdio_pio , only : file_desc_t, ncd_io
+    use clm_varpar, only : ndecomp_pools_max
+    use SoilBiogeochemDecompCascadeConType, only : no_soil_decomp, century_decomp, mimics_decomp, decomp_method
     !
     ! !ARGUMENTS:
-    integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
-    integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'readParams_netcdf'
+    character(len=100) :: errCode = 'Error reading tillage params '
+    logical            :: readv   ! has variable been read in or not
+    real(r8), allocatable :: tempr(:,:,:)   ! temporary to read in constant
+    character(len=100) :: tString ! temp. var for reading
+    character(len=3)   :: decomp_method_str
 
-    if (.not. get_do_tillage()) then
+    ! Initialize tillage multipliers as all 1, and exit if not tilling
+    allocate(tillage_mults_allphases(ndecomp_pools, ntill_stages_max))
+    tillage_mults_allphases(:,:) = 1.0_r8
+    if (tillage_mode == "off") then
         return
     end if
 
-    ! Allocate tillage multipliers
-    allocate(tillage_mults(ndecomp_pools)); tillage_mults(:) = 1.0_r8
-    allocate(tillage_mults_allphases(ndecomp_pools, nphases)); tillage_mults_allphases(:,:) = 1.0_r8
+    ! Handle decomposition method
+    select case( decomp_method )
+    case( no_soil_decomp ) 
+       return
+    case( century_decomp ) 
+        tString = 'till_decompk_multipliers'
+    case( mimics_decomp )
+        tString = 'mimics_till_decompk_multipliers'
+    case default
+       write(decomp_method_str, '(I3)') decomp_method
+       call endrun('Bad decomp_method = '//decomp_method_str )
+    end select
 
-    ! Fill tillage_mults_allphases
-    if (do_tillage_low) then
-        tillage_mults_allphases(i_cel_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
-        tillage_mults_allphases(i_lig_lit,:) = (/ 1.5_r8, 1.5_r8, 1.1_r8 /)
-        tillage_mults_allphases(i_act_som,:) = (/ 1.0_r8, 1.0_r8, 1.0_r8 /)
-        tillage_mults_allphases(i_slo_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
-        tillage_mults_allphases(i_pas_som,:) = (/ 3.0_r8, 1.6_r8, 1.3_r8 /)
-    else if (do_tillage_high) then
-        tillage_mults_allphases(i_cel_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
-        tillage_mults_allphases(i_lig_lit,:) = (/ 1.8_r8, 1.5_r8, 1.1_r8 /)
-        tillage_mults_allphases(i_act_som,:) = (/ 1.2_r8, 1.0_r8, 1.0_r8 /)
-        tillage_mults_allphases(i_slo_som,:) = (/ 4.8_r8, 3.5_r8, 2.5_r8 /)
-        tillage_mults_allphases(i_pas_som,:) = (/ 4.8_r8, 3.5_r8, 2.5_r8 /)
-    else
-        call endrun('ERROR Unrecognized tillage setting in tillage_init_century()')
+    ! Read off of netcdf file
+    allocate(tempr(2,ndecomp_pools_max,ntill_stages_max))
+    call ncd_io(trim(tString), tempr, 'read', ncid, readvar = readv)
+    if (.not. readv) then
+        call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     end if
 
-  end subroutine tillage_init_century
+    ! Save
+    tillage_mults_allphases = tempr(tillage_intensity,1:ndecomp_pools,:)
+
+  end subroutine readParams_netcdf
+
+
+  subroutine readParams(ncid)
+    ! !USES
+    use ncdio_pio , only : file_desc_t
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+
+    call readParams_namelist()
+    call readParams_netcdf(ncid)
+
+  end subroutine readParams
 
 
   function get_do_tillage()
     logical :: get_do_tillage
-    get_do_tillage = do_tillage_low .or. do_tillage_high
+    get_do_tillage = tillage_intensity > tillage_off
   end function get_do_tillage
 
 
-  subroutine get_tillage_multipliers(idop, p, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+  subroutine get_tillage_multipliers(tillage_mults, idop)
     ! !DESCRIPTION:
     !
     !  Get the cultivation effective multiplier if prognostic crops are on and
@@ -168,14 +177,16 @@ contains
     !  to use days past planting. Modified by Sam Rabin to include "new" version
     !  that *actually* uses days past planting.
     !
+    !  Original code had two versions depending on cell's GDP, but this seems to
+    !  have been only an initial effort that was (a) never published and (b) not
+    !  completely developed.
+    !
     ! !USES:
     use clm_time_manager, only : get_curr_calday, get_curr_days_per_year
     use pftconMod       , only : ntmp_corn, nirrig_tmp_corn, ntmp_soybean, nirrig_tmp_soybean
     ! !ARGUMENTS:
-    integer          , intent(in) :: idop(:) ! patch day of planting
-    integer          , intent(in) :: p       ! index of patch this is being called for
-    integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
-    integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
+    real(r8)         , intent(inout) :: tillage_mults(:) ! tillage multipliers for this patch
+    integer          , intent(in) :: idop    ! patch day of planting
     !
     ! !LOCAL VARIABLES:
     !
@@ -190,10 +201,10 @@ contains
     dayspyr = get_curr_days_per_year()               !Add by MWG for IDPP-based routine
 
     ! days past planting may determine harvest/tillage
-    if (day >= idop(p)) then
-        idpp = day - idop(p)
+    if (day >= idop) then
+        idpp = day - idop
     else
-        idpp = int(dayspyr) + day - idop(p)
+        idpp = int(dayspyr) + day - idop
     end if
 
     ! -----------------------------------------------------
@@ -207,11 +218,11 @@ contains
     phase = 0
 
     if (use_original_tillage) then
-        if (day >= idop(p) .and. day < idop(p)+15) then ! based on Point Chisel Tandem Disk multipliers
+        if (day >= idop .and. day < idop+15) then ! based on Point Chisel Tandem Disk multipliers
             phase = 1
-        else if (day >= idop(p)+15 .and. day < idop(p)+45) then ! based on Field and Row Cultivator multipliers
+        else if (day >= idop+15 .and. day < idop+45) then ! based on Field and Row Cultivator multipliers
             phase = 2
-        else if (day >= idop(p)+45 .and. day <idop(p)+75) then ! based on Rod Weed Row Planter
+        else if (day >= idop+45 .and. day <idop+75) then ! based on Rod Weed Row Planter
             phase = 3
         end if
     else
@@ -226,8 +237,8 @@ contains
 
     tillage_mults(:) = 1._r8
     if (phase > 0) then
-        if (phase > nphases) then
-            call endrun(msg='Tillage phase > nphases')
+        if (phase > ntill_stages_max) then
+            call endrun(msg='Tillage phase > ntill_stages_max')
         end if
         tillage_mults = tillage_mults_allphases(:, phase)
     end if
@@ -235,7 +246,7 @@ contains
   end subroutine get_tillage_multipliers
 
 
-  subroutine get_apply_tillage_multipliers(idop, c, decomp_k, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
+  subroutine get_apply_tillage_multipliers(idop, c, j, decomp_k)
     ! !DESCRIPTION:
     !
     ! Multiply decomposition rate constants by tillage coefficients.
@@ -243,33 +254,46 @@ contains
     !
     ! !USES
     use pftconMod , only : npcropmin
+    use PatchType , only : patch
     !
     ! !ARGUMENTS:
     integer       , intent(in) :: idop(:) ! patch day of planting
     integer       , intent(in) :: c       ! index of column this is being called for
-    real(r8), dimension(:,:,:), intent(inout) :: decomp_k ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
-    integer          , intent(in) :: i_act_som, i_slo_som, i_pas_som  ! indices for soil organic matter pools
-    integer          , intent(in) :: i_cel_lit, i_lig_lit  ! indices for litter pools
+    integer       , intent(in) :: j       ! index of soil layer this is being called for
+    real(r8), dimension(:), intent(inout) :: decomp_k ! Output: [real(r8) (:) ]  rate constant for decomposition (1./sec)
     !
     ! !LOCAL VARIABLES
-    integer :: p, this_patch, j, n_noncrop
+    integer :: p, this_patch, n_noncrop
+    real    :: sumwt ! sum of all patch weights, to check
+    real(r8), dimension(ndecomp_pools) :: tillage_mults
+    real(r8), dimension(ndecomp_pools) :: tillage_mults_1patch
 
-    if (.not. col%active(c)) then
+    if (.not. col%active(c) .or. j > 5) then
+        ! Top 5 layers (instead of all nlevdecomp) so that model only tills
+        ! the top 26-40 cm of the soil surface, rather than whole soil - MWGraham
         return
     end if
+    
+    ! Initialize tillage multipliers to 0. We will loop through all patches in column,
+    ! adding patch-weighted multipliers to this.
+    tillage_mults(:) = 0.0_r8
 
     ! TODO: Figure out why adding ".and. col%lun_itype(c) == istcrop" to conditional
     !       controlling call of this subroutine didn't properly exclude non-crop columns.
-    !       That working would allow simplification here.
+    !       That working would allow some simplification here.
     this_patch = 0
     n_noncrop = 0
+    sumwt = 0.0_r8
     do p = col%patchi(c),col%patchf(c)
-        if (patch%active(p)) then
+        if (patch%active(p) .and. patch%wtcol(p) /= 0._r8) then
             if (patch%itype(p) >= npcropmin) then
                 if (this_patch > 0) then
                     call endrun('ERROR multiple active crop patches found in this column')
                 end if
                 this_patch = p
+                call get_tillage_multipliers(tillage_mults_1patch, idop(p))
+                tillage_mults = tillage_mults + tillage_mults_1patch * patch%wtcol(p)
+                sumwt = sumwt + patch%wtcol(p)
             else
                 n_noncrop = n_noncrop + 1
             end if
@@ -277,20 +301,17 @@ contains
     end do
     if (n_noncrop > 0) then
         if (this_patch > 0) then
-            call endrun('ERROR Active crop and non-crop patches found in this active column')
+            call endrun('ERROR Active, non-zero-weight crop AND non-crop patches found')
         end if
         return
     elseif (this_patch == 0) then
-        call endrun('ERROR No active patches found (crop OR non-crop)')
+        call endrun('ERROR No active, non-zero-weight patches found (crop OR non-crop)')
+    elseif (sumwt > 1.0_r8 + 1.e-6_r8) then
+        call endrun('ERROR Active crop patch weights does not sum to 1')
     end if
 
-    call get_tillage_multipliers(idop, this_patch, i_act_som, i_slo_som, i_pas_som, i_cel_lit, i_lig_lit)
-
-    ! Top 5 layers (instead of all nlevdecomp) so that model only tills the top 26-40 cm
-    ! of the soil surface, rather than whole soil - MWGraham
-    do j = 1,5
-        decomp_k(c,j,:) = decomp_k(c,j,:) * tillage_mults(:)
-    end do
+    ! Apply
+    decomp_k = decomp_k * tillage_mults(:)
 
   end subroutine get_apply_tillage_multipliers
 
