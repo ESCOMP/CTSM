@@ -142,4 +142,4 @@ ds1[tillage_century_da.name] = tillage_century_da
 ds1[tillage_mimics_da.name] = tillage_mimics_da
 ds1.attrs['latest_git_log'] = git_log
 
-ds1.to_netcdf(file_out)
+ds1.to_netcdf(file_out, format="NETCDF3_CLASSIC")
