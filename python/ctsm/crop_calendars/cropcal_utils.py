@@ -862,6 +862,7 @@ def safer_timeslice(ds, timeSlice, timeVar="time"):
 
     return ds
 
+
 # Convert a longitude axis that's -180 to 180 around the international date line to one that's 0 to 360 around the prime meridian. If you pass in a Dataset or DataArray, the "lon" coordinates will be changed. Otherwise, it assumes you're passing in numeric data.
 def lon_idl2pm(lons_in, fail_silently=False):
     def check_ok(tmp, fail_silently):
@@ -906,6 +907,7 @@ def lon_idl2pm(lons_in, fail_silently=False):
         )
 
     return lons_out
+
 
 # Helper function to check that a list is strictly increasing
 def is_strictly_increasing(L):

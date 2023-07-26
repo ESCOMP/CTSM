@@ -82,7 +82,7 @@ def main(
 
     # Print some info
     gddfn.log(logger, f"Saving to {output_dir}")
-    
+
     # Parse list of crops to skip
     if "," in skip_crops:
         skip_crops = skip_crops.split(",")

@@ -13,33 +13,45 @@ import regrid_ggcmi_shdates
 
 def get_cft(y):
     return cftime.DatetimeNoLeap(y, 1, 1, 0, 0, 0, 0, has_year_zero=True)
-    
+
+
 def get_dayssince_jan1y1(y1, y):
     cft_y1 = get_cft(y1)
-    cft_y  = get_cft(y)
+    cft_y = get_cft(y)
     time_delta = cft_y - cft_y1
     time_delta_secs = time_delta.total_seconds()
-    return time_delta_secs / (60*60*24)
+    return time_delta_secs / (60 * 60 * 24)
 
 
-def main(input_directory, output_directory, author, file_specifier, first_year,
-         last_year, verbose, ggcmi_author, regrid_resolution, regrid_template_file):
+def main(
+    input_directory,
+    output_directory,
+    author,
+    file_specifier,
+    first_year,
+    last_year,
+    verbose,
+    ggcmi_author,
+    regrid_resolution,
+    regrid_template_file,
+):
 
     ############################################################
     ### Regrid original GGCMI files to target CLM resolution ###
     ############################################################
-    
-    regridded_ggcmi_files_dir = os.path.join(output_directory,
-                                             f"regridded_ggcmi_files-{regrid_resolution}")
-    
-    regrid_ggcmi_shdates.main(regrid_resolution, regrid_template_file, input_directory,
-                              regridded_ggcmi_files_dir)
 
-    
+    regridded_ggcmi_files_dir = os.path.join(
+        output_directory, f"regridded_ggcmi_files-{regrid_resolution}"
+    )
+
+    regrid_ggcmi_shdates.main(
+        regrid_resolution, regrid_template_file, input_directory, regridded_ggcmi_files_dir
+    )
+
     ###########################
     ### Define dictionaries ###
     ###########################
-    
+
     # First, we associate CLM crop names with (1) their integer counterpart and (2) their GGCMI counterpart.
     # Some notes:
     # - As "CLMname: {clm_num, thiscrop_ggcmi}"
@@ -50,6 +62,7 @@ def main(input_directory, output_directory, author, file_specifier, first_year,
     # - Only using GGCMI `ri1` for rice; ignoring `ri2`.
     def set_crop_dict(thisnum, thisname):
         return {"clm_num": thisnum, "thiscrop_ggcmi": thisname}
+
     crop_dict = {
         "temperate_corn": set_crop_dict(17, "mai_rf"),
         "irrigated_temperate_corn": set_crop_dict(18, "mai_ir"),
@@ -117,21 +130,20 @@ def main(input_directory, output_directory, author, file_specifier, first_year,
         "c3_irrigated": set_crop_dict(16, None),
     }
 
-
     # Next, we associate CLM variable names with their GGCMI counterparts. We also save a placeholder for output file paths associated with each variable.
     # As CLMname: {GGCMIname, output_file}
     def set_var_dict(name_ggcmi, outfile):
         return {"name_ggcmi": name_ggcmi, "outfile": outfile}
+
     variable_dict = {
         "sdate": set_var_dict("planting_day", ""),
-        "hdate": set_var_dict("maturity_day", "")
+        "hdate": set_var_dict("maturity_day", ""),
     }
-    
-    
+
     ################################
     ### Instantiate output files ###
     ################################
-    
+
     # Global attributes for output files
     out_attrs = {
         "title": "GGCMI crop calendar for Phase 3, v1.01",
@@ -140,29 +152,33 @@ def main(input_directory, output_directory, author, file_specifier, first_year,
         "comment": "Day of year is 1-indexed (i.e., Jan. 1 = 1). Filled using cdo -remapnn,$original -setmisstonn",
         "created": dt.datetime.now().replace(microsecond=0).astimezone().isoformat(),
     }
-    
+
     # Create template dataset
-    time_array = np.array([get_dayssince_jan1y1(first_year, y) for y in np.arange(first_year, last_year+1)])
+    time_array = np.array(
+        [get_dayssince_jan1y1(first_year, y) for y in np.arange(first_year, last_year + 1)]
+    )
     time_coord = xr.IndexVariable(
         "time",
-        data = time_array,
-        attrs = {
+        data=time_array,
+        attrs={
             "long_name": "time",
             "units": f"days since {first_year}-01-01",
             "calendar": "noleap",
-            }
-        )
-    template_ds = xr.Dataset(coords = {"time": time_coord},
-                             attrs = out_attrs)
+        },
+    )
+    template_ds = xr.Dataset(coords={"time": time_coord}, attrs=out_attrs)
 
     # Create output files
-    datetime_string = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
+    datetime_string = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
     for v in variable_dict:
-        outfile = os.path.join(output_directory, f"{v}s_{file_specifier}.{first_year}-{last_year}.{datetime_string}.nc")
+        outfile = os.path.join(
+            output_directory, f"{v}s_{file_specifier}.{first_year}-{last_year}.{datetime_string}.nc"
+        )
         variable_dict[v]["outfile"] = outfile
-        template_ds.to_netcdf(path=variable_dict[v]["outfile"],
-                              format="NETCDF3_CLASSIC",)
-
+        template_ds.to_netcdf(
+            path=variable_dict[v]["outfile"],
+            format="NETCDF3_CLASSIC",
+        )
 
     #########################
     ### Process all crops ###
@@ -177,29 +193,27 @@ def main(input_directory, output_directory, author, file_specifier, first_year,
         this_dict = crop_dict[thiscrop_clm]
         thiscrop_int = this_dict["clm_num"]
         thiscrop_ggcmi = this_dict["thiscrop_ggcmi"]
-        
+
         # If no corresponding GGCMI crop, skip opening dataset.
         # Will use previous cropcal_ds as a template.
         if thiscrop_ggcmi == None:
             if c == 1:
                 raise ValueError(f"First crop ({thiscrop_clm}) must have a GGCMI type")
-            print("Filling %s with dummy data (%d of %d)..." \
-                % (str(thiscrop_clm),
-                c, 
-                len(crop_dict)))
-        
+            print(
+                "Filling %s with dummy data (%d of %d)..." % (str(thiscrop_clm), c, len(crop_dict))
+            )
+
         # Otherwise, import crop calendar file
         else:
             if verbose:
-                print("Importing %s -> %s (%d of %d)..." \
-                    % (str(thiscrop_ggcmi), 
-                    str(thiscrop_clm),
-                    c, 
-                    len(crop_dict)))
-            
+                print(
+                    "Importing %s -> %s (%d of %d)..."
+                    % (str(thiscrop_ggcmi), str(thiscrop_clm), c, len(crop_dict))
+                )
+
             file_ggcmi = os.path.join(
-                regridded_ggcmi_files_dir,
-                f"{thiscrop_ggcmi}_{file_specifier}.nc4")
+                regridded_ggcmi_files_dir, f"{thiscrop_ggcmi}_{file_specifier}.nc4"
+            )
             if not os.path.exists(file_ggcmi):
                 raise Exception("Input file not found: " + file_ggcmi)
             cropcal_ds = xr.open_dataset(file_ggcmi)
@@ -207,19 +221,19 @@ def main(input_directory, output_directory, author, file_specifier, first_year,
             cropcal_ds = cropcal_ds.reindex(lat=cropcal_ds.lat[::-1])
             # Rearrange longitude to match destination (does nothing if not needed)
             cropcal_ds = utils.lon_idl2pm(cropcal_ds, fail_silently=True)
-        
+
         for thisvar_clm in variable_dict:
             # Get GGCMI netCDF info
             varname_ggcmi = variable_dict[thisvar_clm]["name_ggcmi"]
             if verbose:
                 print("    Processing %s..." % varname_ggcmi)
-            
+
             # Get CLM netCDF info
             varname_clm = thisvar_clm + "1_" + str(thiscrop_int)
             file_clm = variable_dict[thisvar_clm]["outfile"]
             if not os.path.exists(file_clm):
                 raise Exception("Output file not found: " + file_clm)
-            
+
             # Strip dataset to just this variable
             droplist = []
             for i in list(cropcal_ds.keys()):
@@ -231,38 +245,43 @@ def main(input_directory, output_directory, author, file_specifier, first_year,
             # Convert to integer
             new_fillvalue = -1
             dummyvalue = -1
-            thisvar_ds.variables[varname_ggcmi].encoding["_FillValue"] \
-                = new_fillvalue
+            thisvar_ds.variables[varname_ggcmi].encoding["_FillValue"] = new_fillvalue
             if thiscrop_ggcmi == None:
                 thisvar_ds.variables[varname_ggcmi].values.fill(dummyvalue)
             else:
-                thisvar_ds.variables[varname_ggcmi].values[np.isnan(thisvar_ds.variables[varname_ggcmi].values)] \
-                    = new_fillvalue
-                thisvar_ds.variables[varname_ggcmi].values \
-                    = thisvar_ds.variables[varname_ggcmi].values.astype("int16")
-            
+                thisvar_ds.variables[varname_ggcmi].values[
+                    np.isnan(thisvar_ds.variables[varname_ggcmi].values)
+                ] = new_fillvalue
+                thisvar_ds.variables[varname_ggcmi].values = thisvar_ds.variables[
+                    varname_ggcmi
+                ].values.astype("int16")
+
             # Add time dimension (https://stackoverflow.com/a/62862440)
             # (Repeats original map for every timestep)
             # Probably not necessary to use this method, since I only end up extracting thisvar_ds.values anyway---I could probably use some numpy method instead.
-            thisvar_ds = thisvar_ds.expand_dims(time = template_ds.time)
+            thisvar_ds = thisvar_ds.expand_dims(time=template_ds.time)
             thisvar_da_tmp = thisvar_ds[varname_ggcmi]
-            thisvar_da = xr.DataArray(data = thisvar_da_tmp.values.astype("int16"),
-                                      attrs = thisvar_da_tmp.attrs,
-                                      coords = thisvar_da_tmp.coords,
-                                      name = varname_clm)
-            
+            thisvar_da = xr.DataArray(
+                data=thisvar_da_tmp.values.astype("int16"),
+                attrs=thisvar_da_tmp.attrs,
+                coords=thisvar_da_tmp.coords,
+                name=varname_clm,
+            )
 
             # Edit/add variable attributes etc.
             longname = thisvar_da.attrs["long_name"]
             longname = longname.replace("rainfed", thiscrop_clm).replace("irrigated", thiscrop_clm)
-            def set_var_attrs(thisvar_da, longname, thiscrop_clm, thiscrop_ggcmi, varname_ggcmi, new_fillvalue):
+
+            def set_var_attrs(
+                thisvar_da, longname, thiscrop_clm, thiscrop_ggcmi, varname_ggcmi, new_fillvalue
+            ):
                 thisvar_da.attrs["long_name"] = longname
                 if thiscrop_ggcmi == None:
-                   thisvar_da.attrs["crop_name_clm"] = "none"
-                   thisvar_da.attrs["crop_name_ggcmi"] = "none"
+                    thisvar_da.attrs["crop_name_clm"] = "none"
+                    thisvar_da.attrs["crop_name_ggcmi"] = "none"
                 else:
-                   thisvar_da.attrs["crop_name_clm"] = thiscrop_clm
-                   thisvar_da.attrs["crop_name_ggcmi"] = thiscrop_ggcmi
+                    thisvar_da.attrs["crop_name_clm"] = thiscrop_clm
+                    thisvar_da.attrs["crop_name_ggcmi"] = thiscrop_ggcmi
                 thisvar_da.attrs["short_name_ggcmi"] = varname_ggcmi
                 thisvar_da.attrs["units"] = "day of year"
                 thisvar_da.encoding["_FillValue"] = new_fillvalue
@@ -272,17 +291,21 @@ def main(input_directory, output_directory, author, file_specifier, first_year,
                 thisvar_da.attrs["scale_factor"] = np.int16(1)
                 thisvar_da.attrs["add_offset"] = np.int16(0)
                 return thisvar_da
-            thisvar_da = set_var_attrs(thisvar_da, longname, thiscrop_clm, thiscrop_ggcmi, varname_ggcmi, new_fillvalue)
+
+            thisvar_da = set_var_attrs(
+                thisvar_da, longname, thiscrop_clm, thiscrop_ggcmi, varname_ggcmi, new_fillvalue
+            )
 
             # Save
             if verbose:
                 print("    Saving %s..." % varname_ggcmi)
             thisvar_da.to_netcdf(file_clm, mode="a", format="NETCDF3_CLASSIC")
-        
+
         cropcal_ds.close()
 
     print("Done!")
-    
+
+
 if __name__ == "__main__":
     ###############################
     ### Process input arguments ###
@@ -311,15 +334,15 @@ if __name__ == "__main__":
         "--author",
         help="String to be saved in author_thisfile attribute of output files. E.g., 'Author Name (authorname@ucar.edu)'",
         type=str,
-        required=True
+        required=True,
     )
-    
+
     # Optional
     parser.add_argument(
         "--file-specifier",
         help="String following CROP_IRR_ in input filenames. E.g., mai_ir_FILESPECIFIER.nc4. Will also be saved to output filenames.",
         type=str,
-        default = "ggcmi_crop_calendar_phase3_v1.01",
+        default="ggcmi_crop_calendar_phase3_v1.01",
     )
     parser.add_argument(
         "-y1",
@@ -348,17 +371,25 @@ if __name__ == "__main__":
         type=str,
         default="Jonas Jägermeyr (jonas.jaegermeyr@columbia.edu)",
     )
-    
+
     # Arguments for regridding
     parser = regrid_ggcmi_shdates.define_arguments(parser)
 
     # Get arguments
     args = parser.parse_args(sys.argv[1:])
-    
-    
+
     ###########
     ### Run ###
     ###########
-    main(os.path.realpath(args.input_directory), os.path.realpath(args.output_directory),
-         args.author, args.file_specifier, args.first_year, args.last_year,
-         args.verbose, args.ggcmi_author, args.regrid_resolution, args.regrid_template_file)
+    main(
+        os.path.realpath(args.input_directory),
+        os.path.realpath(args.output_directory),
+        args.author,
+        args.file_specifier,
+        args.first_year,
+        args.last_year,
+        args.verbose,
+        args.ggcmi_author,
+        args.regrid_resolution,
+        args.regrid_template_file,
+    )

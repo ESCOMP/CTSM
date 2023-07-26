@@ -219,7 +219,7 @@ def import_and_process_1yr(
         h1_filelist = glob.glob(h1_pattern)
         if not h1_filelist:
             error(logger, "No files found matching pattern '*h1.*.nc(.base)'")
-    
+
     # Get list of crops to include
     if skip_crops is not None:
         crops_to_read = [c for c in utils.define_mgdcrop_list() if c not in skip_crops]
