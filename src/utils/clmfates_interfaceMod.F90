@@ -1463,7 +1463,8 @@ module CLMFatesInterfaceMod
 
    subroutine restart( this, bounds_proc, ncid, flag, waterdiagnosticbulk_inst, &
         waterstatebulk_inst, canopystate_inst, soilstate_inst, &
-        active_layer_inst, soilbiogeochem_carbonflux_inst)
+        active_layer_inst, soilbiogeochem_carbonflux_inst, &
+        soilbiogeochem_nitrogenflux_inst)
 
       ! ---------------------------------------------------------------------------------
       ! The ability to restart the model is handled through three different types of calls
@@ -1499,7 +1500,8 @@ module CLMFatesInterfaceMod
       type(soilstate_type)           , intent(inout) :: soilstate_inst
       type(active_layer_type)        , intent(in)    :: active_layer_inst
       type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
-
+      type(soilbiogeochem_nitrogenflux_type), intent(inout) :: soilbiogeochem_nitrogenflux_inst
+      
       ! Locals
       type(bounds_type) :: bounds_clump
       integer           :: nc
@@ -1715,6 +1717,9 @@ module CLMFatesInterfaceMod
                   call FluxIntoLitterPools(this%fates(nc)%sites(s), &
                        this%fates(nc)%bc_in(s), &
                        this%fates(nc)%bc_out(s))
+
+                  call this%UpdateCLitterFluxes(soilbiogeochem_carbonflux_inst,nc,c)
+                  call this%UpdateNLitterFluxes(soilbiogeochem_nitrogenflux_inst,nc,c)
 
                end do
 
@@ -1946,6 +1951,8 @@ module CLMFatesInterfaceMod
               call FluxIntoLitterPools(this%fates(nc)%sites(s), &
                    this%fates(nc)%bc_in(s), &
                    this%fates(nc)%bc_out(s))
+
+              !call UpdateCLitterFluxes(this,soilbiogeochem_carbonflux_inst,ci,c)
 
            end do
 

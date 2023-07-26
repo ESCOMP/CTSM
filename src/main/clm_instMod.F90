@@ -588,7 +588,8 @@ contains
             canopystate_inst=canopystate_inst, &
             soilstate_inst=soilstate_inst, &
             active_layer_inst=active_layer_inst, &
-            soilbiogeochem_carbonflux_inst=soilbiogeochem_carbonflux_inst)
+            soilbiogeochem_carbonflux_inst=soilbiogeochem_carbonflux_inst, & 
+            soilbiogeochem_nitrogenflux_inst=soilbiogeochem_nitrogenflux_inst)
 
     end if
 
