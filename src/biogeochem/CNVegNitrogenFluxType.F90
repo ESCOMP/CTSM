@@ -1035,7 +1035,8 @@ contains
                   units='gN/m^2/s', &
                   avgflag='A', &
                   long_name=get_repr_longname(k)//' N to food', &
-                  ptr_patch=data1dptr)
+                  ptr_patch=data1dptr, &
+                  default='inactive')
              data1dptr => this%repr_grainn_to_seed_patch(:,k)
              call hist_addfld1d ( &
                   ! e.g., GRAINN_TO_SEED
@@ -1043,7 +1044,8 @@ contains
                   units='gN/m^2/s', &
                   avgflag='A', &
                   long_name=get_repr_longname(k)//' N to seed', &
-                  ptr_patch=data1dptr)
+                  ptr_patch=data1dptr, &
+                  default='inactive')
           end do
     end if
 
