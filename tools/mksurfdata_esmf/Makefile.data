@@ -271,7 +271,8 @@ vancouver : FORCE
 # /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
 urban-alpha : FORCE
 	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_URBALPHA)
-	ncks --dmn nlevurb,0,4 surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000.nc surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_tmp.nc
+	# Set number of nlevurb dimension to 4 for this site
+	ncks -O --dmn nlevurb,0,3 -o surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_tmp.nc surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000.nc
 	$(MODIFYSURF) modify_1x1_urbanc_alpha.cfg -i surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_tmp.nc -o surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_c$(CDATE).nc
 	$(RM) surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000.nc surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_tmp.nc
 
