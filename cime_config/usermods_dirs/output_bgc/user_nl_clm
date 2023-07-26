@@ -11,11 +11,11 @@ hist_fincl2 += 'GPP', 'NPP', 'AGNPP', 'TOTVEGC', 'NPP_NUPTAKE', 'AR', 'HR', 'HTO
 
 ! h2 stream (monthly average, landunit-level)
 ! TOT_WOODPRODC:I, CROPPROD1C:I, and NEE are not available at the landunit level
-hist_fincl3 += 'GPP', 'NPP', 'AR', 'HR', 'DWT_CONV_CFLUX_PATCH', 'WOOD_HARVESTC', 'DWT_WOOD_PRODUCTC_GAIN_PATCH', 'SLASH_HARVESTC', 'COL_FIRE_CLOSS', 'FROOTC:I', 'HTOP'
+hist_fincl3 += 'GPP', 'NPP', 'AR', 'HR', 'DWT_CONV_CFLUX_PATCH', 'WOOD_HARVESTC', 'DWT_WOOD_PRODUCTC_GAIN_PATCH', 'SLASH_HARVESTC', 'COL_FIRE_CLOSS', 'HTOP'
 
 ! h3 stream (yearly average, gridcell-level)
-hist_fincl4 += 'SOILC_vr', 'SOILN_vr', 'CWDC_vr', 'MET_LITC_vr', 'CEL_LITC_vr', 'LIG_LITC_vr', 'MET_LITN_vr', 'CEL_LITN_vr', 'LIG_LITN_vr','CWDN_vr', 'TOTLITC:I', 'TOT_WOODPRODC:I', 'TOTSOMC:I','TOTVEGC:I'
+hist_fincl4 += 'SOILC_vr', 'SOILN_vr', 'CWDC_vr', 'MET_LITC_vr', 'CEL_LITC_vr', 'LIG_LITC_vr', 'MET_LITN_vr', 'CEL_LITN_vr', 'LIG_LITN_vr','CWDN_vr'
 
 ! h4 stream (yearly average, landunit-level)
-hist_fincl5 += 'TOTSOMC:I', 'TOTSOMC_1m:I', 'TOTECOSYSC:I', 'TOTVEGC:I', 'WOODC:I', 'TOTLITC:I', 'LIVECROOTC:I', 'DEADCROOTC:I', 'FROOTC:I'
-
+hist_fincl5 += 'TOTSOMC', 'TOTSOMC_1m', 'TOTECOSYSC', 'TOTVEGC', 'WOODC', 'TOTLITC', 'LIVECROOTC', 'DEADCROOTC', 'FROOTC'
+hist_avgflag_pertape(5) = 'I'
