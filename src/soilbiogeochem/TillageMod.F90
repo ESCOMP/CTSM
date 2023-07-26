@@ -20,10 +20,13 @@ module TillageMod
   public :: get_apply_tillage_multipliers
   ! !PUBLIC DATA MEMBERS
   character(len=CS), public :: tillage_mode     ! off, low, high
+  integer, parameter, public :: ntill_intensities_max = 2
   !
   ! !PRIVATE DATA MEMBERS
-  logical  :: do_tillage_low   ! Do low-intensity tillage?
-  logical  :: do_tillage_high  ! Do high-intensity tillage?
+  integer             :: tillage_intensity
+  integer, parameter  :: tillage_off = 0
+  integer, parameter  :: tillage_low = 1
+  integer, parameter  :: tillage_high = 2
   logical  :: use_original_tillage ! Use get_tillage_multipliers_orig?
   real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, nphases)
   integer, parameter :: nphases = 3 ! How many different tillage phases are there? (Not including all-1 phases.)
@@ -80,13 +83,13 @@ contains
      endif
 
      ! Assign these
-     do_tillage_low = .false.
-     do_tillage_high = .false.
-     if (tillage_mode == "low") then
-        do_tillage_low = .true.
+     if (tillage_mode == "off") then
+         tillage_intensity = tillage_off
+     else if (tillage_mode == "low") then
+         tillage_intensity = tillage_low
      else if (tillage_mode == "high") then
-        do_tillage_high = .true.
-     else if (tillage_mode /= "off") then
+         tillage_intensity = tillage_high
+     else
         call endrun(subname // ':: ERROR Unrecognized tillage_mode')
      end if
 
@@ -143,11 +146,7 @@ contains
     end if
 
     ! Save
-    if (do_tillage_low) then
-        tillage_mults_allphases = tempr(1,1:ndecomp_pools,:)
-    else if (do_tillage_high) then
-        tillage_mults_allphases = tempr(2,1:ndecomp_pools,:)
-    end if
+    tillage_mults_allphases = tempr(tillage_intensity,1:ndecomp_pools,:)
 
   end subroutine readParams_netcdf
 
@@ -167,7 +166,7 @@ contains
 
   function get_do_tillage()
     logical :: get_do_tillage
-    get_do_tillage = do_tillage_low .or. do_tillage_high
+    get_do_tillage = tillage_intensity > tillage_off
   end function get_do_tillage
 
 
