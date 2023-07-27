@@ -8,6 +8,7 @@ requests
 packaging
 numpy>=1.23.0
 xarray>=2022.3.0
+xesmf
 pylint>=2.8.3,<2.9.0  # Once, you move off of 2.8.3, make lint shows 2 errors, at 2.11.1 there are 2 more errors beyond that
                       # By, 2.14.4 there are 75 errors
 black>=22.6.0       # NOTE: The version here needs to be coordinated with the black github action under ../.github/workflows
