@@ -120,4 +120,3 @@ core.*
 *.log !run.log
 *.pyc
 Depends
-ts_generate_gdds.py
