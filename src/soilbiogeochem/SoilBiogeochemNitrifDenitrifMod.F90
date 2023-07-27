@@ -266,8 +266,8 @@ contains
             !---------------- calculate soil anoxia state
             ! calculate gas diffusivity of soil at field capacity here
             ! use expression from methane code, but neglect OM for now
-            f_a = 1._r8 - watfc(c,j) / watsat(c,j)
-            eps =  watsat(c,j)-watfc(c,j) ! Air-filled fraction of total soil volume
+            f_a = 1._r8 - watfc(c,j) / watsat(c,j) ! f_a is theta_a/theta_s in Riley et al. (2011)
+            eps =  watsat(c,j)-watfc(c,j) ! Air-filled fraction of total soil volume; theta_a in Riley et al. (2011)
 
             ! use diffusivity calculation including peat
             if (use_lch4) then
