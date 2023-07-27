@@ -238,6 +238,7 @@ contains
 
             if(col%is_fates(c))then
                s = clm_fates%f2hmap(clump_index)%hsites(c)
+               ! %ema_npp is Smoothed [gc/m2/yr]
                npp = clm_fates%fates(clump_index)%bc_out(s)%ema_npp/(dayspyr*secspday)
             else
                npp = col_lag_npp(c)
@@ -256,7 +257,14 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
 
-            t = (1.8_r8 * (1._r8 - exp(-0.003_r8 * cannsum_npp(c))))/(secspday * dayspyr)
+            if(col%is_fates(c))then
+               s = clm_fates%f2hmap(clump_index)%hsites(c)
+               npp = clm_fates%fates(clump_index)%bc_out(s)%ema_npp 
+            else 
+               npp = cannsum_npp(c)
+            end if
+
+            t = (1.8_r8 * (1._r8 - exp(-0.003_r8 * npp)))/(secspday * dayspyr)
             nfix_to_sminn(c) = max(0._r8,t)
          end do
       endif
