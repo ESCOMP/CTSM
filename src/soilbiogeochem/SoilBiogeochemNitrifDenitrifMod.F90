@@ -279,7 +279,7 @@ contains
                   om_frac = 1._r8
                end if
                diffus (c,j) = (d_con_g(2,1) + d_con_g(2,2)*t_soisno(c,j)) * 1.e-4_r8 * &
-                    (om_frac * f_a**(10._r8/3._r8) / watsat(c,j)**2 + &
+                    (om_frac * eps**(10._r8/3._r8) / watsat(c,j)**2 + &
                     (1._r8-om_frac) * eps**2 * f_a**(3._r8 / bsw(c,j)) ) 
 
                ! calculate anoxic fraction of soils
