@@ -5,7 +5,7 @@ that the CTSM does not fail using the just-generated modified fsurdat file
 
 import os
 import re
-import subprocess
+import systemtest_utils as stu
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
 from CIME.XML.standard_module_setup import *
 from CIME.SystemTests.test_utils.user_nl_utils import append_to_user_nl_files
@@ -69,33 +69,13 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
         tool_path = os.path.join(self._ctsm_root, "tools/modify_input_files/fsurdat_modifier")
 
         self._case.load_env(reset=True)
-        conda_env = ". " + self._get_caseroot() + "/.env_mach_specific.sh; "
-        # Preprend the commands to get the conda environment for python first
-        conda_env += self._get_conda_env()
-        # Source the env
-        try:
-            subprocess.run(
-                conda_env + "python3 " + tool_path + " " + self._cfg_file_path,
-                shell=True,
-                check=True,
-            )
-        except subprocess.CalledProcessError as error:
-            print("ERROR while getting the conda environment and/or ")
-            print("running the fsurdat_modifier tool: ")
-            print("(1) If your ctsm_pylib environment is out of date or you ")
-            print("have not created the ctsm_pylib environment, yet, you may ")
-            print("get past this error by running ./py_env_create ")
-            print("in your ctsm directory and trying this test again. ")
-            print("(2) If conda is not available, install and load conda, ")
-            print("run ./py_env_create, and then try this test again. ")
-            print("(3) If (1) and (2) are not the issue, then you may be ")
-            print("getting an error within the fsurdat_modifier tool itself. ")
-            print("Default error message: ")
-            print(error.output)
-            raise
-        except:
-            print("ERROR trying to run fsurdat_modifier tool.")
-            raise
+        command = f"python3 {tool_path} {self._cfg_file_path}"
+        stu.run_python_script(
+            self._get_caseroot(),
+            "ctsm_pylib",
+            command,
+            tool_path,
+        )
 
     def _modify_user_nl(self):
         append_to_user_nl_files(
@@ -103,24 +83,3 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
             component="clm",
             contents="fsurdat = '{}'".format(self._fsurdat_out),
         )
-
-    def _get_conda_env(self):
-        #
-        # Add specific commands needed on different machines to get conda available
-        # Use semicolon here since it's OK to fail
-        #
-        # Execute the module unload/load when "which conda" fails
-        # eg on cheyenne
-        try:
-            subprocess.run("which conda", shell=True, check=True)
-            conda_env = " "
-        except subprocess.CalledProcessError:
-            # Remove python and add conda to environment for cheyennne
-            conda_env = "module unload python; module load conda;"
-
-        # Activate the python environment
-        conda_env += " conda activate ctsm_pylib"
-        # End above to get to actual command
-        conda_env += " && "
-
-        return conda_env

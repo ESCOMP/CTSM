@@ -1626,9 +1626,9 @@ sub process_namelist_inline_logic {
   setup_logic_urban($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ###############################
-  # namelist group: crop        #
+  # namelist group: crop_inparm #
   ###############################
-  setup_logic_crop($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_crop_inparm($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ###############################
   # namelist group: ch4par_in   #
@@ -1695,6 +1695,11 @@ sub process_namelist_inline_logic {
   # namelist group: lai_streams  #
   ##################################
   setup_logic_lai_streams($opts,  $nl_flags, $definition, $defaults, $nl);
+
+  ##################################
+  # namelist group: cropcal_streams  #
+  ##################################
+  setup_logic_cropcal_streams($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ##########################################
   # namelist group: soil_moisture_streams  #
@@ -2150,7 +2155,7 @@ sub setup_logic_urban {
 
 #-------------------------------------------------------------------------------
 
-sub setup_logic_crop {
+sub setup_logic_crop_inparm {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   if ( &value_is_true($nl->get_value('use_crop')) ) {
@@ -3921,6 +3926,53 @@ sub setup_logic_lai_streams {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_cropcal_streams {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  # Set first and last stream years
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal',
+              'sim_year'=>$nl_flags->{'sim_year'},
+              'sim_year_range'=>$nl_flags->{'sim_year_range'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal',
+              'sim_year'=>$nl_flags->{'sim_year'},
+              'sim_year_range'=>$nl_flags->{'sim_year_range'});
+
+  # Set align year, if first and last years are different
+  if ( $nl->get_value('stream_year_first_cropcal') !=
+      $nl->get_value('stream_year_last_cropcal') ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                'model_year_align_cropcal', 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+  }
+
+  # Set up other crop calendar parameters
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'generate_crop_gdds');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_mxmat');
+
+  # Option checks
+  my $generate_crop_gdds = $nl->get_value('generate_crop_gdds') ;
+  my $use_mxmat = $nl->get_value('use_mxmat') ;
+  my $sdate_file = $nl->get_value('stream_fldFileName_sdate') ;
+  my $gdd_file = $nl->get_value('stream_fldFileName_cultivar_gdds') ;
+  my $mesh_file = $nl->get_value('stream_meshfile_cropcal') ;
+  if ( $generate_crop_gdds eq '.true.' ) {
+      if ( $use_mxmat eq '.true.' ) {
+          $log->fatal_error("If generate_crop_gdds is true, you must also set use_mxmat to false" );
+      }
+      if ( $sdate_file eq '' ) {
+          $log->fatal_error("If generate_crop_gdds is true, you must specify stream_fldFileName_sdate")
+      }
+      if ( $gdd_file ne '' ) {
+          $log->fatal_error("If generate_crop_gdds is true, do not specify stream_fldFileName_cultivar_gdds")
+      }
+  }
+  if ( $mesh_file eq '' and ( $sdate_file ne '' or $gdd_file ne '' ) ) {
+      $log->fatal_error("If prescribing crop sowing dates and/or maturity requirements, you must specify stream_meshfile_cropcal")
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_soilwater_movement {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
@@ -4313,6 +4365,7 @@ sub write_output_files {
   my @groups;
   @groups = qw(clm_inparm ndepdyn_nml popd_streams urbantv_streams light_streams
                soil_moisture_streams lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
+               cropcal_streams
                clm_soilhydrology_inparm dynamic_subgrid cnvegcarbonstate
                finidat_consistency_checks dynpft_consistency_checks
                clm_initinterp_inparm century_soilbgcdecompcascade
@@ -4320,7 +4373,7 @@ sub write_output_files {
                soilwater_movement_inparm rooting_profile_inparm
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
-               cnprecision_inparm clm_glacier_behavior crop irrigation_inparm
+               cnprecision_inparm clm_glacier_behavior crop_inparm irrigation_inparm
                surfacealbedo_inparm water_tracers_inparm);
 
   #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm
