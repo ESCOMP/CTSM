@@ -554,7 +554,6 @@ contains
     integer                :: nstep          ! time step index
     logical                :: rstwr          ! .true. ==> write restart file before returning
     logical                :: nlend          ! .true. ==> last time-step
-!KO    logical                :: dosend         ! true => send data back to driver
     logical                :: doalb          ! .true. ==> do albedo calculation on this time step
     real(r8)               :: nextsw_cday    ! calday from clock of next radiation computation
     real(r8)               :: caldayp1       ! ctsm calday plus dtime offset
@@ -621,175 +620,146 @@ contains
     !--------------------------------
 
     dtime = get_step_size()
-!KO    dosend = .false.
-!KO    do while(.not. dosend)
 
-!KO       ! We assume that the land model time step matches the coupling interval. However,
-!KO       ! we still need this while loop to handle the initial time step (time 0). We may
-!KO       ! want to get rid of this time step 0 in the lilac coupling, at which point we
-!KO       ! should be able to remove this while loop and dosend variable.
-!KO
-       ! We assume that the land model time step matches the coupling interval.
-!KO
-       !
-!KO       ! See also https://github.com/ESCOMP/CTSM/issues/925
-       nstep = get_nstep()
-!KO    ! I don't think this is necessary anymore since there is no longer an nstep=0
-!KO    ! In fact, according to the comment above we should be able to remove this 
-!KO    ! do while loop and the dosend variable. I've done that here.
-!KO       if (nstep > 0) then
-!KO          dosend = .true.
-!KO       end if
+    ! We assume that the land model time step matches the coupling interval.
+    nstep = get_nstep()
 
-       !--------------------------------
-       ! Determine calendar day info
-       !--------------------------------
+    !--------------------------------
+    ! Determine calendar day info
+    !--------------------------------
 
-       calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
-       caldayp1 = get_curr_calday(offset=dtime, reuse_day_365_for_day_366=.true.)
+    calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
+    caldayp1 = get_curr_calday(offset=dtime, reuse_day_365_for_day_366=.true.)
 
-       !--------------------------------
-       ! Get time of next atmospheric shortwave calculation
-       !--------------------------------
+    !--------------------------------
+    ! Get time of next atmospheric shortwave calculation
+    !--------------------------------
 
-       ! TODO(NS): nextsw_cday should come directly from atmosphere!
-       ! For now I am setting nextsw_cday to be the same caldayp1
-       !
-       ! See also https://github.com/ESCOMP/CTSM/issues/860
+    ! TODO(NS): nextsw_cday should come directly from atmosphere!
+    ! For now I am setting nextsw_cday to be the same caldayp1
+    !
+    ! See also https://github.com/ESCOMP/CTSM/issues/860
 
-       nextsw_cday = calday
-       if (masterproc) then
-          write(iulog,*) trim(subname) // '... nextsw_cday is : ', nextsw_cday
-       end if
+    nextsw_cday = calday
+    if (masterproc) then
+       write(iulog,*) trim(subname) // '... nextsw_cday is : ', nextsw_cday
+    end if
 
-       !--------------------------------
-       ! Obtain orbital values
-       !--------------------------------
+    !--------------------------------
+    ! Obtain orbital values
+    !--------------------------------
 
-       call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
-       call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
+    call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
+    call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
 
-       if (masterproc) then
-          write(iulog,*) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-          write(iulog,F02) 'nextsw_cday is :  ', nextsw_cday
-          write(iulog,F02) 'calday is      :  ', calday
-          write(iulog,F02) 'eccen is       :  ', eccen
-          write(iulog,F02) 'mvelpp is      :  ', mvelpp
-          write(iulog,F02) 'lambm0 is      :  ', lambm0
-          write(iulog,F02) 'obliqr is      :  ', obliqr
-          write(iulog,F02) 'declin is      :  ', declin
-          write(iulog,F02) 'declinp1 is    :  ', declinp1
-          write(iulog,*  ) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-       end if
+    if (masterproc) then
+       write(iulog,*) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+       write(iulog,F02) 'nextsw_cday is :  ', nextsw_cday
+       write(iulog,F02) 'calday is      :  ', calday
+       write(iulog,F02) 'eccen is       :  ', eccen
+       write(iulog,F02) 'mvelpp is      :  ', mvelpp
+       write(iulog,F02) 'lambm0 is      :  ', lambm0
+       write(iulog,F02) 'obliqr is      :  ', obliqr
+       write(iulog,F02) 'declin is      :  ', declin
+       write(iulog,F02) 'declinp1 is    :  ', declinp1
+       write(iulog,*  ) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+    end if
 
-       !--------------------------------
-       ! Determine doalb based on nextsw_cday sent from atm model
-       !--------------------------------
+    !--------------------------------
+    ! Determine doalb based on nextsw_cday sent from atm model
+    !--------------------------------
 
-!KO       if (nstep == 0) then
-!KO          doalb = .false.
-!KO          nextsw_cday = caldayp1
-!KO       else if (nstep == 1) then
-!KO          !doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
-!KO          doalb = .false.
-!KO       else
-!KO          doalb = (nextsw_cday >= -0.5_r8)
-!KO       end if
-!KO    ! Removed the nstep=0 check
-       if (nstep == 1) then
-          !doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
-          doalb = .false.
-       else
-          doalb = (nextsw_cday >= -0.5_r8)
-       end if
-!KO
+    if (nstep == 1) then
+       !doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
+       doalb = .false.
+    else
+       doalb = (nextsw_cday >= -0.5_r8)
+    end if
 
-       if (masterproc) then
-          write(iulog,*) '------------  LILAC  ----------------'
-          write(iulog,*) 'nstep       : ', nstep
-          write(iulog,*) 'calday      : ', calday
-          write(iulog,*) 'caldayp1    : ', caldayp1
-          write(iulog,*) 'nextsw_cday : ', nextsw_cday
-          write(iulog,*) 'doalb       : ', doalb
-          write(iulog,*) '-------------------------------------'
-       end if
+    if (masterproc) then
+       write(iulog,*) '------------  LILAC  ----------------'
+       write(iulog,*) 'nstep       : ', nstep
+       write(iulog,*) 'calday      : ', calday
+       write(iulog,*) 'caldayp1    : ', caldayp1
+       write(iulog,*) 'nextsw_cday : ', nextsw_cday
+       write(iulog,*) 'doalb       : ', doalb
+       write(iulog,*) '-------------------------------------'
+    end if
 
-       call update_rad_dtime(doalb)
+    call update_rad_dtime(doalb)
 
-       !--------------------------------
-       ! Determine if time to write restart
-       !--------------------------------
+    !--------------------------------
+    ! Determine if time to write restart
+    !--------------------------------
 
-       call ESMF_ClockGetAlarm(clock, alarmname='lilac_restart_alarm', alarm=alarm, rc=rc)
+    call ESMF_ClockGetAlarm(clock, alarmname='lilac_restart_alarm', alarm=alarm, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          rstwr = .true.
-          call ESMF_AlarmRingerOff( alarm, rc=rc )
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       else
-          rstwr = .false.
-       endif
-       if (masterproc) then
-          write(iulog,*)' restart alarm is ',rstwr
-       end if
-
-       !--------------------------------
-       ! Determine if time to stop
-       !--------------------------------
-
-       call ESMF_ClockGetAlarm(clock, alarmname='lilac_stop_alarm', alarm=alarm, rc=rc)
+       rstwr = .true.
+       call ESMF_AlarmRingerOff( alarm, rc=rc )
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       rstwr = .false.
+    endif
+    if (masterproc) then
+       write(iulog,*)' restart alarm is ',rstwr
+    end if
 
-       if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          nlend = .true.
-          call ESMF_AlarmRingerOff( alarm, rc=rc )
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       else
-          nlend = .false.
-       endif
-       if (masterproc) then
-          write(iulog,*)' stop alarm is ',nlend
-       end if
+    !--------------------------------
+    ! Determine if time to stop
+    !--------------------------------
 
-       !--------------------------------
-       ! Run CTSM
-       !--------------------------------
+    call ESMF_ClockGetAlarm(clock, alarmname='lilac_stop_alarm', alarm=alarm, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-       call t_barrierf('sync_ctsm_run1', mpicom)
-
-       ! Restart File - use nexttimestr rather than currtimestr here since that is the time at the end of
-       ! the timestep and is preferred for restart file names
-       ! TODO: is this correct for lilac?
-
-       call ESMF_ClockGetNextTime(clock, nextTime=nextTime, rc=rc)
+    if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_TimeGet(nexttime, yy=yr_lilac, mm=mon_lilac, dd=day_lilac, s=tod_lilac, rc=rc)
+       nlend = .true.
+       call ESMF_AlarmRingerOff( alarm, rc=rc )
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_lilac, mon_lilac, day_lilac, tod_lilac
+    else
+       nlend = .false.
+    endif
+    if (masterproc) then
+       write(iulog,*)' stop alarm is ',nlend
+    end if
 
-       call t_startf ('ctsm_run')
-       call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic=.false.)
-       call t_stopf ('ctsm_run')
+    !--------------------------------
+    ! Run CTSM
+    !--------------------------------
 
-       !--------------------------------
-       ! Pack export state
-       !--------------------------------
+    call t_barrierf('sync_ctsm_run1', mpicom)
 
-       call t_startf ('lc_lnd_export')
-       call export_fields(export_state, bounds,  rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call t_stopf ('lc_lnd_export')
+    ! Restart File - use nexttimestr rather than currtimestr here since that is the time at the end of
+    ! the timestep and is preferred for restart file names
+    ! TODO: is this correct for lilac?
 
-       !--------------------------------
-       ! Advance ctsm time step
-       !--------------------------------
+    call ESMF_ClockGetNextTime(clock, nextTime=nextTime, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_TimeGet(nexttime, yy=yr_lilac, mm=mon_lilac, dd=day_lilac, s=tod_lilac, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_lilac, mon_lilac, day_lilac, tod_lilac
 
-       call advance_timestep()
+    call t_startf ('ctsm_run')
+    call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic=.false.)
+    call t_stopf ('ctsm_run')
 
-!KO    end do
+    !--------------------------------
+    ! Pack export state
+    !--------------------------------
+
+    call t_startf ('lc_lnd_export')
+    call export_fields(export_state, bounds,  rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call t_stopf ('lc_lnd_export')
+
+    !--------------------------------
+    ! Advance ctsm time step
+    !--------------------------------
+
+    call advance_timestep()
 
     !--------------------------------
     ! Check that internal clock is in sync with lilac driver clock

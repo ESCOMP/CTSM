@@ -741,7 +741,6 @@ contains
     integer                :: localPeCount   ! Number of local Processors
     logical                :: rstwr          ! .true. ==> write restart file before returning
     logical                :: nlend          ! .true. ==> last time-step
-!KO    logical                :: dosend         ! true => send data back to driver
     logical                :: doalb          ! .true. ==> do albedo calculation on this time step
     real(r8)               :: nextsw_cday    ! calday from clock of next radiation computation
     real(r8)               :: caldayp1       ! ctsm calday plus dtime offset
@@ -817,123 +816,104 @@ contains
     !--------------------------------
 
     dtime = get_step_size()
-!KO    dosend = .false.
-!KO    do while(.not. dosend)
 
-       ! TODO: This is currently hard-wired - is there a better way for nuopc?
-       ! Note that the model clock is updated at the end of the time step not at the beginning
-       nstep = get_nstep()
-!KO    ! I don't think this is necessary anymore since there is no longer an nstep=0
-!KO    ! In fact, according to the following comment in src/cpl/lilac/lnd_comp_esmf.F90 we should
-!KO    ! be able to remove this do while loop and the dosend variable. I've done that here.
-!KO       if (nstep > 0) then
-!KO          dosend = .true.
-!KO       end if
+    ! TODO: This is currently hard-wired - is there a better way for nuopc?
+    ! Note that the model clock is updated at the end of the time step not at the beginning
+    nstep = get_nstep()
 
-       !--------------------------------
-       ! Determine doalb based on nextsw_cday sent from atm model
-       !--------------------------------
+    !--------------------------------
+    ! Determine doalb based on nextsw_cday sent from atm model
+    !--------------------------------
 
-       caldayp1 = get_curr_calday(offset=dtime, reuse_day_365_for_day_366=.true.)
+    caldayp1 = get_curr_calday(offset=dtime, reuse_day_365_for_day_366=.true.)
 
-!KO       if (nstep == 0) then
-!KO          doalb = .false.
-!KO       else if (nstep == 1) then
-!KO          doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
-!KO       else
-!KO          doalb = (nextsw_cday >= -0.5_r8)
-!KO       end if
-!KO
-!KO    ! Removed the nstep=0 check
-       if (nstep == 1) then
-          doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
-       else
-          doalb = (nextsw_cday >= -0.5_r8)
-       end if
-!KO
-       call update_rad_dtime(doalb)
+    if (nstep == 1) then
+       doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
+    else
+       doalb = (nextsw_cday >= -0.5_r8)
+    end if
 
-       !--------------------------------
-       ! Determine if time to stop
-       !--------------------------------
+    call update_rad_dtime(doalb)
 
-       call ESMF_ClockGetAlarm(clock, alarmname='alarm_stop', alarm=alarm, rc=rc)
+    !--------------------------------
+    ! Determine if time to stop
+    !--------------------------------
+
+    call ESMF_ClockGetAlarm(clock, alarmname='alarm_stop', alarm=alarm, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       nlend = .true.
+       call ESMF_AlarmRingerOff( alarm, rc=rc )
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       nlend = .false.
+    endif
 
-       if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          nlend = .true.
-          call ESMF_AlarmRingerOff( alarm, rc=rc )
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       else
-          nlend = .false.
-       endif
-
-       !--------------------------------
-       ! Determine if time to write restart
-       !--------------------------------
-       rstwr = .false.
-       if (nlend .and. write_restart_at_endofrun) then
-          rstwr = .true.
-       else 
-          call ESMF_ClockGetAlarm(clock, alarmname='alarm_restart', alarm=alarm, rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          if (ESMF_AlarmIsCreated(alarm, rc=rc)) then
-             if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
-                if (ChkErr(rc,__LINE__,u_FILE_u)) return
-                rstwr = .true.
-                call ESMF_AlarmRingerOff( alarm, rc=rc )
-                if (ChkErr(rc,__LINE__,u_FILE_u)) return
-             endif
+    !--------------------------------
+    ! Determine if time to write restart
+    !--------------------------------
+    rstwr = .false.
+    if (nlend .and. write_restart_at_endofrun) then
+       rstwr = .true.
+    else 
+       call ESMF_ClockGetAlarm(clock, alarmname='alarm_restart', alarm=alarm, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       if (ESMF_AlarmIsCreated(alarm, rc=rc)) then
+          if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             rstwr = .true.
+             call ESMF_AlarmRingerOff( alarm, rc=rc )
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
           endif
-       end if
+       endif
+    end if
 
-       !--------------------------------
-       ! Run CTSM
-       !--------------------------------
+    !--------------------------------
+    ! Run CTSM
+    !--------------------------------
 
-       ! call ESMF_VMBarrier(vm, rc=rc)
-       ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! call ESMF_VMBarrier(vm, rc=rc)
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-       call t_startf ('shr_orb_decl')
-       ! Note - the orbital inquiries set the values in clm_varorb via the module use statements
-       call  clm_orbital_update(clock, iulog, masterproc, eccen, obliqr, lambm0, mvelpp, rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
-       call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
-       call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
-       call t_stopf ('shr_orb_decl')
+    call t_startf ('shr_orb_decl')
+    ! Note - the orbital inquiries set the values in clm_varorb via the module use statements
+    call  clm_orbital_update(clock, iulog, masterproc, eccen, obliqr, lambm0, mvelpp, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
+    call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
+    call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
+    call t_stopf ('shr_orb_decl')
 
-       call t_startf ('ctsm_run')
-       ! Restart File - use nexttimestr rather than currtimestr here since that is the time at the end of
-       ! the timestep and is preferred for restart file names
-       call ESMF_ClockGetNextTime(clock, nextTime=nextTime, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_TimeGet(nexttime, yy=yr_sync, mm=mon_sync, dd=day_sync, s=tod_sync, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync, mon_sync, day_sync, tod_sync
-       call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic)
-       call t_stopf ('ctsm_run')
+    call t_startf ('ctsm_run')
+    ! Restart File - use nexttimestr rather than currtimestr here since that is the time at the end of
+    ! the timestep and is preferred for restart file names
+    call ESMF_ClockGetNextTime(clock, nextTime=nextTime, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_TimeGet(nexttime, yy=yr_sync, mm=mon_sync, dd=day_sync, s=tod_sync, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync, mon_sync, day_sync, tod_sync
+    call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic)
+    call t_stopf ('ctsm_run')
 
-       !--------------------------------
-       ! Pack export state
-       !--------------------------------
+    !--------------------------------
+    ! Pack export state
+    !--------------------------------
 
-       call t_startf ('lc_lnd_export')
-       call export_fields(gcomp, bounds, glc_present, rof_prognostic, &
-            water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call t_stopf ('lc_lnd_export')
+    call t_startf ('lc_lnd_export')
+    call export_fields(gcomp, bounds, glc_present, rof_prognostic, &
+         water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call t_stopf ('lc_lnd_export')
 
-       !--------------------------------
-       ! Advance ctsm time step
-       !--------------------------------
+    !--------------------------------
+    ! Advance ctsm time step
+    !--------------------------------
 
-       call t_startf ('lc_ctsm2_adv_timestep')
-       call advance_timestep()
-       call t_stopf ('lc_ctsm2_adv_timestep')
-
-!KO    end do
+    call t_startf ('lc_ctsm2_adv_timestep')
+    call advance_timestep()
+    call t_stopf ('lc_ctsm2_adv_timestep')
 
     ! Check that internal clock is in sync with master clock
     ! Note that the driver clock has not been updated yet - so at this point
