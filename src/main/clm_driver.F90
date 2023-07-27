@@ -1273,6 +1273,10 @@ contains
     end do
     !$OMP END PARALLEL DO
 
+
+    ! Pass fates seed dispersal information to all nodes
+    if (use_fates .and. is_beg_curr_day()) call clm_fates%WrapSeedGlobal()
+
     ! ============================================================================
     ! Determine gridcell averaged properties to send to atm
     ! ============================================================================

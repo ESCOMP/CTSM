@@ -94,6 +94,7 @@ module CLMFatesInterfaceMod
    use spmdMod           , only : masterproc
    use decompMod         , only : get_proc_bounds,   &
                                   get_proc_clumps,   &
+                                  get_proc_global,   &
                                   get_clump_bounds
    use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, decomp_method
    use SoilBiogeochemDecompCascadeConType , only : no_soil_decomp, century_decomp
@@ -122,7 +123,8 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : set_fates_ctrlparms
    use FatesInterfaceMod     , only : UpdateFatesRMeansTStep
    use FatesInterfaceMod     , only : InitTimeAveragingGlobals
-   
+   use FatesInterfaceMod     , only : DetermineGridCellNeighbors
+
    use FatesHistoryInterfaceMod, only : fates_hist
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
@@ -130,6 +132,8 @@ module CLMFatesInterfaceMod
    use PRTGenericMod         , only : num_elements
    use FatesInterfaceTypesMod, only : hlm_stepsize
    use FatesInterfaceTypesMod, only : fates_maxPatchesPerSite
+   use FatesInterfaceTypesMod, only : fates_dispersal_kernel_mode
+   use FatesInterfaceTypesMod, only : fates_dispersal_kernel_none
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
    use EDInitMod             , only : zero_site
@@ -159,6 +163,8 @@ module CLMFatesInterfaceMod
    use dynHarvestMod          , only : dynHarvest_interp_resolve_harvesttypes
    use FatesConstantsMod      , only : hlm_harvest_area_fraction
    use FatesConstantsMod      , only : hlm_harvest_carbon
+   use FatesDispersalMod     , only : lneighbors, dispersal_type, IsItDispersalTime
+
    use perf_mod               , only : t_startf, t_stopf
    implicit none
 
@@ -198,6 +204,9 @@ module CLMFatesInterfaceMod
       ! fates_fire_data_method determines the fire data passed from HLM to FATES
       class(fates_fire_base_type), allocatable :: fates_fire_data_method
 
+      ! Type structure that holds allocatable arrays for mpi-based seed dispersal
+      type(dispersal_type) :: fates_seed
+
    contains
 
       procedure, public :: init
@@ -225,7 +234,10 @@ module CLMFatesInterfaceMod
       procedure, public  :: wrap_hydraulics_drive
       procedure, public  :: WrapUpdateFatesRmean
       procedure, public  :: wrap_WoodProducts
-      
+      procedure, public  :: WrapSeedGlobal
+      procedure, public  :: wrap_seed_dispersal
+      procedure, public  :: wrap_seed_dispersal_reset
+     
    end type hlm_fates_interface_type
 
    ! hlm_bounds_to_fates_bounds is not currently called outside the interface.
@@ -520,6 +532,12 @@ module CLMFatesInterfaceMod
 
      call SetFatesGlobalElements2(use_fates)
 
+     ! Initialize the array of nearest neighbors for fates-driven grid cell communications
+     ! This must be called after surfrd_get_data and decompInit_lnd
+     if (use_fates) then
+        call DetermineGridCellNeighbors(lneighbors)
+     end if
+
      call t_stopf('fates_globals2')
 
      return
@@ -583,6 +601,7 @@ module CLMFatesInterfaceMod
       type(bounds_type)                              :: bounds_clump
       integer                                        :: nmaxcol
       integer                                        :: ndecomp
+      integer                                        :: numg
 
       ! Initialize the FATES communicators with the HLM
       ! This involves to stages
@@ -594,6 +613,11 @@ module CLMFatesInterfaceMod
 
       ! Parameter Routines
       call param_derived%Init( numpft_fates )
+
+      ! To do: skip this if not running seed dispersal
+      ! Initialize fates global seed dispersal array for all nodes
+      call get_proc_global(ng=numg)
+      call this%fates_seed%init(numg,numpft_fates)
 
       nclumps = get_proc_clumps()
       allocate(this%fates(nclumps))
@@ -1030,6 +1054,9 @@ module CLMFatesInterfaceMod
       ! structures into the cohort structures.
       call UnPackNutrientAquisitionBCs(this%fates(nc)%sites, this%fates(nc)%bc_in)
 
+      ! Distribute any seeds from neighboring gridcells into the current gridcell
+      ! Global seed availability array populated by WrapSeedGlobal call
+      call this%wrap_seed_dispersal(bounds_clump)
 
       ! ---------------------------------------------------------------------------------
       ! Flush arrays to values defined by %flushval (see registry entry in
@@ -1252,9 +1279,22 @@ module CLMFatesInterfaceMod
        patch%is_bareground(bounds_clump%begp:bounds_clump%endp) = .false.
        patch%wt_ed(bounds_clump%begp:bounds_clump%endp)         = 0.0_r8
 
-       do s = 1,this%fates(nc)%nsites
+       ! Check if seed dispersal mode is 'turned on', if not return to calling procedure
+       if (fates_dispersal_kernel_mode .ne. fates_dispersal_kernel_none) then
+          ! zero the outgoing seed array
+          this%fates_seed%outgoing_local(:,:) = 0._r8
+       end if
+
+      do s = 1,this%fates(nc)%nsites
 
           c = this%f2hmap(nc)%fcolumn(s)
+          g = col_pp%gridcell(c)
+
+          ! Accumulate seeds from sites to the gridcell local outgoing buffer
+          if ((fates_dispersal_kernel_mode .ne. fates_dispersal_kernel_none) &
+              .and. IsItDispersalTime()) then
+                this%fates_seed%outgoing_local(g,:) = this%fates_seed%outgoing_local(g,:) + this%fates(nc)%bc_out(s)%seed_out(:)
+          end if
 
           ! Other modules may have AI's we only flush values
           ! that are on the naturally vegetated columns
@@ -2486,6 +2526,140 @@ module CLMFatesInterfaceMod
   call t_stopf('fates_wrapcanopyradiation')
 
  end subroutine wrap_canopy_radiation
+
+ ! ======================================================================================
+
+ subroutine WrapSeedGlobal(this)
+
+   ! Call mpi procedure to provide the global seed output distribution array to every gridcell.
+   ! This could be conducted with a more sophisticated halo-type structure or distributed graph.
+
+   use spmdMod,                only : MPI_REAL8, MPI_SUM, mpicom
+   use FatesDispersalMod,      only : lneighbors, neighbor_type
+   use FatesInterfaceTypesMod, only : numpft_fates => numpft
+
+   ! Arguments
+   class(hlm_fates_interface_type), intent(inout) :: this
+
+   ! Local
+   integer :: numg ! total number of gridcells across all processors
+   integer :: ier  ! error code
+   integer :: g    ! gridcell index
+
+   type (neighbor_type), pointer :: neighbor
+
+   ! Check if seed dispersal mode is 'turned on', if not return to calling procedure
+   if (fates_dispersal_kernel_mode .eq. fates_dispersal_kernel_none) return
+
+   call t_startf('fates-seed-mpi_reduce')
+
+   if (IsItDispersalTime(setdispersedflag=.true.)) then
+
+      ! Re-initialize incoming seed buffer for this time step
+      this%fates_seed%incoming_global(:,:) = 0._r8
+
+      ! Re-initialize the outgoing global seed array buffer
+      this%fates_seed%outgoing_global(:,:) = 1.e6_r8  ! Is this acting as seed rain?
+
+      ! Distribute and sum outgoing seed data from all nodes to all nodes
+      ! mpi_allgather should work here as well since gridcells values are not split across nodes
+      ! This would allow for reduction in the outgoing local array size
+      call get_proc_global(ng=numg)
+      call mpi_allreduce(this%fates_seed%outgoing_local, this%fates_seed%outgoing_global, &
+                         numg*numpft_fates, MPI_REAL8, MPI_SUM, mpicom, ier)
+
+      do g = 1, numg
+
+         ! Calculate the current gridcell incoming seed for each gridcell index
+         ! This should be conducted outside of a threaded region to provide access to
+         ! the neighbor%gindex which might not be available in via the clumped index
+         neighbor => lneighbors(g)%first_neighbor
+         do while (associated(neighbor))
+
+            ! This also applies the same neighborhood distribution scheme to all pfts
+            ! This needs to have a per pft density probability value
+            this%fates_seed%incoming_global(g,:) = this%fates_seed%incoming_global(g,:) + &
+                                                 this%fates_seed%outgoing_global(neighbor%gindex,:) * &
+                                                 neighbor%density_prob(:) / lneighbors(g)%neighbor_count
+            neighbor => neighbor%next_neighbor
+         end do
+      end do
+
+   endif
+   call t_stopf('fates-seed-mpi_reduce')
+
+ end subroutine WrapSeedGlobal
+
+ ! ======================================================================================
+
+ subroutine wrap_seed_dispersal(this,bounds_clump)
+
+    ! This subroutine pass seed_id_global to bc_in and reset seed_out
+
+    ! Arguments
+    class(hlm_fates_interface_type), intent(inout) :: this
+    type(bounds_type),  intent(in)                 :: bounds_clump
+
+    integer  :: g                           ! global index of the host gridcell
+    integer  :: c                           ! global index of the host column
+    integer  :: s                           ! FATES site index
+    integer  :: nc                          ! clump index
+
+    ! Check if seed dispersal mode is 'turned on', if not return to calling procedure
+    if (fates_dispersal_kernel_mode .eq. fates_dispersal_kernel_none) return
+
+    call t_startf('fates-seed-disperse')
+
+    nc = bounds_clump%clump_index
+
+    ! Add fates check for seed dispersal mode
+    do s = 1, this%fates(nc)%nsites
+       c = this%f2hmap(nc)%fcolumn(s)
+       g = col_pp%gridcell(c)
+
+       ! Check that it is the beginning of the current dispersal time step
+       if (IsItDispersalTime()) then
+          ! assuming equal area for all sites, seed_id_global in [kg/grid/day], seed_in in [kg/site/day]
+          this%fates(nc)%bc_in(s)%seed_in(:) = this%fates_seed%incoming_global(g,:)
+          this%fates(nc)%bc_out(s)%seed_out(:) = 0._r8  ! reset seed_out
+       else
+          ! if it is not the dispersing time, pass in zero
+          this%fates(nc)%bc_in(s)%seed_in(:) = 0._r8
+       end if
+
+    end do
+
+    call t_stopf('fates-seed-disperse')
+
+ end subroutine wrap_seed_dispersal
+
+ ! ======================================================================================
+
+ subroutine wrap_seed_dispersal_reset(this,bounds_clump)
+
+    ! This subroutine reset seed_in
+
+    ! Arguments
+    class(hlm_fates_interface_type), intent(inout) :: this
+    type(bounds_type),  intent(in)                 :: bounds_clump
+    ! Local Variables
+    integer  :: g                           ! global index of the host gridcell
+    integer  :: c                           ! global index of the host column
+    integer  :: s                           ! FATES site index
+    integer  :: nc                          ! clump index
+
+    ! Check if seed dispersal mode is 'turned on', if not return to calling procedure
+    if (fates_dispersal_kernel_mode .eq. fates_dispersal_kernel_none) return
+
+    nc = bounds_clump%clump_index
+
+    do s = 1, this%fates(nc)%nsites
+       c = this%f2hmap(nc)%fcolumn(s)
+       g = col_pp%gridcell(c)
+       this%fates(nc)%bc_in(s)%seed_in(:) = 0 ! reset
+    end do
+
+ end subroutine wrap_seed_dispersal_reset
 
  ! ======================================================================================
 
