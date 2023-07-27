@@ -7,8 +7,14 @@ One-line Summary: Enable prescribed crop calendars.
 Purpose and description of changes
 ----------------------------------
 
-This tag introduces the ability to prescribe crop sowing dates
-and/or maturity requirements.
+This branch enables CLM to read in externally-prescribed crop sowing dates and "cultivar" maturity requirements (growing
+degree-days, GDDs). This has so far only been tested with static values, and the results indicate that yield performance is
+worsened. However, this capability is required by the GGCMI phase 3 / ISIMIP3 Agriculture protocol.
+
+Briefly, the way this works is that an offline run is first performed with prescribed sowing dates and 364-day seasons.
+Instantaneous GDD accumulation is saved daily. A Python script then cross-references those daily outputs with a map of mean sowing
+dates to determine the mean accumulated GDDs in the growing season, saving the result as a file for use as prescribed maturity
+requirements.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
