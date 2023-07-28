@@ -1,4 +1,85 @@
 ===============================================================
+Tag name: ctsm5.1.dev135
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri Jul 28 12:36:24 MDT 2023
+One-line Summary: Refactor max_patch_per_col and maxsoil_patches loops
+
+Purpose and description of changes
+----------------------------------
+
+Refactor such loops for clearer and more efficient code, as recommended in
+issue #2025.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+#2025
+
+Notes of particular relevance for users
+---------------------------------------
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Testing summary:
+----------------
+[Remove any lines that don't apply.]
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne -
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne -
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ----
+    izumi -------
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2056
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev131
 Originator(s): samrabin (Sam Rabin,UCAR/TSS)
 Date: Thu Jul 27 14:24:07 MDT 2023
