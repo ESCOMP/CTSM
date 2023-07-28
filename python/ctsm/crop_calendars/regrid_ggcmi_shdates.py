@@ -41,6 +41,33 @@ def define_arguments(parser):
     return parser
 
 
+# lat or lon
+def import_coord_1d(ds, coordName):
+    da = ds[coordName]
+    if len(da.dims) != 1:
+        raise RuntimeError(f"Expected 1 dimension for {coordName}; found {len(da.dims)}: {da.dims}")
+    return da, len(da)
+
+
+# LATIXY or LONGXY
+def import_coord_2d(ds, coordName, varName):
+    da = ds[varName]
+    thisDim = [x for x in da.dims if coordName in x]
+    if len(thisDim) != 1:
+        raise RuntimeError(f"Expected 1 dimension name containing {coordName}; found {len(otherDim)}: {otherDim}")
+    thisDim = thisDim[0]
+    otherDim = [x for x in da.dims if coordName not in x]
+    if len(otherDim) != 1:
+        raise RuntimeError(f"Expected 1 dimension name not containing {coordName}; found {len(otherDim)}: {otherDim}")
+    otherDim = otherDim[0]
+    da = da.astype(np.float32)
+    da = da.isel({otherDim: [0]}).squeeze().rename({thisDim: coordName}).rename(coordName)
+    da = da.assign_coords({coordName: da.values})
+    da.attrs["long_name"] = "coordinate " + da.attrs["long_name"]
+    da.attrs["units"] = da.attrs["units"].replace(" ","_")
+    return da, len(da)
+
+
 def main(
     regrid_resolution, regrid_template_file_in, regrid_input_directory, regrid_output_directory
 ):
@@ -58,31 +85,11 @@ def main(
         os.remove(templatefile)
     
     template_ds_in = xr.open_dataset(regrid_template_file_in)
-    def import_1d(ds, coordName):
-        da = ds[coordName]
-        if len(da.dims) != 1:
-            raise RuntimeError(f"Expected 1 dimension for {coordName}; found {len(da.dims)}: {da.dims}")
-        return da, len(da)
-    def import_2d(ds, coordName, varName):
-        da = ds[varName]
-        thisDim = [x for x in da.dims if coordName in x]
-        if len(thisDim) != 1:
-            raise RuntimeError(f"Expected 1 dimension name containing {coordName}; found {len(otherDim)}: {otherDim}")
-        thisDim = thisDim[0]
-        otherDim = [x for x in da.dims if coordName not in x]
-        if len(otherDim) != 1:
-            raise RuntimeError(f"Expected 1 dimension name not containing {coordName}; found {len(otherDim)}: {otherDim}")
-        otherDim = otherDim[0]
-        da = da.astype(np.float32)
-        da = da.isel({otherDim: [0]}).squeeze().rename({thisDim: coordName}).rename(coordName)
-        da = da.assign_coords({coordName: da.values})
-        da.attrs["long_name"] = "coordinate " + da.attrs["long_name"]
-        da.attrs["units"] = da.attrs["units"].replace(" ","_")
-        return da, len(da)
+
     if "lat" in template_ds_in:
-        lat, Nlat = import_1d(template_ds_in, "lat")
+        lat, Nlat = import_coord_1d(template_ds_in, "lat")
     elif "LATIXY" in template_ds_in:
-        lat, Nlat = import_2d(template_ds_in, "lat", "LATIXY")
+        lat, Nlat = import_coord_2d(template_ds_in, "lat", "LATIXY")
         lat.attrs["axis"] = "Y"
     else:
         raise RuntimeError("No latitude variable found in regrid template file")
@@ -91,9 +98,9 @@ def main(
         lat = lat.reindex(lat=list(reversed(lat["lat"])))
 
     if "lon" in template_ds_in:
-        lon, Nlon = import_1d(template_ds_in, "lon")
+        lon, Nlon = import_coord_1d(template_ds_in, "lon")
     elif "LONGXY" in template_ds_in:
-        lon, Nlon = import_2d(template_ds_in, "lon", "LONGXY")
+        lon, Nlon = import_coord_2d(template_ds_in, "lon", "LONGXY")
         lon.attrs["axis"] = "Y"
     else:
         raise RuntimeError("No longitude variable found in regrid template file")
