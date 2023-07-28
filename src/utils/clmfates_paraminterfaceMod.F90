@@ -48,7 +48,7 @@ contains
     call FatesRegisterParams(fates_params)  !EDParamsMod, only operates on fates_params class
     call SpitFireRegisterParams(fates_params) !SpitFire Mod, only operates of fates_params class
     call PRTRegisterParams(fates_params)     ! PRT mod, only operates on fates_params class
-    call FatesSynchronizedParamsInst%RegisterParams(fates_params) !Synchronized params calss in Synchronized params mod, only operates on fates_params class
+    call FatesSynchronizedParamsInst%RegisterParams(fates_params) !Synchronized params class in Synchronized params mod, only operates on fates_params class
 
     is_host_file = .false.
     ! actually inside this module
