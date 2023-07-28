@@ -51,8 +51,6 @@ contains
     call FatesSynchronizedParamsInst%RegisterParams(fates_params) !Synchronized params class in Synchronized params mod, only operates on fates_params class
 
     is_host_file = .false.
-    ! actually inside this module
-    !uses ncdio_pio module (should be a library)
     call ParametersFromNetCDF(fates_paramfile, is_host_file, fates_params)
 
     is_host_file = .true.
