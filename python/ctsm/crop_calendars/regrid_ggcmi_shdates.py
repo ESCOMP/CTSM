@@ -67,6 +67,10 @@ def main(
         lat, Nlat = import_1d(template_ds_in, "lat")
     else:
         raise RuntimeError("No latitude variable found in regrid template file")
+    # Flip latitude, if needed
+    if lat.values[0] < lat.values[1]:
+        lat = lat.reindex(lat=list(reversed(lat["lat"])))
+            
     if "lon" in template_ds_in:
         lon, Nlon = import_1d(template_ds_in, "lon")
     else:
@@ -84,9 +88,6 @@ def main(
     )
     template_ds_out.to_netcdf(templatefile, mode="w")
     
-
-    run_and_check(f"ncpdq -O -h -a -lat '{templatefile}' '{templatefile}'")
-
     input_files = glob.glob("*nc4")
     input_files.sort()
     for f in input_files:
