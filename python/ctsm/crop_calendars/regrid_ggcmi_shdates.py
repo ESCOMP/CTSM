@@ -71,6 +71,7 @@ def import_coord_2d(ds, coordName, varName):
 def main(
     regrid_resolution, regrid_template_file_in, regrid_input_directory, regrid_output_directory
 ):
+    print(f"Regridding GGCMI crop calendars to {regrid_resolution}:")
 
     # Ensure we can call necessary shell script(s)
     for cmd in ["cdo"]:
@@ -126,7 +127,7 @@ def main(
     input_files = glob.glob("*nc4")
     input_files.sort()
     for f in input_files:
-        print(f[0:6])
+        print("    " + f[0:6])
         f2 = os.path.join(regrid_output_directory, f)
         f3 = f2.replace(".nc4", f"_nninterp-{regrid_resolution}.nc4")
 
