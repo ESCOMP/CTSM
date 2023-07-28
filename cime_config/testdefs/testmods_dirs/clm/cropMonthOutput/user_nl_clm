@@ -1,6 +1,2 @@
- hist_nhtfrq    = 0,-240,-8760
+ hist_nhtfrq    = 0,-240,17520
  hist_mfilt     = 1,1,1
-
- ! Add an annual output file with these crop-specific variables, which exercise some special logic:
- hist_fincl3 = 'SDATES', 'HDATES'
- hist_dov2xy(3) = .false.
