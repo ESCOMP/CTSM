@@ -34,7 +34,7 @@ def define_arguments(parser):
     parser.add_argument(
         "-rt",
         "--regrid-template-file",
-        help="Template file to be used in regridding of inputs.",
+        help="Template netCDF file to be used in regridding of inputs. This can be a CLM output file (i.e., something with 1-d lat and lon variables) or a CLM surface dataset (i.e., something with 2-d LATIXY and LONGXY variables).",
         type=str,
         required=True,
     )
@@ -86,6 +86,7 @@ def main(
     
     template_ds_in = xr.open_dataset(regrid_template_file_in)
 
+    # Import and format latitude
     if "lat" in template_ds_in:
         lat, Nlat = import_coord_1d(template_ds_in, "lat")
     elif "LATIXY" in template_ds_in:
@@ -93,10 +94,12 @@ def main(
         lat.attrs["axis"] = "Y"
     else:
         raise RuntimeError("No latitude variable found in regrid template file")
+    
     # Flip latitude, if needed
     if lat.values[0] < lat.values[1]:
         lat = lat.reindex(lat=list(reversed(lat["lat"])))
 
+    # Import and format longitude
     if "lon" in template_ds_in:
         lon, Nlon = import_coord_1d(template_ds_in, "lon")
     elif "LONGXY" in template_ds_in:
@@ -109,6 +112,8 @@ def main(
         dims = {"lat": lat, "lon": lon},
         name = "area",
     )
+    
+    # Save template Dataset for use by cdo
     template_ds_out = xr.Dataset(
         data_vars = {"planting_day": template_da_out,
                      "maturity_day": template_da_out,
@@ -117,6 +122,7 @@ def main(
     )
     template_ds_out.to_netcdf(templatefile, mode="w")
     
+    # Loop through original crop calendar files, interpolating using cdo with nearest-neighbor
     input_files = glob.glob("*nc4")
     input_files.sort()
     for f in input_files:
@@ -139,6 +145,7 @@ def main(
                 except:
                     run_and_check(f"cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
 
+    # Delete template file, which is no longer needed
     os.remove(templatefile)
 
 
