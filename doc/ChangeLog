@@ -1,4 +1,167 @@
 ===============================================================
+Tag name: ctsm5.1.dev134
+Originator(s): Ronny Meier,  slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Thu Jul 27 18:00:16 MDT 2023
+One-line Summary: Surface roughness modifications
+
+Purpose and description of changes
+----------------------------------
+
+Surface roughness (z0) modifications that appear in this publication:
+https://doi.org/10.5194/gmd-15-2365-2022
+
+When changing the namelist input z0param_method from ZengWang2007 (default)
+to Meier2022 the following modifications are activated:
+
+- A new parameterization of the vegetation surface roughness based on
+Raupach (1992) with optimized parameters to match the data collected in
+Hu et al. (2020) for different types of vegetation. This requires several new
+PFT-specific input parameters in the parameter file.
+- A spatially explicit z0m input field for bare soil based on the data of
+Prigent et al. (2005). This may be activated specifically by the user through
+the namelist input use_z0mg_2d. This requires a new input variable in the
+fsurdat file.
+- The parameterization of z0m for snow based on accumulated snow melt as
+proposed in Brock et al. (2006). This may be activated specifically by the
+user through the namelist input use_z0m_snowmelt.
+- The parameterization of Yang et al. (2008) for z0h and z0q over bare soil,
+snow, and glaciers.
+- The study in GMD also proposes new globally constant values for the
+z0m of bare soil, snow, and ice. To "activate" those the parameter file needs
+to be changed at the moment. The original and modified parameter files and
+fsurdat files will be shared by ftp.
+
+Open issues/questions (discussed with @ekluzek, @dlawrenncar, @olyson):
+
+- How to incorporate the data of Prigent et al. (2005) in the surfdata
+generation. I will write an email about this to Catherine Prigent.
+- One statement marked in CanopyFluxesMod should probably be changed when
+using Meier2022 (i.e., Yang et al. (2008) formulation should be used instead
+of Zeng and Dickinson (1998)).
+- At the moment one needs to change the parameter file to switch between the
+original and proposed globally constant z0m values for bare soil, snow, and
+ice. This is obviously not very user friendly and prone to mistakes.
+- The introduction of Yang et al. (2008) frequently results in z0h and z0q
+larger than z0m. This is only rarely observed in the field and in contradiction
+to the theory that z0h and z0q should be smaller because heat and water vapor
+need to be transported through molecular diffusion in the surface sublayer.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+#1316
+#1596
+
+Notes of particular relevance for users
+---------------------------------------
+Details already discussed in the description above.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+New tests in place for this new code.
+
+Testing summary:
+----------------
+[... Remove before making master tag.
+
+Nearly all CTSM tags should undergo 'regular' (aux_clm) testing.
+However, it occasionally makes sense to do more or less system testing;
+here is guidance on different available levels of system testing:
+    a) no system testing (for use when the only changes are ones that
+                          have absolutely no impact on system runs; this
+                          includes documentation-only tags, tags that
+                          just change the tools or some python code that
+                          does not impact system runs, etc.)
+    b) minimal (for use in rare cases where only a small change with
+                known behavior is added ... eg. a minor bug fix. This
+		might be to just run the "short" test list, or to run
+		a single test. Whatever makes sense for the particular case.)
+    c) python only (for use where the only changes are in the python directory:
+                    run the python testing listed below)
+    d) regular (regular tests on normal machines if CTSM source is modified)
+    e) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
+                and normally all of the ancillary tests (build-namelist, python, ptclm, etc.)
+		would be run as well)
+
+In addition, various other tests of the tools, python and perl
+infrastructure should be run when appropriate, as described below.
+
+...]
+
+[Remove any lines that don't apply.]
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne -
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) -
+
+    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
+     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
+     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
+     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
+     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
+     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
+     separately run the clm_pymods test suite, and you can remove the following line.]
+
+    clm_pymods test suite on cheyenne - 
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ----
+    izumi -------
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ----
+    izumi -------
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+ No, unless user chooses to run in non-default Meier2022 mode.
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2045
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev131
 Originator(s): samrabin (Sam Rabin,UCAR/TSS)
 Date: Thu Jul 27 14:24:07 MDT 2023
