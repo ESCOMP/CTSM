@@ -1,4 +1,353 @@
 ===============================================================
+Tag name: ctsm5.1.dev131
+Originator(s): samrabin (Sam Rabin,UCAR/TSS)
+Date: Thu Jul 27 14:24:07 MDT 2023
+One-line Summary: Enable prescribed crop calendars.
+
+Purpose and description of changes
+----------------------------------
+
+This branch enables CLM to read in externally-prescribed crop sowing dates and "cultivar" maturity requirements (growing
+degree-days, GDDs). This has so far only been tested with static values, and the results indicate that yield performance is
+worsened. However, this capability is required by the GGCMI phase 3 / ISIMIP3 Agriculture protocol.
+
+Briefly, the way this works is that an offline run is first performed with prescribed sowing dates and 364-day seasons.
+Instantaneous GDD accumulation is saved daily. A Python script then cross-references those daily outputs with a map of mean sowing
+dates to determine the mean accumulated GDDs in the growing season, saving the result as a file for use as prescribed maturity
+requirements.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+   Resolves #281  -- Clean up CropPhenology logic
+   Resolves #519  -- Read in crop planting and harvest dates
+   Fixes    #2042 -- Issue running SystemTests due to "conda activate" error
+
+   Some on  #1649 -- Additional "annual" (per growing season) crop outputs
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users:
+    Untested but theoretically possible:
+    * Time-varying inputs
+    * Running at any resolution other than one matching the crop calendar inputs
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+    Adds optional namelist variables:
+    * stream_fldfilename_sdate: Filename of input stream data for sowing dates
+    * stream_fldfilename_cultivar_gdds: Filename of input stream data for cultivar growing degree-day targets
+    * stream_meshfile_cropcal: Filename of input stream data for crop calendar inputs
+    * stream_year_first_cropcal: First year to loop over for crop calendar data
+    * stream_year_last_cropcal: Last year to loop over for crop calendar data
+    * model_year_align_cropcal: Simulation year that aligns with stream_year_first_cropcal value
+    * generate_crop_gdds: Set to .true. in order to override crop harvesting logic and to instead harvest the day before the next sowing date. Used to generate growing-degree day outputs that can be used with an external script to generate new GDD requirement ("cultivar") files.
+    * use_mxmat: Set to .false. in order to ignore crop PFT parameter for maximum growing season length (mxmat). Must be set to .false. when generate_crop_gdds is .true.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+    * Adds RXCROPMATURITY SystemTest, with an example added to ctsm_sci test suite.
+    * Removes 12 MCT tests from testlist_clm.xml, as discussed in CTSM SE standup 2023-06-26.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES for Clm45BgcCrop compsets only
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Clm45BgcCrop
+    - what platforms/compilers: Cheyenne intel and gnu, Izumi intel and nag
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): roundoff
+
+   5 tests in aux_clm showed true DIFFs (i.e., not just field list differences / new output files):
+     - SMS_D_Ly6_Mmpi-serial.1x1_smallvilleIA.IHistClm45BgcCropQianRs.izumi_intel.clm-cropMonthOutput
+     - ERP_D_P36x2_Ld3.f10_f10_mg37.I2000Clm45BgcCrop.cheyenne_gnu.clm-no_subgrid_fluxes
+     - LGRAIN2_Ly2_P72x1.f10_f10_mg37.I1850Clm45BgcCrop.cheyenne_gnu.clm-ciso--clm-cropMonthOutput
+     - ERS_Ly5_P72x1.f10_f10_mg37.IHistClm45BgcCrop.cheyenne_intel.clm-cropMonthOutput
+     - SMS_D_Ld1_P48x1.f10_f10_mg37.I2000Clm45BgcCrop.izumi_nag.clm-oldhyd
+   
+   The first four were likely due to an order-of-operations change in CNOffsetLitterfall(), as they resolve with the patch at
+   https://github.com/samsrabin/CTSM/commit/c30320cbd6583bccbcc290ffe536e8500e6ec358
+
+   The last is resolved with an additional patch that removes all my changes to CNOffsetLitterfall()---changes which *should* only
+   affect new diagnostic variables:
+   https://github.com/samsrabin/CTSM/commit/e025f555e74584c63d50f27c4df38326fa64bc4f
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime
+    cime: cime6.0.108 -> cime6.0.125
+
+Pull Requests that document the changes (include PR ids):
+    https://github.com/ESCOMP/CTSM/pull/1863
+
+===============================================================
+
+===============================================================
+Tag name: ctsm5.1.dev130
+Originator(s): glemieux (Greg Lemieux,LBL/NGEET,510-486-5049)
+Date: Sun Jul  9 23:24:29 MDT 2023
+One-line Summary: FATES parameter file and test definition update
+
+Purpose and description of changes
+----------------------------------
+
+This tag incorporates updates to the FATES parameter file and test
+definitions to be consistent with updates to the drought deciduous
+phenology model in FATES.  This also updates the external FATES
+pointer to the tag associated with the drought deciduous phenology
+update.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+   Fixes #2043 -- Five izumi NEON tests fail (for me) because the testnames include L10d instead of Ld10
+
+Known bugs found since the previous tag (include issue #):
+   #2049 -- Use of 0.01_r8 as a magic number
+   #2042 -- Issue running SystemTests due to "conda activate" error
+   #2039 -- Conditional for NEON usermods is too broad
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+
+   FATES parameter file default updated to fates_params_api.25.5.0_12pft_c230628.nc
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES for FATES tests only
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: FATES
+    - what platforms/compilers: ALL
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+
+      See FATES #958 for discussion.  The update increased the dimensions of
+      some FATES history output from site-level to pft-level.  As such, these
+      have been removed from some test cases to keep the test light weight and
+      added to the AllVars test to maintain coverage.
+
+      Note that this FATES update also incorporates a number of additional science updates
+      since the previous tag.
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates
+  fates: sci.1.65.3_api.25.4.0 -> fates-sci.1.66.0_api.25.5.0
+
+Pull Requests that document the changes (include PR ids):
+  https://github.com/ESCOMP/ctsm/pull/2009
+  https://github.com/NGEET/fates/pull/958
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev129
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu Jun 22 01:21:56 MDT 2023
+One-line Summary: NEON fixes for TOOL and user-mods, add SP for NEON, some history file updates, black refactor for buildlib/buildnml
+
+Purpose and description of changes
+----------------------------------
+
+Merge the NEON fixes for TOOL and allowing SP mode, as well as a few simple history PR's, and a black reformat.
+
+Fixes NEON bug identified at the NCAR-NEON workshop. Corrects the dominant PFT at TOOL site & usermods_dirs
+Some small changes for quality of life improvements for the run_neon script. Some documentation and code
+cleanup type changes regarding history code (delete a unused subroutine). Do a black reformat of python files
+buildlib/buildnml (and CTSM SystemTests) for consistency across CESM. Also add running them through black in the python
+
+Specific notes:
+
+ - fixed a couple lines so that python will stop complaining about deprecated things
+ - added print statements about warning messages being not an issue, and that building/running may take a while
+ - added a "success" print statement - I'm not sure this will actually only print if "successful"
+ - Add more documentation to history tape code
+ - Add more breadcrumbs between related variables and methods
+ - Put related history namelist flags/methods together
+ - Update some out of date comments in history code
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+   Fixes #2013 -- Incorrect PFT at TOOL
+   Fixes #2014 -- NEON usermods not working as intended
+   Fixes #2029 -- fire_method is used before it's set and hence fire_res isn't set to none
+   Fixes #2030 -- Logic in build-namelist not functioning correctly for FATES with light_res
+   Updates conda environment so that #1974 works
+
+Known bugs found since the previous tag (include issue #):
+   #2037 -- shell_commands for tests with two testmods listed don't concatenate both together
+   #2036 -- Remove setting of STOP options in user-mod directories
+   #2017 -- subset_data does not function for regional grids that span across Greenwich longitude zero 
+   #2024 -- snow fraction is uninitialized when passed to fates during cold-starts
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  Ability to run for SP sites was added for NEON, but run-neon.py doesn't have an option for it
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New --light_res option for 106x74 for NEON lightning data added (can be set in CLM_BLDNML_OPTS)
+   This is the default for NEON sites (with $CLM_USRDAT_NAME == NEON or NEON.PRISM)
+   It fails for non CLM_USRDAT resolutions and gives a warning for non-NEON CLM_USRDAT resolutions)
+
+Changes made to namelist defaults (e.g., changed parameter values): 
+  Add NEON 106x74 lightning dataset
+
+Changes to the datasets (e.g., parameter, surface or initial files): New NEON surface datasets
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+   Add a NEON case that runs in SP mode
+   Change one of the FATES tests to turn fire on and require lightning data
+
+Testing summary: regular NEON-tools
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS (57 tests different from baseline)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - PASS (NEON test list passes)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  other testing:
+    izumi -- PASS (tests of changed NEON sites, see list in #2031)
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: bit-for-bit (except some NEON sites)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NEON TOOL site and other NEON sites with namelist changes
+    - what platforms/compilers: all
+    - nature of change: new climate
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #2031 -- Merge of below...
+   #2015 -- Address NEON bugs
+   #2021 -- Small changes to fix warnings, add print statements for clarity
+   #2023 -- Document side effects of htapes_fieldlist
+   #2022 -- Delete unued hist_add_subscript
+   #2020 -- Add more documentation to history tape code
+   #2007 -- black reformat python files for consistancy across cesm
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev128
 Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
 Date: Thu Jun  1 15:31:52 MDT 2023
@@ -195,7 +544,7 @@ https://github.com/ESCOMP/CTSM/pull/2005
 ===============================================================
 Tag name: ctsm5.1.dev125
 Originator(s): jpalex (John Alex)
-Date: Wed May 17 08:56:41 MDT 2023
+Date: Sun Jul  9 21:04:13 MDT 2023
 One-line Summary: Added cache for clock step_size in clm_time_manager.F90
 
 Purpose and description of changes

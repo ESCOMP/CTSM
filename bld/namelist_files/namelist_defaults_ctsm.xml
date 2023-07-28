@@ -493,7 +493,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- FATES default parameter file                                       -->
 <!-- ================================================================== -->
 
-<fates_paramfile>lnd/clm2/paramdata/fates_params_api.25.4.0_12pft_c230327.nc</fates_paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params_api.25.5.0_12pft_c230628.nc</fates_paramfile>
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
@@ -562,6 +562,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <min_critical_dayl_method         use_cn=".true." phys="clm5_1" >DependsOnLat</min_critical_dayl_method>
 <onset_thresh_depends_on_veg                                    >.false.</onset_thresh_depends_on_veg>
 <min_critical_dayl_method                                       >Constant</min_critical_dayl_method>
+<generate_crop_gdds                                             >.false.</generate_crop_gdds>
+<use_mxmat                                                      >.true.</use_mxmat>
 
 <!-- use additional stress deciduous onset trigger    -->
 <constrain_stress_deciduous_onset phys="clm4_5" >.false.</constrain_stress_deciduous_onset>
@@ -1665,10 +1667,16 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
 
+<!-- crop calendar streams namelist defaults -->
+<stream_year_first_cropcal  >1850</stream_year_first_cropcal>
+<stream_year_last_cropcal   >2100</stream_year_last_cropcal>
+<model_year_align_cropcal   >1850</model_year_align_cropcal>
+
 <!-- lightning streams namelist defaults -->
 
 <light_res    use_cn=".false."                     >none</light_res>
 <light_res    use_cn=".true." fire_method="nofire" >none</light_res>
+<light_res    use_cn=".true." neon=".true."        >106x174</light_res>
 <light_res    use_cn=".true." phys="clm4_5"        >94x192</light_res>
 <light_res    use_cn=".true." phys="clm5_0"        >94x192</light_res>
 <light_res    use_cn=".true." phys="clm5_1"        >360x720</light_res>
@@ -1679,12 +1687,18 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <light_res    use_fates=".true." fates_spitfire_mode="3" >360x720</light_res>
 <light_res    use_fates=".true." fates_spitfire_mode="4" >360x720</light_res>
 <light_res    use_fates=".true." fates_spitfire_mode="5" >360x720</light_res>
+<light_res    use_fates=".true." fates_spitfire_mode="2" neon=".true.">106x174</light_res>
+<light_res    use_fates=".true." fates_spitfire_mode="3" neon=".true.">106x174</light_res>
+<light_res    use_fates=".true." fates_spitfire_mode="4" neon=".true.">106x174</light_res>
+<light_res    use_fates=".true." fates_spitfire_mode="5" neon=".true.">106x174</light_res>
 
 <stream_year_first_lightng >0001</stream_year_first_lightng>
 <stream_year_last_lightng  >0001</stream_year_last_lightng>
 
 <stream_fldfilename_lightng hgrid="94x192"    >atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc</stream_fldfilename_lightng>
 <stream_meshfile_lightng    hgrid="94x192"    >atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62_ESMFmesh_cdf5_110621.nc</stream_meshfile_lightng>
+<stream_fldfilename_lightng hgrid="106x174"   >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_NEONarea_c210625.nc</stream_fldfilename_lightng>
+<stream_meshfile_lightng    hgrid="106x174"   >atm/datm7/NASA_LIS/ESMF_MESH.Li_2016.360x720.NEONarea_cdf5_c221104.nc</stream_meshfile_lightng>
 <stream_fldfilename_lightng hgrid="360x720"   >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</stream_fldfilename_lightng>
 <stream_meshfile_lightng    hgrid="360x720"   >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720_ESMFmesh_cdf5_150621.nc</stream_meshfile_lightng>
 
