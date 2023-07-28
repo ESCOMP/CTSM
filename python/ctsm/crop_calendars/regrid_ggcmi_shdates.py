@@ -4,6 +4,8 @@ import shutil
 import glob
 import argparse
 import sys
+import xarray as xr
+import numpy as np
 
 
 def run_and_check(cmd):
@@ -52,21 +54,37 @@ def main(
         os.makedirs(regrid_output_directory)
 
     templatefile = os.path.join(regrid_output_directory, "template.nc")
-
-    # For some reason, doing ncks -v directly doesn't work. Have to copy it over first.
-    regrid_template_file = os.path.join(
-        regrid_output_directory,
-        os.path.basename(regrid_template_file_in),
-    )
-    shutil.copyfile(regrid_template_file_in, regrid_template_file)
-
     if os.path.exists(templatefile):
         os.remove(templatefile)
+    
+    template_ds_in = xr.open_dataset(regrid_template_file_in)
+    def import_1d(ds, varname):
+        da = ds[varname]
+        if len(da.dims) != 1:
+            raise RuntimeError(f"Expected 1 dimension for {varname}; found {len(da.dims)}: {da.dims}")
+        return da, len(da)
+    if "lat" in template_ds_in:
+        lat, Nlat = import_1d(template_ds_in, "lat")
+    else:
+        raise RuntimeError("No latitude variable found in regrid template file")
+    if "lon" in template_ds_in:
+        lon, Nlon = import_1d(template_ds_in, "lon")
+    else:
+        raise RuntimeError("No longitude variable found in regrid template file")
+    template_da_out = xr.DataArray(
+        data = np.full((Nlat, Nlon), 0.0),
+        dims = {"lat": lat, "lon": lon},
+        name = "area",
+    )
+    template_ds_out = xr.Dataset(
+        data_vars = {"planting_day": template_da_out,
+                     "maturity_day": template_da_out,
+                     "growing_season_length": template_da_out,},
+        coords = {"lat": lat, "lon": lon},
+    )
+    template_ds_out.to_netcdf(templatefile, mode="w")
+    
 
-    for v in ["planting_day", "maturity_day", "growing_season_length"]:
-        run_and_check(f"ncks -A -v area '{regrid_template_file}' '{templatefile}'")
-        run_and_check(f"ncrename -v area,{v} '{templatefile}'")
-    os.remove(regrid_template_file)
     run_and_check(f"ncpdq -O -h -a -lat '{templatefile}' '{templatefile}'")
 
     input_files = glob.glob("*nc4")
