@@ -78,6 +78,8 @@ subroutine mkirrigation_method(ldomain, mapfname, datfname, ndiag, ncido)
   real(r8), allocatable :: sprinkler_fraction_i(:,:)      ! sprinkler fraction in
   real(r8), allocatable :: drip_fraction_i(:,:)     ! drip fraction in
   
+  real(r8), allocatable :: frac_dst(:)        ! output fractions: same as frac_dst
+  
   real(r8), allocatable :: mask_src(:)      ! input grid: mask (0, 1)
 
   integer  :: ni,no,ns_i,ns_o               ! indices
@@ -139,7 +141,7 @@ subroutine mkirrigation_method(ldomain, mapfname, datfname, ndiag, ncido)
            drip_fraction_i(ns_i,num_cft_i), &
 		   
            mask_src(ns_i),         &
-		   
+		   frac_dst(ns_o),           &
            flood_fraction_o(ns_o, num_cft),  &
            sprinkler_fraction_o(ns_o, num_cft),  &
            drip_fraction_o(ns_o, num_cft), &
@@ -216,13 +218,14 @@ subroutine mkirrigation_method(ldomain, mapfname, datfname, ndiag, ncido)
   
   irrig_method_o(:,:) = 0.
   
+  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
   ! Loop over cft types to do mapping
 
   do l = 1, num_cft_i
      mask_src(:) = 1._r8 
-     call gridmap_areaave(tgridmap, flood_fraction_i(:,l) , flood_fraction_o(:,l) , nodata=0._r8, mask_src=mask_src)	
-     call gridmap_areaave(tgridmap, sprinkler_fraction_i(:,l) , sprinkler_fraction_o(:,l) , nodata=0._r8, mask_src=mask_src)
-     call gridmap_areaave(tgridmap, drip_fraction_i(:,l), drip_fraction_o(:,l), nodata=0._r8, mask_src=mask_src)
+     call gridmap_areaave_srcmask(tgridmap, flood_fraction_i(:,l) , flood_fraction_o(:,l) , nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)	
+     call gridmap_areaave_srcmask(tgridmap, sprinkler_fraction_i(:,l) , sprinkler_fraction_o(:,l) , nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+     call gridmap_areaave_srcmask(tgridmap, drip_fraction_i(:,l), drip_fraction_o(:,l), nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
   end do
   
   

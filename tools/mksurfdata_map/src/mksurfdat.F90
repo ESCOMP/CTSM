@@ -44,7 +44,7 @@ program mksurfdat
     use mkagfirepkmonthMod , only : mkagfirepkmon
     use mktopostatsMod     , only : mktopostats
     use mkVICparamsMod     , only : mkVICparams
-!   use mkirrigation_methodMod       , only :  mkirrigation_method
+   use mkirrigation_methodMod       , only :  mkirrigation_method
 ! !ARGUMENTS:
     implicit none
 
