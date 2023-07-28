@@ -212,7 +212,7 @@ def main(
                 )
 
             file_ggcmi = os.path.join(
-                regridded_ggcmi_files_dir, f"{thiscrop_ggcmi}_{file_specifier}.nc4"
+                regridded_ggcmi_files_dir, f"{thiscrop_ggcmi}_{file_specifier}_nninterp-{regrid_resolution}.nc4"
             )
             if not os.path.exists(file_ggcmi):
                 raise Exception("Input file not found: " + file_ggcmi)
