@@ -1,6 +1,5 @@
 import numpy as np
 import xarray as xr
-import shutil
 import os
 import datetime as dt
 import cftime

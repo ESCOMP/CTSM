@@ -1,6 +1,5 @@
 from subprocess import run
 import os
-import shutil
 import glob
 import argparse
 import sys
