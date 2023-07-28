@@ -72,8 +72,8 @@ def main(
     regrid_resolution, regrid_template_file_in, regrid_input_directory, regrid_output_directory
 ):
 
-    # Ensure we can call necessary shell scripts
-    for cmd in ["ncks", "ncrename", "ncpdq", "cdo"]:
+    # Ensure we can call necessary shell script(s)
+    for cmd in ["cdo"]:
         run_and_check(f"{cmd} --help")
 
     os.chdir(regrid_input_directory)
