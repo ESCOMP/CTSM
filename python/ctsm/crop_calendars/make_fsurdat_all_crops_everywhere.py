@@ -2,28 +2,36 @@ import numpy as np
 import xarray as xr
 import sys
 import argparse
+import shutil
 
 
 def main(file_in, file_out):
-    # Import
 
+    # Import
     in_ds = xr.open_dataset(file_in)
 
-    out_ds = in_ds.copy()
+    pct_crop_da = in_ds["PCT_CROP"]
+    pct_natveg_da = in_ds["PCT_NATVEG"]
+    pct_cft_da_in = in_ds["PCT_CFT"]
     in_ds.close()
 
     # Move all natural land into crop
-    out_ds["PCT_CROP"] += in_ds["PCT_NATVEG"]
-    out_ds["PCT_NATVEG"] -= in_ds["PCT_NATVEG"]
+    pct_crop_da += pct_natveg_da
+    pct_natveg_da -= pct_natveg_da
 
     # Put some of every crop in every gridcell
-    pct_cft = np.full_like(in_ds["PCT_CFT"].values, 100 / in_ds.dims["cft"])
-    out_ds["PCT_CFT"] = xr.DataArray(
-        data=pct_cft, attrs=in_ds["PCT_CFT"].attrs, dims=in_ds["PCT_CFT"].dims
+    pct_cft = np.full_like(pct_cft_da_in.values, 100 / in_ds.dims["cft"])
+    pct_cft_da = xr.DataArray(
+        data=pct_cft, attrs=pct_cft_da_in.attrs, dims=pct_cft_da_in.dims, name="PCT_CFT",
     )
 
     # Save
-    out_ds.to_netcdf(file_out, format="NETCDF3_64BIT")
+    shutil.copyfile(file_in, file_out)
+    format = "NETCDF3_64BIT"
+    mode = "a" # Use existing file but overwrite existing variables
+    pct_crop_da.to_netcdf(file_out, format=format, mode=mode)
+    pct_natveg_da.to_netcdf(file_out, format=format, mode=mode)
+    pct_cft_da.to_netcdf(file_out, format=format, mode=mode)
 
 
 if __name__ == "__main__":
