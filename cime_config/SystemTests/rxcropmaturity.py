@@ -255,7 +255,9 @@ class RXCROPMATURITY(SystemTestsCommon):
             raise RuntimeError(error_message)
 
         # Where we will save the fsurdat version for this test
-        self._fsurdat_out = os.path.join(self._path_gddgen, "fsurdat.nc")
+        path, ext = os.path.splitext(self._fsurdat_in)
+        dir_in, filename_in_noext = os.path.split(path)
+        self._fsurdat_out = os.path.join(self._path_gddgen, f"{filename_in_noext}.all_crops_everywhere{ext}")
 
         # Make fsurdat for this test, if not already done
         if not os.path.exists(self._fsurdat_out):
@@ -267,7 +269,7 @@ class RXCROPMATURITY(SystemTestsCommon):
                 "make_fsurdat_all_crops_everywhere.py",
             )
             command = (
-                f"python3 {tool_path} " + f"-i {self._fsurdat_in} " + f"-o {self._fsurdat_out}"
+                f"python3 {tool_path} " + f"-i {self._fsurdat_in} " + f"-o {self._path_gddgen}"
             )
             stu.run_python_script(
                 self._get_caseroot(),

@@ -3,11 +3,22 @@ import xarray as xr
 import sys
 import argparse
 import shutil
+import os
 
 
-def main(file_in, file_out):
+def main(file_in, dir_out):
+
+    # Checks and setup
+    if not os.path.exists(dir_out):
+        os.makedirs(dir_out)
+    if not os.path.isdir(args.output_dir):
+        raise RuntimeError("-o/--output-dir needs to be a directory")
+    path, ext = os.path.splitext(file_in)
+    dir_in, filename_in_noext = os.path.split(path)
+    file_out = os.path.join(dir_out, f"{filename_in_noext}.all_crops_everywhere{ext}")
 
     # Import
+    print(f"Importing {file_in}...")
     in_ds = xr.open_dataset(file_in)
 
     pct_crop_da = in_ds["PCT_CROP"]
@@ -26,6 +37,7 @@ def main(file_in, file_out):
     )
 
     # Save
+    print(f"Saving to {file_out}")
     shutil.copyfile(file_in, file_out)
     format = "NETCDF3_64BIT"
     mode = "a" # Use existing file but overwrite existing variables
@@ -51,13 +63,15 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-o",
-        "--output-file",
-        help="Where to save the new surface dataset file",
+        "--output-dir",
+        help="Directory in which to save the new surface dataset file",
         required=True,
     )
 
     # Get arguments
     args = parser.parse_args(sys.argv[1:])
 
+    # Check arguments
+
     # Process
-    main(args.input_file, args.output_file)
+    main(args.input_file, args.output_dir)
