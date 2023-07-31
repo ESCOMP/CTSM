@@ -95,11 +95,12 @@ contains
 
       if ( this%useStreams() )then     ! is this a namelist input and is it set in namelist default
 
-            allocate(stream_varnames(1))
-            stream_varnames = (/"mbl_bsn_fct_geo"/)  ! varname in the dust source file; the variable is dimensionless
+         allocate(stream_varnames(1))
+         stream_varnames = (/"mbl_bsn_fct_geo"/)  ! varname in the dust source file; the variable is dimensionless
 
          if (masterproc) then
             write(iulog,*) '  stream_varnames                  = ',stream_varnames
+            flush(iulog)
          end if
 
          ! Initialize the cdeps data type sdat_erod
@@ -125,7 +126,8 @@ contains
               stream_name         = 'Zender soil erodibility',                          &
               rc                  = rc)
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
-            call ESMF_Finalize(endflag=ESMF_END_ABORT)
+            write(iulog,*) 'Error on stream initialize -- see PET*.ESMF_LogFile(s)'
+            call endrun("ESMF log error")
          end if
 
          ! Explicitly set current date to a hardcoded constant value. Otherwise
@@ -140,14 +142,16 @@ contains
 
          call shr_strdata_advance(sdat_erod, ymd=mcdate, tod=sec, logunit=iulog, istr='zendersoilerod', rc=rc)   ! what is istr and do I need to change elsewhere because the change of istr here
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
-            call ESMF_Finalize(endflag=ESMF_END_ABORT)
+            write(iulog,*) 'Error on stream advance -- see PET*.ESMF_LogFile(s)'
+            call endrun("ESMF log error")
          end if
 
          ! Get pointer for stream data that is time and spatially interpolate to model time and grid
          do n = 1,size(stream_varnames) 
             call dshr_fldbun_getFldPtr(sdat_erod%pstrm(1)%fldbun_model, stream_varnames(n), fldptr1=dataptr1d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
-               call ESMF_Finalize(endflag=ESMF_END_ABORT)
+               write(iulog,*) 'Error on get field pointer -- see PET*.ESMF_LogFile(s)'
+               call endrun("ESMF log error")
             end if
             if (trim(stream_varnames(n)) == 'mbl_bsn_fct_geo') then
                ig = 0
