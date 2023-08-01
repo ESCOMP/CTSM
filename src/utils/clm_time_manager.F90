@@ -680,7 +680,6 @@ contains
     call ESMF_ClockAdvance( tm_clock, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockAdvance')
 
-!KO Do we want to do this?
     tm_first_restart_step = .false.
 
   end subroutine advance_timestep
