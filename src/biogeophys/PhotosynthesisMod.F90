@@ -2723,7 +2723,7 @@ contains
     real(r8)               , intent(in)    :: leafn( bounds%begp: )          ! leaf N (gN/m2)
     real(r8)               , intent(out)   :: bsun( bounds%begp: )           ! sunlit canopy transpiration wetness factor (0 to 1)
     real(r8)               , intent(out)   :: bsha( bounds%begp: )           ! shaded canopy transpiration wetness factor (0 to 1)
-    real(r8)               , intent(out)   :: btran( bounds%begp: )          ! transpiration wetness factor (0 to 1) [pft]
+    real(r8)               , intent(inout) :: btran( bounds%begp: )          ! transpiration wetness factor (0 to 1) [pft]
     real(r8)               , intent(in)    :: froot_carbon( bounds%begp: )    ! fine root carbon (gC/m2) [pft]   
     real(r8)               , intent(in)    :: croot_carbon( bounds%begp: )    ! live coarse root carbon (gC/m2) [pft]   
 
