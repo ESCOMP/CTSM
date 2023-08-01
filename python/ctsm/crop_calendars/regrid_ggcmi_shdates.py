@@ -53,17 +53,21 @@ def import_coord_2d(ds, coordName, varName):
     da = ds[varName]
     thisDim = [x for x in da.dims if coordName in x]
     if len(thisDim) != 1:
-        raise RuntimeError(f"Expected 1 dimension name containing {coordName}; found {len(otherDim)}: {otherDim}")
+        raise RuntimeError(
+            f"Expected 1 dimension name containing {coordName}; found {len(otherDim)}: {otherDim}"
+        )
     thisDim = thisDim[0]
     otherDim = [x for x in da.dims if coordName not in x]
     if len(otherDim) != 1:
-        raise RuntimeError(f"Expected 1 dimension name not containing {coordName}; found {len(otherDim)}: {otherDim}")
+        raise RuntimeError(
+            f"Expected 1 dimension name not containing {coordName}; found {len(otherDim)}: {otherDim}"
+        )
     otherDim = otherDim[0]
     da = da.astype(np.float32)
     da = da.isel({otherDim: [0]}).squeeze().rename({thisDim: coordName}).rename(coordName)
     da = da.assign_coords({coordName: da.values})
     da.attrs["long_name"] = "coordinate " + da.attrs["long_name"]
-    da.attrs["units"] = da.attrs["units"].replace(" ","_")
+    da.attrs["units"] = da.attrs["units"].replace(" ", "_")
     return da, len(da)
 
 
@@ -83,7 +87,7 @@ def main(
     templatefile = os.path.join(regrid_output_directory, "template.nc")
     if os.path.exists(templatefile):
         os.remove(templatefile)
-    
+
     template_ds_in = xr.open_dataset(regrid_template_file_in)
 
     # Import and format latitude
@@ -94,7 +98,7 @@ def main(
         lat.attrs["axis"] = "Y"
     else:
         raise RuntimeError("No latitude variable found in regrid template file")
-    
+
     # Flip latitude, if needed
     if lat.values[0] < lat.values[1]:
         lat = lat.reindex(lat=list(reversed(lat["lat"])))
@@ -108,20 +112,22 @@ def main(
     else:
         raise RuntimeError("No longitude variable found in regrid template file")
     template_da_out = xr.DataArray(
-        data = np.full((Nlat, Nlon), 0.0),
-        dims = {"lat": lat, "lon": lon},
-        name = "area",
+        data=np.full((Nlat, Nlon), 0.0),
+        dims={"lat": lat, "lon": lon},
+        name="area",
     )
-    
+
     # Save template Dataset for use by cdo
     template_ds_out = xr.Dataset(
-        data_vars = {"planting_day": template_da_out,
-                     "maturity_day": template_da_out,
-                     "growing_season_length": template_da_out,},
-        coords = {"lat": lat, "lon": lon},
+        data_vars={
+            "planting_day": template_da_out,
+            "maturity_day": template_da_out,
+            "growing_season_length": template_da_out,
+        },
+        coords={"lat": lat, "lon": lon},
     )
     template_ds_out.to_netcdf(templatefile, mode="w")
-    
+
     # Loop through original crop calendar files, interpolating using cdo with nearest-neighbor
     input_files = glob.glob("*nc4")
     input_files.sort()
