@@ -15,3 +15,5 @@ hist_nhtfrq(3) = 17520
 hist_mfilt(3) = 1
 hist_type1d_pertape(3) = 'PFTS'
 hist_dov2xy(3) = .false.
+hist_avgflag_pertape(3) = 'I'
+
