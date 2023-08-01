@@ -33,14 +33,17 @@ def main(file_in, dir_out):
     # Put some of every crop in every gridcell
     pct_cft = np.full_like(pct_cft_da_in.values, 100 / in_ds.dims["cft"])
     pct_cft_da = xr.DataArray(
-        data=pct_cft, attrs=pct_cft_da_in.attrs, dims=pct_cft_da_in.dims, name="PCT_CFT",
+        data=pct_cft,
+        attrs=pct_cft_da_in.attrs,
+        dims=pct_cft_da_in.dims,
+        name="PCT_CFT",
     )
 
     # Save
     print(f"Saving to {file_out}")
     shutil.copyfile(file_in, file_out)
     format = "NETCDF3_64BIT"
-    mode = "a" # Use existing file but overwrite existing variables
+    mode = "a"  # Use existing file but overwrite existing variables
     pct_crop_da.to_netcdf(file_out, format=format, mode=mode)
     pct_natveg_da.to_netcdf(file_out, format=format, mode=mode)
     pct_cft_da.to_netcdf(file_out, format=format, mode=mode)
