@@ -222,6 +222,49 @@ class TestSysFsurdatModifier(unittest.TestCase):
         np.testing.assert_array_equal(fsurdat_out_data.T_BUILDING_MIN, lev1)
         np.testing.assert_array_equal(fsurdat_out_data.ALB_ROOF_DIR, lev2_two)
         np.testing.assert_array_equal(fsurdat_out_data.TK_ROOF, lev2_five)
+    
+    def test_evenly_split_cropland(self):
+        """
+        Test that evenly splitting cropland works
+        """
+        self._cfg_file_path = os.path.join(
+            path_to_ctsm_root(),
+            "python",
+            "ctsm",
+            "crop_calendars",
+            "modify_fsurdat_allcropseverywhere.cfg")
+        infile_basename_noext = "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214"
+        outfile = os.path.join(
+            self._tempdir,
+            infile_basename_noext + "_output_allcropseverywhere.nc",
+        )
+        sys.argv = [
+            "fsurdat_modifier",
+            self._cfg_file_path,
+            "-i",
+            os.path.join(
+                self._testinputs_path, infile_basename_noext + ".nc"
+            ),
+            "-o",
+            outfile,
+        ]
+        parser = fsurdat_modifier_arg_process()
+        fsurdat_modifier(parser)
+        # Read the resultant output file and make sure the fields are changed as expected
+        fsurdat_out_data = xr.open_dataset(outfile)
+        zero0d = np.zeros((5, 5))
+        hundred0d = np.full((5, 5), 100.0)
+        zero_urban = np.zeros((3, 5, 5))
+        Ncrops = fsurdat_out_data.dims["cft"]
+        pct_cft = np.full((Ncrops, 5, 5), 100/Ncrops)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_NATVEG, zero0d)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_CROP, hundred0d)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_LAKE, zero0d)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_WETLAND, zero0d)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_LAKE, zero0d)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_GLACIER, zero0d)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_URBAN, zero_urban)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_CFT, pct_cft)
 
     def test_1x1_mexicocity(self):
         """
