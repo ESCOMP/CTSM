@@ -134,8 +134,8 @@ class RXCROPMATURITY(SystemTestsCommon):
             case_gddgen.check_all_input_data()
 
             # Make custom version of surface file
-            logger.info("RXCROPMATURITY log:  run make_fsurdat_all_crops_everywhere")
-            self._run_make_fsurdat_all_crops_everywhere()
+            logger.info("RXCROPMATURITY log:  run fsurdat_modifier")
+            self._run_fsurdat_modifier()
 
         # -------------------------------------------------------------------
         # (2) Perform GDD-generating run and generate prescribed GDDs file
@@ -239,7 +239,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         logger.info("RXCROPMATURITY log:  _setup_all done")
 
     # Make a surface dataset that has every crop in every gridcell
-    def _run_make_fsurdat_all_crops_everywhere(self):
+    def _run_fsurdat_modifier(self):
 
         # fsurdat should be defined. Where is it?
         self._fsurdat_in = None
@@ -261,13 +261,21 @@ class RXCROPMATURITY(SystemTestsCommon):
         if not os.path.exists(self._fsurdat_out):
             tool_path = os.path.join(
                 self._ctsm_root,
+                "tools",
+                "modify_input_files",
+                "fsurdat_modifier",
+            )
+            cfg_path = os.path.join(
+                self._ctsm_root,
                 "python",
                 "ctsm",
                 "crop_calendars",
-                "make_fsurdat_all_crops_everywhere.py",
+                "modify_fsurdat_allcropseverywhere.cfg",
             )
             command = (
-                f"python3 {tool_path} " + f"-i {self._fsurdat_in} " + f"-o {self._fsurdat_out}"
+                f"python3 {tool_path} {cfg_path} "
+                + f"-i {self._fsurdat_in} "
+                + f"-o {self._fsurdat_out}"
             )
             stu.run_python_script(
                 self._get_caseroot(),
