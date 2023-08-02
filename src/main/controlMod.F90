@@ -202,7 +202,7 @@ contains
          soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
          crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
-         snicar_numrad_snw, snicar_solarspec, snicar_snw_optics, snicar_dust_optics, &
+         snicar_numrad_snw, snicar_solarspec, snicar_dust_optics, &
          snicar_use_aerosol, snicar_rt_solver, snicar_snw_shape, snicar_snobc_intmix,&
          snicar_snodst_intmix,DO_SNO_OC, &
          for_testing_use_second_grain_pool, for_testing_use_repr_structure_pool, &
@@ -584,12 +584,6 @@ contains
             errMsg(sourcefile, __LINE__))
     end if
 
-    ! check on snow optics type
-    if ( (snicar_snw_optics < 1) .or. (snicar_snw_optics > 3) ) then
-       call endrun(msg=' ERROR: snicar_snw_optics is out of a reasonable range (1,2,3)'//&
-            errMsg(sourcefile, __LINE__))
-    end if
-
     ! check on dust optics type
     if ( (snicar_dust_optics < 1) .or. (snicar_dust_optics > 3) ) then
        call endrun(msg=' ERROR: snicar_dust_optics is out of a reasonable range (1,2,3)'//&
@@ -837,7 +831,6 @@ contains
     call mpi_bcast (soil_layerstruct_userdefined_nlevsoi, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (snicar_numrad_snw, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (snicar_solarspec, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (snicar_snw_optics, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (snicar_dust_optics, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (snicar_use_aerosol, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (snicar_rt_solver, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -1025,7 +1018,6 @@ contains
        write(iulog,*) '   SNICAR: snow optical properties (480-band) file = ',trim(fsnowoptics480)
     endif
     write(iulog,*) '   SNICAR: downward solar radiation spectrum type =', snicar_solarspec
-    write(iulog,*) '   SNICAR: snow refractive index type = ', snicar_snw_optics
     write(iulog,*) '   SNICAR: dust optics type = ', snicar_dust_optics
     write(iulog,*) '   SNICAR: number of bands in snow albedo calculation =', snicar_numrad_snw
     write(iulog,*) '   SNICAR: radiative transfer solver type = ',snicar_rt_solver

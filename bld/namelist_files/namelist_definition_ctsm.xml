@@ -160,11 +160,6 @@ number of wavelength bands used in SNICAR snow albedo calculation
 type of downward solar radiation spectrum for SNICAR snow albedo calculation
 </entry>
 
-<entry id="snicar_snw_optics" type="integer" category="clm_physics"
-       group="clm_inparm" valid_values="1,2,3" >
-snow optics type using different refractive index databases in SNICAR
-</entry>
-
 <entry id="snicar_dust_optics" type="integer" category="clm_physics"
        group="clm_inparm" valid_values="1,2,3" >
 dust optics type for SNICAR snow albedo calculation

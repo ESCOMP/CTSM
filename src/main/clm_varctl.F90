@@ -238,9 +238,6 @@ module clm_varctl
   integer, public :: snicar_solarspec = 1  ! 1->mid-latitude winter;2->mid-latitude summer;3->sub-Arctic winter;
                                            ! 4->sub-Arctic summer;5->Summit,Greenland,summer;6->High Mountain summer;
 
-  ! snow optics type using different refractive index databases in SNICAR, cenlin
-  integer, public :: snicar_snw_optics = 3   ! 1->Warren (1984);2->Warren and Brandt (2008);3->Picard et al (2016)
-
   ! dust optics type for SNICAR snow albedo calculation, cenlin
   integer, public :: snicar_dust_optics = 1 ! 1->Saharan dust (Balkanski et al., 2007, central hematite)
                                             ! 2->San Juan Mountains dust, CO (Skiles et al, 2017)
