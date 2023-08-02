@@ -105,6 +105,7 @@ class SinglePointCase(BaseCase):
         create_datm,
         create_user_mods,
         dom_pft,
+        evenly_split_cropland,
         pct_pft,
         num_pft,
         include_nonveg,
