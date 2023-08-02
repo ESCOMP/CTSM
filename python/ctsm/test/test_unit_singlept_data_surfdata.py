@@ -44,6 +44,7 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
     create_datm = True
     create_user_mods = True
     dom_pft = [8]
+    evenly_split_cropland = False
     pct_pft = None
     num_pft = 16
     include_nonveg = False
@@ -608,6 +609,7 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
     create_datm = True
     create_user_mods = True
     dom_pft = [17]
+    evenly_split_cropland = False
     pct_pft = None
     num_pft = 78
     include_nonveg = False
