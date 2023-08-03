@@ -234,19 +234,23 @@ module clm_varctl
   ! number of wavelength bands used in SNICAR snow albedo calculation, cenlin
   integer, public :: snicar_numrad_snw = 5 
 
-  ! type of downward solar radiation spectrum for SNICAR snow albedo calculation cenlin 
-  integer, public :: snicar_solarspec = 1  ! 1->mid-latitude winter;2->mid-latitude summer;3->sub-Arctic winter;
-                                           ! 4->sub-Arctic summer;5->Summit,Greenland,summer;6->High Mountain summer;
+  ! type of downward solar radiation spectrum for SNICAR snow albedo calculation
+  ! options:
+  ! mid_latitude_winter, mid_latitude_summer, sub_arctic_winter,
+  ! sub_arctic_summer, summit_greenland_summer, high_mountain_summer;
+  character(len=25), public :: snicar_solarspec = 'mid_latitude_winter'
 
-  ! dust optics type for SNICAR snow albedo calculation, cenlin
-  integer, public :: snicar_dust_optics = 1 ! 1->Saharan dust (Balkanski et al., 2007, central hematite)
-                                            ! 2->San Juan Mountains dust, CO (Skiles et al, 2017)
-                                            ! 3->Greenland dust (Polashenski et al., 2015, central absorptivity)
+  ! dust optics type for SNICAR snow albedo calculation
+  ! options:
+  ! sahara: Saharan dust (Balkanski et al., 2007, central hematite)
+  ! san_juan_mtns_colorado: San Juan Mountains dust, CO (Skiles et al, 2017)
+  ! greenland: Greenland dust (Polashenski et al., 2015, central absorptivity)
+  character(len=25), public :: snicar_dust_optics = 'sahara'
   ! option to turn off aerosol effect in snow in SNICAR
   logical, public :: snicar_use_aerosol = .true. ! if .false., turn off aerosol deposition flux
 
   ! option for snow grain shape in SNICAR (He et al. 2017 JC)
-  character(len=15), public :: snicar_snw_shape = 'hexagonal_plate'  ! sphere, spheroid, hexagonal_plate, koch_snowflake
+  character(len=25), public :: snicar_snw_shape = 'hexagonal_plate'  ! sphere, spheroid, hexagonal_plate, koch_snowflake
 
   ! option to activate BC-snow internal mixing in SNICAR (He et al. 2017 JC), ceniln
   logical, public :: snicar_snobc_intmix = .false.   ! false->external mixing for all BC; true->internal mixing for hydrophilic BC

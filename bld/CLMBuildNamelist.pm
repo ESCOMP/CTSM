@@ -1993,6 +1993,8 @@ sub setup_logic_snicar_methods {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snicar_snw_shape' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snicar_solarspec' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snicar_dust_optics' );
 }
 
 #-------------------------------------------------------------------------------

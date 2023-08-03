@@ -578,18 +578,6 @@ contains
             errMsg(sourcefile, __LINE__))
     end if
 
-    ! check on downward solar radiation spectrum
-    if ( (snicar_solarspec < 1) .or. (snicar_solarspec > 6) ) then
-       call endrun(msg=' ERROR: snicar_solarspec is out of a reasonable range (1,2,3,4,5,6)'//&
-            errMsg(sourcefile, __LINE__))
-    end if
-
-    ! check on dust optics type
-    if ( (snicar_dust_optics < 1) .or. (snicar_dust_optics > 3) ) then
-       call endrun(msg=' ERROR: snicar_dust_optics is out of a reasonable range (1,2,3)'//&
-            errMsg(sourcefile, __LINE__))
-    end if
-
     ! check on SNICAR BC-snow and dust-snow internal mixing
     if ( snicar_snobc_intmix .and. snicar_snodst_intmix ) then
        call endrun(msg=' ERROR: currently dust-snow and BC-snow internal mixing cannot be activated together'//&
@@ -818,10 +806,10 @@ contains
     call mpi_bcast (soil_layerstruct_userdefined,size(soil_layerstruct_userdefined), MPI_REAL8, 0, mpicom, ier)
     call mpi_bcast (soil_layerstruct_userdefined_nlevsoi, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (snicar_numrad_snw, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (snicar_solarspec, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (snicar_dust_optics, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (snicar_use_aerosol, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (snicar_solarspec, len(snicar_solarspec), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (snicar_dust_optics, len(snicar_dust_optics), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (snicar_snw_shape, len(snicar_snw_shape), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (snicar_use_aerosol, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (snicar_snobc_intmix, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (snicar_snodst_intmix, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (DO_SNO_OC, 1, MPI_LOGICAL, 0, mpicom, ier)
