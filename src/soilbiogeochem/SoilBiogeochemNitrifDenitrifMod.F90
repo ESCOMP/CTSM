@@ -168,6 +168,7 @@ contains
     real(r8) :: mu, sigma
     real(r8) :: t
     real(r8) :: pH(bounds%begc:bounds%endc)
+    real(r8) :: D0  ! temperature dependence of gaseous diffusion coefficients
     !debug-- put these type structure for outing to hist files
     real(r8) :: co2diff_con(2)                      ! diffusion constants for CO2
     real(r8) :: eps
@@ -232,7 +233,7 @@ contains
          fmax_denit_carbonsubstrate_vr =>    soilbiogeochem_nitrogenflux_inst%fmax_denit_carbonsubstrate_vr_col , & ! Output:  [real(r8) (:,:) ]                                                  
          fmax_denit_nitrate_vr         =>    soilbiogeochem_nitrogenflux_inst%fmax_denit_nitrate_vr_col         , & ! Output:  [real(r8) (:,:) ]                                                  
          f_denit_base_vr               =>    soilbiogeochem_nitrogenflux_inst%f_denit_base_vr_col               , & ! Output:  [real(r8) (:,:) ]                                                  
-         diffus                        =>    soilbiogeochem_nitrogenflux_inst%diffus_col                        , & ! Output:  [real(r8) (:,:) ] diffusivity (unitless fraction of total diffusivity)
+         diffus                        =>    soilbiogeochem_nitrogenflux_inst%diffus_col                        , & ! Output:  [real(r8) (:,:) ] diffusivity (m2/s)
          ratio_k1                      =>    soilbiogeochem_nitrogenflux_inst%ratio_k1_col                      , & ! Output:  [real(r8) (:,:) ]                                                  
          ratio_no3_co2                 =>    soilbiogeochem_nitrogenflux_inst%ratio_no3_co2_col                 , & ! Output:  [real(r8) (:,:) ]                                                  
          soil_co2_prod                 =>    soilbiogeochem_nitrogenflux_inst%soil_co2_prod_col                 , & ! Output:  [real(r8) (:,:) ]  (ug C / g soil / day)                           
@@ -278,7 +279,10 @@ contains
                else
                   om_frac = 1._r8
                end if
-               diffus (c,j) = (d_con_g(2,1) + d_con_g(2,2)*t_soisno(c,j)) * 1.e-4_r8 * &
+
+               ! First, get diffusivity as a unitless constant, which is what's needed to
+               ! calculate ratio_k1 below.
+               diffus (c,j) = &
                     (om_frac * eps**(10._r8/3._r8) / watsat(c,j)**2 + &
                     (1._r8-om_frac) * eps**2 * f_a**(3._r8 / bsw(c,j)) ) 
 
@@ -375,6 +379,15 @@ contains
             ! now calculate the ratio of N2O to N2 from denitrification, following Del Grosso et al., 2000
             ! diffusivity constant (figure 6b)
             ratio_k1(c,j) = max(1.7_r8, 38.4_r8 - 350._r8 * diffus(c,j))
+
+            ! Del Grosso et al. (2000) have diffus (their D_FC, "a relative index of gas diffusivity
+            ! through soil assuming a water content of field capacity") as unitless, but diffus history
+            ! field wants m2/s. Here, we use the same theoretical construct as for methane diffusivity
+            ! to convert to m2/s: We multiply by the temperature-dependent free-air diffusion rate.
+            ! NOTE that the coefficients for oxygen are used here; it may be more appropriate to use
+            ! coefficients for the gases being dealt with in this subroutine.
+            D0 = (d_con_g(2,1) + d_con_g(2,2)*t_soisno(c,j)) * 1.e-4_r8
+            diffus(c,j) = diffus(c,j) * D0
 
             ! ratio function (figure 7c)
             if ( soil_co2_prod(c,j) > 1.0e-9_r8 ) then
