@@ -366,21 +366,8 @@ contains
             soilstate_inst, temperature_inst, atm2lnd_inst, wateratm2lndbulk_inst, cnveg_state_inst, &
             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
-       ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-03) Old restart files generated at the end
-       ! of the year can indicate that a crop was panted on Jan 1, because that used to be
-       ! the time given to the last time step of the year. This would cause problems if we
-       ! ran CropPhenology in time step 0, because now time step 0 is labeled as Dec 31,
-       ! so CropPhenology would see the crop as having been planted 364 days ago, and so
-       ! would want to harvest this newly-planted crop. To avoid this situation, we avoid
-       ! calling CropPhenology on time step 0.
-       !
-       ! This .not. is_first_step() condition can be removed either when we can rely on
-       ! all restart files having been generated with
-       ! https://github.com/ESCOMP/CTSM/issues/1623 resolved, or we stop having a time
-       ! step 0 (https://github.com/ESCOMP/CTSM/issues/925).
 !KO       if (num_pcropp > 0 .and. .not. is_first_step()) then
 !KO
-       ! Unknown if all restart files have been generated with 1623 resolved but we no longer have a time step 0
        if (num_pcropp > 0) then
 !KO
           call CropPhenology(num_pcropp, filter_pcropp, &
