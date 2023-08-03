@@ -203,7 +203,7 @@ contains
          irrigate, run_zero_weight_urban, all_active, &
          crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
          snicar_numrad_snw, snicar_solarspec, snicar_dust_optics, &
-         snicar_use_aerosol, snicar_rt_solver, snicar_snw_shape, snicar_snobc_intmix,&
+         snicar_use_aerosol, snicar_snw_shape, snicar_snobc_intmix,&
          snicar_snodst_intmix,DO_SNO_OC, &
          for_testing_use_second_grain_pool, for_testing_use_repr_structure_pool, &
          for_testing_no_crop_seed_replenishment
@@ -590,12 +590,6 @@ contains
             errMsg(sourcefile, __LINE__))
     end if
 
-    ! check on SNICAR solver option
-    if ( (snicar_rt_solver < 1) .or. (snicar_rt_solver > 2) ) then
-       call endrun(msg=' ERROR: snicar_rt_solver is out of a reasonable range (1,2)'//&
-            errMsg(sourcefile, __LINE__))
-    end if
-
     ! check on SNICAR snow grain shape option
     if ( (snicar_snw_shape < 1) .or. (snicar_snw_shape > 4) ) then
        call endrun(msg=' ERROR: snicar_snw_shape is out of a reasonable range (1,2,3,4)'//&
@@ -833,7 +827,6 @@ contains
     call mpi_bcast (snicar_solarspec, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (snicar_dust_optics, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (snicar_use_aerosol, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (snicar_rt_solver, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (snicar_snw_shape, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (snicar_snobc_intmix, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (snicar_snodst_intmix, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -1020,7 +1013,6 @@ contains
     write(iulog,*) '   SNICAR: downward solar radiation spectrum type =', snicar_solarspec
     write(iulog,*) '   SNICAR: dust optics type = ', snicar_dust_optics
     write(iulog,*) '   SNICAR: number of bands in snow albedo calculation =', snicar_numrad_snw
-    write(iulog,*) '   SNICAR: radiative transfer solver type = ',snicar_rt_solver
     write(iulog,*) '   SNICAR: snow grain shape type = ',snicar_snw_shape
     write(iulog,*) '   SNICAR: BC-snow internal mixing = ', snicar_snobc_intmix
     write(iulog,*) '   SNICAR: dust-snow internal mixing = ', snicar_snodst_intmix

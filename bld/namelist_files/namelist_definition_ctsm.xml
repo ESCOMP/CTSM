@@ -170,11 +170,6 @@ dust optics type for SNICAR snow albedo calculation
 Toggle to turn on/off aerosol deposition flux in snow in SNICAR
 </entry>
 
-<entry id="snicar_rt_solver" type="integer" category="clm_physics"
-       group="clm_inparm" valid_values="1,2" >
-SNICAR radiative transfer solver type
-</entry>
-
 <entry id="snicar_snw_shape" type="integer" category="clm_physics"
        group="clm_inparm" valid_values="1,2,3,4" >
 snow grain shape used in SNICAR snow albedo calculation
