@@ -151,42 +151,43 @@ of soil column (nlevsoi).
 </entry>
 
 <entry id="snicar_numrad_snw" type="integer" category="clm_physics"
-       group="clm_inparm" valid_values="5,480" >
+       group="snicar_inparm" valid_values="5,480" >
 number of wavelength bands used in SNICAR snow albedo calculation
 </entry>
 
 <entry id="snicar_solarspec" type="integer" category="clm_physics"
-       group="clm_inparm" valid_values="1,2,3,4,5,6" >
+       group="snicar_inparm" valid_values="1,2,3,4,5,6" >
 type of downward solar radiation spectrum for SNICAR snow albedo calculation
 </entry>
 
 <entry id="snicar_dust_optics" type="integer" category="clm_physics"
-       group="clm_inparm" valid_values="1,2,3" >
+       group="snicar_inparm" valid_values="1,2,3" >
 dust optics type for SNICAR snow albedo calculation
 </entry>
 
 <entry id="snicar_use_aerosol" type="logical" category="clm_physics"
-       group="clm_inparm" valid_values="" value=".true.">
+       group="snicar_inparm" valid_values="" value=".true.">
 Toggle to turn on/off aerosol deposition flux in snow in SNICAR
 </entry>
 
-<entry id="snicar_snw_shape" type="integer" category="clm_physics"
-       group="clm_inparm" valid_values="1,2,3,4" >
+<entry id="snicar_snw_shape" type="char*15" category="clm_physics"
+       group="snicar_inparm" valid_values="sphere,spheroid,hexagonal_plate,koch_snowflake" value="hexagonal_plate" >
 snow grain shape used in SNICAR snow albedo calculation
+<default>Default: "hexagonal_plate"</default>
 </entry>
 
 <entry id="snicar_snobc_intmix" type="logical" category="clm_physics"
-       group="clm_inparm" valid_values="" value=".true." >
+       group="snicar_inparm" valid_values="" value=".true." >
 option to activate BC-snow internal mixing in SNICAR snow albedo calculation
 </entry>
 
 <entry id="snicar_snodst_intmix" type="logical" category="clm_physics"
-       group="clm_inparm" valid_values="" value=".true." >
+       group="snicar_inparm" valid_values="" value=".true." >
 option to activate dust-snow internal mixing in SNICAR snow albedo calculation
 </entry>
 
 <entry id="DO_SNO_OC" type="logical" category="clm_physics"
-       group="clm_inparm" valid_values="" value=".false." >
+       group="snicar_inparm" valid_values="" value=".false." >
 option to activate organic carbon (OC) in SNICAR snow albedo calculation
 </entry>
 
@@ -1197,7 +1198,7 @@ DependsOnLatAndVeg - Arctic vegetation depends on latitude as above, but tempera
 </entry>
 
 <entry id="use_snicar_frc" type="logical" category="physics"
-       group="clm_inparm" valid_values="" value=".false.">
+       group="snicar_inparm" valid_values="" value=".false.">
 Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) radiative forcing
 (snicar_frc=".true." is EXPERIMENTAL NOT SUPPORTED!)
 </entry>

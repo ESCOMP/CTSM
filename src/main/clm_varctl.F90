@@ -245,8 +245,8 @@ module clm_varctl
   ! option to turn off aerosol effect in snow in SNICAR
   logical, public :: snicar_use_aerosol = .true. ! if .false., turn off aerosol deposition flux
 
-  ! option for snow grain shape in SNICAR (He et al. 2017 JC), ceniln
-  integer, public :: snicar_snw_shape = 3   ! 1->sphere; 2->spheroid; 3->hexagonal plate; 4->Koch snowflake
+  ! option for snow grain shape in SNICAR (He et al. 2017 JC)
+  character(len=15), public :: snicar_snw_shape = 'hexagonal_plate'  ! sphere, spheroid, hexagonal_plate, koch_snowflake
 
   ! option to activate BC-snow internal mixing in SNICAR (He et al. 2017 JC), ceniln
   logical, public :: snicar_snobc_intmix = .false.   ! false->external mixing for all BC; true->internal mixing for hydrophilic BC

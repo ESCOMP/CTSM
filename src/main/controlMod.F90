@@ -235,8 +235,8 @@ contains
           fates_parteh_mode,                            &
           use_fates_tree_damage
 
-   ! Ozone vegetation stress method
-   namelist / clm_inparam / o3_veg_stress_method
+    ! Ozone vegetation stress method
+    namelist / clm_inparm / o3_veg_stress_method
 
     ! CLM 5.0 nitrogen flags
     namelist /clm_inparm/ use_flexibleCN, use_luna
@@ -281,7 +281,7 @@ contains
 
     namelist /clm_inparm/ &
          use_lch4, use_nitrif_denitrif, use_extralakelayers, &
-         use_vichydro, use_cn, use_cndv, use_crop, use_fertilizer, o3_veg_stress_method, &
+         use_vichydro, use_cn, use_cndv, use_crop, use_fertilizer, &
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
          use_nguardrail
 
@@ -590,12 +590,6 @@ contains
             errMsg(sourcefile, __LINE__))
     end if
 
-    ! check on SNICAR snow grain shape option
-    if ( (snicar_snw_shape < 1) .or. (snicar_snw_shape > 4) ) then
-       call endrun(msg=' ERROR: snicar_snw_shape is out of a reasonable range (1,2,3,4)'//&
-            errMsg(sourcefile, __LINE__))
-    end if
-
     ! check on SNICAR BC-snow and dust-snow internal mixing
     if ( snicar_snobc_intmix .and. snicar_snodst_intmix ) then
        call endrun(msg=' ERROR: currently dust-snow and BC-snow internal mixing cannot be activated together'//&
@@ -827,7 +821,7 @@ contains
     call mpi_bcast (snicar_solarspec, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (snicar_dust_optics, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (snicar_use_aerosol, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (snicar_snw_shape, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (snicar_snw_shape, len(snicar_snw_shape), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (snicar_snobc_intmix, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (snicar_snodst_intmix, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (DO_SNO_OC, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -1013,7 +1007,7 @@ contains
     write(iulog,*) '   SNICAR: downward solar radiation spectrum type =', snicar_solarspec
     write(iulog,*) '   SNICAR: dust optics type = ', snicar_dust_optics
     write(iulog,*) '   SNICAR: number of bands in snow albedo calculation =', snicar_numrad_snw
-    write(iulog,*) '   SNICAR: snow grain shape type = ',snicar_snw_shape
+    write(iulog,*) '   SNICAR: snow grain shape type = ', snicar_snw_shape
     write(iulog,*) '   SNICAR: BC-snow internal mixing = ', snicar_snobc_intmix
     write(iulog,*) '   SNICAR: dust-snow internal mixing = ', snicar_snodst_intmix
     write(iulog,*) '   SNICAR: OC in snow = ', DO_SNO_OC
@@ -1097,7 +1091,6 @@ contains
        write(iulog, *) '    carbon_resp_opt = ', carbon_resp_opt
     end if
     write(iulog, *) '  use_luna = ', use_luna
-    write(iulog, *) '  ozone vegetation stress method = ', o3_veg_stress_method
 
     write(iulog, *) '  ED/FATES: '
     write(iulog, *) '    use_fates = ', use_fates

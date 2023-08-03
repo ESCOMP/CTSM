@@ -447,14 +447,14 @@ contains
 
     !-----------------------------------------------------------------------
     ! variables used for nonspherical snow grain treatment (He et al. 2017 J of Climate):
-    integer  :: sno_shp(-nlevsno+1:0)             ! Snow shape type: 1=sphere; 2=spheroid; 3=hexagonal plate; 4=koch snowflake
+    character(len=15) :: sno_shp(-nlevsno+1:0)    ! Snow shape type: sphere, spheroid, hexagonal plate, koch snowflake
                                                   ! currently only assuming same shapes for all snow layers
     real(r8) :: sno_fs(-nlevsno+1:0)              ! Snow shape factor: ratio of nonspherical grain effective radii to that of equal-volume sphere
-                                                  ! only activated when snicar_snw_shape > 1 (i.e. nonspherical)
+                                                  ! only activated when snicar_snw_shape is nonspherical
                                                   ! 0=use recommended default value (He et al. 2017);
                                                   ! others(0<sno_fs<1)= user-specified value
     real(r8) :: sno_AR(-nlevsno+1:0)              ! Snow grain aspect ratio: ratio of grain width to length
-                                                  ! only activated when snicar_snw_shape > 1 (i.e. nonspherical)
+                                                  ! only activated when snicar_snw_shape is nonspherical
                                                   ! 0=use recommended default value (He et al. 2017);
                                                   ! others(0.1<fs<20)= use user-specified value
     ! Constants and parameters for aspherical ice particles    
@@ -831,7 +831,7 @@ contains
                         ! snow optical properties (direct radiation)
                         ss_alb_snw_lcl(i)      = ss_alb_snw_drc(rds_idx,bnd_idx)
                         ext_cff_mss_snw_lcl(i) = ext_cff_mss_snw_drc(rds_idx,bnd_idx)
-                        if (sno_shp(i) == 1) asm_prm_snw_lcl(i) = asm_prm_snw_drc(rds_idx,bnd_idx)
+                        if (sno_shp(i) == 'sphere') asm_prm_snw_lcl(i) = asm_prm_snw_drc(rds_idx,bnd_idx)
                      enddo
                   elseif (flg_slr_in == 2) then
                      do i=snl_top,snl_btm,1
@@ -839,15 +839,15 @@ contains
                         ! snow optical properties (diffuse radiation)
                         ss_alb_snw_lcl(i)      = ss_alb_snw_dfs(rds_idx,bnd_idx)
                         ext_cff_mss_snw_lcl(i) = ext_cff_mss_snw_dfs(rds_idx,bnd_idx)
-                        if (sno_shp(i) == 1) asm_prm_snw_lcl(i) = asm_prm_snw_dfs(rds_idx,bnd_idx)
+                        if (sno_shp(i) == 'sphere') asm_prm_snw_lcl(i) = asm_prm_snw_dfs(rds_idx,bnd_idx)
                      enddo
                   endif
 
                   ! Nonspherical snow: shape-dependent asymmetry factors
                   do i=snl_top,snl_btm,1
 
-                     ! spheroid
-                     if (sno_shp(i) == 2) then
+                     select case (sno_shp(i))
+                     case ('spheroid')
                         diam_ice = 2._r8 * snw_rds_lcl(i)   ! unit: microns
                         if (sno_fs(i) == 0._r8) then
                            fs_sphd = 0.929_r8  ! default; He et al. (2017), Table 1
@@ -865,8 +865,7 @@ contains
                            gg_ice_F07_tmp(igb) = g_F07_c0(igb) + g_F07_c1(igb)*AR_tmp + g_F07_c2(igb)*(AR_tmp**2._r8)  ! Eqn. 3.1 in Fu (2007)
                         enddo
 
-                     ! hexagonal plate
-                     elseif (sno_shp(i) == 3) then
+                     case ('hexagonal_plate')
                         diam_ice = 2._r8 * snw_rds_lcl(i)   ! unit: microns
                         if (sno_fs(i) == 0._r8) then
                            fs_hex0 = 0.788_r8  ! default; He et al. (2017), Table 1
@@ -884,8 +883,7 @@ contains
                            gg_ice_F07_tmp(igb) = g_F07_p0(igb)+g_F07_p1(igb)*LOG(AR_tmp)+g_F07_p2(igb)*((LOG(AR_tmp))**2._r8) ! Eqn. 3.3 in Fu (2007)
                         enddo
 
-                     ! Koch snowflake
-                     elseif (sno_shp(i) == 4) then
+                     case ('koch_snowflake')
                         diam_ice = 2._r8 * snw_rds_lcl(i) / 0.544_r8  ! unit: microns
                         if (sno_fs(i) == 0._r8) then
                            fs_koch = 0.712_r8  ! default; He et al. (2017), Table 1
@@ -903,10 +901,10 @@ contains
                            gg_ice_F07_tmp(igb) = g_F07_p0(igb)+g_F07_p1(igb)*LOG(AR_tmp)+g_F07_p2(igb)*((LOG(AR_tmp))**2._r8) ! Eqn. 3.3 in Fu (2007)
                         enddo
 
-                     endif ! if snow shape
+                     end select
 
                      ! compute nonspherical snow asymmetry factor
-                     if (sno_shp(i) > 1) then
+                     if (sno_shp(i) /= 'sphere') then
                         ! 7 wavelength bands for g_ice to be interpolated into targeted SNICAR bands here
                         ! use the piecewise linear interpolation subroutine created at the end of this module
                         ! tests showed the piecewise linear interpolation has similar results as pchip interpolation
