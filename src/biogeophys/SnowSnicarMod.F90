@@ -13,7 +13,7 @@ module SnowSnicarMod
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use clm_varctl      , only : iulog, snicar_numrad_snw, &
                                snicar_snw_shape, snicar_snobc_intmix, &
-                               snicar_snodst_intmix, DO_SNO_OC ! cenlin
+                               snicar_snodst_intmix, do_sno_oc
   use clm_varcon      , only : tfrz
   use shr_const_mod   , only : SHR_CONST_RHOICE
   use abortutils      , only : endrun
@@ -48,16 +48,9 @@ module SnowSnicarMod
   ! !PUBLIC DATA MEMBERS:
   integer,  public, parameter :: sno_nbr_aer =   8        ! number of aerosol species in snowpack
                                                           ! (indices described above) [nbr]
-  ! DO_SNO_OC moved to namelist control
-  !logical,  public, parameter :: DO_SNO_OC =    .false.   ! parameter to include organic carbon (OC)
-  !                                                        ! in snowpack radiative calculations
   logical,  public, parameter :: DO_SNO_AER =   .true.    ! parameter to include aerosols in snowpack radiative calculations
 
   ! !PRIVATE DATA MEMBERS:
-!  integer,  parameter :: numrad_snw  = 5              ! number of spectral bands used in snow model [nbr] cenlin
-!  integer,  parameter :: nir_bnd_bgn = 2              ! first band index in near-IR spectrum [idx] cenlin
-!  integer,  parameter :: nir_bnd_end = 5              ! ending near-IR band index [idx] cenlin
-
   integer,  parameter :: idx_Mie_snw_mx = 1471           ! number of effective radius indices used in Mie lookup table [idx]
   integer,  parameter :: idx_T_max      = 11             ! maxiumum temperature index used in aging lookup table [idx]
   integer,  parameter :: idx_T_min      = 1              ! minimum temperature index used in aging lookup table [idx]
@@ -250,8 +243,8 @@ contains
     ! !LOCAL VARIABLES:
     !
     ! variables for snow radiative transfer calculations
-    integer :: nir_bnd_bgn  ! first band index in near-IR spectrum [idx] cenlin
-    integer :: nir_bnd_end  ! ending near-IR band index [idx] cenlin
+    integer :: nir_bnd_bgn  ! first band index in near-IR spectrum [idx]
+    integer :: nir_bnd_end  ! ending near-IR band index [idx]
 
     ! Local variables representing single-column values of arrays:
     integer :: snl_lcl                            ! negative number of snow layers [nbr]
@@ -542,7 +535,7 @@ contains
          frac_sno    =>   waterdiagnosticbulk_inst%frac_sno_eff_col    & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
          )
 
-      ! initialize parameter, cenlin
+      ! initialize parameter
       if (snicar_numrad_snw == 5)   nir_bnd_bgn = 2
       if (snicar_numrad_snw == 480) nir_bnd_bgn = 51
       nir_bnd_end    = snicar_numrad_snw 
@@ -705,7 +698,7 @@ contains
 
 
             ! Set spectral underlying surface albedos to their corresponding VIS or NIR albedos
-            albsfc_lcl(1:(nir_bnd_bgn-1))       = albsfc(c_idx,1)  ! cenlin
+            albsfc_lcl(1:(nir_bnd_bgn-1))       = albsfc(c_idx,1)
             albsfc_lcl(nir_bnd_bgn:nir_bnd_end) = albsfc(c_idx,2)
             
 
@@ -734,7 +727,7 @@ contains
             !  Band 4: 1.2-1.5um (NIR)
             !  Band 5: 1.5-5.0um (NIR)
             !
-            ! Hyperspectral (10-nm) bands (480-band case) cenlin
+            ! Hyperspectral (10-nm) bands (480-band case)
             ! Bands 1~50  : 0.2-0.7um (VIS)
             ! Bands 51~480: 0.7~5.0um (NIR)
             !
@@ -770,7 +763,7 @@ contains
             !      flx_wgt(4) = 0.10917889346386_r8
             !      flx_wgt(5) = 0.10343699264369_r8
             !   endif
-            else     ! works for both 5-band & 480-band, flux weights directly read from input data, cenlin
+            else  ! works for both 5-band & 480-band, flux weights directly read from input data
                ! Direct:
                if (flg_slr_in == 1) then
                   flx_wgt(1:snicar_numrad_snw) = flx_wgt_dir(1:snicar_numrad_snw)  ! VIS or NIR band sum is already normalized to 1.0 in input data
@@ -816,7 +809,7 @@ contains
                      mss_cnc_aer_lcl(:,:) = 0._r8
                   endif
 
-                  if ( (snicar_numrad_snw == 480).and.(bnd_idx > 100) ) then ! >1.2um cenlin
+                  if ( (snicar_numrad_snw == 480).and.(bnd_idx > 100) ) then ! >1.2um
                      mss_cnc_aer_lcl(:,:) = 0._r8
                   endif
 
@@ -1450,7 +1443,7 @@ contains
 
 
             ! Weight output NIR albedo appropriately
-            ! for 5- and 3-band cases cenlin
+            ! for 5- and 3-band cases
             if (snicar_numrad_snw <= 5) then
               albout(c_idx,1) = albout_lcl(1)
               flx_sum         = 0._r8
@@ -1460,7 +1453,7 @@ contains
               albout(c_idx,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
             end if
 
-            ! for 480-band case, cenlin
+            ! for 480-band case
             if (snicar_numrad_snw == 480) then
               ! average for VIS band
               flx_sum         = 0._r8
@@ -1477,7 +1470,7 @@ contains
             end if
 
             ! Weight output NIR absorbed layer fluxes (flx_abs) appropriately
-            ! for 5- and 3-band cases cenlin
+            ! for 5- and 3-band cases
             if (snicar_numrad_snw <= 5) then 
               flx_abs(c_idx,:,1) = flx_abs_lcl(:,1)
               do i=snl_top,1,1
@@ -1489,7 +1482,7 @@ contains
               end do
             end if
 
-            ! for 480-band case cenlin
+            ! for 480-band case
             if (snicar_numrad_snw == 480) then
               do i=snl_top,1,1
                  ! average for VIS band
@@ -1932,7 +1925,7 @@ contains
 
      if(masterproc) write(iulog,*) 'Attempting to read snow optical properties .....'
 
-     !--------------------- for 5-band data, cenlin
+     !--------------------- for 5-band data
      if (snicar_numrad_snw == 5) then
 
         call getfil (fsnowoptics, locfn, 0)
@@ -2438,7 +2431,7 @@ contains
      end if  ! end if snicar_numrad_snw == 5
 
 
-     !-------------------- for 480-band data, cenlin
+     !-------------------- for 480-band data
      if (snicar_numrad_snw == 480) then
 
         call getfil (fsnowoptics480, locfn, 0)
@@ -2561,7 +2554,7 @@ contains
         write (iulog,*) 'SNICAR: Mie single scatter albedos for diffuse ice, rds=100um: ',     &
              ss_alb_snw_dfs(71,1), ss_alb_snw_dfs(71,2), ss_alb_snw_dfs(71,3),     &
              ss_alb_snw_dfs(71,4), ss_alb_snw_dfs(71,5)
-        if (DO_SNO_OC) then
+        if (do_sno_oc) then
            write (iulog,*) 'SNICAR: Including OC aerosols from snow radiative transfer calculations'
         else
            write (iulog,*) 'SNICAR: Excluding OC aerosols from snow radiative transfer calculations'
@@ -2570,7 +2563,7 @@ contains
              ss_alb_bc1(1), ss_alb_bc1(2), ss_alb_bc1(3), ss_alb_bc1(4), ss_alb_bc1(5)
         write (iulog,*) 'SNICAR: Mie single scatter albedos for hydrophobic BC: ', &
              ss_alb_bc2(1), ss_alb_bc2(2), ss_alb_bc2(3), ss_alb_bc2(4), ss_alb_bc2(5)
-        if (DO_SNO_OC) then
+        if (do_sno_oc) then
            write (iulog,*) 'SNICAR: Mie single scatter albedos for hydrophillic OC: ', &
                 ss_alb_oc1(1), ss_alb_oc1(2), ss_alb_oc1(3), ss_alb_oc1(4), ss_alb_oc1(5)
            write (iulog,*) 'SNICAR: Mie single scatter albedos for hydrophobic OC: ', &

@@ -204,7 +204,7 @@ contains
          crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
          snicar_numrad_snw, snicar_solarspec, snicar_dust_optics, &
          snicar_use_aerosol, snicar_snw_shape, snicar_snobc_intmix,&
-         snicar_snodst_intmix,DO_SNO_OC, &
+         snicar_snodst_intmix,do_sno_oc, &
          for_testing_use_second_grain_pool, for_testing_use_repr_structure_pool, &
          for_testing_no_crop_seed_replenishment
 
@@ -812,7 +812,7 @@ contains
     call mpi_bcast (snicar_use_aerosol, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (snicar_snobc_intmix, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (snicar_snodst_intmix, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (DO_SNO_OC, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (do_sno_oc, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! snow pack variables
     call mpi_bcast (nlevsno, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -998,7 +998,7 @@ contains
     write(iulog,*) '   SNICAR: snow grain shape type = ', snicar_snw_shape
     write(iulog,*) '   SNICAR: BC-snow internal mixing = ', snicar_snobc_intmix
     write(iulog,*) '   SNICAR: dust-snow internal mixing = ', snicar_snodst_intmix
-    write(iulog,*) '   SNICAR: OC in snow = ', DO_SNO_OC
+    write(iulog,*) '   SNICAR: OC in snow = ', do_sno_oc
 
     write(iulog,'(a,i8)') '   Number of snow layers =', nlevsno
     write(iulog,'(a,d20.10)') '   Max snow depth (mm) =', h2osno_max

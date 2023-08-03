@@ -7,7 +7,7 @@ module SurfaceAlbedoType
   use decompMod      , only : bounds_type
   use clm_varpar     , only : numrad, nlevcan, nlevsno
   use abortutils     , only : endrun
-  use clm_varctl     , only : use_SSRE, use_snicar_frc ! cenlin
+  use clm_varctl     , only : use_SSRE, use_snicar_frc
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -35,7 +35,7 @@ module SurfaceAlbedoType
      real(r8), pointer :: albsoi_col           (:,:) ! col soil albedo: diffuse (col,bnd) [frc]                    
      real(r8), pointer :: albsnd_hst_col       (:,:) ! col snow albedo, direct , for history files (col,bnd) [frc] 
      real(r8), pointer :: albsni_hst_col       (:,:) ! col snow albedo, diffuse, for history files (col,bnd) [frc] 
-! cenlin add new output variables for albedo for history files only
+! add new snicar output variables for albedo for history files only
      real(r8), pointer :: albd_hst_patch       (:,:) ! patch surface albedo (direct) for history files (numrad)                    
      real(r8), pointer :: albi_hst_patch       (:,:) ! patch surface albedo (diffuse) for history files  (numrad)                    
      real(r8), pointer :: albgrd_pur_hst_col   (:,:) ! col pure snow ground direct albedo for history files    (numrad)             
@@ -50,7 +50,7 @@ module SurfaceAlbedoType
      real(r8), pointer :: albgri_hst_col       (:,:) ! col ground albedo (diffuse) for history files (numrad)                        
      real(r8), pointer :: albsnd_hst2_col      (:,:) ! col snow albedo, direct , for history files (col,bnd) [frc] 
      real(r8), pointer :: albsni_hst2_col      (:,:) ! col snow albedo, diffuse, for history files (col,bnd) [frc] 
-! cenlin end
+! end add new snicar
 
      real(r8), pointer :: ftdd_patch           (:,:) ! patch down direct flux below canopy per unit direct flx    (numrad)
      real(r8), pointer :: ftid_patch           (:,:) ! patch down diffuse flux below canopy per unit direct flx   (numrad)
@@ -173,7 +173,7 @@ contains
     allocate(this%vcmaxcintsun_patch (begp:endp))              ; this%vcmaxcintsun_patch (:)   = nan
     allocate(this%vcmaxcintsha_patch (begp:endp))              ; this%vcmaxcintsha_patch (:)   = nan
 
-! cenlin add new output variables for albedo for history files only
+! add new snicar output variables for albedo for history files only
     allocate(this%albgrd_hst_col     (begc:endc,numrad))       ; this%albgrd_hst_col     (:,:) = spval
     allocate(this%albgri_hst_col     (begc:endc,numrad))       ; this%albgri_hst_col     (:,:) = spval
     allocate(this%albsnd_hst2_col    (begc:endc,numrad))       ; this%albsnd_hst2_col    (:,:) = spval
@@ -188,7 +188,7 @@ contains
     allocate(this%albgri_dst_hst_col (begc:endc,numrad))       ; this%albgri_dst_hst_col (:,:) = spval
     allocate(this%albd_hst_patch     (begp:endp,numrad))       ; this%albd_hst_patch     (:,:) = spval
     allocate(this%albi_hst_patch     (begp:endp,numrad))       ; this%albi_hst_patch     (:,:) = spval
-! cenlin end
+! end and new snicar
 
   end subroutine InitAllocate
 
@@ -254,7 +254,7 @@ contains
          avgflag='A', long_name='surface albedo (indirect)', &
          ptr_patch=this%albi_patch, default=defaultoutput, c2l_scale_type='urbanf')
 
-! cenlin add new output variables for albedo for history files only
+! add new snicar output variables for albedo for history files only
     if (use_snicar_frc) then
 
        this%albd_hst_patch(begp:endp,:) = spval
@@ -328,7 +328,7 @@ contains
             ptr_col=this%albsni_hst2_col, default='inactive')
 
     end if ! end of use_snicar_frc
-! cenlin: end 
+! end add new snicar
 
   end subroutine InitHistory
 
@@ -654,7 +654,7 @@ contains
 
     end if  ! end of if-use_snicar_frc 
 
-! cenlin add new output variables for albedo for history files only
+! add new snicar output variables for albedo for history files only
     if (use_snicar_frc) then
 
        call restartvar(ncid=ncid, flag=flag, varname='albd_hist', xtype=ncd_double,  &
@@ -742,7 +742,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=this%albgri_dst_hst_col)
 
     end if  ! end of if-use_snicar_frc 
-! cenlin end
+! end add new snicar
 
     ! patch type physical state variable - fabd
     call restartvar(ncid=ncid, flag=flag, varname='fabd', xtype=ncd_double,  &

@@ -12,9 +12,9 @@ module SurfaceAlbedoMod
   use decompMod         , only : bounds_type, subgrid_level_patch
   use abortutils        , only : endrun
   use landunit_varcon   , only : istsoil, istcrop, istdlak
-  use clm_varcon        , only : grlnd, spval ! cenlin
+  use clm_varcon        , only : grlnd, spval
   use clm_varpar        , only : numrad, nlevcan, nlevsno, nlevcan
-  use clm_varctl        , only : fsurdat, iulog, use_snicar_frc, use_SSRE, DO_SNO_OC !cenlin
+  use clm_varctl        , only : fsurdat, iulog, use_snicar_frc, use_SSRE, do_sno_oc
   use pftconMod         , only : pftcon
   use SnowSnicarMod     , only : sno_nbr_aer, SNICAR_RT, DO_SNO_AER
   use AerosolMod        , only : aerosol_type
@@ -387,7 +387,7 @@ contains
           albsni_hst    =>    surfalb_inst%albsni_hst_col         , & ! Output:  [real(r8) (:,:) ]  snow ground albedo, diffuse, for history files (col,bnd) [frc]
           albd          =>    surfalb_inst%albd_patch             , & ! Output:  [real(r8) (:,:) ]  surface albedo (direct)
           albi          =>    surfalb_inst%albi_patch             , & ! Output:  [real(r8) (:,:) ]  surface albedo (diffuse)
-! cenlin: add new output albedo variables for history fields
+! add new snicar output albedo variables for history fields
           albgrd_hst     =>   surfalb_inst%albgrd_hst_col         , & ! Output:  [real(r8) (:,:) ]  ground albedo (direct) for history files              
           albgri_hst     =>   surfalb_inst%albgri_hst_col         , & ! Output:  [real(r8) (:,:) ]  ground albedo (diffuse) for history files
           albgrd_pur_hst =>   surfalb_inst%albgrd_pur_hst_col     , & ! Output:  [real(r8) (:,:) ]  pure snow ground albedo (direct) for history files
@@ -402,7 +402,7 @@ contains
           albsni_hst2    =>   surfalb_inst%albsni_hst2_col        , & ! Output:  [real(r8) (:,:) ]  snow ground albedo, diffuse, for history files (col,bnd) for history files
           albd_hst       =>   surfalb_inst%albd_hst_patch         , & ! Output:  [real(r8) (:,:) ]  surface albedo (direct) for history files
           albi_hst       =>   surfalb_inst%albi_hst_patch         , & ! Output:  [real(r8) (:,:) ]  surface albedo (diffuse) for history files
-! cenlin: end
+! end add new snicar
           albdSF        =>    surfalb_inst%albdSF_patch           , & ! Output:  [real(r8) (:,:) ]  diagnostic snow-free surface albedo (direct)
           albiSF        =>    surfalb_inst%albiSF_patch           , & ! Output:  [real(r8) (:,:) ]  diagnostic snow-free surface albedo (diffuse)
           fabd          =>    surfalb_inst%fabd_patch             , & ! Output:  [real(r8) (:,:) ]  flux absorbed by canopy per unit direct flux
@@ -456,7 +456,7 @@ contains
           albgri_oc(c,ib)  = 0._r8
           albgrd_dst(c,ib) = 0._r8
           albgri_dst(c,ib) = 0._r8
-! cenlin: add output variables for history files
+! add new snicar output variables for history files
           albgrd_hst(c,ib)     = spval
           albgri_hst(c,ib)     = spval
           albgrd_pur_hst(c,ib) = spval
@@ -469,7 +469,7 @@ contains
           albgri_dst_hst(c,ib) = spval
           albsnd_hst2(c,ib)    = spval
           albsni_hst2(c,ib)    = spval
-! cenlin: end
+! end add new snicar
           do i=-nlevsno+1,1,1
              flx_absdv(c,i) = 0._r8
              flx_absdn(c,i) = 0._r8
@@ -482,10 +482,10 @@ contains
           p = filter_nourbanp(fp)
           albd(p,ib) = 1._r8
           albi(p,ib) = 1._r8
-! cenlin: add output variables for history files
+! add new snicar output variables for history files
           albd_hst(p,ib) = spval
           albi_hst(p,ib) = spval
-! cenlin: end
+! end add new snicar
           if (use_SSRE) then
              albdSF(p,ib) = 1._r8
              albiSF(p,ib) = 1._r8
@@ -552,11 +552,11 @@ contains
        mss_cnc_aer_in_fdb(bounds%begc:bounds%endc,:,1) = mss_cnc_bcphi(bounds%begc:bounds%endc,:)
        mss_cnc_aer_in_fdb(bounds%begc:bounds%endc,:,2) = mss_cnc_bcpho(bounds%begc:bounds%endc,:)
 
-       ! DO_SNO_OC is set in SNICAR_varpar. Default case is to ignore OC concentrations because:
+       ! do_sno_oc is set in SNICAR_varpar. Default case is to ignore OC concentrations because:
        !  1) Knowledge of their optical properties is primitive
        !  2) When 'water-soluble' OPAC optical properties are applied to OC in snow,
        !     it has a negligible darkening effect.
-       if (DO_SNO_OC) then
+       if (do_sno_oc) then
           mss_cnc_aer_in_fdb(bounds%begc:bounds%endc,:,3) = mss_cnc_ocphi(bounds%begc:bounds%endc,:)
           mss_cnc_aer_in_fdb(bounds%begc:bounds%endc,:,4) = mss_cnc_ocpho(bounds%begc:bounds%endc,:)
        endif
@@ -580,7 +580,7 @@ contains
        mss_cnc_aer_in_frc_bc(bounds%begc:bounds%endc,:,6) = mss_cnc_dst2(bounds%begc:bounds%endc,:)
        mss_cnc_aer_in_frc_bc(bounds%begc:bounds%endc,:,7) = mss_cnc_dst3(bounds%begc:bounds%endc,:)
        mss_cnc_aer_in_frc_bc(bounds%begc:bounds%endc,:,8) = mss_cnc_dst4(bounds%begc:bounds%endc,:)
-       if (DO_SNO_OC) then
+       if (do_sno_oc) then
           mss_cnc_aer_in_frc_bc(bounds%begc:bounds%endc,:,3) = mss_cnc_ocphi(bounds%begc:bounds%endc,:)
           mss_cnc_aer_in_frc_bc(bounds%begc:bounds%endc,:,4) = mss_cnc_ocpho(bounds%begc:bounds%endc,:)
        endif
@@ -616,7 +616,7 @@ contains
 
        ! 2. OC input array:
        !  set BC and dust concentrations, so OC_FRC=[(BC+OC+dust)-(BC+dust)]
-       if (DO_SNO_OC) then
+       if (do_sno_oc) then
           mss_cnc_aer_in_frc_oc(bounds%begc:bounds%endc,:,1) = mss_cnc_bcphi(bounds%begc:bounds%endc,:)
           mss_cnc_aer_in_frc_oc(bounds%begc:bounds%endc,:,2) = mss_cnc_bcpho(bounds%begc:bounds%endc,:)
           mss_cnc_aer_in_frc_oc(bounds%begc:bounds%endc,:,5) = mss_cnc_dst1(bounds%begc:bounds%endc,:)
@@ -658,7 +658,7 @@ contains
        ! set BC and OC concentrations, so DST_FRC=[(BC+OC+dust)-(BC+OC)]
        mss_cnc_aer_in_frc_dst(bounds%begc:bounds%endc,:,1) = mss_cnc_bcphi(bounds%begc:bounds%endc,:)
        mss_cnc_aer_in_frc_dst(bounds%begc:bounds%endc,:,2) = mss_cnc_bcpho(bounds%begc:bounds%endc,:)
-       if (DO_SNO_OC) then
+       if (do_sno_oc) then
           mss_cnc_aer_in_frc_dst(bounds%begc:bounds%endc,:,3) = mss_cnc_ocphi(bounds%begc:bounds%endc,:)
           mss_cnc_aer_in_frc_dst(bounds%begc:bounds%endc,:,4) = mss_cnc_ocpho(bounds%begc:bounds%endc,:)
        endif
@@ -768,7 +768,7 @@ contains
                 albgrd_bc(c,ib) = albsod(c,ib)*(1.-frac_sno(c)) + albsnd_bc(c,ib)*frac_sno(c)
                 albgri_bc(c,ib) = albsoi(c,ib)*(1.-frac_sno(c)) + albsni_bc(c,ib)*frac_sno(c)
 
-                if (DO_SNO_OC) then
+                if (do_sno_oc) then
                    ! OC forcing albedo
                    albgrd_oc(c,ib) = albsod(c,ib)*(1.-frac_sno(c)) + albsnd_oc(c,ib)*frac_sno(c)
                    albgri_oc(c,ib) = albsoi(c,ib)*(1.-frac_sno(c)) + albsni_oc(c,ib)*frac_sno(c)
@@ -1082,7 +1082,7 @@ contains
        end do
     end do
 
-! cenlin: add output variables for history files
+    ! add output variables for history files
     do ib = 1, numrad
        do fc = 1,num_nourbanc
           c = filter_nourbanc(fc)
@@ -1112,7 +1112,6 @@ contains
           end if
        end do
     end do
-! cenlin: end
 
      end associate
 

@@ -151,8 +151,9 @@ of soil column (nlevsoi).
 </entry>
 
 <entry id="snicar_numrad_snw" type="integer" category="clm_physics"
-       group="snicar_inparm" valid_values="5,480" >
+       group="snicar_inparm" valid_values="5,480" value="5" >
 number of wavelength bands used in SNICAR snow albedo calculation
+<default>Default: 5</default>
 </entry>
 
 <entry id="snicar_solarspec" type="char*25" category="clm_physics"
@@ -174,23 +175,27 @@ snow grain shape used in SNICAR snow albedo calculation
 </entry>
 
 <entry id="snicar_use_aerosol" type="logical" category="clm_physics"
-       group="snicar_inparm" valid_values="" value=".true.">
+       group="snicar_inparm" value=".true.">
 Toggle to turn on/off aerosol deposition flux in snow in SNICAR
+<default>Default: .true.</default>
 </entry>
 
 <entry id="snicar_snobc_intmix" type="logical" category="clm_physics"
-       group="snicar_inparm" valid_values="" value=".true." >
+       group="snicar_inparm" value=".true." >
 option to activate BC-snow internal mixing in SNICAR snow albedo calculation
+<default>Default: .true.</default>
 </entry>
 
 <entry id="snicar_snodst_intmix" type="logical" category="clm_physics"
-       group="snicar_inparm" valid_values="" value=".true." >
+       group="snicar_inparm" value=".true." >
 option to activate dust-snow internal mixing in SNICAR snow albedo calculation
+<default>Default: .true.</default>
 </entry>
 
-<entry id="DO_SNO_OC" type="logical" category="clm_physics"
-       group="snicar_inparm" valid_values="" value=".false." >
+<entry id="do_sno_oc" type="logical" category="clm_physics"
+       group="snicar_inparm" value=".false." >
 option to activate organic carbon (OC) in SNICAR snow albedo calculation
+<default>Default: .false.</default>
 </entry>
 
 <entry id="rooting_profile_method_water" type="integer" category="clm_physics"
@@ -1200,9 +1205,10 @@ DependsOnLatAndVeg - Arctic vegetation depends on latitude as above, but tempera
 </entry>
 
 <entry id="use_snicar_frc" type="logical" category="physics"
-       group="snicar_inparm" valid_values="" value=".false.">
+       group="snicar_inparm" value=".false.">
 Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) radiative forcing
 (snicar_frc=".true." is EXPERIMENTAL NOT SUPPORTED!)
+<default>Default: .false.</default>
 </entry>
 
 <entry id="use_noio" type="logical" category="default_settings"

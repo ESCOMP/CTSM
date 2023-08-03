@@ -113,7 +113,7 @@ module clm_varctl
   character(len=fname_len), public :: nrevsn     = ' '        ! restart data file name for branch run
   character(len=fname_len), public :: fsnowoptics  = ' '      ! snow optical properties file name
   character(len=fname_len), public :: fsnowaging   = ' '      ! snow aging parameters file name
-  character(len=fname_len), public :: fsnowoptics480  = ' '      ! snow optical properties file name for 480 bands, cenlin
+  character(len=fname_len), public :: fsnowoptics480  = ' '   ! snow optical properties file name for 480 bands
 
   character(len=fname_len), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
                                                               ! only needed for LILAC and MCT drivers
@@ -231,7 +231,7 @@ module clm_varctl
 
   real(r8), public  :: o3_ppbv = 100._r8
 
-  ! number of wavelength bands used in SNICAR snow albedo calculation, cenlin
+  ! number of wavelength bands used in SNICAR snow albedo calculation
   integer, public :: snicar_numrad_snw = 5 
 
   ! type of downward solar radiation spectrum for SNICAR snow albedo calculation
@@ -258,8 +258,8 @@ module clm_varctl
   ! option to activate dust-snow internal mixing in SNICAR (He et al. 2017 JC), ceniln
   logical, public :: snicar_snodst_intmix = .false.   ! false->external mixing for all dust; true->internal mixing for all dust
 
-  ! option to activate OC in snow in SNICAR, cenlin
-  logical, public :: DO_SNO_OC = .false.    ! control to include organic carbon (OC) in snow
+  ! option to activate OC in snow in SNICAR
+  logical, public :: do_sno_oc = .false.  ! control to include organic carbon (OC) in snow
 
   !----------------------------------------------------------
   ! C isotopes

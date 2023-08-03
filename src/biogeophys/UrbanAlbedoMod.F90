@@ -12,7 +12,7 @@ module UrbanAlbedoMod
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type, subgrid_level_landunit
   use clm_varpar        , only : numrad
-  use clm_varcon        , only : isecspday, degpsec, spval ! cenlin
+  use clm_varcon        , only : isecspday, degpsec, spval
   use clm_varctl        , only : iulog
   use abortutils        , only : endrun  
   use UrbanParamsType   , only : urbanparams_type
@@ -156,12 +156,12 @@ contains
          albgri             => surfalb_inst%albgri_col              , & ! Output: [real(r8) (:,:) ]  urban col ground albedo (diffuse)
          albd               => surfalb_inst%albd_patch              , & ! Output  [real(r8) (:,:) ]  urban pft surface albedo (direct)                         
          albi               => surfalb_inst%albi_patch              , & ! Output: [real(r8) (:,:) ]  urban pft surface albedo (diffuse)                        
-! cenlin: add albedo output for history files
+! add new snicar albedo output for history files
          albd_hst           => surfalb_inst%albd_hst_patch          , & ! Output:  [real(r8) (:,:) ]  surface albedo (direct) for history files
          albi_hst           => surfalb_inst%albi_hst_patch          , & ! Output:  [real(r8) (:,:) ]  surface albedo (diffuse) for history files
          albgrd_hst         => surfalb_inst%albgrd_hst_col          , & ! Output:  [real(r8) (:,:) ]  ground albedo (direct) for history files              
          albgri_hst         => surfalb_inst%albgri_hst_col          , & ! Output:  [real(r8) (:,:) ]  ground albedo (diffuse) for history files
-! cenlin: end       
+! end add new snicar
          begl               => bounds%begl                          , &
          vf_sr              => urbanparams_inst%vf_sr               , & ! Input:  [real(r8) (:) ]  view factor of sky for road
          vf_sw              => urbanparams_inst%vf_sw               , & ! Input:  [real(r8) (:) ]  view factor of sky for one wall
@@ -187,10 +187,10 @@ contains
             c = filter_urbanc(fc)
             albgrd(c,ib) = 0._r8
             albgri(c,ib) = 0._r8
-! cenlin: add output variables for history files
+! add new snicar output variables for history files
             albgrd_hst(c,ib) = spval
             albgri_hst(c,ib) = spval
-! cenlin: end
+! end add new snicar
          end do
 
          do fp = 1,num_urbanp  
@@ -212,10 +212,10 @@ contains
                albd(p,ib) = 1._r8
                albi(p,ib) = 1._r8
             endif
-! cenlin: add output variables for history files
+! add new snicar output variables for history files
             albd_hst(p,ib) = spval
             albi_hst(p,ib) = spval
-! cenlin: end
+! end add new snicar
             fabd(p,ib)     = 0._r8
             fabd_sun(p,ib) = 0._r8
             fabd_sha(p,ib) = 0._r8
@@ -431,12 +431,12 @@ contains
                   albgrd(c,ib) = sref_improad_dir(l,ib)
                   albgri(c,ib) = sref_improad_dif(l,ib)
                endif
-! cenlin: add albedo variables for history fields
+! add new snicar albedo variables for history fields
                if (coszen(l) > 0._r8) then
                   albgrd_hst(c,ib) = albgrd(c,ib)
                   albgri_hst(c,ib) = albgri(c,ib)
                end if
-! cenlin: end
+! end add new snicar
             end do
             do fp = 1,num_urbanp
                p = filter_urbanp(fp)
@@ -444,12 +444,12 @@ contains
                l = patch%landunit(p)
                albd(p,ib) = albgrd(c,ib)
                albi(p,ib) = albgri(c,ib)
-! cenlin: add albedo variables for history fields
+! add new snicar albedo variables for history fields
                if (coszen(l) > 0._r8) then
                   albd_hst(p,ib) = albd(p,ib)
                   albi_hst(p,ib) = albi(p,ib)
                end if
-! cenlin: end
+! end add new snicar
             end do
          end do
       end if

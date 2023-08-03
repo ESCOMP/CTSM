@@ -15,7 +15,7 @@ module AerosolMod
   use WaterDiagnosticBulkType   , only : waterdiagnosticbulk_type
   use ColumnType       , only : col               
   use abortutils       , only : endrun
-  use CLM_varctl       , only : snicar_use_aerosol  ! cenlin
+  use CLM_varctl       , only : snicar_use_aerosol
   !
   ! !PUBLIC TYPES:
   implicit none
