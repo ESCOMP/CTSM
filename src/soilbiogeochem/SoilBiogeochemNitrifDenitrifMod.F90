@@ -372,7 +372,7 @@ contains
             ! limit to anoxic fraction of soils
             pot_f_denit_vr(c,j) = f_denit_base_vr(c,j) * anaerobic_frac(c,j)
 
-            ! now calculate the ratio of N2O to N2 from denitrifictaion, following Del Grosso et al., 2000
+            ! now calculate the ratio of N2O to N2 from denitrification, following Del Grosso et al., 2000
             ! diffusivity constant (figure 6b)
             ratio_k1(c,j) = max(1.7_r8, 38.4_r8 - 350._r8 * diffus(c,j))
 
