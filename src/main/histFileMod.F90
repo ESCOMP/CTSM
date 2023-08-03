@@ -350,7 +350,7 @@ contains
     ! Print summary of master field list.
     !
     ! !USES:
-    use clm_varctl, only: hist_master_list_file
+    use clm_varctl, only: hist_fields_list_file
     use fileutils, only: getavu, relavu
     !
     ! !ARGUMENTS:
@@ -358,13 +358,13 @@ contains
     ! !LOCAL VARIABLES:
     integer, parameter :: ncol = 5  ! number of table columns
     integer nf, i, j  ! do-loop counters
-    integer master_list_file  ! file unit number
+    integer hist_fields_file  ! file unit number
     integer width_col(ncol)  ! widths of table columns
     integer width_col_sum  ! widths of columns summed, including spaces
     character(len=3) str_width_col(ncol)  ! string version of width_col
     character(len=3) str_w_col_sum  ! string version of width_col_sum
     character(len=7) file_identifier  ! fates identifier used in file_name
-    character(len=23) file_name  ! master_list_file.rst with or without fates
+    character(len=23) file_name  ! hist_fields_file.rst with or without fates
     character(len=99) fmt_txt  ! format statement
     character(len=*),parameter :: subname = 'CLM_hist_printflds'
     !-----------------------------------------------------------------------
@@ -387,7 +387,7 @@ contains
     ! First sort the list to be in alphabetical order
     call sort_hist_list(1, nfmaster, masterlist)
 
-    if (masterproc .and. hist_master_list_file) then
+    if (masterproc .and. hist_fields_list_file) then
        ! Hardwired table column widths to fit the table on a computer
        ! screen. Some strings will be truncated as a result of the
        ! current choices (4, 35, 94, 65, 7). In sphinx (ie the web-based
@@ -407,67 +407,67 @@ contains
        end do
        write(str_w_col_sum,'(i0)') width_col_sum
 
-       ! Open master_list_file
-       master_list_file = getavu()  ! get next available file unit number
+       ! Open hist_fields_file
+       hist_fields_file = getavu()  ! get next available file unit number
        if (use_fates) then
           file_identifier = 'fates'
        else
           file_identifier = 'nofates'
        end if
-       file_name = 'master_list_' // trim(file_identifier) // '.rst'
-       open(unit = master_list_file, file = file_name,  &
+       file_name = 'history_fields_' // trim(file_identifier) // '.rst'
+       open(unit = hist_fields_file, file = file_name,  &
             status = 'replace', action = 'write', form = 'formatted')
 
        ! File title
        fmt_txt = '(a)'
-       write(master_list_file,fmt_txt) '============================='
-       write(master_list_file,fmt_txt) 'CTSM History Fields (' // trim(file_identifier) // ')'
-       write(master_list_file,fmt_txt) '============================='
-       write(master_list_file,*)
+       write(hist_fields_file,fmt_txt) '============================='
+       write(hist_fields_file,fmt_txt) 'CTSM History Fields (' // trim(file_identifier) // ')'
+       write(hist_fields_file,fmt_txt) '============================='
+       write(hist_fields_file,*)
 
        ! A warning message and flags from the current CTSM case
-       write(master_list_file,fmt_txt) 'CAUTION: Not all variables are relevant / present for all CTSM cases.'
-       write(master_list_file,fmt_txt) 'Key flags used in this CTSM case:'
+       write(hist_fields_file,fmt_txt) 'CAUTION: Not all variables are relevant / present for all CTSM cases.'
+       write(hist_fields_file,fmt_txt) 'Key flags used in this CTSM case:'
        fmt_txt = '(a,l)'
-       write(master_list_file,fmt_txt) 'use_cn = ', use_cn
-       write(master_list_file,fmt_txt) 'use_crop = ', use_crop
-       write(master_list_file,fmt_txt) 'use_fates = ', use_fates
-       write(master_list_file,*)
+       write(hist_fields_file,fmt_txt) 'use_cn = ', use_cn
+       write(hist_fields_file,fmt_txt) 'use_crop = ', use_crop
+       write(hist_fields_file,fmt_txt) 'use_fates = ', use_fates
+       write(hist_fields_file,*)
 
        ! Table header
        ! Concatenate strings needed in format statement
        do i = 1, ncol
           fmt_txt = '('//str_width_col(i)//'a,x)'
-          write(master_list_file,fmt_txt,advance='no') ('=', j=1,width_col(i))
+          write(hist_fields_file,fmt_txt,advance='no') ('=', j=1,width_col(i))
        end do
-       write(master_list_file,*)  ! next write statement will now appear in new line
+       write(hist_fields_file,*)  ! next write statement will now appear in new line
 
        ! Table title
        fmt_txt = '(a)'
-       write(master_list_file,fmt_txt) 'CTSM History Fields'
+       write(hist_fields_file,fmt_txt) 'CTSM History Fields'
 
        ! Sub-header
        ! Concatenate strings needed in format statement
        fmt_txt = '('//str_w_col_sum//'a)'
-       write(master_list_file,fmt_txt) ('-', i=1, width_col_sum)
+       write(hist_fields_file,fmt_txt) ('-', i=1, width_col_sum)
        ! Concatenate strings needed in format statement
        fmt_txt = '(a'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//',x,a'//str_width_col(5)//')'
-       write(master_list_file,fmt_txt) '#', 'Variable Name',  &
+       write(hist_fields_file,fmt_txt) '#', 'Variable Name',  &
                                     'Long Description', 'Units', 'Active?'
 
        ! End header, same as header
        ! Concatenate strings needed in format statement
        do i = 1, ncol
           fmt_txt = '('//str_width_col(i)//'a,x)'
-          write(master_list_file,fmt_txt,advance='no') ('=', j=1,width_col(i))
+          write(hist_fields_file,fmt_txt,advance='no') ('=', j=1,width_col(i))
        end do
-       write(master_list_file,*)  ! next write statement will now appear in new line
+       write(hist_fields_file,*)  ! next write statement will now appear in new line
 
        ! Main table
        ! Concatenate strings needed in format statement
        fmt_txt = '(i'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//',l'//str_width_col(5)//')'
        do nf = 1,nfmaster
-          write(master_list_file,fmt_txt) nf,  &
+          write(hist_fields_file,fmt_txt) nf,  &
              masterlist(nf)%field%name,  &
              masterlist(nf)%field%long_name,  &
              masterlist(nf)%field%units,  &
@@ -478,12 +478,12 @@ contains
        ! Concatenate strings needed in format statement
        do i = 1, ncol
           fmt_txt = '('//str_width_col(i)//'a,x)'
-          write(master_list_file,fmt_txt,advance='no') ('=', j=1,width_col(i))
+          write(hist_fields_file,fmt_txt,advance='no') ('=', j=1,width_col(i))
        end do
 
-       call shr_sys_flush(master_list_file)
-       close(unit = master_list_file)
-       call relavu(master_list_file)  ! close and release file unit number
+       call shr_sys_flush(hist_fields_file)
+       close(unit = hist_fields_file)
+       call relavu(hist_fields_file)  ! close and release file unit number
     end if
 
   end subroutine hist_printflds

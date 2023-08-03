@@ -764,7 +764,7 @@ SNICAR (SNow, ICe, and Aerosol Radiative model) optical data file name
 SNICAR (SNow, ICe, and Aerosol Radiative model) snow aging data file name
 </entry>
 
-<entry id="hist_master_list_file" type="logical" category="history"
+<entry id="hist_fields_list_file" type="logical" category="history"
        group="clm_inparm" valid_values="" value=".false.">
 If TRUE, write master field list to separate file for documentation purposes
 </entry>
