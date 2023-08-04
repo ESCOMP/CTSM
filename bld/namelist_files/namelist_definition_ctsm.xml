@@ -181,15 +181,15 @@ Toggle to turn on/off aerosol deposition flux in snow in SNICAR
 </entry>
 
 <entry id="snicar_snobc_intmix" type="logical" category="clm_physics"
-       group="snicar_inparm" value=".true." >
+       group="snicar_inparm" value=".false." >
 option to activate BC-snow internal mixing in SNICAR snow albedo calculation
-<default>Default: .true.</default>
+<default>Default: .false.</default>
 </entry>
 
 <entry id="snicar_snodst_intmix" type="logical" category="clm_physics"
-       group="snicar_inparm" value=".true." >
+       group="snicar_inparm" value=".false." >
 option to activate dust-snow internal mixing in SNICAR snow albedo calculation
-<default>Default: .true.</default>
+<default>Default: .false.</default>
 </entry>
 
 <entry id="do_sno_oc" type="logical" category="clm_physics"
@@ -1205,10 +1205,9 @@ DependsOnLatAndVeg - Arctic vegetation depends on latitude as above, but tempera
 </entry>
 
 <entry id="use_snicar_frc" type="logical" category="physics"
-       group="snicar_inparm" value=".false.">
+       group="snicar_inparm" value=".true.">
 Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) radiative forcing
-(snicar_frc=".true." is EXPERIMENTAL NOT SUPPORTED!)
-<default>Default: .false.</default>
+<default>Default: .true.</default>
 </entry>
 
 <entry id="use_noio" type="logical" category="default_settings"

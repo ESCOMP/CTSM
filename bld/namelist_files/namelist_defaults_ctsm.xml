@@ -1541,11 +1541,25 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 
 <!-- SNICAR (SNow, ICe, and Aerosol Radiative model) datasets -->
 <!--  ***********  Resolution independent:   ***********  -->
-<fsnowoptics >lnd/clm2/snicardata/snicar_optics_5bnd_c090915.nc</fsnowoptics>
-<fsnowaging  >lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc</fsnowaging>
-<snicar_snw_shape>hexagonal_plate</snicar_snw_shape>
-<snicar_solarspec>mid_latitude_summer</snicar_solarspec>
-<snicar_dust_optics>sahara</snicar_dust_optics>
+<fsnowoptics480>lnd/clm2/snicardata/snicar_optics_480bnd_c012422.nc</fsnowoptics480>
+<fsnowoptics   >lnd/clm2/snicardata/snicar_optics_5bnd_c013122.nc</fsnowoptics>
+<fsnowaging    >lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc</fsnowaging>
+
+<snicar_snw_shape phys="clm5_1">hexagonal_plate</snicar_snw_shape>
+<snicar_snw_shape phys="clm5_0">sphere</snicar_snw_shape>
+<snicar_snw_shape phys="clm4_5">sphere</snicar_snw_shape>
+
+<use_snicar_frc phys="clm5_1">.true.</use_snicar_frc>
+<use_snicar_frc phys="clm5_0">.false.</use_snicar_frc>
+<use_snicar_frc phys="clm4_5">.false.</use_snicar_frc>
+
+<snicar_solarspec    >mid_latitude_winter</snicar_solarspec>
+<snicar_dust_optics  >sahara</snicar_dust_optics>
+<snicar_numrad_snw   >5</snicar_numrad_snw>
+<snicar_snodst_intmix>.false.</snicar_snodst_intmix>
+<snicar_snobc_intmix >.false.</snicar_snobc_intmix>
+<snicar_use_aerosol  >.true.</snicar_use_aerosol>
+<do_sno_oc           >.false.</do_sno_oc>
 
 <!-- Nitrogen deposition streams namelist defaults -->
 <stream_year_first_ndep phys="clm4_5"  use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_ndep>
