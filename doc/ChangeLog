@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev132
 Originator(s): mvdebolskiy (NORCE, Bergen, Norway), slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Thu Aug  3 17:03:44 MDT 2023
+Date: Fri Aug  4 17:52:45 MDT 2023
 One-line Summary: Add parameterization to allow excess ice in soil and subsidence
 
 Purpose and description of changes
@@ -52,11 +52,17 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed or introduced
 ------------------------
 CTSM issues fixed (include CTSM Issue #):
-#1229
+ Fixes #1229 -- excess ice
 
 
 Notes of particular relevance for users
 ---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+    Excess ice can EITHER be turned on by using the stream file, OR a restart file that has excess ice on it.
+    Since, excess ice is expected to melt as time goes on, the use of a restart file is preferred.
+    But, use of a restart file requires a simulation that was spun up to that point.
+
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
  New namelist options added:
  - use_excess_ice (logical, in clm_inparm) default = .false.; turns on excess ice physics
