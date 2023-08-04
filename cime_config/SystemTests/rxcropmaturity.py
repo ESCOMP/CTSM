@@ -277,7 +277,7 @@ class RXCROPMATURITY(SystemTestsCommon):
             command = (
                 f"python3 {tool_path} {cfg_path} "
                 + f"-i {self._fsurdat_in} "
-                + f"-o {self._path_gddgen}"
+                + f"-o {self._fsurdat_out}"
             )
             stu.run_python_script(
                 self._get_caseroot(),
