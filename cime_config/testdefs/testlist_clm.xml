@@ -2533,7 +2533,7 @@
     </machines>
   </test>
 
-  <test name="RXCROPMATURITY_Lm61" grid="f09_g17" compset="IHistClm50BgcCrop">
+  <test name="RXCROPMATURITY_Lm61" grid="f09_g17" compset="IHistClm50BgcCrop"  testmods="clm/cropMonthOutput">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci">
         <options>
