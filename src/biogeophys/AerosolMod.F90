@@ -810,7 +810,6 @@ contains
       ! if turn off aerosol effect in snow, zero out deposition flux
       if (.not. snicar_use_aerosol) then
          do c = bounds%begc,bounds%endc
-            g = col%gridcell(c)
 
             flx_bc_dep_dry(c)   = 0._r8
             flx_bc_dep_wet(c)   = 0._r8
