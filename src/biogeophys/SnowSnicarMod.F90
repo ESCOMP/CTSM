@@ -536,8 +536,12 @@ contains
          )
 
       ! initialize parameter
-      if (snicar_numrad_snw == 5)   nir_bnd_bgn = 2
-      if (snicar_numrad_snw == 480) nir_bnd_bgn = 51
+      select case (snicar_numrad_snw)
+      case (5)
+         nir_bnd_bgn = 2
+      case (480)
+         nir_bnd_bgn = 51
+      end select
       nir_bnd_end    = snicar_numrad_snw 
 
       ! initialize for adding-doubling solver
@@ -733,45 +737,14 @@ contains
             !
             ! The following weights are appropriate for surface-incident flux in a mid-latitude winter atmosphere
             !
-            ! 3-band weights
-            if (snicar_numrad_snw==3) then
-               ! Direct:
-               if (flg_slr_in == 1) then
-                  flx_wgt(1) = 1._r8
-                  flx_wgt(2) = 0.66628670195247_r8
-                  flx_wgt(3) = 0.33371329804753_r8
-               ! Diffuse:
-               elseif (flg_slr_in == 2) then
-                  flx_wgt(1) = 1._r8
-                  flx_wgt(2) = 0.77887652162877_r8
-                  flx_wgt(3) = 0.22112347837123_r8
-               endif
-            ! 5-band weights
-            !elseif (snicar_numrad_snw==5) then
-            !   ! Direct:
-            !   if (flg_slr_in == 1) then
-            !      flx_wgt(1) = 1._r8
-            !      flx_wgt(2) = 0.49352158521175_r8
-            !      flx_wgt(3) = 0.18099494230665_r8
-            !      flx_wgt(4) = 0.12094898498813_r8
-            !      flx_wgt(5) = 0.20453448749347_r8
-            !   ! Diffuse:
-            !   elseif (flg_slr_in == 2) then
-            !      flx_wgt(1) = 1._r8
-            !      flx_wgt(2) = 0.58581507618433_r8
-            !      flx_wgt(3) = 0.20156903770812_r8
-            !      flx_wgt(4) = 0.10917889346386_r8
-            !      flx_wgt(5) = 0.10343699264369_r8
-            !   endif
-            else  ! works for both 5-band & 480-band, flux weights directly read from input data
-               ! Direct:
-               if (flg_slr_in == 1) then
-                  flx_wgt(1:snicar_numrad_snw) = flx_wgt_dir(1:snicar_numrad_snw)  ! VIS or NIR band sum is already normalized to 1.0 in input data
-               ! Diffuse:
-               elseif (flg_slr_in == 2) then
-                  flx_wgt(1:snicar_numrad_snw) = flx_wgt_dif(1:snicar_numrad_snw)  ! VIS or NIR band sum is already normalized to 1.0 in input data
-               endif
-            endif ! end if snicar_numrad_snw
+!           ! works for both 5-band & 480-band, flux weights directly read from input data
+            ! Direct:
+            if (flg_slr_in == 1) then
+               flx_wgt(1:snicar_numrad_snw) = flx_wgt_dir(1:snicar_numrad_snw)  ! VIS or NIR band sum is already normalized to 1.0 in input data
+            ! Diffuse:
+            elseif (flg_slr_in == 2) then
+               flx_wgt(1:snicar_numrad_snw) = flx_wgt_dif(1:snicar_numrad_snw)  ! VIS or NIR band sum is already normalized to 1.0 in input data
+            endif
 
             exp_min = exp(-argmax)
 
@@ -802,10 +775,6 @@ contains
                   ! Pre-emptive error handling: aerosols can reap havoc on these absorptive bands.
                   ! Since extremely high soot concentrations have a negligible effect on these bands, zero them.
                   if ( (snicar_numrad_snw == 5).and.((bnd_idx == 5).or.(bnd_idx == 4)) ) then
-                     mss_cnc_aer_lcl(:,:) = 0._r8
-                  endif
-
-                  if ( (snicar_numrad_snw == 3).and.(bnd_idx == 3) ) then
                      mss_cnc_aer_lcl(:,:) = 0._r8
                   endif
 
@@ -901,14 +870,14 @@ contains
                         ! 7 wavelength bands for g_ice to be interpolated into targeted SNICAR bands here
                         ! use the piecewise linear interpolation subroutine created at the end of this module
                         ! tests showed the piecewise linear interpolation has similar results as pchip interpolation
-                        if (snicar_numrad_snw == 5) then
+                        select case (snicar_numrad_snw)
+                        case (5)
                            call piecewise_linear_interp1d(7,g_wvl_ct,g_ice_Cg_tmp,wvl_ct5(bnd_idx),g_Cg_intp)
                            call piecewise_linear_interp1d(7,g_wvl_ct,gg_ice_F07_tmp,wvl_ct5(bnd_idx),gg_F07_intp)
-                        endif
-                        if (snicar_numrad_snw == 480) then
+                        case (480)
                            call piecewise_linear_interp1d(7,g_wvl_ct,g_ice_Cg_tmp,wvl_ct480(bnd_idx),g_Cg_intp)
                            call piecewise_linear_interp1d(7,g_wvl_ct,gg_ice_F07_tmp,wvl_ct480(bnd_idx),gg_F07_intp)
-                        endif
+                        end select
                         g_ice_F07 = gg_F07_intp + (1._r8 - gg_F07_intp) / ss_alb_snw_lcl(i) / 2._r8  ! Eq.2.2 in Fu (2007)
                         asm_prm_snw_lcl(i) = g_ice_F07 * g_Cg_intp     ! Eq.6, He et al. (2017)
                      endif
@@ -989,8 +958,12 @@ contains
                      ext_cff_mss_aer_lcl(8) = ext_cff_mss_dst4(bnd_idx)
 
                      ! Start BC/dust-snow internal mixing for wavelength<=1.2um
-                     if (snicar_numrad_snw == 5)   wvl_doint = wvl_ct5(bnd_idx)
-                     if (snicar_numrad_snw == 480) wvl_doint = wvl_ct480(bnd_idx)
+                     select case (snicar_numrad_snw)
+                     case (5)
+                        wvl_doint = wvl_ct5(bnd_idx)
+                     case (480)
+                        wvl_doint = wvl_ct480(bnd_idx)
+                     end select
                      if (wvl_doint <= 1.2_r8) then
  
                         ! BC-snow internal mixing applied to hydrophilic BC if activated
@@ -1443,18 +1416,15 @@ contains
 
 
             ! Weight output NIR albedo appropriately
-            ! for 5- and 3-band cases
-            if (snicar_numrad_snw <= 5) then
+            select case (snicar_numrad_snw)
+            case (5)  ! 5-band case
               albout(c_idx,1) = albout_lcl(1)
               flx_sum         = 0._r8
               do bnd_idx= nir_bnd_bgn,nir_bnd_end
                  flx_sum = flx_sum + flx_wgt(bnd_idx)*albout_lcl(bnd_idx)
               end do
               albout(c_idx,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
-            end if
-
-            ! for 480-band case
-            if (snicar_numrad_snw == 480) then
+            case (480)  ! 480-band case
               ! average for VIS band
               flx_sum         = 0._r8
               do bnd_idx= 1, (nir_bnd_bgn-1)
@@ -1467,11 +1437,11 @@ contains
                  flx_sum = flx_sum + flx_wgt(bnd_idx)*albout_lcl(bnd_idx)
               end do
               albout(c_idx,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
-            end if
+            end select
 
             ! Weight output NIR absorbed layer fluxes (flx_abs) appropriately
-            ! for 5- and 3-band cases
-            if (snicar_numrad_snw <= 5) then 
+            select case (snicar_numrad_snw)
+            case (5)  ! 5-band case
               flx_abs(c_idx,:,1) = flx_abs_lcl(:,1)
               do i=snl_top,1,1
                  flx_sum = 0._r8
@@ -1480,10 +1450,7 @@ contains
                  enddo
                  flx_abs(c_idx,i,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))          
               end do
-            end if
-
-            ! for 480-band case
-            if (snicar_numrad_snw == 480) then
+            case (480)  ! 480-band case
               do i=snl_top,1,1
                  ! average for VIS band
                  flx_sum = 0._r8
@@ -1498,7 +1465,7 @@ contains
                  enddo
                  flx_abs(c_idx,i,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
               end do
-            end if
+            end select
 
             ! high solar zenith angle adjustment for Adding-doubling solver results
             ! near-IR direct albedo/absorption adjustment for high solar zenith angles
@@ -1926,7 +1893,8 @@ contains
      if(masterproc) write(iulog,*) 'Attempting to read snow optical properties .....'
 
      !--------------------- for 5-band data
-     if (snicar_numrad_snw == 5) then
+     select case (snicar_numrad_snw)
+     case (5)  ! 5-band case
 
         call getfil (fsnowoptics, locfn, 0)
         call ncd_pio_openfile(ncid, locfn, 0)
@@ -2428,11 +2396,8 @@ contains
            end select
         end select
 
-     end if  ! end if snicar_numrad_snw == 5
-
-
      !-------------------- for 480-band data
-     if (snicar_numrad_snw == 480) then
+     case (480)
 
         call getfil (fsnowoptics480, locfn, 0)
         call ncd_pio_openfile(ncid, locfn, 0)
@@ -2541,7 +2506,7 @@ contains
           call ncd_io( 'flx_wgt_dif480_hmn', flx_wgt_dif,     'read', ncid, posNOTonfile=.true.)
        end select
 
-     endif ! end if snicar_numrad_snw == 480
+     end select
 
      call ncd_pio_closefile(ncid)
      if (masterproc) then
