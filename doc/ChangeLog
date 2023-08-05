@@ -1,4 +1,123 @@
 ===============================================================
+Tag name: ctsm5.1.dev132
+Originator(s): mvdebolskiy (NORCE, Bergen, Norway), slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri Aug  4 17:52:45 MDT 2023
+One-line Summary: Add parameterization to allow excess ice in soil and subsidence
+
+Purpose and description of changes
+----------------------------------
+
+As described in PR #1787:
+
+Parameterization for excess ice described in Lee et al. (2014):
+http://dx.doi.org/10.1088/1748-9326/9/12/124006
+
+This code is a modified version of code provided by Lei Cai:
+https://github.com/lca041/ctsm/tree/clm5.0.dev92_exice
+
+Works only for the nuopc driver.
+
+Files changed:
+bld/CLMBuildNamelist.pm, bld/namelist_files/namelist_defaults_ctsm.xml, bld/namelist_files/namelist_definitionss_ctsm.xml -- added namelist options;
+src/main/clm_varctl.F90, src/main/controlMod.F90 -- added option to switch excess ice physics and read namelist option;
+src/biogeophys/WaterStateType.F90 -- added prognostic excess ice variable and a history field;
+src/biogeophys/WaterStateBulkType.F90, src/main/clm_instMod.F90, -- added arguments to soubrutiens for proper initialization;
+src/biogeophys/TemperatureType.F90 -- initial soil temperature set to 268.15 K at the cold start (possibly redundant because #1460 is closed)
+src/biogeophys/WaterDiagnosticBulkType.F90 -- added two diagnostic excess ice variables and two history fields;
+src/biogeophys/SoilTemperatureMod.F90 -- added main excess ice calculations;
+src/biogeophys/TotalWaterAndHeatMod.F90 -- added excess ice to total water for balance checks;
+src/biogeophys/SoilHydrologyMod.F90 -- added excess ice for ice fraction calculation;
+
+New files:
+src/cpl/share_esmf/ExcessIceStreamType.F90 -- routines to read dataset with initial excess ice concentration
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+ Fixes #1229 -- excess ice
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+    Excess ice can EITHER be turned on by using the stream file, OR a restart file that has excess ice on it.
+    Since, excess ice is expected to melt as time goes on, the use of a restart file is preferred.
+    But, use of a restart file requires a simulation that was spun up to that point.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New namelist options added:
+ - use_excess_ice (logical, in clm_inparm) default = .false.; turns on excess ice physics
+ - stream_meshfile_exice, stream_fldfilename_exice, stream_mapalgo_exice (char, in exice_streams)
+   meshfile, stream file, spatial interpolation algorithm for initial values of excess ice
+   defaults - lnd/clm2/paramdata/exice_init_0.125x0.125_ESMFmesh_c20220516.nc,
+              lnd/clm2/paramdata/exice_init_0.125x0.125_c20220516.nc
+              and bilinear
+ Dataset interpolated to 0.125x0.125 degrees grid from Brown et al. (1997) can be found here:
+ https://drive.google.com/file/d/1mA457Oa52zG_MtLGB7KHuUYQvsS2-P5o/view?usp=sharing
+ Dataset used only in cold start or hybrid runs (or starting with finidat) that do not have excess ice
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ New tests in place for this new code
+
+Testing summary:
+----------------
+[Remove any lines that don't apply.]
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne -
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1787
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev131
 Originator(s): samrabin (Sam Rabin,UCAR/TSS)
 Date: Thu Jul 27 14:24:07 MDT 2023
