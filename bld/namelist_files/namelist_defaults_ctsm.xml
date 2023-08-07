@@ -1549,10 +1549,7 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <snicar_snw_shape phys="clm5_0">sphere</snicar_snw_shape>
 <snicar_snw_shape phys="clm4_5">sphere</snicar_snw_shape>
 
-<use_snicar_frc phys="clm5_1">.true.</use_snicar_frc>
-<use_snicar_frc phys="clm5_0">.false.</use_snicar_frc>
-<use_snicar_frc phys="clm4_5">.false.</use_snicar_frc>
-
+<snicar_aerforc_diag >.false.</snicar_aerforc_diag>
 <snicar_solarspec    >mid_latitude_winter</snicar_solarspec>
 <snicar_dust_optics  >sahara</snicar_dust_optics>
 <snicar_numrad_snw   >5</snicar_numrad_snw>

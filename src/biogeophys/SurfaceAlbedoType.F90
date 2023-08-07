@@ -7,7 +7,7 @@ module SurfaceAlbedoType
   use decompMod      , only : bounds_type
   use clm_varpar     , only : numrad, nlevcan, nlevsno
   use abortutils     , only : endrun
-  use clm_varctl     , only : use_SSRE, use_snicar_frc
+  use clm_varctl     , only : use_SSRE, snicar_aerforc_diag
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -255,7 +255,7 @@ contains
          ptr_patch=this%albi_patch, default=defaultoutput, c2l_scale_type='urbanf')
 
 ! add new snicar output variables for albedo for history files only
-    if (use_snicar_frc) then
+    if (snicar_aerforc_diag) then
 
        this%albd_hst_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='ALBD_HIST', units='proportion', type2d='numrad', &
@@ -327,7 +327,7 @@ contains
             avgflag='A', long_name='snow albedo (diffuse)', &
             ptr_col=this%albsni_hst2_col, default='inactive')
 
-    end if ! end of use_snicar_frc
+    end if ! end of snicar_aerforc_diag
 ! end add new snicar
 
   end subroutine InitHistory
@@ -390,7 +390,7 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use clm_varctl , only : use_snicar_frc, iulog 
+    use clm_varctl , only : snicar_aerforc_diag, iulog 
     use spmdMod    , only : masterproc
     use decompMod  , only : bounds_type
     use abortutils , only : endrun
@@ -562,7 +562,7 @@ contains
        this%vcmaxcintsha_patch(begp:endp) = 1._r8
     end if
 
-    if (use_snicar_frc) then
+    if (snicar_aerforc_diag) then
 
        call restartvar(ncid=ncid, flag=flag, varname='albgrd_bc', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
@@ -652,10 +652,10 @@ contains
           this%albgri_dst_col(begc:endc,:) = this%albgri_col(begc:endc,:)
        end if
 
-    end if  ! end of if-use_snicar_frc 
+    end if  ! end of if-snicar_aerforc_diag 
 
 ! add new snicar output variables for albedo for history files only
-    if (use_snicar_frc) then
+    if (snicar_aerforc_diag) then
 
        call restartvar(ncid=ncid, flag=flag, varname='albd_hist', xtype=ncd_double,  &
             dim1name='pft', dim2name='numrad', switchdim=.true., &
@@ -741,7 +741,7 @@ contains
             scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=this%albgri_dst_hst_col)
 
-    end if  ! end of if-use_snicar_frc 
+    end if  ! end of if-snicar_aerforc_diag 
 ! end add new snicar
 
     ! patch type physical state variable - fabd

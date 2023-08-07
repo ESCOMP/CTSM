@@ -440,7 +440,7 @@ module clm_varctl
   logical, public :: use_cndv            = .false.
   logical, public :: use_grainproduct    = .false.
   logical, public :: use_fertilizer      = .false.
-  logical, public :: use_snicar_frc      = .false.
+  logical, public :: snicar_aerforc_diag = .false.
   logical, public :: use_vancouver       = .false.
   logical, public :: use_mexicocity      = .false.
   logical, public :: use_noio            = .false.
