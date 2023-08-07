@@ -303,6 +303,14 @@ module clm_varctl
   logical, public :: use_lai_streams = .false. ! true => use lai streams in SatellitePhenologyMod.F90
 
   !----------------------------------------------------------
+  ! crop calendar streams switch for CropPhenology
+  !----------------------------------------------------------
+
+  logical, public :: use_cropcal_streams = .false.
+  logical, public :: use_cropcal_rx_sdates = .false.
+  logical, public :: use_cropcal_rx_cultivar_gdds = .false.
+
+  !----------------------------------------------------------
   ! biomass heat storage switch
   !----------------------------------------------------------
 
@@ -316,6 +324,11 @@ module clm_varctl
   character(len=16), public :: soil_layerstruct_predefined = 'UNSET'
   real(r8), public :: soil_layerstruct_userdefined(99) = rundef
   integer, public :: soil_layerstruct_userdefined_nlevsoi = iundef
+
+  !----------------------------------------------------------
+  !excess ice physics switch
+  !----------------------------------------------------------
+  logical, public :: use_excess_ice = .false. ! true. => use excess ice physics
 
   !----------------------------------------------------------
   ! plant hydraulic stress switch
