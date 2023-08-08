@@ -66,10 +66,8 @@ module SnowSnicarMod
 
   real(r8), parameter :: min_snw = 1.0E-30_r8            ! minimum snow mass required for SNICAR RT calculation [kg m-2]
 
-  !real(r8), parameter :: C1_liq_Brun89 = 1.28E-17_r8    ! constant for liquid water grain growth [m3 s-1],
-                                                         ! from Brun89
   real(r8), parameter :: C1_liq_Brun89 = 0._r8           ! constant for liquid water grain growth [m3 s-1],
-                                                         ! from Brun89: zeroed to accomodate dry snow aging
+                                                         ! from Brun89: zeroed to accomodate dry snow aging, was 1.28E-17_r8
 
   real(r8), parameter :: tim_cns_bc_rmv  = 2.2E-8_r8     ! time constant for removal of BC in snow on sea-ice
                                                          ! [s-1] (50% mass removal/year)
@@ -406,11 +404,11 @@ contains
     real(r8):: smr                                ! accumulator for rdif gaussian integration
     real(r8):: smt                                ! accumulator for tdif gaussian integration
     real(r8):: exp_min                            ! minimum exponential value
-    real(r8):: difgauspt(1:8)                     ! Gaussian integration angle
-    real(r8):: difgauswt(1:8)                     ! Gaussian integration coefficients/weights
+    real(r8), allocatable :: difgauspt(:)         ! Gaussian integration angle
+    real(r8), allocatable :: difgauswt(:)         ! Gaussian integration coefficients/weights
     integer :: ng                                 ! gaussian integration index
+    integer :: ngmax = 8                          ! max gaussian integration index
     integer :: snl_btm_itf                        ! index of bottom snow layer interfaces (1) [idx]
-    integer :: ngmax = 8                          ! maxmimum gaussian integration index
     ! constants used in algorithm
     real(r8):: c0     = 0.0_r8
     real(r8):: c1     = 1.0_r8
@@ -545,12 +543,14 @@ contains
       nir_bnd_end    = snicar_numrad_snw 
 
       ! initialize for adding-doubling solver
-      difgauspt(1:8) = & ! gaussian angles (radians)
+      allocate(difgauspt(ngmax))
+      allocate(difgauswt(ngmax))
+      difgauspt(:) = &  ! gaussian angles (radians)
                       (/ 0.9894009_r8,  0.9445750_r8, &
                          0.8656312_r8,  0.7554044_r8, &
                          0.6178762_r8,  0.4580168_r8, &
                          0.2816036_r8,  0.0950125_r8/)
-      difgauswt(1:8) = & ! gaussian weights
+      difgauswt(:) = &  ! gaussian weights
                       (/ 0.0271525_r8,  0.0622535_r8, &
                          0.0951585_r8,  0.1246290_r8, &
                          0.1495960_r8,  0.1691565_r8, &
@@ -1380,7 +1380,7 @@ contains
 
                albout_lcl(bnd_idx) = albedo
 
-               ! Check that albedo is less than 1
+               ! Fail if albedo > 1
                if (albout_lcl(bnd_idx) > 1.0) then
 
                   write (iulog,*) "SNICAR ERROR: Albedo > 1.0 at c: ", c_idx, " NSTEP= ",nstep
