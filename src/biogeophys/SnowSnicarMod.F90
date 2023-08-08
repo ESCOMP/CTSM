@@ -492,6 +492,8 @@ contains
     real(r8) :: Re_bc = 0.045                     ! target BC effective radius (um) used in BC MAC adjustment
     real(r8) :: bcint_m(1:3)                      ! Parameterization coefficients for BC size adjustment in BC-snow int mix
     real(r8) :: bcint_n(1:3)                      ! Parameterization coefficients for BC size adjustment in BC-snow int mix
+    real(r8) :: bcint_m_tmp                       ! temporary of bcint_m
+    real(r8) :: bcint_n_tmp                       ! temporary of bcint_n
     real(r8) :: bcint_dd                          ! intermediate parameter
     real(r8) :: bcint_dd2                         ! intermediate parameter
     real(r8) :: bcint_f                           ! intermediate parameter
@@ -608,7 +610,7 @@ contains
       ! initialize for dust-snow internal mixing
       ! Eq. 1 and Table 1 in He et al. 2019 JAMES (wavelength>1.2um, no dust-snow int mixing effect)
       dstint_wvl(1:7) = (/ 0.2_r8, 0.2632_r8, 0.3448_r8, 0.4415_r8, 0.625_r8, 0.7782_r8, 1.2422_r8/)
-      dstint_wvl_ct(1:6) = dstint_wvl(2:7)/2._r8 + dstint_wvl(1:6)/2._r8
+      dstint_wvl_ct(1:6) = dstint_wvl(2:7) * 0.5_r8 + dstint_wvl(1:6) * 0.5_r8
       dstint_a1(1:6) = (/ -2.1307E+1_r8, -1.5815E+1_r8, -9.2880_r8   , 1.1115_r8   , 1.0307_r8   , 1.0185_r8    /)
       dstint_a2(1:6) = (/  1.1746E+2_r8,  9.3241E+1_r8,  4.0605E+1_r8, 3.7389E-1_r8, 1.4800E-2_r8, 2.8921E-4_r8 /)
       dstint_a3(1:6) = (/  9.9701E-1_r8,  9.9781E-1_r8,  9.9848E-1_r8, 1.0035_r8   , 1.0024_r8   , 1.0356_r8    /)
@@ -824,7 +826,7 @@ contains
                         endif
                         do igb = 1,7
                            g_ice_Cg_tmp(igb) = g_b0(igb) * ((fs_sphd/fs_hex)**g_b1(igb)) * (diam_ice**g_b2(igb))   ! Eq.7, He et al. (2017)
-                           gg_ice_F07_tmp(igb) = g_F07_c0(igb) + g_F07_c1(igb)*AR_tmp + g_F07_c2(igb)*(AR_tmp**2._r8)  ! Eqn. 3.1 in Fu (2007)
+                           gg_ice_F07_tmp(igb) = g_F07_c0(igb) + g_F07_c1(igb) * AR_tmp + g_F07_c2(igb) * (AR_tmp * AR_tmp)  ! Eqn. 3.1 in Fu (2007)
                         enddo
 
                      case ('hexagonal_plate')
@@ -842,7 +844,7 @@ contains
                         endif
                         do igb = 1,7
                            g_ice_Cg_tmp(igb) = g_b0(igb) * ((fs_hex0/fs_hex)**g_b1(igb)) * (diam_ice**g_b2(igb))   ! Eq.7, He et al. (2017)
-                           gg_ice_F07_tmp(igb) = g_F07_p0(igb)+g_F07_p1(igb)*LOG(AR_tmp)+g_F07_p2(igb)*((LOG(AR_tmp))**2._r8) ! Eqn. 3.3 in Fu (2007)
+                           gg_ice_F07_tmp(igb) = g_F07_p0(igb) + g_F07_p1(igb) * log(AR_tmp) + g_F07_p2(igb) * (log(AR_tmp) * log(AR_tmp)) ! Eqn. 3.3 in Fu (2007)
                         enddo
 
                      case ('koch_snowflake')
@@ -860,7 +862,7 @@ contains
                         endif
                         do igb = 1,7
                            g_ice_Cg_tmp(igb) = g_b0(igb) * ((fs_koch/fs_hex)**g_b1(igb)) * (diam_ice**g_b2(igb))   ! Eq.7, He et al. (2017)
-                           gg_ice_F07_tmp(igb) = g_F07_p0(igb)+g_F07_p1(igb)*LOG(AR_tmp)+g_F07_p2(igb)*((LOG(AR_tmp))**2._r8) ! Eqn. 3.3 in Fu (2007)
+                           gg_ice_F07_tmp(igb) = g_F07_p0(igb) + g_F07_p1(igb) * log(AR_tmp) + g_F07_p2(igb) * (log(AR_tmp) * log(AR_tmp)) ! Eqn. 3.3 in Fu (2007)
                         enddo
 
                      end select
@@ -878,19 +880,13 @@ contains
                            call piecewise_linear_interp1d(7,g_wvl_ct,g_ice_Cg_tmp,wvl_ct480(bnd_idx),g_Cg_intp)
                            call piecewise_linear_interp1d(7,g_wvl_ct,gg_ice_F07_tmp,wvl_ct480(bnd_idx),gg_F07_intp)
                         end select
-                        g_ice_F07 = gg_F07_intp + (1._r8 - gg_F07_intp) / ss_alb_snw_lcl(i) / 2._r8  ! Eq.2.2 in Fu (2007)
+                        g_ice_F07 = gg_F07_intp + 0.5_r8 * (1._r8 - gg_F07_intp) / ss_alb_snw_lcl(i)  ! Eq.2.2 in Fu (2007)
                         asm_prm_snw_lcl(i) = g_ice_F07 * g_Cg_intp     ! Eq.6, He et al. (2017)
                      endif
 
                      if (asm_prm_snw_lcl(i) > 0.99_r8) asm_prm_snw_lcl(i) = 0.99_r8 !avoid unreasonable values (rarely occur in large-size spheroid cases)
 
                   enddo ! snow layer loop
-
-
-                  ! aerosol species 1 optical properties, hydrophilic BC
-                  !ss_alb_aer_lcl(1)        = ss_alb_bc1(bnd_idx)      
-                  !asm_prm_aer_lcl(1)       = asm_prm_bc1(bnd_idx)
-                  !ext_cff_mss_aer_lcl(1)   = ext_cff_mss_bc1(bnd_idx)
 
                   ! aerosol species 2 optical properties, hydrophobic BC
                   ss_alb_aer_lcl(2)        = ss_alb_bc2(bnd_idx)      
@@ -906,27 +902,6 @@ contains
                   ss_alb_aer_lcl(4)        = ss_alb_oc2(bnd_idx)      
                   asm_prm_aer_lcl(4)       = asm_prm_oc2(bnd_idx)
                   ext_cff_mss_aer_lcl(4)   = ext_cff_mss_oc2(bnd_idx)
-
-                  ! aerosol species 5 optical properties, dust size1
-                  !ss_alb_aer_lcl(5)        = ss_alb_dst1(bnd_idx)      
-                  !asm_prm_aer_lcl(5)       = asm_prm_dst1(bnd_idx)
-                  !ext_cff_mss_aer_lcl(5)   = ext_cff_mss_dst1(bnd_idx)
-
-                  ! aerosol species 6 optical properties, dust size2
-                  !ss_alb_aer_lcl(6)        = ss_alb_dst2(bnd_idx)      
-                  !asm_prm_aer_lcl(6)       = asm_prm_dst2(bnd_idx)
-                  !ext_cff_mss_aer_lcl(6)   = ext_cff_mss_dst2(bnd_idx)
-
-                  ! aerosol species 7 optical properties, dust size3
-                  !ss_alb_aer_lcl(7)        = ss_alb_dst3(bnd_idx)      
-                  !asm_prm_aer_lcl(7)       = asm_prm_dst3(bnd_idx)
-                  !ext_cff_mss_aer_lcl(7)   = ext_cff_mss_dst3(bnd_idx)
-
-                  ! aerosol species 8 optical properties, dust size4
-                  !ss_alb_aer_lcl(8)        = ss_alb_dst4(bnd_idx)      
-                  !asm_prm_aer_lcl(8)       = asm_prm_dst4(bnd_idx)
-                  !ext_cff_mss_aer_lcl(8)   = ext_cff_mss_dst4(bnd_idx)
-
 
                   ! 1. snow and aerosol layer column mass (L_snw, L_aer [kg/m^2])
                   ! 2. optical Depths (tau_snw, tau_aer)
@@ -983,20 +958,19 @@ contains
                                  ( (mss_cnc_aer_lcl(i,1)*1.0E9_r8*1.7_r8/den_bc + bcint_d2(ibb)) **bcint_d1(ibb) )
                               ! adjust enhancment factor for BC effective size from 0.1um to Re_bc (He et al. 2018 GRL Eqs.1a,1b)
                               if (ibb < 3) then ! near-UV
-                                 bcint_dd  = (Re_bc/0.05_r8)**bcint_m(1)
-                                 bcint_dd2 = (0.1_r8/0.05_r8)**bcint_m(1)
-                                 bcint_f  = (Re_bc/0.1_r8)**bcint_n(1)
+                                 bcint_m_tmp = bcint_m(1)
+                                 bcint_n_tmp = bcint_n(1)
+                              else if (ibb >= 3 .and. ibb <= 11) then ! visible
+                                 bcint_m_tmp = bcint_m(2)
+                                 bcint_n_tmp = bcint_n(2)
+                              else  ! ibb > 11, NIR
+                                 bcint_m_tmp = bcint_m(3)
+                                 bcint_n_tmp = bcint_n(3)
                               endif
-                              if ( (ibb >= 3) .and. (ibb <= 11) ) then ! visible
-                                 bcint_dd  = (Re_bc/0.05_r8)**bcint_m(2)
-                                 bcint_dd2 = (0.1_r8/0.05_r8)**bcint_m(2)
-                                 bcint_f  = (Re_bc/0.1_r8)**bcint_n(2)
-                              endif
-                              if ( ibb > 11 ) then ! NIR
-                                 bcint_dd  = (Re_bc/0.05_r8)**bcint_m(3)
-                                 bcint_dd2 = (0.1_r8/0.05_r8)**bcint_m(3)
-                                 bcint_f  = (Re_bc/0.1_r8)**bcint_n(3)
-                              endif
+                              bcint_dd  = (Re_bc * 20.0_r8)**bcint_m_tmp
+                              bcint_dd2 = (0.1_r8 * 20.0_r8)**bcint_m_tmp
+                              bcint_f  = (Re_bc * 10.0_r8)**bcint_n_tmp
+
                               enh_omg_bcint_tmp2(ibb)=LOG10(max(1._r8,bcint_dd*((enh_omg_bcint_tmp(ibb)/bcint_dd2)**bcint_f)))
                            enddo
                            ! piecewise linear interpolate into targeted SNICAR bands in a logscale space
@@ -1069,8 +1043,8 @@ contains
                   if (DELTA == 1) then
                      do i=snl_top,snl_btm,1
                         g_star(i)     = g(i)/(1+g(i))
-                        omega_star(i) = ((1-(g(i)**2))*omega(i)) / (1-(omega(i)*(g(i)**2)))
-                        tau_star(i)   = (1-(omega(i)*(g(i)**2)))*tau(i)
+                        omega_star(i) = (1._r8 - g(i) * g(i)) * omega(i) / (1._r8 - omega(i) * (g(i) * g(i)))
+                        tau_star(i)   = (1._r8 - omega(i) * (g(i) * g(i))) * tau(i)
                      enddo
                   else
                      do i=snl_top,snl_btm,1
@@ -1134,7 +1108,7 @@ contains
 
                       ! first calculation of rdif, tdif using Delta-Eddington formulas
                       ! Eq.: Briegleb 1992; alpha and gamma for direct radiation
-                      rdif_a(i) = (ue**2-c1)*(c1/extins - extins)/ne
+                      rdif_a(i) = (ue * ue - c1) * (c1 / extins - extins) / ne
                       tdif_a(i) = c4*ue/ne
 
                       ! evaluate rdir,tdir for direct beam
@@ -1344,9 +1318,7 @@ contains
 
                  !Underflow check (we've already tripped the error condition above)
                  do i=snl_top,1,1
-                    if (flx_abs_lcl(i,bnd_idx) < 0._r8) then
-                       flx_abs_lcl(i,bnd_idx) = 0._r8
-                    endif
+                    flx_abs_lcl(i,bnd_idx) = max(0._r8, flx_abs_lcl(i,bnd_idx))
                  enddo
 
                  F_abs_sum = 0._r8
@@ -1472,8 +1444,8 @@ contains
             ! solar zenith angle parameterization
             ! calculate the scaling factor for NIR direct albedo if SZA>75 degree
             if ((mu_not < mu_75) .and. (flg_slr_in == 1)) then
-               sza_c1 = sza_a0 + sza_a1 * mu_not + sza_a2 * mu_not**2
-               sza_c0 = sza_b0 + sza_b1 * mu_not + sza_b2 * mu_not**2
+               sza_c1 = sza_a0 + sza_a1 * mu_not + sza_a2 * (mu_not * mu_not)
+               sza_c0 = sza_b0 + sza_b1 * mu_not + sza_b2 * (mu_not * mu_not)
                sza_factor = sza_c1 * (log10(snw_rds_lcl(snl_top) * c1) - c6) + sza_c0
                flx_sza_adjust  = albout(c_idx,2) * (sza_factor-c1) * sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
                albout(c_idx,2) = albout(c_idx,2) * sza_factor
@@ -1703,7 +1675,7 @@ contains
             !dr_wet = 1E6_r8*(dtime*(C1_liq_Brun89 + C2_liq_Brun89*(frc_liq**(3))) / (4*SHR_CONST_PI*(snw_rds(c_idx,i)/1E6)**(2)))
             !simplified, units of microns:
             dr_wet = 1E18_r8*(dtime*(params_inst%C2_liq_Brun89*(frc_liq**(3))) / &
-                     (4*SHR_CONST_PI*snw_rds(c_idx,i)**(2)))
+               (4._r8 * SHR_CONST_PI * (snw_rds(c_idx,i) * snw_rds(c_idx,i))))
 
             dr = dr + dr_wet
 
@@ -1757,13 +1729,8 @@ contains
             !**********  5. CHECK BOUNDARIES   ***********
             !
             ! boundary check
-            if (snw_rds(c_idx,i) < snw_rds_min) then
-               snw_rds(c_idx,i) = snw_rds_min
-            endif
-
-            if (snw_rds(c_idx,i) > snw_rds_max) then
-               snw_rds(c_idx,i) = snw_rds_max
-            end if
+            snw_rds(c_idx,i) = max(snw_rds(c_idx,i), snw_rds_min)
+            snw_rds(c_idx,i) = min(snw_rds(c_idx,i), snw_rds_max)
 
             ! set top layer variables for history files
             if (i == snl_top) then
