@@ -237,7 +237,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         fsurdat_in_data = xr.open_dataset(self._fsurdat_in)
         fsurdat_out_data = xr.open_dataset(self._fsurdat_out)
         Ncrops = fsurdat_out_data.dims["cft"]
-        pct_cft = np.full((Ncrops, 5, 5), 100 / Ncrops)
+        pct_cft = np.full_like(fsurdat_out_data.PCT_CFT, 100 / Ncrops)
         np.testing.assert_array_equal(fsurdat_in_data.PCT_NATVEG, fsurdat_out_data.PCT_NATVEG)
         np.testing.assert_array_equal(fsurdat_in_data.PCT_CROP, fsurdat_out_data.PCT_CROP)
         np.testing.assert_array_equal(fsurdat_in_data.PCT_LAKE, fsurdat_out_data.PCT_LAKE)
