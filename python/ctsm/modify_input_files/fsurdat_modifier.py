@@ -441,8 +441,8 @@ def read_cfg_option_control(
         file_path=cfg_path,
         convert_to_type=bool,
     )
-    if evenly_split_cropland and dom_pft:
-        abort("dom_pft must be UNSET if evenly_split_cropland is True; pick one or the other")
+    if evenly_split_cropland and dom_pft and dom_pft > int(max(modify_fsurdat.file.natpft.values)):
+        abort("dom_pft must not be set to a crop PFT when evenly_split_cropland is True")
     if process_subgrid and idealized:
         abort("idealized AND process_subgrid_section can NOT both be on, pick one or the other")
 

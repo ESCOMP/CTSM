@@ -96,13 +96,14 @@ class TestFSurdatModifier(unittest.TestCase):
             read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
 
     def test_dompft_and_splitcropland_fails(self):
-        """test that dompft and evenly_split_cropland fails gracefully"""
+        """test that setting dompft crop with evenly_split_cropland True fails gracefully"""
         section = "modify_fsurdat_basic_options"
-        self.config.set(section, "dom_pft", "1")
+        crop_pft = max(self.modify_fsurdat.file.natpft.values) + 1
+        self.config.set(section, "dom_pft", str(crop_pft))
         self.config.set(section, "evenly_split_cropland", "True")
         with self.assertRaisesRegex(
             SystemExit,
-            "dom_pft must be UNSET if evenly_split_cropland is True; pick one or the other",
+            "dom_pft must not be set to a crop PFT when evenly_split_cropland is True",
         ):
             read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
 
