@@ -324,1295 +324,1302 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </mksrf_fvegtyp>
 
 
-<!-- TRENDY mksurf raw PFT datasets from 1700 to 2021 -->
+<!-- TRENDY mksurf raw PFT datasets from 1700 to 2023 -->
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1700" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1700.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1700.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1701" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1701.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1701.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1702" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1702.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1702.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1703" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1703.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1703.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1704" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1704.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1704.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1705" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1705.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1705.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1706" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1706.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1706.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1707" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1707.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1707.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1708" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1708.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1708.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1709" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1709.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1709.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1710" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1710.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1710.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1711" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1711.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1711.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1712" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1712.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1712.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1713" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1713.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1713.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1714" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1714.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1714.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1715" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1715.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1715.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1716" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1716.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1716.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1717" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1717.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1717.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1718" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1718.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1718.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1719" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1719.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1719.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1720" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1720.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1720.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1721" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1721.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1721.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1722" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1722.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1722.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1723" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1723.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1723.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1724" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1724.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1724.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1725" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1725.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1725.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1726" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1726.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1726.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1727" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1727.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1727.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1728" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1728.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1728.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1729" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1729.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1729.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1730" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1730.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1730.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1731" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1731.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1731.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1732" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1732.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1732.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1733" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1733.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1733.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1734" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1734.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1734.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1735" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1735.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1735.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1736" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1736.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1736.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1737" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1737.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1737.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1738" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1738.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1738.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1739" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1739.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1739.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1740" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1740.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1740.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1741" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1741.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1741.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1742" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1742.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1742.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1743" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1743.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1743.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1744" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1744.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1744.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1745" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1745.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1745.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1746" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1746.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1746.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1747" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1747.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1747.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1748" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1748.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1748.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1749" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1749.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1749.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1750" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1750.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1750.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1751" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1751.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1751.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1752" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1752.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1752.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1753" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1753.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1753.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1754" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1754.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1754.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1755" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1755.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1755.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1756" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1756.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1756.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1757" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1757.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1757.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1758" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1758.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1758.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1759" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1759.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1759.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1760" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1760.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1760.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1761" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1761.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1761.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1762" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1762.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1762.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1763" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1763.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1763.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1764" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1764.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1764.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1765" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1765.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1765.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1766" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1766.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1766.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1767" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1767.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1767.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1768" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1768.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1768.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1769" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1769.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1769.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1770" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1770.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1770.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1771" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1771.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1771.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1772" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1772.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1772.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1773" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1773.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1773.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1774" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1774.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1774.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1775" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1775.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1775.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1776" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1776.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1776.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1777" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1777.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1777.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1778" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1778.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1778.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1779" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1779.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1779.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1780" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1780.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1780.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1781" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1781.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1781.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1782" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1782.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1782.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1783" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1783.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1783.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1784" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1784.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1784.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1785" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1785.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1785.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1786" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1786.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1786.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1787" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1787.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1787.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1788" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1788.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1788.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1789" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1789.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1789.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1790" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1790.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1790.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1791" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1791.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1791.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1792" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1792.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1792.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1793" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1793.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1793.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1794" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1794.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1794.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1795" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1795.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1795.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1796" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1796.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1796.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1797" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1797.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1797.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1798" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1798.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1798.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1799" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1799.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1799.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1800" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1800.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1800.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1801" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1801.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1801.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1802" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1802.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1802.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1803" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1803.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1803.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1804" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1804.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1804.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1805" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1805.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1805.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1806" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1806.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1806.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1807" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1807.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1807.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1808" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1808.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1808.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1809" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1809.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1809.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1810" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1810.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1810.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1811" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1811.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1811.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1812" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1812.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1812.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1813" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1813.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1813.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1814" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1814.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1814.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1815" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1815.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1815.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1816" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1816.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1816.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1817" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1817.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1817.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1818" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1818.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1818.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1819" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1819.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1819.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1820" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1820.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1820.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1821" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1821.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1821.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1822" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1822.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1822.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1823" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1823.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1823.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1824" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1824.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1824.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1825" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1825.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1825.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1826" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1826.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1826.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1827" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1827.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1827.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1828" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1828.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1828.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1829" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1829.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1829.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1830" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1830.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1830.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1831" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1831.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1831.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1832" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1832.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1832.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1833" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1833.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1833.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1834" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1834.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1834.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1835" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1835.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1835.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1836" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1836.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1836.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1837" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1837.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1837.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1838" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1838.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1838.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1839" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1839.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1839.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1840" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1840.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1840.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1841" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1841.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1841.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1842" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1842.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1842.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1843" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1843.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1843.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1844" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1844.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1844.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1845" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1845.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1845.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1846" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1846.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1846.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1847" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1847.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1847.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1848" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1848.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1848.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1849" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1849.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1849.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1850" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1850.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1850.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1851" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1851.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1851.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1852" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1852.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1852.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1853" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1853.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1853.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1854" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1854.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1854.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1855" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1855.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1855.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1856" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1856.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1856.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1857" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1857.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1857.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1858" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1858.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1858.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1859" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1859.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1859.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1860" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1860.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1860.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1861" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1861.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1861.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1862" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1862.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1862.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1863" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1863.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1863.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1864" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1864.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1864.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1865" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1865.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1865.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1866" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1866.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1866.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1867" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1867.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1867.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1868" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1868.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1868.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1869" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1869.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1869.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1870" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1870.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1870.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1871" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1871.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1871.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1872" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1872.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1872.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1873" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1873.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1873.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1874" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1874.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1874.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1875" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1875.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1875.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1876" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1876.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1876.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1877" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1877.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1877.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1878" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1878.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1878.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1879" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1879.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1879.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1880" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1880.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1880.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1881" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1881.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1881.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1882" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1882.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1882.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1883" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1883.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1883.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1884" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1884.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1884.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1885" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1885.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1885.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1886" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1886.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1886.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1887" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1887.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1887.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1888" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1888.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1888.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1889" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1889.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1889.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1890" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1890.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1890.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1891" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1891.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1891.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1892" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1892.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1892.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1893" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1893.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1893.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1894" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1894.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1894.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1895" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1895.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1895.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1896" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1896.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1896.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1897" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1897.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1897.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1898" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1898.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1898.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1899" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1899.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1899.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1900" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1900.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1900.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1901" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1901.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1901.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1902" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1902.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1902.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1903" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1903.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1903.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1904" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1904.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1904.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1905" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1905.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1905.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1906" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1906.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1906.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1907" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1907.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1907.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1908" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1908.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1908.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1909" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1909.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1909.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1910" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1910.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1910.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1911" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1911.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1911.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1912" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1912.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1912.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1913" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1913.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1913.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1914" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1914.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1914.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1915" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1915.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1915.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1916" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1916.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1916.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1917" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1917.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1917.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1918" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1918.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1918.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1919" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1919.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1919.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1920" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1920.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1920.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1921" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1921.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1921.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1922" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1922.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1922.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1923" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1923.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1923.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1924" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1924.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1924.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1925" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1925.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1925.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1926" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1926.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1926.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1927" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1927.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1927.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1928" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1928.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1928.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1929" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1929.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1929.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1930" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1930.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1930.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1931" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1931.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1931.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1932" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1932.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1932.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1933" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1933.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1933.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1934" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1934.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1934.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1935" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1935.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1935.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1936" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1936.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1936.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1937" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1937.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1937.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1938" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1938.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1938.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1939" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1939.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1939.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1940" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1940.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1940.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1941" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1941.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1941.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1942" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1942.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1942.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1943" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1943.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1943.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1944" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1944.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1944.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1945" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1945.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1945.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1946" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1946.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1946.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1947" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1947.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1947.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1948" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1948.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1948.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1949" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1949.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1949.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1950" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1950.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1950.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1951" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1951.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1951.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1952" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1952.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1952.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1953" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1953.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1953.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1954" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1954.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1954.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1955" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1955.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1955.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1956" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1956.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1956.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1957" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1957.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1957.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1958" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1958.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1958.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1959" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1959.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1959.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1960" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1960.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1960.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1961" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1961.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1961.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1962" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1962.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1962.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1963" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1963.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1963.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1964" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1964.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1964.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1965" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1965.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1965.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1966" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1966.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1966.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1967" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1967.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1967.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1968" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1968.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1968.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1969" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1969.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1969.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1970" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1970.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1970.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1971" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1971.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1971.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1972" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1972.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1972.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1973" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1973.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1973.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1974" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1974.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1974.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1975" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1975.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1975.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1976" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1976.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1976.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1977" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1977.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1977.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1978" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1978.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1978.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1979" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1979.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1979.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1980" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1980.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1980.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1981" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1981.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1981.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1982" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1982.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1982.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1983" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1983.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1983.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1984" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1984.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1984.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1985" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1985.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1985.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1986" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1986.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1986.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1987" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1987.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1987.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1988" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1988.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1988.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1989" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1989.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1989.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1990" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1990.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1990.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1991" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1991.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1991.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1992" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1992.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1992.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1993" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1993.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1993.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1994" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1994.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1994.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1995" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1995.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1995.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1996" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1996.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1996.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1997" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1997.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1997.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1998" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1998.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1998.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1999" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_1999.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_1999.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2000" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2000.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2000.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2001" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2001.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2001.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2002" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2002.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2002.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2003" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2003.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2003.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2004" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2004.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2004.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2005" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2005.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2005.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2006" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2006.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2006.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2007" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2007.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2007.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2008" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2008.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2008.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2009" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2009.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2009.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2010" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2010.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2010.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2011" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2011.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2011.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2012" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2012.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2012.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2013" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2013.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2013.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2014" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2014.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2014.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2015" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2015.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2015.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2016" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2016.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2016.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2017" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2017.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2017.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2018" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2018.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2018.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2019" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2019.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2019.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2020" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2020.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2020.c230730.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2021" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2021.c220822/mksrf_landuse_clm52_trendy2022_2021.c220822.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2021.c230730.nc
 </mksrf_fvegtyp>
 
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2022" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2022.c230730.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2023" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2023.c230730.nc
+</mksrf_fvegtyp>
 
 <!-- Potential Vegetation dataset -->
 <mksrf_fvegtyp hgrid="0.25x0.25" sim_year="PtVg" crop="on"
