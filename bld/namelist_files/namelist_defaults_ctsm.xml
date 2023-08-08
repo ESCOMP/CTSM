@@ -2713,4 +2713,14 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 
 <init_interp_method>general</init_interp_method>
 
+<!-- =========================================  -->
+<!-- Defaults for excess ice                    -->
+<!-- =========================================  -->
+
+<use_excess_ice>.false.</use_excess_ice>
+
+<stream_fldfilename_exice use_excess_ice=".true.">lnd/clm2/paramdata/exice_init_0.125x0.125_c20220516.nc</stream_fldfilename_exice>
+<stream_meshfile_exice    use_excess_ice=".true.">lnd/clm2/paramdata/exice_init_0.125x0.125_ESMFmesh_cdf5_c20220802.nc</stream_meshfile_exice>
+<stream_mapalgo_exice     use_excess_ice=".true.">bilinear</stream_mapalgo_exice>
+
 </namelist_defaults>
