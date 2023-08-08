@@ -226,41 +226,24 @@ class TestSysFsurdatModifier(unittest.TestCase):
         """
         Test that evenly splitting cropland works
         """
-        self._cfg_file_path = os.path.join(
-            path_to_ctsm_root(),
-            "python",
-            "ctsm",
-            "crop_calendars",
-            "modify_fsurdat_allcropseverywhere.cfg",
-        )
-        infile_basename_noext = "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214"
-        outfile = os.path.join(
-            self._tempdir,
-            infile_basename_noext + "_output_allcropseverywhere.nc",
-        )
+        self._create_config_file_evenlysplitcrop()
         sys.argv = [
             "fsurdat_modifier",
             self._cfg_file_path,
-            "-i",
-            os.path.join(self._testinputs_path, infile_basename_noext + ".nc"),
-            "-o",
-            outfile,
         ]
         parser = fsurdat_modifier_arg_process()
         fsurdat_modifier(parser)
         # Read the resultant output file and make sure the fields are changed as expected
-        fsurdat_out_data = xr.open_dataset(outfile)
-        zero0d = np.zeros((5, 5))
-        hundred0d = np.full((5, 5), 100.0)
-        zero_urban = np.zeros((3, 5, 5))
+        fsurdat_in_data = xr.open_dataset(self._fsurdat_in)
+        fsurdat_out_data = xr.open_dataset(self._fsurdat_out)
         Ncrops = fsurdat_out_data.dims["cft"]
         pct_cft = np.full((Ncrops, 5, 5), 100 / Ncrops)
-        np.testing.assert_array_equal(fsurdat_out_data.PCT_NATVEG, zero0d)
-        np.testing.assert_array_equal(fsurdat_out_data.PCT_CROP, hundred0d)
-        np.testing.assert_array_equal(fsurdat_out_data.PCT_LAKE, zero0d)
-        np.testing.assert_array_equal(fsurdat_out_data.PCT_WETLAND, zero0d)
-        np.testing.assert_array_equal(fsurdat_out_data.PCT_GLACIER, zero0d)
-        np.testing.assert_array_equal(fsurdat_out_data.PCT_URBAN, zero_urban)
+        np.testing.assert_array_equal(fsurdat_in_data.PCT_NATVEG, fsurdat_out_data.PCT_NATVEG)
+        np.testing.assert_array_equal(fsurdat_in_data.PCT_CROP, fsurdat_out_data.PCT_CROP)
+        np.testing.assert_array_equal(fsurdat_in_data.PCT_LAKE, fsurdat_out_data.PCT_LAKE)
+        np.testing.assert_array_equal(fsurdat_in_data.PCT_WETLAND, fsurdat_out_data.PCT_WETLAND)
+        np.testing.assert_array_equal(fsurdat_in_data.PCT_GLACIER, fsurdat_out_data.PCT_GLACIER)
+        np.testing.assert_array_equal(fsurdat_in_data.PCT_URBAN, fsurdat_out_data.PCT_URBAN)
         np.testing.assert_array_equal(fsurdat_out_data.PCT_CFT, pct_cft)
 
     def test_1x1_mexicocity(self):
@@ -442,6 +425,23 @@ class TestSysFsurdatModifier(unittest.TestCase):
             with open(self._cfg_template_path, "r", encoding="utf-8") as cfg_in:
                 for line in cfg_in:
                     if re.match(r" *fsurdat_in *=", line):
+                        line = f"fsurdat_in = {self._fsurdat_in}"
+                    elif re.match(r" *fsurdat_out *=", line):
+                        line = f"fsurdat_out = {self._fsurdat_out}"
+                    cfg_out.write(line)
+
+    def _create_config_file_evenlysplitcrop(self):
+        """
+        Open the new and the template .cfg files
+        Loop line by line through the template .cfg file
+        When string matches, replace that line's content
+        """
+        with open(self._cfg_file_path, "w", encoding="utf-8") as cfg_out:
+            with open(self._cfg_template_path, "r", encoding="utf-8") as cfg_in:
+                for line in cfg_in:
+                    if re.match(r" *evenly_split_cropland *=", line):
+                        line = f"evenly_split_cropland = True"
+                    elif re.match(r" *fsurdat_in *=", line):
                         line = f"fsurdat_in = {self._fsurdat_in}"
                     elif re.match(r" *fsurdat_out *=", line):
                         line = f"fsurdat_out = {self._fsurdat_out}"
