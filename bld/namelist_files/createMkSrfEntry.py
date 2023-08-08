@@ -6,7 +6,7 @@ class mksrfDataEntry_prog:
 
    # Class data
    year_start = 1700
-   year_end   = 2023
+   year_end   = 2022
    ssp_rcp    = "hist"
    subdir     = "pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730"
    cdate      = 230730

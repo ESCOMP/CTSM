@@ -1617,10 +1617,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2022.c230730.nc
 </mksrf_fvegtyp>
 
-<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2023" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.hist_1700-2022.c230730/mksrf_landuse_ctsm52_trendy2023_2023.c230730.nc
-</mksrf_fvegtyp>
-
 <!-- Potential Vegetation dataset -->
 <mksrf_fvegtyp hgrid="0.25x0.25" sim_year="PtVg" crop="on"
 >lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.simyrPtVg.c181106/mksrf_landuse_potvegclm50_LUH2.c181106.nc
