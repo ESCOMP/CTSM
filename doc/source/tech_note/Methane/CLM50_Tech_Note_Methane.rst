@@ -66,7 +66,7 @@ phases:\ :math:`R = \epsilon _{a} +K_{H} \epsilon _{w}`, with
 porosity, and partitioning coefficient for the species of interest,
 respectively, and :math:`C` represents CH\ :sub:`4` or O\ :sub:`2` concentration with respect to water volume (mol m\ :sup:`-3`).
 
-An analogous version of equation is concurrently solved for
+An analogous version of equation :eq:`24.1` is concurrently solved for
 O\ :sub:`2`, but with the following differences relative to
 CH\ :sub:`4`: *P* = *E* = 0 (i.e., no production or ebullition),
 and the oxidation sink includes the O\ :sub:`2` demanded by
@@ -74,7 +74,7 @@ methanotrophs, heterotroph decomposers, nitrifiers, and autotrophic root
 respiration.
 
 As currently implemented, each gridcell contains an inundated and a
-non-inundated fraction. Therefore, equation is solved four times for
+non-inundated fraction. Therefore, equation :eq:`24.1` is solved four times for
 each gridcell and time step: in the inundated and non-inundated
 fractions, and for CH\ :sub:`4` and O\ :sub:`2`. If desired,
 the CH\ :sub:`4` and O\ :sub:`2` mass balance equation is
@@ -175,7 +175,7 @@ anoxic microsites above the water table, we apply the Arah and Stephen
 
 Here, :math:`\varphi` is the factor by which production is inhibited
 above the water table (compared to production as calculated in equation
-, :math:`C_{O_{2}}`  (mol m\ :sup:`-3`) is the bulk soil oxygen
+:eq:`24.2`, :math:`C_{O_{2}}`  (mol m\ :sup:`-3`) is the bulk soil oxygen
 concentration, and :math:`\eta` = 400 mol m\ :sup:`-3`.
 
 The O\ :sub:`2` required to facilitate the vertically resolved
@@ -457,8 +457,8 @@ measurements more closely in unsaturated peat soils:
 
    D_{e} =D_{0} \frac{\theta _{a} ^{{\raise0.7ex\hbox{$ 10 $}\!\mathord{\left/ {\vphantom {10 3}} \right. \kern-\nulldelimiterspace}\!\lower0.7ex\hbox{$ 3 $}} } }{\theta _{s} ^{2} }
 
-In CLM, we applied equation for soils with zero organic matter content
-and equation for soils with more than 130 kg m\ :sup:`-3` organic
+In CLM, we applied equation :eq:`24.12` for soils with zero organic matter content
+and equation :eq:`24.13` for soils with more than 130 kg m\ :sup:`-3` organic
 matter content. A linear interpolation between these two limits is
 applied for soils with SOM content below 130 kg m\ :sup:`-3`. For
 aqueous diffusion in the saturated part of the soil column, we applied
@@ -518,10 +518,10 @@ a zero flux gradient at the bottom of the soil column.
 Crank-Nicholson Solution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Equation is solved using a Crank-Nicholson solution 
+Equation :eq:`24.1` is solved using a Crank-Nicholson solution 
 (:ref:`Press et al. 1992<Pressetal1992>`),
 which combines fully explicit and implicit representations of the mass
-balance. The fully explicit decomposition of equation can be written as
+balance. The fully explicit decomposition of equation :eq:`24.1` can be written as
 
 .. math::
    :label: 24.15
@@ -535,11 +535,11 @@ and :math:`S_{j}^{n}`  is the net source at time step *n* and position
 *j*, i.e.,
 :math:`S_{j}^{n} =P\left(j,n\right)-E\left(j,n\right)-A\left(j,n\right)-O\left(j,n\right)`.
 The diffusivity coefficients are calculated as harmonic means of values
-from the adjacent cells. Equation is solved for gaseous and aqueous
+from the adjacent cells. Equation :eq:`24.15` is solved for gaseous and aqueous
 concentrations above and below the water table, respectively. The *R*
 term ensure the total mass balance in both phases is properly accounted
 for. An analogous relationship can be generated for the fully implicit
-case by replacing *n* by *n+1* on the *C* and *S* terms of equation .
+case by replacing *n* by *n+1* on the *C* and *S* terms of equation :eq:`24.15`.
 Using an average of the fully implicit and fully explicit relationships
 gives:
 
@@ -548,14 +548,14 @@ gives:
 
    \begin{array}{l} {-\frac{1}{2\Delta x_{j} } \frac{D_{m1}^{} }{\Delta x_{m1}^{} } C_{j-1}^{n+1} +\left[\frac{R_{j}^{n+1} }{\Delta t} +\frac{1}{2\Delta x_{j} } \left(\frac{D_{p1}^{} }{\Delta x_{p1}^{} } +\frac{D_{m1}^{} }{\Delta x_{m1}^{} } \right)\right]C_{j}^{n+1} -\frac{1}{2\Delta x_{j} } \frac{D_{p1}^{} }{\Delta x_{p1}^{} } C_{j+1}^{n+1} =} \\ {\frac{R_{j}^{n} }{\Delta t} +\frac{1}{2\Delta x_{j} } \left[\frac{D_{p1}^{} }{\Delta x_{p1}^{} } \left(C_{j+1}^{n} -C_{j}^{n} \right)-\frac{D_{m1}^{} }{\Delta x_{m1}^{} } \left(C_{j}^{n} -C_{j-1}^{n} \right)\right]+\frac{1}{2} \left[S_{j}^{n} +S_{j}^{n+1} \right]} \end{array},
 
-Equation is solved with a standard tridiagonal solver, i.e.:
+Equation :eq:`24.16` is solved with a standard tridiagonal solver, i.e.:
 
 .. math::
    :label: 24.17
 
    aC_{j-1}^{n+1} +bC_{j}^{n+1} +cC_{j+1}^{n+1} =r,
 
-with coefficients specified in equation .
+with coefficients specified in equation :eq:`24.16`.
 
 Two methane balance checks are performed at each timestep to insure that
 the diffusion solution and the time-varying aggregation over inundated
