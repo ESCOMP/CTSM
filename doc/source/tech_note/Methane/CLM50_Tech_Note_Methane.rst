@@ -259,8 +259,8 @@ aqueous CH\ :sub:`4` concentration, and *p* is pressure.
 The local pressure is calculated as the sum of the ambient pressure,
 water pressure down to the local depth, and pressure from surface
 ponding (if applicable). When the CH\ :sub:`4` partial pressure
-exceeds 15% of the local pressure (Baird et al. 2004; Strack et al.
-2006; Wania et al. 2010), bubbling occurs to remove CH\ :sub:`4`
+exceeds 15% of the local pressure (:ref:`Baird et al. 2004<Bairdetal2004>`; :ref:`Strack et al.
+2006<Stracketal2006>`; :ref:`Wania et al. 2010<Waniaetal2010>`), bubbling occurs to remove CH\ :sub:`4`
 to below this value, modified by the fraction of CH\ :sub:`4` in
 the bubbles [taken as 57%; (:ref:`Kellner et al. 2006<Kellneretal2006>`; 
 :ref:`Wania et al. 2010<Waniaetal2010>`)].
@@ -519,7 +519,7 @@ Crank-Nicholson Solution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Equation :eq:`24.1` is solved using a Crank-Nicholson solution 
-(:ref:`Press et al. 1992<Pressetal1992>`),
+(:ref:`Press et al., 1992<Pressetal1992>`),
 which combines fully explicit and implicit representations of the mass
 balance. The fully explicit decomposition of equation :eq:`24.1` can be written as
 
@@ -599,7 +599,7 @@ Inundated Fraction Prediction
 ----------------------------------
 
 A simplified dynamic representation of spatial inundation
-based on recent work by :ref:`Prigent et al. (2007)<Prigentetal2007>` is used.  Prigent et al. (2007) described a
+based on recent work by :ref:`Prigent et al. (2007)<Prigentetal2007>` is used. :ref:`Prigent et al. (2007)<Prigentetal2007>` described a
 multi-satellite approach to estimate the global monthly inundated
 fraction (:math:`{F}_{i}`) over an equal area grid
 (0.25 :math:`\circ`  \ :math:`\times`\ 0.25\ :math:`\circ` at the equator)
