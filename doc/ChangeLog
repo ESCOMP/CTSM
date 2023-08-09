@@ -31,12 +31,20 @@ Does this tag change answers significantly for any of the following physics conf
 [ ] clm4_5
 
 
+Bugs fixed or introduced
+------------------------
+Issues updated:
+
+    Updated #1733 -- nvhpc compiler tests failing on cheyenne
+
 Notes of particular relevance for developers:
 ---------------------------------------------
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
 
     - Note that the fates patch and cohort types now use the `fates_` prefix instead
       of the `ed_` prefix.
+    - The expected failures list of tests has been expanded to include the remaining
+      nvhpc compiler tests on cheyenne with this update
 
 Testing summary:
 ----------------
