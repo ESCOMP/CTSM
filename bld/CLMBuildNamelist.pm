@@ -2194,7 +2194,7 @@ sub setup_logic_tillage {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   my $tillage_mode = remove_leading_and_trailing_quotes( $nl->get_value( "tillage_mode" ) );
-  if ( $tillage_mode ne "off" && not &value_is_true($nl->get_value('use_crop')) ) {
+  if ( $tillage_mode ne "off" && $tillage_mode ne "" && not &value_is_true($nl->get_value('use_crop')) ) {
       $log->fatal_error( "It doesn't make sense to use tillage with use_crop false" );
   }
 }
