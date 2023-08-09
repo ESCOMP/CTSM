@@ -173,7 +173,7 @@ anoxic microsites above the water table, we apply the Arah and Stephen
 
    \varphi =\frac{1}{1+\eta C_{O_{2} } } .
 
-Here, :math:`\phi` is the factor by which production is inhibited
+Here, :math:`\varphi` is the factor by which production is inhibited
 above the water table (compared to production as calculated in equation
 , :math:`C_{O_{2}}`  (mol m\ :sup:`-3`) is the bulk soil oxygen
 concentration, and :math:`\eta` = 400 mol m\ :sup:`-3`.
