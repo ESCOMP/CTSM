@@ -286,12 +286,12 @@ The diffusive transport through aerenchyma (*A*, mol m\ :sup:`-2` s\ :sup:`-1`) 
 
    A=\frac{C\left(z\right)-C_{a} }{{\raise0.7ex\hbox{$ r_{L} z $}\!\mathord{\left/ {\vphantom {r_{L} z D}} \right. \kern-\nulldelimiterspace}\!\lower0.7ex\hbox{$ D $}} +r_{a} } pT\rho _{r} ,
  
-where *D* is the free-air gas diffusion coefficient (m:sup:`2` s\ :sup:`-1`); *C(z)* (mol m\ :sup:`-3`) is the gaseous
+where *D* is the free-air gas diffusion coefficient (m\ :sup:`2` s\ :sup:`-1`); *C(z)* (mol m\ :sup:`-3`) is the gaseous
 concentration at depth *z* (m); :math:`r_{L}`  is the ratio of root
 length to depth; *p* is the porosity (-); *T* is specific aerenchyma
-area (m:sup:`2` m\ :sup:`-2`); :math:`{r}_{a}` is the
+area (m\ :sup:`2` m\ :sup:`-2`); :math:`{r}_{a}` is the
 aerodynamic resistance between the surface and the atmospheric reference
-height (s m:sup:`-1`); and :math:`\rho _{r}`  is the rooting
+height (s m\ :sup:`-1`); and :math:`\rho _{r}`  is the rooting
 density as a function of depth (-). The gaseous concentration is
 calculated with Henry’s law as described in equation .
 
@@ -416,7 +416,7 @@ Aqueous and Gaseous Diffusion
 
 For gaseous diffusion, we adopted the temperature dependence of
 molecular free-air diffusion coefficients (:math:`{D}_{0}`
-(m:sup:`2` s\ :sup:`-1`)) as described by 
+(m\ :sup:`2` s\ :sup:`-1`)) as described by 
 :ref:`Lerman (1979) <Lerman1979>` and applied by 
 :ref:`Wania et al. (2010)<Waniaetal2010>` 
 (:numref:`Table Temperature dependence of aqueous and gaseous diffusion`).
@@ -437,7 +437,7 @@ Gaseous diffusivity in soils also depends on the molecular diffusivity,
 soil structure, porosity, and organic matter content.  
 :ref:`Moldrup et al. (2003)<Moldrupetal2003>`, using observations across a 
 range of unsaturated mineral soils, showed that the relationship between 
-effective diffusivity (:math:`D_{e}`  (m:sup:`2` s\ :sup:`-1`)) and soil
+effective diffusivity (:math:`D_{e}`  (m\ :sup:`2` s\ :sup:`-1`)) and soil
 properties can be represented as:
 
 .. math::
