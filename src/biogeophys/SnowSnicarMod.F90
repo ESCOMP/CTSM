@@ -93,7 +93,7 @@ module SnowSnicarMod
   real(r8), pointer :: asm_prm_snw_dfs(:,:) !(idx_Mie_snw_mx,numrad_snw)
   real(r8), pointer :: ext_cff_mss_snw_dfs(:,:) !(idx_Mie_snw_mx,numrad_snw)
 
-  ! hydrophiliic BC
+  ! hydrophilic BC
   real(r8), pointer :: ss_alb_bc1(:) !(numrad_snw)
   real(r8), pointer :: asm_prm_bc1(:) !(numrad_snw)
   real(r8), pointer :: ext_cff_mss_bc1(:) !(numrad_snw)
@@ -103,12 +103,12 @@ module SnowSnicarMod
   real(r8), pointer :: asm_prm_bc2(:) !(numrad_snw)
   real(r8), pointer :: ext_cff_mss_bc2(:) !(numrad_snw)
 
-  ! hydrophobic OC
+  ! hydrophilic OC
   real(r8), pointer :: ss_alb_oc1(:) !(numrad_snw)
   real(r8), pointer :: asm_prm_oc1(:) !(numrad_snw)
   real(r8), pointer :: ext_cff_mss_oc1(:) !(numrad_snw)
 
-  ! hydrophilic OC
+  ! hydrophobic OC
   real(r8), pointer :: ss_alb_oc2(:) !(numrad_snw)
   real(r8), pointer :: asm_prm_oc2(:) !(numrad_snw)
   real(r8), pointer :: ext_cff_mss_oc2(:) !(numrad_snw)
