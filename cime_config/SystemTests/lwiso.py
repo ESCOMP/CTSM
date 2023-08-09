@@ -17,15 +17,18 @@ from CIME.SystemTests.test_utils.user_nl_utils import append_to_user_nl_files
 
 logger = logging.getLogger(__name__)
 
-class LWISO(SystemTestsCompareTwo):
 
+class LWISO(SystemTestsCompareTwo):
     def __init__(self, case):
-        SystemTestsCompareTwo.__init__(self, case,
-                                       separate_builds = False,
-                                       run_two_suffix = 'nowiso',
-                                       run_one_description = 'water isotopes on',
-                                       run_two_description = 'water isotopes off',
-                                       ignore_fieldlist_diffs = True)
+        SystemTestsCompareTwo.__init__(
+            self,
+            case,
+            separate_builds=False,
+            run_two_suffix="nowiso",
+            run_one_description="water isotopes on",
+            run_two_description="water isotopes off",
+            ignore_fieldlist_diffs=True,
+        )
 
     def _case_one_setup(self):
         # BUG(wjs, 2019-07-30, ESCOMP/ctsm#495) We currently can't turn on actual water
@@ -33,12 +36,15 @@ class LWISO(SystemTestsCompareTwo):
         # enable_water_tracer_consistency_checks rather than enable_water_isotopes;
         # eventually, though, we should change this to the latter. (See
         # <https://github.com/ESCOMP/ctsm/issues/495#issuecomment-516619853>.)
-        append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
-                                contents = "enable_water_tracer_consistency_checks=.true.")
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(),
+            component="clm",
+            contents="enable_water_tracer_consistency_checks=.true.",
+        )
 
     def _case_two_setup(self):
-        append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
-                                contents = "enable_water_tracer_consistency_checks=.false.")
-
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(),
+            component="clm",
+            contents="enable_water_tracer_consistency_checks=.false.",
+        )

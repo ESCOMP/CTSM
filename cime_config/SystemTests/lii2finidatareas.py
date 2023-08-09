@@ -58,13 +58,15 @@ from lii import LII
 
 logger = logging.getLogger(__name__)
 
-class LII2FINIDATAREAS(LII):
 
+class LII2FINIDATAREAS(LII):
     def __init__(self, case):
         super(LII2FINIDATAREAS, self).__init__(case)
 
     def _case_one_setup(self):
         super(LII2FINIDATAREAS, self)._case_one_setup()
-        append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
-                                contents = "init_interp_method = 'use_finidat_areas'")
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(),
+            component="clm",
+            contents="init_interp_method = 'use_finidat_areas'",
+        )
