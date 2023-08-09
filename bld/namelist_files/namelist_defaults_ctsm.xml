@@ -1541,9 +1541,14 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 
 <!-- SNICAR (SNow, ICe, and Aerosol Radiative model) datasets -->
 <!--  ***********  Resolution independent:   ***********  -->
-<fsnowoptics480>lnd/clm2/snicardata/snicar_optics_480bnd_c012422.nc</fsnowoptics480>
-<fsnowoptics   >lnd/clm2/snicardata/snicar_optics_5bnd_c013122.nc</fsnowoptics>
-<fsnowaging    >lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc</fsnowaging>
+<fsnowaging>lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc</fsnowaging>
+
+<snicar_numrad_snw>5</snicar_numrad_snw>
+
+<!-- TODO slevis: IF I UNCOMMENT, IT PICKS UP THE 480 FILE BY DEFAULT. WHY?
+<fsnowoptics snicar_numrad_snw=480>lnd/clm2/snicardata/snicar_optics_480bnd_c012422.nc</fsnowoptics>
+-->
+<fsnowoptics snicar_numrad_snw=5  >lnd/clm2/snicardata/snicar_optics_5bnd_c013122.nc</fsnowoptics>
 
 <snicar_snw_shape phys="clm5_1">hexagonal_plate</snicar_snw_shape>
 <snicar_snw_shape phys="clm5_0">sphere</snicar_snw_shape>
@@ -1552,7 +1557,6 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <snicar_aerforc_diag >.false.</snicar_aerforc_diag>
 <snicar_solarspec    >mid_latitude_winter</snicar_solarspec>
 <snicar_dust_optics  >sahara</snicar_dust_optics>
-<snicar_numrad_snw   >5</snicar_numrad_snw>
 <snicar_snodst_intmix>.false.</snicar_snodst_intmix>
 <snicar_snobc_intmix >.false.</snicar_snobc_intmix>
 <snicar_use_aerosol  >.true.</snicar_use_aerosol>

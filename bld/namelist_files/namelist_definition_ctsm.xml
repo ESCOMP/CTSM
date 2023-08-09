@@ -807,12 +807,6 @@ Full pathname of surface data file.
 SNICAR (SNow, ICe, and Aerosol Radiative model) optical data file name
 </entry>
 
-<entry id="fsnowoptics480" type="char*256" category="datasets" 
-       input_pathname="abs" group="clm_inparm" valid_values="" >
-SNICAR (SNow, ICe, and Aerosol Radiative model) 480-band optical data file name
-</entry>
-
-
 <entry id="fsnowaging" type="char*256"  category="datasets" 
        input_pathname="abs" group="clm_inparm" valid_values="" >
 SNICAR (SNow, ICe, and Aerosol Radiative model) snow aging data file name

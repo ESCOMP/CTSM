@@ -1812,7 +1812,7 @@ contains
    subroutine SnowOptics_init( )
      
      use fileutils  , only : getfil
-     use CLM_varctl , only : fsnowoptics, snicar_numrad_snw, fsnowoptics480
+     use CLM_varctl , only : fsnowoptics, snicar_numrad_snw
      use CLM_varctl , only : snicar_solarspec, snicar_dust_optics
      use spmdMod    , only : masterproc
      use ncdio_pio  , only : file_desc_t, ncd_io, ncd_pio_openfile, ncd_pio_closefile
@@ -1857,15 +1857,14 @@ contains
      allocate(flx_wgt_dir(snicar_numrad_snw))
      allocate(flx_wgt_dif(snicar_numrad_snw))
 
-     if(masterproc) write(iulog,*) 'Attempting to read snow optical properties .....'
+     if (masterproc) write(iulog,*) 'Attempting to read snow optical properties...'
+     call getfil (fsnowoptics, locfn, 0)
+     call ncd_pio_openfile(ncid, locfn, 0)
+     if(masterproc) write(iulog,*) subname,trim(fsnowoptics)
 
      !--------------------- for 5-band data
      select case (snicar_numrad_snw)
      case (5)  ! 5-band case
-
-        call getfil (fsnowoptics, locfn, 0)
-        call ncd_pio_openfile(ncid, locfn, 0)
-        if(masterproc) write(iulog,*) subname,trim(fsnowoptics)
 
         select case (snicar_solarspec)
         ! mid-latitude winter spectrum
@@ -2365,10 +2364,6 @@ contains
 
      !-------------------- for 480-band data
      case (480)
-
-        call getfil (fsnowoptics480, locfn, 0)
-        call ncd_pio_openfile(ncid, locfn, 0)
-        if(masterproc) write(iulog,*) subname,trim(fsnowoptics480)
 
         ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
         call ncd_io( 'ss_alb_bcphob', ss_alb_bc1,           'read', ncid, posNOTonfile=.true.)

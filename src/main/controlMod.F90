@@ -146,7 +146,7 @@ contains
 
     namelist /clm_inparm/  &
          fsurdat, &
-         paramfile, fsnowoptics, fsnowaging, fsnowoptics480
+         paramfile, fsnowoptics, fsnowaging
 
     ! History, restart options
 
@@ -662,7 +662,6 @@ contains
     call mpi_bcast (paramfile, len(paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowoptics, len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowaging,  len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (fsnowoptics480, len(fsnowoptics480),  MPI_CHARACTER, 0, mpicom, ier)
 
     ! Irrigation
     call mpi_bcast(irrigate, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -986,11 +985,6 @@ contains
        write(iulog,'(a)') '   snow aging parameters file NOT set'
     else
        write(iulog,'(a)') '   snow aging parameters file = '//trim(fsnowaging)
-    endif
-    if (fsnowoptics480 == ' ') then
-       write(iulog,*) '   SNICAR: snow optical properties (480-band) file NOT set'
-    else
-       write(iulog,*) '   SNICAR: snow optical properties (480-band) file = ',trim(fsnowoptics480)
     endif
     write(iulog,*) '   SNICAR: downward solar radiation spectrum type =', snicar_solarspec
     write(iulog,*) '   SNICAR: dust optics type = ', snicar_dust_optics
