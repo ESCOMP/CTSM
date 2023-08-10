@@ -27,6 +27,7 @@ module restFileMod
   use glcBehaviorMod   , only : glc_behavior_type
   use reweightMod      , only : reweight_wrapup
   use IssueFixedMetadataHandler, only : write_issue_fixed_metadata, read_issue_fixed_metadata
+  use restUtilMod      , only : excess_ice_issue
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -592,6 +593,8 @@ contains
     ! !DESCRIPTION:
     ! Write metadata for issues fixed
     !
+    ! !USES:
+    use clm_varctl, only : use_excess_ice
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: ncid ! local file id
     logical          , intent(in)    :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file
@@ -606,6 +609,15 @@ contains
          ncid = ncid, &
          writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
          issue_num = lake_dynbal_baseline_issue)
+    ! If running with execess ice then mark the restart file as having excess ice fixed
+    ! This is a permanent feature, i.e. not expected to be removed from here.
+    ! It would only be removed if we decided to make use_excess_ice = .true. the default.
+    if ( use_excess_ice ) then
+       call write_issue_fixed_metadata( &
+            ncid = ncid, &
+            writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
+            issue_num = excess_ice_issue)
+    end if
 
   end subroutine restFile_write_issues_fixed
 

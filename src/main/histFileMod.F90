@@ -22,12 +22,12 @@ module histFileMod
   use LandunitType   , only : lun
   use ColumnType     , only : col
   use PatchType      , only : patch
-  use EDTypesMod     , only : nclmax
-  use EDTypesMod     , only : nlevleaf
+  use EDParamsMod    , only : nclmax
+  use EDParamsMod    , only : nlevleaf
   use FatesInterfaceTypesMod , only : nlevsclass, nlevage, nlevcoage
   use FatesInterfaceTypesMod , only : nlevheight
   use FatesInterfaceTypesMod , only : nlevdamage
-  use EDTypesMod        , only : nfsc
+  use FatesLitterMod        , only : nfsc
   use FatesLitterMod    , only : ncwd
   use PRTGenericMod     , only : num_elements_fates  => num_elements
   use FatesInterfaceTypesMod , only : numpft_fates => numpft
@@ -804,8 +804,11 @@ contains
     ! !DESCRIPTION:
     ! Define the contents of each history file based on namelist
     ! input for initial or branch run, and restart data if a restart run.
-    ! Use arrays fincl and fexcl to modify default history tape contents.
+    ! Fill and use arrays fincl and fexcl to modify default history tape contents.
     ! Then sort the result alphanumerically.
+    !
+    ! Sets history_tape_in_use and htapes_defined. Fills fields in 'tape' array.
+    ! Optionally updates masterlist avgflag.
     !
     ! !ARGUMENTS:
     !

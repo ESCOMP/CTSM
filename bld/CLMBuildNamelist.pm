@@ -168,7 +168,8 @@ OPTIONS
                               (default is 0) (standard option with land-ice model is 10)
      -glc_use_antarctica      Set defaults appropriate for runs that include Antarctica
      -help [or -h]            Print usage to STDOUT.
-     -light_res <value>       Resolution of lightning dataset to use for CN fire (360x720 or 94x192)
+     -light_res <value>       Resolution of lightning dataset to use for CN or FATES fire (360x720, 106x174, or 94x192)
+                              106x174 can only be used for NEON sites
      -lilac                   If CTSM is being run through LILAC (normally not used)
                               (LILAC is the Lightweight Infrastructure for Land-Atmosphere Coupling)
      -ignore_ic_date          Ignore the date on the initial condition files
@@ -688,6 +689,13 @@ sub setup_cmdl_resolution {
       }
     }
   }
+  # For NEON sites
+  if ($nl_flags->{'res'} =~ /NEON/) {
+    $nl_flags->{'neon'} = ".true."
+  } else {
+    $nl_flags->{'neon'} = ".false."
+  }
+
 }
 
 #-------------------------------------------------------------------------------
@@ -952,59 +960,84 @@ sub setup_cmdl_fire_light_res {
 
   my $var = "light_res";
   my $val = $opts->{$var};
+  if ( &value_is_true($nl->get_value('use_cn')) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
+  }
+  my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
   if ( $val eq "default" ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                  'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'},
+                 'neon'=>$nl_flags->{'neon'},
                  'fates_spitfire_mode'=>$nl->get_value('fates_spitfire_mode'),
-                 'use_fates'=>$nl_flags->{'use_fates'}, fire_method=>$nl->get_value('fire_method') );
+                 'use_fates'=>$nl_flags->{'use_fates'}, fire_method=>$fire_method );
      $val              = remove_leading_and_trailing_quotes( $nl->get_value($var) );
      $nl_flags->{$var} = $val;
   } else {
-     my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
      if ( defined($fire_method) && $val ne "none" ) {
         if ( $fire_method eq "nofire" ) {
            $log->fatal_error("-$var option used with fire_method='nofire'. -$var can ONLY be used without the nofire option");
-         }
-       }
-       my $stream_fldfilename_lightng = remove_leading_and_trailing_quotes( $nl->get_value('stream_fldfilename_lightng') );
-       if ( defined($stream_fldfilename_lightng) && $val ne "none" ) {
-          $log->fatal_error("-$var option used while also explicitly setting stream_fldfilename_lightng filename which is a contradiction. Use one or the other not both.");
-       }
-       if ( ! &value_is_true($nl->get_value('use_cn')) ) {
-          $log->fatal_error("-$var option used CN is NOT on. -$var can only be used when CN is on (with bgc: cn or bgc)");
-       }
-       if ( &value_is_true($nl->get_value('use_cn')) && $val eq "none" ) {
-          $log->fatal_error("-$var option is set to none, but CN is on (with bgc: cn or bgc) which is a contradiction");
-       }
-       $nl_flags->{$var} = $val;
-    }
-    my $group = $definition->get_group_name($var);
-    $nl->set_variable_value($group, $var, quote_string($nl_flags->{$var}) );
-    if (  ! $definition->is_valid_value( $var, $nl_flags->{$var}, 'noquotes'=>1 ) ) {
-      my @valid_values   = $definition->get_valid_values( $var );
-      $log->fatal_error("$var has a value (".$nl_flags->{$var}.") that is NOT valid. Valid values are: @valid_values");
-    }
-    $log->verbose_message("Using $nl_flags->{$var} for $var.");
-    #
-    # Set flag if cn-fires are on or not
-    #
-    $var = "cnfireson";
-    if ( &value_is_true($nl->get_value('use_cn')) ) {
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
-    }
-    my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
-    if ( defined($fire_method) && ! &value_is_true($nl_flags->{'use_cn'}) && ! &value_is_true($nl_flags->{'use_fates'}) ) {
-       $log->fatal_error("fire_method is being set while use_cn and use_fates are both false.");
-    }
-    if ( defined($fire_method) && $fire_method eq "nofire" ) {
-       $nl_flags->{$var} = ".false.";
-#   } elsif ( &value_is_true($nl->get_value('use_cn')) || $nl_flags->{'fates_spitfire_mode'} > 1 ) {
-    } elsif ( &value_is_true($nl->get_value('use_cn')) || &value_is_true($nl->get_value('use_fates')) ) {
-       $nl_flags->{$var} = ".true.";
-    } else {
-       $nl_flags->{$var} = ".false.";
-    }
+        }
+     }
+     my $stream_fldfilename_lightng = remove_leading_and_trailing_quotes( $nl->get_value('stream_fldfilename_lightng') );
+     if ( defined($stream_fldfilename_lightng) && $val ne "none" ) {
+        $log->fatal_error("-$var option used while also explicitly setting stream_fldfilename_lightng filename which is a contradiction. Use one or the other not both.");
+     }
+     if ( ! &value_is_true($nl->get_value('use_cn')) ) {
+        if ( &value_is_true($nl_flags->{'use_fates'}) ) {
+           if ( $nl->get_value('fates_spitfire_mode') < 2) {
+              if ( $val ne "none" ) {
+                  $log->fatal_error("-$var option used when FATES is on, but fates_spitfire_mode does NOT use lightning data");
+              }
+           } else {
+              if ( $val eq "none" ) {
+                 $log->fatal_error("-$var option is set to none, but FATES is on and fates_spitfire_mode requires lightning data");
+              }
+           }
+        } else {
+           $log->fatal_error("-$var option used when FATES off and CN is NOT on. -$var can only be used when BGC is set to bgc or fates");
+        }
+     } else {
+        if ( $val eq "none" and $fire_method ne "nofire" ) {
+           $log->fatal_error("-$var option is set to none, but CN is on (with bgc: cn or bgc) which is a contradiction");
+        }
+     }
+     $nl_flags->{$var} = $val;
   }
+  # Check that NEON data is only used for NEON sites
+  if ( $val eq "106x174" ) {
+     if ( ! &value_is_true($nl_flags->{'neon'}) ) {
+         if ( defined($opts->{'clm_usr_name'}) ) {
+            $log->warning("The NEON lightning dataset does NOT cover the entire globe, make sure it covers the region for your grid");
+         } else { 
+            $log->fatal_error("The NEON lightning dataset can NOT be used for global grids or regions or points outside of its area as it does NOT cover the entire globe.");
+         }
+     }
+  }
+  # check for valid values...
+  my $group = $definition->get_group_name($var);
+  $nl->set_variable_value($group, $var, quote_string($nl_flags->{$var}) );
+  if (  ! $definition->is_valid_value( $var, $nl_flags->{$var}, 'noquotes'=>1 ) ) {
+    my @valid_values   = $definition->get_valid_values( $var );
+    $log->fatal_error("$var has a value (".$nl_flags->{$var}.") that is NOT valid. Valid values are: @valid_values");
+  }
+  $log->verbose_message("Using $nl_flags->{$var} for $var.");
+  #
+  # Set flag if cn-fires are on or not, only for BGC (not FATES)
+  #
+  $var = "cnfireson";
+  my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
+  if ( defined($fire_method) && ! &value_is_true($nl_flags->{'use_cn'}) && ! &value_is_true($nl_flags->{'use_fates'}) ) {
+     $log->fatal_error("fire_method is being set while use_cn and use_fates are both false.");
+  }
+  if ( defined($fire_method) && $fire_method eq "nofire" ) {
+     $nl_flags->{$var} = ".false.";
+# } elsif ( &value_is_true($nl->get_value('use_cn')) || $nl_flags->{'fates_spitfire_mode'} > 1 ) {
+  } elsif ( &value_is_true($nl->get_value('use_cn')) || &value_is_true($nl->get_value('use_fates')) ) {
+     $nl_flags->{$var} = ".true.";
+  } else {
+     $nl_flags->{$var} = ".false.";
+  }
+}
 
 #-------------------------------------------------------------------------------
 
@@ -1592,9 +1625,9 @@ sub process_namelist_inline_logic {
   setup_logic_urban($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ###############################
-  # namelist group: crop        #
+  # namelist group: crop_inparm #
   ###############################
-  setup_logic_crop($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_crop_inparm($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ###############################
   # namelist group: ch4par_in   #
@@ -1661,6 +1694,11 @@ sub process_namelist_inline_logic {
   # namelist group: lai_streams  #
   ##################################
   setup_logic_lai_streams($opts,  $nl_flags, $definition, $defaults, $nl);
+
+  ##################################
+  # namelist group: cropcal_streams  #
+  ##################################
+  setup_logic_cropcal_streams($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ##########################################
   # namelist group: soil_moisture_streams  #
@@ -1755,6 +1793,11 @@ sub process_namelist_inline_logic {
   # namelist group: clm_initinterp_inparm #
   #########################################
   setup_logic_initinterp($opts, $nl_flags, $definition, $defaults, $nl);
+
+  ###############################
+  # namelist group: exice_streams   #
+  ###############################
+  setup_logic_exice($opts, $nl_flags, $definition, $defaults, $nl);
 }
 
 #-------------------------------------------------------------------------------
@@ -2116,7 +2159,7 @@ sub setup_logic_urban {
 
 #-------------------------------------------------------------------------------
 
-sub setup_logic_crop {
+sub setup_logic_crop_inparm {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   if ( &value_is_true($nl->get_value('use_crop')) ) {
@@ -2159,6 +2202,7 @@ sub setup_logic_soilstate {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'organic_frac_squared' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_bedrock',
               'use_fates'=>$nl_flags->{'use_fates'}, 'vichydro'=>$nl_flags->{'vichydro'} );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice'); # excess ice flag should be read before stream vars
 
   my $var1 = "soil_layerstruct_predefined";
   my $var2 = "soil_layerstruct_userdefined";
@@ -3887,6 +3931,53 @@ sub setup_logic_lai_streams {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_cropcal_streams {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  # Set first and last stream years
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal',
+              'sim_year'=>$nl_flags->{'sim_year'},
+              'sim_year_range'=>$nl_flags->{'sim_year_range'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal',
+              'sim_year'=>$nl_flags->{'sim_year'},
+              'sim_year_range'=>$nl_flags->{'sim_year_range'});
+
+  # Set align year, if first and last years are different
+  if ( $nl->get_value('stream_year_first_cropcal') !=
+      $nl->get_value('stream_year_last_cropcal') ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                'model_year_align_cropcal', 'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+  }
+
+  # Set up other crop calendar parameters
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'generate_crop_gdds');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_mxmat');
+
+  # Option checks
+  my $generate_crop_gdds = $nl->get_value('generate_crop_gdds') ;
+  my $use_mxmat = $nl->get_value('use_mxmat') ;
+  my $sdate_file = $nl->get_value('stream_fldFileName_sdate') ;
+  my $gdd_file = $nl->get_value('stream_fldFileName_cultivar_gdds') ;
+  my $mesh_file = $nl->get_value('stream_meshfile_cropcal') ;
+  if ( $generate_crop_gdds eq '.true.' ) {
+      if ( $use_mxmat eq '.true.' ) {
+          $log->fatal_error("If generate_crop_gdds is true, you must also set use_mxmat to false" );
+      }
+      if ( $sdate_file eq '' ) {
+          $log->fatal_error("If generate_crop_gdds is true, you must specify stream_fldFileName_sdate")
+      }
+      if ( $gdd_file ne '' ) {
+          $log->fatal_error("If generate_crop_gdds is true, do not specify stream_fldFileName_cultivar_gdds")
+      }
+  }
+  if ( $mesh_file eq '' and ( $sdate_file ne '' or $gdd_file ne '' ) ) {
+      $log->fatal_error("If prescribing crop sowing dates and/or maturity requirements, you must specify stream_meshfile_cropcal")
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_soilwater_movement {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
@@ -4222,6 +4313,54 @@ sub setup_logic_fates {
 }
 
 #-------------------------------------------------------------------------------
+sub setup_logic_exice {
+  #
+  # excess ice streams
+  #
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  my $use_exice = $nl->get_value( 'use_excess_ice' );
+  my $use_exice_streams = $nl->get_value( 'use_excess_ice_streams' );
+  # IF excess ice streams is on
+  if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
+     # Can only be true if excess ice is also on, otherwise fail
+     if (defined($use_exice) && not value_is_true($use_exice)) {
+        $log->fatal_error("use_excess_ice_streams can NOT be TRUE when use_excess_ice is FALSE" );
+     }
+  # Otherwise if ice streams are off
+  } else {
+     my @list = ( "stream_meshfile_exice", "stream_fldfilename_exice" );
+     # fail is excess ice streams files are set
+     foreach my $var ( @list ) {
+        if ( defined($nl->get_value($var)) ) {
+           $log->fatal_error("$var should NOT be set when use_excess_ice_streams=FALSE" );
+        }
+     }
+     # mapalgo can only be none, if excess ice streams are off
+     my $map_algo = $nl->get_value("stream_mapalgo_exice");
+     if ( defined($map_algo) && ($map_algo ne "none") ) {
+        $log->fatal_error("stream_mapalgo_exice can ONLY be none when use_excess_ice_streams=FALSE" );
+     }
+  }
+  # If excess ice is on
+  if (defined($use_exice) && value_is_true($use_exice)) {
+     # IF nuopc driver and excess ice streams are on get the stream defaults
+     if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_exice');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_mapalgo_exice');
+       # If excess ice streams on, but NOT the NUOPC driver fail
+       if ( not $opts->{'driver'} eq "nuopc" ) {
+          $log->fatal_error("nuopc driver is required when use_excess_ice_streams is set to true" );
+       # NUOPC driver needs a mesh file
+       } else {
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_exice');
+       }
+     }
+  }
+
+
+} # end exice streams
+
+#-------------------------------------------------------------------------------
 
 sub setup_logic_misc {
    #
@@ -4264,6 +4403,7 @@ sub write_output_files {
   my @groups;
   @groups = qw(clm_inparm ndepdyn_nml popd_streams urbantv_streams light_streams
                soil_moisture_streams lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
+               cropcal_streams
                clm_soilhydrology_inparm dynamic_subgrid cnvegcarbonstate
                finidat_consistency_checks dynpft_consistency_checks
                clm_initinterp_inparm century_soilbgcdecompcascade
@@ -4271,7 +4411,7 @@ sub write_output_files {
                soilwater_movement_inparm rooting_profile_inparm
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
-               cnprecision_inparm clm_glacier_behavior crop irrigation_inparm
+               cnprecision_inparm clm_glacier_behavior crop_inparm irrigation_inparm
                surfacealbedo_inparm water_tracers_inparm);
 
   #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm
@@ -4291,6 +4431,7 @@ sub write_output_files {
   push @groups, "nitrif_inparm";
   push @groups, "lifire_inparm";
   push @groups, "ch4finundated";
+  push @groups, "exice_streams";
   push @groups, "soilbgc_decomp";
   push @groups, "clm_canopy_inparm";
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
