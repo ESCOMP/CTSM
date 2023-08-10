@@ -283,8 +283,8 @@ contains
                ! First, get diffusivity as a unitless constant, which is what's needed to
                ! calculate ratio_k1 below.
                diffus (c,j) = &
-                    (om_frac * eps**(10._r8/3._r8) / watsat(c,j)**2 + &
-                    (1._r8-om_frac) * eps**2 * f_a**(3._r8 / bsw(c,j)) ) 
+                    (om_frac * (eps**(10._r8/3._r8) / watsat(c,j)**2) + &
+                    (1._r8-om_frac) * (eps**2 * f_a**(3._r8 / bsw(c,j))) ) 
 
                ! calculate anoxic fraction of soils
                ! use rijtema and kroess model after Riley et al., 2000
