@@ -1,4 +1,100 @@
 ===============================================================
+Tag name: ctsm5.1.dev133
+Originator(s): adrifoster (Adrianna Foster), glemieux (Gregory Lemieux, LBL/NGEET)
+Date: Wed Aug  9 22:44:46 MDT 2023
+One-line Summary: FATES API update to facilitate fates refactor
+
+Purpose and description of changes
+----------------------------------
+
+This updates a number of FATES type names and module use statements
+which correspond with a refactoring effort that moves FATES
+patches and cohorts into their own respective modules.
+
+With the FATES update is a minor science update, so there are
+changes to answers for FATES.
+
+This also incorporates a minor update to a more recent version
+of the ccs config external.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues updated:
+
+    Updated #1733 -- nvhpc compiler tests failing on cheyenne
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+    - Note that the fates patch and cohort types now use the `fates_` prefix instead
+      of the `ed_` prefix.
+    - The expected failures list of tests has been expanded to include the remaining
+      nvhpc compiler tests on cheyenne with this update
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+      cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+    Note that the previous ctsm5.1.dev132 tag was generated using FATES tagname
+    sci.1.66.1_api.25.5.0.  This api update includes intermediate FATES science
+    tags that are non-b4b, so aux_clm FATES tests result in DIFFs as expected.
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, but only for aux_clm fates tests.
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+    sci.1.66.1_api.25.5.0 -> sci.1.67.1_api.26.0.0
+    ccs_config_cesm0.0.64 -> ccs_config_cesm0.0.65
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+    https://github.com/ESCOMP/CTSM/pull/2000 -- refactor
+    https://github.com/ESCOMP/CTSM/pull/2089 -- Change template update
+    https://github.com/NGEET/fates/pull/1024 -- FATES refactor
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev132
 Originator(s): mvdebolskiy (NORCE, Bergen, Norway), slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Fri Aug  4 17:52:45 MDT 2023
@@ -91,13 +187,9 @@ Testing summary:
 
     cheyenne - PASS
 
-  tools-tests (test/tools) (if tools have been changed):
-
-    cheyenne -
-
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ---- OK
+    heyenne ---- OK
     izumi ------- OK
 
   any other testing (give details below):
