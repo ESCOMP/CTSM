@@ -463,8 +463,7 @@ contains
     real(r8) :: g_F07_p1(1:7)
     real(r8) :: g_F07_p0(1:7)
     ! other temporary variables
-    real(r8) :: wvl_ct5(1:5)                      ! band center wavelength (um) for 5-band case
-    real(r8) :: wvl_ct480(1:480)                  ! band center wavelength (um) for 480-band case, computed below
+    real(r8), allocatable :: wvl_ct(:)            ! band center wavelength (um) for 5 or 480-band case
     real(r8) :: diam_ice                          ! effective snow grain diameter (SSA-equivalent) unit: microns
     real(r8) :: fs_sphd                           ! shape factor for spheroid snow
     real(r8) :: fs_hex                            ! shape factor for reference hexagonal snow
@@ -565,7 +564,7 @@ contains
       ! Table 3 of He et al 2017 JC
       g_wvl(1:8)    = (/ 0.25_r8, 0.70_r8, 1.41_r8, 1.90_r8, &
                          2.50_r8, 3.50_r8, 4.00_r8, 5.00_r8 /)
-      g_wvl_ct(1:7) = g_wvl(2:8) / 2._r8 + g_wvl(1:7) / 2._r8
+      g_wvl_ct(1:7) = g_wvl(2:8) * 0.5_r8 + g_wvl(1:7) * 0.5_r8
       g_b0(1:7)     = (/  9.76029E-1_r8,  9.67798E-1_r8,  1.00111_r8, 1.00224_r8, &
                           9.64295E-1_r8,  9.97475E-1_r8,  9.97475E-1_r8 /)
       g_b1(1:7)     = (/  5.21042E-1_r8,  4.96181E-1_r8,  1.83711E-1_r8,  1.37082E-1_r8, &
@@ -590,7 +589,7 @@ contains
       ! Eq. 8b & Table 4 in He et al., 2017 J. Climate (wavelength>1.2um, no BC-snow int mixing effect)
       bcint_wvl(1:17) = (/ 0.20_r8, 0.25_r8, 0.30_r8, 0.33_r8, 0.36_r8, 0.40_r8, 0.44_r8, 0.48_r8, &
                            0.52_r8, 0.57_r8, 0.64_r8, 0.69_r8, 0.75_r8, 0.78_r8, 0.87_r8, 1._r8, 1.2_r8 /)
-      bcint_wvl_ct(1:16) = bcint_wvl(2:17)/2._r8 + bcint_wvl(1:16)/2._r8
+      bcint_wvl_ct(1:16) = bcint_wvl(2:17) * 0.5_r8 + bcint_wvl(1:16) * 0.5_r8
       bcint_d0(1:16)  = (/ 2.48045_r8   , 4.70305_r8   , 4.68619_r8   , 4.67369_r8   , 4.65040_r8   , &
                            2.40364_r8   , 7.95408E-1_r8, 2.92745E-1_r8, 8.63396E-2_r8, 2.76299E-2_r8, &
                            1.40864E-2_r8, 8.65705E-3_r8, 6.12971E-3_r8, 4.45697E-3_r8, 3.06648E-2_r8, &
@@ -616,10 +615,15 @@ contains
       dstint_a3(1:6) = (/  9.9701E-1_r8,  9.9781E-1_r8,  9.9848E-1_r8, 1.0035_r8   , 1.0024_r8   , 1.0356_r8    /)
 
       ! SNICAR/CLM snow band center wavelength (um)
-      wvl_ct5(1:5)  = (/ 0.5_r8, 0.85_r8, 1.1_r8, 1.35_r8, 3.25_r8 /)  ! 5-band
-      do igb = 1,480 
-         wvl_ct480(igb) = 0.205_r8 + 0.01_r8 * (igb-1)  ! 480-band
-      enddo
+      allocate(wvl_ct(snicar_numrad_snw))
+      select case (snicar_numrad_snw)
+      case (5)
+         wvl_ct(:)  = (/ 0.5_r8, 0.85_r8, 1.1_r8, 1.35_r8, 3.25_r8 /)  ! 5-band
+      case (480)
+         do igb = 1, snicar_numrad_snw
+            wvl_ct(igb) = 0.205_r8 + 0.01_r8 * (igb - 1._r8)  ! 480-band
+         enddo
+      end select
 
       ! Define constants
       pi = SHR_CONST_PI
@@ -872,14 +876,8 @@ contains
                         ! 7 wavelength bands for g_ice to be interpolated into targeted SNICAR bands here
                         ! use the piecewise linear interpolation subroutine created at the end of this module
                         ! tests showed the piecewise linear interpolation has similar results as pchip interpolation
-                        select case (snicar_numrad_snw)
-                        case (5)
-                           call piecewise_linear_interp1d(7,g_wvl_ct,g_ice_Cg_tmp,wvl_ct5(bnd_idx),g_Cg_intp)
-                           call piecewise_linear_interp1d(7,g_wvl_ct,gg_ice_F07_tmp,wvl_ct5(bnd_idx),gg_F07_intp)
-                        case (480)
-                           call piecewise_linear_interp1d(7,g_wvl_ct,g_ice_Cg_tmp,wvl_ct480(bnd_idx),g_Cg_intp)
-                           call piecewise_linear_interp1d(7,g_wvl_ct,gg_ice_F07_tmp,wvl_ct480(bnd_idx),gg_F07_intp)
-                        end select
+                        call piecewise_linear_interp1d(7, g_wvl_ct, g_ice_Cg_tmp, wvl_ct(bnd_idx), g_Cg_intp)
+                        call piecewise_linear_interp1d(7, g_wvl_ct, gg_ice_F07_tmp, wvl_ct(bnd_idx), gg_F07_intp)
                         g_ice_F07 = gg_F07_intp + 0.5_r8 * (1._r8 - gg_F07_intp) / ss_alb_snw_lcl(i)  ! Eq.2.2 in Fu (2007)
                         asm_prm_snw_lcl(i) = g_ice_F07 * g_Cg_intp     ! Eq.6, He et al. (2017)
                      endif
@@ -933,12 +931,8 @@ contains
                      ext_cff_mss_aer_lcl(8) = ext_cff_mss_dst4(bnd_idx)
 
                      ! Start BC/dust-snow internal mixing for wavelength<=1.2um
-                     select case (snicar_numrad_snw)
-                     case (5)
-                        wvl_doint = wvl_ct5(bnd_idx)
-                     case (480)
-                        wvl_doint = wvl_ct480(bnd_idx)
-                     end select
+                     wvl_doint = wvl_ct(bnd_idx)
+
                      if (wvl_doint <= 1.2_r8) then
  
                         ! BC-snow internal mixing applied to hydrophilic BC if activated
