@@ -1384,26 +1384,23 @@ contains
             ! Weight output NIR albedo appropriately
             select case (snicar_numrad_snw)
             case (5)  ! 5-band case
+              ! VIS band
               albout(c_idx,1) = albout_lcl(1)
-              flx_sum         = 0._r8
-              do bnd_idx= nir_bnd_bgn,nir_bnd_end
-                 flx_sum = flx_sum + flx_wgt(bnd_idx)*albout_lcl(bnd_idx)
-              end do
-              albout(c_idx,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
             case (480)  ! 480-band case
               ! average for VIS band
-              flx_sum         = 0._r8
+              flx_sum = 0._r8
               do bnd_idx= 1, (nir_bnd_bgn-1)
                  flx_sum = flx_sum + flx_wgt(bnd_idx)*albout_lcl(bnd_idx)
               end do
               albout(c_idx,1) = flx_sum / sum(flx_wgt(1:(nir_bnd_bgn-1)))
-              ! average for NIR band
-              flx_sum         = 0._r8
-              do bnd_idx= nir_bnd_bgn,nir_bnd_end
-                 flx_sum = flx_sum + flx_wgt(bnd_idx)*albout_lcl(bnd_idx)
-              end do
-              albout(c_idx,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
             end select
+
+            ! average for NIR band
+            flx_sum = 0._r8
+            do bnd_idx = nir_bnd_bgn, nir_bnd_end
+               flx_sum = flx_sum + flx_wgt(bnd_idx) * albout_lcl(bnd_idx)
+            end do
+            albout(c_idx,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
 
             ! Weight output NIR absorbed layer fluxes (flx_abs) appropriately
             select case (snicar_numrad_snw)
