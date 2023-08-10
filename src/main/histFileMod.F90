@@ -143,8 +143,9 @@ module histFileMod
   ! !PUBLIC MEMBER FUNCTIONS:  (in rough call order)
   public :: hist_addfld1d        ! Add a 1d single-level field to the master field list
   public :: hist_addfld2d        ! Add a 2d multi-level field to the master field list
+
   public :: hist_addfld_decomp   ! Add a 1d/2d field based on patch or column data
-  public :: hist_add_subscript   ! Add a 2d subscript dimension
+
 
   public :: hist_printflds       ! Print summary of master field list
   public :: htapes_fieldlist     ! Finalize history file field lists, intersecting masterlist with
@@ -193,10 +194,6 @@ module histFileMod
                                                   ! is 255. But this can't be increased until all hard
                                                   ! coded values throughout the i/o stack are updated.
   integer, parameter :: max_chars = 199        ! max chars for char variables
-  integer, parameter :: max_subs = 100         ! max number of subscripts
-  integer            :: num_subs = 0           ! actual number of subscripts
-  character(len=32)  :: subs_name(max_subs)    ! name of subscript
-  integer            :: subs_dim(max_subs)     ! dimension of subscript
   !
   type field_info
      character(len=max_namlen) :: name         ! field name
@@ -2464,9 +2461,6 @@ contains
     ! (although on the history file it will go 1:(nec+1) rather than 0:nec)
     call ncd_defdim(lnfid, 'elevclas' , maxpatch_glc + 1, dimid)
 
-    do n = 1,num_subs
-       call ncd_defdim(lnfid, subs_name(n), subs_dim(n), dimid)
-    end do
     call ncd_defdim(lnfid, 'string_length', hist_dim_name_length, strlen_dimid)
     call ncd_defdim(lnfid, 'scale_type_string_length', scale_type_strlen, dimid)
     call ncd_defdim( lnfid, 'levdcmp', nlevdecomp_full, dimid)
@@ -5837,31 +5831,6 @@ contains
     endif
 
   end function next_history_pointer_index
-
-  !-----------------------------------------------------------------------
-  subroutine hist_add_subscript(name, dim)
-    !
-    ! !DESCRIPTION:
-    ! Add a history variable to the output history tape.
-    !
-    ! !ARGUMENTS:
-    character(len=*), intent(in) :: name ! name of subscript
-    integer         , intent(in) :: dim  ! dimension of subscript
-    !
-    ! !LOCAL VARIABLES:
-    character(len=*),parameter :: subname = 'hist_add_subscript'
-    !-----------------------------------------------------------------------
-
-    num_subs = num_subs + 1
-    if (num_subs > max_subs) then
-       write(iulog,*) trim(subname),' ERROR: ',&
-            ' num_subs = ',num_subs,' greater than max_subs= ',max_subs
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    endif
-    subs_name(num_subs) = name
-    subs_dim(num_subs) =  dim
-
-  end subroutine hist_add_subscript
 
   !-----------------------------------------------------------------------
 
