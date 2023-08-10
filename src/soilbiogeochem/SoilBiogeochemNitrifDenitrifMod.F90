@@ -183,7 +183,7 @@ contains
     real(r8) :: r_max
     real(r8) :: r_min(bounds%begc:bounds%endc,1:nlevdecomp)
     real(r8) :: ratio_diffusivity_water_gas(bounds%begc:bounds%endc,1:nlevdecomp)
-    real(r8) :: om_frac
+    real(r8) :: om_frac, diffus_millingtonquirk, diffus_moldrup
     real(r8) :: anaerobic_frac_sat, r_psi_sat, r_min_sat ! scalar values in sat portion for averaging
     real(r8) :: organic_max              ! organic matter content (kg/m3) where
                                          ! soil is assumed to act like peat
@@ -280,11 +280,19 @@ contains
                   om_frac = 1._r8
                end if
 
+               ! Diffusitivity after Moldrup et al. (2003)
+               ! Eq. 8 in Riley et al. (2011, Biogeosciences)
+               diffus_moldrup = eps**2 * f_a**(3._r8 / bsw(c,j))
+
+               ! Diffusivity after Millington & Quirk (1961)
+               ! Eq. 9 in Riley et al. (2011, Biogeosciences)
+               diffus_millingtonquirk = eps**(10._r8/3._r8) / watsat(c,j)**2
+
                ! First, get diffusivity as a unitless constant, which is what's needed to
                ! calculate ratio_k1 below.
                diffus (c,j) = &
-                    (om_frac * (eps**(10._r8/3._r8) / watsat(c,j)**2) + &
-                    (1._r8-om_frac) * (eps**2 * f_a**(3._r8 / bsw(c,j))) ) 
+                    (om_frac        * diffus_millingtonquirk + &
+                    (1._r8-om_frac) * diffus_moldrup ) 
 
                ! calculate anoxic fraction of soils
                ! use rijtema and kroess model after Riley et al., 2000
