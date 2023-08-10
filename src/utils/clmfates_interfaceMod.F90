@@ -1182,9 +1182,17 @@ module CLMFatesInterfaceMod
 
      associate(cf_soil => soilbiogeochem_carbonflux_inst)
 
-       cf_soil%decomp_cpools_sourcesink_col(c,:,:) = 0._r8
+       ! This is zeroed in CNDriverNoLeaching -> soilbiogeochem_carbonflux_inst%SetValues()
+       ! Which is called prior to this call, which is later in the CNDriverNoLeaching()
+       ! routine.
+       ! cf_soil%decomp_cpools_sourcesink_col(c,:,:) = 0._r8
        
        if ( .not. use_fates_sp ) then
+
+
+          call FluxIntoLitterPools(this%fates(ci)%sites(s), &
+                                   this%fates(ci)%bc_in(s), &
+                                   this%fates(ci)%bc_out(s))
 
           ! (gC/m3/timestep)
           cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_met_lit) = &
@@ -1711,16 +1719,6 @@ module CLMFatesInterfaceMod
                         this%fates(nc)%bc_in(s), &
                         this%fates(nc)%bc_out(s) )
 
-                  ! This call sends internal fates variables into the
-                  ! output boundary condition structures. Note: this is called
-                  ! internally in fates dynamics as well.
-                  call FluxIntoLitterPools(this%fates(nc)%sites(s), &
-                       this%fates(nc)%bc_in(s), &
-                       this%fates(nc)%bc_out(s))
-
-                  call this%UpdateCLitterFluxes(soilbiogeochem_carbonflux_inst,nc,c)
-                  call this%UpdateNLitterFluxes(soilbiogeochem_nitrogenflux_inst,nc,c)
-
                end do
 
                if(use_fates_sp)then
@@ -1944,15 +1942,6 @@ module CLMFatesInterfaceMod
               call ed_update_site(this%fates(nc)%sites(s), &
                     this%fates(nc)%bc_in(s), &
                     this%fates(nc)%bc_out(s))
-
-              ! This call sends internal fates variables into the
-              ! output boundary condition structures. Note: this is called
-              ! internally in fates dynamics as well.
-              call FluxIntoLitterPools(this%fates(nc)%sites(s), &
-                   this%fates(nc)%bc_in(s), &
-                   this%fates(nc)%bc_out(s))
-
-              !call UpdateCLitterFluxes(this,soilbiogeochem_carbonflux_inst,ci,c)
 
            end do
 

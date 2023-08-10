@@ -239,7 +239,10 @@ contains
             if(col%is_fates(c))then
                s = clm_fates%f2hmap(clump_index)%hsites(c)
                ! %ema_npp is Smoothed [gc/m2/yr]
-               npp = clm_fates%fates(clump_index)%bc_out(s)%ema_npp/(dayspyr*secspday)
+               !npp = clm_fates%fates(clump_index)%bc_out(s)%ema_npp/(dayspyr*secspday)
+               ! FATES N cycling is not yet active, so runs are supplemented anyway
+               ! this will be added when FATES N cycling is completed.
+               npp = 0._r8
             else
                npp = col_lag_npp(c)
             end if
@@ -259,7 +262,9 @@ contains
 
             if(col%is_fates(c))then
                s = clm_fates%f2hmap(clump_index)%hsites(c)
-               npp = clm_fates%fates(clump_index)%bc_out(s)%ema_npp 
+               !npp = clm_fates%fates(clump_index)%bc_out(s)%ema_npp 
+               ! See above regarding FATES and N fixation
+               npp = 0._r8
             else 
                npp = cannsum_npp(c)
             end if
