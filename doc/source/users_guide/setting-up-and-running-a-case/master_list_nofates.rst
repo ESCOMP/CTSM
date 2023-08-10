@@ -1289,7 +1289,7 @@ CTSM History Fields
 1274 anaerobic_frac                      anaerobic_frac                                                                                 m3/m3                                                                  F
 1275 bsw                                 clap and hornberger B                                                                          unitless                                                               F
 1276 currentPatch                        currentPatch coefficient for VOC calc                                                          non                                                                    F
-1277 diffus                              diffusivity                                                                                    m^2/s                                                                  F
+1277 diffus                              diffusivity (from nitrification-denitrification)                                               m^2/s                                                                  F
 1278 fr_WFPS                             fr_WFPS                                                                                        fraction                                                               F
 1279 n2_n2o_ratio_denit                  n2_n2o_ratio_denit                                                                             gN/gN                                                                  F
 1280 num_iter                            number of iterations                                                                           unitless                                                               F
