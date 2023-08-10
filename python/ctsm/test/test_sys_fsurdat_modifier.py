@@ -440,7 +440,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
             with open(self._cfg_template_path, "r", encoding="utf-8") as cfg_in:
                 for line in cfg_in:
                     if re.match(r" *evenly_split_cropland *=", line):
-                        line = f"evenly_split_cropland = True"
+                        line = "evenly_split_cropland = True"
                     elif re.match(r" *fsurdat_in *=", line):
                         line = f"fsurdat_in = {self._fsurdat_in}"
                     elif re.match(r" *fsurdat_out *=", line):
