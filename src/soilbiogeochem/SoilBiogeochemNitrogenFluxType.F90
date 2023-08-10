@@ -688,6 +688,8 @@ contains
     end if
 
     if (use_nitrif_denitrif) then
+       ! NOTE that the calculation for diffusivity here uses coefficients for oxygen.
+       ! It may be more appropriate to use coefficients for N(2)O instead.
        this%diffus_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='diffus', units='m^2/s', type2d='levdcmp', &
             avgflag='A', long_name='diffusivity', &
