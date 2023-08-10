@@ -158,6 +158,24 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
+  <test name="ERS_D" grid="f10_f10_mg37" compset="I1850Clm51Sp" testmods="clm/ExcessIceStreams">
+    <machines>
+      <machine name="izumi"    compiler="nag" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Include an excess ice test starting up from streams</option>
+    </options>
+  </test>
+  <test name="SMS_Lm12" grid="f09_f09_mg17" compset="I1850Clm51Sp" testmods="clm/ExcessIceStartup_output_sp_exice">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:00:00</option>
+      <option name="comment"  >Include an excess ice test starting up from an finidat startup file with excessice output with extra output</option>
+    </options>
+  </test>
   <test name="SMS_Ln9_P144x3" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/waccmx_offline2005Start">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>

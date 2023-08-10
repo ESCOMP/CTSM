@@ -1793,6 +1793,11 @@ sub process_namelist_inline_logic {
   # namelist group: clm_initinterp_inparm #
   #########################################
   setup_logic_initinterp($opts, $nl_flags, $definition, $defaults, $nl);
+
+  ###############################
+  # namelist group: exice_streams   #
+  ###############################
+  setup_logic_exice($opts, $nl_flags, $definition, $defaults, $nl);
 }
 
 #-------------------------------------------------------------------------------
@@ -2197,6 +2202,7 @@ sub setup_logic_soilstate {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'organic_frac_squared' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_bedrock',
               'use_fates'=>$nl_flags->{'use_fates'}, 'vichydro'=>$nl_flags->{'vichydro'} );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice'); # excess ice flag should be read before stream vars
 
   my $var1 = "soil_layerstruct_predefined";
   my $var2 = "soil_layerstruct_userdefined";
@@ -4307,6 +4313,54 @@ sub setup_logic_fates {
 }
 
 #-------------------------------------------------------------------------------
+sub setup_logic_exice {
+  #
+  # excess ice streams
+  #
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  my $use_exice = $nl->get_value( 'use_excess_ice' );
+  my $use_exice_streams = $nl->get_value( 'use_excess_ice_streams' );
+  # IF excess ice streams is on
+  if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
+     # Can only be true if excess ice is also on, otherwise fail
+     if (defined($use_exice) && not value_is_true($use_exice)) {
+        $log->fatal_error("use_excess_ice_streams can NOT be TRUE when use_excess_ice is FALSE" );
+     }
+  # Otherwise if ice streams are off
+  } else {
+     my @list = ( "stream_meshfile_exice", "stream_fldfilename_exice" );
+     # fail is excess ice streams files are set
+     foreach my $var ( @list ) {
+        if ( defined($nl->get_value($var)) ) {
+           $log->fatal_error("$var should NOT be set when use_excess_ice_streams=FALSE" );
+        }
+     }
+     # mapalgo can only be none, if excess ice streams are off
+     my $map_algo = $nl->get_value("stream_mapalgo_exice");
+     if ( defined($map_algo) && ($map_algo ne "none") ) {
+        $log->fatal_error("stream_mapalgo_exice can ONLY be none when use_excess_ice_streams=FALSE" );
+     }
+  }
+  # If excess ice is on
+  if (defined($use_exice) && value_is_true($use_exice)) {
+     # IF nuopc driver and excess ice streams are on get the stream defaults
+     if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_exice');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_mapalgo_exice');
+       # If excess ice streams on, but NOT the NUOPC driver fail
+       if ( not $opts->{'driver'} eq "nuopc" ) {
+          $log->fatal_error("nuopc driver is required when use_excess_ice_streams is set to true" );
+       # NUOPC driver needs a mesh file
+       } else {
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_exice');
+       }
+     }
+  }
+
+
+} # end exice streams
+
+#-------------------------------------------------------------------------------
 
 sub setup_logic_misc {
    #
@@ -4377,6 +4431,7 @@ sub write_output_files {
   push @groups, "nitrif_inparm";
   push @groups, "lifire_inparm";
   push @groups, "ch4finundated";
+  push @groups, "exice_streams";
   push @groups, "soilbgc_decomp";
   push @groups, "clm_canopy_inparm";
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
