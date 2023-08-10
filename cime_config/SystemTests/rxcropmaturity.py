@@ -134,8 +134,8 @@ class RXCROPMATURITY(SystemTestsCommon):
             case_gddgen.check_all_input_data()
 
             # Make custom version of surface file
-            logger.info("RXCROPMATURITY log:  run make_fsurdat_all_crops_everywhere")
-            self._run_make_fsurdat_all_crops_everywhere()
+            logger.info("RXCROPMATURITY log:  run fsurdat_modifier")
+            self._run_fsurdat_modifier()
 
         # -------------------------------------------------------------------
         # (2) Perform GDD-generating run and generate prescribed GDDs file
@@ -239,7 +239,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         logger.info("RXCROPMATURITY log:  _setup_all done")
 
     # Make a surface dataset that has every crop in every gridcell
-    def _run_make_fsurdat_all_crops_everywhere(self):
+    def _run_fsurdat_modifier(self):
 
         # fsurdat should be defined. Where is it?
         self._fsurdat_in = None
@@ -255,19 +255,28 @@ class RXCROPMATURITY(SystemTestsCommon):
             raise RuntimeError(error_message)
 
         # Where we will save the fsurdat version for this test
-        self._fsurdat_out = os.path.join(self._path_gddgen, "fsurdat.nc")
+        path, ext = os.path.splitext(self._fsurdat_in)
+        dir_in, filename_in_noext = os.path.split(path)
+        self._fsurdat_out = os.path.join(self._path_gddgen, f"{filename_in_noext}.all_crops_everywhere{ext}")
 
         # Make fsurdat for this test, if not already done
         if not os.path.exists(self._fsurdat_out):
             tool_path = os.path.join(
                 self._ctsm_root,
-                "python",
-                "ctsm",
-                "crop_calendars",
-                "make_fsurdat_all_crops_everywhere.py",
+                "tools",
+                "modify_input_files",
+                "fsurdat_modifier",
             )
+
+            # Create configuration file for fsurdat_modifier
+            self._cfg_path = os.path.join(
+                self._path_gddgen,
+                "modify_fsurdat_allcropseverywhere.cfg",
+            )
+            self._create_config_file_evenlysplitcrop()
+
             command = (
-                f"python3 {tool_path} " + f"-i {self._fsurdat_in} " + f"-o {self._fsurdat_out}"
+                f"python3 {tool_path} {self._cfg_path} "
             )
             stu.run_python_script(
                 self._get_caseroot(),
@@ -286,6 +295,41 @@ class RXCROPMATURITY(SystemTestsCommon):
                 "use_init_interp = .true.",
             ]
         )
+
+    def _create_config_file_evenlysplitcrop(self):
+        """
+        Open the new and the template .cfg files
+        Loop line by line through the template .cfg file
+        When string matches, replace that line's content
+        """
+        cfg_template_path = os.path.join(
+            self._ctsm_root, "tools/modify_input_files/modify_fsurdat_template.cfg"
+        )
+
+        with open(self._cfg_path, "w", encoding="utf-8") as cfg_out:
+            # Copy template, replacing some lines
+            with open(cfg_template_path, "r", encoding="utf-8") as cfg_in:
+                for line in cfg_in:
+                    if re.match(r" *evenly_split_cropland *=", line):
+                        line = f"evenly_split_cropland = True"
+                    elif re.match(r" *fsurdat_in *=", line):
+                        line = f"fsurdat_in = {self._fsurdat_in}"
+                    elif re.match(r" *fsurdat_out *=", line):
+                        line = f"fsurdat_out = {self._fsurdat_out}"
+                    elif re.match(r" *process_subgrid_section *=", line):
+                        line = f"process_subgrid_section = True"
+                    cfg_out.write(line)
+
+            # Add new lines
+            cfg_out.write("\n")
+            cfg_out.write("[modify_fsurdat_subgrid_fractions]\n")
+            cfg_out.write("PCT_CROP    = 100.0\n")
+            cfg_out.write("PCT_NATVEG  = 0.0\n")
+            cfg_out.write("PCT_GLACIER = 0.0\n")
+            cfg_out.write("PCT_WETLAND = 0.0\n")
+            cfg_out.write("PCT_LAKE    = 0.0\n")
+            cfg_out.write("PCT_URBAN   = 0.0 0.0 0.0\n")
+
 
     def _run_check_rxboth_run(self):
 
