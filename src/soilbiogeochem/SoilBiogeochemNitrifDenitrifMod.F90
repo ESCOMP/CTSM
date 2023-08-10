@@ -171,8 +171,8 @@ contains
     real(r8) :: D0  ! temperature dependence of gaseous diffusion coefficients
     !debug-- put these type structure for outing to hist files
     real(r8) :: co2diff_con(2)                      ! diffusion constants for CO2
-    real(r8) :: eps
     real(r8) :: f_a
+    real(r8) :: fc_air_frac ! Air-filled fraction of soil volume at field capacity
     real(r8) :: surface_tension_water ! (J/m^2), Arah and Vinten 1995
     real(r8) :: rij_kro_a             !  Arah and Vinten 1995
     real(r8) :: rij_kro_alpha         !  Arah and Vinten 1995
@@ -268,7 +268,7 @@ contains
             ! calculate gas diffusivity of soil at field capacity here
             ! use expression from methane code, but neglect OM for now
             f_a = 1._r8 - watfc(c,j) / watsat(c,j) ! f_a is theta_a/theta_s in Riley et al. (2011)
-            eps =  watsat(c,j)-watfc(c,j) ! Air-filled fraction of total soil volume; theta_a in Riley et al. (2011)
+            fc_air_frac =  watsat(c,j)-watfc(c,j) ! theta_a in Riley et al. (2011)
 
             ! use diffusivity calculation including peat
             if (use_lch4) then
@@ -282,11 +282,11 @@ contains
 
                ! Diffusitivity after Moldrup et al. (2003)
                ! Eq. 8 in Riley et al. (2011, Biogeosciences)
-               diffus_moldrup = eps**2 * f_a**(3._r8 / bsw(c,j))
+               diffus_moldrup = fc_air_frac**2 * f_a**(3._r8 / bsw(c,j))
 
                ! Diffusivity after Millington & Quirk (1961)
                ! Eq. 9 in Riley et al. (2011, Biogeosciences)
-               diffus_millingtonquirk = eps**(10._r8/3._r8) / watsat(c,j)**2
+               diffus_millingtonquirk = fc_air_frac**(10._r8/3._r8) / watsat(c,j)**2
 
                ! First, get diffusivity as a unitless constant, which is what's needed to
                ! calculate ratio_k1 below.
