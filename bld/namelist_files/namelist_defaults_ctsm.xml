@@ -1545,10 +1545,8 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 
 <snicar_numrad_snw>5</snicar_numrad_snw>
 
-<!-- TODO slevis: IF I UNCOMMENT, IT PICKS UP THE 480 FILE BY DEFAULT. WHY?
-<fsnowoptics snicar_numrad_snw=480>lnd/clm2/snicardata/snicar_optics_480bnd_c012422.nc</fsnowoptics>
--->
-<fsnowoptics snicar_numrad_snw=5  >lnd/clm2/snicardata/snicar_optics_5bnd_c013122.nc</fsnowoptics>
+<fsnowoptics snicar_numrad_snw="480">lnd/clm2/snicardata/snicar_optics_480bnd_c012422.nc</fsnowoptics>
+<fsnowoptics snicar_numrad_snw="5"  >lnd/clm2/snicardata/snicar_optics_5bnd_c013122.nc</fsnowoptics>
 
 <snicar_snw_shape phys="clm5_1">hexagonal_plate</snicar_snw_shape>
 <snicar_snw_shape phys="clm5_0">sphere</snicar_snw_shape>
