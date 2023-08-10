@@ -1630,13 +1630,11 @@ contains
 
 
             !LvK extra boundary check, to prevent when using old restart file with lower snw_rds_min than current run
-            if (snw_rds(c_idx,i) < snw_rds_min) then
-               snw_rds(c_idx,i) = snw_rds_min
-            endif
+            snw_rds(c_idx,i) = max(snw_rds(c_idx,i), snw_rds_min)
 
             ! change in snow effective radius, using best-fit parameters
             dr_fresh = snw_rds(c_idx,i)-snw_rds_min
-            dr = (bst_drdt0*(bst_tau/(dr_fresh+bst_tau))**(1/bst_kappa)) * (dtime/3600)
+            dr = (bst_drdt0 * (bst_tau / (dr_fresh + bst_tau))**(1._r8 / bst_kappa)) * (dtime / 3600._r8)
 
             !
             !**********  2. WET SNOW AGING  ***********
