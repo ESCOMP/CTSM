@@ -1610,30 +1610,18 @@ contains
             ! make sure rhos doesn't drop below 50 (see rhos_idx below)
             rhos=max(50._r8,rhos)
 
-            ! best-fit table indecies
+            ! best-fit table indices
             T_idx    = nint((t_soisno(c_idx,i)-223) / 5) + 1
             Tgrd_idx = nint(dTdz(c_idx,i) / 10) + 1
             rhos_idx = nint((rhos-50) / 50) + 1
 
-            ! boundary check:
-            if (T_idx < idx_T_min) then 
-               T_idx = idx_T_min
-            endif
-            if (T_idx > idx_T_max) then 
-               T_idx = idx_T_max
-            endif
-            if (Tgrd_idx < idx_Tgrd_min) then 
-               Tgrd_idx = idx_Tgrd_min
-            endif
-            if (Tgrd_idx > idx_Tgrd_max) then 
-               Tgrd_idx = idx_Tgrd_max
-            endif
-            if (rhos_idx < idx_rhos_min) then 
-               rhos_idx = idx_rhos_min
-            endif
-            if (rhos_idx > idx_rhos_max) then 
-               rhos_idx = idx_rhos_max
-            endif
+            ! boundary checks
+            T_idx = max(T_idx, idx_T_min)
+            T_idx = min(T_idx, idx_T_max)
+            Tgrd_idx = max(Tgrd_idx, idx_Tgrd_min)
+            Tgrd_idx = min(Tgrd_idx, idx_Tgrd_max)
+            rhos_idx = max(rhos_idx, idx_rhos_min)
+            rhos_idx = min(rhos_idx, idx_rhos_max)
 
             ! best-fit parameters
             bst_tau   = snowage_tau(rhos_idx,Tgrd_idx,T_idx)
