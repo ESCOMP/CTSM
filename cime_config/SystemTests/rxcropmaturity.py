@@ -267,17 +267,16 @@ class RXCROPMATURITY(SystemTestsCommon):
                 "modify_input_files",
                 "fsurdat_modifier",
             )
-            cfg_path = os.path.join(
-                self._ctsm_root,
-                "python",
-                "ctsm",
-                "crop_calendars",
+
+            # Create configuration file for fsurdat_modifier
+            self._cfg_path = os.path.join(
+                self._path_gddgen,
                 "modify_fsurdat_allcropseverywhere.cfg",
             )
+            self._create_config_file_evenlysplitcrop()
+
             command = (
-                f"python3 {tool_path} {cfg_path} "
-                + f"-i {self._fsurdat_in} "
-                + f"-o {self._fsurdat_out}"
+                f"python3 {tool_path} {self._cfg_path} "
             )
             stu.run_python_script(
                 self._get_caseroot(),
@@ -296,6 +295,41 @@ class RXCROPMATURITY(SystemTestsCommon):
                 "use_init_interp = .true.",
             ]
         )
+
+    def _create_config_file_evenlysplitcrop(self):
+        """
+        Open the new and the template .cfg files
+        Loop line by line through the template .cfg file
+        When string matches, replace that line's content
+        """
+        cfg_template_path = os.path.join(
+            self._ctsm_root, "tools/modify_input_files/modify_fsurdat_template.cfg"
+        )
+
+        with open(self._cfg_path, "w", encoding="utf-8") as cfg_out:
+            # Copy template, replacing some lines
+            with open(cfg_template_path, "r", encoding="utf-8") as cfg_in:
+                for line in cfg_in:
+                    if re.match(r" *evenly_split_cropland *=", line):
+                        line = f"evenly_split_cropland = True"
+                    elif re.match(r" *fsurdat_in *=", line):
+                        line = f"fsurdat_in = {self._fsurdat_in}"
+                    elif re.match(r" *fsurdat_out *=", line):
+                        line = f"fsurdat_out = {self._fsurdat_out}"
+                    elif re.match(r" *process_subgrid_section *=", line):
+                        line = f"process_subgrid_section = True"
+                    cfg_out.write(line)
+
+            # Add new lines
+            cfg_out.write("\n")
+            cfg_out.write("[modify_fsurdat_subgrid_fractions]\n")
+            cfg_out.write("PCT_CROP    = 100.0\n")
+            cfg_out.write("PCT_NATVEG  = 0.0\n")
+            cfg_out.write("PCT_GLACIER = 0.0\n")
+            cfg_out.write("PCT_WETLAND = 0.0\n")
+            cfg_out.write("PCT_LAKE    = 0.0\n")
+            cfg_out.write("PCT_URBAN   = 0.0 0.0 0.0\n")
+
 
     def _run_check_rxboth_run(self):
 

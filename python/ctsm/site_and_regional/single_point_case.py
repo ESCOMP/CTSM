@@ -442,11 +442,6 @@ class SinglePointCase(BaseCase):
                 f_mod["PCT_NATVEG"] = f_mod["PCT_NATVEG"] / tot_pct * 100
 
         if self.evenly_split_cropland:
-            f_mod["PCT_LAKE"][:, :] = 0.0
-            f_mod["PCT_WETLAND"][:, :] = 0.0
-            f_mod["PCT_URBAN"][:, :, :] = 0.0
-            f_mod["PCT_GLACIER"][:, :] = 0.0
-            f_mod["PCT_NAT_PFT"][:, :, :] = 0.0
             f_mod["PCT_CFT"][:, :, :] = 100.0 / f_mod["PCT_CFT"].shape[2]
 
         else:
