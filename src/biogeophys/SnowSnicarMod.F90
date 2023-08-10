@@ -1395,7 +1395,7 @@ contains
               albout(c_idx,1) = flx_sum / sum(flx_wgt(1:(nir_bnd_bgn-1)))
             end select
 
-            ! average for NIR band
+            ! average for NIR band (5 or 480-band case)
             flx_sum = 0._r8
             do bnd_idx = nir_bnd_bgn, nir_bnd_end
                flx_sum = flx_sum + flx_wgt(bnd_idx) * albout_lcl(bnd_idx)
@@ -1405,30 +1405,27 @@ contains
             ! Weight output NIR absorbed layer fluxes (flx_abs) appropriately
             select case (snicar_numrad_snw)
             case (5)  ! 5-band case
+              ! VIS band
               flx_abs(c_idx,:,1) = flx_abs_lcl(:,1)
-              do i=snl_top,1,1
-                 flx_sum = 0._r8
-                 do bnd_idx= nir_bnd_bgn,nir_bnd_end
-                    flx_sum = flx_sum + flx_wgt(bnd_idx)*flx_abs_lcl(i,bnd_idx)
-                 enddo
-                 flx_abs(c_idx,i,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))          
-              end do
             case (480)  ! 480-band case
+              ! average for VIS band
               do i=snl_top,1,1
-                 ! average for VIS band
                  flx_sum = 0._r8
                  do bnd_idx= 1,(nir_bnd_bgn-1)
                     flx_sum = flx_sum + flx_wgt(bnd_idx)*flx_abs_lcl(i,bnd_idx)
                  enddo
                  flx_abs(c_idx,i,1) = flx_sum / sum(flx_wgt(1:(nir_bnd_bgn-1)))
-                 ! average for NIR band
-                 flx_sum = 0._r8
-                 do bnd_idx= nir_bnd_bgn,nir_bnd_end
-                    flx_sum = flx_sum + flx_wgt(bnd_idx)*flx_abs_lcl(i,bnd_idx)
-                 enddo
-                 flx_abs(c_idx,i,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
               end do
             end select
+
+            ! average for NIR band (5 or 480-band case)
+            do i = snl_top, 1, 1
+               flx_sum = 0._r8
+               do bnd_idx = nir_bnd_bgn, nir_bnd_end
+                  flx_sum = flx_sum + flx_wgt(bnd_idx) * flx_abs_lcl(i,bnd_idx)
+               end do
+               flx_abs(c_idx,i,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
+            end do
 
             ! high solar zenith angle adjustment for Adding-doubling solver results
             ! near-IR direct albedo/absorption adjustment for high solar zenith angles
