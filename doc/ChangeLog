@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev133
 Originator(s): adrifoster (Adrianna Foster), glemieux (Gregory Lemieux, LBL/NGEET)
-Date: Tue Aug  8 13:30:00 PM MDT 2023
+Date: Wed Aug  9 22:44:46 MDT 2023
 One-line Summary: FATES API update to facilitate fates refactor
 
 Purpose and description of changes
@@ -10,6 +10,9 @@ Purpose and description of changes
 This updates a number of FATES type names and module use statements
 which correspond with a refactoring effort that moves FATES
 patches and cohorts into their own respective modules.
+
+With the FATES update is a minor science update, so there are
+changes to answers for FATES.
 
 This also incorporates a minor update to a more recent version
 of the ccs config external.
@@ -51,6 +54,10 @@ Testing summary:
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+      cheyenne - PASS
+
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     cheyenne ---- OK
@@ -82,8 +89,9 @@ List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
 
-    https://github.com/ESCOMP/CTSM/pull/2000
-    https://github.com/NGEET/fates/pull/1024
+    https://github.com/ESCOMP/CTSM/pull/2000 -- refactor
+    https://github.com/ESCOMP/CTSM/pull/2089 -- Change template update
+    https://github.com/NGEET/fates/pull/1024 -- FATES refactor
 
 ===============================================================
 ===============================================================
@@ -179,13 +187,9 @@ Testing summary:
 
     cheyenne - PASS
 
-  tools-tests (test/tools) (if tools have been changed):
-
-    cheyenne -
-
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ---- OK
+    heyenne ---- OK
     izumi ------- OK
 
   any other testing (give details below):

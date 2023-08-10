@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-    ctsm5.1.dev133 glemieux 08/08/2023 FATES API update to facilitate fates refactor
+    ctsm5.1.dev133 glemieux 08/09/2023 FATES API update to facilitate fates refactor
     ctsm5.1.dev132   slevis 08/04/2023 Add parameterization to allow excess ice in soil and subsidence
     ctsm5.1.dev131 samrabin 07/27/2023 Enable prescribed crop calendars
     ctsm5.1.dev130 glemieux 07/09/2023 FATES parameter file and test definition update
