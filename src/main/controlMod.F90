@@ -247,6 +247,8 @@ contains
 
     namelist /clm_inparm/ use_soil_moisture_streams
 
+    namelist /clm_inparm/ use_excess_ice
+
     namelist /clm_inparm/ use_lai_streams
 
     namelist /clm_inparm/ use_bedrock
@@ -748,6 +750,8 @@ contains
 
     call mpi_bcast (use_soil_moisture_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+    call mpi_bcast (use_excess_ice, 1, MPI_LOGICAL, 0, mpicom,ier)
+
     call mpi_bcast (use_lai_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_cropcal_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -892,6 +896,7 @@ contains
     write(iulog,*) '    use_nitrif_denitrif = ', use_nitrif_denitrif
     write(iulog,*) '    use_extralakelayers = ', use_extralakelayers
     write(iulog,*) '    use_vichydro = ', use_vichydro
+    write(iulog,*) '    use_excess_ice = ', use_excess_ice
     write(iulog,*) '    use_cn = ', use_cn
     write(iulog,*) '    use_cndv = ', use_cndv
     write(iulog,*) '    use_crop = ', use_crop

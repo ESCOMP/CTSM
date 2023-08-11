@@ -356,6 +356,11 @@ module clm_varctl
   integer, public :: soil_layerstruct_userdefined_nlevsoi = iundef
 
   !----------------------------------------------------------
+  !excess ice physics switch
+  !----------------------------------------------------------
+  logical, public :: use_excess_ice = .false. ! true. => use excess ice physics
+
+  !----------------------------------------------------------
   ! plant hydraulic stress switch
   !----------------------------------------------------------
 
