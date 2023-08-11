@@ -531,7 +531,8 @@ contains
     character(len=*),parameter :: subname = 'masterlist_addfld'
     !------------------------------------------------------------------------
 
-    if (.not. avgflag_valid(avgflag, blank_valid=.true.)) then
+    if (.not. avgflag_valid(avgflag, blank_valid=.true., &
+        local_valid = .false., instantaneous_valid=.false.)) then
        write(iulog,*) trim(subname),' ERROR: unknown averaging flag=', avgflag
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
@@ -740,7 +741,8 @@ contains
     end if
 
     if (present(avgflag)) then
-       if (.not. avgflag_valid(avgflag, blank_valid=.true.)) then
+       if (.not. avgflag_valid(avgflag, blank_valid=.true., &
+           local_valid = .false., instantaneous_valid=.false.)) then
           write(iulog,*) trim(subname),' ERROR: unknown averaging flag=', avgflag
           call endrun(msg=errMsg(sourcefile, __LINE__))
        endif
@@ -785,7 +787,8 @@ contains
     !-----------------------------------------------------------------------
 
     avgflag = hist_avgflag_pertape(t)
-    if (.not. avgflag_valid(avgflag, blank_valid = .false.)) then
+    if (.not. avgflag_valid(avgflag, blank_valid = .false., &
+        local_valid = .true., instantaneous_valid=.true.)) then
        write(iulog,*) trim(subname),' ERROR: unknown avgflag=',avgflag
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
@@ -1154,6 +1157,7 @@ contains
     integer :: beg1d,end1d          ! beginning and ending indices for this field (assume already set)
     integer :: num1d_out            ! history output 1d size
     type(bounds_type) :: bounds
+    character(len=avgflag_strlen) :: avgflag_temp  ! local copy of hist_avgflag_pertape(t)
     character(len=*),parameter :: subname = 'htape_addfld'
     !-----------------------------------------------------------------------
 
@@ -1273,7 +1277,8 @@ contains
     ! Set time averaging flag based on masterlist setting or
     ! override the default averaging flag with namelist setting
 
-    if (.not. avgflag_valid(avgflag, blank_valid=.true.)) then
+    if (.not. avgflag_valid(avgflag, blank_valid=.true., &
+        local_valid = .false., instantaneous_valid=.false.)) then
        write(iulog,*) trim(subname),' ERROR: unknown avgflag=', avgflag
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
@@ -1282,6 +1287,14 @@ contains
        tape(t)%hlist(n)%avgflag = masterlist(f)%avgflag(t)
     else
        tape(t)%hlist(n)%avgflag = avgflag
+    end if
+
+    ! Override this field's avgflag if the namelist has set this tape to
+    ! - instantaneous or
+    ! - local time
+    avgflag_temp = hist_avgflag_pertape(t)
+    if (avgflag_temp == 'I' .or. avgflag_temp(1:1) == 'L') then
+       tape(t)%hlist(n)%avgflag = avgflag_temp
     end if
 
   end subroutine htape_addfld
@@ -3068,6 +3081,7 @@ contains
     integer :: mcdate                     ! current date
     integer :: yr,mon,day,nbsec           ! year,month,day,seconds components of a date
     integer :: hours,minutes,secs         ! hours,minutes,seconds of hh:mm:ss
+    character(len= 12) :: step_or_bounds  ! string used in long_name of several time variables
     character(len= 10) :: basedate        ! base date (yyyymmdd)
     character(len=  8) :: basesec         ! base seconds
     character(len=  8) :: cdate           ! system date
@@ -3250,8 +3264,18 @@ contains
 
        dim1id(1) = time_dimid
        str = 'days since ' // basedate // " " // basesec
-       call ncd_defvar(nfid(t), 'time', tape(t)%ncprec, 1, dim1id, varid, &
-            long_name='time',units=str)
+       if (tape(t)%hlist(1)%avgflag /= 'I') then  ! NOT instantaneous fields tape
+          step_or_bounds = 'time_bounds'
+          long_name = 'time at exact middle of ' // step_or_bounds
+          call ncd_defvar(nfid(t), 'time', tape(t)%ncprec, 1, dim1id, varid, &
+               long_name=long_name, units=str)
+          call ncd_putatt(nfid(t), varid, 'bounds', 'time_bounds')
+       else  ! instantaneous fields tape
+          step_or_bounds = 'time step'
+          long_name = 'time at end of ' // step_or_bounds
+          call ncd_defvar(nfid(t), 'time', tape(t)%ncprec, 1, dim1id, varid, &
+               long_name=long_name, units=str)
+       end if
        cal = get_calendar()
        if (      trim(cal) == NO_LEAP_C   )then
           caldesc = "noleap"
@@ -3259,11 +3283,11 @@ contains
           caldesc = "gregorian"
        end if
        call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
-       call ncd_putatt(nfid(t), varid, 'bounds', 'time_bounds')
 
        dim1id(1) = time_dimid
+       long_name = 'current date (YYYYMMDD) at end of ' // step_or_bounds
        call ncd_defvar(nfid(t) , 'mcdate', ncd_int, 1, dim1id , varid, &
-          long_name = 'current date (YYYYMMDD)')
+          long_name = long_name)
        !
        ! add global attribute time_period_freq
        !
@@ -3290,18 +3314,23 @@ contains
        call ncd_putatt(nfid(t), ncd_global, 'time_period_freq',          &
                           trim(time_period_freq))
 
+       long_name = 'current seconds of current date at end of ' // step_or_bounds
        call ncd_defvar(nfid(t) , 'mcsec' , ncd_int, 1, dim1id , varid, &
-          long_name = 'current seconds of current date', units='s')
+          long_name = long_name, units='s')
+       long_name = 'current day (from base day) at end of ' // step_or_bounds
        call ncd_defvar(nfid(t) , 'mdcur' , ncd_int, 1, dim1id , varid, &
-          long_name = 'current day (from base day)')
+          long_name = long_name)
+       long_name = 'current seconds of current day at end of ' // step_or_bounds
        call ncd_defvar(nfid(t) , 'mscur' , ncd_int, 1, dim1id , varid, &
-          long_name = 'current seconds of current day')
+          long_name = long_name)
        call ncd_defvar(nfid(t) , 'nstep' , ncd_int, 1, dim1id , varid, &
           long_name = 'time step')
 
        dim2id(1) = hist_interval_dimid;  dim2id(2) = time_dimid
-       call ncd_defvar(nfid(t), 'time_bounds', ncd_double, 2, dim2id, varid, &
-          long_name = 'history time interval endpoints')
+       if (tape(t)%hlist(1)%avgflag /= 'I') then  ! NOT instantaneous fields tape
+          call ncd_defvar(nfid(t), 'time_bounds', ncd_double, 2, dim2id, varid, &
+             long_name = 'history time interval endpoints')
+       end if
 
        dim2id(1) = strlen_dimid;  dim2id(2) = time_dimid
        call ncd_defvar(nfid(t), 'date_written', ncd_char, 2, dim2id, varid)
@@ -3329,12 +3358,15 @@ contains
        call ncd_io('mscur' , mscur , 'write', nfid(t), nt=tape(t)%ntimes)
        call ncd_io('nstep' , nstep , 'write', nfid(t), nt=tape(t)%ntimes)
 
-       time = mdcur + mscur/secspday
+       timedata(1) = tape(t)%begtime  ! beginning time
+       timedata(2) = mdcur + mscur/secspday  ! end time
+       if (tape(t)%hlist(1)%avgflag /= 'I') then  ! NOT instantaneous fields tape
+          time = (timedata(1) + timedata(2)) * 0.5_r8
+          call ncd_io('time_bounds', timedata, 'write', nfid(t), nt=tape(t)%ntimes)
+       else
+          time = timedata(2)
+       end if
        call ncd_io('time'  , time  , 'write', nfid(t), nt=tape(t)%ntimes)
-
-       timedata(1) = tape(t)%begtime
-       timedata(2) = time
-       call ncd_io('time_bounds', timedata, 'write', nfid(t), nt=tape(t)%ntimes)
 
        call getdatetime (cdate, ctime)
        call ncd_io('date_written', cdate, 'write', nfid(t), nt=tape(t)%ntimes)
@@ -5930,7 +5962,8 @@ contains
   end subroutine hist_do_disp
 
   !-----------------------------------------------------------------------
-  function avgflag_valid(avgflag, blank_valid) result(valid)
+  function avgflag_valid(avgflag, blank_valid, local_valid, &
+                         instantaneous_valid) result(valid)
     !
     ! !DESCRIPTION:
     ! Returns true if the given avgflag is a valid option, false if not
@@ -5943,6 +5976,8 @@ contains
     logical :: valid  ! function result
     character(len=*), intent(in) :: avgflag
     logical, intent(in) :: blank_valid  ! whether ' ' is a valid avgflag in this context
+    logical, intent(in) :: local_valid  ! is 'L' a valid avgflag or not
+    logical, intent(in) :: instantaneous_valid  ! is 'I' a valid avgflag or not
     !
     ! !LOCAL VARIABLES:
 
@@ -5958,11 +5993,12 @@ contains
 
     else if (avgflag == ' ' .and. blank_valid) then
        valid = .true.
-    else if (avgflag == 'A' .or. avgflag == 'I' .or. &
-         avgflag == 'X' .or. avgflag == 'M' .or. &
+    else if (avgflag == 'I' .and. instantaneous_valid) then
+       valid = .true.
+    else if (avgflag == 'A' .or. avgflag == 'X' .or. avgflag == 'M' .or. &
          avgflag == 'SUM') then
        valid = .true.
-    else if (avgflag(1:1) == 'L') then
+    else if (avgflag(1:1) == 'L' .and. local_valid) then
        dtime = get_step_size()
        if ( len_trim(avgflag) < 6 )then
           valid = .false.

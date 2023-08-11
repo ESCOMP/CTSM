@@ -321,9 +321,20 @@ contains
             ptr_patch=this%gddmaturity_patch, default='inactive')
        
        ! Per harvest
+       ! GDDHARV_PERHARV is default='inactive' because it makes more
+       ! sense to view as an instantaneous field. To view variables as
+       ! instantaneous fields:
+       ! 1) Users now cannot set avgflag='I' or 'L' in the code.
+       ! 2) Instead add lines like these to the user_nl_clm of a case. The
+       ! last two lines will look different according to each user's needs:
+       ! hist_fincl2 = 'GDDHARV_PERHARV'
+       ! hist_fincl3 = 'GDDHARV_PERHARV'
+       ! hist_avgflag_pertape = 'A','I','L180000'
+       ! hist_nhtfrq = -24,-24,-24
+       ! hist_mfilt = 1,1,1
        this%gddmaturity_thisyr(begp:endp,:) = spval
        call hist_addfld2d (fname='GDDHARV_PERHARV', units='ddays', type2d='mxharvests', &
-            avgflag='I', long_name='Growing degree days (gdd) needed to harvest; should only be output annually', &
+            avgflag='A', long_name='Growing degree days (gdd) needed to harvest; should only be output annually and as an instantaneous field', &
             ptr_patch=this%gddmaturity_thisyr, default='inactive')
 
     end if

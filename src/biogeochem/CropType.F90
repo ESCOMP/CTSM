@@ -297,49 +297,58 @@ contains
             ptr_patch=this%latbaset_patch, default='inactive')
     end if
 
+    ! SDATES, HDATES make sense as instantaneous fields; to view as such:
+    ! 1) Users now cannot set avgflag='I' or 'L' in the code.
+    ! 2) Instead add lines like these to the user_nl_clm of a case. The
+    ! last two lines will look different according to each user's needs:
+    ! hist_fincl2 = 'SDATES','HDATES'
+    ! hist_fincl3 = 'SDATES','HDATES'
+    ! hist_avgflag_pertape = 'A','I','L180000'
+    ! hist_nhtfrq = -24,-24,-24
+    ! hist_mfilt = 1,1,1
     this%sdates_thisyr_patch(begp:endp,:) = spval
     call hist_addfld2d (fname='SDATES', units='day of year', type2d='mxsowings', &
-         avgflag='I', long_name='actual crop sowing dates; should only be output annually', &
+         avgflag='A', long_name='actual crop sowing dates; should only be output annually and as an instantaneous field', &
          ptr_patch=this%sdates_thisyr_patch, default='inactive')
 
     this%sdates_perharv_patch(begp:endp,:) = spval
     call hist_addfld2d (fname='SDATES_PERHARV', units='day of year', type2d='mxharvests', &
-         avgflag='I', long_name='actual sowing dates for crops harvested this year; should only be output annually', &
+         avgflag='A', long_name='actual sowing dates for crops harvested this year; should only be output annually and as an instantaneous field', &
          ptr_patch=this%sdates_perharv_patch, default='inactive')
 
     this%syears_perharv_patch(begp:endp,:) = spval
     call hist_addfld2d (fname='SYEARS_PERHARV', units='year', type2d='mxharvests', &
-         avgflag='I', long_name='actual sowing years for crops harvested this year; should only be output annually', &
+         avgflag='A', long_name='actual sowing years for crops harvested this year; should only be output annually and as an instantaneous field', &
          ptr_patch=this%syears_perharv_patch, default='inactive')
 
     this%hdates_thisyr_patch(begp:endp,:) = spval
     call hist_addfld2d (fname='HDATES', units='day of year', type2d='mxharvests', &
-         avgflag='I', long_name='actual crop harvest dates; should only be output annually', &
+         avgflag='A', long_name='actual crop harvest dates; should only be output annually and as an instantaneous field', &
          ptr_patch=this%hdates_thisyr_patch, default='inactive')
 
     this%gddaccum_thisyr_patch(begp:endp,:) = spval
     call hist_addfld2d (fname='GDDACCUM_PERHARV', units='ddays', type2d='mxharvests', &
-         avgflag='I', long_name='At-harvest accumulated growing degree days past planting date for crop; should only be output annually', &
+         avgflag='A', long_name='At-harvest accumulated growing degree days past planting date for crop; should only be output annually and as an instantaneous field', &
          ptr_patch=this%gddaccum_thisyr_patch, default='inactive')
 
     this%hui_thisyr_patch(begp:endp,:) = spval
     call hist_addfld2d (fname='HUI_PERHARV', units='ddays', type2d='mxharvests', &
-         avgflag='I', long_name='At-harvest accumulated heat unit index for crop; should only be output annually', &
+         avgflag='A', long_name='At-harvest accumulated heat unit index for crop; should only be output annually and as an instantaneous field', &
          ptr_patch=this%hui_thisyr_patch, default='inactive')
 
     this%sowing_reason_thisyr_patch(begp:endp,:) = spval
     call hist_addfld2d (fname='SOWING_REASON', units='unitless', type2d='mxsowings', &
-         avgflag='I', long_name='Reason for each crop sowing; should only be output annually', &
+         avgflag='A', long_name='Reason for each crop sowing; should only be output annually and as an instantaneous field', &
          ptr_patch=this%sowing_reason_thisyr_patch, default='inactive')
 
     this%sowing_reason_perharv_patch(begp:endp,:) = spval
     call hist_addfld2d (fname='SOWING_REASON_PERHARV', units='unitless', type2d='mxharvests', &
-         avgflag='I', long_name='Reason for sowing of each crop harvested this year; should only be output annually', &
+         avgflag='A', long_name='Reason for sowing of each crop harvested this year; should only be output annually and as an instantaneous field', &
          ptr_patch=this%sowing_reason_perharv_patch, default='inactive')
 
     this%harvest_reason_thisyr_patch(begp:endp,:) = spval
     call hist_addfld2d (fname='HARVEST_REASON_PERHARV', units='1 = mature; 2 = max season length; 3 = incorrect Dec. 31 sowing; 4 = sowing today; 5 = sowing tomorrow; 6 = tomorrow == idop; 7 = killed by cold temperature during vernalization', type2d='mxharvests', &
-         avgflag='I', long_name='Reason for each crop harvest; should only be output annually', &
+         avgflag='A', long_name='Reason for each crop harvest; should only be output annually and as an instantaneous field', &
          ptr_patch=this%harvest_reason_thisyr_patch, default='inactive')
 
   end subroutine InitHistory

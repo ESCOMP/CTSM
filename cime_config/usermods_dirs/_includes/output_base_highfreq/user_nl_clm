@@ -20,11 +20,21 @@ hist_fincl7 += 'TREFMXAV','TREFMNAV'
 
 ! h7 stream (3-hourly average, gridcell-level)
 ! 3hr, E3hr, CF3hr
-! 3hr requires QRUNOFF for time mean, and SOILWATER_10CM, TSKIN for time point (I)
-! CF3hr requires QFLX_SOLIDEVAP_FROM_TOP_LAYER for time point (I)
+! 3hr requires QRUNOFF for time mean
 hist_mfilt(8) = 2920
 hist_dov2xy(8) = .true.
 hist_nhtfrq(8) = -3
 hist_type1d_pertape(8) = ' '
-hist_fincl8 += 'TSA','RH2M','SOILWATER_10CM:I','FSH','EFLX_LH_TOT','FSDS','QRUNOFF','QFLX_SOLIDEVAP_FROM_TOP_LAYER:I','TSKIN:I'
+hist_fincl8 += 'TSA','RH2M','FSH','EFLX_LH_TOT','FSDS','QRUNOFF'
+
+! h8 stream (3-hourly average, gridcell-level)
+! 3hr, E3hr, CF3hr
+! 3hr requires SOILWATER_10CM, TSKIN for time point (I)
+! CF3hr requires QFLX_SOLIDEVAP_FROM_TOP_LAYER for time point (I)
+hist_mfilt(9) = 2920
+hist_dov2xy(9) = .true.
+hist_nhtfrq(9) = -3
+hist_type1d_pertape(9) = ' '
+hist_avgflag_pertape(9) = 'I'
+hist_fincl9 += 'SOILWATER_10CM','QFLX_SOLIDEVAP_FROM_TOP_LAYER','TSKIN'
 

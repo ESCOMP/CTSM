@@ -12,5 +12,5 @@ hist_fincl2 += 'GRAINC_TO_FOOD','NFERTILIZATION'
 hist_fincl3 += 'GRAINC_TO_FOOD'
 
 ! h3 stream (yearly average, gridcell-level)
-hist_fincl4 += 'PCT_CFT','CROPPROD1C:I'
+hist_fincl4 += 'PCT_CFT'
 

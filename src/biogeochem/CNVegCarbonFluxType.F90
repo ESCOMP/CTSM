@@ -930,6 +930,17 @@ contains
                   ptr_patch=data1dptr)
           end do
 
+          ! GRAINC_TO_FOOD_* are default='inactive' because they make more
+          ! sense to view as instantaneous fields. To view variables as
+          ! instantaneous fields:
+          ! 1) Users now cannot set avgflag='I' or 'L' in the code.
+          ! 2) Instead add lines like these to the user_nl_clm of a case. The
+          ! last two lines will look different according to each user's needs:
+          ! hist_fincl2 = 'GRAINC_TO_FOOD_PERHARV'
+          ! hist_fincl3 = 'GRAINC_TO_FOOD_PERHARV'
+          ! hist_avgflag_pertape = 'A','I','L180000'
+          ! hist_nhtfrq = -24,-24,-24
+          ! hist_mfilt = 1,1,1
           this%repr_grainc_to_food_perharv_patch(begp:endp,:,:) = spval
           do k = repr_grain_min, repr_grain_max
              data2dptr => this%repr_grainc_to_food_perharv_patch(:,:,k)
@@ -938,8 +949,8 @@ contains
                   fname=get_repr_hist_fname(k)//'C_TO_FOOD_PERHARV', &
                   units='gC/m^2', &
                   type2d='mxharvests', &
-                  avgflag='I', &
-                  long_name=get_repr_longname(k)//' C to food per harvest; should only be output annually', &
+                  avgflag='A', &
+                  long_name=get_repr_longname(k)//' C to food per harvest; should only be output annually and as an instantaneous field', &
                   ptr_patch=data2dptr, &
                   default='inactive')
           end do
@@ -951,8 +962,8 @@ contains
                   ! e.g., GRAINC_TO_FOOD_ANN
                   fname=get_repr_hist_fname(k)//'C_TO_FOOD_ANN', &
                   units='gC/m^2', &
-                  avgflag='I', &
-                  long_name=get_repr_longname(k)//' C to food harvested per calendar year; should only be output annually', &
+                  avgflag='A', &
+                  long_name=get_repr_longname(k)//' C to food harvested per calendar year; should only be output annually and as an instantaneous field', &
                   ptr_patch=data1dptr, &
                   default='inactive')
           end do

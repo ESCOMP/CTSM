@@ -150,13 +150,25 @@ contains
          ptr_col=this%int_snow_col, l2g_scale_type='ice', &
          default='inactive')
 
+    ! SNOW_PERSISTENCE is default='inactive' because as the "length of
+    ! time of continuous snow cover" it makes more sense to view as an
+    ! instantaneous field. To view variables as instantaneous fields:
+    ! 1) Users now cannot set avgflag='I' or 'L' in the code.
+    ! 2) Instead add lines like these to the user_nl_clm of a case. The
+    ! last two lines will look different according to each user's needs:
+    ! hist_fincl2 = 'SNOW_PERSISTENCE'
+    ! hist_fincl3 = 'SNOW_PERSISTENCE'
+    ! hist_avgflag_pertape = 'A','I','L180000'
+    ! hist_nhtfrq = -24,-24,-24
+    ! hist_mfilt = 1,1,1
     this%snow_persistence_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('SNOW_PERSISTENCE'),  &
          units='seconds',  &
-         avgflag='I', &
-         long_name=this%info%lname('Length of time of continuous snow cover (nat. veg. landunits only)'), &
-         ptr_col=this%snow_persistence_col, l2g_scale_type='natveg') 
+         avgflag='A', &
+         long_name=this%info%lname('Length of time of continuous snow cover (nat. veg. landunits only); should be output as an instantaneous field'), &
+         ptr_col=this%snow_persistence_col, l2g_scale_type='natveg', &
+         default='inactive')
 
 
   end subroutine InitBulkHistory
