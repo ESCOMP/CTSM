@@ -356,7 +356,7 @@ contains
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
-    integer, parameter :: ncol = 5  ! number of table columns
+    integer, parameter :: ncol = 4  ! number of table columns
     integer nf, i, j  ! do-loop counters
     integer hist_fields_file  ! file unit number
     integer width_col(ncol)  ! widths of table columns
@@ -390,14 +390,13 @@ contains
     if (masterproc .and. hist_fields_list_file) then
        ! Hardwired table column widths to fit the table on a computer
        ! screen. Some strings will be truncated as a result of the
-       ! current choices (4, 35, 94, 65, 7). In sphinx (ie the web-based
+       ! current choices (35, 94, 65, 7). In sphinx (ie the web-based
        ! documentation), text that has not been truncated will wrap
        ! around in the available space.
-       width_col(1) = 4  ! column that shows the variable number, nf
-       width_col(2) = 35  ! variable name column
-       width_col(3) = 94  ! long description column
-       width_col(4) = 65  ! units column
-       width_col(5) = 7  ! active (T or F) column
+       width_col(1) = 35  ! variable name column
+       width_col(2) = 94  ! long description column
+       width_col(3) = 65  ! units column
+       width_col(4) = 7  ! active (T or F) column
        width_col_sum = sum(width_col) + ncol - 1  ! sum of widths & blank spaces
 
        ! Convert integer widths to strings for use in format statements
