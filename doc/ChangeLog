@@ -1,4 +1,126 @@
 ===============================================================
+Tag name: ctsm5.1.dev13?
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri Aug 11 16:18:08 MDT 2023
+One-line Summary: Change history time var and put 'I' fields on separate hist file
+
+Purpose and description of changes
+----------------------------------
+
+ These changes make CTSM output consistent with CMIP.
+ Of course we will maintain consistency across CESM components, as well.
+ We have
+ - redefined our history time variable from "end of time_bounds" to
+ "middle of time_bounds" for all fields except instantaneous ('I')
+ - moved 'I' fields to their own separate history files because
+ their time variable is defined as "end of time_bounds"
+ - removed time_bounds from 'I' history tapes
+ - moved 'L' fields to their own separate history files because they represent
+ a local time within the time_bounds
+ - clarified the long_name for several history time variables
+
+ I made respective updates in ESCOMP/RTM#32 and ESCOMP/MOSART#52, as well.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+ Fixes #1059
+
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ Changes to history time-related variables as explained above.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+
+
+Testing summary:
+----------------
+[Remove any lines that don't apply.]
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne -
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) -
+
+    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
+     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
+     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
+     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
+     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
+     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
+     separately run the clm_pymods test suite, and you can remove the following line.]
+
+    clm_pymods test suite on cheyenne - 
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ----
+    izumi -------
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ----
+    izumi -------
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+ Yes, for time-related variables only.
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: Time-related variables have changed as explained above.
+ Otherwise bit-for-bit.
+
+ I ran the LMWG diagnostics package at @billsacks recommendation and
+ confirmed that all results look identical despite the changes to time-related
+ variables.
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2019
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev133
 Originator(s): adrifoster (Adrianna Foster), glemieux (Gregory Lemieux, LBL/NGEET)
 Date: Wed Aug  9 22:44:46 MDT 2023
