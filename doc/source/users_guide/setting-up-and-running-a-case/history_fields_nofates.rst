@@ -1,18 +1,18 @@
 =============================
 CTSM History Fields (nofates)
 =============================
-
+ 
 CAUTION: Not all variables are relevant / present for all CTSM cases.
 Key flags used in this CTSM case:
-use_cn = T
-use_crop = T
-use_fates = F
-
-==== =================================== ============================================================================================== ================================================================= ======= 
+use_cn =  T
+use_crop =  T
+use_fates =  F
+ 
+=================================== ============================================================================================== ================================================================= ======= 
 CTSM History Fields
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-   #                       Variable Name                                                                               Long Description                                                             Units Active?
-==== =================================== ============================================================================================== ================================================================= ======= 
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                      Variable Name                                                                               Long Description                                                             Units Active?
+=================================== ============================================================================================== ================================================================= ======= 
 A10TMIN                             10-day running mean of min 2-m temperature                                                     K                                                                      F
 A5TMIN                              5-day running mean of min 2-m temperature                                                      K                                                                      F
 ACTUAL_IMMOB                        actual N immobilization                                                                        gN/m^2/s                                                               T
@@ -42,12 +42,10 @@ ACT_SOM_HR_S3_vr                    Het. Resp. from active soil organic         
 AGLB                                Aboveground leaf biomass                                                                       kg/m^2                                                                 F
 AGNPP                               aboveground NPP                                                                                gC/m^2/s                                                               T
 AGSB                                Aboveground stem biomass                                                                       kg/m^2                                                                 F
-ALBD                                surface albedo (direct)                                                                        proportion                                                             T
-ALBDSF                              diagnostic snow-free surface albedo (direct)                                                   proportion                                                             T
+ALBD                                surface albedo (direct)                                                                        proportion                                                             F
 ALBGRD                              ground albedo (direct)                                                                         proportion                                                             F
 ALBGRI                              ground albedo (indirect)                                                                       proportion                                                             F
-ALBI                                surface albedo (indirect)                                                                      proportion                                                             T
-ALBISF                              diagnostic snow-free surface albedo (indirect)                                                 proportion                                                             T
+ALBI                                surface albedo (indirect)                                                                      proportion                                                             F
 ALPHA                               alpha coefficient for VOC calc                                                                 non                                                                    F
 ALT                                 current active layer thickness                                                                 m                                                                      T
 ALTMAX                              maximum annual active layer thickness                                                          m                                                                      T
@@ -57,10 +55,8 @@ ANNMAX_RETRANSN                     annual max of retranslocated N pool         
 ANNSUM_COUNTER                      seconds since last annual accumulator turnover                                                 s                                                                      F
 ANNSUM_NPP                          annual sum of NPP                                                                              gC/m^2/yr                                                              F
 ANNSUM_POTENTIAL_GPP                annual sum of potential GPP                                                                    gN/m^2/yr                                                              F
-APPAR_TEMP                          2 m apparent temperature                                                                       C                                                                      T
-APPAR_TEMP_R                        Rural 2 m apparent temperature                                                                 C                                                                      T
-APPAR_TEMP_U                        Urban 2 m apparent temperature                                                                 C                                                                      T
 AR                                  autotrophic respiration (MR + GR)                                                              gC/m^2/s                                                               T
+ATM_O3                              atmospheric ozone partial pressure                                                             mol/mol                                                                F
 ATM_TOPO                            atmospheric surface height                                                                     m                                                                      T
 AVAILC                              C flux available for allocation                                                                gC/m^2/s                                                               F
 AVAIL_RETRANSN                      N flux available from retranslocation pool                                                     gN/m^2/s                                                               F
@@ -152,7 +148,7 @@ CROP_SEEDN_TO_LEAF                  crop seed source to leaf                    
 CURRENT_GR                          growth resp for new growth displayed in this timestep                                          gC/m^2/s                                                               F
 CWDC                                CWD C                                                                                          gC/m^2                                                                 T
 CWDC_1m                             CWD C to 1 meter                                                                               gC/m^2                                                                 F
-CWDC_HR                             cwd C heterotrophic respiration                                                                gC/m^2/s                                                               F
+CWDC_HR                             cwd C heterotrophic respiration                                                                gC/m^2/s                                                               T
 CWDC_LOSS                           coarse woody debris C loss                                                                     gC/m^2/s                                                               T
 CWDC_TO_CEL_LITC                    decomp. of coarse woody debris C to cellulosic litter C                                        gC/m^2/s                                                               F
 CWDC_TO_CEL_LITC_vr                 decomp. of coarse woody debris C to cellulosic litter C                                        gC/m^3/s                                                               F
@@ -170,6 +166,10 @@ CWD_HR_L2                           Het. Resp. from coarse woody debris         
 CWD_HR_L2_vr                        Het. Resp. from coarse woody debris                                                            gC/m^3/s                                                               F
 CWD_HR_L3                           Het. Resp. from coarse woody debris                                                            gC/m^2/s                                                               F
 CWD_HR_L3_vr                        Het. Resp. from coarse woody debris                                                            gC/m^3/s                                                               F
+CWD_PATHFRAC_L2_vr                  PATHFRAC from coarse woody debris to cellulosic litter                                         fraction                                                               F
+CWD_PATHFRAC_L3_vr                  PATHFRAC from coarse woody debris to lignin litter                                             fraction                                                               F
+CWD_RESP_FRAC_L2_vr                 respired from coarse woody debris to cellulosic litter                                         fraction                                                               F
+CWD_RESP_FRAC_L3_vr                 respired from coarse woody debris to lignin litter                                             fraction                                                               F
 C_ALLOMETRY                         C allocation index                                                                             none                                                                   F
 DAYL                                daylength                                                                                      s                                                                      F
 DAYS_ACTIVE                         number of days since last dormancy                                                             days                                                                   F
@@ -195,13 +195,7 @@ DEADSTEMN_XFER                      dead stem N transfer                        
 DEADSTEMN_XFER_TO_DEADSTEMN         dead stem N growth from storage                                                                gN/m^2/s                                                               F
 DENIT                               total rate of denitrification                                                                  gN/m^2/s                                                               T
 DGNETDT                             derivative of net ground heat flux wrt soil temp                                               W/m^2/K                                                                F
-DISCOI                              2 m Discomfort Index                                                                           C                                                                      T
-DISCOIS                             2 m Stull Discomfort Index                                                                     C                                                                      T
-DISCOIS_R                           Rural 2 m Stull Discomfort Index                                                               C                                                                      T
-DISCOIS_U                           Urban 2 m Stull Discomfort Index                                                               C                                                                      T
-DISCOI_R                            Rural 2 m Discomfort Index                                                                     C                                                                      T
-DISCOI_U                            Urban 2 m Discomfort Index                                                                     C                                                                      T
-DISPLA                              displacement height                                                                            m                                                                      F
+DISPLA                              displacement height (vegetated landunits only)                                                 m                                                                      F
 DISPVEGC                            displayed veg carbon, excluding storage and cpool                                              gC/m^2                                                                 T
 DISPVEGN                            displayed vegetation nitrogen                                                                  gN/m^2                                                                 T
 DLRAD                               downward longwave radiation below the canopy                                                   W/m^2                                                                  F
@@ -268,9 +262,6 @@ ELAI                                exposed one-sided leaf area index           
 EMG                                 ground emissivity                                                                              proportion                                                             F
 EMV                                 vegetation emissivity                                                                          proportion                                                             F
 EOPT                                Eopt coefficient for VOC calc                                                                  non                                                                    F
-EPT                                 2 m Equiv Pot Temp                                                                             K                                                                      T
-EPT_R                               Rural 2 m Equiv Pot Temp                                                                       K                                                                      T
-EPT_U                               Urban 2 m Equiv Pot Temp                                                                       K                                                                      T
 ER                                  total ecosystem respiration, autotrophic + heterotrophic                                       gC/m^2/s                                                               T
 ERRH2O                              total water conservation error                                                                 mm                                                                     T
 ERRH2OSNO                           imbalance in snow depth (liquid water)                                                         mm                                                                     T
@@ -380,13 +371,6 @@ FSR                                 reflected solar radiation                   
 FSRND                               direct nir reflected solar radiation                                                           W/m^2                                                                  T
 FSRNDLN                             direct nir reflected solar radiation at local noon                                             W/m^2                                                                  T
 FSRNI                               diffuse nir reflected solar radiation                                                          W/m^2                                                                  T
-FSRSF                               reflected solar radiation                                                                      W/m^2                                                                  T
-FSRSFND                             direct nir reflected solar radiation                                                           W/m^2                                                                  T
-FSRSFNDLN                           direct nir reflected solar radiation at local noon                                             W/m^2                                                                  T
-FSRSFNI                             diffuse nir reflected solar radiation                                                          W/m^2                                                                  T
-FSRSFVD                             direct vis reflected solar radiation                                                           W/m^2                                                                  T
-FSRSFVDLN                           direct vis reflected solar radiation at local noon                                             W/m^2                                                                  T
-FSRSFVI                             diffuse vis reflected solar radiation                                                          W/m^2                                                                  T
 FSRVD                               direct vis reflected solar radiation                                                           W/m^2                                                                  T
 FSRVDLN                             direct vis reflected solar radiation at local noon                                             W/m^2                                                                  T
 FSRVI                               diffuse vis reflected solar radiation                                                          W/m^2                                                                  T
@@ -404,14 +388,6 @@ F_N2O_DENIT                         denitrification N2O flux                    
 F_N2O_NIT                           nitrification N2O flux                                                                         gN/m^2/s                                                               T
 F_NIT                               nitrification flux                                                                             gN/m^2/s                                                               T
 F_NIT_vr                            nitrification flux                                                                             gN/m^3/s                                                               F
-FireComp_BC                         fire emissions flux of BC                                                                      kg/m2/sec                                                              F
-FireComp_OC                         fire emissions flux of OC                                                                      kg/m2/sec                                                              F
-FireComp_SO2                        fire emissions flux of SO2                                                                     kg/m2/sec                                                              F
-FireEmis_TOT                        Total fire emissions flux                                                                      gC/m2/sec                                                              F
-FireEmis_ZTOP                       Top of vertical fire emissions distribution                                                    m                                                                      F
-FireMech_SO2                        fire emissions flux of SO2                                                                     kg/m2/sec                                                              F
-FireMech_bc_a1                      fire emissions flux of bc_a1                                                                   kg/m2/sec                                                              F
-FireMech_pom_a1                     fire emissions flux of pom_a1                                                                  kg/m2/sec                                                              F
 GAMMA                               total gamma for VOC calc                                                                       non                                                                    F
 GAMMAA                              gamma A for VOC calc                                                                           non                                                                    F
 GAMMAC                              gamma C for VOC calc                                                                           non                                                                    F
@@ -426,16 +402,16 @@ GDD1020                             Twenty year average of growing degree days b
 GDD8                                Growing degree days base  8C from planting                                                     ddays                                                                  F
 GDD820                              Twenty year average of growing degree days base  8C from planting                              ddays                                                                  F
 GDDACCUM                            Accumulated growing degree days past planting date for crop                                    ddays                                                                  F
-GDDACCUM_PERHARV                    For each crop harvest in a calendar year, accumulated growing degree days past planting date   ddays                                                                  F
+GDDACCUM_PERHARV                    At-harvest accumulated growing degree days past planting date for crop; should only be output  ddays                                                                  F
 GDDHARV                             Growing degree days (gdd) needed to harvest                                                    ddays                                                                  F
-GDDHARV_PERHARV                     For each harvest in a calendar year,For each harvest in a calendar year,  growing degree days (gdd) needed to harvest               ddays                                                                  F
+GDDHARV_PERHARV                     Growing degree days (gdd) needed to harvest; should only be output annually                    ddays                                                                  F
 GDDTSOI                             Growing degree-days from planting (top two soil layers)                                        ddays                                                                  F
 GPP                                 gross primary production                                                                       gC/m^2/s                                                               T
 GR                                  total growth respiration                                                                       gC/m^2/s                                                               T
 GRAINC                              grain C (does not equal yield)                                                                 gC/m^2                                                                 T
 GRAINC_TO_FOOD                      grain C to food                                                                                gC/m^2/s                                                               T
-GRAINC_TO_FOOD_ANN                  total grain C to food in all harvests in a calendar year                                       gC/m^2                                                                 F
-GRAINC_TO_FOOD_PERHARV              grain C to food for each harvest in a calendar year                                            gC/m^2                                                                 F
+GRAINC_TO_FOOD_ANN                  grain C to food harvested per calendar year; should only be output annually                    gC/m^2                                                                 F
+GRAINC_TO_FOOD_PERHARV              grain C to food per harvest; should only be output annually                                    gC/m^2                                                                 F
 GRAINC_TO_SEED                      grain C to seed                                                                                gC/m^2/s                                                               T
 GRAINN                              grain N                                                                                        gN/m^2                                                                 T
 GRESP_STORAGE                       growth respiration storage                                                                     gC/m^2                                                                 F
@@ -443,6 +419,10 @@ GRESP_STORAGE_TO_XFER               growth respiration shift storage to transfer
 GRESP_XFER                          growth respiration transfer                                                                    gC/m^2                                                                 F
 GROSS_NMIN                          gross rate of N mineralization                                                                 gN/m^2/s                                                               T
 GROSS_NMIN_vr                       gross rate of N mineralization                                                                 gN/m^3/s                                                               F
+GRU_PROD100C_GAIN                   gross unrepresented landcover change addition to 100-yr wood product pool                      gC/m^2/s                                                               F
+GRU_PROD100N_GAIN                   gross unrepresented landcover change addition to 100-yr wood product pool                      gN/m^2/s                                                               F
+GRU_PROD10C_GAIN                    gross unrepresented landcover change addition to 10-yr wood product pool                       gC/m^2/s                                                               F
+GRU_PROD10N_GAIN                    gross unrepresented landcover change addition to 10-yr wood product pool                       gN/m^2/s                                                               F
 GSSHA                               shaded leaf stomatal conductance                                                               umol H20/m2/s                                                          T
 GSSHALN                             shaded leaf stomatal conductance at local noon                                                 umol H20/m2/s                                                          T
 GSSUN                               sunlit leaf stomatal conductance                                                               umol H20/m2/s                                                          T
@@ -453,8 +433,9 @@ H2OSNO                              snow depth (liquid water)                   
 H2OSNO_ICE                          snow depth (liquid water, ice landunits only)                                                  mm                                                                     F
 H2OSNO_TOP                          mass of snow in top snow layer                                                                 kg/m2                                                                  T
 H2OSOI                              volumetric soil water (natural vegetated and crop landunits only)                              mm3/mm3                                                                T
-HARVEST_REASON_PERHARV              For each harvest in a calendar year, the reason the crop was harvested                         categorical                                                            F
+HARVEST_REASON_PERHARV              Reason for each crop harvest; should only be output annually                                   1 = mature; 2 = max season length; 3 = incorrect Dec. 31 sowing;       F
 HBOT                                canopy bottom                                                                                  m                                                                      F
+HDATES                              actual crop harvest dates; should only be output annually                                      day of year                                                            F
 HEAT_CONTENT1                       initial gridcell total heat content                                                            J/m^2                                                                  T
 HEAT_CONTENT1_VEG                   initial gridcell total heat content - natural vegetated and crop landunits only                J/m^2                                                                  F
 HEAT_CONTENT2                       post land cover change total heat content                                                      J/m^2                                                                  F
@@ -466,8 +447,8 @@ HK                                  hydraulic conductivity (natural vegetated an
 HR                                  total heterotrophic respiration                                                                gC/m^2/s                                                               T
 HR_vr                               total vertically resolved heterotrophic respiration                                            gC/m^3/s                                                               T
 HTOP                                canopy top                                                                                     m                                                                      T
-HUI                                 crop heat unit index                                                                           ddays                                                                  F
-HUI_PERHARV                         For each harvest in a calendar year, crop heat unit index                                      ddays                                                                  F
+HUI                                 Crop patch heat unit index                                                                     ddays                                                                  F
+HUI_PERHARV                         At-harvest accumulated heat unit index for crop; should only be output annually                ddays                                                                  F
 HUMIDEX                             2 m Humidex                                                                                    C                                                                      T
 HUMIDEX_R                           Rural 2 m Humidex                                                                              C                                                                      T
 HUMIDEX_U                           Urban 2 m Humidex                                                                              C                                                                      T
@@ -493,6 +474,12 @@ K_NITR_PH                           K_NITR_PH                                   
 K_NITR_T                            K_NITR_T                                                                                       unitless                                                               F
 K_PAS_SOM                           passive soil organic potential loss coefficient                                                1/s                                                                    F
 K_SLO_SOM                           slow soil organic ma potential loss coefficient                                                1/s                                                                    F
+L1_PATHFRAC_S1_vr                   PATHFRAC from metabolic litter to active soil organic                                          fraction                                                               F
+L1_RESP_FRAC_S1_vr                  respired from metabolic litter to active soil organic                                          fraction                                                               F
+L2_PATHFRAC_S1_vr                   PATHFRAC from cellulosic litter to active soil organic                                         fraction                                                               F
+L2_RESP_FRAC_S1_vr                  respired from cellulosic litter to active soil organic                                         fraction                                                               F
+L3_PATHFRAC_S2_vr                   PATHFRAC from lignin litter to slow soil organic ma                                            fraction                                                               F
+L3_RESP_FRAC_S2_vr                  respired from lignin litter to slow soil organic ma                                            fraction                                                               F
 LAI240                              240hr average of leaf area index                                                               m^2/m^2                                                                F
 LAISHA                              shaded projected leaf area index                                                               m^2/m^2                                                                T
 LAISUN                              sunlit projected leaf area index                                                               m^2/m^2                                                                T
@@ -500,7 +487,7 @@ LAKEICEFRAC                         lake layer ice mass fraction                
 LAKEICEFRAC_SURF                    surface lake layer ice mass fraction                                                           unitless                                                               T
 LAKEICETHICK                        thickness of lake ice (including physical expansion on freezing)                               m                                                                      T
 LAND_USE_FLUX                       total C emitted from land cover conversion (smoothed over the year) and wood and grain product gC/m^2/s                                                               T
-LATBASET                            latitude vary base temperature for gddplant                                                    degree C                                                               F
+LATBASET                            latitude vary base temperature for hui                                                         degree C                                                               F
 LEAFC                               leaf C                                                                                         gC/m^2                                                                 T
 LEAFCN                              Leaf CN ratio used for flexible CN                                                             gC/gN                                                                  T
 LEAFCN_OFFSET                       Leaf C:N used by FUN                                                                           unitless                                                               F
@@ -980,11 +967,21 @@ RSSHA                               shaded leaf stomatal resistance             
 RSSUN                               sunlit leaf stomatal resistance                                                                s/m                                                                    T
 Rainf                               atmospheric rain, after rain/snow repartitioning based on temperature                          mm/s                                                                   F
 Rnet                                net radiation                                                                                  W/m^2                                                                  F
+S1_PATHFRAC_S2_vr                   PATHFRAC from active soil organic to slow soil organic ma                                      fraction                                                               F
+S1_PATHFRAC_S3_vr                   PATHFRAC from active soil organic to passive soil organic                                      fraction                                                               F
+S1_RESP_FRAC_S2_vr                  respired from active soil organic to slow soil organic ma                                      fraction                                                               F
+S1_RESP_FRAC_S3_vr                  respired from active soil organic to passive soil organic                                      fraction                                                               F
+S2_PATHFRAC_S1_vr                   PATHFRAC from slow soil organic ma to active soil organic                                      fraction                                                               F
+S2_PATHFRAC_S3_vr                   PATHFRAC from slow soil organic ma to passive soil organic                                     fraction                                                               F
+S2_RESP_FRAC_S1_vr                  respired from slow soil organic ma to active soil organic                                      fraction                                                               F
+S2_RESP_FRAC_S3_vr                  respired from slow soil organic ma to passive soil organic                                     fraction                                                               F
+S3_PATHFRAC_S1_vr                   PATHFRAC from passive soil organic to active soil organic                                      fraction                                                               F
+S3_RESP_FRAC_S1_vr                  respired from passive soil organic to active soil organic                                      fraction                                                               F
 SABG                                solar rad absorbed by ground                                                                   W/m^2                                                                  T
 SABG_PEN                            Rural solar rad penetrating top soil or snow layer                                             watt/m^2                                                               T
 SABV                                solar rad absorbed by veg                                                                      W/m^2                                                                  T
-SDATES                              Crop sowing dates in each calendar year                                                        day of year (julian day)                                               F
-SDATES_PERHARV                      For each harvest in a calendar year, the Julian day the crop was sown                          day of year (julian day)                                               F
+SDATES                              actual crop sowing dates; should only be output annually                                       day of year                                                            F
+SDATES_PERHARV                      actual sowing dates for crops harvested this year; should only be output annually              day of year                                                            F
 SEEDC                               pool for seeding new PFTs via dynamic landcover                                                gC/m^2                                                                 T
 SEEDN                               pool for seeding new PFTs via dynamic landcover                                                gN/m^2                                                                 T
 SLASH_HARVESTC                      slash harvest carbon (to litter)                                                               gC/m^2/s                                                               T
@@ -1114,16 +1111,9 @@ SOM_ADV_COEF                        advection term for vertical SOM translocatio
 SOM_C_LEACHED                       total flux of C from SOM pools due to leaching                                                 gC/m^2/s                                                               T
 SOM_DIFFUS_COEF                     diffusion coefficient for vertical SOM translocation                                           m^2/s                                                                  F
 SOM_N_LEACHED                       total flux of N from SOM pools due to leaching                                                 gN/m^2/s                                                               F
-SOWING_REASON                       For each sowing in a calendar year, the reason the crop was sown                               categorical                                                            F
-SOWING_REASON_PERHARV               For each harvest in a calendar year, the reason the crop was sown                              categorical                                                            F
+SOWING_REASON                       Reason for each crop sowing; should only be output annually                                    unitless                                                               F
+SOWING_REASON_PERHARV               Reason for sowing of each crop harvested this year; should only be output annually             unitless                                                               F
 SR                                  total soil respiration (HR + root resp)                                                        gC/m^2/s                                                               T
-SSRE_FSR                            surface snow effect on reflected solar radiation                                               W/m^2                                                                  T
-SSRE_FSRND                          surface snow effect on direct nir reflected solar radiation                                    W/m^2                                                                  T
-SSRE_FSRNDLN                        surface snow effect on direct nir reflected solar radiation at local noon                      W/m^2                                                                  T
-SSRE_FSRNI                          surface snow effect on diffuse nir reflected solar radiation                                   W/m^2                                                                  T
-SSRE_FSRVD                          surface snow radiatve effect on direct vis reflected solar radiation                           W/m^2                                                                  T
-SSRE_FSRVDLN                        surface snow radiatve effect on direct vis reflected solar radiation at local noon             W/m^2                                                                  T
-SSRE_FSRVI                          surface snow radiatve effect on diffuse vis reflected solar radiation                          W/m^2                                                                  T
 STEM_PROF                           profile for litter C and N inputs from stems                                                   1/m                                                                    F
 STORAGE_CDEMAND                     C use from the C storage pool                                                                  gC/m^2                                                                 F
 STORAGE_GR                          growth resp for growth sent to storage for later display                                       gC/m^2/s                                                               F
@@ -1132,18 +1122,12 @@ STORVEGC                            stored vegetation carbon, excluding cpool   
 STORVEGN                            stored vegetation nitrogen                                                                     gN/m^2                                                                 T
 SUPPLEMENT_TO_SMINN                 supplemental N supply                                                                          gN/m^2/s                                                               T
 SUPPLEMENT_TO_SMINN_vr              supplemental N supply                                                                          gN/m^3/s                                                               F
-SYEARS_PERHARV                      For each harvest in a calendar year, the year the crop was sown                                year                                                                   F
 SWBGT                               2 m Simplified Wetbulb Globe Temp                                                              C                                                                      T
 SWBGT_R                             Rural 2 m Simplified Wetbulb Globe Temp                                                        C                                                                      T
 SWBGT_U                             Urban 2 m Simplified Wetbulb Globe Temp                                                        C                                                                      T
-SWMP65                              2 m Swamp Cooler Temp 65% Eff                                                                  C                                                                      T
-SWMP65_R                            Rural 2 m Swamp Cooler Temp 65% Eff                                                            C                                                                      T
-SWMP65_U                            Urban 2 m Swamp Cooler Temp 65% Eff                                                            C                                                                      T
-SWMP80                              2 m Swamp Cooler Temp 80% Eff                                                                  C                                                                      T
-SWMP80_R                            Rural 2 m Swamp Cooler Temp 80% Eff                                                            C                                                                      T
-SWMP80_U                            Urban 2 m Swamp Cooler Temp 80% Eff                                                            C                                                                      T
 SWdown                              atmospheric incident solar radiation                                                           W/m^2                                                                  F
 SWup                                upwelling shortwave radiation                                                                  W/m^2                                                                  F
+SYEARS_PERHARV                      actual sowing years for crops harvested this year; should only be output annually              year                                                                   F
 SoilAlpha                           factor limiting ground evap                                                                    unitless                                                               F
 SoilAlpha_U                         urban factor limiting ground evap                                                              unitless                                                               F
 T10                                 10-day running mean of 2-m temperature                                                         K                                                                      F
@@ -1156,9 +1140,6 @@ TBUILD_MAX                          prescribed maximum interior building tempera
 TEMPAVG_T2M                         temporary average 2m air temperature                                                           K                                                                      F
 TEMPMAX_RETRANSN                    temporary annual max of retranslocated N pool                                                  gN/m^2                                                                 F
 TEMPSUM_POTENTIAL_GPP               temporary annual sum of potential GPP                                                          gC/m^2/yr                                                              F
-TEQ                                 2 m Equiv Temp                                                                                 K                                                                      T
-TEQ_R                               Rural 2 m Equiv Temp                                                                           K                                                                      T
-TEQ_U                               Urban 2 m Equiv Temp                                                                           K                                                                      T
 TFLOOR                              floor temperature                                                                              K                                                                      F
 TG                                  ground temperature                                                                             K                                                                      T
 TG_ICE                              ground temperature (ice landunits only)                                                        K                                                                      F
@@ -1166,12 +1147,6 @@ TG_R                                Rural ground temperature                    
 TG_U                                Urban ground temperature                                                                       K                                                                      F
 TH2OSFC                             surface water temperature                                                                      K                                                                      T
 THBOT                               atmospheric air potential temperature (downscaled to columns in glacier regions)               K                                                                      T
-THIC                                2 m Temp Hum Index Comfort                                                                     C                                                                      T
-THIC_R                              Rural 2 m Temp Hum Index Comfort                                                               C                                                                      T
-THIC_U                              Urban 2 m Temp Hum Index Comfort                                                               C                                                                      T
-THIP                                2 m Temp Hum Index Physiology                                                                  C                                                                      T
-THIP_R                              Rural 2 m Temp Hum Index Physiology                                                            C                                                                      T
-THIP_U                              Urban 2 m Temp Hum Index Physiology                                                            C                                                                      T
 TKE1                                top lake level eddy thermal conductivity                                                       W/(mK)                                                                 T
 TLAI                                total projected leaf area index                                                                m^2/m^2                                                                T
 TLAKE                               lake temperature                                                                               K                                                                      T
@@ -1256,6 +1231,7 @@ VCMX25T                             canopy profile of vcmax25                   
 VEGWP                               vegetation water matric potential for sun/sha canopy,xyl,root segments                         mm                                                                     T
 VEGWPLN                             vegetation water matric potential for sun/sha canopy,xyl,root at local noon                    mm                                                                     T
 VEGWPPD                             predawn vegetation water matric potential for sun/sha canopy,xyl,root                          mm                                                                     T
+VENTILATION                         sensible heat flux from building ventilation                                                   W/m^2                                                                  T
 VOCFLXT                             total VOC flux into atmosphere                                                                 moles/m2/sec                                                           F
 VOLR                                river channel total water storage                                                              m3                                                                     T
 VOLRMCH                             river channel main channel water storage                                                       m3                                                                     T
@@ -1264,9 +1240,6 @@ VPD2M                               2m vapor pressure deficit                   
 VPD_CAN                             canopy vapor pressure deficit                                                                  kPa                                                                    T
 Vcmx25Z                             canopy profile of vcmax25 predicted by LUNA model                                              umol/m2/s                                                              T
 WASTEHEAT                           sensible heat flux from heating/cooling sources of urban waste heat                            W/m^2                                                                  T
-WBA                                 2 m Wet Bulb                                                                                   C                                                                      T
-WBA_R                               Rural 2 m Wet Bulb                                                                             C                                                                      T
-WBA_U                               Urban 2 m Wet Bulb                                                                             C                                                                      T
 WBT                                 2 m Stull Wet Bulb                                                                             C                                                                      T
 WBT_R                               Rural 2 m Stull Wet Bulb                                                                       C                                                                      T
 WBT_U                               Urban 2 m Stull Wet Bulb                                                                       C                                                                      T
@@ -1284,13 +1257,13 @@ Wind                                atmospheric wind velocity magnitude         
 XSMRPOOL                            temporary photosynthate C pool                                                                 gC/m^2                                                                 T
 XSMRPOOL_LOSS                       temporary photosynthate C pool loss                                                            gC/m^2                                                                 F
 XSMRPOOL_RECOVER                    C flux assigned to recovery of negative xsmrpool                                               gC/m^2/s                                                               T
-Z0HG                                roughness length over ground, sensible heat                                                    m                                                                      F
+Z0HG                                roughness length over ground, sensible heat (vegetated landunits only)                         m                                                                      F
 Z0HV                                roughness length over vegetation, sensible heat                                                m                                                                      F
-Z0M                                 momentum roughness length                                                                      m                                                                      F
-Z0MG                                roughness length over ground, momentum                                                         m                                                                      F
+Z0MG                                roughness length over ground, momentum (vegetated landunits only)                              m                                                                      F
 Z0MV                                roughness length over vegetation, momentum                                                     m                                                                      F
+Z0MV_DENSE                          roughness length over vegetation, momentum, for dense canopy                                   m                                                                      F
 Z0M_TO_COUPLER                      roughness length, momentum: gridcell average sent to coupler                                   m                                                                      F
-Z0QG                                roughness length over ground, latent heat                                                      m                                                                      F
+Z0QG                                roughness length over ground, latent heat (vegetated landunits only)                           m                                                                      F
 Z0QV                                roughness length over vegetation, latent heat                                                  m                                                                      F
 ZBOT                                atmospheric reference height                                                                   m                                                                      T
 ZETA                                dimensionless stability parameter                                                              unitless                                                               F
@@ -1312,4 +1285,4 @@ soil_bulkdensity                    soil_bulkdensity                            
 soil_co2_prod                       soil_co2_prod                                                                                  ug C / g soil / day                                                    F
 watfc                               water field capacity                                                                           m^3/m^3                                                                F
 watsat                              water saturated                                                                                m^3/m^3                                                                F
-==== =================================== ============================================================================================== ================================================================= ======= 
+=================================== ============================================================================================== ================================================================= =======
