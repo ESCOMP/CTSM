@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev13?
 Originator(s): @cenlinhe (Cenlin He,UCAR/RAL), slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Fri Aug 11 15:07:55 MDT 2023
+Date: Fri Aug 11 17:09:18 MDT 2023
 One-line Summary: SNICAR snow albedo scheme updates
 
 Purpose and description of changes
@@ -12,12 +12,9 @@ Purpose and description of changes
  A few substantial changes in the SNICAR module for the following updated snow
  albedo calculation features:
  - Updated ice optical properties from Flanner et al. (2021), with multiple types
- for ice refractive indices. The updated SNICAR database files are:
- /glade/work/cenlinhe/NOAA_CPT_snowAER/CLM_SNICAR_data/snicar_optics_480bnd_c012422.nc
- /glade/work/cenlinhe/NOAA_CPT_snowAER/CLM_SNICAR_data/snicar_optics_5bnd_c013122.nc
+ for ice refractive indices.
  - Updated aerosol optical properties from Flanner et al. (2021) with multiple
- dust types & new BC and OC optics (the updated data are in the new SNICAR
- database files shown above).
+ dust types & new BC and OC optics.
  - Updated downward solar spectra from Flanner et al. (2021) for multiple
  condition types.
  - More accurate radiative transfer solver (adding-doubling) from Dang et al. (2019).
@@ -31,7 +28,11 @@ Purpose and description of changes
  Specific notes
  - Code contributors: Cenlin He (NCAR/RAL) with advice from
  Dave Lawrence (NCAR/CGD) and Mark Flanner (UMich).
- - The manuscript to report this update is in preparation (He et al, 2022 JAMES in prep)
+ - The manuscript to report this update is
+ Cenlin He, Mark Flanner, David M Lawrence, Yu Gu: New features and
+ enhancements in Community Land Model (CLM5) snow albedo modeling: description,
+ sensitivity, and evaluation. Authorea. June 08, 2023.
+ DOI:10.22541/essoar.168626390.01530324/v1
  - These updates will change the snow and surface albedo results along with
  other surface fluxes changes.
  - There are a few new namelist options related to SNICAR scheme added to the
