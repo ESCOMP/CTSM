@@ -1846,6 +1846,25 @@ contains
            ! flux weights/spectrum
            call ncd_io( 'flx_wgt_dir5_mlw', flx_wgt_dir,     'read', ncid, posNOTonfile=.true.)
            call ncd_io( 'flx_wgt_dif5_mlw', flx_wgt_dif,     'read', ncid, posNOTonfile=.true.)
+           !
+           ! THIS NOTE APPLIES TO ALL THE call ncd_io LINES BELOW WHERE
+           ! bcphob AND ocphob GET ASSIGNED TO VARIABLES SUFFIXED bc1/oc1:
+           !
+           ! Assumption (1) applies here, in the input section.
+           ! Assumption (2) applies later, in the snicar code.
+           !
+           ! 1) In this section, hydrophillic particles behave like hydrophobic
+           ! particles. We assume bc1/oc1 to have the same optics as bc2/oc2
+           ! because sulfate coating on the bc1/oc1 surface is assumed to be
+           ! dissolved into the hydrometeo (i.e, snow grain here) during the
+           ! deposition process. This is different from the assumption made in
+           ! prior model versions, where bc1/oc1 was coated by undissolved
+           ! sulfate.
+           ! 2) Later, in the snicar code, if the bc-snow internal mixing option
+           ! is on, bc1/oc1 (internally mixed within the snow grain) will be
+           ! treated differently than bc2/oc2 (mixed externally or outside the
+           ! snow grain).
+           !
            ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
            call ncd_io( 'ss_alb_bcphob_dif_mlw', ss_alb_bc1,           'read', ncid, posNOTonfile=.true.)
            call ncd_io( 'asm_prm_bcphob_dif_mlw', asm_prm_bc1,         'read', ncid, posNOTonfile=.true.)
