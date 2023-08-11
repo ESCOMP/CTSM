@@ -136,6 +136,7 @@ contains
     use clm_varctl                    , only : use_cn, use_fates
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
+    use clm_varctl                    , only : use_cropcal_streams
     use landunit_varcon               , only : landunit_varcon_init, max_lunit, numurbl
     use pftconMod                     , only : pftcon
     use decompInitMod                 , only : decompInit_clumps, decompInit_glcp
@@ -163,6 +164,7 @@ contains
     use restFileMod                   , only : restFile_getfile, restFile_open, restFile_close
     use restFileMod                   , only : restFile_read, restFile_write
     use ndepStreamMod                 , only : ndep_init, ndep_interp
+    use cropcalStreamMod              , only : cropcal_init, cropcal_interp, cropcal_advance
     use LakeCon                       , only : LakeConInit
     use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg, SatellitePhenology
     use SnowSnicarMod                 , only : SnowAge_init, SnowOptics_init
@@ -634,7 +636,22 @@ contains
        end if
        call t_stopf('init_ndep')
     end if
-    
+
+    ! Initialize crop calendars
+    call t_startf('init_cropcal')
+    call cropcal_init(bounds_proc)
+    if (use_cropcal_streams) then
+      call cropcal_advance( bounds_proc )
+      !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+      do nc = 1,nclumps
+         call get_clump_bounds(nc, bounds_clump)
+         call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, &
+              filter_inactive_and_active(nc)%pcropp, crop_inst)
+      end do
+      !$OMP END PARALLEL DO
+    end if
+    call t_stopf('init_cropcal')
+
     ! Initialize active history fields.
     ! This is only done if not a restart run. If a restart run, then this
     ! information has already been obtained from the restart data read above.
