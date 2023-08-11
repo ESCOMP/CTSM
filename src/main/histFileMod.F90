@@ -451,8 +451,8 @@ contains
        fmt_txt = '('//str_w_col_sum//'a)'
        write(hist_fields_file,fmt_txt) ('-', i=1, width_col_sum)
        ! Concatenate strings needed in format statement
-       fmt_txt = '(a'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//',x,a'//str_width_col(5)//')'
-       write(hist_fields_file,fmt_txt) '#', 'Variable Name',  &
+       fmt_txt = '(a'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//')'
+       write(hist_fields_file,fmt_txt) 'Variable Name',  &
                                     'Long Description', 'Units', 'Active?'
 
        ! End header, same as header
@@ -465,9 +465,9 @@ contains
 
        ! Main table
        ! Concatenate strings needed in format statement
-       fmt_txt = '(i'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//',l'//str_width_col(5)//')'
+       fmt_txt = '(a'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',l'//str_width_col(4)//')'
        do nf = 1,nallhistflds
-          write(hist_fields_file,fmt_txt) nf,  &
+          write(hist_fields_file,fmt_txt) &
              allhistfldlist(nf)%field%name,  &
              allhistfldlist(nf)%field%long_name,  &
              allhistfldlist(nf)%field%units,  &
