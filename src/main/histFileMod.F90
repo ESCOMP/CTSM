@@ -141,12 +141,12 @@ module histFileMod
   logical, private :: if_disphist(max_tapes)   ! restart, true => save history file
   !
   ! !PUBLIC MEMBER FUNCTIONS:  (in rough call order)
-  public :: hist_addfld1d        ! Add a 1d single-level field to the master field list
-  public :: hist_addfld2d        ! Add a 2d multi-level field to the master field list
+  public :: hist_addfld1d        ! Add a 1d single-level field to the list of all history fields
+  public :: hist_addfld2d        ! Add a 2d multi-level field to the list of all history fields
   public :: hist_addfld_decomp   ! Add a 1d/2d field based on patch or column data
   public :: hist_add_subscript   ! Add a 2d subscript dimension
 
-  public :: hist_printflds       ! Print summary of master field list
+  public :: hist_printflds       ! Print summary of list of all history fields
   public :: htapes_fieldlist     ! Finalize history file field lists, intersecting masterlist with
                                  ! namelist params.
 
@@ -159,7 +159,7 @@ module histFileMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: is_mapping_upto_subgrid   ! Is this field being mapped up to a higher subgrid level?
   private :: masterlist_make_active    ! Declare a single field active for a single tape
-  private :: masterlist_addfld         ! Add a field to the master field list
+  private :: masterlist_addfld         ! Add a field to the list of all history fields
   private :: masterlist_change_timeavg ! Override default history tape contents for specific tape
   private :: htape_addfld              ! Transfer field metadata from masterlist to a history tape.
   private :: htape_create              ! Define netcdf metadata of history file t
@@ -294,7 +294,7 @@ module histFileMod
   ! hist_addfld* calls in the code.
   ! For the field data itself, see 'tape'.
   !
-  type (master_entry) :: masterlist(max_flds)  ! master field list
+  type (master_entry) :: masterlist(max_flds)  ! list of all history fields
   !
   ! Whether each history tape is in use in this run. If history_tape_in_use(i) is false,
   ! then data in tape(i) is undefined and should not be referenced.
@@ -311,7 +311,7 @@ module histFileMod
   !
   ! Counters
   !
-  integer :: nfmaster = 0                        ! number of fields in master field list
+  integer :: nfmaster = 0                        ! number of fields in list of all history fields
   !
   ! Other variables
   !
@@ -347,7 +347,7 @@ contains
   subroutine hist_printflds()
     !
     ! !DESCRIPTION:
-    ! Print summary of master field list.
+    ! Print summary of list of all history fields.
     !
     ! !USES:
     use clm_varctl, only: hist_fields_list_file
@@ -371,7 +371,7 @@ contains
 
     if (masterproc) then
        write(iulog,*) trim(subname),' : number of master fields = ',nfmaster
-       write(iulog,*)' ******* MASTER FIELD LIST *******'
+       write(iulog,*)' ******* LIST OF ALL HISTORY FIELDS *******'
        do nf = 1,nfmaster
           write(iulog,9000)nf, masterlist(nf)%field%name, masterlist(nf)%field%units
 9000      format (i5,1x,a32,1x,a16)
@@ -379,7 +379,7 @@ contains
        call shr_sys_flush(iulog)
     end if
 
-    ! Print master field list in separate text file when namelist
+    ! Print list of all history fields in separate text file when namelist
     ! variable requests it. Text file is formatted in the .rst
     ! (reStructuredText) format for easy introduction of the file to
     ! the CTSM's web-based documentation.
@@ -495,9 +495,9 @@ contains
         no_snow_behavior)
     !
     ! !DESCRIPTION:
-    ! Add a field to the master field list. Put input arguments of
+    ! Add a field to the list of all history fields. Put input arguments of
     ! field name, units, number of levels, averaging flag, and long name
-    ! into a type entry in the global master field list (masterlist).
+    ! into a type entry in the global list of all history fields (masterlist).
     !
     ! The optional argument no_snow_behavior should be given when this is a multi-layer
     ! snow field, and should be absent otherwise. It should take on one of the no_snow_*
@@ -563,12 +563,12 @@ contains
        end if
     end do
 
-    ! Increase number of fields on master field list
+    ! Increase number of fields on list of all history fields
 
     nfmaster = nfmaster + 1
     f = nfmaster
 
-    ! Check number of fields in master list against maximum number for master list
+    ! Check number of fields in list against maximum number
 
     if (nfmaster > max_flds) then
        write(iulog,*) trim(subname),' ERROR: too many fields for primary history file ', &
@@ -576,7 +576,7 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
-    ! Add field to master list
+    ! Add field to list of all history fields
 
     masterlist(f)%field%name           = fname
     masterlist(f)%field%long_name      = long_name
@@ -623,9 +623,9 @@ contains
        masterlist(f)%field%no_snow_behavior = no_snow_unset
     end if
 
-    ! The following two fields are used only in master field list,
+    ! The following two fields are used only in list of all history fields,
     ! NOT in the runtime active field list
-    ! ALL FIELDS IN THE MASTER LIST ARE INITIALIZED WITH THE ACTIVE
+    ! ALL FIELDS IN THE FORMER ARE INITIALIZED WITH THE ACTIVE
     ! FLAG SET TO FALSE
 
     masterlist(f)%avgflag(:) = avgflag
@@ -746,7 +746,7 @@ contains
        endif
     end if
 
-    ! Look through master list for input field name.
+    ! Look through list of all history fields for input field name.
     ! When found, set active flag for that tape to true.
     ! Also reset averaging flag if told to use other than default.
 
@@ -773,7 +773,7 @@ contains
     !
     ! !DESCRIPTION:
     ! Override default history tape contents for a specific tape.
-    ! Copy the flag into the master field list.
+    ! Copy the flag into the list of all history fields.
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t         ! history tape index
@@ -1133,11 +1133,11 @@ contains
   subroutine htape_addfld (t, f, avgflag)
     !
     ! !DESCRIPTION:
-    ! Add a field to a history tape, copying metadata from the master field list
+    ! Add a field to a history tape, copying metadata from the list of all history fields
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t                 ! history tape index
-    integer, intent(in) :: f                 ! field index from master field list
+    integer, intent(in) :: f                 ! field index from list of all history fields
     character(len=*), intent(in) :: avgflag  ! time averaging flag
     !
     ! !LOCAL VARIABLES:
