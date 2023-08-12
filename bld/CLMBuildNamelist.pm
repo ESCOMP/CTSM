@@ -611,7 +611,7 @@ sub process_namelist_user_input {
   process_namelist_commandline_infile($opts, $definition, $nl, $envxml_ref);
 
   # Apply the commandline options and make sure the user didn't change it above
-  process_namelist_commandline_options($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  process_namelist_commandline_options($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref, $physv);
 
   # The last two process command line arguments for usr_name and use_case
   # They require that process_namelist_commandline_options was called before this
@@ -632,10 +632,10 @@ sub process_namelist_commandline_options {
   # Obtain default values for the following build-namelist input arguments
   # : res, mask, ssp_rcp, sim_year, sim_year_range, and clm_accelerated_spinup.
 
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref, $physv) = @_;
 
   setup_cmdl_chk_res($opts, $defaults);
-  setup_cmdl_resolution($opts, $nl_flags, $definition, $defaults);
+  setup_cmdl_resolution($opts, $nl_flags, $definition, $defaults, $envxml_ref);
   setup_cmdl_mask($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_configuration_and_structure($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_bgc($opts, $nl_flags, $definition, $defaults, $nl);
@@ -666,7 +666,7 @@ sub setup_cmdl_chk_res {
 }
 
 sub setup_cmdl_resolution {
-  my ($opts, $nl_flags, $definition, $defaults) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $envxml_ref) = @_;
 
   my $var = "res";
   my $val;
@@ -690,10 +690,20 @@ sub setup_cmdl_resolution {
     }
   }
   # For NEON sites
-  if ($nl_flags->{'res'} =~ /NEON/) {
-    $nl_flags->{'neon'} = ".true."
-  } else {
-    $nl_flags->{'neon'} = ".false."
+  $nl_flags->{'neon'} = ".false.";
+  $nl_flags->{'neonsite'} = "";
+  if ( $nl_flags->{'res'} eq "CLM_USRDAT" ) {
+    if ( ! defined($opts->{'clm_usr_name'}) ) {
+        $log->fatal_error("Resolution is CLM_USRDAT, but --clm_usr_name option is NOT set, and it is required for CLM_USRDAT resolutions");
+    }
+    if ( $opts->{'clm_usr_name'} eq "NEON" ) {
+       $nl_flags->{'neon'} = ".true.";
+       $nl_flags->{'neonsite'} = $envxml_ref->{'NEONSITE'};
+       $log->verbose_message( "This is a NEON site with NEONSITE = " . $nl_flags->{'neonsite'} );
+    }
+  }
+  if ( ! &value_is_true( $nl_flags->{'neon'} ) ) {
+    $log->verbose_message( "This is NOT a NEON site" );
   }
 
 }
@@ -1583,7 +1593,7 @@ sub process_namelist_inline_logic {
   setup_logic_grainproduct($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_soilstate($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_demand($opts, $nl_flags, $definition, $defaults, $nl);
-  setup_logic_surface_dataset($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_surface_dataset($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_dynamic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl);
   if ( remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) ne "branch" ) {
     setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
@@ -2305,7 +2315,7 @@ sub setup_logic_surface_dataset {
   # consistent with it
   # MUST BE AFTER: setup_logic_demand which is where flanduse_timeseries is set
   #
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $xmlvar_ref) = @_;
 
   $nl_flags->{'flanduse_timeseries'} = "null";
   my $flanduse_timeseries = $nl->get_value('flanduse_timeseries');
@@ -2330,25 +2340,41 @@ sub setup_logic_surface_dataset {
   if ( !  &value_is_true($nl_flags->{'use_fates'}) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                  'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
+                 'neon'=>$nl_flags->{'neon'}, 'neonsite'=>$nl_flags->{'neonsite'},
                  'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>".true.", 'use_vichydro'=>$nl_flags->{'use_vichydro'},
-                 'use_crop'=>".true.", 'glc_nec'=>$nl_flags->{'glc_nec'}, 'nofail'=>1);
+                 'use_crop'=>".true.", 'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_fates'=>$nl_flags->{'use_fates'}, 'nofail'=>1);
   }
   # If didn't find the crop version check for the exact match
-  if ( ! defined($nl->get_value($var) ) ) {
+  my $fsurdat = $nl->get_value($var);
+  if ( ! defined($fsurdat) ) {
      if ( !  &value_is_true($nl_flags->{'use_fates'}) ) {
         $log->verbose_message( "Crop version of $var NOT found, searching for an exact match" );
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                  'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'use_vichydro'=>$nl_flags->{'use_vichydro'},
-                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>$nl_flags->{'irrigate'},
+                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>$nl_flags->{'irrigate'}, 'use_fates'=>$nl_flags->{'use_fates'},
+                 'neon'=>$nl_flags->{'neon'}, 'neonsite'=>$nl_flags->{'neonsite'},
                  'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'}, 'nofail'=>1 );
-     if ( ! defined($nl->get_value($var) ) ) {
+     if ( ! defined($fsurdat) ) {
         $log->verbose_message( "Exact match of $var NOT found, searching for version with irrigate true" );
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                  'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'use_vichydro'=>$nl_flags->{'use_vichydro'},
-                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>".true.",
+                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>".true.", 'use_fates'=>$nl_flags->{'use_fates'}, 
+                 'neon'=>$nl_flags->{'neon'}, 'neonsite'=>$nl_flags->{'neonsite'},
                  'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'} );
+  }
+  #
+  # Expand the XML variables for NEON cases so that NEONSITE will be used
+  #
+  if ( &value_is_true($nl_flags->{'neon'}) ) {
+     my $fsurdat = $nl->get_value($var);
+     my $newval = SetupTools::expand_xml_var( $fsurdat, $xmlvar_ref );
+     if ( $newval ne $fsurdat ) {
+        my $group = $definition->get_group_name($var);
+        $nl->set_variable_value($group, $var, $newval);
+        $log->verbose_message( "This is a NEON site and the fsurdat file selected is: $newval" );
+     }
   }
 }
 
