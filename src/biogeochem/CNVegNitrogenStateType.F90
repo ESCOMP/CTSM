@@ -96,40 +96,49 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds,  &
-       leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, deadstemc_patch)
+       leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, &
+       deadstemc_patch, tot_bgc_vegp)
 
     class(cnveg_nitrogenstate_type)   :: this
     type(bounds_type) , intent(in)    :: bounds  
-    real(r8)          , intent(in)    :: leafc_patch          (bounds%begp:)
-    real(r8)          , intent(in)    :: leafc_storage_patch  (bounds%begp:)
-    real(r8)          , intent(in)    :: frootc_patch         (bounds%begp:)     
-    real(r8)          , intent(in)    :: frootc_storage_patch (bounds%begp:)     
-    real(r8)          , intent(in)    :: deadstemc_patch      (bounds%begp:)
-
-    call this%InitAllocate (bounds )
-    call this%InitHistory (bounds)
-    call this%InitCold ( bounds, &
-         leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, deadstemc_patch)
-
+    real(r8)          , intent(in)    :: leafc_patch         (:) !(begp:)
+    real(r8)          , intent(in)    :: leafc_storage_patch (:) !(begp:)
+    real(r8)          , intent(in)    :: frootc_patch        (:) !(begp:)     
+    real(r8)          , intent(in)    :: frootc_storage_patch(:) !(begp:)     
+    real(r8)          , intent(in)    :: deadstemc_patch     (:) !(begp:)
+    integer           , intent(in)    :: tot_bgc_vegp
+    
+    call this%InitAllocate (bounds, tot_bgc_vegp)
+    if(tot_bgc_vegp>0) then
+       call this%InitHistory (bounds)
+       call this%InitCold ( bounds, &
+            leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, deadstemc_patch)
+    end if
   end subroutine Init
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds)
+  subroutine InitAllocate(this, bounds, tot_bgc_vegp)
     !
     ! !ARGUMENTS:
     class (cnveg_nitrogenstate_type) :: this
-    type(bounds_type) , intent(in) :: bounds  
+    type(bounds_type) , intent(in) :: bounds
+    integer,intent(in)             :: tot_bgc_vegp
     !
     ! !LOCAL VARIABLES:
     integer           :: begp,endp
     integer           :: begc,endc
     integer           :: begg,endg
     !------------------------------------------------------------------------
-
-    begp = bounds%begp; endp = bounds%endp
-    begc = bounds%begc; endc = bounds%endc
-    begg = bounds%begg; endg = bounds%endg
-
+    if(tot_bgc_vegp>0) then
+       begp = bounds%begp; endp = bounds%endp
+       begc = bounds%begc; endc = bounds%endc
+       begg = bounds%begg; endg = bounds%endg
+    else
+       begp = 0; endp = 0
+       begc = 0; endc = 0
+       begg = 0; endg = 0
+    end if
+       
     allocate(this%reproductiven_patch             (begp:endp, nrepr)) ; this%reproductiven_patch               (:,:) = nan
     allocate(this%reproductiven_storage_patch     (begp:endp, nrepr)) ; this%reproductiven_storage_patch       (:,:) = nan
     allocate(this%reproductiven_xfer_patch        (begp:endp, nrepr)) ; this%reproductiven_xfer_patch          (:,:) = nan

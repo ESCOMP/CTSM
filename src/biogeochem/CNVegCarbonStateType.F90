@@ -126,7 +126,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, carbon_type, ratio, NLFilename, &
-                  dribble_crophrv_xsmrpool_2atm, c12_cnveg_carbonstate_inst)
+                  dribble_crophrv_xsmrpool_2atm, tot_bgc_vegp, c12_cnveg_carbonstate_inst)
 
     class(cnveg_carbonstate_type)                       :: this
     type(bounds_type)            , intent(in)           :: bounds  
@@ -134,6 +134,7 @@ contains
     character(len=*)             , intent(in)           :: carbon_type                ! Carbon isotope type C12, C13 or C1
     character(len=*)             , intent(in)           :: NLFilename                 ! Namelist filename
     logical                      , intent(in)           :: dribble_crophrv_xsmrpool_2atm
+    integer                      , intent(in)           :: tot_bgc_vegp               ! total number of bgc patches (non-fates)
     type(cnveg_carbonstate_type) , intent(in), optional :: c12_cnveg_carbonstate_inst ! cnveg_carbonstate for C12 (if C13 or C14)
     !-----------------------------------------------------------------------
 
@@ -141,15 +142,17 @@ contains
 
     this%dribble_crophrv_xsmrpool_2atm = dribble_crophrv_xsmrpool_2atm
 
-    call this%InitAllocate ( bounds)
-    call this%InitReadNML  ( NLFilename )
-    call this%InitHistory ( bounds, carbon_type)
-    if (present(c12_cnveg_carbonstate_inst)) then
-       call this%InitCold  ( bounds, ratio, carbon_type, c12_cnveg_carbonstate_inst )
-    else
-       call this%InitCold  ( bounds, ratio, carbon_type )
+    call this%InitAllocate ( bounds, tot_bgc_vegp)
+    if(tot_bgc_vegp>0)then
+       call this%InitReadNML  ( NLFilename )
+       call this%InitHistory ( bounds, carbon_type)
+       if (present(c12_cnveg_carbonstate_inst)) then
+          call this%InitCold  ( bounds, ratio, carbon_type, c12_cnveg_carbonstate_inst )
+       else
+          call this%InitCold  ( bounds, ratio, carbon_type )
+       end if
     end if
-
+    
   end subroutine Init
 
   !------------------------------------------------------------------------
@@ -213,21 +216,28 @@ contains
   end subroutine InitReadNML
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds)
+  subroutine InitAllocate(this, bounds, tot_bgc_vegp)
     !
     ! !ARGUMENTS:
     class (cnveg_carbonstate_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
+    integer,intent(in)            :: tot_bgc_vegp ! Total number of bgc patches on the proc (non_fates)
     !
     ! !LOCAL VARIABLES:
     integer           :: begp,endp
     integer           :: begc,endc
     integer           :: begg,endg
     !------------------------------------------------------------------------
-
-    begp = bounds%begp; endp = bounds%endp
-    begc = bounds%begc; endc = bounds%endc
-    begg = bounds%begg; endg = bounds%endg
+    
+    if(tot_bgc_vegp>0)then
+       begp = bounds%begp; endp = bounds%endp
+       begc = bounds%begc; endc = bounds%endc
+       begg = bounds%begg; endg = bounds%endg
+    else
+       begp = 0;endp=0
+       begc = 0;endc=0
+       begg = 0;endg=0
+    end if
 
     allocate(this%leafc_patch                            (begp:endp)) ; this%leafc_patch                        (:) = nan
     allocate(this%leafc_storage_patch                    (begp:endp)) ; this%leafc_storage_patch                (:) = nan

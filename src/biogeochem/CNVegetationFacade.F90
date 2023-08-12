@@ -206,6 +206,8 @@ contains
     use CNFireFactoryMod , only : create_cnfire_method
     use clm_varcon       , only : c13ratio, c14ratio
     use ncdio_pio        , only : file_desc_t
+    use filterMod        , only : filter
+    use decompMod        , only : get_proc_clumps
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
@@ -215,16 +217,33 @@ contains
     type(file_desc_t), intent(inout) :: params_ncid ! NetCDF handle to parameter file
     !
     ! !LOCAL VARIABLES:
-    integer :: begp, endp
+    integer :: begp, endp, ci
+    integer :: nclumps       ! number of clumps on the proc
+    integer :: tot_bgc_vegp  ! Total number of bgc vegetation patches (non-fates)
+                             ! on the proc
 
     character(len=*), parameter :: subname = 'Init'
     !-----------------------------------------------------------------------
 
-    begp = bounds%begp
-    endp = bounds%endp
-
     ! Note - always initialize the memory for cnveg_state_inst (used in biogeophys/)
-    call this%cnveg_state_inst%Init(bounds)
+    !      - Even if FATES is the only vegetation option, we still allocate
+    !      - a single value for both column and patch, using index 0 only
+    !      - that is why we pass the number of bgc veg patches here
+
+    nclumps = get_proc_clumps()
+    tot_bgc_vegp = 0
+    do ci=1,nclumps
+       tot_bgc_vegp = tot_bgc_vegp + filter(ci)%num_bgc_vegp
+    end do
+    if(tot_bgc_vegp>0)then
+       begp = bounds%begp
+       endp = bounds%endp
+    else
+       begp = 0
+       endp = 0
+    end if
+    
+    call this%cnveg_state_inst%Init(bounds,tot_bgc_vegp)
     
     skip_steps = nskip_steps
 
@@ -232,37 +251,43 @@ contains
 
        ! Read in the general CN namelist
        call this%CNReadNML( NLFilename )    ! MUST be called first as passes down control information to others
+    end if
 
+    if(use_cn.or.use_fates_bgc)then
        call this%cnveg_carbonstate_inst%Init(bounds, carbon_type='c12', ratio=1._r8, &
-                                             NLFilename=NLFilename,  dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm )
+            NLFilename=NLFilename, dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm, &
+            tot_bgc_vegp=tot_bgc_vegp)
+       
        if (use_c13) then
           call this%c13_cnveg_carbonstate_inst%Init(bounds, carbon_type='c13', ratio=c13ratio, &
                NLFilename=NLFilename, dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,        &
-               c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+               tot_bgc_vegp=tot_bgc_vegp, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
        if (use_c14) then
           call this%c14_cnveg_carbonstate_inst%Init(bounds, carbon_type='c14', ratio=c14ratio, &
                NLFilename=NLFilename, dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,        &
-               c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+               tot_bgc_vegp=tot_bgc_vegp,c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
-       call this%cnveg_carbonflux_inst%Init(bounds, carbon_type='c12', dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm )
+       
+       call this%cnveg_carbonflux_inst%Init(bounds, carbon_type='c12', &
+            dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm, tot_bgc_vegp=tot_bgc_vegp )
        if (use_c13) then
-          call this%c13_cnveg_carbonflux_inst%Init(bounds, carbon_type='c13', dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm)
+          call this%c13_cnveg_carbonflux_inst%Init(bounds, carbon_type='c13', &
+               dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,tot_bgc_vegp=tot_bgc_vegp)
        end if
        if (use_c14) then
-          call this%c14_cnveg_carbonflux_inst%Init(bounds, carbon_type='c14', dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm)
+          call this%c14_cnveg_carbonflux_inst%Init(bounds, carbon_type='c14', &
+               dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,tot_bgc_vegp=tot_bgc_vegp)
        end if
        call this%cnveg_nitrogenstate_inst%Init(bounds,    &
             this%cnveg_carbonstate_inst%leafc_patch(begp:endp),          &
             this%cnveg_carbonstate_inst%leafc_storage_patch(begp:endp),  &
             this%cnveg_carbonstate_inst%frootc_patch(begp:endp),         &
             this%cnveg_carbonstate_inst%frootc_storage_patch(begp:endp), &
-            this%cnveg_carbonstate_inst%deadstemc_patch(begp:endp) )
-       call this%cnveg_nitrogenflux_inst%Init(bounds) 
-
-    end if
-
-    if (use_cn .or. use_fates_bgc) then
+            this%cnveg_carbonstate_inst%deadstemc_patch(begp:endp), &
+            tot_bgc_vegp=tot_bgc_vegp)
+       call this%cnveg_nitrogenflux_inst%Init(bounds,tot_bgc_vegp=tot_bgc_vegp) 
+       
        call this%c_products_inst%Init(bounds, species_non_isotope_type('C'))
        if (use_c13) then
           call this%c13_products_inst%Init(bounds, species_isotope_type('C', '13'))

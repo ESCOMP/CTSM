@@ -277,9 +277,11 @@ contains
     allocate(this%decomp_npools_sourcesink_col (begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
     this%decomp_npools_sourcesink_col (:,:,:) = nan
     if(use_fates)then
-        allocate(this%fates_litter_flux(begc:endc)); this%fates_litter_flux(:) = nan
-     end if
-
+       allocate(this%fates_litter_flux(begc:endc)); this%fates_litter_flux(:) = nan
+    else
+       allocate(this%fates_litter_flux(0:0)); this%fates_litter_flux(:) = nan
+    end if
+    
     ! Allocate soil Matrix setug
     if(use_soil_matrixcn)then
     end if

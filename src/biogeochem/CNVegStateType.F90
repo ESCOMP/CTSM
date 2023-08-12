@@ -130,12 +130,13 @@ module CNVegStateType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds)
+  subroutine Init(this, bounds, tot_bgc_vegp)
 
     class(cnveg_state_type) :: this
     type(bounds_type), intent(in) :: bounds
+    integer,intent(in) :: tot_bgc_vegp  ! Total number of bgc patches on proc (non-fates)
 
-    call this%InitAllocate ( bounds )
+    call this%InitAllocate ( bounds, tot_bgc_vegp)
     if (use_cn) then
        call this%InitHistory ( bounds )
     end if
@@ -144,7 +145,7 @@ contains
   end subroutine Init
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds)
+  subroutine InitAllocate(this, bounds, tot_bgc_vegp)
     !
     ! !DESCRIPTION:
     ! Initialize module data structure
@@ -156,6 +157,7 @@ contains
     ! !ARGUMENTS:
     class(cnveg_state_type) :: this
     type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: tot_bgc_vegp ! Total number of bgc patches on proc (non-fates)
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
@@ -163,9 +165,15 @@ contains
     logical :: allows_non_annual_delta
     !------------------------------------------------------------------------
 
-    begp = bounds%begp; endp= bounds%endp
-    begc = bounds%begc; endc= bounds%endc
-
+    if(tot_bgc_vegp>0)then
+       begp = bounds%begp; endp= bounds%endp
+       begc = bounds%begc; endc= bounds%endc
+    else
+       begp = 0;endp = 0
+       begc = 0;endc = 0
+    end if
+       
+       
     ! Note that we set allows_non_annual_delta to false because we expect land cover
     ! change to be applied entirely at the start of the year. Currently the fire code
     ! appears to assume that the land cover change rate is constant throughout the year,

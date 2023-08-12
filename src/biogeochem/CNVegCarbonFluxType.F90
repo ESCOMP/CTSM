@@ -434,21 +434,23 @@ module CNVegCarbonFluxType
 contains
    
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds, carbon_type, dribble_crophrv_xsmrpool_2atm)
+  subroutine Init(this, bounds, carbon_type, dribble_crophrv_xsmrpool_2atm,tot_bgc_vegp)
 
     class(cnveg_carbonflux_type) :: this
     type(bounds_type), intent(in) :: bounds  
     character(len=3) , intent(in) :: carbon_type ! one of ['c12', c13','c14']
     logical          , intent(in) :: dribble_crophrv_xsmrpool_2atm
+    integer          , intent(in) :: tot_bgc_vegp
 
     this%dribble_crophrv_xsmrpool_2atm = dribble_crophrv_xsmrpool_2atm
-    call this%InitAllocate ( bounds, carbon_type)
-    if(use_matrixcn)then
-       call this%InitTransfer ()
+    call this%InitAllocate ( bounds, carbon_type,tot_bgc_vegp)
+    if(tot_bgc_vegp>0)then
+       if(use_matrixcn)then
+          call this%InitTransfer ()
+       end if
+       call this%InitHistory ( bounds, carbon_type )
+       call this%InitCold (bounds )
     end if
-    call this%InitHistory ( bounds, carbon_type )
-    call this%InitCold (bounds )
-
   end subroutine Init
 
   subroutine InitTransfer (this)
@@ -461,12 +463,13 @@ contains
   end subroutine InitTransfer 
     
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds, carbon_type)
+  subroutine InitAllocate(this, bounds, carbon_type, tot_bgc_vegp)
     !
     ! !ARGUMENTS:
     class (cnveg_carbonflux_type) :: this 
     type(bounds_type), intent(in) :: bounds 
     character(len=*) , intent(in) :: carbon_type ! one of ['c12', c13','c14']
+    integer          , intent(in) :: tot_bgc_vegp
     !
     ! !LOCAL VARIABLES:
     integer           :: begp,endp
@@ -476,9 +479,15 @@ contains
     character(len=:), allocatable :: carbon_type_suffix
     !------------------------------------------------------------------------
 
-    begp = bounds%begp; endp = bounds%endp
-    begc = bounds%begc; endc = bounds%endc
-    begg = bounds%begg; endg = bounds%endg
+    if(tot_bgc_vegp>0)then
+       begp = bounds%begp; endp = bounds%endp
+       begc = bounds%begc; endc = bounds%endc
+       begg = bounds%begg; endg = bounds%endg
+    else
+       begp = 0; endp = 0
+       begc = 0; endc = 0
+       begg = 0; endg = 0
+    end if
 
     allocate(this%m_leafc_to_litter_patch                   (begp:endp)) ; this%m_leafc_to_litter_patch                   (:) = nan
     allocate(this%m_frootc_to_litter_patch                  (begp:endp)) ; this%m_frootc_to_litter_patch                  (:) = nan
