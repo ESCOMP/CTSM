@@ -120,7 +120,7 @@ contains
     ! Initialize tillage multipliers as all 1, and exit if not tilling
     allocate(tillage_mults_allphases(ndecomp_pools, ntill_stages_max))
     tillage_mults_allphases(:,:) = 1.0_r8
-    if (tillage_mode == "off") then
+    if (.not. get_do_tillage()) then
         return
     end if
 
