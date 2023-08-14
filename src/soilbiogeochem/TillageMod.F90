@@ -225,7 +225,7 @@ contains
             phase = 1
         else if (day >= idop+15 .and. day < idop+45) then ! based on Field and Row Cultivator multipliers
             phase = 2
-        else if (day >= idop+45 .and. day <idop+75) then ! based on Rod Weed Row Planter
+        else if (day >= idop+45 .and. day < idop+75) then ! based on Rod Weed Row Planter
             phase = 3
         end if
     else
