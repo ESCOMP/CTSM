@@ -393,43 +393,45 @@ contains
     ! do_nutrient_competition should be modified, but that modification should not significantly change 
     ! the current interface.
 
-     !RF: moved ths call to before nutrient_demand, so that croplive didn't change half way through crop N cycle. 
-     if ( use_fun ) then
-       call t_startf('CNPhenology_phase1')
-       call CNPhenology (bounds, num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, &
-            filter_bgc_vegp, num_pcropp, filter_pcropp, &
-            waterdiagnosticbulk_inst, wateratm2lndbulk_inst, temperature_inst, atm2lnd_inst, &
-            crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
-            cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
-            cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
-            c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
-            leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp,1:nlevdecomp_full), &
-            froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), &
-            phase=1)
-       call t_stopf('CNPhenology_phase1')
-
-       call t_startf('CNFUNInit')
-       call CNFUNInit(bounds,cnveg_state_inst,cnveg_carbonstate_inst,cnveg_nitrogenstate_inst)
-       call t_stopf('CNFUNInit')
-
-     end if
-
-     call t_startf('cnalloc')
-     call calc_gpp_mr_availc( &
-          bounds, num_bgc_vegp, filter_bgc_vegp, &
-          crop_inst, photosyns_inst, canopystate_inst, &
-          cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
-          c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst)
-
-     if (.not. use_crop_agsys) then
-        call calc_crop_allocation_fractions(bounds, num_pcropp, filter_pcropp, &
-             crop_inst, cnveg_state_inst)
-     end if
-
-     call calc_allometry(num_bgc_vegp, filter_bgc_vegp, &
-          cnveg_carbonflux_inst, cnveg_state_inst)
-     call t_stopf('cnalloc')
-
+    !RF: moved ths call to before nutrient_demand, so that croplive didn't change half way through crop N cycle. 
+    if(num_bgc_vegp>0)then
+       if ( use_fun) then
+          call t_startf('CNPhenology_phase1')
+          call CNPhenology (bounds, num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, &
+               filter_bgc_vegp, num_pcropp, filter_pcropp, &
+               waterdiagnosticbulk_inst, wateratm2lndbulk_inst, temperature_inst, atm2lnd_inst, &
+               crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
+               cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+               cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+               c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
+               leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp,1:nlevdecomp_full), &
+               froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), &
+               phase=1)
+          call t_stopf('CNPhenology_phase1')
+          
+          call t_startf('CNFUNInit')
+          call CNFUNInit(bounds,cnveg_state_inst,cnveg_carbonstate_inst,cnveg_nitrogenstate_inst)
+          call t_stopf('CNFUNInit')
+          
+       end if
+       
+       call t_startf('cnalloc')
+       call calc_gpp_mr_availc( &
+            bounds, num_bgc_vegp, filter_bgc_vegp, &
+            crop_inst, photosyns_inst, canopystate_inst, &
+            cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+            c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst)
+       
+       if (.not. use_crop_agsys) then
+          call calc_crop_allocation_fractions(bounds, num_pcropp, filter_pcropp, &
+               crop_inst, cnveg_state_inst)
+       end if
+       
+       call calc_allometry(num_bgc_vegp, filter_bgc_vegp, &
+            cnveg_carbonflux_inst, cnveg_state_inst)
+       call t_stopf('cnalloc')
+    end if
+    
      call t_startf('calc_plant_nutrient_demand')
      ! We always call calc_plant_nutrient_demand for natural veg patches, but only call
      ! it for crop patches if NOT running with AgSys (since AgSys calculates the relevant
@@ -522,10 +524,20 @@ contains
 
     ! CNphenology needs to be called after above calls, since it depends on current
     ! time-step fluxes to new growth on the lastlitterfall timestep in deciduous systems
-
-    call t_startf('CNPhenology')
-
-    if ( .not. use_fun ) then
+    if(num_bgc_vegp>0)then
+       call t_startf('CNPhenology')
+       if ( .not. use_fun ) then
+          call CNPhenology (bounds, num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, &
+               filter_bgc_vegp, num_pcropp, filter_pcropp, &
+               waterdiagnosticbulk_inst, wateratm2lndbulk_inst, temperature_inst, atm2lnd_inst, &
+               crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
+               cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+               cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+               c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
+               leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp,1:nlevdecomp_full), &
+               froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), &
+               phase=1)
+       end if
        call CNPhenology (bounds, num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, &
             filter_bgc_vegp, num_pcropp, filter_pcropp, &
             waterdiagnosticbulk_inst, wateratm2lndbulk_inst, temperature_inst, atm2lnd_inst, &
@@ -535,21 +547,10 @@ contains
             c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
             leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp,1:nlevdecomp_full), &
             froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), &
-            phase=1)
+            phase=2)
+       
+       call t_stopf('CNPhenology')
     end if
-    call CNPhenology (bounds, num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, &
-         filter_bgc_vegp, num_pcropp, filter_pcropp, &
-         waterdiagnosticbulk_inst, wateratm2lndbulk_inst, temperature_inst, atm2lnd_inst, &
-         crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
-         cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
-         cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
-         c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
-         leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp,1:nlevdecomp_full), &
-         froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), &
-         phase=2)
-
-    call t_stopf('CNPhenology')
-
     !--------------------------------------------
     ! Growth respiration
     !--------------------------------------------

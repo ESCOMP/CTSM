@@ -219,8 +219,8 @@ contains
     ! !LOCAL VARIABLES:
     integer :: begp, endp, ci
     integer :: nclumps       ! number of clumps on the proc
-    integer :: tot_bgc_vegp  ! Total number of bgc vegetation patches (non-fates)
-                             ! on the proc
+    logical :: alloc_full_veg  ! Signal to allocate vegetation data fully or trivialy
+                        
 
     character(len=*), parameter :: subname = 'Init'
     !-----------------------------------------------------------------------
@@ -230,20 +230,17 @@ contains
     !      - a single value for both column and patch, using index 0 only
     !      - that is why we pass the number of bgc veg patches here
 
-    nclumps = get_proc_clumps()
-    tot_bgc_vegp = 0
-    do ci=1,nclumps
-       tot_bgc_vegp = tot_bgc_vegp + filter(ci)%num_bgc_vegp
-    end do
-    if(tot_bgc_vegp>0)then
-       begp = bounds%begp
-       endp = bounds%endp
-    else
+    if(use_fates_bgc)then
+       alloc_full_veg=.false.
        begp = 0
        endp = 0
+    else
+       alloc_full_veg=.true.
+       begp = bounds%begp
+       endp = bounds%endp
     end if
     
-    call this%cnveg_state_inst%Init(bounds,tot_bgc_vegp)
+    call this%cnveg_state_inst%Init(bounds,alloc_full_veg)
     
     skip_steps = nskip_steps
 
@@ -256,28 +253,28 @@ contains
     if(use_cn.or.use_fates_bgc)then
        call this%cnveg_carbonstate_inst%Init(bounds, carbon_type='c12', ratio=1._r8, &
             NLFilename=NLFilename, dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm, &
-            tot_bgc_vegp=tot_bgc_vegp)
+            alloc_full_veg=alloc_full_veg)
        
        if (use_c13) then
           call this%c13_cnveg_carbonstate_inst%Init(bounds, carbon_type='c13', ratio=c13ratio, &
                NLFilename=NLFilename, dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,        &
-               tot_bgc_vegp=tot_bgc_vegp, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+               alloc_full_veg=alloc_full_veg, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
        if (use_c14) then
           call this%c14_cnveg_carbonstate_inst%Init(bounds, carbon_type='c14', ratio=c14ratio, &
                NLFilename=NLFilename, dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,        &
-               tot_bgc_vegp=tot_bgc_vegp,c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+               alloc_full_veg=alloc_full_veg,c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
        
        call this%cnveg_carbonflux_inst%Init(bounds, carbon_type='c12', &
-            dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm, tot_bgc_vegp=tot_bgc_vegp )
+            dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm, alloc_full_veg=alloc_full_veg )
        if (use_c13) then
           call this%c13_cnveg_carbonflux_inst%Init(bounds, carbon_type='c13', &
-               dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,tot_bgc_vegp=tot_bgc_vegp)
+               dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,alloc_full_veg=alloc_full_veg)
        end if
        if (use_c14) then
           call this%c14_cnveg_carbonflux_inst%Init(bounds, carbon_type='c14', &
-               dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,tot_bgc_vegp=tot_bgc_vegp)
+               dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,alloc_full_veg=alloc_full_veg)
        end if
        call this%cnveg_nitrogenstate_inst%Init(bounds,    &
             this%cnveg_carbonstate_inst%leafc_patch(begp:endp),          &
@@ -285,8 +282,8 @@ contains
             this%cnveg_carbonstate_inst%frootc_patch(begp:endp),         &
             this%cnveg_carbonstate_inst%frootc_storage_patch(begp:endp), &
             this%cnveg_carbonstate_inst%deadstemc_patch(begp:endp), &
-            tot_bgc_vegp=tot_bgc_vegp)
-       call this%cnveg_nitrogenflux_inst%Init(bounds,tot_bgc_vegp=tot_bgc_vegp) 
+            alloc_full_veg=alloc_full_veg)
+       call this%cnveg_nitrogenflux_inst%Init(bounds,alloc_full_veg=alloc_full_veg) 
        
        call this%c_products_inst%Init(bounds, species_non_isotope_type('C'))
        if (use_c13) then
@@ -1167,13 +1164,14 @@ contains
 
     ! On the radiation time step, use C state variables to calculate
     ! vegetation structure (LAI, SAI, height)
-
-    if (doalb) then   
-       call CNVegStructUpdate(bounds,num_bgc_vegp, filter_bgc_vegp, &
-            waterdiagnosticbulk_inst, frictionvel_inst, this%dgvs_inst, this%cnveg_state_inst, &
-            crop_inst, this%cnveg_carbonstate_inst, canopystate_inst)
+    if(num_bgc_vegp>0)then
+       if (doalb) then   
+          call CNVegStructUpdate(bounds,num_bgc_vegp, filter_bgc_vegp, &
+               waterdiagnosticbulk_inst, frictionvel_inst, this%dgvs_inst, this%cnveg_state_inst, &
+               crop_inst, this%cnveg_carbonstate_inst, canopystate_inst)
+       end if
     end if
-
+    
   end subroutine EcosystemDynamicsPostDrainage
 
   !-----------------------------------------------------------------------

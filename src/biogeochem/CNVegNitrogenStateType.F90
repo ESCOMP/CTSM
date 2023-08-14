@@ -97,7 +97,7 @@ contains
   !------------------------------------------------------------------------
   subroutine Init(this, bounds,  &
        leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, &
-       deadstemc_patch, tot_bgc_vegp)
+       deadstemc_patch, alloc_full_veg)
 
     class(cnveg_nitrogenstate_type)   :: this
     type(bounds_type) , intent(in)    :: bounds  
@@ -106,10 +106,10 @@ contains
     real(r8)          , intent(in)    :: frootc_patch        (:) !(begp:)     
     real(r8)          , intent(in)    :: frootc_storage_patch(:) !(begp:)     
     real(r8)          , intent(in)    :: deadstemc_patch     (:) !(begp:)
-    integer           , intent(in)    :: tot_bgc_vegp
+    logical           , intent(in)    :: alloc_full_veg
     
-    call this%InitAllocate (bounds, tot_bgc_vegp)
-    if(tot_bgc_vegp>0) then
+    call this%InitAllocate (bounds, alloc_full_veg)
+    if(alloc_full_veg) then
        call this%InitHistory (bounds)
        call this%InitCold ( bounds, &
             leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, deadstemc_patch)
@@ -117,19 +117,19 @@ contains
   end subroutine Init
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds, tot_bgc_vegp)
+  subroutine InitAllocate(this, bounds, alloc_full_veg)
     !
     ! !ARGUMENTS:
     class (cnveg_nitrogenstate_type) :: this
     type(bounds_type) , intent(in) :: bounds
-    integer,intent(in)             :: tot_bgc_vegp
+    logical,intent(in)             :: alloc_full_veg
     !
     ! !LOCAL VARIABLES:
     integer           :: begp,endp
     integer           :: begc,endc
     integer           :: begg,endg
     !------------------------------------------------------------------------
-    if(tot_bgc_vegp>0) then
+    if(alloc_full_veg) then
        begp = bounds%begp; endp = bounds%endp
        begc = bounds%begc; endc = bounds%endc
        begg = bounds%begg; endg = bounds%endg
@@ -1135,7 +1135,7 @@ contains
     ! --------------------------------------------
     ! column level summary
     ! --------------------------------------------
-    if(associated(this%totvegn_patch))then
+    if(num_soilp>0)then
        call p2c(bounds, num_soilc, filter_soilc, &
             this%totvegn_patch(bounds%begp:bounds%endp), &
             this%totvegn_col(bounds%begc:bounds%endc))

@@ -292,14 +292,14 @@ module CNVegNitrogenFluxType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds, tot_bgc_vegp)
+  subroutine Init(this, bounds, alloc_full_veg)
 
     class(cnveg_nitrogenflux_type) :: this
     type(bounds_type), intent(in) :: bounds
-    integer,intent(in)            :: tot_bgc_vegp
+    logical,intent(in)            :: alloc_full_veg
 
-    call this%InitAllocate (bounds,tot_bgc_vegp)
-    if(tot_bgc_vegp>0)then
+    call this%InitAllocate (bounds,alloc_full_veg)
+    if(alloc_full_veg)then
        if(use_matrixcn)then
           call this%InitTransfer ()
        end if
@@ -326,7 +326,7 @@ contains
   end subroutine InitTransfer
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds, tot_bgc_vegp)
+  subroutine InitAllocate(this, bounds, alloc_full_veg)
     !
     ! !DESCRIPTION:
     ! Initialize patch nitrogen flux
@@ -334,7 +334,7 @@ contains
     ! !ARGUMENTS:
     class (cnveg_nitrogenflux_type) :: this
     type(bounds_type) , intent(in) :: bounds
-    integer,intent(in)             :: tot_bgc_vegp
+    logical,intent(in)             :: alloc_full_veg
     !
     ! !LOCAL VARIABLES:
     integer           :: begp,endp
@@ -342,7 +342,7 @@ contains
     integer           :: begg,endg
     !------------------------------------------------------------------------
 
-    if(tot_bgc_vegp>0)then
+    if(alloc_full_veg)then
        begp = bounds%begp; endp = bounds%endp
        begc = bounds%begc; endc = bounds%endc
        begg = bounds%begg; endg = bounds%endg

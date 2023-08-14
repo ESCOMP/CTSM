@@ -126,7 +126,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, carbon_type, ratio, NLFilename, &
-                  dribble_crophrv_xsmrpool_2atm, tot_bgc_vegp, c12_cnveg_carbonstate_inst)
+                  dribble_crophrv_xsmrpool_2atm, alloc_full_veg, c12_cnveg_carbonstate_inst)
 
     class(cnveg_carbonstate_type)                       :: this
     type(bounds_type)            , intent(in)           :: bounds  
@@ -134,7 +134,7 @@ contains
     character(len=*)             , intent(in)           :: carbon_type                ! Carbon isotope type C12, C13 or C1
     character(len=*)             , intent(in)           :: NLFilename                 ! Namelist filename
     logical                      , intent(in)           :: dribble_crophrv_xsmrpool_2atm
-    integer                      , intent(in)           :: tot_bgc_vegp               ! total number of bgc patches (non-fates)
+    logical                      , intent(in)           :: alloc_full_veg               ! total number of bgc patches (non-fates)
     type(cnveg_carbonstate_type) , intent(in), optional :: c12_cnveg_carbonstate_inst ! cnveg_carbonstate for C12 (if C13 or C14)
     !-----------------------------------------------------------------------
 
@@ -142,8 +142,8 @@ contains
 
     this%dribble_crophrv_xsmrpool_2atm = dribble_crophrv_xsmrpool_2atm
 
-    call this%InitAllocate ( bounds, tot_bgc_vegp)
-    if(tot_bgc_vegp>0)then
+    call this%InitAllocate ( bounds, alloc_full_veg)
+    if(alloc_full_veg)then
        call this%InitReadNML  ( NLFilename )
        call this%InitHistory ( bounds, carbon_type)
        if (present(c12_cnveg_carbonstate_inst)) then
@@ -216,12 +216,12 @@ contains
   end subroutine InitReadNML
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds, tot_bgc_vegp)
+  subroutine InitAllocate(this, bounds, alloc_full_veg)
     !
     ! !ARGUMENTS:
     class (cnveg_carbonstate_type) :: this
     type(bounds_type), intent(in) :: bounds
-    integer,intent(in)            :: tot_bgc_vegp ! Total number of bgc patches on the proc (non_fates)
+    logical,intent(in)            :: alloc_full_veg ! Total number of bgc patches on the proc (non_fates)
     !
     ! !LOCAL VARIABLES:
     integer           :: begp,endp
@@ -229,7 +229,7 @@ contains
     integer           :: begg,endg
     !------------------------------------------------------------------------
     
-    if(tot_bgc_vegp>0)then
+    if(alloc_full_veg)then
        begp = bounds%begp; endp = bounds%endp
        begc = bounds%begc; endc = bounds%endc
        begg = bounds%begg; endg = bounds%endg

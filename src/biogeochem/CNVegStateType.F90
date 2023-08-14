@@ -130,22 +130,24 @@ module CNVegStateType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds, tot_bgc_vegp)
+  subroutine Init(this, bounds, alloc_full_veg)
 
     class(cnveg_state_type) :: this
     type(bounds_type), intent(in) :: bounds
-    integer,intent(in) :: tot_bgc_vegp  ! Total number of bgc patches on proc (non-fates)
+    logical,intent(in) :: alloc_full_veg  ! Total number of bgc patches on proc (non-fates)
 
-    call this%InitAllocate ( bounds, tot_bgc_vegp)
+    call this%InitAllocate ( bounds, alloc_full_veg)
     if (use_cn) then
        call this%InitHistory ( bounds )
     end if
-    call this%InitCold ( bounds )
-
+    if(alloc_full_veg) then  !This is true if not use_fates_bgc
+       call this%InitCold ( bounds )
+    end if
+    
   end subroutine Init
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds, tot_bgc_vegp)
+  subroutine InitAllocate(this, bounds, alloc_full_veg)
     !
     ! !DESCRIPTION:
     ! Initialize module data structure
@@ -157,7 +159,7 @@ contains
     ! !ARGUMENTS:
     class(cnveg_state_type) :: this
     type(bounds_type), intent(in) :: bounds
-    integer, intent(in) :: tot_bgc_vegp ! Total number of bgc patches on proc (non-fates)
+    logical, intent(in) :: alloc_full_veg ! Total number of bgc patches on proc (non-fates)
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
@@ -165,7 +167,7 @@ contains
     logical :: allows_non_annual_delta
     !------------------------------------------------------------------------
 
-    if(tot_bgc_vegp>0)then
+    if(alloc_full_veg)then
        begp = bounds%begp; endp= bounds%endp
        begc = bounds%begc; endc= bounds%endc
     else
@@ -503,7 +505,7 @@ contains
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
-  subroutine initCold(this, bounds)
+  subroutine InitCold(this, bounds)
     !
     ! !USES:
     !
@@ -623,7 +625,7 @@ contains
        this%lfc2_col(c) = 0._r8
     end do
 
-  end subroutine initCold
+  end subroutine InitCold
 
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag, cnveg_carbonstate, &
