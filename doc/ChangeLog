@@ -1,4 +1,82 @@
 ===============================================================
+Tag name: ctsm5.1.dev134
+Originator(s): rgknox (Ryan Knox,LBNL EESA), erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Aug 14 07:19:59 PM EDT 2023
+One-line Summary: Migration of FATES to share normal soil BGC call sequence and functionality
+
+Purpose and description of changes
+----------------------------------
+
+This set of changes enables the normal soil biogeochemistry that is used for CN, to be used for FATES as well. FATES had been using a simplified subset of soil biogeochemistry in its own module. This change required coordination of litter flux and methane boundary conditions from FATES to CLM.  CNVEG datastructures were given trivial allocation (of size one on index zero) to prevent inappropriate use of CNVEG datastructures while FATES is active. Note that now the carbon balance checking for the soil is now active when FATES is active. Various accomodations have also been put in place to enable nitrogen cycling between the two models.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Surprisingly, nvhpc tests are now working, but it may just be coincidental. All existing aux_clm tests are passing. Tests without FATES are b4b, with roundoff differences in just TOTCOLC and TOTCOLN.
+
+CTSM issues fixed (include CTSM Issue #):
+
+Known bugs introduced in this tag (include issue #):
+
+Notes of particular relevance for users
+---------------------------------------
+A CLM-FATES simulation will turn on nitrogen supplementation, this enables sufficient immobilization and decomposition. Until FATES and CLM can handle fully coupled nitrogen exchange, which would include root uptake of the mineralized aqueous forms (NH4 and NO3), N limitations in the soil are meaningless when FATES is on.
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+Changes made to namelist defaults (e.g., changed parameter values): FATES runs now supplement N
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+
+Substantial timing or memory changes:
+[e.g., check PFS test in the test suite and look at timings, if you
+expect possible significant timing changes]
+
+
+Testing summary:
+----------------
+
+aux_clm test run on cheyenne and izumi. See:
+
+izumi: OK  /scratch/cluster/rgknox/tests_0814-095624iz
+cheyenne: OK  /glade/scratch/rgknox/tests_0814-134713ch
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+Baseline changes will be reported for many tests, all tests were combed to identify RMS diffs, all non-FATES tests had at most, roundoff level (<e-12) diffs in TOTCOLC and TOTCOLN.  FATES tests have diffs due to the subtle but unavoidable differences in how the models are coupled.
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1959
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev133
 Originator(s): adrifoster (Adrianna Foster), glemieux (Gregory Lemieux, LBL/NGEET)
 Date: Wed Aug  9 22:44:46 MDT 2023
