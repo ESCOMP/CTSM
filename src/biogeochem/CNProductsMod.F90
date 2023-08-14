@@ -792,15 +792,15 @@ contains
        this%prod10_grc(g)    = this%prod10_grc(g)    + this%dwt_prod10_gain_grc(g)*dt
        this%prod100_grc(g)   = this%prod100_grc(g)   + this%dwt_prod100_gain_grc(g)*dt
 
+       ! fluxes into wood & grain product pools, from gross unrepresented landcover change
+       this%prod10_grc(g)    = this%prod10_grc(g)    + this%gru_prod10_gain_grc(g)*dt
+       this%prod100_grc(g)   = this%prod100_grc(g)   + this%gru_prod100_gain_grc(g)*dt
+
        ! fluxes into wood & crop product pools, from harvest
        this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%crop_harvest_to_cropprod1_grc(g)*dt
        this%prod10_grc(g)    = this%prod10_grc(g)    + this%hrv_deadstem_to_prod10_grc(g)*dt
        this%prod100_grc(g)   = this%prod100_grc(g)   + this%hrv_deadstem_to_prod100_grc(g)*dt
 
-       ! fluxes into wood & grain product pools, from gross unrepresented landcover change
-       this%prod10_grc(g)    = this%prod10_grc(g)    + this%gru_prod10_gain_grc(g)*dt
-       this%prod100_grc(g)   = this%prod100_grc(g)   + this%gru_prod100_gain_grc(g)*dt
-       
        ! fluxes out of wood & crop product pools, from decomposition
        this%cropprod1_grc(g) = this%cropprod1_grc(g) - this%cropprod1_loss_grc(g)*dt
        this%prod10_grc(g)    = this%prod10_grc(g)    - this%prod10_loss_grc(g)*dt
