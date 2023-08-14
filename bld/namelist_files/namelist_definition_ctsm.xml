@@ -2892,7 +2892,7 @@ Whether to till crop soil, and if so, with what intensity.
 
 <entry id="use_original_tillage" type="logical" category="physics"
        group="tillage_inparm" valid_values="" value=".false.">
-Toggle to use original tillage logic
+Toggle to use original tillage logic, with bug for seasons crossing into a new calendar year
 </entry>
 
 </namelist_definition>
