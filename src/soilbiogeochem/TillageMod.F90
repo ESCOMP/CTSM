@@ -290,9 +290,6 @@ contains
     do p = col%patchi(c),col%patchf(c)
         if (patch%active(p) .and. patch%wtcol(p) /= 0._r8) then
             if (patch%itype(p) >= npcropmin) then
-                if (this_patch > 0) then
-                    call endrun('ERROR multiple active crop patches found in this column')
-                end if
                 this_patch = p
                 call get_tillage_multipliers(tillage_mults_1patch, idop(p))
                 tillage_mults = tillage_mults + tillage_mults_1patch * patch%wtcol(p)
