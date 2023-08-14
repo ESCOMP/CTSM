@@ -172,10 +172,13 @@ contains
   subroutine get_tillage_multipliers(tillage_mults, idop)
     ! !DESCRIPTION:
     !
-    !  Get the cultivation effective multiplier if prognostic crops are on and
-    !  cultivation is turned on. Created by Sam Levis. Modified by Michael Graham
-    !  to use days past planting. Modified by Sam Rabin to include "new" version
-    !  that *actually* uses days past planting.
+    !  Get the tillage effective multiplier if prognostic crops are on and
+    !  tillage is turned on. Created by Sam Levis. Modified by Michael Graham
+    !  to use days past planting (idpp).
+    !
+    !  Modified by Sam Rabin to fix a bug where idpp wasn't actually used, which
+    !  would affect growing seasons that crossed over into a new calendar year.
+    !  Previous behavior can be requested with namelist variable use_original_tillage.
     !
     !  Original code had two versions depending on cell's GDP, but this seems to
     !  have been only an initial effort that was (a) never published and (b) not
@@ -208,7 +211,7 @@ contains
     end if
 
     ! -----------------------------------------------------
-    ! 3) assigning cultivation practices and mapping to the
+    ! 3) assigning tillage practices and mapping to the
     !    effect on soil C decomposition
     ! -----------------------------------------------------
     ! info from DAYCENT (Melannie Hartman CSU)
