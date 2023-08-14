@@ -306,7 +306,7 @@ contains
         return
     elseif (this_patch == 0) then
         call endrun('ERROR No active, non-zero-weight patches found (crop OR non-crop)')
-    elseif (sumwt > 1.0_r8 + 1.e-6_r8) then
+    elseif (abs(1.0_r8 - sumwt) > 1.e-6_r8) then
         call endrun('ERROR Active crop patch weights does not sum to 1')
     end if
 
