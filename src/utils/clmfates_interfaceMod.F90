@@ -98,6 +98,7 @@ module CLMFatesInterfaceMod
                                   get_clump_bounds
    use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, decomp_method
    use SoilBiogeochemDecompCascadeConType , only : no_soil_decomp, century_decomp
+   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
    use GridCellType      , only : grc
    use ColumnType        , only : col
    use LandunitType      , only : lun
@@ -126,7 +127,7 @@ module CLMFatesInterfaceMod
    use FatesHistoryInterfaceMod, only : fates_hist
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
-   use EDTypesMod            , only : ed_patch_type
+   use FatesPatchMod         , only : fates_patch_type
    use PRTGenericMod         , only : num_elements
    use FatesInterfaceTypesMod, only : hlm_stepsize
    use FatesInterfaceTypesMod, only : fates_maxPatchesPerSite
@@ -834,7 +835,8 @@ module CLMFatesInterfaceMod
    subroutine dynamics_driv(this, nc, bounds_clump,      &
          atm2lnd_inst, soilstate_inst, temperature_inst, active_layer_inst, &
          waterstatebulk_inst, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
-         canopystate_inst, soilbiogeochem_carbonflux_inst, frictionvel_inst)
+         canopystate_inst, soilbiogeochem_carbonflux_inst, frictionvel_inst, &
+         soil_water_retention_curve)
 
       ! This wrapper is called daily from clm_driver
       ! This wrapper calls ed_driver, which is the daily dynamics component of FATES
@@ -860,11 +862,13 @@ module CLMFatesInterfaceMod
       type(canopystate_type)  , intent(inout)        :: canopystate_inst
       type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
       type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
+      class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
 
       ! !LOCAL VARIABLES:
       integer  :: s                        ! site index
       integer  :: g                        ! grid-cell index (HLM)
       integer  :: c                        ! column index (HLM)
+      integer  :: j                        ! Soil layer index
       integer  :: ifp                      ! patch index ft
       integer  :: p                        ! HLM patch index
       integer  :: nlevsoil                 ! number of soil layers at the site
@@ -875,6 +879,7 @@ module CLMFatesInterfaceMod
       integer  :: ier
       integer  :: begg,endg
       real(r8) :: harvest_rates(bounds_clump%begg:bounds_clump%endg,num_harvest_inst)
+      real(r8) :: s_node, smp_node         ! local for relative water content and potential
       logical  :: after_start_of_harvest_ts
       integer  :: iharv
       !-----------------------------------------------------------------------
@@ -958,6 +963,24 @@ module CLMFatesInterfaceMod
 
          this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
               min(nlevsoil, active_layer_inst%altmax_lastyear_indx_col(c))
+
+         nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
+         do j = 1,nlevsoil
+            this%fates(nc)%bc_in(s)%tempk_sl(j) = temperature_inst%t_soisno_col(c,j)
+         end do
+
+         call get_active_suction_layers(this%fates(nc)%nsites, &
+             this%fates(nc)%sites,  &
+             this%fates(nc)%bc_in,  &
+             this%fates(nc)%bc_out)
+
+         do j = 1,nlevsoil
+            if(this%fates(nc)%bc_out(s)%active_suction_sl(j)) then
+               s_node = max(waterstatebulk_inst%h2osoi_vol_col(c,j)/soilstate_inst%eff_porosity_col(c,j) ,0.01_r8)
+               call soil_water_retention_curve%soil_suction(c,j,s_node, soilstate_inst, smp_node)
+               this%fates(nc)%bc_in(s)%smp_sl(j)           = smp_node
+            end if
+         end do
 
 
          do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno !for vegetated patches
@@ -1061,7 +1084,6 @@ module CLMFatesInterfaceMod
             call ed_update_site(this%fates(nc)%sites(s), &
                   this%fates(nc)%bc_in(s), &
                   this%fates(nc)%bc_out(s))
-
       enddo
 
       ! ---------------------------------------------------------------------------------
@@ -1152,11 +1174,11 @@ module CLMFatesInterfaceMod
      type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
      type(canopystate_type)  , intent(inout)        :: canopystate_inst
      type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
+                   
 
      ! is this being called during a read from restart sequence (if so then use the restarted fates
      ! snow depth variable rather than the CLM variable).
      logical                 , intent(in)           :: is_initing_from_restart
-
      integer :: npatch  ! number of patches in each site
      integer :: ifp     ! index FATES patch
      integer :: p       ! HLM patch index
@@ -1198,7 +1220,7 @@ module CLMFatesInterfaceMod
        ! Canopy diagnostics for FATES
        call canopy_summarization(this%fates(nc)%nsites, &
             this%fates(nc)%sites,  &
-            this%fates(nc)%bc_in)
+            this%fates(nc)%bc_in)            
 
        ! Canopy diagnostic outputs for HLM
        call update_hlm_dynamics(this%fates(nc)%nsites, &
@@ -1421,7 +1443,6 @@ module CLMFatesInterfaceMod
       integer                 :: nvar
       integer                 :: ivar
       logical                 :: readvar
-
       logical, save           :: initialized = .false.
 
      call t_startf('fates_restart')
@@ -1928,7 +1949,7 @@ module CLMFatesInterfaceMod
                                               ! this is the order increment of patch
                                               ! on the site
 
-      type(ed_patch_type), pointer :: cpatch  ! c"urrent" patch  INTERF-TODO: SHOULD
+      type(fates_patch_type), pointer :: cpatch  ! c"urrent" patch  INTERF-TODO: SHOULD
                                               ! BE HIDDEN AS A FATES PRIVATE
 
      call t_startf('fates_wrapsunfrac')
@@ -2040,8 +2061,6 @@ module CLMFatesInterfaceMod
       ! This subroutine also calculates rootr
       !
       ! ---------------------------------------------------------------------------------
-
-      use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
 
       implicit none
 
@@ -2209,12 +2228,13 @@ module CLMFatesInterfaceMod
     use shr_log_mod       , only : errMsg => shr_log_errMsg
     use abortutils        , only : endrun
     use decompMod         , only : bounds_type
-    use clm_varcon        , only : rgas, tfrz, namep
+    use clm_varcon        , only : tfrz, namep
     use clm_varctl        , only : iulog
-    use pftconMod         , only : pftcon
     use PatchType         , only : patch
     use quadraticMod      , only : quadratic
-    use EDtypesMod        , only : ed_patch_type, ed_cohort_type, ed_site_type
+    use EDtypesMod        , only : ed_site_type
+    use FatesPatchMod,      only : fates_patch_type
+    use FatesCohortMod    , only : fates_cohort_type
 
     !
     ! !ARGUMENTS:
@@ -3182,13 +3202,13 @@ module CLMFatesInterfaceMod
 
  subroutine hlm_bounds_to_fates_bounds(hlm, fates)
 
-   use FatesIODimensionsMod, only : fates_bounds_type
+   use FatesIODimensionsMod,   only : fates_bounds_type
    use FatesInterfaceTypesMod, only : nlevsclass, nlevage, nlevcoage
    use FatesInterfaceTypesMod, only : nlevheight
    use FatesInterfaceTypesMod, only : nlevdamage
-   use EDtypesMod,        only : nfsc
-   use FatesLitterMod,    only : ncwd
-   use EDtypesMod,        only : nlevleaf, nclmax
+   use FatesLitterMod,         only : nfsc
+   use FatesLitterMod,         only : ncwd
+   use EDParamsMod,            only : nlevleaf, nclmax
    use FatesInterfaceTypesMod, only : numpft_fates => numpft
    use FatesConstantsMod, only : n_landuse_cats
 
