@@ -52,6 +52,7 @@ module CNPhenologyMod
   public :: CNPhenologyInit      ! Initialization
   public :: CNPhenology          ! Update
   public :: CropPhase            ! Get the current phase of each crop patch
+  public :: DaysPastPlanting     ! Get how many days it's been since crop was planted
 
   ! !PUBLIC for unit testing
   public :: CNPhenologySetNML         ! Set the namelist setttings explicitly for unit tests
@@ -2117,12 +2118,7 @@ contains
             end if
 
             ! days past planting may determine harvest
-
-            if (jday >= idop(p)) then
-               idpp = jday - idop(p)
-            else
-               idpp = int(dayspyr) + jday - idop(p)
-            end if
+            idpp = DaysPastPlanting(idop(p), jday)
 
             ! onset_counter initialized to zero when .not. croplive
             ! offset_counter relevant only at time step of harvest
@@ -2663,6 +2659,39 @@ contains
     end associate
 
   end subroutine PlantCrop
+
+  !-----------------------------------------------------------------------
+  function DaysPastPlanting(idop, jday_in)
+    ! !USES:
+    use clm_time_manager, only : get_prev_calday, get_curr_days_per_year
+    !
+    ! !ARGUMENTS:
+    integer,           intent(in) :: idop ! patch day of planting
+    integer, optional, intent(in) :: jday_in ! julian day of the year
+    !
+    ! !LOCAL VARIABLES
+    integer :: DaysPastPlanting
+    integer :: jday
+
+    ! Must use separate jday_in and jday because we can't redefine an intent(in)
+    ! variable, even if it wasn't provided in the function call.
+    if (present(jday_in)) then
+       jday = jday_in
+    else
+       ! Use prev instead of curr to avoid jday=1 in last timestep of year
+       jday = get_prev_calday()
+    end if
+
+    if (jday >= idop) then
+       DaysPastPlanting = jday - idop
+    else
+      ! As long as crops have at most a 365-day growing season, using get_curr_days_per_year()
+      ! should give the same result of this function as using get_prev_days_per_year().
+      ! TODO: Test identicality when using get_prev_days_per_year().
+       DaysPastPlanting = jday - idop + get_curr_days_per_year()
+    end if
+
+  end function DaysPastPlanting
 
   !-----------------------------------------------------------------------
   subroutine vernalization(p, &

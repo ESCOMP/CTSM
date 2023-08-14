@@ -178,6 +178,8 @@ contains
     !
     !  Modified by Sam Rabin to fix a bug where idpp wasn't actually used, which
     !  would affect growing seasons that crossed over into a new calendar year.
+    !  Also avoids day=1 in last timestep of year by using DaysPastPlanting(), which
+    !  uses get_prev_calday() instead of get_curr_calday().
     !  Previous behavior can be requested with namelist variable use_original_tillage.
     !
     !  Original code had two versions depending on cell's GDP, but this seems to
@@ -187,6 +189,7 @@ contains
     ! !USES:
     use clm_time_manager, only : get_curr_calday, get_curr_days_per_year
     use pftconMod       , only : ntmp_corn, nirrig_tmp_corn, ntmp_soybean, nirrig_tmp_soybean
+    use CNPhenologyMod  , only : DaysPastPlanting
     ! !ARGUMENTS:
     real(r8)         , intent(inout) :: tillage_mults(:) ! tillage multipliers for this patch
     integer          , intent(in) :: idop    ! patch day of planting
@@ -199,21 +202,6 @@ contains
     real(r8) dayspyr                ! days per year
     !-----------------------------------------------------------------------
         
-    !get info from externals
-    day = get_curr_calday()
-    dayspyr = get_curr_days_per_year()               !Add by MWG for IDPP-based routine
-
-    ! days past planting may determine harvest/tillage
-    if (day >= idop) then
-        idpp = day - idop
-    else
-        idpp = int(dayspyr) + day - idop
-    end if
-
-    ! -----------------------------------------------------
-    ! 3) assigning tillage practices and mapping to the
-    !    effect on soil C decomposition
-    ! -----------------------------------------------------
     ! info from DAYCENT (Melannie Hartman CSU)
     ! temp. cereals: P 30 d bef, C 15 d bef, D on day of planting
     ! corn, soy    : P           C           D           & HW-7 30 d aftr
@@ -221,6 +209,7 @@ contains
     phase = 0
 
     if (use_original_tillage) then
+        day = get_curr_calday()
         if (day >= idop .and. day < idop+15) then ! based on Point Chisel Tandem Disk multipliers
             phase = 1
         else if (day >= idop+15 .and. day < idop+45) then ! based on Field and Row Cultivator multipliers
@@ -229,6 +218,7 @@ contains
             phase = 3
         end if
     else
+        idpp = DaysPastPlanting(idop)
         if (idpp < 15) then ! based on Point Chisel Tandem Disk multipliers
             phase = 1
         else if (idpp < 45) then ! based on Field and Row Cultivator multipliers
