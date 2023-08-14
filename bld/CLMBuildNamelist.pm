@@ -684,18 +684,22 @@ sub setup_cmdl_resolution {
     $val = &quote_string( $nl_flags->{'res'} );
     if (  ! $definition->is_valid_value( $var, $val ) ) {
       my @valid_values   = $definition->get_valid_values( $var );
-      if ( ! defined($opts->{'clm_usr_name'}) || $nl_flags->{'res'} ne $opts->{'clm_usr_name'} ) {
+      if ( $nl_flags->{'res'} ne "CLM_USRDAT" ) {
         $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
       }
     }
   }
-  # For NEON sites
-  $nl_flags->{'neon'} = ".false.";
-  $nl_flags->{'neonsite'} = "";
   if ( $nl_flags->{'res'} eq "CLM_USRDAT" ) {
     if ( ! defined($opts->{'clm_usr_name'}) ) {
         $log->fatal_error("Resolution is CLM_USRDAT, but --clm_usr_name option is NOT set, and it is required for CLM_USRDAT resolutions");
     }
+  }
+  #
+  # For NEON sites
+  #
+  $nl_flags->{'neon'} = ".false.";
+  $nl_flags->{'neonsite'} = "";
+  if ( $nl_flags->{'res'} eq "CLM_USRDAT" ) {
     if ( $opts->{'clm_usr_name'} eq "NEON" ) {
        $nl_flags->{'neon'} = ".true.";
        $nl_flags->{'neonsite'} = $envxml_ref->{'NEONSITE'};
@@ -2263,6 +2267,7 @@ sub setup_logic_demand {
   $settings{'use_lch4'}            = $nl_flags->{'use_lch4'};
   $settings{'use_nitrif_denitrif'} = $nl_flags->{'use_nitrif_denitrif'};
   $settings{'use_crop'}            = $nl_flags->{'use_crop'};
+  $settings{'neon'}                = $nl_flags->{'neon'};
 
   my $demand = $nl->get_value('clm_demand');
   if (defined($demand)) {

@@ -399,7 +399,7 @@ foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO
    #
    # Now run  the site
    #
-   my $options = "-res CLM_USRDAT -clm_usr_name NEON -no-megan -bgc bgc -sim_year 2018 -infile $namelistfile";
+   my $options = "--res CLM_USRDAT --clm_usr_name NEON --no-megan --bgc bgc --use_case 2018_control --infile $namelistfile";
    eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
    $cfiles->checkfilesexist( "$options", $mode );
