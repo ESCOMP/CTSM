@@ -24,7 +24,9 @@ module SurfaceWaterMod
   use WaterStateBulkType          , only : waterstatebulk_type
   use WaterDiagnosticBulkType     , only : waterdiagnosticbulk_type
   use WaterTracerUtils            , only : CalcTracerFromBulk
-
+  use IrrigationMod      		  , only : irrigation_type
+  use clm_varctl       			  , only : iulog
+  
   implicit none
   save
   private
@@ -345,7 +347,7 @@ contains
   subroutine UpdateH2osfc(bounds, num_hydrologyc, filter_hydrologyc, &
        infiltration_excess_runoff_inst, &
        energyflux_inst, soilhydrology_inst, &
-       waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst)
+       waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, irrigation_inst)
     !
     ! !DESCRIPTION:
     ! Calculate fluxes out of h2osfc and update the h2osfc state
@@ -360,6 +362,7 @@ contains
     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(in) :: waterdiagnosticbulk_inst
+	type(irrigation_type)    , intent(in) :: irrigation_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: c,l,fc                                     ! indices
@@ -390,7 +393,8 @@ contains
          h2osfc_thresh = h2osfc_thresh(bounds%begc:bounds%endc), &
          frac_h2osfc_nosnow = frac_h2osfc_nosnow(bounds%begc:bounds%endc), &
          topo_slope = col%topo_slope(bounds%begc:bounds%endc), &
-         qflx_h2osfc_surf = qflx_h2osfc_surf(bounds%begc:bounds%endc))
+         qflx_h2osfc_surf = qflx_h2osfc_surf(bounds%begc:bounds%endc), &
+		 irrigation_inst = irrigation_inst)
 
     ! Update h2osfc prior to calculating bottom drainage from h2osfc.
     !
@@ -435,21 +439,22 @@ contains
   !-----------------------------------------------------------------------
   subroutine QflxH2osfcSurf(bounds, num_hydrologyc, filter_hydrologyc, &
        h2osfcflag, h2osfc, h2osfc_thresh, frac_h2osfc_nosnow, topo_slope, &
-       qflx_h2osfc_surf)
+       qflx_h2osfc_surf, irrigation_inst)
     !
     ! !DESCRIPTION:
     ! Compute qflx_h2osfc_surf
     !
     ! !ARGUMENTS:
-    type(bounds_type) , intent(in)    :: bounds
-    integer           , intent(in)    :: num_hydrologyc                     ! number of column soil points in column filter
-    integer           , intent(in)    :: filter_hydrologyc(:)               ! column filter for soil points
-    integer           , intent(in)    :: h2osfcflag                         ! true => surface water is active
-    real(r8)          , intent(in)    :: h2osfc( bounds%begc: )             ! surface water (mm)
-    real(r8)          , intent(in)    :: h2osfc_thresh( bounds%begc: )      ! level at which h2osfc "percolates"
-    real(r8)          , intent(in)    :: frac_h2osfc_nosnow( bounds%begc: ) ! fractional area with surface water greater than zero (if no snow present)
-    real(r8)          , intent(in)    :: topo_slope( bounds%begc: )         ! topographic slope
-    real(r8)          , intent(inout) :: qflx_h2osfc_surf( bounds%begc: )   ! surface water runoff (mm H2O /s)
+    type(bounds_type) 		 , intent(in)    :: bounds
+	type(irrigation_type)    , intent(in)    :: irrigation_inst
+    integer           		 , intent(in)    :: num_hydrologyc                     ! number of column soil points in column filter
+    integer           		 , intent(in)    :: filter_hydrologyc(:)               ! column filter for soil points
+    integer           		 , intent(in)    :: h2osfcflag                         ! true => surface water is active
+    real(r8)          		 , intent(in)    :: h2osfc( bounds%begc: )             ! surface water (mm)
+    real(r8)          		 , intent(in)    :: h2osfc_thresh( bounds%begc: )      ! level at which h2osfc "percolates"
+    real(r8)          		 , intent(in)    :: frac_h2osfc_nosnow( bounds%begc: ) ! fractional area with surface water greater than zero (if no snow present)
+    real(r8)          		 , intent(in)    :: topo_slope( bounds%begc: )         ! topographic slope
+	real(r8)          		 , intent(inout) :: qflx_h2osfc_surf( bounds%begc: )   ! surface water runoff (mm H2O /s)
     !
     ! !LOCAL VARIABLES:
     integer  :: fc, c
@@ -472,15 +477,24 @@ contains
        c = filter_hydrologyc(fc)
 
        if (h2osfcflag==1) then
-          if (frac_h2osfc_nosnow(c) <= params_inst%pc) then
+		  ! if surface_water_ponding_column(c) > 0, means that the surface water over this column will be kept
+		  if (irrigation_inst%surface_water_ponding_column(c) > 0) then 
+		     frac_infclust=0.0_r8
+          else if (frac_h2osfc_nosnow(c) <= params_inst%pc) then
              frac_infclust=0.0_r8
           else
              frac_infclust=(frac_h2osfc_nosnow(c)-params_inst%pc)**params_inst%mu
           endif
        endif
-
        ! limit runoff to value of storage above S(pc)
-       if(h2osfc(c) > h2osfc_thresh(c) .and. h2osfcflag/=0) then
+	   if (irrigation_inst%surface_water_ponding_column(c) > 0) then 
+	       ! here means that once the surface water is over 100mm, we do drainage. Might be changed in future
+	       if (h2osfc(c) > 100) then
+              qflx_h2osfc_surf(c) = (h2osfc(c) - 100) / dtime
+           else
+              qflx_h2osfc_surf(c) = 0
+           end if			
+       else if(h2osfc(c) > h2osfc_thresh(c) .and. h2osfcflag/=0) then
           ! spatially variable k_wet
           k_wet=1.0e-4_r8 * sin((rpi/180._r8) * topo_slope(c))
           qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))

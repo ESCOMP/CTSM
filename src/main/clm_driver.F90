@@ -531,6 +531,13 @@ contains
 
        if (irrigate) then
 
+          ! Update irrigation params from data stream
+          if (use_irrigation_streams) then
+             call t_startf('prescribed_irrig')
+             call PrescribedIrrigationInterp(bounds_clump, irrigation_inst)
+             call t_stopf('prescribed_irrig')
+          endif
+
           call t_startf('irrigationwithdraw')
 
           call CalcAndWithdrawIrrigationFluxes( &
@@ -542,7 +549,8 @@ contains
                soilhydrology_inst = soilhydrology_inst, &
                soilstate_inst = soilstate_inst, &
                irrigation_inst = irrigation_inst, &
-               water_inst = water_inst)
+               water_inst = water_inst, &
+               soil_water_retention_curve=soil_water_retention_curve)
 
           call t_stopf('irrigationwithdraw')
 
@@ -794,14 +802,6 @@ contains
                volr               = water_inst%wateratm2lndbulk_inst%volrmch_grc(bounds_clump%begg:bounds_clump%endg), &
                rof_prognostic     = rof_prognostic)
           call t_stopf('irrigationneeded')
-		  
-		  ! Update irrigation rate from data stream
-          if (use_irrigation_streams) then
-             call t_startf('prescribed_irrig')
-             call PrescribedIrrigationInterp(bounds_clump, irrigation_inst)
-             call t_stopf('prescribed_irrig')
-          endif
-
        end if
 
        ! ============================================================================
@@ -907,7 +907,7 @@ contains
             water_inst, soilhydrology_inst, &
             saturated_excess_runoff_inst, &
             infiltration_excess_runoff_inst, &
-            aerosol_inst, canopystate_inst, scf_method, soil_water_retention_curve, topo_inst)
+            aerosol_inst, canopystate_inst, scf_method, soil_water_retention_curve, topo_inst, irrigation_inst)
 
        ! The following needs to be done after HydrologyNoDrainage (because it needs
        ! waterfluxbulk_inst%qflx_snwcp_ice_col), but before HydrologyDrainage (because

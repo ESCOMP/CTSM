@@ -52,13 +52,14 @@ contains
        num_soilp, filter_soilp, &
        soilhydrology_inst, soilstate_inst, &
        irrigation_inst, &
-       water_inst)
+       water_inst,soil_water_retention_curve)
     !
     ! !DESCRIPTION:
     ! Calculates irrigation withdrawal fluxes and withdraws from groundwater
     !
     ! !USES:
-    use SoilHydrologyMod       , only : WithdrawGroundwaterIrrigation
+    use SoilHydrologyMod           , only : WithdrawGroundwaterIrrigation
+    use SoilWaterRetentionCurveMod , only : soil_water_retention_curve_type
     !
     ! !ARGUMENTS:
     type(bounds_type)              , intent(in)    :: bounds
@@ -70,6 +71,7 @@ contains
     type(soilstate_type)           , intent(in)    :: soilstate_inst
     type(irrigation_type)          , intent(inout) :: irrigation_inst
     type(water_type)               , intent(inout) :: water_inst
+    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
     ! !LOCAL VARIABLES:
     integer :: i  ! tracer index
@@ -81,8 +83,7 @@ contains
     call irrigation_inst%CalcIrrigationFluxes(bounds, num_soilc, &
          filter_soilc, num_soilp, filter_soilp, &
          soilhydrology_inst, soilstate_inst, &
-         water_inst)
-
+         water_inst,soil_water_retention_curve)
     ! Remove groundwater irrigation
     if (irrigation_inst%UseGroundwaterIrrigation()) then
        do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
@@ -141,7 +142,7 @@ contains
        atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst, &
        water_inst, &
        soilhydrology_inst, saturated_excess_runoff_inst, infiltration_excess_runoff_inst, &
-       aerosol_inst, canopystate_inst, scf_method, soil_water_retention_curve, topo_inst)
+       aerosol_inst, canopystate_inst, scf_method, soil_water_retention_curve, topo_inst, irrigation_inst)
     !
     ! !DESCRIPTION:
     ! This is the main subroutine to execute the calculation of soil/snow
@@ -182,6 +183,7 @@ contains
     integer                  , intent(inout) :: filter_nosnowc(:)    ! column filter for non-snow points
     type(hlm_fates_interface_type), intent(inout) :: clm_fates
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
+	type(irrigation_type)    , intent(in)    :: irrigation_inst
     type(soilstate_type)     , intent(inout) :: soilstate_inst
     type(energyflux_type)    , intent(in)    :: energyflux_inst
     type(temperature_type)   , intent(inout) :: temperature_inst
@@ -323,7 +325,7 @@ contains
       call UpdateH2osfc(bounds, num_hydrologyc, filter_hydrologyc, &
            infiltration_excess_runoff_inst, &
            energyflux_inst, soilhydrology_inst, &
-           b_waterflux_inst, b_waterstate_inst, b_waterdiagnostic_inst)
+           b_waterflux_inst, b_waterstate_inst, b_waterdiagnostic_inst, irrigation_inst)
 
       call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, &
            b_waterflux_inst)

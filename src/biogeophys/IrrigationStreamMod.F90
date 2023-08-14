@@ -31,8 +31,8 @@ module IrrigationStreamMod
   use clm_varcon         , only : denh2o, denice, watmin, spval
   use landunit_varcon    , only : istsoil, istcrop
   use lnd_comp_shr       , only : mesh, model_meshfile, model_clock
-  use PatchType,        only : patch
-  use IrrigationMod   , only : irrigation_type
+  use PatchType          , only : patch
+  use IrrigationMod      , only : irrigation_type,irrig_method_drip
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -44,18 +44,13 @@ module IrrigationStreamMod
   public :: PrescribedIrrigationInterp  ! interpolates between two periods of irrigation data
 
   ! !PRIVATE MEMBER DATA:
-  type(shr_strdata_type)  :: sdat_irrig                    ! irrigation input data stream
+  type(shr_strdata_type)  :: sdat_irrig                 ! irrigation input data stream
   
-  ! ADDED
-  integer :: ism                          ! irrigation stream index
-  integer :: nfields                      ! number of fields in irrigation stream
-  integer, public, parameter :: nirrig = 64        ! number of fields in irrigation stream
-  ! character(SHR_KIND_CXX), allocatable    :: fldNames(:)
-  
-  ! UNSURE
-  character(*), parameter :: stream_var_name_1 = "sfc_irrig_rate_patch"    ! base string for field string
+  integer :: ism                                        ! irrigation stream index
+  integer     , parameter :: numFields = 8              ! number of fields to build field string
+  character(cl)           :: stream_varnames(numFields) ! field string
   character(len=CL)       :: stream_lev_dimname = 'cft' ! name of vertical layer dimension
-  character(*), parameter :: stream_var_name_2 = "irrig_rate_demand_patch"    ! base string for field string
+  integer :: num_irrig_cft                              ! number of irrigated cfts on stream file
 
   integer, allocatable    :: g_to_ig(:)                    ! Array matching gridcell index to data index
   logical                 :: irrig_ignore_data_if_missing  ! If should ignore overridding a point with soil moisture data
@@ -101,14 +96,13 @@ contains
     integer            :: irrig_offset               ! Offset in time for dataset (sec)
     character(len=CL)  :: stream_fldfilename_irrig   ! ustar stream filename to read
     character(len=CL)  :: irrig_tintalgo = 'nearest'  ! Time interpolation alogrithm
-    character(len=CL)  :: stream_mapalgo = 'bilinear'
+    character(len=CL)  :: stream_mapalgo = 'nn'
     real(r8)           :: stream_dtlimit = 15._r8
     character(len=CL)  :: stream_taxmode = 'cycle'
     character(*), parameter :: subName = "('PrescribedIrrigationInit')"
     character(*), parameter :: F00 = "('(PrescribedIrrigationInit) ',4a)"
 	
-	! ADDED
-	! character(SHR_KIND_CXX)    :: fldList            ! field string
+    ! ADDED
     !-----------------------------------------------------------------------
     !
     ! deal with namelist variables here in init
@@ -164,6 +158,7 @@ contains
        write(iulog,*) '  stream_fldfilename_irrig = ',trim(stream_fldfilename_irrig)
        write(iulog,*) '  irrig_tintalgo           = ',trim(irrig_tintalgo)
        write(iulog,*) '  irrig_offset             = ',irrig_offset
+       
        if ( irrig_ignore_data_if_missing ) then
           write(iulog,*) '  Do NOT override a point with streams data if the streams data is missing'
        else
@@ -175,6 +170,14 @@ contains
     ! TODO: for now stream_meshfile is the same as the model meshfile - must generalize this if want to have
     ! stream be at a different resolution
 
+    stream_varnames = (/'irrig_depth_column','irrig_target_smp_column','irrig_fraction_column','irrig_method_patch','irrig_duration_column','irrig_start_time_column','surface_water_ponding_column','crop_type'/)
+
+    if (masterproc) then
+       do i = 1,numFields
+          write(iulog,'(a,a)' ) '  stream_varname         = ',trim(stream_varnames(i))
+       end do
+    endif
+
     call shr_strdata_init_from_inline(sdat_irrig,                  &
          my_task             = iam,                                &
          logunit             = iulog,                              &
@@ -185,8 +188,8 @@ contains
          stream_lev_dimname  = trim(stream_lev_dimname),           & 
          stream_mapalgo      = trim(stream_mapalgo),               &
          stream_filenames    = (/trim(stream_fldfilename_irrig)/), &
-         stream_fldlistFile  = (/trim(stream_var_name_1)/),          &
-         stream_fldListModel = (/trim(stream_var_name_1)/),          &
+         stream_fldlistFile  = stream_varnames,          &
+         stream_fldListModel = stream_varnames,          &
          stream_yearFirst    = stream_year_first_irrig,            &
          stream_yearLast     = stream_year_last_irrig,             &
          stream_yearAlign    = model_year_align_irrig,             &
@@ -194,37 +197,18 @@ contains
          stream_taxmode      = stream_taxmode,                     &
          stream_dtlimit      = stream_dtlimit,                     &
          stream_tintalgo     = irrig_tintalgo,                     &
+         stream_name         = 'Irrig',                            &
          rc                  = rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
-    end if
-	
-	call shr_strdata_init_from_inline(sdat_irrig,                  &
-         my_task             = iam,                                &
-         logunit             = iulog,                              &
-         compname            = 'LND',                              &
-         model_clock         = model_clock,                        &
-         model_mesh          = mesh,                               &
-         stream_meshfile     = model_meshfile,                     &
-         stream_lev_dimname  = trim(stream_lev_dimname),           & 
-         stream_mapalgo      = trim(stream_mapalgo),               &
-         stream_filenames    = (/trim(stream_fldfilename_irrig)/), &
-         stream_fldlistFile  = (/trim(stream_var_name_2)/),          &
-         stream_fldListModel = (/trim(stream_var_name_2)/),          &
-         stream_yearFirst    = stream_year_first_irrig,            &
-         stream_yearLast     = stream_year_last_irrig,             &
-         stream_yearAlign    = model_year_align_irrig,             &
-         stream_offset       = irrig_offset,                       &
-         stream_taxmode      = stream_taxmode,                     &
-         stream_dtlimit      = stream_dtlimit,                     &
-         stream_tintalgo     = irrig_tintalgo,                     &
-         rc                  = rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
-       call ESMF_Finalize(endflag=ESMF_END_ABORT)
-    end if
+    end if	
+
+    ! get actual number of cfts on stream file
+    num_irrig_cft = sdat_irrig%pstrm(1)%stream_nlev
 
     if (masterproc) then
        call shr_strdata_print(sdat_irrig,'irrigation data')
+       write(iulog,*) 'number of irrigated cfts on stream file ',num_irrig_cft
     endif
 
   end subroutine PrescribedIrrigationInit
@@ -249,7 +233,6 @@ contains
     integer :: sec     ! seconds into current date for nstep+1
     integer :: mcdate  ! Current model date (yyyymmdd)
     !-----------------------------------------------------------------------
-
     rc = ESMF_SUCCESS
 
     call get_curr_date(year, mon, day, sec)
@@ -276,7 +259,6 @@ contains
           g_to_ig(g) = ig
        end do
     end if
-
   end subroutine PrescribedIrrigationAdvance
 
   !==============================================================================
@@ -296,34 +278,37 @@ contains
     type(bounds_type)         , intent(in)    :: bounds
     type(irrigation_type)      , intent(in)    :: irrigation_inst
     ! !LOCAL VARIABLES:
-    integer  :: rc
-    integer  :: c	
-	integer :: p, g, j, ig, ip, n, ivt
-	integer :: mcsec                      ! seconds of current date
+    integer :: rc
+    integer :: lsize
+    integer :: c	
+    integer :: p, g, j, ig, ip, n, ivt
+    integer :: mcsec                      ! seconds of current date
     integer :: mdcur                      ! current day
     integer :: mscur                      ! seconds of current day
     integer :: mcdate                     ! current date
     integer :: yr,mon,day,nbsec           ! year,month,day,seconds components of a date
     integer :: hours,minutes,secs         ! hours,minutes,seconds of hh:mm:ss
 	
-	real(r8), allocatable :: sfc_irrig_rate_patch_prescribed (:,:)
-	real(r8), allocatable :: irrig_rate_demand_patch_prescribed (:,:)
-	
-	real(r8), allocatable :: irrig_method (:,:)    ! prescribed type of irrigation
-    real(r8), allocatable :: irrig_rate_duration   (:,:)    ! prescribed duration of irrigation
-    real(r8), allocatable :: irrig_start_time  (:,:)
+    real(r8), allocatable :: irrig_rate_prescribed  (:,:)
+    integer, allocatable :: irrig_method_prescribed (:,:)    
+	integer, allocatable :: irrig_method	 (:,:)												 
+    integer, allocatable :: irrig_duration    (:,:)
+    integer, allocatable :: irrig_start_time  (:,:)
     integer,  allocatable :: irrig_crop_type   (:,:)
-    real(r8), allocatable :: irrig_lon   (:,:)
-    real(r8), allocatable :: irrig_lat   (:,:)
+    real(r8), allocatable :: irrig_lon     (:,:)
+    real(r8), allocatable :: irrig_lat     (:,:)
+    real(r8), allocatable :: irrig_target  (:,:)
+    real(r8), allocatable :: irrig_depth   (:,:)
+    real(r8), allocatable :: irrig_fraction(:,:)
+	real(r8), allocatable :: surface_water_ponding(:,:)
     real(r8), parameter :: eps = 1e-3_r8 
 	
 	
-    !real(r8) :: soilm_liq_frac            ! liquid fraction of soil moisture
-    !real(r8) :: soilm_ice_frac            ! ice fraction of soil moisture
-    !real(r8) :: moisture_increment        ! soil moisture adjustment increment
-    !real(r8) :: h2osoi_vol_initial        ! initial vwc value
-    real(r8), pointer :: dataptr2d_1(:,:)   ! first dimension is level, second is data on that level
-	real(r8), pointer :: dataptr2d_2(:,:)   ! first dimension is level, second is data on that level
+    real(r8), pointer :: dataptr1d(:)
+    real(r8), pointer :: dataptr2d(:,:)
+	
+	integer, pointer :: dataptr2d_int(:,:)
+	
     character(*), parameter    :: subName = "('PrescribedIrrigationInterp')"
     !-----------------------------------------------------------------------
 
@@ -331,155 +316,205 @@ contains
     SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
 	
     associate( &
-         sfc_irrig_rate_patch  =>    irrigation_inst%sfc_irrig_rate_patch      , & 		! Input:  [real(r8) (:,:) ] patch irrigation flux (mm H2O/s) from surface water
-		 irrig_rate_demand_patch  =>    irrigation_inst%irrig_rate_demand_patch       & ! Input:  [real(r8) (:,:) ] patch irrigation flux (mm H2O/s) demand
-         )
+         sfc_irrig_rate_patch     			 =>    irrigation_inst%sfc_irrig_rate_patch      		, & 		! Input:  [real(r8) (:,:) ] patch irrigation flux (mm H2O/s) from surface water
+         irrig_rate_demand_patch  			 =>    irrigation_inst%irrig_rate_demand_patch   		, & ! Input:  [real(r8) (:,:) ] patch irrigation flux (mm H2O/s) demand
+         irrig_method_patch 				 =>    irrigation_inst%irrig_method_patch             	, & ! Input:  [real(r8) (:,:) ] patch irrigation method (drip,sprinkler,flood)
+         irrig_target_smp_column  			 =>    irrigation_inst%irrig_target_smp_column  		, & ! Input:  [real(r8) (:,:) ] column irrigation target soil matric potential (mm)
+         irrig_depth_column       			 =>    irrigation_inst%irrig_depth_column       		, & ! Input:  [real(r8) (:,:) ] column irrigation depth (m)
+         irrig_threshold_fraction_column     =>    irrigation_inst%irrig_threshold_fraction_column  ,& ! Input:  [real(r8) (:,:) ] column irrigation threshold fraction
+		 irrig_start_time_column  			 =>    irrigation_inst%irrig_start_time_column  		, & ! Input:  [real(r8) (:,:) ] column irrigation target soil matric potential (mm)
+         irrig_duration_column       		 =>    irrigation_inst%irrig_duration_column       		, & ! Input:  [real(r8) (:,:) ] column irrigation depth (m)
+		 surface_water_ponding_column    	 =>    irrigation_inst%surface_water_ponding_column		  & ! Input:  [real(r8) (:,:) ] column irrigation threshold fraction
+		 )
       SHR_ASSERT_FL( (lbound(sfc_irrig_rate_patch,1) <= bounds%begp ), sourcefile, __LINE__)
       SHR_ASSERT_FL( (ubound(sfc_irrig_rate_patch,1) >= bounds%endp ), sourcefile, __LINE__)	
-	  SHR_ASSERT_FL( (lbound(sfc_irrig_rate_patch,2) == 1 ), sourcefile, __LINE__)
-      SHR_ASSERT_FL( (ubound(sfc_irrig_rate_patch,2) >= 64 ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(sfc_irrig_rate_patch,2) == 1 ), sourcefile, __LINE__)
+!      SHR_ASSERT_FL( (ubound(sfc_irrig_rate_patch,2) >= 64 ), sourcefile, __LINE__)
       SHR_ASSERT_FL( (ubound(irrig_rate_demand_patch,1) >= bounds%endp ), sourcefile, __LINE__)
-	  SHR_ASSERT_FL( (lbound(irrig_rate_demand_patch,1) <= bounds%begp ), sourcefile, __LINE__)	
-	  SHR_ASSERT_FL( (lbound(irrig_rate_demand_patch,2) == 1 ),                        sourcefile, __LINE__)
-	  SHR_ASSERT_FL( (ubound(irrig_rate_demand_patch,2) >= 64 ),          sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(irrig_rate_demand_patch,1) <= bounds%begp ), sourcefile, __LINE__)	
+      SHR_ASSERT_FL( (lbound(irrig_rate_demand_patch,2) == 1 ),                        sourcefile, __LINE__)
+!      SHR_ASSERT_FL( (ubound(irrig_rate_demand_patch,2) >= 64 ),          sourcefile, __LINE__)
 	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-																					  
       ! Get pointer for stream data that is time and spatially interpolate to model time and grid
-      call dshr_fldbun_getFldPtr(sdat_irrig%pstrm(1)%fldbun_model, trim(stream_var_name_1), fldptr2=dataptr2d_1,  rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
-         call ESMF_Finalize(endflag=ESMF_END_ABORT)
-      end if
-	  call dshr_fldbun_getFldPtr(sdat_irrig%pstrm(1)%fldbun_model, trim(stream_var_name_2), fldptr2=dataptr2d_2,  rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
-         call ESMF_Finalize(endflag=ESMF_END_ABORT)
-      end if
 
-      ! Check that inner most dimensino of dataptr2d is equal to nlevsoi
-      if (size(dataptr2d_1,dim=1) /= 64) then
-        if (masterproc) then
-           write(iulog,*) 'ERROR: dataptr2d(dim=1) = ',size(dataptr2d_1,dim=1),&
-                ' and  ncft = ',64,' must match '
-        end if
-        call endrun(trim(subname) // &
-             ' ERROR:: The input Irrigation stream does not have levels equal to ncft')
-      end if
+      ! Place all data from each type into a temporary 2d array
+      lsize = bounds%endg - bounds%begg + 1
+	
+	  ! Read variables based on stream_varnames
+      do n = 1,numFields
+         call dshr_fldbun_getFldPtr(sdat_irrig%pstrm(1)%fldbun_model, trim(stream_varnames(n)), &
+              fldptr2=dataptr2d,  rc=rc)
+         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+            call ESMF_Finalize(endflag=ESMF_END_ABORT)
+         end if
 
-      ! Set the prescribed soil moisture read from the file everywhere
-	  call get_curr_time (mdcur, mscur)
+         ! Read data from data streams
+         select case (stream_varnames(n))
+         case ('sfc_irrig_rate_patch')
+            allocate(irrig_rate_prescribed(bounds%begg:bounds%endg,num_irrig_cft))    
+            do g = bounds%begg, bounds%endg
+               ig = g_to_ig(g)
+               irrig_rate_prescribed(g,:) = dataptr2d(:,ig)
+            enddo
+         case ('irrig_method_patch')
+            allocate(irrig_method_prescribed(bounds%begg:bounds%endg,num_irrig_cft))
+            do g = bounds%begg, bounds%endg
+               ig = g_to_ig(g)
+               irrig_method_prescribed(g,:) = dataptr2d(:,ig)
+            enddo
+         case ('irrig_duration_column')
+            allocate(irrig_duration(bounds%begg:bounds%endg,num_irrig_cft))
+            do g = bounds%begg, bounds%endg
+               ig = g_to_ig(g)
+               irrig_duration(g,:) = INT(dataptr2d(:,ig))
+            enddo
+         case ('irrig_start_time_column')
+            allocate(irrig_start_time(bounds%begg:bounds%endg,num_irrig_cft))
+            do g = bounds%begg, bounds%endg
+               ig = g_to_ig(g)
+               irrig_start_time(g,:) = INT(dataptr2d(:,ig))
+            enddo
+         case ('crop_type')
+            allocate(irrig_crop_type(bounds%begg:bounds%endg,num_irrig_cft))
+	        do g = bounds%begg, bounds%endg
+               ig = g_to_ig(g)
+               irrig_crop_type(g,:) = dataptr2d(:,ig)
+            enddo
+         case ('irrig_longitude')
+            allocate(irrig_lon(bounds%begg:bounds%endg,num_irrig_cft))
+            do g = bounds%begg, bounds%endg
+               ig = g_to_ig(g)
+               irrig_lon(g,:) = dataptr2d(:,ig)
+            enddo
+         case ('irrig_latitude')
+            allocate(irrig_lat(bounds%begg:bounds%endg,num_irrig_cft))
+            do g = bounds%begg, bounds%endg
+               ig = g_to_ig(g)
+               irrig_lat(g,:) = dataptr2d(:,ig)
+            enddo
+         case ('irrig_target_smp_column')
+            allocate(irrig_target(bounds%begg:bounds%endg,num_irrig_cft))
+            do g = bounds%begg, bounds%endg
+               ig = g_to_ig(g)
+               irrig_target(g,:) = dataptr2d(:,ig)
+            enddo
+         case ('irrig_depth_column')
+            allocate(irrig_depth(bounds%begg:bounds%endg,num_irrig_cft))
+            do g = bounds%begg, bounds%endg
+               ig = g_to_ig(g)
+               irrig_depth(g,:) = dataptr2d(:,ig)
+            enddo
+         case ('irrig_fraction_column')
+            allocate(irrig_fraction(bounds%begg:bounds%endg,num_irrig_cft))
+            do g = bounds%begg, bounds%endg
+               ig = g_to_ig(g)
+               irrig_fraction(g,:) = dataptr2d(:,ig) 
+            enddo
+		 case ('surface_water_ponding_column')
+            allocate(surface_water_ponding(bounds%begg:bounds%endg,num_irrig_cft))
+            do g = bounds%begg, bounds%endg
+               ig = g_to_ig(g)
+               surface_water_ponding(g,:) = dataptr2d(:,ig) 
+            enddo
+         end select
+
+      end do
+      call get_curr_time (mdcur, mscur)
       call get_curr_date (yr, mon, day, mcsec)
 	  
-	  allocate(sfc_irrig_rate_patch_prescribed(bounds%begg:bounds%endg,nirrig))
-	  allocate(irrig_rate_demand_patch_prescribed(bounds%begg:bounds%endg,nirrig))
 	  
-	  allocate(irrig_method(bounds%begg:bounds%endg,nirrig))
-      allocate(irrig_rate_duration(bounds%begg:bounds%endg,nirrig))
-      allocate(irrig_start_time(bounds%begg:bounds%endg,nirrig))
-      allocate(irrig_crop_type(bounds%begg:bounds%endg,nirrig))
-      allocate(irrig_lon(bounds%begg:bounds%endg,nirrig))
-      allocate(irrig_lat(bounds%begg:bounds%endg,nirrig))
-	  
-	  ! Read data from data streams
-      ! do g = bounds%begg, bounds%endg
-         ! ig = g_to_ig(g)
-						  
-												  
-
-         ! do j = 1, nirrig
-		 
-		    
-            ! n = ig + (j-1)*size(g_to_ig)
-			
-			! ip = mct_aVect_indexRA(sdat_irrig%avs(1),'sfc_irrig_rate_patch')
-            ! sfc_irrig_rate_patch_prescribed(g,j) = sdat_irrig%avs(1)%rAttr(ip,n)
-			
-			! ip = mct_aVect_indexRA(sdat_irrig%avs(1),'irrig_rate_demand_patch')
-            ! irrig_rate_demand_patch_prescribed(g,j) = sdat_irrig%avs(1)%rAttr(ip,n)
-			
-            ! ip = mct_aVect_indexRA(sdat_irrig%avs(1),'irrig_method')
-            ! irrig_method(g,j) = sdat_irrig%avs(1)%rAttr(ip,n)
-																									   
-															
-																							
-
-            ! ip = mct_aVect_indexRA(sdat_irrig%avs(1),'irrig_duration')
-            ! irrig_rate_duration(g,j)   = sdat_irrig%avs(1)%rAttr(ip,n)
-																			  
-																	 
-				  
-													 
-													  
-			
-																			
-									 
-																							   
-															
-							 
-						 
-																											   
-																	  
-																						  
-											  
-																													
-						   
-						
-
-            ! ip = mct_aVect_indexRA(sdat_irrig%avs(1),'irrig_start_time')
-            ! irrig_start_time(g,j)   = sdat_irrig%avs(1)%rAttr(ip,n)
-
-            ! ip = mct_aVect_indexRA(sdat_irrig%avs(1),'crop_type')
-            ! irrig_crop_type(g,j)   = int(sdat_irrig%avs(1)%rAttr(ip,n))
-																						   
-
-            ! ip = mct_aVect_indexRA(sdat_irrig%avs(1),'irrig_longitude')
-            ! irrig_lon(g,j)   = sdat_irrig%avs(1)%rAttr(ip,n)
-										
-																																   
-
-            ! ip = mct_aVect_indexRA(sdat_irrig%avs(1),'irrig_latitude')
-            ! irrig_lat(g,j)   = sdat_irrig%avs(1)%rAttr(ip,n)
-																											   
-
-         ! end do
-      ! end do
-	  
-	  do p = bounds%begp, bounds%endp
+      do p = bounds%begp, bounds%endp
          if (lun%itype(patch%landunit(p)) == istcrop) then
             g = patch%gridcell(p)
+            c = patch%column(p)
             ivt = patch%itype(p)
 
+            !set all to zero as test                     
+            !sfc_irrig_rate_patch(p)    = 0._r8
+            !irrig_rate_demand_patch(p) = 0._r8
 
-            do j = 1, nirrig
-
-              ! if((abs(irrig_lon(g) - grc%londeg(g)) < eps) .and. (abs(irrig_lat(g) - grc%latdeg(g)) < eps) .and. (ivt == irrig_crop_type(g))) then
+            do j = 1, num_irrig_cft
               if(ivt == int(irrig_crop_type(g,j))) then
-			  ! if((abs(irrig_lon(g,j) - grc%londeg(g)) < eps) .and. (abs(irrig_lat(g,j) - grc%latdeg(g)) < eps) .and. (ivt == irrig_crop_type(g,j))) then
+                     ! check if these params on stream file before assign them to arrays in irrigationMod.F90
+                     if (allocated(irrig_method_prescribed)) then
+                        irrig_method_patch(p)      = irrig_method_prescribed(g,j)
+                     endif
+                     if (allocated(irrig_target)) then
+                        irrig_target_smp_column(c) = irrig_target(g,j)
+					 end if
+					 if (allocated(irrig_depth)) then
+                        irrig_depth_column(c)      = irrig_depth(g,j)
+					 end if
+                     if (allocated(irrig_fraction)) then
+                        irrig_threshold_fraction_column(c)   = irrig_fraction(g,j)
+					 end if
+                     if (allocated(irrig_start_time)) then
+                        irrig_start_time_column(c)      = INT(irrig_start_time(g,j))
+					 end if
+					 if (allocated(irrig_duration)) then
+						irrig_duration_column(c)      = INT(irrig_duration(g,j))
+                     endif
+					 if (allocated(surface_water_ponding)) then 
+						surface_water_ponding_column(c)      = surface_water_ponding(g,j)
+                     endif
+                     ! prescribed irrigation rate on stream file
+                     if (allocated(irrig_rate_prescribed)) then 
+                        if ((mscur >=  irrig_start_time(g,j)) .and. (mscur <= (irrig_start_time(g,j)+irrig_duration(g,j)))) then
+                           
+                           sfc_irrig_rate_patch(p) = irrig_rate_prescribed(g,j)
+                           irrig_rate_demand_patch(p) = irrig_rate_prescribed(g,j)
+                           
+                        else
+                           sfc_irrig_rate_patch(p)    = 0._r8
+                           irrig_rate_demand_patch(p) = 0._r8
+                        endif
+                     endif
 
-                  if ((mscur >=  irrig_start_time(g,j)) .and. (mscur <= (irrig_start_time(g,j)+irrig_rate_duration(g,j)))) then
+               !endif
 
-                     sfc_irrig_rate_patch(p) = dataptr2d_1(j,ig)
-					 irrig_rate_demand_patch(p) = dataptr2d_2(j,ig)
-
-                  else
-                     sfc_irrig_rate_patch(p) = 0._r8
-					 irrig_rate_demand_patch(p) = 0._r8
-                  endif
                endif
             enddo
          endif
       enddo
 
-      deallocate(sfc_irrig_rate_patch_prescribed, irrig_rate_demand_patch_prescribed, irrig_method,irrig_rate_duration,irrig_start_time,irrig_crop_type,irrig_lon,irrig_lat)
-	  
-	end associate
-	
+      if (allocated(irrig_rate_prescribed)) then
+         deallocate(irrig_rate_prescribed)
+      endif
+      if (allocated(irrig_method_prescribed)) then
+         deallocate(irrig_method_prescribed)
+      endif
+      if (allocated(irrig_duration)) then
+         deallocate(irrig_duration)
+      endif
+      if (allocated(irrig_start_time)) then
+         deallocate(irrig_start_time)
+      endif
+      if (allocated(irrig_crop_type)) then
+         deallocate(irrig_crop_type)
+      endif
+      if (allocated(irrig_lon)) then
+         deallocate(irrig_lon)
+      endif
+      if (allocated(irrig_lat)) then
+         deallocate(irrig_lat)
+      endif
+      if (allocated(irrig_target)) then
+         deallocate(irrig_target)
+      endif
+      if (allocated(irrig_depth)) then
+         deallocate(irrig_depth)
+      endif
+      if (allocated(irrig_fraction)) then
+         deallocate(irrig_fraction)
+      endif
+	  if (allocated(irrig_method)) then
+         deallocate(irrig_method)
+      endif
+	  if (allocated(surface_water_ponding)) then
+         deallocate(surface_water_ponding)
+      endif
+
+    end associate
   end subroutine PrescribedIrrigationInterp
 
 end module IrrigationStreamMod

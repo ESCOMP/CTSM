@@ -3844,26 +3844,46 @@ sub setup_logic_soilm_streams {
 
 sub setup_logic_irrig_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
-
-  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'irrig_mapalgo',
-                  'hgrid'=>$nl_flags->{'res'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_irrig', 'phys'=>$nl_flags->{'phys'},
-                  'sim_year'=>$nl_flags->{'sim_year'},
-                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_irrig', 'phys'=>$nl_flags->{'phys'},
-                  'sim_year'=>$nl_flags->{'sim_year'},
-                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
-      # Set align year, if first and last years are different
-      if ( $nl->get_value('stream_year_first_irrig') !=
-           $nl->get_value('stream_year_last_irrig') ) {
-           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                       'model_year_align_irrig', 'sim_year'=>$nl_flags->{'sim_year'},
-                       'sim_year_range'=>$nl_flags->{'sim_year_range'});
+	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_irrigation_streams');
+      if ( &value_is_true( $nl->get_value('use_irrigation_streams') ) ) {
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'irrig_tintalgo',
+                     'hgrid'=>$nl_flags->{'res'} );
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'irrig_offset',
+                     'hgrid'=>$nl_flags->{'res'} );
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_irrig', 'phys'=>$nl_flags->{'phys'},
+                     'sim_year'=>$nl_flags->{'sim_year'},
+                     'sim_year_range'=>$nl_flags->{'sim_year_range'});
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_irrig', 'phys'=>$nl_flags->{'phys'},
+                     'sim_year'=>$nl_flags->{'sim_year'},
+                     'sim_year_range'=>$nl_flags->{'sim_year_range'});
+		 # Set align year, if first and last years are different
+         if ( $nl->get_value('stream_year_first_irrig') !=
+              $nl->get_value('stream_year_last_irrig') ) {
+              add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                          'model_year_align_irrig', 'sim_year'=>$nl_flags->{'sim_year'},
+                          'sim_year_range'=>$nl_flags->{'sim_year_range'});
+         }
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_irrig', 'phys'=>$nl_flags->{'phys'},
+                     'hgrid'=>$nl_flags->{'res'} );
+		 if ( ($opts->{'use_case'} =~ /_transient$/) &&
+              (remove_leading_and_trailing_quotes($nl->get_value("irrig_tintalgo")) eq "linear") ) {
+             $log->warning("For a transient case, irrigation streams, should NOT use irrig_tintalgo='linear'" .
+                           " since vegetated areas could go from missing to not missing or vice versa" );
+         }
+	  } else {
+         if ( defined($nl->get_value('stream_year_first_irrig')) ||
+              defined($nl->get_value('model_year_align_irrig')) ||
+              defined($nl->get_value('stream_fldfilename_irrig')) ||
+              defined($nl->get_value('irrig_tintalgo')) ||
+              defined($nl->get_value('irrig_offset')) ||
+              defined($nl->get_value('stream_year_last_irrig')) ) {
+             $log->fatal_error("One of the irrig streams namelist items (stream_year_first_irrig, " .
+                                " model_year_align_irrig, stream_fldfilename_irrig, stream_fldfilename_irrig)" .
+                                " soilm_tintalgo irrig_offset" .
+                                " is defined, but use_irrigation_streams option NOT set to true");
+         }
       }
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_irrig', 'phys'=>$nl_flags->{'phys'},
-                  'hgrid'=>"0.9x1.25" );
-  }
+
 }
 
 #-------------------------------------------------------------------------------
