@@ -609,17 +609,17 @@ contains
             avgflag='A', long_name='Growing degree days base 10C from planting', &
             ptr_patch=this%gdd10_patch, default='inactive')
 
-       this%gdd020_patch(begp:endp) = nan
+       this%gdd020_patch(begp:endp) = spval
        call hist_addfld1d (fname='GDD020', units='ddays', &
             avgflag='A', long_name='Twenty year average of growing degree days base  0C from planting', &
             ptr_patch=this%gdd020_patch, default='inactive')
 
-       this%gdd820_patch(begp:endp) = nan
+       this%gdd820_patch(begp:endp) = spval
        call hist_addfld1d (fname='GDD820', units='ddays', &
             avgflag='A', long_name='Twenty year average of growing degree days base  8C from planting', &
             ptr_patch=this%gdd820_patch, default='inactive')
 
-       this%gdd1020_patch(begp:endp) = nan
+       this%gdd1020_patch(begp:endp) = spval
        call hist_addfld1d (fname='GDD1020', units='ddays', &
             avgflag='A', long_name='Twenty year average of growing degree days base 10C from planting', &
             ptr_patch=this%gdd1020_patch, default='inactive')
