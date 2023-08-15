@@ -1048,7 +1048,7 @@ contains
        if ( decomp_cascade_con%is_litter(k) .or. decomp_cascade_con%is_cwd(k) ) then
           this%m_decomp_npools_to_fire_col(begc:endc,k) = spval
           data1dptr => this%m_decomp_npools_to_fire_col(:,k)
-          fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'N_TO_FIRE'
+          fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_N_TO_FIRE'
           longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' N fire loss'
           call hist_addfld1d (fname=fieldname, units='gN/m^2',  &
                avgflag='A', long_name=longname, &
@@ -1057,7 +1057,7 @@ contains
           if ( nlevdecomp_full > 1 ) then
              this%m_decomp_npools_to_fire_vr_col(begc:endc,:,k) = spval
              data2dptr => this%m_decomp_npools_to_fire_vr_col(:,:,k)
-             fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'N_TO_FIRE'//trim(vr_suffix)
+             fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_N_TO_FIRE'//trim(vr_suffix)
              longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' N fire loss'
              call hist_addfld_decomp (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
                   avgflag='A', long_name=longname, &

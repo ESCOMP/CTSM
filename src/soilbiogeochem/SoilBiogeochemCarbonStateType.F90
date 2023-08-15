@@ -169,7 +169,7 @@ contains
        do l  = 1, ndecomp_pools
           if ( nlevdecomp_full > 1 ) then
              data2dptr => this%decomp_cpools_vr_col(:,1:nlevsoi,l)
-             fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_vr'
+             fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'_C_vr'
              longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' C (vertically resolved)'
              call hist_addfld2d (fname=fieldname, units='gC/m^3',  type2d='levsoi', &
                   avgflag='A', long_name=longname, &
@@ -177,7 +177,7 @@ contains
           endif
 
           data1dptr => this%decomp_cpools_col(:,l)
-          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'C'
+          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'_C'
           longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' C'
           call hist_addfld1d (fname=fieldname, units='gC/m^2', &
                avgflag='A', long_name=longname, &
@@ -185,7 +185,7 @@ contains
 
           if ( nlevdecomp_full > 1 ) then
              data1dptr => this%decomp_cpools_1m_col(:,l)
-             fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_1m'
+             fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'_C_1m'
              longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' C to 1 meter'
              call hist_addfld1d (fname=fieldname, units='gC/m^2', &
                   avgflag='A', long_name=longname, &
@@ -268,7 +268,7 @@ contains
        do l = 1, ndecomp_pools
           if ( nlevdecomp_full > 1 ) then
              data2dptr => this%decomp_cpools_vr_col(:,1:nlevsoi,l)
-             fieldname = 'C13_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_vr'
+             fieldname = 'C13_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'_C_vr'
              longname =  'C13 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C (vertically resolved)'
              call hist_addfld2d (fname=fieldname, units='gC13/m^3',  type2d='levsoi', &
                   avgflag='A', long_name=longname, &
@@ -276,7 +276,7 @@ contains
           endif
 
           data1dptr => this%decomp_cpools_col(:,l)
-          fieldname = 'C13_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C'
+          fieldname = 'C13_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'_C'
           longname =  'C13 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C'
           call hist_addfld1d (fname=fieldname, units='gC13/m^2', &
                avgflag='A', long_name=longname, &
@@ -355,21 +355,21 @@ contains
        do l = 1, ndecomp_pools
           if ( nlevdecomp_full > 1 ) then
              data2dptr => this%decomp_cpools_vr_col(:,1:nlevsoi,l)
-             fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_vr'
+             fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'_C_vr'
              longname =  'C14 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C (vertically resolved)'
              call hist_addfld2d (fname=fieldname, units='gC14/m^3',  type2d='levsoi', &
                   avgflag='A', long_name=longname, ptr_col=data2dptr, default='inactive')
           endif
 
           data1dptr => this%decomp_cpools_col(:,l)
-          fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C'
+          fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'_C'
           longname =  'C14 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C'
           call hist_addfld1d (fname=fieldname, units='gC14/m^2', &
                avgflag='A', long_name=longname, ptr_col=data1dptr, default='inactive')
 
           if ( nlevdecomp_full > 1 ) then
              data1dptr => this%decomp_cpools_1m_col(:,l)
-             fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_1m'
+             fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'_C_1m'
              longname =  'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C to 1 meter'
              call hist_addfld1d (fname=fieldname, units='gC/m^2', &
                   avgflag='A', long_name=longname, ptr_col=data1dptr, default='inactive')
