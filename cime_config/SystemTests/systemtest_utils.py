@@ -10,6 +10,9 @@ def cmds_to_setup_conda(caseroot):
     # Use semicolon here since it's OK to fail
     #
     conda_setup_commands = ". " + caseroot + "/.env_mach_specific.sh; "
+    # Setting CONDA_PREFIX to empty ensures that this works even if called from
+    # a shell with a conda environment activated
+    conda_setup_commands += "CONDA_PREFIX=; "
     # Execute the module unload/load when "which conda" fails
     # eg on cheyenne
     try:
