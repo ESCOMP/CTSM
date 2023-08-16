@@ -52,7 +52,7 @@ contains
        num_soilp, filter_soilp, &
        soilhydrology_inst, soilstate_inst, &
        irrigation_inst, &
-       water_inst,soil_water_retention_curve)
+       water_inst, soil_water_retention_curve)
     !
     ! !DESCRIPTION:
     ! Calculates irrigation withdrawal fluxes and withdraws from groundwater
@@ -83,7 +83,8 @@ contains
     call irrigation_inst%CalcIrrigationFluxes(bounds, num_soilc, &
          filter_soilc, num_soilp, filter_soilp, &
          soilhydrology_inst, soilstate_inst, &
-         water_inst,soil_water_retention_curve)
+         water_inst, soil_water_retention_curve)
+
     ! Remove groundwater irrigation
     if (irrigation_inst%UseGroundwaterIrrigation()) then
        do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
@@ -183,7 +184,7 @@ contains
     integer                  , intent(inout) :: filter_nosnowc(:)    ! column filter for non-snow points
     type(hlm_fates_interface_type), intent(inout) :: clm_fates
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
-	type(irrigation_type)    , intent(in)    :: irrigation_inst
+    type(irrigation_type)    , intent(in)    :: irrigation_inst
     type(soilstate_type)     , intent(inout) :: soilstate_inst
     type(energyflux_type)    , intent(in)    :: energyflux_inst
     type(temperature_type)   , intent(inout) :: temperature_inst

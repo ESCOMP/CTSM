@@ -467,9 +467,10 @@ contains
     if (use_soil_moisture_streams) then
        call PrescribedSoilMoistureInit(bounds_proc)
     endif
-    if(use_irrigation_streams) then 
+    if (use_irrigation_streams) then 
        call PrescribedIrrigationInit(bounds_proc)
-    endif
+    end if
+
     ! On restart only - process the history namelist.
     ! Later the namelist from the restart file will be used.  This allows basic
     ! checking to make sure you didn't try to change the history namelist on restart.

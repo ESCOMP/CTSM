@@ -1756,6 +1756,7 @@ prescribed data.
 <!-- ============================================================  -->
 <!-- irrigation stream -->
 <!-- ============================================================  -->
+
 <!-- Prescribed irrigation -->
 <entry id="use_irrigation_streams" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">

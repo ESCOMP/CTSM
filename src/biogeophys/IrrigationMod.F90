@@ -70,7 +70,7 @@ module IrrigationMod
   !   evils.
   !
   ! !USES:
-#include "shr_assert.h"  
+#include "shr_assert.h"
   use shr_kind_mod     , only : r8 => shr_kind_r8
   use decompMod        , only : bounds_type, get_proc_global
   use decompMod        , only : subgrid_level_gridcell, subgrid_level_column, subgrid_level_patch
@@ -96,7 +96,7 @@ module IrrigationMod
   use ColumnType       , only : col                
   use PatchType        , only : patch                
   use subgridAveMod    , only : p2c, c2g
-  use filterColMod     , only : filter_col_type, col_filter_from_logical_array															
+  use filterColMod     , only : filter_col_type, col_filter_from_logical_array
   !
   implicit none
   private
@@ -168,19 +168,18 @@ module IrrigationMod
 
      ! Private data members; set in initialization:
      type(irrigation_params_type) :: params
-     integer :: dtime                					! land model time step (sec)
-	 integer, pointer :: irrig_nsteps_per_day (:)		! number of time steps per day in which we irrigate	[col]							  
+     integer :: dtime                ! land model time step (sec)
+     integer, pointer :: irrig_nsteps_per_day (:)       ! number of time steps per day in which we irrigate [col]
      real(r8), pointer :: relsat_wilting_point_col(:,:) ! relative saturation at which smp = wilting point [col, nlevsoi]
      real(r8), pointer :: relsat_target_col(:,:)        ! relative saturation at which smp is at the irrigation target [col, nlevsoi]
      integer , pointer, public :: irrig_method_patch          (:) ! patch irrigation application method
      ! Arrays corresponding to irrigation parameters
      real(r8), pointer, public :: irrig_target_smp_column(:)         ! Target soil matric potential for irrigation (mm)
      real(r8), pointer, public :: irrig_depth_column(:)              ! Soil depth to which we measure for irrigation (m)
-     real(r8), pointer, public :: irrig_threshold_fraction_column(:) ! Determines soil moisture threshold at which we irrigate
-	 integer , pointer, public :: irrig_start_time_column(:)             ! Irrigation start time
-	 integer , pointer, public :: irrig_duration_column(:)             ! Irrigation duration time
-	 real(r8), pointer, public :: surface_water_ponding_column(:)																							  
-	 
+     real(r8), pointer, public :: irrig_threshold_fraction_column(:) ! Soil moisture threshold at/below which we irrigate
+     integer , pointer, public :: irrig_start_time_column(:)         ! Irrigation start time
+     integer , pointer, public :: irrig_duration_column(:)           ! Irrigation duration time
+     real(r8), pointer, public :: surface_water_ponding_column(:)    ! Whether runoff should be allowed
 
      ! Private data members; time-varying:
      real(r8), pointer, public :: sfc_irrig_rate_patch        (:) ! current irrigation rate from surface water [mm/s]
@@ -256,6 +255,7 @@ contains
   ! ========================================================================
   ! Constructors
   ! ========================================================================
+
   !-----------------------------------------------------------------------
   function irrigation_params_constructor(irrig_min_lai, &
        irrig_start_time, irrig_length, &
@@ -446,6 +446,7 @@ contains
     call shr_mpi_bcast(irrig_method_default, mpicom)
 
     call translate_irrig_method_default
+
     this%params = irrigation_params_type( &
          irrig_min_lai = irrig_min_lai, &
          irrig_start_time = irrig_start_time, &
@@ -622,21 +623,21 @@ contains
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
 
-    allocate(this%qflx_irrig_demand_patch 			(begp:endp))          ; this%qflx_irrig_demand_patch  			(:)   = nan
-    allocate(this%relsat_wilting_point_col    		(begc:endc,nlevsoi))  ; this%relsat_wilting_point_col     		(:,:) = nan
-    allocate(this%relsat_target_col           		(begc:endc,nlevsoi))  ; this%relsat_target_col            		(:,:) = nan
-    allocate(this%sfc_irrig_rate_patch        		(begp:endp))          ; this%sfc_irrig_rate_patch         		(:)   = nan
-    allocate(this%irrig_rate_demand_patch     		(begp:endp))          ; this%irrig_rate_demand_patch      		(:)   = nan
-    allocate(this%irrig_method_patch          		(begp:endp))          ; this%irrig_method_patch           		(:)   = ispval
-    allocate(this%n_irrig_steps_left_patch    		(begp:endp))          ; this%n_irrig_steps_left_patch     		(:)   = 0
-    allocate(this%irrig_target_smp_column     		(begc:endc))          ; this%irrig_target_smp_column      		(:)   = 0
-    allocate(this%irrig_depth_column          		(begc:endc))          ; this%irrig_depth_column           		(:)   = 0
-    allocate(this%irrig_threshold_fraction_column 	(begc:endc))      	  ; this%irrig_threshold_fraction_column  	(:)   = 0
-	allocate(this%irrig_start_time_column     		(begc:endc))          ; this%irrig_start_time_column      		(:)   = 0
-    allocate(this%irrig_duration_column          	(begc:endc))          ; this%irrig_duration_column        		(:)   = 0
-	allocate(this%surface_water_ponding_column      (begc:endc))          ; this%surface_water_ponding_column 		(:)   = 0
-	allocate(this%irrig_nsteps_per_day          	(begc:endc))          ; this%irrig_nsteps_per_day         		(:)   = 0
-    
+    allocate(this%qflx_irrig_demand_patch (begp:endp))              ; this%qflx_irrig_demand_patch  (:)   = nan
+    allocate(this%relsat_wilting_point_col    (begc:endc,nlevsoi))  ; this%relsat_wilting_point_col     (:,:) = nan
+    allocate(this%relsat_target_col           (begc:endc,nlevsoi))  ; this%relsat_target_col            (:,:) = nan
+    allocate(this%sfc_irrig_rate_patch        (begp:endp))          ; this%sfc_irrig_rate_patch         (:)   = nan
+    allocate(this%irrig_rate_demand_patch     (begp:endp))          ; this%irrig_rate_demand_patch      (:)   = nan
+    allocate(this%irrig_method_patch          (begp:endp))          ; this%irrig_method_patch           (:)   = ispval
+    allocate(this%n_irrig_steps_left_patch    (begp:endp))          ; this%n_irrig_steps_left_patch     (:)   = 0
+    allocate(this%irrig_target_smp_column         (begc:endc))         ; this%irrig_target_smp_column         (:)   = 0
+    allocate(this%irrig_depth_column              (begc:endc))         ; this%irrig_depth_column              (:)   = 0
+    allocate(this%irrig_threshold_fraction_column (begc:endc))         ; this%irrig_threshold_fraction_column (:)   = 0
+    allocate(this%irrig_start_time_column         (begc:endc))         ; this%irrig_start_time_column         (:)   = 0
+    allocate(this%irrig_duration_column           (begc:endc))         ; this%irrig_duration_column           (:)   = 0
+    allocate(this%surface_water_ponding_column    (begc:endc))         ; this%surface_water_ponding_column    (:)   = 0
+    allocate(this%irrig_nsteps_per_day            (begc:endc))         ; this%irrig_nsteps_per_day            (:)   = 0
+
   end subroutine IrrigationInitAllocate
 
   !-----------------------------------------------------------------------
@@ -681,30 +682,28 @@ contains
     type(bounds_type)      , intent(in)    :: bounds
     type(soilstate_type)   , intent(in)    :: soilstate_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
-    ! 
+    !
     ! !LOCAL VARIABLES:
     integer :: c ! col index
     integer :: j ! level index
 
     character(len=*), parameter :: subname = 'InitCold'
     !-----------------------------------------------------------------------
-	this%dtime = get_step_size()
-	write(iulog,*) ' this%dtime = ', this%dtime
+
+   this%dtime = get_step_size()
+   write(iulog,*) ' this%dtime = ', this%dtime
     ! Initialize arrays to default parameter values
     do c = bounds%begc, bounds%endc
-       this%irrig_target_smp_column(c) = this%params%irrig_target_smp	   
-       this%irrig_depth_column(c) = this%params%irrig_depth	   
-       this%irrig_threshold_fraction_column(c) = this%params%irrig_threshold_fraction	   	   
-	   this%irrig_start_time_column(c) = this%params%irrig_start_time	   
-       this%irrig_duration_column(c) = this%params%irrig_length	      
-	   this%surface_water_ponding_column(c) = 0._r8
-	   this%irrig_nsteps_per_day(c) = this%CalcIrrigNstepsPerDay(this%dtime, c)
-	   !write(iulog,*) 'TEST: default this%irrig_duration_column(c) = ', this%irrig_duration_column(c)
-	   !this%irrig_nsteps_per_day(c) = ((this%irrig_duration_column(c) + (this%dtime - 1))/this%dtime)
-	   !write(iulog,*) 'TEST: default this%irrig_nsteps_per_day(c) = ', this%irrig_nsteps_per_day(c)
+       this%irrig_target_smp_column(c) = this%params%irrig_target_smp
+       this%irrig_depth_column(c) = this%params%irrig_depth
+       this%irrig_threshold_fraction_column(c) = this%params%irrig_threshold_fraction
+       this%irrig_start_time_column(c) = this%params%irrig_start_time
+       this%irrig_duration_column(c) = this%params%irrig_length
+       this%surface_water_ponding_column(c) = 0._r8
+       this%irrig_nsteps_per_day(c) = this%CalcIrrigNstepsPerDay(this%dtime, c)
     enddo
 
-    ! Determine relative saturation corresponding to target smp
+    ! Determine relative saturation corresponding to target soil matric potential
     do j = 1, nlevsoi
        do c = bounds%begc, bounds%endc
           call soil_water_retention_curve%soil_suction_inverse( &
@@ -713,12 +712,13 @@ contains
                smp_target = wilting_point_smp, &
                soilstate_inst = soilstate_inst, &
                s_target = this%relsat_wilting_point_col(c,j))
+
           call soil_water_retention_curve%soil_suction_inverse( &
                c = c, &
                j = j, &
                smp_target = this%params%irrig_target_smp, &
                soilstate_inst = soilstate_inst, &
-               s_target = this%relsat_target_col(c,j))		  
+               s_target = this%relsat_target_col(c,j))
 
           ! Make sure relative saturation targets are bounded by [0,1]
           !
@@ -788,8 +788,8 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
-    integer :: irrig_nsteps_per_day_c  		 ! function result
-	integer                , intent(in) :: c ! column
+    integer :: irrig_nsteps_per_day_c  ! function result
+    integer                , intent(in) :: c ! column
     class(irrigation_type) , intent(in) :: this
     integer                , intent(in) :: dtime ! model time step (sec)
     !
@@ -797,6 +797,7 @@ contains
     
     character(len=*), parameter :: subname = 'CalcIrrigNstepsPerDay'
     !-----------------------------------------------------------------------
+    
     irrig_nsteps_per_day_c = ((this%irrig_duration_column(c) + (dtime - 1))/dtime)  ! round up
 
   end function CalcIrrigNstepsPerDay
@@ -818,27 +819,28 @@ contains
 
     character(len=*), parameter :: subname = 'SetIrrigMethod'
     !-----------------------------------------------------------------------
-	do p = bounds%begp,bounds%endp
-	   g = patch%gridcell(p)
-	   m = patch%itype(p)
-	   if (m >= lbound(irrig_method, 2) .and. m <= ubound(irrig_method, 2) &
-			.and. pftcon%irrigated(m) == 1._r8) then
-			!Firstly check if the irrig_method is already set from stream file
-		  if (this%irrig_method_patch(p) /= irrig_method_drip .and. this%irrig_method_patch(p) /= irrig_method_sprinkler .and. this%irrig_method_patch(p) /= irrig_method_flood) then
-			this%irrig_method_patch(p) = irrig_method(g,m)
-		    ! ensure irrig_method is valid; if not set, use drip irrigation
-		    if(irrig_method(g,m) == irrig_method_unset) then
-			   this%irrig_method_patch(p) = this%params%irrig_method_default
-		    else if (irrig_method(g,m) /= irrig_method_drip .and. irrig_method(g,m) /= irrig_method_sprinkler .and. irrig_method(g,m) /= irrig_method_flood) then
-			   write(iulog,*) subname //' invalid irrigation method specified'
-			   call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg='bad irrig_method '// &
-				    errMsg(sourcefile, __LINE__))
-		    end if
-		  end if
-	   else
-		  this%irrig_method_patch(p) = this%params%irrig_method_default
-	   end if
-	end do
+
+    do p = bounds%begp,bounds%endp
+      g = patch%gridcell(p)
+      m = patch%itype(p)
+      if (m >= lbound(irrig_method, 2) .and. m <= ubound(irrig_method, 2) &
+           .and. pftcon%irrigated(m) == 1._r8) then
+         ! First, check whether irrigation method is set from the stream file
+         if (this%irrig_method_patch(p) /= irrig_method_drip .and. this%irrig_method_patch(p) /= irrig_method_sprinkler .and. this%irrig_method_patch(p) /= irrig_method_flood) then
+            this%irrig_method_patch(p) = irrig_method(g,m)
+            ! ensure irrigation method is valid; if not set, use default irrigation
+            if (irrig_method(g,m) == irrig_method_unset) then
+               this%irrig_method_patch(p) = this%params%irrig_method_default
+            else if (irrig_method(g,m) /= irrig_method_drip .and. irrig_method(g,m) /= irrig_method_sprinkler .and. irrig_method(g,m) /= irrig_method_flood) then
+               write(iulog,*) subname //' invalid irrigation method specified'
+               call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg='bad irrig_method '// &
+                 errMsg(sourcefile, __LINE__))
+            end if
+         end if
+      else
+         this%irrig_method_patch(p) = this%params%irrig_method_default
+      end if
+   end do
   end subroutine SetIrrigMethod
 
 
@@ -952,10 +954,11 @@ contains
     deallocate(this%irrig_target_smp_column)
     deallocate(this%irrig_depth_column)
     deallocate(this%irrig_threshold_fraction_column)
-	deallocate(this%irrig_start_time_column)
+    deallocate(this%irrig_start_time_column)
     deallocate(this%irrig_duration_column)
-	deallocate(this%irrig_nsteps_per_day)
-	deallocate(this%surface_water_ponding_column)
+    deallocate(this%irrig_nsteps_per_day)
+    deallocate(this%surface_water_ponding_column)
+
   end subroutine IrrigationClean
 
 
@@ -967,7 +970,7 @@ contains
   subroutine CalcIrrigationFluxes(this, bounds, num_soilc, &
        filter_soilc, num_soilp, filter_soilp, &
        soilhydrology_inst, soilstate_inst, &
-       water_inst,soil_water_retention_curve)
+       water_inst, soil_water_retention_curve)
     !
     ! !DESCRIPTION:
     ! Apply the irrigation computed by CalcIrrigationNeeded in order to set various fluxes
@@ -1024,10 +1027,10 @@ contains
          begc => bounds%begc, &
          endc => bounds%endc  &
          )
-	! Update the target soil moisture based on the target param from the stream file
-	if (use_irrigation_streams) then
+    ! Update the target soil moisture based on the target param from the stream file
+    if (use_irrigation_streams) then
        call this%UpdateTargetSMP(bounds, soilstate_inst, soil_water_retention_curve)
-	end if
+    end if
 
     call this%CalcBulkWithdrawals(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
          soilhydrology_inst, soilstate_inst, water_inst%waterfluxbulk_inst, &
@@ -1121,6 +1124,7 @@ contains
 
     do fp = 1, num_soilp
        p = filter_soilp(fp)
+
        if (this%n_irrig_steps_left_patch(p) > 0) then
           qflx_sfc_irrig_bulk_patch(p)     = this%sfc_irrig_rate_patch(p)
           this%qflx_irrig_demand_patch(p)  = this%irrig_rate_demand_patch(p)
@@ -1392,7 +1396,6 @@ contains
        waterflux_inst%qflx_irrig_sprinkler_patch(p) = 0._r8
 
        ! using qflx_irrig_drip_patch for both drip and flood, because both are applied to the soil surface rather than above the canopy
-	   ! maybe will be separated in future.
        if(this%irrig_method_patch(p) == irrig_method_drip .or. this%irrig_method_patch(p) == irrig_method_flood) then
           waterflux_inst%qflx_irrig_drip_patch(p)      = qflx_irrig_tot
        else if(this%irrig_method_patch(p) == irrig_method_sprinkler) then
@@ -1619,6 +1622,7 @@ contains
     deficit(bounds%begc:bounds%endc) = 0._r8
     do fc = 1, check_for_irrig_col_filter%num
        c = check_for_irrig_col_filter%indices(fc)
+
        h2osoi_liq_at_threshold = h2osoi_liq_wilting_point_tot(c) + &
             this%irrig_threshold_fraction_column(c) * &
             (h2osoi_liq_target_tot(c) - h2osoi_liq_wilting_point_tot(c))
@@ -1663,21 +1667,19 @@ contains
     do fp = 1, num_exposedvegp
        p = filter_exposedvegp(fp)
        c = patch%column(p)
-	   
-	   
-	   this%irrig_nsteps_per_day(c) = ((this%irrig_duration_column(c) + (this%dtime - 1))/this%dtime)
-	   
+
+       this%irrig_nsteps_per_day(c) = ((this%irrig_duration_column(c) + (this%dtime - 1))/this%dtime)
 
        if (check_for_irrig_patch(p)) then
           ! if using irrigation streams, do not set these two variables
           ! TODO: determine volr limited rate based on prescribed input rates rather than soil moisture based irrigation rates
           ! if (.not. use_irrigation_streams) then
-             ! Convert units from mm to mm/sec
-		  this%sfc_irrig_rate_patch(p) = deficit_volr_limited(c) / &
-			   (this%dtime*this%irrig_nsteps_per_day(c))
-		  this%irrig_rate_demand_patch(p) = deficit(c) / &
-			   (this%dtime*this%irrig_nsteps_per_day(c))
-          ! else
+          ! Convert units from mm to mm/sec
+          this%sfc_irrig_rate_patch(p) = deficit_volr_limited(c) / &
+             (this%dtime*this%irrig_nsteps_per_day(c))
+          this%irrig_rate_demand_patch(p) = deficit(c) / &
+             (this%dtime*this%irrig_nsteps_per_day(c))
+       ! else
           !    this%sfc_irrig_rate_patch(p) = 0._r8
           !    this%irrig_rate_demand_patch(p) = 0._r8
           ! endif
@@ -1687,10 +1689,11 @@ contains
           this%n_irrig_steps_left_patch(p) = this%irrig_nsteps_per_day(c)
        end if
     end do
+
   end subroutine CalcIrrigationNeeded
 
   !-----------------------------------------------------------------------
-  function PointNeedsCheckForIrrig(this, pft_type, p, elai, londeg) & ! as many irrig params are different over patches or columns, a param indicating the patch is added
+  function PointNeedsCheckForIrrig(this, pft_type, p, elai, londeg) &
        result(check_for_irrig)
     !
     ! !DESCRIPTION:
@@ -1699,18 +1702,18 @@ contains
     ! !USES:
     use clm_time_manager, only : get_local_time
     use pftconMod       , only : pftcon
-	use PatchType       , only : patch
+    use PatchType       , only : patch
     !
     ! !ARGUMENTS:
     logical :: check_for_irrig  ! function result
     class(irrigation_type), intent(in) :: this
     integer , intent(in) :: pft_type  ! type of pft in this patch
-	integer , intent(in) :: p  ! type of pft in this patch
-	integer :: c  ! the column of this patch
+    integer , intent(in) :: p         ! index of this patch
     real(r8), intent(in) :: elai      ! one-sided leaf area index with burying by snow
     real(r8), intent(in) :: londeg    ! longitude (degrees)
     !
     ! !LOCAL VARIABLES:
+    integer :: c  ! the column of this patch
     ! number of seconds since the prescribed irrigation start time
     integer  :: seconds_since_irrig_start_time
 
@@ -1720,7 +1723,7 @@ contains
     if (pftcon%irrigated(pft_type) == 1._r8 .and. &
          elai > this%params%irrig_min_lai) then
        ! see if it's the right time of day to start irrigating:
-	   c = patch%column(p)
+       c = patch%column(p)
        seconds_since_irrig_start_time = get_local_time( londeg, starttime=this%irrig_start_time_column(c), offset=-this%dtime )
        if (seconds_since_irrig_start_time < this%dtime) then
           check_for_irrig         = .true.

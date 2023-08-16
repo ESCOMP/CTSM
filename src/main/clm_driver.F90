@@ -381,8 +381,8 @@ contains
        call PrescribedSoilMoistureAdvance( bounds_proc )
        call t_stopf('prescribed_sm')
     endif
-	
-	! ============================================================================
+
+    ! ============================================================================
     ! If irrigation is prescribed from data streams set it here
     ! NOTE: This call needs to happen outside loops over nclumps (as streams are not threadsafe).
     ! ============================================================================
@@ -391,7 +391,7 @@ contains
        call PrescribedIrrigationAdvance( bounds_proc )
        call t_stopf('prescribed_irrig')
     endif
-	
+
     ! ============================================================================
     ! Initialize the column-level mass balance checks for water, carbon & nitrogen.
     !
@@ -802,6 +802,7 @@ contains
                volr               = water_inst%wateratm2lndbulk_inst%volrmch_grc(bounds_clump%begg:bounds_clump%endg), &
                rof_prognostic     = rof_prognostic)
           call t_stopf('irrigationneeded')
+
        end if
 
        ! ============================================================================
