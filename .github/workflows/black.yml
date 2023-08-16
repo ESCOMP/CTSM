@@ -23,15 +23,15 @@ jobs:
         - uses: psf/black@stable
           with:
              options: "--check --config python/pyproject.toml"
-             src: "/cime_config/SystemTests"
+             src: "./cime_config/SystemTests"
              version: "22.3.0"
         - uses: psf/black@stable
           with:
              options: "--check --config python/pyproject.toml"
-             src: "/cime_config/buildlib"
+             src: "./cime_config/buildlib"
              version: "22.3.0"
         - uses: psf/black@stable
           with:
              options: "--check --config python/pyproject.toml"
-             src: "/cime_config/buildnml"
+             src: "./cime_config/buildnml"
              version: "22.3.0"
