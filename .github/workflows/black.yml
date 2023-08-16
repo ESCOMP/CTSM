@@ -16,10 +16,6 @@ jobs:
              # Use options and version identical to the conda environment
              # Using pyproject.toml makes sure this testing is consistent with our python directory testing
              options: "--check --config python/pyproject.toml"
-             src:
-                      - "./python"
-                      - "/cime_config/SystemTests"
-                      - "/cime_config/buildlib"
-                      - "/cime_config/buildnml"
+             src: [ "./python", "/cime_config/SystemTests",  "/cime_config/buildlib",  "/cime_config/buildnml" ]
              # Version should be coordinated with the ctsm_pylib conda environment under the python directory
              version: "22.3.0"
