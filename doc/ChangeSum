@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev134   rgknox 08/16/2023 Migration of FATES to share normal soil BGC call sequence and functionality
     ctsm5.1.dev133 glemieux 08/09/2023 FATES API update to facilitate fates refactor
     ctsm5.1.dev132   slevis 08/04/2023 Add parameterization to allow excess ice in soil and subsidence
     ctsm5.1.dev131 samrabin 07/27/2023 Enable prescribed crop calendars
