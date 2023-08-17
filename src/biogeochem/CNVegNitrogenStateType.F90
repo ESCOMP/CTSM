@@ -69,9 +69,7 @@ module CNVegNitrogenStateType
      real(r8), pointer :: totvegn_col                         (:) ! (gN/m2) total vegetation nitrogen (p2c)
      real(r8), pointer :: totn_patch                          (:) ! (gN/m2) total patch-level nitrogen
      real(r8), pointer :: totn_p2c_col                        (:) ! (gN/m2) totn_patch averaged to col
-     real(r8), pointer :: totn_col                            (:) ! (gN/m2) total column nitrogen, incl veg
-     real(r8), pointer :: totecosysn_col                      (:) ! (gN/m2) total ecosystem nitrogen, incl veg  
-     real(r8), pointer :: totn_grc                            (:) ! (gN/m2) total gridcell nitrogen
+    
 
     ! acc spinup for matrix solution
 
@@ -98,40 +96,49 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds,  &
-       leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, deadstemc_patch)
+       leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, &
+       deadstemc_patch, alloc_full_veg)
 
     class(cnveg_nitrogenstate_type)   :: this
     type(bounds_type) , intent(in)    :: bounds  
-    real(r8)          , intent(in)    :: leafc_patch          (bounds%begp:)
-    real(r8)          , intent(in)    :: leafc_storage_patch  (bounds%begp:)
-    real(r8)          , intent(in)    :: frootc_patch         (bounds%begp:)     
-    real(r8)          , intent(in)    :: frootc_storage_patch (bounds%begp:)     
-    real(r8)          , intent(in)    :: deadstemc_patch      (bounds%begp:)
-
-    call this%InitAllocate (bounds )
-    call this%InitHistory (bounds)
-    call this%InitCold ( bounds, &
-         leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, deadstemc_patch)
-
+    real(r8)          , intent(in)    :: leafc_patch         (:) !(begp:)
+    real(r8)          , intent(in)    :: leafc_storage_patch (:) !(begp:)
+    real(r8)          , intent(in)    :: frootc_patch        (:) !(begp:)     
+    real(r8)          , intent(in)    :: frootc_storage_patch(:) !(begp:)     
+    real(r8)          , intent(in)    :: deadstemc_patch     (:) !(begp:)
+    logical           , intent(in)    :: alloc_full_veg
+    
+    call this%InitAllocate (bounds, alloc_full_veg)
+    if(alloc_full_veg) then
+       call this%InitHistory (bounds)
+       call this%InitCold ( bounds, &
+            leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, deadstemc_patch)
+    end if
   end subroutine Init
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds)
+  subroutine InitAllocate(this, bounds, alloc_full_veg)
     !
     ! !ARGUMENTS:
     class (cnveg_nitrogenstate_type) :: this
-    type(bounds_type) , intent(in) :: bounds  
+    type(bounds_type) , intent(in) :: bounds
+    logical,intent(in)             :: alloc_full_veg
     !
     ! !LOCAL VARIABLES:
     integer           :: begp,endp
     integer           :: begc,endc
     integer           :: begg,endg
     !------------------------------------------------------------------------
-
-    begp = bounds%begp; endp = bounds%endp
-    begc = bounds%begc; endc = bounds%endc
-    begg = bounds%begg; endg = bounds%endg
-
+    if(alloc_full_veg) then
+       begp = bounds%begp; endp = bounds%endp
+       begc = bounds%begc; endc = bounds%endc
+       begg = bounds%begg; endg = bounds%endg
+    else
+       begp = 0; endp = 0
+       begc = 0; endc = 0
+       begg = 0; endg = 0
+    end if
+       
     allocate(this%reproductiven_patch             (begp:endp, nrepr)) ; this%reproductiven_patch               (:,:) = nan
     allocate(this%reproductiven_storage_patch     (begp:endp, nrepr)) ; this%reproductiven_storage_patch       (:,:) = nan
     allocate(this%reproductiven_xfer_patch        (begp:endp, nrepr)) ; this%reproductiven_xfer_patch          (:,:) = nan
@@ -167,9 +174,7 @@ contains
     allocate(this%seedn_grc                              (begg:endg)) ; this%seedn_grc                           (:) = nan
     allocate(this%totvegn_col                            (begc:endc)) ; this%totvegn_col                         (:) = nan
     allocate(this%totn_p2c_col                           (begc:endc)) ; this%totn_p2c_col                        (:) = nan
-    allocate(this%totn_col                               (begc:endc)) ; this%totn_col                            (:) = nan
-    allocate(this%totecosysn_col                         (begc:endc)) ; this%totecosysn_col                      (:) = nan
-    allocate(this%totn_grc                               (begg:endg)) ; this%totn_grc                            (:) = nan
+    
 
     ! Matrix solution allocations
     if ( use_matrixcn )then
@@ -376,15 +381,7 @@ contains
          avgflag='A', long_name='pool for seeding new PFTs via dynamic landcover', &
          ptr_gcell=this%seedn_grc)
 
-    this%totecosysn_col(begc:endc) = spval
-    call hist_addfld1d (fname='TOTECOSYSN', units='gN/m^2', &
-         avgflag='A', long_name='total ecosystem N, excluding product pools', &
-         ptr_col=this%totecosysn_col)
 
-    this%totn_col(begc:endc) = spval
-    call hist_addfld1d (fname='TOTCOLN', units='gN/m^2', &
-         avgflag='A', long_name='total column-level N, excluding product pools', &
-         ptr_col=this%totn_col)
 
   end subroutine InitHistory
 
@@ -558,16 +555,13 @@ contains
        l = col%landunit(c)
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           ! total nitrogen pools
-          this%totecosysn_col(c) = 0._r8
           this%totn_p2c_col(c)   = 0._r8
-          this%totn_col(c)       = 0._r8
        end if
     end do
 
 
     do g = bounds%begg, bounds%endg
        this%seedn_grc(g) = 0._r8
-       this%totn_grc(g)  = 0._r8
     end do
 
     ! now loop through special filters and explicitly set the variables that
@@ -1024,11 +1018,8 @@ contains
 
     do fi = 1,num_column
        i = filter_column(fi)
-
-       this%totecosysn_col(i)                                            = value_column
        this%totvegn_col(i)                                               = value_column
        this%totn_p2c_col(i)                                              = value_column
-       this%totn_col(i)                                                  = value_column
     end do
 
   end subroutine SetValues
@@ -1057,24 +1048,20 @@ contains
   end subroutine ZeroDwt
 
   !-----------------------------------------------------------------------
-  subroutine Summary_nitrogenstate(this, bounds, num_allc, filter_allc, &
-       num_soilc, filter_soilc, num_soilp, filter_soilp,&
-       soilbiogeochem_nitrogenstate_inst)
+  subroutine Summary_nitrogenstate(this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
     !
     ! !USES:
     use subgridAveMod, only : p2c
-    use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+
     !
     ! !ARGUMENTS:
     class(cnveg_nitrogenstate_type)                      :: this
     type(bounds_type)                       , intent(in) :: bounds  
-    integer                                 , intent(in) :: num_allc        ! number of columns in allc filter
-    integer                                 , intent(in) :: filter_allc(:)  ! filter for all active columns
     integer                                 , intent(in) :: num_soilc       ! number of soil columns in filter
     integer                                 , intent(in) :: filter_soilc(:) ! filter for soil columns
     integer                                 , intent(in) :: num_soilp       ! number of soil patches in filter
     integer                                 , intent(in) :: filter_soilp(:) ! filter for soil patches
-    type(soilbiogeochem_nitrogenstate_type) , intent(in) :: soilbiogeochem_nitrogenstate_inst
+
     !
     ! !LOCAL VARIABLES:
     integer  :: c,p,j,k,l ! indices
@@ -1148,38 +1135,16 @@ contains
     ! --------------------------------------------
     ! column level summary
     ! --------------------------------------------
+    if(num_soilp>0)then
+       call p2c(bounds, num_soilc, filter_soilc, &
+            this%totvegn_patch(bounds%begp:bounds%endp), &
+            this%totvegn_col(bounds%begc:bounds%endc))
+       
+       call p2c(bounds, num_soilc, filter_soilc, &
+            this%totn_patch(bounds%begp:bounds%endp), &
+            this%totn_p2c_col(bounds%begc:bounds%endc))
+    end if
 
-    call p2c(bounds, num_soilc, filter_soilc, &
-         this%totvegn_patch(bounds%begp:bounds%endp), &
-         this%totvegn_col(bounds%begc:bounds%endc))
-
-    call p2c(bounds, num_soilc, filter_soilc, &
-         this%totn_patch(bounds%begp:bounds%endp), &
-         this%totn_p2c_col(bounds%begc:bounds%endc))
-
-    do fc = 1,num_allc
-       c = filter_allc(fc)
-
-       ! total ecosystem nitrogen, including veg (TOTECOSYSN)
-       this%totecosysn_col(c) =    &
-            soilbiogeochem_nitrogenstate_inst%cwdn_col(c)    + &
-            soilbiogeochem_nitrogenstate_inst%totlitn_col(c) + &
-            soilbiogeochem_nitrogenstate_inst%totmicn_col(c) + &
-            soilbiogeochem_nitrogenstate_inst%totsomn_col(c) + &
-            soilbiogeochem_nitrogenstate_inst%sminn_col(c)   + &
-            this%totvegn_col(c)                              
-
-       ! total column nitrogen, including patch (TOTCOLN)
-
-       this%totn_col(c) = this%totn_p2c_col(c)               + &
-            soilbiogeochem_nitrogenstate_inst%cwdn_col(c)    + &
-            soilbiogeochem_nitrogenstate_inst%totlitn_col(c) + &
-            soilbiogeochem_nitrogenstate_inst%totmicn_col(c) + &
-            soilbiogeochem_nitrogenstate_inst%totsomn_col(c) + &
-            soilbiogeochem_nitrogenstate_inst%sminn_col(c)   + &
-            soilbiogeochem_nitrogenstate_inst%ntrunc_col(c)
-
-    end do
 
   end subroutine Summary_nitrogenstate
 
