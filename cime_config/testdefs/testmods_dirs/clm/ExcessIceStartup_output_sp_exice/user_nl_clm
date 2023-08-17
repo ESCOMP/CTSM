@@ -1,0 +1,3 @@
+ use_excess_ice = .true.
+ finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.I1850Clm50Sp.0003-01-01.0.9x1.25_gx1v7_exice_simyr1850_c221205.nc'
+ use_init_interp = .true.

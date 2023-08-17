@@ -25,11 +25,63 @@ module CNNStateUpdate3Mod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public:: NStateUpdate3
+  public :: NStateUpdate3
+  public :: NStateUpdateLeaching
   !-----------------------------------------------------------------------
 
 contains
 
+  subroutine NStateUpdateLeaching(num_soilc, filter_soilc, &
+       soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+    !
+    ! !DESCRIPTION:
+    ! On the radiation time step, update all the prognostic nitrogen state
+    ! variables affected by the Sminn leaching flux.
+    ! RGK: This code was separated from gap mortality fluxes to make this
+    ! compatible with FATES.
+    !
+    ! !ARGUMENTS:
+    integer                                 , intent(in)    :: num_soilc       ! number of soil columns in filter
+    integer                                 , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
+    type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+
+    ! !LOCAL VARIABLES:
+    integer :: c,p,j,l,k        ! indices
+    integer :: fp,fc      ! lake filter indices
+    real(r8):: dt         ! radiation time step (seconds)
+    !-----------------------------------------------------------------------
+
+    associate(                                         & 
+         nf_soil => soilbiogeochem_nitrogenflux_inst , & ! Input
+         ns_soil => soilbiogeochem_nitrogenstate_inst  & ! Output
+         )
+
+      ! set time steps
+      dt = get_step_size_real()
+      
+      do j = 1, nlevdecomp
+         ! column loop
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            
+            if (.not. use_nitrif_denitrif) then
+               ! mineral N loss due to leaching
+               ns_soil%sminn_vr_col(c,j) = ns_soil%sminn_vr_col(c,j) - nf_soil%sminn_leached_vr_col(c,j) * dt
+            else
+               ! mineral N loss due to leaching and runoff
+               ns_soil%smin_no3_vr_col(c,j) = max( ns_soil%smin_no3_vr_col(c,j) - &
+                    ( nf_soil%smin_no3_leached_vr_col(c,j) + nf_soil%smin_no3_runoff_vr_col(c,j) ) * dt, 0._r8)
+               
+               ns_soil%sminn_vr_col(c,j) = ns_soil%smin_no3_vr_col(c,j) + ns_soil%smin_nh4_vr_col(c,j)
+            end if
+         end do
+      end do
+            
+    end associate
+    return
+  end subroutine NStateUpdateLeaching
+  
   !-----------------------------------------------------------------------
   subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, &
        cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
@@ -37,7 +89,7 @@ contains
     !
     ! !DESCRIPTION:
     ! On the radiation time step, update all the prognostic nitrogen state
-    ! variables affected by gap-phase mortality fluxes. Also the Sminn leaching flux.
+    ! variables affected by gap-phase mortality fluxes. 
     ! NOTE - associate statements have been removed where there are
     ! no science equations. This increases readability and maintainability.
     !
@@ -72,20 +124,8 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
 
-            if (.not. use_nitrif_denitrif) then
-               ! mineral N loss due to leaching
-               ns_soil%sminn_vr_col(c,j) = ns_soil%sminn_vr_col(c,j) - nf_soil%sminn_leached_vr_col(c,j) * dt
-            else
-               ! mineral N loss due to leaching and runoff
-               ns_soil%smin_no3_vr_col(c,j) = max( ns_soil%smin_no3_vr_col(c,j) - &
-                    ( nf_soil%smin_no3_leached_vr_col(c,j) + nf_soil%smin_no3_runoff_vr_col(c,j) ) * dt, 0._r8)
-
-               ns_soil%sminn_vr_col(c,j) = ns_soil%smin_no3_vr_col(c,j) + ns_soil%smin_nh4_vr_col(c,j)
-            end if
-
             ! column level nitrogen fluxes from fire
             ! patch-level wood to column-level CWD (uncombusted wood)
-
             !
             ! State update without the matrix solution
             !

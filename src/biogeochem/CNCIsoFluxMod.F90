@@ -1324,12 +1324,12 @@ contains
             ! in the line above
             do i = i_met_lit+1, i_litr_max
                iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i) = &
-                  iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i) + &
-                  (iso_cnveg_cf%m_leafc_to_litter_fire_patch(pp) * lf_f(ivt(pp),i) * leaf_prof(pp,j) + &
-                  iso_cnveg_cf%m_frootc_to_litter_fire_patch(pp) * fr_f(ivt(pp),i) * froot_prof(pp,j)) * patch%wtcol(pp)
+                    iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i) + &
+                    (iso_cnveg_cf%m_leafc_to_litter_fire_patch(pp) * lf_f(ivt(pp),i) * leaf_prof(pp,j) + &
+                    iso_cnveg_cf%m_frootc_to_litter_fire_patch(pp) * fr_f(ivt(pp),i) * froot_prof(pp,j)) * patch%wtcol(pp)
             end do
          end do
-      end do                     
+      end do
 
     end associate
 
@@ -1533,6 +1533,7 @@ contains
 
           end do
        end do
+
 
      end associate
 

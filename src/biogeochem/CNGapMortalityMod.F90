@@ -310,7 +310,7 @@ contains
            froot_prof_patch(bounds%begp:bounds%endp, 1:nlevdecomp_full), & 
            croot_prof_patch(bounds%begp:bounds%endp, 1:nlevdecomp_full), &
            stem_prof_patch(bounds%begp:bounds%endp, 1:nlevdecomp_full))
-
+      
     end associate
 
   end subroutine CNGapMortality
