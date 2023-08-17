@@ -2866,4 +2866,38 @@ use case.)
 
 </entry>
 
+<!-- ========================================================================================  -->
+<!-- Namelist options related to excess ice                                                    -->
+<!-- ========================================================================================  -->
+<entry id="use_excess_ice" type="logical" category="clm_physics"
+        group="clm_inparm" valid_values="" >
+If TRUE turn on the excess ice physics, (Lee et al., 2014; Cai et al., 2020)
+</entry>
+
+<entry id="use_excess_ice_streams" type="logical" category="clm_physics"
+        group="exice_streams" valid_values="" >
+If TRUE and use_excess_ice is TRUE, use the excess ice stream to determine the initial values of the excess ice field
+if FALSE and use_excess_ice is TRUE, expect excess ice to come from the initial conditions or restart file
+Expect to be FALSE is use_excess_ice is FALSE
+</entry>
+
+<entry id="stream_fldfilename_exice" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="exice_streams" valid_values="" >
+Filename of input stream data for excess ice data
+</entry>
+
+<entry id="stream_meshfile_exice" type="char*256" category="datasets"
+       input_pathname="abs" group="exice_streams" valid_values="" >
+mesh filename of input stream data for excess ice
+</entry>
+
+<entry id="stream_mapalgo_exice" type="char*256" category="datasets"
+       group="exice_streams" valid_values="bilinear,nn,none" >
+Mapping method from excess ice input stream data to the model resolution
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    none     = no interpolation
+</entry>
+
+
 </namelist_definition>
