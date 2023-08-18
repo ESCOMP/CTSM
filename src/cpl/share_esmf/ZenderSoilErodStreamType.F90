@@ -1,5 +1,5 @@
 module ZenderSoilErodStreamType
-#include "shr_assert.h"             ! What is this? In many modules but not dust module
+#include "shr_assert.h"
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -172,7 +172,8 @@ contains
   logical function UseStreams(this)
     !
     ! !DESCRIPTION:
-    ! Return true if
+    ! Return true if the Zender method is being used and the soil erodability
+    ! file is being used with it
     !
     ! !USES:
     !
@@ -216,21 +217,10 @@ contains
   end subroutine InitAllocate
 
   !==============================================================================
-  !subroutine CalcFinundated(this, bounds, num_soilc, filter_soilc, soilhydrology_inst, &
-  !                          waterdiagnosticbulk_inst, qflx_surf_lag_col, finundated )
-  !subroutine CalcDragPartition(this, bounds, num_nolakep, filter_nolakep, dpfct_rock)
   subroutine CalcDustSource(this, bounds, soil_erod)
     !
     ! !DESCRIPTION:
-    ! Commented below by dmleung 31 Dec 2022
-    ! Calculate the drag partition effect of friction velocity due to surface roughness following 
-    ! Leung et al. (2022).  This module is used in the dust emission module DUSTMod.F90 for 
-    ! calculating drag partitioning. The drag partition equation comes from Marticorena and 
-    ! Bergametti (1995) with constants modified by Darmenova et al. (2009). Here it is assumed 
-    ! that this equation is used only over arid/desertic regions, such that Catherine Prigent's
-    ! roughness measurements represents mostly rocks. For more vegetated areas, the vegetation
-    ! roughness and drag partitioning are calculated in the DustEmission subroutine. This 
-    ! subroutine is used in the InitCold subroutine of DUSTMod.F90.
+    !  Calculate the soil eroditability for the Zender dust method.
     !
     ! !USES:
     use ColumnType              , only : col
@@ -254,7 +244,7 @@ contains
     real(r8),parameter :: soil_erod_threshold = 0.1_r8   ! CAM soil erodibility threshold; below threshold -> soil_erod = 0_r8     11 Mar 2023
     !---------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(soil_erod)        == (/bounds%endc/)), sourcefile, __LINE__) !what's the use of this
+    SHR_ASSERT_ALL_FL((ubound(soil_erod)        == (/bounds%endc/)), sourcefile, __LINE__)
 
     !associate(                                                     &
          !z           =>   col%z                                   & ! Input:  [real(r8) (:,:) ]  layer depth (m) (-nlevsno+1:nlevsoi)
@@ -283,7 +273,8 @@ contains
   !==============================================================================
   subroutine ReadNML(this, bounds, NLFilename)
    !
-   ! Read the namelist data stream information.
+   ! Read the namelist data stream information for the Zender method soil
+   ! eroditability file
    !
    ! Uses:
    use shr_nl_mod       , only : shr_nl_find_group_name
