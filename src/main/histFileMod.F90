@@ -1076,7 +1076,17 @@ contains
 
     do f = n_fields-1, 1, -1
        do ff = 1, f
-          if (hist_list(ff)%field%name > hist_list(ff+1)%field%name) then
+          if (hist_list(ff)%field%num2d > hist_list(ff+1)%field%num2d) then
+
+             call tmp%copy(hist_list(ff))
+             call hist_list(ff  )%copy(hist_list(ff+1))
+             call hist_list(ff+1)%copy(tmp)
+
+          endif
+       enddo
+       do ff = 1, f
+          if ((hist_list(ff)%field%num2d == hist_list(ff+1)%field%num2d) .and. &
+               (hist_list(ff)%field%name > hist_list(ff+1)%field%name)) then
 
              call tmp%copy(hist_list(ff))
              call hist_list(ff  )%copy(hist_list(ff+1))
