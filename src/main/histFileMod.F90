@@ -1076,28 +1076,18 @@ contains
 
     do f = n_fields-1, 1, -1
        do ff = 1, f
-          if (hist_list(ff)%field%num2d > hist_list(ff+1)%field%num2d) then
+          ! First sort by size of level dimension (this presents a significant performance
+          ! improvement especially notable on lustre file systems such as on derecho);
+          ! then, within the list of fields with the same size of the level dimension,
+          ! sort alphabetically.
+          if (hist_list(ff)%field%num2d > hist_list(ff+1)%field%num2d .or. &
+               (hist_list(ff)%field%num2d == hist_list(ff+1)%field%num2d .and. &
+               hist_list(ff)%field%name > hist_list(ff+1)%field%name)) then
 
              call tmp%copy(hist_list(ff))
              call hist_list(ff  )%copy(hist_list(ff+1))
              call hist_list(ff+1)%copy(tmp)
 
-          endif
-       enddo
-       do ff = 1, f
-          if ((hist_list(ff)%field%num2d == hist_list(ff+1)%field%num2d) .and. &
-               (hist_list(ff)%field%name > hist_list(ff+1)%field%name)) then
-
-             call tmp%copy(hist_list(ff))
-             call hist_list(ff  )%copy(hist_list(ff+1))
-             call hist_list(ff+1)%copy(tmp)
-
-          else if (hist_list(ff)%field%name == hist_list(ff+1)%field%name) then
-
-             write(iulog,*) trim(subname),' ERROR: Duplicate field ', &
-                hist_list(ff)%field%name, &
-                't,ff,name=',t,ff,hist_list(ff+1)%field%name
-             call endrun(msg=errMsg(sourcefile, __LINE__))
           end if
        end do
     end do
