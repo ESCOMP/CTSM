@@ -16,6 +16,7 @@ module test_irrigation
   use decompMod, only : bounds_type
   use SoilHydrologyType, only : soilhydrology_type
   use SoilStateType, only : soilstate_type
+  use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
   use WaterFluxBulkType, only : waterfluxbulk_type
   use WaterType, only : water_type
   use PatchType     , only : patch
@@ -590,10 +591,11 @@ contains
     integer :: calc_fluxes_numc
     integer, allocatable :: calc_fluxes_filterc(:)
 
-    ! For the sake of the tests done here, it's currently fine for soilhydrology_inst and
-    ! soilstate_inst to be uninitialized
+    ! For the sake of the tests done here, it's currently fine for soilhydrology_inst,
+    ! soilstate_inst, and soil_water_retention_curve to be uninitialized
     type(soilhydrology_type) :: soilhydrology_inst
     type(soilstate_type) :: soilstate_inst
+    class(soil_water_retention_curve_type), allocatable :: soil_water_retention_curve
 
     character(len=*), parameter :: subname = 'calculateIrrigation'
     !-----------------------------------------------------------------------
@@ -632,7 +634,8 @@ contains
          filter_soilp = calc_fluxes_filterp, &
          soilhydrology_inst = soilhydrology_inst, &
          soilstate_inst = soilstate_inst, &
-         water_inst = this%water_inst)
+         water_inst = this%water_inst, &
+         soil_water_retention_curve = soil_water_retention_curve)
 
   end subroutine calculateIrrigation
 
