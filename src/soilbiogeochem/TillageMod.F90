@@ -30,6 +30,7 @@ module TillageMod
   logical  :: use_original_tillage ! Use get_tillage_multipliers_orig?
   real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, ntill_stages_max)
   integer, parameter :: ntill_stages_max = 3 ! How many different tillage phases are there? (Not including all-1 phases.)
+  real(r8), parameter :: max_tillage_depth = 0.32_r8 ! Maximum depth to till (m)
 
 !==============================================================================
 contains
@@ -247,6 +248,7 @@ contains
     !
     ! !USES
     use pftconMod , only : npcropmin
+    use clm_varcon, only : zisoi
     use PatchType , only : patch
     !
     ! !ARGUMENTS:
@@ -261,9 +263,8 @@ contains
     real(r8), dimension(ndecomp_pools) :: tillage_mults
     real(r8), dimension(ndecomp_pools) :: tillage_mults_1patch
 
-    if (.not. col%active(c) .or. j > 5) then
-        ! Top 5 layers (instead of all nlevdecomp) so that model only tills
-        ! the top 26-40 cm of the soil surface, rather than whole soil - MWGraham
+    ! TODO: Allow partially-tilled layers.
+    if (.not. col%active(c) .or. zisoi(j) > max_tillage_depth) then
         return
     end if
     
