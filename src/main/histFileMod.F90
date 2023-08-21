@@ -356,7 +356,7 @@ contains
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
-    integer, parameter :: ncol = 4  ! number of table columns
+    integer, parameter :: ncol = 5  ! number of table columns
     integer nf, i, j  ! do-loop counters
     integer hist_fields_file  ! file unit number
     integer width_col(ncol)  ! widths of table columns
@@ -390,13 +390,14 @@ contains
     if (masterproc .and. hist_fields_list_file) then
        ! Hardwired table column widths to fit the table on a computer
        ! screen. Some strings will be truncated as a result of the
-       ! current choices (35, 94, 65, 7). In sphinx (ie the web-based
+       ! current choices (35, 16, 94, 65, 7). In sphinx (ie the web-based
        ! documentation), text that has not been truncated will wrap
        ! around in the available space.
        width_col(1) = 35  ! variable name column
-       width_col(2) = 94  ! long description column
-       width_col(3) = 65  ! units column
-       width_col(4) = 7  ! active (T or F) column
+       width_col(2) = hist_dim_name_length  ! level dimension column
+       width_col(3) = 94  ! long description column
+       width_col(4) = 65  ! units column
+       width_col(5) = 7  ! active (T or F) column
        width_col_sum = sum(width_col) + ncol - 1  ! sum of widths & blank spaces
 
        ! Convert integer widths to strings for use in format statements
@@ -450,9 +451,9 @@ contains
        fmt_txt = '('//str_w_col_sum//'a)'
        write(hist_fields_file,fmt_txt) ('-', i=1, width_col_sum)
        ! Concatenate strings needed in format statement
-       fmt_txt = '(a'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//')'
+       fmt_txt = '(a'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//',x,a'//str_width_col(5)//')'
        write(hist_fields_file,fmt_txt) 'Variable Name',  &
-                                    'Long Description', 'Units', 'Active?'
+                           'Level Dim.', 'Long Description', 'Units', 'Active?'
 
        ! End header, same as header
        ! Concatenate strings needed in format statement
@@ -464,10 +465,11 @@ contains
 
        ! Main table
        ! Concatenate strings needed in format statement
-       fmt_txt = '(a'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',l'//str_width_col(4)//')'
+       fmt_txt = '(a'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//',l'//str_width_col(5)//')'
        do nf = 1,nallhistflds
           write(hist_fields_file,fmt_txt) &
              allhistfldlist(nf)%field%name,  &
+             allhistfldlist(nf)%field%type2d,  &
              allhistfldlist(nf)%field%long_name,  &
              allhistfldlist(nf)%field%units,  &
              allhistfldlist(nf)%actflag(1)
@@ -5369,7 +5371,7 @@ contains
     ! Add field to allhistfldlist
 
     call allhistfldlist_addfld (fname=trim(fname), numdims=1, type1d=l_type1d, &
-          type1d_out=l_type1d_out, type2d='unset', num2d=1, &
+          type1d_out=l_type1d_out, type2d='-', num2d=1, &
           units=units, avgflag=avgflag, long_name=long_name, hpindex=hpindex, &
           p2c_scale_type=scale_type_p2c, c2l_scale_type=scale_type_c2l, &
           l2g_scale_type=scale_type_l2g)
