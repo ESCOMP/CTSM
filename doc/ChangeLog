@@ -1,7 +1,7 @@
 ===============================================================
-Tag name: ctsm5.1.dev135
+Tag name: ctsm5.1.dev136
 Originator(s): Ronny Meier,  slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Thu Aug 17 11:44:09 MDT 2023
+Date: Mon Aug 21 17:35:00 MDT 2023
 One-line Summary: Surface roughness modifications
 
 Purpose and description of changes
@@ -159,6 +159,72 @@ Other details
 -------------
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/2045
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev135
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Mon Aug 21 15:06:35 MDT 2023
+One-line Summary: Rename hist fields to track them down more easily
+
+Purpose and description of changes
+----------------------------------
+
+ Renaming history fields to make easier to find in lists, e.g. when
+ using ncview. For example, litter fields like MET_LIT and STR_LIT
+ will be LIT_MET and LIT_STR.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+ Fixes #2095
+
+
+Testing summary:
+----------------
+[Remove any lines that don't apply.]
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+ Sam L. ran the LMWG diag. pkg and found only one plot affected by this
+ PR's changes. In particular, set 6 CWD_C, which was CWDC
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+ No. Field lists differ. In some tests, the namelists differ.
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2106
 
 ===============================================================
 ===============================================================
