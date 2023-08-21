@@ -8,7 +8,7 @@ module clm_instMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use decompMod       , only : bounds_type
   use clm_varpar      , only : ndecomp_pools, nlevdecomp_full
-  use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates
+  use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates, use_fates_bgc
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_crop, snow_cover_fraction_method, paramfile
   use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, no_soil_decomp, century_decomp, decomp_method
@@ -231,7 +231,6 @@ contains
 
     allocate (h2osno_col(begc:endc))
     allocate (snow_depth_col(begc:endc))
-
     ! snow water
     do c = begc,endc
        l = col%landunit(c)
@@ -371,7 +370,7 @@ contains
 
     call drydepvel_inst%Init(bounds)
 
-    if (decomp_method /= no_soil_decomp) then
+    if_decomp: if (decomp_method /= no_soil_decomp) then
 
        ! Initialize soilbiogeochem_state_inst
 
@@ -423,9 +422,10 @@ contains
        call SoilBiogeochemPrecisionControlInit( soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
                                                 c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst)
 
-    end if ! end of if use_cn 
+    end if if_decomp
 
     ! Note - always call Init for bgc_vegetation_inst: some pieces need to be initialized always
+    ! Even for a FATES simulation, we call this to initialize product pools
     call bgc_vegetation_inst%Init(bounds, nlfilename, GetBalanceCheckSkipSteps(), params_ncid )
 
     if (use_cn .or. use_fates) then
@@ -553,7 +553,7 @@ contains
        call ch4_inst%restart(bounds, ncid, flag=flag)
     end if
 
-    if ( use_cn ) then
+    if ( use_cn .or. use_fates_bgc) then
        ! Need to do vegetation restart before soil bgc restart to get totvegc_col for purpose
        ! of resetting soil carbon at exit spinup when no vegetation is growing.
        call bgc_vegetation_inst%restart(bounds, ncid, flag=flag)
@@ -591,7 +591,8 @@ contains
             canopystate_inst=canopystate_inst, &
             soilstate_inst=soilstate_inst, &
             active_layer_inst=active_layer_inst, &
-            soilbiogeochem_carbonflux_inst=soilbiogeochem_carbonflux_inst)
+            soilbiogeochem_carbonflux_inst=soilbiogeochem_carbonflux_inst, & 
+            soilbiogeochem_nitrogenflux_inst=soilbiogeochem_nitrogenflux_inst)
 
     end if
 
