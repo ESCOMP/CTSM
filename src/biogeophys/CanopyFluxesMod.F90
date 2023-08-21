@@ -332,7 +332,6 @@ contains
     real(r8) :: cir(bounds%begp:bounds%endp)         ! atmos. radiation temporay set
     real(r8) :: dc1,dc2                              ! derivative of energy flux [W/m2/K]
     real(r8) :: delt                                 ! temporary
-    real(r8) :: delt_threshold                       ! temporary
     real(r8) :: delq(bounds%begp:bounds%endp)        ! temporary
     real(r8) :: del(bounds%begp:bounds%endp)         ! absolute change in leaf temp in current iteration [K]
     real(r8) :: del2(bounds%begp:bounds%endp)        ! change in leaf temperature in previous iteration [K]
@@ -895,8 +894,7 @@ bioms:   do f = 1, fn
             z0mv(p)   = exp(egvf * log(z0mv(p)) + (1._r8 - egvf) * log(z0mg(c)))
 
          case ('Meier2022')
-            delt_threshold = 1.e-4
-            lt = max(delt_threshold, elai(p) + esai(p))
+            lt = max(1.e-5_r8, elai(p) + esai(p))
             displa(p) = htop(p) * (1._r8 - (1._r8 - exp(-(cd1_param * lt)**0.5_r8)) / (cd1_param*lt)**0.5_r8)
 
             lt = min(lt,z0v_LAImax(patch%itype(p)))
@@ -906,7 +904,7 @@ bioms:   do f = 1, fn
                       *z0v_c(patch%itype(p)) * lt * 0.25_r8
             U_ustar = U_ustar_ini
 
-            do while (delt > delt_threshold)
+            do while (delt > 1.e-4_r8)
                U_ustar_prev = U_ustar
                U_ustar = U_ustar_ini * exp(U_ustar_prev)
                delt = abs(U_ustar - U_ustar_prev)
