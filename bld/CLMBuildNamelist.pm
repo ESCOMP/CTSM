@@ -4381,6 +4381,13 @@ sub setup_logic_z0param {
    my $z0param_method = remove_leading_and_trailing_quotes($nl->get_value('z0param_method' ));  
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_z0m_snowmelt',
            'z0param_method'=>$z0param_method );
+
+   my $use_z0m_snowmelt = $nl->get_value( 'use_z0m_snowmelt' );
+
+   if ( $z0param_method eq "ZengWang2007" && defined($use_z0m_snowmelt) && value_is_true($use_z0m_snowmelt)) {
+      $log->fatal_error("use_z0m_snowmelt must be .false. when z0param_method = $z0param_method.\n $@");
+   }
+
 }
 
 #-------------------------------------------------------------------------------
