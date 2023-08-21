@@ -249,7 +249,7 @@ module clm_varctl
   !  Surface roughness parameterization
   !----------------------------------------------------------
 
-  character(len=64), public :: z0param_method
+  character(len=64), public :: z0param_method  ! ZengWang2007 or Meier2022
   logical, public :: use_z0m_snowmelt = .false.         ! true => use snow z0m parameterization of Brock2006
   
 
