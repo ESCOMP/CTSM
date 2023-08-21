@@ -2895,4 +2895,9 @@ Whether to till crop soil, and if so, with what intensity.
 Toggle to use original tillage logic, with bug for seasons crossing into a new calendar year
 </entry>
 
+<entry id="max_tillage_depth" type="real" category="physics"
+       group="tillage_inparm" valid_values="" value="0.32d00">
+Maximum depth to till soil (m).
+</entry>
+
 </namelist_definition>

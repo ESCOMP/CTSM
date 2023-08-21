@@ -30,7 +30,7 @@ module TillageMod
   logical  :: use_original_tillage ! Use get_tillage_multipliers_orig?
   real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, ntill_stages_max)
   integer, parameter :: ntill_stages_max = 3 ! How many different tillage phases are there? (Not including all-1 phases.)
-  real(r8), parameter :: max_tillage_depth = 0.32_r8 ! Maximum depth to till (m)
+  real(r8)           :: max_tillage_depth ! Maximum depth to till (m)
 
 !==============================================================================
 contains
@@ -53,11 +53,13 @@ contains
 
     namelist /tillage_inparm/    &
         tillage_mode,            &
-        use_original_tillage
+        use_original_tillage,    &
+        max_tillage_depth
 
     ! Default values
     tillage_mode = 'off'
     use_original_tillage = .false.
+    max_tillage_depth = 0.32_r8
 
     ! Read tillage namelist
     if (masterproc) then
@@ -75,12 +77,14 @@ contains
      endif
      call shr_mpi_bcast(tillage_mode, mpicom)
      call shr_mpi_bcast(use_original_tillage , mpicom)
+     call shr_mpi_bcast(max_tillage_depth, mpicom)
 
      if (masterproc) then
         write(iulog,*) ' '
         write(iulog,*) 'tillage settings:'
         write(iulog,*) '  tillage_mode  = ',tillage_mode
         write(iulog,*) '  use_original_tillage   = ',use_original_tillage
+        write(iulog,*) '  max_tillage_depth = ',max_tillage_depth
      endif
 
      ! Assign these
