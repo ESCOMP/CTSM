@@ -262,9 +262,16 @@ contains
     real    :: sumwt ! sum of all patch weights, to check
     real(r8), dimension(ndecomp_pools) :: tillage_mults
     real(r8), dimension(ndecomp_pools) :: tillage_mults_1patch
+    real(r8) :: layer_top ! Depth (cm) of the top of this soil layer. zisoi is the depth of the bottom.
+    real(r8) :: layer_thickness ! Thickness of this soil layer (m)
+    real(r8) :: fraction_tilled ! Fraction of this layer that's within the tillage depth
 
-    ! TODO: Allow partially-tilled layers.
-    if (.not. col%active(c) .or. zisoi(j) > max_tillage_depth) then
+    if (j == 1) then
+        layer_top = 0._r8
+    else
+        layer_top = zisoi(j-1)
+    end if                                                   
+    if (.not. col%active(c) .or. layer_top > max_tillage_depth) then
         return
     end if
     
@@ -300,6 +307,12 @@ contains
     elseif (abs(1.0_r8 - sumwt) > 1.e-6_r8) then
         call endrun('ERROR Active crop patch weights does not sum to 1')
     end if
+
+    ! Adjust tillage_mults to consider fraction of this layer that's within tillage depth
+    layer_thickness = zisoi(j) - layer_top
+    fraction_tilled = max(0._r8, min(1._r8, (max_tillage_depth - layer_top) / layer_thickness))
+    tillage_mults = tillage_mults *          fraction_tilled &
+                    + 1._r8       * (1._r8 - fraction_tilled)
 
     ! Apply
     decomp_k = decomp_k * tillage_mults(:)
