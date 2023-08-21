@@ -129,7 +129,7 @@ contains
     case( no_soil_decomp ) 
        return
     case( century_decomp ) 
-        tString = 'till_decompk_multipliers'
+        tString = 'bgc_till_decompk_multipliers'
     case( mimics_decomp )
         tString = 'mimics_till_decompk_multipliers'
     case default

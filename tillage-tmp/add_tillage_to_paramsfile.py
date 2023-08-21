@@ -103,9 +103,11 @@ def make_dataarray(np_array, decomp_model, ntill_intensities_max, ndecomp_pools_
         )
     
     # Name DataArray
-    da_name = "till_decompk_multipliers"
-    if "mimics" in decomp_model.lower():
-        da_name = "mimics_" + da_name
+    if decomp_model.lower() == "mimics":
+        da_name = "mimics"
+    elif decomp_model.lower() == "century":
+        da_name = "bgc"
+    da_name += "_till_decompk_multipliers"
         
     da = xr.DataArray(
         data = np_array,
