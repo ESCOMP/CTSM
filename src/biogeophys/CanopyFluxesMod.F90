@@ -332,6 +332,7 @@ contains
     real(r8) :: cir(bounds%begp:bounds%endp)         ! atmos. radiation temporay set
     real(r8) :: dc1,dc2                              ! derivative of energy flux [W/m2/K]
     real(r8) :: delt                                 ! temporary
+    real(r8) :: delt_threshold                       ! temporary
     real(r8) :: delq(bounds%begp:bounds%endp)        ! temporary
     real(r8) :: del(bounds%begp:bounds%endp)         ! absolute change in leaf temp in current iteration [K]
     real(r8) :: del2(bounds%begp:bounds%endp)        ! change in leaf temperature in previous iteration [K]
@@ -894,16 +895,18 @@ bioms:   do f = 1, fn
             z0mv(p)   = exp(egvf * log(z0mv(p)) + (1._r8 - egvf) * log(z0mg(c)))
 
          case ('Meier2022')
-            lt = max(0.00001_r8,elai(p)+esai(p))
+            delt_threshold = 1.e-4
+            lt = max(delt_threshold, elai(p) + esai(p))
             displa(p) = htop(p) * (1._r8 - (1._r8 - exp(-(cd1_param * lt)**0.5_r8)) / (cd1_param*lt)**0.5_r8)
 
             lt = min(lt,z0v_LAImax(patch%itype(p)))
             delt = 2._r8
+            ! Reminder that (...)**(-0.5) = 1 / sqrt(...)
             U_ustar_ini = (z0v_Cs(patch%itype(p)) + z0v_Cr(patch%itype(p)) * lt * 0.5_r8)**(-0.5_r8) &
                       *z0v_c(patch%itype(p)) * lt * 0.25_r8
             U_ustar = U_ustar_ini
 
-            do while (delt > 0.0001_r8)
+            do while (delt > delt_threshold)
                U_ustar_prev = U_ustar
                U_ustar = U_ustar_ini * exp(U_ustar_prev)
                delt = abs(U_ustar - U_ustar_prev)
@@ -1066,10 +1069,6 @@ bioms:   do f = 1, fn
             ! changed by K.Sakaguchi from here
             ! transfer coefficient over bare soil is changed to a local variable
             ! just for readability of the code (from line 680)
-            ! RM: Does this need to be updated if Ya08 is used too? Proposed formulation (definitely double-check!)
-            ! , interpreting the statement below as csoilb = vkc / ln(z0mg/z0hg):
-            ! csoilb = vkc / log( z0mg(c) / ( 70._r8 * nu_param / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) *
-            ! (abs(temp1(p)*dth(p)))**(0.25_r8)) ) ) 
             csoilb = vkc / (params_inst%a_coef * (z0mg(c) * uaf(p) / nu_param)**params_inst%a_exp)
             
 

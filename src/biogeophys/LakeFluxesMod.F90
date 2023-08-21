@@ -94,6 +94,7 @@ contains
     use clm_varcon          , only : hvap, hsub, hfus, cpair, cpliq, tkwat, tkice, tkair
     use clm_varcon          , only : sb, vkc, grav, denh2o, tfrz, spval, rpi
     use clm_varcon          , only : beta_param, nu_param, b1_param, b4_param
+    use clm_varcon          , only : meier_param1, meier_param2, meier_param3
     use clm_varctl          , only : use_lch4, z0param_method, use_z0m_snowmelt
     use LakeCon             , only : betavis, z0frzlake, tdmax, emg_lake
     use LakeCon             , only : lake_use_old_fcrit_minz0
@@ -341,7 +342,7 @@ contains
                z0mg(p) = params_inst%zglc
 
 
-               z0hg(p) = 70._r8 * nu_param / ust_lake(c) ! For initial guess assume tstar = 0
+               z0hg(p) = meier_param3 * nu_param / ust_lake(c) ! For initial guess assume tstar = 0
 
             case ('ZengWang2007')
                z0mg(p) = z0frzlake
@@ -353,7 +354,7 @@ contains
                if ( snomelt_accum(c) < 1.e-5_r8 ) then
                   z0mg(p) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8
                else
-                  z0mg(p) = exp(b1_param * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8)) + b4_param) * 1.e-3_r8
+                  z0mg(p) = exp(b1_param * (atan((log10(snomelt_accum(c)) + meier_param1) / meier_param2)) + b4_param) * 1.e-3_r8
                end if
             else
                z0mg(p) = params_inst%zsno
@@ -361,7 +362,7 @@ contains
 
             select case (z0param_method)
             case ('Meier2022') 
-               z0hg(p) = 70._r8 * nu_param / ust_lake(c) ! For initial guess assume tstar = 0
+               z0hg(p) = meier_param3 * nu_param / ust_lake(c) ! For initial guess assume tstar = 0
             case ('ZengWang2007')
                z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / nu_param)**params_inst%a_exp) ! Consistent with BareGroundFluxes
             end select
@@ -593,8 +594,9 @@ contains
                select case (z0param_method)
                case ('Meier2022') 
                   z0mg(p) = params_inst%zglc
-                  
-                  z0hg(p) = 70._r8 * nu_param / ustar(p) * exp( -beta_param * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Consistent with BareGroundFluxes 
+                  ! (...)**0.5 = sqrt(...) and (...)**0.25 = sqrt(sqrt(...))
+                  ! likely more efficient to calculate as exponents
+                  z0hg(p) = meier_param3 * nu_param / ustar(p) * exp( -beta_param * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Consistent with BareGroundFluxes
                  
                case ('ZengWang2007')
                   z0mg(p) = z0frzlake
@@ -606,13 +608,15 @@ contains
                   if ( snomelt_accum(c) < 1.e-5_r8 )then
                       z0mg(p) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8 
                   else
-                      z0mg(p) = exp(b1_param * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8)) + b4_param) * 1.e-3_r8
+                      z0mg(p) = exp(b1_param * (atan((log10(snomelt_accum(c)) + meier_param1) / meier_param2)) + b4_param) * 1.e-3_r8
                   end if
                end if
 
                select case (z0param_method)
                case ('Meier2022')
-                  z0hg(p) =  70._r8 * nu_param / ustar(p) * exp( -beta_param * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Consistent with BareGroundFluxes
+                  ! (...)**0.5 = sqrt(...) and (...)**0.25 = sqrt(sqrt(...))
+                  ! likely more efficient to calculate as exponents
+                  z0hg(p) =  meier_param3 * nu_param / ustar(p) * exp( -beta_param * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Consistent with BareGroundFluxes
 
                case ('ZengWang2007')
                   z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / nu_param)**params_inst%a_exp) ! Consistent with BareGroundFluxes

@@ -162,6 +162,9 @@ module clm_varcon
   real(r8), public, parameter :: b1_param = 1.4_r8  ! Meier et al. (2022) empirical constant
   real(r8), public, parameter :: b4_param = -0.31_r8  ! Meier et al. (2022) empirical constant
   real(r8), public, parameter :: cd1_param = 7.5_r8  ! Meier et al. (2022) originally from Raupach (1994)
+  real(r8), public, parameter :: meier_param1 = 0.23_r8  ! slevis did not find it documented
+  real(r8), public, parameter :: meier_param2 = 0.08_r8  ! slevis did not find it documented
+  real(r8), public, parameter :: meier_param3 = 70.0_r8  ! slevis did not find it documented, but to the question "What is the 70 in the formula for roughness length" bard.google.com responds "[...] a dimensionless constant [...] originally introduced by von Karman. It is based on experimental data and is thought to represent the ratio of the average height of the surface roughness elements to the distance that the wind travels before it is slowed down by the roughness."
 
   !------------------------------------------------------------------
   ! Urban building temperature constants

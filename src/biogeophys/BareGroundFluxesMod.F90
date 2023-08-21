@@ -82,7 +82,7 @@ contains
     use shr_const_mod        , only : SHR_CONST_RGAS
     use clm_varpar           , only : nlevgrnd
     use clm_varcon           , only : cpair, vkc, grav, denice, denh2o
-    use clm_varcon           , only : beta_param, nu_param
+    use clm_varcon           , only : beta_param, nu_param, meier_param3
     use clm_varctl           , only : use_lch4, z0param_method
     use landunit_varcon      , only : istsoil, istcrop
     use QSatMod              , only : QSat
@@ -356,13 +356,10 @@ contains
             case ('Meier2022')
 
                ! After Yang et al. (2008)
-               z0hg_patch(p) = 70._r8 * nu_param / ustar(p) * exp( -beta_param * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8))
-               
-               ! RM: After Owen and Thomson (1963). This formulation could be used as an alternative to Yang et al. (2007). It would
-               ! avoid that z0hg and z0qg becomes larger frequently than z0mg, which happens with Yang et al. (2007). 
-               !z0hg_patch(p) = z0mg_patch(p) / exp(0.52_r8 * 0.4_r8 * (8._r8 * ustar(p) * z0mg_patch(p) / nu_param)**params_inst%a_exp * 0.71_r8**0.8_r8)
-               
-       
+               ! (...)**0.5 = sqrt(...) and (...)**0.25 = sqrt(sqrt(...))
+               ! likely more efficient to calculate as exponents
+               z0hg_patch(p) = meier_param3 * nu_param / ustar(p) * exp( -beta_param * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8))
+
             end select
 
             z0qg_patch(p) = z0hg_patch(p)

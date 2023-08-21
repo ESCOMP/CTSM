@@ -517,7 +517,7 @@ contains
     ! Set roughness lengths and forcing heights for non-lake points
     !
     ! !USES:
-    use clm_varcon  , only : rpi, b1_param, b4_param
+    use clm_varcon  , only : rpi, b1_param, b4_param, meier_param1, meier_param2
     ! !ARGUMENTS:
     class(frictionvel_type)        , intent(inout) :: this
     type(bounds_type)              , intent(in)    :: bounds    
@@ -577,15 +577,7 @@ contains
        select case (z0param_method)
        case ('ZengWang2007')
           if (frac_sno(c) > 0._r8) then
-             if(use_z0m_snowmelt) then
-                if ( snomelt_accum(c) < 1.e-5_r8 )then
-                    z0mg(c) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8
-                else
-                    z0mg(c) = exp(b1_param * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8)) + b4_param) * 1.e-3_r8
-                end if
-             else
-                z0mg(c) = this%zsno
-             end if                    
+             z0mg(c) = this%zsno
           else
              z0mg(c) = this%zlnd
           end if
@@ -596,7 +588,7 @@ contains
                 if ( snomelt_accum(c) < 1.e-5_r8 )then
                     z0mg(c) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8
                 else
-                    z0mg(c) = exp(b1_param * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8)) + b4_param) * 1.e-3_r8
+                    z0mg(c) = exp(b1_param * (atan((log10(snomelt_accum(c)) + meier_param1) / meier_param2)) + b4_param) * 1.e-3_r8
                 end if
              else
                 z0mg(c) = this%zsno

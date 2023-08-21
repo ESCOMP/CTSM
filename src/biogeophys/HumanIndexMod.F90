@@ -1014,7 +1014,6 @@ end subroutine InitHistory
 ! !LOCAL VARIABLES:
 !EOP
 !
-#ifndef NDEBUG
     if ( rh < 0.0d00 )then
        write(iulog,*) 'rh = ', rh
        call endrun(msg="ERROR RH is negative "//errmsg(sourcefile, __LINE__))
@@ -1022,7 +1021,7 @@ end subroutine InitHistory
        write(iulog,*) 'rh = ', rh
        call endrun(msg="ERROR RH is greater than a hundred "//errmsg(sourcefile, __LINE__))
     end if
-#endif
+
     wbt = Tc_6 * atan(0.151977_r8*sqrt(rh + 8.313659_r8)) + &
           atan(Tc_6+rh) - atan(rh-1.676331_r8) + &
           0.00391838_r8*rh**(3._r8/2._r8)*atan(0.023101_r8*rh) - &
