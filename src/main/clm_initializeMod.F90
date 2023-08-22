@@ -10,10 +10,11 @@ module clm_initializeMod
   use spmdMod               , only : masterproc, mpicom
   use decompMod             , only : bounds_type, get_proc_bounds, get_proc_clumps, get_clump_bounds
   use abortutils            , only : endrun
-  use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch, use_fates_sp
+  use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch
+  use clm_varctl            , only : use_fates_sp, use_fates_bgc, use_fates
   use clm_varctl            , only : is_cold_start
   use clm_varctl            , only : iulog
-  use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
+  use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14
   use clm_varctl            , only : use_soil_moisture_streams
   use clm_instur            , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft
   use clm_instur            , only : irrig_method, wt_glc_mec, topo_glc_mec, haslake, pct_urban_max
@@ -135,6 +136,7 @@ contains
     use clm_varctl                    , only : use_cn, use_fates
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
+    use clm_varctl                    , only : use_cropcal_streams
     use landunit_varcon               , only : landunit_varcon_init, max_lunit, numurbl
     use pftconMod                     , only : pftcon
     use decompInitMod                 , only : decompInit_clumps, decompInit_glcp
@@ -162,6 +164,7 @@ contains
     use restFileMod                   , only : restFile_getfile, restFile_open, restFile_close
     use restFileMod                   , only : restFile_read, restFile_write
     use ndepStreamMod                 , only : ndep_init, ndep_interp
+    use cropcalStreamMod              , only : cropcal_init, cropcal_interp, cropcal_advance
     use LakeCon                       , only : LakeConInit
     use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg, SatellitePhenology
     use SnowSnicarMod                 , only : SnowAge_init, SnowOptics_init
@@ -429,8 +432,11 @@ contains
     !$OMP END PARALLEL DO
 
     ! Initialize modules (after time-manager initialization in most cases)
-    if (use_cn) then
+    if (use_cn .or. use_fates) then
        call bgc_vegetation_inst%Init2(bounds_proc, NLFilename)
+    end if
+
+    if (use_cn) then
 
        ! NOTE(wjs, 2016-02-23) Maybe the rest of the body of this conditional should also
        ! be moved into bgc_vegetation_inst%Init2
@@ -622,7 +628,7 @@ contains
     !$OMP END PARALLEL DO
 
     ! Initialize nitrogen deposition
-    if (use_cn) then
+    if (use_cn ) then !.or. use_fates_bgc) then (ndep with fates will be added soon RGK)
        call t_startf('init_ndep')
        if (.not. ndep_from_cpl) then
           call ndep_init(bounds_proc, NLFilename)
@@ -630,6 +636,21 @@ contains
        end if
        call t_stopf('init_ndep')
     end if
+
+    ! Initialize crop calendars
+    call t_startf('init_cropcal')
+    call cropcal_init(bounds_proc)
+    if (use_cropcal_streams) then
+      call cropcal_advance( bounds_proc )
+      !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+      do nc = 1,nclumps
+         call get_clump_bounds(nc, bounds_clump)
+         call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, &
+              filter_inactive_and_active(nc)%pcropp, crop_inst)
+      end do
+      !$OMP END PARALLEL DO
+    end if
+    call t_stopf('init_cropcal')
 
     ! Initialize active history fields.
     ! This is only done if not a restart run. If a restart run, then this

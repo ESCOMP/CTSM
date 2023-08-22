@@ -22,12 +22,12 @@ module histFileMod
   use LandunitType   , only : lun
   use ColumnType     , only : col
   use PatchType      , only : patch
-  use EDTypesMod     , only : nclmax
-  use EDTypesMod     , only : nlevleaf
+  use EDParamsMod    , only : nclmax
+  use EDParamsMod    , only : nlevleaf
   use FatesInterfaceTypesMod , only : nlevsclass, nlevage, nlevcoage
   use FatesInterfaceTypesMod , only : nlevheight
   use FatesInterfaceTypesMod , only : nlevdamage
-  use EDTypesMod        , only : nfsc
+  use FatesLitterMod        , only : nfsc
   use FatesLitterMod    , only : ncwd
   use PRTGenericMod     , only : num_elements_fates  => num_elements
   use FatesInterfaceTypesMod , only : numpft_fates => numpft
