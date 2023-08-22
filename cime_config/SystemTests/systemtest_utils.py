@@ -5,7 +5,7 @@ Reduce code duplication by putting reused functions here.
 import os, subprocess
 
 
-def cmds_to_setup_conda(caseroot):
+def cmds_to_setup_conda(caseroot, test_conda_retry=True):
     # Add specific commands needed on different machines to get conda available
     # Use semicolon here since it's OK to fail
     #
@@ -19,7 +19,12 @@ def cmds_to_setup_conda(caseroot):
         subprocess.run("which conda", shell=True, check=True)
     except subprocess.CalledProcessError:
         # Remove python and add conda to environment for cheyennne
-        conda_setup_commands += " module unload python; module load conda;"
+        unload_python_load_conda = "module unload python; module load conda;"
+        # Make sure that adding this actually loads conda
+        if test_conda_retry:
+            subprocess.run(unload_python_load_conda + "which conda", shell=True, check=True)
+        # Save
+        conda_setup_commands += " " + unload_python_load_conda
 
     return conda_setup_commands
 
