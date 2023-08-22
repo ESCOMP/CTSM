@@ -1,4 +1,67 @@
 ===============================================================
+Tag name: ctsm5.1.dev136
+Originator(s): jedwards (Jim Edwards), sacks (Bill Sacks)
+Date: Tue Aug 22 13:10:28 MDT 2023
+One-line Summary: Change order of history fields to improve performance on derecho
+
+Purpose and description of changes
+----------------------------------
+
+Instead of just ordering history fields alphabetically, order them first
+by the name of their level dimension (with fields without a level
+dimension appearing first), then alphabetically within a given level
+dimension. This changed ordering gives a significant performance
+improvement especially noticeable on lustre file systems such as on
+derecho.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+- History fields will now appear in a different order from tools like
+  ncdump, etc.
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+    
+  In addition to expected fails, the test
+  FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon.I2000Clm50SpRs.cheyenne_intel
+  also failed as in https://github.com/ESCOMP/CTSM/issues/2111
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/2114
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev135
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Mon Aug 21 15:06:35 MDT 2023
