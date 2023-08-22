@@ -761,7 +761,7 @@ contains
        ! the matrix multiply in VegMatrix and SoilMatrix.
        !--------------------------------------------------------------------------
 
-       ! Set harvest mortality routine 
+       ! Set harvest mortality routine
        if (get_do_harvest()) then
           call CNHarvest(num_bgc_vegp, filter_bgc_vegp, &
                soilbiogeochem_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
@@ -837,6 +837,9 @@ contains
           call CStateUpdate2g(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
                c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)
        end if
+
+       call NStateUpdate2g(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
+            cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst)
 
        call t_stopf('CNUpdate2')
 
