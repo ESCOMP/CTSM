@@ -203,7 +203,7 @@ contains
     do l  = 1, ndecomp_pools
        if ( nlevdecomp_full > 1 ) then
           data2dptr => this%decomp_npools_vr_col(:,:,l)
-          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'N_vr'
+          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'_N_vr'
           longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N (vertically resolved)'
           call hist_addfld2d (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
@@ -213,7 +213,7 @@ contains
        endif
 
        data1dptr => this%decomp_npools_col(:,l)
-       fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'N'
+       fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'_N'
        longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N'
        call hist_addfld1d (fname=fieldname, units='gN/m^2', &
             avgflag='A', long_name=longname, &
@@ -225,7 +225,7 @@ contains
 
        if ( nlevdecomp_full > 1 ) then
           data1dptr => this%decomp_npools_1m_col(:,l)
-          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'N_1m'
+          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'_N_1m'
           longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N to 1 meter'
           call hist_addfld1d (fname=fieldname, units='gN/m^2', &
                avgflag='A', long_name=longname, &

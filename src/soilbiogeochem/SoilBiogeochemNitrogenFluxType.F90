@@ -359,7 +359,7 @@ contains
                   'to '//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))
           else
              fieldname = trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
-                  //'N_TO_SMINN'
+                  //'_N_TO_SMINN'
              longname =  'mineral N flux for decomp. of '&
                   //trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))
           endif
@@ -372,8 +372,8 @@ contains
        if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
           this%decomp_cascade_ntransfer_col(begc:endc,l) = spval
           data1dptr => this%decomp_cascade_ntransfer_col(:,l)
-          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'N_TO_'//&
-               trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))//'N'
+          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_N_TO_'//&
+               trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))//'_N'
           longname =  'decomp. of '//trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))//&
                ' N to '//trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_receiver_pool(l)))//' N'
           call hist_addfld1d (fname=fieldname, units='gN/m^2',  &
@@ -396,7 +396,7 @@ contains
                      'to '//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))
              else
                 fieldname = trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
-                     //'N_TO_SMINN'//trim(vr_suffix)
+                     //'_N_TO_SMINN'//trim(vr_suffix)
                 longname =  'mineral N flux for decomp. of '&
                      //trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))
              endif
@@ -409,9 +409,9 @@ contains
           if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
              this%decomp_cascade_ntransfer_vr_col(begc:endc,:,l) = spval
              data2dptr => this%decomp_cascade_ntransfer_vr_col(:,:,l)
-             fieldname = trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'N_TO_'//&
+             fieldname = trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_N_TO_'//&
                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))&
-                  //'N'//trim(vr_suffix)
+                  //'_N'//trim(vr_suffix)
              longname =  'decomp. of '&
                   //trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))//&
                   ' N to '//trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_receiver_pool(l)))//' N'
@@ -437,7 +437,7 @@ contains
        if ( .not. decomp_cascade_con%is_cwd(k) ) then
           this%decomp_npools_leached_col(begc:endc,k) = spval
           data1dptr => this%decomp_npools_leached_col(:,k)
-          fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'N_TO_LEACHING'
+          fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_N_TO_LEACHING'
           longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' N leaching loss'
           call hist_addfld1d (fname=fieldname, units='gN/m^2/s', &
                avgflag='A', long_name=longname, &
@@ -445,7 +445,7 @@ contains
 
           this%decomp_npools_transport_tendency_col(begc:endc,:,k) = spval
           data2dptr => this%decomp_npools_transport_tendency_col(:,:,k)
-          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(k))//'N_TNDNCY_VERT_TRANSPORT'
+          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(k))//'_N_TNDNCY_VERT_TRANSPORT'
           longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' N tendency due to vertical transport'
           call hist_addfld_decomp (fname=fieldname, units='gN/m^3/s',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
