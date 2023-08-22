@@ -312,7 +312,8 @@ contains
         call endrun('ERROR Active crop patch weights does not sum to 1')
     end if
 
-    ! Adjust tillage_mults to consider fraction of this layer that's within tillage depth
+    ! Adjust tillage_mults to consider fraction of this layer that's within tillage depth.
+    ! TODO: Unit-test this
     layer_thickness = zisoi(j) - layer_top
     fraction_tilled = max(0._r8, min(1._r8, (max_tillage_depth - layer_top) / layer_thickness))
     tillage_mults = tillage_mults *          fraction_tilled &
