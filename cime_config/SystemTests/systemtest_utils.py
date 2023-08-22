@@ -29,15 +29,21 @@ def cmds_to_setup_conda(caseroot, test_conda_retry=True):
     return conda_setup_commands
 
 
-def run_python_script(caseroot, this_conda_env, command, tool_path):
-
+def cmds_to_run_via_conda(caseroot, conda_run_call, command, test_conda_retry=True):
     # Run in the specified conda environment
-    conda_setup_commands = cmds_to_setup_conda(caseroot)
-    conda_setup_commands += f" conda run -n {this_conda_env}"
+    conda_setup_commands = cmds_to_setup_conda(caseroot, test_conda_retry)
+    conda_setup_commands += " " + conda_run_call
 
     # Finish with Python script call
     command = conda_setup_commands + " " + command
     print(f"command: {command}")
+
+    return command
+
+
+def run_python_script(caseroot, this_conda_env, command_in, tool_path):
+
+    command = cmds_to_run_via_conda(caseroot, f"conda run -n {this_conda_env}", command_in)
 
     # Run with logfile
     tool_name = os.path.split(tool_path)[-1]
@@ -47,19 +53,30 @@ def run_python_script(caseroot, this_conda_env, command, tool_path):
                 command, shell=True, check=True, text=True, stdout=f, stderr=subprocess.STDOUT
             )
     except subprocess.CalledProcessError as error:
-        print("ERROR while getting the conda environment and/or ")
-        print(f"running the {tool_name} tool: ")
-        print(f"(1) If your {this_conda_env} environment is out of date or you ")
-        print(f"have not created the {this_conda_env} environment, yet, you may ")
-        print("get past this error by running ./py_env_create ")
-        print("in your ctsm directory and trying this test again. ")
-        print("(2) If conda is not available, install and load conda, ")
-        print("run ./py_env_create, and then try this test again. ")
-        print("(3) If (1) and (2) are not the issue, then you may be ")
-        print(f"getting an error within {tool_name} itself. ")
-        print("Default error message: ")
-        print(error.output)
-        raise
+        # First, retry with the original method
+        command = cmds_to_run_via_conda(caseroot, f"conda activate {this_conda_env} && ", command_in, test_conda_retry=False)
+        try:
+            with open(tool_name + ".log2", "w") as f:
+                subprocess.run(
+                    command, shell=True, check=True, text=True, stdout=f, stderr=subprocess.STDOUT
+                )
+        except subprocess.CalledProcessError as error:
+            print("ERROR while getting the conda environment and/or ")
+            print(f"running the {tool_name} tool: ")
+            print(f"(1) If your {this_conda_env} environment is out of date or you ")
+            print(f"have not created the {this_conda_env} environment, yet, you may ")
+            print("get past this error by running ./py_env_create ")
+            print("in your ctsm directory and trying this test again. ")
+            print("(2) If conda is not available, install and load conda, ")
+            print("run ./py_env_create, and then try this test again. ")
+            print("(3) If (1) and (2) are not the issue, then you may be ")
+            print(f"getting an error within {tool_name} itself. ")
+            print("Default error message: ")
+            print(error.output)
+            raise
+        except:
+            print(f"ERROR trying to run {tool_name}.")
+            raise
     except:
         print(f"ERROR trying to run {tool_name}.")
         raise
