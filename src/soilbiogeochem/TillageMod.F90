@@ -27,7 +27,7 @@ module TillageMod
   integer, parameter  :: tillage_off = 0
   integer, parameter  :: tillage_low = 1
   integer, parameter  :: tillage_high = 2
-  logical  :: use_original_tillage ! Use get_tillage_multipliers_orig?
+  logical  :: use_original_tillage_phases ! Use buggy tillage phase determination?
   real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, ntill_stages_max)
   integer, parameter :: ntill_stages_max = 3 ! How many different tillage phases are there? (Not including all-1 phases.)
   real(r8)           :: max_tillage_depth ! Maximum depth to till (m)
@@ -53,13 +53,13 @@ contains
 
     namelist /tillage_inparm/    &
         tillage_mode,            &
-        use_original_tillage,    &
+        use_original_tillage_phases,    &
         max_tillage_depth
 
     ! Default values
     tillage_mode = 'off'
-    use_original_tillage = .false.
-    max_tillage_depth = 0.26_r8
+    use_original_tillage_phases = .false.
+    max_tillage_depth = 0.26_r8  ! Graham et al. (2021) unintentionally used 0.32
 
     ! Read tillage namelist
     if (masterproc) then
@@ -76,14 +76,14 @@ contains
         close(nu_nml)
      endif
      call shr_mpi_bcast(tillage_mode, mpicom)
-     call shr_mpi_bcast(use_original_tillage , mpicom)
+     call shr_mpi_bcast(use_original_tillage_phases , mpicom)
      call shr_mpi_bcast(max_tillage_depth, mpicom)
 
      if (masterproc) then
         write(iulog,*) ' '
         write(iulog,*) 'tillage settings:'
         write(iulog,*) '  tillage_mode  = ',tillage_mode
-        write(iulog,*) '  use_original_tillage   = ',use_original_tillage
+        write(iulog,*) '  use_original_tillage_phases   = ',use_original_tillage_phases
         write(iulog,*) '  max_tillage_depth = ',max_tillage_depth
      endif
 
@@ -185,7 +185,7 @@ contains
     !  would affect growing seasons that crossed over into a new calendar year.
     !  Also avoids day=1 in last timestep of year by using DaysPastPlanting(), which
     !  uses get_prev_calday() instead of get_curr_calday().
-    !  Previous behavior can be requested with namelist variable use_original_tillage.
+    !  Previous behavior can be requested with namelist variable use_original_tillage_phases.
     !
     !  Original code had two versions depending on cell's GDP, but this seems to
     !  have been only an initial effort that was (a) never published and (b) not
@@ -213,7 +213,7 @@ contains
 
     phase = 0
 
-    if (use_original_tillage) then
+    if (use_original_tillage_phases) then
         day = get_curr_calday()
         if (day >= idop .and. day < idop+15) then ! based on Point Chisel Tandem Disk multipliers
             phase = 1
