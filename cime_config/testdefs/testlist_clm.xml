@@ -868,7 +868,6 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="hobart" compiler="intel" category="prebeta"/>
-      <machine name="hobart" compiler="pgi" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1136,7 +1135,6 @@
   <test name="SMS" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/crop">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="pgi" category="aux_clm"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
@@ -1226,7 +1224,6 @@ for ERS test as otherwise it won't work for a sub-day test"</option>
   <test name="SMS_D" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/crop">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="pgi" category="aux_clm"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
@@ -1235,7 +1232,6 @@ for ERS test as otherwise it won't work for a sub-day test"</option>
   </test>
   <test name="SMS_D_Ld1" grid="f19_g17" compset="I1850Clm45Cn" testmods="clm/default">
     <machines>
-      <machine name="izumi" compiler="pgi" category="prebeta"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
