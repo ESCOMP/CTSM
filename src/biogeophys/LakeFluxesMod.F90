@@ -66,7 +66,7 @@ contains
     call readNcdioScalar(ncid, 'a_exp', subname, params_inst%a_exp)
     ! Momentum roughness length for snow (m)
     call readNcdioScalar(ncid, 'zsno', subname, params_inst%zsno)
-    
+
     if (z0param_method == 'Meier2022') then
        ! Momentum roughness length for ice (m)
        call readNcdioScalar(ncid, 'zglc', subname, params_inst%zglc)
@@ -228,8 +228,8 @@ contains
          lakefetch        =>    lakestate_inst%lakefetch_col           , & ! Input:  [real(r8) (:)   ]  lake fetch from surface data (m)                  
          
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col         , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
-         h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col         , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)  
-         snomelt_accum    =>    waterdiagnosticbulk_inst%snomelt_accum_col , & ! Input:  [real(r8) (:)   ] accumulated col snow melt for z0m calculation (m H2O)       
+         h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col         , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)
+         snomelt_accum    =>    waterdiagnosticbulk_inst%snomelt_accum_col , & ! Input:  [real(r8) (:)   ] accumulated col snow melt for z0m calculation (m H2O)
          t_skin_patch     =>    temperature_inst%t_skin_patch           , & ! Output: [real(r8) (:)   ]  patch skin temperature (K)
 
          t_lake           =>    temperature_inst%t_lake_col            , & ! Input:  [real(r8) (:,:) ]  lake temperature (Kelvin)                       
@@ -338,7 +338,7 @@ contains
             z0hg(p) = max(z0hg(p), minz0lake)
          else if (snl(c) == 0) then    ! frozen lake with ice
             select case (z0param_method)
-            case ('Meier2022') 
+            case ('Meier2022')
                z0mg(p) = params_inst%zglc
 
 
@@ -361,7 +361,7 @@ contains
             end if
 
             select case (z0param_method)
-            case ('Meier2022') 
+            case ('Meier2022')
                z0hg(p) = meier_param3 * nu_param / ust_lake(c) ! For initial guess assume tstar = 0
             case ('ZengWang2007')
                z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / nu_param)**params_inst%a_exp) ! Consistent with BareGroundFluxes
@@ -424,7 +424,7 @@ contains
          g = patch%gridcell(p)
 
          dhsdt_canopy(p) = 0.0_r8
-         
+
          nmozsgn(p) = 0
          obuold(p) = 0._r8
          displa(p) = 0._r8
@@ -592,12 +592,12 @@ contains
             else if (snl(c) == 0) then
                ! in case it was above freezing and now below freezing
                select case (z0param_method)
-               case ('Meier2022') 
+               case ('Meier2022')
                   z0mg(p) = params_inst%zglc
                   ! (...)**0.5 = sqrt(...) and (...)**0.25 = sqrt(sqrt(...))
                   ! likely more efficient to calculate as exponents
                   z0hg(p) = meier_param3 * nu_param / ustar(p) * exp( -beta_param * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Consistent with BareGroundFluxes
-                 
+
                case ('ZengWang2007')
                   z0mg(p) = z0frzlake
                   z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / nu_param)**params_inst%a_exp) ! Consistent with BareGroundFluxes
@@ -606,7 +606,7 @@ contains
             else ! Snow layers
                if(use_z0m_snowmelt) then
                   if ( snomelt_accum(c) < 1.e-5_r8 )then
-                      z0mg(p) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8 
+                      z0mg(p) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8
                   else
                       z0mg(p) = exp(b1_param * (atan((log10(snomelt_accum(c)) + meier_param1) / meier_param2)) + b4_param) * 1.e-3_r8
                   end if

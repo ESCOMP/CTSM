@@ -34,7 +34,7 @@ module BiogeophysPreFluxCalcsMod
   use WaterStateBulkType      , only : waterstatebulk_type
   use SurfaceResistanceMod    , only : calc_soilevap_resis
   use WaterFluxBulkType     , only : waterfluxbulk_type
-  
+
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -172,30 +172,30 @@ contains
             z0m(p)    = pftcon%z0mr(patch%itype(p)) * htop(p)
             displa(p) = pftcon%displar(patch%itype(p)) * htop(p)
 
-         case ('Meier2022') 
-            
+         case ('Meier2022')
+
             ! Don't set on first few steps of a simulation, since htop isn't set yet, need to wait until after first do_alb time
             if ( is_first_step() .or. get_nstep() <= GetBalanceCheckSkipSteps()-1 ) then
                z0m(p)    = 0._r8
-               displa(p) = 0._r8 
+               displa(p) = 0._r8
                cycle
             ! If a crop type and it's the start of the year, htop gets reset to
             ! zero...
             else if ( is_beg_curr_year() .and. pftcon%crop(patch%itype(p)) /= 0.0_r8 )then
                z0m(p)    = 0._r8
-               displa(p) = 0._r8 
+               displa(p) = 0._r8
             end if
 
             if (patch%itype(p) == noveg) then
                z0m(p)    = 0._r8
-               displa(p) = 0._r8 
+               displa(p) = 0._r8
 
             else
                ! Compute as if elai+esai = LAImax in CanopyFluxes
                displa(p) = htop(p) * (1._r8 - (1._r8 - exp(-(cd1_param * (pftcon%z0v_LAImax(patch%itype(p))))**0.5_r8)) &
                            / (cd1_param*(pftcon%z0v_LAImax(patch%itype(p)) ))**0.5_r8)
 
-               U_ustar = 4._r8 * (pftcon%z0v_Cs(patch%itype(p)) + pftcon%z0v_Cr(patch%itype(p)) *  (pftcon%z0v_LAImax(patch%itype(p))) & 
+               U_ustar = 4._r8 * (pftcon%z0v_Cs(patch%itype(p)) + pftcon%z0v_Cr(patch%itype(p)) *  (pftcon%z0v_LAImax(patch%itype(p))) &
                          / 2._r8)**(-0.5_r8) /  (pftcon%z0v_LAImax(patch%itype(p))) / pftcon%z0v_c(patch%itype(p))
 
                if ( htop(p) <= 1.e-10_r8 )then
@@ -210,7 +210,7 @@ contains
 
 
          end select
-          
+
        end if
     end do
 

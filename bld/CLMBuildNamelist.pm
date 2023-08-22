@@ -4378,7 +4378,7 @@ sub setup_logic_z0param {
 
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'z0param_method');
 
-   my $z0param_method = remove_leading_and_trailing_quotes($nl->get_value('z0param_method' ));  
+   my $z0param_method = remove_leading_and_trailing_quotes($nl->get_value('z0param_method' ));
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_z0m_snowmelt',
            'z0param_method'=>$z0param_method );
 

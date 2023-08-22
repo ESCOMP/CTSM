@@ -435,7 +435,7 @@ contains
     real(r8)                  , intent(inout) :: frac_sno( bounds%begc: )        ! fraction of ground covered by snow (0 to 1)
     real(r8)                  , intent(inout) :: frac_sno_eff( bounds%begc: )    ! eff. fraction of ground covered by snow (0 to 1)
     real(r8)                  , intent(inout) :: snow_depth( bounds%begc: )      ! snow height (m)
-    real(r8)                  , intent(inout) :: snomelt_accum( bounds%begc: )   ! accumulated col snow melt for z0m calculation (m H2O) 
+    real(r8)                  , intent(inout) :: snomelt_accum( bounds%begc: )   ! accumulated col snow melt for z0m calculation (m H2O)
     !
     ! !LOCAL VARIABLES:
     integer  :: fc, c
@@ -491,7 +491,7 @@ contains
        ! all snow falls on ground, no snow on h2osfc (note that qflx_snow_h2osfc is
        ! currently set to 0 always in CanopyHydrologyMod)
        newsnow(c) = qflx_snow_grnd(c) * dtime
-       snomelt_accum(c) = max(0._r8, snomelt_accum(c) - newsnow(c) * 1.e-3_r8) 
+       snomelt_accum(c) = max(0._r8, snomelt_accum(c) - newsnow(c) * 1.e-3_r8)
 
        ! update int_snow
        int_snow(c) = max(int_snow(c),h2osno_total(c)) !h2osno_total could be larger due to frost

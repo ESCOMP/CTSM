@@ -368,16 +368,16 @@ contains
     allocate( this%taul          (0:mxpft,numrad) ) 
     allocate( this%taus          (0:mxpft,numrad) ) 
     allocate( this%z0mr          (0:mxpft) )
-    allocate( this%z0v_Cr        (0:mxpft) )        
-    allocate( this%z0v_Cs        (0:mxpft) )        
-    allocate( this%z0v_c         (0:mxpft) )        
-    allocate( this%z0v_cw        (0:mxpft) )        
-    allocate( this%z0v_LAIoff    (0:mxpft) )        
-    allocate( this%z0v_LAImax    (0:mxpft) )        
-    allocate( this%displar       (0:mxpft) )     
-    allocate( this%roota_par     (0:mxpft) )   
-    allocate( this%rootb_par     (0:mxpft) )   
-    allocate( this%crop          (0:mxpft) )        
+    allocate( this%z0v_Cr        (0:mxpft) )
+    allocate( this%z0v_Cs        (0:mxpft) )
+    allocate( this%z0v_c         (0:mxpft) )
+    allocate( this%z0v_cw        (0:mxpft) )
+    allocate( this%z0v_LAIoff    (0:mxpft) )
+    allocate( this%z0v_LAImax    (0:mxpft) )
+    allocate( this%displar       (0:mxpft) )
+    allocate( this%roota_par     (0:mxpft) )
+    allocate( this%rootb_par     (0:mxpft) )
+    allocate( this%crop          (0:mxpft) )
     allocate( this%mergetoclmpft (0:mxpft) )
     allocate( this%is_pft_known_to_model  (0:mxpft) )
     allocate( this%irrigated     (0:mxpft) )   
@@ -663,7 +663,7 @@ contains
        this%z0v_cw = 0._r8
        this%z0v_LAImax = 0._r8
        this%z0v_LAIoff = 0._r8
-    
+
     case ('Meier2022')
        call ncd_io('z0v_Cr', this%z0v_Cr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))

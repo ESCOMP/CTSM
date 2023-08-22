@@ -92,7 +92,7 @@ contains
                                       swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                       SwampCoolEff, KtoC, VaporPres
     use CanopyStateType      , only : canopystate_type
-                              
+
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds  
@@ -247,9 +247,9 @@ contains
          z0mg_patch             => frictionvel_inst%z0mg_patch                  , & ! Output: [real(r8) (:)   ]  patch roughness length, momentum [m]
          z0hg_patch             => frictionvel_inst%z0hg_patch                  , & ! Output: [real(r8) (:)   ]  patch roughness length, sensible heat [m]
          z0qg_patch             => frictionvel_inst%z0qg_patch                  , & ! Output: [real(r8) (:)   ]  patch roughness length, latent heat [m]
-         z0mv                   => frictionvel_inst%z0mv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, momentum [m]                        
-         z0hv                   => frictionvel_inst%z0hv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, sensible heat [m]                   
-         z0qv                   => frictionvel_inst%z0qv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, latent heat [m]          
+         z0mv                   => frictionvel_inst%z0mv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, momentum [m]
+         z0hv                   => frictionvel_inst%z0hv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, sensible heat [m]
+         z0qv                   => frictionvel_inst%z0qv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, latent heat [m]
          kbm1                   => frictionvel_inst%kbm1_patch                  , & ! Output: [real(r8) (:)   ]  natural logarithm of z0mg_p/z0hg_p [-]
          ram1                   => frictionvel_inst%ram1_patch                  , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)
          num_iter               => frictionvel_inst%num_iter_patch              , & ! Output: [real(r8) (:)   ]  number of iterations
@@ -265,7 +265,7 @@ contains
          rssun                  => photosyns_inst%rssun_patch                   , & ! Output: [real(r8) (:)   ]  leaf sunlit stomatal resistance (s/m) (output from Photosynthesis)
          rssha                  => photosyns_inst%rssha_patch                   , & ! Output: [real(r8) (:)   ]  leaf shaded stomatal resistance (s/m) (output from Photosynthesis)
 
-         displa                 => canopystate_inst%displa_patch                , & ! Output: [real(r8) (:)   ]  displacement height (m)                                               
+         displa                 => canopystate_inst%displa_patch                , & ! Output: [real(r8) (:)   ]  displacement height (m)
 
          begp                   => bounds%begp                                  , &
          endp                   => bounds%endp                                    &
@@ -309,7 +309,7 @@ contains
          z0mv(p)   = 0._r8
          z0hv(p)   = 0._r8
          z0qv(p)   = 0._r8
-         
+
 
          ur(p)    = max(params_inst%wind_min,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
          dth(p)   = thm(p)-t_grnd(c)

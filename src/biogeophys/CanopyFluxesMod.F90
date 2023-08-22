@@ -113,7 +113,7 @@ contains
     namelist /canopyfluxes_inparm/ use_undercanopy_stability
     namelist /canopyfluxes_inparm/ use_biomass_heat_storage
     namelist /canopyfluxes_inparm/ itmax_canopy_fluxes
-  
+
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -535,7 +535,7 @@ contains
          forc_hgt_q             => atm2lnd_inst%forc_hgt_q_grc                  , & ! Input:  [real(r8) (:)   ] observational height of specific humidity [m]
          forc_hgt_t_patch       => frictionvel_inst%forc_hgt_t_patch            , & ! Output: [real(r8) (:)   ] observational height of temperature at patch level [m]
          forc_hgt_q_patch       => frictionvel_inst%forc_hgt_q_patch            , & ! Output: [real(r8) (:)   ] observational height of specific humidity at patch level [m]
-         forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Output:  [real(r8) (:)   ]  observational height of wind at patch level [m]                          
+         forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Output:  [real(r8) (:)   ]  observational height of wind at patch level [m]
          z0mg                   => frictionvel_inst%z0mg_col                    , & ! Input:  [real(r8) (:)   ]  roughness length of ground, momentum [m]                              
          zetamax                => frictionvel_inst%zetamaxstable               , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
          ram1                   => frictionvel_inst%ram1_patch                  , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                                        
@@ -1068,7 +1068,6 @@ bioms:   do f = 1, fn
             ! transfer coefficient over bare soil is changed to a local variable
             ! just for readability of the code (from line 680)
             csoilb = vkc / (params_inst%a_coef * (z0mg(c) * uaf(p) / nu_param)**params_inst%a_exp)
-            
 
             !compute the stability parameter for ricsoilc  ("S" in Sakaguchi&Zeng,2008)
 
@@ -1482,7 +1481,7 @@ bioms:   do f = 1, fn
 
             dhsdt_canopy(p) = dt_stem(p)*cp_stem(p)/dtime &
                  + (t_veg(p)-tl_ini(p))*cp_leaf(p)/dtime
-            
+
             t_stem(p) =  t_stem(p) + dt_stem(p)
          else
             dt_stem(p) = 0._r8
