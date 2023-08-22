@@ -1,7 +1,7 @@
 ===============================================================
-Tag name: ctsm5.1.dev136
+Tag name: ctsm5.1.dev137
 Originator(s): Ronny Meier,  slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Mon Aug 21 17:35:00 MDT 2023
+Date: Tue Aug 22 14:34:53 MDT 2023
 One-line Summary: Surface roughness modifications
 
 Purpose and description of changes
@@ -67,98 +67,99 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed or introduced
 ------------------------
 CTSM issues fixed (include CTSM Issue #):
-#1316
-#1596
+Fixes #1316
+Fixes #1596
 
 Notes of particular relevance for users
 ---------------------------------------
 Details already discussed in the description above.
 
-
 Notes of particular relevance for developers:
 ---------------------------------------------
 Changes to tests or testing:
-New tests in place for this new code.
+New tests are in place for this new code.
 
 Testing summary:
 ----------------
-[... Remove before making master tag.
-
-Nearly all CTSM tags should undergo 'regular' (aux_clm) testing.
-However, it occasionally makes sense to do more or less system testing;
-here is guidance on different available levels of system testing:
-    a) no system testing (for use when the only changes are ones that
-                          have absolutely no impact on system runs; this
-                          includes documentation-only tags, tags that
-                          just change the tools or some python code that
-                          does not impact system runs, etc.)
-    b) minimal (for use in rare cases where only a small change with
-                known behavior is added ... eg. a minor bug fix. This
-		might be to just run the "short" test list, or to run
-		a single test. Whatever makes sense for the particular case.)
-    c) python only (for use where the only changes are in the python directory:
-                    run the python testing listed below)
-    d) regular (regular tests on normal machines if CTSM source is modified)
-    e) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
-                and normally all of the ancillary tests (build-namelist, python, ptclm, etc.)
-		would be run as well)
-
-In addition, various other tests of the tools, python and perl
-infrastructure should be run when appropriate, as described below.
-
-...]
-
-[Remove any lines that don't apply.]
-
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
-
-  build-namelist tests (if CLMBuildNamelist.pm has changed):
-
-    cheyenne -
-
-  tools-tests (test/tools) (if tools have been changed):
-
-    cheyenne -
-
-  python testing (if python code has changed; see instructions in python/README.md; document testing done):
-
-    (any machine) -
-
-    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
-     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
-     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
-     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
-     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
-     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
-     separately run the clm_pymods test suite, and you can remove the following line.]
-
-    clm_pymods test suite on cheyenne - 
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ----
-    izumi -------
-
-  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    cheyenne ----
-    izumi -------
-
-  any other testing (give details below):
-
-If the tag used for baseline comparisons was NOT the previous tag, note that here:
-
+    cheyenne ---- OK 
+    izumi ------- OK
 
 Answer changes
 --------------
-
 Changes answers relative to baseline:
  No, unless user chooses to run in non-default Meier2022 mode.
-
 
 Other details
 -------------
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/2045
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev136
+Originator(s): jedwards (Jim Edwards), sacks (Bill Sacks)
+Date: Tue Aug 22 13:10:28 MDT 2023
+One-line Summary: Change order of history fields to improve performance on derecho
+
+Purpose and description of changes
+----------------------------------
+
+Instead of just ordering history fields alphabetically, order them first
+by the name of their level dimension (with fields without a level
+dimension appearing first), then alphabetically within a given level
+dimension. This changed ordering gives a significant performance
+improvement especially noticeable on lustre file systems such as on
+derecho.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+- History fields will now appear in a different order from tools like
+  ncdump, etc.
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+    
+  In addition to expected fails, the test
+  FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon.I2000Clm50SpRs.cheyenne_intel
+  also failed as in https://github.com/ESCOMP/CTSM/issues/2111
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/2114
 
 ===============================================================
 ===============================================================
