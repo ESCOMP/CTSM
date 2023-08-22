@@ -1301,7 +1301,7 @@ contains
          cc = patch%column(pp)
          do j = 1, nlevdecomp
             iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i_met_lit) = &
-               iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i_met_lit) + &
+                 iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i_met_lit) + &
                  ((iso_cnveg_cf%m_leafc_to_litter_fire_patch(pp) * lf_f(ivt(pp),i_met_lit) &
                  +iso_cnveg_cf%m_leafc_storage_to_litter_fire_patch(pp) + &
                  iso_cnveg_cf%m_leafc_xfer_to_litter_fire_patch(pp) + &
@@ -1318,7 +1318,7 @@ contains
                  iso_cnveg_cf%m_livecrootc_xfer_to_litter_fire_patch(pp) &
                  +iso_cnveg_cf%m_deadcrootc_storage_to_litter_fire_patch(pp) + &
                  iso_cnveg_cf%m_deadcrootc_xfer_to_litter_fire_patch(pp))* croot_prof(pp,j)) * patch%wtcol(pp)    
-                     
+
             ! Here metabolic litter is treated differently than other
             ! types of litter, so it remains outside this litter loop,
             ! in the line above
@@ -1350,8 +1350,8 @@ contains
 !DML
 
     ! !ARGUMENTS:
-    integer                         , intent(in)    :: num_soilp       ! number of soil columns in filter
-    integer                         , intent(in)    :: filter_soilp(:) ! filter for soil columns
+    integer                         , intent(in)    :: num_soilp       ! number of soil patches in filter
+    integer                         , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(soilbiogeochem_state_type) , intent(in)    :: soilbiogeochem_state_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: iso_cnveg_carbonflux_inst
     !
@@ -1384,11 +1384,11 @@ contains
 
             do i = i_litr_min, i_litr_max
                phenology_c_to_litr_c(c,j,i) = &
-                  phenology_c_to_litr_c(c,j,i) + &
-                  ! leaf litter carbon fluxes
-                  leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
-                  ! fine root litter carbon fluxes
-                  frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
+                    phenology_c_to_litr_c(c,j,i) + &
+                    ! leaf litter carbon fluxes
+                    leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
+                    ! fine root litter carbon fluxes
+                    frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
             end do
 
 !DML
@@ -1396,8 +1396,8 @@ contains
                ! stem litter carbon fluxes
                do i = i_litr_min, i_litr_max
                   phenology_c_to_litr_c(c,j,i) = &
-                     phenology_c_to_litr_c(c,j,i) + &
-                     livestemc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                       phenology_c_to_litr_c(c,j,i) + &
+                       livestemc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
                end do
 
                if (.not. use_grainproduct) then
@@ -1420,7 +1420,7 @@ contains
                   end do
                end do
             end if
-!DML
+            !DML
          end do
       end do
 
@@ -1437,8 +1437,8 @@ contains
      ! to the column level and assign them to the three litter pools (+ cwd pool)
      !
      ! !ARGUMENTS:
-     integer                         , intent(in)    :: num_soilp         ! number of soil columns in filter
-     integer                         , intent(in)    :: filter_soilp(:)   ! soil column filter
+     integer                         , intent(in)    :: num_soilp         ! number of soil patches in filter
+     integer                         , intent(in)    :: filter_soilp(:)   ! soil patch filter
      type(soilbiogeochem_state_type) , intent(in)    :: soilbiogeochem_state_inst
      type(cnveg_carbonflux_type)     , intent(inout) :: iso_cnveg_carbonflux_inst
      !
@@ -1491,12 +1491,12 @@ contains
              do i = i_litr_min, i_litr_max
                 ! leaf gap mortality carbon fluxes
                 gap_mortality_c_to_litr_c(c,j,i) = &
-                   gap_mortality_c_to_litr_c(c,j,i) + &
-                   m_leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                     gap_mortality_c_to_litr_c(c,j,i) + &
+                     m_leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
                 ! fine root gap mortality carbon fluxes
                 gap_mortality_c_to_litr_c(c,j,i) = &
-                   gap_mortality_c_to_litr_c(c,j,i) + &
-                   m_frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
+                     gap_mortality_c_to_litr_c(c,j,i) + &
+                     m_frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
              end do
 
              ! wood gap mortality carbon fluxes
@@ -1513,23 +1513,23 @@ contains
              ! of litter, so it gets this additional line after the
              ! most recent loop over all litter types
              gap_mortality_c_to_litr_c(c,j,i_met_lit) = &
-                gap_mortality_c_to_litr_c(c,j,i_met_lit) + &
-                ! storage gap mortality carbon fluxes
-                m_leafc_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
-                m_frootc_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
-                m_livestemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
-                m_deadstemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
-                m_livecrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
-                m_deadcrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
-                m_gresp_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
-                ! transfer gap mortality carbon fluxes
-                m_leafc_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
-                m_frootc_xfer_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
-                m_livestemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
-                m_deadstemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
-                m_livecrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
-                m_deadcrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
-                m_gresp_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j)
+                  gap_mortality_c_to_litr_c(c,j,i_met_lit) + &
+                  ! storage gap mortality carbon fluxes
+                  m_leafc_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+                  m_frootc_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+                  m_livestemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                  m_deadstemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                  m_livecrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+                  m_deadcrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+                  m_gresp_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+                  ! transfer gap mortality carbon fluxes
+                  m_leafc_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+                  m_frootc_xfer_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+                  m_livestemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                  m_deadstemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                  m_livecrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+                  m_deadcrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+                  m_gresp_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j)
 
           end do
        end do
@@ -1548,8 +1548,8 @@ contains
      ! to the column level and assign them to the litter, cwd, and wood product pools
      !
      ! !ARGUMENTS:
-     integer                         , intent(in)    :: num_soilp         ! number of soil columns in filter
-     integer                         , intent(in)    :: filter_soilp(:)   ! soil column filter
+     integer                         , intent(in)    :: num_soilp         ! number of soil patches in filter
+     integer                         , intent(in)    :: filter_soilp(:)   ! soil patch filter
      type(soilbiogeochem_state_type) , intent(in)    :: soilbiogeochem_state_inst
      type(cnveg_carbonflux_type)     , intent(inout) :: iso_cnveg_carbonflux_inst
      !
@@ -1664,8 +1664,8 @@ contains
      ! to the column level and assign them to the litter, cwd, and wood product pools
      !
      ! !ARGUMENTS:
-     integer                         , intent(in)    :: num_soilp         ! number of soil columns in filter
-     integer                         , intent(in)    :: filter_soilp(:)   ! soil column filter
+     integer                         , intent(in)    :: num_soilp         ! number of soil patches in filter
+     integer                         , intent(in)    :: filter_soilp(:)   ! soil patch filter
      type(soilbiogeochem_state_type) , intent(in)    :: soilbiogeochem_state_inst
      type(cnveg_carbonflux_type)     , intent(inout) :: iso_cnveg_carbonflux_inst
      !

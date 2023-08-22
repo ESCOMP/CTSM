@@ -3800,7 +3800,7 @@ ptch: do fp = 1,num_soilp
          end do do_vegp
       end do do_nlev
 
-    end associate 
+    end associate
 
   end subroutine CNLitterToColumn
 
