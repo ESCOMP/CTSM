@@ -2729,6 +2729,6 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 
 <tillage_mode>off</tillage_mode>
 <use_original_tillage>.false.</use_original_tillage>
-<max_tillage_depth>0.32d00</max_tillage_depth>
+<max_tillage_depth>0.26d00</max_tillage_depth>
 
 </namelist_defaults>

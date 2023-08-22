@@ -59,7 +59,7 @@ contains
     ! Default values
     tillage_mode = 'off'
     use_original_tillage = .false.
-    max_tillage_depth = 0.32_r8
+    max_tillage_depth = 0.26_r8
 
     ! Read tillage namelist
     if (masterproc) then

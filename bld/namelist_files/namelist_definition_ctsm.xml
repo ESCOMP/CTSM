@@ -2896,7 +2896,7 @@ Toggle to use original tillage logic, with bug for seasons crossing into a new c
 </entry>
 
 <entry id="max_tillage_depth" type="real" category="physics"
-       group="tillage_inparm" valid_values="" value="0.32d00">
+       group="tillage_inparm" valid_values="" value="0.26d00">
 Maximum depth to till soil (m).
 </entry>
 
