@@ -325,8 +325,7 @@ contains
       call UpdateH2osfc(bounds, num_hydrologyc, filter_hydrologyc, &
            infiltration_excess_runoff_inst, &
            energyflux_inst, soilhydrology_inst, &
-           b_waterflux_inst, b_waterstate_inst, b_waterdiagnostic_inst, &
-           soilstate_inst)
+           b_waterflux_inst, b_waterstate_inst, b_waterdiagnostic_inst)
 
       call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, &
            b_waterflux_inst)

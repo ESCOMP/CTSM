@@ -456,7 +456,7 @@ contains
     real(r8) :: dtime         ! land model time step (sec)
     real(r8) :: frac_infclust ! fraction of submerged area that is connected
     real(r8) :: k_wet         ! linear reservoir coefficient for h2osfc
-    real(r8),paramter :: min_hill_slope = 1e-3_r8! minimum value of hillslope for outflow
+    real(r8),parameter :: min_hill_slope = 1e-3_r8! minimum value of hillslope for outflow
 
     character(len=*), parameter :: subname = 'QflxH2osfcSurf'
     !-----------------------------------------------------------------------
