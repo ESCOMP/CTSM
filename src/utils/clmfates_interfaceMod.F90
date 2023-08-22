@@ -538,7 +538,7 @@ module CLMFatesInterfaceMod
 
      ! Initialize the array of nearest neighbors for fates-driven grid cell communications
      ! This must be called after surfrd_get_data and decompInit_lnd
-     if (use_fates) then
+     if (fates_dispersal_kernel_mode .ne. fates_dispersal_kernel_none) then
         call DetermineGridCellNeighbors(lneighbors)
      end if
 
