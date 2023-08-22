@@ -63,7 +63,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine decomp_cascade_par_init( NLFilename )
-    use clm_varctl         , only : use_fates, use_cn, use_fates_sp
+    use clm_varctl         , only : use_cn, use_fates_bgc
     use clm_varpar         , only : ndecomp_pools_max
     use spmdMod            , only : masterproc, mpicom
     use clm_nlUtilsMod     , only : find_nlgroup_name
@@ -110,9 +110,9 @@ contains
        if ( decomp_method == no_soil_decomp )then
           call endrun('When running with BGC an active soil_decomp_method must be used')
        end if
-    else if ( use_fates ) then
-       if ( .not. use_fates_sp .and. (decomp_method == no_soil_decomp) )then
-          call endrun('When running with FATES and without FATES-SP an active soil_decomp_method must be used')
+    else if ( use_fates_bgc ) then
+       if ( decomp_method == no_soil_decomp )then
+          call endrun('When running with FATES and without FATES-SP, an active soil_decomp_method must be used')
        end if
     else
        if ( decomp_method /= no_soil_decomp )then
@@ -128,7 +128,7 @@ contains
        ! ndecomp_pools would get the value of i_pas_som or i_cwd and
        ! ndecomp_cascade_transitions would get the value of i_s3s1 or i_cwdl3
        ! depending on how use_fates is set.
-       if ( use_fates ) then
+       if ( use_fates_bgc ) then
           if (decomp_method == century_decomp) then
              ndecomp_pools = 6
              ndecomp_cascade_transitions = 8
