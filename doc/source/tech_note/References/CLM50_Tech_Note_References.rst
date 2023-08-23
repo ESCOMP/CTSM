@@ -223,6 +223,13 @@ Geosci. Model Dev., 7, 2193-2222, doi:10.5194/gmd-7-2193-2014.
 
 Botta, A et al., 2000. A global prognostic scheme of leaf onset using satellite data. Global Change Biology 6.7, pp. 709-725.
 
+.. _Brownetal1997:
+
+Brown J., Ferrians O. J. Jr, Heginbottom J. A. and Melnikov E. S. 1997.
+ Circum-Arctic Map of Permafrost and Ground-Ice Conditions 
+(Boulder, CO: National Snow and Ice Data Center) version 2,
+DOI: 10.3133/cp45
+
 .. _Brun1989:
 
 Brun, E. 1989. Investigation of wet-snow metamorphism in respect of
@@ -1084,6 +1091,12 @@ Climate 25:3071-3095. DOI:10.1175/JCLI-D-11-00256.1.
 
 Lehner, B. and Döll, P., 2004. Development and validation of a global
 database of lakes, reservoirs and wetlands, J. Hydrol., 296, 1–22.
+
+.. _Leeetal2014:
+
+Lee, H., Swenson, S.C., Slater A.G. and Lawrence D.M., 2014. Effects
+of excess ground ice on projections of permafrost in a warming climate.
+Environmental Research Letters 9:12 124006. DOI: 10.1088/1748-9326/9/12/124006
 
 .. _Lehneretal2008:
 

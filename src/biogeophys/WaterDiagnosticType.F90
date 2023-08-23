@@ -164,13 +164,7 @@ contains
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
 
-    this%h2ocan_patch(begp:endp) = spval 
-    call hist_addfld1d ( &
-         fname=this%info%fname('H2OCAN'), &
-         units='mm',  &
-         avgflag='A', &
-         long_name=this%info%lname('intercepted water'), &
-         ptr_patch=this%h2ocan_patch)
+
 
     this%h2osoi_liqice_10cm_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -205,8 +199,15 @@ contains
          long_name=this%info%lname('2m specific humidity'), &
          ptr_patch=this%q_ref2m_patch)
 
+    this%h2ocan_patch(begp:endp) = spval 
+    call hist_addfld1d ( &
+         fname=this%info%fname('H2OCAN'), &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('intercepted water'), &
+         ptr_patch=this%h2ocan_patch)
 
-
+    
     ! Snow properties - these will be vertically averaged over the snow profile
 
     this%snowliq_col(begc:endc) = spval
