@@ -203,7 +203,8 @@ contains
          irrigate, run_zero_weight_urban, all_active, &
          crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
          for_testing_use_second_grain_pool, for_testing_use_repr_structure_pool, &
-         for_testing_no_crop_seed_replenishment
+         for_testing_no_crop_seed_replenishment, &
+         z0param_method, use_z0m_snowmelt
 
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -251,6 +252,7 @@ contains
     namelist /clm_inparm/ use_bedrock
 
     namelist /clm_inparm/ use_biomass_heat_storage
+
 
     namelist /clm_inparm/ use_hydrstress
 
@@ -775,6 +777,7 @@ contains
 
     call mpi_bcast (use_biomass_heat_storage, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+
     call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -815,6 +818,8 @@ contains
     call mpi_bcast (nsegspc, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (use_subgrid_fluxes , 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (snow_cover_fraction_method , len(snow_cover_fraction_method), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (z0param_method , len(z0param_method), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (use_z0m_snowmelt, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (single_column,1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (scmlat, 1, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (scmlon, 1, MPI_REAL8,0, mpicom, ier)

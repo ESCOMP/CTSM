@@ -649,7 +649,7 @@ contains
             atm2lnd_inst, canopystate_inst, energyflux_inst, frictionvel_inst, &
             soilstate_inst, temperature_inst, &
             water_inst%wateratm2lndbulk_inst, water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterstatebulk_inst)
+            water_inst%waterstatebulk_inst, water_inst%waterfluxbulk_inst)
 
        call ozone_inst%CalcOzoneStress(bounds_clump, &
             filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
