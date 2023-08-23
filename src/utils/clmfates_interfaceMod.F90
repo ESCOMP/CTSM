@@ -1401,12 +1401,12 @@ module CLMFatesInterfaceMod
       do s = 1,this%fates(nc)%nsites
 
           c = this%f2hmap(nc)%fcolumn(s)
-          g = col_pp%gridcell(c)
+          g = col%gridcell(c)
 
           ! Accumulate seeds from sites to the gridcell local outgoing buffer
           if ((fates_dispersal_kernel_mode .ne. fates_dispersal_kernel_none) &
               .and. IsItDispersalTime()) then
-                this%fates_seed%outgoing_local(g,:) = this%fates_seed%outgoing_local(g,:) + this%fates(nc)%bc_out(s)%seed_out(:)
+                this%fates_seed%outgoing_local(g,:) = this%fates_seed%outgoing_local(g,:) + this%fates(nc)%sites(s)%seed_out(:)
           end if
 
           ! Other modules may have AI's we only flush values
@@ -2718,16 +2718,16 @@ module CLMFatesInterfaceMod
     ! Add fates check for seed dispersal mode
     do s = 1, this%fates(nc)%nsites
        c = this%f2hmap(nc)%fcolumn(s)
-       g = col_pp%gridcell(c)
+       g = col%gridcell(c)
 
        ! Check that it is the beginning of the current dispersal time step
        if (IsItDispersalTime()) then
           ! assuming equal area for all sites, seed_id_global in [kg/grid/day], seed_in in [kg/site/day]
-          this%fates(nc)%bc_in(s)%seed_in(:) = this%fates_seed%incoming_global(g,:)
-          this%fates(nc)%bc_out(s)%seed_out(:) = 0._r8  ! reset seed_out
+          this%fates(nc)%sites(s)%seed_in(:) = this%fates_seed%incoming_global(g,:)
+          this%fates(nc)%sites(s)%seed_out(:) = 0._r8  ! reset seed_out
        else
           ! if it is not the dispersing time, pass in zero
-          this%fates(nc)%bc_in(s)%seed_in(:) = 0._r8
+          this%fates(nc)%sites(s)%seed_in(:) = 0._r8
        end if
 
     end do
@@ -2758,8 +2758,8 @@ module CLMFatesInterfaceMod
 
     do s = 1, this%fates(nc)%nsites
        c = this%f2hmap(nc)%fcolumn(s)
-       g = col_pp%gridcell(c)
-       this%fates(nc)%bc_in(s)%seed_in(:) = 0 ! reset
+       g = col%gridcell(c)
+       this%fates(nc)%sites(s)%seed_in(:) = 0 ! reset
     end do
 
  end subroutine wrap_seed_dispersal_reset
