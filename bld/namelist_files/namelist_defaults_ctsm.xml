@@ -1095,7 +1095,8 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne16np4_hist_78pfts_CMIP6_2000_c230517
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_0.125nldas2_hist_16pfts_CMIP6_2000_c230517.nc</fsurdat>
 
 <fsurdat hgrid="1x1_brazil"    sim_year="2000">
-lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_brazil_hist_78pfts_CMIP6_simyr2000_c230123.nc</fsurdat>
+/glade/work/erik/ctsm_worktrees/ctsm5.2.mksurfdata/tools/mksurfdata_esmf/surfdata_1x1_brazil_hist_78pfts_CMIP6_2000_c230726.nc
+</fsurdat>
 
 <fsurdat hgrid="5x5_amazon"    sim_year="2000" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517.nc</fsurdat>
@@ -1126,9 +1127,11 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_10x15_hist_78pfts_CMIP6_2000_c230517.n
 <fsurdat hgrid="4x5"       sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_4x5_hist_78pfts_CMIP6_2000_c230517.nc</fsurdat>
 <fsurdat hgrid="1x1_numaIA"       sim_year="2000" >
-lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_numaIA_hist_78pfts_CMIP6_simyr2000_c230123.nc</fsurdat>
+/glade/work/erik/ctsm_worktrees/ctsm5.2.mksurfdata/tools/mksurfdata_esmf/surfdata_1x1_numaIA_hist_78pfts_CMIP6_2000_c230726.nc
+</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="2000" >
-lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_smallvilleIA_hist_78pfts_CMIP6_simyr2000_c230123.nc</fsurdat>
+/glade/work/erik/ctsm_worktrees/ctsm5.2.mksurfdata/tools/mksurfdata_esmf/surfdata_1x1_smallvilleIA_hist_78pfts_CMIP6_2000_c230726.nc
+</fsurdat>
 
 <fsurdat hgrid="mpasa480"  sim_year="2000">
 lnd/clm2/surfdata_map/ctsm5.1.dev052/surfdata_mpasa480_hist_78pfts_CMIP6_simyr2000_c211110.nc </fsurdat>
@@ -1172,11 +1175,14 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts_CMIP6_
 
 <!-- 100% Urban single-point datasets (only for sim-year=2000) -->
 <fsurdat hgrid="1x1_vancouverCAN"    sim_year="2000" >
-lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_vancouverCAN_hist_78pfts_CMIP6_simyr2000_c230123.nc</fsurdat>
+/glade/work/erik/ctsm_worktrees/ctsm5.2.mksurfdata/tools/mksurfdata_esmf/surfdata_1x1_vancouverCAN_hist_78pfts_CMIP6_simyr2000_c230726.nc
+</fsurdat>
 <fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" >
-lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000_c230123.nc</fsurdat>
+/glade/work/erik/ctsm_worktrees/ctsm5.2.mksurfdata/tools/mksurfdata_esmf/surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000_c230726.nc
+</fsurdat>
 <fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" >
-lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_c230123.nc</fsurdat>
+/glade/work/erik/ctsm_worktrees/ctsm5.2.mksurfdata/tools/mksurfdata_esmf/surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_c230726.nc
+</fsurdat>
 
 <!-- for pre-industrial simulations - year 1850 without crop -->
 
@@ -1226,12 +1232,15 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_10x15_hist_78pfts_CMIP6_1850_c230517.n
 <fsurdat hgrid="4x5"       sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_4x5_hist_78pfts_CMIP6_1850_c230517.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" >
-lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_smallvilleIA_hist_78pfts_CMIP6_simyr1850_c230123.nc</fsurdat>
+/glade/work/erik/ctsm_worktrees/ctsm5.2.mksurfdata/tools/mksurfdata_esmf/surfdata_1x1_smallvilleIA_hist_78pfts_CMIP6_1850_c230726.nc
+</fsurdat>
 <fsurdat hgrid="1x1_numaIA"       sim_year="1850" >
-lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_numaIA_hist_78pfts_CMIP6_simyr1850_c230123.nc</fsurdat>
+/glade/work/erik/ctsm_worktrees/ctsm5.2.mksurfdata/tools/mksurfdata_esmf/surfdata_1x1_numaIA_hist_78pfts_CMIP6_1850_c230726.nc
+</fsurdat>
 
 <fsurdat hgrid="1x1_brazil"               sim_year="1850">
-lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_brazil_hist_78pfts_CMIP6_simyr1850_c230123.nc</fsurdat>
+/glade/work/erik/ctsm_worktrees/ctsm5.2.mksurfdata/tools/mksurfdata_esmf/surfdata_1x1_brazil_hist_78pfts_CMIP6_1850_c230726.nc
+</fsurdat>
 
 <fsurdat hgrid="ne3np4.pg3"               sim_year="1850">
 lnd/clm2/surfdata_map/ctsm5.1.dev120/surfdata_ne3np4.pg3_hist_78pfts_CMIP6_simyr1850_c230405.nc</fsurdat>
@@ -1293,7 +1302,8 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts_CMIP6_
  use_crop=".true." >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_10x15_hist_78_CMIP6_1850-2015_c230601.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="1x1_brazil"    sim_year_range="1850-2000"
->lnd/clm2/surfdata_map/ctsm5.1.dev116/landuse.timeseries_1x1_brazil_hist_78pfts_CMIP6_simyr1850-2015_c230123.nc</flanduse_timeseries>
+>/glade/work/erik/ctsm_worktrees/ctsm5.2.mksurfdata/tools/mksurfdata_esmf/landuse.timeseries_1x1_brazil_hist_78_CMIP6_1850-2015_c230726.nc
+</flanduse_timeseries>
 <flanduse_timeseries hgrid="1x1_numaIA"    sim_year_range="1850-2000"
  use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_1x1_numaIA_hist_78pfts_CMIP6_simyr1850-2015_c170917.nc</flanduse_timeseries>
 
