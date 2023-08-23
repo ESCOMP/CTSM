@@ -764,7 +764,16 @@ contains
 
        do f = tape(t)%nflds-1,1,-1
           do ff = 1,f
-             if (tape(t)%hlist(ff)%field%name > tape(t)%hlist(ff+1)%field%name) then
+             if (masterlist(ff)%field%num2d > masterlist(ff+1)%field%num2d) then
+
+                tmp = tape(t)%hlist(ff)
+                tape(t)%hlist(ff  ) = tape(t)%hlist(ff+1)
+                tape(t)%hlist(ff+1) = tmp
+             endif
+          enddo
+          do ff = 1,f
+             if ((masterlist(ff)%field%num2d == masterlist(ff+1)%field%num2d) .and. &
+                  (masterlist(ff)%field%name > masterlist(ff+1)%field%name)) then
 
                 tmp = tape(t)%hlist(ff)
                 tape(t)%hlist(ff  ) = tape(t)%hlist(ff+1)

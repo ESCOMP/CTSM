@@ -1,4 +1,75 @@
 ===============================================================
+Tag name:  release-cesm2.2.02
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Aug 23 13:18:00 MDT 2023
+One-line Summary: Change the sorting method for history files to help with performance on lustre filesystems
+
+Purpose of this version:
+------------------------
+
+Bring in a change from Jim Edwards changing the way that history file variables
+are sorted which improves performance on lustre filesystems. 
+
+Also update the cime tag so will work on izumi with the new domainname.
+
+Tried updating the mosart tag, but that resulting in failing tests.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev108 (with most changes from ctsm1.0.dev111)
+
+Summary of changes:
+-------------------
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    izumi ---- PASS
+
+  tools-tests (components/clm/test/tools): Not tested
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- PASS
+    cheyenne_gnu ------ PASS
+    izumi_nag --------- PASS
+    izumi_intel ------- PASS
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+      cism2_1_69
+      rtm1_0_72
+      mosart1_0_37
+      cime5.8.32.1
+      FATES tag -- sci.1.30.0_api.8.0.0
+      PTCLM2_20200902
+      cdeps hash -- 45b7a85
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+    https://github.com/ESCOMP/CTSM/pull/2115 -- history file optimization
+
+===============================================================
+===============================================================
 Tag name:  release-cesm2.2.01
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed Sep  2 02:44:01 MDT 2020
