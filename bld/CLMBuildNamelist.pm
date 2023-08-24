@@ -3919,16 +3919,18 @@ sub setup_logic_lai_streams {
      }
   } else {
      # If bgc is CN/CNDV then make sure none of the LAI settings are set
-     if ( &value_is_true($nl->get_value('use_lai_streams')) ||
-          defined($nl->get_value('stream_year_first_lai'))  ||
+     if ( &value_is_true($nl->get_value('use_lai_streams'))) {
+        $log->fatal_error("When bgc is NOT SP use_lai_streams cannot be .true.\n" .
+                          "(eg. don't use this option with BGC,CN,CNDV nor BGDCV).");
+     }
+     if ( defined($nl->get_value('stream_year_first_lai'))  ||
           defined($nl->get_value('stream_year_last_lai'))   ||
           defined($nl->get_value('model_year_align_lai'))   ||
           defined($nl->get_value('lai_tintalgo'        ))   ||
           defined($nl->get_value('stream_fldfilename_lai'))   ) {
         $log->fatal_error("When bgc is NOT SP none of the following can be set: stream_year_first_lai,\n" .
                           "stream_year_last_lai, model_year_align_lai, lai_tintalgo nor\n" .
-                          "stream_fldfilename_lai and use_lai_streams can't be .true.\n" .
-                          "(eg. don't use this option with BGC,CN,CNDV nor BGDCV).");
+                          "stream_fldfilename_lai (eg. don't use this option with BGC,CN,CNDV nor BGDCV).");
      }
   }
 }
