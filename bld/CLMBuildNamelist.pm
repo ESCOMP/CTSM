@@ -3927,7 +3927,8 @@ sub setup_logic_lai_streams {
           defined($nl->get_value('stream_fldfilename_lai'))   ) {
         $log->fatal_error("When bgc is NOT SP none of the following can be set: stream_year_first_lai,\n" .
                           "stream_year_last_lai, model_year_align_lai, lai_tintalgo nor\n" .
-                          "stream_fldfilename_lai (eg. don't use this option with BGC,CN,CNDV nor BGDCV).");
+                          "stream_fldfilename_lai and use_lai_streams can't be .true.\n" .
+                          "(eg. don't use this option with BGC,CN,CNDV nor BGDCV).");
      }
   }
 }
