@@ -536,12 +536,6 @@ module CLMFatesInterfaceMod
 
      call SetFatesGlobalElements2(use_fates)
 
-     ! Initialize the array of nearest neighbors for fates-driven grid cell communications
-     ! This must be called after surfrd_get_data and decompInit_lnd
-     if (fates_dispersal_kernel_mode .ne. fates_dispersal_kernel_none) then
-        call DetermineGridCellNeighbors(lneighbors)
-     end if
-
      call t_stopf('fates_globals2')
 
      return
@@ -620,6 +614,12 @@ module CLMFatesInterfaceMod
       ! Initialize fates global seed dispersal array for all nodes
       call get_proc_global(ng=numg)
       call this%fates_seed%init(numg,numpft_fates)
+
+      ! Initialize the array of nearest neighbors for fates-driven grid cell communications
+      ! This must be called after surfrd_get_data and decompInit_lnd
+      if (fates_dispersal_kernel_mode .ne. fates_dispersal_kernel_none) then
+         call DetermineGridCellNeighbors(lneighbors,numg)
+      end if
 
       nclumps = get_proc_clumps()
       allocate(this%fates(nclumps))
