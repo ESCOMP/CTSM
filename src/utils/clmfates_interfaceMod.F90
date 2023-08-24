@@ -610,14 +610,15 @@ module CLMFatesInterfaceMod
       ! Parameter Routines
       call param_derived%Init( numpft_fates )
 
-      ! To do: skip this if not running seed dispersal
-      ! Initialize fates global seed dispersal array for all nodes
-      call get_proc_global(ng=numg)
-      call this%fates_seed%init(numg,numpft_fates)
 
-      ! Initialize the array of nearest neighbors for fates-driven grid cell communications
-      ! This must be called after surfrd_get_data and decompInit_lnd
+      ! Initialize dispersal
       if (fates_dispersal_kernel_mode .ne. fates_dispersal_kernel_none) then
+         ! Initialize fates global seed dispersal array for all nodes
+         call get_proc_global(ng=numg)
+         call this%fates_seed%init(numg,numpft_fates)
+
+         ! Initialize the array of nearest neighbors for fates-driven grid cell communications
+         ! This must be called after surfrd_get_data and decompInit_lnd
          call DetermineGridCellNeighbors(lneighbors,numg)
       end if
 
