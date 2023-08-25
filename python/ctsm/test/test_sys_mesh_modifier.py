@@ -96,8 +96,8 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         self._lon_dimname = fsurdat_in_data[self._lat_varname].dims[1]
 
         ncap2_cmd = (
-            "ncap2 -A -v -s 'mod_lnd_props=PFTDATA_MASK' "
-            + "-A -v -s 'landmask=PFTDATA_MASK' "
+            "ncap2 -A -v -s 'mod_lnd_props=LANDFRAC_PFT' "
+            + "-A -v -s 'landmask=LANDFRAC_PFT' "
             + f"-A -v -s {self._lat_varname}={self._lat_varname} "
             + f"-A -v -s {self._lon_varname}={self._lon_varname} "
             + f"{fsurdat_in} {self._landmask_file}"
