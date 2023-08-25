@@ -44,12 +44,12 @@ class TestFSurdatModifier(unittest.TestCase):
         self._testinputs_path = testinputs_path
         self._fsurdat_in = os.path.join(
             testinputs_path,
-            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc",
+            "surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517.nc",
         )
         self._tempdir = tempfile.mkdtemp()
         self._fsurdat_in = os.path.join(
             testinputs_path,
-            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc",
+            "surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517.nc",
         )
         self._fsurdat_out = os.path.join(self._tempdir, "fsurdat_out.nc")
         sys.argv = [
