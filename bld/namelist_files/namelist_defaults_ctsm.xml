@@ -1181,7 +1181,7 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts_CMIP6_
 /glade/work/erik/ctsm_worktrees/ctsm5.2.mksurfdata/tools/mksurfdata_esmf/surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000_c230726.nc
 </fsurdat>
 <fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" >
-/glade/work/erik/ctsm_worktrees/ctsm5.2.mksurfdata/tools/mksurfdata_esmf/surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_c230726.nc
+/glade/work/erik/ctsm_worktrees/ctsm5.2.mksurfdata/tools/mksurfdata_esmf/surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_c230825.nc
 </fsurdat>
 
 <!-- for pre-industrial simulations - year 1850 without crop -->
