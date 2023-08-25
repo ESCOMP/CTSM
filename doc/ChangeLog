@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev138
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Thu Aug 24 12:33:20 MDT 2023
+Date: Fri Aug 25 14:44:22 MDT 2023
 One-line Summary: Refactor max_patch_per_col and maxsoil_patches loops
 
 Purpose and description of changes
@@ -31,7 +31,7 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed or introduced
 ------------------------
 CTSM issues fixed (include CTSM Issue #):
-Fixes #2025
+Fixes #2025 "Refactor loops that use max_patch_per_col?"
 
 Testing summary:
 ----------------
