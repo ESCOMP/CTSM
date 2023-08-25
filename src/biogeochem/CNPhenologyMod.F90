@@ -550,7 +550,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: p       ! indices
-    integer  :: fp      ! lake filter patch index
+    integer  :: fp      ! filter patch index
     real(r8) :: dayspyr ! days per year (days)
     integer  :: kyr     ! current year
     integer  :: kmo     ! month of year  (1, ..., 12)
@@ -647,7 +647,7 @@ contains
     ! !LOCAL VARIABLES:
     real(r8):: avg_dayspyr                ! Average days per year
     integer :: p                          ! indices
-    integer :: fp                         ! lake filter patch index
+    integer :: fp                         ! filter patch index
     
     real(r8):: tranr 				      
     real(r8):: t1                         ! temporary variable 
@@ -832,7 +832,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: g,c,p          !indices
-    integer :: fp             !lake filter patch index
+    integer :: fp             !filter patch index
     real(r8):: ws_flag        !winter-summer solstice flag (0 or 1)
     real(r8):: crit_onset_gdd !critical onset growing degree-day sum
     real(r8):: crit_daylat    !latitudinal light gradient in arctic-boreal 
@@ -1288,7 +1288,7 @@ contains
     ! !LOCAL VARIABLES:
     real(r8),parameter :: secspqtrday = secspday / 4  ! seconds per quarter day
     integer :: g,c,p           ! indices
-    integer :: fp              ! lake filter patch index
+    integer :: fp              ! filter patch index
     real(r8):: avg_dayspyr     ! average days per year
     real(r8):: crit_onset_gdd  ! degree days for onset trigger
     real(r8):: soilt           ! temperature of top soil layer
@@ -2832,7 +2832,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: p            ! indices
-    integer :: fp           ! lake filter patch index
+    integer :: fp           ! filter patch index
     real(r8):: t1           ! temporary variable
     !-----------------------------------------------------------------------
 
@@ -2968,7 +2968,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: p, c, k, h   ! indices
-    integer :: fp           ! lake filter patch index
+    integer :: fp           ! filter patch index
     real(r8):: t1           ! temporary variable
     real(r8):: denom        ! temporary variable for divisor
     real(r8) :: ntovr_leaf  
@@ -3315,7 +3315,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: p            ! indices
-    integer :: fp           ! lake filter patch index
+    integer :: fp           ! filter patch index
     real(r8) :: fr_leafn_to_litter ! fraction of the nitrogen turnover that goes to litter; remaining fraction is retranslocated
     real(r8) :: ntovr_leaf  
     real(r8) :: denom       
@@ -3472,7 +3472,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: p            ! indices
-    integer :: fp           ! lake filter patch index
+    integer :: fp           ! filter patch index
     real(r8):: ctovr        ! temporary variable for carbon turnover
     real(r8):: ntovr        ! temporary variable for nitrogen turnover
     !-----------------------------------------------------------------------
@@ -3690,7 +3690,7 @@ ptch: do fp = 1,num_soilp
     real(r8)                        , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
     !
     ! !LOCAL VARIABLES:
-    integer :: fp,c,pi,p,k,j,i     ! indices
+    integer :: fp,c,p,k,j,i  ! indices
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
@@ -3774,7 +3774,7 @@ ptch: do fp = 1,num_soilp
                         phenology_c_to_litr_c(c,j,i) = &
                              phenology_c_to_litr_c(c,j,i) + &
                              repr_grainc_to_food(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
-                        
+
                         ! grain litter nitrogen fluxes
                         phenology_n_to_litr_n(c,j,i) = &
                              phenology_n_to_litr_n(c,j,i) + &
@@ -3782,14 +3782,14 @@ ptch: do fp = 1,num_soilp
                      end do
                   end do
                end if
-               
+
                do i = i_litr_min, i_litr_max
                   do k = repr_structure_min, repr_structure_max
                      ! reproductive structure litter carbon fluxes
                      phenology_c_to_litr_c(c,j,i) = &
                           phenology_c_to_litr_c(c,j,i) + &
                           repr_structurec_to_litter(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
-                     
+
                      ! reproductive structure litter nitrogen fluxes
                      phenology_n_to_litr_n(c,j,i) = &
                           phenology_n_to_litr_n(c,j,i) + &
@@ -3799,9 +3799,9 @@ ptch: do fp = 1,num_soilp
             end if
          end do do_vegp
       end do do_nlev
-      
+
     end associate
-    
+
   end subroutine CNLitterToColumn
 
 end module CNPhenologyMod

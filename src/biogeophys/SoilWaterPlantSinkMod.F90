@@ -149,7 +149,6 @@ contains
       use SoilStateType    , only : soilstate_type
       use WaterFluxBulkType    , only : waterfluxbulk_type
       use clm_varpar       , only : nlevsoi
-      use clm_varpar       , only : max_patch_per_col
       use PatchType        , only : patch
       use ColumnType       , only : col
 
@@ -199,30 +198,25 @@ contains
            end do
         end do
         
-        do pi = 1,max_patch_per_col
-           do j = 1,nlevsoi
-              do fc = 1, num_filterc
-                 c = filterc(fc)
-                 if (pi <= col%npatches(c)) then
-                    p = col%patchi(c) + pi - 1
-                    if (patch%active(p)) then
-                       rootr_col(c,j) = rootr_col(c,j) + rootr_patch(p,j) * &
-                             qflx_tran_veg_patch(p) * patch%wtcol(p)
-                    end if
+        do j = 1,nlevsoi
+           do fc = 1, num_filterc
+              c = filterc(fc)
+              do p = col%patchi(c), col%patchi(c) + col%npatches(c) - 1
+                 if (patch%active(p)) then
+                    rootr_col(c,j) = rootr_col(c,j) + rootr_patch(p,j) * &
+                          qflx_tran_veg_patch(p) * patch%wtcol(p)
                  end if
               end do
            end do
-           do fc = 1, num_filterc
-              c = filterc(fc)
-              if (pi <= col%npatches(c)) then
-                 p = col%patchi(c) + pi - 1
-                 if (patch%active(p)) then
-                    temp(c) = temp(c) + qflx_tran_veg_patch(p) * patch%wtcol(p)
-                 end if
+        end do
+        do fc = 1, num_filterc
+           c = filterc(fc)
+           do p = col%patchi(c), col%patchi(c) + col%npatches(c) - 1
+              if (patch%active(p)) then
+                 temp(c) = temp(c) + qflx_tran_veg_patch(p) * patch%wtcol(p)
               end if
            end do
         end do
-
    
         do j = 1, nlevsoi
            do fc = 1, num_filterc
@@ -248,7 +242,6 @@ contains
         !USES:
         use decompMod        , only : bounds_type
         use clm_varpar       , only : nlevsoi
-        use clm_varpar       , only : max_patch_per_col
         use SoilStateType    , only : soilstate_type
         use WaterFluxBulkType    , only : waterfluxbulk_type
         use CanopyStateType  , only : canopystate_type
@@ -308,21 +301,18 @@ contains
              do j = 1, nlevsoi
                 grav2 = z(c,j) * 1000._r8
                 temp(c) = 0._r8
-                do pi = 1,max_patch_per_col
-                   if (pi <= col%npatches(c)) then
-                      p = col%patchi(c) + pi - 1
-                      if (j == 1) then
-                         qflx_hydr_redist_patch(p) = 0._r8
-                      end if
-                      if (patch%active(p).and.frac_veg_nosno(p)>0) then 
-                         if (patch%wtcol(p) > 0._r8) then
-                            patchflux = k_soil_root(p,j) * (smp(c,j) - vegwp(p,4) - grav2)
-                            if (patchflux <0) then
-                               qflx_hydr_redist_patch(p) = qflx_hydr_redist_patch(p) + patchflux
-                            end if
-                            temp(c) = temp(c) + patchflux * patch%wtcol(p)
-                         endif
-                      end if
+                do p = col%patchi(c), col%patchi(c) + col%npatches(c) - 1
+                   if (j == 1) then
+                      qflx_hydr_redist_patch(p) = 0._r8
+                   end if
+                   if (patch%active(p).and.frac_veg_nosno(p)>0) then 
+                      if (patch%wtcol(p) > 0._r8) then
+                         patchflux = k_soil_root(p,j) * (smp(c,j) - vegwp(p,4) - grav2)
+                         if (patchflux <0) then
+                            qflx_hydr_redist_patch(p) = qflx_hydr_redist_patch(p) + patchflux
+                         end if
+                         temp(c) = temp(c) + patchflux * patch%wtcol(p)
+                      endif
                    end if
                 end do
                 qflx_rootsoi_col(c,j)= temp(c)
@@ -351,7 +341,7 @@ contains
     !USES:
     use decompMod        , only : bounds_type
     use shr_kind_mod     , only : r8 => shr_kind_r8
-    use clm_varpar       , only : nlevsoi, max_patch_per_col
+    use clm_varpar       , only : nlevsoi
     use SoilStateType    , only : soilstate_type
     use WaterFluxBulkType    , only : waterfluxbulk_type
     use PatchType        , only : patch
@@ -399,26 +389,22 @@ contains
          end do
       end do
       
-      do pi = 1,max_patch_per_col
-         do j = 1,nlevsoi
-            do fc = 1, num_filterc
-               c = filterc(fc)
-               if (pi <= col%npatches(c)) then
-                  p = col%patchi(c) + pi - 1
-                  if (patch%active(p)) then
-                     rootr_col(c,j) = rootr_col(c,j) + rootr_patch(p,j) * &
-                           qflx_tran_veg_patch(p) * patch%wtcol(p)
-                  end if
+      do j = 1,nlevsoi
+         do fc = 1, num_filterc
+            c = filterc(fc)
+            do p = col%patchi(c), col%patchi(c) + col%npatches(c) - 1
+               if (patch%active(p)) then
+                  rootr_col(c,j) = rootr_col(c,j) + rootr_patch(p,j) * &
+                        qflx_tran_veg_patch(p) * patch%wtcol(p)
                end if
             end do
          end do
-         do fc = 1, num_filterc
-            c = filterc(fc)
-            if (pi <= col%npatches(c)) then
-               p = col%patchi(c) + pi - 1
-               if (patch%active(p)) then
-                  temp(c) = temp(c) + qflx_tran_veg_patch(p) * patch%wtcol(p)
-               end if
+      end do
+      do fc = 1, num_filterc
+         c = filterc(fc)
+         do p = col%patchi(c), col%patchi(c) + col%npatches(c) - 1
+            if (patch%active(p)) then
+               temp(c) = temp(c) + qflx_tran_veg_patch(p) * patch%wtcol(p)
             end if
          end do
       end do
