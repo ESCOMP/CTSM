@@ -396,7 +396,6 @@ class ModifyFsurdat:
         max_sat_area = 0  # max saturated area
         std_elev = 0  # standard deviation of elevation
         slope = 0  # mean topographic slope
-        pftdata_mask = 1
         landfrac_pft = 1
         # if pct_nat_veg had to be set to less than 100, then each special
         # landunit would have to receive a unique pct value rather than the
