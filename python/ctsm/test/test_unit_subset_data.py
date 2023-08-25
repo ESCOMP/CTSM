@@ -46,7 +46,7 @@ class TestSubsetData(unittest.TestCase):
         files = setup_files(self.args, self.defaults, self.cesmroot)
         self.assertEqual(
             files["fsurf_in"],
-            "surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
+            "surfdata_0.9x1.25_hist_16pfts_CMIP6_2000_c230517.nc",
             "fsurf_in filename not whats expected",
         )
         self.assertEqual(
