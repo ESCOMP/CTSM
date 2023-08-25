@@ -22,12 +22,12 @@ module histFileMod
   use LandunitType   , only : lun
   use ColumnType     , only : col
   use PatchType      , only : patch
-  use EDTypesMod     , only : nclmax
-  use EDTypesMod     , only : nlevleaf
+  use EDParamsMod    , only : nclmax
+  use EDParamsMod    , only : nlevleaf
   use FatesInterfaceTypesMod , only : nlevsclass, nlevage, nlevcoage
   use FatesInterfaceTypesMod , only : nlevheight
   use FatesInterfaceTypesMod , only : nlevdamage
-  use EDTypesMod        , only : nfsc
+  use FatesLitterMod        , only : nfsc
   use FatesLitterMod    , only : ncwd
   use PRTGenericMod     , only : num_elements_fates  => num_elements
   use FatesInterfaceTypesMod , only : numpft_fates => numpft
@@ -197,6 +197,20 @@ module histFileMod
   integer            :: num_subs = 0           ! actual number of subscripts
   character(len=32)  :: subs_name(max_subs)    ! name of subscript
   integer            :: subs_dim(max_subs)     ! dimension of subscript
+
+  ! type2d value for a field without a level dimension. This value is important for the
+  ! following reasons (as of 2023-08-21):
+  ! - type2d is used to determine the sort order of history fields both within the history
+  !   file (e.g., what you see from 'ncdump -h') and in the documentation that lists all
+  !   history fields. For these purposes, it is important that variables with
+  !   type2d_unset appear before variables with a real type2d, so type2d_unset should
+  !   appear early in alphabetical sort order. (If type2d_unset were changed to something
+  !   that appeared later in alphabetical sort order, then sort_hist_list should be
+  !   changed to have some special handling of fields with type2d_unset, forcing them to
+  !   appear first.)
+  ! - This will soon be added to the history field documentation, so should be a sensible
+  !   value for the type2d column in that output.
+  character(len=*), parameter :: type2d_unset = '-'
   !
   type field_info
      character(len=max_namlen) :: name         ! field name
@@ -1076,18 +1090,18 @@ contains
 
     do f = n_fields-1, 1, -1
        do ff = 1, f
-          if (hist_list(ff)%field%name > hist_list(ff+1)%field%name) then
+          ! First sort by the name of the level dimension; then, within the list of
+          ! fields with the same level dimension, sort by field name. Sorting first by
+          ! the level dimension gives a significant performance improvement especially
+          ! notable on lustre file systems such as on derecho.
+          if (hist_list(ff)%field%type2d > hist_list(ff+1)%field%type2d .or. &
+               (hist_list(ff)%field%type2d == hist_list(ff+1)%field%type2d .and. &
+               hist_list(ff)%field%name > hist_list(ff+1)%field%name)) then
 
              call tmp%copy(hist_list(ff))
              call hist_list(ff  )%copy(hist_list(ff+1))
              call hist_list(ff+1)%copy(tmp)
 
-          else if (hist_list(ff)%field%name == hist_list(ff+1)%field%name) then
-
-             write(iulog,*) trim(subname),' ERROR: Duplicate field ', &
-                hist_list(ff)%field%name, &
-                't,ff,name=',t,ff,hist_list(ff+1)%field%name
-             call endrun(msg=errMsg(sourcefile, __LINE__))
           end if
        end do
     end do
@@ -5370,7 +5384,7 @@ contains
     ! Add field to masterlist
 
     call masterlist_addfld (fname=trim(fname), numdims=1, type1d=l_type1d, &
-          type1d_out=l_type1d_out, type2d='unset', num2d=1, &
+          type1d_out=l_type1d_out, type2d=type2d_unset, num2d=1, &
           units=units, avgflag=avgflag, long_name=long_name, hpindex=hpindex, &
           p2c_scale_type=scale_type_p2c, c2l_scale_type=scale_type_c2l, &
           l2g_scale_type=scale_type_l2g)
