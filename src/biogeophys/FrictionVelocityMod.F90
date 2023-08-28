@@ -750,10 +750,13 @@ contains
     real(r8) , intent(in)    :: ur      ( lbn: )         ! wind speed at reference height [m/s] [lbn:ubn]
     real(r8) , intent(in)    :: um      ( lbn: )         ! wind speed including the stablity effect [m/s] [lbn:ubn]
     real(r8) , intent(out)   :: ustar   ( lbn: )         ! friction velocity [m/s] [lbn:ubn]
-    real(r8) , intent(inout) :: temp1   ( lbn: )         ! relation for potential temperature profile [lbn:ubn] (inout instead of out to prevent returning nan)
-    real(r8) , intent(inout) :: temp12m ( lbn: )         ! relation for potential temperature profile applied at 2-m [lbn:ubn] (inout instead of out to prevent returning nan)
-    real(r8) , intent(inout) :: temp2   ( lbn: )         ! relation for specific humidity profile [lbn:ubn] (inout instead of out to prevent returning nan)
-    real(r8) , intent(inout) :: temp22m ( lbn: )         ! relation for specific humidity profile applied at 2-m [lbn:ubn] (inout instead of out to prevent returning nan)
+    ! temp1, temp12m, temp2, temp22m are "inout" rather than "out" to
+    ! prevent returning nan when the code returns from this subroutine
+    ! before assigning values to these variables
+    real(r8) , intent(inout) :: temp1   ( lbn: )         ! relation for potential temperature profile [lbn:ubn]
+    real(r8) , intent(inout) :: temp12m ( lbn: )         ! relation for potential temperature profile applied at 2-m [lbn:ubn]
+    real(r8) , intent(inout) :: temp2   ( lbn: )         ! relation for specific humidity profile [lbn:ubn]
+    real(r8) , intent(inout) :: temp22m ( lbn: )         ! relation for specific humidity profile applied at 2-m [lbn:ubn]
     real(r8) , intent(inout) :: fm      ( lbn: )         ! diagnose 10m wind (DUST only) [lbn:ubn]
     logical  , intent(in), optional :: landunit_index   ! optional argument that defines landunit or pft level
     !
