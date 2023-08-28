@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev139   slevis 08/28/2023 Fix problems uncovered by nag -nan tests
     ctsm5.1.dev138   slevis 08/25/2023 Refactor max_patch_per_col and maxsoil_patches loops
     ctsm5.1.dev137   slevis 08/23/2023 Surface roughness modifications
     ctsm5.1.dev136 multiple 08/22/2023 Change order of history fields to improve performance on derecho
