@@ -10,10 +10,11 @@ module clm_initializeMod
   use spmdMod               , only : masterproc, mpicom
   use decompMod             , only : bounds_type, get_proc_bounds, get_proc_clumps, get_clump_bounds
   use abortutils            , only : endrun
-  use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch, use_fates_sp
+  use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch
+  use clm_varctl            , only : use_fates_sp, use_fates_bgc, use_fates
   use clm_varctl            , only : is_cold_start
   use clm_varctl            , only : iulog
-  use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
+  use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14
   use clm_varctl            , only : use_soil_moisture_streams
   use clm_instur            , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft
   use clm_instur            , only : irrig_method, wt_glc_mec, topo_glc_mec, haslake, pct_urban_max
@@ -339,7 +340,7 @@ contains
     end if
 
     ! Pass model timestep info to FATES
-    call CLMFatesTimesteps()
+    if (use_fates) call CLMFatesTimesteps()
 
     ! Initialize daylength from the previous time step (needed so prev_dayl can be set correctly)
     call t_startf('init_orbd')
@@ -431,8 +432,11 @@ contains
     !$OMP END PARALLEL DO
 
     ! Initialize modules (after time-manager initialization in most cases)
-    if (use_cn) then
+    if (use_cn .or. use_fates) then
        call bgc_vegetation_inst%Init2(bounds_proc, NLFilename)
+    end if
+
+    if (use_cn) then
 
        ! NOTE(wjs, 2016-02-23) Maybe the rest of the body of this conditional should also
        ! be moved into bgc_vegetation_inst%Init2
@@ -624,7 +628,7 @@ contains
     !$OMP END PARALLEL DO
 
     ! Initialize nitrogen deposition
-    if (use_cn) then
+    if (use_cn ) then !.or. use_fates_bgc) then (ndep with fates will be added soon RGK)
        call t_startf('init_ndep')
        if (.not. ndep_from_cpl) then
           call ndep_init(bounds_proc, NLFilename)

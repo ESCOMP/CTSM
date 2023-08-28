@@ -146,7 +146,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Supplmental Nitrogen mode -->
 <suplnitro use_cn=".true." >NONE</suplnitro>
-<suplnitro use_fates=".true." >NONE</suplnitro>
+<suplnitro use_fates=".true." >ALL</suplnitro>
 
 <!-- Albedo for glaciers -->
 <albice phys="clm5_1" >0.50,0.30</albice>
@@ -213,7 +213,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <zetamaxstable               use_biomass_heat_storage=".true." >2.0d00</zetamaxstable>
 <zetamaxstable phys="clm4_5"                                   >2.0d00</zetamaxstable>
 <zetamaxstable phys="clm5_0"                                   >0.5d00</zetamaxstable>
-<zetamaxstable phys="clm5_1"                                   >0.5d00</zetamaxstable>
+<zetamaxstable phys="clm5_1" z0param_method="ZengWang2007" >0.5d00</zetamaxstable>
+<zetamaxstable phys="clm5_1" z0param_method="Meier2022" >2.0d00</zetamaxstable>
 
 <!-- atm2lnd defaults -->
 <repartition_rain_snow phys="clm5_1" >.true.</repartition_rain_snow>
@@ -323,6 +324,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <itmax_canopy_fluxes structure="standard">40</itmax_canopy_fluxes>
 <itmax_canopy_fluxes structure="fast"    >3</itmax_canopy_fluxes>
+
 
 <!-- Canopy hydrology namelist defaults -->
 <use_clm5_fpi                 phys="clm5_1" >.true.</use_clm5_fpi>
@@ -495,6 +497,15 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <fates_paramfile>lnd/clm2/paramdata/fates_params_api.25.5.0_12pft_c230628.nc</fates_paramfile>
 
+<!-- ================================================================== -->
+<!-- Default surface roughness parameterization                         -->
+<!-- ================================================================== -->
+
+<z0param_method>ZengWang2007</z0param_method>
+
+<use_z0m_snowmelt z0param_method="Meier2022" >.true.</use_z0m_snowmelt>
+<use_z0m_snowmelt >.false.</use_z0m_snowmelt>
+
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
 <!-- ========================================================================================  -->
@@ -510,6 +521,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_luna phys="clm5_0"  >.true.</use_luna>
 <use_luna phys="clm5_0"  use_fates=".true." >.false.</use_luna>
 <use_luna phys="clm4_5"  >.false.</use_luna>
+<use_luna phys="clm4_5"  use_fates=".true." >.false.</use_luna>
 
 <!-- Flexible CN options -->
 <MM_Nuptake_opt             use_flexibleCN=".true." >.true.</MM_Nuptake_opt>
@@ -1128,6 +1140,8 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_C24_hist_78pfts_CMIP6_simyr2000
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_c190214.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".true." use_vichydro=".false.">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1.9x2.5_hist_78pfts_CMIP6_simyr2000_c190304.nc</fsurdat>
+<fsurdat hgrid="hcru_hcru"   sim_year="2000">
+lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_360x720cru_78pfts_CMIP6_simyr2000_c170824.nc</fsurdat>
 <fsurdat hgrid="0.125x0.125"  sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/release-clm5.0.24/surfdata_0.125x0.125_hist_78pfts_CMIP6_simyr2005_c190624.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="2000" use_crop=".true." use_vichydro=".false.">
