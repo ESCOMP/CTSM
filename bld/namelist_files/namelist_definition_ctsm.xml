@@ -1097,20 +1097,20 @@ Fraction of post-harvest crop residues (leaf and stem) to move to
 </entry>
 
 <entry id="baset_mapping" type="char*20" category="physics"
-       group="crop" valid_values="constant,varytropicsbylat" value="constant">
+       group="crop_inparm" valid_values="constant,varytropicsbylat" value="constant">
 Type of mapping to use for base temperature for prognostic crop model
 constant = Just use baset from the PFT parameter file
 varytropicsbylat = Vary the tropics by latitude 
 </entry>
 
 <entry id="baset_latvary_slope" type="real" category="physics"
-       group="crop" valid_values="" value="0.4d00">
+       group="crop_inparm" valid_values="" value="0.4d00">
 Only used when baset_mapping == varytropicsbylat
 Slope with latitude in degrees to vary tropical baset by
 </entry>
 
 <entry id="baset_latvary_intercept" type="real" category="physics"
-       group="crop" valid_values="" value="12.0d00">
+       group="crop_inparm" valid_values="" value="12.0d00">
 Only used when baset_mapping == varytropicsbylat
 Intercept at zero latitude to add to baset from the PFT parameter file
 </entry>
@@ -1134,6 +1134,16 @@ Initial seed Carbon to use at planting
        group="cnphenology">
 Phenology onset depends on the vegetation type
 (only used when CN is on)
+</entry>
+
+<entry id="generate_crop_gdds" type="logical" category="physics"
+        group="cnphenology" valid_values="" value=".false.">
+Set to .true. in order to override crop harvesting logic and to instead harvest the day before the next sowing date. Used to generate growing-degree day outputs that can be used with an external script to generate new GDD requirement ("cultivar") files.
+</entry>
+
+<entry id="use_mxmat" type="logical" category="physics"
+        group="cnphenology" valid_values="" value=".true.">
+Set to .false. in order to ignore crop PFT parameter for maximum growing season length (mxmat). Must be set to .false. when generate_crop_gdds is .true.
 </entry>
 
 <entry id="min_critical_dayl_method" type="char*25" category="physics"
@@ -1810,6 +1820,41 @@ Mapping method from LAI input file to the model resolution
     nnonj    = nearest neighbor on the "j" (latitude) axis
     spval    = set to special value
     copy     = copy using the same indices
+</entry>
+
+<!-- ========================================================================================  -->
+<!-- cropcal_streams streams Namelist                                                          -->
+<!-- ========================================================================================  -->
+
+<!-- Crop calendars -->
+<entry id="stream_year_first_cropcal" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+First year to loop over for crop calendar data
+</entry>
+
+<entry id="stream_year_last_cropcal" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Last year to loop over for crop calendar data
+</entry>
+
+<entry id="model_year_align_cropcal" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Simulation year that aligns with stream_year_first_cropcal value
+</entry>
+
+<entry id="stream_fldfilename_sdate" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for sowing dates
+</entry>
+
+<entry id="stream_fldfilename_cultivar_gdds" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for cultivar growing degree-day targets
+</entry>
+
+<entry id="stream_meshfile_cropcal" type="char*256" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for crop calendar inputs
 </entry>
 
 <!-- ========================================================================================  -->
@@ -2809,5 +2854,39 @@ weren't for that difference, then this option would be useful for this
 use case.)
 
 </entry>
+
+<!-- ========================================================================================  -->
+<!-- Namelist options related to excess ice                                                    -->
+<!-- ========================================================================================  -->
+<entry id="use_excess_ice" type="logical" category="clm_physics"
+        group="clm_inparm" valid_values="" >
+If TRUE turn on the excess ice physics, (Lee et al., 2014; Cai et al., 2020)
+</entry>
+
+<entry id="use_excess_ice_streams" type="logical" category="clm_physics"
+        group="exice_streams" valid_values="" >
+If TRUE and use_excess_ice is TRUE, use the excess ice stream to determine the initial values of the excess ice field
+if FALSE and use_excess_ice is TRUE, expect excess ice to come from the initial conditions or restart file
+Expect to be FALSE is use_excess_ice is FALSE
+</entry>
+
+<entry id="stream_fldfilename_exice" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="exice_streams" valid_values="" >
+Filename of input stream data for excess ice data
+</entry>
+
+<entry id="stream_meshfile_exice" type="char*256" category="datasets"
+       input_pathname="abs" group="exice_streams" valid_values="" >
+mesh filename of input stream data for excess ice
+</entry>
+
+<entry id="stream_mapalgo_exice" type="char*256" category="datasets"
+       group="exice_streams" valid_values="bilinear,nn,none" >
+Mapping method from excess ice input stream data to the model resolution
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    none     = no interpolation
+</entry>
+
 
 </namelist_definition>

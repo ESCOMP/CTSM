@@ -564,6 +564,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <min_critical_dayl_method         use_cn=".true." phys="clm5_1" >DependsOnLat</min_critical_dayl_method>
 <onset_thresh_depends_on_veg                                    >.false.</onset_thresh_depends_on_veg>
 <min_critical_dayl_method                                       >Constant</min_critical_dayl_method>
+<generate_crop_gdds                                             >.false.</generate_crop_gdds>
+<use_mxmat                                                      >.true.</use_mxmat>
 
 <!-- use additional stress deciduous onset trigger    -->
 <constrain_stress_deciduous_onset phys="clm4_5" >.false.</constrain_stress_deciduous_onset>
@@ -1667,6 +1669,11 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
 
+<!-- crop calendar streams namelist defaults -->
+<stream_year_first_cropcal  >1850</stream_year_first_cropcal>
+<stream_year_last_cropcal   >2100</stream_year_last_cropcal>
+<model_year_align_cropcal   >1850</model_year_align_cropcal>
+
 <!-- lightning streams namelist defaults -->
 
 <light_res    use_cn=".false."                     >none</light_res>
@@ -2707,5 +2714,15 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <!-- =========================================  -->
 
 <init_interp_method>general</init_interp_method>
+
+<!-- =========================================  -->
+<!-- Defaults for excess ice                    -->
+<!-- =========================================  -->
+
+<use_excess_ice>.false.</use_excess_ice>
+
+<stream_fldfilename_exice use_excess_ice=".true.">lnd/clm2/paramdata/exice_init_0.125x0.125_c20220516.nc</stream_fldfilename_exice>
+<stream_meshfile_exice    use_excess_ice=".true.">lnd/clm2/paramdata/exice_init_0.125x0.125_ESMFmesh_cdf5_c20220802.nc</stream_meshfile_exice>
+<stream_mapalgo_exice     use_excess_ice=".true.">bilinear</stream_mapalgo_exice>
 
 </namelist_defaults>
