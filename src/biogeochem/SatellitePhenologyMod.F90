@@ -28,6 +28,7 @@ module SatellitePhenologyMod
   public :: SatellitePhenologyInit ! Dynamically allocate memory
   public :: interpMonthlyVeg       ! interpolate monthly vegetation data
   public :: readAnnualVegetation   ! Read in annual vegetation (needed for Dry-deposition)
+  public :: do_interpMonthlyVeg    ! whether or not to call interpMonthlyVeg
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: readMonthlyVegetation   ! read monthly vegetation data for two months
