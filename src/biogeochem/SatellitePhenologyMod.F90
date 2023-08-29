@@ -257,6 +257,55 @@ contains
   end subroutine interpMonthlyVeg
 
   !==============================================================================
+
+  logical function do_interpMonthlyVeg(use_cn, use_fates, use_fates_sp, doalb, n_drydep)
+    !
+    ! !DESCRIPTION:
+    ! returns whether or not to conduct interpMonthlyVeg subroutine
+    !
+    ! !ARGUMENTS:
+    logical, intent(in) :: use_cn       ! are we using the big-leaf, BGC version of model?
+    logical, intent(in) :: use_fates    ! are we running FATES?
+    logical, intent(in) :: use_fates_sp ! are we running FATES-SP?
+    logical, intent(in) :: doalb        ! true if time for surface albedo calc
+    integer, intent(in) :: n_drydep     ! number in drypdep list
+    
+    if (use_cn .and. n_drydep > 0) then
+      
+      ! For dry-deposition need to call CLMSP so that mlaidiff is obtained
+      ! NOTE: This is also true of FATES below
+      do_interpMonthlyVeg = .true.
+
+    else if (use_fates .and. use_fates_sp) then
+
+    ! For FATES-Specified phenology mode interpolate the weights for
+    ! time-interpolation of monthly vegetation data (as in SP mode below)
+    ! Also for FATES with dry-deposition as above need to call CLMSP so that mlaidiff is obtained
+    !if ( use_fates_sp .or. (n_drydep > 0 ) ) then    ! Replace with this when we have dry-deposition working
+    ! For now don't allow for dry-deposition because of issues in #1044 EBK Jun/17/2022
+    do_interpMonthlyVeg = .true.
+
+  else if (doalb .or. n_drydep > 0) then 
+
+    ! Determine weights for time interpolation of monthly vegetation data.
+    ! This also determines whether it is time to read new monthly vegetation and
+    ! obtain updated leaf area index [mlai1,mlai2], stem area index [msai1,msai2],
+    ! vegetation top [mhvt1,mhvt2] and vegetation bottom [mhvb1,mhvb2]. The
+    ! weights obtained here are used in subroutine SatellitePhenology to obtain time
+    ! interpolated values.
+    ! This is also done for FATES-SP mode above
+    do_interpMonthlyVeg = .true.
+
+  else 
+    
+    do_interpMonthlyVeg = .false.
+
+   end if
+
+  end function do_interpMonthlyVeg
+
+  !==============================================================================
+
   subroutine readAnnualVegetation (bounds, canopystate_inst)
     !
     ! !DESCRIPTION:
