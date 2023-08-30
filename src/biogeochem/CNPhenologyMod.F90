@@ -3128,6 +3128,7 @@ contains
                   leafc_to_biofuelc(p) = t1 * leafc(p) * biofuel_harvfrac(ivt(p))
                   leafc_remaining = leafc(p)*(1._r8-biofuel_harvfrac(ivt(p)))
                   leafn_to_biofueln(p) = t1 * leafn(p) * biofuel_harvfrac(ivt(p))
+                  leafn_remaining = leafn(p)*(1._r8-biofuel_harvfrac(ivt(p)))
 
                   ! Cut a certain fraction (i.e., biofuel_harvfrac(ivt(p))) (e.g., biofuel_harvfrac(ivt(p)=70% for bioenergy crops) of livestem C
                   ! and move this fration of leaf C to biofuel C, rather than move it to litter
