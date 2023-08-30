@@ -166,7 +166,7 @@ module CLMFatesInterfaceMod
    use dynHarvestMod          , only : dynHarvest_interp_resolve_harvesttypes
    use FatesConstantsMod      , only : hlm_harvest_area_fraction
    use FatesConstantsMod      , only : hlm_harvest_carbon
-   use FatesDispersalMod     , only : lneighbors, dispersal_type, IsItDispersalTime
+   use FatesDispersalMod      , only : lneighbors, dispersal_type, IsItDispersalTime
 
    use perf_mod               , only : t_startf, t_stopf
    implicit none
@@ -1405,9 +1405,8 @@ module CLMFatesInterfaceMod
           g = col%gridcell(c)
 
           ! Accumulate seeds from sites to the gridcell local outgoing buffer
-          if ((fates_dispersal_kernel_mode .ne. fates_dispersal_kernel_none) &
-              .and. IsItDispersalTime()) then
-                this%fates_seed%outgoing_local(g,:) = this%fates_seed%outgoing_local(g,:) + this%fates(nc)%sites(s)%seed_out(:)
+          if ((fates_dispersal_kernel_mode .ne. fates_dispersal_kernel_none) .and. IsItDispersalTime()) then
+             this%fates_seed%outgoing_local(g,:) = this%fates_seed%outgoing_local(g,:) + this%fates(nc)%sites(s)%seed_out(:)
           end if
 
           ! Other modules may have AI's we only flush values
@@ -1842,6 +1841,9 @@ module CLMFatesInterfaceMod
             end if
          end do
          !$OMP END PARALLEL DO
+
+         ! Disperse seeds
+         call this%WrapSeedGlobal(is_restart_flag=.true.)
 
       end if
 
@@ -2633,7 +2635,7 @@ module CLMFatesInterfaceMod
 
  ! ======================================================================================
 
- subroutine WrapSeedGlobal(this)
+ subroutine WrapSeedGlobal(this,is_restart_flag)
 
    ! Call mpi procedure to provide the global seed output distribution array to every gridcell.
    ! This could be conducted with a more sophisticated halo-type structure or distributed graph.
@@ -2644,20 +2646,31 @@ module CLMFatesInterfaceMod
 
    ! Arguments
    class(hlm_fates_interface_type), intent(inout) :: this
+   logical, optional                              :: is_restart_flag 
 
    ! Local
    integer :: numg ! total number of gridcells across all processors
    integer :: ier  ! error code
    integer :: g    ! gridcell index
 
+   logical :: set_flag ! local logical variable to pass to IsItDispersalTime
+
    type (neighbor_type), pointer :: neighbor
+
+   ! If WrapSeedGlobal is being called at the end a fates restart call,
+   ! pass .false. to the set_dispersed_flag to avoid updating the 
+   ! global dispersal date
+   set_flag = .true.
+   if (present(is_restart_flag)) then
+      if (is_restart_flag) set_flag = .false.   
+   end if
 
    ! Check if seed dispersal mode is 'turned on', if not return to calling procedure
    if (fates_dispersal_kernel_mode .eq. fates_dispersal_kernel_none) return
 
    call t_startf('fates-seed-mpi_reduce')
 
-   if (IsItDispersalTime(setdispersedflag=.true.)) then
+   if (IsItDispersalTime(setdispersedflag=set_flag)) then
 
       ! Re-initialize incoming seed buffer for this time step
       this%fates_seed%incoming_global(:,:) = 0._r8
@@ -2716,7 +2729,6 @@ module CLMFatesInterfaceMod
 
     nc = bounds_clump%clump_index
 
-    ! Add fates check for seed dispersal mode
     do s = 1, this%fates(nc)%nsites
        c = this%f2hmap(nc)%fcolumn(s)
        g = col%gridcell(c)
@@ -2728,10 +2740,12 @@ module CLMFatesInterfaceMod
           this%fates(nc)%sites(s)%seed_out(:) = 0._r8  ! reset seed_out
        else
           ! if it is not the dispersing time, pass in zero
+          ! if this is a restart, then skip this entirely
           this%fates(nc)%sites(s)%seed_in(:) = 0._r8
        end if
 
     end do
+
 
     call t_stopf('fates-seed-disperse')
 
