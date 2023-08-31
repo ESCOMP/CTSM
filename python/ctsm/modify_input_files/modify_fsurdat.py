@@ -225,7 +225,9 @@ class ModifyFsurdat:
             if val is not None:
                 self.set_lai_sai_hgts(dom_pft=dom_pft, var=var, val=val)
 
-    def check_varlist(self, settings, allow_uppercase_vars=False, source="input settings dictionary"):
+    def check_varlist(
+        self, settings, allow_uppercase_vars=False, source="input settings dictionary"
+    ):
         """
         Check a list of variables from a dictionary of settings
         """
@@ -250,7 +252,10 @@ class ModifyFsurdat:
             if len(self.file[varname].dims) == 2:
                 if not isinstance(val, float):
                     abort(
-                        "For 2D vars, there should only be a single value for variable = " + varname + " in " + source
+                        "For 2D vars, there should only be a single value for variable = "
+                        + varname
+                        + " in "
+                        + source
                     )
             elif len(self.file[varname].dims) >= 3:
                 dim1 = int(self.file.sizes[self.file[varname].dims[0]])
@@ -261,11 +266,17 @@ class ModifyFsurdat:
                         + str(dim1)
                         + " for variable="
                         + varname
-                        + " in " + source
+                        + " in "
+                        + source
                     )
                 if len(val) != dim1:
                     abort(
-                        "Variable " + varname + " is of the wrong size. It should be = " + str(dim1) + " in " + source
+                        "Variable "
+                        + varname
+                        + " is of the wrong size. It should be = "
+                        + str(dim1)
+                        + " in "
+                        + source
                     )
         return settings_return
 

@@ -601,7 +601,9 @@ def fsurdat_modifier(parser):
 
     if process_var_list:
         varlist = read_cfg_var_list(config, idealized=idealized)
-        update_list = modify_fsurdat.check_varlist(varlist, allow_uppercase_vars=True, source="Config file: "+cfg_path)
+        update_list = modify_fsurdat.check_varlist(
+            varlist, allow_uppercase_vars=True, source="Config file: " + cfg_path
+        )
         modify_fsurdat.set_varlist(update_list, cfg_path)
         logger.info("process_var_list is complete")
     else:
