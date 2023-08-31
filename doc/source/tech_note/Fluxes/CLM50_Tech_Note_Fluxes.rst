@@ -785,26 +785,45 @@ The roughness lengths used to calculate :math:`r_{am}` ,
 :math:`r_{ah}` , and :math:`r_{aw}`  are :math:`z_{0m} =z_{0m,\, g}` ,
 :math:`z_{0h} =z_{0h,\, g}` , and :math:`z_{0w} =z_{0w,\, g}` . The
 displacement height :math:`d=0`. The momentum roughness length is
-:math:`z_{0m,\, g} =0.01` for soil, glaciers, and
-:math:`z_{0m,\, g} =0.0024` for snow-covered surfaces
-(:math:`f_{sno} >0`). In general, :math:`z_{0m}`  is different from
-:math:`z_{0h}`  because the transfer of momentum is affected by pressure
-fluctuations in the turbulent waves behind the roughness elements, while
-for heat and water vapor transfer no such dynamical mechanism exists.
-Rather, heat and water vapor must be transferred by molecular diffusion
-across the interfacial sublayer. The following relation from
-:ref:`Zilitinkevich (1970) <Zilitinkevich1970>` is adopted by 
-:ref:`Zeng and Dickinson 1998 <ZengDickinson1998>`
+:math:`z_{0m,\, g} =0.0023` for glaciers without snow (:math:`f_{sno} =0) {\rm }`, and
+:math:`z_{0m,\, g} =0.00085` for bare soil surfaces without snow (:math:`f_{sno} =0) {\rm }` 
+(:ref:`Meier et al. (2022) <Meieretal2022>`).
+
+For bare soil and glaciers with snow ( :math:`f_{sno} > 0` ),
+the momentum roughness length is evaluated based on accumulated snow melt :math:`M_{a} {\rm }` (:ref:`Meier et al. (2022) <Meieretal2022>`).
+For :math:`M_{a} >=1\times 10^{-5}`
+
+.. math::
+   :label: 5.81a
+
+   z_{0m,\, g} =\exp (b_{1} \tan ^{-1} \left[\frac{log_{10} (M_{a}) + 0.23)} {0.08}\right] + b_{4})\times 10^{-3}
+
+where :math:`M_{a}` is accumulated snow melt (meters water equivalent), :math:`b_{1} =1.4` and :math:`b_{4} =-0.31`.
+For :math:`M_{a} <1\times 10^{-5}`
+
+.. math::
+   :label: 5.81b
+
+   z_{0m,\, g} =\exp (-b_{1} 0.5 \pi + b_{4})\times 10^{-3}
+
+Accumulated snow melt :math:`M_{a}` at the current time step :math:`t` is defined as
+
+.. math::
+   :label: 5.81c
+
+   M ^{t}_{a} = M ^{t-1}_{a} - (q ^{t}_{sno} \Delta t + q ^{t}_{snowmelt} \Delta t)\times 10^{-3}
+
+where :math:`M ^{t}_{a}` and :math:`M ^{t-1}_{a}` are the accumulated snowmelt at the current time step and previous time step, respectively (m), :math:`q ^{t}_{sno} \Delta t` is the freshly fallen snow (mm), and :math:`q ^{t}_{snowmelt} \Delta t` is the melted snow (mm).
+
+The scalar roughness lengths (:math:`z_{0q,\, g}` for latent heat and :math:`z_{0h,\ g}` for sensible heat) are calculated
+as (:ref:`Meier et al. (2022) <Meieretal2022>`)
 
 .. math::
    :label: 5.82
 
-   z_{0h,\, g} =z_{0w,\, g} =z_{0m,\, g} e^{-a\left({u_{*} z_{0m,\, g} \mathord{\left/ {\vphantom {u_{*} z_{0m,\, g}  \upsilon }} \right. \kern-\nulldelimiterspace} \upsilon } \right)^{0.45} }
+   z_{0h,\, g}=z_{0q,\, g}=\frac{70 \nu}{u_{*}} \exp (-\beta {u_{*}} ^{0.5} |{\theta_{*}}| ^{0.25} )
 
-where the quantity
-:math:`{u_{\*} z_{0m,\, g} \mathord{\left/ {\vphantom {u_{*} z_{0m,\, g}  \upsilon }} \right. \kern-\nulldelimiterspace} \upsilon }` 
-is the roughness Reynolds number (and may be interpreted as the Reynolds number of the smallest turbulent eddy in the flow) with the kinematic
-viscosity of air :math:`\upsilon =1.5\times 10^{-5}`  m\ :sup:`2` s\ :sup:`-1` and :math:`a=0.13`.
+where :math:`\beta` = 7.2, and :math:`\theta_{*}` is the potential temperature scale.
 
 The numerical solution for the fluxes of momentum, sensible heat, and
 water vapor flux from non-vegetated surfaces proceeds as follows:
@@ -828,7 +847,7 @@ water vapor flux from non-vegetated surfaces proceeds as follows:
 #. Humidity scale :math:`q_{*}`  (:eq:`5.41`, :eq:`5.42`, :eq:`5.43`, :eq:`5.44`)
 
 #. Roughness lengths for sensible :math:`z_{0h,\, g}`  and latent heat
-   :math:`z_{0w,\, g}`  (:eq:`5.82` )
+   :math:`z_{0w,\, g}`  (:eq:`5.81a` , :eq:`5.81b` , :eq:`5.82`)
 
 #. Virtual potential temperature scale :math:`\theta _{v*}`  ( :eq:`5.17`)
 
@@ -1264,101 +1283,153 @@ determined analytically, are ignored for
 The roughness lengths used to calculate :math:`r_{am}` ,
 :math:`r_{ah}` , and :math:`r_{aw}`  from :eq:`5.55`, :eq:`5.56`, and :eq:`5.57` are
 :math:`z_{0m} =z_{0m,\, v}` , :math:`z_{0h} =z_{0h,\, v}` , and
-:math:`z_{0w} =z_{0w,\, v}` . The vegetation displacement height
-:math:`d` and the roughness lengths are a function of plant height and
-adjusted for canopy density following :ref:`Zeng and Wang (2007) <ZengWang2007>`
+:math:`z_{0w} =z_{0w,\, v}` . 
+
+The vegetation roughness lengths and displacement height :math:`d` 
+are from :ref:`Meier et al. (2022) <Meieretal2022>`
 
 .. math::
    :label: 5.125
 
-   z_{0m,\, v} = z_{0h,\, v} =z_{0w,\, v} =\exp \left[V\ln \left(z_{top} R_{z0m} \right)+\left(1-V\right)\ln \left(z_{0m,\, g} \right)\right]
-
-.. math::
-   :label: 5.126 
-
-   d = z_{top} R_{d} V
+   z_{0m,\, v} = z_{0h,\, v} =z_{0w,\, v} = z_{top} (1 - \frac{d} {z_{top} } ) \exp (\psi_{h} - \frac{k U_{h}} {u_{*} } )
 
 where :math:`z_{top}`  is canopy top height (m) 
-(:numref:`Table Plant functional type canopy top and bottom heights`),
-:math:`R_{z0m}`  and :math:`R_{d}`  are the ratio of momentum roughness
-length and displacement height to canopy top height, respectively 
-(:numref:`Table Plant functional type aerodynamic parameters`), and :math:`z_{0m,\, g}` 
-is the ground momentum roughness length (m) (section 
-:numref:`Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces`). The 
-fractional weight :math:`V` is determined from
+(:numref:`Table Plant functional type canopy top and bottom heights`), 
+:math:`k` is the von Karman constant (:numref:`Table Physical constants`),
+and :math:`\psi_{h}` is the roughness sublayer influence function
 
 .. math::
-   :label: 5.127 
+   :label: 5.125a
 
-   V = \frac{1-\exp \left\{-\beta \min \left[L+S,\, \left(L+S\right)_{cr} \right]\right\}}{1-\exp \left[-\beta \left(L+S\right)_{cr} \right]}
+   \psi_{h} = \ln(c_{w}) - 1 + c_{w}^{-1}
 
-where :math:`\beta =1` and :math:`\left(L+S\right)_{cr} = 2` 
-(m\ :sup:`2` m\ :sup:`-2`) is a critical value of exposed leaf
-plus stem area for which :math:`z_{0m}`  reaches its maximum.
+where :math:`c_{w}` is a pft-dependent constant (:numref:`Table Plant functional type aerodynamic parameters`).
+
+The ratio of wind speed at canopy height to friction velocity, :math:`\frac{U_{h}} {u_{*}}` is derived from an
+implicit function of the roughness density :math:`\lambda`
+
+.. math::
+   :label: 5.125b
+
+   \frac{U_{h}} {u_{*} } =(C_{S} + \lambda C_{R})^{0.5} \exp(\frac{\min \left(\lambda, \lambda_{\max}\right) c U_{h}} {2 u_{*}})
+
+where :math:`C_{S}` represents the drag coefficient of the ground in the absence of vegetation,
+:math:`C_{R}` is the drag coefficient of an isolated roughness element (plant), and :math:`c` is an empirical constant.
+These three are pft-dependent parameters (:numref:`Table Plant functional type aerodynamic parameters`).
+:math:`\lambda_{max}` is the maximum :math:`\lambda` above which :math:`\frac{U_{h}} {u_{*}}` becomes constant.
+:math:`\lambda_{max}` is set to the value of :math:`\lambda` for which :eq:`5.125b`, in the absence of :math:`\lambda_{max}`, 
+would have its minimum. :math:`\lambda_{max}` is also a pft-dependent parameter (:numref:`Table Plant functional type aerodynamic parameters`).
+:eq:`5.125b` can be written as
+
+.. math::
+   :label: 5.125c
+
+   X \exp(-X) =(C_{S} + \lambda C_{R})^{0.5} c \frac{\lambda} {2 }
+
+where 
+
+.. math::
+   :label: 5.125d
+
+   X =\frac{c \lambda U_{h}} {2 u_{*} }.
+
+:math:`X` and therefore :math:`\frac{U_{h}} {u_{*}}` can be solved for iteratively where the initial value of :math:`X` is 
+
+.. math::
+   :label: 5.125e
+
+   X_{i=0} =(C_{S} + \lambda C_{R})^{0.5} c \frac{\lambda} {2 }
+
+and the next value of :math:`X` at :math:`i+1` is
+
+.. math::
+   :label: 5.125f
+
+   X_{i+1} =(C_{S} + \lambda C_{R})^{0.5} c \frac{\lambda} {2 } \exp(X_{i}).
+
+:math:`X` is updated until :math:`\frac{U_{h}} {u_{*}}` converges to within :math:`1 \times 10^{-4}` between iterations.
+
+:math:`\lambda` is set to half the total single-sided area of all canopy elements, 
+here defined as the vegetation area index (VAI) defined as the sum of leaf (:math:`L`) and stem area index (:math:`S`),
+subject to a maximum of :math:`\lambda_{max}` and a minimum limit applied for numerical stability
+
+.. math::
+   :label: 5.126
+   
+   \lambda = \frac{\min(\max(1 \times 10^{-5}, VAI), \lambda_{max})} {2 }
+
+The displacement height :math:`d` is
+
+.. math::
+   :label: 5.127
+
+   d = z_{top}\left[1- \frac{1-\exp(-(c_{d1} 2 \lambda)^{0.5}} {(c_{d1} 2 \lambda)^{0.5} }\right]
+
+where :math:`c_{d1} =7.5`.
 
 .. _Table Plant functional type aerodynamic parameters:
 
 .. table:: Plant functional type aerodynamic parameters
 
- +----------------------------------+--------------------+------------------+-------------------------+
- | Plant functional type            | :math:`R_{z0m}`    | :math:`R_{d}`    | :math:`d_{leaf}`  (m)   |
- +==================================+====================+==================+=========================+
- | NET Temperate                    | 0.055              | 0.67             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | NET Boreal                       | 0.055              | 0.67             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | NDT Boreal                       | 0.055              | 0.67             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | BET Tropical                     | 0.075              | 0.67             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | BET temperate                    | 0.075              | 0.67             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | BDT tropical                     | 0.055              | 0.67             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | BDT temperate                    | 0.055              | 0.67             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | BDT boreal                       | 0.055              | 0.67             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | BES temperate                    | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | BDS temperate                    | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | BDS boreal                       | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | C\ :sub:`3` arctic grass         | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | C\ :sub:`3` grass                | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | C\ :sub:`4` grass                | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | Crop R                           | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | Crop I                           | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | Corn R                           | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | Corn I                           | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | Temp Cereal R                    | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | Temp Cereal I                    | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | Winter Cereal R                  | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | Winter Cereal I                  | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | Soybean R                        | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | Soybean I                        | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | Miscanthus R                     | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | Miscanthus I                     | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | Switchgrass R                    | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
- | Switchgrass I                    | 0.120              | 0.68             | 0.04                    |
- +----------------------------------+--------------------+------------------+-------------------------+
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | Plant functional type            | :math:`d_{leaf}`  (m) | :math:`c_{w}`           | :math:`C_{S}`           | :math:`C_{R}`           | :math:`c`               | :math:`\lambda_{max}`   |
+ +==================================+=======================+=========================+=========================+=========================+=========================+=========================+
+ | NET Temperate                    | 0.04                  | 9                       | 0.003                   | 0.05                    | 0.09                    | 4.55                    |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | NET Boreal                       | 0.04                  | 9                       | 0.003                   | 0.05                    | 0.09                    | 4.55                    |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | NDT Boreal                       | 0.04                  | 9                       | 0.003                   | 0.05                    | 0.09                    | 4.55                    |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | BET Tropical                     | 0.04                  | 3                       | 0.01                    | 0.14                    | 0.01                    | 7.87                    |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | BET temperate                    | 0.04                  | 3                       | 0.01                    | 0.14                    | 0.01                    | 7.87                    |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | BDT tropical                     | 0.04                  | 1                       | 0.013                   | 0.13                    | 0.06                    | 8.88                    |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | BDT temperate                    | 0.04                  | 1                       | 0.013                   | 0.13                    | 0.06                    | 8.88                    |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | BDT boreal                       | 0.04                  | 1                       | 0.013                   | 0.13                    | 0.06                    | 8.88                    |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | BES temperate                    | 0.04                  | 20                      | 0.001                   | 0.05                    | 0.12                    | 3.07                    |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | BDS temperate                    | 0.04                  | 20                      | 0.001                   | 0.05                    | 0.12                    | 3.07                    |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | BDS boreal                       | 0.04                  | 20                      | 0.001                   | 0.05                    | 0.12                    | 3.07                    |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | C\ :sub:`3` arctic grass         | 0.04                  | 19                      | 0.001                   | 0.05                    | 0.08                    | 4.61                    |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | C\ :sub:`3` grass                | 0.04                  | 19                      | 0.001                   | 0.05                    | 0.08                    | 4.61                    |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | C\ :sub:`4` grass                | 0.04                  | 19                      | 0.001                   | 0.05                    | 0.08                    | 4.61                    |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | Crop R                           | 0.04                  | 3.5                     | 0.001                   | 0.05                    | 0.04                    | 5.3                     |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | Crop I                           | 0.04                  | 3.5                     | 0.001                   | 0.05                    | 0.04                    | 5.3                     |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | Corn R                           | 0.04                  | 3.5                     | 0.001                   | 0.05                    | 0.04                    | 5.3                     |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | Corn I                           | 0.04                  | 3.5                     | 0.001                   | 0.05                    | 0.04                    | 5.3                     |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | Temp Cereal R                    | 0.04                  | 3.5                     | 0.001                   | 0.05                    | 0.04                    | 5.3                     |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | Temp Cereal I                    | 0.04                  | 3.5                     | 0.001                   | 0.05                    | 0.04                    | 5.3                     |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | Winter Cereal R                  | 0.04                  | 3.5                     | 0.001                   | 0.05                    | 0.04                    | 5.3                     |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | Winter Cereal I                  | 0.04                  | 3.5                     | 0.001                   | 0.05                    | 0.04                    | 5.3                     |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | Soybean R                        | 0.04                  | 3.5                     | 0.001                   | 0.05                    | 0.04                    | 5.3                     |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | Soybean I                        | 0.04                  | 3.5                     | 0.001                   | 0.05                    | 0.04                    | 5.3                     |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | Miscanthus R                     | 0.04                  | 3.5                     | 0.001                   | 0.05                    | 0.04                    | 5.3                     |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | Miscanthus I                     | 0.04                  | 3.5                     | 0.001                   | 0.05                    | 0.04                    | 5.3                     |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | Switchgrass R                    | 0.04                  | 3.5                     | 0.001                   | 0.05                    | 0.04                    | 5.3                     |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
+ | Switchgrass I                    | 0.04                  | 3.5                     | 0.001                   | 0.05                    | 0.04                    | 5.3                     |
+ +----------------------------------+-----------------------+-------------------------+-------------------------+-------------------------+-------------------------+-------------------------+
  
 .. _Numerical Implementation:
 
