@@ -18,6 +18,7 @@ module TillageMod
   public :: readParams
   public :: get_do_tillage
   public :: get_apply_tillage_multipliers
+  public :: get_fraction_tilled
   ! !PUBLIC DATA MEMBERS
   character(len=CS), public :: tillage_mode     ! off, low, high
   integer, parameter, public :: ntill_intensities_max = 2
@@ -36,15 +37,16 @@ module TillageMod
 contains
 !==============================================================================
 
-  subroutine readParams_namelist()
+  subroutine readParams_namelist(NLFilename)
     !
     ! Read namelist parameters related to tillage.
     !
     ! !USES:
     use spmdMod        , only : masterproc, mpicom
-    use controlMod     , only : NLFilename
     use clm_nlUtilsMod , only : find_nlgroup_name
     use shr_mpi_mod    , only : shr_mpi_bcast
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
     !
     ! !LOCAL VARIABLES
     integer                :: nu_nml       ! unit for namelist file
@@ -155,14 +157,15 @@ contains
   end subroutine readParams_netcdf
 
 
-  subroutine readParams(ncid)
+  subroutine readParams(ncid, NLFilename)
     ! !USES
     use ncdio_pio , only : file_desc_t
     !
     ! !ARGUMENTS:
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
 
-    call readParams_namelist()
+    call readParams_namelist(NLFilename)
     call readParams_netcdf(ncid)
 
   end subroutine readParams

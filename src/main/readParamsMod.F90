@@ -106,7 +106,7 @@ contains
           call readSoilBiogeochemDecompBgcParams(ncid)
        end if
        call readSoilBiogeochemDecompParams(ncid)
-       call readTillageParams(ncid)
+       call readTillageParams(ncid, NLFilename_in)
        call readSoilBiogeochemLittVertTranspParams(ncid)
        call readSoilBiogeochemNitrifDenitrifParams(ncid)
        call readSoilBiogeochemNLeachingParams(ncid)
