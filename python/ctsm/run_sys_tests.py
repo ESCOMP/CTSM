@@ -231,10 +231,14 @@ def run_sys_tests(
             _make_cs_status_non_suite(testroot, testid_base)
         if testfile:
             test_args = ["--testfile", os.path.abspath(testfile)]
+            with open(test_args[1], "r") as f:
+                testname_list = f.readlines()
         elif testlist:
             test_args = testlist
+            testname_list = testlist
         else:
             raise RuntimeError("None of suite_name, testfile or testlist were provided")
+        _try_systemtests(testname_list)
         _run_create_test(
             cime_path=cime_path,
             test_args=test_args,
@@ -692,12 +696,31 @@ def _run_test_suite(
         )
 
 
+def _try_systemtests(testname_list):
+    errMsg = " can't be loaded. Do you need to activate the ctsm_pylib conda environment?"
+    if any(["FSURDATMODIFYCTSM" in t for t in testname_list]):
+        try:
+            import ctsm.modify_input_files.modify_fsurdat
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError("modify_fsurdat" + errMsg)
+    if any(["RXCROPMATURITY" in t for t in testname_list]):
+        try:
+            import ctsm.crop_calendars.make_fsurdat_all_crops_everywhere
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError("make_fsurdat_all_crops_everywhere.py" + errMsg)
+        try:
+            import ctsm.crop_calendars.generate_gdds
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError("generate_gdds.py" + errMsg)
+
+
 def _get_compilers_for_suite(suite_name, machine_name):
     test_data = get_tests_from_xml(xml_machine=machine_name, xml_category=suite_name)
     if not test_data:
         raise RuntimeError(
             "No tests found for suite {} on machine {}".format(suite_name, machine_name)
         )
+    _try_systemtests([t["testname"] for t in test_data])
     compilers = sorted({one_test["compiler"] for one_test in test_data})
     logger.info("Running with compilers: %s", compilers)
     return compilers

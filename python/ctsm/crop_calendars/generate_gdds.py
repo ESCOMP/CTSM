@@ -1,6 +1,3 @@
-# Import supporting functions
-import generate_gdds_functions as gddfn
-
 paramfile_dir = "/glade/p/cesmdata/cseg/inputdata/lnd/clm2/paramdata"
 
 # Import other shared functions
@@ -8,10 +5,12 @@ import os
 import inspect
 import sys
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
-import cropcal_module as cc
+_CTSM_PYTHON = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, os.pardir, "python"
+)
+sys.path.insert(1, _CTSM_PYTHON)
+import ctsm.crop_calendars.cropcal_module as cc
+import ctsm.crop_calendars.generate_gdds_functions as gddfn
 
 # Import everything else
 import os
