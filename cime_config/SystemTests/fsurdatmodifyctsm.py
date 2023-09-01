@@ -15,7 +15,6 @@ _CTSM_PYTHON = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python"
 )
 sys.path.insert(1, _CTSM_PYTHON)
-from ctsm.modify_input_files.fsurdat_modifier import fsurdat_modifier
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +81,7 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
             silent=False,
             verbose=False,
         )
+        from ctsm.modify_input_files.fsurdat_modifier import fsurdat_modifier
         fsurdat_modifier(fsurdat_modifier_args)
 
     def _modify_user_nl(self):
