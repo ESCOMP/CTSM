@@ -96,8 +96,8 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         self._lon_dimname = fsurdat_in_data[self._lat_varname].dims[1]
 
         ncap2_cmd = (
-            "ncap2 -A -v -s 'mod_lnd_props=LANDFRAC_PFT' "
-            + "-A -v -s 'landmask=LANDFRAC_PFT' "
+            "ncap2 -A -v -s 'mod_lnd_props=LANDFRAC_PFT.convert(NC_INT)' "
+            + "-A -v -s 'landmask=LANDFRAC_PFT.convert(NC_INT)' "
             + f"-A -v -s {self._lat_varname}={self._lat_varname} "
             + f"-A -v -s {self._lon_varname}={self._lon_varname} "
             + f"{fsurdat_in} {self._landmask_file}"
@@ -137,7 +137,9 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         # the Mask variable will now equal zeros, not ones
         element_mask_in = mesh_mask_in_data.elementMask
         element_mask_out = mesh_mask_out_data.elementMask
-        self.assertTrue(element_mask_out.equals(element_mask_in - 1))
+        self.assertTrue(
+            element_mask_out.equals(element_mask_in - 1)
+        )  # The -1 is because of the comment above about the mask
 
     def _create_config_file(self):
         """

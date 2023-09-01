@@ -186,6 +186,10 @@ class TestSysFsurdatModifier(unittest.TestCase):
         lev2_five[2, :, :, :] = 3.0
         lev2_five[3, :, :, :] = 4.0
         lev2_five[4, :, :, :] = 5.0
+        lev2_ten = np.empty((10, 3, 5, 5))
+        for l in range(10):
+            lev2_ten[l, :, :, :] = float(l + 1)
+
         lev1 = np.array(
             [
                 [
@@ -221,7 +225,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         np.testing.assert_array_equal(fsurdat_out_data.LAKEDEPTH, one0d * 200.0)
         np.testing.assert_array_equal(fsurdat_out_data.T_BUILDING_MIN, lev1)
         np.testing.assert_array_equal(fsurdat_out_data.ALB_ROOF_DIR, lev2_two)
-        np.testing.assert_array_equal(fsurdat_out_data.TK_ROOF, lev2_five)
+        np.testing.assert_array_equal(fsurdat_out_data.TK_ROOF, lev2_ten)
 
     def test_1x1_mexicocity(self):
         """
