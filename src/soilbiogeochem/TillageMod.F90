@@ -284,8 +284,9 @@ contains
     ! Written by Sam Rabin, based on original code by Michael Graham.
     !
     ! !USES
-    use pftconMod , only : npcropmin
+    use pftconMod , only : nc3crop
     use clm_varcon, only : zisoi
+    use landunit_varcon , only : istcrop
     use PatchType , only : patch
     !
     ! !ARGUMENTS:
@@ -295,7 +296,7 @@ contains
     real(r8), dimension(:), intent(inout) :: decomp_k ! Output: [real(r8) (:) ]  rate constant for decomposition (1./sec)
     !
     ! !LOCAL VARIABLES
-    integer :: p, this_patch, n_noncrop
+    integer :: p
     real    :: sumwt ! sum of all patch weights, to check
     real(r8), dimension(ndecomp_pools) :: tillage_mults
     real(r8), dimension(ndecomp_pools) :: tillage_mults_1patch
@@ -303,7 +304,7 @@ contains
 
     ! Skip tillage if column is inactive or this layer doesn't get tilled
     fraction_tilled = get_fraction_tilled(zisoi, j, max_tillage_depth)
-    if (.not. col%active(c) .or. fraction_tilled == 0._r8) then
+    if (.not. col%active(c) .or. fraction_tilled == 0._r8 .or. col%lun_itype(c) /= istcrop) then
         return
     end if
     
@@ -311,32 +312,15 @@ contains
     ! adding patch-weighted multipliers to this.
     tillage_mults(:) = 0.0_r8
 
-    ! TODO: Figure out why adding ".and. col%lun_itype(c) == istcrop" to conditional
-    !       controlling call of this subroutine didn't properly exclude non-crop columns.
-    !       That working would allow some simplification here.
-    this_patch = 0
-    n_noncrop = 0
     sumwt = 0.0_r8
     do p = col%patchi(c),col%patchf(c)
         if (patch%active(p) .and. patch%wtcol(p) /= 0._r8) then
-            if (patch%itype(p) >= npcropmin) then
-                this_patch = p
-                call get_tillage_multipliers(tillage_mults_1patch, idop(p))
-                tillage_mults = tillage_mults + tillage_mults_1patch * patch%wtcol(p)
-                sumwt = sumwt + patch%wtcol(p)
-            else
-                n_noncrop = n_noncrop + 1
-            end if
+            call get_tillage_multipliers(tillage_mults_1patch, idop(p))
+            tillage_mults = tillage_mults + tillage_mults_1patch * patch%wtcol(p)
+            sumwt = sumwt + patch%wtcol(p)
         end if
     end do
-    if (n_noncrop > 0) then
-        if (this_patch > 0) then
-            call endrun('ERROR Active, non-zero-weight crop AND non-crop patches found')
-        end if
-        return
-    elseif (this_patch == 0) then
-        call endrun('ERROR No active, non-zero-weight patches found (crop OR non-crop)')
-    elseif (abs(1.0_r8 - sumwt) > 1.e-6_r8) then
+    if (abs(1.0_r8 - sumwt) > 1.e-6_r8) then
         call endrun('ERROR Active crop patch weights does not sum to 1')
     end if
 
