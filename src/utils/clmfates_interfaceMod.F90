@@ -573,6 +573,8 @@ module CLMFatesInterfaceMod
       ! is not turned on
       ! ---------------------------------------------------------------------------------
 
+      use spmdMod,                only : npes
+      use decompMod,              only : procinfo
       use FatesInterfaceTypesMod, only : numpft_fates => numpft
       use FatesParameterDerivedMod, only : param_derived
       use subgridMod, only :  natveg_patch_exists
@@ -613,13 +615,14 @@ module CLMFatesInterfaceMod
 
       ! Initialize dispersal
       if (fates_dispersal_kernel_mode .ne. fates_dispersal_kernel_none) then
+
          ! Initialize fates global seed dispersal array for all nodes
          call get_proc_global(ng=numg)
-         call this%fates_seed%init(numg,numpft_fates)
+         call this%fates_seed%init(npes,numg,procinfo%ncells,numpft_fates)
 
          ! Initialize the array of nearest neighbors for fates-driven grid cell communications
          ! This must be called after surfrd_get_data and decompInit_lnd
-         call DetermineGridCellNeighbors(lneighbors,numg)
+         call DetermineGridCellNeighbors(lneighbors,this%fates_seed,numg)
       end if
 
       nclumps = get_proc_clumps()
@@ -1406,7 +1409,7 @@ module CLMFatesInterfaceMod
 
           ! Accumulate seeds from sites to the gridcell local outgoing buffer
           if ((fates_dispersal_kernel_mode .ne. fates_dispersal_kernel_none) .and. IsItDispersalTime()) then
-             this%fates_seed%outgoing_local(g,:) = this%fates_seed%outgoing_local(g,:) + this%fates(nc)%sites(s)%seed_out(:)
+             this%fates_seed%outgoing_local(g,:) = this%fates(nc)%sites(s)%seed_out(:)
           end if
 
           ! Other modules may have AI's we only flush values
@@ -2640,8 +2643,9 @@ module CLMFatesInterfaceMod
    ! Call mpi procedure to provide the global seed output distribution array to every gridcell.
    ! This could be conducted with a more sophisticated halo-type structure or distributed graph.
 
+   use decompMod,              only : procinfo
    use spmdMod,                only : MPI_REAL8, MPI_SUM, mpicom
-   use FatesDispersalMod,      only : lneighbors, neighbor_type
+   use FatesDispersalMod,      only : lneighbors, neighbor_type, dispersal_type
    use FatesInterfaceTypesMod, only : numpft_fates => numpft
 
    ! Arguments
@@ -2655,7 +2659,7 @@ module CLMFatesInterfaceMod
 
    logical :: set_flag ! local logical variable to pass to IsItDispersalTime
 
-   type (neighbor_type), pointer :: neighbor
+   type (neighbor_type),  pointer :: neighbor
 
    ! If WrapSeedGlobal is being called at the end a fates restart call,
    ! pass .false. to the set_dispersed_flag to avoid updating the 
@@ -2675,16 +2679,12 @@ module CLMFatesInterfaceMod
       ! Re-initialize incoming seed buffer for this time step
       this%fates_seed%incoming_global(:,:) = 0._r8
 
-      ! Re-initialize the outgoing global seed array buffer
-      this%fates_seed%outgoing_global(:,:) = 1.e6_r8  ! Is this acting as seed rain?
+      ! Distribute obtgoing seed data from all nodes to all nodes
+      call MPI_Allgatherv(this%fates_seed%outgoing_local, procinfo%ncells*numpft_fates, MPI_REAL8, &
+                          this%fates_seed%outgoing_global, this%fates_seed%ncells_array*numpft_fates, this%fates_seed%begg_array, &
+                          MPI_REAL8, mpicom, ier)
 
-      ! Distribute and sum outgoing seed data from all nodes to all nodes
-      ! mpi_allgather should work here as well since gridcells values are not split across nodes
-      ! This would allow for reduction in the outgoing local array size
       call get_proc_global(ng=numg)
-      call mpi_allreduce(this%fates_seed%outgoing_local, this%fates_seed%outgoing_global, &
-                         numg*numpft_fates, MPI_REAL8, MPI_SUM, mpicom, ier)
-
       do g = 1, numg
 
          ! Calculate the current gridcell incoming seed for each gridcell index
