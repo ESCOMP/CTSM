@@ -255,7 +255,7 @@ contains
     integer  :: j        ! Soil layer
     real(r8) :: max_tillage_depth_gft ! Maximum tillage depth
     ! !LOCAL VARIABLES
-    real(r8) :: layer_top ! Depth (cm) of the top of this soil layer. zisoi is the depth of the bottom.
+    real(r8) :: layer_top ! Depth (m) of the top of this soil layer. zisoi is the depth of the bottom.
     real(r8) :: layer_thickness ! Thickness of this soil layer (m)
     ! !RESULT
     real(r8) :: fraction_tilled ! Fraction of this layer that's within the tillage depth
