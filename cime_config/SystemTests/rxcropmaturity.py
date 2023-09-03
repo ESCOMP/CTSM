@@ -135,7 +135,7 @@ class RXCROPMATURITY(SystemTestsCommon):
 
             # Make custom version of surface file
             logger.info("RXCROPMATURITY log:  run make_fsurdat_all_crops_everywhere")
-            self._run_make_fsurdat_all_crops_everywhere()
+            self._setup_make_fsurdat_all_crops_everywhere()
 
         # -------------------------------------------------------------------
         # (2) Perform GDD-generating run and generate prescribed GDDs file
@@ -239,7 +239,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         logger.info("RXCROPMATURITY log:  _setup_all done")
 
     # Make a surface dataset that has every crop in every gridcell
-    def _run_make_fsurdat_all_crops_everywhere(self):
+    def _setup_make_fsurdat_all_crops_everywhere(self):
 
         # fsurdat should be defined. Where is it?
         self._fsurdat_in = None
@@ -269,12 +269,20 @@ class RXCROPMATURITY(SystemTestsCommon):
             command = (
                 f"python3 {tool_path} " + f"-i {self._fsurdat_in} " + f"-o {self._fsurdat_out}"
             )
-            stu.run_python_script(
-                self._get_caseroot(),
-                self._this_conda_env,
-                command,
-                tool_path,
-            )
+
+            # Write a bash script that will do what we want
+            prerun_script = os.path.join(self._path_gddgen, "make_fsurdat_all_crops_everywhere.sh")
+            prerun_script_lines = [
+                    "#!/bin/bash",
+                    "set -e",
+                    "conda run -n ctsm_pylib " + command,
+                    "exit 0",
+                    ]
+            with open(prerun_script, "w") as f:
+                f.writelines(line + "\n" for line in prerun_script_lines)
+            os.chmod(prerun_script, 0o755) # 0o755 = -rwxr-xr-x
+            with self._case:
+                self._case.set_value("PRERUN_SCRIPT", prerun_script)
 
         # Modify namelist
         logger.info("RXCROPMATURITY log:  modify user_nl files: new fsurdat")
