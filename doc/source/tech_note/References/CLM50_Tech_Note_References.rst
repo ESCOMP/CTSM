@@ -6,7 +6,7 @@ References
 .. _Aberetal1990:
 
 Aber, J.D., Melillo, J.M. and McClaugherty, C.A., 1990. Predicting
-long-term patterns of mass loss, nitrogen dynamics, and soil organic
+lang-term patterns of mass loss, nitrogen dynamics, and soil organic
 matter formation from initial fime litter chemistry in temperate forest
 ecosystems. Canadian Journal of Botany, 68: 2201-2208.
 
