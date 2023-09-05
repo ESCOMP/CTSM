@@ -43,9 +43,9 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         self._cfg_template_path = os.path.join(
             path_to_ctsm_root(), "tools/modify_input_files/modify_mesh_template.cfg"
         )
-        testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
-        fsurdat_in = os.path.join(
-            testinputs_path,
+        self.testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
+        self.fsurdat_in = os.path.join(
+            self.testinputs_path,
             "surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517.nc",
         )
         self._tempdir = tempfile.mkdtemp()
@@ -69,13 +69,13 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         # Generate scrip file from fsurdat_in using nco
         # In the ctsm_py environment this requires running 'module load nco'
         # interactively
-        ncks_cmd = f"ncks --rgr infer --rgr scrip={scrip_file} {fsurdat_in} {metadata_file}"
+        ncks_cmd = f"ncks --rgr infer --rgr scrip={scrip_file} {self.fsurdat_in} {metadata_file}"
         try:
             subprocess.check_call(ncks_cmd, shell=True)
         except subprocess.CalledProcessError as e:
             err_msg = (
                 f"{e} ERROR using ncks to generate {scrip_file} from "
-                + f"{fsurdat_in}; MOST LIKELY SHOULD INVOKE module load nco"
+                + f"{self.fsurdat_in}; MOST LIKELY SHOULD INVOKE module load nco"
             )
             sys.exit(err_msg)
         # Run .env_mach_specific.sh to load esmf and generate mesh_mask_in
@@ -89,23 +89,28 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         # Generate landmask_file from fsurdat_in
         self._lat_varname = "LATIXY"  # same as in fsurdat_in
         self._lon_varname = "LONGXY"  # same as in fsurdat_in
-        fsurdat_in_data = xr.open_dataset(fsurdat_in)
+        fsurdat_in_data = xr.open_dataset(self.fsurdat_in)
         assert self._lat_varname in fsurdat_in_data.variables
         assert self._lon_varname in fsurdat_in_data.variables
         self._lat_dimname = fsurdat_in_data[self._lat_varname].dims[0]
         self._lon_dimname = fsurdat_in_data[self._lat_varname].dims[1]
+        self.createLandMaskFile()
 
+    def createLandMaskFile(self):
+        """ Create the LandMask file from the input fsurdat_in file"""
+        if os.path.exists(self._landmask_file):
+           os.remove(self._landmask_file)
         ncap2_cmd = (
             "ncap2 -A -v -s 'mod_lnd_props=LANDFRAC_PFT.convert(NC_INT)' "
             + "-A -v -s 'landmask=LANDFRAC_PFT.convert(NC_INT)' "
             + f"-A -v -s {self._lat_varname}={self._lat_varname} "
             + f"-A -v -s {self._lon_varname}={self._lon_varname} "
-            + f"{fsurdat_in} {self._landmask_file}"
+            + f"{self.fsurdat_in} {self._landmask_file}"
         )
         try:
             subprocess.check_call(ncap2_cmd, shell=True)
         except subprocess.CalledProcessError as e:
-            sys.exit(f"{e} ERROR using ncap2 to generate {self._landmask_file} from {fsurdat_in}")
+            sys.exit(f"{e} ERROR using ncap2 to generate {self._landmask_file} from {self.fsurdat_in}")
 
     def tearDown(self):
         """
@@ -118,8 +123,43 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         """
         This test specifies all the information that one may specify
         Create .cfg file, run the tool, compare mesh_mask_in to mesh_mask_out
+        For a case where the mesh remains unchanged, it's just output as
+        ocean so the mesh is output as all zero's rather than the all 1's that came in.
         """
 
+        self._create_config_file()
+
+        # run the mesh_mask_modifier tool
+        mesh_mask_modifier(self._cfg_file_path)
+        # the critical piece of this test is that the above command
+        # doesn't generate errors; however, we also do some assertions below
+
+        # Error checks
+        mesh_mask_in_data = xr.open_dataset(self._mesh_mask_in)
+        mesh_mask_out_data = xr.open_dataset(self._mesh_mask_out)
+
+        center_coords_in = mesh_mask_in_data.centerCoords
+        center_coords_out = mesh_mask_out_data.centerCoords
+        self.assertTrue(center_coords_out.equals(center_coords_in))
+        # the Mask variable will now equal zeros, not ones
+        element_mask_in = mesh_mask_in_data.elementMask
+        element_mask_out = mesh_mask_out_data.elementMask
+        self.assertTrue(
+            element_mask_out.equals(element_mask_in - 1)
+        )  # The -1 is because of the comment above about the mask
+
+    def test_modifyMesh(self):
+        """
+        This test specifies all the information that one may specify
+        Create .cfg file, run the tool, compare mesh_mask_in to mesh_mask_out
+        For a case where the mesh is changed.
+        """
+
+        self.fsurdat_in = os.path.join(
+            self.testinputs_path,
+            "surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517_modify_mask.nc",
+        )
+        self.createLandMaskFile()
         self._create_config_file()
 
         # run the mesh_mask_modifier tool
