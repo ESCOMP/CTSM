@@ -97,9 +97,9 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         self.createLandMaskFile()
 
     def createLandMaskFile(self):
-        """ Create the LandMask file from the input fsurdat_in file"""
+        """Create the LandMask file from the input fsurdat_in file"""
         if os.path.exists(self._landmask_file):
-           os.remove(self._landmask_file)
+            os.remove(self._landmask_file)
         ncap2_cmd = (
             "ncap2 -A -v -s 'mod_lnd_props=LANDFRAC_PFT.convert(NC_INT)' "
             + "-A -v -s 'landmask=LANDFRAC_PFT.convert(NC_INT)' "
@@ -110,7 +110,9 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         try:
             subprocess.check_call(ncap2_cmd, shell=True)
         except subprocess.CalledProcessError as e:
-            sys.exit(f"{e} ERROR using ncap2 to generate {self._landmask_file} from {self.fsurdat_in}")
+            sys.exit(
+                f"{e} ERROR using ncap2 to generate {self._landmask_file} from {self.fsurdat_in}"
+            )
 
     def tearDown(self):
         """
