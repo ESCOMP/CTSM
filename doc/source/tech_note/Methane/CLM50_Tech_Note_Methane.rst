@@ -293,7 +293,7 @@ area (m\ :sup:`2` m\ :sup:`-2`); :math:`{r}_{a}` is the
 aerodynamic resistance between the surface and the atmospheric reference
 height (s m\ :sup:`-1`); and :math:`\rho _{r}`  is the rooting
 density as a function of depth (-). The gaseous concentration is
-calculated with Henry’s law as described in equation .
+calculated with Henry’s law as described in equation :eq:`24.7`.
 
 Based on the ranges reported in :ref:`Colmer (2003)<Colmer2003>`, we have chosen 
 baseline aerenchyma porosity values of 0.3 for grass and crop PFTs and 0.1 for
@@ -310,7 +310,7 @@ m\ :sup:`-2` s\ :sup:`-1`); *R* is the aerenchyma radius
 belowground fraction of annual NPP; and the 0.22 factor represents the
 amount of C per tiller. O\ :sub:`2` can also diffuse in from the
 atmosphere to the soil layer via the reverse of the same pathway, with
-the same representation as Equation but with the gas diffusivity of
+the same representation as Equation :eq:`24.8` but with the gas diffusivity of
 oxygen.
 
 CLM also simulates the direct emission of CH\ :sub:`4` from leaves
@@ -358,7 +358,7 @@ potential and :math:`{P}_{c} = -2.4 \times {10}^{5}` mm.
 Reactive Transport Solution
 --------------------------------
 
-The solution to equation is solved in several sequential steps: resolve
+The solution to equation :eq:`24.11` is solved in several sequential steps: resolve
 competition for CH\ :sub:`4` and O\ :sub:`2` (section
 :numref:`Competition for CH4and O2`); add the ebullition flux into the 
 layer directly above the water
