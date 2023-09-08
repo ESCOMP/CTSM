@@ -1,4 +1,282 @@
 ===============================================================
+Tag name: ctsm5.1.dev139
+Originator(s): slevis (Samuel Levis)
+Date: Fri Aug 25 16:47:45 MDT 2023
+One-line Summary: Fix problems uncovered by nag -nan tests
+
+Purpose and description of changes
+----------------------------------
+
+ Fix problems uncovered by adding the -nan compilation flag for the Nag
+ compiler.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+ Makes progress on issue #1994 (same title)
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2051
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev138
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri Aug 25 14:44:22 MDT 2023
+One-line Summary: Refactor max_patch_per_col and maxsoil_patches loops
+
+Purpose and description of changes
+----------------------------------
+
+Refactor such loops for clearer and more efficient code, as recommended in
+issue #2025.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+Fixes #2025 "Refactor loops that use max_patch_per_col?"
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2056
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev137
+Originator(s): Ronny Meier,  slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Tue Aug 22 14:34:53 MDT 2023
+One-line Summary: Surface roughness modifications
+
+Purpose and description of changes
+----------------------------------
+
+Surface roughness (z0) modifications that appear in this publication:
+https://doi.org/10.5194/gmd-15-2365-2022
+
+When changing the namelist input z0param_method from ZengWang2007 (default)
+to Meier2022 the following modifications are activated:
+
+- A new parameterization of the vegetation surface roughness based on
+Raupach (1992) with optimized parameters to match the data collected in
+Hu et al. (2020) for different types of vegetation. This requires several new
+PFT-specific input parameters in the parameter file.
+- A spatially explicit z0m input field for bare soil based on the data of
+Prigent et al. (2005). This may be activated specifically by the user through
+the namelist input use_z0mg_2d. This requires a new input variable in the
+fsurdat file.
+- The parameterization of z0m for snow based on accumulated snow melt as
+proposed in Brock et al. (2006). This may be activated specifically by the
+user through the namelist input use_z0m_snowmelt.
+- The parameterization of Yang et al. (2008) for z0h and z0q over bare soil,
+snow, and glaciers.
+- The study in GMD also proposes new globally constant values for the
+z0m of bare soil, snow, and ice. To "activate" those the parameter file needs
+to be changed at the moment. The original and modified parameter files and
+fsurdat files will be shared by ftp.
+
+Open issues/questions (discussed with @ekluzek, @dlawrenncar, @olyson):
+
+- How to incorporate the data of Prigent et al. (2005) in the surfdata
+generation. I will write an email about this to Catherine Prigent.
+- One statement marked in CanopyFluxesMod should probably be changed when
+using Meier2022 (i.e., Yang et al. (2008) formulation should be used instead
+of Zeng and Dickinson (1998)).
+- At the moment one needs to change the parameter file to switch between the
+original and proposed globally constant z0m values for bare soil, snow, and
+ice. This is obviously not very user friendly and prone to mistakes.
+- The introduction of Yang et al. (2008) frequently results in z0h and z0q
+larger than z0m. This is only rarely observed in the field and in contradiction
+to the theory that z0h and z0q should be smaller because heat and water vapor
+need to be transported through molecular diffusion in the surface sublayer.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+Fixes #1316
+Fixes #1596
+
+Notes of particular relevance for users
+---------------------------------------
+Details already discussed in the description above.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+New tests are in place for this new code.
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK 
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline:
+ No, unless user chooses to run in non-default Meier2022 mode.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2045
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev136
+Originator(s): jedwards (Jim Edwards), sacks (Bill Sacks)
+Date: Tue Aug 22 13:10:28 MDT 2023
+One-line Summary: Change order of history fields to improve performance on derecho
+
+Purpose and description of changes
+----------------------------------
+
+Instead of just ordering history fields alphabetically, order them first
+by the name of their level dimension (with fields without a level
+dimension appearing first), then alphabetically within a given level
+dimension. This changed ordering gives a significant performance
+improvement especially noticeable on lustre file systems such as on
+derecho.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+- History fields will now appear in a different order from tools like
+  ncdump, etc.
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+    
+  In addition to expected fails, the test
+  FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon.I2000Clm50SpRs.cheyenne_intel
+  also failed as in https://github.com/ESCOMP/CTSM/issues/2111
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/2114
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev135
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Mon Aug 21 15:06:35 MDT 2023

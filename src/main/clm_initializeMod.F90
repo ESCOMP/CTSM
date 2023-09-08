@@ -340,7 +340,7 @@ contains
     end if
 
     ! Pass model timestep info to FATES
-    call CLMFatesTimesteps()
+    if (use_fates) call CLMFatesTimesteps()
 
     ! Initialize daylength from the previous time step (needed so prev_dayl can be set correctly)
     call t_startf('init_orbd')
