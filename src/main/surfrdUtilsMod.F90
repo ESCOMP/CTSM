@@ -64,7 +64,7 @@ contains
     found = .false.
 
     do nl = lb, ub
-       if (abs(sum(arr(nl,:)) - TotalSum(nl)) > eps) then
+       if (abs(sum(arr(nl,:)) - TotalSum(nl)) > sum_to_1_tol) then
           found = .true.
           nindx = nl
           exit
