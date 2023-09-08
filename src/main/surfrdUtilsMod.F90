@@ -46,7 +46,7 @@ contains
     character(len=*), intent(in) :: name         ! name of array
     character(len=*), intent(in) :: caller       ! identifier of caller, for more meaningful error messages
     integer, optional, intent(out):: ier         ! Return an error code rather than abort
-    real(r8), optional, intent(out):: sumto(lb:)  ! The value the array should sum to (1.0 if not provided)
+    real(r8), optional, intent(in):: sumto(lb:)  ! The value the array should sum to (1.0 if not provided)
     !
     ! !LOCAL VARIABLES:
     logical :: found
@@ -63,8 +63,8 @@ contains
     if( present(ier) ) ier = 0
     found = .false.
 
-    do nl = lbound(arr, 1), ub
-       if (abs(sum(arr(nl,:)) - TotalSum(nl)) > sum_to_1_tol) then
+    do nl = lb, ub
+       if (abs(sum(arr(nl,:)) - TotalSum(nl)) > eps) then
           found = .true.
           nindx = nl
           exit
