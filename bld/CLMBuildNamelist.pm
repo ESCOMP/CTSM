@@ -648,9 +648,9 @@ sub process_namelist_commandline_options {
   setup_cmdl_dynamic_vegetation($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_fates_mode($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_vichydro($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_lnd_tuning($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_cmdl_run_type($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_output_reals($opts, $nl_flags, $definition, $defaults, $nl);
-  setup_logic_lnd_tuning($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 }
 
 #-------------------------------------------------------------------------------
@@ -1243,20 +1243,19 @@ sub setup_cmdl_run_type {
     my $group = $definition->get_group_name($date);
     $nl->set_variable_value($group, $date, $ic_date );
   }
+  my $set = undef;
   if (defined $opts->{$var}) {
-    if ($opts->{$var} eq "default" ) {
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                  'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'},
-                  'sim_year'=>$st_year, 'sim_year_range'=>$nl_flags->{'sim_year_range'},
-                  'bgc_spinup'=>$nl_flags->{'bgc_spinup'} );
-    } else {
+    if ($opts->{$var} ne "default" ) {
+      $set = 1;
       my $group = $definition->get_group_name($var);
       $nl->set_variable_value($group, $var, quote_string( $opts->{$var} ) );
     }
-  } else {
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                  'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'},
-                  'sim_year'=>$st_year );
+  }
+  if ( ! defined $set ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                 'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'},
+                 'sim_year'=>$st_year, 'sim_year_range'=>$nl_flags->{'sim_year_range'},
+                 'bgc_spinup'=>$nl_flags->{'bgc_spinup'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
   }
   $nl_flags->{'clm_start_type'} = $nl->get_value($var);
   $nl_flags->{'st_year'}        = $st_year;
