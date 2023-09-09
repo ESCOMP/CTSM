@@ -1229,6 +1229,8 @@ sub setup_cmdl_simulation_year {
 
 sub setup_cmdl_run_type {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  # Set the clm_start_type and the st_year, start year
+  # This MUST be done after lnd_tuning_mode is set 
 
   my $val;
   my $var = "clm_start_type";
