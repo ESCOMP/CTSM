@@ -216,6 +216,7 @@ module histFileMod
      character(len=max_namlen) :: name         ! field name
      character(len=max_chars)  :: long_name    ! long name
      character(len=max_chars)  :: units        ! units
+     character(len=max_chars)  :: coords       ! coordinates
      character(len=hist_dim_name_length) :: type1d                ! pointer to first dimension type from data type (nameg, etc)
      character(len=hist_dim_name_length) :: type1d_out            ! hbuf first dimension type from data type (nameg, etc)
      character(len=hist_dim_name_length) :: type2d                ! hbuf second dimension type ["levgrnd","levlak","numrad","ltype","natpft","cft","glc_nec","elevclas","subname(n)","mxsowings","mxharvests"]
@@ -506,7 +507,7 @@ contains
   subroutine masterlist_addfld (fname, numdims, type1d, type1d_out, &
         type2d, num2d, units, avgflag, long_name, hpindex, &
         p2c_scale_type, c2l_scale_type, l2g_scale_type, &
-        no_snow_behavior)
+        coords, no_snow_behavior)
     !
     ! !DESCRIPTION:
     ! Add a field to the master field list. Put input arguments of
@@ -531,6 +532,7 @@ contains
     character(len=*), intent(in)  :: p2c_scale_type   ! scale type for subgrid averaging of pfts to column
     character(len=*), intent(in)  :: c2l_scale_type   ! scale type for subgrid averaging of columns to landunits
     character(len=*), intent(in)  :: l2g_scale_type   ! scale type for subgrid averaging of landunits to gridcells
+    character(len=*), intent(in), optional :: coords  ! coordinates
     integer, intent(in), optional :: no_snow_behavior ! if a multi-layer snow field, behavior to use for absent snow layers
     !
     ! !LOCAL VARIABLES:
@@ -595,6 +597,11 @@ contains
     masterlist(f)%field%name           = fname
     masterlist(f)%field%long_name      = long_name
     masterlist(f)%field%units          = units
+    if (present(coords)) then
+       masterlist(f)%field%coords      = coords
+    else
+       masterlist(f)%field%coords      = ' '
+    end if
     masterlist(f)%field%type1d         = type1d
     masterlist(f)%field%type1d_out     = type1d_out
     masterlist(f)%field%type2d         = type2d
@@ -2676,6 +2683,7 @@ contains
     character(len=max_chars) :: long_name ! variable long name
     character(len=max_namlen):: varname   ! variable name
     character(len=max_namlen):: units     ! variable units
+    character(len=max_chars) :: coords    ! coordinates
     integer :: varid                      ! variable id
     !
     real(r8), pointer :: histi(:,:)       ! temporary
@@ -2743,6 +2751,8 @@ contains
 
     if (mode == 'define') then
 
+       ! For now, if coords is used, it's defined as 'LONGXY LATIXY'
+       coords = 'LONGXY LATIXY'
        do ifld = 1,nflds
           ! Field indices MUST match varnames array order above!
           if (ifld == 1) then
@@ -2763,7 +2773,7 @@ contains
           if (tape(t)%dov2xy) then
              if (ldomain%isgrid2d) then
                 call ncd_defvar(ncid=nfid(t), varname=trim(varnames(ifld)), xtype=tape(t)%ncprec,&
-                     dim1name='lon', dim2name='lat', dim3name='levgrnd', &
+                     dim1name='lon', dim2name='lat', dim3name='levgrnd', coords=coords, &
                      long_name=long_name, units=units, missing_value=spval, fill_value=spval, &
                      varid=varid)
              else
@@ -2854,7 +2864,7 @@ contains
           if (tape(t)%dov2xy) then
              if (ldomain%isgrid2d) then
                 call ncd_defvar(ncid=nfid(t), varname=trim(varnamesl(ifld)), xtype=tape(t)%ncprec,&
-                     dim1name='lon', dim2name='lat', dim3name='levlak', &
+                     dim1name='lon', dim2name='lat', dim3name='levlak', coords=coords, &
                      long_name=long_name, units=units, missing_value=spval, fill_value=spval, &
                      varid=varid)
              else
@@ -2940,7 +2950,7 @@ contains
           if (tape(t)%dov2xy) then
              if (ldomain%isgrid2d) then
                 call ncd_defvar(ncid=nfid(t), varname=trim(varnamest(ifld)), xtype=tape(t)%ncprec,&
-                     dim1name='lon', dim2name='lat', dim3name='levsoi', &
+                     dim1name='lon', dim2name='lat', dim3name='levsoi', coords=coords, &
                      long_name=long_name, units=units, missing_value=spval, fill_value=spval)
              else
                 call ncd_defvar(ncid=nfid(t), varname=trim(varnamest(ifld)), xtype=tape(t)%ncprec, &
@@ -3094,6 +3104,7 @@ contains
     character(len=max_chars) :: long_name ! variable long name
     character(len=max_namlen):: varname   ! variable name
     character(len=max_namlen):: units     ! variable units
+    character(len=max_chars) :: coords    ! coordinates
     character(len=max_namlen):: cal       ! calendar from the time-manager
     character(len=max_namlen):: caldesc   ! calendar description to put on file
     character(len=256):: str              ! global attribute string
@@ -3360,32 +3371,34 @@ contains
     !-------------------------------------------------------------------------------
     !***     Grid definition variables ***
     !-------------------------------------------------------------------------------
+    ! For now, if coords is used, it's defined as 'LONGXY LATIXY'
+    coords = 'LONGXY LATIXY'
     ! For define mode -- only do this for first time-sample
     if (mode == 'define' .and. tape(t)%ntimes == 1) then
 
        if (ldomain%isgrid2d) then
-          call ncd_defvar(varname='lon', xtype=tape(t)%ncprec, dim1name='lon', &
-              long_name='coordinate longitude', units='degrees_east', &
-              ncid=nfid(t), missing_value=spval, fill_value=spval)
+          ! 2D lat/lon vars
+          call ncd_defvar(varname='LONGXY', xtype=tape(t)%ncprec, &
+               dim1name='lon', dim2name='lat', &
+               long_name='coordinate longitude', units='degrees east', ncid=nfid(t), &
+               missing_value=spval, fill_value=spval)
+          call ncd_defvar(varname='LATIXY', xtype=tape(t)%ncprec, &
+               dim1name='lon', dim2name='lat', &
+               long_name='coordinate latitude', units='degrees north', ncid=nfid(t), &
+               missing_value=spval, fill_value=spval)
        else
-          call ncd_defvar(varname='lon', xtype=tape(t)%ncprec, &
+          call ncd_defvar(varname='LONGXY', xtype=tape(t)%ncprec, &
               dim1name=grlnd, &
               long_name='coordinate longitude', units='degrees_east', ncid=nfid(t), &
               missing_value=spval, fill_value=spval)
-       end if
-       if (ldomain%isgrid2d) then
-          call ncd_defvar(varname='lat', xtype=tape(t)%ncprec, dim1name='lat', &
-              long_name='coordinate latitude', units='degrees_north', &
-              ncid=nfid(t), missing_value=spval, fill_value=spval)
-       else
-          call ncd_defvar(varname='lat', xtype=tape(t)%ncprec, &
+          call ncd_defvar(varname='LATIXY', xtype=tape(t)%ncprec, &
               dim1name=grlnd, &
               long_name='coordinate latitude', units='degrees_north', ncid=nfid(t), &
               missing_value=spval, fill_value=spval)
        end if
        if (ldomain%isgrid2d) then
           call ncd_defvar(varname='area', xtype=tape(t)%ncprec, &
-              dim1name='lon', dim2name='lat',&
+              dim1name='lon', dim2name='lat', coords=coords, &
               long_name='grid cell areas', units='km^2', ncid=nfid(t), &
               missing_value=spval, fill_value=spval)
        else
@@ -3396,7 +3409,7 @@ contains
        end if
        if (ldomain%isgrid2d) then
           call ncd_defvar(varname='landfrac', xtype=tape(t)%ncprec, &
-              dim1name='lon', dim2name='lat', &
+              dim1name='lon', dim2name='lat', coords=coords, &
               long_name='land fraction', ncid=nfid(t), &
               missing_value=spval, fill_value=spval)
        else
@@ -3407,7 +3420,7 @@ contains
        end if
        if (ldomain%isgrid2d) then
           call ncd_defvar(varname='landmask', xtype=ncd_int, &
-              dim1name='lon', dim2name='lat', &
+              dim1name='lon', dim2name='lat', coords=coords, &
               long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t), &
               imissing_value=ispval, ifill_value=ispval)
        else
@@ -3418,7 +3431,7 @@ contains
        end if
        if (ldomain%isgrid2d) then
           call ncd_defvar(varname='pftmask' , xtype=ncd_int, &
-              dim1name='lon', dim2name='lat', &
+              dim1name='lon', dim2name='lat', coords=coords, &
               long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
               imissing_value=ispval, ifill_value=ispval)
        else
@@ -3429,7 +3442,7 @@ contains
        end if
        if (ldomain%isgrid2d) then
           call ncd_defvar(varname='nbedrock' , xtype=ncd_int, &
-              dim1name='lon', dim2name='lat', &
+              dim1name='lon', dim2name='lat', coords=coords, &
               long_name='index of shallowest bedrock layer', ncid=nfid(t), &
               imissing_value=ispval, ifill_value=ispval)
        else
@@ -3444,13 +3457,9 @@ contains
        ! Most of this is constant and only needs to be done on tape(t)%ntimes=1
        ! But, some may change for dynamic PATCH mode for example
 
-       if (ldomain%isgrid2d) then
-          call ncd_io(varname='lon', data=lon1d, ncid=nfid(t), flag='write')
-          call ncd_io(varname='lat', data=lat1d, ncid=nfid(t), flag='write')
-       else
-          call ncd_io(varname='lon', data=ldomain%lonc, dim1name=grlnd, ncid=nfid(t), flag='write')
-          call ncd_io(varname='lat', data=ldomain%latc, dim1name=grlnd, ncid=nfid(t), flag='write')
-       end if
+       ! 2D lat/lon vars
+       call ncd_io(varname='LONGXY', data=ldomain%lonc, dim1name=grlnd, ncid=nfid(t), flag='write')
+       call ncd_io(varname='LATIXY', data=ldomain%latc, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='area'    , data=ldomain%area, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='landfrac', data=ldomain%frac, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='landmask', data=ldomain%mask, dim1name=grlnd, ncid=nfid(t), flag='write')
@@ -3491,6 +3500,7 @@ contains
     character(len=avgflag_strlen) :: avgflag  ! time averaging flag
     character(len=max_chars) :: long_name! long name
     character(len=max_chars) :: units    ! units
+    character(len=max_chars) :: coords   ! coordinates
     character(len=max_namlen):: varname  ! variable name
     character(len=32) :: avgstr          ! time averaging type
     character(len=hist_dim_name_length)  :: type1d          ! field 1d type
@@ -3523,6 +3533,7 @@ contains
        varname        = tape(t)%hlist(f)%field%name
        long_name      = tape(t)%hlist(f)%field%long_name
        units          = tape(t)%hlist(f)%field%units
+       coords         = tape(t)%hlist(f)%field%coords
        avgflag        = tape(t)%hlist(f)%avgflag
        type1d         = tape(t)%hlist(f)%field%type1d
        type1d_out     = tape(t)%hlist(f)%field%type1d_out
@@ -3577,6 +3588,7 @@ contains
              else
                 call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec, &
                      dim1name=dim1name, dim2name=type2d, dim3name='time', &
+                     coords=coords, &
                      long_name=long_name, units=units, cell_method=avgstr, &
                      missing_value=spval, fill_value=spval, &
                      varid=varid)
@@ -3591,6 +3603,7 @@ contains
              else
                 call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec, &
                      dim1name=dim1name, dim2name=dim2name, dim3name=type2d, dim4name='time', &
+                     coords=coords, &
                      long_name=long_name, units=units, cell_method=avgstr, &
                      missing_value=spval, fill_value=spval, &
                      varid=varid)
@@ -5406,7 +5419,7 @@ contains
                         ptr_gcell, ptr_lunit, ptr_col, ptr_patch, ptr_lnd, ptr_atm, &
                         p2c_scale_type, c2l_scale_type, l2g_scale_type, &
                         set_lake, set_nolake, set_urb, set_nourb, set_spec, &
-                        no_snow_behavior, default)
+                        coords, no_snow_behavior, default)
     !
     ! !DESCRIPTION:
     ! Initialize a single level history field. The pointer inputs, ptr\_*,
@@ -5427,6 +5440,7 @@ contains
     character(len=*), intent(in) :: units                      ! units of field
     character(len=*), intent(in) :: avgflag                    ! time averaging flag
     character(len=*), intent(in) :: long_name                  ! long name of field
+    character(len=*), optional, intent(in) :: coords           ! coordinates
     character(len=*), optional, intent(in) :: type1d_out       ! output type (from data type)
     real(r8)        , optional, pointer    :: ptr_atm(:,:)     ! pointer to atm array
     real(r8)        , optional, pointer    :: ptr_lnd(:,:)     ! pointer to lnd array
@@ -5456,10 +5470,17 @@ contains
     character(len=scale_type_strlen) :: scale_type_l2g ! scale type for subgrid averaging of landunits to gridcells
     type(bounds_type):: bounds
     character(len=16):: l_default      ! local version of 'default'
+    character(len=max_chars) :: coordinates   ! coordinates
     character(len=*),parameter :: subname = 'hist_addfld2d'
 !------------------------------------------------------------------------
 
     call get_proc_bounds(bounds)
+
+    if (present(coords)) then
+       coordinates = coords
+    else
+       coordinates = ' '
+    end if
 
     ! Error-check no_snow_behavior optional argument: It should be present if and only if
     ! type2d is 'levsno', and its value should be one of the public no_snow_* parameters
@@ -5723,7 +5744,8 @@ contains
           type1d_out=l_type1d_out, type2d=type2d, num2d=num2d, &
           units=units, avgflag=avgflag, long_name=long_name, hpindex=hpindex, &
           p2c_scale_type=scale_type_p2c, c2l_scale_type=scale_type_c2l, &
-          l2g_scale_type=scale_type_l2g, no_snow_behavior=no_snow_behavior)
+          l2g_scale_type=scale_type_l2g, coords=coordinates, &
+          no_snow_behavior=no_snow_behavior)
 
     l_default = 'active'
     if (present(default)) then
@@ -5739,7 +5761,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine hist_addfld_decomp (fname, type2d, units, avgflag, long_name, ptr_col, &
-       ptr_patch, l2g_scale_type, default)
+       ptr_patch, l2g_scale_type, coords, default)
 
     !
     ! !DESCRIPTION:
@@ -5758,6 +5780,7 @@ contains
     character(len=*), intent(in) :: units                    ! units of field
     character(len=*), intent(in) :: avgflag                  ! time averaging flag
     character(len=*), intent(in) :: long_name                ! long name of field
+    character(len=*), intent(in), optional :: coords         ! coordinates
     real(r8)        , optional, pointer    :: ptr_col(:,:)   ! pointer to column array
     real(r8)        , optional, pointer    :: ptr_patch(:,:)   ! pointer to patch array
     character(len=*), optional, intent(in) :: l2g_scale_type ! scale type for subgrid averaging of landunits to gridcells
@@ -5765,7 +5788,14 @@ contains
     !
     ! !LOCAL VARIABLES:
     real(r8), pointer  :: ptr_1d(:)
+    character(len=max_chars) :: coordinates   ! coordinates
     !-----------------------------------------------------------------------
+
+    if (present(coords)) then
+       coordinates = coords
+    else
+       coordinates = ' '
+    end if
 
     if (present(ptr_col)) then
 
@@ -5773,7 +5803,7 @@ contains
        if (present(default)) then
           if ( nlevdecomp_full > 1 ) then
              call hist_addfld2d (fname=trim(fname), units=units, type2d=type2d, &
-                  avgflag=avgflag, long_name=long_name, &
+                  avgflag=avgflag, long_name=long_name, coords=coordinates, &
                   ptr_col=ptr_col, l2g_scale_type=l2g_scale_type, default=default)
           else
              ptr_1d => ptr_col(:,1)
@@ -5784,7 +5814,7 @@ contains
        else
           if ( nlevdecomp_full > 1 ) then
              call hist_addfld2d (fname=trim(fname), units=units, type2d=type2d, &
-                  avgflag=avgflag, long_name=long_name, &
+                  avgflag=avgflag, long_name=long_name, coords=coordinates, &
                   ptr_col=ptr_col, l2g_scale_type=l2g_scale_type)
           else
              ptr_1d => ptr_col(:,1)
@@ -5800,7 +5830,7 @@ contains
        if (present(default)) then
           if ( nlevdecomp_full > 1 ) then
              call hist_addfld2d (fname=trim(fname), units=units, type2d=type2d, &
-                  avgflag=avgflag, long_name=long_name, &
+                  avgflag=avgflag, long_name=long_name, coords=coordinates, &
                   ptr_patch=ptr_patch, l2g_scale_type=l2g_scale_type, default=default)
           else
              ptr_1d => ptr_patch(:,1)
@@ -5811,7 +5841,7 @@ contains
        else
           if ( nlevdecomp_full > 1 ) then
              call hist_addfld2d (fname=trim(fname), units=units, type2d=type2d, &
-                  avgflag=avgflag, long_name=long_name, &
+                  avgflag=avgflag, long_name=long_name, coords=coordinates, &
                   ptr_patch=ptr_patch, l2g_scale_type=l2g_scale_type)
           else
              ptr_1d => ptr_patch(:,1)
