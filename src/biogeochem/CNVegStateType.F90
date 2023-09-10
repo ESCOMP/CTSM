@@ -7,7 +7,7 @@ module CNVegStateType
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc
   use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoi
-  use clm_varctl     , only : use_cn, iulog, fsurdat, use_crop, use_cndv
+  use clm_varctl     , only : use_cn, iulog, fsurdat, use_crop, use_cndv, use_crop_agsys
   use clm_varcon     , only : spval, ispval, grlnd
   use landunit_varcon, only : istsoil, istcrop
   use LandunitType   , only : lun
@@ -15,6 +15,7 @@ module CNVegStateType
   use PatchType      , only : patch
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_patch
   use dynSubgridControlMod, only : get_for_testing_allow_non_annual_changes
+  use CropReprPoolsMod, only : nrepr
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -34,16 +35,29 @@ module CNVegStateType
      real(r8) , pointer :: hdidx_patch                 (:)     ! patch cold hardening index?
      real(r8) , pointer :: cumvd_patch                 (:)     ! patch cumulative vernalization d?ependence?
      real(r8) , pointer :: gddmaturity_patch           (:)     ! patch growing degree days (gdd) needed to harvest (ddays)
+     real(r8) , pointer :: gddmaturity_thisyr          (:,:)   ! all at-harvest values of the above for this patch this year (ddays) [patch, mxharvests]
      real(r8) , pointer :: huileaf_patch               (:)     ! patch heat unit index needed from planting to leaf emergence
      real(r8) , pointer :: huigrain_patch              (:)     ! patch heat unit index needed to reach vegetative maturity
      real(r8) , pointer :: aleafi_patch                (:)     ! patch saved leaf allocation coefficient from phase 2
      real(r8) , pointer :: astemi_patch                (:)     ! patch saved stem allocation coefficient from phase 2
+
      real(r8) , pointer :: aleaf_patch                 (:)     ! patch leaf allocation coefficient
      real(r8) , pointer :: astem_patch                 (:)     ! patch stem allocation coefficient
+     real(r8) , pointer :: aroot_patch                 (:)     ! patch root allocation coefficient
+     real(r8) , pointer :: arepr_patch                 (:,:)   ! patch reproductive allocation coefficient(s)
+
+     ! The following nitrogen-based allocation fractions are just used with the AgSys
+     ! crop model (use_crop_agsys = .true.):
+     real(r8) , pointer :: aleaf_n_patch               (:)     ! patch leaf allocation coefficient for N
+     real(r8) , pointer :: astem_n_patch               (:)     ! patch stem allocation coefficient for N
+     real(r8) , pointer :: aroot_n_patch               (:)     ! patch root allocation coefficient for N
+     real(r8) , pointer :: arepr_n_patch               (:,:)   ! patch reproductive allocation coefficient(s) for N
+
      real(r8) , pointer :: htmx_patch                  (:)     ! patch max hgt attained by a crop during yr (m)
      integer  , pointer :: peaklai_patch               (:)     ! patch 1: max allowed lai; 0: not at max
 
-     integer  , pointer :: idop_patch                  (:)     ! patch date of planting
+     integer  , pointer :: idop_patch                  (:)     ! patch date of planting (day of year)
+     integer  , pointer :: iyop_patch                  (:)     ! patch year of planting
 
      real(r8) , pointer :: lgdp_col                    (:)     ! col gdp limitation factor for fire occurrence (0-1)
      real(r8) , pointer :: lgdp1_col                   (:)     ! col gdp limitation factor for fire spreading (0-1)
@@ -116,31 +130,36 @@ module CNVegStateType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds)
+  subroutine Init(this, bounds, alloc_full_veg)
 
     class(cnveg_state_type) :: this
     type(bounds_type), intent(in) :: bounds
+    logical,intent(in) :: alloc_full_veg  ! Total number of bgc patches on proc (non-fates)
 
-    call this%InitAllocate ( bounds )
+    call this%InitAllocate ( bounds, alloc_full_veg)
     if (use_cn) then
        call this%InitHistory ( bounds )
     end if
-    call this%InitCold ( bounds )
-
+    if(alloc_full_veg) then  !This is true if not use_fates_bgc
+       call this%InitCold ( bounds )
+    end if
+    
   end subroutine Init
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds)
+  subroutine InitAllocate(this, bounds, alloc_full_veg)
     !
     ! !DESCRIPTION:
     ! Initialize module data structure
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
+    use clm_varpar, only : mxsowings, mxharvests
     !
     ! !ARGUMENTS:
     class(cnveg_state_type) :: this
     type(bounds_type), intent(in) :: bounds
+    logical, intent(in) :: alloc_full_veg ! Total number of bgc patches on proc (non-fates)
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
@@ -148,9 +167,15 @@ contains
     logical :: allows_non_annual_delta
     !------------------------------------------------------------------------
 
-    begp = bounds%begp; endp= bounds%endp
-    begc = bounds%begc; endc= bounds%endc
-
+    if(alloc_full_veg)then
+       begp = bounds%begp; endp= bounds%endp
+       begc = bounds%begc; endc= bounds%endc
+    else
+       begp = 0;endp = 0
+       begc = 0;endc = 0
+    end if
+       
+       
     ! Note that we set allows_non_annual_delta to false because we expect land cover
     ! change to be applied entirely at the start of the year. Currently the fire code
     ! appears to assume that the land cover change rate is constant throughout the year,
@@ -195,16 +220,29 @@ contains
     allocate(this%hdidx_patch         (begp:endp))                   ; this%hdidx_patch         (:)   = nan
     allocate(this%cumvd_patch         (begp:endp))                   ; this%cumvd_patch         (:)   = nan
     allocate(this%gddmaturity_patch   (begp:endp))                   ; this%gddmaturity_patch   (:)   = spval
+    allocate(this%gddmaturity_thisyr  (begp:endp,1:mxharvests))      ; this%gddmaturity_thisyr  (:,:) = spval
     allocate(this%huileaf_patch       (begp:endp))                   ; this%huileaf_patch       (:)   = nan
     allocate(this%huigrain_patch      (begp:endp))                   ; this%huigrain_patch      (:)   = 0.0_r8
     allocate(this%aleafi_patch        (begp:endp))                   ; this%aleafi_patch        (:)   = nan
     allocate(this%astemi_patch        (begp:endp))                   ; this%astemi_patch        (:)   = nan
+
     allocate(this%aleaf_patch         (begp:endp))                   ; this%aleaf_patch         (:)   = nan
     allocate(this%astem_patch         (begp:endp))                   ; this%astem_patch         (:)   = nan
+    allocate(this%aroot_patch         (begp:endp))                   ; this%aroot_patch         (:)   = nan
+    allocate(this%arepr_patch         (begp:endp, nrepr))            ; this%arepr_patch         (:,:) = nan
+
+    if (use_crop_agsys) then
+       allocate(this%aleaf_n_patch    (begp:endp))                   ; this%aleaf_n_patch       (:)   = nan
+       allocate(this%astem_n_patch    (begp:endp))                   ; this%astem_n_patch       (:)   = nan
+       allocate(this%aroot_n_patch    (begp:endp))                   ; this%aroot_n_patch       (:)   = nan
+       allocate(this%arepr_n_patch    (begp:endp, nrepr))            ; this%arepr_n_patch       (:,:) = nan
+    end if
+
     allocate(this%htmx_patch          (begp:endp))                   ; this%htmx_patch          (:)   = 0.0_r8
     allocate(this%peaklai_patch       (begp:endp))                   ; this%peaklai_patch       (:)   = 0
 
     allocate(this%idop_patch          (begp:endp))                   ; this%idop_patch          (:)   = huge(1)
+    allocate(this%iyop_patch          (begp:endp))                   ; this%iyop_patch          (:)   = ispval
 
     allocate(this%lgdp_col            (begc:endc))                   ;
     allocate(this%lgdp1_col           (begc:endc))                   ;
@@ -286,10 +324,18 @@ contains
     begc = bounds%begc; endc= bounds%endc
 
     if ( use_crop) then
+       ! Daily
        this%gddmaturity_patch(begp:endp) = spval
        call hist_addfld1d (fname='GDDHARV', units='ddays', &
             avgflag='A', long_name='Growing degree days (gdd) needed to harvest', &
             ptr_patch=this%gddmaturity_patch, default='inactive')
+       
+       ! Per harvest
+       this%gddmaturity_thisyr(begp:endp,:) = spval
+       call hist_addfld2d (fname='GDDHARV_PERHARV', units='ddays', type2d='mxharvests', &
+            avgflag='I', long_name='Growing degree days (gdd) needed to harvest; should only be output annually', &
+            ptr_patch=this%gddmaturity_thisyr, default='inactive')
+
     end if
 
     this%lfc2_col(begc:endc) = spval
@@ -459,7 +505,7 @@ contains
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
-  subroutine initCold(this, bounds)
+  subroutine InitCold(this, bounds)
     !
     ! !USES:
     !
@@ -579,7 +625,7 @@ contains
        this%lfc2_col(c) = 0._r8
     end do
 
-  end subroutine initCold
+  end subroutine InitCold
 
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag, cnveg_carbonstate, &
@@ -819,6 +865,16 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='grain_flag', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%grain_flag_patch)
+
+       ! Read or write variable(s) with mxharvests dimension
+       ! BACKWARDS_COMPATIBILITY(ssr, 2022-03-31) See note in CallRestartvarDimOK()
+       if (CallRestartvarDimOK(ncid, flag, 'mxharvests')) then
+          call restartvar(ncid=ncid, flag=flag, varname='gddmaturity_thisyr', xtype=ncd_double,  &
+               dim1name='pft', dim2name='mxharvests', switchdim=.true., &
+               long_name='crop harvest dates for this patch this year', units='day of year', &
+               scale_by_thickness=.false., &
+               interpinic_flag='interp', readvar=readvar, data=this%gddmaturity_thisyr)
+       end if
     end if
     if ( flag == 'read' .and. num_reseed_patch > 0 )then
        if ( masterproc ) write(iulog, *) 'Reseed dead plants for CNVegState'

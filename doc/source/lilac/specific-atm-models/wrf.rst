@@ -390,7 +390,10 @@ A simple PBS script to run WRF-CTSM on ``Cheyenne`` looks like this:
     #PBS -l select=2:ncpus=36:mpiprocs=36
 
     ### Run the executable
+    setenv MPI_TYPE_DEPTH 16
     mpiexec_mpt ./wrf.exe
+
+(See :numref:`runtime-environment-variables` for a description of the need to set ``MPI_TYPE_DEPTH`` on ``Cheyenne``.)
 
 To submit a batch job to the ``Cheyenne`` queues, use ``qsub`` command followed
 by the PBS script name. 

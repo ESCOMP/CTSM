@@ -11,8 +11,9 @@ module FrictionVelocityMod
   use shr_log_mod             , only : errMsg => shr_log_errMsg
   use shr_const_mod           , only : SHR_CONST_PI
   use decompMod               , only : bounds_type
+  use abortutils              , only : endrun
   use clm_varcon              , only : spval
-  use clm_varctl              , only : use_cn, use_luna
+  use clm_varctl              , only : use_cn, use_luna, z0param_method, use_z0m_snowmelt
   use LandunitType            , only : lun
   use ColumnType              , only : col
   use PatchType               , only : patch
@@ -22,6 +23,7 @@ module FrictionVelocityMod
   use atm2lndType             , only : atm2lnd_type
   use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
   use CanopyStateType         , only : canopystate_type
+  use WaterFluxBulkType       , only : waterfluxbulk_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -35,6 +37,7 @@ module FrictionVelocityMod
      real(r8), public :: zetamaxstable = -999._r8  ! Max value zeta ("height" used in Monin-Obukhov theory) can go to under stable conditions
      real(r8) :: zsno = -999._r8  ! Momentum roughness length for snow (m)
      real(r8) :: zlnd = -999._r8  ! Momentum roughness length for soil, glacier, wetland (m)
+     real(r8) :: zglc = -999._r8  ! Momentum roughness length for glacier (only used with z0param_method = 'Meier2022') (m)
 
      ! Roughness length/resistance for friction velocity calculation
 
@@ -52,7 +55,12 @@ module FrictionVelocityMod
      real(r8), pointer, public :: z0mv_patch       (:)   ! patch roughness length over vegetation, momentum [m]
      real(r8), pointer, public :: z0hv_patch       (:)   ! patch roughness length over vegetation, sensible heat [m]
      real(r8), pointer, public :: z0qv_patch       (:)   ! patch roughness length over vegetation, latent heat [m]
-     real(r8), pointer, public :: z0mg_col         (:)   ! col roughness length over ground, momentum  [m] 
+     real(r8), pointer, public :: z0mg_patch       (:)   ! patch roughness length over ground, momentum [m]
+     real(r8), pointer, public :: z0hg_patch       (:)   ! patch roughness length over ground, sensible heat [m]
+     real(r8), pointer, public :: z0qg_patch       (:)   ! patch roughness length over ground, latent heat [m]
+     real(r8), pointer, public :: kbm1_patch       (:)   ! natural logarithm of z0mg_p/z0hg_p [-]
+     real(r8), pointer, public :: z0mg_col         (:)   ! col roughness length over ground, momentum  [m]
+     real(r8), pointer, public :: z0mg_2D_col      (:)   ! 2-D field of input col roughness length over ground, momentum  [m]
      real(r8), pointer, public :: z0hg_col         (:)   ! col roughness length over ground, sensible heat [m]
      real(r8), pointer, public :: z0qg_col         (:)   ! col roughness length over ground, latent heat [m]
      ! variables to add history output from CanopyFluxesMod
@@ -149,7 +157,12 @@ contains
     allocate(this%z0mv_patch       (begp:endp)) ; this%z0mv_patch       (:)   = nan
     allocate(this%z0hv_patch       (begp:endp)) ; this%z0hv_patch       (:)   = nan
     allocate(this%z0qv_patch       (begp:endp)) ; this%z0qv_patch       (:)   = nan
+    allocate(this%z0mg_patch       (begp:endp)) ; this%z0mg_patch       (:)   = nan
+    allocate(this%z0hg_patch       (begp:endp)) ; this%z0hg_patch       (:)   = nan
+    allocate(this%z0qg_patch       (begp:endp)) ; this%z0qg_patch       (:)   = nan
+    allocate(this%kbm1_patch       (begp:endp)) ; this%kbm1_patch       (:)   = nan
     allocate(this%z0mg_col         (begc:endc)) ; this%z0mg_col         (:)   = nan
+    allocate(this%z0mg_2D_col      (begc:endc)) ; this%z0mg_2D_col      (:)   = nan
     allocate(this%z0qg_col         (begc:endc)) ; this%z0qg_col         (:)   = nan
     allocate(this%z0hg_col         (begc:endc)) ; this%z0hg_col         (:)   = nan
     allocate(this%rah1_patch       (begp:endp)) ; this%rah1_patch       (:)   = nan
@@ -192,18 +205,18 @@ contains
 
     this%z0mg_col(begc:endc) = spval
     call hist_addfld1d (fname='Z0MG', units='m', &
-         avgflag='A', long_name='roughness length over ground, momentum', &
-         ptr_col=this%z0mg_col, default='inactive')
+         avgflag='A', long_name='roughness length over ground, momentum (vegetated landunits only)', &
+         ptr_col=this%z0mg_col, default='inactive', l2g_scale_type='veg')
 
     this%z0hg_col(begc:endc) = spval
     call hist_addfld1d (fname='Z0HG', units='m', &
-         avgflag='A', long_name='roughness length over ground, sensible heat', &
-         ptr_col=this%z0hg_col, default='inactive')
+         avgflag='A', long_name='roughness length over ground, sensible heat (vegetated landunits only)', &
+         ptr_col=this%z0hg_col, default='inactive', l2g_scale_type='veg')
 
     this%z0qg_col(begc:endc) = spval
     call hist_addfld1d (fname='Z0QG', units='m', &
-         avgflag='A', long_name='roughness length over ground, latent heat', &
-         ptr_col=this%z0qg_col, default='inactive')
+         avgflag='A', long_name='roughness length over ground, latent heat (vegetated landunits only)', &
+         ptr_col=this%z0qg_col, default='inactive', l2g_scale_type='veg')
 
     this%va_patch(begp:endp) = spval
     call hist_addfld1d (fname='VA', units='m/s', &
@@ -294,25 +307,41 @@ contains
             avgflag='A', long_name='leaf boundary resistance', &
             ptr_patch=this%rb1_patch, default='inactive')
 
-       if (use_cn) then
+    if (use_cn) then
        this%z0hv_patch(begp:endp) = spval
        call hist_addfld1d (fname='Z0HV', units='m', &
             avgflag='A', long_name='roughness length over vegetation, sensible heat', &
-            ptr_patch=this%z0hv_patch, default='inactive')
-    end if
+            ptr_patch=this%z0hv_patch, default='inactive', l2g_scale_type='veg')
 
-    if (use_cn) then
        this%z0mv_patch(begp:endp) = spval
        call hist_addfld1d (fname='Z0MV', units='m', &
             avgflag='A', long_name='roughness length over vegetation, momentum', &
-            ptr_patch=this%z0mv_patch, default='inactive')
-    end if
+            ptr_patch=this%z0mv_patch, default='inactive', l2g_scale_type='veg')
 
-    if (use_cn) then
        this%z0qv_patch(begp:endp) = spval
        call hist_addfld1d (fname='Z0QV', units='m', &
             avgflag='A', long_name='roughness length over vegetation, latent heat', &
-            ptr_patch=this%z0qv_patch, default='inactive')
+            ptr_patch=this%z0qv_patch, default='inactive', l2g_scale_type='veg')
+
+       this%z0hg_patch(begp:endp) = spval
+       call hist_addfld1d (fname='Z0HG_P', units='m', &
+            avgflag='A', long_name='patch roughness length over ground, sensible heat', &
+            ptr_patch=this%z0hg_patch, default='inactive')
+
+       this%z0mg_patch(begp:endp) = spval
+       call hist_addfld1d (fname='Z0MG_P', units='m', &
+            avgflag='A', long_name='patch roughness length over ground, momentum', &
+            ptr_patch=this%z0mg_patch, default='inactive')
+
+       this%z0qg_patch(begp:endp) = spval
+       call hist_addfld1d (fname='Z0QG_P', units='m', &
+            avgflag='A', long_name='patch roughness length over ground, latent heat', &
+            ptr_patch=this%z0qg_patch, default='inactive')
+
+       this%kbm1_patch(begp:endp) = spval
+       call hist_addfld1d (fname='KBM1', units='unitless', &
+            avgflag='A', long_name='natural logarithm of Z0MG_P/Z0HG_P', &
+            ptr_patch=this%kbm1_patch, default='inactive')
     end if
 
     if (use_luna) then
@@ -374,6 +403,11 @@ contains
     ! Momentum roughness length for soil, glacier, wetland (m)
     call readNcdioScalar(params_ncid, 'zlnd', subname, this%zlnd)
 
+    ! Separated roughness length for glacier if z0param_method == 'Meier2022'
+    if (z0param_method == 'Meier2022') then
+       call readNcdioScalar(params_ncid, 'zglc', subname, this%zglc)
+    end if
+
   end subroutine ReadParams
 
   !------------------------------------------------------------------------
@@ -424,7 +458,6 @@ contains
     use shr_mpi_mod    , only : shr_mpi_bcast
     use clm_varctl     , only : iulog
     use shr_log_mod    , only : errMsg => shr_log_errMsg
-    use abortutils     , only : endrun
     !
     ! !ARGUMENTS:
     class(frictionvel_type), intent(inout) :: this
@@ -477,11 +510,13 @@ contains
   !-----------------------------------------------------------------------
   subroutine SetRoughnessLengthsAndForcHeightsNonLake(this, bounds, &
        num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
-       atm2lnd_inst, waterdiagnosticbulk_inst, canopystate_inst)
+       atm2lnd_inst, waterdiagnosticbulk_inst, canopystate_inst, waterfluxbulk_inst)
     !
     ! !DESCRIPTION:
     ! Set roughness lengths and forcing heights for non-lake points
     !
+    ! !USES:
+    use clm_varcon  , only : rpi, b1_param, b4_param, meier_param1, meier_param2
     ! !ARGUMENTS:
     class(frictionvel_type)        , intent(inout) :: this
     type(bounds_type)              , intent(in)    :: bounds    
@@ -492,6 +527,7 @@ contains
     type(atm2lnd_type)             , intent(in)    :: atm2lnd_inst
     type(waterdiagnosticbulk_type) , intent(in)    :: waterdiagnosticbulk_inst
     type(canopystate_type)         , intent(in)    :: canopystate_inst
+    type(waterfluxbulk_type)       , intent(in)    :: waterfluxbulk_inst
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
@@ -505,6 +541,10 @@ contains
          z0mv             =>    this%z0mv_patch                       , & ! Output: [real(r8) (:)   ] roughness length over vegetation, momentum [m]
          z0hv             =>    this%z0hv_patch                       , & ! Output: [real(r8) (:)   ] roughness length over vegetation, sensible heat [m]
          z0qv             =>    this%z0qv_patch                       , & ! Output: [real(r8) (:)   ] roughness length over vegetation, latent heat [m]
+         z0mg_p           =>    this%z0mg_patch                       , & ! Output: [real(r8) (:)   ] patch roughness length over ground, momentum [m]
+         z0hg_p           =>    this%z0hg_patch                       , & ! Output: [real(r8) (:)   ] patch roughness length over ground, sensible heat [m]
+         z0qg_p           =>    this%z0qg_patch                       , & ! Output: [real(r8) (:)   ] patch roughness length over ground, latent heat [m]
+         kbm1             =>    this%kbm1_patch                       , & ! Output: [real(r8) (:)   ] natural logarithm of z0mg_p/z0hg_p [-]
          z0hg             =>    this%z0hg_col                         , & ! Output: [real(r8) (:)   ] roughness length over ground, sensible heat [m]
          z0mg             =>    this%z0mg_col                         , & ! Output: [real(r8) (:)   ] roughness length over ground, momentum [m]
          z0qg             =>    this%z0qg_col                         , & ! Output: [real(r8) (:)   ] roughness length over ground, latent heat [m]
@@ -516,12 +556,14 @@ contains
 
          frac_veg_nosno   =>    canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer  (:)   ] fraction of vegetation not covered by snow (0 OR 1) [-]
          frac_sno         =>    waterdiagnosticbulk_inst%frac_sno_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
+         snomelt_accum    =>    waterdiagnosticbulk_inst%snomelt_accum_col , & ! Input:  [real(r8) (:)   ] accumulated col snow melt for z0m calculation (m H2O)
          urbpoi           =>    lun%urbpoi                            , & ! Input:  [logical  (:)   ] true => landunit is an urban point
          z_0_town         =>    lun%z_0_town                          , & ! Input:  [real(r8) (:)   ] momentum roughness length of urban landunit (m)
          z_d_town         =>    lun%z_d_town                          , & ! Input:  [real(r8) (:)   ] displacement height of urban landunit (m)
          forc_hgt_t       =>    atm2lnd_inst%forc_hgt_t_grc           , & ! Input:  [real(r8) (:)   ] observational height of temperature [m]
          forc_hgt_u       =>    atm2lnd_inst%forc_hgt_u_grc           , & ! Input:  [real(r8) (:)   ] observational height of wind [m]
-         forc_hgt_q       =>    atm2lnd_inst%forc_hgt_q_grc             & ! Input:  [real(r8) (:)   ] observational height of specific humidity [m]
+         forc_hgt_q       =>    atm2lnd_inst%forc_hgt_q_grc           , & ! Input:  [real(r8) (:)   ] observational height of specific humidity [m]
+         z0mg_2D          =>    this%z0mg_2D_col                        & ! Input:  [real(r8) (:)   ] 2-D field of input col roughness length over ground, momentum  [m]
          )
 
     do fc = 1, num_nolakec
@@ -529,13 +571,37 @@ contains
 
        ! Ground roughness lengths over non-lake columns (includes bare ground, ground
        ! underneath canopy, wetlands, etc.)
-       if (frac_sno(c) > 0._r8) then
-          z0mg(c) = this%zsno
-       else
-          z0mg(c) = this%zlnd
-       end if
+
+       select case (z0param_method)
+       case ('ZengWang2007')
+          if (frac_sno(c) > 0._r8) then
+             z0mg(c) = this%zsno
+          else
+             z0mg(c) = this%zlnd
+          end if
+       case ('Meier2022')           ! Bare ground and ice have a different value
+          l = col%landunit(c)
+          if (frac_sno(c) > 0._r8) then ! Do snow first because ice could be snow-covered
+             if(use_z0m_snowmelt) then
+                if ( snomelt_accum(c) < 1.e-5_r8 )then
+                    z0mg(c) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8
+                else
+                    z0mg(c) = exp(b1_param * (atan((log10(snomelt_accum(c)) + meier_param1) / meier_param2)) + b4_param) * 1.e-3_r8
+                end if
+             else
+                z0mg(c) = this%zsno
+             end if
+          else if (lun%itype(l) == istice) then
+             z0mg(c) = this%zglc
+          else
+             z0mg(c) = this%zlnd
+          end if
+       end select
+
        z0hg(c) = z0mg(c)            ! initial set only
        z0qg(c) = z0mg(c)            ! initial set only
+
+
     end do
 
     do fp = 1,num_nolakep
@@ -545,6 +611,13 @@ contains
        z0mv(p)   = z0m(p)
        z0hv(p)   = z0mv(p)
        z0qv(p)   = z0mv(p)
+
+       ! Set to arbitrary value (will be overwritten by respective modules
+       z0mg_p(p)   = spval
+       z0hg_p(p)   = spval
+       z0qg_p(p)   = spval
+       kbm1(p)     = spval
+
     end do
 
     ! Make forcing height a patch-level quantity that is the atmospheric forcing 
@@ -557,17 +630,17 @@ contains
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           if (frac_veg_nosno(p) == 0) then
              forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c) + displa(p)
-             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(c) + displa(p)
-             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(c) + displa(p)
+             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hg(c) + displa(p)
+             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qg(c) + displa(p)
           else
-             forc_hgt_u_patch(p) = forc_hgt_u(g) + z0m(p) + displa(p)
-             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0m(p) + displa(p)
-             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0m(p) + displa(p)
+             forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mv(p) + displa(p)
+             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hv(p) + displa(p)
+             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qv(p) + displa(p)
           end if
        else if (lun%itype(l) == istwet .or. lun%itype(l) == istice) then
-          forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c)
-          forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(c)
-          forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(c)
+          forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c) + displa(p)
+          forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hg(c) + displa(p)
+          forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qg(c) + displa(p)
        else if (urbpoi(l)) then
           forc_hgt_u_patch(p) = forc_hgt_u(g) + z_0_town(l) + z_d_town(l)
           forc_hgt_t_patch(p) = forc_hgt_t(g) + z_0_town(l) + z_d_town(l)
@@ -677,10 +750,13 @@ contains
     real(r8) , intent(in)    :: ur      ( lbn: )         ! wind speed at reference height [m/s] [lbn:ubn]
     real(r8) , intent(in)    :: um      ( lbn: )         ! wind speed including the stablity effect [m/s] [lbn:ubn]
     real(r8) , intent(out)   :: ustar   ( lbn: )         ! friction velocity [m/s] [lbn:ubn]
-    real(r8) , intent(out)   :: temp1   ( lbn: )         ! relation for potential temperature profile [lbn:ubn]
-    real(r8) , intent(out)   :: temp12m ( lbn: )         ! relation for potential temperature profile applied at 2-m [lbn:ubn]
-    real(r8) , intent(out)   :: temp2   ( lbn: )         ! relation for specific humidity profile [lbn:ubn]
-    real(r8) , intent(out)   :: temp22m ( lbn: )         ! relation for specific humidity profile applied at 2-m [lbn:ubn]
+    ! temp1, temp12m, temp2, temp22m are "inout" rather than "out" to
+    ! prevent returning nan when the code returns from this subroutine
+    ! before assigning values to these variables
+    real(r8) , intent(inout) :: temp1   ( lbn: )         ! relation for potential temperature profile [lbn:ubn]
+    real(r8) , intent(inout) :: temp12m ( lbn: )         ! relation for potential temperature profile applied at 2-m [lbn:ubn]
+    real(r8) , intent(inout) :: temp2   ( lbn: )         ! relation for specific humidity profile [lbn:ubn]
+    real(r8) , intent(inout) :: temp22m ( lbn: )         ! relation for specific humidity profile applied at 2-m [lbn:ubn]
     real(r8) , intent(inout) :: fm      ( lbn: )         ! diagnose 10m wind (DUST only) [lbn:ubn]
     logical  , intent(in), optional :: landunit_index   ! optional argument that defines landunit or pft level
     !

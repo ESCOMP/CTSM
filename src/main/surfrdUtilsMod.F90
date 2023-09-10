@@ -7,7 +7,7 @@ module surfrdUtilsMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use clm_varctl   , only : iulog
+  use clm_varctl   , only : iulog,use_fates
   use abortutils   , only : endrun
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use spmdMod      , only : masterproc
@@ -45,7 +45,7 @@ contains
     character(len=*), intent(in) :: name         ! name of array
     character(len=*), intent(in) :: caller       ! identifier of caller, for more meaningful error messages
     integer, optional, intent(out):: ier         ! Return an error code rather than abort
-    real(r8), optional, intent(out):: sumto(lb:)  ! The value the array should sum to (1.0 if not provided)
+    real(r8), optional, intent(in):: sumto(lb:)  ! The value the array should sum to (1.0 if not provided)
     !
     ! !LOCAL VARIABLES:
     logical :: found
@@ -63,7 +63,7 @@ contains
     if( present(ier) ) ier = 0
     found = .false.
 
-    do nl = lbound(arr, 1), ub
+    do nl = lb, ub
        if (abs(sum(arr(nl,:)) - TotalSum(nl)) > eps) then
           found = .true.
           nindx = nl
@@ -131,10 +131,11 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: g    ! index
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+
     SHR_ASSERT_ALL_FL((ubound(wt_cft) == (/endg, cftsize/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(wt_nat_patch) == (/endg, nc3crop+cftsize-1/)), sourcefile, __LINE__)
-
+    
     do g = begg, endg
        if ( wt_lunit(g,istcrop) > 0.0_r8 )then
           ! Move CFT over to PFT and do weighted average of the crop and soil parts

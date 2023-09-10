@@ -5,15 +5,18 @@ module CNC14DecayMod
   !
   ! !USES:
   use shr_kind_mod                       , only : r8 => shr_kind_r8
-  use clm_time_manager                   , only : get_step_size_real, get_days_per_year
+  use clm_time_manager                   , only : get_step_size_real, get_average_days_per_year
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools
   use clm_varcon                         , only : secspday
   use clm_varctl                         , only : spinup_state
+  use CNSharedParamsMod                  , only : use_matrixcn
   use decompMod                          , only : bounds_type
   use pftconMod                          , only : npcropmin
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
+  use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use PatchType                          , only : patch
   use ColumnType                         , only : col
   use GridcellType                       , only : grc
@@ -30,11 +33,13 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine C14Decay( bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)
+       c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
+       c14_cnveg_carbonflux_inst,  c14_soilbiogeochem_carbonflux_inst )
     !
     ! !DESCRIPTION:
     ! On the radiation time step, calculate the radioactive decay of C14
     !
+    implicit none
     ! !ARGUMENTS:
     type(bounds_type)                     , intent(in)    :: bounds        
     integer                               , intent(in)    :: num_soilc       ! number of soil columns filter
@@ -43,6 +48,8 @@ contains
     integer                               , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(CNVeg_carbonstate_type)          , intent(inout) :: c14_cnveg_carbonstate_inst
     type(soilbiogeochem_carbonstate_type) , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
+    type(CNVeg_carbonflux_type)           , intent(inout) :: c14_cnveg_carbonflux_inst
+    type(soilbiogeochem_carbonflux_type)  , intent(inout) :: c14_soilbiogeochem_carbonflux_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: fp,j,g,l,p,fc,c,i
@@ -87,7 +94,7 @@ contains
 
       ! set time steps
       dt = get_step_size_real()
-      days_per_year = get_days_per_year()
+      days_per_year = get_average_days_per_year()
 
       half_life = 5730._r8 * secspday * days_per_year
       decay_const = - log(0.5_r8) / half_life
@@ -109,7 +116,13 @@ contains
                else
                   spinup_term = 1._r8
                endif
-               decomp_cpools_vr(c,j,l) = decomp_cpools_vr(c,j,l) * (1._r8 - decay_const * spinup_term * dt)
+               ! Without matrix solution
+               if(.not. use_soil_matrixcn)then
+                  decomp_cpools_vr(c,j,l) = decomp_cpools_vr(c,j,l) * (1._r8 - decay_const * spinup_term * dt)
+               else
+                  ! Matrix solution equivalent to above
+                  ! This will be added when the full matrix solution is brought in
+               end if
             end do
          end do
       end do ! end of columns loop
@@ -120,26 +133,36 @@ contains
 
          cpool(p)              = cpool(p)               * (1._r8 - decay_const * dt)
          xsmrpool(p)           = xsmrpool(p)            * (1._r8 - decay_const * dt)
-         deadcrootc(p)         = deadcrootc(p)          * (1._r8 - decay_const * dt)
-         deadcrootc_storage(p) = deadcrootc_storage(p)  * (1._r8 - decay_const * dt)
-         deadcrootc_xfer(p)    = deadcrootc_xfer(p)     * (1._r8 - decay_const * dt)
-         deadstemc(p)          = deadstemc(p)           * (1._r8 - decay_const * dt)
-         deadstemc_storage(p)  = deadstemc_storage(p)   * (1._r8 - decay_const * dt)
-         deadstemc_xfer(p)     = deadstemc_xfer(p)      * (1._r8 - decay_const * dt)
-         frootc(p)             = frootc(p)              * (1._r8 - decay_const * dt)
-         frootc_storage(p)     = frootc_storage(p)      * (1._r8 - decay_const * dt)
-         frootc_xfer(p)        = frootc_xfer(p)         * (1._r8 - decay_const * dt)
+
+         ! Without Matrix solution
+         if(.not. use_matrixcn)then
+            ! NOTE: Any changes here need to be applied below
+            deadcrootc(p)         = deadcrootc(p)          * (1._r8 - decay_const * dt)
+            deadcrootc_storage(p) = deadcrootc_storage(p)  * (1._r8 - decay_const * dt)
+            deadcrootc_xfer(p)    = deadcrootc_xfer(p)     * (1._r8 - decay_const * dt)
+            deadstemc(p)          = deadstemc(p)           * (1._r8 - decay_const * dt)
+            deadstemc_storage(p)  = deadstemc_storage(p)   * (1._r8 - decay_const * dt)
+            deadstemc_xfer(p)     = deadstemc_xfer(p)      * (1._r8 - decay_const * dt)
+            frootc(p)             = frootc(p)              * (1._r8 - decay_const * dt)
+            frootc_storage(p)     = frootc_storage(p)      * (1._r8 - decay_const * dt)
+            frootc_xfer(p)        = frootc_xfer(p)         * (1._r8 - decay_const * dt)
+            leafc(p)              = leafc(p)               * (1._r8 - decay_const * dt)
+            leafc_storage(p)      = leafc_storage(p)       * (1._r8 - decay_const * dt)
+            leafc_xfer(p)         = leafc_xfer(p)          * (1._r8 - decay_const * dt)
+            livecrootc(p)         = livecrootc(p)          * (1._r8 - decay_const * dt)
+            livecrootc_storage(p) = livecrootc_storage(p)  * (1._r8 - decay_const * dt)
+            livecrootc_xfer(p)    = livecrootc_xfer(p)     * (1._r8 - decay_const * dt)
+            livestemc(p)          = livestemc(p)           * (1._r8 - decay_const * dt)
+            livestemc_storage(p)  = livestemc_storage(p)   * (1._r8 - decay_const * dt)
+            livestemc_xfer(p)     = livestemc_xfer(p)      * (1._r8 - decay_const * dt)
+         else
+            ! Each of these MUST correspond to the code above. Any changes in
+            ! code above need to apply here as well
+         end if
+         ! Some fields like cpool, and xsmrpool above, and the gresp and
+         ! pft_ctrunc fields are handled the same for both matrix on and off
          gresp_storage(p)      = gresp_storage(p)       * (1._r8 - decay_const * dt)
          gresp_xfer(p)         = gresp_xfer(p)          * (1._r8 - decay_const * dt)
-         leafc(p)              = leafc(p)               * (1._r8 - decay_const * dt)
-         leafc_storage(p)      = leafc_storage(p)       * (1._r8 - decay_const * dt)
-         leafc_xfer(p)         = leafc_xfer(p)          * (1._r8 - decay_const * dt)
-         livecrootc(p)         = livecrootc(p)          * (1._r8 - decay_const * dt)
-         livecrootc_storage(p) = livecrootc_storage(p)  * (1._r8 - decay_const * dt)
-         livecrootc_xfer(p)    = livecrootc_xfer(p)     * (1._r8 - decay_const * dt)
-         livestemc(p)          = livestemc(p)           * (1._r8 - decay_const * dt)
-         livestemc_storage(p)  = livestemc_storage(p)   * (1._r8 - decay_const * dt)
-         livestemc_xfer(p)     = livestemc_xfer(p)      * (1._r8 - decay_const * dt)
          pft_ctrunc(p)         = pft_ctrunc(p)          * (1._r8 - decay_const * dt)
 
          ! NOTE(wjs, 2017-02-02) This isn't a completely robust way to check if this is a

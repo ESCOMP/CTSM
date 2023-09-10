@@ -27,7 +27,11 @@ nohup ./test_driver.sh -i >& run.out &
 release tests
 
 qcmd -l walltime=10:00:00 -- env CLM_INPUT_TESTS=`pwd`/tests_posttag_nompi_regression \
-./test_driver.sh -i >& run.out &
+./test_driver.sh -i >& run_regress.out &
+
+To run neon-specific tests, please use login nodes:
+env CLM_INPUT_TESTS=`pwd`/tests_pretag_nompi_neon ./test_driver.sh -i > & run_neon.out &
+
 
 Intended for use on NCAR machines cheyenne, geyser (DAV) and hobart.
 

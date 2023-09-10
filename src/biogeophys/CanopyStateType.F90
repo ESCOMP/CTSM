@@ -211,8 +211,8 @@ contains
 
        this%displa_patch(begp:endp) = spval
        call hist_addfld1d (fname='DISPLA', units='m', &
-            avgflag='A', long_name='displacement height', &
-            ptr_patch=this%displa_patch, default='inactive')
+            avgflag='A', long_name='displacement height (vegetated landunits only)', &
+            ptr_patch=this%displa_patch, default='inactive', l2g_scale_type='veg')
 
        if(use_fates_sp)then
           this%htop_hist_patch(begp:endp) = spval
@@ -225,9 +225,7 @@ contains
               avgflag='A', long_name='canopy top', &
               ptr_patch=this%htop_patch)
        endif
-
-
-    endif !fates or CN
+    endif
 
     if(use_fates_sp)then
       this%tlai_hist_patch(begp:endp) = spval
@@ -254,9 +252,9 @@ contains
     endif !FATES_SP
 
     this%z0m_patch(begp:endp) = spval
-    call hist_addfld1d (fname='Z0M', units='m', &
-         avgflag='A', long_name='momentum roughness length', &
-          ptr_patch=this%z0m_patch, default='inactive')
+    call hist_addfld1d (fname='Z0MV_DENSE', units='m', &
+         avgflag='A', long_name='roughness length over vegetation, momentum, for dense canopy', &
+          ptr_patch=this%z0m_patch, default='inactive', l2g_scale_type='veg')
 
     ! Accumulated fields
     this%fsun24_patch(begp:endp) = spval

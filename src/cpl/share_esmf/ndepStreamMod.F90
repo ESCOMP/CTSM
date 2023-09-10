@@ -7,7 +7,7 @@ module ndepStreamMod
   ! interpolation.
   !
   ! !USES
-  use ESMF
+  use ESMF             , only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU, ESMF_Finalize, ESMF_END_ABORT
   use dshr_strdata_mod , only : shr_strdata_type 
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_cl, CS => shr_kind_cs
   use spmdMod          , only : mpicom, masterproc, iam
@@ -213,7 +213,7 @@ contains
   subroutine ndep_interp(bounds, atm2lnd_inst)
 
     !-----------------------------------------------------------------------
-    use clm_time_manager , only : get_curr_date, get_days_per_year
+    use clm_time_manager , only : get_curr_date, get_curr_days_per_year
     use clm_varcon       , only : secspday
     use atm2lndType      , only : atm2lnd_type
     use dshr_methods_mod , only : dshr_fldbun_getfldptr
@@ -252,7 +252,7 @@ contains
     ! Fill in atm2lnd_inst%forc_ndep_grc
     if ( divide_by_secs_per_yr )then
        ig = 0
-       dayspyr = get_days_per_year( )
+       dayspyr = get_curr_days_per_year( )
        do g = bounds%begg,bounds%endg
           ig = ig+1
           atm2lnd_inst%forc_ndep_grc(g) = dataptr1d(ig) / (secspday * dayspyr)

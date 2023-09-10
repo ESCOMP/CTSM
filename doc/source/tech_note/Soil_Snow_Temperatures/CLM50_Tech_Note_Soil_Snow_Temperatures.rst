@@ -42,7 +42,7 @@ one-dimensional form
    c\frac{\partial T}{\partial t} =\frac{\partial }{\partial z} \left[\lambda \frac{\partial T}{\partial z} \right].
 
 This equation is solved numerically to calculate the soil, snow, and
-surface water temperatures for a fifteen-layer soil column with up to
+surface water temperatures for a 25-layer soil column with up to
 twelve overlying layers of snow and a single surface water layer with the
 boundary conditions of :math:`h` as the heat flux into the top soil,
 snow, and surface water layers from the overlying atmosphere (section
@@ -59,7 +59,7 @@ The soil column is discretized into 25 layers (section
 :numref:`Vertical Discretization`) where :math:`N_{levgrnd} = 25` is the 
 number of soil layers (:numref:`Table Soil layer structure`).
 
-The overlying snow pack is modeled with up to five layers depending on
+The overlying snow pack is modeled with up to twelve layers depending on
 the total snow depth. The layers from top to bottom are indexed in the
 Fortran code as :math:`i=-4,-3,-2,-1,0`, which permits the accumulation
 or ablation of snow at the top of the snow pack without renumbering the
@@ -979,3 +979,50 @@ the top layer is a blend of ice and soil heat capacity
    c_{1} =c_{1}^{*} +\frac{C_{ice} W_{sno} }{\Delta z_{1} }
 
 where :math:`c_{1}^{*}`  is calculated from :eq:`6.89` or :eq:`6.92`.
+
+
+.. _Excess Ground Ice:
+
+Excess Ground Ice
+------------------------------------
+
+An optional parameterization of excess ground ice melt and respective subsidence based on (:ref:`Lee et al., (2014) <Leeetal2014>`). 
+Initial excess ground ice concentrations for soil columns are derived from (:ref:`Brown et al., (1997) <Brownetal1997>`). 
+When the excess ground ice is present in the soil column, soil depth for a given layer (:math:`z_{i}`) 
+is adjusted by the amount of excess ice in the column:
+
+.. math::
+   :label: 6.94
+
+   z_{i}^{'}=\Sigma_{j=1}^{i} \ z_{j}^{'}+\frac{w_{exice,\, j}}{\rho_{ice} }
+
+where :math:`w_{exice,\,j}` is excess ground ice amount (kg m :sup:`-2`) in layer :math:`j` 
+and :math:`\rho_{ice}` is the density of ice (kg m :sup:`-3`).
+After adjustment of layer depths have been made, all of the soil temperature equations  (from :eq:`6.80` to :eq:`6.89`)
+are calculted based on the adjusted depths. Thermal properties are additionally adjusted (:eq:`6.8` and :eq:`6.8`) in the following way:
+
+.. math::
+   :label: 6.95
+
+   \begin{array}{lr}
+    \theta_{sat}^{'} =\frac{\theta _{liq} }{\theta _{liq} +\theta _{ice} +\theta_{exice}}{\theta_{sat}} \\
+    \lambda _{sat}^{'} =\lambda _{s}^{1-\theta _{sat}^{'} } \lambda _{liq}^{\frac{\theta _{liq} }{\theta _{liq} +\theta _{ice} +\theta_{exice}} \theta _{sat}^{'} } \lambda _{ice}^{\theta _{sat}^{'} \left(1-\frac{\theta _{liq} }{\theta _{liq} +\theta _{ice} +\theta_{exice}} \right)} \\
+    c_{i}^{'} =c_{s,\, i} \left(1-\theta _{sat,\, i}^{'} \right)+\frac{w_{ice,\, i} +w_{exice,\,j}}{\Delta z_{i}^{'} } C_{ice} +\frac{w_{liq,\, i} }{\Delta z_{i}^{'} } C_{liq}
+   \end{array}
+
+Soil subsidence at the timestep :math:`n+1` (:math:`z_{exice}^{n+1}`, m) is then calculated as:
+
+.. math::
+   :label: 6.96
+
+   z_{exice}^{n+1}=\Sigma_{i=1}^{N_{levgrnd}} \ z_{j}^{',\ ,n+1}-z_{j}^{',\ ,n }
+
+With regards to hydraulic counductivity, excess ground ice is treated the same way normal soil 
+ice is treated in :numref:`Frozen Soils and Perched Water Table`. 
+When a soil layer thaws, excess ground ice is only allowed 
+to melt when no normals soil ice is present in the layer. 
+When a soil layer refreezes, liquid soil water can only turn into normal soil ice, thus, no new of excess ice can be created but only melted. 
+The excess liquid soil moisture from excess ice melt is distributed within the soil column according 
+to :numref:`Lateral Sub-surface Runoff`.
+
+

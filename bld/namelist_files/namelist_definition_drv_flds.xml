@@ -63,21 +63,7 @@
   <!-- drydep Namelists                                                                          -->
   <!-- ========================================================================================  -->
 
-  <entry id="drydep_method"
-	 type="char*16"
-	 category="dry-deposition"
-	 group="drydep_inparm"
-	 valid_values="xactive_lnd,xactive_atm,table">
-    Where dry deposition is calculated (from land, atmosphere, or from a table)
-    This specifies the method used to calculate dry
-    deposition velocities of gas-phase chemical species.  The available methods
-    are:
-    'table'       - prescribed method in CAM
-    'xactive_atm' - interactive method in CAM
-    'xactive_lnd' - interactive method in CLM
-  </entry>
-
-<entry id="drydep_list"
+  <entry id="drydep_list"
        type="char*32(300)"
        category="dry-deposition"
        group="drydep_inparm"
@@ -85,6 +71,15 @@
     List of species that undergo dry deposition.
   </entry>
 
+  <entry id="dep_data_file"
+         type="char*500"
+         input_pathname="abs"
+         category="dry_deposition"
+         group="drydep_inparm"
+         valid_values="" >
+    Full pathname of file containing gas phase deposition data including effective
+    Henry's law coefficients.
+  </entry>
 
   <!-- ========================================================================================  -->
   <!-- Fire emissions fluxes                                                                     -->
@@ -114,7 +109,7 @@
 	 category="Fire_emissions"
 	 group="fire_emis_nl"
 	 valid_values="" >
-    If ture fire emissions are input into atmosphere as elevated forcings.
+    If true fire emissions are input into atmosphere as elevated forcings.
     Otherwise they are treated as surface emissions.
     Default: TRUE
   </entry>

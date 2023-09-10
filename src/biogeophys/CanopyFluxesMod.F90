@@ -14,7 +14,7 @@ module CanopyFluxesMod
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use abortutils            , only : endrun
   use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_fates, &
-                                     use_luna, use_hydrstress, use_biomass_heat_storage
+                                     use_luna, use_hydrstress, use_biomass_heat_storage, z0param_method
   use clm_varpar            , only : nlevgrnd, nlevsno, nlevcan, mxpft
   use pftconMod             , only : pftcon
   use decompMod             , only : bounds_type, subgrid_level_patch
@@ -113,6 +113,7 @@ contains
     namelist /canopyfluxes_inparm/ use_undercanopy_stability
     namelist /canopyfluxes_inparm/ use_biomass_heat_storage
     namelist /canopyfluxes_inparm/ itmax_canopy_fluxes
+
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -228,6 +229,7 @@ contains
     use clm_varcon         , only : denh2o, tfrz, tlsai_crit, alpha_aero
     use clm_varcon         , only : c14ratio, spval
     use clm_varcon         , only : c_water, c_dry_biomass, c_to_b
+    use clm_varcon         , only : nu_param, cd1_param
     use perf_mod           , only : t_startf, t_stopf
     use QSatMod            , only : QSat
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
@@ -237,6 +239,7 @@ contains
                                     SwampCoolEff, KtoC, VaporPres
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use LunaMod            , only : is_time_to_run_LUNA
+
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)            :: bounds 
@@ -378,6 +381,9 @@ contains
     integer  :: index                                ! patch index for error
     real(r8) :: egvf                                 ! effective green vegetation fraction
     real(r8) :: lt                                   ! elai+esai
+    real(r8) :: U_ustar                              ! wind at canopy height divided by friction velocity (unitless)
+    real(r8) :: U_ustar_ini                          ! initial guess of wind at canopy height divided by friction velocity (unitless)
+    real(r8) :: U_ustar_prev                         ! wind at canopy height divided by friction velocity from the previous iteration (unitless)
     real(r8) :: ri                                   ! stability parameter for under canopy air (unitless)
     real(r8) :: csoilb                               ! turbulent transfer coefficient over bare soil (unitless)
     real(r8) :: ricsoilc                             ! modified transfer coefficient under dense canopy (unitless)
@@ -449,8 +455,16 @@ contains
          slatop                 => pftcon%slatop                                , & ! SLA at top of canopy [m^2/gC]
          fbw                    => pftcon%fbw                                   , & ! Input:  fraction of biomass that is water
          nstem                  => pftcon%nstem                                 , & ! Input:  stem number density (#ind/m2)
+         woody                  => pftcon%woody                                 , & ! Input:  woody flag
          rstem_per_dbh          => pftcon%rstem_per_dbh                         , & ! Input:  stem resistance per stem diameter (s/m**2)
          wood_density           => pftcon%wood_density                          , & ! Input:  dry wood density (kg/m3)
+
+         z0v_Cr                 => pftcon%z0v_Cr                                , & ! Input:  roughness-element drag coefficient for Raupach92 parameterization (-)
+         z0v_Cs                 => pftcon%z0v_Cs                                , & ! Input:  substrate-element drag coefficient for Raupach92 parameterization (-)
+         z0v_c                  => pftcon%z0v_c                                 , & ! Input:  c parameter for Raupach92 parameterization (-)
+         z0v_cw                 => pftcon%z0v_cw                                , & ! Input:  roughness sublayer depth coefficient for Raupach92 parameterization (-)
+         z0v_LAIoff             => pftcon%z0v_LAIoff                            , & ! Input:  leaf area index offset for Raupach92 parameterization (-)
+         z0v_LAImax             => pftcon%z0v_LAImax                            , & ! Input:  onset of over-sheltering for Raupach92 parameterization (-)
 
          forc_lwrad             => atm2lnd_inst%forc_lwrad_downscaled_col       , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)                       
          forc_q                 => wateratm2lndbulk_inst%forc_q_downscaled_col  , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)
@@ -516,7 +530,12 @@ contains
          soilbeta               => soilstate_inst%soilbeta_col                  , & ! Input:  [real(r8) (:)   ]  soil wetness relative to field capacity                               
 
          u10_clm                => frictionvel_inst%u10_clm_patch               , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
-         forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Input:  [real(r8) (:)   ]  observational height of wind at patch level [m]                          
+         forc_hgt_t             => atm2lnd_inst%forc_hgt_t_grc                  , & ! Input:  [real(r8) (:)   ] observational height of temperature [m]
+         forc_hgt_u             => atm2lnd_inst%forc_hgt_u_grc                  , & ! Input:  [real(r8) (:)   ] observational height of wind [m]
+         forc_hgt_q             => atm2lnd_inst%forc_hgt_q_grc                  , & ! Input:  [real(r8) (:)   ] observational height of specific humidity [m]
+         forc_hgt_t_patch       => frictionvel_inst%forc_hgt_t_patch            , & ! Output: [real(r8) (:)   ] observational height of temperature at patch level [m]
+         forc_hgt_q_patch       => frictionvel_inst%forc_hgt_q_patch            , & ! Output: [real(r8) (:)   ] observational height of specific humidity at patch level [m]
+         forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Output:  [real(r8) (:)   ]  observational height of wind at patch level [m]
          z0mg                   => frictionvel_inst%z0mg_col                    , & ! Input:  [real(r8) (:)   ]  roughness length of ground, momentum [m]                              
          zetamax                => frictionvel_inst%zetamaxstable               , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
          ram1                   => frictionvel_inst%ram1_patch                  , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                                        
@@ -865,13 +884,54 @@ bioms:   do f = 1, fn
       do f = 1, fn
          p = filterp(f)
          c = patch%column(p)
+         g = patch%gridcell(p)
 
-         lt = min(elai(p)+esai(p), tlsai_crit)
-         egvf =(1._r8 - alpha_aero * exp(-lt)) / (1._r8 - alpha_aero * exp(-tlsai_crit))
-         displa(p) = egvf * displa(p)
-         z0mv(p)   = exp(egvf * log(z0mv(p)) + (1._r8 - egvf) * log(z0mg(c)))
-         z0hv(p)   = z0mv(p)
-         z0qv(p)   = z0mv(p)
+         select case (z0param_method)
+         case ('ZengWang2007')
+            lt = min(elai(p)+esai(p), tlsai_crit)
+            egvf =(1._r8 - alpha_aero * exp(-lt)) / (1._r8 - alpha_aero * exp(-tlsai_crit))
+            displa(p) = egvf * displa(p)
+            z0mv(p)   = exp(egvf * log(z0mv(p)) + (1._r8 - egvf) * log(z0mg(c)))
+
+         case ('Meier2022')
+            lt = max(1.e-5_r8, elai(p) + esai(p))
+            displa(p) = htop(p) * (1._r8 - (1._r8 - exp(-(cd1_param * lt)**0.5_r8)) / (cd1_param*lt)**0.5_r8)
+
+            lt = min(lt,z0v_LAImax(patch%itype(p)))
+            delt = 2._r8
+            ! Reminder that (...)**(-0.5) = 1 / sqrt(...)
+            U_ustar_ini = (z0v_Cs(patch%itype(p)) + z0v_Cr(patch%itype(p)) * lt * 0.5_r8)**(-0.5_r8) &
+                      *z0v_c(patch%itype(p)) * lt * 0.25_r8
+            U_ustar = U_ustar_ini
+
+            do while (delt > 1.e-4_r8)
+               U_ustar_prev = U_ustar
+               U_ustar = U_ustar_ini * exp(U_ustar_prev)
+               delt = abs(U_ustar - U_ustar_prev)
+            end do
+
+            U_ustar = 4._r8 * U_ustar / lt / z0v_c(patch%itype(p))
+
+            z0mv(p) = htop(p) * (1._r8 - displa(p) / htop(p)) * exp(-vkc * U_ustar + &
+                      log(z0v_cw(patch%itype(p))) - 1._r8 + z0v_cw(patch%itype(p))**(-1._r8))
+
+
+          case default
+            write(iulog,*) 'ERROR: unknown z0para_method: ', z0param_method
+            call endrun(msg = 'unknown z0param_method', additional_msg = errMsg(sourcefile, __LINE__))
+          end select
+
+          z0hv(p)   = z0mv(p)
+          z0qv(p)   = z0mv(p)
+
+          ! Update the forcing heights
+          ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
+          if (z0param_method == 'Meier2022') then
+             forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mv(p) + displa(p)
+             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hv(p) + displa(p)
+             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qv(p) + displa(p)
+          end if
+
       end do
 
       found = .false.
@@ -1007,7 +1067,7 @@ bioms:   do f = 1, fn
             ! changed by K.Sakaguchi from here
             ! transfer coefficient over bare soil is changed to a local variable
             ! just for readability of the code (from line 680)
-            csoilb = vkc / (params_inst%a_coef * (z0mg(c) * uaf(p) / 1.5e-5_r8)**params_inst%a_exp)
+            csoilb = vkc / (params_inst%a_coef * (z0mg(c) * uaf(p) / nu_param)**params_inst%a_exp)
 
             !compute the stability parameter for ricsoilc  ("S" in Sakaguchi&Zeng,2008)
 
@@ -1329,16 +1389,29 @@ bioms:   do f = 1, fn
             zeta(p) = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
 
             if (zeta(p) >= 0._r8) then     !stable
-               ! remove stability cap when biomass heat storage is active 
-               if(use_biomass_heat_storage) then 
-                  zeta(p) = min(100._r8,max(zeta(p),0.01_r8))
-               else
-                  zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
-               endif
+               zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
                um(p) = max(ur(p),0.1_r8)
             else                     !unstable
                zeta(p) = max(-100._r8,min(zeta(p),-0.01_r8))
-               wc = beta*(-grav*ustar(p)*thvstar*zii/thv(c))**0.333_r8
+               if ( ustar(p)*thvstar > 0.0d00 )then
+                  write(iulog,*) 'ustar*thvstar is positive and has to be negative'
+                  write(iulog,*) 'p = ', p
+                  write(iulog,*) '-grav*ustar(p)*thvstar*zii/thv(c) = ', -grav*ustar(p)*thvstar*zii/thv(c)
+                  write(iulog,*) 'ustar = ', ustar(p)
+                  write(iulog,*) 'thvstar = ', thvstar
+                  write(iulog,*) 'thv = ', thv(c)
+                  write(iulog,*) 'displa= ', displa(p)
+                  write(iulog,*) 'z0mg= ', z0mg(c)
+                  write(iulog,*) 'zeta= ', zeta(p)
+                  write(iulog,*) 'temp1= ', temp1(p)
+                  write(iulog,*) 'dth= ', dth(p)
+                  write(iulog,*) 'rah(above)= ', rah(p,above_canopy)
+                  write(iulog,*) 'rah(below)= ', rah(p,below_canopy)
+                  !call endrun(decomp_index=p, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+                  wc = 0.0_r8
+               else
+                  wc = beta*(-grav*ustar(p)*thvstar*zii/thv(c))**0.333_r8
+               end if
                um(p) = sqrt(ur(p)*ur(p)+wc*wc)
             end if
             obu(p) = zldis(p)/zeta(p)
@@ -1405,8 +1478,9 @@ bioms:   do f = 1, fn
                dt_stem(p) = 0._r8
             endif
 
+
             dhsdt_canopy(p) = dt_stem(p)*cp_stem(p)/dtime &
-                 +(t_veg(p)-tl_ini(p))*cp_leaf(p)/dtime
+                 + (t_veg(p)-tl_ini(p))*cp_leaf(p)/dtime
 
             t_stem(p) =  t_stem(p) + dt_stem(p)
          else
@@ -1598,7 +1672,8 @@ bioms:   do f = 1, fn
               rssha     = photosyns_inst%rssha_patch(bounds%begp:bounds%endp), &
               rb        = frictionvel_inst%rb1_patch(bounds%begp:bounds%endp), &
               ram       = frictionvel_inst%ram1_patch(bounds%begp:bounds%endp), &
-              tlai      = canopystate_inst%tlai_patch(bounds%begp:bounds%endp))
+              tlai      = canopystate_inst%tlai_patch(bounds%begp:bounds%endp),  &
+	      forc_o3   = atm2lnd_inst%forc_o3_grc(bounds%begg:bounds%endg))
 
          !---------------------------------------------------------
          !update Vc,max and Jmax by LUNA model
@@ -1653,6 +1728,7 @@ bioms:   do f = 1, fn
             fn = fn + 1
             filterp(fn) = p
          end if
+
       end do
 
       do f = 1, fn

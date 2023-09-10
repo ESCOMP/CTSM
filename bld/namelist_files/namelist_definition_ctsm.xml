@@ -8,16 +8,6 @@
 <!-- CLM Namelist -->
 <!-- ========================================================================================  -->
 
-<entry id="finidat_interp_dest" 
-       type="char*256" 
-       category="datasets"
-       input_pathname="abs" 
-       group="clm_inparm" 
-       valid_values="" >
-If use_init_interp is set to .true., interpinic will be called to interpolate
-the file given by finidat, creating the output file specified by finidat_interp_dest.
-</entry>
-
 <entry id="finidat" 
        type="char*256" 
        category="datasets"
@@ -648,6 +638,12 @@ Switch deciding which nutrient model to use in FATES.
 (Only relevant if FATES is on)
 </entry>
 
+<entry id="use_fates_tree_damage" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false."> 
+Toggle to turn on the tree damage module in FATES
+(Only relevant if FATES is on)
+</entry>
+
 <entry id="fates_spitfire_mode" type="integer" category="physics"
         group="clm_inparm" valid_values="0,1,2,3,4,5" value=".false.">
 Turn on spitfire module to simulate fire by setting fates_spitfire_mode > 0.
@@ -987,6 +983,36 @@ Whether to run some tests of ncdio_pio as part of the model run. This is
 typically only used in automated tests.
 </entry>
 
+<entry id="for_testing_use_second_grain_pool" type="logical" category="default_settings"
+       group="clm_inparm" >
+If true, allocate memory for and use a second crop grain pool. This is
+meant only for software testing of infrastructure to support the AgSys
+crop model integration. This option can be dropped once AgSys is
+integrated and we have tests of it.
+</entry>
+
+<entry id="for_testing_use_repr_structure_pool" type="logical" category="default_settings"
+       group="clm_inparm" >
+If true, allocate memory for two crop reproductive structure pools and
+send all reproductive C and N to the second reproductive structure pool
+instead of the grain pool. This is meant only for software testing of
+infrastructure to support the AgSys crop model integration. This option
+can be dropped once AgSys is integrated and we have tests of it.
+</entry>
+
+<entry id="for_testing_no_crop_seed_replenishment" type="logical" category="default_settings"
+       group="clm_inparm" >
+If true, do NOT use grain C/N to replenish the crop seed deficits. This
+is needed when doing software testing to verify that we can get
+bit-for-bit identical answers when using a reproductive structure pool
+as when using a grain pool (in conjunction with
+for_testing_use_repr_structure_pool). We do this testing to have some
+tests of the infrastructure to support the AgSys crop model integration.
+This option can be dropped if/when we stop doing this software testing,
+e.g., because we have integrated AgSys and have tests of it that make
+these software infrastructure tests obsolete.
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Former CPP tokens -->
 <!-- ========================================================================================  -->
@@ -1064,20 +1090,20 @@ Toggle to turn on the 1-year grain product pool in the crop model
 </entry>
 
 <entry id="baset_mapping" type="char*20" category="physics"
-       group="crop" valid_values="constant,varytropicsbylat" value="constant">
+       group="crop_inparm" valid_values="constant,varytropicsbylat" value="constant">
 Type of mapping to use for base temperature for prognostic crop model
 constant = Just use baset from the PFT parameter file
 varytropicsbylat = Vary the tropics by latitude 
 </entry>
 
 <entry id="baset_latvary_slope" type="real" category="physics"
-       group="crop" valid_values="" value="0.4d00">
+       group="crop_inparm" valid_values="" value="0.4d00">
 Only used when baset_mapping == varytropicsbylat
 Slope with latitude in degrees to vary tropical baset by
 </entry>
 
 <entry id="baset_latvary_intercept" type="real" category="physics"
-       group="crop" valid_values="" value="12.0d00">
+       group="crop_inparm" valid_values="" value="12.0d00">
 Only used when baset_mapping == varytropicsbylat
 Intercept at zero latitude to add to baset from the PFT parameter file
 </entry>
@@ -1101,6 +1127,16 @@ Initial seed Carbon to use at planting
        group="cnphenology">
 Phenology onset depends on the vegetation type
 (only used when CN is on)
+</entry>
+
+<entry id="generate_crop_gdds" type="logical" category="physics"
+        group="cnphenology" valid_values="" value=".false.">
+Set to .true. in order to override crop harvesting logic and to instead harvest the day before the next sowing date. Used to generate growing-degree day outputs that can be used with an external script to generate new GDD requirement ("cultivar") files.
+</entry>
+
+<entry id="use_mxmat" type="logical" category="physics"
+        group="cnphenology" valid_values="" value=".true.">
+Set to .false. in order to ignore crop PFT parameter for maximum growing season length (mxmat). Must be set to .false. when generate_crop_gdds is .true.
 </entry>
 
 <entry id="min_critical_dayl_method" type="char*25" category="physics"
@@ -1780,6 +1816,41 @@ Mapping method from LAI input file to the model resolution
 </entry>
 
 <!-- ========================================================================================  -->
+<!-- cropcal_streams streams Namelist                                                          -->
+<!-- ========================================================================================  -->
+
+<!-- Crop calendars -->
+<entry id="stream_year_first_cropcal" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+First year to loop over for crop calendar data
+</entry>
+
+<entry id="stream_year_last_cropcal" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Last year to loop over for crop calendar data
+</entry>
+
+<entry id="model_year_align_cropcal" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Simulation year that aligns with stream_year_first_cropcal value
+</entry>
+
+<entry id="stream_fldfilename_sdate" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for sowing dates
+</entry>
+
+<entry id="stream_fldfilename_cultivar_gdds" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for cultivar growing degree-day targets
+</entry>
+
+<entry id="stream_meshfile_cropcal" type="char*256" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for crop calendar inputs
+</entry>
+
+<!-- ========================================================================================  -->
 <!-- light_streams streams Namelist (when CN an CLM4_5 is active)                              -->
 <!-- ========================================================================================  -->
 
@@ -1966,9 +2037,9 @@ to use for methane model
 </entry>
        
 <entry id="light_res" type="char*10" category="default_settings"
-       group="default_settings" valid_values="none,360x720,94x192">
-Resolution of Lightning dataset to use for CN fire model
-(only applies when CN and the CN fire model are turned on)
+       group="default_settings" valid_values="none,360x720,106x174,94x192">
+Resolution of Lightning dataset to use for CN or FATES fire model
+(only applies when CN or FATES and the fire model is turned on)
 </entry>
 
 <entry id="chk_res" type="integer"  category="default_settings"
@@ -1994,7 +2065,7 @@ CLM run type.
 
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
-       valid_values="512x1024,360x720cru,128x256,64x128,48x96,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,0.125nldas2,5x5_amazon,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.25x0.25,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,0.125x0.125,ne4np4,ne16np4,ne30np4.pg2,ne30np4.pg3,ne30np4,ne60np4,ne120np4,ne120np4.pg2,ne120np4.pg3,ne0np4CONUS.ne30x8,ne0np4.ARCTIC.ne30x4,ne0np4.ARCTICGRIS.ne30x8,ne240np4,1km-merge-10min,C24,C48,C96,C192,C384">
+       valid_values="512x1024,360x720cru,128x256,64x128,48x96,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,0.125nldas2,5x5_amazon,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.25x0.25,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,0.125x0.125,ne3np4.pg3,ne4np4,ne5np4.pg3,ne16np4,ne16np4.pg3,ne30np4.pg2,ne30np4.pg3,ne30np4,ne60np4,ne120np4,ne120np4.pg2,ne120np4.pg3,ne0np4CONUS.ne30x8,ne0np4.ARCTIC.ne30x4,ne0np4.ARCTICGRIS.ne30x8,ne240np4,1km-merge-10min,C24,C48,C96,C192,C384,mpasa480,mpasa240,mpasa120,mpasa60,mpasa30,mpasa15">
 Horizontal resolutions
 Note: 0.25x0.25, 0.5x0.5, 5x5min, 10x10min, 3x3min, 1km-merge-10min and 0.33x0.33 are only used for CLM toolsI
 </entry> 
@@ -2031,7 +2102,7 @@ If 1, turn on the MEGAN model for BVOC's (Biogenic Volitile Organic Compounds)
 
 <entry id="sim_year" type="char*4" category="default_settings"
        group="default_settings" valid_values=
-"PtVg,1000,850,1100,1350,1600,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1979,1980,1982,1985,1995,2000,2005,2010,2013,2015,2025,2035,2045,2055,2065,2075,2085,2095,2105">
+"PtVg,1000,850,1100,1350,1600,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1979,1980,1982,1985,1995,2000,2005,2010,2013,2015,2018,2025,2035,2045,2055,2065,2075,2085,2095,2105">
 Year to simulate and to provide datasets for (such as surface datasets, initial conditions, aerosol-deposition, Nitrogen deposition rates etc.)
 A sim_year of 1000 corresponds to data used for testing only, NOT corresponding to any real datasets.
 A sim_year greater than 2015 corresponds to ssp_rcp scenario data
@@ -2094,7 +2165,7 @@ Command line arguement for biogeochemistry mode for CLM4.5
         Nitrification/De-nitrification
         Methane model
         Vertically resolved Carbon
-   fates = FATES/ED ecosystem demography model with below ground BGC:
+   fates = FATES Functionally Assembled Terrestrial Ecosystem Simulator (ecosystem demography model with below ground BGC):
 </entry>
 
 <!-- ========================================================================================  -->
@@ -2125,12 +2196,6 @@ Base advective flux (downwards) for SOM.
 <entry id="max_depth_cryoturb" type="real" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
 Maximum depth to mix soils to by croturbation, in permafrost soils.
-</entry>
-
-<!-- turnover time modifications    -->
-<entry id="decomp_depth_efolding" type="real" category="clm_vertcn"
-       group="bgc_shared" valid_values="" >
-E-folding depth over which decomposition is slowed with depth in all soils.
 </entry>
 
 <entry id="anoxia" type="logical" category="clm_vertcn"
@@ -2169,10 +2234,11 @@ Number of days over which to use exponential relaxation of NPP in N fixation cal
 
 <!-- Soil decomposition options  -->
 <entry id="soil_decomp_method" type="char*20" category="clm_physics"
-       group="soilbgc_decomp" valid_values="None,CENTURYKoven2013" >
+       group="soilbgc_decomp" valid_values="None,CENTURYKoven2013,MIMICSWieder2015" >
 Soil decomposition method
   None --  No soil decomposition is done
   CENTURYKoven2013 -- CENTURY model in CTSM from Koven et. al. 2013
+  MIMICSWieder2015 -- MIMICS model in CTSM from Wieder et. al. 2015
 
 An active soil decomposition method requires the BGC or FATES model to work 
 And both BGC and FATES models require an active soil decomposition model
@@ -2276,36 +2342,6 @@ Allow the CN ratio to flexibly change with the simulation, rather than being fix
 How much Carbon to initialize vegetation pools (leafc/frootc and storage) to when -- Michaelis Menten nitrogen uptake kinetics is on
 </entry>
 
-<entry id="downreg_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".false.">
-   GPP downregulation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="plant_ndemand_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1,2,3">
-   Plant nitrogen demand for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="substrate_term_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".true.">
-   Michaelis Menten substrate limitation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="nscalar_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".true.">
-   Michaelis Menten nitrogen limitation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="temp_scalar_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".true.">
-   Michaelis Menten temperature limitation for use_flexibleCN option
-(EXPERIMENTAL and NOT tested)
-</entry>
-
 <entry id="CNratio_floating" type="logical" category="clm_nitrogen"
        group="clm_nitrogen" value=".false.">
    Flexible CN ratio used for Phenology
@@ -2324,19 +2360,6 @@ Vcmax calculation for Photosynthesis
     vcmax_opt = 4 As for vcmax_opt=0, but using leafN, and exponential if tree  (EXPERIMENTAL NOT TESTED!)
     vcmax_opt = 3 Based on leafN and VCAD (used with Luna for crop and C4 vegetation)
     vcmax_opt = 0 Based on canopy top and foilage Nitrogen limitation factor from params file (clm4.5)
-</entry>
-
-<entry id="CN_residual_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1">
-Residual option for flexible-CN
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="CN_partition_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1">
-Partition option for flexible-CN
-   CN_partition_opt = 1
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="CN_evergreen_phenology_opt" type="integer" category="clm_nitrogen"
@@ -2493,6 +2516,13 @@ If TRUE, apply transient urban from flanduse_timeseries file.
 <entry id="do_harvest" type="logical" category="physics"
        group="dynamic_subgrid" valid_values="" >
 If TRUE, apply harvest from flanduse_timeseries file.
+(Only valid for transient runs, where there is a flanduse_timeseries file.)
+(Also, only valid for use_cn = true.)
+</entry>
+
+<entry id="do_grossunrep" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+If TRUE, apply gross unrepresented landuse/land-cover change from flanduse_timeseries file.
 (Only valid for transient runs, where there is a flanduse_timeseries file.)
 (Also, only valid for use_cn = true.)
 </entry>
@@ -2765,6 +2795,24 @@ If .true., run with water isotopes
 </entry>  
 
 <!-- ========================================================================================  -->
+<!-- Namelist options related to surface roughness                                             -->
+<!-- ========================================================================================  -->
+
+<entry id="z0param_method" type="char*64" category="clm_physics"
+       group="clm_inparm" valid_values="ZengWang2007,Meier2022" >
+Parameterization/parameters to use for surface roughness
+ZengWang2007: Zeng and Wang 2007
+Meier2022: Meier et al. in prep. 2022
+</entry>
+
+<entry id="use_z0m_snowmelt" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If FALSE use constant snow z0m
+If TRUE use parameterization of snow z0m as a function of accumulated
+snow melt of Brock et al. (2006)
+</entry>
+
+<!-- ========================================================================================  -->
 <!-- Namelist options related to initInterp                                                    -->
 <!-- ========================================================================================  -->
 
@@ -2817,5 +2865,39 @@ weren't for that difference, then this option would be useful for this
 use case.)
 
 </entry>
+
+<!-- ========================================================================================  -->
+<!-- Namelist options related to excess ice                                                    -->
+<!-- ========================================================================================  -->
+<entry id="use_excess_ice" type="logical" category="clm_physics"
+        group="clm_inparm" valid_values="" >
+If TRUE turn on the excess ice physics, (Lee et al., 2014; Cai et al., 2020)
+</entry>
+
+<entry id="use_excess_ice_streams" type="logical" category="clm_physics"
+        group="exice_streams" valid_values="" >
+If TRUE and use_excess_ice is TRUE, use the excess ice stream to determine the initial values of the excess ice field
+if FALSE and use_excess_ice is TRUE, expect excess ice to come from the initial conditions or restart file
+Expect to be FALSE is use_excess_ice is FALSE
+</entry>
+
+<entry id="stream_fldfilename_exice" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="exice_streams" valid_values="" >
+Filename of input stream data for excess ice data
+</entry>
+
+<entry id="stream_meshfile_exice" type="char*256" category="datasets"
+       input_pathname="abs" group="exice_streams" valid_values="" >
+mesh filename of input stream data for excess ice
+</entry>
+
+<entry id="stream_mapalgo_exice" type="char*256" category="datasets"
+       group="exice_streams" valid_values="bilinear,nn,none" >
+Mapping method from excess ice input stream data to the model resolution
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    none     = no interpolation
+</entry>
+
 
 </namelist_definition>

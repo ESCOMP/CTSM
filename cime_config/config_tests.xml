@@ -25,6 +25,26 @@ This defines various CTSM-specific system tests
     <HIST_N>$STOP_N</HIST_N>
   </test>
 
+  <test NAME="LGRAIN2">
+    <DESC>CTSM Land model test to ensure that we can allocate and use a second grain pool</DESC>
+    <INFO_DBUG>1</INFO_DBUG>
+    <DOUT_S>FALSE</DOUT_S>
+    <CONTINUE_RUN>FALSE</CONTINUE_RUN>
+    <REST_OPTION>never</REST_OPTION>
+    <HIST_OPTION>$STOP_OPTION</HIST_OPTION>
+    <HIST_N>$STOP_N</HIST_N>
+  </test>
+
+  <test NAME="LREPRSTRUCT">
+    <DESC>CTSM Land model test to ensure that we can allocate and use a reproductive structure pool</DESC>
+    <INFO_DBUG>1</INFO_DBUG>
+    <DOUT_S>FALSE</DOUT_S>
+    <CONTINUE_RUN>FALSE</CONTINUE_RUN>
+    <REST_OPTION>never</REST_OPTION>
+    <HIST_OPTION>$STOP_OPTION</HIST_OPTION>
+    <HIST_N>$STOP_N</HIST_N>
+  </test>
+
   <test NAME="LII">
     <DESC>CLM initial condition interpolation test (requires configuration with non-blank finidat)</DESC>
     <INFO_DBUG>1</INFO_DBUG>
@@ -85,6 +105,16 @@ This defines various CTSM-specific system tests
 
   <test NAME="LWISO">
     <DESC>CTSM Land model test to ensure Water isotopes on or off does NOT change answers</DESC>
+    <INFO_DBUG>1</INFO_DBUG>
+    <DOUT_S>FALSE</DOUT_S>
+    <CONTINUE_RUN>FALSE</CONTINUE_RUN>
+    <REST_OPTION>never</REST_OPTION>
+    <HIST_OPTION>$STOP_OPTION</HIST_OPTION>
+    <HIST_N>$STOP_N</HIST_N>
+  </test>
+
+  <test NAME="RXCROPMATURITY">
+    <DESC>Generate prescribed maturity requirements, then test with them</DESC>
     <INFO_DBUG>1</INFO_DBUG>
     <DOUT_S>FALSE</DOUT_S>
     <CONTINUE_RUN>FALSE</CONTINUE_RUN>

@@ -7,11 +7,11 @@ module SoilBiogeochemStateType
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc
   use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoifl, nlevsoi
-  use clm_varpar     , only : ndecomp_cascade_transitions, nlevdecomp, nlevdecomp_full
+  use clm_varpar     , only : ndecomp_pools, ndecomp_cascade_transitions, nlevdecomp, nlevdecomp_full
   use clm_varcon     , only : spval, ispval, c14ratio, grlnd
   use landunit_varcon, only : istsoil, istcrop
   use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak
-  use clm_varctl     , only : use_cn 
+  use clm_varctl     , only : use_cn, use_fates_bgc
   use clm_varctl     , only : iulog
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
@@ -33,8 +33,7 @@ module SoilBiogeochemStateType
      real(r8) , pointer :: fpi_vr_col                  (:,:)   ! (no units) fraction of potential immobilization 
      real(r8) , pointer :: fpi_col                     (:)     ! (no units) fraction of potential immobilization 
      real(r8),  pointer :: fpg_col                     (:)     ! (no units) fraction of potential gpp 
-     real(r8) , pointer :: rf_decomp_cascade_col       (:,:,:) ! (frac) respired fraction in decomposition step 
-     real(r8) , pointer :: pathfrac_decomp_cascade_col (:,:,:) ! (frac) what fraction of C leaving a given pool passes through a given transition 
+     real(r8) , pointer :: nue_decomp_cascade_col      (:)     ! (gN going into microbe / gN decomposed) N use efficiency for a given transition
      real(r8) , pointer :: nfixation_prof_col          (:,:)   ! (1/m) profile for N fixation additions 
      real(r8) , pointer :: ndep_prof_col               (:,:)   ! (1/m) profile for N fixation additions 
      real(r8) , pointer :: som_adv_coef_col            (:,:)   ! (m2/s) SOM advective flux 
@@ -61,7 +60,7 @@ contains
     type(bounds_type), intent(in) :: bounds  
 
     call this%InitAllocate ( bounds )
-    if (use_cn) then
+    if (use_cn .or. use_fates_bgc) then
        call this%InitHistory ( bounds )
     end if
     call this%InitCold ( bounds ) 
@@ -102,12 +101,9 @@ contains
     allocate(this%som_diffus_coef_col (begc:endc,1:nlevdecomp_full)) ; this%som_diffus_coef_col (:,:) = spval
     allocate(this%plant_ndemand_col   (begc:endc))                   ; this%plant_ndemand_col   (:)   = nan
 
-    allocate(this%rf_decomp_cascade_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions)); 
-    this%rf_decomp_cascade_col(:,:,:) = nan
-
-    allocate(this%pathfrac_decomp_cascade_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions));     
-    this%pathfrac_decomp_cascade_col(:,:,:) = nan
-
+    allocate(this%nue_decomp_cascade_col(1:ndecomp_cascade_transitions)); 
+    this%nue_decomp_cascade_col(:) = nan
+    
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -136,26 +132,30 @@ contains
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
 
-    this%croot_prof_patch(begp:endp,:) = spval
-    call hist_addfld_decomp (fname='CROOT_PROF', units='1/m',  type2d='levdcmp', &
-         avgflag='A', long_name='profile for litter C and N inputs from coarse roots', &
-         ptr_patch=this%croot_prof_patch, default='inactive')
+    if_usecn: if(use_cn) then
+       this%croot_prof_patch(begp:endp,:) = spval
+       call hist_addfld_decomp (fname='CROOT_PROF', units='1/m',  type2d='levdcmp', &
+            avgflag='A', long_name='profile for litter C and N inputs from coarse roots', &
+            ptr_patch=this%croot_prof_patch, default='inactive')
 
-    this%froot_prof_patch(begp:endp,:) = spval
-    call hist_addfld_decomp (fname='FROOT_PROF', units='1/m',  type2d='levdcmp', &
-         avgflag='A', long_name='profile for litter C and N inputs from fine roots', &
-         ptr_patch=this%froot_prof_patch, default='inactive')
+       this%froot_prof_patch(begp:endp,:) = spval
+       call hist_addfld_decomp (fname='FROOT_PROF', units='1/m',  type2d='levdcmp', &
+            avgflag='A', long_name='profile for litter C and N inputs from fine roots', &
+            ptr_patch=this%froot_prof_patch, default='inactive')
 
-    this%leaf_prof_patch(begp:endp,:) = spval
-    call hist_addfld_decomp (fname='LEAF_PROF', units='1/m',  type2d='levdcmp', &
-         avgflag='A', long_name='profile for litter C and N inputs from leaves', &
-         ptr_patch=this%leaf_prof_patch, default='inactive')
+       this%leaf_prof_patch(begp:endp,:) = spval
+       call hist_addfld_decomp (fname='LEAF_PROF', units='1/m',  type2d='levdcmp', &
+            avgflag='A', long_name='profile for litter C and N inputs from leaves', &
+            ptr_patch=this%leaf_prof_patch, default='inactive')
 
-    this%stem_prof_patch(begp:endp,:) = spval
-    call hist_addfld_decomp (fname='STEM_PROF', units='1/m',  type2d='levdcmp', &
-         avgflag='A', long_name='profile for litter C and N inputs from stems', &
-         ptr_patch=this%stem_prof_patch, default='inactive')
+       this%stem_prof_patch(begp:endp,:) = spval
+       call hist_addfld_decomp (fname='STEM_PROF', units='1/m',  type2d='levdcmp', &
+            avgflag='A', long_name='profile for litter C and N inputs from stems', &
+            ptr_patch=this%stem_prof_patch, default='inactive')
+    end if if_usecn
 
+    ! These output variables are valid for both use_cn AND use_fates_bgc
+    
     this%nfixation_prof_col(begc:endc,:) = spval
     call hist_addfld_decomp (fname='NFIXATION_PROF', units='1/m',  type2d='levdcmp', &
          avgflag='A', long_name='profile for biological N fixation', &
@@ -165,7 +165,7 @@ contains
     call hist_addfld_decomp (fname='NDEP_PROF', units='1/m',  type2d='levdcmp', &
          avgflag='A', long_name='profile for atmospheric N  deposition', &
          ptr_col=this%ndep_prof_col, default='inactive')
-
+    
     this%som_adv_coef_col(begc:endc,:) = spval
     call hist_addfld_decomp (fname='SOM_ADV_COEF', units='m/s',  type2d='levdcmp', &
          avgflag='A', long_name='advection term for vertical SOM translocation', &

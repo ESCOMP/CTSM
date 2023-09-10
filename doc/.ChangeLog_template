@@ -31,14 +31,9 @@ Bugs fixed or introduced
 ------------------------
 [Remove any lines that don't apply. Remove entire section if nothing applies.]
 
-Issues fixed (include CTSM Issue #):
-
-CIME Issues fixed (include issue #):
+CTSM issues fixed (include CTSM Issue #):
 
 Known bugs introduced in this tag (include issue #):
-
-Known bugs found since the previous tag (include issue #):
-
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -150,7 +145,9 @@ Changes answers relative to baseline:
     - nature of change (roundoff; larger than roundoff/same climate; new climate):
 
    If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
+   than roundoff? Roundoff differences means one or more lines of code change results
+   only by roundoff level (because order of operation changes for example). Roundoff
+   changes to state fields usually grow to greater than roundoff as the simulation progresses.
 
    If this tag changes climate describe the run(s) done to evaluate the new
    climate (put details of the simulations in the experiment database)

@@ -1,0 +1,120 @@
+module test_matrix
+
+  ! Tests of Matrix: inverse
+
+  use funit
+  use MatrixMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestUtils, only : endrun_msg
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestMatrix
+     real(r8), allocatable :: identity(:,:)
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestMatrix
+
+
+  integer, parameter :: ndims = 20
+
+  real(r8), parameter :: tol = 1.e-14_r8
+
+contains
+
+  subroutine setUp(this)
+    class(TestMatrix), intent(inout) :: this
+
+    integer :: i
+
+    allocate( this%identity(ndims,ndims) )
+    this%identity(:,:) = 0.0_r8
+    do i = 1, ndims
+       this%identity(i,i) = 1.0_r8
+    end do
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestMatrix), intent(inout) :: this
+    deallocate( this%identity )
+  end subroutine tearDown
+
+  @Test
+  subroutine inverse_of_identity_is_identity(this)
+    class(TestMatrix), intent(inout) :: this
+    real(r8) :: data(ndims,ndims)
+    real(r8) :: result(ndims,ndims)
+
+    data = this%identity
+    call inverse( data, result, ndims )
+    @assertEqual(this%identity, result)
+
+  end subroutine inverse_of_identity_is_identity
+
+  @Test
+  subroutine scalar_multiplication_of_identity(this)
+    use shr_const_mod, only : SHR_CONST_PI
+    class(TestMatrix), intent(inout) :: this
+    real(r8) :: data(ndims,ndims)
+    real(r8) :: result(ndims,ndims)
+    real(r8) :: expected(ndims,ndims)
+    integer  :: i
+
+    data = this%identity
+    expected = this%identity
+    do i = 1, ndims
+       data(i,i) = SHR_CONST_PI*100.0_r8
+       expected(i,i) = 1.0_r8 / data(i,i)
+    end do
+    call inverse( data, result, ndims )
+    @assertEqual( expected, result)
+
+  end subroutine scalar_multiplication_of_identity
+
+  @Test
+  subroutine arb_upper_tri_matrix_multiplies_to_identity(this)
+    use shr_const_mod, only : SHR_CONST_PI
+    class(TestMatrix), intent(inout) :: this
+    real(r8) :: data(ndims,ndims)
+    real(r8) :: calcInverse(ndims,ndims)
+    real(r8) :: result(ndims,ndims)
+    real(r8) :: rando
+    integer  :: i, j
+    intrinsic :: random_number
+
+    ! Fill an arbitrary upper triangular matrix, with non-zero diagonal
+    data = this%identity
+    do i = 1, ndims
+       call random_number(rando)
+       data(i,i) = real(i,r8) + rando
+       if ( i < ndims ) then
+          do j = i+1, ndims
+             call random_number(rando)
+             data(i,j) = real(i+j,r8) + rando
+          end do
+       end if
+    end do
+    call inverse( data, calcInverse, ndims )
+    result = matmul( data, calcInverse )
+    @assertEqual( this%identity, result, tolerance=tol)
+
+  end subroutine arb_upper_tri_matrix_multiplies_to_identity
+
+  @Test
+  subroutine error_zero_on_diagonal(this)
+    class(TestMatrix), intent(inout) :: this
+    real(r8) :: data(ndims,ndims)
+    real(r8) :: result(ndims,ndims)
+    character(len=:), allocatable :: expected_msg
+
+    data = this%identity
+    data(1,1) = 0.0_r8
+    call inverse( data, result, ndims )
+    expected_msg = endrun_msg( &
+         'inverse ERROR: A diagonal element of the input matrix is zero')
+    @assertExceptionRaised(expected_msg)
+  end subroutine error_zero_on_diagonal
+
+end module test_matrix

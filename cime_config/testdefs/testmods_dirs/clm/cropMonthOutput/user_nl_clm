@@ -1,2 +1,2 @@
- hist_nhtfrq    = 0,-240
- hist_mfilt     = 1,1
+ hist_nhtfrq    = 0,-240,17520
+ hist_mfilt     = 1,1,1

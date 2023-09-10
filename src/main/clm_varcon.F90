@@ -122,6 +122,10 @@ module clm_varcon
 
   real(r8), public, parameter :: aquifer_water_baseline = 5000._r8 ! baseline value for water in the unconfined aquifer [mm]
   real(r8), public, parameter :: c_to_b = 2.0_r8         ! conversion between mass carbon and total biomass (g biomass /g C)
+  ! Some non-tunable conversions (may need to place elsewhere)
+  real(r8), public, parameter :: g_to_mg = 1.0e3_r8  ! coefficient to convert g to mg
+  real(r8), public, parameter :: cm3_to_m3 = 1.0e-6_r8  ! coefficient to convert cm3 to m3
+  real(r8), public, parameter :: pct_to_frac = 1.0e-2_r8  ! coefficient to convert % to fraction
   
   !!! C13
   real(r8), public, parameter :: preind_atm_del13c = -6.0_r8   ! preindustrial value for atmospheric del13C
@@ -149,6 +153,18 @@ module clm_varcon
   !!! C14
   real(r8), public :: c14ratio = 1.e-12_r8
   ! real(r8) :: c14ratio = 1._r8  ! debug lets set to 1 to try to avoid numerical errors
+
+  !------------------------------------------------------------------
+  ! Surface roughness constants
+  !------------------------------------------------------------------
+  real(r8), public, parameter :: beta_param = 7.2_r8  ! Meier et al. (2022) https://doi.org/10.5194/gmd-15-2365-2022
+  real(r8), public, parameter :: nu_param = 1.5e-5_r8  ! Meier et al. (2022) kinematic viscosity of air
+  real(r8), public, parameter :: b1_param = 1.4_r8  ! Meier et al. (2022) empirical constant
+  real(r8), public, parameter :: b4_param = -0.31_r8  ! Meier et al. (2022) empirical constant
+  real(r8), public, parameter :: cd1_param = 7.5_r8  ! Meier et al. (2022) originally from Raupach (1994)
+  real(r8), public, parameter :: meier_param1 = 0.23_r8  ! slevis did not find it documented
+  real(r8), public, parameter :: meier_param2 = 0.08_r8  ! slevis did not find it documented
+  real(r8), public, parameter :: meier_param3 = 70.0_r8  ! slevis did not find it documented, but to the question "What is the 70 in the formula for roughness length" bard.google.com responds "[...] a dimensionless constant [...] originally introduced by von Karman. It is based on experimental data and is thought to represent the ratio of the average height of the surface roughness elements to the distance that the wind travels before it is slowed down by the roughness."
 
   !------------------------------------------------------------------
   ! Urban building temperature constants
