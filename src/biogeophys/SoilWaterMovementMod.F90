@@ -1395,12 +1395,12 @@ contains
          !  save number of adaptive substeps used during time step
          nsubsteps(c) = nsubstep
 
-         ! check for over-saturated layers                                      
-         do j = nlayers,2,-1
-            over_saturation   = max(h2osoi_liq(c,j)-(watsat(c,j)*m_to_mm*dz(c,j)),0._r8)
-            h2osoi_liq(c,j)   = min(watsat(c,j)*m_to_mm*dz(c,j), h2osoi_liq(c,j))
-            h2osoi_liq(c,j-1) = h2osoi_liq(c,j-1) + over_saturation
-         end do
+!!$         ! check for over-saturated layers                                      
+!!$         do j = nlayers,2,-1
+!!$            over_saturation   = max(h2osoi_liq(c,j)-(watsat(c,j)*m_to_mm*dz(c,j)),0._r8)
+!!$            h2osoi_liq(c,j)   = min(watsat(c,j)*m_to_mm*dz(c,j), h2osoi_liq(c,j))
+!!$            h2osoi_liq(c,j-1) = h2osoi_liq(c,j-1) + over_saturation
+!!$         end do
          
          ! check for negative moisture values
          do j = 2, nlayers
