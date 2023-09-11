@@ -44,18 +44,20 @@ class TestSysMeshMaskModifier(unittest.TestCase):
             path_to_ctsm_root(), "tools/modify_input_files/modify_mesh_template.cfg"
         )
         self.testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
-        self.fsurdat_in = os.path.join(
-            self.testinputs_path,
-            "surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517.nc",
-        )
+        self.fsurdat_in = None
         self._tempdir = tempfile.mkdtemp()
         self._cfg_file_path = os.path.join(self._tempdir, "modify_mesh_mask.cfg")
         self._mesh_mask_in = os.path.join(self._tempdir, "mesh_mask_in.nc")
         self._mesh_mask_out = os.path.join(self._tempdir, "mesh_mask_out.nc")
         self._landmask_file = os.path.join(self._tempdir, "landmask.nc")
-        scrip_file = os.path.join(self._tempdir, "scrip.nc")
-        metadata_file = os.path.join(self._tempdir, "metadata.nc")
+        self.scrip_file = os.path.join(self._tempdir, "scrip.nc")
+        self.metadata_file = os.path.join(self._tempdir, "metadata.nc")
         configure_path = os.path.join(path_to_cime(), "CIME/scripts/configure")
+
+        self._lat_varname = None
+        self._lon_varname = None
+        self._lat_dimname = None
+        self._lon_dimname = None
 
         os.chdir(self._tempdir)  # cd to tempdir
 
@@ -66,21 +68,35 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         except subprocess.CalledProcessError as e:
             sys.exit(f"{e} ERROR using {configure_cmd}")
 
+    def createScripGridAndMask(self):
+        """Create the SCRIP gird and mask file"""
         # Generate scrip file from fsurdat_in using nco
         # In the ctsm_py environment this requires running 'module load nco'
         # interactively
-        ncks_cmd = f"ncks --rgr infer --rgr scrip={scrip_file} {self.fsurdat_in} {metadata_file}"
+        if os.path.exists(self.scrip_file):
+            os.remove(self.scrip_file)
+        # --rgr infer, means create the vertices bases on the cell centers (--rgr is the regrid options for ncks)
+        # --rgr scrip=<file>, names the output SCRIP grid file
+        # The mask will be idnetically 1, no matter the input grid (you can, change it, but you have to get it from a mapping file)
+        # Since, the mask is going to be changed later, it's fine that the mask at this point is identically 1.
+
+        # This could also alturnatively be done, by using the stored SCRIP grid file for the resolution under CESM inputdata
+        ncks_cmd = (
+            f"ncks --rgr infer --rgr scrip={self.scrip_file} {self.fsurdat_in} {self.metadata_file}"
+        )
         try:
             subprocess.check_call(ncks_cmd, shell=True)
         except subprocess.CalledProcessError as e:
             err_msg = (
-                f"{e} ERROR using ncks to generate {scrip_file} from "
+                f"{e} ERROR using ncks to generate {self.scrip_file} from "
                 + f"{self.fsurdat_in}; MOST LIKELY SHOULD INVOKE module load nco"
             )
             sys.exit(err_msg)
         # Run .env_mach_specific.sh to load esmf and generate mesh_mask_in
         # Execute two commands at once to preserve the results of the first
-        two_commands = f". {self._tempdir}/.env_mach_specific.sh; ESMF_Scrip2Unstruct {scrip_file} {self._mesh_mask_in} 0"
+        if os.path.exists(self._mesh_mask_in):
+            os.remove(self._mesh_mask_in)
+        two_commands = f". {self._tempdir}/.env_mach_specific.sh; ESMF_Scrip2Unstruct {self.scrip_file} {self._mesh_mask_in} 0"
         try:
             subprocess.check_call(two_commands, shell=True)
         except subprocess.CalledProcessError as e:
@@ -94,7 +110,6 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         assert self._lon_varname in fsurdat_in_data.variables
         self._lat_dimname = fsurdat_in_data[self._lat_varname].dims[0]
         self._lon_dimname = fsurdat_in_data[self._lat_varname].dims[1]
-        self.createLandMaskFile()
 
     def createLandMaskFile(self):
         """Create the LandMask file from the input fsurdat_in file"""
@@ -128,15 +143,24 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         For a case where the mesh remains unchanged, it's just output as
         ocean so the mesh is output as all zero's rather than the all 1's that came in.
         """
+        self.fsurdat_in = os.path.join(
+            self.testinputs_path,
+            "surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517.nc",
+        )
 
+        self.createScripGridAndMask()
+        self.createLandMaskFile()
         self._create_config_file()
 
         # run the mesh_mask_modifier tool
+        if os.path.exists(self._mesh_mask_out):
+            os.remove(self._mesh_mask_out)
         mesh_mask_modifier(self._cfg_file_path)
         # the critical piece of this test is that the above command
         # doesn't generate errors; however, we also do some assertions below
 
         # Error checks
+        # Use the mesh file that was created with to compare to with a mask identical to 1
         mesh_mask_in_data = xr.open_dataset(self._mesh_mask_in)
         mesh_mask_out_data = xr.open_dataset(self._mesh_mask_out)
 
@@ -161,16 +185,26 @@ class TestSysMeshMaskModifier(unittest.TestCase):
             self.testinputs_path,
             "surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517_modify_mask.nc",
         )
+        print(self.fsurdat_in)
+        self.createScripGridAndMask()
         self.createLandMaskFile()
         self._create_config_file()
+
+        if os.path.exists(self._mesh_mask_out):
+            os.remove(self._mesh_mask_out)
 
         # run the mesh_mask_modifier tool
         mesh_mask_modifier(self._cfg_file_path)
         # the critical piece of this test is that the above command
         # doesn't generate errors; however, we also do some assertions below
+        mesh_compare = os.path.join(
+            self.testinputs_path, "5x5pt_amazon-modify_mask_ESMFmesh_c20230911.nc"
+        )
 
         # Error checks
-        mesh_mask_in_data = xr.open_dataset(self._mesh_mask_in)
+        print(mesh_compare)
+        print(self._mesh_mask_out)
+        mesh_mask_in_data = xr.open_dataset(mesh_compare)
         mesh_mask_out_data = xr.open_dataset(self._mesh_mask_out)
 
         center_coords_in = mesh_mask_in_data.centerCoords
@@ -179,9 +213,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         # the Mask variable will now equal zeros, not ones
         element_mask_in = mesh_mask_in_data.elementMask
         element_mask_out = mesh_mask_out_data.elementMask
-        self.assertTrue(
-            element_mask_out.equals(element_mask_in - 1)
-        )  # The -1 is because of the comment above about the mask
+        self.assertTrue(element_mask_out.equals(element_mask_in))
 
     def _create_config_file(self):
         """
