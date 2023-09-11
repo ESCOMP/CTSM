@@ -3136,6 +3136,10 @@ contains
                   leafc_to_litter(p)  = t1 * leafc_remaining  + cpool_to_leafc(p)
                   livestemc_to_litter(p)   = t1 * livestemc_remaining  + cpool_to_livestemc(p)
                   livestemn_to_litter(p)   = t1 * livestemn_remaining
+                  ! Sam Rabin 2023-09-11:
+                  ! leafn_to_litter is calculated below based on leafc_to_litter (updated above)
+                  ! as well as leaf C:N ratio (unaffected by biofuel harvest). It thus does not
+                  ! need to be updated here.
 
                   ! Matrix for grain, livestem to litter and biofuel
                   if(use_matrixcn)then
