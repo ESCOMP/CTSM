@@ -2447,7 +2447,7 @@ contains
             do j = jwt(c)+1,1,-1
 
                ! ensure water is not added to frozen layers
-!scs               if (zi(c,j) < frost_table(c)) then 
+               if (zi(c,j) < frost_table(c)) then 
                   ! analytical expression for specific yield
                   s_y = watsat(c,j) &
                        * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
@@ -2466,7 +2466,7 @@ contains
                   else
                      zwt(c) = zi(c,j-1)
                   endif
-!scs               endif
+               endif
                   
             enddo
             
