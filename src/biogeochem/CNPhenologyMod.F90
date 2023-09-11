@@ -2954,7 +2954,7 @@ contains
     use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
     
     use CNSharedParamsMod, only : use_fun
-    use clm_varctl       , only : CNratio_floating    
+    use clm_varctl       , only : CNratio_floating, crop_residue_removal_frac
     !
     ! !ARGUMENTS:
     integer                       , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -3053,8 +3053,6 @@ contains
       ! The litterfall transfer rate starts at 0.0 and increases linearly
       ! over time, with displayed growth going to 0.0 on the last day of litterfall
 
-      removedresidue_fraction = 0._r8
-      
       do fp = 1,num_soilp
          p = filter_soilp(fp)
 
@@ -3141,14 +3139,14 @@ contains
                   livestemn_remaining = livestemn(p)*(1._r8-biofuel_harvfrac(ivt(p)))
 
                   ! Remove residues
-                  leafc_to_removedresiduec(p) = t1 * leafc_remaining * removedresidue_fraction
-                  leafn_to_removedresiduen(p) = t1 * leafn_remaining * removedresidue_fraction
-                  livestemc_to_removedresiduec(p) = t1 * livestemc_remaining * removedresidue_fraction
-                  livestemn_to_removedresiduen(p) = t1 * livestemn_remaining * removedresidue_fraction
-                  leafc_remaining     = leafc_remaining     * (1._r8 - removedresidue_fraction)
-                  leafn_remaining     = leafn_remaining     * (1._r8 - removedresidue_fraction)
-                  livestemc_remaining = livestemc_remaining * (1._r8 - removedresidue_fraction)
-                  livestemn_remaining = livestemn_remaining * (1._r8 - removedresidue_fraction)
+                  leafc_to_removedresiduec(p) = t1 * leafc_remaining * crop_residue_removal_frac
+                  leafn_to_removedresiduen(p) = t1 * leafn_remaining * crop_residue_removal_frac
+                  livestemc_to_removedresiduec(p) = t1 * livestemc_remaining * crop_residue_removal_frac
+                  livestemn_to_removedresiduen(p) = t1 * livestemn_remaining * crop_residue_removal_frac
+                  leafc_remaining     = leafc_remaining     * (1._r8 - crop_residue_removal_frac)
+                  leafn_remaining     = leafn_remaining     * (1._r8 - crop_residue_removal_frac)
+                  livestemc_remaining = livestemc_remaining * (1._r8 - crop_residue_removal_frac)
+                  livestemn_remaining = livestemn_remaining * (1._r8 - crop_residue_removal_frac)
                   
                   leafc_to_litter(p)  = t1 * leafc_remaining  + cpool_to_leafc(p)
                   livestemc_to_litter(p)   = t1 * livestemc_remaining  + cpool_to_livestemc(p)

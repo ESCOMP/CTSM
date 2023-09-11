@@ -1089,6 +1089,13 @@ Toggle to turn on the prognostic fertilizer for crop model
 Toggle to turn on the 1-year grain product pool in the crop model 
 </entry>
 
+<entry id="crop_residue_removal_frac" type="real" category="physics"
+       group="clm_inparm" valid_values="" value="0.0d00">
+Fraction of post-harvest crop residues (leaf and stem) to move to 
+1-year product pool instead of letting them fall as litter.
+<default>Default: 0.0</default>
+</entry>
+
 <entry id="baset_mapping" type="char*20" category="physics"
        group="crop_inparm" valid_values="constant,varytropicsbylat" value="constant">
 Type of mapping to use for base temperature for prognostic crop model
