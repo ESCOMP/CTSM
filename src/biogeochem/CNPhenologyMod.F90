@@ -2981,6 +2981,7 @@ contains
     real(r8) :: repr_grainc_to_food_thispool ! amount added to / subtracted from repr_grainc_to_food for the pool in question (gC/m2/s)
     real(r8) :: leafc_remaining, livestemc_remaining
     real(r8) :: leafn_remaining, livestemn_remaining
+    real(r8) :: removedresidue_fraction
     !-----------------------------------------------------------------------
 
     associate(                                                                           & 
@@ -3051,6 +3052,8 @@ contains
 
       ! The litterfall transfer rate starts at 0.0 and increases linearly
       ! over time, with displayed growth going to 0.0 on the last day of litterfall
+
+      removedresidue_fraction = 0._r8
       
       do fp = 1,num_soilp
          p = filter_soilp(fp)
@@ -3137,6 +3140,16 @@ contains
                   livestemc_remaining = livestemc(p)*(1._r8-biofuel_harvfrac(ivt(p)))
                   livestemn_remaining = livestemn(p)*(1._r8-biofuel_harvfrac(ivt(p)))
 
+                  ! Remove residues
+                  leafc_to_removedresiduec(p) = t1 * leafc_remaining * removedresidue_fraction
+                  leafn_to_removedresiduen(p) = t1 * leafn_remaining * removedresidue_fraction
+                  livestemc_to_removedresiduec(p) = t1 * livestemc_remaining * removedresidue_fraction
+                  livestemn_to_removedresiduen(p) = t1 * livestemn_remaining * removedresidue_fraction
+                  leafc_remaining     = leafc_remaining     * (1._r8 - removedresidue_fraction)
+                  leafn_remaining     = leafn_remaining     * (1._r8 - removedresidue_fraction)
+                  livestemc_remaining = livestemc_remaining * (1._r8 - removedresidue_fraction)
+                  livestemn_remaining = livestemn_remaining * (1._r8 - removedresidue_fraction)
+                  
                   leafc_to_litter(p)  = t1 * leafc_remaining  + cpool_to_leafc(p)
                   livestemc_to_litter(p)   = t1 * livestemc_remaining  + cpool_to_livestemc(p)
                   livestemn_to_litter(p)   = t1 * livestemn_remaining
