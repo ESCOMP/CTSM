@@ -73,7 +73,10 @@ This should show no diffs
 
 (9) Make an annotated tag on master
 
-(10) Push master and tag to ESCOMP/ctsm
+(10) Push tag to ESCOMP/ctsm
+
+(10a) Push to master (if needed because you changed something in master after PR was merged, or 
+if you did step 7 above using git commands that require this step)
 
 (11) Update the CTSM upcoming tags project, if necessary
      (https://github.com/ESCOMP/ctsm/projects/6)
