@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1992;
+my $ntests = 1999;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 1353;
@@ -1227,22 +1227,22 @@ my %failtest = (
                                      phys=>"clm5_0",
                                    },
      "fates_non_sp_laistreams"   =>{ options=>"--envxml_dir . --bgc fates",
-                                     namelist=>"use_lai_streams=.true., use_fates_sp=.false.",
+                                     namelst=>"use_lai_streams=.true., use_fates_sp=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                      },
-      "bgc_non_sp_laistreams"   =>{ options=>"--envxml_dir . -bgc bgc",
-                                     namelist=>"use_lai_streams=.true.",
+     "bgc_non_sp_laistreams"     =>{ options=>"--envxml_dir . -bgc bgc",
+                                     namelst=>"use_lai_streams=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                      },
-   #   "bgc_laistreams_input"     =>{ options=>"--envxml_dir . --bgc bgc",
-   #                                   namelist=>"stream_year_first_lai=1999",
-   #                                   GLC_TWO_WAY_COUPLING=>"FALSE",
-   #                                   phys=>"clm5_0",
-   #                                   },
+     "bgc_laistreams_input"     =>{ options=>"--envxml_dir . --bgc bgc",
+                                     namelst=>"stream_year_first_lai=1999",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                     },
      "crop_laistreams_input"     =>{ options=>"--envxml_dir . --bgc sp --crop",
-                                     namelist=>"use_lai_streams=.true.",
+                                     namelst=>"use_lai_streams=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                      },
