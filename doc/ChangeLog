@@ -29,7 +29,7 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed or introduced
 ------------------------
 
-CTSM issues fixed (include CTSM Issue #): #1722
+CTSM issues fixed (include CTSM Issue #): #1722 - Should be able to use lai streams with FATES-SP mode
 
 Notes of particular relevance for developers:
 ---------------------------------------------
@@ -60,7 +60,7 @@ Other details
 
 List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates
 
-Pull Requests that document the changes (include PR ids): #2054
+Pull Requests that document the changes (include PR ids): #2054 
 (https://github.com/ESCOMP/ctsm/pull)
 
 ===============================================================
