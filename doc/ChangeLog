@@ -34,6 +34,8 @@ CTSM issues fixed (include CTSM Issue #): #1722
 Notes of particular relevance for developers:
 ---------------------------------------------
 
+build-namelist tests (if CLMBuildNamelist.pm has changed): added tests to make sure use_lai_streams failed correctly
+
 Changes to tests or testing: Added a test for lai_streams with FATES
 
 Testing summary:

@@ -3921,17 +3921,18 @@ sub setup_logic_lai_streams {
   } else {
      # If bgc is BGC/BGCDV then make sure none of the LAI settings are set
      if ( &value_is_true($nl->get_value('use_lai_streams'))) {
-        $log->fatal_error("When bgc is NOT SP use_lai_streams cannot be .true.\n" .
-                          "(eg. don't use this option with BGC or BGCDV).");
+        $log->fatal_error("When not in SP mode use_lai_streams cannot be .true.\n" .
+                          "(eg. don't use this option with BGC or non-SP FATES," .
+                          "update compset to use SP)");
      }
      if ( defined($nl->get_value('stream_year_first_lai'))  ||
           defined($nl->get_value('stream_year_last_lai'))   ||
           defined($nl->get_value('model_year_align_lai'))   ||
           defined($nl->get_value('lai_tintalgo'        ))   ||
           defined($nl->get_value('stream_fldfilename_lai'))   ) {
-        $log->fatal_error("When bgc is NOT SP none of the following can be set: stream_year_first_lai,\n" .
+        $log->fatal_error("When not in SP mode none of the following can be set: stream_year_first_lai,\n" .
                           "stream_year_last_lai, model_year_align_lai, lai_tintalgo nor\n" .
-                          "stream_fldfilename_lai (eg. don't use this option with BGC or BGCDV).");
+                          "stream_fldfilename_lai (eg. don't use this option with BGC or FATES-SP).");
      }
   }
 }
