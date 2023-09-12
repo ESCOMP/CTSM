@@ -1076,7 +1076,7 @@ module CLMFatesInterfaceMod
       call fates_hist%update_history_dyn( nc,                    &
                                           this%fates(nc)%nsites, &
                                           this%fates(nc)%sites,  &
-                                          this%fates(nc)%bc_in, )
+                                          this%fates(nc)%bc_in )
 
       if (masterproc) then
          write(iulog, *) 'clm: leaving fates model', bounds_clump%begg, &
@@ -2635,13 +2635,20 @@ module CLMFatesInterfaceMod
       dtime = get_step_size_real()
 
       ! Update history variables that track these variables
-      call fates_hist%update_history_hifrq(nc, &
+      call fates_hist%update_history_hifrq_simple(nc, &
             this%fates(nc)%nsites,  &
             this%fates(nc)%sites,   &
             this%fates(nc)%bc_in,   &
             this%fates(nc)%bc_out,  &
             dtime)
 
+      call fates_hist%update_history_hifrq_multi(nc, &
+            this%fates(nc)%nsites,  &
+            this%fates(nc)%sites,   &
+            this%fates(nc)%bc_in,   &
+            this%fates(nc)%bc_out,  &
+            dtime)
+      
     end associate
 
     call t_stopf('fates_wrap_update_hifrq_hist')
