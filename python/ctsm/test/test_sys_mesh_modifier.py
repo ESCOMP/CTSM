@@ -185,7 +185,6 @@ class TestSysMeshMaskModifier(unittest.TestCase):
             self.testinputs_path,
             "surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517_modify_mask.nc",
         )
-        print(self.fsurdat_in)
         self.createScripGridAndMask()
         self.createLandMaskFile()
         self._create_config_file()
@@ -202,15 +201,13 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         )
 
         # Error checks
-        print(mesh_compare)
-        print(self._mesh_mask_out)
         mesh_mask_in_data = xr.open_dataset(mesh_compare)
         mesh_mask_out_data = xr.open_dataset(self._mesh_mask_out)
 
         center_coords_in = mesh_mask_in_data.centerCoords
         center_coords_out = mesh_mask_out_data.centerCoords
         self.assertTrue(center_coords_out.equals(center_coords_in))
-        # the Mask variable will now equal zeros, not ones
+        # the Mask variable will now equal the comparision file
         element_mask_in = mesh_mask_in_data.elementMask
         element_mask_out = mesh_mask_out_data.elementMask
         self.assertTrue(element_mask_out.equals(element_mask_in))
