@@ -3891,6 +3891,7 @@ sub setup_logic_lai_streams {
     $log->fatal_error("turning use_lai_streams on is incompatable with use_crop set to true.");
   }
   if ( $nl_flags->{'bgc_mode'} eq "sp" || ($nl_flags->{'bgc_mode'} eq "fates" && &value_is_true($nl->get_value('use_fates_sp')) )) {
+   #print "WE ARE HERE" 
      if ( &value_is_true($nl->get_value('use_lai_streams')) ) {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo',
@@ -3919,8 +3920,8 @@ sub setup_logic_lai_streams {
      # If bgc is BGC/BGCDV then make sure none of the LAI settings are set
      if ( &value_is_true($nl->get_value('use_lai_streams'))) {
         $log->fatal_error("When not in SP mode use_lai_streams cannot be .true.\n" .
-                          "(eg. don't use this option with BGC or non-SP FATES," .
-                          "update compset to use SP)");
+                          "(eg. don't use this option with BGC or non-SP FATES), \n" .
+                          "Update compset to use SP)");
      }
      if ( defined($nl->get_value('stream_year_first_lai'))  ||
           defined($nl->get_value('stream_year_last_lai'))   ||
