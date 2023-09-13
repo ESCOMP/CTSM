@@ -14,7 +14,7 @@ following:
 Instructions for running using conda python environments:
 
 ../../py_env_create
-conda activate ctsm_py
+conda activate ctsm_pylib
 
 """
 # TODO
@@ -118,7 +118,7 @@ def main():
             subset_command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),
                               '--site',clmsite, '--create-surface','--uniform-snowpack',
                               '--cap-saturation','--verbose','--overwrite']
-            modify_command = ['./modify_singlept_site_neon.py', '--neon_site', site, '--surf_dir',
+            modify_command = ['./modify_singlept_site_neon', '--neon_site', site, '--surf_dir',
                        'subset_data_single_point', '--16pft']
         elif args.pft_16:
             # use surface dataset with 16 pfts, but overwrite to 100% 1 dominant PFT
@@ -127,7 +127,7 @@ def main():
             subset_command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),
                               '--site',clmsite,'--dompft',str(pft),'--create-surface',
                               '--uniform-snowpack','--cap-saturation','--verbose','--overwrite']
-            modify_command = ['./modify_singlept_site_neon.py', '--neon_site', site, '--surf_dir',
+            modify_command = ['./modify_singlept_site_neon', '--neon_site', site, '--surf_dir',
                               'subset_data_single_point', '--16pft']
         elif args.mixed:
             # use surface dataset with 78 pfts, and don't overwrite with 100% 1 dominant PFT
@@ -137,7 +137,7 @@ def main():
             subset_command = ['./subset_data','point','--lat',str(lat),'--lon',str(lon),
                               '--site',clmsite,'--crop','--create-surface',
                               '--uniform-snowpack','--cap-saturation','--verbose','--overwrite']
-            modify_command = ['./modify_singlept_site_neon.py', '--neon_site', site, '--surf_dir',
+            modify_command = ['./modify_singlept_site_neon', '--neon_site', site, '--surf_dir',
                        'subset_data_single_point']
         else:
             # use surface dataset with 78 pfts, and overwrite to 100% 1 dominant PFT
@@ -147,11 +147,7 @@ def main():
             subset_command = ['./subset_data', 'point', '--lat', str(lat), '--lon', str(lon),
                               '--site', clmsite,'--crop', '--dompft', str(pft), '--create-surface',
                               '--uniform-snowpack', '--cap-saturation', '--verbose', '--overwrite']
-            modify_command = ['./modify_singlept_site_neon.py', '--neon_site', site, '--surf_dir',
+            modify_command = ['./modify_singlept_site_neon', '--neon_site', site, '--surf_dir',
                        'subset_data_single_point']
         execute(subset_command)
         execute(modify_command)
-
-if __name__ == "__main__": 
-    main()
-
