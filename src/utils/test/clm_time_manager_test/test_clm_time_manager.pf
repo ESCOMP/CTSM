@@ -577,4 +577,35 @@ contains
 
   end subroutine bad_hilontolocal_time
 
+  @Test
+  subroutine check_is_doy_in_interval(this)
+    class(TestTimeManager), intent(inout) :: this
+
+    integer :: start, end
+
+    start = 100
+    end = 300
+    @assertTrue(is_doy_in_interval(start, end, start))
+    @assertTrue(is_doy_in_interval(start, end, end))
+    @assertTrue(is_doy_in_interval(start, end, 200))
+    @assertFalse(is_doy_in_interval(start, end, 35))
+    @assertFalse(is_doy_in_interval(start, end, 350))
+
+    start = 300
+    end = 100
+    @assertTrue(is_doy_in_interval(start, end, start))
+    @assertTrue(is_doy_in_interval(start, end, end))
+    @assertFalse(is_doy_in_interval(start, end, 200))
+    @assertTrue(is_doy_in_interval(start, end, 35))
+    @assertTrue(is_doy_in_interval(start, end, 350))
+
+    start = 300
+    end = 300
+    @assertTrue(is_doy_in_interval(start, end, start))
+    @assertTrue(is_doy_in_interval(start, end, end))
+    @assertFalse(is_doy_in_interval(start, end, 200))
+    @assertFalse(is_doy_in_interval(start, end, 350))
+
+  end subroutine check_is_doy_in_interval
+
 end module test_clm_time_manager
