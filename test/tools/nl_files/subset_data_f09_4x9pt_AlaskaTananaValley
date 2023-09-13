@@ -1,0 +1,1 @@
+region --lat1 62 --lat2 66 --lon1 -152 --lon2 -141 --create-mesh --create-domain --create-surface --create-user-mods --verbose --overwrite --reg f09_4x9pt_AlaskaTananaValley --inputdata-dir CSMDATA

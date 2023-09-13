@@ -433,6 +433,12 @@ good-names=i,
            k,
            ex,
            Run,
+           ds,
+           m,
+           n,
+           l1,
+           l2,
+           ax,
            _,
 # --- default list is above here, our own list is below here ---
 # Allow logger as a global name in each module, because this seems to follow general recommended convention:

@@ -1,0 +1,1 @@
+region --lat1 55 --lat2 89.1 --lon1 0 --lon2 360 --create-mesh --create-surface --create-domain --create-user-mods --verbose --overwrite --reg f09_37x288pt_PanBoreal --inputdata-dir CSMDATA
