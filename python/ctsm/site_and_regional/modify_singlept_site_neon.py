@@ -160,7 +160,7 @@ def get_parser():
         dest="inputdatadir",
         type=str,
         required=False,
-        default="/glade/p/cesmdata/cseg/inputdata"
+        default="/glade/p/cesmdata/cseg/inputdata",
     )
     parser.add_argument(
         "-d",
@@ -233,10 +233,7 @@ def get_neon(neon_dir, site_name):
             print("Download finished successfully for", site_name)
         elif response.status_code == 404:
             sys.exit(
-                "Data for this site "
-                + site_name
-                + " was not available on the neon server:"
-                + url
+                "Data for this site " + site_name + " was not available on the neon server:" + url
             )
 
         print("Download exit status code:  ", response.status_code)
@@ -270,12 +267,12 @@ def find_surffile(surf_dir, site_name, pft_16):
     """
 
     if pft_16:
-        sf_name = "surfdata_1x1_NEON_"+site_name+"*hist_16pfts_Irrig_CMIP6_simyr2000_*.nc"
+        sf_name = "surfdata_1x1_NEON_" + site_name + "*hist_16pfts_Irrig_CMIP6_simyr2000_*.nc"
     else:
-        sf_name = "surfdata_1x1_NEON_" +site_name+"*hist_78pfts_CMIP6_simyr2000_*.nc"
+        sf_name = "surfdata_1x1_NEON_" + site_name + "*hist_78pfts_CMIP6_simyr2000_*.nc"
 
-    print (os.path.join(surf_dir , sf_name))
-    surf_file = sorted(glob.glob(os.path.join(surf_dir , sf_name)))
+    print(os.path.join(surf_dir, sf_name))
+    surf_file = sorted(glob.glob(os.path.join(surf_dir, sf_name)))
 
     if len(surf_file) > 1:
         print("The following files found :", *surf_file, sep="\n- ")
@@ -287,10 +284,14 @@ def find_surffile(surf_dir, site_name, pft_16):
         surf_file = surf_file[0]
     else:
         sys.exit(
-            "Surface data for this site " + str(site_name) + " was not found:" + str(surf_dir) + str(sf_name) +
-            "." +
-            "\n" +
-            "Please run ./subset_data.py for this site."
+            "Surface data for this site "
+            + str(site_name)
+            + " was not found:"
+            + str(surf_dir)
+            + str(sf_name)
+            + "."
+            + "\n"
+            + "Please run ./subset_data.py for this site."
         )
     return surf_file
 
@@ -324,10 +325,8 @@ def find_soil_structure(args, surf_file):
     print("------------")
     # print (f1.attrs["Soil_texture_raw_data_file_name"])
 
-    clm_input_dir = os.path.join( args.inputdatadir, "lnd/clm2/rawdata/" )
-    surf_soildepth_file = os.path.join(
-        clm_input_dir, f1.attrs["Soil_texture_raw_data_file_name"]
-    )
+    clm_input_dir = os.path.join(args.inputdatadir, "lnd/clm2/rawdata/")
+    surf_soildepth_file = os.path.join(clm_input_dir, f1.attrs["Soil_texture_raw_data_file_name"])
 
     if os.path.exists(surf_soildepth_file):
         print(
@@ -345,9 +344,7 @@ def find_soil_structure(args, surf_file):
 
     else:
         sys.exit(
-            "Cannot find soil structure file : "
-            + surf_soildepth_file
-            + "for the surface dataset."
+            "Cannot find soil structure file : " + surf_soildepth_file + "for the surface dataset."
         )
 
     return soil_bot, soil_top
@@ -492,9 +489,9 @@ def download_file(url, fname):
         elif response.status_code == 404:
             print("File " + fname + "was not available on the neon server:" + url)
     except Exception as err:
-        print ('The server could not fulfill the request.')
-        print ('Something went wrong in downloading', fname)
-        print ('Error code:', err.code)
+        print("The server could not fulfill the request.")
+        print("Something went wrong in downloading", fname)
+        print("Error code:", err.code)
 
 
 def fill_interpolate(f2, var, method):
@@ -536,8 +533,10 @@ def main():
     # Check if pandas is a recent enough version
     pdvers = pd.__version__
     if version.parse(pdvers) < version.parse("1.1.0"):
-        sys.exit("The pandas version in your python environment is too old, update to a newer version of pandas (>=1.1.0): version=%s", pdvers )
-
+        sys.exit(
+            "The pandas version in your python environment is too old, update to a newer version of pandas (>=1.1.0): version=%s",
+            pdvers,
+        )
 
     file_time = check_neon_time()
 
@@ -639,8 +638,7 @@ def main():
             estimated_oc = carbon_tot
 
         layer_depth = (
-            df["biogeoBottomDepth"][bin_index[soil_lev]]
-            - df["biogeoTopDepth"][bin_index[soil_lev]]
+            df["biogeoBottomDepth"][bin_index[soil_lev]] - df["biogeoTopDepth"][bin_index[soil_lev]]
         )
 
         # f2["ORGANIC"][soil_lev] = estimated_oc * bulk_den / 0.58
@@ -709,9 +707,9 @@ def main():
         print("Updated  : ", f2.PCT_CROP.values)
 
         print("Updating PCT_NAT_PFT")
-        #print (f2.PCT_NAT_PFT)
+        # print (f2.PCT_NAT_PFT)
         print(f2.PCT_NAT_PFT.values[0])
-        #f2.PCT_NAT_PFT.values[0] = [[100.0]]
+        # f2.PCT_NAT_PFT.values[0] = [[100.0]]
         print(f2.PCT_NAT_PFT[0].values)
 
     out_dir = args.out_dir
@@ -729,9 +727,4 @@ def main():
     print(f2.attrs)
     f2.to_netcdf(path=wfile, mode="w", format="NETCDF3_64BIT")
 
-    print(
-        "Successfully updated surface data file for neon site("
-        + site_name
-        + "):\n - "
-        + wfile
-    )
+    print("Successfully updated surface data file for neon site(" + site_name + "):\n - " + wfile)

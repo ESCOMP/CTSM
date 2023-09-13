@@ -67,9 +67,7 @@ import datetime
 from getpass import getuser
 
 # Get the ctsm util tools and then the cime tools.
-_CTSM_PYTHON = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "python")
-)
+_CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "python"))
 sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm import add_cime_to_path
@@ -194,7 +192,7 @@ def get_parser(args, description, valid_neon_sites):
     )
 
     parser.add_argument(
-       "--prism",
+        "--prism",
         help="""
                 Uses the PRISM reanaylsis precipitation data for the site instead of the NEON data
                 (only available over Continental US)
@@ -205,9 +203,8 @@ def get_parser(args, description, valid_neon_sites):
         default=False,
     )
 
-
     parser.add_argument(
-       "--experiment",
+        "--experiment",
         help="""
                 Appends the case name with string for model experiment
                 """,
@@ -274,11 +271,10 @@ def get_parser(args, description, valid_neon_sites):
                 """,
         action="store",
         dest="user_version",
-        required = False,
-        type = str,
-        choices= ['v1','v2','v3'],
+        required=False,
+        type=str,
+        choices=["v1", "v2", "v3"],
     )
-
 
     args = CIME.utils.parse_args_and_handle_standard_logging_options(args, parser)
 
@@ -381,9 +377,7 @@ class NeonSite:
 
     def __str__(self):
         return (
-            str(self.__class__)
-            + "\n"
-            + "\n".join((str(item) + " = " for item in (self.__dict__)))
+            str(self.__class__) + "\n" + "\n".join((str(item) + " = " for item in (self.__dict__)))
         )
 
     def build_base_case(
@@ -408,9 +402,7 @@ class NeonSite:
         """
         print("---- building a base case -------")
         self.base_case_root = output_root
-        user_mods_dirs = [
-            os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)
-        ]
+        user_mods_dirs = [os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)]
         if not output_root:
             output_root = os.getcwd()
         case_path = os.path.join(output_root, self.name)
@@ -449,9 +441,15 @@ class NeonSite:
                 existingcompname = case.get_value("COMPSET")
                 match = re.search("^HIST", existingcompname, flags=re.IGNORECASE)
                 if re.search("^HIST", compset, flags=re.IGNORECASE) is None:
-                    expect( match == None, "Existing base case is a historical type and should not be  -- rerun with the --orverwrite option" )
+                    expect(
+                        match == None,
+                        "Existing base case is a historical type and should not be  -- rerun with the --orverwrite option",
+                    )
                 else:
-                    expect( match != None, "Existing base case should be a historical type and is not -- rerun with the --orverwrite option" )
+                    expect(
+                        match != None,
+                        "Existing base case should be a historical type and is not -- rerun with the --orverwrite option",
+                    )
                 # reset the case
                 case.case_setup(reset=True)
             case_path = case.get_value("CASEROOT")
@@ -474,22 +472,22 @@ class NeonSite:
         d1 = datetime.datetime(self.end_year, self.end_month, 1)
         d2 = datetime.datetime(self.start_year, self.start_month, 1)
         return (d1.year - d2.year) * 12 + d1.month - d2.month
-    
+
     def get_batch_query(self, case):
         """
-        Function for querying the batch queue query command for a case, depending on the 
-        user's batch system. 
+        Function for querying the batch queue query command for a case, depending on the
+        user's batch system.
 
         Args:
         case:
             case object
         """
-        
+
         if case.get_value("BATCH_SYSTEM") == "none":
-          return "none"
+            return "none"
         else:
-          return case.get_value("batch_query")
-          
+            return case.get_value("batch_query")
+
     def run_case(
         self,
         base_case_root,
@@ -504,9 +502,7 @@ class NeonSite:
         experiment=False,
     ):
         user_mods_dirs = [
-            os.path.join(
-                self.cesmroot, "cime_config", "usermods_dirs", "NEON", self.name
-            )
+            os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)
         ]
         expect(
             os.path.isdir(base_case_root),
@@ -516,15 +512,13 @@ class NeonSite:
         if user_version:
             version = user_version
         else:
-            version = 'latest'
+            version = "latest"
 
-        print ("using this version:", version)
+        print("using this version:", version)
 
         if experiment != None:
             self.name = self.name + "." + experiment
-        case_root = os.path.abspath(
-                os.path.join(base_case_root, "..", self.name + "." + run_type)
-            )
+        case_root = os.path.abspath(os.path.join(base_case_root, "..", self.name + "." + run_type))
 
         rundir = None
         if os.path.isdir(case_root):
@@ -538,15 +532,17 @@ class NeonSite:
                     existingcompname = case.get_value("COMPSET")
                     match = re.search("^HIST", existingcompname, flags=re.IGNORECASE)
                     if re.search("^HIST", compset, flags=re.IGNORECASE) is None:
-                        expect( match == None, "Existing base case is a historical type and should not be  -- rerun with the --orverwrite option" )
-                    else:
-                        expect( match != None, "Existing base case should be a historical type and is not -- rerun with the --orverwrite option" )
-                    if os.path.isfile(os.path.join(rundir, "ESMF_Profile.summary")):
-                        print(
-                            "Case {} appears to be complete, not rerunning.".format(
-                                case_root
-                            )
+                        expect(
+                            match == None,
+                            "Existing base case is a historical type and should not be  -- rerun with the --orverwrite option",
                         )
+                    else:
+                        expect(
+                            match != None,
+                            "Existing base case should be a historical type and is not -- rerun with the --orverwrite option",
+                        )
+                    if os.path.isfile(os.path.join(rundir, "ESMF_Profile.summary")):
+                        print("Case {} appears to be complete, not rerunning.".format(case_root))
                     elif not setup_only:
                         print("Resubmitting case {}".format(case_root))
                         case.submit(no_batch=no_batch)
@@ -557,17 +553,13 @@ class NeonSite:
                             print(f"Use {batch_query} to check its run status")
                     return
             else:
-                logger.warning(
-                    "Case already exists in {}, not overwritting.".format(case_root)
-                )
+                logger.warning("Case already exists in {}, not overwritting.".format(case_root))
                 return
 
         if run_type == "postad":
             adcase_root = case_root.replace(".postad", ".ad")
             if not os.path.isdir(adcase_root):
-                logger.warning(
-                    "postad requested but no ad case found in {}".format(adcase_root)
-                )
+                logger.warning("postad requested but no ad case found in {}".format(adcase_root))
                 return
 
         if not os.path.isdir(case_root):
@@ -580,15 +572,13 @@ class NeonSite:
                 # that the shell_commands file is copied, as well as taking care of the DATM inputs.
                 # See https://github.com/ESCOMP/CTSM/pull/1872#pullrequestreview-1169407493
                 #
-                basecase.create_clone(
-                    case_root, keepexe=True, user_mods_dirs=user_mods_dirs
-                )
+                basecase.create_clone(case_root, keepexe=True, user_mods_dirs=user_mods_dirs)
 
         with Case(case_root, read_only=False) as case:
             if run_type != "transient":
-                 # in order to avoid the complication of leap years we always set the run_length in units of days.
-                 case.set_value("STOP_OPTION", "ndays")
-                 case.set_value("REST_OPTION", "end")
+                # in order to avoid the complication of leap years we always set the run_length in units of days.
+                case.set_value("STOP_OPTION", "ndays")
+                case.set_value("REST_OPTION", "end")
             case.set_value("CONTINUE_RUN", False)
             case.set_value("NEONVERSION", version)
             if prism:
@@ -660,9 +650,7 @@ class NeonSite:
         case.set_value("RUN_REFDIR", refrundir)
         case.set_value("RUN_REFCASE", os.path.basename(ref_case_root))
         refdate = None
-        for reffile in glob.iglob(
-            refrundir + "/{}{}.clm2.r.*.nc".format(self.name, root)
-        ):
+        for reffile in glob.iglob(refrundir + "/{}{}.clm2.r.*.nc".format(self.name, root)):
             m = re.search("(\d\d\d\d-\d\d-\d\d)-\d\d\d\d\d.nc", reffile)
             if m:
                 refdate = m.group(1)
@@ -677,9 +665,7 @@ class NeonSite:
         if not os.path.isdir(os.path.join(rundir, "inputdata")) and os.path.isdir(
             os.path.join(refrundir, "inputdata")
         ):
-            symlink_force(
-                os.path.join(refrundir, "inputdata"), os.path.join(rundir, "inputdata")
-            )
+            symlink_force(os.path.join(refrundir, "inputdata"), os.path.join(rundir, "inputdata"))
 
         case.set_value("RUN_REFDATE", refdate)
         if case_root.endswith(".postad"):
@@ -693,9 +679,7 @@ class NeonSite:
         if run_type == "transient":
             if self.finidat:
                 user_nl_lines = [
-                    "finidat = '{}/inputdata/lnd/ctsm/initdata/{}'".format(
-                        rundir, self.finidat
-                    )
+                    "finidat = '{}/inputdata/lnd/ctsm/initdata/{}'".format(rundir, self.finidat)
                 ]
         else:
             user_nl_lines = [
@@ -767,14 +751,13 @@ def parse_neon_listing(listing_file, valid_neon_sites):
 
             # -- find all the data versions
             versions = tmp_df[7].unique()
-            #print ("all versions available for ", site_name,":", *versions)
+            # print ("all versions available for ", site_name,":", *versions)
             latest_version = tmp_df[7].iloc[-1]
-            #print ("latests version available for ", site_name,":", latest_version)
+            # print ("latests version available for ", site_name,":", latest_version)
 
             tmp_df = tmp_df[tmp_df[7].str.contains(latest_version)]
             # -- remove .nc from the file names
             tmp_df[9] = tmp_df[9].str.replace(".nc", "", regex=False)
-
 
             tmp_df2 = tmp_df[9].str.split("-", expand=True)
 
@@ -800,9 +783,7 @@ def parse_neon_listing(listing_file, valid_neon_sites):
                 if site_name in line:
                     finidat = line.split(",")[0].split("/")[-1]
 
-            neon_site = NeonSite(
-                site_name, start_year, end_year, start_month, end_month, finidat
-            )
+            neon_site = NeonSite(site_name, start_year, end_year, start_month, end_month, finidat)
             logger.debug(neon_site)
             available_list.append(neon_site)
 
@@ -847,9 +828,9 @@ def main(description):
 
     res = "CLM_USRDAT"
     if run_type == "transient":
-       compset = "IHist1PtClm51Bgc"
+        compset = "IHist1PtClm51Bgc"
     else:
-       compset = "I1PtClm51Bgc"
+        compset = "I1PtClm51Bgc"
 
     # --  Looping over neon sites
 
