@@ -153,7 +153,7 @@ def get_parser():
     parser.add_argument(
         "--inputdata-dir",
         help="""
-                Directory to write updated single point surface dataset.
+                Directory containing standard input files from CESM input data such as the surf_soildepth_file.
                 [default: %(default)s]
                 """,
         action="store",
@@ -735,7 +735,3 @@ def main():
         + "):\n - "
         + wfile
     )
-
-
-if __name__ == "__main__":
-    main()
