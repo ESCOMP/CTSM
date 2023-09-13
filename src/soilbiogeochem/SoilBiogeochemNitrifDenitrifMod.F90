@@ -268,7 +268,10 @@ contains
             ! calculate gas diffusivity of soil at field capacity here
             ! use expression from methane code, but neglect OM for now
             fc_air_frac =  watsat(c,j)-watfc(c,j) ! theta_a in Riley et al. (2011)
-            fc_air_frac_as_frac_porosity = fc_air_frac  / watsat(c,j) ! theta_a/theta_s in Riley et al. (2011)
+            fc_air_frac_as_frac_porosity = 1._r8 - watfc(c,j) / watsat(c,j)
+            ! This calculation of fc_air_frac_as_frac_porosity is algebraically equivalent to
+            ! fc_air_frac/watsat(c,j). In that form, it's easier to see its correspondence
+            ! to theta_a/theta_s in Riley et al. (2011).
 
             ! use diffusivity calculation including peat
             if (use_lch4) then
