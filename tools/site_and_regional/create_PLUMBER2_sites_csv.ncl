@@ -1,6 +1,7 @@
 ; NCL script
 ; create_PLUMBER2_sites_csv.ncl ; Keith Oleson, Sep 2023
 ; This script generates a csv file for the NEON site_and_regional infrastructure
+; PLUMBER2_sites.csv
 ;**************************************
 
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
@@ -12,7 +13,7 @@ begin
   print ("=========================================")
 
 
-; Sites
+; Sites (170 sites)
   sim = systemfunc("ls -1 " + "/glade/work/oleson/PLUMBER2/datm_files/")
 
   nsim = dimsizes(sim)
@@ -152,8 +153,9 @@ begin
 
   print((/"Done with Loop"/))
 
-  fname = "/glade/work/oleson/PLUMBER2/NEON_PLUMBER/PLUMBER2_sites.csv"
-  header = (/"#start_year and end_year are used to define DATM_YR_START and DATM_YR_END.", \
+; fname = "/glade/work/oleson/PLUMBER2/NEON_PLUMBER/PLUMBER2_sites.csv"
+  fname = "/glade/work/oleson/ctsm_PLUMBERcsv/tools/site_and_regional/PLUMBER2_sites.csv"
+  header = (/"#start_year and end_year will be used to define DATM_YR_ALIGH, DATM_YR_START and DATM_YR_END, and STOP_N in units of nyears.", \
              "#RUN_STARTDATE and START_TOD are specified because we are starting at GMT corresponding to local midnight.", \
              "#ATM_NCPL is specified so that the time step of the model matches the time interval specified by the atm forcing data.", \
              ",Site,Lat,Lon,pft1,pft1-%,pft2,pft2-%,start_year,end_year,RUN_STARTDATE,START_TOD,ATM_NCPL"/)

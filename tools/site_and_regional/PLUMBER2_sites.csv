@@ -1,4 +1,4 @@
-#start_year and end_year are used to define DATM_YR_START and DATM_YR_END.
+#start_year and end_year will be used to define DATM_YR_ALIGH, DATM_YR_START and DATM_YR_END, and STOP_N in units of nyears.
 #RUN_STARTDATE and START_TOD are specified because we are starting at GMT corresponding to local midnight.
 #ATM_NCPL is specified so that the time step of the model matches the time interval specified by the atm forcing data.
 ,Site,Lat,Lon,pft1,pft1-%,pft2,pft2-%,start_year,end_year,RUN_STARTDATE,START_TOD,ATM_NCPL
