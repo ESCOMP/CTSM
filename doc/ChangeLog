@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev141
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Tue Sep 12 17:08:11 MDT 2023
+Date: Wed Sep 13 13:58:04 MDT 2023
 One-line Summary: Change small snocan to zero
 
 Purpose and description of changes
@@ -34,8 +34,8 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed or introduced
 ------------------------
 CTSM issues fixed (include CTSM Issue #):
- #2041
- #2048
+ Fixes #2041
+ Fixes #2048
 
 
 Testing summary:
@@ -43,36 +43,10 @@ Testing summary:
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
-  build-namelist tests (if CLMBuildNamelist.pm has changed):
-
-    cheyenne -
-
-  tools-tests (test/tools) (if tools have been changed):
-
-    cheyenne -
-
-  python testing (if python code has changed; see instructions in python/README.md; document testing done):
-
-    (any machine) -
-
-    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
-     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
-     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
-     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
-     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
-     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
-     separately run the clm_pymods test suite, and you can remove the following line.]
-
-    clm_pymods test suite on cheyenne - 
-
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ----
-    izumi -------
-
-  any other testing (give details below):
-
-If the tag used for baseline comparisons was NOT the previous tag, note that here:
+    cheyenne ---- OK
+    izumi ------- OK
 
 
 Answer changes
@@ -89,7 +63,8 @@ Changes answers relative to baseline:
  The answer changes are expected to be roundoff-level because the code change
  just truncates roundoff-level greater-than-zero states to exactly zero for
  snocan that most likely needed to be zero anyway.
- We find that the answer changes grow to greater than roundoff, but the
+
+ The answer changes grow to greater than roundoff, but the
  cprnc.out file from a 20-year izumi test-suite case does not contain
  differences of concerning magnitude.
 
