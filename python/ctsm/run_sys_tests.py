@@ -703,15 +703,6 @@ def _try_systemtests(testname_list):
             import ctsm.modify_input_files.modify_fsurdat
         except ModuleNotFoundError:
             raise ModuleNotFoundError("modify_fsurdat" + errMsg)
-    if any(["RXCROPMATURITY" in t for t in testname_list]):
-        try:
-            import ctsm.crop_calendars.make_fsurdat_all_crops_everywhere
-        except ModuleNotFoundError:
-            raise ModuleNotFoundError("make_fsurdat_all_crops_everywhere.py" + errMsg)
-        try:
-            import ctsm.crop_calendars.generate_gdds
-        except ModuleNotFoundError:
-            raise ModuleNotFoundError("generate_gdds.py" + errMsg)
 
 
 def _get_compilers_for_suite(suite_name, machine_name):
