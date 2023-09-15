@@ -60,6 +60,7 @@ module clm_time_manager
         is_end_curr_year,         &! return true on last timestep in current year
         is_perpetual,             &! return true if perpetual calendar is in use
         is_doy_in_interval,       &! return true if day of year is in the provided interval
+        is_today_in_doy_interval, &! return true if today's day of year is in the provided interval
         is_near_local_noon,       &! return true if near local noon
         is_restart,               &! return true if this is a restart run
         update_rad_dtime,         &! track radiation interval via nstep
@@ -1760,27 +1761,19 @@ contains
 
   !=========================================================================================
 
-  logical function is_doy_in_interval(start, end, doy_in)
+  logical function is_doy_in_interval(start, end, doy)
 
     ! Return true if day of year is in the provided interval.
     ! Does not treat leap years differently from normal years.
     ! Arguments
     integer, intent(in) :: start ! start of interval (day of year)
     integer, intent(in) :: end ! end of interval (day of year)
-    integer, optional, intent(in) :: doy_in ! day of year to query
+    integer, intent(in) :: doy ! day of year to query
     
     ! Local variables
-    integer :: doy
     logical :: window_crosses_newyear
 
     character(len=*), parameter :: sub = 'clm::is_doy_in_interval'
-
-    ! Get doy of beginning of current timestep if doy_in is not provided
-    if (present(doy_in)) then
-       doy = doy_in
-    else
-       doy = get_prev_calday()
-    end if
 
     window_crosses_newyear = end < start
 
@@ -1795,6 +1788,28 @@ contains
     end if
     
   end function is_doy_in_interval
+
+  !=========================================================================================
+
+  logical function is_today_in_doy_interval(start, end)
+
+    ! Return true if today's day of year is in the provided interval.
+    ! Does not treat leap years differently from normal years.
+    ! Arguments
+    integer, intent(in) :: start ! start of interval (day of year)
+    integer, intent(in) :: end ! end of interval (day of year)
+
+    ! Local variable(s)
+    integer :: doy_today
+
+    character(len=*), parameter :: sub = 'clm::is_today_in_doy_interval'
+
+    ! Get doy of beginning of current timestep
+    doy_today = get_prev_calday()
+
+    is_today_in_doy_interval = is_doy_in_interval(start, end, doy_today)
+
+  end function is_today_in_doy_interval
 
   !=========================================================================================
 
