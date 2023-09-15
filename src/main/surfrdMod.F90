@@ -390,6 +390,7 @@ contains
     real(r8),pointer :: pctgla(:)     ! percent of grid cell is glacier
     real(r8),pointer :: pctlak(:)     ! percent of grid cell is lake
     real(r8),pointer :: pctwet(:)     ! percent of grid cell is wetland
+    real(r8),pointer :: pctocn(:)     ! percent of grid cell is ocean
     real(r8),pointer :: pcturb(:,:)   ! percent of grid cell is urbanized
     integer ,pointer :: urban_region_id(:)
     real(r8),pointer :: pcturb_tot(:) ! percent of grid cell is urban (sum over density classes)
@@ -403,6 +404,7 @@ contains
     allocate(pctgla(begg:endg))
     allocate(pctlak(begg:endg))
     allocate(pctwet(begg:endg))
+    allocate(pctocn(begg:endg))
     allocate(pcturb(begg:endg,numurbl))
     allocate(pcturb_tot(begg:endg))
     allocate(urban_region_id(begg:endg))
@@ -411,6 +413,10 @@ contains
     call check_dim_size(ncid, 'nlevsoi', nlevsoifl)
 
        ! Obtain non-grid surface properties of surface dataset other than percent patch
+
+    call ncd_io(ncid=ncid, varname='PCT_OCEAN', flag='read', data=pctocn, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( msg=' ERROR: PCT_OCEAN NOT on surfdata file'//errMsg(sourcefile, __LINE__))
 
     call ncd_io(ncid=ncid, varname='PCT_WETLAND', flag='read', data=pctwet, &
          dim1name=grlnd, readvar=readvar)
@@ -512,7 +518,7 @@ contains
 
     call CheckUrban(begg, endg, pcturb(begg:endg,:), subname)
 
-    deallocate(pctgla,pctlak,pctwet,pcturb,pcturb_tot,urban_region_id,pctspec)
+    deallocate(pctgla,pctlak,pctwet,pctocn,pcturb,pcturb_tot,urban_region_id,pctspec)
 
   end subroutine surfrd_special
 
