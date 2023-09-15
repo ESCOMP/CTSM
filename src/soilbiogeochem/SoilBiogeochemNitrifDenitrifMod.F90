@@ -171,8 +171,8 @@ contains
     real(r8) :: D0  ! temperature dependence of gaseous diffusion coefficients
     !debug-- put these type structure for outing to hist files
     real(r8) :: co2diff_con(2)                      ! diffusion constants for CO2
-    real(r8) :: fc_air_frac ! Air-filled fraction of soil volume at field capacity
-    real(r8) :: fc_air_frac_as_frac_porosity ! fc_air_frac as fraction of total porosity 
+    real(r8) :: fc_air_frac                         ! Air-filled fraction of soil volume at field capacity
+    real(r8) :: fc_air_frac_as_frac_porosity        ! fc_air_frac as fraction of total porosity 
     real(r8) :: surface_tension_water ! (J/m^2), Arah and Vinten 1995
     real(r8) :: rij_kro_a             !  Arah and Vinten 1995
     real(r8) :: rij_kro_alpha         !  Arah and Vinten 1995
