@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev141   slevis 09/13/2023 Change small snocan to zero
+    ctsm5.1.dev140  afoster 09/12/2023 add lai_streams capability for FATES
     ctsm5.1.dev139   slevis 08/28/2023 Fix problems uncovered by nag -nan tests
     ctsm5.1.dev138   slevis 08/25/2023 Refactor max_patch_per_col and maxsoil_patches loops
     ctsm5.1.dev137   slevis 08/23/2023 Surface roughness modifications

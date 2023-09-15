@@ -694,7 +694,7 @@ contains
        ! prior to the first call to SatellitePhenology()
        call interpMonthlyVeg(bounds_proc, canopystate_inst)
     end if
-
+    
     ! Determine gridcell averaged properties to send to atm
     if (nsrest == nsrStartup) then
        call t_startf('init_map2gc')
@@ -730,7 +730,6 @@ contains
           !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
           do nc = 1,nclumps
              call get_clump_bounds(nc, bounds_clump)
-
              ! FATES satellite phenology mode needs to include all active and inactive patch-level soil
              ! filters due to the translation between the hlm pfts and the fates pfts.
              ! E.g. in FATES, an active PFT vector of 1, 0, 0, 0, 1, 0, 1, 0 would be mapped into
@@ -743,11 +742,12 @@ contains
           end do
           !$OMP END PARALLEL DO
        end if
+       
        call clm_fates%init_coldstart(water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
             soilstate_inst, soilbiogeochem_carbonflux_inst)
     end if
-
+    
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through
     ! initialize2 because it is used to initialize other variables; now it can be deallocated
     deallocate(topo_glc_mec, fert_cft, irrig_method)

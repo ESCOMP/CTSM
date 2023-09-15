@@ -205,6 +205,10 @@
     <alias>I2000Clm45BgcCropQianRs</alias>
     <lname>2000_DATM%QIA_CLM45%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
+  <compset>
+    <alias>I2000Clm50FatesQian</alias>
+    <lname>2000_DATM%QIA_CLM50%FATES_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
 
   <compset>
     <alias>I2000Clm50BgcCruRs</alias>
