@@ -247,31 +247,25 @@ contains
   end subroutine get_tillage_multipliers
 
 
-  function get_fraction_tilled(zisoi, j, max_tillage_depth_gft) result(fraction_tilled)
+  function get_fraction_tilled(layer_top, layer_thickness, j, max_tillage_depth_gft) result(fraction_tilled)
     ! !ARGUMENTS
-    ! zisoi and max_tillage_depth are passed to this function, rather than using from clm_varcon or
-    ! parent scope (respectively), to enable unit testing.
-    real(r8) :: zisoi(:) ! Soil layer interface depths
-    integer  :: j        ! Soil layer
+    real(r8), intent(in) :: layer_top       ! Soil layer interface depth (zisoi)
+    real(r8), intent(in) :: layer_thickness ! Soil layer thickness (dzsoi_decomp)
+    integer , intent(in) :: j               ! Soil layer index
     real(r8) :: max_tillage_depth_gft ! Maximum tillage depth
-    ! !LOCAL VARIABLES
-    real(r8) :: layer_top ! Depth (m) of the top of this soil layer. zisoi is the depth of the bottom.
-    real(r8) :: layer_thickness ! Thickness of this soil layer (m)
     ! !RESULT
     real(r8) :: fraction_tilled ! Fraction of this layer that's within the tillage depth
-
-    if (j == 1) then
-        layer_top = 0._r8
-    else
-        layer_top = zisoi(j-1)
-    end if
 
     if (layer_top > max_tillage_depth_gft) then
         fraction_tilled = 0._r8
         return
     end if
 
-    layer_thickness = zisoi(j) - layer_top
+    if (layer_thickness == 0._r8) then
+        write(iulog,*) 'j = ',j
+        call endrun(msg='layer thickness 0')
+    end if
+
     fraction_tilled = max(0._r8, min(1._r8, (max_tillage_depth_gft - layer_top) / layer_thickness))
 
   end function get_fraction_tilled
@@ -285,7 +279,7 @@ contains
     !
     ! !USES
     use pftconMod , only : nc3crop
-    use clm_varcon, only : zisoi
+    use clm_varcon, only : zisoi, dzsoi_decomp
     use landunit_varcon , only : istcrop
     use PatchType , only : patch
     !
@@ -303,7 +297,7 @@ contains
     real(r8) :: fraction_tilled ! Fraction of this layer that's within the tillage depth
 
     ! Skip tillage if column is inactive or this layer doesn't get tilled
-    fraction_tilled = get_fraction_tilled(zisoi, j, max_tillage_depth)
+    fraction_tilled = get_fraction_tilled(zisoi(j), dzsoi_decomp(j), j, max_tillage_depth)
     if (.not. col%active(c) .or. fraction_tilled == 0._r8 .or. col%lun_itype(c) /= istcrop) then
         return
     end if
