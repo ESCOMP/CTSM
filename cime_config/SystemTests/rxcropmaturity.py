@@ -273,14 +273,14 @@ class RXCROPMATURITY(SystemTestsCommon):
             # Write a bash script that will do what we want
             prerun_script = os.path.join(self._path_gddgen, "make_fsurdat_all_crops_everywhere.sh")
             prerun_script_lines = [
-                    "#!/bin/bash",
-                    "set -e",
-                    "conda run -n ctsm_pylib " + command,
-                    "exit 0",
-                    ]
+                "#!/bin/bash",
+                "set -e",
+                "conda run -n ctsm_pylib " + command,
+                "exit 0",
+            ]
             with open(prerun_script, "w") as f:
                 f.writelines(line + "\n" for line in prerun_script_lines)
-            os.chmod(prerun_script, 0o755) # 0o755 = -rwxr-xr-x
+            os.chmod(prerun_script, 0o755)  # 0o755 = -rwxr-xr-x
             with self._case:
                 self._case.set_value("PRERUN_SCRIPT", prerun_script)
 

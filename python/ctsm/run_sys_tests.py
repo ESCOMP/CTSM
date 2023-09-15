@@ -213,9 +213,13 @@ def run_sys_tests(
         rerun_existing_failures=rerun_existing_failures,
         extra_create_test_args=extra_create_test_args,
     )
-    
-    running_ctsm_py_tests = testfile == "/path/to/testfile" or testlist in [['test1', 'test2'], ['foo']] or suite_name == "my_suite"
-    
+
+    running_ctsm_py_tests = (
+        testfile == "/path/to/testfile"
+        or testlist in [["test1", "test2"], ["foo"]]
+        or suite_name == "my_suite"
+    )
+
     if suite_name:
         if not dry_run:
             _make_cs_status_for_suite(testroot, testid_base)

@@ -11,6 +11,7 @@ from CIME.SystemTests.test_utils.user_nl_utils import append_to_user_nl_files
 
 # For calling fsurdat_modifier
 from argparse import Namespace
+
 _CTSM_PYTHON = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python"
 )
@@ -82,6 +83,7 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
             verbose=False,
         )
         from ctsm.modify_input_files.fsurdat_modifier import fsurdat_modifier
+
         fsurdat_modifier(fsurdat_modifier_args)
 
     def _modify_user_nl(self):
