@@ -241,8 +241,8 @@ def run_sys_tests(
         if testfile:
             test_args = ["--testfile", os.path.abspath(testfile)]
             if not running_ctsm_py_tests:
-                with open(test_args[1], "r") as f:
-                    testname_list = f.readlines()
+                with open(test_args[1], "r") as testfile_abspath:
+                    testname_list = testfile_abspath.readlines()
         elif testlist:
             test_args = testlist
             testname_list = testlist
@@ -709,12 +709,18 @@ def _run_test_suite(
 
 
 def _try_systemtests(testname_list):
-    errMsg = " can't be loaded. Do you need to activate the ctsm_pylib conda environment?"
-    if any(["FSURDATMODIFYCTSM" in t for t in testname_list]):
+    err_msg = " can't be loaded. Do you need to activate the ctsm_pylib conda environment?"
+    # Suppress pylint import-outside-toplevel warning because (a) we only want to import
+    # this when certain tests are requested, and (b) the import needs to be in a try-except
+    # block to produce a nice error message.
+    # pylint: disable=import-outside-toplevel disable
+    # Suppress pylint unused-import warning because the import itself IS the use.
+    # pylint: disable=unused-import disable
+    if any("FSURDATMODIFYCTSM" in t for t in testname_list):
         try:
             import ctsm.modify_input_files.modify_fsurdat
-        except ModuleNotFoundError:
-            raise ModuleNotFoundError("modify_fsurdat" + errMsg)
+        except ModuleNotFoundError as err:
+            raise ModuleNotFoundError("modify_fsurdat" + err_msg) from err
 
 
 def _get_compilers_for_suite(suite_name, machine_name, running_ctsm_py_tests):
