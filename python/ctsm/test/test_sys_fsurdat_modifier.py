@@ -215,7 +215,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         np.testing.assert_array_equal(fsurdat_out_data.PCT_CROP, zero0d)
         np.testing.assert_array_equal(fsurdat_out_data.PCT_LAKE, zero0d)
         np.testing.assert_array_equal(fsurdat_out_data.PCT_WETLAND, zero0d)
-        np.testing.assert_array_equal(fsurdat_out_data.PCT_LAKE, zero0d)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_OCEAN, zero0d)
         np.testing.assert_array_equal(fsurdat_out_data.PCT_GLACIER, zero0d)
         np.testing.assert_array_equal(fsurdat_out_data.PCT_URBAN, pct_urban)
         np.testing.assert_array_equal(fsurdat_out_data.LAKEDEPTH, one0d * 200.0)

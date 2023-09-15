@@ -351,6 +351,7 @@ class ModifyFsurdat:
         self.setvar_lev0("PCT_WETLAND", 0)
         self.setvar_lev0("PCT_URBAN", 0)
         self.setvar_lev0("PCT_GLACIER", 0)
+        self.setvar_lev0("PCT_OCEAN", 0)
 
     def setvar_lev0(self, var, val):
         """
@@ -421,6 +422,7 @@ class ModifyFsurdat:
         self.setvar_lev0("PCT_LAKE", pct_not_nat_veg)
         self.setvar_lev0("PCT_URBAN", pct_not_nat_veg)
         self.setvar_lev0("PCT_GLACIER", pct_not_nat_veg)
+        self.setvar_lev0("PCT_OCEAN", pct_not_nat_veg)
         self.setvar_lev0("PCT_NATVEG", pct_nat_veg)
 
         for lev in self.file.nlevsoi:
