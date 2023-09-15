@@ -456,6 +456,9 @@ contains
 
        end if
 
+       call mkpio_def_spatial_var(pioid=pioid, varname='PCT_OCEAN', xtype=xtype, &
+            long_name='percent ocean', units='unitless')
+
        call mkpio_def_spatial_var(pioid=pioid, varname='LAKEDEPTH', xtype=xtype, &
             long_name='lake depth', units='m')
 
