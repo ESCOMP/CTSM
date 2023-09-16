@@ -431,9 +431,10 @@ program mksurfdata
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkwetlnd')
 
   ! Initialize pctocn to zero.
-  ! Traditionally we have set pctwet = 100 at ocean points rather than
-  ! setting a pctocn. We now set pctocn = 100 at ocean points in
-  ! subroutine normalize_and_check_landuse. No regridding required.
+  ! Until ctsm5.1 we set pctwet = 100 at ocean points rather than
+  ! setting a pctocn. Starting with ctsm5.2, we set pctocn = 100 at
+  ! ocean points in subroutine normalize_and_check_landuse.
+  ! No regridding required.
   allocate ( pctocn(lsize_o)); pctocn(:) = 0._r8
 
   ! -----------------------------------

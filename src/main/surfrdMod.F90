@@ -481,9 +481,9 @@ contains
 
     topo_glc_mec(:,:) = max(topo_glc_mec(:,:), 0._r8)
 
-    pctspec = pctwet + pctlak + pcturb_tot + pctgla
+    pctspec = pctwet + pctlak + pcturb_tot + pctgla + pctocn
 
-    ! Error check: glacier, lake, wetland, urban sum must be less than 100
+    ! Error check: sum of glacier, lake, wetland, urban, ocean must be < 100
 
     found = .false.
     do nl = begg,endg
@@ -503,15 +503,23 @@ contains
 
     do nl = begg,endg
 
-       wt_lunit(nl,istdlak)     = pctlak(nl)/100._r8
+       wt_lunit(nl,istdlak) = pctlak(nl) / 100._r8
 
-       wt_lunit(nl,istwet)      = pctwet(nl)/100._r8
+       ! Until ctsm5.1 we would label ocean points as wetland in fsurdat
+       ! files. Starting with ctsm5.2 we label ocean points as ocean
+       ! (always 100%) and wetland points as wetland. Here we merge them
+       ! again to keep model behavior unchanged for now.
+       if (pctocn(nl) > 100._r8 - 1.e-04_r8) then
+          wt_lunit(nl,istwet) = pctocn(nl) / 100._r8
+       else
+          wt_lunit(nl,istwet) = pctwet(nl) / 100._r8
+       end if
 
-       wt_lunit(nl,istice)  = pctgla(nl)/100._r8
+       wt_lunit(nl,istice) = pctgla(nl) / 100._r8
 
        do n = isturb_MIN, isturb_MAX
           dens_index = n - isturb_MIN + 1
-          wt_lunit(nl,n)        = pcturb(nl,dens_index) / 100._r8
+          wt_lunit(nl,n) = pcturb(nl,dens_index) / 100._r8
        end do
 
     end do
