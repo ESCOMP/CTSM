@@ -509,11 +509,7 @@ contains
        ! files. Starting with ctsm5.2 we label ocean points as ocean
        ! (always 100%) and wetland points as wetland. Here we merge them
        ! again to keep model behavior unchanged for now.
-       if (pctocn(nl) > 100._r8 - 1.e-04_r8) then
-          wt_lunit(nl,istwet) = pctocn(nl) / 100._r8
-       else
-          wt_lunit(nl,istwet) = pctwet(nl) / 100._r8
-       end if
+       wt_lunit(nl,istwet) = (pctocn(nl) + pctwet(nl)) / 100._r8
 
        wt_lunit(nl,istice) = pctgla(nl) / 100._r8
 
