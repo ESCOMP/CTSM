@@ -55,7 +55,9 @@ def run_python_script(caseroot, this_conda_env, command_in, tool_path):
     except subprocess.CalledProcessError as error:
         # Retry with the original "conda activate" method
         command = cmds_to_run_via_conda(
-            caseroot, f"conda activate {this_conda_env} && ", command_in,
+            caseroot,
+            f"conda activate {this_conda_env} && ",
+            command_in,
         )
         try:
             with open(tool_name + ".log2", "w") as f:
