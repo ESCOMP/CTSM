@@ -261,10 +261,14 @@ contains
     end if
 
     if (layer_thickness == 0._r8) then
-        call endrun(msg='layer thickness 0')
+        if (layer_top <= max_tillage_depth_gft) then
+            fraction_tilled = 1._r8
+        else
+            fraction_tilled = 0._r8
+        end if
+    else
+        fraction_tilled = max(0._r8, min(1._r8, (max_tillage_depth_gft - layer_top) / layer_thickness))
     end if
-
-    fraction_tilled = max(0._r8, min(1._r8, (max_tillage_depth_gft - layer_top) / layer_thickness))
 
   end function get_fraction_tilled
 

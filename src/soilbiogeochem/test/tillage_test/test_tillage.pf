@@ -47,6 +47,11 @@ contains
     @assertEqual(0.275_r8, get_fraction_tilled(zisoi(4), dzsoi_decomp(4), max_tillage_depth), tolerance=tol)
     @assertEqual(0._r8,    get_fraction_tilled(zisoi(5), dzsoi_decomp(5), max_tillage_depth))
 
+    max_tillage_depth = 0.5_r8
+    @assertEqual(1._r8, get_fraction_tilled(0.4_r8, 0._r8, max_tillage_depth))
+    @assertEqual(1._r8, get_fraction_tilled(0.5_r8, 0._r8, max_tillage_depth))
+    @assertEqual(0._r8, get_fraction_tilled(0.6_r8, 0._r8, max_tillage_depth))
+
   end subroutine test_get_fraction_tilled
 
 
