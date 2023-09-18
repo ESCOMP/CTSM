@@ -5,6 +5,8 @@ import os
 import inspect
 import sys
 
+# Import the CTSM Python utilities.
+# sys.path.insert() is necessary for RXCROPMATURITY to work. The fact that it's calling this script in the RUN phase seems to require the python/ directory to be manually added to path.
 _CTSM_PYTHON = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, os.pardir, "python"
 )

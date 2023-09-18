@@ -6,12 +6,12 @@ import glob
 import datetime as dt
 from importlib import util as importlib_util
 
-# Import the CTSM Python utilities
+# Import the CTSM Python utilities.
+# sys.path.insert() is necessary for RXCROPMATURITY to work. The fact that it's calling this script in the RUN phase seems to require the python/ directory to be manually added to path.
 _CTSM_PYTHON = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, os.pardir, "python"
 )
 import sys
-
 sys.path.insert(1, _CTSM_PYTHON)
 import ctsm.crop_calendars.cropcal_utils as utils
 import ctsm.crop_calendars.cropcal_module as cc
