@@ -23,12 +23,12 @@ contains
     integer  :: j                 ! Soil layer
     real(r8), parameter :: max_tillage_depth = 0.21_r8
 
-    zisoi = [0._r8, 0.01_r8, 0.05_r8, 0.1_r8, 0.5_r8]
-    dzsoi_decomp = [zisoi(2) - zisoi(1), &
+    zisoi = [0.01_r8, 0.05_r8, 0.1_r8, 0.5_r8, 1._r8]
+    dzsoi_decomp = [zisoi(1) - 0._r8, &
+                    zisoi(2) - zisoi(1), &
                     zisoi(3) - zisoi(2), &
                     zisoi(4) - zisoi(3), &
-                    zisoi(5) - zisoi(4), &
-                    0.5_r8]
+                    zisoi(5) - zisoi(4)]
 
     @assertEqual(1._r8,    get_fraction_tilled(zisoi(1), dzsoi_decomp(1), max_tillage_depth))
     @assertEqual(1._r8,    get_fraction_tilled(zisoi(2), dzsoi_decomp(2), max_tillage_depth))

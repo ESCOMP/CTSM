@@ -247,28 +247,34 @@ contains
   end subroutine get_tillage_multipliers
 
 
-  function get_fraction_tilled(layer_top, layer_thickness, max_tillage_depth_gft) result(fraction_tilled)
+  function get_fraction_tilled(layer_bottom, layer_thickness, max_tillage_depth_gft) result(fraction_tilled)
     ! !ARGUMENTS
-    real(r8), intent(in) :: layer_top       ! Soil layer interface depth (zisoi)
+    real(r8), intent(in) :: layer_bottom    ! Soil layer interface (between j and j+1) depth (zisoi)
     real(r8), intent(in) :: layer_thickness ! Soil layer thickness (dzsoi_decomp)
     real(r8) :: max_tillage_depth_gft ! Maximum tillage depth
+    ! !LOCAL VARIABLES
+    real(r8) :: layer_top
     ! !RESULT
     real(r8) :: fraction_tilled ! Fraction of this layer that's within the tillage depth
 
+    ! If the top of the layer is below the max tillage depth, do not till.
+    layer_top = layer_bottom - layer_thickness
     if (layer_top > max_tillage_depth_gft) then
         fraction_tilled = 0._r8
         return
     end if
 
+    ! Handle zero-thickness layers. This may not be necessary.
     if (layer_thickness == 0._r8) then
-        if (layer_top <= max_tillage_depth_gft) then
+        if (layer_bottom <= max_tillage_depth_gft) then
             fraction_tilled = 1._r8
         else
             fraction_tilled = 0._r8
         end if
-    else
-        fraction_tilled = max(0._r8, min(1._r8, (max_tillage_depth_gft - layer_top) / layer_thickness))
+        return
     end if
+
+    fraction_tilled = max(0._r8, min(1._r8, (max_tillage_depth_gft - layer_top) / layer_thickness))
 
   end function get_fraction_tilled
 
