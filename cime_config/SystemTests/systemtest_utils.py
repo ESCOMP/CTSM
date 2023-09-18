@@ -43,6 +43,7 @@ def cmds_to_run_via_conda(caseroot, conda_run_call, command, test_conda_retry=Tr
 
 def run_python_script(caseroot, this_conda_env, command_in, tool_path):
 
+    # First, try with "conda run -n"
     command = cmds_to_run_via_conda(caseroot, f"conda run -n {this_conda_env}", command_in)
 
     # Run with logfile
@@ -53,7 +54,8 @@ def run_python_script(caseroot, this_conda_env, command_in, tool_path):
                 command, shell=True, check=True, text=True, stdout=f, stderr=subprocess.STDOUT
             )
     except subprocess.CalledProcessError as error:
-        # First, retry with the original method
+        # Retry with the original ("conda activate") method. Set test_conda_retry False because
+        # that didn't happen in the original method.
         command = cmds_to_run_via_conda(
             caseroot, f"conda activate {this_conda_env} && ", command_in, test_conda_retry=False
         )
