@@ -114,7 +114,7 @@ Example 1-2. Default CLM Namelist
 Adding/removing fields on your primary history file
 ---------------------------------------------------
 
-The primary history files are output monthly, and contain an extensive list of fieldnames, but the list of fieldnames can be added to using ``hist_fincl1`` or removed from by adding fieldnames to ``hist_fexcl1``. 
+The primary history files are output monthly, and contain an extensive list of fieldnames, but the list of fieldnames can be added to using ``hist_fincl1`` or removed from by adding fieldnames to ``hist_fexcl1``.   For maximum output, ``hist_all_htapes`` will enable all fieldnames on the primary history file.
 A sample user namelist ``user_nl_clm`` adding few new fields (cosine of solar zenith angle, and solar declination) and excluding a few standard fields is (ground temperature, vegetation temperature, soil temperature and soil water).:
 
 Example 1-3. Example user_nl_clm namelist adding and removing fields on primary history file

@@ -1,0 +1,2 @@
+calc_human_stress_indices = 'ALL'
+hist_all_htapes = .true.
