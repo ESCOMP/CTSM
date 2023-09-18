@@ -47,8 +47,10 @@ module CropType
      character(len=20) :: baset_mapping
      real(r8) :: baset_latvary_intercept
      real(r8) :: baset_latvary_slope
-     integer , pointer :: next_rx_sdate_patch     (:)   ! prescribed sowing date for the next growing season this year
-     integer , pointer :: rx_sdates_thisyr_patch  (:,:) ! all prescribed sowing dates for this patch this year (day of year) [patch, mxsowings]
+     integer , pointer :: next_rx_swindow_start_patch   (:)   ! start of prescribed sowing window for the next growing season this year
+     integer , pointer :: next_rx_swindow_end_patch     (:)   ! end   of prescribed sowing window for the next growing season this year
+     integer , pointer :: rx_swindow_starts_thisyr_patch(:,:) ! all prescribed sowing window start dates for this patch this year (day of year) [patch, mxsowings]
+     integer , pointer :: rx_swindow_ends_thisyr_patch  (:,:) ! all prescribed sowing window end   dates for this patch this year (day of year) [patch, mxsowings]
      real(r8), pointer :: rx_cultivar_gdds_thisyr_patch (:,:) ! all cultivar GDD targets for this patch this year (ddays) [patch, mxsowings]
      real(r8), pointer :: sdates_thisyr_patch     (:,:) ! all actual sowing dates for this patch this year (day of year) [patch, mxsowings]
      real(r8), pointer :: sdates_perharv_patch    (:,:) ! all actual sowing dates for crops *harvested* this year (day of year) [patch, mxharvests]
@@ -227,8 +229,10 @@ contains
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = cphase_not_planted
     allocate(this%sowing_reason_patch (begp:endp)) ; this%sowing_reason_patch (:) = -1
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
-    allocate(this%next_rx_sdate_patch(begp:endp)) ; this%next_rx_sdate_patch(:) = -1
-    allocate(this%rx_sdates_thisyr_patch(begp:endp,1:mxsowings)) ; this%rx_sdates_thisyr_patch(:,:) = -1
+    allocate(this%next_rx_swindow_start_patch(begp:endp)) ; this%next_rx_swindow_start_patch(:) = -1
+    allocate(this%next_rx_swindow_end_patch  (begp:endp)) ; this%next_rx_swindow_end_patch  (:) = -1
+    allocate(this%rx_swindow_starts_thisyr_patch(begp:endp,1:mxsowings)); this%rx_swindow_starts_thisyr_patch(:,:) = -1
+    allocate(this%rx_swindow_ends_thisyr_patch(begp:endp,1:mxsowings))  ; this%rx_swindow_ends_thisyr_patch  (:,:) = -1
     allocate(this%rx_cultivar_gdds_thisyr_patch(begp:endp,1:mxsowings)) ; this%rx_cultivar_gdds_thisyr_patch(:,:) = spval
     allocate(this%sdates_thisyr_patch(begp:endp,1:mxsowings)) ; this%sdates_thisyr_patch(:,:) = spval
     allocate(this%sdates_perharv_patch(begp:endp,1:mxharvests)) ; this%sdates_perharv_patch(:,:) = spval
@@ -242,7 +246,8 @@ contains
     allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
     allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
 
-    this%rx_sdates_thisyr_patch(:,:) = -1
+    this%rx_swindow_starts_thisyr_patch(:,:) = -1
+    this%rx_swindow_ends_thisyr_patch  (:,:) = -1
     this%rx_cultivar_gdds_thisyr_patch(:,:) = spval
 
   end subroutine InitAllocate
