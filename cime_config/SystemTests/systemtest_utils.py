@@ -5,7 +5,7 @@ Reduce code duplication by putting reused functions here.
 import os, subprocess
 
 
-def cmds_to_setup_conda(caseroot, test_conda_retry=True):
+def cmds_to_setup_conda(caseroot):
     # Add specific commands needed on different machines to get conda available
     # Use semicolon here since it's OK to fail
     #
@@ -21,17 +21,16 @@ def cmds_to_setup_conda(caseroot, test_conda_retry=True):
         # Remove python and add conda to environment for cheyennne
         unload_python_load_conda = "module unload python; module load conda;"
         # Make sure that adding this actually loads conda
-        if test_conda_retry:
-            subprocess.run(unload_python_load_conda + "which conda", shell=True, check=True)
+        subprocess.run(unload_python_load_conda + "which conda", shell=True, check=True)
         # Save
         conda_setup_commands += " " + unload_python_load_conda
 
     return conda_setup_commands
 
 
-def cmds_to_run_via_conda(caseroot, conda_run_call, command, test_conda_retry=True):
+def cmds_to_run_via_conda(caseroot, conda_run_call, command):
     # Run in the specified conda environment
-    conda_setup_commands = cmds_to_setup_conda(caseroot, test_conda_retry)
+    conda_setup_commands = cmds_to_setup_conda(caseroot)
     conda_setup_commands += " " + conda_run_call
 
     # Finish with Python script call
@@ -54,10 +53,9 @@ def run_python_script(caseroot, this_conda_env, command_in, tool_path):
                 command, shell=True, check=True, text=True, stdout=f, stderr=subprocess.STDOUT
             )
     except subprocess.CalledProcessError as error:
-        # Retry with the original ("conda activate") method. Set test_conda_retry False because
-        # that didn't happen in the original method.
+        # Retry with the original "conda activate" method
         command = cmds_to_run_via_conda(
-            caseroot, f"conda activate {this_conda_env} && ", command_in, test_conda_retry=False
+            caseroot, f"conda activate {this_conda_env} && ", command_in,
         )
         try:
             with open(tool_name + ".log2", "w") as f:
