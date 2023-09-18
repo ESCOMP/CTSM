@@ -53,6 +53,8 @@ module CropType
      integer , pointer :: rx_swindow_ends_thisyr_patch  (:,:) ! all prescribed sowing window end   dates for this patch this year (day of year) [patch, mxsowings]
      real(r8), pointer :: rx_cultivar_gdds_thisyr_patch (:,:) ! all cultivar GDD targets for this patch this year (ddays) [patch, mxsowings]
      real(r8), pointer :: sdates_thisyr_patch     (:,:) ! all actual sowing dates for this patch this year (day of year) [patch, mxsowings]
+     real(r8), pointer :: swindow_starts_thisyr_patch(:,:) ! all sowing window start dates for this patch this year (day of year) [patch, mxsowings]
+     real(r8), pointer :: swindow_ends_thisyr_patch  (:,:) ! all sowing window end   dates for this patch this year (day of year) [patch, mxsowings]
      real(r8), pointer :: sdates_perharv_patch    (:,:) ! all actual sowing dates for crops *harvested* this year (day of year) [patch, mxharvests]
      real(r8), pointer :: syears_perharv_patch    (:,:) ! all actual sowing years for crops *harvested* this year (day of year) [patch, mxharvests]
      real(r8), pointer :: hdates_thisyr_patch     (:,:) ! all actual harvest dates for this patch this year (day of year) [patch, mxharvests]
@@ -235,6 +237,8 @@ contains
     allocate(this%rx_swindow_ends_thisyr_patch(begp:endp,1:mxsowings))  ; this%rx_swindow_ends_thisyr_patch  (:,:) = -1
     allocate(this%rx_cultivar_gdds_thisyr_patch(begp:endp,1:mxsowings)) ; this%rx_cultivar_gdds_thisyr_patch(:,:) = spval
     allocate(this%sdates_thisyr_patch(begp:endp,1:mxsowings)) ; this%sdates_thisyr_patch(:,:) = spval
+    allocate(this%swindow_starts_thisyr_patch(begp:endp,1:mxsowings)) ; this%swindow_starts_thisyr_patch(:,:) = spval
+    allocate(this%swindow_ends_thisyr_patch  (begp:endp,1:mxsowings)) ; this%swindow_ends_thisyr_patch  (:,:) = spval
     allocate(this%sdates_perharv_patch(begp:endp,1:mxharvests)) ; this%sdates_perharv_patch(:,:) = spval
     allocate(this%syears_perharv_patch(begp:endp,1:mxharvests)) ; this%syears_perharv_patch(:,:) = spval
     allocate(this%hdates_thisyr_patch(begp:endp,1:mxharvests)) ; this%hdates_thisyr_patch(:,:) = spval
@@ -306,6 +310,16 @@ contains
     call hist_addfld2d (fname='SDATES', units='day of year', type2d='mxsowings', &
          avgflag='I', long_name='actual crop sowing dates; should only be output annually', &
          ptr_patch=this%sdates_thisyr_patch, default='inactive')
+
+    this%swindow_starts_thisyr_patch(begp:endp,:) = spval
+    call hist_addfld2d (fname='SWINDOW_STARTS', units='day of year', type2d='mxsowings', &
+         avgflag='I', long_name='crop sowing window start dates; should only be output annually', &
+         ptr_patch=this%swindow_starts_thisyr_patch, default='inactive')
+
+    this%swindow_ends_thisyr_patch(begp:endp,:) = spval
+    call hist_addfld2d (fname='SWINDOW_ENDS', units='day of year', type2d='mxsowings', &
+         avgflag='I', long_name='crop sowing window end dates; should only be output annually', &
+         ptr_patch=this%swindow_ends_thisyr_patch, default='inactive')
 
     this%sdates_perharv_patch(begp:endp,:) = spval
     call hist_addfld2d (fname='SDATES_PERHARV', units='day of year', type2d='mxharvests', &
