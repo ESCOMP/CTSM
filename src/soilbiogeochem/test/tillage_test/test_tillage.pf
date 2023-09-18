@@ -32,20 +32,20 @@ contains
     
     max_tillage_depth = 10._r8
     do j = 1, nlayers
-      @assertEqual(1._r8, get_fraction_tilled(zisoi(j), dzsoi_decomp(j), j, max_tillage_depth))
+      @assertEqual(1._r8, get_fraction_tilled(zisoi(j), dzsoi_decomp(j), max_tillage_depth))
     end do
 
     max_tillage_depth = 0._r8
     do j = 1, nlayers
-      @assertEqual(0._r8, get_fraction_tilled(zisoi(j), dzsoi_decomp(j), j, max_tillage_depth))
+      @assertEqual(0._r8, get_fraction_tilled(zisoi(j), dzsoi_decomp(j), max_tillage_depth))
     end do
 
     max_tillage_depth = 0.21_r8
-    @assertEqual(1._r8,    get_fraction_tilled(zisoi(1), dzsoi_decomp(1), 1, max_tillage_depth))
-    @assertEqual(1._r8,    get_fraction_tilled(zisoi(2), dzsoi_decomp(2), 2, max_tillage_depth))
-    @assertEqual(1._r8,    get_fraction_tilled(zisoi(3), dzsoi_decomp(3), 3, max_tillage_depth))
-    @assertEqual(0.275_r8, get_fraction_tilled(zisoi(4), dzsoi_decomp(4), 4, max_tillage_depth), tolerance=tol)
-    @assertEqual(0._r8,    get_fraction_tilled(zisoi(5), dzsoi_decomp(5), 5, max_tillage_depth))
+    @assertEqual(1._r8,    get_fraction_tilled(zisoi(1), dzsoi_decomp(1), max_tillage_depth))
+    @assertEqual(1._r8,    get_fraction_tilled(zisoi(2), dzsoi_decomp(2), max_tillage_depth))
+    @assertEqual(1._r8,    get_fraction_tilled(zisoi(3), dzsoi_decomp(3), max_tillage_depth))
+    @assertEqual(0.275_r8, get_fraction_tilled(zisoi(4), dzsoi_decomp(4), max_tillage_depth), tolerance=tol)
+    @assertEqual(0._r8,    get_fraction_tilled(zisoi(5), dzsoi_decomp(5), max_tillage_depth))
 
   end subroutine test_get_fraction_tilled
 
