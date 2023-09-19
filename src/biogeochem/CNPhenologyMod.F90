@@ -1726,7 +1726,7 @@ contains
     use clm_time_manager , only : get_prev_calday, get_curr_days_per_year, is_beg_curr_year
     use clm_time_manager , only : get_average_days_per_year
     use clm_time_manager , only : get_prev_date
-    use clm_time_manager , only : is_doy_in_interval
+    use clm_time_manager , only : is_doy_in_interval, is_end_curr_day
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -1964,6 +1964,10 @@ contains
              sowing_window_enddate   = maxplantjday(ivt(p),h)
          end if
          is_in_sowing_window  = is_doy_in_interval(sowing_window_startdate, sowing_window_enddate, jday)
+         if (crop_inst%sown_in_this_window(p) .and. .not. is_in_sowing_window) then
+            ! Probably unnecessary since it's set to false in last timestep of sowing window at the end of CropPhenology()
+            crop_inst%sown_in_this_window(p) = .false.
+         end if
          is_end_sowing_window = jday == sowing_window_enddate
          !
          ! Save these diagnostic variables only on the first day of the window to ensure that windows spanning the new year aren't double-counted.
@@ -2388,6 +2392,11 @@ contains
             endif
          end if ! croplive
 
+         ! At the end of the sowing window, AFTER we've done everything crop-related, set this to false
+         if (is_end_sowing_window .and. is_end_curr_day()) then
+            crop_inst%sown_in_this_window(p) = .false.
+         end if
+
       end do ! prognostic crops loop
 
     end associate
@@ -2603,6 +2612,7 @@ contains
       ! impose limit on growing season length needed
       ! for crop maturity - for cold weather constraints
       croplive(p)  = .true.
+      crop_inst%sown_in_this_window(p) = .true.
       idop(p)      = jday
       iyop(p)      = kyr
       harvdate(p)  = NOT_Harvested

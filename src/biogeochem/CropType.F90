@@ -47,6 +47,7 @@ module CropType
      character(len=20) :: baset_mapping
      real(r8) :: baset_latvary_intercept
      real(r8) :: baset_latvary_slope
+     logical , pointer :: sown_in_this_window           (:)   ! patch flag. True if the crop has already been sown during the current sowing window. False otherwise or if not in a sowing window.
      integer , pointer :: next_rx_swindow_start_patch   (:)   ! start of prescribed sowing window for the next growing season this year
      integer , pointer :: next_rx_swindow_end_patch     (:)   ! end   of prescribed sowing window for the next growing season this year
      integer , pointer :: rx_swindow_starts_thisyr_patch(:,:) ! all prescribed sowing window start dates for this patch this year (day of year) [patch, mxsowings]
@@ -231,6 +232,7 @@ contains
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = cphase_not_planted
     allocate(this%sowing_reason_patch (begp:endp)) ; this%sowing_reason_patch (:) = -1
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
+    allocate(this%sown_in_this_window(begp:endp)) ; this%sown_in_this_window(:) = .false.
     allocate(this%next_rx_swindow_start_patch(begp:endp)) ; this%next_rx_swindow_start_patch(:) = -1
     allocate(this%next_rx_swindow_end_patch  (begp:endp)) ; this%next_rx_swindow_end_patch  (:) = -1
     allocate(this%rx_swindow_starts_thisyr_patch(begp:endp,1:mxsowings)); this%rx_swindow_starts_thisyr_patch(:,:) = -1
@@ -600,6 +602,31 @@ contains
                 this%croplive_patch(p) = .true.
              else
                 this%croplive_patch(p) = .false.
+             end if
+          end do
+       end if
+       deallocate(temp1d)
+
+       allocate(temp1d(bounds%begp:bounds%endp))
+       if (flag == 'write') then
+          do p= bounds%begp,bounds%endp
+             if (this%sown_in_this_window(p)) then
+                temp1d(p) = 1
+             else
+                temp1d(p) = 0
+             end if
+          end do
+       end if
+       call restartvar(ncid=ncid, flag=flag,  varname='sown_in_this_window', xtype=ncd_log,  &
+            dim1name='pft', &
+            long_name='Flag that patch was sown already during the current sowing window', &
+            interpinic_flag='interp', readvar=readvar, data=temp1d)
+       if (flag == 'read') then
+          do p= bounds%begp,bounds%endp
+             if (temp1d(p) == 1) then
+                this%sown_in_this_window(p) = .true.
+             else
+                this%sown_in_this_window(p) = .false.
              end if
           end do
        end if
