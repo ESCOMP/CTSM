@@ -403,8 +403,8 @@ module clm_varctl
   ! namelist: write CH4 extra diagnostic output
   logical, public :: hist_wrtch4diag = .false.         
 
-  ! namelist: write history master list to a file for use in documentation
-  logical, public :: hist_master_list_file = .false.
+  ! namelist: write list of all history fields to a file for use in documentation
+  logical, public :: hist_fields_list_file = .false.
 
   !----------------------------------------------------------
   ! FATES
