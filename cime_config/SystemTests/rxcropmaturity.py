@@ -257,7 +257,9 @@ class RXCROPMATURITY(SystemTestsCommon):
         # Where we will save the fsurdat version for this test
         path, ext = os.path.splitext(self._fsurdat_in)
         dir_in, filename_in_noext = os.path.split(path)
-        self._fsurdat_out = os.path.join(self._path_gddgen, f"{filename_in_noext}.all_crops_everywhere{ext}")
+        self._fsurdat_out = os.path.join(
+            self._path_gddgen, f"{filename_in_noext}.all_crops_everywhere{ext}"
+        )
 
         # Make fsurdat for this test, if not already done
         if not os.path.exists(self._fsurdat_out):
@@ -275,9 +277,7 @@ class RXCROPMATURITY(SystemTestsCommon):
             )
             self._create_config_file_evenlysplitcrop()
 
-            command = (
-                f"python3 {tool_path} {self._cfg_path} "
-            )
+            command = f"python3 {tool_path} {self._cfg_path} "
             stu.run_python_script(
                 self._get_caseroot(),
                 self._this_conda_env,
@@ -329,7 +329,6 @@ class RXCROPMATURITY(SystemTestsCommon):
             cfg_out.write("PCT_WETLAND = 0.0\n")
             cfg_out.write("PCT_LAKE    = 0.0\n")
             cfg_out.write("PCT_URBAN   = 0.0 0.0 0.0\n")
-
 
     def _run_check_rxboth_run(self):
 
@@ -397,7 +396,7 @@ class RXCROPMATURITY(SystemTestsCommon):
                 f"--sdates-file {sdates_file}",
                 f"--hdates-file {hdates_file}",
                 f"--output-dir generate_gdds_out",
-                f"--skip-crops miscanthus,irrigated_miscanthus"
+                f"--skip-crops miscanthus,irrigated_miscanthus",
             ]
         )
         stu.run_python_script(
