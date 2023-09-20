@@ -1602,7 +1602,7 @@
   </test>
   <test name="SMS_Ly5_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm51BgcCropQianRs" testmods="clm/gregorian_cropMonthOutput">
     <machines>
-      <machine name="cheyenne" compiler="gnu" category="ctsm_sci"/>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
