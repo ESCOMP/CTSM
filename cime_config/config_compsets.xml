@@ -420,6 +420,10 @@
     <alias>IHistClm50BgcCropQianRs</alias>
     <lname>HIST_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
+  <compset>
+    <alias>IHistClm51BgcCropQianRs</alias>
+    <lname>HIST_DATM%QIA_CLM51%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
 
   <!-- Primarily for testing -->
   <compset>

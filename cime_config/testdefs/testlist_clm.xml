@@ -536,6 +536,7 @@
       <option name="comment">Low resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, tested in CAM, so test both 1850 and 2000</option>
     </options>
   </test>
+  <!-- These need to be turned off until they are allowed in ccs_config
   <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I1850Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
@@ -554,6 +555,7 @@
       <option name="comment">Medium resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, test both 1850 and 2000</option>
     </options>
   </test>
+  -->
   <test name="SMS" grid="ne16_ne16_mg17" compset="I1850Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
@@ -653,7 +655,7 @@
       <option name="comment">Workhorse SE grid for running with CAM and with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS_ln9" grid="ne120pg2_t13" compset="I1850Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS_ln9" grid="ne120pg2_ne120pg2_mt12" compset="I1850Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -662,7 +664,7 @@
       <option name="comment">High resolution SE grid for running with CAM and with the latest CLM version in the CTSM science test list, tested in CAM, so test all of 1850 and 2000</option>
     </options>
   </test>
-  <test name="SMS_ln9" grid="ne120pg2_t13" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS_ln9" grid="ne120pg2_ne120pg2_mt12" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1695,7 +1697,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS" grid="f45_f45_mg37" compset="I2000Clm51FatesSpRs" testmods="clm/FatesColdSatPhen">
+  <test name="SMS" grid="f45_f45_mg37" compset="I2000Clm51FatesSpRsGs" testmods="clm/FatesColdSatPhen">
     <machines>
       <machine name="cheyenne" compiler="nvhpc" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
