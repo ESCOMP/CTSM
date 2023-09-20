@@ -206,6 +206,7 @@
       <option name="comment"  >Include a test of this scientifically-supported compset at a scientifically-supported resolution</option>
     </options>
   </test>
+  <!-- science support for workhorse resolutions with CLM5_0 physics -->
   <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm50Sp" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
@@ -240,6 +241,25 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Science support for I1850Clm50SpCru at f19</option>
+    </options>
+  </test>
+  <!-- science support for workhorse resolutions with CLM5_1 physics -->
+  <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm51Sp" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Science support for 1850 with clm5_1 for SP mode at f09</option>
+    </options>
+  </test>
+  <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm51Sp" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Science support for 1850 with clm5_1 for SP mode at f19</option>
     </options>
   </test>
   <test name="ERP_D_Ld3_PS" grid="f09_g17" compset="I2000Clm50Sp" testmods="clm/prescribed">
@@ -425,13 +445,14 @@
       <option name="comment"  >cism is not answer preserving across processor changes, but short test length should be ok.</option>
     </options>
   </test>
+  <!-- clm5_0 physics workhorse resolution BGC science test list -->
   <test name="SMS_Ld5" grid="f19_g17" compset="I1850Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Science support for I1850Clm50Bgc at f19</option>
+      <option name="comment"  >Science support for 1850 clm5_0 physics for Bgc at f19</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f09_g17" compset="I1850Clm50Bgc" testmods="clm/default">
@@ -440,7 +461,26 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Science support for I1850Clm50Bgc at f09</option>
+      <option name="comment"  >Science support for 1850 clm5_0 physics for Bgc at f09</option>
+    </options>
+  </test>
+  <!-- clm5_1 physics workhorse resolution BGC science test list -->
+  <test name="SMS_Ld5" grid="f19_g17" compset="I1850Clm51Bgc" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Science support for 1850 Clm5_1 physics for Bgc at f19</option>
+    </options>
+  </test>
+  <test name="SMS_Ld5" grid="f09_g17" compset="I1850Clm51Bgc" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Science support for 1850 Clm5_1 physics for Bgc at f09</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="ne30_g17" compset="I1850Clm50BgcCrop" testmods="clm/default">
@@ -667,13 +707,14 @@
       <option name="comment">Want one C96 test in the aux_clm test suite; just a short smoke test to make sure it can get off the ground. Use a PE layout that (1) has threading, because CAM uses threading at this resolution; and (2) has a smaller-than-standard task count in order to get through the queue faster.</option>
     </options>
   </test>
+  <!-- Historical clm5_0 physics BgcCrop science support -->
   <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Science support for IHistClm50BgcCrop at f09</option>
+      <option name="comment"  >Science support for Historical clm5_0 physics with BGC-Crop at f09</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50BgcCrop" testmods="clm/default">
@@ -682,7 +723,26 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Science support for IHistClm50BgcCrop at f19</option>
+      <option name="comment"  >Science support for Historical clm5_0 physics with BGC-Crop at f19</option>
+    </options>
+  </test>
+  <!-- Historical clm5_1 physics BgcCrop science support -->
+  <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm51BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Science support for Historical clm5_1 physics with BGC-Crop at f09</option>
+    </options>
+  </test>
+  <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm51BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Science support for Historical clm5_1 physics with BGC-Crop at f19</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/allActive">
@@ -1708,13 +1768,14 @@
       <option name="comment"  >Run CONUS for transient case starting in 2013 as for CAM case (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
     </options>
   </test>
+  <!-- Historical science support for clm5_0 workhorse resolutions -->
   <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm50Sp" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Science support for IHistClm50Sp at f09</option>
+      <option name="comment"  >Science support for historical clm5_0 physics with SP mode at f09</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/default">
@@ -1723,7 +1784,26 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Science support for IHistClm50Sp at f19</option>
+      <option name="comment"  >Science support for historical clm5_0 physics with SP mode at f19</option>
+    </options>
+  </test>
+  <!-- Historical science support for clm5_1 workhorse resolutions -->
+  <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm51Sp" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Science support for historical clm5_1 physics with SP mode at f09</option>
+    </options>
+  </test>
+  <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm51Sp" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Science support for historical clm5_1 physics with SP mode at f19</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne30pg2_ne30pg2_mg17" compset="I1850Clm50Sp" testmods="clm/clm50cam6LndTuningMode">
