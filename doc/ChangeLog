@@ -1,4 +1,153 @@
 ===============================================================
+Tag name: ctsm5.1.dev142
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Tue Sep 19 11:30:22 MDT 2023
+One-line Summary: Merge 5 bit-for-bit pull requests
+
+Purpose and description of changes
+----------------------------------
+
+Merge 5 bit-for-bit pull requests; see "Other details."
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+* Add unit test for making fsurdat with all crops everywhere (#2079)
+* Rework master_list_(no)?fates.rst? (#2083)
+* conda run -n can fail if a conda environment is already active (#2109)
+* conda fails to load for SystemTests (#2111)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+* FSURDATMODIFYCTSM system test should now work for everyone.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+    clm_pymods test suite on cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+* Add system and unit tests for making fsurdat with all crops everywhere (#2081)
+* Rework master_list* files etc. (#2087)
+* Fixes to methane Tech Note (#2091)
+* Add is_doy_in_interval() function (#2158)
+* Avoid using subprocess.run() in FSURDATMODIFYCTSM (#2125)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev141
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Wed Sep 13 13:58:04 MDT 2023
+One-line Summary: Change small snocan to zero
+
+Purpose and description of changes
+----------------------------------
+
+ Issues #2041 and #2048 discuss and resolve a test failure in the ctsm5.2
+ branch. The failure goes away when we reset small snocan to zero.
+
+ Bill Sacks recommended merging this change in ctsm5.1 and then updating
+ the ctsm5.2 branch to the latest ctsm5.1.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+ Fixes #2041
+ Fixes #2048
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+ Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: roundoff
+
+ The answer changes are expected to be roundoff-level because the code change
+ just truncates roundoff-level greater-than-zero states to exactly zero for
+ snocan that most likely needed to be zero anyway.
+
+ The answer changes grow to greater than roundoff, but the
+ cprnc.out file from a 20-year izumi test-suite case does not contain
+ differences of concerning magnitude.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2053
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev140
 Originator(s): afoster (Adrianna Foster)
 Date: Tue Sep 12 14:47:06 MDT 2023

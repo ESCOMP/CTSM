@@ -67,8 +67,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <for_testing_use_repr_structure_pool>.false.</for_testing_use_repr_structure_pool>
 <for_testing_no_crop_seed_replenishment>.false.</for_testing_no_crop_seed_replenishment>
 
-<!-- Set to .true. in namelist to write hist fields master list file -->
-<hist_master_list_file>.false.</hist_master_list_file>
+<!-- Set to .true. in namelist to write file with all history fields -->
+<hist_fields_list_file>.false.</hist_fields_list_file>
 
 <!-- In accelerated spinup mode reduce the amount of history output -->
 <hist_empty_htapes clm_accelerated_spinup="on">.true.</hist_empty_htapes>
