@@ -83,6 +83,10 @@
     <alias>I2000Clm50SpRs</alias>
     <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
+  <compset>
+    <alias>I2000Clm51SpRs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM51%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
 
   <compset>
     <alias>I2000Clm51Sp</alias>
@@ -300,6 +304,11 @@
   <compset>
     <alias>IHistClm51Sp</alias>
     <lname>HIST_DATM%GSWP3v1_CLM51%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>IHistClm51SpRs</alias>
+    <lname>HIST_DATM%GSWP3v1_CLM51%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>
@@ -598,6 +607,11 @@
   <compset>
     <alias>I1850Clm50SpRsGag</alias>
     <lname>1850_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_SROF_CISM2%AIS-EVOLVE%GRIS-EVOLVE_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I1850Clm51SpRs</alias>
+    <lname>1850_DATM%GSWP3v1_CLM51%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
 

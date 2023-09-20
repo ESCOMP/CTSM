@@ -91,7 +91,7 @@
       <option name="comment">Low resolution C48 test with the latest CLM version for the CTSM science test list, both 1850 and 2000 because tested in CAM</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="C96_t061" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="C96_t061" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -100,7 +100,7 @@
       <option name="comment">We have one C96 test in aux_clm; this is another that uses a different compset. No needn't run this additional C96 test with every tag, but include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="C192_C192_mg17" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="C192_C192_mg17" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -109,7 +109,7 @@
       <option name="comment">FV3 high resolution C192 resolution test with latest CLM version for the CTSM science test list</option>
     </options>
   </test>
-   <test name="SMS_Ln9" grid="C384_C384_mg17" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+   <test name="SMS_Ln9" grid="C384_C384_mg17" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -136,7 +136,7 @@
       <option name="comment">mpasa low resolution grid, tested in CAM, so do both Hist and 2000 with latest CLM version and include in the CTSM science test list</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="IHistClm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="IHistClm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -145,7 +145,7 @@
       <option name="comment">Test that the workhorse mpasa resolution functions for CAM, for both Hist and 2000 with latest CLM version. No need to run this test with every tag, but include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -154,7 +154,7 @@
       <option name="comment">Test that the workhorse mpasa resolution functions for CAM, for both Hist and 2000 with latest CLM version. No need to run this test with every tag, but include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa60_mpasa60" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="mpasa60_mpasa60" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -500,7 +500,7 @@
       <option name="comment">Low resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="ISSP585Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="ISSP585Clm51BgcCrop" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -536,7 +536,7 @@
       <option name="comment">Low resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, tested in CAM, so test both 1850 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I1850Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I1850Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -545,7 +545,7 @@
       <option name="comment">Medium resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, test both 1850 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -554,7 +554,7 @@
       <option name="comment">Medium resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, test both 1850 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne16_ne16_mg17" compset="I1850Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS" grid="ne16_ne16_mg17" compset="I1850Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -563,7 +563,7 @@
       <option name="comment">Medium resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, tested in CAM, so test both 1850 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne16_ne16_mg17" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS" grid="ne16_ne16_mg17" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -572,7 +572,7 @@
       <option name="comment">Medium resolution SE grid for running with CAM and with the latest CLM version in the CTSM science test list, tested in CAM, so test both 1850 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30_g17" compset="IHistClm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS" grid="ne30_g17" compset="IHistClm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -590,7 +590,7 @@
       <option name="comment">Workhorse SE grid for running with CAM with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30_g17" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS" grid="ne30_g17" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -599,7 +599,7 @@
       <option name="comment">Workhorse SE grid for running with CAM with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="IHistClm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="IHistClm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -617,7 +617,7 @@
       <option name="comment">Workhorse SE grid for running with CAM with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -626,7 +626,7 @@
       <option name="comment">Workhorse SE grid for running with CAM with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-   <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="IHistClm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+   <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="IHistClm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -644,7 +644,7 @@
       <option name="comment">Workhorse SE grid for running with CAM and with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -653,7 +653,7 @@
       <option name="comment">Workhorse SE grid for running with CAM and with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS_ln9" grid="ne120pg2_t13" compset="I1850Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS_ln9" grid="ne120pg2_t13" compset="I1850Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -662,7 +662,7 @@
       <option name="comment">High resolution SE grid for running with CAM and with the latest CLM version in the CTSM science test list, tested in CAM, so test all of 1850 and 2000</option>
     </options>
   </test>
-  <test name="SMS_ln9" grid="ne120pg2_t13" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS_ln9" grid="ne120pg2_t13" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -689,7 +689,7 @@
       <option name="comment">High resolution SE grid for running with CAM and with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS_ln9" grid="ne120pg3_t13" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS_ln9" grid="ne120pg3_t13" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1695,7 +1695,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS" grid="f45_f45_mg37" compset="I2000Clm51FatesSpRsGs" testmods="clm/FatesColdSatPhen">
+  <test name="SMS" grid="f45_f45_mg37" compset="I2000Clm51FatesSpRs" testmods="clm/FatesColdSatPhen">
     <machines>
       <machine name="cheyenne" compiler="nvhpc" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
