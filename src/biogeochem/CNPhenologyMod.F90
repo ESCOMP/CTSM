@@ -2018,6 +2018,7 @@ contains
                                   gdd820(p) /= spval
          end if
          do_plant = do_plant_prescribed .or. do_plant_normal .or. do_plant_lastchance
+         do_plant = do_plant .and. .not. crop_inst%sown_in_this_window(p)
          did_plant = .false.
 
          ! Once outputs can handle >1 planting per year, remove 2nd condition.
