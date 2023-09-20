@@ -1,4 +1,15 @@
 <?xml version="1.0"?>
+<!--
+     CTSM test list. Test suites included:
+        ctsm_pymods: System tests for the python codes that also run CTSM cases
+        clm_short: The short CLM test for basic testing of a few configurations
+        aux_clm: Main workhorse test list to be run on main machines before most tags are made
+        fates: The FATES testlist, run when FATES is updated
+        ctsm_sci: Tests for all science supported compset/resolution configurations, plus all supported resolutions
+        prelpha: Run before CESM alpha tags
+        prebeta: Run before CESM beta tags (more extensive, but should have tests outside of prealpha)
+        aux_cime_baselines: CESM cime baselines
+-->
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm51Bgc" testmods="clm/default">
     <machines>
@@ -15,6 +26,15 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+  <test name="SMS_Ld5" grid="hcru_hcru_mt13" compset="I1850Clm45BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >CTSM science test list for the half degree grid</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f09_g17" compset="I1850Clm45BgcCru" testmods="clm/default">
@@ -44,7 +64,34 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="C96_t061" compset="I2000Clm50SpRs" testmods="clm/clm50cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="C24_C24_mg17" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Low resolution C24 test for the CTSM science test list</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="C48_C48_mg17" compset="I1850Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Low resolution C48 test for the CTSM science test list, both 1850 and 2000 because tested in CAM</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="C48_C48_mg17" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Low resolution C48 test for the CTSM science test list, both 1850 and 2000 because tested in CAM</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="C96_t061" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -53,13 +100,85 @@
       <option name="comment">We have one C96 test in aux_clm; this is another that uses a different compset. No need to run this additional C96 test with every tag, but include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="I2000Clm50SpRs" testmods="clm/clm50cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="C192_C192_mg17" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
-      <option name="comment">Test that the workhorse mpasa resolution functions for CAM. No need to run this test with every tag, but include it in the less frequent ctsm_sci testing.</option>
+      <option name="comment">FV3 high resolution C192 resolution test for the CTSM science test list</option>
+    </options>
+  </test>
+   <test name="SMS_Ln9" grid="C384_C384_mg17" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">FV3 high resolution C384 resolution test for the CTSM science test list</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="IHistClm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">mpasa low resolution grid, tested in CAM, so do both Hist and 2000 and include in the CTSM science test list</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">mpasa low resolution grid, tested in CAM, so do both Hist and 2000 and include in the CTSM science test list</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="IHistClm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Test that the workhorse mpasa resolution functions for CAM, for both Hist and 2000. No need to run this test with every tag, but include it in the less frequent ctsm_sci testing.</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Test that the workhorse mpasa resolution functions for CAM, for both Hist and 2000. No need to run this test with every tag, but include it in the less frequent ctsm_sci testing.</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="mpasa60_mpasa60" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Higher resolution mpasa grid for CAM. Include it in the less frequent ctsm_sci testing.</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="mpasa30_mpasa30" compset="I1850Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Higher resolution mpasa grid for CAM. Include it in the less frequent ctsm_sci testing.</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="mpasa15_mpasa15" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Higher resolution mpasa grid for CAM. Include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
   <test name="ERI_D_Ld9" grid="ne30_g17" compset="I2000Clm50BgcCru" testmods="clm/vrtlay">
@@ -273,6 +392,7 @@
   <test name="ERP_Ld9" grid="f45_g37" compset="I2000Clm51Bgc" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -329,6 +449,213 @@
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="IHistClm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Low resolution SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="ISSP585Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Low resolution SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Low resolution SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne5pg3_ne5pg3_mg37" compset="I1850Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Low resolution SE grid for running with CAM in the CTSM science test list, tested in CAM, so test both 1850 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne5pg3_ne5pg3_mg37" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Low resolution SE grid for running with CAM in the CTSM science test list, tested in CAM, so test both 1850 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I1850Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Medium resolution SE grid for running with CAM in the CTSM science test list, test both 1850 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Medium resolution SE grid for running with CAM in the CTSM science test list, test both 1850 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne16_ne16_mg17" compset="I1850Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Medium resolution SE grid for running with CAM in the CTSM science test list, tested in CAM, so test both 1850 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne16_ne16_mg17" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Medium resolution SE grid for running with CAM in the CTSM science test list, tested in CAM, so test both 1850 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne30_g17" compset="IHistClm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Workhorse SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne30_g17" compset="ISSP585Clm50BgcCrop" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Workhorse SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne30_g17" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Workhorse SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="IHistClm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Workhorse SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="ISSP585Clm50BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Workhorse SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="I2000Clm51SpRs" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Workhorse SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
+    </options>
+  </test>
+   <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="IHistClm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Workhorse SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="ISSP585Clm50BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Workhorse SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="I2000Clm51SpRs" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Workhorse SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS_ln9" grid="ne120pg2_t13" compset="I1850Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">High resolution SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of 1850 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS_ln9" grid="ne120pg2_t13" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">High resolution SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of 1850 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS_ln9" grid="ne120pg3_t13" compset="IHistClm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">High resolution SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS_ln9" grid="ne120pg3_t13" compset="ISSP585Clm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">High resolution SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
+    </options>
+  </test>
+  <test name="SMS_ln9" grid="ne120pg3_t13" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">High resolution SE grid for running with CAM in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
   <test name="SMS_Ln9_P72x2" grid="C96_C96_mg17" compset="IHistClm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
@@ -888,6 +1215,7 @@
   <test name="ERP_P72x2_D_Ld5" grid="f19_g17_gris4" compset="I1850Clm50BgcCropG" testmods="clm/glcMEC_increase">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
       <machine name="cheyenne" compiler="intel" category="prealpha"/>
     </machines>
     <options>
@@ -1214,6 +1542,7 @@
   </test>
   <test name="SMS_Ly5_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/gregorian_cropMonthOutput">
     <machines>
+      <machine name="cheyenne" compiler="gnu" category="ctsm_sci"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
@@ -1309,6 +1638,7 @@
   <test name="SMS" grid="f45_f45_mg37" compset="I2000Clm51FatesSpRsGs" testmods="clm/FatesColdSatPhen">
     <machines>
       <machine name="cheyenne" compiler="nvhpc" category="aux_clm"/>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1569,6 +1899,7 @@
   </test>
   <test name="ERS_D_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRs" testmods="clm/CLM1PTStartDate">
     <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="prebeta"/>
     </machines>
@@ -1816,6 +2147,7 @@
   </test>
   <test name="SMS_Ly3_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/clm50dynroots">
     <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
@@ -1877,9 +2209,11 @@
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="prebeta"/>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment"  >5x5_amazon grid with FATES</option>
     </options>
   </test>
   <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTreeDamage">
@@ -2133,6 +2467,12 @@
   <test name="SMS_Ld1_PS" grid="nldas2_rnldas2_mnldas2" compset="I2000Ctsm50NwpSpNldas" testmods="clm/default">
     <machines>
 
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci">
+        <options>
+          <option name="wallclock">00:30:00</option>
+          <option name="comment">NLDAS2 grid for the CTSM science test list</option>
+        </options>
+      </machine>
       <machine name="cheyenne" compiler="gnu" category="aux_clm">
         <options>
           <option name="wallclock">00:30:00</option>
@@ -2355,6 +2695,7 @@
   </test>
   <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdSatPhen">
     <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -2501,6 +2842,12 @@
   </test>
   <test name="SMS_Ly1_Mmpi-serial" grid="1x1_brazil" compset="IHistClm50BgcQianRs" testmods="clm/output_bgc_highfreq">
     <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci">
+        <options>
+          <option name="wallclock">00:20:00</option>
+          <option name="comment">Run the brazil site for the CTSM science test list</option>
+        </options>
+      </machine>
       <machine name="cheyenne" compiler="intel" category="aux_clm">
         <options>
           <option name="wallclock">00:20:00</option>
@@ -2516,10 +2863,26 @@
   </test>
   <test name="SMS_Ld12_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpRs" testmods="clm/output_sp_highfreq">
     <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci">
+        <options>
+          <option name="wallclock">00:10:00</option>
+          <option name="comment">A short test in ctsm_sci to make sure that the urban VanCouver Canada site works</option>
+        </options>
+      </machine>
       <machine name="cheyenne" compiler="gnu" category="aux_clm">
         <options>
           <option name="wallclock">00:10:00</option>
           <option name="comment">Want a year-long test covering the output_sp and output_sp_highfreq usermods; don't want a highfreq, year-long global test because of the output volume, so this is single-point.</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
+  <test name="SMS_Ld12_Mmpi-serial" grid="1x1_urbanc_alpha" compset="I1PtClm50SpRs" testmods="clm/output_sp_highfreq">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci">
+        <options>
+          <option name="wallclock">00:10:00</option>
+          <option name="comment">Test with the urbanc alpha site to make sure all grids work</option>
         </options>
       </machine>
     </machines>
