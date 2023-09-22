@@ -153,49 +153,41 @@ of soil column (nlevsoi).
 <entry id="snicar_numrad_snw" type="integer" category="clm_physics"
        group="snicar_inparm" valid_values="5,480" value="5" >
 number of wavelength bands used in SNICAR snow albedo calculation
-<default>Default: 5</default>
 </entry>
 
 <entry id="snicar_solarspec" type="char*25" category="clm_physics"
        group="snicar_inparm" valid_values="mid_latitude_winter,mid_latitude_summer,sub_arctic_winter,sub_arctic_summer,summit_greenland_summer,high_mountain_summer" value="mid_latitude_winter" >
 type of downward solar radiation spectrum for SNICAR snow albedo calculation
-<default>Default: "mid_latitude_winter"</default>
 </entry>
 
 <entry id="snicar_dust_optics" type="char*25" category="clm_physics"
        group="snicar_inparm" valid_values="sahara,san_juan_mtns_colorado,greenland" value="sahara" >
 dust optics type for SNICAR snow albedo calculation
-<default>Default: "sahara"</default>
 </entry>
 
 <entry id="snicar_snw_shape" type="char*25" category="clm_physics"
        group="snicar_inparm" valid_values="sphere,spheroid,hexagonal_plate,koch_snowflake" value="hexagonal_plate" >
 snow grain shape used in SNICAR snow albedo calculation
-<default>Default: "hexagonal_plate"</default>
 </entry>
 
 <entry id="snicar_use_aerosol" type="logical" category="clm_physics"
        group="snicar_inparm" value=".true.">
 Toggle to turn on/off aerosol deposition flux in snow in SNICAR
-<default>Default: .true.</default>
 </entry>
 
 <entry id="snicar_snobc_intmix" type="logical" category="clm_physics"
        group="snicar_inparm" value=".false." >
 option to activate BC-snow internal mixing in SNICAR snow albedo calculation
-<default>Default: .false.</default>
 </entry>
 
 <entry id="snicar_snodst_intmix" type="logical" category="clm_physics"
        group="snicar_inparm" value=".false." >
 option to activate dust-snow internal mixing in SNICAR snow albedo calculation
-<default>Default: .false.</default>
 </entry>
 
 <entry id="do_sno_oc" type="logical" category="clm_physics"
        group="snicar_inparm" value=".false." >
 option to activate organic carbon (OC) in SNICAR snow albedo calculation
-<default>Default: .false.</default>
 </entry>
 
 <entry id="rooting_profile_method_water" type="integer" category="clm_physics"
