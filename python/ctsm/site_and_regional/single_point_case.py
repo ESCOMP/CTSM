@@ -52,6 +52,8 @@ class SinglePointCase(BaseCase):
         flag for creating user mods directories and files
     dom_pft : int
         dominant pft type for this single point (None if not specified)
+    evenly_split_cropland : bool
+        flag for splitting cropland evenly among all crop types
     pct_pft : list
         weight or percentage of each pft.
     num_pft : list
@@ -105,6 +107,7 @@ class SinglePointCase(BaseCase):
         create_datm,
         create_user_mods,
         dom_pft,
+        evenly_split_cropland,
         pct_pft,
         num_pft,
         include_nonveg,
@@ -125,6 +128,7 @@ class SinglePointCase(BaseCase):
         self.plon = plon
         self.site_name = site_name
         self.dom_pft = dom_pft
+        self.evenly_split_cropland = evenly_split_cropland
         self.pct_pft = pct_pft
         self.num_pft = num_pft
         self.include_nonveg = include_nonveg
@@ -436,6 +440,9 @@ class SinglePointCase(BaseCase):
                 tot_pct = f_mod["PCT_CROP"] + f_mod["PCT_NATVEG"]
                 f_mod["PCT_CROP"] = f_mod["PCT_CROP"] / tot_pct * 100
                 f_mod["PCT_NATVEG"] = f_mod["PCT_NATVEG"] / tot_pct * 100
+
+        if self.evenly_split_cropland:
+            f_mod["PCT_CFT"][:, :, :] = 100.0 / f_mod["PCT_CFT"].shape[2]
 
         else:
             logger.info(

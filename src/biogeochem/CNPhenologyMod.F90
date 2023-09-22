@@ -1726,6 +1726,7 @@ contains
     use clm_time_manager , only : get_prev_calday, get_curr_days_per_year, is_beg_curr_year
     use clm_time_manager , only : get_average_days_per_year
     use clm_time_manager , only : get_prev_date
+    use clm_time_manager , only : is_doy_in_interval
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -1930,7 +1931,7 @@ contains
          end if
 
          ! This is outside the croplive check so that the "harvest if planting conditions were met today" conditional works.
-         is_in_sowing_window = jday >= minplantjday(ivt(p),h) .and. jday <= maxplantjday(ivt(p),h)
+         is_in_sowing_window = is_doy_in_interval(minplantjday(ivt(p),h), maxplantjday(ivt(p),h), jday)
          is_end_sowing_window = jday == maxplantjday(ivt(p),h)
          !
          ! Only allow sowing according to normal "window" rules if not using prescribed

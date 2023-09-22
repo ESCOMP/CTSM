@@ -1007,7 +1007,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Among other extra outputs, ensure that writing the history field master list to a separate file does not cause failure"</option>
+      <option name="comment"  >Among other extra outputs, ensure that writing the list of all history fields to a separate file does not cause failure"</option>
     </options>
   </test>
   <test name="ERS_D_Ld3" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/default">
@@ -2594,7 +2594,7 @@
     </machines>
   </test>
 
-  <test name="RXCROPMATURITY_Lm61" grid="f09_g17" compset="IHistClm50BgcCrop">
+  <test name="RXCROPMATURITY_Lm61" grid="f09_g17" compset="IHistClm50BgcCrop"  testmods="clm/cropMonthOutput">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci">
         <options>

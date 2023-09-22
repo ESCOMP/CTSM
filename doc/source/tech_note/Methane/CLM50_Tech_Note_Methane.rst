@@ -66,7 +66,7 @@ phases:\ :math:`R = \epsilon _{a} +K_{H} \epsilon _{w}`, with
 porosity, and partitioning coefficient for the species of interest,
 respectively, and :math:`C` represents CH\ :sub:`4` or O\ :sub:`2` concentration with respect to water volume (mol m\ :sup:`-3`).
 
-An analogous version of equation is concurrently solved for
+An analogous version of equation :eq:`24.1` is concurrently solved for
 O\ :sub:`2`, but with the following differences relative to
 CH\ :sub:`4`: *P* = *E* = 0 (i.e., no production or ebullition),
 and the oxidation sink includes the O\ :sub:`2` demanded by
@@ -74,7 +74,7 @@ methanotrophs, heterotroph decomposers, nitrifiers, and autotrophic root
 respiration.
 
 As currently implemented, each gridcell contains an inundated and a
-non-inundated fraction. Therefore, equation is solved four times for
+non-inundated fraction. Therefore, equation :eq:`24.1` is solved four times for
 each gridcell and time step: in the inundated and non-inundated
 fractions, and for CH\ :sub:`4` and O\ :sub:`2`. If desired,
 the CH\ :sub:`4` and O\ :sub:`2` mass balance equation is
@@ -173,9 +173,9 @@ anoxic microsites above the water table, we apply the Arah and Stephen
 
    \varphi =\frac{1}{1+\eta C_{O_{2} } } .
 
-Here, :math:`\phi` is the factor by which production is inhibited
+Here, :math:`\varphi` is the factor by which production is inhibited
 above the water table (compared to production as calculated in equation
-, :math:`C_{O_{2}}`  (mol m\ :sup:`-3`) is the bulk soil oxygen
+:eq:`24.2`, :math:`C_{O_{2}}`  (mol m\ :sup:`-3`) is the bulk soil oxygen
 concentration, and :math:`\eta` = 400 mol m\ :sup:`-3`.
 
 The O\ :sub:`2` required to facilitate the vertically resolved
@@ -259,8 +259,8 @@ aqueous CH\ :sub:`4` concentration, and *p* is pressure.
 The local pressure is calculated as the sum of the ambient pressure,
 water pressure down to the local depth, and pressure from surface
 ponding (if applicable). When the CH\ :sub:`4` partial pressure
-exceeds 15% of the local pressure (Baird et al. 2004; Strack et al.
-2006; Wania et al. 2010), bubbling occurs to remove CH\ :sub:`4`
+exceeds 15% of the local pressure (:ref:`Baird et al. 2004<Bairdetal2004>`; :ref:`Strack et al.
+2006<Stracketal2006>`; :ref:`Wania et al. 2010<Waniaetal2010>`), bubbling occurs to remove CH\ :sub:`4`
 to below this value, modified by the fraction of CH\ :sub:`4` in
 the bubbles [taken as 57%; (:ref:`Kellner et al. 2006<Kellneretal2006>`; 
 :ref:`Wania et al. 2010<Waniaetal2010>`)].
@@ -286,14 +286,14 @@ The diffusive transport through aerenchyma (*A*, mol m\ :sup:`-2` s\ :sup:`-1`) 
 
    A=\frac{C\left(z\right)-C_{a} }{{\raise0.7ex\hbox{$ r_{L} z $}\!\mathord{\left/ {\vphantom {r_{L} z D}} \right. \kern-\nulldelimiterspace}\!\lower0.7ex\hbox{$ D $}} +r_{a} } pT\rho _{r} ,
  
-where *D* is the free-air gas diffusion coefficient (m:sup:`2` s\ :sup:`-1`); *C(z)* (mol m\ :sup:`-3`) is the gaseous
+where *D* is the free-air gas diffusion coefficient (m\ :sup:`2` s\ :sup:`-1`); *C(z)* (mol m\ :sup:`-3`) is the gaseous
 concentration at depth *z* (m); :math:`r_{L}`  is the ratio of root
 length to depth; *p* is the porosity (-); *T* is specific aerenchyma
-area (m:sup:`2` m\ :sup:`-2`); :math:`{r}_{a}` is the
+area (m\ :sup:`2` m\ :sup:`-2`); :math:`{r}_{a}` is the
 aerodynamic resistance between the surface and the atmospheric reference
-height (s m:sup:`-1`); and :math:`\rho _{r}`  is the rooting
+height (s m\ :sup:`-1`); and :math:`\rho _{r}`  is the rooting
 density as a function of depth (-). The gaseous concentration is
-calculated with Henry’s law as described in equation .
+calculated with Henry’s law as described in equation :eq:`24.7`.
 
 Based on the ranges reported in :ref:`Colmer (2003)<Colmer2003>`, we have chosen 
 baseline aerenchyma porosity values of 0.3 for grass and crop PFTs and 0.1 for
@@ -310,7 +310,7 @@ m\ :sup:`-2` s\ :sup:`-1`); *R* is the aerenchyma radius
 belowground fraction of annual NPP; and the 0.22 factor represents the
 amount of C per tiller. O\ :sub:`2` can also diffuse in from the
 atmosphere to the soil layer via the reverse of the same pathway, with
-the same representation as Equation but with the gas diffusivity of
+the same representation as Equation :eq:`24.8` but with the gas diffusivity of
 oxygen.
 
 CLM also simulates the direct emission of CH\ :sub:`4` from leaves
@@ -358,7 +358,7 @@ potential and :math:`{P}_{c} = -2.4 \times {10}^{5}` mm.
 Reactive Transport Solution
 --------------------------------
 
-The solution to equation is solved in several sequential steps: resolve
+The solution to equation :eq:`24.11` is solved in several sequential steps: resolve
 competition for CH\ :sub:`4` and O\ :sub:`2` (section
 :numref:`Competition for CH4and O2`); add the ebullition flux into the 
 layer directly above the water
@@ -416,7 +416,7 @@ Aqueous and Gaseous Diffusion
 
 For gaseous diffusion, we adopted the temperature dependence of
 molecular free-air diffusion coefficients (:math:`{D}_{0}`
-(m:sup:`2` s\ :sup:`-1`)) as described by 
+(m\ :sup:`2` s\ :sup:`-1`)) as described by 
 :ref:`Lerman (1979) <Lerman1979>` and applied by 
 :ref:`Wania et al. (2010)<Waniaetal2010>` 
 (:numref:`Table Temperature dependence of aqueous and gaseous diffusion`).
@@ -426,7 +426,7 @@ molecular free-air diffusion coefficients (:math:`{D}_{0}`
 .. table:: Temperature dependence of aqueous and gaseous diffusion coefficients for CH\ :sub:`4` and O\ :sub:`2`
 
  +----------------------------------------------------------+----------------------------------------------------------+--------------------------------------------------------+
- | :math:`{D}_{0}` (m\ :sup:`2` s\ :sup:`-1`)               | CH\ :sub:`4`                                             | O\ :sub:`2`                                            |
+ | :math:`{D}_{0}` (cm\ :sup:`2` s\ :sup:`-1`)              | CH\ :sub:`4`                                             | O\ :sub:`2`                                            |
  +==========================================================+==========================================================+========================================================+
  | Aqueous                                                  | 0.9798 + 0.02986\ *T* + 0.0004381\ *T*\ :sup:`2`         | 1.172+ 0.03443\ *T* + 0.0005048\ *T*\ :sup:`2`         |
  +----------------------------------------------------------+----------------------------------------------------------+--------------------------------------------------------+
@@ -437,7 +437,7 @@ Gaseous diffusivity in soils also depends on the molecular diffusivity,
 soil structure, porosity, and organic matter content.  
 :ref:`Moldrup et al. (2003)<Moldrupetal2003>`, using observations across a 
 range of unsaturated mineral soils, showed that the relationship between 
-effective diffusivity (:math:`D_{e}`  (m:sup:`2` s\ :sup:`-1`)) and soil
+effective diffusivity (:math:`D_{e}`  (m\ :sup:`2` s\ :sup:`-1`)) and soil
 properties can be represented as:
 
 .. math::
@@ -457,8 +457,8 @@ measurements more closely in unsaturated peat soils:
 
    D_{e} =D_{0} \frac{\theta _{a} ^{{\raise0.7ex\hbox{$ 10 $}\!\mathord{\left/ {\vphantom {10 3}} \right. \kern-\nulldelimiterspace}\!\lower0.7ex\hbox{$ 3 $}} } }{\theta _{s} ^{2} }
 
-In CLM, we applied equation for soils with zero organic matter content
-and equation for soils with more than 130 kg m\ :sup:`-3` organic
+In CLM, we applied equation :eq:`24.12` for soils with zero organic matter content
+and equation :eq:`24.13` for soils with more than 130 kg m\ :sup:`-3` organic
 matter content. A linear interpolation between these two limits is
 applied for soils with SOM content below 130 kg m\ :sup:`-3`. For
 aqueous diffusion in the saturated part of the soil column, we applied
@@ -518,10 +518,10 @@ a zero flux gradient at the bottom of the soil column.
 Crank-Nicholson Solution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Equation is solved using a Crank-Nicholson solution 
-(:ref:`Press et al. 1992<Pressetal1992>`),
+Equation :eq:`24.1` is solved using a Crank-Nicholson solution 
+(:ref:`Press et al., 1992<Pressetal1992>`),
 which combines fully explicit and implicit representations of the mass
-balance. The fully explicit decomposition of equation can be written as
+balance. The fully explicit decomposition of equation :eq:`24.1` can be written as
 
 .. math::
    :label: 24.15
@@ -535,11 +535,11 @@ and :math:`S_{j}^{n}`  is the net source at time step *n* and position
 *j*, i.e.,
 :math:`S_{j}^{n} =P\left(j,n\right)-E\left(j,n\right)-A\left(j,n\right)-O\left(j,n\right)`.
 The diffusivity coefficients are calculated as harmonic means of values
-from the adjacent cells. Equation is solved for gaseous and aqueous
+from the adjacent cells. Equation :eq:`24.15` is solved for gaseous and aqueous
 concentrations above and below the water table, respectively. The *R*
 term ensure the total mass balance in both phases is properly accounted
 for. An analogous relationship can be generated for the fully implicit
-case by replacing *n* by *n+1* on the *C* and *S* terms of equation .
+case by replacing *n* by *n+1* on the *C* and *S* terms of equation :eq:`24.15`.
 Using an average of the fully implicit and fully explicit relationships
 gives:
 
@@ -548,14 +548,14 @@ gives:
 
    \begin{array}{l} {-\frac{1}{2\Delta x_{j} } \frac{D_{m1}^{} }{\Delta x_{m1}^{} } C_{j-1}^{n+1} +\left[\frac{R_{j}^{n+1} }{\Delta t} +\frac{1}{2\Delta x_{j} } \left(\frac{D_{p1}^{} }{\Delta x_{p1}^{} } +\frac{D_{m1}^{} }{\Delta x_{m1}^{} } \right)\right]C_{j}^{n+1} -\frac{1}{2\Delta x_{j} } \frac{D_{p1}^{} }{\Delta x_{p1}^{} } C_{j+1}^{n+1} =} \\ {\frac{R_{j}^{n} }{\Delta t} +\frac{1}{2\Delta x_{j} } \left[\frac{D_{p1}^{} }{\Delta x_{p1}^{} } \left(C_{j+1}^{n} -C_{j}^{n} \right)-\frac{D_{m1}^{} }{\Delta x_{m1}^{} } \left(C_{j}^{n} -C_{j-1}^{n} \right)\right]+\frac{1}{2} \left[S_{j}^{n} +S_{j}^{n+1} \right]} \end{array},
 
-Equation is solved with a standard tridiagonal solver, i.e.:
+Equation :eq:`24.16` is solved with a standard tridiagonal solver, i.e.:
 
 .. math::
    :label: 24.17
 
    aC_{j-1}^{n+1} +bC_{j}^{n+1} +cC_{j+1}^{n+1} =r,
 
-with coefficients specified in equation .
+with coefficients specified in equation :eq:`24.16`.
 
 Two methane balance checks are performed at each timestep to insure that
 the diffusion solution and the time-varying aggregation over inundated
@@ -599,7 +599,7 @@ Inundated Fraction Prediction
 ----------------------------------
 
 A simplified dynamic representation of spatial inundation
-based on recent work by :ref:`Prigent et al. (2007)<Prigentetal2007>` is used.  Prigent et al. (2007) described a
+based on recent work by :ref:`Prigent et al. (2007)<Prigentetal2007>` is used. :ref:`Prigent et al. (2007)<Prigentetal2007>` described a
 multi-satellite approach to estimate the global monthly inundated
 fraction (:math:`{F}_{i}`) over an equal area grid
 (0.25 :math:`\circ`  \ :math:`\times`\ 0.25\ :math:`\circ` at the equator)
