@@ -30,6 +30,13 @@ parser.add_argument(
     default=0,
 )
 parser.add_argument(
+    "--hist-or-ssp",
+    help="save historical period (hist) or ssp period (ssp; default)?",
+    type=str,
+    default="ssp",
+    choices=["hist", "ssp"],
+)
+parser.add_argument(
     "--write_climo",
     help="write out climatology files and exit",
     action="store_true",
@@ -202,7 +209,7 @@ num_ens = 3
 # Setup output directory
 sspoutdir = "anomaly_forcing/CMIP6-" + ssptag
 
-outdir = spath + sspoutdir
+outdir = "/glade/scratch/samrabin/anomaly_forcing/CMIP6-" + ssptag
 if not os.path.exists(outdir):
     os.makedirs(outdir)
 
@@ -294,6 +301,7 @@ for f in range(nfields):
             lat = np.asfarray(f1.variables["lat"][:], np.float64)
             hist_time = np.asfarray(f1.variables["time"][:], np.float64)
             time_units = f1.variables["time"].units
+            hist_time_longname = f1.variables["time"].long_name
 
             # read landfrac, landmask, and area
             landfrac = np.asfarray(f1.variables["landfrac"][:, :], np.float64)
@@ -305,8 +313,9 @@ for f in range(nfields):
             x = time_units.split()[2]
             ref_year = float(x.split("-")[0])
             hist_yrstart = np.min(hist_time / 365.0 + ref_year).astype(int)
-            # overwrite hist_yrstart to select just 20 years prior to climo_year
-            hist_yrstart = climo_year - (climo_base_nyrs - 1)
+            if args.hist_or_ssp == "ssp":
+                # overwrite hist_yrstart to select just 20 years prior to climo_year
+                hist_yrstart = climo_year - (climo_base_nyrs - 1)
             hist_yrend = (np.max(hist_time / 365.0 + ref_year) - 1).astype(int)
             hist_nyrs = hist_yrend - hist_yrstart + 1
             if f == 0:
@@ -342,7 +351,7 @@ for f in range(nfields):
                 hist_time[-1] / 365.0 + ref_year,
             )
 
-        # read in future data  ---------------------
+        # read in ssp data  ---------------------
 
         f1 = netcdf4.MFDataset(sspfiles, "r")
         if nens == 0:
@@ -370,16 +379,25 @@ for f in range(nfields):
             ssp_yrstart = np.min(ssp_time / 365.0 + ref_year).astype(int)
             ssp_yrend = (np.max(ssp_time / 365.0 + ref_year) - 1).astype(int)
             ssp_nyrs = ssp_yrend - ssp_yrstart + 1
+
+            if args.hist_or_ssp == "hist":
+                thisperiod_yrstart = hist_yrstart
+                thisperiod_yrend = hist_yrend
+            elif args.hist_or_ssp == "ssp":
+                thisperiod_yrstart = ssp_yrstart
+                thisperiod_yrend = ssp_yrend
+            thisperiod_nyrs = thisperiod_yrend - thisperiod_yrstart + 1
+
             if f == 0:
-                print("SSP years: ", ssp_yrstart, ssp_yrend, ssp_nyrs)
+                print(f"{args.hist_or_ssp.upper()} years: ", thisperiod_yrstart, thisperiod_yrend, thisperiod_nyrs)
             tot_nyrs = hist_nyrs + ssp_nyrs
             outfile_suffix = (
                 ".CESM."
                 + ssptag
                 + "."
-                + str(ssp_yrstart)
+                + str(thisperiod_yrstart)
                 + "-"
-                + str(ssp_yrend)
+                + str(thisperiod_yrend)
                 + creationdate
                 + ".nc"
             )
@@ -448,21 +466,43 @@ for f in range(nfields):
     if f == 0:
         print("climo calculated")
 
-    # extract smoothed SSP data
+    # extract smoothed data for period of interest
+    def get_year_from_time(time, t, ref_year):
+        return time[t] / 365.0 + ref_year
     t_ssp_start = (ssp_yrstart - hist_yrstart) * nmo
-    if f == 0:
-        print((time[t_ssp_start] / 365.0 + ref_year))
-    ssp_fld_smoothed = stemp_fld[t_ssp_start:, :, :]
+    if args.hist_or_ssp == "hist":
+        t_hist_end = t_ssp_start - 1
+        if f == 0:
+            print(f"{get_year_from_time(time, 0, ref_year)}-{get_year_from_time(time, t_hist_end, ref_year)}")
+        fld_smoothed = stemp_fld[:t_ssp_start, :, :]
+        nyrs = hist_nyrs
+        thisperiod_time = hist_time
+        thisperiod_time_units = time_units
+        thisperiod_time_longname = hist_time_longname
+        thisperiod_yrstart = hist_yrstart
+        thisperiod_yrend = hist_yrend
+    elif args.hist_or_ssp == "ssp":
+        if f == 0:
+            print(f"{get_year_from_time(time, t_ssp_start, ref_year)}-{get_year_from_time(time, len(time)-1, ref_year)}")
+        fld_smoothed = stemp_fld[t_ssp_start:, :, :]
+        nyrs = ssp_nyrs
+        thisperiod_time = ssp_time
+        thisperiod_time_units = ssp_time_units
+        thisperiod_time_longname = ssp_time_longname
+        thisperiod_yrstart = ssp_yrstart
+        thisperiod_yrend = ssp_yrend
+    else:
+        raise RuntimeError(f"Handle --hist-or-ssp {args.hist_or_ssp}")
 
     # calculate anomaly relative to climatology
-    anom_fld = np.zeros((ssp_fld_smoothed.shape))
-    for y in range(ssp_nyrs):
+    anom_fld = np.zeros((fld_smoothed.shape))
+    for y in range(nyrs):
         ind = (np.arange(nmo) + y * nmo).astype(int)
         if anomsf[f] == "anomaly":
-            anom_fld[ind, :, :] = ssp_fld_smoothed[ind, :, :] - climo
+            anom_fld[ind, :, :] = fld_smoothed[ind, :, :] - climo
 
         if anomsf[f] == "scale factor":
-            tmp = ssp_fld_smoothed[ind, :, :]
+            tmp = fld_smoothed[ind, :, :]
             ind2 = np.where(climo != 0.0)
             # initialize scalar anomaly to 1
             tmp2 = np.ones(tmp.shape)
@@ -613,7 +653,7 @@ for f in range(nfields):
         wmask = outfile.createVariable("landmask", np.int32, ("lat", "lon"))
         warea = outfile.createVariable("area", np.float64, ("lat", "lon"))
         wfrac = outfile.createVariable("landfrac", np.float64, ("lat", "lon"))
-        wtime.units = ssp_time_units
+        wtime.units = thisperiod_time_units
         wlon.units = "degrees_east"
         wlat.units = "degrees_north"
         warea.units = "km2"
@@ -621,7 +661,7 @@ for f in range(nfields):
         wmask.units = "unitless"
 
         # wtime.long_name = 'Months since January '+str(fut_yrstart)
-        wtime.long_name = ssp_time_longname
+        wtime.long_name = thisperiod_time_longname
         wlon.long_name = "Longitude"
         wlat.long_name = "Latitude"
         warea.long_name = "Grid cell area"
@@ -639,8 +679,8 @@ for f in range(nfields):
         # wtime_offset = 0
         # adjust time to middle of month
         # wtime_offset = -15
-        wtime_offset = 15 - ssp_time[0]
-        wtime[:] = ssp_time + wtime_offset
+        wtime_offset = 15 - thisperiod_time[0]
+        wtime[:] = thisperiod_time + wtime_offset
         wtime.calendar = "noleap"
         wlon[:] = lon
         wlat[:] = lat
