@@ -1,1 +1,2 @@
-use_fates_seeddisp = .true.
+fates_paramfile = '/glade/p/cesm/cseg/inputdata/lnd/clm2/paramdata/fates_params_api.25.5.0_12pft_5x5_amazon_seeddispersal_c230925.nc'
+fates_seeddisp_cadence = 1

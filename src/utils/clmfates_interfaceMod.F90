@@ -61,7 +61,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : use_fates_nocomp
    use clm_varctl        , only : use_fates_sp
-   use clm_varctl        , only : use_fates_seeddisp
+   use clm_varctl        , only : fates_seeddisp_cadence
    use clm_varctl        , only : fates_inventory_ctrl_filename
    use clm_varctl        , only : use_nitrif_denitrif
    use clm_varctl        , only : use_lch4
@@ -136,8 +136,7 @@ module CLMFatesInterfaceMod
    use PRTGenericMod         , only : num_elements
    use FatesInterfaceTypesMod, only : hlm_stepsize
    use FatesInterfaceTypesMod, only : fates_maxPatchesPerSite
-   use FatesInterfaceTypesMod, only : fates_dispersal_kernel_mode
-   use FatesInterfaceTypesMod, only : fates_dispersal_kernel_none
+   use FatesInterfaceTypesMod, only : fates_dispersal_cadence_none
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
    use EDInitMod             , only : zero_site
@@ -389,6 +388,7 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('soilwater_ipedof',ival=get_ipedof(0))
         
         call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
+        call set_fates_ctrlparms('seeddisp_cadence',ival=fates_seeddisp_cadence)
 
         ! CTSM-FATES is not fully coupled (yet)
         ! So lets tell fates to use the RD competition mechanism
@@ -615,7 +615,7 @@ module CLMFatesInterfaceMod
 
 
       ! Initialize dispersal
-      if (fates_dispersal_kernel_mode .ne. fates_dispersal_kernel_none) then
+      if (fates_seeddisp_cadence .eq. fates_dispersal_cadence_none) then
 
          ! Initialize fates global seed dispersal array for all nodes
          call get_proc_global(ng=numg)
@@ -1397,8 +1397,8 @@ module CLMFatesInterfaceMod
        patch%is_bareground(bounds_clump%begp:bounds_clump%endp) = .false.
        patch%wt_ed(bounds_clump%begp:bounds_clump%endp)         = 0.0_r8
 
-       ! Check if seed dispersal mode is 'turned on', if not return to calling procedure
-       if (fates_dispersal_kernel_mode .ne. fates_dispersal_kernel_none) then
+       ! Zero the outgoing_local values prior to populating with the most recent seed update
+       if (fates_seeddisp_cadence .eq. fates_dispersal_cadence_none) then
           ! zero the outgoing seed array
           !this%fates_seed%outgoing_local(:,:) = 0._r8
        end if
@@ -1410,7 +1410,7 @@ module CLMFatesInterfaceMod
 
           write(iulog,*) 'WUHD pre: g, seed_out, outgoing: ', g, sum(this%fates(nc)%sites(s)%seed_out(:)), sum(this%fates_seed%outgoing_local(:,g))
           ! Accumulate seeds from sites to the gridcell local outgoing buffer
-          if ((fates_dispersal_kernel_mode .ne. fates_dispersal_kernel_none) .and. IsItDispersalTime()) then
+          if (fates_seeddisp_cadence .ne. fates_dispersal_cadence_none .and. IsItDispersalTime()) then
              this%fates_seed%outgoing_local(:,g) = this%fates(nc)%sites(s)%seed_out(:)
           end if
           write(iulog,*) 'WUHD pst: g, seed_out, outgoing: ', g, sum(this%fates(nc)%sites(s)%seed_out(:)), sum(this%fates_seed%outgoing_local(:,g))
@@ -2673,7 +2673,7 @@ module CLMFatesInterfaceMod
    end if
 
    ! Check if seed dispersal mode is 'turned on', if not return to calling procedure
-   if (fates_dispersal_kernel_mode .eq. fates_dispersal_kernel_none) return
+   if (fates_seeddisp_cadence .eq. fates_dispersal_cadence_none) return
 
    call t_startf('fates-seed-mpi_reduce')
 
@@ -2743,7 +2743,7 @@ module CLMFatesInterfaceMod
     integer  :: nc                          ! clump index
 
     ! Check if seed dispersal mode is 'turned on', if not return to calling procedure
-    if (fates_dispersal_kernel_mode .eq. fates_dispersal_kernel_none) return
+    if (fates_seeddisp_cadence .eq. fates_dispersal_cadence_none) return
 
     call t_startf('fates-seed-disperse')
 
@@ -2775,34 +2775,6 @@ module CLMFatesInterfaceMod
     call t_stopf('fates-seed-disperse')
 
  end subroutine wrap_seed_dispersal
-
- ! ======================================================================================
-
- subroutine wrap_seed_dispersal_reset(this,bounds_clump)
-
-    ! This subroutine reset seed_in
-
-    ! Arguments
-    class(hlm_fates_interface_type), intent(inout) :: this
-    type(bounds_type),  intent(in)                 :: bounds_clump
-    ! Local Variables
-    integer  :: g                           ! global index of the host gridcell
-    integer  :: c                           ! global index of the host column
-    integer  :: s                           ! FATES site index
-    integer  :: nc                          ! clump index
-
-    ! Check if seed dispersal mode is 'turned on', if not return to calling procedure
-    if (fates_dispersal_kernel_mode .eq. fates_dispersal_kernel_none) return
-
-    nc = bounds_clump%clump_index
-
-    do s = 1, this%fates(nc)%nsites
-       c = this%f2hmap(nc)%fcolumn(s)
-       g = col%gridcell(c)
-       this%fates(nc)%sites(s)%seed_in(:) = 0 ! reset
-    end do
-
- end subroutine wrap_seed_dispersal_reset
 
  ! ======================================================================================
 
