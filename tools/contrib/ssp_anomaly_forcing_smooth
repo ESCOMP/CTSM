@@ -31,10 +31,10 @@ parser.add_argument(
 )
 parser.add_argument(
     "--hist-or-ssp",
-    help="save historical period (hist) or ssp period (ssp; default)?",
+    help="save historical period (hist), ssp period (ssp; default), or both?",
     type=str,
     default="ssp",
-    choices=["hist", "ssp"],
+    choices=["hist", "ssp", "both"],
 )
 parser.add_argument(
     "--output-dir",
@@ -308,7 +308,7 @@ for f in range(nfields):
             lon = np.asfarray(f1.variables["lon"][:], np.float64)
             lat = np.asfarray(f1.variables["lat"][:], np.float64)
             hist_time = np.asfarray(f1.variables["time"][:], np.float64)
-            time_units = f1.variables["time"].units
+            hist_time_units = f1.variables["time"].units
             hist_time_longname = f1.variables["time"].long_name
 
             # read landfrac, landmask, and area
@@ -318,7 +318,7 @@ for f in range(nfields):
             ind = np.where(landfrac > 1.0e10)
             landfrac[ind] = 0
 
-            x = time_units.split()[2]
+            x = hist_time_units.split()[2]
             ref_year = float(x.split("-")[0])
             hist_yrstart = np.min(hist_time / 365.0 + ref_year).astype(int)
             if args.hist_or_ssp == "ssp":
@@ -394,6 +394,11 @@ for f in range(nfields):
             elif args.hist_or_ssp == "ssp":
                 thisperiod_yrstart = ssp_yrstart
                 thisperiod_yrend = ssp_yrend
+            elif args.hist_or_ssp == "both":
+                thisperiod_yrstart = hist_yrstart
+                thisperiod_yrend = ssp_yrend
+            else:
+                raise RuntimeError(f"Handle --hist-or-ssp {args.hist_or_ssp}")
             thisperiod_nyrs = thisperiod_yrend - thisperiod_yrstart + 1
 
             if f == 0:
@@ -434,8 +439,8 @@ for f in range(nfields):
     ssp_fld = ssp_fld / float(num_ens)
     # concatenate arrays to form contiguous time series
     temp_fld = np.concatenate((hist_fld, ssp_fld), axis=0)
-    time = np.concatenate((hist_time, ssp_time), axis=0)
-    tm = time.size
+    full_time = np.concatenate((hist_time, ssp_time), axis=0)
+    tm = full_time.size
 
     # smooth data by applying boxcar averaging to sequence of months
     stemp_fld = np.copy(temp_fld)
@@ -451,18 +456,18 @@ for f in range(nfields):
     if f == 0:
         print(
             "full time: ",
-            time[0] / 365.0 + ref_year,
-            time[-1] / 365.0 + ref_year,
-            time.size,
+            full_time[0] / 365.0 + ref_year,
+            full_time[-1] / 365.0 + ref_year,
+            full_time.size,
         )
 
     # create climatology of smoothed data
     climo = np.zeros((nmo, nlat, nlon))
-    t_climo_year = np.argmin(np.abs((time / 365.0 + ref_year) - climo_year))
+    t_climo_year = np.argmin(np.abs((full_time / 365.0 + ref_year) - climo_year))
     # shift to january of climo_year
     t_climo_year += 1
     if f == 0:
-        print((time[t_climo_year] / 365.0 + ref_year))
+        print((full_time[t_climo_year] / 365.0 + ref_year))
     for n in range(nmo):
         ind = (
             nmo * (np.arange(climo_base_nyrs) - (climo_base_nyrs - 1) / 2)
@@ -481,23 +486,33 @@ for f in range(nfields):
     if args.hist_or_ssp == "hist":
         t_hist_end = t_ssp_start - 1
         if f == 0:
-            print(f"{get_year_from_time(time, 0, ref_year)}-{get_year_from_time(time, t_hist_end, ref_year)}")
+            print(f"{get_year_from_time(full_time, 0, ref_year)}-{get_year_from_time(full_time, t_hist_end, ref_year)}")
         fld_smoothed = stemp_fld[:t_ssp_start, :, :]
         nyrs = hist_nyrs
         thisperiod_time = hist_time
-        thisperiod_time_units = time_units
+        thisperiod_time_units = hist_time_units
         thisperiod_time_longname = hist_time_longname
         thisperiod_yrstart = hist_yrstart
         thisperiod_yrend = hist_yrend
     elif args.hist_or_ssp == "ssp":
         if f == 0:
-            print(f"{get_year_from_time(time, t_ssp_start, ref_year)}-{get_year_from_time(time, len(time)-1, ref_year)}")
+            print(f"{get_year_from_time(full_time, t_ssp_start, ref_year)}-{get_year_from_time(full_time, len(full_time)-1, ref_year)}")
         fld_smoothed = stemp_fld[t_ssp_start:, :, :]
         nyrs = ssp_nyrs
         thisperiod_time = ssp_time
         thisperiod_time_units = ssp_time_units
         thisperiod_time_longname = ssp_time_longname
         thisperiod_yrstart = ssp_yrstart
+        thisperiod_yrend = ssp_yrend
+    elif args.hist_or_ssp == "both":
+        if f == 0:
+            print(f"{get_year_from_time(full_time, 0, ref_year)}-{get_year_from_time(full_time, len(full_time)-1, ref_year)}")
+        fld_smoothed = stemp_fld
+        nyrs = hist_nyrs + ssp_nyrs
+        thisperiod_time = full_time
+        thisperiod_time_units = hist_time_units
+        thisperiod_time_longname = hist_time_longname
+        thisperiod_yrstart = hist_yrstart
         thisperiod_yrend = ssp_yrend
     else:
         raise RuntimeError(f"Handle --hist-or-ssp {args.hist_or_ssp}")
@@ -549,7 +564,7 @@ for f in range(nfields):
         )
         wtime[
             :,
-        ] = time[0:12]
+        ] = full_time[0:12]
         wlon[
             :,
         ] = lon
@@ -586,7 +601,7 @@ for f in range(nfields):
             fill_value=np.float64(1.0e36),
         )
 
-        wtime[:] = time
+        wtime[:] = full_time
         wlon[
             :,
         ] = lon
