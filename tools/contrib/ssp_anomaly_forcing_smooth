@@ -37,6 +37,12 @@ parser.add_argument(
     choices=["hist", "ssp"],
 )
 parser.add_argument(
+    "--output-dir",
+    help="Top-level output directory (default: ./anomaly_forcing/). Sub-directory will be created for the selected scenario.",
+    type=str,
+    default=os.path.join(".", "anomaly_forcing"),
+)
+parser.add_argument(
     "--write_climo",
     help="write out climatology files and exit",
     action="store_true",
@@ -119,7 +125,7 @@ _v2 is just used for restart files that have been spatially interpolated
 
 """
 
-spath = "./"
+spath = args.output_dir
 if os.path.exists(datapath):
     print("Input data directory:" + datapath)
 else:
@@ -210,9 +216,8 @@ if num_ens != len(histdir):
 num_ens = 3
 
 # Setup output directory
-sspoutdir = "anomaly_forcing/CMIP6-" + ssptag
-
-outdir = "/glade/scratch/samrabin/anomaly_forcing/CMIP6-" + ssptag
+sspoutdir = "CMIP6-" + ssptag
+outdir = os.path.join(spath, sspoutdir)
 if not os.path.exists(outdir):
     os.makedirs(outdir)
 
