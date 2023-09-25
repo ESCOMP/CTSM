@@ -55,6 +55,9 @@ if args.sspnum == 0:
 
 # -------------------------------------------------------
 
+# Output file format
+format = "NETCDF3_64BIT_DATA"
+
 print("Create anomaly forcing data that can be used by CTSM in CESM")
 # Input and output directories make sure they exist
 datapath = "/glade/campaign/collections/cmip/CMIP6/timeseries-cmip6/"  # Path on casper
@@ -524,7 +527,7 @@ for f in range(nfields):
         w = netcdf4.Dataset(
             outdir + field_out[f] + "_climo" + creationdate + ".nc",
             "w",
-            format="NETCDF3_64BIT_DATA"
+            format=format
         )
         w.createDimension("lat", int(nlat))
         w.createDimension("lon", int(nlon))
@@ -555,7 +558,7 @@ for f in range(nfields):
         w = netcdf4.Dataset(
             outdir + field_out[f] + "_smooth" + creationdate + ".nc",
             "w",
-            format="NETCDF3_64BIT_DATA"
+            format=format
         )
         w.createDimension("lat", int(nlat))
         w.createDimension("lon", int(nlon))
@@ -598,7 +601,7 @@ for f in range(nfields):
         # output in CDF5 format using netCDF4 python interfaces
         outfilename = outdir + "/" + "af.allvars" + outfile_suffix
         print("Creating: " + outfilename)
-        outfile = netcdf4.Dataset(outfilename, "w", format="NETCDF3_64BIT_DATA")
+        outfile = netcdf4.Dataset(outfilename, "w", format=format)
 
         # creation date on the file
         command = 'date "+%Y/%m/%d"'
