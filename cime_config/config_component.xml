@@ -82,7 +82,7 @@
       <value compset="DATM%CRUv7_CLM45"  >clm4_5_CRUv7</value>
       <value compset="DATM%CRU_CLM45"    >clm4_5_CRUv7</value>
       <value compset="DATM%GSWP3_CLM45"  >clm4_5_GSWP3v1</value>
-      <value compset="CAM.*_CLM45"         >clm4_5_cam6.0</value>
+      <value compset="CAM[^_]+_CLM45"    >clm4_5_cam6.0</value>
       <value compset="DATM%CPLHIST_CLM45">clm4_5_cam6.0</value>
       <value compset="DATM%QIA_CLM45"    >clm4_5_QIAN</value>
       <value compset="DATM%WISOQIA_CLM45">clm4_5_QIAN</value>
@@ -93,7 +93,7 @@
       <value compset="DATM%CRUv7_CLM50"  >clm5_0_CRUv7</value>
       <value compset="DATM%CRU_CLM50"    >clm5_0_CRUv7</value>
       <value compset="DATM%GSWP3_CLM50"  >clm5_0_GSWP3v1</value>
-      <value compset="CAM.+_CLM50"         >clm5_0_cam6.0</value>
+      <value compset="CAM[^_]+_CLM50"    >clm5_0_cam6.0</value>
       <value compset="DATM%CPLHIST_CLM50">clm5_0_cam6.0</value>
       <value compset="DATM%QIA_CLM50"    >clm5_0_QIAN</value>
       <value compset="DATM%WISOQIA_CLM50">clm5_0_QIAN</value>
@@ -104,13 +104,18 @@
       <value compset="DATM%CRUv7_CLM51"  >clm5_1_CRUv7</value>
       <value compset="DATM%CRU_CLM51"    >clm5_1_CRUv7</value>
       <value compset="DATM%GSWP3_CLM51"  >clm5_1_GSWP3v1</value>
-      <value compset="CAM.*_CLM51"         >clm5_1_cam6.0</value>
+      <value compset="CAM[^_]+_CLM51"    >clm5_1_cam6.0</value>
       <value compset="DATM%CPLHIST_CLM51">clm5_1_cam6.0</value>
       <value compset="DATM%QIA_CLM51"    >clm5_1_QIAN</value>
       <value compset="DATM%WISOQIA_CLM51">clm5_1_QIAN</value>
       <value compset="DATM%1PT_CLM51"    >clm5_1_1PT</value>
       <value compset="DATM%NLDAS2_CLM51" >clm5_1_NLDAS2</value>
       <value compset="DATM%ERA5_CLM51"   >clm5_1_ERA5</value>
+      <!-- Invalid ocean DATM forcing options -->
+      <value compset="DATM%NYF"          >INVALID_DATM_FORCING_FOR_RUNNING_CTSM</value>
+      <value compset="DATM%MOSARTTEST"   >INVALID_DATM_FORCING_FOR_RUNNING_CTSM</value>
+      <value compset="DATM%IAF"          >INVALID_DATM_FORCING_FOR_RUNNING_CTSM</value>
+      <value compset="DATM%JRA"          >INVALID_DATM_FORCING_FOR_RUNNING_CTSM</value>
     </values>
   </entry>
 
