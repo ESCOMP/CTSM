@@ -56,7 +56,7 @@ if args.sspnum == 0:
 # -------------------------------------------------------
 
 # Output file format
-format = "NETCDF3_64BIT_DATA"
+format = "NETCDF4_CLASSIC"
 
 print("Create anomaly forcing data that can be used by CTSM in CESM")
 # Input and output directories make sure they exist
@@ -402,7 +402,7 @@ for f in range(nfields):
                 + "-"
                 + str(thisperiod_yrend)
                 + creationdate
-                + ".nc"
+                + ".nc4"
             )
 
         ssp_fld += np.asfarray(f1.variables[field_in[f]][ssp_ind, :, :], np.float64)
@@ -555,8 +555,9 @@ for f in range(nfields):
         w.close()
 
         # Use NetCDF4 format, because using older NetCDF formats are too slow
+        w_filename = outdir + field_out[f] + "_smooth" + creationdate + ".nc4"
         w = netcdf4.Dataset(
-            outdir + field_out[f] + "_smooth" + creationdate + ".nc",
+            w_filename,
             "w",
             format=format
         )
@@ -590,6 +591,8 @@ for f in range(nfields):
         wvar[:, :, :] = temp_fld
         wvar2[:, :, :] = stemp_fld
         w.close()
+        w_filename_cdf5 = w_filename.replace(".nc4", ".nc")
+        subprocess.Popen(f"nccopy -k 'cdf5' {w_filename} {w_filename_cdf5} && rm {w_filename}", stdout=subprocess.PIPE, shell="True")
         print("Exit early after writing out climatology\n\n")
         sys.exit()
 
@@ -752,5 +755,9 @@ for f in range(nfields):
 
 # --  End Loop over forcing fields  ------------------------------------
 outfile.close()
+
+# Convert to CDF5
+outfilename_cdf5 = outfilename.replace(".nc4", ".nc")
+subprocess.Popen(f"nccopy -k 'cdf5' {outfilename} {outfilename_cdf5} && rm {outfilename}", stdout=subprocess.PIPE, shell="True")
 
 print("\n\nSuccessfully made anomaly forcing datasets\n")
