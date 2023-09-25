@@ -3,7 +3,7 @@
 
 ssp_anomaly_forcing_smooth
 
-Create anomoly forcing datasets for SSP scenarios that can be used by CESM datm model
+Create anomaly forcing datasets for SSP scenarios that can be used by CESM datm model
 
 load proper modules first, i.e.
 
@@ -55,7 +55,7 @@ if args.sspnum == 0:
 
 # -------------------------------------------------------
 
-print("Create anomoly forcing data that can be used by CTSM in CESM")
+print("Create anomaly forcing data that can be used by CTSM in CESM")
 # Input and output directories make sure they exist
 datapath = "/glade/campaign/collections/cmip/CMIP6/timeseries-cmip6/"  # Path on casper
 
@@ -750,4 +750,4 @@ for f in range(nfields):
 # --  End Loop over forcing fields  ------------------------------------
 outfile.close()
 
-print("\n\nSuccessfully made anomoly forcing datasets\n")
+print("\n\nSuccessfully made anomaly forcing datasets\n")
