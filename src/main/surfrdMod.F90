@@ -271,8 +271,10 @@ contains
     type(file_desc_t) :: ncid                 ! netcdf file id
     integer :: dimid                          ! netCDF dimension id
     logical :: cft_dim_exists                 ! dimension exists on dataset
+    logical :: natpft_dim_exists              ! dimension exists on dataset
     integer :: check_numpft                   ! Surface dataset count of numpft, should
                                               ! match maxsoil_patches - actual_numcft
+    integer :: actual_numnatpft               ! natpft value from sfc dataset
     character(len=32) :: subname = 'surfrd_get_num_patches'  ! subroutine name
     !-----------------------------------------------------------------------
 
@@ -304,9 +306,17 @@ contains
     call ncd_inqdlen(ncid, dimid, actual_maxsoil_patches, 'lsmpft')
     actual_numpft = actual_maxsoil_patches - actual_numcft
 
-    call ncd_inqdlen(ncid, dimid, check_numpft, 'natpft')
+    ! Read numpft
+    call ncd_inqdid(ncid, 'natpft', dimid, natpft_dim_exists)
+    if ( natpft_dim_exists ) then
+       call ncd_inqdlen(ncid, dimid, actual_numnatpft, 'natpft')
+       call ncd_inqdlen(ncid, dimid, check_numpft, 'natpft')
+    else
+       actual_numnatpft = 0
+    end if
 
-    if(check_numpft.ne.actual_numpft)then
+!jt    if(check_numpft.ne.actual_numpft)then
+    if(actual_numcft+actual_numnatpft.ne.actual_maxsoil_patches)then
        write(iulog,*)'the sum of the cftdim and the natpft dim should match the lsmpft dim in the surface file'
        write(iulog,*)'natpft: ',check_numpft
        write(iulog,*)'lsmpft: ',actual_maxsoil_patches

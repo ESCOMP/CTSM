@@ -4943,9 +4943,9 @@ contains
                    end if
 
                    call ncd_io(ncid=ncid_hist(t), flag='read', varname=trim(name), &
-                        dim1name=type1d_out, data=hbuf1d)
+                        dim1name=type1d_out, data=hbuf1d, posNOTonfile=.true.)
                    call ncd_io(ncid=ncid_hist(t), flag='read', varname=trim(name_acc), &
-                        dim1name=type1d_out, data=nacs1d)
+                        dim1name=type1d_out, data=nacs1d, posNOTonfile=.true.)
 
                    hbuf(beg1d_out:end1d_out,1) = hbuf1d(beg1d_out:end1d_out)
                    nacs(beg1d_out:end1d_out,1) = nacs1d(beg1d_out:end1d_out)
@@ -4954,9 +4954,9 @@ contains
                    deallocate(nacs1d)
                 else
                    call ncd_io(ncid=ncid_hist(t), flag='read', varname=trim(name), &
-                        dim1name=type1d_out, data=hbuf)
+                        dim1name=type1d_out, data=hbuf, posNOTonfile=.true.)
                    call ncd_io(ncid=ncid_hist(t), flag='read', varname=trim(name_acc), &
-                        dim1name=type1d_out, data=nacs)
+                        dim1name=type1d_out, data=nacs, posNOTonfile=.true.)
                 end if
              end do
 
