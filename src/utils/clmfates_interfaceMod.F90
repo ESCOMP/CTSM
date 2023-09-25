@@ -61,6 +61,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : use_fates_nocomp
    use clm_varctl        , only : use_fates_sp
+   use clm_varctl        , only : use_fates_seeddisp
    use clm_varctl        , only : fates_inventory_ctrl_filename
    use clm_varctl        , only : use_nitrif_denitrif
    use clm_varctl        , only : use_lch4

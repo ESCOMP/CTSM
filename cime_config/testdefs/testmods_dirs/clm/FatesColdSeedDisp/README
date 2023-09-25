@@ -1,0 +1,15 @@
+Testing FATES cross grid seed dispersal is activated by enabling the 
+namelist switch option use_fates_seeddisp as well as providing reasonable
+values to the fates parameter file for the following variables:
+
+fates_seed_dispersal_fraction
+fates_seed_dispersal_max_dist
+fates_seed_dispersal_pdf_scale
+fates_seed_dispersal_pdf_shape
+
+Given that the default fates parameter file has the above variables as unset,
+a custom fates parameter file must be supplied to appropriately test this mode.
+
+Addressing CTSM issue #2126 will provide the capability to build the fates parameter
+file on the fly with the appropriate values for this test.  This testmod itself
+addresses CTSM issue #2151.

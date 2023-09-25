@@ -1795,6 +1795,14 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="ERP_D_Ld30" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+    </options>
+  </test>
   <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTreeDamage">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
