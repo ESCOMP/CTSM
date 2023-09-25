@@ -2549,6 +2549,8 @@ contains
 
      ! piecewise linear interpolation method for 1-dimensional data
      ! original author: John Burkardt, Florida State University, 09/22/2012
+     ! Licencing: Original code distributed under the GNU LGPL license
+     ! Original code: https://people.sc.fsu.edu/~jburkardt/f77_src/pwl_interp_1d/pwl_interp_1d.f
      ! Added and modified by Cenlin He (NCAR), 01/27/2022
 
      implicit none
