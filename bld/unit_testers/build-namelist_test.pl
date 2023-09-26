@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1958;
+my $ntests = 2462;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1335;
 }
@@ -1265,12 +1265,8 @@ foreach my $res ( @resolutions ) {
    print "=== Test $res === \n";
    my $options  = "-res $res -bgc sp -envxml_dir .";
 
-   # Regional single point resolutions
-   if ( $res =~ /^([0-9]+x[0-9]+_[a-zA-Z]+)$/ ) {
-      push( @regional, $res );
-      next;
    # Resolutions for mksurfdata mapping
-   } elsif ( $res eq "0.5x0.5"     ||
+   if ( $res eq "0.5x0.5"     ||
              $res eq "0.25x0.25"   ||
              $res eq "3x3min"      ||
              $res eq "5x5min"      ||
@@ -1279,23 +1275,62 @@ foreach my $res ( @resolutions ) {
              $res eq "0.33x0.33"   ||
              $res eq "1km-merge-10min" ) {
       next;
-   # Resolutions that were supported in clm40 but NOT clm45/clm50
-   } elsif ( $res eq "ne240np4"    ||
+   # Resolutions that don't have surface datasets created for them
+   # SE grids:
+   } elsif ( 
+             $res eq "ne240np4"    ||
+             $res eq "ne240np4.pg2"||
+             $res eq "ne240np4.pg3"||
+             $res eq "ne120np4"    ||
+             $res eq "ne120np4.pg2"||
+             $res eq "ne120np4.pg4"||
              $res eq "ne60np4"     ||
-             $res eq "ne4np4"      ||
+             $res eq "ne60np4.pg2" ||
+             $res eq "ne60np4.pg3" ||
+             $res eq "ne60np4.pg4" ||
+             $res eq "ne30np4.pg2" ||
+             $res eq "ne30np4.pg4" ||
+             $res eq "ne16np4.pg3" ||
+             $res eq "ne5np4"      ||
+             $res eq "ne5np4.pg2"  ||
+             $res eq "ne5np4.pg4"  ||
+             $res eq "ne3np4"
+           ) {
+      next;
+   # FV grids:
+   } elsif ( 
              $res eq "2.5x3.33"    ||
              $res eq "0.23x0.31"   ||
-             $res eq "0.47x0.63"   ||
-             $res eq "94x192"      ||
+             $res eq "0.47x0.63"
+           ) {
+      next;
+   # FV^3 grids:
+   } elsif ( 
+             $res eq "C192"        ||
+             $res eq "C384"
+           ) {
+      next;
+   # mpasa grids:
+   } elsif ( 
+             $res eq "mpasa240"       ||
+             $res eq "mpasa240"       ||
+             $res eq "mpasa60"        ||
+             $res eq "mpasa30"        ||
+             $res eq "mpasa15"        ||
+             $res eq "mpasa15-3conus" ||
+             $res eq "mpasa12"        ||
+             $res eq "mpasa7p5"       ||
+             $res eq "mpasa3p75"
+           ) {
+      next;
+   # EUL grids:
+   } elsif ( 
              $res eq "8x16"        ||
              $res eq "32x64"       ||
+             $res eq "64x128"      ||
              $res eq "128x256"     ||
-             $res eq "360x720cru"  ||
-             $res eq "512x1024" ) {
-      next;
-   # Resolutions not supported on release branch
-   } elsif ( $res eq "ne120np4"    ||
-             $res eq "conus_30_x8" ) {
+             $res eq "512x1024" 
+           ) {
       next;
    }
 
@@ -1322,7 +1357,7 @@ print "\n==================================================\n";
 print " Test important resolutions for BGC\n";
 print "==================================================\n";
 
-my @resolutions = ( "4x5", "10x15", "ne30np4", "ne16np4", "1.9x2.5", "0.9x1.25" );
+my @resolutions = ( "4x5", "10x15", "ne120np4.pg3", "ne30np4", "ne30np4.pg3", "ne16np4", "ne3np4.pg3", "1.9x2.5", "0.9x1.25", "C96", "mpasa120", "mpasa480" );
 my @regional;
 my $nlbgcmode = "bgc";
 my $mode = "$phys-$nlbgcmode";
@@ -1383,7 +1418,7 @@ print "Test crop resolutions \n";
 print "==================================================\n";
 
 # Check for crop resolutions
-my @crop_res = ( "1x1_numaIA", "1x1_smallvilleIA", "4x5", "10x15", "0.9x1.25", "1.9x2.5", "ne30np4" );
+my @crop_res = ( "1x1_numaIA", "1x1_smallvilleIA", "4x5", "10x15", "0.9x1.25", "1.9x2.5", "ne3np4.pg3", "ne30np4", "ne30np4.pg3", "C96", "mpasa120" );
 foreach my $res ( @crop_res ) {
    $options = "-bgc bgc -crop -res $res -envxml_dir .";
    &make_env_run();
@@ -1534,7 +1569,7 @@ foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
                      "-bgc bgc -clm_demand flanduse_timeseries -sim_year 1850-2000 -namelist '&a start_ymd=18500101/'",
                      "-bgc bgc -envxml_dir . -namelist '&a use_c13=.true.,use_c14=.true.,use_c14_bombspike=.true./'" );
   foreach my $clmopts ( @clmoptions ) {
-     my @clmres = ( "10x15", "0.9x1.25", "1.9x2.5" );
+     my @clmres = ( "10x15", "0.9x1.25", "1.9x2.5", "ne3np4.pg3", "ne30np4", "C96", "mpasa120" );
      foreach my $res ( @clmres ) {
         $options = "-res $res -envxml_dir . ";
         &make_env_run( );
@@ -1621,20 +1656,16 @@ foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
   }
 }
 #
-# Run over the differen lnd_tuning modes
+# Run over the different lnd_tuning modes
 #
 my $res = "0.9x1.25";
-my $mask = "gx1v6";
+my $mask = "gx1v7";
 my $simyr = "1850";
 foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
   my @forclist = ();
-  if ( $phys == "clm5_1" ) {
-    @forclist = ( "GSWP3v1" );
-  } else {
-    @forclist = ( "CRUv7", "GSWP3v1", "cam6.0" );
-  }
+  @forclist = ( "CRUv7", "GSWP3v1", "cam6.0" );
   foreach my $forc ( @forclist ) {
      foreach my $bgc ( "sp", "bgc" ) {
         my $lndtuningmode = "${phys}_${forc}";
