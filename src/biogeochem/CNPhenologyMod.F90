@@ -1959,7 +1959,10 @@ contains
                  sowing_window_startdate = 999
                  sowing_window_enddate   = 999
              end if
-         else
+         end if
+         ! Fall back on parameter file in case either prescribed sowing window value is missing, or if not using prescribed sowing windows at all.
+         ! TODO: Test whether ".or. .not. use_cropcal_rx_swindows" is necessary. I think not: in that case, rx_swindow_starts_thisyr_patch and rx_swindow_ends_thisyr_patch are initialized to and stay -1.
+         if (min(sowing_window_startdate, sowing_window_enddate) <= 0 .or. .not. use_cropcal_rx_swindows) then
              sowing_window_startdate = minplantjday(ivt(p),h)
              sowing_window_enddate   = maxplantjday(ivt(p),h)
          end if
