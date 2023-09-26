@@ -109,8 +109,8 @@
     </phase>
   </test>
 
-  <test name="ERP_D_Ld30.5x5_amazon.I2000Clm50FatesCruRs.cheyenne_gnu.clm-FatesColdSeedDisp">
-    <phase name="COMPARE_BASE_REST">
+  <test name="PEM_D_Ld15.5x5_amazon.I2000Clm50FatesCruRs.cheyenne_gnu.clm-FatesColdSeedDisp">
+    <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>FATES#1089</issue>
       <comment>This job will fail restart comparison due to pe layout change (i.e. PEM test would fail).</comment>
