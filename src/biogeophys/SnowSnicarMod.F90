@@ -1796,6 +1796,10 @@ contains
      character(len= 32) :: subname = 'SnowOptics_init' ! subroutine name
      integer            :: ier                         ! error status
      logical :: readv  ! has variable been read in or not
+     character(len=100) :: errCode = '-Error reading fsnowoptics file:'
+     character(len=100) :: tString ! temp. var for reading
+     character(len=3) :: short_case_dust_opt  ! subset of tString
+     character(len=3) :: short_case_solarspec  ! subset of tString
 
      !
      ! Initialize optical variables
@@ -1837,1032 +1841,275 @@ contains
      call ncd_pio_openfile(ncid, locfn, 0)
      if(masterproc) write(iulog,*) subname,trim(fsnowoptics)
 
+     select case (snicar_solarspec)
+     case ('mid_latitude_winter')  ! mid-latitude winter spectrum
+        short_case_solarspec = 'mlw'
+     case ('mid_latitude_summer')  ! mid-latitude summer spectrum
+        short_case_solarspec = 'mls'
+     case ('sub_arctic_winter')  ! sub-Arctic winter spectrum
+        short_case_solarspec = 'saw'
+     case ('sub_arctic_summer')  ! sub-Arctic summer spectrum
+        short_case_solarspec = 'sas'
+     case ('summit_greenland_summer')  ! Summit,Greenland,summer spectrum
+        short_case_solarspec = 'smm'
+     case ('high_mountain_summer')  ! High Mountain summer spectrum
+        short_case_solarspec = 'hmn'
+     end select
+
+     select case (snicar_dust_optics)  ! dust optical properties
+     case ('sahara')  ! Saharan dust (Balkanski et al., 2007, central hematite)
+        short_case_dust_opt = 'sah'
+     case ('san_juan_mtns_colorado')  ! San Juan Mountains, CO (Skiles et al, 2017)
+        short_case_dust_opt = 'col'
+     case ('greenland')  ! Greenland (Polashenski et al., 2015, central absorptivity)
+        short_case_dust_opt = 'gre'
+     end select
+
      !--------------------- for 5-band data
      select case (snicar_numrad_snw)
      case (5)  ! 5-band case
 
-        select case (snicar_solarspec)
-        ! mid-latitude winter spectrum
-        case ('mid_latitude_winter')
-           ! flux weights/spectrum
-           call ncd_io('flx_wgt_dir5_mlw', flx_wgt_dir, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('flx_wgt_dif5_mlw', flx_wgt_dif, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           !
-           ! THIS NOTE APPLIES TO ALL THE call ncd_io LINES BELOW WHERE
-           ! bcphob AND ocphob GET ASSIGNED TO VARIABLES SUFFIXED bc1/oc1:
-           !
-           ! Assumption (1) applies here, in the input section.
-           ! Assumption (2) applies later, in the snicar code.
-           !
-           ! 1) In this section, hydrophillic particles behave like hydrophobic
-           ! particles. We assume bc1/oc1 to have the same optics as bc2/oc2
-           ! because sulfate coating on the bc1/oc1 surface is assumed to be
-           ! dissolved into the hydrometeo (i.e, snow grain here) during the
-           ! deposition process. This is different from the assumption made in
-           ! prior model versions, where bc1/oc1 was coated by undissolved
-           ! sulfate.
-           ! 2) Later, in the snicar code, if the bc-snow internal mixing option
-           ! is on, bc1/oc1 (internally mixed within the snow grain) will be
-           ! treated differently than bc2/oc2 (mixed externally or outside the
-           ! snow grain).
-           !
-           ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
-           call ncd_io('ss_alb_bcphob_dif_mlw', ss_alb_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_bcphob_dif_mlw', asm_prm_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_bcphob_dif_mlw', ext_cff_mss_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! BC species 2 Mie parameters, uncoated BC
-           call ncd_io('ss_alb_bcphob_dif_mlw', ss_alb_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_bcphob_dif_mlw', asm_prm_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_bcphob_dif_mlw', ext_cff_mss_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
-           call ncd_io('ss_alb_ocphob_dif_mlw', ss_alb_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ocphob_dif_mlw', asm_prm_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ocphob_dif_mlw', ext_cff_mss_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! OC species 2 Mie parameters, uncoated OC
-           call ncd_io('ss_alb_ocphob_dif_mlw', ss_alb_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ocphob_dif_mlw', asm_prm_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ocphob_dif_mlw', ext_cff_mss_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! ice refractive index (Picard et al., 2016)
-           call ncd_io('ss_alb_ice_pic16_dir_mlw', ss_alb_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ice_pic16_dir_mlw',asm_prm_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ice_pic16_dir_mlw', ext_cff_mss_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ss_alb_ice_pic16_dif_mlw', ss_alb_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ice_pic16_dif_mlw',asm_prm_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ice_pic16_dif_mlw', ext_cff_mss_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! dust optical properties
-           select case (snicar_dust_optics)
-           case ('sahara')  ! Saharan dust (Balkanski et al., 2007, central hematite)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_sah_dif_mlw', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_sah_dif_mlw', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_sah_dif_mlw', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_sah_dif_mlw', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_sah_dif_mlw', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_sah_dif_mlw', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_sah_dif_mlw', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_sah_dif_mlw', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_sah_dif_mlw', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_sah_dif_mlw', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_sah_dif_mlw', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_sah_dif_mlw', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           case ('san_juan_mtns_colorado')  ! San Juan Mountains, CO (Skiles et al, 2017)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_col_dif_mlw', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_col_dif_mlw', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_col_dif_mlw', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_col_dif_mlw', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_col_dif_mlw', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_col_dif_mlw', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_col_dif_mlw', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_col_dif_mlw', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_col_dif_mlw', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_col_dif_mlw', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_col_dif_mlw', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_col_dif_mlw', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           case ('greenland')  ! Greenland (Polashenski et al., 2015, central absorptivity)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_gre_dif_mlw', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_gre_dif_mlw', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_gre_dif_mlw', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_gre_dif_mlw', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_gre_dif_mlw', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_gre_dif_mlw', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_gre_dif_mlw', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_gre_dif_mlw', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_gre_dif_mlw', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_gre_dif_mlw', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_gre_dif_mlw', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_gre_dif_mlw', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           end select
+        ! flux weights/spectrum
+        tString = 'flx_wgt_dir5_'//short_case_solarspec
+        call ncd_io(trim(tString), flx_wgt_dir, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'flx_wgt_dif5_'//short_case_solarspec
+        call ncd_io(trim(tString), flx_wgt_dif, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        !
+        ! THIS NOTE APPLIES TO ALL THE call ncd_io LINES BELOW WHERE
+        ! bcphob AND ocphob GET ASSIGNED TO VARIABLES SUFFIXED bc1/oc1:
+        !
+        ! Assumption (1) applies here, in the input section.
+        ! Assumption (2) applies later, in the snicar code.
+        !
+        ! 1) In this section, hydrophillic particles behave like hydrophobic
+        ! particles. We assume bc1/oc1 to have the same optics as bc2/oc2
+        ! because sulfate coating on the bc1/oc1 surface is assumed to be
+        ! dissolved into the hydrometeo (i.e, snow grain here) during the
+        ! deposition process. This is different from the assumption made in
+        ! prior model versions, where bc1/oc1 was coated by undissolved
+        ! sulfate.
+        ! 2) Later, in the snicar code, if the bc-snow internal mixing option
+        ! is on, bc1/oc1 (internally mixed within the snow grain) will be
+        ! treated differently than bc2/oc2 (mixed externally or outside the
+        ! snow grain).
+        !
+        ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
+        tString = 'ss_alb_bcphob_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ss_alb_bc1, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'asm_prm_bcphob_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), asm_prm_bc1, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ext_cff_mss_bcphob_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ext_cff_mss_bc1, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        ! BC species 2 Mie parameters, uncoated BC
+        tString = 'ss_alb_bcphob_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ss_alb_bc2, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'asm_prm_bcphob_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), asm_prm_bc2, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ext_cff_mss_bcphob_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ext_cff_mss_bc2, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
+        tString = 'ss_alb_ocphob_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ss_alb_oc1, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'asm_prm_ocphob_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), asm_prm_oc1, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ext_cff_mss_ocphob_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ext_cff_mss_oc1, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        ! OC species 2 Mie parameters, uncoated OC
+        tString = 'ss_alb_ocphob_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ss_alb_oc2, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'asm_prm_ocphob_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), asm_prm_oc2, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ext_cff_mss_ocphob_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ext_cff_mss_oc2, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        ! ice refractive index (Picard et al., 2016)
+        tString = 'ss_alb_ice_pic16_dir_'//short_case_solarspec
+        call ncd_io(trim(tString), ss_alb_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'asm_prm_ice_pic16_dir_'//short_case_solarspec
+        call ncd_io(trim(tString),asm_prm_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ext_cff_mss_ice_pic16_dir_'//short_case_solarspec
+        call ncd_io(trim(tString), ext_cff_mss_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ss_alb_ice_pic16_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ss_alb_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'asm_prm_ice_pic16_dif_'//short_case_solarspec
+        call ncd_io(trim(tString),asm_prm_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ext_cff_mss_ice_pic16_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ext_cff_mss_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-        ! mid-latitude summer spectrum
-        case ('mid_latitude_summer')
-           ! flux weights/spectrum
-           call ncd_io('flx_wgt_dir5_mls', flx_wgt_dir, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('flx_wgt_dif5_mls', flx_wgt_dif, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
-           call ncd_io('ss_alb_bcphob_dif_mls', ss_alb_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_bcphob_dif_mls', asm_prm_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_bcphob_dif_mls', ext_cff_mss_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! BC species 2 Mie parameters, uncoated BC
-           call ncd_io('ss_alb_bcphob_dif_mls', ss_alb_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_bcphob_dif_mls', asm_prm_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_bcphob_dif_mls', ext_cff_mss_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
-           call ncd_io('ss_alb_ocphob_dif_mls', ss_alb_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ocphob_dif_mls', asm_prm_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ocphob_dif_mls', ext_cff_mss_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! OC species 2 Mie parameters, uncoated OC
-           call ncd_io('ss_alb_ocphob_dif_mls', ss_alb_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ocphob_dif_mls', asm_prm_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ocphob_dif_mls', ext_cff_mss_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! ice refractive index (Picard et al., 2016)
-           call ncd_io('ss_alb_ice_pic16_dir_mls', ss_alb_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ice_pic16_dir_mls',asm_prm_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ice_pic16_dir_mls', ext_cff_mss_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ss_alb_ice_pic16_dif_mls', ss_alb_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ice_pic16_dif_mls',asm_prm_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ice_pic16_dif_mls', ext_cff_mss_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! dust optical properties
-           select case (snicar_dust_optics)
-           case ('sahara')  ! Saharan dust (Balkanski et al., 2007, central hematite)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_sah_dif_mls', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_sah_dif_mls', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_sah_dif_mls', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_sah_dif_mls', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_sah_dif_mls', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_sah_dif_mls', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_sah_dif_mls', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_sah_dif_mls', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_sah_dif_mls', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_sah_dif_mls', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_sah_dif_mls', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_sah_dif_mls', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           case ('san_juan_mtns_colorado')  ! San Juan Mountains, CO (Skiles et al, 2017)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_col_dif_mls', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_col_dif_mls', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_col_dif_mls', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_col_dif_mls', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_col_dif_mls', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_col_dif_mls', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_col_dif_mls', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_col_dif_mls', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_col_dif_mls', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_col_dif_mls', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_col_dif_mls', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_col_dif_mls', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           case ('greenland')  ! Greenland (Polashenski et al., 2015, central absorptivity)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_gre_dif_mls', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_gre_dif_mls', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_gre_dif_mls', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_gre_dif_mls', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_gre_dif_mls', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_gre_dif_mls', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_gre_dif_mls', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_gre_dif_mls', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_gre_dif_mls', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_gre_dif_mls', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_gre_dif_mls', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_gre_dif_mls', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           end select
-
-        ! sub-Arctic winter spectrum
-        case ('sub_arctic_winter')
-           call ncd_io('flx_wgt_dir5_saw', flx_wgt_dir, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('flx_wgt_dif5_saw', flx_wgt_dif, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
-           call ncd_io('ss_alb_bcphob_dif_saw', ss_alb_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_bcphob_dif_saw', asm_prm_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_bcphob_dif_saw', ext_cff_mss_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! BC species 2 Mie parameters, uncoated BC
-           call ncd_io('ss_alb_bcphob_dif_saw', ss_alb_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_bcphob_dif_saw', asm_prm_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_bcphob_dif_saw', ext_cff_mss_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
-           call ncd_io('ss_alb_ocphob_dif_saw', ss_alb_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ocphob_dif_saw', asm_prm_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ocphob_dif_saw', ext_cff_mss_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! OC species 2 Mie parameters, uncoated OC
-           call ncd_io('ss_alb_ocphob_dif_saw', ss_alb_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ocphob_dif_saw', asm_prm_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ocphob_dif_saw', ext_cff_mss_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! ice refractive index (Picard et al., 2016)
-           call ncd_io('ss_alb_ice_pic16_dir_saw', ss_alb_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ice_pic16_dir_saw',asm_prm_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ice_pic16_dir_saw', ext_cff_mss_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ss_alb_ice_pic16_dif_saw', ss_alb_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ice_pic16_dif_saw',asm_prm_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ice_pic16_dif_saw', ext_cff_mss_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! dust optical properties
-           select case (snicar_dust_optics)
-           case ('sahara')  ! Saharan dust (Balkanski et al., 2007, central hematite)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_sah_dif_saw', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_sah_dif_saw', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_sah_dif_saw', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_sah_dif_saw', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_sah_dif_saw', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_sah_dif_saw', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_sah_dif_saw', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_sah_dif_saw', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_sah_dif_saw', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_sah_dif_saw', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_sah_dif_saw', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_sah_dif_saw', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           case ('san_juan_mtns_colorado')  ! San Juan Mountains, CO (Skiles et al, 2017)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_col_dif_saw', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_col_dif_saw', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_col_dif_saw', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_col_dif_saw', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_col_dif_saw', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_col_dif_saw', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_col_dif_saw', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_col_dif_saw', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_col_dif_saw', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_col_dif_saw', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_col_dif_saw', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_col_dif_saw', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           case ('greenland')  ! Greenland (Polashenski et al., 2015, central absorptivity)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_gre_dif_saw', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_gre_dif_saw', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_gre_dif_saw', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_gre_dif_saw', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_gre_dif_saw', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_gre_dif_saw', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_gre_dif_saw', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_gre_dif_saw', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_gre_dif_saw', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_gre_dif_saw', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_gre_dif_saw', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_gre_dif_saw', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           end select
-
-        ! sub-Arctic summer spectrum
-        case ('sub_arctic_summer')
-           call ncd_io('flx_wgt_dir5_sas', flx_wgt_dir, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('flx_wgt_dif5_sas', flx_wgt_dif, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
-           call ncd_io('ss_alb_bcphob_dif_sas', ss_alb_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_bcphob_dif_sas', asm_prm_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_bcphob_dif_sas', ext_cff_mss_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! BC species 2 Mie parameters, uncoated BC
-           call ncd_io('ss_alb_bcphob_dif_sas', ss_alb_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_bcphob_dif_sas', asm_prm_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_bcphob_dif_sas', ext_cff_mss_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
-           call ncd_io('ss_alb_ocphob_dif_sas', ss_alb_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ocphob_dif_sas', asm_prm_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ocphob_dif_sas', ext_cff_mss_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! OC species 2 Mie parameters, uncoated OC
-           call ncd_io('ss_alb_ocphob_dif_sas', ss_alb_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ocphob_dif_sas', asm_prm_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ocphob_dif_sas', ext_cff_mss_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! ice refractive index (Picard et al., 2016)
-           call ncd_io('ss_alb_ice_pic16_dir_sas', ss_alb_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ice_pic16_dir_sas',asm_prm_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ice_pic16_dir_sas', ext_cff_mss_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ss_alb_ice_pic16_dif_sas', ss_alb_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ice_pic16_dif_sas',asm_prm_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ice_pic16_dif_sas', ext_cff_mss_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! dust optical properties
-           select case (snicar_dust_optics)
-           case ('sahara')  ! Saharan dust (Balkanski et al., 2007, central hematite)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_sah_dif_sas', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_sah_dif_sas', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_sah_dif_sas', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_sah_dif_sas', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_sah_dif_sas', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_sah_dif_sas', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_sah_dif_sas', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_sah_dif_sas', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_sah_dif_sas', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_sah_dif_sas', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_sah_dif_sas', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_sah_dif_sas', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           case ('san_juan_mtns_colorado')  ! San Juan Mountains, CO (Skiles et al, 2017)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_col_dif_sas', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_col_dif_sas', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_col_dif_sas', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_col_dif_sas', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_col_dif_sas', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_col_dif_sas', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_col_dif_sas', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_col_dif_sas', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_col_dif_sas', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_col_dif_sas', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_col_dif_sas', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_col_dif_sas', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           case ('greenland')  ! Greenland (Polashenski et al., 2015, central absorptivity)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_gre_dif_sas', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_gre_dif_sas', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_gre_dif_sas', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_gre_dif_sas', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_gre_dif_sas', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_gre_dif_sas', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_gre_dif_sas', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_gre_dif_sas', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_gre_dif_sas', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_gre_dif_sas', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_gre_dif_sas', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_gre_dif_sas', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           end select
-
-        ! Summit,Greenland,summer spectrum
-        case ('summit_greenland_summer')
-           call ncd_io('flx_wgt_dir5_smm', flx_wgt_dir, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('flx_wgt_dif5_smm', flx_wgt_dif, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
-           call ncd_io('ss_alb_bcphob_dif_smm', ss_alb_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_bcphob_dif_smm', asm_prm_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_bcphob_dif_smm', ext_cff_mss_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! BC species 2 Mie parameters, uncoated BC
-           call ncd_io('ss_alb_bcphob_dif_smm', ss_alb_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_bcphob_dif_smm', asm_prm_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_bcphob_dif_smm', ext_cff_mss_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
-           call ncd_io('ss_alb_ocphob_dif_smm', ss_alb_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ocphob_dif_smm', asm_prm_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ocphob_dif_smm', ext_cff_mss_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! OC species 2 Mie parameters, uncoated OC
-           call ncd_io('ss_alb_ocphob_dif_smm', ss_alb_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ocphob_dif_smm', asm_prm_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ocphob_dif_smm', ext_cff_mss_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! ice refractive index (Picard et al., 2016)
-           call ncd_io('ss_alb_ice_pic16_dir_smm', ss_alb_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ice_pic16_dir_smm',asm_prm_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ice_pic16_dir_smm', ext_cff_mss_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ss_alb_ice_pic16_dif_smm', ss_alb_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ice_pic16_dif_smm',asm_prm_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ice_pic16_dif_smm', ext_cff_mss_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! dust optical properties
-           select case (snicar_dust_optics)
-           case ('sahara')  ! Saharan dust (Balkanski et al., 2007, central hematite)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_sah_dif_smm', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_sah_dif_smm', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_sah_dif_smm', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_sah_dif_smm', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_sah_dif_smm', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_sah_dif_smm', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_sah_dif_smm', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_sah_dif_smm', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_sah_dif_smm', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_sah_dif_smm', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_sah_dif_smm', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_sah_dif_smm', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           case ('san_juan_mtns_colorado')  ! San Juan Mountains, CO (Skiles et al, 2017)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_col_dif_smm', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_col_dif_smm', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_col_dif_smm', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_col_dif_smm', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_col_dif_smm', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_col_dif_smm', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_col_dif_smm', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_col_dif_smm', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_col_dif_smm', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_col_dif_smm', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_col_dif_smm', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_col_dif_smm', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           case ('greenland')  ! Greenland (Polashenski et al., 2015, central absorptivity)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_gre_dif_smm', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_gre_dif_smm', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_gre_dif_smm', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_gre_dif_smm', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_gre_dif_smm', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_gre_dif_smm', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_gre_dif_smm', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_gre_dif_smm', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_gre_dif_smm', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_gre_dif_smm', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_gre_dif_smm', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_gre_dif_smm', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           end select
-
-        ! High Mountain summer spectrum
-        case ('high_mountain_summer')
-           call ncd_io('flx_wgt_dir5_hmn', flx_wgt_dir, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('flx_wgt_dif5_hmn', flx_wgt_dif, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
-           call ncd_io('ss_alb_bcphob_dif_hmn', ss_alb_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_bcphob_dif_hmn', asm_prm_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_bcphob_dif_hmn', ext_cff_mss_bc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! BC species 2 Mie parameters, uncoated BC
-           call ncd_io('ss_alb_bcphob_dif_hmn', ss_alb_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_bcphob_dif_hmn', asm_prm_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_bcphob_dif_hmn', ext_cff_mss_bc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
-           call ncd_io('ss_alb_ocphob_dif_hmn', ss_alb_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ocphob_dif_hmn', asm_prm_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ocphob_dif_hmn', ext_cff_mss_oc1, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! OC species 2 Mie parameters, uncoated OC
-           call ncd_io('ss_alb_ocphob_dif_hmn', ss_alb_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ocphob_dif_hmn', asm_prm_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ocphob_dif_hmn', ext_cff_mss_oc2, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! ice refractive index (Picard et al., 2016)
-           call ncd_io('ss_alb_ice_pic16_dir_hmn', ss_alb_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ice_pic16_dir_hmn',asm_prm_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ice_pic16_dir_hmn', ext_cff_mss_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ss_alb_ice_pic16_dif_hmn', ss_alb_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('asm_prm_ice_pic16_dif_hmn',asm_prm_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           call ncd_io('ext_cff_mss_ice_pic16_dif_hmn', ext_cff_mss_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-           if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           ! dust optical properties
-           select case (snicar_dust_optics)
-           case ('sahara')  ! Saharan dust (Balkanski et al., 2007, central hematite)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_sah_dif_hmn', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_sah_dif_hmn', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_sah_dif_hmn', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_sah_dif_hmn', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_sah_dif_hmn', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_sah_dif_hmn', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_sah_dif_hmn', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_sah_dif_hmn', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_sah_dif_hmn', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_sah_dif_hmn', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_sah_dif_hmn', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_sah_dif_hmn', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           case ('san_juan_mtns_colorado')  ! San Juan Mountains, CO (Skiles et al, 2017)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_col_dif_hmn', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_col_dif_hmn', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_col_dif_hmn', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_col_dif_hmn', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_col_dif_hmn', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_col_dif_hmn', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_col_dif_hmn', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_col_dif_hmn', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_col_dif_hmn', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_col_dif_hmn', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_col_dif_hmn', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_col_dif_hmn', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           case ('greenland')  ! Greenland (Polashenski et al., 2015, central absorptivity)
-              ! dust species 1 Mie parameters
-              call ncd_io('ss_alb_dust01_gre_dif_hmn', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust01_gre_dif_hmn', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust01_gre_dif_hmn', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 2 Mie parameters
-              call ncd_io('ss_alb_dust02_gre_dif_hmn', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust02_gre_dif_hmn', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust02_gre_dif_hmn', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 3 Mie parameters
-              call ncd_io('ss_alb_dust03_gre_dif_hmn', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust03_gre_dif_hmn', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust03_gre_dif_hmn', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              ! dust species 4 Mie parameters
-              call ncd_io('ss_alb_dust04_gre_dif_hmn', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('asm_prm_dust04_gre_dif_hmn', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-              call ncd_io('ext_cff_mss_dust04_gre_dif_hmn', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-              if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-           end select
-        end select
+        ! dust species 1 Mie parameters
+        tString = 'ss_alb_dust01_'//short_case_dust_opt//'_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'asm_prm_dust01_'//short_case_dust_opt//'_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ext_cff_mss_dust01_'//short_case_dust_opt//'_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        ! dust species 2 Mie parameters
+        tString = 'ss_alb_dust02_'//short_case_dust_opt//'_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'asm_prm_dust02_'//short_case_dust_opt//'_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ext_cff_mss_dust02_'//short_case_dust_opt//'_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        ! dust species 3 Mie parameters
+        tString = 'ss_alb_dust03_'//short_case_dust_opt//'_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'asm_prm_dust03_'//short_case_dust_opt//'_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ext_cff_mss_dust03_'//short_case_dust_opt//'_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        ! dust species 4 Mie parameters
+        tString = 'ss_alb_dust04_'//short_case_dust_opt//'_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'asm_prm_dust04_'//short_case_dust_opt//'_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ext_cff_mss_dust04_'//short_case_dust_opt//'_dif_'//short_case_solarspec
+        call ncd_io(trim(tString), ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
      !-------------------- for 480-band data
      case (480)
 
         ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
-        call ncd_io('ss_alb_bcphob', ss_alb_bc1, 'read', ncid, readv, posNOTonfile=.true.)
+        tString = 'ss_alb_bcphob'
+        call ncd_io(trim(tString), ss_alb_bc1, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-        call ncd_io('asm_prm_bcphob', asm_prm_bc1, 'read', ncid, readv, posNOTonfile=.true.)
+        tString = 'asm_prm_bcphob'
+        call ncd_io(trim(tString), asm_prm_bc1, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-        call ncd_io('ext_cff_mss_bcphob', ext_cff_mss_bc1, 'read', ncid, readv, posNOTonfile=.true.)
+        tString = 'ext_cff_mss_bcphob'
+        call ncd_io(trim(tString), ext_cff_mss_bc1, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         ! BC species 2 Mie parameters, uncoated BC
-        call ncd_io('ss_alb_bcphob', ss_alb_bc2, 'read', ncid, readv, posNOTonfile=.true.)
+        tString = 'ss_alb_bcphob'
+        call ncd_io(trim(tString), ss_alb_bc2, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-        call ncd_io('asm_prm_bcphob', asm_prm_bc2, 'read', ncid, readv, posNOTonfile=.true.)
+        tString = 'asm_prm_bcphob'
+        call ncd_io(trim(tString), asm_prm_bc2, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-        call ncd_io('ext_cff_mss_bcphob', ext_cff_mss_bc2, 'read', ncid, readv, posNOTonfile=.true.)
+        tString = 'ext_cff_mss_bcphob'
+        call ncd_io(trim(tString), ext_cff_mss_bc2, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
-        call ncd_io('ss_alb_ocphob', ss_alb_oc1, 'read', ncid, readv, posNOTonfile=.true.)
+        tString = 'ss_alb_ocphob'
+        call ncd_io(trim(tString), ss_alb_oc1, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-        call ncd_io('asm_prm_ocphob', asm_prm_oc1, 'read', ncid, readv, posNOTonfile=.true.)
+        tString = 'asm_prm_ocphob'
+        call ncd_io(trim(tString), asm_prm_oc1, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-        call ncd_io('ext_cff_mss_ocphob', ext_cff_mss_oc1, 'read', ncid, readv, posNOTonfile=.true.)
+        tString = 'ext_cff_mss_ocphob'
+        call ncd_io(trim(tString), ext_cff_mss_oc1, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         ! OC species 2 Mie parameters, uncoated OC
-        call ncd_io('ss_alb_ocphob', ss_alb_oc2, 'read', ncid, readv, posNOTonfile=.true.)
+        tString = 'ss_alb_ocphob'
+        call ncd_io(trim(tString), ss_alb_oc2, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-        call ncd_io('asm_prm_ocphob', asm_prm_oc2, 'read', ncid, readv, posNOTonfile=.true.)
+        tString = 'asm_prm_ocphob'
+        call ncd_io(trim(tString), asm_prm_oc2, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-        call ncd_io('ext_cff_mss_ocphob', ext_cff_mss_oc2, 'read', ncid, readv, posNOTonfile=.true.)
+        tString = 'ext_cff_mss_ocphob'
+        call ncd_io(trim(tString), ext_cff_mss_oc2, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-       ! snow optical properties derived from different ice refractive index dataset
-       ! same value for direct and diffuse due to high spectral res without spectra averaging in database (Picard et al., 2016)
-       call ncd_io('ss_alb_ice_pic16', ss_alb_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-       if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-       call ncd_io('asm_prm_ice_pic16',asm_prm_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-       if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-       call ncd_io('ext_cff_mss_ice_pic16', ext_cff_mss_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
-       if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-       call ncd_io('ss_alb_ice_pic16', ss_alb_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-       if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-       call ncd_io('asm_prm_ice_pic16',asm_prm_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-       if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-       call ncd_io('ext_cff_mss_ice_pic16', ext_cff_mss_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
-       if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        ! snow optical properties derived from different ice refractive index dataset
+        ! same value for direct and diffuse due to high spectral res without spectra averaging in database (Picard et al., 2016)
+        tString = 'ss_alb_ice_pic16'
+        call ncd_io(trim(tString), ss_alb_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'asm_prm_ice_pic16'
+        call ncd_io(trim(tString), asm_prm_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ext_cff_mss_ice_pic16'
+        call ncd_io(trim(tString), ext_cff_mss_snw_drc, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ss_alb_ice_pic16'
+        call ncd_io(trim(tString), ss_alb_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'asm_prm_ice_pic16'
+        call ncd_io(trim(tString), asm_prm_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ext_cff_mss_ice_pic16'
+        call ncd_io(trim(tString), ext_cff_mss_snw_dfs, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-       ! dust optical properties
-       select case (snicar_dust_optics)
-       case ('sahara')  ! Saharan dust (Balkanski et al., 2007, central hematite)
-          ! dust species 1 Mie parameters
-          call ncd_io('ss_alb_dust01_sah', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('asm_prm_dust01_sah', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('ext_cff_mss_dust01_sah', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          ! dust species 2 Mie parameters
-          call ncd_io('ss_alb_dust02_sah', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('asm_prm_dust02_sah', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('ext_cff_mss_dust02_sah', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          ! dust species 3 Mie parameters
-          call ncd_io('ss_alb_dust03_sah', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('asm_prm_dust03_sah', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('ext_cff_mss_dust03_sah', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          ! dust species 4 Mie parameters
-          call ncd_io('ss_alb_dust04_sah', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('asm_prm_dust04_sah', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('ext_cff_mss_dust04_sah', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-       case ('san_juan_mtns_colorado')  ! San Juan Mountains, CO (Skiles et al, 2017)
-          ! dust species 1 Mie parameters
-          call ncd_io('ss_alb_dust01_col', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('asm_prm_dust01_col', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('ext_cff_mss_dust01_col', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          ! dust species 2 Mie parameters
-          call ncd_io('ss_alb_dust02_col', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('asm_prm_dust02_col', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('ext_cff_mss_dust02_col', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          ! dust species 3 Mie parameters
-          call ncd_io('ss_alb_dust03_col', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('asm_prm_dust03_col', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('ext_cff_mss_dust03_col', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          ! dust species 4 Mie parameters
-          call ncd_io('ss_alb_dust04_col', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('asm_prm_dust04_col', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('ext_cff_mss_dust04_col', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-       case ('greenland')  ! Greenland (Polashenski et al., 2015, central absorptivity)
-          ! dust species 1 Mie parameters
-          call ncd_io('ss_alb_dust01_gre', ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('asm_prm_dust01_gre', asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('ext_cff_mss_dust01_gre', ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          ! dust species 2 Mie parameters
-          call ncd_io('ss_alb_dust02_gre', ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('asm_prm_dust02_gre', asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('ext_cff_mss_dust02_gre', ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          ! dust species 3 Mie parameters
-          call ncd_io('ss_alb_dust03_gre', ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('asm_prm_dust03_gre', asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('ext_cff_mss_dust03_gre', ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          ! dust species 4 Mie parameters
-          call ncd_io('ss_alb_dust04_gre', ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('asm_prm_dust04_gre', asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('ext_cff_mss_dust04_gre', ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-       end select
+        ! dust optical properties
+        ! dust species 1 Mie parameters
+        tString = 'ss_alb_dust01_'//short_case_dust_opt
+        call ncd_io(trim(tString), ss_alb_dst1, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'asm_prm_dust01_'//short_case_dust_opt
+        call ncd_io(trim(tString), asm_prm_dst1, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ext_cff_mss_dust01_'//short_case_dust_opt
+        call ncd_io(trim(tString), ext_cff_mss_dst1, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        ! dust species 2 Mie parameters
+        tString = 'ss_alb_dust02_'//short_case_dust_opt
+        call ncd_io(trim(tString), ss_alb_dst2, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'asm_prm_dust02_'//short_case_dust_opt
+        call ncd_io(trim(tString), asm_prm_dst2, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ext_cff_mss_dust02_'//short_case_dust_opt
+        call ncd_io(trim(tString), ext_cff_mss_dst2, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        ! dust species 3 Mie parameters
+        tString = 'ss_alb_dust03_'//short_case_dust_opt
+        call ncd_io(trim(tString), ss_alb_dst3, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'asm_prm_dust03_'//short_case_dust_opt
+        call ncd_io(trim(tString), asm_prm_dst3, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ext_cff_mss_dust03_'//short_case_dust_opt
+        call ncd_io(trim(tString), ext_cff_mss_dst3, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        ! dust species 4 Mie parameters
+        tString = 'ss_alb_dust04_'//short_case_dust_opt
+        call ncd_io(trim(tString), ss_alb_dst4, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'asm_prm_dust04_'//short_case_dust_opt
+        call ncd_io(trim(tString), asm_prm_dst4, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'ext_cff_mss_dust04_'//short_case_dust_opt
+        call ncd_io(trim(tString), ext_cff_mss_dst4, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
  
-       ! downward solar radiation spectral weights for 480-band
-       select case (snicar_solarspec)
-       case ('mid_latitude_winter')
-          call ncd_io('flx_wgt_dir480_mlw', flx_wgt_dir, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('flx_wgt_dif480_mlw', flx_wgt_dif, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-       case ('mid_latitude_summer')
-          call ncd_io('flx_wgt_dir480_mls', flx_wgt_dir, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('flx_wgt_dif480_mls', flx_wgt_dif, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-       case ('sub_arctic_winter')
-          call ncd_io('flx_wgt_dir480_saw', flx_wgt_dir, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('flx_wgt_dif480_saw', flx_wgt_dif, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-       case ('sub_arctic_summer')
-          call ncd_io('flx_wgt_dir480_sas', flx_wgt_dir, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('flx_wgt_dif480_sas', flx_wgt_dif, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-       case ('summit_greenland_summer')
-          call ncd_io('flx_wgt_dir480_smm', flx_wgt_dir, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('flx_wgt_dif480_smm', flx_wgt_dif, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-       case ('high_mountain_summer')
-          call ncd_io('flx_wgt_dir480_hmn', flx_wgt_dir, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-          call ncd_io('flx_wgt_dif480_hmn', flx_wgt_dif, 'read', ncid, readv, posNOTonfile=.true.)
-          if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-       end select
+        ! downward solar radiation spectral weights for 480-band
+        tString = 'flx_wgt_dir480_'//short_case_solarspec
+        call ncd_io(trim(tString), flx_wgt_dir, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+        tString = 'flx_wgt_dif480_'//short_case_solarspec
+        call ncd_io(trim(tString), flx_wgt_dif, 'read', ncid, readv, posNOTonfile=.true.)
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
      end select
 
@@ -2918,6 +2165,8 @@ contains
      integer            :: varid                       ! netCDF id's
      integer            :: ier                         ! error status
      logical :: readv  ! has variable been read in or not
+     character(len=100) :: errCode = '-Error reading snow aging parameters:'
+     character(len=100) :: tString ! temp. var for reading
 
      ! Open snow aging (effective radius evolution) file:
      allocate(snowage_tau(idx_rhos_max,idx_Tgrd_max,idx_T_max))
@@ -2931,11 +2180,14 @@ contains
 
      ! snow aging parameters
 
-     call ncd_io('tau', snowage_tau, 'read', ncid, readv, posNOTonfile=.true.)
+     tString = 'tau'
+     call ncd_io(trim(tString), snowage_tau, 'read', ncid, readv, posNOTonfile=.true.)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-     call ncd_io('kappa', snowage_kappa, 'read', ncid, readv, posNOTonfile=.true.)
+     tString = 'kappa'
+     call ncd_io(trim(tString), snowage_kappa, 'read', ncid, readv, posNOTonfile=.true.)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-     call ncd_io('drdsdt0', snowage_drdt0, 'read', ncid, readv, posNOTonfile=.true.)
+     tString = 'drdsdt0'
+     call ncd_io(trim(tString), snowage_drdt0, 'read', ncid, readv, posNOTonfile=.true.)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
      call ncd_pio_closefile(ncid)
