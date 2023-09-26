@@ -1,2 +1,3 @@
 fates_paramfile = '/glade/p/cesm/cseg/inputdata/lnd/clm2/paramdata/fates_params_api.25.5.0_12pft_5x5_amazon_seeddispersal_c230925.nc'
 fates_seeddisp_cadence = 1
+hist_fincl1       = 'FATES_SEEDS_IN_GRIDCELL_PF', 'FATES_SEEDS_OUT_GRIDCELL_PF'
