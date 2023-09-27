@@ -113,7 +113,6 @@
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>FATES#1089</issue>
-      <comment>This job will fail restart comparison due to pe layout change (i.e. PEM test would fail).</comment>
     </phase>
   </test>
 

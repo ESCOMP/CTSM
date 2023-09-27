@@ -1,5 +1,5 @@
 Testing FATES cross grid seed dispersal is activated by enabling the 
-namelist switch option use_fates_seeddisp as well as providing reasonable
+namelist switch option fates_seeddisp_cadence as well as providing reasonable
 values to the fates parameter file for the following variables:
 
 fates_seed_dispersal_fraction
