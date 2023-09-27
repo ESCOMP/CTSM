@@ -1156,7 +1156,7 @@ lnd/clm2/surfdata_map/ctsm5.1.dev052/surfdata_mpasa30_hist_78pfts_CMIP6_simyr200
 lnd/clm2/surfdata_map/ctsm5.1.dev052/surfdata_mpasa15_hist_78pfts_CMIP6_simyr2000_c211111.nc</fsurdat>
 
 <fsurdat hgrid="ne3np4"                  sim_year="2000">
-lnd/clm2/surfdata_map/ctsm5.1.dev120//surfdata_ne3np4.pg3_hist_78pfts_CMIP6_simyr2000_c230405.nc</fsurdat>
+lnd/clm2/surfdata_map/ctsm5.1.dev120/surfdata_ne3np4_hist_78pfts_CMIP6_simyr2000_c230718.nc</fsurdat>
 <fsurdat hgrid="ne3np4.pg3"              sim_year="2000">
 lnd/clm2/surfdata_map/ctsm5.1.dev120//surfdata_ne3np4.pg3_hist_78pfts_CMIP6_simyr2000_c230405.nc</fsurdat>
 <fsurdat hgrid="ne5np4.pg3"              sim_year="2000">
@@ -1251,8 +1251,6 @@ lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_numaIA_hist_78pfts_CMIP6_simyr
 <fsurdat hgrid="1x1_brazil"               sim_year="1850">
 lnd/clm2/surfdata_map/ctsm5.1.dev116/surfdata_1x1_brazil_hist_78pfts_CMIP6_simyr1850_c230123.nc</fsurdat>
 
-<fsurdat hgrid="ne3np4"                   sim_year="1850">
-lnd/clm2/surfdata_map/ctsm5.1.dev120/surfdata_ne3np4.pg3_hist_78pfts_CMIP6_simyr1850_c230405.nc</fsurdat>
 <fsurdat hgrid="ne3np4.pg3"               sim_year="1850">
 lnd/clm2/surfdata_map/ctsm5.1.dev120/surfdata_ne3np4.pg3_hist_78pfts_CMIP6_simyr1850_c230405.nc</fsurdat>
 <fsurdat hgrid="ne5np4.pg3"               sim_year="1850">
@@ -1338,8 +1336,6 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa3
 <flanduse_timeseries hgrid="mpasa15" sim_year_range="1850-2000"
 use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa15_hist_78pfts_CMIP6_simyr1850-2015_c211111.nc</flanduse_timeseries>
 
-<flanduse_timeseries hgrid="ne3np4"            sim_year_range="1850-2000"
- >lnd/clm2/surfdata_map/ctsm5.1.dev120/landuse.timeseries_ne3np4.pg3_SSP5-8.5_78pfts_CMIP6_simyr1850-2100_c230405.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne3np4.pg3"        sim_year_range="1850-2000"
  >lnd/clm2/surfdata_map/ctsm5.1.dev120/landuse.timeseries_ne3np4.pg3_SSP5-8.5_78pfts_CMIP6_simyr1850-2100_c230405.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne5np4.pg3"        sim_year_range="1850-2000"
@@ -1384,8 +1380,6 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <flanduse_timeseries hgrid="C96"           sim_year_range="1850-2100" ssp_rcp="SSP5-8.5"
  >lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_C96_SSP5-8.5_78pfts_CMIP6_simyr1850-2100_c200317.nc</flanduse_timeseries>
 
-<flanduse_timeseries hgrid="ne3np4"            sim_year_range="1850-2000" ssp_rcp="SSP5-8.5"
- >lnd/clm2/surfdata_map/ctsm5.1.dev120/landuse.timeseries_ne3np4.pg3_SSP5-8.5_78pfts_CMIP6_simyr1850-2100_c230405.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne3np4.pg3"        sim_year_range="1850-2000" ssp_rcp="SSP5-8.5"
  >lnd/clm2/surfdata_map/ctsm5.1.dev120/landuse.timeseries_ne3np4.pg3_SSP5-8.5_78pfts_CMIP6_simyr1850-2100_c230405.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne5np4.pg3"        sim_year_range="1850-2000" ssp_rcp="SSP5-8.5"
