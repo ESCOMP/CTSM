@@ -389,6 +389,7 @@ contains
              ! Only for first sowing window of the year
              ! The conditional here is to ensure nothing weird happens if it's called incorrectly on day 365
              if (crop_inst%sdates_thisyr_patch(p,1) <= 0) then
+                 ! TODO: Add handling of mid-year restarts
                  crop_inst%next_rx_swindow_start_patch(p) = crop_inst%rx_swindow_starts_thisyr_patch(p,1)
                  crop_inst%next_rx_swindow_end_patch  (p) = crop_inst%rx_swindow_ends_thisyr_patch  (p,1)
              end if
@@ -397,6 +398,11 @@ contains
              call ESMF_Finalize(endflag=ESMF_END_ABORT)
           endif
        end do
+
+       ! TODO: Ensure that, if mxsowings > 1, sowing windows are ordered such that ENDS are monotonically increasing. This is necessary because of how get_swindow() works.
+
+       ! TODO: Fail if a sowing window start date is prescribed without an end date (or vice versa)
+
     end if ! use_cropcal_rx_swindows
     deallocate(dataptr2d_swindow_start)
     deallocate(dataptr2d_swindow_end)
