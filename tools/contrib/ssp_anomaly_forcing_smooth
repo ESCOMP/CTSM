@@ -360,86 +360,90 @@ for f in range(nfields):
             )
 
         # read in ssp data  ---------------------
+        if args.hist_or_ssp is not "hist":
+            f1 = netcdf4.MFDataset(sspfiles, "r")
+            if nens == 0:
+                ssp_time = np.asfarray(f1.variables["time"][:], np.float64)
+                ssp_time_units = f1.variables["time"].units
+                ssp_time_longname = f1.variables["time"].long_name
+                x = ssp_time_units.split()[2]
+                ssp_ref_year = float(x.split("-")[0])
 
-        f1 = netcdf4.MFDataset(sspfiles, "r")
-        if nens == 0:
-            ssp_time = np.asfarray(f1.variables["time"][:], np.float64)
-            ssp_time_units = f1.variables["time"].units
-            ssp_time_longname = f1.variables["time"].long_name
-            x = ssp_time_units.split()[2]
-            ssp_ref_year = float(x.split("-")[0])
+                # adjust ssp_time to reference time of hist_time
+                # ssp_time += 365*(ssp_ref_year - ref_year)
+                # ssp_ref_year = ref_year
+                # adjust hist_time to reference time of ssp_time
+                hist_time += 365 * (ref_year - ssp_ref_year)
+                ref_year = ssp_ref_year
 
-            # adjust ssp_time to reference time of hist_time
-            # ssp_time += 365*(ssp_ref_year - ref_year)
-            # ssp_ref_year = ref_year
-            # adjust hist_time to reference time of ssp_time
-            hist_time += 365 * (ref_year - ssp_ref_year)
-            ref_year = ssp_ref_year
+                # ssp_ind could be modified to subset data if needed...
+                ssp_ind = np.arange(ssp_time.size, dtype=int)
 
-            # ssp_ind could be modified to subset data if needed...
-            ssp_ind = np.arange(ssp_time.size, dtype=int)
+                ssp_time = ssp_time[ssp_ind]
+                long_name = f1.variables[field_in[f]].long_name
+                ntime_ssp = ssp_time.size
+                ssp_fld = np.zeros((ntime_ssp, nlat, nlon))
 
-            ssp_time = ssp_time[ssp_ind]
-            long_name = f1.variables[field_in[f]].long_name
-            ntime_ssp = ssp_time.size
-            ssp_fld = np.zeros((ntime_ssp, nlat, nlon))
+                ssp_yrstart = np.min(ssp_time / 365.0 + ref_year).astype(int)
+                ssp_yrend = (np.max(ssp_time / 365.0 + ref_year) - 1).astype(int)
+                ssp_nyrs = ssp_yrend - ssp_yrstart + 1
 
-            ssp_yrstart = np.min(ssp_time / 365.0 + ref_year).astype(int)
-            ssp_yrend = (np.max(ssp_time / 365.0 + ref_year) - 1).astype(int)
-            ssp_nyrs = ssp_yrend - ssp_yrstart + 1
+                if args.hist_or_ssp == "hist":
+                    thisperiod_yrstart = hist_yrstart
+                    thisperiod_yrend = hist_yrend
+                elif args.hist_or_ssp == "ssp":
+                    thisperiod_yrstart = ssp_yrstart
+                    thisperiod_yrend = ssp_yrend
+                elif args.hist_or_ssp == "both":
+                    thisperiod_yrstart = hist_yrstart
+                    thisperiod_yrend = ssp_yrend
+                else:
+                    raise RuntimeError(f"Handle --hist-or-ssp {args.hist_or_ssp}")
+                thisperiod_nyrs = thisperiod_yrend - thisperiod_yrstart + 1
 
-            if args.hist_or_ssp == "hist":
-                thisperiod_yrstart = hist_yrstart
-                thisperiod_yrend = hist_yrend
-            elif args.hist_or_ssp == "ssp":
-                thisperiod_yrstart = ssp_yrstart
-                thisperiod_yrend = ssp_yrend
-            elif args.hist_or_ssp == "both":
-                thisperiod_yrstart = hist_yrstart
-                thisperiod_yrend = ssp_yrend
-            else:
-                raise RuntimeError(f"Handle --hist-or-ssp {args.hist_or_ssp}")
-            thisperiod_nyrs = thisperiod_yrend - thisperiod_yrstart + 1
+                if f == 0:
+                    print(f"{args.hist_or_ssp.upper()} years: ", thisperiod_yrstart, thisperiod_yrend, thisperiod_nyrs)
+                tot_nyrs = hist_nyrs + ssp_nyrs
+                outfile_suffix = (
+                    ".CESM."
+                    + ssptag
+                    + "."
+                    + str(thisperiod_yrstart)
+                    + "-"
+                    + str(thisperiod_yrend)
+                    + creationdate
+                    + ".nc4"
+                )
 
-            if f == 0:
-                print(f"{args.hist_or_ssp.upper()} years: ", thisperiod_yrstart, thisperiod_yrend, thisperiod_nyrs)
-            tot_nyrs = hist_nyrs + ssp_nyrs
-            outfile_suffix = (
-                ".CESM."
-                + ssptag
-                + "."
-                + str(thisperiod_yrstart)
-                + "-"
-                + str(thisperiod_yrend)
-                + creationdate
-                + ".nc4"
-            )
-
-        ssp_fld += np.asfarray(f1.variables[field_in[f]][ssp_ind, :, :], np.float64)
-        f1.close()
-
-        # add SNOW to RAIN
-        if field_in[f] == "RAIN":
-            sspfiles2 = [file.replace("RAIN", "SNOW") for file in sspfiles]
-            f1 = netcdf4.MFDataset(sspfiles2, "r")
-            ssp_fld += np.asfarray(f1.variables["SNOW"][ssp_ind, :, :], np.float64)
+            ssp_fld += np.asfarray(f1.variables[field_in[f]][ssp_ind, :, :], np.float64)
             f1.close()
 
-        if f == 0:
-            print(
-                "ssp_time: ",
-                ssp_time[0] / 365.0 + ssp_ref_year,
-                ssp_time[-1] / 365.0 + ssp_ref_year,
-                ssp_time.size,
-            )
+            # add SNOW to RAIN
+            if field_in[f] == "RAIN":
+                sspfiles2 = [file.replace("RAIN", "SNOW") for file in sspfiles]
+                f1 = netcdf4.MFDataset(sspfiles2, "r")
+                ssp_fld += np.asfarray(f1.variables["SNOW"][ssp_ind, :, :], np.float64)
+                f1.close()
+
+            if f == 0:
+                print(
+                    "ssp_time: ",
+                    ssp_time[0] / 365.0 + ssp_ref_year,
+                    ssp_time[-1] / 365.0 + ssp_ref_year,
+                    ssp_time.size,
+                )
     # --  end Loop over ensemble members  ------------------------------
 
     # normalize summed fields by number of ensemble members
     hist_fld = hist_fld / float(num_ens)
-    ssp_fld = ssp_fld / float(num_ens)
-    # concatenate arrays to form contiguous time series
-    temp_fld = np.concatenate((hist_fld, ssp_fld), axis=0)
-    full_time = np.concatenate((hist_time, ssp_time), axis=0)
+    if args.hist_or_ssp is not "hist":
+        ssp_fld = ssp_fld / float(num_ens)
+        # concatenate arrays to form contiguous time series
+        temp_fld = np.concatenate((hist_fld, ssp_fld), axis=0)
+        full_time = np.concatenate((hist_time, ssp_time), axis=0)
+    else:
+        temp_fld = hist_fld
+        full_time = hist_time
     tm = full_time.size
 
     # smooth data by applying boxcar averaging to sequence of months
@@ -482,12 +486,11 @@ for f in range(nfields):
     # extract smoothed data for period of interest
     def get_year_from_time(time, t, ref_year):
         return time[t] / 365.0 + ref_year
-    t_ssp_start = (ssp_yrstart - hist_yrstart) * nmo
     if args.hist_or_ssp == "hist":
-        t_hist_end = t_ssp_start - 1
+        t_hist_end = len(full_time) - 1
         if f == 0:
             print(f"{get_year_from_time(full_time, 0, ref_year)}-{get_year_from_time(full_time, t_hist_end, ref_year)}")
-        fld_smoothed = stemp_fld[:t_ssp_start, :, :]
+        fld_smoothed = stemp_fld
         nyrs = hist_nyrs
         thisperiod_time = hist_time
         thisperiod_time_units = hist_time_units
@@ -495,6 +498,7 @@ for f in range(nfields):
         thisperiod_yrstart = hist_yrstart
         thisperiod_yrend = hist_yrend
     elif args.hist_or_ssp == "ssp":
+        t_ssp_start = (ssp_yrstart - hist_yrstart) * nmo
         if f == 0:
             print(f"{get_year_from_time(full_time, t_ssp_start, ref_year)}-{get_year_from_time(full_time, len(full_time)-1, ref_year)}")
         fld_smoothed = stemp_fld[t_ssp_start:, :, :]
@@ -657,16 +661,20 @@ for f in range(nfields):
 
         for nens in range(num_ens):
             hdir = dpath + histdir[nens] + dfile
-            fdir = dpath + sspdir[nens] + dfile
             if nens == 0:
                 outfile.Created_from_historical_dirs = hdir
-                outfile.Created_from_scenario_dirs = fdir
             else:
                 outfile.Created_from_historical_dirs += ", " + hdir
-                outfile.Created_from_scenario_dirs += ", " + fdir
+            if args.hist_or_ssp is not "hist":
+                fdir = dpath + sspdir[nens] + dfile
+                if nens == 0:
+                    outfile.Created_from_scenario_dirs = fdir
+                else:
+                    outfile.Created_from_scenario_dirs += ", " + fdir
 
         outfile.History_years = str(hist_yrstart) + "," + str(hist_yrend)
-        outfile.Scenario_years = str(ssp_yrstart) + "," + str(ssp_yrend)
+        if args.hist_or_ssp is not "hist":
+            outfile.Scenario_years = str(ssp_yrstart) + "," + str(ssp_yrend)
         outfile.institution = "National Center for Atmospheric Research"
 
         outfile.createDimension("lat", size=int(nlat))
