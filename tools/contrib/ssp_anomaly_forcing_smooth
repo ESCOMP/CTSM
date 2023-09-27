@@ -267,16 +267,17 @@ for f in range(nfields):
         print("Beginning ensemble number ", nens + 1)
 
         hist_case = histdir[nens]
-        fut_case = sspdir[nens]
         dpath = datapath
         dfile = "/lnd/proc/tseries/month_1/"
         hdir = dpath + hist_case + dfile
-        fdir = dpath + fut_case + dfile
+        if args.hist_or_ssp != "hist":
+            fut_case = sspdir[nens]
+            fdir = dpath + fut_case + dfile
 
         # Check that directories exist
         if not os.path.exists(hdir):
             sys.exit("Could not find directory: " + hdir)
-        if not os.path.exists(fdir):
+        if args.hist_or_ssp != "hist" and not os.path.exists(fdir):
             sys.exit("Could not find directory: " + fdir)
 
         # --  Get historical and SSP filenames  --------------------
@@ -286,20 +287,22 @@ for f in range(nfields):
         histfiles = x[0].decode("utf-8").split("\n")
         histfiles.remove("")
 
-        command = "ls " + fdir + "*." + field_in[f] + ".*.nc"
-        x2 = subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
-        x = x2.communicate()
-        sspfiles = x[0].decode("utf-8").split("\n")
-        sspfiles.remove("")
+        if args.hist_or_ssp != "hist":
+            command = "ls " + fdir + "*." + field_in[f] + ".*.nc"
+            x2 = subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
+            x = x2.communicate()
+            sspfiles = x[0].decode("utf-8").split("\n")
+            sspfiles.remove("")
 
         for hfile in histfiles:
             print(hfile.split("month_1/")[-1])
             if not os.path.exists(hfile):
                 sys.exit(hfile + " does not exist")
-        for sfile in sspfiles:
-            print(sfile.split("month_1/")[-1])
-            if not os.path.exists(sfile):
-                sys.exit(sfile + " does not exist")
+        if args.hist_or_ssp != "hist":
+            for sfile in sspfiles:
+                print(sfile.split("month_1/")[-1])
+                if not os.path.exists(sfile):
+                    sys.exit(sfile + " does not exist")
 
         # --  Read in historical data  -----------
         f1 = netcdf4.MFDataset(histfiles, "r")
@@ -360,7 +363,7 @@ for f in range(nfields):
             )
 
         # read in ssp data  ---------------------
-        if args.hist_or_ssp is not "hist":
+        if args.hist_or_ssp != "hist":
             f1 = netcdf4.MFDataset(sspfiles, "r")
             if nens == 0:
                 ssp_time = np.asfarray(f1.variables["time"][:], np.float64)
@@ -441,7 +444,7 @@ for f in range(nfields):
 
     # normalize summed fields by number of ensemble members
     hist_fld = hist_fld / float(num_ens)
-    if args.hist_or_ssp is not "hist":
+    if args.hist_or_ssp != "hist":
         ssp_fld = ssp_fld / float(num_ens)
         # concatenate arrays to form contiguous time series
         temp_fld = np.concatenate((hist_fld, ssp_fld), axis=0)
@@ -673,7 +676,7 @@ for f in range(nfields):
                 outfile.Created_from_historical_dirs = hdir
             else:
                 outfile.Created_from_historical_dirs += ", " + hdir
-            if args.hist_or_ssp is not "hist":
+            if args.hist_or_ssp != "hist":
                 fdir = dpath + sspdir[nens] + dfile
                 if nens == 0:
                     outfile.Created_from_scenario_dirs = fdir
@@ -681,7 +684,7 @@ for f in range(nfields):
                     outfile.Created_from_scenario_dirs += ", " + fdir
 
         outfile.History_years = str(hist_yrstart) + "," + str(hist_yrend)
-        if args.hist_or_ssp is not "hist":
+        if args.hist_or_ssp != "hist":
             outfile.Scenario_years = str(ssp_yrstart) + "," + str(ssp_yrend)
         outfile.institution = "National Center for Atmospheric Research"
 
