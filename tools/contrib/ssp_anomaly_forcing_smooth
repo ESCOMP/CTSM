@@ -223,13 +223,6 @@ if not os.path.exists(outdir):
 
 print("Output specific data directory :" + outdir)
 
-# historical files are split by 50 year periods; use last period
-hist_suffix = ["200001-201412.nc"]  # not standardized?!
-# hist_suffix = ['-201412.nc']
-# projections are split 2015/2064 2065/2100
-ssp_suffix = ["201501-206412.nc", "206501-210012.nc"]
-# ssp_suffix  = ['-206412.nc','-210012.nc']
-
 climo_year = 2015
 # ten years on either side (21 years total)
 climo_base_nyrs = 21
