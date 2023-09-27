@@ -111,10 +111,12 @@ contains
     ! the calling tree is given in the description of this module.
     !
     ! !USES:
-    use clm_time_manager     , only : get_curr_date
-    use clm_varctl           , only : use_lai_streams, fates_spitfire_mode
-    use laiStreamMod         , only : lai_advance
-    use FATESFireFactoryMod  , only : scalar_lightning
+    use clm_time_manager      , only : get_curr_date
+    use clm_varctl            , only : use_lai_streams, fates_spitfire_mode
+    use clm_varctl            , only : fates_seeddisp_cadence
+    use laiStreamMod          , only : lai_advance
+    use FATESFireFactoryMod   , only : scalar_lightning
+    use FatesInterfaceTypesMod, only : fates_dispersal_cadence_none
     !
     ! !ARGUMENTS:
     implicit none
@@ -1269,7 +1271,9 @@ contains
 
 
     ! Pass fates seed dispersal information to all nodes
-    if (use_fates .and. is_beg_curr_day()) call clm_fates%WrapSeedGlobal()
+    if (fates_seeddisp_cadence .eq. fates_dispersal_cadence_none) then
+       if (use_fates .and. is_beg_curr_day()) call clm_fates%WrapSeedGlobal()
+    end if
 
     ! ============================================================================
     ! Determine gridcell averaged properties to send to atm

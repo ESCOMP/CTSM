@@ -1062,7 +1062,9 @@ module CLMFatesInterfaceMod
 
       ! Distribute any seeds from neighboring gridcells into the current gridcell
       ! Global seed availability array populated by WrapSeedGlobal call
-      call this%wrap_seed_dispersal(bounds_clump)
+      if (fates_seeddisp_cadence .eq. fates_dispersal_cadence_none) then
+         call this%wrap_seed_dispersal(bounds_clump)
+      end if
 
       ! ---------------------------------------------------------------------------------
       ! Flush arrays to values defined by %flushval (see registry entry in
@@ -1846,7 +1848,9 @@ module CLMFatesInterfaceMod
          !$OMP END PARALLEL DO
 
          ! Disperse seeds
-         call this%WrapSeedGlobal(is_restart_flag=.true.)
+         if (fates_seeddisp_cadence .eq. fates_dispersal_cadence_none) then
+            call this%WrapSeedGlobal(is_restart_flag=.true.)
+         end if
 
       end if
 
@@ -2669,9 +2673,6 @@ module CLMFatesInterfaceMod
       if (is_restart_flag) set_flag = .false.   
    end if
 
-   ! Check if seed dispersal mode is 'turned on', if not return to calling procedure
-   if (fates_seeddisp_cadence .eq. fates_dispersal_cadence_none) return
-
    call t_startf('fates-seed-mpi_reduce')
 
    if (IsItDispersalTime(setdispersedflag=set_flag)) then
@@ -2739,9 +2740,6 @@ module CLMFatesInterfaceMod
     integer  :: s                           ! FATES site index
     integer  :: nc                          ! clump index
 
-    ! Check if seed dispersal mode is 'turned on', if not return to calling procedure
-    if (fates_seeddisp_cadence .eq. fates_dispersal_cadence_none) return
-
     call t_startf('fates-seed-disperse')
 
     nc = bounds_clump%clump_index
@@ -2767,7 +2765,6 @@ module CLMFatesInterfaceMod
        write(iulog,*) 'WSD pst: g, incoming, seed_in: ', g, sum(this%fates_seed%incoming_global(:,g)), sum(this%fates(nc)%sites(s)%seed_in(:))
 
     end do
-
 
     call t_stopf('fates-seed-disperse')
 
