@@ -516,6 +516,8 @@ contains
     real(r8) :: tot_dst_snw_conc                  ! total dust content in snow across all size bins (ppm=ug/g)
     integer  :: idb                               ! loop index
 
+    real(r8), parameter :: enh_omg_max = 1.e5_r8  ! reasonable maximum value for enh_omg_[bc,dst]int_intp2
+
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
@@ -971,7 +973,7 @@ contains
                            call piecewise_linear_interp1d(16,bcint_wvl_ct,enh_omg_bcint_tmp2,wvl_doint,enh_omg_bcint_intp)
                            ! update snow single-scattering albedo
                            enh_omg_bcint_intp2 = 10._r8 ** enh_omg_bcint_intp                           
-                           enh_omg_bcint_intp2 = min(1.0E5_r8, max(enh_omg_bcint_intp2,1._r8)) ! constrain enhancement to a reasonable range
+                           enh_omg_bcint_intp2 = min(enh_omg_max, max(enh_omg_bcint_intp2, 1._r8)) ! constrain enhancement to a reasonable range
                            ss_alb_snw_lcl(i)   = 1._r8 - (1._r8 - ss_alb_snw_lcl(i)) * enh_omg_bcint_intp2
                            ss_alb_snw_lcl(i)   = max(0.5_r8, min(ss_alb_snw_lcl(i),1._r8))
                            ! reset hydrophilic BC property to 0 since it is accounted by updated snow ss_alb above
@@ -998,7 +1000,7 @@ contains
                            call piecewise_linear_interp1d(6,dstint_wvl_ct,enh_omg_dstint_tmp2,wvl_doint,enh_omg_dstint_intp)
                            ! update snow single-scattering albedo
                            enh_omg_dstint_intp2 = 10._r8 ** enh_omg_dstint_intp
-                           enh_omg_dstint_intp2 = min(1.0E5_r8, max(enh_omg_dstint_intp2,1._r8)) ! constrain enhancement to a reasonable range
+                           enh_omg_dstint_intp2 = min(enh_omg_max, max(enh_omg_dstint_intp2, 1._r8)) ! constrain enhancement to a reasonable range
                            ss_alb_snw_lcl(i) = 1._r8 - (1._r8 - ss_alb_snw_lcl(i)) * enh_omg_dstint_intp2
                            ss_alb_snw_lcl(i) = max(0.5_r8, min(ss_alb_snw_lcl(i),1._r8))
                            ! reset all dust optics to zero  since it is accounted by updated snow ss_alb above
