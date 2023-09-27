@@ -6,7 +6,11 @@ module clm_time_manager
    use spmdMod     , only: masterproc
    use clm_varctl  , only: iulog
    use clm_varcon  , only: isecspday
-   use ESMF
+   use ESMF        , only: ESMF_Clock, ESMF_Calendar, ESMF_MAXSTR, ESMF_Time, ESMF_TimeInterval
+   use ESMF        , only: ESMF_TimeIntervalSet, ESMF_TimeSet, ESMF_TimeGet, ESMF_ClockGet
+   use ESMF        , only: operator(==), operator(+), operator(<=), operator(>=)
+   use ESMF        , only: operator(>), operator(<), operator(-)
+   use ESMF        , only: ESMF_KIND_I8, ESMF_TimeIntervalGet
 
    implicit none
    private
@@ -55,6 +59,8 @@ module clm_time_manager
         is_beg_curr_year,         &! return true on first timestep in current year
         is_end_curr_year,         &! return true on last timestep in current year
         is_perpetual,             &! return true if perpetual calendar is in use
+        is_doy_in_interval,       &! return true if day of year is in the provided interval
+        is_today_in_doy_interval, &! return true if today's day of year is in the provided interval
         is_near_local_noon,       &! return true if near local noon
         is_restart,               &! return true if this is a restart run
         update_rad_dtime,         &! track radiation interval via nstep
@@ -93,10 +99,11 @@ module clm_time_manager
         ref_ymd       = uninit_int,  &! reference date for time coordinate in yearmmdd format
         ref_tod       = 0             ! reference time of day for time coordinate in seconds
    type(ESMF_Calendar), target, save   :: tm_cal       ! calendar
-   type(ESMF_Clock),    save   :: tm_clock     ! model clock   
+   type(ESMF_Clock),    save   :: tm_clock     ! model clock
+   integer,             save   :: tm_clock_step_size_sec ! Cache of clock timestep.
    type(ESMF_Time),     save   :: tm_perp_date ! perpetual date
 
-   ! Data required to restart time manager:
+   ! Data required to restart time manager (only set if timemgr_restart_io is called):
    integer, save :: rst_step_sec          = uninit_int ! timestep size seconds
    integer, save :: rst_start_ymd         = uninit_int ! start date
    integer, save :: rst_start_tod         = uninit_int ! start time of day
@@ -245,6 +252,8 @@ contains
     !---------------------------------------------------------------------------------
     ! Purpose: Initialize the clock based on the start_date, ref_date and curr_date
     !
+    use ESMF       , only : ESMF_ClockCreate, ESMF_ClockAdvance
+
     type(ESMF_Time), intent(in) :: start_date  ! start date for run
     type(ESMF_Time), intent(in) :: ref_date    ! reference date for time coordinate
     type(ESMF_Time), intent(in) :: curr_date   ! current date (equal to start_date)
@@ -303,6 +312,12 @@ contains
        call ESMF_ClockGet(tm_clock, currTime=current )
        call chkrc(rc, sub//': error return from ESMF_ClockGet')
     end do
+
+
+    ! Cache step size, we query it a lot.
+    call ESMF_TimeIntervalGet(step_size, s=tm_clock_step_size_sec, rc=rc)
+    call chkrc(rc, sub//': error return from ESMF_ClockTimeIntervalGet')
+
   end subroutine init_clock
 
   !=========================================================================================
@@ -553,6 +568,8 @@ contains
 
     !---------------------------------------------------------------------------------
     ! Initialize calendar
+    use ESMF        , only : ESMF_CalKind_Flag, ESMF_CALKIND_NOLEAP
+    use ESMF        , only : ESMF_CALKIND_GREGORIAN, ESMF_CalendarCreate
     !
     ! Local variables
     !
@@ -652,6 +669,7 @@ contains
   subroutine advance_timestep()
 
     ! Increment the timestep number.
+    use ESMF       , only : ESMF_ClockAdvance
 
     character(len=*), parameter :: sub = 'clm::advance_timestep'
     integer :: rc
@@ -687,16 +705,10 @@ contains
     ! Return the step size in seconds.
 
     character(len=*), parameter :: sub = 'clm::get_step_size'
-    type(ESMF_TimeInterval) :: step_size       ! timestep size
-    integer :: rc
 
     if ( .not. check_timemgr_initialized(sub) ) return
 
-    call ESMF_ClockGet(tm_clock, timeStep=step_size, rc=rc)
-    call chkrc(rc, sub//': error return from ESMF_ClockGet')
-
-    call ESMF_TimeIntervalGet(step_size, s=get_step_size, rc=rc)
-    call chkrc(rc, sub//': error return from ESMF_ClockTimeIntervalGet')
+    get_step_size = tm_clock_step_size_sec
 
   end function get_step_size
 
@@ -1749,6 +1761,58 @@ contains
 
   !=========================================================================================
 
+  logical function is_doy_in_interval(start, end, doy)
+
+    ! Return true if day of year is in the provided interval.
+    ! Does not treat leap years differently from normal years.
+    ! Arguments
+    integer, intent(in) :: start ! start of interval (day of year)
+    integer, intent(in) :: end ! end of interval (day of year)
+    integer, intent(in) :: doy ! day of year to query
+    
+    ! Local variables
+    logical :: window_crosses_newyear
+
+    character(len=*), parameter :: sub = 'clm::is_doy_in_interval'
+
+    window_crosses_newyear = end < start
+
+    if (window_crosses_newyear .and. &
+        (doy >= start .or. doy <= end)) then
+       is_doy_in_interval = .true.
+    else if (.not. window_crosses_newyear .and. &
+        (doy >= start .and. doy <= end)) then
+       is_doy_in_interval = .true.
+    else
+       is_doy_in_interval = .false.
+    end if
+    
+  end function is_doy_in_interval
+
+  !=========================================================================================
+
+  logical function is_today_in_doy_interval(start, end)
+
+    ! Return true if today's day of year is in the provided interval.
+    ! Does not treat leap years differently from normal years.
+    ! Arguments
+    integer, intent(in) :: start ! start of interval (day of year)
+    integer, intent(in) :: end ! end of interval (day of year)
+
+    ! Local variable(s)
+    integer :: doy_today
+
+    character(len=*), parameter :: sub = 'clm::is_today_in_doy_interval'
+
+    ! Get doy of beginning of current timestep
+    doy_today = get_prev_calday()
+
+    is_today_in_doy_interval = is_doy_in_interval(start, end, doy_today)
+
+  end function is_today_in_doy_interval
+
+  !=========================================================================================
+
   subroutine timemgr_datediff(ymd1, tod1, ymd2, tod2, days)
 
     ! Calculate the difference (ymd2,tod2) - (ymd1,tod1) and return the result in days.
@@ -1782,6 +1846,7 @@ contains
   !=========================================================================================
 
   subroutine chkrc(rc, mes)
+    use ESMF        , only : ESMF_SUCCESS
     integer, intent(in)          :: rc   ! return code from time management library
     character(len=*), intent(in) :: mes  ! error message
     if ( rc == ESMF_SUCCESS ) return
@@ -1886,6 +1951,7 @@ contains
     ! does not explicitly initialize all variables).
     !
     ! !USES:
+    use ESMF      , only : ESMF_ClockDestroy
     !
     ! !ARGUMENTS:
     !
@@ -1963,6 +2029,7 @@ contains
     ! *** Should only be used in unit tests!!! ***
     !
     ! !USES:
+    use ESMF    , only : ESMF_ClockSet
     !
     ! !ARGUMENTS:
     integer, intent(in) :: yr  ! year

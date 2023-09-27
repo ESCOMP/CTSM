@@ -89,13 +89,14 @@ module atm2lndType
      real(r8), pointer :: forc_po2_240_patch            (:)   => null() ! 10-day mean O2 partial pressure (Pa)
      real(r8), pointer :: forc_aer_grc                  (:,:) => null() ! aerosol deposition array
      real(r8), pointer :: forc_pch4_grc                 (:)   => null() ! CH4 partial pressure (Pa)
+     real(r8), pointer :: forc_o3_grc                   (:)   => null() ! ozone partial pressure (mol/mol)
 
-     real(r8), pointer :: forc_t_not_downscaled_grc     (:)   => null() ! not downscaled atm temperature (Kelvin)       
-     real(r8), pointer :: forc_th_not_downscaled_grc    (:)   => null() ! not downscaled atm potential temperature (Kelvin)    
-     real(r8), pointer :: forc_pbot_not_downscaled_grc  (:)   => null() ! not downscaled atm pressure (Pa)   
-     real(r8), pointer :: forc_pbot240_downscaled_patch (:)   => null() ! 10-day mean downscaled atm pressure (Pa)           
-     real(r8), pointer :: forc_rho_not_downscaled_grc   (:)   => null() ! not downscaled atm density (kg/m**3)                      
-     real(r8), pointer :: forc_lwrad_not_downscaled_grc (:)   => null() ! not downscaled atm downwrd IR longwave radiation (W/m**2) 
+     real(r8), pointer :: forc_t_not_downscaled_grc     (:)   => null() ! not downscaled atm temperature (Kelvin)
+     real(r8), pointer :: forc_th_not_downscaled_grc    (:)   => null() ! not downscaled atm potential temperature (Kelvin)
+     real(r8), pointer :: forc_pbot_not_downscaled_grc  (:)   => null() ! not downscaled atm pressure (Pa)
+     real(r8), pointer :: forc_pbot240_downscaled_patch (:)   => null() ! 10-day mean downscaled atm pressure (Pa)
+     real(r8), pointer :: forc_rho_not_downscaled_grc   (:)   => null() ! not downscaled atm density (kg/m**3)
+     real(r8), pointer :: forc_lwrad_not_downscaled_grc (:)   => null() ! not downscaled atm downwrd IR longwave radiation (W/m**2)
 
      ! atm->lnd downscaled
      real(r8), pointer :: forc_t_downscaled_col         (:)   => null() ! downscaled atm temperature (Kelvin)
@@ -106,10 +107,10 @@ module atm2lndType
 
 
      ! time averaged quantities
-     real(r8) , pointer :: fsd24_patch                  (:)   => null() ! patch 24hr average of direct beam radiation 
-     real(r8) , pointer :: fsd240_patch                 (:)   => null() ! patch 240hr average of direct beam radiation 
-     real(r8) , pointer :: fsi24_patch                  (:)   => null() ! patch 24hr average of diffuse beam radiation 
-     real(r8) , pointer :: fsi240_patch                 (:)   => null() ! patch 240hr average of diffuse beam radiation 
+     real(r8) , pointer :: fsd24_patch                  (:)   => null() ! patch 24hr average of direct beam radiation
+     real(r8) , pointer :: fsd240_patch                 (:)   => null() ! patch 240hr average of direct beam radiation
+     real(r8) , pointer :: fsi24_patch                  (:)   => null() ! patch 24hr average of diffuse beam radiation
+     real(r8) , pointer :: fsi240_patch                 (:)   => null() ! patch 240hr average of diffuse beam radiation
      real(r8) , pointer :: wind24_patch                 (:)   => null() ! patch 24-hour running mean of wind
      real(r8) , pointer :: t_mo_patch                   (:)   => null() ! patch 30-day average temperature (Kelvin)
      real(r8) , pointer :: t_mo_min_patch               (:)   => null() ! patch annual min of t_mo (Kelvin)
@@ -120,7 +121,7 @@ module atm2lndType
      procedure, public  :: InitForTesting  ! version of Init meant for unit testing
      procedure, private :: ReadNamelist
      procedure, private :: InitAllocate
-     procedure, private :: InitHistory  
+     procedure, private :: InitHistory
      procedure, public  :: InitAccBuffer
      procedure, public  :: InitAccVars
      procedure, public  :: UpdateAccVars
@@ -289,7 +290,7 @@ contains
     call this%InitAllocate(bounds)
     call this%ReadNamelist(NLFilename)
     call this%InitHistory(bounds)
-    
+
   end subroutine Init
 
   !-----------------------------------------------------------------------
@@ -450,7 +451,7 @@ contains
     !
     ! !ARGUMENTS:
     class(atm2lnd_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     real(r8) :: ival  = 0.0_r8  ! initial value
@@ -482,6 +483,7 @@ contains
     allocate(this%forc_po2_grc                  (begg:endg))        ; this%forc_po2_grc                  (:)   = ival
     allocate(this%forc_aer_grc                  (begg:endg,14))     ; this%forc_aer_grc                  (:,:) = ival
     allocate(this%forc_pch4_grc                 (begg:endg))        ; this%forc_pch4_grc                 (:)   = ival
+    allocate(this%forc_o3_grc                   (begg:endg))        ; this%forc_o3_grc                   (:)   = ival
     if(use_luna)then
      allocate(this%forc_pco2_240_patch          (begp:endp))        ; this%forc_pco2_240_patch           (:)   = ival
      allocate(this%forc_po2_240_patch           (begp:endp))        ; this%forc_po2_240_patch            (:)   = ival
@@ -494,7 +496,7 @@ contains
     allocate(this%forc_th_not_downscaled_grc    (begg:endg))        ; this%forc_th_not_downscaled_grc    (:)   = ival
     allocate(this%forc_rho_not_downscaled_grc   (begg:endg))        ; this%forc_rho_not_downscaled_grc   (:)   = ival
     allocate(this%forc_lwrad_not_downscaled_grc (begg:endg))        ; this%forc_lwrad_not_downscaled_grc (:)   = ival
-    
+
     ! atm->lnd downscaled
     allocate(this%forc_t_downscaled_col         (begc:endc))        ; this%forc_t_downscaled_col         (:)   = ival
     allocate(this%forc_pbot_downscaled_col      (begc:endc))        ; this%forc_pbot_downscaled_col      (:)   = ival
@@ -522,7 +524,7 @@ contains
     !
     ! !ARGUMENTS:
     class(atm2lnd_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer  :: begg, endg
@@ -552,6 +554,10 @@ contains
     call hist_addfld1d (fname='ATM_TOPO', units='m', &
          avgflag='A', long_name='atmospheric surface height', &
          ptr_lnd=this%forc_topo_grc)
+
+    call hist_addfld1d (fname='ATM_O3', units='mol/mol', &
+         avgflag='A', long_name='atmospheric ozone partial pressure', &
+         ptr_lnd=this%forc_o3_grc, default = 'inactive')
 
     this%forc_solar_grc(begg:endg) = spval
     call hist_addfld1d (fname='FSDS', units='W/m^2',  &
@@ -668,13 +674,13 @@ contains
     ! This routine set defaults values that are then overwritten by the
     ! restart file for restart or branch runs
     !
-    ! !USES 
+    ! !USES
     use clm_varcon  , only : spval
     use accumulMod  , only : init_accum_field
     !
     ! !ARGUMENTS:
     class(atm2lnd_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !---------------------------------------------------------------------
 
     this%fsd24_patch(bounds%begp:bounds%endp) = spval
@@ -729,16 +735,16 @@ contains
     ! !DESCRIPTION:
     ! Initialize module variables that are associated with
     ! time accumulated fields. This routine is called for both an initial run
-    ! and a restart run (and must therefore must be called after the restart file 
+    ! and a restart run (and must therefore must be called after the restart file
     ! is read in and the accumulation buffer is obtained)
     !
-    ! !USES 
+    ! !USES
     use accumulMod       , only : extract_accum_field
     use clm_time_manager , only : get_nstep
     !
     ! !ARGUMENTS:
     class(atm2lnd_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer  :: begp, endp
@@ -783,7 +789,7 @@ contains
     this%fsi240_patch(begp:endp) = rbufslp(begp:endp)
 
     if (use_cndv) then
-       call extract_accum_field ('TDA', rbufslp, nstep) 
+       call extract_accum_field ('TDA', rbufslp, nstep)
        this%t_mo_patch(begp:endp) = rbufslp(begp:endp)
     end if
 
@@ -797,11 +803,11 @@ contains
        this%forc_po2_240_patch(begp:endp) = rbufslp(begp:endp)
 
        call extract_accum_field ('pco2_240', rbufslp, nstep)
-       this%forc_pco2_240_patch(begp:endp) = rbufslp(begp:endp)   
+       this%forc_pco2_240_patch(begp:endp) = rbufslp(begp:endp)
 
        call extract_accum_field ('pbot240', rbufslp, nstep)
-       this%forc_pbot240_downscaled_patch(begp:endp) = rbufslp(begp:endp)  
- 
+       this%forc_pbot240_downscaled_patch(begp:endp) = rbufslp(begp:endp)
+
     endif
 
     deallocate(rbufslp)
@@ -818,7 +824,7 @@ contains
     !
     ! !ARGUMENTS:
     class(atm2lnd_type)                 :: this
-    type(bounds_type)      , intent(in) :: bounds  
+    type(bounds_type)      , intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: g,c,p                     ! indices
@@ -849,7 +855,7 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
-    ! Accumulate and extract forc_solad24 & forc_solad240 
+    ! Accumulate and extract forc_solad24 & forc_solad240
     do p = begp,endp
        g = patch%gridcell(p)
        rbufslp(p) = this%forc_solad_grc(g,1)
@@ -859,7 +865,7 @@ contains
     call update_accum_field  ('FSD24' , rbufslp               , nstep)
     call extract_accum_field ('FSD24' , this%fsd24_patch      , nstep)
 
-    ! Accumulate and extract forc_solai24 & forc_solai240 
+    ! Accumulate and extract forc_solai24 & forc_solai240
     do p = begp,endp
        g = patch%gridcell(p)
        rbufslp(p) = this%forc_solai_grc(g,1)
@@ -872,9 +878,9 @@ contains
 
     if (use_cndv) then
 
-       ! Accumulate and extract TDA (accumulates TBOT as 30-day average) and 
+       ! Accumulate and extract TDA (accumulates TBOT as 30-day average) and
        ! also determines t_mo_min
-       
+
        do p = begp,endp
           c = patch%column(p)
           rbufslp(p) = this%forc_t_downscaled_col(c)
@@ -890,8 +896,8 @@ contains
 
     if (use_fates) then
        do p = bounds%begp,bounds%endp
-          g = patch%gridcell(p) 
-          rbufslp(p) = this%forc_wind_grc(g) 
+          g = patch%gridcell(p)
+          rbufslp(p) = this%forc_wind_grc(g)
        end do
        call update_accum_field  ('WIND24', rbufslp, nstep)
        call extract_accum_field ('WIND24', this%wind24_patch, nstep)
@@ -901,21 +907,21 @@ contains
     if(use_luna) then
      do p = bounds%begp,bounds%endp
        g = patch%gridcell(p)
-       rbufslp(p) = this%forc_pco2_grc(g) 
+       rbufslp(p) = this%forc_pco2_grc(g)
      enddo
      call update_accum_field  ('pco2_240', rbufslp, nstep)
      call extract_accum_field ('pco2_240', this%forc_pco2_240_patch, nstep)
 
      do p = bounds%begp,bounds%endp
        g = patch%gridcell(p)
-       rbufslp(p) = this%forc_po2_grc(g) 
+       rbufslp(p) = this%forc_po2_grc(g)
      enddo
      call update_accum_field  ('po2_240', rbufslp, nstep)
      call extract_accum_field ('po2_240', this%forc_po2_240_patch, nstep)
 
      do p = bounds%begp,bounds%endp
        c = patch%column(p)
-       rbufslp(p) = this%forc_pbot_downscaled_col(c) 
+       rbufslp(p) = this%forc_pbot_downscaled_col(c)
      enddo
      call update_accum_field  ('pbot240', rbufslp, nstep)
      call extract_accum_field ('pbot240', this%forc_pbot240_downscaled_patch, nstep)
@@ -929,19 +935,19 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag)
-    ! 
+    !
     ! !USES:
     use restUtilMod
     use ncdio_pio
     !
     ! !ARGUMENTS:
     class(atm2lnd_type) :: this
-    type(bounds_type), intent(in) :: bounds  
-    type(file_desc_t), intent(inout) :: ncid   
-    character(len=*) , intent(in)    :: flag   
+    type(bounds_type), intent(in) :: bounds
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
     !
     ! !LOCAL VARIABLES:
-    logical            :: readvar 
+    logical            :: readvar
     !------------------------------------------------------------------------
 
     if (use_cndv) then
@@ -999,6 +1005,7 @@ contains
     deallocate(this%forc_po2_grc)
     deallocate(this%forc_aer_grc)
     deallocate(this%forc_pch4_grc)
+    deallocate(this%forc_o3_grc)
 
     ! atm->lnd not downscaled
     deallocate(this%forc_t_not_downscaled_grc)
@@ -1006,7 +1013,7 @@ contains
     deallocate(this%forc_th_not_downscaled_grc)
     deallocate(this%forc_rho_not_downscaled_grc)
     deallocate(this%forc_lwrad_not_downscaled_grc)
-    
+
     ! atm->lnd downscaled
     deallocate(this%forc_t_downscaled_col)
     deallocate(this%forc_pbot_downscaled_col)

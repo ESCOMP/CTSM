@@ -718,8 +718,13 @@ def _create_case(
     else:
         machine_args = ["--machine", machine]
 
+    cmd = os.path.join(cime_path, "scripts", "create_newcase")
+    if not os.path.exists(cmd):
+        abort(
+            "The create_newcase command doesn't exist as expected <{}> does not exist)".format(cmd)
+        )
     create_newcase_cmd = [
-        os.path.join(cime_path, "scripts", "create_newcase"),
+        cmd,
         "--output-root",
         build_dir,
         "--case",
@@ -741,7 +746,12 @@ def _create_case(
     create_newcase_cmd.extend(machine_args)
     if inputdata_path:
         create_newcase_cmd.extend(["--input-dir", inputdata_path])
-    run_cmd_output_on_error(create_newcase_cmd, errmsg="Problem creating CTSM case directory")
+        if not os.path.isdir(inputdata_path):
+            abort("inputdata_path directory (<{}> does not exist)".format(inputdata_path))
+    run_cmd_output_on_error(
+        create_newcase_cmd,
+        errmsg="Problem running create_newcase to create the CTSM case directory",
+    )
 
     subprocess.check_call([xmlchange, "LILAC_MODE=on"], cwd=case_dir)
     if build_debug:

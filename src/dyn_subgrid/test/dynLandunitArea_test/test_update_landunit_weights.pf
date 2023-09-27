@@ -2,7 +2,7 @@ module test_update_landunit_weights
 
   ! Tests of the update_landunit_weights routine in the dynLandunitArea module
 
-  use pfunit_mod
+  use funit
   use unittestSubgridMod
   use dynLandunitAreaMod
   use shr_kind_mod	, only : r8 => shr_kind_r8

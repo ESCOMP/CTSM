@@ -1,4 +1,3 @@
-create_pFUnit_test(dynInitColumns test_dynInitColumns_exe
-  "test_init_columns.pf" "")
-
-target_link_libraries(test_dynInitColumns_exe clm csm_share esmf_wrf_timemgr)
+add_pfunit_ctest(dynInitColumns
+  TEST_SOURCES "test_init_columns.pf"
+  LINK_LIBRARIES clm csm_share esmf_wrf_timemgr)

@@ -13,8 +13,9 @@ module WaterStateType
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
   use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_gridcell
-  use clm_varctl     , only : use_bedrock, iulog
-  use clm_varctl     , only : use_fates_planthydro
+  use clm_varctl     , only : use_bedrock, use_excess_ice, iulog
+  use spmdMod        , only : masterproc
+  use clm_varctl     , only : use_fates
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevmaxurbgrnd, nlevsno   
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
@@ -22,6 +23,7 @@ module WaterStateType
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
+  use ExcessIceStreamType, only : excessicestream_type, UseExcessIceStreams
   !
   implicit none
   save
@@ -46,10 +48,15 @@ module WaterStateType
      ! For the following dynbal baseline variables: positive values are subtracted to
      ! avoid counting liquid water content of "virtual" states; negative values are added
      ! to account for missing states in the model.
-     real(r8), pointer :: dynbal_baseline_liq_col(:)   ! baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
-     real(r8), pointer :: dynbal_baseline_ice_col(:)   ! baseline ice content subtracted from each column's total ice calculation (mm H2O)
+     real(r8), pointer :: dynbal_baseline_liq_col(:)    ! baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
+     real(r8), pointer :: dynbal_baseline_ice_col(:)    ! baseline ice content subtracted from each column's total ice calculation (mm H2O)
 
-     real(r8) :: aquifer_water_baseline                ! baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
+     real(r8) :: aquifer_water_baseline                 ! baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
+
+     real(r8), pointer :: excess_ice_col         (:,:)  ! col excess ice (kg/m2) (new) (-nlevsno+1:nlevgrnd)
+     real(r8), pointer :: exice_bulk_init        (:)    ! inital value for excess ice (new) (unitless)
+
+     type(excessicestream_type), private :: exicestream ! stream type for excess ice initialization NUOPC only
 
    contains
 
@@ -72,7 +79,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, info, tracer_vars, &
-       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer)
+       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer, NLFilename)
 
     class(waterstate_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds  
@@ -82,18 +89,19 @@ contains
     real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     logical           , intent(in)    :: use_aquifer_layer ! whether an aquifer layer is used in this run
+    character(len=*) , intent(in)     :: NLFilename ! Namelist filename
 
     this%info => info
 
     call this%InitAllocate(bounds, tracer_vars)
 
     call this%InitHistory(bounds, use_aquifer_layer)
-
     call this%InitCold(bounds = bounds, &
-         h2osno_input_col = h2osno_input_col, &
-         watsat_col = watsat_col, &
-         t_soisno_col = t_soisno_col, &
-         use_aquifer_layer = use_aquifer_layer)
+      h2osno_input_col = h2osno_input_col, &
+      watsat_col = watsat_col, &
+      t_soisno_col = t_soisno_col, &
+      use_aquifer_layer = use_aquifer_layer, &
+      NLFilename = NLFilename)
 
   end subroutine Init
 
@@ -148,6 +156,14 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%dynbal_baseline_ice_col, name = 'dynbal_baseline_ice_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_column)
+    !excess ice vars
+    call AllocateVar2d(var = this%excess_ice_col, name = 'excess_ice_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
+         dim2beg = -nlevsno+1, dim2end = nlevmaxurbgrnd)
+    call AllocateVar1d(var = this%exice_bulk_init, name = 'exice_bulk_init', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column)
 
@@ -268,6 +284,15 @@ contains
             ptr_col=this%wa_col, l2g_scale_type='veg')
     end if
 
+    ! Add excess ice fields to history
+
+    if (use_excess_ice) then
+       data2dptr => this%excess_ice_col(begc:endc,1:nlevsoi)
+       call hist_addfld2d (fname='EXCESS_ICE',  units='kg/m2', type2d='levsoi', &
+           avgflag='A', long_name='excess soil ice (vegetated landunits only)', &
+           ptr_col=this%excess_ice_col, l2g_scale_type='veg', default = 'inactive')
+    end if
+
     ! (rgk 02-02-2017) There is intentionally no entry  here for stored plant water
     !                  I think that since the value is zero in all cases except
     !                  for FATES plant hydraulics, it will be confusing for users
@@ -281,7 +306,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine InitCold(this, bounds, &
-       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer)
+       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer, NLFilename)
     !
     ! !DESCRIPTION:
     ! Initialize time constant variables and cold start conditions 
@@ -290,20 +315,22 @@ contains
     use shr_const_mod   , only : SHR_CONST_TKFRZ
     use landunit_varcon , only : istwet, istsoil, istcrop, istice
     use column_varcon   , only : icol_road_perv, icol_road_imperv
-    use clm_varcon      , only : denice, denh2o, bdsno 
+    use clm_varcon      , only : denice, denh2o, bdsno , zisoi
     use clm_varcon      , only : tfrz, aquifer_water_baseline
+    use initVerticalMod , only : find_soil_layer_containing_depth
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(inout) :: this
     type(bounds_type)     , intent(in)    :: bounds
     real(r8)              , intent(in)    :: h2osno_input_col(bounds%begc:)
-    real(r8)              , intent(in)    :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
+    real(r8)              , intent(in)    :: watsat_col(bounds%begc:, 1:)            ! volumetric soil water at saturation (porosity)
     real(r8)              , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
-    logical               , intent(in)    :: use_aquifer_layer ! whether an aquifer layer is used in this run
+    logical               , intent(in)    :: use_aquifer_layer                       ! whether an aquifer layer is used in this run
+    character(len=*)      , intent(in)    :: NLFilename                              ! Namelist filename
     !
     ! !LOCAL VARIABLES:
-    integer            :: c,j,l,nlevs 
-    integer            :: nbedrock
+    integer            :: c,j,l,nlevs,g 
+    integer            :: nbedrock, n05m ! layer containing 0.5 m
     real(r8)           :: ratio
     !-----------------------------------------------------------------------
 
@@ -340,7 +367,7 @@ contains
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                nlevs = nlevgrnd
                do j = 1, nlevs
-                  if (use_bedrock) then
+                  if (use_bedrock .and. col%nbedrock(c) <=nlevsoi) then
                      nbedrock = col%nbedrock(c)
                   else
                      nbedrock = nlevsoi
@@ -348,7 +375,7 @@ contains
                   if (j > nbedrock) then
                      this%h2osoi_vol_col(c,j) = 0.0_r8
                   else
-                     if(use_fates_planthydro) then
+                     if(use_fates) then
                          this%h2osoi_vol_col(c,j) = 0.75_r8*watsat_col(c,j)*ratio
                      else
                          this%h2osoi_vol_col(c,j) = 0.15_r8*ratio
@@ -505,39 +532,91 @@ contains
       this%dynbal_baseline_liq_col(bounds%begc:bounds%endc) = 0._r8
       this%dynbal_baseline_ice_col(bounds%begc:bounds%endc) = 0._r8
 
+      !Initialize excess ice
+      if (use_excess_ice .and. NLFilename /= '') then
+         ! enforce initialization with 0 for everything
+         this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
+         this%exice_bulk_init(bounds%begc:bounds%endc)=0.0_r8
+         call this%exicestream%Init(bounds, NLFilename) ! get initial fraction of excess ice per column
+         !
+         ! If excess ice is being read from streams, use the streams to
+         ! initialize
+         !
+         if ( UseExcessIceStreams() )then
+            call this%exicestream%CalcExcessIce(bounds, this%exice_bulk_init)
+            do c = bounds%begc,bounds%endc
+               g = col%gridcell(c)
+               l = col%landunit(c)
+               if (.not. lun%lakpoi(l)) then  !not lake
+                  if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+                     if (zisoi(nlevsoi) >= 0.5_r8) then
+                       call find_soil_layer_containing_depth(0.5_r8,n05m)
+                     else
+                       n05m=nlevsoi-1
+                     endif
+                     if (use_bedrock .and. col%nbedrock(c) <=nlevsoi) then
+                        nbedrock = col%nbedrock(c)
+                     else
+                        nbedrock = nlevsoi
+                     endif
+                     do j = 2, nlevmaxurbgrnd ! ignore first layer
+                        if (n05m<nbedrock) then ! bedrock below 1 m
+                           if (j >= n05m .and. j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
+                              this%excess_ice_col(c,j) = col%dz(c,j)*denice*(this%exice_bulk_init(c))
+                           else
+                              this%excess_ice_col(c,j) = 0.0_r8
+                           endif
+                        else 
+                           this%excess_ice_col(c,j) = 0.0_r8
+                        end if
+                     end do
+                  endif
+               else ! just in case zeros for lakes and other columns
+                  this%excess_ice_col(c,-nlevsno+1:nlevmaxurbgrnd) = 0.0_r8
+               endif
+            enddo
+         end if
+      else ! use_excess_ice is false
+         this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
+         this%exice_bulk_init(bounds%begc:bounds%endc)=0.0_r8
+      end if
     end associate
 
   end subroutine InitCold
 
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag, &
-       watsat_col)
+       watsat_col, t_soisno_col, altmax_lastyear_indx)
     ! 
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use clm_varcon       , only : denice, denh2o, pondmx, watmin
+    use clm_varcon       , only : denice, denh2o, pondmx, watmin, tfrz
     use landunit_varcon  , only : istcrop, istdlak, istsoil  
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_time_manager , only : is_first_step, is_restart
-    use clm_varctl       , only : bound_h2osoi
+    use clm_varctl       , only : bound_h2osoi, nsrest, nsrContinue
     use ncdio_pio        , only : file_desc_t, ncd_double
-    use restUtilMod
+    use ExcessIceStreamType, only : UseExcessIceStreams
+    use restUtilMod        , only : restartvar, RestartExcessIceIssue
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(in) :: this
     type(bounds_type), intent(in)    :: bounds 
-    type(file_desc_t), intent(inout) :: ncid   ! netcdf id
-    character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
-    real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
+    type(file_desc_t), intent(inout) :: ncid                                    ! netcdf id
+    character(len=*) , intent(in)    :: flag                                    ! 'read' or 'write'
+    real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)           ! volumetric soil water at saturation (porosity)
+    real(r8)         , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
+    integer          , intent(in)    :: altmax_lastyear_indx(bounds%begc:)      !col active layer index last year
     !
     ! !LOCAL VARIABLES:
-    integer  :: p,c,l,j,nlevs
+    integer  :: p,c,l,j,nlevs,nbedrock
     logical  :: readvar
     real(r8) :: maxwatsat    ! maximum porosity    
     real(r8) :: excess       ! excess volumetric soil water
     real(r8) :: totwat       ! total soil water (mm)
+    logical :: excess_ice_on_restart ! Excess ice fields are on the restart file
     !------------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc,nlevmaxurbgrnd/)) , sourcefile, __LINE__)
@@ -629,6 +708,62 @@ contains
          long_name=this%info%lname("baseline ice mass subtracted from each column's total ice calculation"), &
          units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_ice_col)
+
+    ! Restart excess ice vars
+    if (.not. use_excess_ice) then
+       ! no need to even define the restart vars
+       this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
+    else
+       call RestartExcessIceIssue( &
+            ncid = ncid, &
+            flag = flag, &
+            excess_ice_on_restart = excess_ice_on_restart)
+       ! have to at least define them 
+       call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('EXCESS_ICE'), xtype=ncd_double,  &
+            dim1name='column', dim2name='levtot', switchdim=.true., &
+            long_name=this%info%lname('excess soil ice (vegetated landunits only)'), &
+            units='kg/m2', scale_by_thickness=.true., &
+            interpinic_flag='interp', readvar=readvar, data=this%excess_ice_col)
+       if (flag == 'read' .and. ((.not. readvar) .or. (.not.  excess_ice_on_restart)) ) then ! when reading restart that does not have excess ice in it
+          if (nsrest == nsrContinue) then
+             call endrun(msg = "On a continue run, excess ice fields MUST be on the restart file "// & 
+             errMsg(sourcefile, __LINE__))
+          else if ( .not. UseExcessIceStreams() )then
+             call endrun(msg = "This input initial conditions file does NOT include excess ice fields" // &
+                         ", and use_excess_ice_streams is off, one or the other needs to be changed  "// & 
+                         errMsg(sourcefile, __LINE__))
+          end if
+          if (masterproc) then
+             write(iulog,*) 'Excess ice data is read from the stream and not from restart file!'
+          endif
+          do c = bounds%begc,bounds%endc
+          l = col%landunit(c)
+          if (.not. lun%lakpoi(l)) then  !not lake
+             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+                if (use_bedrock .and. col%nbedrock(c)>nlevsoi) then
+                   nbedrock = col%nbedrock(c)
+                else
+                   nbedrock = nlevsoi
+                end if
+                do j = 2, nlevmaxurbgrnd ! ignore first layer
+                   if(altmax_lastyear_indx(c) < nbedrock) then
+                      if (j>altmax_lastyear_indx(c) .and. j<nbedrock &
+                           .and. t_soisno_col(c,j) <= tfrz) then
+                         this%excess_ice_col(c,j) = col%dz(c,j)*denice*(this%exice_bulk_init(c)) ! exice_bulk_init should be already read from the stream during InitCold
+                      else
+                         this%excess_ice_col(c,j) = 0.0_r8
+                      end if
+                   else
+                      this%excess_ice_col(c,j) = 0.0_r8
+                   end if
+                end do
+             else
+                this%excess_ice_col(c,-nlevsno+1:nlevmaxurbgrnd) = 0.0_r8
+             end if
+          end if
+          end do ! end of column loop
+       endif! end of old file restart
+    endif ! end of exice restart
 
     ! Determine volumetric soil water (for read only)
     if (flag == 'read' ) then

@@ -17,6 +17,15 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="SMS_D_Ln6" grid="f09_g17" compset="I1850Clm50BgcNoAnthro" testmods="clm/Meier2022_surf_rough">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Meier Surface roughness with no-anthro compset</option>
+    </options>
+  </test>
   <test name="SMS_Ld5" grid="f09_g17" compset="I1850Clm45BgcCru" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
@@ -51,6 +60,15 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">We have one C96 test in aux_clm; this is another that uses a different compset. No need to run this additional C96 test with every tag, but include it in the less frequent ctsm_sci testing.</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="I2000Clm50SpRs" testmods="clm/clm50cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Test that the workhorse mpasa resolution functions for CAM. No need to run this test with every tag, but include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
   <test name="ERI_D_Ld9" grid="ne30_g17" compset="I2000Clm50BgcCru" testmods="clm/vrtlay">
@@ -124,16 +142,6 @@
       <option name="comment"  >Include a test of prescribed soil-moisture, has to be at f09, should be 2000 and for SP</option>
     </options>
   </test>
-  <test name="ERP_D_Ld3_Vmct_PS" grid="f09_g17" compset="I2000Clm50Sp" testmods="clm/prescribed">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="cheyenne" compiler="intel" category="prealpha"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >MCT test covering prescribed soil moisture stream (this stream uses different code in a mct test than in an mct test).</option>
-    </options>
-  </test>
   <test name="ERI_D_Ld9_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/reduceOutput">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
@@ -159,13 +167,22 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="ERI_D_Ld9_P48x1_Vmct" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/SNICARFRC">
+  <test name="ERS_D" grid="f10_f10_mg37" compset="I1850Clm51Sp" testmods="clm/ExcessIceStreams">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi"    compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
-      <option name="comment"  >Include an ERI test with MCT</option>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Include an excess ice test starting up from streams</option>
+    </options>
+  </test>
+  <test name="SMS_Lm12" grid="f09_f09_mg17" compset="I1850Clm51Sp" testmods="clm/ExcessIceStartup_output_sp_exice">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:00:00</option>
+      <option name="comment"  >Include an excess ice test starting up from an finidat startup file with excessice output with extra output</option>
     </options>
   </test>
   <test name="SMS_Ln9_P144x3" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/waccmx_offline2005Start">
@@ -184,15 +201,6 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Run a transient case with standalone settings similar to the FXHIST waccm test</option>
-    </options>
-  </test>
-  <test name="SMS_D_Ln9_P36x3_Vmct" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/waccmx_offline">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">MCT test covering drydep, megan and Gregorian calendar.</option>
     </options>
   </test>
   <test name="ERP_D_P36x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/cn_conly">
@@ -327,7 +335,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:10:00</option>
+      <option name="wallclock">00:20:00</option>
       <option name="comment">Want one C96 test in the aux_clm test suite; just a short smoke test to make sure it can get off the ground. Use a PE layout that (1) has threading, because CAM uses threading at this resolution; and (2) has a smaller-than-standard task count in order to get through the queue faster.</option>
     </options>
   </test>
@@ -467,17 +475,17 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Transient case with isotopes with a december start</option>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment"  >Transient case with isotopes with a December start</option>
     </options>
   </test>
-  <test name="ERP_D_Ld10_P36x2_Vmct" grid="f10_f10_mg37" compset="IHistClm51BgcCrop" testmods="clm/ciso_decStart">
+  <test name="SMS_Ld3_PS" grid="f09_g17" compset="IHistClm50BgcCrop" testmods="clm/f09_dec1990Start_GU_LULCC">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >MCT test covering both carbon isotopes and decStart (the latter is not very important, but we might as well have a test of that option).</option>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment"  >Transient case with a December 1990 start, and Gross Unrepresented Land Use and Land Cover change on, with f09 datasets with non-zero GU_LULCC values</option>
     </options>
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/reduceOutput">
@@ -610,16 +618,6 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Do a test with RTM and flooding on as that also impacts CLM code</option>
-    </options>
-  </test>
-  <test name="ERS_D_Ld5_Vmct" grid="f10_f10_mg37" compset="I2000Clm50BgcCropRtm" testmods="rtm/rtmOnFloodOnEffvelOn">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="cheyenne" compiler="intel" category="prebeta"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:40:00</option>
-      <option name="comment"  >MCT test covering flooding.</option>
     </options>
   </test>
   <test name="ERP_D_P48x1" grid="f10_f10_mg37" compset="IHistClm51Bgc" testmods="clm/decStart">
@@ -950,16 +948,6 @@
       </machine>
     </machines>
   </test>
-  <test name="ERP_P72x2_Lm7_Vmct" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate_monthly">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm">
-        <options>
-          <option name="wallclock">00:30:00</option>
-          <option name="comment">MCT test covering irrig_alternate, because this tests some rof coupling.</option>
-        </options>
-      </machine>
-    </machines>
-  </test>
   <test name="ERS_D" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/reseedresetsnow">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -1019,7 +1007,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Among other extra outputs, ensure that writing the history field master list to a separate file does not cause failure"</option>
+      <option name="comment"  >Among other extra outputs, ensure that writing the list of all history fields to a separate file does not cause failure"</option>
     </options>
   </test>
   <test name="ERS_D_Ld3" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/default">
@@ -1157,15 +1145,6 @@
       <option name="comment"  >Multi-year global test of transient crops together with transient glaciers. Use glacier evolution with ERS test</option>
     </options>
   </test>
-  <test name="ERS_Ly3_P72x2_Vmct" grid="f10_f10_mg37" compset="IHistClm50BgcCropG" testmods="clm/cropMonthOutput">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">01:40:00</option>
-      <option name="comment"  >MCT test covering evolving glacier.</option>
-    </options>
-  </test>
   <test name="ERS_Ly5_P144x1" grid="f10_f10_mg37" compset="IHistClm51BgcCrop" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -1182,6 +1161,37 @@
     <options>
       <option name="wallclock">03:00:00</option>
       <option name="comment"  >include a long Clm45 test, and include a production intel test of Clm45</option>
+    </options>
+  </test>
+  <test name="ERS_Ly3" grid="f10_f10_mg37" compset="I2000Clm51BgcCrop" testmods="clm/Meier2022_surf_rough">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:40:00</option>
+      <option name="comment"  >include a long exact restart test with Meier surface roughness</option>
+    </options>
+  </test>
+  <test name="SMS_D" grid="f10_f10_mg37" compset="I2000Clm51Bgc" testmods="clm/Meier2022_surf_rough">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="gnu"   category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+      <machine name="izumi"    compiler="intel" category="aux_clm"/>
+      <machine name="izumi"    compiler="gnu"   category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >include a short DEBUG test with Meier surface roughness without crop</option>
+    </options>
+  </test>
+  <test name="ERS_D" grid="f10_f10_mg37" compset="I1850Clm51Sp" testmods="clm/Meier2022_surf_rough">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Exact restart short DEBUG SP test with Meier surface roughness</option>
     </options>
   </test>
   <test name="ERS_Ly6_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/cropMonthOutput">
@@ -1288,7 +1298,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS" grid="f45_f45_mg37" compset="I2000Clm51FatesSpRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen">
+  <test name="SMS" grid="f45_f45_mg37" compset="I2000Clm51FatesSpRsGs" testmods="clm/FatesColdSatPhen">
     <machines>
       <machine name="cheyenne" compiler="nvhpc" category="aux_clm"/>
     </machines>
@@ -1297,21 +1307,13 @@
       <option name="comment"  >Simple test to make sure the basic Fates-SP compset works"</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_PS" grid="f09_g17" compset="I1850Clm50BgcSpinup" testmods="clm/cplhist">
+  <test name="SMS_D_Ld1" grid="ne30pg3_t061" compset="I1850Clm50BgcSpinup" testmods="clm/cplhist">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="intel" category="prealpha"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="SMS_Vmct_D_Ld1_PS" grid="f09_g17" compset="I1850Clm50BgcSpinup" testmods="clm/cplhist">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Spinup test with MCT driver</option>
     </options>
   </test>
   <test name="SMS_D_Ld1_PS" grid="f19_f19_mg17" compset="I2010Clm50Sp" testmods="clm/clm50cam6LndTuningMode">
@@ -1395,6 +1397,24 @@
       <option name="comment"  >Run ne30np4.pg3 to make sure will work for CAM"</option>
     </options>
   </test>
+  <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I1850Clm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment"  >Run mpasa480 to make sure will work for CAM"</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="ne3pg3_ne3pg3_mg37" compset="I2000Clm50Sp" testmods="clm/clm50cam6LndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Run course resolution ne3pg3_ne3pg3_mg37 to make sure will work for CAM"</option>
+    </options>
+  </test>
   <test name="SMS_D" grid="f10_f10_mg37" compset="I2000Clm51BgcCrop" testmods="clm/crop">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
@@ -1428,16 +1448,6 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_Mmpi-serial_Vmct" grid="f45_f45_mg37" compset="I2000Clm50SpRs" testmods="clm/ptsRLA">
-    <machines>
-      <machine name="izumi" compiler="gnu" category="aux_clm"/>
-      <machine name="izumi" compiler="gnu" category="prealpha"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Include a MCT test of pts mode</option>
-    </options>
-  </test>
   <test name="SMS_D_Ld1_P48x1" grid="f10_f10_mg37" compset="I2000Clm45BgcCrop" testmods="clm/oldhyd">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
@@ -1462,15 +1472,6 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="SMS_D_Ld1_P48x1_Vmct" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/datm_bias_correct_cruv7">
-    <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >MCT test covering bias correction</option>
     </options>
   </test>
   <test name="SMS_D_Ld3" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/default">
@@ -1511,16 +1512,6 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="DAE_N2_D_Lh12_Vmct" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/DA_multidrv">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="cheyenne" compiler="intel" category="prealpha"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >MCT test covering multi-driver, the DAE test, and Gregorian calendar</option>
-    </options>
-  </test>
   <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm45BgcCrop" testmods="clm/crop">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
@@ -1541,7 +1532,7 @@
       <option name="comment">Want to keep a little single-point testing on cheyenne</option>
     </options>
   </test>
-  <test name="SMS_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/default--clm/NEON/NIWO">
+  <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/default--clm/NEON/NIWO">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
     </machines>
@@ -1551,15 +1542,46 @@
       <option name="comment"  >Add at least one test of a NEON site</option>
     </options>
   </test>
-  <test name="SMS_D_Vmct_Lm1_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm50SpRs" testmods="clm/USUMB_mct">
+  <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51SpRs" testmods="clm/default--clm/NEON/TOOL">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="cheyenne" compiler="intel" category="prebeta"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="tput_tolerance">0.5</option>
-      <option name="comment"  >This is a test of a generic tower site under MCT</option>
+      <option name="comment"  >Add at least one test of a NEON site with SP</option>
+    </options>
+  </test>
+  <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/NEON/MOAB--clm/PRISM">
+    <machines>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="tput_tolerance">0.5</option>
+      <option name="comment"  >Add at least one test of a NEON site with PRISM precipitation</option>
+    </options>
+  </test>
+  <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Fates" testmods="clm/FatesFireLightningPopDens--clm/NEON/FATES/NIWO">
+    <machines>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="tput_tolerance">0.5</option>
+      <option name="comment"  >Add at least one test of a FATES NEON site that needs lightning data</option>
+    </options>
+  </test>
+  <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Fates" testmods="clm/FatesPRISM--clm/NEON/FATES/YELL">
+    <machines>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="tput_tolerance">0.5</option>
+      <option name="comment"  >Add at least one test of a FATES NEON site with PRISM precipitation</option>
     </options>
   </test>
   <test name="SMS_D_Lm1_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm50SpRs" testmods="clm/USUMB_nuopc">
@@ -1804,7 +1826,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDef">
+  <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="prebeta"/>
@@ -1813,7 +1835,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDefTreeDamage">
+  <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTreeDamage">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
@@ -1822,7 +1844,7 @@
       <option name="comment"  >Ensure functionality of the tree damage option in FATES</option>
     </options>
   </test>
-  <test name="ERS_D_Ld3_PS" grid="f09_g17" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDef">
+  <test name="ERS_D_Ld3_PS" grid="f09_g17" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1831,16 +1853,16 @@
       <option name="comment"  >Want one fates test on a large grid: Since FATES has cohorts, it has potential to be a massive memory consumer and netcdf array size maker, so the large grid test will help smoke out these types of issues (and it's a restart test to cover possible memory/netcdf size issues with the restart file).</option>
     </options>
   </test>
-  <test name="ERS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDef">
+  <test name="ERS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Want one simple FatesColdDef gridded test on a izumi using nag compiler.</option>
+      <option name="comment"  >Want one simple FatesCold gridded test on a izumi using nag compiler.</option>
     </options>
   </test>
-  <test name="ERS_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdDef">
+  <test name="ERS_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="fates"/>
@@ -1850,7 +1872,23 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDef">
+  <test name="ERS_Lm13" grid="f10_f10_mg37" compset="I2000Clm50Fates" testmods="clm/FatesCold">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:50:00</option>
+    </options>
+  </test>
+  <test name="ERS_Lm13" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdNoComp">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+    </options>
+  </test>
+  <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
@@ -1859,7 +1897,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDef">
+  <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
@@ -1868,7 +1906,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm51Fates" testmods="clm/FatesColdDef">
+  <test name="SMS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm51Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
@@ -1877,16 +1915,7 @@
       <option name="comment"  >Fates with clm5_1</option>
     </options>
   </test>
-  <test name="ERS_D_Mmpi-serial_Ld5_Vmct" grid="1x1_brazil" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDef">
-    <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Include a MCT FATES test, and a single-point test with MCT: There isn't any interaction between FATES and the cap, as far as I can tell, but it seems like a good idea to have one FATES test with MCT, since there is so much extra code covered in a FATES test.</option>
-    </options>
-  </test>
-  <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm51FatesRs" testmods="clm/FatesColdDef">
+  <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm51FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1895,7 +1924,7 @@
       <option name="comment"  >Run a Fates test with latest Clm5_1</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
+  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm45Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="aux_cime_baselines"/>
@@ -1904,7 +1933,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="SMS_D_Lm6_P144x1" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDef">
+  <test name="SMS_D_Lm6_P144x1" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1912,7 +1941,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDef">
+  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
@@ -1923,7 +1952,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ld5_PS" grid="f19_g17" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDef">
+  <test name="SMS_Ld5_PS" grid="f19_g17" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -1931,7 +1960,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDefAllVars">
+  <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdAllVars">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1940,7 +1969,7 @@
       <option name="comment">ERP FATES test covering all standard FATES history variables.</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f10_f10_mg37" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
+  <test name="SMS_Ld5" grid="f10_f10_mg37" compset="I2000Clm45Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
@@ -1950,7 +1979,7 @@
       <option name="comment">60 day exact restart FATES test on f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDefReducedComplexFixedBiogeo">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdFixedBiogeo">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
@@ -1960,7 +1989,7 @@
       <option name="comment">30 day exact restart test for FATES fixed biogeography reduced complexity mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f10_f10_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDef">
+  <test name="SMS_Ld5" grid="f10_f10_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
@@ -1970,7 +1999,7 @@
       <option name="comment">60 day exact restart test providing coverage for the FATES logging mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDefSizeAgeMort">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSizeAgeMort">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1979,7 +2008,7 @@
       <option name="comment">30 day exact restart test activating FATES size and age mortality mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERP_P144x2_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/mimicsFatesColdDef">
+  <test name="ERP_P72x2_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/mimicsFatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="fates"/>
@@ -2069,7 +2098,7 @@
 
     </machines>
   </test>
-  <test name="ERP_D_Ld3" grid="f19_g17" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDef">
+  <test name="ERP_D_Ld3" grid="f19_g17" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
@@ -2078,7 +2107,7 @@
       <option name="comment">Short ERP debug FATES test for f19_g17 grid.</option>
     </options>
   </test>
-  <test name="ERP_D_P36x2_Ld3" grid="f19_g17" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDef">
+  <test name="ERP_D_P36x2_Ld3" grid="f19_g17" compset="I2000Clm50FatesCru" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
@@ -2087,7 +2116,7 @@
       <option name="comment">Short ERP debug FATES test for f19_g17 grid with modified task layout.</option>
     </options>
   </test>
-  <test name="ERP_Ld3" grid="f09_g17" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDef">
+  <test name="ERP_Ld3" grid="f09_g17" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -2097,7 +2126,7 @@
       <option name="comment">Short ERP FATES test for f09_g17 grid.</option>
     </options>
   </test>
-  <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefAllVars">
+  <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdAllVars">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -2107,7 +2136,7 @@
       <option name="comment">ERP FATES test covering all standard FATES history variables.</option>
     </options>
   </test>
-  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefPRT2">
+  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdPRT2">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -2118,7 +2147,7 @@
       <option name="comment">Exact restart debug test covering Fates CNP nutrients mode.</option>
     </options>
   </test>
-  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefLandUse">
+  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLandUse">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -2128,7 +2157,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld3" grid="f19_g17" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDef">
+  <test name="ERS_D_Ld3" grid="f19_g17" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="cheyenne" compiler="gnu" category="fates"/>
@@ -2149,7 +2178,7 @@
       <option name="comment">Exact restart debug test to provide for some CLM coverage during fates suite tests.</option>
     </options>
   </test>
-  <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDef">
+  <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -2160,7 +2189,7 @@
       <option name="comment">Short ERP debug FATES test for single site grid with serial mpi.</option>
     </options>
   </test>
-  <test name="ERS_Ld9" grid="f10_f10_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefCH4Off">
+  <test name="ERS_Ld9" grid="f10_f10_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdCH4Off">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -2171,7 +2200,7 @@
       <option name="comment">30 day exact restart test activating FATES with CH4 off for the f10 grid.</option>
     </options>
   </test>
-  <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefHydro">
+  <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdHydro">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="fates"/>
@@ -2182,7 +2211,7 @@
       <option name="comment">Longer smoke debug test for single site grid with serial mpi with coverage for FATES Hydro. Bypasses grid level mass checks.</option>
     </options>
   </test>
-  <test name="ERS_D_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefHydro">
+  <test name="ERS_D_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdHydro">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -2193,7 +2222,7 @@
       <option name="comment">Short exact restart debug test for single site grid with coverage for FATES Hydro. Bypasses grid level mass checks.</option>
     </options>
   </test>
-  <test name="ERS_Ld5" grid="f19_g17" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
+  <test name="ERS_Ld5" grid="f19_g17" compset="I2000Clm45Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -2213,7 +2242,7 @@
       <option name="comment">60 day exact restart FATES test on f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefNoFire">
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdNoFire">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -2223,7 +2252,7 @@
       <option name="comment">60 day exact restart test that turns off all fire (both FATES and CLM) on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefST3">
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdST3">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -2233,7 +2262,7 @@
       <option name="comment">60 day exact restart test activating FATES static stand structure on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefPPhys">
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdPPhys">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
@@ -2242,7 +2271,7 @@
       <option name="comment">60 day exact restart test activating FATES prescribed physiology mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefReducedComplexFixedBiogeo">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdFixedBiogeo">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -2251,7 +2280,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-    <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefReducedComplexNoComp">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdNoComp">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -2260,7 +2289,15 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdNoCompFixedBioGeo">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+    </options>
+  </test>
+  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdSatPhen">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
@@ -2269,7 +2306,7 @@
       <option name="comment">Test with DEBUG on for FatesSP mode, NOTE: FatesSp has the largest difference in CTSM code for any FATES mode</option>
     </options>
   </test>
-  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDefDryDepReducedComplexSatPhen">
+  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDryDepSatPhen">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -2278,7 +2315,7 @@
       <option name="comment"  >Run a test with dry deposition on and FATES-SP</option>
     </options>
   </test>
-  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDefMeganReducedComplexSatPhen">
+  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdMeganSatPhen">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -2287,27 +2324,26 @@
       <option name="comment"  >Run a test with MEGAN on and FATES-SP</option>
     </options>
   </test>
-<!--    Don't active this test until #1722 is fixed
-  <test name="SMS_Ld3" grid="f09_f09_mg17" compset="I2000Clm51FatesCruRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen_prescribed">
+
+  <test name="SMS_Ld3" grid="f09_g17" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdSatPhen_prescribed">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Test with prescribed LAI and soil-moisture with FatesSP mode, has to be at f09 and 2000</option>
+      <option name="comment">Test with prescribed LAI and soil moisture with FatesSP mode</option>
     </options>
   </test>
--->
-  <test name="SMS_Ld30" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen">
+  <test name="SMS_Lm1" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdBasic">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
-      <option name="comment">Temporary smoke test.  This test should be removed once the ERS version of this test passes COMPARE_base_rest</option>
+      <option name="comment">Smoke test that uses just the FATES SP compset.</option>
     </options>
   </test>
-  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdSatPhen">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -2317,7 +2353,7 @@
       <option name="comment">30 day exact restart test for FATES fixed biogeography reduced complexity mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERP_P36x2_Ld30" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen">
+  <test name="ERP_P36x2_Ld30" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdSatPhen">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -2327,7 +2363,7 @@
       <option name="comment">30 day exact restart test with threading for FATES fixed biogeography reduced complexity mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefLogging">
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLogging">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
@@ -2336,7 +2372,7 @@
       <option name="comment">60 day exact restart test providing coverage for the FATES logging mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefSizeAgeMort">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdSizeAgeMort">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -2356,7 +2392,7 @@
       <option name="comment"  >Run a short non-Fates test (without land-ice model) in the fates test list, to make sure fates changes do not mess up the standard model</option>
     </options>
   </test>
-  <test name="SMS_Lm13" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDef">
+  <test name="SMS_Lm13" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="cheyenne" compiler="gnu" category="fates"/>
@@ -2532,12 +2568,34 @@
     </machines>
   </test>
 
+  <test name="REUSEINITFILES_D_Ld1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm">
+        <options>
+          <option name="wallclock">0:20:00</option>
+          <option name="comment">Make sure that a rerun with already-generated initialization files is bit-for-bit</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
+
   <test name="FUNITCTSM_P1x1" grid="f10_f10_mg37" compset="I2000Clm50Sp">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm">
         <options>
           <option name="wallclock">00:30:00</option>
           <option name="comment">This test runs CTSM's Fortran unit tests. We're abusing the system test infrastructure to run these, so that a run of the test suite results in the unit tests being run as well. Grid and compset are irrelevant here, except that compset must be one that includes CTSM in order for CIME to find the test definition.</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
+
+  <test name="RXCROPMATURITY_Lm61" grid="f09_g17" compset="IHistClm50BgcCrop"  testmods="clm/cropMonthOutput">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="ctsm_sci">
+        <options>
+          <option name="wallclock">12:00:00</option>
+          <option name="comment">This test is designed to test the ability to prescribe crop sowing dates and maturity requirements. It first performs a GDD-generating run, then calls Python code to generate the maturity requirement file. This is then used in a sowing+maturity forced run, which finally is tested to ensure correct behavior.</option>
         </options>
       </machine>
     </machines>

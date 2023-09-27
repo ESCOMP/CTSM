@@ -2,7 +2,7 @@ module test_clm_time_manager
 
   ! Tests of clm_time_manager
 
-  use pfunit_mod
+  use funit
   use shr_kind_mod, only : r8 => shr_kind_r8
   use clm_time_manager
   use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
@@ -576,5 +576,86 @@ contains
     @assertExceptionRaised(expected_msg)
 
   end subroutine bad_hilontolocal_time
+
+  @Test
+  subroutine check_is_doy_in_interval_startend(this)
+    class(TestTimeManager), intent(inout) :: this
+
+    integer, parameter :: start = 100
+    integer, parameter :: end   = 300
+
+    @assertTrue(is_doy_in_interval(start, end, start))
+    @assertTrue(is_doy_in_interval(start, end, end))
+    @assertTrue(is_doy_in_interval(start, end, 200))
+    @assertFalse(is_doy_in_interval(start, end, 35))
+    @assertFalse(is_doy_in_interval(start, end, 350))
+
+  end subroutine check_is_doy_in_interval_startend
+
+  @Test
+  subroutine check_is_doy_in_interval_endstart(this)
+    class(TestTimeManager), intent(inout) :: this
+
+    integer, parameter :: start = 300
+    integer, parameter :: end   = 100
+
+    @assertTrue(is_doy_in_interval(start, end, start))
+    @assertTrue(is_doy_in_interval(start, end, end))
+    @assertFalse(is_doy_in_interval(start, end, 200))
+    @assertTrue(is_doy_in_interval(start, end, 35))
+    @assertTrue(is_doy_in_interval(start, end, 350))
+
+  end subroutine check_is_doy_in_interval_endstart
+
+  @Test
+  subroutine check_is_doy_in_interval_sameday(this)
+    class(TestTimeManager), intent(inout) :: this
+
+    integer, parameter :: start = 300
+    integer, parameter :: end   = 300
+
+    @assertTrue(is_doy_in_interval(start, end, start))
+    @assertTrue(is_doy_in_interval(start, end, end))
+    @assertFalse(is_doy_in_interval(start, end, 200))
+    @assertFalse(is_doy_in_interval(start, end, 350))
+
+  end subroutine check_is_doy_in_interval_sameday
+
+  @Test
+  subroutine check_is_today_in_doy_interval(this)
+    class(TestTimeManager), intent(inout) :: this
+
+    integer :: start, end
+
+    call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar=.true.)
+
+    start = 100 ! April 10
+    end   = 300 ! October 27
+
+    ! Test well before interval
+    call set_date(yr=2009, mon=3, day=25, tod=0)
+    @assertFalse(is_today_in_doy_interval(start, end))
+
+    ! Test last timestep before interval
+    call set_date(yr=2009, mon=4, day=10, tod=0)
+    @assertFalse(is_today_in_doy_interval(start, end))
+
+    ! Test first timestep of interval
+    call set_date(yr=2009, mon=4, day=10, tod=dtime)
+    @assertTrue(is_today_in_doy_interval(start, end))
+
+    ! Test well within interval
+    call set_date(yr=2009, mon=7, day=24, tod=0)
+    @assertTrue(is_today_in_doy_interval(start, end))
+
+    ! Test last timestep of interval
+    call set_date(yr=2009, mon=10, day=28, tod=0)
+    @assertTrue(is_today_in_doy_interval(start, end))
+
+    ! Test first timestep after interval
+    call set_date(yr=2009, mon=10, day=28, tod=dtime)
+    @assertFalse(is_today_in_doy_interval(start, end))
+
+  end subroutine check_is_today_in_doy_interval
 
 end module test_clm_time_manager

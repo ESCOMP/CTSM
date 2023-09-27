@@ -42,8 +42,18 @@
   </compset>
 
   <compset>
+    <alias>I1PtClm51Fates</alias>
+    <lname>2000_DATM%1PT_CLM51%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
     <alias>IHist1PtClm51Bgc</alias>
     <lname>HIST_DATM%1PT_CLM51%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
+    <compset>
+    <alias>IHist1PtClm51Fates</alias>
+    <lname>HIST_DATM%1PT_CLM51%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>
@@ -151,7 +161,7 @@
 
   <compset>
     <alias>I1850Clm51BgcCrop</alias>
-    <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%GSWP3v1_CLM51%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
   <compset>
@@ -194,6 +204,10 @@
   <compset>
     <alias>I2000Clm45BgcCropQianRs</alias>
     <lname>2000_DATM%QIA_CLM45%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+  <compset>
+    <alias>I2000Clm50FatesQian</alias>
+    <lname>2000_DATM%QIA_CLM50%FATES_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
   <compset>
@@ -263,12 +277,6 @@
     <science_support grid="f09_g17"/>
     <science_support grid="f19_g17"/>
   </compset>
-
-  <compset>
-     <alias>I1850Clm51Bgc</alias>
-     <lname>1850_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
-   </compset>
-
 
   <compset>
      <alias>I1850Clm51SpNoAnthro</alias>

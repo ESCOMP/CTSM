@@ -1,3 +1,7 @@
 ./xmlchange NEONSITE=KONA
 ./xmlchange PTS_LON=263.38956
 ./xmlchange PTS_LAT=39.10828
+# Setup to run with prognostic crops for this site
+# If you want to explicitly run in SP mode or add other
+# options you'll need to add that after this...
+./xmlchange CLM_BLDNML_OPTS="--bgc bgc --crop"

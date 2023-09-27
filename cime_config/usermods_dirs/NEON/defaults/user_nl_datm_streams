@@ -1,6 +1,40 @@
+!------------------------------------------------------------------------
+! This file is used to modify datm.streams.xml generated in $RUNDIR
+! Entries should have the form
+!  <streamname>:<stream_variable><= new stream_value>
+! The following are accepted values for an assume streamname of foo
+!  foo:meshfile = character string
+!  foo:datafiles = comma separated string of full pathnames (e.g. file1,file2,file3...)
+!  foo:datavars = comma separated string of field pairs  (e.g. foo foobar,foo2 foobar2...)
+!  foo:taxmode = one of [cycle, extend, limit]
+!  foo:tintalgo = one of [lower,upper,nearest,linear,coszen]
+!  foo:readmode = single (only suported mode right now)
+!  foo:mapalgo = one of [bilinear,redist,nn,consf,consd,none]
+!  foo:dtlimit = real (1.5 is default)
+!  foo:year_first = integer
+!  foo:year_last = integer
+!  foo:year_align = integer
+!  foo:vectors = one of [none,u:v]
+!  foo:lev_dimname: = one of [null,name of level dimenion name]
+!  foo:offset = integer
+! As an example:
+!   foo:year_first = 1950
+! would change the stream year_first stream_entry to 1950 for the foo stream block
+!------------------------------------------------------------------------
 presaero.SSP3-7.0:datafiles = $DIN_LOC_ROOT/atm/cam/chem/trop_mozart_aero/aero/aerodep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.001_2018-2030_monthly_0.9x1.25_c210826.nc
 presaero.SSP3-7.0:year_first=2018
-presaero.SSP3-7.0:year_last=2030
+presaero.SSP3-7.0:year_last=2022
 presaero.SSP3-7.0:year_align=2018
 presaero.SSP3-7.0:dtlimit=30
+
+presndep.SSP3-7.0:datafiles = $DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_2018-2030_monthly_c210826.nc
+presndep.SSP3-7.0:year_first=2018
+presndep.SSP3-7.0:year_last=2022
+presndep.SSP3-7.0:year_align=2018
+presndep.SSP3-7.0:dtlimit=30
+
+preso3.SSP3-7.0:year_first=2018
+preso3.SSP3-7.0:year_last=2022
+preso3.SSP3-7.0:year_align=2018
+preso3.SSP3-7.0:dtlimit=30
 
