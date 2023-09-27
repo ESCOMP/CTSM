@@ -30,6 +30,12 @@ parser.add_argument(
     default=0,
 )
 parser.add_argument(
+    "--climo-year",
+    help="year to use to generate climatology",
+    type=int,
+    default=2015,
+)
+parser.add_argument(
     "--hist-or-ssp",
     help="save historical period (hist), ssp period (ssp; default), or both?",
     type=str,
@@ -58,6 +64,15 @@ parser.add_argument(
 args = parser.parse_args()
 if args.sspnum == 0:
     sys.exit("choose valid ssp number")
+
+if args.climo_year < 1850:
+    raise ValueError("Minimum --climo-year is 1850")
+elif args.climo_year > 2100:
+    raise ValueError("Maximum --climo-year is 2100")
+elif args.hist_or_ssp == "hist" and args.climo_year > 2014:
+    raise ValueError("Maximum hist --climo-year is 2014")
+elif args.hist_or_ssp == "ssp" and args.climo_year < 2015:
+    raise ValueError("Minimum ssp --climo-year is 2015")
 
 # -------------------------------------------------------
 
@@ -223,9 +238,16 @@ if not os.path.exists(outdir):
 
 print("Output specific data directory :" + outdir)
 
-climo_year = 2015
+climo_year = args.climo_year
+if climo_year != 2015:
+    climo_text = "_climo" + str(climo_year)
+else:
+    climo_text = ""
 # ten years on either side (21 years total)
 climo_base_nyrs = 21
+climo_radius = (climo_base_nyrs - 1)/2
+if climo_radius != round(climo_radius):
+    raise RuntimeError("climo_base_nyrs must be an integer")
 
 write_climo = args.write_climo
 
@@ -303,6 +325,7 @@ for f in range(nfields):
             # read in coordinates
             lon = np.asfarray(f1.variables["lon"][:], np.float64)
             lat = np.asfarray(f1.variables["lat"][:], np.float64)
+            hist_long_name = f1.variables[field_in[f]].long_name
             hist_time = np.asfarray(f1.variables["time"][:], np.float64)
             hist_time_units = f1.variables["time"].units
             hist_time_longname = f1.variables["time"].long_name
@@ -376,45 +399,13 @@ for f in range(nfields):
                 ssp_ind = np.arange(ssp_time.size, dtype=int)
 
                 ssp_time = ssp_time[ssp_ind]
-                long_name = f1.variables[field_in[f]].long_name
+                ssp_long_name = f1.variables[field_in[f]].long_name
                 ntime_ssp = ssp_time.size
                 ssp_fld = np.zeros((ntime_ssp, nlat, nlon))
 
                 ssp_yrstart = np.min(ssp_time / 365.0 + ref_year).astype(int)
                 ssp_yrend = (np.max(ssp_time / 365.0 + ref_year) - 1).astype(int)
                 ssp_nyrs = ssp_yrend - ssp_yrstart + 1
-
-                if args.hist_or_ssp == "hist":
-                    thisperiod_yrstart = hist_yrstart
-                    thisperiod_yrend = hist_yrend
-                elif args.hist_or_ssp == "ssp":
-                    thisperiod_yrstart = ssp_yrstart
-                    thisperiod_yrend = ssp_yrend
-                elif args.hist_or_ssp == "both":
-                    thisperiod_yrstart = hist_yrstart
-                    thisperiod_yrend = ssp_yrend
-                else:
-                    raise RuntimeError(f"Handle --hist-or-ssp {args.hist_or_ssp}")
-                thisperiod_nyrs = thisperiod_yrend - thisperiod_yrstart + 1
-
-                if f == 0:
-                    print(
-                        f"{args.hist_or_ssp.upper()} years: ",
-                        thisperiod_yrstart,
-                        thisperiod_yrend,
-                        thisperiod_nyrs,
-                    )
-                tot_nyrs = hist_nyrs + ssp_nyrs
-                outfile_suffix = (
-                    ".CESM."
-                    + ssptag
-                    + "."
-                    + str(thisperiod_yrstart)
-                    + "-"
-                    + str(thisperiod_yrend)
-                    + creationdate
-                    + ".nc4"
-                )
 
             ssp_fld += np.asfarray(f1.variables[field_in[f]][ssp_ind, :, :], np.float64)
             f1.close()
@@ -433,6 +424,44 @@ for f in range(nfields):
                     ssp_time[-1] / 365.0 + ssp_ref_year,
                     ssp_time.size,
                 )
+        # end read in ssp data  -----------------
+
+        if nens == 0:
+            if args.hist_or_ssp == "hist":
+                thisperiod_yrstart = hist_yrstart
+                thisperiod_yrend = hist_yrend
+                long_name = hist_long_name
+            elif args.hist_or_ssp == "ssp":
+                thisperiod_yrstart = ssp_yrstart
+                thisperiod_yrend = ssp_yrend
+                long_name = ssp_long_name
+            elif args.hist_or_ssp == "both":
+                thisperiod_yrstart = hist_yrstart
+                thisperiod_yrend = ssp_yrend
+                long_name = ssp_long_name
+            else:
+                raise RuntimeError(f"Handle --hist-or-ssp {args.hist_or_ssp}")
+            thisperiod_nyrs = thisperiod_yrend - thisperiod_yrstart + 1
+
+            if f == 0:
+                print(
+                    f"{args.hist_or_ssp.upper()} years: ",
+                    thisperiod_yrstart,
+                    thisperiod_yrend,
+                    thisperiod_nyrs,
+                )
+            outfile_suffix = (
+                ".CESM."
+                + ssptag
+                + climo_text
+                + "."
+                + str(thisperiod_yrstart)
+                + "-"
+                + str(thisperiod_yrend)
+                + creationdate
+                + ".nc4"
+            )
+
     # --  end Loop over ensemble members  ------------------------------
 
     # normalize summed fields by number of ensemble members
@@ -451,7 +480,7 @@ for f in range(nfields):
     stemp_fld = np.copy(temp_fld)
     for n in range(tm):
         # 21 years of jan, feb, etc. centered on each month in data
-        ind = nmo * (np.arange(climo_base_nyrs) - (climo_base_nyrs - 1) / 2) + n
+        ind = nmo * (np.arange(climo_base_nyrs) - climo_radius) + n
         # account for edges
         m = np.where(np.logical_and(ind >= 0, ind < tm))[0]
         ind2 = ind[m].astype(int)
@@ -471,11 +500,15 @@ for f in range(nfields):
     t_climo_year = np.argmin(np.abs((full_time / 365.0 + ref_year) - climo_year))
     # shift to january of climo_year
     t_climo_year += 1
+    if args.hist_or_ssp != "hist":
+        climo_base_arange = np.arange(climo_base_nyrs)
+    else:
+        climo_base_arange = np.arange(climo_radius + 1)
     if f == 0:
         print((full_time[t_climo_year] / 365.0 + ref_year))
     for n in range(nmo):
         ind = (
-            nmo * (np.arange(climo_base_nyrs) - (climo_base_nyrs - 1) / 2) + t_climo_year + n
+            nmo * (climo_base_arange - climo_radius) + t_climo_year + n
         ).astype(int)
         climo[n, :, :] = np.sum(stemp_fld[ind, :, :], axis=0) / float(ind.size)
 
@@ -555,7 +588,7 @@ for f in range(nfields):
     if write_climo:
         # Use NetCDF4 format, because using older NetCDF formats are too slow
         w = netcdf4.Dataset(
-            outdir + field_out[f] + "_climo" + creationdate + ".nc", "w", format=format
+            outdir + field_out[f] + "_climo" + str(climo_year) + creationdate + ".nc", "w", format=format
         )
         w.createDimension("lat", int(nlat))
         w.createDimension("lon", int(nlon))
@@ -583,7 +616,7 @@ for f in range(nfields):
         w.close()
 
         # Use NetCDF4 format, because using older NetCDF formats are too slow
-        w_filename = outdir + field_out[f] + "_smooth" + creationdate + ".nc4"
+        w_filename = outdir + field_out[f] + climo_text + "_smooth" + creationdate + ".nc4"
         w = netcdf4.Dataset(w_filename, "w", format=format)
         w.createDimension("lat", int(nlat))
         w.createDimension("lon", int(nlon))
@@ -643,11 +676,15 @@ for f in range(nfields):
         outfile.Created_on = timetag
 
         outfile.title = "anomaly forcing data"
+        if args.hist_or_ssp == "hist":
+            note1_year2 = climo_year
+        else:
+            note1_year2 = climo_year + climo_radius
         outfile.note1 = (
             "Anomaly/scale factors calculated relative to "
-            + str(climo_year - (climo_base_nyrs - 1) / 2)
+            + str(climo_year - climo_radius)
             + "-"
-            + str(climo_year + (climo_base_nyrs - 1) / 2)
+            + str(note1_year2)
         )
         outfile.history = historydate + ": created by " + sys.argv[0]
         stdout = os.popen("git describe")
@@ -757,7 +794,8 @@ for f in range(nfields):
 
     # List of source files
     wvar.historical_source_files = "".join(histfiles).replace(hdir, "")
-    wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
+    if args.hist_or_ssp != "hist":
+        wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
 
     # create second wind field for V component
     if field_out[f] == "sfcWind":
@@ -781,7 +819,8 @@ for f in range(nfields):
 
         # List of source files
         wvar.historical_source_files = "".join(histfiles).replace(hdir, "")
-        wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
+        if args.hist_or_ssp != "hist":
+            wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
 
     # -- end if statement for write for V field --------
 
