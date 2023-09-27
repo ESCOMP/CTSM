@@ -1271,7 +1271,7 @@ contains
 
 
     ! Pass fates seed dispersal information to all nodes
-    if (fates_seeddisp_cadence .eq. fates_dispersal_cadence_none) then
+    if (fates_seeddisp_cadence .ne. fates_dispersal_cadence_none) then
        if (use_fates .and. is_beg_curr_day()) call clm_fates%WrapSeedGlobal()
     end if
 
