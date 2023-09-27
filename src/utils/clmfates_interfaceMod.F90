@@ -1062,7 +1062,7 @@ module CLMFatesInterfaceMod
 
       ! Distribute any seeds from neighboring gridcells into the current gridcell
       ! Global seed availability array populated by WrapSeedGlobal call
-      if (fates_seeddisp_cadence .eq. fates_dispersal_cadence_none) then
+      if (fates_seeddisp_cadence .ne. fates_dispersal_cadence_none) then
          call this%wrap_seed_dispersal(bounds_clump)
       end if
 
@@ -1848,7 +1848,7 @@ module CLMFatesInterfaceMod
          !$OMP END PARALLEL DO
 
          ! Disperse seeds
-         if (fates_seeddisp_cadence .eq. fates_dispersal_cadence_none) then
+         if (fates_seeddisp_cadence .ne. fates_dispersal_cadence_none) then
             call this%WrapSeedGlobal(is_restart_flag=.true.)
          end if
 
