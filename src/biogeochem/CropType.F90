@@ -48,8 +48,6 @@ module CropType
      real(r8) :: baset_latvary_intercept
      real(r8) :: baset_latvary_slope
      logical , pointer :: sown_in_this_window           (:)   ! patch flag. True if the crop has already been sown during the current sowing window. False otherwise or if not in a sowing window.
-     integer , pointer :: next_rx_swindow_start_patch   (:)   ! start of prescribed sowing window for the next growing season this year
-     integer , pointer :: next_rx_swindow_end_patch     (:)   ! end   of prescribed sowing window for the next growing season this year
      integer , pointer :: rx_swindow_starts_thisyr_patch(:,:) ! all prescribed sowing window start dates for this patch this year (day of year) [patch, mxsowings]
      integer , pointer :: rx_swindow_ends_thisyr_patch  (:,:) ! all prescribed sowing window end   dates for this patch this year (day of year) [patch, mxsowings]
      real(r8), pointer :: rx_cultivar_gdds_thisyr_patch (:,:) ! all cultivar GDD targets for this patch this year (ddays) [patch, mxsowings]
@@ -233,8 +231,6 @@ contains
     allocate(this%sowing_reason_patch (begp:endp)) ; this%sowing_reason_patch (:) = -1
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
     allocate(this%sown_in_this_window(begp:endp)) ; this%sown_in_this_window(:) = .false.
-    allocate(this%next_rx_swindow_start_patch(begp:endp)) ; this%next_rx_swindow_start_patch(:) = -1
-    allocate(this%next_rx_swindow_end_patch  (begp:endp)) ; this%next_rx_swindow_end_patch  (:) = -1
     allocate(this%rx_swindow_starts_thisyr_patch(begp:endp,1:mxsowings)); this%rx_swindow_starts_thisyr_patch(:,:) = -1
     allocate(this%rx_swindow_ends_thisyr_patch(begp:endp,1:mxsowings))  ; this%rx_swindow_ends_thisyr_patch  (:,:) = -1
     allocate(this%rx_cultivar_gdds_thisyr_patch(begp:endp,1:mxsowings)) ; this%rx_cultivar_gdds_thisyr_patch(:,:) = spval
