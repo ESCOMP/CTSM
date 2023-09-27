@@ -1499,7 +1499,7 @@ contains
     ! !USES:
     use clm_time_manager , only : get_step_size_real, get_nstep
     use clm_varpar       , only : nlevsno
-    use clm_varcon       , only : spval
+    use clm_varcon, only: spval, secsphr
     use shr_const_mod    , only : SHR_CONST_RHOICE, SHR_CONST_PI
     !
     ! !ARGUMENTS:
@@ -1634,7 +1634,7 @@ contains
 
             ! change in snow effective radius, using best-fit parameters
             dr_fresh = snw_rds(c_idx,i)-snw_rds_min
-            dr = (bst_drdt0 * (bst_tau / (dr_fresh + bst_tau))**(1._r8 / bst_kappa)) * (dtime / 3600._r8)
+            dr = (bst_drdt0 * (bst_tau / (dr_fresh + bst_tau))**(1._r8 / bst_kappa)) * (dtime / secsphr)
 
             !
             !**********  2. WET SNOW AGING  ***********
