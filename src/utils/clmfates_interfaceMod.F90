@@ -239,7 +239,6 @@ module CLMFatesInterfaceMod
       procedure, public  :: wrap_WoodProducts
       procedure, public  :: WrapSeedGlobal
       procedure, public  :: wrap_seed_dispersal
-      procedure, public  :: wrap_seed_dispersal_reset
       procedure, public  :: UpdateCLitterFluxes
       procedure, public  :: UpdateNLitterFluxes
    end type hlm_fates_interface_type
@@ -615,7 +614,7 @@ module CLMFatesInterfaceMod
 
 
       ! Initialize dispersal
-      if (fates_seeddisp_cadence .eq. fates_dispersal_cadence_none) then
+      if (fates_seeddisp_cadence .ne. fates_dispersal_cadence_none) then
 
          ! Initialize fates global seed dispersal array for all nodes
          call get_proc_global(ng=numg)
@@ -1397,10 +1396,9 @@ module CLMFatesInterfaceMod
        patch%is_bareground(bounds_clump%begp:bounds_clump%endp) = .false.
        patch%wt_ed(bounds_clump%begp:bounds_clump%endp)         = 0.0_r8
 
-       ! Zero the outgoing_local values prior to populating with the most recent seed update
-       if (fates_seeddisp_cadence .eq. fates_dispersal_cadence_none) then
-          ! zero the outgoing seed array
-          !this%fates_seed%outgoing_local(:,:) = 0._r8
+       ! Zero the outgoing_local seed values prior to populating with the most recent seed update
+       if (fates_seeddisp_cadence .ne. fates_dispersal_cadence_none) then
+          this%fates_seed%outgoing_local(:,:) = 0._r8
        end if
 
       do s = 1,this%fates(nc)%nsites
@@ -1408,12 +1406,10 @@ module CLMFatesInterfaceMod
           c = this%f2hmap(nc)%fcolumn(s)
           g = col%gridcell(c)
 
-          write(iulog,*) 'WUHD pre: g, seed_out, outgoing: ', g, sum(this%fates(nc)%sites(s)%seed_out(:)), sum(this%fates_seed%outgoing_local(:,g))
           ! Accumulate seeds from sites to the gridcell local outgoing buffer
           if (fates_seeddisp_cadence .ne. fates_dispersal_cadence_none .and. IsItDispersalTime()) then
              this%fates_seed%outgoing_local(:,g) = this%fates(nc)%sites(s)%seed_out(:)
           end if
-          write(iulog,*) 'WUHD pst: g, seed_out, outgoing: ', g, sum(this%fates(nc)%sites(s)%seed_out(:)), sum(this%fates_seed%outgoing_local(:,g))
 
           ! Other modules may have AI's we only flush values
           ! that are on the naturally vegetated columns
