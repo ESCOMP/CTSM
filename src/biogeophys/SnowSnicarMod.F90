@@ -217,7 +217,7 @@ contains
     ! spectral snow albedo
     !
     ! !USES:
-    use clm_varpar       , only : nlevsno, numrad
+    use clm_varpar       , only : nlevsno, numrad, ivis, inir
     use clm_time_manager , only : get_nstep
     use shr_const_mod    , only : SHR_CONST_PI
     !
@@ -708,8 +708,8 @@ contains
 
 
             ! Set spectral underlying surface albedos to their corresponding VIS or NIR albedos
-            albsfc_lcl(1:(nir_bnd_bgn-1))       = albsfc(c_idx,1)
-            albsfc_lcl(nir_bnd_bgn:nir_bnd_end) = albsfc(c_idx,2)
+            albsfc_lcl(1:(nir_bnd_bgn-1))       = albsfc(c_idx,ivis)
+            albsfc_lcl(nir_bnd_bgn:nir_bnd_end) = albsfc(c_idx,inir)
             
 
             ! Error check for snow grain size:
@@ -1189,11 +1189,11 @@ contains
 
                  ! set the underlying ground albedo == albedo of near-IR
                  ! unless bnd_idx < nir_bnd_bgn, for visible
-                 rupdir(snl_btm_itf) = albsfc(c_idx,2)
-                 rupdif(snl_btm_itf) = albsfc(c_idx,2)
+                 rupdir(snl_btm_itf) = albsfc(c_idx,inir)
+                 rupdif(snl_btm_itf) = albsfc(c_idx,inir)
                  if (bnd_idx < nir_bnd_bgn) then
-                     rupdir(snl_btm_itf) = albsfc(c_idx,1)
-                     rupdif(snl_btm_itf) = albsfc(c_idx,1)
+                     rupdir(snl_btm_itf) = albsfc(c_idx,ivis)
+                     rupdif(snl_btm_itf) = albsfc(c_idx,ivis)
                  endif
 
                  do i=snl_btm,snl_top,-1
@@ -1385,14 +1385,14 @@ contains
             select case (snicar_numrad_snw)
             case (5)  ! 5-band case
               ! VIS band
-              albout(c_idx,1) = albout_lcl(1)
+              albout(c_idx,ivis) = albout_lcl(ivis)
             case (480)  ! 480-band case
               ! average for VIS band
               flx_sum = 0._r8
               do bnd_idx= 1, (nir_bnd_bgn-1)
                  flx_sum = flx_sum + flx_wgt(bnd_idx)*albout_lcl(bnd_idx)
               end do
-              albout(c_idx,1) = flx_sum / sum(flx_wgt(1:(nir_bnd_bgn-1)))
+              albout(c_idx,ivis) = flx_sum / sum(flx_wgt(1:(nir_bnd_bgn-1)))
             end select
 
             ! average for NIR band (5 or 480-band case)
@@ -1400,7 +1400,7 @@ contains
             do bnd_idx = nir_bnd_bgn, nir_bnd_end
                flx_sum = flx_sum + flx_wgt(bnd_idx) * albout_lcl(bnd_idx)
             end do
-            albout(c_idx,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
+            albout(c_idx,inir) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
 
             ! Weight output NIR absorbed layer fluxes (flx_abs) appropriately
             select case (snicar_numrad_snw)
@@ -1414,7 +1414,7 @@ contains
                  do bnd_idx= 1,(nir_bnd_bgn-1)
                     flx_sum = flx_sum + flx_wgt(bnd_idx)*flx_abs_lcl(i,bnd_idx)
                  enddo
-                 flx_abs(c_idx,i,1) = flx_sum / sum(flx_wgt(1:(nir_bnd_bgn-1)))
+                 flx_abs(c_idx,i,ivis) = flx_sum / sum(flx_wgt(1:(nir_bnd_bgn-1)))
               end do
             end select
 
@@ -1424,7 +1424,7 @@ contains
                do bnd_idx = nir_bnd_bgn, nir_bnd_end
                   flx_sum = flx_sum + flx_wgt(bnd_idx) * flx_abs_lcl(i,bnd_idx)
                end do
-               flx_abs(c_idx,i,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
+               flx_abs(c_idx,i,inir) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
             end do
 
             ! high solar zenith angle adjustment for Adding-doubling solver results
@@ -1435,21 +1435,21 @@ contains
                sza_c1 = sza_a0 + sza_a1 * mu_not + sza_a2 * (mu_not * mu_not)
                sza_c0 = sza_b0 + sza_b1 * mu_not + sza_b2 * (mu_not * mu_not)
                sza_factor = sza_c1 * (log10(snw_rds_lcl(snl_top) * c1) - c6) + sza_c0
-               flx_sza_adjust  = albout(c_idx,2) * (sza_factor-c1) * sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
-               albout(c_idx,2) = albout(c_idx,2) * sza_factor
-               flx_abs(c_idx,snl_top,2) = flx_abs(c_idx,snl_top,2) - flx_sza_adjust
+               flx_sza_adjust  = albout(c_idx,inir) * (sza_factor-c1) * sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))
+               albout(c_idx,inir) = albout(c_idx,inir) * sza_factor
+               flx_abs(c_idx,snl_top,inir) = flx_abs(c_idx,snl_top,inir) - flx_sza_adjust
             endif
 
 
          ! If snow < minimum_snow, but > 0, and there is sun, set albedo to underlying surface albedo
          elseif ( (coszen(c_idx) > 0._r8) .and. (h2osno_lcl < min_snw) .and. (h2osno_lcl > 0._r8) ) then
-            albout(c_idx,1) = albsfc(c_idx,1)
-            albout(c_idx,2) = albsfc(c_idx,2)
+            albout(c_idx,ivis) = albsfc(c_idx,ivis)
+            albout(c_idx,inir) = albsfc(c_idx,inir)
 
          ! There is either zero snow, or no sun
          else
-            albout(c_idx,1) = 0._r8
-            albout(c_idx,2) = 0._r8
+            albout(c_idx,ivis) = 0._r8
+            albout(c_idx,inir) = 0._r8
          endif    ! if column has snow and coszen > 0
 
       enddo    ! loop over all columns
