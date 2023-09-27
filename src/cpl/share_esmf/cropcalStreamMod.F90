@@ -385,14 +385,6 @@ contains
                                             crop_inst%rx_swindow_ends_thisyr_patch(p,1)
                  call ESMF_Finalize(endflag=ESMF_END_ABORT)
              end if
-
-             ! Only for first sowing window of the year
-             ! The conditional here is to ensure nothing weird happens if it's called incorrectly on day 365
-             if (crop_inst%sdates_thisyr_patch(p,1) <= 0) then
-                 ! TODO: Add handling of mid-year restarts
-                 crop_inst%next_rx_swindow_start_patch(p) = crop_inst%rx_swindow_starts_thisyr_patch(p,1)
-                 crop_inst%next_rx_swindow_end_patch  (p) = crop_inst%rx_swindow_ends_thisyr_patch  (p,1)
-             end if
          else
              write(iulog,'(a,i0)') 'cropcal_interp(), prescribed sowing windows: Crop patch has ivt ',ivt
              call ESMF_Finalize(endflag=ESMF_END_ABORT)
