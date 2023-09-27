@@ -402,7 +402,12 @@ for f in range(nfields):
                 thisperiod_nyrs = thisperiod_yrend - thisperiod_yrstart + 1
 
                 if f == 0:
-                    print(f"{args.hist_or_ssp.upper()} years: ", thisperiod_yrstart, thisperiod_yrend, thisperiod_nyrs)
+                    print(
+                        f"{args.hist_or_ssp.upper()} years: ",
+                        thisperiod_yrstart,
+                        thisperiod_yrend,
+                        thisperiod_nyrs,
+                    )
                 tot_nyrs = hist_nyrs + ssp_nyrs
                 outfile_suffix = (
                     ".CESM."
@@ -474,9 +479,7 @@ for f in range(nfields):
         print((full_time[t_climo_year] / 365.0 + ref_year))
     for n in range(nmo):
         ind = (
-            nmo * (np.arange(climo_base_nyrs) - (climo_base_nyrs - 1) / 2)
-            + t_climo_year
-            + n
+            nmo * (np.arange(climo_base_nyrs) - (climo_base_nyrs - 1) / 2) + t_climo_year + n
         ).astype(int)
         climo[n, :, :] = np.sum(stemp_fld[ind, :, :], axis=0) / float(ind.size)
 
@@ -486,10 +489,13 @@ for f in range(nfields):
     # extract smoothed data for period of interest
     def get_year_from_time(time, t, ref_year):
         return time[t] / 365.0 + ref_year
+
     if args.hist_or_ssp == "hist":
         t_hist_end = len(full_time) - 1
         if f == 0:
-            print(f"{get_year_from_time(full_time, 0, ref_year)}-{get_year_from_time(full_time, t_hist_end, ref_year)}")
+            print(
+                f"{get_year_from_time(full_time, 0, ref_year)}-{get_year_from_time(full_time, t_hist_end, ref_year)}"
+            )
         fld_smoothed = stemp_fld
         nyrs = hist_nyrs
         thisperiod_time = hist_time
@@ -500,7 +506,9 @@ for f in range(nfields):
     elif args.hist_or_ssp == "ssp":
         t_ssp_start = (ssp_yrstart - hist_yrstart) * nmo
         if f == 0:
-            print(f"{get_year_from_time(full_time, t_ssp_start, ref_year)}-{get_year_from_time(full_time, len(full_time)-1, ref_year)}")
+            print(
+                f"{get_year_from_time(full_time, t_ssp_start, ref_year)}-{get_year_from_time(full_time, len(full_time)-1, ref_year)}"
+            )
         fld_smoothed = stemp_fld[t_ssp_start:, :, :]
         nyrs = ssp_nyrs
         thisperiod_time = ssp_time
@@ -510,7 +518,9 @@ for f in range(nfields):
         thisperiod_yrend = ssp_yrend
     elif args.hist_or_ssp == "both":
         if f == 0:
-            print(f"{get_year_from_time(full_time, 0, ref_year)}-{get_year_from_time(full_time, len(full_time)-1, ref_year)}")
+            print(
+                f"{get_year_from_time(full_time, 0, ref_year)}-{get_year_from_time(full_time, len(full_time)-1, ref_year)}"
+            )
         fld_smoothed = stemp_fld
         nyrs = hist_nyrs + ssp_nyrs
         thisperiod_time = full_time
@@ -549,9 +559,7 @@ for f in range(nfields):
     if write_climo:
         # Use NetCDF4 format, because using older NetCDF formats are too slow
         w = netcdf4.Dataset(
-            outdir + field_out[f] + "_climo" + creationdate + ".nc",
-            "w",
-            format=format
+            outdir + field_out[f] + "_climo" + creationdate + ".nc", "w", format=format
         )
         w.createDimension("lat", int(nlat))
         w.createDimension("lon", int(nlon))
@@ -580,11 +588,7 @@ for f in range(nfields):
 
         # Use NetCDF4 format, because using older NetCDF formats are too slow
         w_filename = outdir + field_out[f] + "_smooth" + creationdate + ".nc4"
-        w = netcdf4.Dataset(
-            w_filename,
-            "w",
-            format=format
-        )
+        w = netcdf4.Dataset(w_filename, "w", format=format)
         w.createDimension("lat", int(nlat))
         w.createDimension("lon", int(nlon))
         w.createDimension("time", int(tm))
@@ -616,7 +620,11 @@ for f in range(nfields):
         wvar2[:, :, :] = stemp_fld
         w.close()
         w_filename_cdf5 = w_filename.replace(".nc4", ".nc")
-        subprocess.Popen(f"nccopy -k 'cdf5' {w_filename} {w_filename_cdf5} && rm {w_filename}", stdout=subprocess.PIPE, shell="True")
+        subprocess.Popen(
+            f"nccopy -k 'cdf5' {w_filename} {w_filename_cdf5} && rm {w_filename}",
+            stdout=subprocess.PIPE,
+            shell="True",
+        )
         print("Exit early after writing out climatology\n\n")
         sys.exit()
 
@@ -786,6 +794,10 @@ outfile.close()
 
 # Convert to CDF5
 outfilename_cdf5 = outfilename.replace(".nc4", ".nc")
-subprocess.Popen(f"nccopy -k 'cdf5' {outfilename} {outfilename_cdf5} && rm {outfilename}", stdout=subprocess.PIPE, shell="True")
+subprocess.Popen(
+    f"nccopy -k 'cdf5' {outfilename} {outfilename_cdf5} && rm {outfilename}",
+    stdout=subprocess.PIPE,
+    shell="True",
+)
 
 print("\n\nSuccessfully made anomaly forcing datasets\n")
