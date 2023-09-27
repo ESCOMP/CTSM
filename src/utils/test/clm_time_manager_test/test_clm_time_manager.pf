@@ -658,4 +658,17 @@ contains
 
   end subroutine check_is_today_in_doy_interval
 
+  @Test
+  subroutine check_get_doy_tomorrow(this)
+    class(TestTimeManager), intent(inout) :: this
+
+    ! We don't care about the actual date here; we just want to enable get_curr_days_per_year()
+    call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar=.true.)
+    call set_date(yr=2009, mon=10, day=28, tod=dtime)
+
+    @assertEqual(get_doy_tomorrow(1), 2)
+    @assertEqual(get_doy_tomorrow(150), 151)
+    @assertEqual(get_doy_tomorrow(get_curr_days_per_year()), 1)
+  end subroutine check_get_doy_tomorrow
+
 end module test_clm_time_manager

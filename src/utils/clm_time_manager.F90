@@ -42,6 +42,7 @@ module clm_time_manager
         get_prev_calday,          &! return calendar day at beginning of current timestep
         get_calday,               &! return calendar day from input date
         get_calendar,             &! return calendar
+        get_doy_tomorrow,         &! return next day of year
         get_average_days_per_year,&! return the average number of days per year for the given calendar
         get_curr_days_per_year,   &! return the days per year for year as of the end of the current time step
         get_prev_days_per_year,   &! return the days per year for year as of the beginning of the current time step
@@ -1271,6 +1272,23 @@ contains
     get_calendar = calendar
 
   end function get_calendar
+
+  !=========================================================================================
+
+  function get_doy_tomorrow(doy_today) result(doy_tomorrow)
+
+    !---------------------------------------------------------------------------------
+    ! Given a day of the year (doy_today), return the next day of the year
+
+    integer, intent(in) :: doy_today
+    integer             :: doy_tomorrow
+
+    if (doy_today == get_curr_days_per_year()) then
+        doy_tomorrow = 1
+    else
+        doy_tomorrow = doy_today + 1
+    end if
+  end function get_doy_tomorrow
 
   !=========================================================================================
 

@@ -58,6 +58,7 @@ module CNPhenologyMod
   public :: CNPhenologySetParams      ! Set the parameters explicitly for unit tests
   public :: SeasonalDecidOnset        ! Logical function to determine is seasonal decidious onset should be triggered
   public :: SeasonalCriticalDaylength ! Critical day length needed for Seasonal decidious offset
+  public :: get_swindow
 
   ! !PRIVITE MEMBER FIUNCTIONS:
   private :: CNPhenologyClimate             ! Get climatological everages to figure out triggers for Phenology
@@ -1711,6 +1712,104 @@ contains
     end associate
 
   end subroutine CNStressDecidPhenology
+
+
+  !-----------------------------------------------------------------------
+  subroutine get_swindow(jday, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w, sowing_window_starts_tomorrow)
+    ! !DESCRIPTION:
+    ! Determine when the "next" sowing window is. This is either the sowing window we are
+    ! currently in or, if not in a sowing window, the next one that will occur.
+
+    ! !USES:
+    use clm_time_manager , only : get_curr_days_per_year, is_doy_in_interval, get_doy_tomorrow
+    ! !ARGUMENTS:
+    integer,                          intent(in)    :: jday ! Day of year
+    integer, dimension(:), intent(in)               :: rx_starts, rx_ends ! All prescribed sowing window start and end dates for this patch
+    integer,                          intent(in)    :: param_start, param_end ! Sowing window start and end dates from parameter file
+    integer,                          intent(out)   :: w ! Index of "next" sowing window
+    integer,                          intent(out)   :: start_w, end_w ! Start and end dates of "next" sowing window
+    logical,                          intent(out)   :: sowing_window_starts_tomorrow
+    !
+    ! !LOCAL VARIABLES
+    integer :: next_swindow_start
+    integer :: i, x
+    integer :: jday_tomorrow
+    integer :: mxsowings_in ! Due to unit testing, we can't assume the length of the rx sowing window arrays is mxsowings as set in clm_varpar
+
+    ! Initialize
+    w = -1
+    start_w = -1
+    end_w   = -1
+
+    ! Get info
+    jday_tomorrow = get_doy_tomorrow(jday)
+    mxsowings_in = size(rx_starts)
+
+    ! If no sowing windows are prescribed, use the values from the parameter file.
+    if (maxval(rx_starts) < 1) then
+        w = 1
+        start_w = param_start
+        end_w   = param_end
+
+    ! Otherwise, if today is after the latest sowing window end date, use the first sowing window. This works only if sowing windows that span the new year are located at index w = 1.
+    else if (jday > maxval(rx_ends)) then
+        w = 1
+        start_w = rx_starts(w)
+        end_w   = rx_ends(w)
+    end if
+
+    ! If we already got sowing window dates, do this and exit.
+    if (w > 0) then
+        sowing_window_starts_tomorrow = start_w == jday_tomorrow
+        return
+    end if
+
+    ! Otherwise, use the first prescribed sowing window we find whose end is >= today.
+    do w = 1, mxsowings_in
+        ! If nothing prescribed at this w, stop looking and exit loop.
+        if (min(rx_starts(w), rx_ends(w)) < 0) then
+            exit
+        end if
+
+        if (jday <= rx_ends(w)) then
+            start_w = rx_starts(w)
+            end_w   = rx_ends(w)
+            exit
+        end if
+    end do
+
+    ! Ensure that a window was found
+    if (start_w < 1 .or. end_w < 1) then
+        call endrun(msg="get_swindow(): No sowing window found")
+    end if
+
+    ! Get the start date of the NEXT sowing window (not including the sowing window we're currently in, if any)
+    if (is_doy_in_interval(start_w, end_w, jday)) then
+        next_swindow_start = -1
+        x = w
+        i = 0 ! For checking infinite loop
+        do while (next_swindow_start < 1)
+            ! Check for infinite loop
+            i = i + 1
+            if (i > mxsowings_in + 1) then
+                call endrun("Infinite loop in get_swindow()")
+            end if
+
+            x = x + 1
+            if (x > mxsowings_in) then
+                x = 1
+            end if
+            next_swindow_start = rx_starts(x)
+        end do
+    else
+        next_swindow_start = start_w
+    end if
+
+    ! Does the NEXT sowing window start tomorrow?
+    sowing_window_starts_tomorrow = next_swindow_start == jday_tomorrow
+
+  end subroutine get_swindow
+
 
   !-----------------------------------------------------------------------
   subroutine CropPhenology(num_pcropp, filter_pcropp                     , &

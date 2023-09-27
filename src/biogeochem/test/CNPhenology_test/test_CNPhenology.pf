@@ -293,6 +293,100 @@ contains
     end do
   end subroutine check_crit_dayl_dependsonlatnveg
 
+  @Test
+  subroutine test_get_swindow_startend(this)
+    use clm_time_manager, only : get_curr_days_per_year
+    class(TestCNPhenology), intent(inout) :: this
+    integer, dimension(3), parameter :: rx_starts = (/1, 150, -1/)
+    integer, dimension(3), parameter :: rx_ends   = (/45, 180, -1/)
+    integer, parameter :: param_start = 200
+    integer, parameter :: param_end   = 250
+    integer :: w, start_w, end_w
+    logical :: sowing_window_starts_tomorrow
 
+    call get_swindow(1, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w, sowing_window_starts_tomorrow)
+    @assertEqual(1, w)
+    @assertEqual(1, start_w)
+    @assertEqual(45, end_w)
+    @assertFalse(sowing_window_starts_tomorrow)
+
+    call get_swindow(45, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w, sowing_window_starts_tomorrow)
+    @assertEqual(1, w)
+    @assertEqual(1, start_w)
+    @assertEqual(45, end_w)
+    @assertFalse(sowing_window_starts_tomorrow)
+
+    call get_swindow(149, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w, sowing_window_starts_tomorrow)
+    @assertEqual(2, w)
+    @assertEqual(150, start_w)
+    @assertEqual(180, end_w)
+    @assertTrue(sowing_window_starts_tomorrow)
+
+    call get_swindow(175, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w, sowing_window_starts_tomorrow)
+    @assertEqual(2, w)
+    @assertEqual(150, start_w)
+    @assertEqual(180, end_w)
+    @assertFalse(sowing_window_starts_tomorrow)
+
+    call get_swindow(229, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w, sowing_window_starts_tomorrow)
+    @assertEqual(1, w)
+    @assertEqual(1, start_w)
+    @assertEqual(45, end_w)
+    @assertFalse(sowing_window_starts_tomorrow)
+
+    call get_swindow(get_curr_days_per_year(), rx_starts, rx_ends, param_start, param_end, w, start_w, end_w, sowing_window_starts_tomorrow)
+    @assertEqual(1, w)
+    @assertEqual(1, start_w)
+    @assertEqual(45, end_w)
+    @assertTrue(sowing_window_starts_tomorrow)
+  end subroutine test_get_swindow_startend
+
+  @Test
+  subroutine test_get_swindow_endstart(this)
+    use clm_time_manager, only : get_curr_days_per_year
+    class(TestCNPhenology), intent(inout) :: this
+    integer, dimension(3), parameter :: rx_starts = (/360, 150, -1/)
+    integer, dimension(3), parameter :: rx_ends   = (/45,  180, -1/)
+    integer, parameter :: param_start = 200
+    integer, parameter :: param_end   = 250
+    integer :: w, start_w, end_w
+    logical :: sowing_window_starts_tomorrow
+
+    call get_swindow(1, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w, sowing_window_starts_tomorrow)
+    @assertEqual(1, w)
+    @assertEqual(360, start_w)
+    @assertEqual(45, end_w)
+    @assertFalse(sowing_window_starts_tomorrow)
+
+    call get_swindow(45, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w, sowing_window_starts_tomorrow)
+    @assertEqual(1, w)
+    @assertEqual(start_w, 360)
+    @assertEqual(end_w, 45)
+    @assertFalse(sowing_window_starts_tomorrow)
+
+    call get_swindow(149, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w, sowing_window_starts_tomorrow)
+    @assertEqual(2, w)
+    @assertEqual(150, start_w)
+    @assertEqual(180, end_w)
+    @assertTrue(sowing_window_starts_tomorrow)
+
+    call get_swindow(175, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w, sowing_window_starts_tomorrow)
+    @assertEqual(2, w)
+    @assertEqual(150, start_w)
+    @assertEqual(180, end_w)
+    @assertFalse(sowing_window_starts_tomorrow)
+
+    call get_swindow(229, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w, sowing_window_starts_tomorrow)
+    @assertEqual(1, w)
+    @assertEqual(360, start_w)
+    @assertEqual(45, end_w)
+    @assertFalse(sowing_window_starts_tomorrow)
+
+    call get_swindow(get_curr_days_per_year(), rx_starts, rx_ends, param_start, param_end, w, start_w, end_w, sowing_window_starts_tomorrow)
+    @assertEqual(1, w)
+    @assertEqual(360, start_w)
+    @assertEqual(45, end_w)
+    @assertFalse(sowing_window_starts_tomorrow)
+  end subroutine test_get_swindow_endstart
 
 end module test_CNPhenology
