@@ -2681,43 +2681,29 @@ module CLMFatesInterfaceMod
       this%fates_seed%incoming_global(:,:) = 0._r8
       this%fates_seed%outgoing_global(:,:) = 0._r8
 
-      write(iulog,*) 'WSG: begg: ', procinfo%begg
-      do g = 1, procinfo%ncells
-         write(iulog,*) 'WSG: g+begg, outgoing_local: ', g+procinfo%begg, sum(this%fates_seed%outgoing_local(:,g))
-      end do
-
-
-      ! Distribute obtgoing seed data from all nodes to all nodes
+      ! Distribute outgoing seed data from all nodes to all nodes
       call MPI_Allgatherv(this%fates_seed%outgoing_local, procinfo%ncells*numpft_fates, MPI_REAL8, &
                           this%fates_seed%outgoing_global, this%fates_seed%ncells_array*numpft_fates, this%fates_seed%begg_array*numpft_fates, &
                           MPI_REAL8, mpicom, ier)
       write(iulog,*) 'WSG: MPI_Allgatherv ier: ', ier
 
-      ! zero outgoing local for all gridcells outside threaded region
+      ! zero outgoing local for all gridcells outside threaded region now that we've passed them out
       this%fates_seed%outgoing_local(:,:) = 0._r8
 
-
+      ! Calculate the current gridcell incoming seed for each gridcell index
+      ! This should be conducted outside of a threaded region to provide access to
+      ! the neighbor%gindex which might not be available in via the clumped index
       call get_proc_global(ng=numg)
       do g = 1, numg
-
-         write(iulog,*) 'WSG: g, outgoing_global: ', g, sum(this%fates_seed%outgoing_global(:,g))
-
-         ! Calculate the current gridcell incoming seed for each gridcell index
-         ! This should be conducted outside of a threaded region to provide access to
-         ! the neighbor%gindex which might not be available in via the clumped index
          neighbor => lneighbors(g)%first_neighbor
          do while (associated(neighbor))
-
             ! This also applies the same neighborhood distribution scheme to all pfts
             ! This needs to have a per pft density probability value
             this%fates_seed%incoming_global(:,g) = this%fates_seed%incoming_global(:,g) + &
                                                  this%fates_seed%outgoing_global(:,neighbor%gindex) * &
                                                  neighbor%density_prob(:) / lneighbors(g)%neighbor_count
-            !write(iulog,*) 'WSGloop: g, incoming, outgoing: ', g, sum(this%fates_seed%incoming_global(g,:)), sum(this%fates_seed%outgoing_global(g,:))
-            !write(iulog,*) 'WSGloop: g, densprob,   ncount: ', g, sum(neighbor%density_prob(:)), lneighbors(g)%neighbor_count
             neighbor => neighbor%next_neighbor
          end do
-         !write(iulog,*) 'WSG: g, incoming, outgoing: ', g, sum(this%fates_seed%incoming_global(g,:)), sum(this%fates_seed%outgoing_global(g,:))
       end do
 
    endif
@@ -2748,11 +2734,8 @@ module CLMFatesInterfaceMod
        c = this%f2hmap(nc)%fcolumn(s)
        g = col%gridcell(c)
 
-       write(iulog,*) 'WSD pre: g, incoming, seed_in: ', g, sum(this%fates_seed%incoming_global(:,g)), sum(this%fates(nc)%sites(s)%seed_in(:))
-
        ! Check that it is the beginning of the current dispersal time step
        if (IsItDispersalTime()) then
-          write(iulog,*) 'WSD IIDT: g: ', g
           ! assuming equal area for all sites, seed_id_global in [kg/grid/day], seed_in in [kg/site/day]
           this%fates(nc)%sites(s)%seed_in(:) = this%fates_seed%incoming_global(:,g)
           this%fates(nc)%sites(s)%seed_out(:) = 0._r8  ! reset seed_out
@@ -2761,9 +2744,6 @@ module CLMFatesInterfaceMod
           ! if this is a restart, then skip this entirely
           this%fates(nc)%sites(s)%seed_in(:) = 0._r8
        end if
-
-       write(iulog,*) 'WSD pst: g, incoming, seed_in: ', g, sum(this%fates_seed%incoming_global(:,g)), sum(this%fates(nc)%sites(s)%seed_in(:))
-
     end do
 
     call t_stopf('fates-seed-disperse')
