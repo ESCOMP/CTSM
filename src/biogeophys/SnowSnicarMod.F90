@@ -487,8 +487,12 @@ contains
     real(r8) :: bcint_d0(1:16)                    ! Parameterization coefficients at each band center wavelength
     real(r8) :: bcint_d1(1:16)                    ! Parameterization coefficients at each band center wavelength
     real(r8) :: bcint_d2(1:16)                    ! Parameterization coefficients at each band center wavelength
-    real(r8) :: den_bc = 1.49_r8                  ! target BC particle density (g/cm3) used in BC MAC adjustment
-    real(r8) :: Re_bc = 0.045                     ! target BC effective radius (um) used in BC MAC adjustment
+    real(r8), parameter :: kg_to_ug = 1.e9_r8  ! unit conversion of kg to micrograms
+    real(r8), parameter :: den_bc = 1.7_r8  ! BC particle density (g/cm3)
+    real(r8), parameter :: den_bc_target = 1.49_r8  ! target BC particle density (g/cm3) used in BC MAC adjustment
+    real(r8), parameter :: Re_bc = 0.045_r8  ! target BC effective radius (um) used in BC MAC adjustment
+    real(r8), parameter :: radius_1 = 0.1_r8  ! used with Re_bc (um)
+    real(r8), parameter :: radius_2 = 0.05_r8  ! used with Re_bc (um)
     real(r8) :: bcint_m(1:3)                      ! Parameterization coefficients for BC size adjustment in BC-snow int mix
     real(r8) :: bcint_n(1:3)                      ! Parameterization coefficients for BC size adjustment in BC-snow int mix
     real(r8) :: bcint_m_tmp                       ! temporary of bcint_m
@@ -884,7 +888,7 @@ contains
                         asm_prm_snw_lcl(i) = g_ice_F07 * g_Cg_intp     ! Eq.6, He et al. (2017)
                      endif
 
-                     if (asm_prm_snw_lcl(i) > 0.99_r8) asm_prm_snw_lcl(i) = 0.99_r8 !avoid unreasonable values (rarely occur in large-size spheroid cases)
+                     asm_prm_snw_lcl(i) = min(0.99_r8, asm_prm_snw_lcl(i))  !avoid unreasonable values (rarely occur in large-size spheroid cases)
 
                   enddo ! snow layer loop
 
@@ -892,66 +896,64 @@ contains
                   ss_alb_aer_lcl(2)        = ss_alb_bc2(bnd_idx)      
                   asm_prm_aer_lcl(2)       = asm_prm_bc2(bnd_idx)
                   ext_cff_mss_aer_lcl(2)   = ext_cff_mss_bc2(bnd_idx)
-
                   ! aerosol species 3 optical properties, hydrophilic OC
                   ss_alb_aer_lcl(3)        = ss_alb_oc1(bnd_idx)      
                   asm_prm_aer_lcl(3)       = asm_prm_oc1(bnd_idx)
                   ext_cff_mss_aer_lcl(3)   = ext_cff_mss_oc1(bnd_idx)
-
                   ! aerosol species 4 optical properties, hydrophobic OC
                   ss_alb_aer_lcl(4)        = ss_alb_oc2(bnd_idx)      
                   asm_prm_aer_lcl(4)       = asm_prm_oc2(bnd_idx)
                   ext_cff_mss_aer_lcl(4)   = ext_cff_mss_oc2(bnd_idx)
 
+                  ! Optics for BC/dust-snow external mixing:
+                  ! aerosol species 1 optical properties, hydrophilic BC
+                  ss_alb_aer_lcl(1)        = ss_alb_bc1(bnd_idx)
+                  asm_prm_aer_lcl(1)       = asm_prm_bc1(bnd_idx)
+                  ext_cff_mss_aer_lcl(1)   = ext_cff_mss_bc1(bnd_idx)
+                  ! aerosol species 5 optical properties, dust size1
+                  ss_alb_aer_lcl(5)      = ss_alb_dst1(bnd_idx)
+                  asm_prm_aer_lcl(5)     = asm_prm_dst1(bnd_idx)
+                  ext_cff_mss_aer_lcl(5) = ext_cff_mss_dst1(bnd_idx)
+                  ! aerosol species 6 optical properties, dust size2
+                  ss_alb_aer_lcl(6)      = ss_alb_dst2(bnd_idx)
+                  asm_prm_aer_lcl(6)     = asm_prm_dst2(bnd_idx)
+                  ext_cff_mss_aer_lcl(6) = ext_cff_mss_dst2(bnd_idx)
+                  ! aerosol species 7 optical properties, dust size3
+                  ss_alb_aer_lcl(7)      = ss_alb_dst3(bnd_idx)
+                  asm_prm_aer_lcl(7)     = asm_prm_dst3(bnd_idx)
+                  ext_cff_mss_aer_lcl(7) = ext_cff_mss_dst3(bnd_idx)
+                  ! aerosol species 8 optical properties, dust size4
+                  ss_alb_aer_lcl(8)      = ss_alb_dst4(bnd_idx)
+                  asm_prm_aer_lcl(8)     = asm_prm_dst4(bnd_idx)
+                  ext_cff_mss_aer_lcl(8) = ext_cff_mss_dst4(bnd_idx)
+
                   ! 1. snow and aerosol layer column mass (L_snw, L_aer [kg/m^2])
                   ! 2. optical Depths (tau_snw, tau_aer)
                   ! 3. weighted Mie properties (tau, omega, g)
 
+                  wvl_doint = wvl_ct(bnd_idx)
+
                   ! Weighted Mie parameters of each layer
                   do i=snl_top,snl_btm,1
 
-                     ! Optics for BC/dust-snow external mixing:
-                     ! aerosol species 1 optical properties, hydrophilic BC
-                     ss_alb_aer_lcl(1)        = ss_alb_bc1(bnd_idx)
-                     asm_prm_aer_lcl(1)       = asm_prm_bc1(bnd_idx)
-                     ext_cff_mss_aer_lcl(1)   = ext_cff_mss_bc1(bnd_idx)
-                     ! aerosol species 5 optical properties, dust size1
-                     ss_alb_aer_lcl(5)      = ss_alb_dst1(bnd_idx)
-                     asm_prm_aer_lcl(5)     = asm_prm_dst1(bnd_idx)
-                     ext_cff_mss_aer_lcl(5) = ext_cff_mss_dst1(bnd_idx)
-                     ! aerosol species 6 optical properties, dust size2
-                     ss_alb_aer_lcl(6)      = ss_alb_dst2(bnd_idx)
-                     asm_prm_aer_lcl(6)     = asm_prm_dst2(bnd_idx)
-                     ext_cff_mss_aer_lcl(6) = ext_cff_mss_dst2(bnd_idx)
-                     ! aerosol species 7 optical properties, dust size3
-                     ss_alb_aer_lcl(7)      = ss_alb_dst3(bnd_idx)
-                     asm_prm_aer_lcl(7)     = asm_prm_dst3(bnd_idx)
-                     ext_cff_mss_aer_lcl(7) = ext_cff_mss_dst3(bnd_idx)
-                     ! aerosol species 8 optical properties, dust size4
-                     ss_alb_aer_lcl(8)      = ss_alb_dst4(bnd_idx)
-                     asm_prm_aer_lcl(8)     = asm_prm_dst4(bnd_idx)
-                     ext_cff_mss_aer_lcl(8) = ext_cff_mss_dst4(bnd_idx)
-
                      ! Start BC/dust-snow internal mixing for wavelength<=1.2um
-                     wvl_doint = wvl_ct(bnd_idx)
-
                      if (wvl_doint <= 1.2_r8) then
  
                         ! BC-snow internal mixing applied to hydrophilic BC if activated
                         ! BC-snow internal mixing primarily affect snow single-scattering albedo
                         if ( snicar_snobc_intmix .and. (mss_cnc_aer_lcl(i,1) > 0._r8) ) then
                            ! result from Eq.8b in He et al.(2017) is based on BC Re=0.1um &
-                           ! MAC=6.81 m2/g (@550 nm) & BC density=1.7g/cm3.
+                           ! MAC=6.81 m2/g (@550 nm) & BC density=1.7g/cm3 (den_bc).
                            ! To be consistent with Bond et al. 2006 recommeded value (BC MAC=7.5 m2/g @550nm)
                            ! we made adjustments on BC size & density as follows to get MAC=7.5m2/g:
                            ! (1) We use BC Re=0.045um [geometric mean diameter=0.06um (Dentener et al.2006, 
                            ! Yu and Luo,2009) & geometric std=1.5 (Flanner et al.2007;Aoki et al., 2011)].
-                           ! (2) We tune BC density from 1.7 to 1.49 g/cm3 (Aoki et al., 2011).
+                           ! (2) We tune BC density from 1.7 to 1.49 g/cm3 (den_bc_target) (Aoki et al., 2011).
                            ! These adjustments also lead to consistent results with Flanner et al. 2012 (ACP) lookup table
                            ! for BC-snow internal mixing enhancement in albedo reduction (He et al. 2018 ACP)
                            do ibb=1,16
                               enh_omg_bcint_tmp(ibb) = bcint_d0(ibb) * &
-                                 ( (mss_cnc_aer_lcl(i,1)*1.0E9_r8*1.7_r8/den_bc + bcint_d2(ibb)) **bcint_d1(ibb) )
+                                 ( (mss_cnc_aer_lcl(i,1) * kg_to_ug * den_bc / den_bc_target + bcint_d2(ibb))**bcint_d1(ibb) )
                               ! adjust enhancment factor for BC effective size from 0.1um to Re_bc (He et al. 2018 GRL Eqs.1a,1b)
                               if (ibb < 3) then ! near-UV
                                  bcint_m_tmp = bcint_m(1)
@@ -963,9 +965,9 @@ contains
                                  bcint_m_tmp = bcint_m(3)
                                  bcint_n_tmp = bcint_n(3)
                               endif
-                              bcint_dd  = (Re_bc * 20.0_r8)**bcint_m_tmp
-                              bcint_dd2 = (0.1_r8 * 20.0_r8)**bcint_m_tmp
-                              bcint_f  = (Re_bc * 10.0_r8)**bcint_n_tmp
+                              bcint_dd  = (Re_bc / radius_2)**bcint_m_tmp
+                              bcint_dd2 = (radius_1 / radius_2)**bcint_m_tmp
+                              bcint_f  = (Re_bc / radius_1)**bcint_n_tmp
 
                               enh_omg_bcint_tmp2(ibb)=LOG10(max(1._r8,bcint_dd*((enh_omg_bcint_tmp(ibb)/bcint_dd2)**bcint_f)))
                            enddo
