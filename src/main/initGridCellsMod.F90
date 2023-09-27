@@ -272,7 +272,8 @@ contains
     SHR_ASSERT_FL(npatches_added == npatches, sourcefile, __LINE__)
 
   end subroutine set_landunit_veg_compete
-  
+
+
   !------------------------------------------------------------------------
   subroutine set_landunit_wet_lake (ltype, gi, li, ci, pi)
     !

@@ -1580,6 +1580,7 @@ sub process_namelist_inline_logic {
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_z0param($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_misc($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
@@ -3889,8 +3890,7 @@ sub setup_logic_lai_streams {
   if ( &value_is_true($nl_flags->{'use_crop'}) && &value_is_true($nl->get_value('use_lai_streams'))  ) {
     $log->fatal_error("turning use_lai_streams on is incompatable with use_crop set to true.");
   }
-  if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
-
+  if ( $nl_flags->{'bgc_mode'} eq "sp" || ($nl_flags->{'bgc_mode'} eq "fates" && &value_is_true($nl->get_value('use_fates_sp')) )) {
      if ( &value_is_true($nl->get_value('use_lai_streams')) ) {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo',
@@ -3916,15 +3916,20 @@ sub setup_logic_lai_streams {
        }
      }
   } else {
-     # If bgc is CN/CNDV then make sure none of the LAI settings are set
-     if ( defined($nl->get_value('stream_year_first_lai')) ||
-          defined($nl->get_value('stream_year_last_lai'))  ||
-          defined($nl->get_value('model_year_align_lai'))  ||
-          defined($nl->get_value('lai_tintalgo'        ))  ||
+     # If bgc is BGC/BGCDV then make sure none of the LAI settings are set
+     if ( &value_is_true($nl->get_value('use_lai_streams'))) {
+        $log->fatal_error("When not in SP mode use_lai_streams cannot be .true.\n" .
+                          "(eg. don't use this option with BGC or non-SP FATES), \n" .
+                          "Update compset to use SP)");
+     }
+     if ( defined($nl->get_value('stream_year_first_lai'))  ||
+          defined($nl->get_value('stream_year_last_lai'))   ||
+          defined($nl->get_value('model_year_align_lai'))   ||
+          defined($nl->get_value('lai_tintalgo'        ))   ||
           defined($nl->get_value('stream_fldfilename_lai'))   ) {
-        $log->fatal_error("When bgc is NOT SP none of the following can be set: stream_year_first_lai,\n" .
+        $log->fatal_error("When not in SP mode none of the following can be set: stream_year_first_lai,\n" .
                           "stream_year_last_lai, model_year_align_lai, lai_tintalgo nor\n" .
-                          "stream_fldfilename_lai (eg. don't use this option with BGC,CN,CNDV nor BGDCV).");
+                          "stream_fldfilename_lai (eg. don't use this option with BGC or FATES-SP).");
      }
   }
 }
@@ -4369,6 +4374,28 @@ sub setup_logic_exice {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_z0param {
+   #
+   # Set default z0 paramterization
+   #
+   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'z0param_method');
+
+   my $z0param_method = remove_leading_and_trailing_quotes($nl->get_value('z0param_method' ));
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_z0m_snowmelt',
+           'z0param_method'=>$z0param_method );
+
+   my $use_z0m_snowmelt = $nl->get_value( 'use_z0m_snowmelt' );
+
+   if ( $z0param_method eq "ZengWang2007" && defined($use_z0m_snowmelt) && value_is_true($use_z0m_snowmelt)) {
+      $log->fatal_error("use_z0m_snowmelt must be .false. when z0param_method = $z0param_method.\n $@");
+   }
+
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_misc {
    #
    # Set some misc options
@@ -4386,7 +4413,7 @@ sub setup_logic_misc {
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_use_second_grain_pool');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_use_repr_structure_pool');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_no_crop_seed_replenishment');
-   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hist_master_list_file');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hist_fields_list_file');
 }
 
 #-------------------------------------------------------------------------------

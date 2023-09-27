@@ -1,5 +1,5 @@
 calc_human_stress_indices = 'ALL'
-hist_master_list_file = .true.
+hist_fields_list_file = .true.
 
 hist_fincl1   += 'GSSUN:L43200', 'GSSHA:L43200', 'FSDSND:L43200', 'FSRND:L43200', 'FSRSFND:L43200', 
                  'SSRE_FSRND:L43200', 'FSDSVD:L43200', 'FSDSVI:L43200',

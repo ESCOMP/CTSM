@@ -246,6 +246,13 @@ module clm_varctl
   logical, public :: for_testing_allow_interp_non_ciso_to_ciso = .false.
 
   !----------------------------------------------------------
+  !  Surface roughness parameterization
+  !----------------------------------------------------------
+
+  character(len=64), public :: z0param_method  ! ZengWang2007 or Meier2022
+  logical, public :: use_z0m_snowmelt = .false.         ! true => use snow z0m parameterization of Brock2006
+
+  !----------------------------------------------------------
   !  FATES switches
   !----------------------------------------------------------
 
@@ -398,8 +405,8 @@ module clm_varctl
   ! namelist: write CH4 extra diagnostic output
   logical, public :: hist_wrtch4diag = .false.         
 
-  ! namelist: write history master list to a file for use in documentation
-  logical, public :: hist_master_list_file = .false.
+  ! namelist: write list of all history fields to a file for use in documentation
+  logical, public :: hist_fields_list_file = .false.
 
   !----------------------------------------------------------
   ! FATES
