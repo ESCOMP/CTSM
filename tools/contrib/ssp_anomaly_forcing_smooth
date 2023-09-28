@@ -19,28 +19,21 @@ import argparse
 from getpass import getuser
 import numpy as np
 import netCDF4 as netcdf4
+import re
 
 
 parser = argparse.ArgumentParser(description="Create anomaly forcing")
+period_options = "hist, (hist-)ssp126, (hist-)ssp245, (hist-)ssp370, (hist-)ssp585"
 parser.add_argument(
-    "sspnum",
-    help="scenario number (1=SSP1-2.6, 2=SSP2-4.5, 3=SSP3-7.0, 4=SSP5-8.5)",
-    nargs="?",
-    type=int,
-    default=0,
+    "period",
+    help="Period to process and output. " + period_options,
+    type=str,
 )
 parser.add_argument(
     "--climo-year",
     help="year to use to generate climatology",
     type=int,
     default=2015,
-)
-parser.add_argument(
-    "--hist-or-ssp",
-    help="save historical period (hist), ssp period (ssp; default), or both?",
-    type=str,
-    default="ssp",
-    choices=["hist", "ssp", "both"],
 )
 parser.add_argument(
     "--output-dir",
@@ -62,17 +55,46 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
-if args.sspnum == 0:
-    sys.exit("choose valid ssp number")
 
+# Check provided period
+periodtag = args.period.lower()
+for ignore_punct in [".", "-", "_"]:
+    periodtag = periodtag.replace(ignore_punct, "")
+valid_ssps = ["ssp126", "ssp245", "ssp370", "ssp585"]
+if periodtag not in ["hist"] + valid_ssps + ["hist" + ssp for ssp in valid_ssps]:
+    raise ValueError(f"{args.period} is not a valid period. Choices: {period_options}")
+
+# Get this to use in filenames
+pattern = re.compile("ssp\d{3}")
+result = pattern.findall(periodtag)
+if result:
+    if len(result) > 1:
+        raise ValueError(f"Period not recognized: {args.period}")
+    s = result[0].replace("ssp", "")
+    ssptag = f"SSP{s[0]}-{s[1]}.{s[2]}"
+    if "hist" in periodtag:
+        periodtag_filenames = "hist-" + ssptag
+    else:
+        periodtag_filenames = ssptag
+else:
+    periodtag_filenames = "hist"
+
+climo_year = args.climo_year
+if climo_year != 2015:
+    climo_text = ".climo" + str(climo_year)
+else:
+    climo_text = ""
+# ten years on either side (21 years total)
+climo_base_nyrs = 21
+climo_radius = (climo_base_nyrs - 1)/2
+if climo_radius != round(climo_radius):
+    raise RuntimeError("climo_base_nyrs must be an integer")
 if args.climo_year < 1850:
     raise ValueError("Minimum --climo-year is 1850")
 elif args.climo_year > 2100:
     raise ValueError("Maximum --climo-year is 2100")
-elif args.hist_or_ssp == "hist" and args.climo_year > 2014:
+elif periodtag == "hist" and args.climo_year > 2014:
     raise ValueError("Maximum hist --climo-year is 2014")
-elif args.hist_or_ssp == "ssp" and args.climo_year < 2015:
-    raise ValueError("Minimum ssp --climo-year is 2015")
 
 # -------------------------------------------------------
 
@@ -170,20 +192,13 @@ sspdir_full = [
     "b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.103/",
 ]
 
-histdir_full = [
-    "b.e21.BHIST.f09_g17.CMIP6-historical.010/",
-    "b.e21.BHIST.f09_g17.CMIP6-historical.011/",
-    "b.e21.BHIST.f09_g17.CMIP6-historical.004/",
-    "b.e21.BHIST.f09_g17.CMIP6-historical.010/",
-    "b.e21.BHIST.f09_g17.CMIP6-historical.011/",
-    "b.e21.BHIST.f09_g17.CMIP6-historical.004/",
-    "b.e21.BHIST.f09_g17.CMIP6-historical.010/",
-    "b.e21.BHIST.f09_g17.CMIP6-historical.011/",
-    "b.e21.BHIST.f09_g17.CMIP6-historical.004/",
+histdir = [
     "b.e21.BHIST.f09_g17.CMIP6-historical.010/",
     "b.e21.BHIST.f09_g17.CMIP6-historical.011/",
     "b.e21.BHIST.f09_g17.CMIP6-historical.004/",
 ]
+num_ens = len(histdir)
+histdir_full = histdir + histdir + histdir + histdir
 
 sim_pairs = zip(sspdir_full, histdir_full)
 # print simulation pairs and exit
@@ -194,60 +209,29 @@ if args.print_ssps:
         print("historical: ", sim[1], "\n")
     sys.exit()
 
-sspnum = args.sspnum
-
 # hist_case needed?
 hist_case = "b.e21.BHIST.f09_g17.CMIP6-historical.010"
 
-if sspnum == 1:
-    # SSP1-26
-    ssptag = "SSP1-2.6"
-    histdir = histdir_full[0:3]
-    sspdir = sspdir_full[0:3]
-elif sspnum == 2:
-    # SSP2-45
-    ssptag = "SSP2-4.5"
-    histdir = histdir_full[3:6]
-    sspdir = sspdir_full[3:6]
-elif sspnum == 3:
-    # SSP3-70
-    ssptag = "SSP3-7.0"
-    histdir = histdir_full[6:9]
-    sspdir = sspdir_full[6:9]
-elif sspnum == 4:
-    # SSP5-85
-    ssptag = "SSP5-8.5"
-    histdir = histdir_full[9:12]
-    sspdir = sspdir_full[9:12]
-else:
-    sys.exit("sspnum is out of range: " + sspnum)
-
-num_ens = len(sspdir)
-if num_ens != len(histdir):
-    print("number of ensemble members not the same")
-    sys.exit("number of members different")
-
-# test w/ 1 ensemble member
-num_ens = 3
+if "ssp" in periodtag:
+    if ssptag == "SSP1-2.6":
+        sspdir = sspdir_full[0:3]
+    elif ssptag == "SSP2-4.5":
+        sspdir = sspdir_full[3:6]
+    elif ssptag == "SSP3-7.0":
+        sspdir = sspdir_full[6:9]
+    elif ssptag == "SSP5-8.5":
+        sspdir = sspdir_full[9:12]
+    else:
+        raise RuntimeError(f"ssptag {ssptag} needs to be handled")
+    if len(sspdir) != len(histdir):
+        sys.exit(f"number of ensemble members not the same between historical {len(histdir)} and SSP {len(sspdir)} periods")
 
 # Setup output directory
-sspoutdir = "CMIP6-" + ssptag
-outdir = os.path.join(spath, sspoutdir)
+outdir = os.path.join(spath, "CMIP6-" + periodtag_filenames)
 if not os.path.exists(outdir):
     os.makedirs(outdir)
 
 print("Output specific data directory :" + outdir)
-
-climo_year = args.climo_year
-if climo_year != 2015:
-    climo_text = "_climo" + str(climo_year)
-else:
-    climo_text = ""
-# ten years on either side (21 years total)
-climo_base_nyrs = 21
-climo_radius = (climo_base_nyrs - 1)/2
-if climo_radius != round(climo_radius):
-    raise RuntimeError("climo_base_nyrs must be an integer")
 
 write_climo = args.write_climo
 
@@ -285,14 +269,14 @@ for f in range(nfields):
         dpath = datapath
         dfile = "/lnd/proc/tseries/month_1/"
         hdir = dpath + hist_case + dfile
-        if args.hist_or_ssp != "hist":
+        if "ssp" in periodtag:
             fut_case = sspdir[nens]
             fdir = dpath + fut_case + dfile
 
         # Check that directories exist
         if not os.path.exists(hdir):
             sys.exit("Could not find directory: " + hdir)
-        if args.hist_or_ssp != "hist" and not os.path.exists(fdir):
+        if "ssp" in periodtag and not os.path.exists(fdir):
             sys.exit("Could not find directory: " + fdir)
 
         # --  Get historical and SSP filenames  --------------------
@@ -302,7 +286,7 @@ for f in range(nfields):
         histfiles = x[0].decode("utf-8").split("\n")
         histfiles.remove("")
 
-        if args.hist_or_ssp != "hist":
+        if "ssp" in periodtag:
             command = "ls " + fdir + "*." + field_in[f] + ".*.nc"
             x2 = subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
             x = x2.communicate()
@@ -313,7 +297,7 @@ for f in range(nfields):
             print(hfile.split("month_1/")[-1])
             if not os.path.exists(hfile):
                 sys.exit(hfile + " does not exist")
-        if args.hist_or_ssp != "hist":
+        if "ssp" in periodtag:
             for sfile in sspfiles:
                 print(sfile.split("month_1/")[-1])
                 if not os.path.exists(sfile):
@@ -340,7 +324,7 @@ for f in range(nfields):
             x = hist_time_units.split()[2]
             ref_year = float(x.split("-")[0])
             hist_yrstart = np.min(hist_time / 365.0 + ref_year).astype(int)
-            if args.hist_or_ssp == "ssp":
+            if "hist" not in periodtag:
                 # overwrite hist_yrstart to select just 20 years prior to climo_year
                 hist_yrstart = climo_year - (climo_base_nyrs - 1)
             hist_yrend = (np.max(hist_time / 365.0 + ref_year) - 1).astype(int)
@@ -379,7 +363,7 @@ for f in range(nfields):
             )
 
         # read in ssp data  ---------------------
-        if args.hist_or_ssp != "hist":
+        if "ssp" in periodtag:
             f1 = netcdf4.MFDataset(sspfiles, "r")
             if nens == 0:
                 ssp_time = np.asfarray(f1.variables["time"][:], np.float64)
@@ -427,32 +411,29 @@ for f in range(nfields):
         # end read in ssp data  -----------------
 
         if nens == 0:
-            if args.hist_or_ssp == "hist":
+            if "hist" in periodtag:
                 thisperiod_yrstart = hist_yrstart
-                thisperiod_yrend = hist_yrend
                 long_name = hist_long_name
-            elif args.hist_or_ssp == "ssp":
+                if "ssp" not in periodtag:
+                    thisperiod_yrend = hist_yrend
+                else:
+                    thisperiod_yrend = ssp_yrend
+            else:
                 thisperiod_yrstart = ssp_yrstart
                 thisperiod_yrend = ssp_yrend
                 long_name = ssp_long_name
-            elif args.hist_or_ssp == "both":
-                thisperiod_yrstart = hist_yrstart
-                thisperiod_yrend = ssp_yrend
-                long_name = ssp_long_name
-            else:
-                raise RuntimeError(f"Handle --hist-or-ssp {args.hist_or_ssp}")
             thisperiod_nyrs = thisperiod_yrend - thisperiod_yrstart + 1
 
             if f == 0:
                 print(
-                    f"{args.hist_or_ssp.upper()} years: ",
+                    f"{args.period} years: ",
                     thisperiod_yrstart,
                     thisperiod_yrend,
                     thisperiod_nyrs,
                 )
             outfile_suffix = (
                 ".CESM."
-                + ssptag
+                + periodtag_filenames
                 + climo_text
                 + "."
                 + str(thisperiod_yrstart)
@@ -466,7 +447,7 @@ for f in range(nfields):
 
     # normalize summed fields by number of ensemble members
     hist_fld = hist_fld / float(num_ens)
-    if args.hist_or_ssp != "hist":
+    if "ssp" in periodtag:
         ssp_fld = ssp_fld / float(num_ens)
         # concatenate arrays to form contiguous time series
         temp_fld = np.concatenate((hist_fld, ssp_fld), axis=0)
@@ -500,7 +481,7 @@ for f in range(nfields):
     t_climo_year = np.argmin(np.abs((full_time / 365.0 + ref_year) - climo_year))
     # shift to january of climo_year
     t_climo_year += 1
-    if args.hist_or_ssp != "hist":
+    if "ssp" in periodtag:
         climo_base_arange = np.arange(climo_base_nyrs)
     else:
         climo_base_arange = np.arange(climo_radius + 1)
@@ -519,7 +500,8 @@ for f in range(nfields):
     def get_year_from_time(time, t, ref_year):
         return time[t] / 365.0 + ref_year
 
-    if args.hist_or_ssp == "hist":
+    if periodtag == "hist":
+        # Historical period (1850-2014) only
         t_hist_end = len(full_time) - 1
         if f == 0:
             print(
@@ -532,7 +514,8 @@ for f in range(nfields):
         thisperiod_time_longname = hist_time_longname
         thisperiod_yrstart = hist_yrstart
         thisperiod_yrend = hist_yrend
-    elif args.hist_or_ssp == "ssp":
+    elif "hist" not in periodtag:
+        # SSP period (2015-2100) only
         t_ssp_start = (ssp_yrstart - hist_yrstart) * nmo
         if f == 0:
             print(
@@ -545,7 +528,8 @@ for f in range(nfields):
         thisperiod_time_longname = ssp_time_longname
         thisperiod_yrstart = ssp_yrstart
         thisperiod_yrend = ssp_yrend
-    elif args.hist_or_ssp == "both":
+    else:
+        # Entire period (1850-2100)
         if f == 0:
             print(
                 f"{get_year_from_time(full_time, 0, ref_year)}-{get_year_from_time(full_time, len(full_time)-1, ref_year)}"
@@ -557,38 +541,40 @@ for f in range(nfields):
         thisperiod_time_longname = hist_time_longname
         thisperiod_yrstart = hist_yrstart
         thisperiod_yrend = ssp_yrend
-    else:
-        raise RuntimeError(f"Handle --hist-or-ssp {args.hist_or_ssp}")
 
     # calculate anomaly relative to climatology
     anom_fld = np.zeros((fld_smoothed.shape))
     for y in range(nyrs):
         ind = (np.arange(nmo) + y * nmo).astype(int)
-        if anomsf[f] == "anomaly":
-            anom_fld[ind, :, :] = fld_smoothed[ind, :, :] - climo
+        try:
+            if anomsf[f] == "anomaly":
+                anom_fld[ind, :, :] = fld_smoothed[ind, :, :] - climo
+            if anomsf[f] == "scale factor":
+                tmp = fld_smoothed[ind, :, :]
+                ind2 = np.where(climo != 0.0)
+                # initialize scalar anomaly to 1
+                tmp2 = np.ones(tmp.shape)
+                # calculate scalar anomaly
+                tmp2[ind2] = tmp[ind2] / climo[ind2]
 
-        if anomsf[f] == "scale factor":
-            tmp = fld_smoothed[ind, :, :]
-            ind2 = np.where(climo != 0.0)
-            # initialize scalar anomaly to 1
-            tmp2 = np.ones(tmp.shape)
-            # calculate scalar anomaly
-            tmp2[ind2] = tmp[ind2] / climo[ind2]
-
-            # place upper limit on scalar anomalies
-            max_scale_factor = 5.0
-            if field_in[f] == "FSDS":
-                max_scale_factor = 2.0
-            ind2 = np.where(tmp2 > max_scale_factor)
-            tmp2[ind2] = max_scale_factor
-            anom_fld[ind, :, :] = tmp2
+                # place upper limit on scalar anomalies
+                max_scale_factor = 5.0
+                if field_in[f] == "FSDS":
+                    max_scale_factor = 2.0
+                ind2 = np.where(tmp2 > max_scale_factor)
+                tmp2[ind2] = max_scale_factor
+                anom_fld[ind, :, :] = tmp2
+        except IndexError as e:
+            raise IndexError("Try using a different climo_year.") from e
+        except:
+            raise
     # ----- end of year loop -------
 
     # write out climo to check field  -------------------------
     if write_climo:
         # Use NetCDF4 format, because using older NetCDF formats are too slow
         w = netcdf4.Dataset(
-            outdir + field_out[f] + "_climo" + str(climo_year) + creationdate + ".nc", "w", format=format
+            os.path.join(outdir, field_out[f] + "_climo" + str(climo_year) + creationdate + ".nc"), "w", format=format
         )
         w.createDimension("lat", int(nlat))
         w.createDimension("lon", int(nlon))
@@ -676,7 +662,7 @@ for f in range(nfields):
         outfile.Created_on = timetag
 
         outfile.title = "anomaly forcing data"
-        if args.hist_or_ssp == "hist":
+        if periodtag == "hist":
             note1_year2 = climo_year
         else:
             note1_year2 = climo_year + climo_radius
@@ -706,7 +692,7 @@ for f in range(nfields):
                 outfile.Created_from_historical_dirs = hdir
             else:
                 outfile.Created_from_historical_dirs += ", " + hdir
-            if args.hist_or_ssp != "hist":
+            if "ssp" in periodtag:
                 fdir = dpath + sspdir[nens] + dfile
                 if nens == 0:
                     outfile.Created_from_scenario_dirs = fdir
@@ -714,7 +700,7 @@ for f in range(nfields):
                     outfile.Created_from_scenario_dirs += ", " + fdir
 
         outfile.History_years = str(hist_yrstart) + "," + str(hist_yrend)
-        if args.hist_or_ssp != "hist":
+        if "ssp" in periodtag:
             outfile.Scenario_years = str(ssp_yrstart) + "," + str(ssp_yrend)
         outfile.institution = "National Center for Atmospheric Research"
 
@@ -794,7 +780,7 @@ for f in range(nfields):
 
     # List of source files
     wvar.historical_source_files = "".join(histfiles).replace(hdir, "")
-    if args.hist_or_ssp != "hist":
+    if "ssp" in periodtag:
         wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
 
     # create second wind field for V component
@@ -819,7 +805,7 @@ for f in range(nfields):
 
         # List of source files
         wvar.historical_source_files = "".join(histfiles).replace(hdir, "")
-        if args.hist_or_ssp != "hist":
+        if "ssp" in periodtag:
             wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
 
     # -- end if statement for write for V field --------
