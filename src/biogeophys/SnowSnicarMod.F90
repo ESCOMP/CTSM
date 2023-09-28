@@ -404,32 +404,42 @@ contains
     real(r8):: smr                                ! accumulator for rdif gaussian integration
     real(r8):: smt                                ! accumulator for tdif gaussian integration
     real(r8):: exp_min                            ! minimum exponential value
-    real(r8), allocatable :: difgauspt(:)         ! Gaussian integration angle
-    real(r8), allocatable :: difgauswt(:)         ! Gaussian integration coefficients/weights
-    integer :: ng                                 ! gaussian integration index
-    integer :: ngmax = 8                          ! max gaussian integration index
+
+    integer :: ng  ! gaussian integration index
+    integer, parameter :: ngmax = 8  ! max gaussian integration index
+    real(r8), parameter :: difgauspt(ngmax) = &  ! Gaussian integration angles (radians)
+                      (/ 0.9894009_r8,  0.9445750_r8, &
+                         0.8656312_r8,  0.7554044_r8, &
+                         0.6178762_r8,  0.4580168_r8, &
+                         0.2816036_r8,  0.0950125_r8/)
+    real(r8), parameter :: difgauswt(ngmax) = &  ! Gaussian integration coefficients/weights
+                      (/ 0.0271525_r8,  0.0622535_r8, &
+                         0.0951585_r8,  0.1246290_r8, &
+                         0.1495960_r8,  0.1691565_r8, &
+                         0.1826034_r8,  0.1894506_r8/)
+
     integer :: snl_btm_itf                        ! index of bottom snow layer interfaces (1) [idx]
     ! constants used in algorithm
-    real(r8):: c0     = 0.0_r8
-    real(r8):: c1     = 1.0_r8
-    real(r8):: c3     = 3.0_r8
-    real(r8):: c4     = 4.0_r8
-    real(r8):: c6     = 6.0_r8
-    real(r8):: cp01   = 0.01_r8
-    real(r8):: cp5    = 0.5_r8
-    real(r8):: cp75   = 0.75_r8
-    real(r8):: c1p5   = 1.5_r8
-    real(r8):: trmin  = 0.001_r8
-    real(r8):: argmax = 10.0_r8                   ! maximum argument of exponential
-    ! cconstant and coefficients used for SZA parameterization
-    real(r8):: sza_a0 =  0.085730_r8
-    real(r8):: sza_a1 = -0.630883_r8
-    real(r8):: sza_a2 =  1.303723_r8
-    real(r8):: sza_b0 =  1.467291_r8
-    real(r8):: sza_b1 = -3.338043_r8
-    real(r8):: sza_b2 =  6.807489_r8
-    real(r8):: puny   =  1.0e-11_r8
-    real(r8):: mu_75  =  0.2588_r8                ! cosine of 75 degree
+    real(r8), parameter :: c0 = 0.0_r8
+    real(r8), parameter :: c1 = 1.0_r8
+    real(r8), parameter :: c3 = 3.0_r8
+    real(r8), parameter :: c4 = 4.0_r8
+    real(r8), parameter :: c6 = 6.0_r8
+    real(r8), parameter :: cp01 = 0.01_r8
+    real(r8), parameter :: cp5 = 0.5_r8
+    real(r8), parameter :: cp75 = 0.75_r8
+    real(r8), parameter :: c1p5 = 1.5_r8
+    real(r8), parameter :: trmin = 0.001_r8
+    real(r8), parameter :: argmax = 10.0_r8  ! maximum argument of exponential
+    ! constants and coefficients used for SZA parameterization
+    real(r8), parameter :: sza_a0 =  0.085730_r8
+    real(r8), parameter :: sza_a1 = -0.630883_r8
+    real(r8), parameter :: sza_a2 =  1.303723_r8
+    real(r8), parameter :: sza_b0 =  1.467291_r8
+    real(r8), parameter :: sza_b1 = -3.338043_r8
+    real(r8), parameter :: sza_b2 =  6.807489_r8
+    real(r8), parameter :: puny =  1.0e-11_r8
+    real(r8), parameter :: mu_75 =  0.2588_r8  ! cosine of 75 degree
     real(r8):: sza_c1                             ! coefficient, SZA parameteirzation
     real(r8):: sza_c0                             ! coefficient, SZA parameterization
     real(r8):: sza_factor                         ! factor used to adjust NIR direct albedo
@@ -466,10 +476,15 @@ contains
     real(r8), allocatable :: wvl_ct(:)            ! band center wavelength (um) for 5 or 480-band case
     real(r8) :: diam_ice                          ! effective snow grain diameter (SSA-equivalent) unit: microns
     real(r8) :: fs_sphd                           ! shape factor for spheroid snow
+    real(r8), parameter :: fs_sphd_default = 0.929_r8  ! default; He et al. (2017), Table 1
     real(r8) :: fs_hex                            ! shape factor for reference hexagonal snow
     real(r8) :: fs_hex0                           ! shape factor for hexagonal plate
+    real(r8), parameter :: fs_hex_ref = 0.788_r8  ! reference shape factor
     real(r8) :: fs_koch                           ! shape factor for Koch snowflake
+    real(r8), parameter :: fs_koch_default = 0.712_r8  ! default; He et al. (2017), Table 1
     real(r8) :: AR_tmp                            ! aspect ratio temporary
+    real(r8), parameter :: AR_tmp_default_1 = 0.5_r8  ! default; He et al. (2017), Table 1
+    real(r8), parameter :: AR_tmp_default_2 = 2.5_r8  ! default; He et al. (2017), Table 1
     real(r8) :: g_ice_Cg_tmp(1:7)                 ! temporary asymmetry factor correction coeff
     real(r8) :: gg_ice_F07_tmp(1:7)               ! temporary asymmetry factor related to geometric reflection & refraction
     real(r8) :: g_Cg_intp                         ! interpolated asymmetry factor correction coeff to target bands 
@@ -548,20 +563,6 @@ contains
          nir_bnd_bgn = 51
       end select
       nir_bnd_end    = snicar_numrad_snw 
-
-      ! initialize for adding-doubling solver
-      allocate(difgauspt(ngmax))
-      allocate(difgauswt(ngmax))
-      difgauspt(:) = &  ! gaussian angles (radians)
-                      (/ 0.9894009_r8,  0.9445750_r8, &
-                         0.8656312_r8,  0.7554044_r8, &
-                         0.6178762_r8,  0.4580168_r8, &
-                         0.2816036_r8,  0.0950125_r8/)
-      difgauswt(:) = &  ! gaussian weights
-                      (/ 0.0271525_r8,  0.0622535_r8, &
-                         0.0951585_r8,  0.1246290_r8, &
-                         0.1495960_r8,  0.1691565_r8, &
-                         0.1826034_r8,  0.1894506_r8/)
 
       ! initialize for nonspherical snow grains
       sno_shp(:) = snicar_snw_shape ! currently only assuming same shapes for all snow layers
@@ -824,13 +825,13 @@ contains
                      case ('spheroid')
                         diam_ice = 2._r8 * snw_rds_lcl(i)   ! unit: microns
                         if (sno_fs(i) == 0._r8) then
-                           fs_sphd = 0.929_r8  ! default; He et al. (2017), Table 1
+                           fs_sphd = fs_sphd_default  ! default; He et al. (2017), Table 1
                         else
                            fs_sphd = sno_fs(i) ! user specified value
                         endif
-                        fs_hex = 0.788_r8      ! reference shape factor
+                        fs_hex = fs_hex_ref  ! reference shape factor
                         if (sno_AR(i) == 0._r8) then
-                           AR_tmp = 0.5_r8     ! default; He et al. (2017), Table 1
+                           AR_tmp = AR_tmp_default_1  ! default; He et al. (2017), Table 1
                         else
                            AR_tmp = sno_AR(i)  ! user specified value
                         endif
@@ -842,13 +843,13 @@ contains
                      case ('hexagonal_plate')
                         diam_ice = 2._r8 * snw_rds_lcl(i)   ! unit: microns
                         if (sno_fs(i) == 0._r8) then
-                           fs_hex0 = 0.788_r8  ! default; He et al. (2017), Table 1
+                           fs_hex0 = fs_hex_ref  ! default; He et al. (2017), Table 1
                         else
                            fs_hex0 = sno_fs(i) ! user specified value
                         endif
-                        fs_hex = 0.788_r8      ! reference shape factor
+                        fs_hex = fs_hex_ref  ! reference shape factor
                         if (sno_AR(i) == 0._r8) then
-                           AR_tmp = 2.5_r8     ! default; He et al. (2017), Table 1
+                           AR_tmp = AR_tmp_default_2  ! default; He et al. (2017), Table 1
                         else
                            AR_tmp = sno_AR(i)  ! user specified value
                         endif
@@ -860,13 +861,13 @@ contains
                      case ('koch_snowflake')
                         diam_ice = 2._r8 * snw_rds_lcl(i) / 0.544_r8  ! unit: microns
                         if (sno_fs(i) == 0._r8) then
-                           fs_koch = 0.712_r8  ! default; He et al. (2017), Table 1
+                           fs_koch = fs_koch_default  ! default; He et al. (2017), Table 1
                         else
                            fs_koch = sno_fs(i) ! user specified value
                         endif
-                        fs_hex = 0.788_r8      ! reference shape factor
+                        fs_hex = fs_hex_ref  ! reference shape factor
                         if (sno_AR(i) == 0._r8) then
-                           AR_tmp = 2.5_r8     ! default; He et al. (2017), Table 1
+                           AR_tmp = AR_tmp_default_2  ! default; He et al. (2017), Table 1
                         else
                            AR_tmp = sno_AR(i)  ! user specified value
                         endif
@@ -893,23 +894,23 @@ contains
                   enddo ! snow layer loop
 
                   ! aerosol species 2 optical properties, hydrophobic BC
-                  ss_alb_aer_lcl(2)        = ss_alb_bc2(bnd_idx)      
-                  asm_prm_aer_lcl(2)       = asm_prm_bc2(bnd_idx)
-                  ext_cff_mss_aer_lcl(2)   = ext_cff_mss_bc2(bnd_idx)
+                  ss_alb_aer_lcl(2)      = ss_alb_bc2(bnd_idx)
+                  asm_prm_aer_lcl(2)     = asm_prm_bc2(bnd_idx)
+                  ext_cff_mss_aer_lcl(2) = ext_cff_mss_bc2(bnd_idx)
                   ! aerosol species 3 optical properties, hydrophilic OC
-                  ss_alb_aer_lcl(3)        = ss_alb_oc1(bnd_idx)      
-                  asm_prm_aer_lcl(3)       = asm_prm_oc1(bnd_idx)
-                  ext_cff_mss_aer_lcl(3)   = ext_cff_mss_oc1(bnd_idx)
+                  ss_alb_aer_lcl(3)      = ss_alb_oc1(bnd_idx)
+                  asm_prm_aer_lcl(3)     = asm_prm_oc1(bnd_idx)
+                  ext_cff_mss_aer_lcl(3) = ext_cff_mss_oc1(bnd_idx)
                   ! aerosol species 4 optical properties, hydrophobic OC
-                  ss_alb_aer_lcl(4)        = ss_alb_oc2(bnd_idx)      
-                  asm_prm_aer_lcl(4)       = asm_prm_oc2(bnd_idx)
-                  ext_cff_mss_aer_lcl(4)   = ext_cff_mss_oc2(bnd_idx)
+                  ss_alb_aer_lcl(4)      = ss_alb_oc2(bnd_idx)
+                  asm_prm_aer_lcl(4)     = asm_prm_oc2(bnd_idx)
+                  ext_cff_mss_aer_lcl(4) = ext_cff_mss_oc2(bnd_idx)
 
                   ! Optics for BC/dust-snow external mixing:
                   ! aerosol species 1 optical properties, hydrophilic BC
-                  ss_alb_aer_lcl(1)        = ss_alb_bc1(bnd_idx)
-                  asm_prm_aer_lcl(1)       = asm_prm_bc1(bnd_idx)
-                  ext_cff_mss_aer_lcl(1)   = ext_cff_mss_bc1(bnd_idx)
+                  ss_alb_aer_lcl(1)      = ss_alb_bc1(bnd_idx)
+                  asm_prm_aer_lcl(1)     = asm_prm_bc1(bnd_idx)
+                  ext_cff_mss_aer_lcl(1) = ext_cff_mss_bc1(bnd_idx)
                   ! aerosol species 5 optical properties, dust size1
                   ss_alb_aer_lcl(5)      = ss_alb_dst1(bnd_idx)
                   asm_prm_aer_lcl(5)     = asm_prm_dst1(bnd_idx)
