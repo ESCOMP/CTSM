@@ -460,18 +460,39 @@ contains
                                                   ! others(0.1<fs<20)= use user-specified value
     ! Constants and parameters for aspherical ice particles    
     ! asymmetry factor parameterization coefficients (6 bands) from Table 3 & Eqs. 6-7 in He et al. (2017)
-    real(r8) :: g_wvl(1:8)                        ! wavelength (um) division point
-    real(r8) :: g_wvl_ct(1:7)                     ! center point for wavelength band (um)
-    real(r8) :: g_b0(1:7)
-    real(r8) :: g_b1(1:7)
-    real(r8) :: g_b2(1:7)
+    real(r8) :: g_wvl_ct(ngmax-1)  ! center point for wavelength band (um)
+    real(r8), parameter :: g_wvl(ngmax) =  &  ! wavelength (um) division point
+        (/ 0.25_r8, 0.70_r8, 1.41_r8, 1.90_r8, &
+           2.50_r8, 3.50_r8, 4.00_r8, 5.00_r8 /)
+    real(r8), parameter :: g_b0(ngmax-1) =  &
+        (/  9.76029E-1_r8,  9.67798E-1_r8,  1.00111_r8, 1.00224_r8, &
+            9.64295E-1_r8,  9.97475E-1_r8,  9.97475E-1_r8 /)
+    real(r8), parameter :: g_b1(ngmax-1) =  &
+        (/  5.21042E-1_r8,  4.96181E-1_r8,  1.83711E-1_r8,  1.37082E-1_r8, &
+            5.50598E-2_r8,  8.48743E-2_r8,  8.48743E-2_r8 /)
+    real(r8), parameter :: g_b2(ngmax-1) =  &
+        (/ -2.66792E-4_r8,  1.14088E-3_r8,  2.37011E-4_r8, -2.35905E-4_r8, &
+            8.40449E-4_r8, -4.71484E-4_r8, -4.71484E-4_r8 /)
     ! Tables 1 & 2 and Eqs. 3.1-3.4 from Fu, 2007 JAS
-    real(r8) :: g_F07_c2(1:7)
-    real(r8) :: g_F07_c1(1:7)
-    real(r8) :: g_F07_c0(1:7)
-    real(r8) :: g_F07_p2(1:7)
-    real(r8) :: g_F07_p1(1:7)
-    real(r8) :: g_F07_p0(1:7)
+    real(r8), parameter :: g_F07_c2(ngmax-1) =  &
+        (/  1.349959E-1_r8,  1.115697E-1_r8,  9.853958E-2_r8,  5.557793E-2_r8, &
+            -1.233493E-1_r8,  0.0_r8        ,  0.0_r8         /)
+    real(r8), parameter :: g_F07_c1(ngmax-1) =  &
+        (/ -3.987320E-1_r8, -3.723287E-1_r8, -3.924784E-1_r8, -3.259404E-1_r8, &
+            4.429054E-2_r8, -1.726586E-1_r8, -1.726586E-1_r8 /)
+    real(r8), parameter :: g_F07_c0(ngmax-1) =  &
+        (/  7.938904E-1_r8,  8.030084E-1_r8,  8.513932E-1_r8,  8.692241E-1_r8, &
+            7.085850E-1_r8,  6.412701E-1_r8,  6.412701E-1_r8 /)
+    real(r8), parameter :: g_F07_p2(ngmax-1) =  &
+        (/  3.165543E-3_r8,  2.014810E-3_r8,  1.780838E-3_r8,  6.987734E-4_r8, &
+            -1.882932E-2_r8, -2.277872E-2_r8, -2.277872E-2_r8 /)
+    real(r8), parameter :: g_F07_p1(ngmax-1) =  &
+        (/  1.140557E-1_r8,  1.143152E-1_r8,  1.143814E-1_r8,  1.071238E-1_r8, &
+            1.353873E-1_r8,  1.914431E-1_r8,  1.914431E-1_r8 /)
+    real(r8), parameter :: g_F07_p0(ngmax-1) =  &
+        (/  5.292852E-1_r8,  5.425909E-1_r8,  5.601598E-1_r8,  6.023407E-1_r8, &
+            6.473899E-1_r8,  4.634944E-1_r8,  4.634944E-1_r8 /)
+
     ! other temporary variables
     real(r8), allocatable :: wvl_ct(:)            ! band center wavelength (um) for 5 or 480-band case
     real(r8) :: diam_ice                          ! effective snow grain diameter (SSA-equivalent) unit: microns
@@ -568,29 +589,8 @@ contains
       sno_shp(:) = snicar_snw_shape ! currently only assuming same shapes for all snow layers
       sno_fs(:)  = 0._r8
       sno_AR(:)  = 0._r8
-      ! Table 3 of He et al 2017 JC
-      g_wvl(1:8)    = (/ 0.25_r8, 0.70_r8, 1.41_r8, 1.90_r8, &
-                         2.50_r8, 3.50_r8, 4.00_r8, 5.00_r8 /)
-      g_wvl_ct(1:7) = g_wvl(2:8) * 0.5_r8 + g_wvl(1:7) * 0.5_r8
-      g_b0(1:7)     = (/  9.76029E-1_r8,  9.67798E-1_r8,  1.00111_r8, 1.00224_r8, &
-                          9.64295E-1_r8,  9.97475E-1_r8,  9.97475E-1_r8 /)
-      g_b1(1:7)     = (/  5.21042E-1_r8,  4.96181E-1_r8,  1.83711E-1_r8,  1.37082E-1_r8, &
-                          5.50598E-2_r8,  8.48743E-2_r8,  8.48743E-2_r8 /)
-      g_b2(1:7)     = (/ -2.66792E-4_r8,  1.14088E-3_r8,  2.37011E-4_r8, -2.35905E-4_r8, &
-                          8.40449E-4_r8, -4.71484E-4_r8, -4.71484E-4_r8 /)
-      ! Tables 1 & 2 and Eqs. 3.1-3.4 from Fu, 2007 JAS
-      g_F07_c2(1:7) = (/  1.349959E-1_r8,  1.115697E-1_r8,  9.853958E-2_r8,  5.557793E-2_r8, &
-                         -1.233493E-1_r8,  0.0_r8        ,  0.0_r8         /)
-      g_F07_c1(1:7) = (/ -3.987320E-1_r8, -3.723287E-1_r8, -3.924784E-1_r8, -3.259404E-1_r8, &
-                          4.429054E-2_r8, -1.726586E-1_r8, -1.726586E-1_r8 /)
-      g_F07_c0(1:7) = (/  7.938904E-1_r8,  8.030084E-1_r8,  8.513932E-1_r8,  8.692241E-1_r8, &
-                          7.085850E-1_r8,  6.412701E-1_r8,  6.412701E-1_r8 /)
-      g_F07_p2(1:7) = (/  3.165543E-3_r8,  2.014810E-3_r8,  1.780838E-3_r8,  6.987734E-4_r8, &
-                         -1.882932E-2_r8, -2.277872E-2_r8, -2.277872E-2_r8 /)
-      g_F07_p1(1:7) = (/  1.140557E-1_r8,  1.143152E-1_r8,  1.143814E-1_r8,  1.071238E-1_r8, &
-                          1.353873E-1_r8,  1.914431E-1_r8,  1.914431E-1_r8 /)
-      g_F07_p0(1:7) = (/  5.292852E-1_r8,  5.425909E-1_r8,  5.601598E-1_r8,  6.023407E-1_r8, &
-                          6.473899E-1_r8,  4.634944E-1_r8,  4.634944E-1_r8 /)
+
+      g_wvl_ct(1:ngmax-1) = g_wvl(2:ngmax) * 0.5_r8 + g_wvl(1:ngmax-1) * 0.5_r8
 
       ! initialize for BC-snow internal mixing
       ! Eq. 8b & Table 4 in He et al., 2017 J. Climate (wavelength>1.2um, no BC-snow int mixing effect)
@@ -883,8 +883,8 @@ contains
                         ! 7 wavelength bands for g_ice to be interpolated into targeted SNICAR bands here
                         ! use the piecewise linear interpolation subroutine created at the end of this module
                         ! tests showed the piecewise linear interpolation has similar results as pchip interpolation
-                        call piecewise_linear_interp1d(7, g_wvl_ct, g_ice_Cg_tmp, wvl_ct(bnd_idx), g_Cg_intp)
-                        call piecewise_linear_interp1d(7, g_wvl_ct, gg_ice_F07_tmp, wvl_ct(bnd_idx), gg_F07_intp)
+                        call piecewise_linear_interp1d(ngmax-1, g_wvl_ct, g_ice_Cg_tmp, wvl_ct(bnd_idx), g_Cg_intp)
+                        call piecewise_linear_interp1d(ngmax-1, g_wvl_ct, gg_ice_F07_tmp, wvl_ct(bnd_idx), gg_F07_intp)
                         g_ice_F07 = gg_F07_intp + 0.5_r8 * (1._r8 - gg_F07_intp) / ss_alb_snw_lcl(i)  ! Eq.2.2 in Fu (2007)
                         asm_prm_snw_lcl(i) = g_ice_F07 * g_Cg_intp     ! Eq.6, He et al. (2017)
                      endif
