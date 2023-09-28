@@ -1410,8 +1410,9 @@ module CLMFatesInterfaceMod
           g = col%gridcell(c)
 
           ! Accumulate seeds from sites to the gridcell local outgoing buffer
-          if (fates_seeddisp_cadence .ne. fates_dispersal_cadence_none .and. IsItDispersalTime()) then
-             this%fates_seed%outgoing_local(:,g) = this%fates(nc)%sites(s)%seed_out(:)
+          if (fates_seeddisp_cadence .ne. fates_dispersal_cadence_none) then
+             if (IsItDispersalTime()) this%fates_seed%outgoing_local(:,g) = &
+                                      this%fates(nc)%sites(s)%seed_out(:)
           end if
 
           ! Other modules may have AI's we only flush values
