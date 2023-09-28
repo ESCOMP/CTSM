@@ -110,7 +110,7 @@
   </test>
 
   <test name="PEM_D_Ld15.5x5_amazon.I2000Clm50FatesCruRs.cheyenne_gnu.clm-FatesColdSeedDisp">
-    <phase name="COMPARE_base_rest">
+    <phase name="COMPARE_base_modpes">
       <status>FAIL</status>
       <issue>FATES#1089</issue>
     </phase>
