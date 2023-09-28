@@ -86,7 +86,7 @@ else:
     climo_text = ""
 # ten years on either side (21 years total)
 climo_base_nyrs = 21
-climo_radius = (climo_base_nyrs - 1)/2
+climo_radius = (climo_base_nyrs - 1) / 2
 if climo_radius != round(climo_radius):
     raise RuntimeError("climo_base_nyrs must be an integer")
 if args.climo_year < 1850:
@@ -224,7 +224,9 @@ if "ssp" in periodtag:
     else:
         raise RuntimeError(f"ssptag {ssptag} needs to be handled")
     if len(sspdir) != len(histdir):
-        sys.exit(f"number of ensemble members not the same between historical {len(histdir)} and SSP {len(sspdir)} periods")
+        sys.exit(
+            f"number of ensemble members not the same between historical {len(histdir)} and SSP {len(sspdir)} periods"
+        )
 
 # Setup output directory
 outdir = os.path.join(spath, "CMIP6-" + periodtag_filenames)
@@ -488,9 +490,7 @@ for f in range(nfields):
     if f == 0:
         print((full_time[t_climo_year] / 365.0 + ref_year))
     for n in range(nmo):
-        ind = (
-            nmo * (climo_base_arange - climo_radius) + t_climo_year + n
-        ).astype(int)
+        ind = (nmo * (climo_base_arange - climo_radius) + t_climo_year + n).astype(int)
         climo[n, :, :] = np.sum(stemp_fld[ind, :, :], axis=0) / float(ind.size)
 
     if f == 0:
@@ -574,7 +574,9 @@ for f in range(nfields):
     if write_climo:
         # Use NetCDF4 format, because using older NetCDF formats are too slow
         w = netcdf4.Dataset(
-            os.path.join(outdir, field_out[f] + "_climo" + str(climo_year) + creationdate + ".nc"), "w", format=format
+            os.path.join(outdir, field_out[f] + "_climo" + str(climo_year) + creationdate + ".nc"),
+            "w",
+            format=format,
         )
         w.createDimension("lat", int(nlat))
         w.createDimension("lon", int(nlon))
