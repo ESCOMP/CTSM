@@ -636,7 +636,7 @@ for f in range(nfields):
         w.close()
         w_filename_cdf5 = w_filename.replace(".nc4", ".nc")
         subprocess.Popen(
-            f"nccopy -k 'cdf5' {w_filename} {w_filename_cdf5} && rm {w_filename}",
+            f"module load nco && nccopy -k 'cdf5' {w_filename} {w_filename_cdf5} && rm {w_filename}",
             stdout=subprocess.PIPE,
             shell="True",
         )
@@ -816,7 +816,7 @@ outfile.close()
 # Convert to CDF5
 outfilename_cdf5 = outfilename.replace(".nc4", ".nc")
 subprocess.Popen(
-    f"nccopy -k 'cdf5' {outfilename} {outfilename_cdf5} && rm {outfilename}",
+    f"module load nco && nccopy -k 'cdf5' {outfilename} {outfilename_cdf5} && rm {outfilename}",
     stdout=subprocess.PIPE,
     shell="True",
 )
