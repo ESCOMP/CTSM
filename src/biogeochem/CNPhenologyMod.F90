@@ -2050,10 +2050,8 @@ contains
          end if
          !
          ! Only allow sowing according to normal "window" rules if not using prescribed
-         ! sowing windows at all, or if this cell had no values in either of the
-         ! prescribed sowing window files. (Note that if either sowing window start was
-         ! or end was missing a value, they are both set to negative values.)
-         allow_unprescribed_planting = (.not. use_cropcal_rx_swindows) .or. crop_inst%rx_swindow_starts_thisyr_patch(p,1)<0
+         ! sowing dates.
+         allow_unprescribed_planting = sowing_window_startdate /= sowing_window_enddate
          if (sowing_count(p) == mxsowings) then
             do_plant_normal = .false.
             do_plant_lastchance = .false.
