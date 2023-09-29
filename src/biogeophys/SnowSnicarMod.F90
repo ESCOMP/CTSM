@@ -52,11 +52,11 @@ module SnowSnicarMod
 
   ! !PRIVATE DATA MEMBERS:
   integer,  parameter :: idx_Mie_snw_mx = 1471           ! number of effective radius indices used in Mie lookup table [idx]
-  integer,  parameter :: idx_T_max      = 11             ! maxiumum temperature index used in aging lookup table [idx]
+  integer,  parameter :: idx_T_max      = 11             ! maximum temperature index used in aging lookup table [idx]
   integer,  parameter :: idx_T_min      = 1              ! minimum temperature index used in aging lookup table [idx]
-  integer,  parameter :: idx_Tgrd_max   = 31             ! maxiumum temperature gradient index used in aging lookup table [idx]
+  integer,  parameter :: idx_Tgrd_max   = 31             ! maximum temperature gradient index used in aging lookup table [idx]
   integer,  parameter :: idx_Tgrd_min   = 1              ! minimum temperature gradient index used in aging lookup table [idx]
-  integer,  parameter :: idx_rhos_max   = 8              ! maxiumum snow density index used in aging lookup table [idx]
+  integer,  parameter :: idx_rhos_max   = 8              ! maximum snow density index used in aging lookup table [idx]
   integer,  parameter :: idx_rhos_min   = 1              ! minimum snow density index used in aging lookup table [idx]
 
   integer,  parameter :: snw_rds_max_tbl = 1500          ! maximum effective radius defined in Mie lookup table [microns]
@@ -460,36 +460,37 @@ contains
                                                   ! others(0.1<fs<20)= use user-specified value
     ! Constants and parameters for aspherical ice particles    
     ! asymmetry factor parameterization coefficients (6 bands) from Table 3 & Eqs. 6-7 in He et al. (2017)
-    real(r8) :: g_wvl_ct(ngmax-1)  ! center point for wavelength band (um)
-    real(r8), parameter :: g_wvl(ngmax) =  &  ! wavelength (um) division point
+    integer, parameter :: seven_bands = 7
+    real(r8) :: g_wvl_ct(seven_bands)  ! center point for wavelength band (um)
+    real(r8), parameter :: g_wvl(seven_bands+1) =  &  ! wavelength (um) division point
         (/ 0.25_r8, 0.70_r8, 1.41_r8, 1.90_r8, &
            2.50_r8, 3.50_r8, 4.00_r8, 5.00_r8 /)
-    real(r8), parameter :: g_b0(ngmax-1) =  &
+    real(r8), parameter :: g_b0(seven_bands) =  &
         (/  9.76029E-1_r8,  9.67798E-1_r8,  1.00111_r8, 1.00224_r8, &
             9.64295E-1_r8,  9.97475E-1_r8,  9.97475E-1_r8 /)
-    real(r8), parameter :: g_b1(ngmax-1) =  &
+    real(r8), parameter :: g_b1(seven_bands) =  &
         (/  5.21042E-1_r8,  4.96181E-1_r8,  1.83711E-1_r8,  1.37082E-1_r8, &
             5.50598E-2_r8,  8.48743E-2_r8,  8.48743E-2_r8 /)
-    real(r8), parameter :: g_b2(ngmax-1) =  &
+    real(r8), parameter :: g_b2(seven_bands) =  &
         (/ -2.66792E-4_r8,  1.14088E-3_r8,  2.37011E-4_r8, -2.35905E-4_r8, &
             8.40449E-4_r8, -4.71484E-4_r8, -4.71484E-4_r8 /)
     ! Tables 1 & 2 and Eqs. 3.1-3.4 from Fu, 2007 JAS
-    real(r8), parameter :: g_F07_c2(ngmax-1) =  &
+    real(r8), parameter :: g_F07_c2(seven_bands) =  &
         (/  1.349959E-1_r8,  1.115697E-1_r8,  9.853958E-2_r8,  5.557793E-2_r8, &
             -1.233493E-1_r8,  0.0_r8        ,  0.0_r8         /)
-    real(r8), parameter :: g_F07_c1(ngmax-1) =  &
+    real(r8), parameter :: g_F07_c1(seven_bands) =  &
         (/ -3.987320E-1_r8, -3.723287E-1_r8, -3.924784E-1_r8, -3.259404E-1_r8, &
             4.429054E-2_r8, -1.726586E-1_r8, -1.726586E-1_r8 /)
-    real(r8), parameter :: g_F07_c0(ngmax-1) =  &
+    real(r8), parameter :: g_F07_c0(seven_bands) =  &
         (/  7.938904E-1_r8,  8.030084E-1_r8,  8.513932E-1_r8,  8.692241E-1_r8, &
             7.085850E-1_r8,  6.412701E-1_r8,  6.412701E-1_r8 /)
-    real(r8), parameter :: g_F07_p2(ngmax-1) =  &
+    real(r8), parameter :: g_F07_p2(seven_bands) =  &
         (/  3.165543E-3_r8,  2.014810E-3_r8,  1.780838E-3_r8,  6.987734E-4_r8, &
             -1.882932E-2_r8, -2.277872E-2_r8, -2.277872E-2_r8 /)
-    real(r8), parameter :: g_F07_p1(ngmax-1) =  &
+    real(r8), parameter :: g_F07_p1(seven_bands) =  &
         (/  1.140557E-1_r8,  1.143152E-1_r8,  1.143814E-1_r8,  1.071238E-1_r8, &
             1.353873E-1_r8,  1.914431E-1_r8,  1.914431E-1_r8 /)
-    real(r8), parameter :: g_F07_p0(ngmax-1) =  &
+    real(r8), parameter :: g_F07_p0(seven_bands) =  &
         (/  5.292852E-1_r8,  5.425909E-1_r8,  5.601598E-1_r8,  6.023407E-1_r8, &
             6.473899E-1_r8,  4.634944E-1_r8,  4.634944E-1_r8 /)
 
@@ -506,8 +507,8 @@ contains
     real(r8) :: AR_tmp                            ! aspect ratio temporary
     real(r8), parameter :: AR_tmp_default_1 = 0.5_r8  ! default; He et al. (2017), Table 1
     real(r8), parameter :: AR_tmp_default_2 = 2.5_r8  ! default; He et al. (2017), Table 1
-    real(r8) :: g_ice_Cg_tmp(1:7)                 ! temporary asymmetry factor correction coeff
-    real(r8) :: gg_ice_F07_tmp(1:7)               ! temporary asymmetry factor related to geometric reflection & refraction
+    real(r8) :: g_ice_Cg_tmp(seven_bands)  ! temporary asymmetry factor correction coeff
+    real(r8) :: gg_ice_F07_tmp(seven_bands)  ! temporary asymmetry factor related to geometric reflection & refraction
     real(r8) :: g_Cg_intp                         ! interpolated asymmetry factor correction coeff to target bands 
     real(r8) :: gg_F07_intp                       ! interpolated asymmetry factor related to geometric reflection & refraction
     real(r8) :: g_ice_F07                         ! asymmetry factor for Fu 2007 parameterization value
@@ -516,14 +517,30 @@ contains
     !-----------------------------------------------------------------------
     ! variables used for BC-snow internal mixing (He et al. 2017 J of Climate):
     real(r8) :: enh_omg_bcint                     ! BC-induced enhancement in snow single-scattering co-albedo (1-omega)
-    real(r8) :: enh_omg_bcint_tmp(1:16)           ! temporary BC-induced enhancement in snow 1-omega
-    real(r8) :: enh_omg_bcint_tmp2(1:16)          ! temporary BC-induced enhancement in snow 1-omega
-    real(r8) :: bcint_wvl(1:17)                   ! Parameterization band (0.2-1.2um) for BC-induced enhancement in snow 1-omega
-    real(r8) :: bcint_wvl_ct(1:16)                ! Parameterization band center wavelength (um)
-    real(r8) :: bcint_d0(1:16)                    ! Parameterization coefficients at each band center wavelength
-    real(r8) :: bcint_d1(1:16)                    ! Parameterization coefficients at each band center wavelength
-    real(r8) :: bcint_d2(1:16)                    ! Parameterization coefficients at each band center wavelength
-    real(r8), parameter :: kg_to_ug = 1.e9_r8  ! unit conversion of kg to micrograms
+    integer, parameter :: sixteen_bands = 16
+    real(r8) :: enh_omg_bcint_tmp(1:sixteen_bands)  ! temporary BC-induced enhancement in snow 1-omega
+    real(r8) :: enh_omg_bcint_tmp2(1:sixteen_bands)  ! temporary BC-induced enhancement in snow 1-omega
+    real(r8) :: bcint_wvl_ct(1:sixteen_bands)  ! Parameterization band center wavelength (um)
+    ! initialize for BC-snow internal mixing
+    ! Eq. 8b & Table 4 in He et al., 2017 J. Climate (wavelength>1.2um, no BC-snow int mixing effect)
+    real(r8), parameter :: bcint_wvl(sixteen_bands+1) =  &  ! Parameterization band (0.2-1.2um) for BC-induced enhancement in snow 1-omega
+        (/ 0.20_r8, 0.25_r8, 0.30_r8, 0.33_r8, 0.36_r8, 0.40_r8, 0.44_r8, 0.48_r8, &
+           0.52_r8, 0.57_r8, 0.64_r8, 0.69_r8, 0.75_r8, 0.78_r8, 0.87_r8, 1._r8, 1.2_r8 /)
+    real(r8), parameter :: bcint_d0(sixteen_bands) =  &  ! Parameterization coefficients at each band center wavelength
+        (/ 2.48045_r8   , 4.70305_r8   , 4.68619_r8   , 4.67369_r8   , 4.65040_r8   , &
+           2.40364_r8   , 7.95408E-1_r8, 2.92745E-1_r8, 8.63396E-2_r8, 2.76299E-2_r8, &
+           1.40864E-2_r8, 8.65705E-3_r8, 6.12971E-3_r8, 4.45697E-3_r8, 3.06648E-2_r8, &
+           7.96544E-1_r8 /)
+    real(r8), parameter :: bcint_d1(sixteen_bands) =  &  ! Parameterization coefficients at each band center wavelength
+        (/ 9.77209E-1_r8, 9.73317E-1_r8, 9.79650E-1_r8, 9.84579E-1_r8, 9.93537E-1_r8, &
+           9.95955E-1_r8, 9.95218E-1_r8, 9.74284E-1_r8, 9.81193E-1_r8, 9.81239E-1_r8, &
+           9.55515E-1_r8, 9.10491E-1_r8, 8.74196E-1_r8, 8.27238E-1_r8, 4.82870E-1_r8, &
+           4.36649E-2_r8 /)
+    real(r8), parameter :: bcint_d2(sixteen_bands) =  &  ! Parameterization coefficients at each band center wavelength
+        (/ 3.95960E-1_r8, 2.04820E-1_r8, 2.07410E-1_r8, 2.09390E-1_r8, 2.13030E-1_r8, &
+           4.18570E-1_r8, 1.29682_r8   , 3.75514_r8   , 1.27372E+1_r8, 3.93293E+1_r8, &
+           8.78918E+1_r8, 1.86969E+2_r8, 3.45600E+2_r8, 7.08637E+2_r8, 1.41067E+3_r8, &
+           2.57288E+2_r8 /)
     real(r8), parameter :: den_bc = 1.7_r8  ! BC particle density (g/cm3)
     real(r8), parameter :: den_bc_target = 1.49_r8  ! target BC particle density (g/cm3) used in BC MAC adjustment
     real(r8), parameter :: Re_bc = 0.045_r8  ! target BC effective radius (um) used in BC MAC adjustment
@@ -544,19 +561,31 @@ contains
     !-----------------------------------------------------------------------
     ! variables used for dust-snow internal mixing (He et al. 2019 JAMES):
     real(r8) :: enh_omg_dstint                    ! dust-induced enhancement in snow single-scattering co-albedo (1-omega)
-    real(r8) :: enh_omg_dstint_tmp(1:6)           ! temporary dust-induced enhancement in snow 1-omega
-    real(r8) :: enh_omg_dstint_tmp2(1:6)          ! temporary dust-induced enhancement in snow 1-omega
-    real(r8) :: dstint_wvl(1:7)                   ! Parameterization band (0.2-1.2um) for dust-induced enhancement in snow 1-omega
-    real(r8) :: dstint_wvl_ct(1:6)                ! Parameterization band center wavelength (um)
-    real(r8) :: dstint_a1(1:6)                    ! Parameterization coefficients at each band center wavelength
-    real(r8) :: dstint_a2(1:6)                    ! Parameterization coefficients at each band center wavelength
-    real(r8) :: dstint_a3(1:6)                    ! Parameterization coefficients at each band center wavelength
+    integer, parameter :: size_bins = 6
+    real(r8) :: enh_omg_dstint_tmp(size_bins)  ! temporary dust-induced enhancement in snow 1-omega
+    real(r8) :: enh_omg_dstint_tmp2(size_bins)  ! temporary dust-induced enhancement in snow 1-omega
+    real(r8) :: dstint_wvl_ct(size_bins)  ! Parameterization band center wavelength (um)
+    ! initialize for dust-snow internal mixing
+    ! Eq. 1 and Table 1 in He et al. 2019 JAMES (wavelength>1.2um, no dust-snow int mixing effect)
+    real(r8), parameter :: dstint_wvl(size_bins+1) =  &  ! Parameterization band (0.2-1.2um) for dust-induced enhancement in snow 1-omega
+        (/ 0.2_r8, 0.2632_r8, 0.3448_r8, 0.4415_r8, 0.625_r8, 0.7782_r8, 1.2422_r8/)
+    real(r8), parameter :: dstint_a1(size_bins) =  &  ! Parameterization coefficients at each band center wavelength
+        (/ -2.1307E+1_r8, -1.5815E+1_r8, -9.2880_r8   , 1.1115_r8   , 1.0307_r8   , 1.0185_r8    /)
+    real(r8), parameter :: dstint_a2(size_bins) =  &  ! Parameterization coefficients at each band center wavelength
+        (/  1.1746E+2_r8,  9.3241E+1_r8,  4.0605E+1_r8, 3.7389E-1_r8, 1.4800E-2_r8, 2.8921E-4_r8 /)
+    real(r8), parameter :: dstint_a3(size_bins) =  &  ! Parameterization coefficients at each band center wavelength
+        (/  9.9701E-1_r8,  9.9781E-1_r8,  9.9848E-1_r8, 1.0035_r8   , 1.0024_r8   , 1.0356_r8    /)
+
     real(r8) :: enh_omg_dstint_intp               ! dust-induced enhancement in snow 1-omega (logscale) interpolated to CLM wavelength
     real(r8) :: enh_omg_dstint_intp2              ! dust-induced enhancement in snow 1-omega interpolated to CLM wavelength
     real(r8) :: tot_dst_snw_conc                  ! total dust content in snow across all size bins (ppm=ug/g)
     integer  :: idb                               ! loop index
 
     real(r8), parameter :: enh_omg_max = 1.e5_r8  ! reasonable maximum value for enh_omg_[bc,dst]int_intp2
+
+    ! unit conversions
+    real(r8), parameter :: kg_kg_to_ppm = 1.e6_r8  ! kg/kg to ppm
+    real(r8), parameter :: kg_to_ug = 1.e9_r8  ! kg to micrograms
 
     !-----------------------------------------------------------------------
 
@@ -590,36 +619,13 @@ contains
       sno_fs(:)  = 0._r8
       sno_AR(:)  = 0._r8
 
-      g_wvl_ct(1:ngmax-1) = g_wvl(2:ngmax) * 0.5_r8 + g_wvl(1:ngmax-1) * 0.5_r8
+      g_wvl_ct(1:seven_bands) = g_wvl(2:seven_bands+1) * 0.5_r8 + g_wvl(1:seven_bands) * 0.5_r8
+      dstint_wvl_ct(1:size_bins) = dstint_wvl(2:size_bins+1) * 0.5_r8 + dstint_wvl(1:size_bins) * 0.5_r8
+      bcint_wvl_ct(1:sixteen_bands) = bcint_wvl(2:sixteen_bands+1) * 0.5_r8 + bcint_wvl(1:sixteen_bands) * 0.5_r8
 
-      ! initialize for BC-snow internal mixing
-      ! Eq. 8b & Table 4 in He et al., 2017 J. Climate (wavelength>1.2um, no BC-snow int mixing effect)
-      bcint_wvl(1:17) = (/ 0.20_r8, 0.25_r8, 0.30_r8, 0.33_r8, 0.36_r8, 0.40_r8, 0.44_r8, 0.48_r8, &
-                           0.52_r8, 0.57_r8, 0.64_r8, 0.69_r8, 0.75_r8, 0.78_r8, 0.87_r8, 1._r8, 1.2_r8 /)
-      bcint_wvl_ct(1:16) = bcint_wvl(2:17) * 0.5_r8 + bcint_wvl(1:16) * 0.5_r8
-      bcint_d0(1:16)  = (/ 2.48045_r8   , 4.70305_r8   , 4.68619_r8   , 4.67369_r8   , 4.65040_r8   , &
-                           2.40364_r8   , 7.95408E-1_r8, 2.92745E-1_r8, 8.63396E-2_r8, 2.76299E-2_r8, &
-                           1.40864E-2_r8, 8.65705E-3_r8, 6.12971E-3_r8, 4.45697E-3_r8, 3.06648E-2_r8, &
-                           7.96544E-1_r8 /)
-      bcint_d1(1:16)  = (/ 9.77209E-1_r8, 9.73317E-1_r8, 9.79650E-1_r8, 9.84579E-1_r8, 9.93537E-1_r8, &
-                           9.95955E-1_r8, 9.95218E-1_r8, 9.74284E-1_r8, 9.81193E-1_r8, 9.81239E-1_r8, &
-                           9.55515E-1_r8, 9.10491E-1_r8, 8.74196E-1_r8, 8.27238E-1_r8, 4.82870E-1_r8, &
-                           4.36649E-2_r8 /)
-      bcint_d2(1:16)  = (/ 3.95960E-1_r8, 2.04820E-1_r8, 2.07410E-1_r8, 2.09390E-1_r8, 2.13030E-1_r8, &
-                           4.18570E-1_r8, 1.29682_r8   , 3.75514_r8   , 1.27372E+1_r8, 3.93293E+1_r8, &
-                           8.78918E+1_r8, 1.86969E+2_r8, 3.45600E+2_r8, 7.08637E+2_r8, 1.41067E+3_r8, &
-                           2.57288E+2_r8 /)
       ! Eq. 1a,1b and Table S1 in He et al. 2018 GRL
       bcint_m(1:3)    = (/ -0.8724_r8, -0.1866_r8, -0.0046_r8 /)
       bcint_n(1:3)    = (/ -0.0072_r8, -0.1918_r8, -0.5177_r8 /)
-
-      ! initialize for dust-snow internal mixing
-      ! Eq. 1 and Table 1 in He et al. 2019 JAMES (wavelength>1.2um, no dust-snow int mixing effect)
-      dstint_wvl(1:7) = (/ 0.2_r8, 0.2632_r8, 0.3448_r8, 0.4415_r8, 0.625_r8, 0.7782_r8, 1.2422_r8/)
-      dstint_wvl_ct(1:6) = dstint_wvl(2:7) * 0.5_r8 + dstint_wvl(1:6) * 0.5_r8
-      dstint_a1(1:6) = (/ -2.1307E+1_r8, -1.5815E+1_r8, -9.2880_r8   , 1.1115_r8   , 1.0307_r8   , 1.0185_r8    /)
-      dstint_a2(1:6) = (/  1.1746E+2_r8,  9.3241E+1_r8,  4.0605E+1_r8, 3.7389E-1_r8, 1.4800E-2_r8, 2.8921E-4_r8 /)
-      dstint_a3(1:6) = (/  9.9701E-1_r8,  9.9781E-1_r8,  9.9848E-1_r8, 1.0035_r8   , 1.0024_r8   , 1.0356_r8    /)
 
       ! SNICAR/CLM snow band center wavelength (um)
       allocate(wvl_ct(snicar_numrad_snw))
@@ -835,7 +841,7 @@ contains
                         else
                            AR_tmp = sno_AR(i)  ! user specified value
                         endif
-                        do igb = 1,7
+                        do igb = 1, seven_bands
                            g_ice_Cg_tmp(igb) = g_b0(igb) * ((fs_sphd/fs_hex)**g_b1(igb)) * (diam_ice**g_b2(igb))   ! Eq.7, He et al. (2017)
                            gg_ice_F07_tmp(igb) = g_F07_c0(igb) + g_F07_c1(igb) * AR_tmp + g_F07_c2(igb) * (AR_tmp * AR_tmp)  ! Eqn. 3.1 in Fu (2007)
                         enddo
@@ -853,7 +859,7 @@ contains
                         else
                            AR_tmp = sno_AR(i)  ! user specified value
                         endif
-                        do igb = 1,7
+                        do igb = 1, seven_bands
                            g_ice_Cg_tmp(igb) = g_b0(igb) * ((fs_hex0/fs_hex)**g_b1(igb)) * (diam_ice**g_b2(igb))   ! Eq.7, He et al. (2017)
                            gg_ice_F07_tmp(igb) = g_F07_p0(igb) + g_F07_p1(igb) * log(AR_tmp) + g_F07_p2(igb) * (log(AR_tmp) * log(AR_tmp)) ! Eqn. 3.3 in Fu (2007)
                         enddo
@@ -871,7 +877,7 @@ contains
                         else
                            AR_tmp = sno_AR(i)  ! user specified value
                         endif
-                        do igb = 1,7
+                        do igb = 1, seven_bands
                            g_ice_Cg_tmp(igb) = g_b0(igb) * ((fs_koch/fs_hex)**g_b1(igb)) * (diam_ice**g_b2(igb))   ! Eq.7, He et al. (2017)
                            gg_ice_F07_tmp(igb) = g_F07_p0(igb) + g_F07_p1(igb) * log(AR_tmp) + g_F07_p2(igb) * (log(AR_tmp) * log(AR_tmp)) ! Eqn. 3.3 in Fu (2007)
                         enddo
@@ -883,8 +889,8 @@ contains
                         ! 7 wavelength bands for g_ice to be interpolated into targeted SNICAR bands here
                         ! use the piecewise linear interpolation subroutine created at the end of this module
                         ! tests showed the piecewise linear interpolation has similar results as pchip interpolation
-                        call piecewise_linear_interp1d(ngmax-1, g_wvl_ct, g_ice_Cg_tmp, wvl_ct(bnd_idx), g_Cg_intp)
-                        call piecewise_linear_interp1d(ngmax-1, g_wvl_ct, gg_ice_F07_tmp, wvl_ct(bnd_idx), gg_F07_intp)
+                        call piecewise_linear_interp1d(seven_bands, g_wvl_ct, g_ice_Cg_tmp, wvl_ct(bnd_idx), g_Cg_intp)
+                        call piecewise_linear_interp1d(seven_bands, g_wvl_ct, gg_ice_F07_tmp, wvl_ct(bnd_idx), gg_F07_intp)
                         g_ice_F07 = gg_F07_intp + 0.5_r8 * (1._r8 - gg_F07_intp) / ss_alb_snw_lcl(i)  ! Eq.2.2 in Fu (2007)
                         asm_prm_snw_lcl(i) = g_ice_F07 * g_Cg_intp     ! Eq.6, He et al. (2017)
                      endif
@@ -952,7 +958,7 @@ contains
                            ! (2) We tune BC density from 1.7 to 1.49 g/cm3 (den_bc_target) (Aoki et al., 2011).
                            ! These adjustments also lead to consistent results with Flanner et al. 2012 (ACP) lookup table
                            ! for BC-snow internal mixing enhancement in albedo reduction (He et al. 2018 ACP)
-                           do ibb=1,16
+                           do ibb=1,sixteen_bands
                               enh_omg_bcint_tmp(ibb) = bcint_d0(ibb) * &
                                  ( (mss_cnc_aer_lcl(i,1) * kg_to_ug * den_bc / den_bc_target + bcint_d2(ibb))**bcint_d1(ibb) )
                               ! adjust enhancment factor for BC effective size from 0.1um to Re_bc (He et al. 2018 GRL Eqs.1a,1b)
@@ -973,7 +979,7 @@ contains
                               enh_omg_bcint_tmp2(ibb)=LOG10(max(1._r8,bcint_dd*((enh_omg_bcint_tmp(ibb)/bcint_dd2)**bcint_f)))
                            enddo
                            ! piecewise linear interpolate into targeted SNICAR bands in a logscale space
-                           call piecewise_linear_interp1d(16,bcint_wvl_ct,enh_omg_bcint_tmp2,wvl_doint,enh_omg_bcint_intp)
+                           call piecewise_linear_interp1d(sixteen_bands,bcint_wvl_ct,enh_omg_bcint_tmp2,wvl_doint,enh_omg_bcint_intp)
                            ! update snow single-scattering albedo
                            enh_omg_bcint_intp2 = 10._r8 ** enh_omg_bcint_intp                           
                            enh_omg_bcint_intp2 = min(enh_omg_max, max(enh_omg_bcint_intp2, 1._r8)) ! constrain enhancement to a reasonable range
@@ -993,14 +999,14 @@ contains
                         ! from (He et al. 2019 JAMES). Thus, the parameterization can be approximately applied to
                         ! all dust size bins here.
                         tot_dst_snw_conc = (mss_cnc_aer_lcl(i,5) + mss_cnc_aer_lcl(i,6) + &
-                                            mss_cnc_aer_lcl(i,7) + mss_cnc_aer_lcl(i,8)) * 1.0E6_r8 !kg/kg->ppm
+                                            mss_cnc_aer_lcl(i,7) + mss_cnc_aer_lcl(i,8)) * kg_kg_to_ppm
                         if ( snicar_snodst_intmix .and. (tot_dst_snw_conc > 0._r8) ) then
-                           do idb=1,6
+                           do idb=1, size_bins
                               enh_omg_dstint_tmp(idb) = dstint_a1(idb)+dstint_a2(idb)*(tot_dst_snw_conc**dstint_a3(idb))
                               enh_omg_dstint_tmp2(idb) = LOG10(max(enh_omg_dstint_tmp(idb),1._r8))
                            enddo
                            ! piecewise linear interpolate into targeted SNICAR bands in a logscale space
-                           call piecewise_linear_interp1d(6,dstint_wvl_ct,enh_omg_dstint_tmp2,wvl_doint,enh_omg_dstint_intp)
+                           call piecewise_linear_interp1d(size_bins,dstint_wvl_ct,enh_omg_dstint_tmp2,wvl_doint,enh_omg_dstint_intp)
                            ! update snow single-scattering albedo
                            enh_omg_dstint_intp2 = 10._r8 ** enh_omg_dstint_intp
                            enh_omg_dstint_intp2 = min(enh_omg_max, max(enh_omg_dstint_intp2, 1._r8)) ! constrain enhancement to a reasonable range
