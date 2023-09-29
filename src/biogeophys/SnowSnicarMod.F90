@@ -587,6 +587,7 @@ contains
     real(r8), parameter :: kg_kg_to_ppm = 1.e6_r8  ! kg/kg to ppm
     real(r8), parameter :: kg_to_ug = 1.e9_r8  ! kg to micrograms
 
+    character(len=*), parameter :: subname = 'SNICAR_RT'
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
@@ -605,12 +606,21 @@ contains
          frac_sno    =>   waterdiagnosticbulk_inst%frac_sno_eff_col    & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
          )
 
-      ! initialize parameter
+      ! initialize parameter and
+      ! SNICAR/CLM snow band center wavelength (um)
+      allocate(wvl_ct(snicar_numrad_snw))
       select case (snicar_numrad_snw)
       case (5)
          nir_bnd_bgn = 2
+         wvl_ct(:)  = (/ 0.5_r8, 0.85_r8, 1.1_r8, 1.35_r8, 3.25_r8 /)  ! 5-band
       case (480)
          nir_bnd_bgn = 51
+         do igb = 1, snicar_numrad_snw
+            wvl_ct(igb) = 0.205_r8 + 0.01_r8 * (igb - 1._r8)  ! 480-band
+         enddo
+      case default
+         write(iulog,*) subname//' ERROR: unknown snicar_numrad_snw value: ', snicar_numrad_snw
+         call endrun(msg=errMsg(sourcefile, __LINE__))
       end select
       nir_bnd_end    = snicar_numrad_snw 
 
@@ -626,17 +636,6 @@ contains
       ! Eq. 1a,1b and Table S1 in He et al. 2018 GRL
       bcint_m(1:3)    = (/ -0.8724_r8, -0.1866_r8, -0.0046_r8 /)
       bcint_n(1:3)    = (/ -0.0072_r8, -0.1918_r8, -0.5177_r8 /)
-
-      ! SNICAR/CLM snow band center wavelength (um)
-      allocate(wvl_ct(snicar_numrad_snw))
-      select case (snicar_numrad_snw)
-      case (5)
-         wvl_ct(:)  = (/ 0.5_r8, 0.85_r8, 1.1_r8, 1.35_r8, 3.25_r8 /)  ! 5-band
-      case (480)
-         do igb = 1, snicar_numrad_snw
-            wvl_ct(igb) = 0.205_r8 + 0.01_r8 * (igb - 1._r8)  ! 480-band
-         enddo
-      end select
 
       ! Define constants
       pi = SHR_CONST_PI
@@ -882,6 +881,9 @@ contains
                            gg_ice_F07_tmp(igb) = g_F07_p0(igb) + g_F07_p1(igb) * log(AR_tmp) + g_F07_p2(igb) * (log(AR_tmp) * log(AR_tmp)) ! Eqn. 3.3 in Fu (2007)
                         enddo
 
+                     case default
+                        write(iulog,*) subname//' ERROR: unknown sno_shp for i: ', sno_shp(i), i
+                        call endrun(msg=errMsg(sourcefile, __LINE__))
                      end select
 
                      ! compute nonspherical snow asymmetry factor
@@ -1865,6 +1867,9 @@ contains
         short_case_solarspec = 'smm'
      case ('high_mountain_summer')  ! High Mountain summer spectrum
         short_case_solarspec = 'hmn'
+     case default
+        write(iulog,*) subname//' ERROR: unknown snicar_solarspec: ', snicar_solarspec
+        call endrun(msg=errMsg(sourcefile, __LINE__))
      end select
 
      select case (snicar_dust_optics)  ! dust optical properties
@@ -1874,6 +1879,9 @@ contains
         short_case_dust_opt = 'col'
      case ('greenland')  ! Greenland (Polashenski et al., 2015, central absorptivity)
         short_case_dust_opt = 'gre'
+     case default
+        write(iulog,*) subname//' ERROR: unknown snicar_dust_optics: ', snicar_dust_optics
+        call endrun(msg=errMsg(sourcefile, __LINE__))
      end select
 
      !--------------------- for 5-band data
@@ -2122,6 +2130,9 @@ contains
         call ncd_io(trim(tString), flx_wgt_dif, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
+     case default
+        write(iulog,*) subname//' ERROR: unknown snicar_numrad_snw: ', snicar_numrad_snw
+        call endrun(msg=errMsg(sourcefile, __LINE__))
      end select
 
      call ncd_pio_closefile(ncid)
