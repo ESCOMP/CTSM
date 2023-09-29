@@ -546,8 +546,12 @@ contains
     real(r8), parameter :: Re_bc = 0.045_r8  ! target BC effective radius (um) used in BC MAC adjustment
     real(r8), parameter :: radius_1 = 0.1_r8  ! used with Re_bc (um)
     real(r8), parameter :: radius_2 = 0.05_r8  ! used with Re_bc (um)
-    real(r8) :: bcint_m(1:3)                      ! Parameterization coefficients for BC size adjustment in BC-snow int mix
-    real(r8) :: bcint_n(1:3)                      ! Parameterization coefficients for BC size adjustment in BC-snow int mix
+    ! Eq. 1a,1b and Table S1 in He et al. 2018 GRL
+    ! Parameterization coefficients for BC size adjustment in BC-snow int mix
+    integer, parameter :: three_bands = 3
+    real(r8), parameter :: bcint_m(three_bands) = (/ -0.8724_r8, -0.1866_r8, -0.0046_r8 /)
+    real(r8), parameter :: bcint_n(three_bands) = (/ -0.0072_r8, -0.1918_r8, -0.5177_r8 /)
+
     real(r8) :: bcint_m_tmp                       ! temporary of bcint_m
     real(r8) :: bcint_n_tmp                       ! temporary of bcint_n
     real(r8) :: bcint_dd                          ! intermediate parameter
@@ -632,10 +636,6 @@ contains
       g_wvl_ct(1:seven_bands) = g_wvl(2:seven_bands+1) * 0.5_r8 + g_wvl(1:seven_bands) * 0.5_r8
       dstint_wvl_ct(1:size_bins) = dstint_wvl(2:size_bins+1) * 0.5_r8 + dstint_wvl(1:size_bins) * 0.5_r8
       bcint_wvl_ct(1:sixteen_bands) = bcint_wvl(2:sixteen_bands+1) * 0.5_r8 + bcint_wvl(1:sixteen_bands) * 0.5_r8
-
-      ! Eq. 1a,1b and Table S1 in He et al. 2018 GRL
-      bcint_m(1:3)    = (/ -0.8724_r8, -0.1866_r8, -0.0046_r8 /)
-      bcint_n(1:3)    = (/ -0.0072_r8, -0.1918_r8, -0.5177_r8 /)
 
       ! Define constants
       pi = SHR_CONST_PI
