@@ -94,24 +94,24 @@ module SnowSnicarMod
   real(r8), pointer :: ext_cff_mss_snw_dfs(:,:) !(idx_Mie_snw_mx,numrad_snw)
 
   ! hydrophilic BC
-  real(r8), pointer :: ss_alb_bc1(:) !(numrad_snw)
-  real(r8), pointer :: asm_prm_bc1(:) !(numrad_snw)
-  real(r8), pointer :: ext_cff_mss_bc1(:) !(numrad_snw)
+  real(r8), pointer :: ss_alb_bc_hphil(:) !(numrad_snw)
+  real(r8), pointer :: asm_prm_bc_hphil(:) !(numrad_snw)
+  real(r8), pointer :: ext_cff_mss_bc_hphil(:) !(numrad_snw)
 
   ! hydrophobic BC
-  real(r8), pointer :: ss_alb_bc2(:) !(numrad_snw)
-  real(r8), pointer :: asm_prm_bc2(:) !(numrad_snw)
-  real(r8), pointer :: ext_cff_mss_bc2(:) !(numrad_snw)
+  real(r8), pointer :: ss_alb_bc_hphob(:) !(numrad_snw)
+  real(r8), pointer :: asm_prm_bc_hphob(:) !(numrad_snw)
+  real(r8), pointer :: ext_cff_mss_bc_hphob(:) !(numrad_snw)
 
   ! hydrophilic OC
-  real(r8), pointer :: ss_alb_oc1(:) !(numrad_snw)
-  real(r8), pointer :: asm_prm_oc1(:) !(numrad_snw)
-  real(r8), pointer :: ext_cff_mss_oc1(:) !(numrad_snw)
+  real(r8), pointer :: ss_alb_oc_hphil(:) !(numrad_snw)
+  real(r8), pointer :: asm_prm_oc_hphil(:) !(numrad_snw)
+  real(r8), pointer :: ext_cff_mss_oc_hphil(:) !(numrad_snw)
 
   ! hydrophobic OC
-  real(r8), pointer :: ss_alb_oc2(:) !(numrad_snw)
-  real(r8), pointer :: asm_prm_oc2(:) !(numrad_snw)
-  real(r8), pointer :: ext_cff_mss_oc2(:) !(numrad_snw)
+  real(r8), pointer :: ss_alb_oc_hphob(:) !(numrad_snw)
+  real(r8), pointer :: asm_prm_oc_hphob(:) !(numrad_snw)
+  real(r8), pointer :: ext_cff_mss_oc_hphob(:) !(numrad_snw)
 
   ! dust species 1:
   real(r8), pointer :: ss_alb_dst1(:) !(numrad_snw)
@@ -902,23 +902,23 @@ contains
                   enddo ! snow layer loop
 
                   ! aerosol species 2 optical properties, hydrophobic BC
-                  ss_alb_aer_lcl(2)      = ss_alb_bc2(bnd_idx)
-                  asm_prm_aer_lcl(2)     = asm_prm_bc2(bnd_idx)
-                  ext_cff_mss_aer_lcl(2) = ext_cff_mss_bc2(bnd_idx)
+                  ss_alb_aer_lcl(2)      = ss_alb_bc_hphob(bnd_idx)
+                  asm_prm_aer_lcl(2)     = asm_prm_bc_hphob(bnd_idx)
+                  ext_cff_mss_aer_lcl(2) = ext_cff_mss_bc_hphob(bnd_idx)
                   ! aerosol species 3 optical properties, hydrophilic OC
-                  ss_alb_aer_lcl(3)      = ss_alb_oc1(bnd_idx)
-                  asm_prm_aer_lcl(3)     = asm_prm_oc1(bnd_idx)
-                  ext_cff_mss_aer_lcl(3) = ext_cff_mss_oc1(bnd_idx)
+                  ss_alb_aer_lcl(3)      = ss_alb_oc_hphil(bnd_idx)
+                  asm_prm_aer_lcl(3)     = asm_prm_oc_hphil(bnd_idx)
+                  ext_cff_mss_aer_lcl(3) = ext_cff_mss_oc_hphil(bnd_idx)
                   ! aerosol species 4 optical properties, hydrophobic OC
-                  ss_alb_aer_lcl(4)      = ss_alb_oc2(bnd_idx)
-                  asm_prm_aer_lcl(4)     = asm_prm_oc2(bnd_idx)
-                  ext_cff_mss_aer_lcl(4) = ext_cff_mss_oc2(bnd_idx)
+                  ss_alb_aer_lcl(4)      = ss_alb_oc_hphob(bnd_idx)
+                  asm_prm_aer_lcl(4)     = asm_prm_oc_hphob(bnd_idx)
+                  ext_cff_mss_aer_lcl(4) = ext_cff_mss_oc_hphob(bnd_idx)
 
                   ! Optics for BC/dust-snow external mixing:
                   ! aerosol species 1 optical properties, hydrophilic BC
-                  ss_alb_aer_lcl(1)      = ss_alb_bc1(bnd_idx)
-                  asm_prm_aer_lcl(1)     = asm_prm_bc1(bnd_idx)
-                  ext_cff_mss_aer_lcl(1) = ext_cff_mss_bc1(bnd_idx)
+                  ss_alb_aer_lcl(1)      = ss_alb_bc_hphil(bnd_idx)
+                  asm_prm_aer_lcl(1)     = asm_prm_bc_hphil(bnd_idx)
+                  ext_cff_mss_aer_lcl(1) = ext_cff_mss_bc_hphil(bnd_idx)
                   ! aerosol species 5 optical properties, dust size1
                   ss_alb_aer_lcl(5)      = ss_alb_dst1(bnd_idx)
                   asm_prm_aer_lcl(5)     = asm_prm_dst1(bnd_idx)
@@ -1822,18 +1822,18 @@ contains
      allocate(ss_alb_snw_dfs(idx_Mie_snw_mx,snicar_numrad_snw))
      allocate(asm_prm_snw_dfs(idx_Mie_snw_mx,snicar_numrad_snw))
      allocate(ext_cff_mss_snw_dfs(idx_Mie_snw_mx,snicar_numrad_snw))
-     allocate(ss_alb_bc1(snicar_numrad_snw))
-     allocate(asm_prm_bc1(snicar_numrad_snw))
-     allocate(ext_cff_mss_bc1(snicar_numrad_snw))
-     allocate(ss_alb_bc2(snicar_numrad_snw))
-     allocate(asm_prm_bc2(snicar_numrad_snw))
-     allocate(ext_cff_mss_bc2(snicar_numrad_snw))
-     allocate(ss_alb_oc1(snicar_numrad_snw))
-     allocate(asm_prm_oc1(snicar_numrad_snw))
-     allocate(ext_cff_mss_oc1(snicar_numrad_snw))
-     allocate(ss_alb_oc2(snicar_numrad_snw))
-     allocate(asm_prm_oc2(snicar_numrad_snw))
-     allocate(ext_cff_mss_oc2(snicar_numrad_snw))
+     allocate(ss_alb_bc_hphil(snicar_numrad_snw))
+     allocate(asm_prm_bc_hphil(snicar_numrad_snw))
+     allocate(ext_cff_mss_bc_hphil(snicar_numrad_snw))
+     allocate(ss_alb_bc_hphob(snicar_numrad_snw))
+     allocate(asm_prm_bc_hphob(snicar_numrad_snw))
+     allocate(ext_cff_mss_bc_hphob(snicar_numrad_snw))
+     allocate(ss_alb_oc_hphil(snicar_numrad_snw))
+     allocate(asm_prm_oc_hphil(snicar_numrad_snw))
+     allocate(ext_cff_mss_oc_hphil(snicar_numrad_snw))
+     allocate(ss_alb_oc_hphob(snicar_numrad_snw))
+     allocate(asm_prm_oc_hphob(snicar_numrad_snw))
+     allocate(ext_cff_mss_oc_hphob(snicar_numrad_snw))
      allocate(ss_alb_dst1(snicar_numrad_snw))
      allocate(asm_prm_dst1(snicar_numrad_snw))
      allocate(ext_cff_mss_dst1(snicar_numrad_snw))
@@ -1897,62 +1897,62 @@ contains
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         !
         ! THIS NOTE APPLIES TO ALL THE call ncd_io LINES BELOW WHERE
-        ! bcphob AND ocphob GET ASSIGNED TO VARIABLES SUFFIXED bc1/oc1:
+        ! bcphob AND ocphob GET ASSIGNED TO VARIABLES SUFFIXED bc_hphil/oc_hphil:
         !
         ! Assumption (1) applies here, in the input section.
         ! Assumption (2) applies later, in the snicar code.
         !
         ! 1) In this section, hydrophillic particles behave like hydrophobic
-        ! particles. We assume bc1/oc1 to have the same optics as bc2/oc2
-        ! because sulfate coating on the bc1/oc1 surface is assumed to be
+        ! particles. We assume bc_hphil/oc_hphil to have the same optics as bc_hphob/oc_hphob
+        ! because sulfate coating on the bc_hphil/oc_hphil surface is assumed to be
         ! dissolved into the hydrometeo (i.e, snow grain here) during the
         ! deposition process. This is different from the assumption made in
-        ! prior model versions, where bc1/oc1 was coated by undissolved
+        ! prior model versions, where bc_hphil/oc_hphil was coated by undissolved
         ! sulfate.
         ! 2) Later, in the snicar code, if the bc-snow internal mixing option
-        ! is on, bc1/oc1 (internally mixed within the snow grain) will be
-        ! treated differently than bc2/oc2 (mixed externally or outside the
+        ! is on, bc_hphil/oc_hphil (internally mixed within the snow grain) will be
+        ! treated differently than bc_hphob/oc_hphob (mixed externally or outside the
         ! snow grain).
         !
-        ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
+        ! BC species 1 Mie parameters, uncoated BC, same as bc_hphob before BC-snow internal mixing
         tString = 'ss_alb_bcphob_dif_'//short_case_solarspec
-        call ncd_io(trim(tString), ss_alb_bc1, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), ss_alb_bc_hphil, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         tString = 'asm_prm_bcphob_dif_'//short_case_solarspec
-        call ncd_io(trim(tString), asm_prm_bc1, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), asm_prm_bc_hphil, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         tString = 'ext_cff_mss_bcphob_dif_'//short_case_solarspec
-        call ncd_io(trim(tString), ext_cff_mss_bc1, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), ext_cff_mss_bc_hphil, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         ! BC species 2 Mie parameters, uncoated BC
         tString = 'ss_alb_bcphob_dif_'//short_case_solarspec
-        call ncd_io(trim(tString), ss_alb_bc2, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), ss_alb_bc_hphob, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         tString = 'asm_prm_bcphob_dif_'//short_case_solarspec
-        call ncd_io(trim(tString), asm_prm_bc2, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), asm_prm_bc_hphob, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         tString = 'ext_cff_mss_bcphob_dif_'//short_case_solarspec
-        call ncd_io(trim(tString), ext_cff_mss_bc2, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), ext_cff_mss_bc_hphob, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-        ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
+        ! OC species 1 Mie parameters, uncoated OC, same as oc_hphob before OC-snow internal mixing
         tString = 'ss_alb_ocphob_dif_'//short_case_solarspec
-        call ncd_io(trim(tString), ss_alb_oc1, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), ss_alb_oc_hphil, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         tString = 'asm_prm_ocphob_dif_'//short_case_solarspec
-        call ncd_io(trim(tString), asm_prm_oc1, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), asm_prm_oc_hphil, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         tString = 'ext_cff_mss_ocphob_dif_'//short_case_solarspec
-        call ncd_io(trim(tString), ext_cff_mss_oc1, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), ext_cff_mss_oc_hphil, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         ! OC species 2 Mie parameters, uncoated OC
         tString = 'ss_alb_ocphob_dif_'//short_case_solarspec
-        call ncd_io(trim(tString), ss_alb_oc2, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), ss_alb_oc_hphob, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         tString = 'asm_prm_ocphob_dif_'//short_case_solarspec
-        call ncd_io(trim(tString), asm_prm_oc2, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), asm_prm_oc_hphob, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         tString = 'ext_cff_mss_ocphob_dif_'//short_case_solarspec
-        call ncd_io(trim(tString), ext_cff_mss_oc2, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), ext_cff_mss_oc_hphob, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         ! ice refractive index (Picard et al., 2016)
         tString = 'ss_alb_ice_pic16_dir_'//short_case_solarspec
@@ -2018,45 +2018,45 @@ contains
      !-------------------- for 480-band data
      case (480)
 
-        ! BC species 1 Mie parameters, uncoated BC, same as bc2 before BC-snow internal mixing
+        ! BC species 1 Mie parameters, uncoated BC, same as bc_hphob before BC-snow internal mixing
         tString = 'ss_alb_bcphob'
-        call ncd_io(trim(tString), ss_alb_bc1, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), ss_alb_bc_hphil, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         tString = 'asm_prm_bcphob'
-        call ncd_io(trim(tString), asm_prm_bc1, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), asm_prm_bc_hphil, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         tString = 'ext_cff_mss_bcphob'
-        call ncd_io(trim(tString), ext_cff_mss_bc1, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), ext_cff_mss_bc_hphil, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         ! BC species 2 Mie parameters, uncoated BC
         tString = 'ss_alb_bcphob'
-        call ncd_io(trim(tString), ss_alb_bc2, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), ss_alb_bc_hphob, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         tString = 'asm_prm_bcphob'
-        call ncd_io(trim(tString), asm_prm_bc2, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), asm_prm_bc_hphob, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         tString = 'ext_cff_mss_bcphob'
-        call ncd_io(trim(tString), ext_cff_mss_bc2, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), ext_cff_mss_bc_hphob, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-        ! OC species 1 Mie parameters, uncoated OC, same as oc2 before OC-snow internal mixing
+        ! OC species 1 Mie parameters, uncoated OC, same as oc_hphob before OC-snow internal mixing
         tString = 'ss_alb_ocphob'
-        call ncd_io(trim(tString), ss_alb_oc1, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), ss_alb_oc_hphil, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         tString = 'asm_prm_ocphob'
-        call ncd_io(trim(tString), asm_prm_oc1, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), asm_prm_oc_hphil, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         tString = 'ext_cff_mss_ocphob'
-        call ncd_io(trim(tString), ext_cff_mss_oc1, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), ext_cff_mss_oc_hphil, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         ! OC species 2 Mie parameters, uncoated OC
         tString = 'ss_alb_ocphob'
-        call ncd_io(trim(tString), ss_alb_oc2, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), ss_alb_oc_hphob, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         tString = 'asm_prm_ocphob'
-        call ncd_io(trim(tString), asm_prm_oc2, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), asm_prm_oc_hphob, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         tString = 'ext_cff_mss_ocphob'
-        call ncd_io(trim(tString), ext_cff_mss_oc2, 'read', ncid, readv, posNOTonfile=.true.)
+        call ncd_io(trim(tString), ext_cff_mss_oc_hphob, 'read', ncid, readv, posNOTonfile=.true.)
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
         ! snow optical properties derived from different ice refractive index dataset
@@ -2152,14 +2152,14 @@ contains
            write (iulog,*) 'SNICAR: Excluding OC aerosols from snow radiative transfer calculations'
         endif
         write (iulog,*) 'SNICAR: Mie single scatter albedos for hydrophillic BC: ', &
-             ss_alb_bc1(1), ss_alb_bc1(2), ss_alb_bc1(3), ss_alb_bc1(4), ss_alb_bc1(5)
+             ss_alb_bc_hphil(1), ss_alb_bc_hphil(2), ss_alb_bc_hphil(3), ss_alb_bc_hphil(4), ss_alb_bc_hphil(5)
         write (iulog,*) 'SNICAR: Mie single scatter albedos for hydrophobic BC: ', &
-             ss_alb_bc2(1), ss_alb_bc2(2), ss_alb_bc2(3), ss_alb_bc2(4), ss_alb_bc2(5)
+             ss_alb_bc_hphob(1), ss_alb_bc_hphob(2), ss_alb_bc_hphob(3), ss_alb_bc_hphob(4), ss_alb_bc_hphob(5)
         if (do_sno_oc) then
            write (iulog,*) 'SNICAR: Mie single scatter albedos for hydrophillic OC: ', &
-                ss_alb_oc1(1), ss_alb_oc1(2), ss_alb_oc1(3), ss_alb_oc1(4), ss_alb_oc1(5)
+                ss_alb_oc_hphil(1), ss_alb_oc_hphil(2), ss_alb_oc_hphil(3), ss_alb_oc_hphil(4), ss_alb_oc_hphil(5)
            write (iulog,*) 'SNICAR: Mie single scatter albedos for hydrophobic OC: ', &
-                ss_alb_oc2(1), ss_alb_oc2(2), ss_alb_oc2(3), ss_alb_oc2(4), ss_alb_oc2(5)
+                ss_alb_oc_hphob(1), ss_alb_oc_hphob(2), ss_alb_oc_hphob(3), ss_alb_oc_hphob(4), ss_alb_oc_hphob(5)
         endif
         write (iulog,*) 'SNICAR: Mie single scatter albedos for dust species 1: ', &
              ss_alb_dst1(1), ss_alb_dst1(2), ss_alb_dst1(3), ss_alb_dst1(4), ss_alb_dst1(5)
