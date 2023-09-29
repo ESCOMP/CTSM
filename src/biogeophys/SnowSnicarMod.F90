@@ -84,67 +84,67 @@ module SnowSnicarMod
   ! (idx_Mie_snw_mx is number of snow radii with defined parameters (i.e. from 30um to 1500um))
   
   ! direct-beam weighted ice optical properties
-  real(r8), pointer :: ss_alb_snw_drc(:,:) !(idx_Mie_snw_mx,numrad_snw)
-  real(r8), pointer :: asm_prm_snw_drc(:,:) !(idx_Mie_snw_mx,numrad_snw)
-  real(r8), pointer :: ext_cff_mss_snw_drc(:,:) !(idx_Mie_snw_mx,numrad_snw)
+  real(r8), allocatable :: ss_alb_snw_drc(:,:)  ! (idx_Mie_snw_mx, numrad_snw)
+  real(r8), allocatable :: asm_prm_snw_drc(:,:)
+  real(r8), allocatable :: ext_cff_mss_snw_drc(:,:)
 
   ! diffuse radiation weighted ice optical properties
-  real(r8), pointer :: ss_alb_snw_dfs(:,:) !(idx_Mie_snw_mx,numrad_snw)
-  real(r8), pointer :: asm_prm_snw_dfs(:,:) !(idx_Mie_snw_mx,numrad_snw)
-  real(r8), pointer :: ext_cff_mss_snw_dfs(:,:) !(idx_Mie_snw_mx,numrad_snw)
+  real(r8), allocatable :: ss_alb_snw_dfs(:,:)  ! (idx_Mie_snw_mx, numrad_snw)
+  real(r8), allocatable :: asm_prm_snw_dfs(:,:)
+  real(r8), allocatable :: ext_cff_mss_snw_dfs(:,:)
 
   ! hydrophilic BC
-  real(r8), pointer :: ss_alb_bc_hphil(:) !(numrad_snw)
-  real(r8), pointer :: asm_prm_bc_hphil(:) !(numrad_snw)
-  real(r8), pointer :: ext_cff_mss_bc_hphil(:) !(numrad_snw)
+  real(r8), allocatable :: ss_alb_bc_hphil(:)  ! (numrad_snw)
+  real(r8), allocatable :: asm_prm_bc_hphil(:)
+  real(r8), allocatable :: ext_cff_mss_bc_hphil(:)
 
   ! hydrophobic BC
-  real(r8), pointer :: ss_alb_bc_hphob(:) !(numrad_snw)
-  real(r8), pointer :: asm_prm_bc_hphob(:) !(numrad_snw)
-  real(r8), pointer :: ext_cff_mss_bc_hphob(:) !(numrad_snw)
+  real(r8), allocatable :: ss_alb_bc_hphob(:)  ! (numrad_snw)
+  real(r8), allocatable :: asm_prm_bc_hphob(:)
+  real(r8), allocatable :: ext_cff_mss_bc_hphob(:)
 
   ! hydrophilic OC
-  real(r8), pointer :: ss_alb_oc_hphil(:) !(numrad_snw)
-  real(r8), pointer :: asm_prm_oc_hphil(:) !(numrad_snw)
-  real(r8), pointer :: ext_cff_mss_oc_hphil(:) !(numrad_snw)
+  real(r8), allocatable :: ss_alb_oc_hphil(:)  ! (numrad_snw)
+  real(r8), allocatable :: asm_prm_oc_hphil(:)
+  real(r8), allocatable :: ext_cff_mss_oc_hphil(:)
 
   ! hydrophobic OC
-  real(r8), pointer :: ss_alb_oc_hphob(:) !(numrad_snw)
-  real(r8), pointer :: asm_prm_oc_hphob(:) !(numrad_snw)
-  real(r8), pointer :: ext_cff_mss_oc_hphob(:) !(numrad_snw)
+  real(r8), allocatable :: ss_alb_oc_hphob(:)  ! (numrad_snw)
+  real(r8), allocatable :: asm_prm_oc_hphob(:)
+  real(r8), allocatable :: ext_cff_mss_oc_hphob(:)
 
   ! dust species 1:
-  real(r8), pointer :: ss_alb_dst1(:) !(numrad_snw)
-  real(r8), pointer :: asm_prm_dst1(:) !(numrad_snw)
-  real(r8), pointer :: ext_cff_mss_dst1(:) !(numrad_snw)
+  real(r8), allocatable :: ss_alb_dst1(:)  ! (numrad_snw)
+  real(r8), allocatable :: asm_prm_dst1(:)
+  real(r8), allocatable :: ext_cff_mss_dst1(:)
 
   ! dust species 2:
-  real(r8), pointer :: ss_alb_dst2(:) !(numrad_snw)
-  real(r8), pointer :: asm_prm_dst2(:) !(numrad_snw)
-  real(r8), pointer :: ext_cff_mss_dst2(:) !(numrad_snw)
+  real(r8), allocatable :: ss_alb_dst2(:)  ! (numrad_snw)
+  real(r8), allocatable :: asm_prm_dst2(:)
+  real(r8), allocatable :: ext_cff_mss_dst2(:)
 
   ! dust species 3:
-  real(r8), pointer :: ss_alb_dst3(:) !(numrad_snw)
-  real(r8), pointer :: asm_prm_dst3(:) !(numrad_snw)
-  real(r8), pointer :: ext_cff_mss_dst3(:) !(numrad_snw)
+  real(r8), allocatable :: ss_alb_dst3(:)  ! (numrad_snw)
+  real(r8), allocatable :: asm_prm_dst3(:)
+  real(r8), allocatable :: ext_cff_mss_dst3(:)
 
   ! dust species 4:
-  real(r8), pointer :: ss_alb_dst4(:) !(numrad_snw)
-  real(r8), pointer :: asm_prm_dst4(:) !(numrad_snw)
-  real(r8), pointer :: ext_cff_mss_dst4(:) !(numrad_snw)
+  real(r8), allocatable :: ss_alb_dst4(:)  ! (numrad_snw)
+  real(r8), allocatable :: asm_prm_dst4(:)
+  real(r8), allocatable :: ext_cff_mss_dst4(:)
 
   ! downward solar radiation spectral weights for 5-band or 480-band
-  real(r8), pointer :: flx_wgt_dir(:) !(numrad_snw)  ! direct
-  real(r8), pointer :: flx_wgt_dif(:) !(numrad_snw)  ! diffuse
+  real(r8), allocatable :: flx_wgt_dir(:)  ! (numrad_snw)  ! direct
+  real(r8), allocatable :: flx_wgt_dif(:)  ! (numrad_snw)  ! diffuse
 
   ! best-fit parameters for snow aging defined over:
   !  11 temperatures from 225 to 273 K
   !  31 temperature gradients from 0 to 300 K/m
   !   8 snow densities from 0 to 350 kg/m3
   ! (arrays declared here, but are set in iniTimeConst)
-  real(r8), pointer :: snowage_tau(:,:,:) ! (idx_rhos_max,idx_Tgrd_max,idx_T_max)
-  real(r8), pointer :: snowage_kappa(:,:,:) ! (idx_rhos_max,idx_Tgrd_max,idx_T_max)
-  real(r8), pointer :: snowage_drdt0(:,:,:) ! idx_rhos_max,idx_Tgrd_max,idx_T_max)
+  real(r8), allocatable :: snowage_tau(:,:,:)  ! (idx_rhos_max, idx_Tgrd_max, idx_T_max)
+  real(r8), allocatable :: snowage_kappa(:,:,:)
+  real(r8), allocatable :: snowage_drdt0(:,:,:)
   !
   ! !REVISION HISTORY:
   ! Created by Mark Flanner (Univ. of Michigan)
