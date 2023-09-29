@@ -1715,7 +1715,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine get_swindow(jday, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w, sowing_window_starts_tomorrow)
+  subroutine get_swindow(jday, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w)
     ! !DESCRIPTION:
     ! Determine when the "next" sowing window is. This is either the sowing window we are
     ! currently in or, if not in a sowing window, the next one that will occur.
@@ -1728,7 +1728,6 @@ contains
     integer,                          intent(in)    :: param_start, param_end ! Sowing window start and end dates from parameter file
     integer,                          intent(out)   :: w ! Index of "next" sowing window
     integer,                          intent(out)   :: start_w, end_w ! Start and end dates of "next" sowing window
-    logical,                          intent(out)   :: sowing_window_starts_tomorrow
     !
     ! !LOCAL VARIABLES
     integer :: next_swindow_start
@@ -1750,17 +1749,13 @@ contains
         w = 1
         start_w = param_start
         end_w   = param_end
+        return
 
     ! Otherwise, if today is after the latest sowing window end date, use the first sowing window. This works only if sowing windows that span the new year are located at index w = 1.
     else if (jday > maxval(rx_ends)) then
         w = 1
         start_w = rx_starts(w)
         end_w   = rx_ends(w)
-    end if
-
-    ! If we already got sowing window dates, do this and exit.
-    if (w > 0) then
-        sowing_window_starts_tomorrow = start_w == jday_tomorrow
         return
     end if
 
@@ -1804,9 +1799,6 @@ contains
     else
         next_swindow_start = start_w
     end if
-
-    ! Does the NEXT sowing window start tomorrow?
-    sowing_window_starts_tomorrow = next_swindow_start == jday_tomorrow
 
   end subroutine get_swindow
 
@@ -1872,7 +1864,6 @@ contains
     integer mcsec     ! seconds of day (0, ..., seconds/day)
     integer sowing_window_startdate ! date (day of year) of first day of sowing window
     integer sowing_window_enddate   ! date (day of year) of last  day of sowing window
-    logical sowing_window_starts_tomorrow ! Is tomorrow the start of a sowing window?
     real(r8) harvest_reason
     real(r8) dayspyr  ! days per year in this year
     real(r8) avg_dayspyr ! average number of days per year
@@ -2016,7 +2007,7 @@ contains
          end if
 
          ! Get dates of current or next sowing window.
-         call get_swindow(jday, crop_inst%rx_swindow_starts_thisyr_patch(p,:), crop_inst%rx_swindow_ends_thisyr_patch(p,:), minplantjday(ivt(p),h), maxplantjday(ivt(p),h), w, sowing_window_startdate, sowing_window_enddate, sowing_window_starts_tomorrow)
+         call get_swindow(jday, crop_inst%rx_swindow_starts_thisyr_patch(p,:), crop_inst%rx_swindow_ends_thisyr_patch(p,:), minplantjday(ivt(p),h), maxplantjday(ivt(p),h), w, sowing_window_startdate, sowing_window_enddate)
 
          ! We only want to plant on a specific day if the prescribed sowing window starts AND ends on the same day. Also make sure we haven't planted yet today.
          ! TODO: Change last condition to `maxval(crop_inst%sdates_perharv_patch(p,:)) /= jday`
