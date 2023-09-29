@@ -1826,6 +1826,7 @@ contains
     use clm_time_manager , only : get_average_days_per_year
     use clm_time_manager , only : get_prev_date
     use clm_time_manager , only : is_doy_in_interval, is_end_curr_day
+    use clm_time_manager , only : get_doy_tomorrow
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -1877,12 +1878,14 @@ contains
     real(r8) avg_dayspyr ! average number of days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
+    logical has_rx_sowing_date ! does the crop have a single sowing date instead of a window?
     logical is_in_sowing_window ! is the crop in its sowing window?
     logical is_end_sowing_window ! is it the last day of the crop's sowing window?
     logical sowing_gdd_requirement_met ! has the gridcell historically been warm enough to support the crop?
     logical do_plant_normal ! are the normal planting rules defined and satisfied?
     logical do_plant_lastchance ! if not the above, what about relaxed rules for the last day of the planting window?
     logical do_plant_prescribed ! is today the prescribed sowing date?
+    logical do_plant_prescribed_tomorrow  ! is tomorrow the prescribed sowing date?
     logical do_plant  ! are we planting in this time step for any reason?
     logical did_plant ! did we plant the crop in this time step?
     logical allow_unprescribed_planting ! should crop be allowed to be planted according to sowing window rules?
@@ -2017,9 +2020,15 @@ contains
 
          ! We only want to plant on a specific day if the prescribed sowing window starts AND ends on the same day. Also make sure we haven't planted yet today.
          ! TODO: Change last condition to `maxval(crop_inst%sdates_perharv_patch(p,:)) /= jday`
-         do_plant_prescribed = sowing_window_startdate == jday .and. &
-                               sowing_window_enddate   == jday .and. &
+         ! TODO: ¿Allow use of NON-prescribed sowing with one-day-long windows?
+         has_rx_sowing_date = sowing_window_startdate == sowing_window_enddate
+         do_plant_prescribed = has_rx_sowing_date .and. &
+                               sowing_window_startdate == jday .and. &
                                sowing_count (p) < mxsowings
+         do_plant_prescribed_tomorrow = \
+             has_rx_sowing_date .and. &
+             sowing_window_startdate == get_doy_tomorrow(jday) .and. &
+             sowing_count (p) < mxsowings
 
          ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-18)
          ! When resuming from a run with old code, may need to manually set these.
@@ -2051,7 +2060,7 @@ contains
          !
          ! Only allow sowing according to normal "window" rules if not using prescribed
          ! sowing dates.
-         allow_unprescribed_planting = sowing_window_startdate /= sowing_window_enddate
+         allow_unprescribed_planting = .not. has_rx_sowing_date
          if (sowing_count(p) == mxsowings) then
             do_plant_normal = .false.
             do_plant_lastchance = .false.
@@ -2280,7 +2289,7 @@ contains
             else if (generate_crop_gdds .and. crop_inst%rx_swindow_starts_thisyr_patch(p,1) .gt. 0) then
                if (sowing_window_startdate >= 0) then
                   ! Harvest the day before the start of the next sowing window.
-                  do_harvest = sowing_window_starts_tomorrow
+                  do_harvest = do_plant_prescribed_tomorrow
 
                   ! ... unless that will lead to growing season length 365 (or 366,
                   ! if last year was a leap year). This would result in idop==jday,
@@ -2332,13 +2341,13 @@ contains
                ! WARNING: This implementation assumes that sowing windows don't change over time!
                ! In order to avoid this, you'd have to read this year's AND next year's prescribed
                ! sowing windows.
-               do_harvest = do_harvest .or. sowing_window_starts_tomorrow
+               do_harvest = do_harvest .or. do_plant_prescribed_tomorrow
 
                if (hui(p) >= gddmaturity(p)) then
                    harvest_reason = HARVEST_REASON_MATURE
                else if (idpp >= mxmat) then
                    harvest_reason = HARVEST_REASON_MAXSEASLENGTH
-               else if (sowing_window_starts_tomorrow) then
+               else if (do_plant_prescribed_tomorrow) then
                    harvest_reason = HARVEST_REASON_SOWTOMORROW
                end if
             endif
