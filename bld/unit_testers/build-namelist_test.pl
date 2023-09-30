@@ -163,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 2462;
+my $ntests = 2426;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1335;
+   $ntests += 1686;
 }
 plan( tests=>$ntests );
 
@@ -1253,86 +1253,16 @@ $mode = "-phys $phys";
 &make_config_cache($phys);
 
 print "\n==================================================\n";
-print "Test ALL resolutions with SP\n";
+print "Test ALL resolutions that have surface datasets with SP\n";
 print "==================================================\n";
 
 # Check for ALL resolutions with CLM50SP
-my $reslist = `../queryDefaultNamelist.pl -res list -s`;
-my @resolutions = split( / /, $reslist );
+my @resolutions = ( "1x1_brazil", "1x1_numaIA", "1x1_smallvilleIA", "1x1_mexicocityMEX", "1x1_vancouverCAN", "1x1_urbanc_alpha", "5x5_amazon", "360x720cru", "0.125x0.125", "0.125nldas2", "10x15", "4x5", "0.9x1.25", "1.9x2.5", "ne3np4.pg3", "ne5np4.pg2", "ne16np4", "ne30np4", "ne30np4.pg3", "ne120np4.pg3", "ne0np4CONUS.ne30x8", "ne0np4.ARCTIC.ne30x4", "ne0np4.ARCTICGRIS.ne30x8", "C24", "C48", "C96", "mpasa480", "mpasa120" );
 my @regional;
 foreach my $res ( @resolutions ) {
    chomp($res);
    print "=== Test $res === \n";
    my $options  = "-res $res -bgc sp -envxml_dir .";
-
-   # Resolutions for mksurfdata mapping
-   if ( $res eq "0.5x0.5"     ||
-             $res eq "0.25x0.25"   ||
-             $res eq "3x3min"      ||
-             $res eq "5x5min"      ||
-             $res eq "10x10min"    ||
-             $res eq "0.125x0.125" ||
-             $res eq "0.33x0.33"   ||
-             $res eq "1km-merge-10min" ) {
-      next;
-   # Resolutions that don't have surface datasets created for them
-   # SE grids:
-   } elsif ( 
-             $res eq "ne240np4"    ||
-             $res eq "ne240np4.pg2"||
-             $res eq "ne240np4.pg3"||
-             $res eq "ne120np4"    ||
-             $res eq "ne120np4.pg2"||
-             $res eq "ne120np4.pg4"||
-             $res eq "ne60np4"     ||
-             $res eq "ne60np4.pg2" ||
-             $res eq "ne60np4.pg3" ||
-             $res eq "ne60np4.pg4" ||
-             $res eq "ne30np4.pg2" ||
-             $res eq "ne30np4.pg4" ||
-             $res eq "ne16np4.pg3" ||
-             $res eq "ne5np4"      ||
-             $res eq "ne5np4.pg2"  ||
-             $res eq "ne5np4.pg4"  ||
-             $res eq "ne3np4"
-           ) {
-      next;
-   # FV grids:
-   } elsif ( 
-             $res eq "2.5x3.33"    ||
-             $res eq "0.23x0.31"   ||
-             $res eq "0.47x0.63"
-           ) {
-      next;
-   # FV^3 grids:
-   } elsif ( 
-             $res eq "C192"        ||
-             $res eq "C384"
-           ) {
-      next;
-   # mpasa grids:
-   } elsif ( 
-             $res eq "mpasa240"       ||
-             $res eq "mpasa240"       ||
-             $res eq "mpasa60"        ||
-             $res eq "mpasa30"        ||
-             $res eq "mpasa15"        ||
-             $res eq "mpasa15-3conus" ||
-             $res eq "mpasa12"        ||
-             $res eq "mpasa7p5"       ||
-             $res eq "mpasa3p75"
-           ) {
-      next;
-   # EUL grids:
-   } elsif ( 
-             $res eq "8x16"        ||
-             $res eq "32x64"       ||
-             $res eq "64x128"      ||
-             $res eq "128x256"     ||
-             $res eq "512x1024" 
-           ) {
-      next;
-   }
 
    &make_env_run();
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
