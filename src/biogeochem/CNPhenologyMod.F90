@@ -2043,8 +2043,7 @@ contains
          is_end_sowing_window = jday == sowing_window_enddate
          !
          ! Save these diagnostic variables only on the first day of the window to ensure that windows spanning the new year aren't double-counted.
-         ! TODO: Change this to the LAST day of the window, to ensure the same ordering as required for rx sowing window input files.
-         if (jday == sowing_window_startdate) then
+         if (jday == sowing_window_enddate) then
              crop_inst%swindow_starts_thisyr_patch(p,w) = sowing_window_startdate
              crop_inst%swindow_ends_thisyr_patch  (p,w) = sowing_window_enddate
          end if
