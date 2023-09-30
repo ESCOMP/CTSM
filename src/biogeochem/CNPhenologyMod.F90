@@ -2037,7 +2037,7 @@ contains
          ! This is outside the croplive check so that the "harvest if planting conditions were met today" conditional works.
          is_in_sowing_window  = is_doy_in_interval(sowing_window_startdate, sowing_window_enddate, jday)
          if (crop_inst%sown_in_this_window(p) .and. .not. is_in_sowing_window) then
-            ! TODO: Test whether this is necessary, since it's set to false in last timestep of sowing window at the end of CropPhenology().
+            ! Although sown_in_this_window is set to false in last timestep of sowing window at the end of CropPhenology(), this extra check may be necessary if sowing windows change.
             crop_inst%sown_in_this_window(p) = .false.
          end if
          is_end_sowing_window = jday == sowing_window_enddate
