@@ -15,6 +15,7 @@ module cropcalStreamMod
   use clm_varctl       , only : iulog
   use clm_varctl       , only : use_cropcal_rx_swindows, use_cropcal_rx_cultivar_gdds, use_cropcal_streams
   use clm_varpar       , only : mxpft
+  use clm_varpar       , only : mxsowings
   use perf_mod         , only : t_startf, t_stopf
   use spmdMod          , only : masterproc, mpicom, iam
   use pftconMod        , only : npcropmin
@@ -396,7 +397,14 @@ contains
           endif
        end do
 
-       ! TODO: Ensure that, if mxsowings > 1, sowing windows are ordered such that ENDS are monotonically increasing. This is necessary because of how get_swindow() works.
+       ! Ensure that, if mxsowings > 1, sowing windows are ordered such that ENDS are monotonically increasing. This is necessary because of how get_swindow() works.
+       if (mxsowings > 1) then
+           if (any(ends(:,2:mxsowings) <= ends(:,1:mxsowings-1) .and. &
+                   ends(:,2:mxsowings) >= 1)) then
+               write(iulog, *) 'Sowing window inputs must be ordered such that end dates are monotonically increasing.'
+               call ESMF_Finalize(endflag=ESMF_END_ABORT)
+           end if
+       end if
 
        ! Fail if a sowing window start date is prescribed without an end date (or vice versa)
        if (any((starts >= 1 .and. ends < 1) .or. (starts < 1 .and. ends >= 1))) then
