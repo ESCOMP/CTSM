@@ -2274,7 +2274,6 @@ contains
                 harvest_reason = HARVEST_REASON_SOWTODAY
 
             ! If generate_crop_gdds and this patch has prescribed sowing inputs
-            ! TODO: Shouldn't this also apply to paramfile sowing windows?
             else if (generate_crop_gdds .and. crop_inst%rx_swindow_starts_thisyr_patch(p,1) .gt. 0) then
                ! Harvest the day before the next prescribed sowing.
                do_harvest = do_plant_prescribed_tomorrow
