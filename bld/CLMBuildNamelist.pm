@@ -2194,6 +2194,9 @@ sub setup_logic_tillage {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   my $tillage_mode = remove_leading_and_trailing_quotes( $nl->get_value( "tillage_mode" ) );
+  if ( $tillage_mode ne "" && $tillage_mode ne "off") {
+      $log->fatal_error( "Tillage has not yet been scientifically tested and so may not be enabled." );
+  }
   if ( $tillage_mode ne "off" && $tillage_mode ne "" && not &value_is_true($nl->get_value('use_crop')) ) {
       $log->fatal_error( "Tillage only works on crop columns, so use_crop must be true if tillage is enabled." );
   }
