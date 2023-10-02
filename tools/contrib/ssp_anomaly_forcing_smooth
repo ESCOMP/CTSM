@@ -237,7 +237,16 @@ field_out_wind = ["uas", "vas"]
 
 nfields = len(field_in)
 
-output_format = "NETCDF3_64BIT_DATA"
+# We can't seem to output in CDF5 format using netCDF4 python interfaces.
+# Instead, write to netCDF-4 and then convert to CDF5.
+output_format = "NETCDF4_CLASSIC"
+def convert_to_cdf5(outfilename):
+    outfilename_cdf5 = outfilename.replace(".nc4", ".nc")
+    subprocess.Popen(
+        f"module load nco && nccopy -k 'cdf5' {outfilename} {outfilename_cdf5} && rm {outfilename}",
+        stdout=subprocess.PIPE,
+        shell="True",
+    )
 
 # --  Loop over forcing fields  ------------------------------------
 for f in range(nfields):
@@ -376,7 +385,7 @@ for f in range(nfields):
                 + "-"
                 + str(ssp_yrend)
                 + creationdate
-                + ".nc"
+                + ".nc4"
             )
 
         ssp_fld += np.asfarray(f1.variables[field_in[f]][ssp_ind, :, :], np.float64)
@@ -476,8 +485,9 @@ for f in range(nfields):
     # write out climo to check field  -------------------------
     if write_climo:
         # Use NetCDF4 format, because using older NetCDF formats are too slow
+        output_filename_climo = os.path.join(outdir, field_out[f] + "_climo" + creationdate + ".nc4")
         w = netcdf4.Dataset(
-            os.path.join(outdir, field_out[f] + "_climo" + creationdate + ".nc"),
+            output_filename_climo,
             "w",
             format=output_format,
         )
@@ -505,10 +515,12 @@ for f in range(nfields):
         ] = lat
         wvar[:, :, :] = climo
         w.close()
+        convert_to_cdf5(output_filename_climo)
 
         # Use NetCDF4 format, because using older NetCDF formats are too slow
+        output_filename_smooth = os.path.join(outdir, field_out[f] + "_smooth" + creationdate + ".nc4")
         w = netcdf4.Dataset(
-            os.path.join(outdir, field_out[f] + "_smooth" + creationdate + ".nc"),
+            output_filename_smooth,
             "w",
             format=output_format,
         )
@@ -542,15 +554,13 @@ for f in range(nfields):
         wvar[:, :, :] = temp_fld
         wvar2[:, :, :] = stemp_fld
         w.close()
+        convert_to_cdf5(output_filename_smooth)
         print("Exit early after writing out climatology\n\n")
         sys.exit()
 
     # create netcdf file  ---------------------------------
 
     if f == 0:
-        # Use NetCDF4 format, because using older NetCDF formats are too slow
-        # Will need to convert to CDF5 format at the end, as we can't seem to
-        # output in CDF5 format using netCDF4 python interfaces
         outfilename = os.path.join(outdir, "af.allvars" + outfile_suffix)
         print("Creating: " + outfilename)
         outfile = netcdf4.Dataset(outfilename, "w", format=output_format)
@@ -704,5 +714,6 @@ for f in range(nfields):
 
 # --  End Loop over forcing fields  ------------------------------------
 outfile.close()
+convert_to_cdf5(outfilename)
 
 print("\n\nSuccessfully made anomaly forcing datasets\n")
