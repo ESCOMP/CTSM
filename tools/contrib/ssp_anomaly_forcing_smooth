@@ -41,6 +41,13 @@ parser.add_argument(
     action="store_true",
     default=False,
 )
+parser.add_argument(
+    "--output_dir", "--output-dir",
+    help="Top-level output directory (default: ./anomaly_forcing/). Sub-directory will be created for the selected scenario.",
+    type=str,
+    default=os.path.join(".", "anomaly_forcing"),
+)
+
 
 args = parser.parse_args()
 if args.sspnum == 0:
@@ -109,15 +116,14 @@ _v2 is just used for restart files that have been spatially interpolated
 
 """
 
-spath = "./"
 if os.path.exists(datapath):
     print("Input data directory:" + datapath)
 else:
     sys.exit("Could not find input directory: " + datapath)
-if os.path.exists(spath):
-    print("Output data directory:" + spath)
+if os.path.exists(args.output_dir):
+    print("Output data directory:" + args.output_dir)
 else:
-    sys.exit("Could not find output directory: " + spath)
+    sys.exit("Could not find output directory: " + args.output_dir)
 
 # Settings to run with
 today = datetime.date.today()
@@ -194,9 +200,9 @@ if num_ens != len(histdir):
     sys.exit("number of members different")
 
 # Setup output directory
-sspoutdir = "anomaly_forcing/CMIP6-" + ssptag
+sspoutdir = "CMIP6-" + ssptag
 
-outdir = spath + sspoutdir
+outdir = os.path.join(args.output_dir, sspoutdir)
 if not os.path.exists(outdir):
     os.makedirs(outdir)
 
@@ -471,7 +477,7 @@ for f in range(nfields):
     if write_climo:
         # Use NetCDF4 format, because using older NetCDF formats are too slow
         w = netcdf4.Dataset(
-            outdir + field_out[f] + "_climo" + creationdate + ".nc",
+            os.path.join(outdir, field_out[f] + "_climo" + creationdate + ".nc"),
             "w",
             format=output_format,
         )
@@ -502,7 +508,7 @@ for f in range(nfields):
 
         # Use NetCDF4 format, because using older NetCDF formats are too slow
         w = netcdf4.Dataset(
-            outdir + field_out[f] + "_smooth" + creationdate + ".nc",
+            os.path.join(outdir, field_out[f] + "_smooth" + creationdate + ".nc"),
             "w",
             format=output_format,
         )
@@ -545,7 +551,7 @@ for f in range(nfields):
         # Use NetCDF4 format, because using older NetCDF formats are too slow
         # Will need to convert to CDF5 format at the end, as we can't seem to
         # output in CDF5 format using netCDF4 python interfaces
-        outfilename = outdir + "/" + "af.allvars" + outfile_suffix
+        outfilename = os.path.join(outdir, "af.allvars" + outfile_suffix)
         print("Creating: " + outfilename)
         outfile = netcdf4.Dataset(outfilename, "w", format=output_format)
 
