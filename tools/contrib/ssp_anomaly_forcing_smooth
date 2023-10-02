@@ -193,9 +193,6 @@ if num_ens != len(histdir):
     print("number of ensemble members not the same")
     sys.exit("number of members different")
 
-# test w/ 1 ensemble member
-num_ens = 3
-
 # Setup output directory
 sspoutdir = "anomaly_forcing/CMIP6-" + ssptag
 
