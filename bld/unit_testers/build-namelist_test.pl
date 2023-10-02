@@ -163,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 2426;
+my $ntests = 2394;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1686;
+   $ntests += 1662;
 }
 plan( tests=>$ntests );
 
@@ -1257,7 +1257,7 @@ print "Test ALL resolutions that have surface datasets with SP\n";
 print "==================================================\n";
 
 # Check for ALL resolutions with CLM50SP
-my @resolutions = ( "1x1_brazil", "1x1_numaIA", "1x1_smallvilleIA", "1x1_mexicocityMEX", "1x1_vancouverCAN", "1x1_urbanc_alpha", "5x5_amazon", "360x720cru", "0.125x0.125", "0.125nldas2", "10x15", "4x5", "0.9x1.25", "1.9x2.5", "ne3np4.pg3", "ne5np4.pg2", "ne16np4", "ne30np4", "ne30np4.pg3", "ne120np4.pg3", "ne0np4CONUS.ne30x8", "ne0np4.ARCTIC.ne30x4", "ne0np4.ARCTICGRIS.ne30x8", "C24", "C48", "C96", "mpasa480", "mpasa120" );
+my @resolutions = ( "1x1_brazil", "1x1_mexicocityMEX", "1x1_vancouverCAN", "1x1_urbanc_alpha", "5x5_amazon", "360x720cru", "0.125x0.125", "0.125nldas2", "10x15", "4x5", "0.9x1.25", "1.9x2.5", "ne3np4.pg3", "ne5np4.pg2", "ne16np4", "ne30np4", "ne30np4.pg3", "ne120np4.pg3", "ne0np4CONUS.ne30x8", "ne0np4.ARCTIC.ne30x4", "ne0np4.ARCTICGRIS.ne30x8", "C24", "C48", "C96", "mpasa480", "mpasa120" );
 my @regional;
 foreach my $res ( @resolutions ) {
    chomp($res);
@@ -1599,6 +1599,9 @@ foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
   foreach my $forc ( @forclist ) {
      foreach my $bgc ( "sp", "bgc" ) {
         my $lndtuningmode = "${phys}_${forc}";
+        if ( $lndtuningmode eq "clm5_1_CRUv7" ) {
+           next;
+        }
         my $clmoptions = "-res $res -mask $mask -sim_year $simyr -envxml_dir . -lnd_tuning_mod $lndtuningmode -bgc $bgc";
         &make_env_run( );
         eval{ system( "$bldnml $clmoptions > $tempfile 2>&1 " ); };
