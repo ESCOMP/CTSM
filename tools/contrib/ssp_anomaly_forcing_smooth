@@ -231,6 +231,8 @@ field_out_wind = ["uas", "vas"]
 
 nfields = len(field_in)
 
+output_format = "NETCDF3_64BIT_DATA"
+
 # --  Loop over forcing fields  ------------------------------------
 for f in range(nfields):
 
@@ -471,7 +473,7 @@ for f in range(nfields):
         w = netcdf4.Dataset(
             outdir + field_out[f] + "_climo" + creationdate + ".nc",
             "w",
-            format="NETCDF3_64BIT_DATA"
+            format=output_format,
         )
         w.createDimension("lat", int(nlat))
         w.createDimension("lon", int(nlon))
@@ -502,7 +504,7 @@ for f in range(nfields):
         w = netcdf4.Dataset(
             outdir + field_out[f] + "_smooth" + creationdate + ".nc",
             "w",
-            format="NETCDF3_64BIT_DATA"
+            format=output_format,
         )
         w.createDimension("lat", int(nlat))
         w.createDimension("lon", int(nlon))
@@ -545,7 +547,7 @@ for f in range(nfields):
         # output in CDF5 format using netCDF4 python interfaces
         outfilename = outdir + "/" + "af.allvars" + outfile_suffix
         print("Creating: " + outfilename)
-        outfile = netcdf4.Dataset(outfilename, "w", format="NETCDF3_64BIT_DATA")
+        outfile = netcdf4.Dataset(outfilename, "w", format=output_format)
 
         # creation date on the file
         command = 'date "+%Y/%m/%d"'
