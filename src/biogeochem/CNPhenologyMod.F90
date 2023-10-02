@@ -2015,7 +2015,7 @@ contains
          do_plant_prescribed = has_rx_sowing_date .and. &
                                sowing_window_startdate == jday .and. &
                                sowing_count (p) < mxsowings
-         do_plant_prescribed_tomorrow = \
+         do_plant_prescribed_tomorrow = &
              has_rx_sowing_date .and. &
              sowing_window_startdate == get_doy_tomorrow(jday) .and. &
              sowing_count (p) < mxsowings
