@@ -165,9 +165,6 @@ if args.print_ssps:
 
 sspnum = args.sspnum
 
-# hist_case needed?
-hist_case = "b.e21.BHIST.f09_g17.CMIP6-historical.010"
-
 if sspnum == 1:
     # SSP1-26
     ssptag = "SSP1-2.6"
