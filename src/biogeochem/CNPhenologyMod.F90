@@ -423,7 +423,7 @@ contains
 
        ! gather all patch-level litterfall fluxes to the column for litter C and N inputs
 
-       call CNLitterToColumn(bounds, num_soilc, filter_soilc, &
+       call CNLitterToColumn(bounds, num_soilp, filter_soilp, &
             cnveg_state_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
             leaf_prof_patch(bounds%begp:bounds%endp,1:nlevdecomp_full), & 
             froot_prof_patch(bounds%begp:bounds%endp,1:nlevdecomp_full))
@@ -551,7 +551,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: p       ! indices
-    integer  :: fp      ! lake filter patch index
+    integer  :: fp      ! filter patch index
     real(r8) :: dayspyr ! days per year (days)
     integer  :: kyr     ! current year
     integer  :: kmo     ! month of year  (1, ..., 12)
@@ -648,7 +648,7 @@ contains
     ! !LOCAL VARIABLES:
     real(r8):: avg_dayspyr                ! Average days per year
     integer :: p                          ! indices
-    integer :: fp                         ! lake filter patch index
+    integer :: fp                         ! filter patch index
     
     real(r8):: tranr 				      
     real(r8):: t1                         ! temporary variable 
@@ -833,7 +833,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: g,c,p          !indices
-    integer :: fp             !lake filter patch index
+    integer :: fp             !filter patch index
     real(r8):: ws_flag        !winter-summer solstice flag (0 or 1)
     real(r8):: crit_onset_gdd !critical onset growing degree-day sum
     real(r8):: crit_daylat    !latitudinal light gradient in arctic-boreal 
@@ -1289,7 +1289,7 @@ contains
     ! !LOCAL VARIABLES:
     real(r8),parameter :: secspqtrday = secspday / 4  ! seconds per quarter day
     integer :: g,c,p           ! indices
-    integer :: fp              ! lake filter patch index
+    integer :: fp              ! filter patch index
     real(r8):: avg_dayspyr     ! average days per year
     real(r8):: crit_onset_gdd  ! degree days for onset trigger
     real(r8):: soilt           ! temperature of top soil layer
@@ -1727,6 +1727,7 @@ contains
     use clm_time_manager , only : get_prev_calday, get_curr_days_per_year, is_beg_curr_year
     use clm_time_manager , only : get_average_days_per_year
     use clm_time_manager , only : get_prev_date
+    use clm_time_manager , only : is_doy_in_interval
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -1931,7 +1932,7 @@ contains
          end if
 
          ! This is outside the croplive check so that the "harvest if planting conditions were met today" conditional works.
-         is_in_sowing_window = jday >= minplantjday(ivt(p),h) .and. jday <= maxplantjday(ivt(p),h)
+         is_in_sowing_window = is_doy_in_interval(minplantjday(ivt(p),h), maxplantjday(ivt(p),h), jday)
          is_end_sowing_window = jday == maxplantjday(ivt(p),h)
          !
          ! Only allow sowing according to normal "window" rules if not using prescribed
@@ -2861,7 +2862,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: p            ! indices
-    integer :: fp           ! lake filter patch index
+    integer :: fp           ! filter patch index
     real(r8):: t1           ! temporary variable
     !-----------------------------------------------------------------------
 
@@ -2997,7 +2998,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: p, c, k, h   ! indices
-    integer :: fp           ! lake filter patch index
+    integer :: fp           ! filter patch index
     real(r8):: t1           ! temporary variable
     real(r8):: denom        ! temporary variable for divisor
     real(r8) :: ntovr_leaf  
@@ -3344,7 +3345,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: p            ! indices
-    integer :: fp           ! lake filter patch index
+    integer :: fp           ! filter patch index
     real(r8) :: fr_leafn_to_litter ! fraction of the nitrogen turnover that goes to litter; remaining fraction is retranslocated
     real(r8) :: ntovr_leaf  
     real(r8) :: denom       
@@ -3501,7 +3502,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: p            ! indices
-    integer :: fp           ! lake filter patch index
+    integer :: fp           ! filter patch index
     real(r8):: ctovr        ! temporary variable for carbon turnover
     real(r8):: ntovr        ! temporary variable for nitrogen turnover
     !-----------------------------------------------------------------------
@@ -3695,7 +3696,7 @@ ptch: do fp = 1,num_soilp
   end subroutine CNCropHarvestToProductPools
 
   !-----------------------------------------------------------------------
-  subroutine CNLitterToColumn (bounds, num_soilc, filter_soilc,         &
+  subroutine CNLitterToColumn (bounds, num_bgc_vegp, filter_bgc_vegp,         &
        cnveg_state_inst,cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
        leaf_prof_patch, froot_prof_patch)
     !
@@ -3704,14 +3705,14 @@ ptch: do fp = 1,num_soilp
     ! to the column level and assign them to the three litter pools
     !
     ! !USES:
-    use clm_varpar , only : max_patch_per_col, nlevdecomp
+    use clm_varpar , only : nlevdecomp
     use pftconMod  , only : npcropmin
     use clm_varctl , only : use_grainproduct
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds
-    integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                         , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    integer                         , intent(in)    :: num_bgc_vegp       ! number of bgc veg patches
+    integer                         , intent(in)    :: filter_bgc_vegp(:) ! filter for bgc veg patches
     type(cnveg_state_type)          , intent(in)    :: cnveg_state_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
@@ -3719,7 +3720,7 @@ ptch: do fp = 1,num_soilp
     real(r8)                        , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
     !
     ! !LOCAL VARIABLES:
-    integer :: fc,c,pi,p,k,j,i     ! indices
+    integer :: fp,c,p,k,j,i  ! indices
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
@@ -3749,95 +3750,87 @@ ptch: do fp = 1,num_soilp
          frootn_to_litter          => cnveg_nitrogenflux_inst%frootn_to_litter_patch        , & ! Input:  [real(r8) (:)   ]  fine root N litterfall (gN/m2/s)                  
          phenology_n_to_litr_n     => cnveg_nitrogenflux_inst%phenology_n_to_litr_n_col       & ! Output: [real(r8) (:,:,:) ]  N fluxes associated with phenology (litterfall and crop) to litter pools (gN/m3/s)
          )
-    
-      do j = 1, nlevdecomp
-         do pi = 1,max_patch_per_col
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+      
+      do_nlev: do j = 1, nlevdecomp
 
-               if ( pi <=  col%npatches(c) ) then
-                  p = col%patchi(c) + pi - 1
-                  if (patch%active(p)) then
+         do_vegp: do fp = 1,num_bgc_vegp
+            p = filter_bgc_vegp(fp)
+            c = patch%column(p)
 
-                     do i = i_litr_min, i_litr_max
-                        ! leaf litter carbon fluxes
+            do_ilit: do i = i_litr_min, i_litr_max
+               ! leaf litter carbon fluxes
+               phenology_c_to_litr_c(c,j,i) = &
+                    phenology_c_to_litr_c(c,j,i) + &
+                    leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+               
+               ! leaf litter nitrogen fluxes
+               phenology_n_to_litr_n(c,j,i) = &
+                    phenology_n_to_litr_n(c,j,i) + &
+                    leafn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+               
+               ! fine root litter carbon fluxes
+               phenology_c_to_litr_c(c,j,i) = &
+                    phenology_c_to_litr_c(c,j,i) + &
+                    frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
+               
+               ! fine root litter nitrogen fluxes
+               phenology_n_to_litr_n(c,j,i) = &
+                    phenology_n_to_litr_n(c,j,i) + &
+                    frootn_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
+            end do do_ilit
+            
+            ! agroibis puts crop stem litter together with leaf litter
+            ! so I've used the leaf lf_f* parameters instead of making
+            ! new ones for now (slevis)
+            ! also for simplicity I've put "food" into the litter pools
+            
+            if (ivt(p) >= npcropmin) then ! add livestemc to litter
+               do i = i_litr_min, i_litr_max
+                  ! stem litter carbon fluxes
+                  phenology_c_to_litr_c(c,j,i) = &
+                       phenology_c_to_litr_c(c,j,i) + &
+                       livestemc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                  
+                  ! stem litter nitrogen fluxes
+                  phenology_n_to_litr_n(c,j,i) = &
+                       phenology_n_to_litr_n(c,j,i) + &
+                       livestemn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+               end do
+               
+               if (.not. use_grainproduct) then
+                  do i = i_litr_min, i_litr_max
+                     do k = repr_grain_min, repr_grain_max
+                        ! grain litter carbon fluxes
                         phenology_c_to_litr_c(c,j,i) = &
-                           phenology_c_to_litr_c(c,j,i) + &
-                           leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                             phenology_c_to_litr_c(c,j,i) + &
+                             repr_grainc_to_food(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
 
-                        ! leaf litter nitrogen fluxes
+                        ! grain litter nitrogen fluxes
                         phenology_n_to_litr_n(c,j,i) = &
-                           phenology_n_to_litr_n(c,j,i) + &
-                           leafn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
-
-                        ! fine root litter carbon fluxes
-                        phenology_c_to_litr_c(c,j,i) = &
-                           phenology_c_to_litr_c(c,j,i) + &
-                           frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
-
-                        ! fine root litter nitrogen fluxes
-                        phenology_n_to_litr_n(c,j,i) = &
-                           phenology_n_to_litr_n(c,j,i) + &
-                           frootn_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
+                             phenology_n_to_litr_n(c,j,i) + &
+                             repr_grainn_to_food(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
                      end do
-
-                     ! agroibis puts crop stem litter together with leaf litter
-                     ! so I've used the leaf lf_f* parameters instead of making
-                     ! new ones for now (slevis)
-                     ! also for simplicity I've put "food" into the litter pools
-
-                     if (ivt(p) >= npcropmin) then ! add livestemc to litter
-                        do i = i_litr_min, i_litr_max
-                           ! stem litter carbon fluxes
-                           phenology_c_to_litr_c(c,j,i) = &
-                              phenology_c_to_litr_c(c,j,i) + &
-                              livestemc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
-
-                           ! stem litter nitrogen fluxes
-                           phenology_n_to_litr_n(c,j,i) = &
-                              phenology_n_to_litr_n(c,j,i) + &
-                              livestemn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
-                        end do
-
-                        if (.not. use_grainproduct) then
-                           do i = i_litr_min, i_litr_max
-                              do k = repr_grain_min, repr_grain_max
-                                 ! grain litter carbon fluxes
-                                 phenology_c_to_litr_c(c,j,i) = &
-                                      phenology_c_to_litr_c(c,j,i) + &
-                                      repr_grainc_to_food(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
-
-                                 ! grain litter nitrogen fluxes
-                                 phenology_n_to_litr_n(c,j,i) = &
-                                      phenology_n_to_litr_n(c,j,i) + &
-                                      repr_grainn_to_food(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
-                              end do
-                           end do
-                        end if
-
-                        do i = i_litr_min, i_litr_max
-                           do k = repr_structure_min, repr_structure_max
-                              ! reproductive structure litter carbon fluxes
-                              phenology_c_to_litr_c(c,j,i) = &
-                                   phenology_c_to_litr_c(c,j,i) + &
-                                   repr_structurec_to_litter(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
-
-                              ! reproductive structure litter nitrogen fluxes
-                              phenology_n_to_litr_n(c,j,i) = &
-                                   phenology_n_to_litr_n(c,j,i) + &
-                                   repr_structuren_to_litter(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
-                           end do
-                        end do
-                     end if
-                  end if
+                  end do
                end if
 
-            end do
+               do i = i_litr_min, i_litr_max
+                  do k = repr_structure_min, repr_structure_max
+                     ! reproductive structure litter carbon fluxes
+                     phenology_c_to_litr_c(c,j,i) = &
+                          phenology_c_to_litr_c(c,j,i) + &
+                          repr_structurec_to_litter(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
 
-         end do
-      end do
+                     ! reproductive structure litter nitrogen fluxes
+                     phenology_n_to_litr_n(c,j,i) = &
+                          phenology_n_to_litr_n(c,j,i) + &
+                          repr_structuren_to_litter(p,k) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                  end do
+               end do
+            end if
+         end do do_vegp
+      end do do_nlev
 
-    end associate 
+    end associate
 
   end subroutine CNLitterToColumn
 

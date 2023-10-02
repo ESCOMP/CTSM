@@ -481,7 +481,7 @@ contains
       i_met_lit = i_litr_min
       floating_cn_ratio_decomp_pools(i_met_lit) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_met_lit) = 'litr1'
-      decomp_cascade_con%decomp_pool_name_history(i_met_lit) = 'MET_LIT'
+      decomp_cascade_con%decomp_pool_name_history(i_met_lit) = 'LIT_MET'
       decomp_cascade_con%decomp_pool_name_long(i_met_lit) = 'metabolic litter'
       decomp_cascade_con%decomp_pool_name_short(i_met_lit) = 'L1'
       is_microbe(i_met_lit) = .false.
@@ -497,7 +497,7 @@ contains
       i_str_lit = i_met_lit + 1
       floating_cn_ratio_decomp_pools(i_str_lit) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_str_lit) = 'litr2'
-      decomp_cascade_con%decomp_pool_name_history(i_str_lit) = 'STR_LIT'
+      decomp_cascade_con%decomp_pool_name_history(i_str_lit) = 'LIT_STR'
       decomp_cascade_con%decomp_pool_name_long(i_str_lit) = 'structural litter'
       decomp_cascade_con%decomp_pool_name_short(i_str_lit) = 'L2'
       is_microbe(i_str_lit) = .false.
@@ -523,7 +523,7 @@ contains
       i_avl_som = i_str_lit + 1
       floating_cn_ratio_decomp_pools(i_avl_som) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_avl_som) = 'soil1'
-      decomp_cascade_con%decomp_pool_name_history(i_avl_som) = 'AVL_SOM'
+      decomp_cascade_con%decomp_pool_name_history(i_avl_som) = 'SOM_AVL'
       decomp_cascade_con%decomp_pool_name_long(i_avl_som) = 'available soil organic matter'
       decomp_cascade_con%decomp_pool_name_short(i_avl_som) = 'S1'
       is_microbe(i_avl_som) = .false.
@@ -539,7 +539,7 @@ contains
       i_chem_som = i_avl_som + 1
       floating_cn_ratio_decomp_pools(i_chem_som) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_chem_som) = 'soil2'
-      decomp_cascade_con%decomp_pool_name_history(i_chem_som) = 'CHEM_SOM'
+      decomp_cascade_con%decomp_pool_name_history(i_chem_som) = 'SOM_CHEM'
       decomp_cascade_con%decomp_pool_name_long(i_chem_som) = 'chemically protected soil organic matter'
       decomp_cascade_con%decomp_pool_name_short(i_chem_som) = 'S2'
       is_microbe(i_chem_som) = .false.
@@ -555,7 +555,7 @@ contains
       i_phys_som = i_chem_som + 1
       floating_cn_ratio_decomp_pools(i_phys_som) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_phys_som) = 'soil3'
-      decomp_cascade_con%decomp_pool_name_history(i_phys_som) = 'PHYS_SOM'
+      decomp_cascade_con%decomp_pool_name_history(i_phys_som) = 'SOM_PHYS'
       decomp_cascade_con%decomp_pool_name_long(i_phys_som) = 'physically protected soil organic matter'
       decomp_cascade_con%decomp_pool_name_short(i_phys_som) = 'S3'
       is_microbe(i_phys_som) = .false.
@@ -571,7 +571,7 @@ contains
       i_cop_mic = i_phys_som + 1
       floating_cn_ratio_decomp_pools(i_cop_mic) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_cop_mic) = 'micr1'
-      decomp_cascade_con%decomp_pool_name_history(i_cop_mic) = 'COP_MIC'
+      decomp_cascade_con%decomp_pool_name_history(i_cop_mic) = 'MIC_COP'
       decomp_cascade_con%decomp_pool_name_long(i_cop_mic) = 'copiotrophic microbes'
       decomp_cascade_con%decomp_pool_name_short(i_cop_mic) = 'M1'
       is_microbe(i_cop_mic) = .true.
@@ -587,7 +587,7 @@ contains
       i_oli_mic = i_cop_mic + 1
       floating_cn_ratio_decomp_pools(i_oli_mic) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_oli_mic) = 'micr2'
-      decomp_cascade_con%decomp_pool_name_history(i_oli_mic) = 'OLI_MIC'
+      decomp_cascade_con%decomp_pool_name_history(i_oli_mic) = 'MIC_OLI'
       decomp_cascade_con%decomp_pool_name_long(i_oli_mic) = 'oligotrophic microbes'
       decomp_cascade_con%decomp_pool_name_short(i_oli_mic) = 'M2'
       is_microbe(i_oli_mic) = .true.
@@ -752,7 +752,7 @@ contains
   end subroutine init_decompcascade_mimics
 
   !-----------------------------------------------------------------------
-  subroutine decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
+  subroutine decomp_rates_mimics(bounds, num_bgc_soilc, filter_bgc_soilc, &
        num_soilp, filter_soilp, clm_fates, &
        soilstate_inst, temperature_inst, cnveg_carbonflux_inst, &
        ch4_inst, soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
@@ -776,8 +776,8 @@ contains
     type(bounds_type)                    , intent(in)    :: bounds          
     integer                              , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                              , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    integer                              , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    integer                              , intent(in)    :: num_bgc_soilc       ! number of soil columns in filter
+    integer                              , intent(in)    :: filter_bgc_soilc(:) ! filter for soil columns
     type(soilstate_type)                 , intent(in)    :: soilstate_inst
     type(temperature_type)               , intent(in)    :: temperature_inst
     type(cnveg_carbonflux_type)          , intent(in)    :: cnveg_carbonflux_inst
@@ -903,8 +903,8 @@ contains
 
      ! calc ref rate
       if ( spinup_state >= 1 ) then
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             !
             if ( abs(spinup_factor(i_met_lit) - 1._r8) .gt. eps) then
                spinup_geogterm_l1(c) = spinup_factor(i_met_lit) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
@@ -958,8 +958,8 @@ contains
             !
          end do
       else
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             spinup_geogterm_l1(c) = 1._r8
             spinup_geogterm_l2(c) = 1._r8
             spinup_geogterm_cwd(c) = 1._r8
@@ -983,14 +983,14 @@ contains
          frw(bounds%begc:bounds%endc) = 0._r8
          allocate(fr(bounds%begc:bounds%endc,nlev_soildecomp_standard))
          do j=1,nlev_soildecomp_standard
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                frw(c) = frw(c) + col%dz(c,j)
             end do
          end do
          do j = 1,nlev_soildecomp_standard
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                if (frw(c) /= 0._r8) then
                   fr(c,j) = col%dz(c,j) / frw(c)
                else
@@ -1008,8 +1008,8 @@ contains
          ! and soil moisture. Soil Biol. Biochem., 15(4):447-453.
 
          do j = 1,nlev_soildecomp_standard
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                if (j==1) w_scalar(c,:) = 0._r8
                psi = min(soilpsi(c,j),maxpsi)
                ! decomp only if soilpsi is higher than minpsi
@@ -1025,8 +1025,8 @@ contains
          if (anoxia) then
 
             do j = 1,nlev_soildecomp_standard
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
 
                   if (j==1) o_scalar(c,:) = 0._r8
 
@@ -1050,8 +1050,8 @@ contains
          ! and soil moisture. Soil Biol. Biochem., 15(4):447-453.
 
          do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                psi = min(soilpsi(c,j),maxpsi)
                ! decomp only if soilpsi is higher than minpsi
                if (psi > minpsi) then
@@ -1067,8 +1067,8 @@ contains
 
          if (anoxia) then
             do j = 1,nlevdecomp
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
 
                   o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim)
                end do
@@ -1082,8 +1082,8 @@ contains
       ! Term that reduces decomposition rate at depth
       ! Placeholder. For now depth_scalar = 1.
       do j = 1, nlevdecomp
-         do fc = 1, num_soilc
-            c = filter_soilc(fc)
+         do fc = 1, num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             ! Using fixed e-folding depth as in
             ! SoilBiogeochemDecompCascadeBGCMod.F90
 !           depth_scalar(c,j) = exp(-zsoi(j) / decomp_depth_efolding)
@@ -1143,7 +1143,7 @@ contains
             end do  ! p loop
 
             ! Calculate the column-level average
-            call p2c(bounds, num_soilc, filter_soilc, &
+            call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
                  annsum_npp(bounds%begp:bounds%endp), &
                  annsum_npp_col_local(bounds%begc:bounds%endc))
          else
@@ -1154,8 +1154,8 @@ contains
       end if fates_if
 
       ! calculate rates for all litter and som pools
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
 
          if (use_fates) then
             annsum_npp_col_scalar = max(0._r8, annsum_npp_col_local(c))

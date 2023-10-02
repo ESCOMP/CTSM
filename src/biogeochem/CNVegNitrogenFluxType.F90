@@ -292,18 +292,21 @@ module CNVegNitrogenFluxType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds)
+  subroutine Init(this, bounds, alloc_full_veg)
 
     class(cnveg_nitrogenflux_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
+    logical,intent(in)            :: alloc_full_veg
 
-    call this%InitAllocate (bounds)
-    if(use_matrixcn)then
-       call this%InitTransfer ()
+    call this%InitAllocate (bounds,alloc_full_veg)
+    if(alloc_full_veg)then
+       if(use_matrixcn)then
+          call this%InitTransfer ()
+       end if
+       call this%InitHistory (bounds)
+       call this%InitCold (bounds)
     end if
-    call this%InitHistory (bounds)
-    call this%InitCold (bounds)
-
+    
   end subroutine Init
 
   subroutine InitTransfer (this)
@@ -323,14 +326,15 @@ contains
   end subroutine InitTransfer
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds)
+  subroutine InitAllocate(this, bounds, alloc_full_veg)
     !
     ! !DESCRIPTION:
     ! Initialize patch nitrogen flux
     !
     ! !ARGUMENTS:
     class (cnveg_nitrogenflux_type) :: this
-    type(bounds_type) , intent(in) :: bounds  
+    type(bounds_type) , intent(in) :: bounds
+    logical,intent(in)             :: alloc_full_veg
     !
     ! !LOCAL VARIABLES:
     integer           :: begp,endp
@@ -338,10 +342,16 @@ contains
     integer           :: begg,endg
     !------------------------------------------------------------------------
 
-    begp = bounds%begp; endp = bounds%endp
-    begc = bounds%begc; endc = bounds%endc
-    begg = bounds%begg; endg = bounds%endg
-
+    if(alloc_full_veg)then
+       begp = bounds%begp; endp = bounds%endp
+       begc = bounds%begc; endc = bounds%endc
+       begg = bounds%begg; endg = bounds%endg
+    else
+       begp = 0; endp = 0
+       begc = 0; endc = 0
+       begg = 0; endg = 0
+    end if
+       
     allocate(this%m_leafn_to_litter_patch                   (begp:endp)) ; this%m_leafn_to_litter_patch                   (:) = nan
     allocate(this%m_frootn_to_litter_patch                  (begp:endp)) ; this%m_frootn_to_litter_patch                  (:) = nan
     allocate(this%m_leafn_storage_to_litter_patch           (begp:endp)) ; this%m_leafn_storage_to_litter_patch           (:) = nan
@@ -1048,7 +1058,7 @@ contains
        if ( decomp_cascade_con%is_litter(k) .or. decomp_cascade_con%is_cwd(k) ) then
           this%m_decomp_npools_to_fire_col(begc:endc,k) = spval
           data1dptr => this%m_decomp_npools_to_fire_col(:,k)
-          fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'N_TO_FIRE'
+          fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_N_TO_FIRE'
           longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' N fire loss'
           call hist_addfld1d (fname=fieldname, units='gN/m^2',  &
                avgflag='A', long_name=longname, &
@@ -1057,7 +1067,7 @@ contains
           if ( nlevdecomp_full > 1 ) then
              this%m_decomp_npools_to_fire_vr_col(begc:endc,:,k) = spval
              data2dptr => this%m_decomp_npools_to_fire_vr_col(:,:,k)
-             fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'N_TO_FIRE'//trim(vr_suffix)
+             fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_N_TO_FIRE'//trim(vr_suffix)
              longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' N fire loss'
              call hist_addfld_decomp (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
                   avgflag='A', long_name=longname, &

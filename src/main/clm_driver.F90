@@ -9,7 +9,7 @@ module clm_driver
   !
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
-  use clm_varctl             , only : iulog, use_fates, use_fates_sp
+  use clm_varctl             , only : iulog, use_fates, use_fates_sp, use_fates_bgc
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use CNSharedParamsMod      , only : use_matrixcn
   use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
@@ -82,7 +82,6 @@ module clm_driver
   use ColumnType             , only : col
   use PatchType              , only : patch
   use clm_instMod
-  use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
   use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
   use SoilBiogeochemDecompCascadeConType , only : no_soil_decomp, decomp_method
   !
@@ -207,7 +206,7 @@ contains
     ! ========================================================================
 
     need_glacier_initialization = is_first_step()
-
+    
     if (need_glacier_initialization) then
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1, nclumps
@@ -226,7 +225,7 @@ contains
     ! Specified phenology
     ! Done in SP mode, FATES-SP mode and also when dry-deposition is active
     ! ============================================================================
-
+    
     if (use_cn) then
        ! For dry-deposition need to call CLMSP so that mlaidiff is obtained
        ! NOTE: This is also true of FATES below
@@ -265,7 +264,7 @@ contains
        end if
 
     end if
-
+    
     ! ==================================================================================
     ! Determine decomp vertical profiles
     !
@@ -291,10 +290,12 @@ contains
        call active_layer_inst%alt_calc(filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc, &
             temperature_inst)
 
-       if (use_cn .and. decomp_method /= no_soil_decomp) then
+       ! Filter bgc_soilc operates on all non-sp soil columns
+       ! Filter bgc_vegp  operates on all non-fates, non-sp patches (use_cn) on soil
+       if ((use_cn .or. use_fates_bgc) .and. decomp_method /= no_soil_decomp) then
           call SoilBiogeochemVerticalProfile(bounds_clump                                       , &
-               filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc   , &
-               filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp   , &
+               filter_inactive_and_active(nc)%num_bgc_soilc, filter_inactive_and_active(nc)%bgc_soilc   , &
+               filter_inactive_and_active(nc)%num_bgc_vegp, filter_inactive_and_active(nc)%bgc_vegp   , &
                active_layer_inst, soilstate_inst, soilbiogeochem_state_inst)
        end if
 
@@ -327,12 +328,12 @@ contains
        call get_clump_bounds(nc, bounds_clump)
 
        call t_startf('begcnbal_grc')
-       if (use_cn) then
+       if (use_cn .or. use_fates_bgc) then
           ! Initialize gridcell-level balance check
           call bgc_vegetation_inst%InitGridcellBalance(bounds_clump, &
                filter(nc)%num_allc, filter(nc)%allc, &
-               filter(nc)%num_soilc, filter(nc)%soilc, &
-               filter(nc)%num_soilp, filter(nc)%soilp, &
+               filter(nc)%num_bgc_soilc, filter(nc)%bgc_soilc, &
+               filter(nc)%num_bgc_vegp, filter(nc)%bgc_vegp, &
                soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonstate_inst, &
@@ -417,12 +418,12 @@ contains
        call t_stopf('begwbal')
 
        call t_startf('begcnbal_col')
-       if (use_cn) then
+       if (use_cn .or. use_fates_bgc) then
           ! Initialize column-level balance check
           call bgc_vegetation_inst%InitColumnBalance(bounds_clump, &
                filter(nc)%num_allc, filter(nc)%allc, &
-               filter(nc)%num_soilc, filter(nc)%soilc, &
-               filter(nc)%num_soilp, filter(nc)%soilp, &
+               filter(nc)%num_bgc_soilc, filter(nc)%bgc_soilc, &
+               filter(nc)%num_bgc_vegp, filter(nc)%bgc_vegp, &
                soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonstate_inst, &
@@ -446,15 +447,18 @@ contains
     ! re-written to go inside.
     ! ============================================================================
 
-    if (use_cn) then
-       call t_startf('bgc_interp')
+    if (use_cn) then ! .or. use_fates_bgc) then (ndep with fates will be added soon)
        if (.not. ndep_from_cpl) then
           call ndep_interp(bounds_proc, atm2lnd_inst)
        end if
+    end if
+    
+    if(use_cn) then
+       call t_startf('bgc_interp')
        call bgc_vegetation_inst%InterpFileInputs(bounds_proc)
        call t_stopf('bgc_interp')
-    ! fates_spitfire_mode is assigned an integer value in the namelist
-    ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
+       ! fates_spitfire_mode is assigned an integer value in the namelist
+       ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
     else if (fates_spitfire_mode > scalar_lightning) then
        call clm_fates%InterpFileInputs(bounds_proc)
     end if
@@ -464,8 +468,8 @@ contains
 
     ! When LAI streams are being used
     ! NOTE: This call needs to happen outside loops over nclumps (as streams are not threadsafe)
-    if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb) .and. use_lai_streams) then
-       call lai_advance( bounds_proc )
+    if (doalb .and. use_lai_streams) then
+       call lai_advance(bounds_proc)
     endif
 
     ! When crop calendar streams are being used
@@ -645,7 +649,7 @@ contains
             atm2lnd_inst, canopystate_inst, energyflux_inst, frictionvel_inst, &
             soilstate_inst, temperature_inst, &
             water_inst%wateratm2lndbulk_inst, water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterstatebulk_inst)
+            water_inst%waterstatebulk_inst, water_inst%waterfluxbulk_inst)
 
        call ozone_inst%CalcOzoneStress(bounds_clump, &
             filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
@@ -839,6 +843,7 @@ contains
        call SoilTemperature(bounds_clump,                                                      &
             filter(nc)%num_urbanl  , filter(nc)%urbanl,                                        &
             filter(nc)%num_urbanc  , filter(nc)%urbanc,                                        &
+            filter(nc)%num_nolakep , filter(nc)%nolakep,                                       &
             filter(nc)%num_nolakec , filter(nc)%nolakec,                                       &
             atm2lnd_inst, urbanparams_inst, canopystate_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst, &
@@ -1005,17 +1010,20 @@ contains
              ! - CNDV defined: prognostic biogeography; else prescribed
        ! - crop model:  crop algorithms called from within CNDriver
 
-       if (use_cn) then
+       ! Filter bgc_soilc operates on all non-sp soil columns
+       ! Filter bgc_vegp  operates on all non-fates, non-sp patches (use_cn) on soil
+
+       if(use_cn .or. use_fates_bgc)then
           call t_startf('ecosysdyn')
           call bgc_vegetation_inst%EcosystemDynamicsPreDrainage(bounds_clump,            &
-                  filter(nc)%num_soilc, filter(nc)%soilc,                       &
-                  filter(nc)%num_soilp, filter(nc)%soilp,                       &
-                  filter(nc)%num_actfirec, filter(nc)%actfirec,                 &
-                  filter(nc)%num_actfirep, filter(nc)%actfirep,                 &
-                  filter(nc)%num_pcropp, filter(nc)%pcropp, &
-                  filter(nc)%num_soilnopcropp, filter(nc)%soilnopcropp, &
-                  filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
-                  filter(nc)%num_noexposedvegp, filter(nc)%noexposedvegp, &
+               filter(nc)%num_bgc_soilc, filter(nc)%bgc_soilc,                       &
+               filter(nc)%num_bgc_vegp, filter(nc)%bgc_vegp,                       &
+               filter(nc)%num_actfirec, filter(nc)%actfirec,                 &
+               filter(nc)%num_actfirep, filter(nc)%actfirep,                 &
+               filter(nc)%num_pcropp, filter(nc)%pcropp, &
+               filter(nc)%num_soilnopcropp, filter(nc)%soilnopcropp, &
+               filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
+               filter(nc)%num_noexposedvegp, filter(nc)%noexposedvegp, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
@@ -1028,9 +1036,7 @@ contains
                soil_water_retention_curve, crop_inst, ch4_inst, &
                photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
                nutrient_competition_method, fireemis_inst)
-
           call t_stopf('ecosysdyn')
-
        end if
 
        ! Prescribed biogeography - prescribed canopy structure, some prognostic carbon fluxes
@@ -1092,13 +1098,13 @@ contains
 
        call t_stopf('hydro2_drainage')
 
-       if (use_cn) then
-
+       
+       if (use_cn .or. use_fates_bgc) then
           call t_startf('EcosysDynPostDrainage')
           call bgc_vegetation_inst%EcosystemDynamicsPostDrainage(bounds_clump, &
                filter(nc)%num_allc, filter(nc)%allc, &
-               filter(nc)%num_soilc, filter(nc)%soilc, &
-               filter(nc)%num_soilp, filter(nc)%soilp, &
+               filter(nc)%num_bgc_soilc, filter(nc)%bgc_soilc, &
+               filter(nc)%num_bgc_vegp, filter(nc)%bgc_vegp, &
                filter(nc)%num_actfirec, filter(nc)%actfirec,                 &
                filter(nc)%num_actfirep, filter(nc)%actfirep,                 &
                doalb, crop_inst, &
@@ -1110,10 +1116,7 @@ contains
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
           call t_stopf('EcosysDynPostDrainage')
-
        end if
-
-
 
        if ( use_fates) then
 
@@ -1123,30 +1126,6 @@ contains
           ! moving averages are updated here
           call clm_fates%WrapUpdateFatesRmean(nc,temperature_inst)
 
-          call EDBGCDyn(bounds_clump,                                                              &
-               filter(nc)%num_soilc, filter(nc)%soilc,                                             &
-               filter(nc)%num_soilp, filter(nc)%soilp,                                             &
-               filter(nc)%num_pcropp, filter(nc)%pcropp, doalb,                                    &
-               bgc_vegetation_inst%cnveg_carbonflux_inst, &
-               bgc_vegetation_inst%cnveg_carbonstate_inst, &
-               soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,                    &
-               soilbiogeochem_state_inst, clm_fates,                                               &
-               soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
-               c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst,            &
-               c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst,            &
-               active_layer_inst, atm2lnd_inst, water_inst%waterfluxbulk_inst,                     &
-               canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst)
-
-          if ( decomp_method /= no_soil_decomp )then
-             call EDBGCDynSummary(bounds_clump,                                             &
-                   filter(nc)%num_soilc, filter(nc)%soilc,                                  &
-                   filter(nc)%num_soilp, filter(nc)%soilp,                                  &
-                   soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
-                   c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
-                   c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
-                   soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-                   nc)
-          end if
 
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &
@@ -1159,9 +1138,6 @@ contains
              ! This is the main call to FATES dynamics
              ! --------------------------------------------------------------------------
 
-             if ( masterproc ) then
-                write(iulog,*)  'clm: calling FATES model ', get_nstep()
-             end if
              call clm_fates%dynamics_driv( nc, bounds_clump,                        &
                   atm2lnd_inst, soilstate_inst, temperature_inst, active_layer_inst, &
                   water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
@@ -1191,15 +1167,18 @@ contains
        ! Check the carbon and nitrogen balance
        ! ============================================================================
 
-       if (use_cn) then
+       if(use_cn .or. use_fates_bgc)then
           call t_startf('cnbalchk')
           call bgc_vegetation_inst%BalanceCheck( &
-               bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
-               soilbiogeochem_carbonflux_inst, &
-               soilbiogeochem_nitrogenflux_inst, atm2lnd_inst )
+               bounds_clump, filter(nc)%num_bgc_soilc, filter(nc)%bgc_soilc, &
+               soilbiogeochem_carbonflux_inst, & 
+               soilbiogeochem_nitrogenflux_inst, &
+               soilbiogeochem_carbonstate_inst, & 
+               soilbiogeochem_nitrogenstate_inst, &
+               atm2lnd_inst, clm_fates )
           call t_stopf('cnbalchk')
        end if
-
+       
        ! Calculation of methane fluxes
 
        if (use_lch4) then
@@ -1417,7 +1396,6 @@ contains
     ! ============================================================================
     ! Update history buffer
     ! ============================================================================
-
 
     call t_startf('hbuf')
     call hist_update_hbuf(bounds_proc)
