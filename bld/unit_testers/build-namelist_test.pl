@@ -163,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 2394;
+my $ntests = 2425;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1662;
+   $ntests += 1683;
 }
 plan( tests=>$ntests );
 
@@ -188,7 +188,7 @@ my $phys = "clm5_0";
 my $mode = "-phys $phys";
 &make_config_cache($phys);
 
-my $DOMFILE = "$inputdata_rootdir/atm/datm7/domain.lnd.T31_gx3v7.090928.nc";
+my $DOMFILE = "$inputdata_rootdir/atm/datm7/domain.lnd.fv0.9x1.25_gx1v6.090309.nc";
 my $real_par_file = "user_nl_ctsm_real_parameters";
 my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -configuration clm -structure standard -glc_nec 10 -no-note -output_reals $real_par_file";
 if ( $opts{'test'} ) {
@@ -259,7 +259,7 @@ print "==================================================\n";
 
 # Exercise a bunch of options
 my $options = "-co2_ppmv 250 ";
-   $options .= " -res 0.9x1.25 -ssp_rcp SSP1-2.6 -envxml_dir .";
+   $options .= " -res 10x15 -ssp_rcp SSP2-4.5 -envxml_dir .";
 
    &make_env_run();
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
@@ -321,7 +321,7 @@ foreach my $driver ( "mct", "nuopc" ) {
    # configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, test, sim_year, use_case
    foreach my $options ( "-res 0.9x1.25 -configuration nwp",
                          "-res 0.9x1.25 -structure fast",
-                         "-res 0.9x1.25 -namelist '&a irrigate=.true./'", "-res 0.9x1.25 -verbose", "-res 0.9x1.25 -ssp_rcp SSP1-2.6", "-res 0.9x1.25 -test", "-res 0.9x1.25 -sim_year 1850",
+                         "-res 0.9x1.25 -namelist '&a irrigate=.true./'", "-res 0.9x1.25 -verbose", "-res 0.9x1.25 -ssp_rcp SSP4-2.5", "-res 0.9x1.25 -test", "-res 0.9x1.25 -sim_year 1850",
                          "-res 0.9x1.25 -namelist '&a use_lai_streams=.true.,use_soil_moisture_streams=.true./'",
                          "-res 0.9x1.25 -use_case 1850_control",
                          "-res 1x1pt_US-UMB -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
@@ -455,14 +455,12 @@ $phys = "clm5_0";
 $mode = "-phys $phys";
 &make_config_cache($phys);
 foreach my $options (
-                      "-bgc bgc -use_case 1850-2100_SSP1-2.6_transient -namelist '&a start_ymd=20100101/'",
-                      "-bgc sp  -use_case 1850-2100_SSP2-4.5_transient -namelist '&a start_ymd=18501223/'",
-                      "-bgc bgc -use_case 1850-2100_SSP3-7.0_transient -namelist '&a start_ymd=20701029/'",
+                      "--res 0.9x1.25 --bgc sp  --use_case 1850-2100_SSP2-4.5_transient --namelist '&a start_ymd=18501223/'",
                       "-bgc fates  -use_case 2000_control -no-megan",
                       "-bgc fates  -use_case 20thC_transient -no-megan",
                       "-bgc fates  -use_case 1850_control -no-megan -namelist \"&a use_fates_sp=T, soil_decomp_method='None'/\"",
                       "-bgc sp  -use_case 2000_control -res 0.9x1.25 -namelist '&a use_soil_moisture_streams = T/'",
-                      "-bgc bgc -use_case 1850-2100_SSP5-8.5_transient -namelist '&a start_ymd=19101023/'",
+                      "--res 1.9x2.5 --bgc bgc --use_case 1850-2100_SSP2-4.5_transient --namelist '&a start_ymd=19101023/'",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
                       "-res 0.9x1.25 -bgc sp -use_case 1850_noanthro_control -drydep -fire_emis",
                       "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res 360x720",
@@ -1382,10 +1380,8 @@ print "==================================================\n";
 # cases; I'm not sure if it's actually important to test this with all
 # of the different use cases.
 my @glc_res = ( "0.9x1.25", "1.9x2.5" );
-my @use_cases = ( "1850-2100_SSP1-2.6_transient",
+my @use_cases = ( 
                   "1850-2100_SSP2-4.5_transient",
-                  "1850-2100_SSP3-7.0_transient",
-                  "1850-2100_SSP5-8.5_transient",
                   "1850_control",
                   "2000_control",
                   "2010_control",
@@ -1441,9 +1437,8 @@ foreach my $res ( @tran_res ) {
    &cleanup();
 }
 # Transient ssp_rcp scenarios that work
-my @tran_res = ( "0.9x1.25", "1.9x2.5", "10x15" );
-foreach my $usecase ( "1850_control", "1850-2100_SSP5-8.5_transient", "1850-2100_SSP1-2.6_transient", "1850-2100_SSP3-7.0_transient",
-                      "1850-2100_SSP2-4.5_transient" ) {
+my @tran_res = ( "4x5", "0.9x1.25", "1.9x2.5", "10x15", "ne3np4.pg3", "ne30np4", "ne30np4.pg2", "C96", "mpasa120" );
+foreach my $usecase ( "1850_control", "1850-2100_SSP2-4.5_transient" ) {
    my $startymd = undef;
    if ( $usecase eq "1850_control") {
       $startymd = 18500101;
@@ -1479,7 +1474,7 @@ $mode = "-phys $phys";
 &make_config_cache($phys);
 my $res = "0.9x1.25";
 foreach my $usecase ( "1850-2100_SSP4-3.4_transient", "1850-2100_SSP5-3.4_transient", "1850-2100_SSP1-1.9_transient",
-                      "1850-2100_SSP4-6.0_transient" ) {
+                      "1850-2100_SSP4-6.0_transient", "1850-2100_SSP5-8.5_transient", "1850-2100_SSP1-2.6_transient", "1850-2100_SSP3-7.0_transient" ) {
       $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . -namelist '&a start_ymd=20150101/'";
       &make_env_run();
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
