@@ -521,10 +521,10 @@ def main ():
     if run_type == 'transient':
         if ssp_rcp == 'none':
             landuse_fname = \
- f"landuse_timeseries_hist_{num_pft}pfts_simyr{start_year}-{end_year}.txt"
+ f"landuse_timeseries_hist_{start_year}-{end_year}_{num_pft}pfts.txt"
         else:
             landuse_fname = \
- f"landuse_timeseries_{ssp_rcp}_{num_pft}pfts_CMIP6_simyr{start_year}-{end_year}.txt"
+ f"landuse_timeseries_{ssp_rcp}_{start_year}-{end_year}_{num_pft}pfts.txt"
 
         with open(landuse_fname, "w", encoding='utf-8') as landuse_file:
             for year in range(start_year, end_year + 1):
@@ -581,13 +581,12 @@ def main ():
         ssp_rcp_name = ssp_rcp
     if int(end_year) == int(start_year):
         fdyndat = ''
-        prefix = \
- f'surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}_c{time_stamp}.'
     else:
         fdyndat = \
- f'landuse.timeseries_{res}_{ssp_rcp_name}_{num_pft}_CMIP6_{start_year}-{end_year}_c{time_stamp}.nc'
-        prefix = \
- f'surfdata_{res}_{ssp_rcp_name}_{num_pft}pfts_CMIP6_{start_year}-{end_year}_c{time_stamp}.'
+ f'landuse.timeseries_{res}_{ssp_rcp_name}_{start_year}-{end_year}_{num_pft}_c{time_stamp}.nc'
+
+    prefix = \
+ f'surfdata_{res}_{ssp_rcp_name}_{start_year}_num_pft}pfts_c{time_stamp}.'
 
     nlfname = f'{prefix}namelist'
     fsurdat = f'{prefix}nc'
