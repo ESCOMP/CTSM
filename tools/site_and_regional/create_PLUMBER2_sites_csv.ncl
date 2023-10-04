@@ -30,8 +30,14 @@ begin
   latitude       = new(nsim,"double")
   longitude      = new(nsim,"double")
 
-  pfttype = new((/nsim,2/),"integer")
-  pftperc = new((/nsim,2/),"double")
+  npfts_ch = 17  ; Number of pfts for canopy top/bottom height
+
+  pfttype = new((/nsim,2/),"integer")  ; pft type
+  pftperc = new((/nsim,2/),"double")   ; pft %
+  pftcth  = new((/nsim,2/),"double")   ; pft canopy top height
+  pftcbh  = new((/nsim,2/),"double")   ; pft canopy bottom height
+; pftcth  = new((/nsim,npfts_ch/),"double")   ; pft canopy top height
+; pftcbh  = new((/nsim,npfts_ch/),"double")   ; pft canopy bottom height
   pctwet  = new(nsim,"double")
 
   do sel = 0,nsim - 1
@@ -80,7 +86,6 @@ begin
     longitude(sel) = longitude(sel) - 360.d
   end if
 
-
   delete(time)
   delete(tmp)
   delete(utc_date)
@@ -92,6 +97,8 @@ begin
   fls = systemfunc("ls " + f_in_dir + "surfdata_0.9x1.25_16pfts_" + sim(sel) + ".nc")
   surfdatafile = addfile(fls,"r")
   pct_natveg = surfdatafile->PCT_NATVEG(0,0)
+  monthly_height_top = surfdatafile->MONTHLY_HEIGHT_TOP(0,:,0,0)  ; For SP, all months have the same height
+  monthly_height_bot = surfdatafile->MONTHLY_HEIGHT_BOT(0,:,0,0)  ; For SP, all months have the same height
   if (pct_natveg .gt. 0.) then
     pct_nat_pft = surfdatafile->PCT_NAT_PFT(:,0,0)
     indx = ind(pct_nat_pft(:) .gt. 0)
@@ -101,12 +108,18 @@ begin
       print((/"Number of pfts is > 2"/))
       pfttype(sel,:) = -999
       pftperc(sel,:) = -999.
+      pftcth(sel,:)  = -999.
+      pftcbh(sel,:)  = -999.
     else
       pfttype(sel,:) = -999
       pftperc(sel,:) = -999.
+      pftcth(sel,:)  = -999.
+      pftcbh(sel,:)  = -999.
       do p = 0,npfts-1
          pfttype(sel,p) = indx(p)
          pftperc(sel,p) = pct_nat_pft(indx(p))
+         pftcth(sel,p)  = monthly_height_top(indx(p))
+         pftcbh(sel,p)  = monthly_height_bot(indx(p))
       end do
     end if
     pctwet(sel) = 0.
@@ -116,6 +129,8 @@ begin
     print((/"PCT_NATVEG is zero"/))
     pfttype(sel,:) = -999
     pftperc(sel,:) = -999.
+    pftcth(sel,:)  = -999.
+    pftcbh(sel,:)  = -999.
     pct_wetland = surfdatafile->PCT_WETLAND(0,0)
     if (pct_wetland .gt. 0.) then
       print((/"Wetland Site"/))
@@ -130,16 +145,24 @@ begin
         if (pct_cft(0) .gt. 0.) then
           pfttype(sel,0) = 15
           pftperc(sel,0) = (/pct_cft(0)/)
+          pftcth(sel,0)  = monthly_height_top(15)
+          pftcbh(sel,0)  = monthly_height_bot(15)
         else
           pfttype(sel,0) = -999
           pftperc(sel,0) = -999.
+          pftcth(sel,0)  = -999.
+          pftcbh(sel,0)  = -999.
         end if
         if (pct_cft(1) .gt. 0.) then
           pfttype(sel,1) = 16
           pftperc(sel,1) = (/pct_cft(1)/)
+          pftcth(sel,1)  = monthly_height_top(16)
+          pftcbh(sel,1)  = monthly_height_bot(16)
         else
           pfttype(sel,1) = -999
           pftperc(sel,1) = -999.
+          pftcth(sel,1)  = -999.
+          pftcbh(sel,1)  = -999.
         end if
       else
         print((/"PCT_NATVEG, PCT_WETLAND, PCT_CROP are all zero"/))
@@ -147,7 +170,10 @@ begin
     end if
   end if
 
-
+; do ch = 0,npfts_ch-1
+;   pftcth(sel,ch)  = monthly_height_top(ch)
+;   pftcbh(sel,ch)  = monthly_height_bot(ch)
+; end do
 
   end do
 
@@ -155,17 +181,18 @@ begin
 
 ; fname = "/glade/work/oleson/PLUMBER2/NEON_PLUMBER/PLUMBER2_sites.csv"
   fname = "/glade/work/oleson/ctsm_PLUMBERcsv/tools/site_and_regional/PLUMBER2_sites.csv"
-  header = (/"#start_year and end_year will be used to define DATM_YR_ALIGH, DATM_YR_START and DATM_YR_END, and STOP_N in units of nyears.", \
+  header = (/"#pftX-cth and pftX-cbh are the site=specific canopy top and bottom heights", \
+             "#start_year and end_year will be used to define DATM_YR_ALIGH, DATM_YR_START and DATM_YR_END, and STOP_N in units of nyears.", \
              "#RUN_STARTDATE and START_TOD are specified because we are starting at GMT corresponding to local midnight.", \
              "#ATM_NCPL is specified so that the time step of the model matches the time interval specified by the atm forcing data.", \
-             ",Site,Lat,Lon,pft1,pft1-%,pft2,pft2-%,start_year,end_year,RUN_STARTDATE,START_TOD,ATM_NCPL"/)
+             ",Site,Lat,Lon,pft1,pft1-%,pft1-cth,pft1-cbh,pft2,pft2-%,pft2-cth,pft2-cbh,start_year,end_year,RUN_STARTDATE,START_TOD,ATM_NCPL"/)
   hlist = [/header/]
-  alist = [/site_num, sim, latitude, longitude, pfttype(:,0), pftperc(:,0), pfttype(:,1), pftperc(:,1), startyear, endyear, run_startdate, starttod, atm_ncpl/]
+  alist = [/site_num, sim, latitude, longitude, pfttype(:,0), pftperc(:,0), pftcth(:,0), pftcbh(:,0), pfttype(:,1), pftperc(:,1), pftcth(:,1), pftcbh(:,1),startyear, endyear, run_startdate, starttod, atm_ncpl/]
   print(alist)
   print((/"Done defining hlist and alist"/))
   write_table(fname, "w", hlist, "%s")
   print((/"Done with header"/))
-  write_table(fname, "a", alist, "%d,%s,%9.6f,%9.6f,%d,%5.2f,%d,%5.2f,%s,%s,%s,%s,%s")
+  write_table(fname, "a", alist, "%d,%s,%9.6f,%9.6f,%d,%5.2f,%5.2f,%5.2f,%d,%5.2f,%5.2f,%5.2f,%s,%s,%s,%s,%s")
 
   print ("=========================================")
   print ("Finish Time: "+systemfunc("date") )
