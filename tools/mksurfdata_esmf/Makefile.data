@@ -47,9 +47,16 @@ SUBSETDATA_1X1_SMALL  := --lat 40.6878 --lon 267.0228 --site 1x1_smallvilleIA \
 # NOTE: The 1850 smallvilleIA site is constructed to start with 100% natural vegetation, so we can test transition to crops
 SUBSETDATA_1X1_SMALL1850  := --lat 40.6878 --lon 267.0228 --site 1x1_smallvilleIA --dompft 13 --pctpft 100
 
-SUBSETDATA_1X1_MEXICOCITY  := --lat 19.5 --lon 260.5 --site 1x1_mexicocityMEX --out-surface surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000.nc
-SUBSETDATA_1X1_VANCOUVER   := --lat 49.5 --lon 236.5 --site 1x1_vancouverCAN --out-surface surfdata_1x1_vancouverCAN_hist_78pfts_CMIP6_simyr2000.nc
-SUBSETDATA_1X1_URBALPHA    := --lat -37.7308 --lon 0 --site 1x1_urbanc_alpha --out-surface surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000.nc
+MEXICOCITY_TMP_FNAME       := surfdata_1x1_mexicocityMEX_hist_2000_78pfts.nc
+MEXICOCITY_FNAME           := surfdata_1x1_mexicocityMEX_hist_2000_78pfts_c$(CDATE).nc
+VANCOUVER_TMP_FNAME        := surfdata_1x1_vancouverCAN_hist_2000_78pfts.nc
+VANCOUVER_FNAME            := surfdata_1x1_vancouverCAN_hist_2000_78pfts_c$(CDATE).nc
+URBALPHA_TMP_FNAME         := surfdata_1x1_urbanc_alpha_hist_2000_78pfts.nc
+URBALPHA_TMP2_FNAME        := surfdata_1x1_urbanc_alpha_hist_2000_78pfts_tmp.nc
+URBALPHA_FNAME             := surfdata_1x1_urbanc_alpha_hist_2000_78pfts_c$(CDATE).nc
+SUBSETDATA_1X1_MEXICOCITY  := --lat 19.5 --lon 260.5 --site 1x1_mexicocityMEX --out-surface $(MEXICOCITY_TMP_FNAME)
+SUBSETDATA_1X1_VANCOUVER   := --lat 49.5 --lon 236.5 --site 1x1_vancouverCAN --out-surface  $(VANCOUVER_TMP_FNAME)
+SUBSETDATA_1X1_URBALPHA    := --lat -37.7308 --lon 0 --site 1x1_urbanc_alpha --out-surface $(URBALPHA_TMP_FNAME)
 # f19 and f09 are standard resolutions, f10 is used for testing, f45 is used for FATES
 # ne30np4 is standard resolution for SE dycore in CAM, C96 is standard for fv3 dycore
 # The ne30np4 series (including pg2, pg3, pg4) are standard for SE dycore
@@ -215,38 +222,9 @@ crop-global-transient-f05 : FORCE
 #
 # Crop with future scenarios
 #
-crop-global-future : crop-global-SSP1-2.6 crop-global-SSP3-7.0 crop-global-SSP5-3.4 crop-global-SSP2-4.5 \
-                     crop-global-SSP1-1.9 crop-global-SSP4-3.4 crop-global-SSP4-6.0 crop-global-SSP5-8.5
-
-crop-global-SSP1-2.6 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
-	$(BATCHJOBS) $@.sh
-
-crop-global-SSP3-7.0 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
-	$(BATCHJOBS) $@.sh
-
-crop-global-SSP5-3.4 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
-	$(BATCHJOBS) $@.sh
+crop-global-future : crop-global-SSP2-4.5
 
 crop-global-SSP2-4.5 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
-	$(BATCHJOBS) $@.sh
-
-crop-global-SSP1-1.9 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
-	$(BATCHJOBS) $@.sh
-
-crop-global-SSP4-3.4 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
-	$(BATCHJOBS) $@.sh
-
-crop-global-SSP4-6.0 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
-	$(BATCHJOBS) $@.sh
-
-crop-global-SSP5-8.5 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
 	$(BATCHJOBS) $@.sh
 
@@ -259,22 +237,22 @@ urban-present : mexicocity vancouver
 
 mexicocity : FORCE
 	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_MEXICOCITY)
-	$(MODIFYSURF) modify_1x1_mexicocityMEX.cfg -i surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000.nc -o surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000_c$(CDATE).nc
-	$(RM) surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000.nc
+	$(MODIFYSURF) modify_1x1_mexicocityMEX.cfg -i $(MEXICOCITY_TMP_FNAME) -o $(MEXICOCITY_FNAME)
+	$(RM) $(MEXICOCITY_TMP_FNAME)
 
 vancouver : FORCE
 	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_VANCOUVER)
-	$(MODIFYSURF) modify_1x1_vancouverCAN.cfg -i surfdata_1x1_vancouverCAN_hist_78pfts_CMIP6_simyr2000.nc -o surfdata_1x1_vancouverCAN_hist_78pfts_CMIP6_simyr2000_c$(CDATE).nc
-	$(RM) surfdata_1x1_vancouverCAN_hist_78pfts_CMIP6_simyr2000.nc
+	$(MODIFYSURF) modify_1x1_vancouverCAN.cfg -i $(VANCOUVER_TMP_FNAME) -o $(VANCOUVER_FNAME)
+	$(RM) $(VANCOUVER_TMP_FNAME)
 
 # NOTE(bja, 2015-01) skip abort on invalid data necessary as of 2015-01. See
 # /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
 urban-alpha : FORCE
 	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_URBALPHA)
 	# Set number of nlevurb dimension to 4 for this site
-	ncks -O --dmn nlevurb,0,3 -o surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_tmp.nc surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000.nc
-	$(MODIFYSURF) modify_1x1_urbanc_alpha.cfg -i surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_tmp.nc -o surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_c$(CDATE).nc
-	$(RM) surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000.nc surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_tmp.nc
+	ncks -O --dmn nlevurb,0,3 -o $(URBALPHA_TMP2_FNAME) $(URBALPHA_TMP_FNAME)
+	$(MODIFYSURF) modify_1x1_urbanc_alpha.cfg -i $(URBALPHA_TMP2_FNAME) -o $(URBALPHA_FNAME)
+	$(RM) $(URBALPHA_TMP_FNAME) $(URBALPHA_TMP2_FNAME)
 
 #
 # landuse timeseries with subset data
