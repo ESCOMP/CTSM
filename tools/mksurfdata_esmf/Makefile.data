@@ -70,13 +70,10 @@ FUTURE_RES = 0.9x1.25,1.9x2.5,10x15
 TRANS_RES = 0.9x1.25,1.9x2.5,10x15,ne30np4,ne0np4ARCTICGRISne30x8,ne0np4ARCTICne30x4,ne0np4CONUSne30x8
 
 # ne120np4 is for high resolution SE dycore, ne16 is for testing SE dycore
-# T42 is for SCAM
-# f05 is needed for running full chemistry model
 # nldas is for NWP working with WRF
 STANDARD = \
 	global-present \
-	global-present-nldas \
-	global-present-T42 
+	global-present-nldas
 
 TROPICS = \
 	crop-tropics-present \
@@ -125,11 +122,6 @@ global-present : FORCE
 	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
 
-# T42 is needed for SCAM
-global-present-T42 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
-	$(BATCHJOBS) $@.sh
-
 global-present-nldas : FORCE
 	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
@@ -166,10 +158,6 @@ crop-global-present-0.125 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
 	$(BATCHJOBS) $@.sh
 
-crop-global-present-f05 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 96 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
-	$(BATCHJOBS) $@.sh
-
 crop-numa-present : FORCE
 	$(SUBSETDATA_POINT_ALLLU) --create-surface $(SUBSETDATA_1X1_NUMAIA)
 
@@ -199,10 +187,6 @@ crop-global-historical : FORCE
 	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 03:00:00
 	$(BATCHJOBS) $@.sh
 
-crop-global-historical-f05 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 06:00:00
-	$(BATCHJOBS) $@.sh
-
 crop-global-historical-ne120np4 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 96 --scenario $@ --jobscript-file $@.sh --walltime 06:00:00
 	$(BATCHJOBS) $@.sh
@@ -213,10 +197,6 @@ crop-global-transient: FORCE
 
 crop-global-transient-ne120np4 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 96 --scenario $@ --jobscript-file $@.sh --walltime 06:00:00
-	$(BATCHJOBS) $@.sh
-
-crop-global-transient-f05 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 06:00:00
 	$(BATCHJOBS) $@.sh
 
 #
