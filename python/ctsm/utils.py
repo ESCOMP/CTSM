@@ -7,7 +7,7 @@ import string
 import re
 import pdb
 
-from datetime import date
+from datetime import date, timedelta
 from getpass import getuser
 
 from ctsm.git_utils import get_ctsm_git_short_hash
@@ -189,3 +189,33 @@ def write_output(file, file_in, file_out, file_type):
     file.to_netcdf(path=file_out, mode="w", format="NETCDF3_64BIT")
     logger.info("Successfully created: %s", file_out)
     file.close()
+
+
+def get_isosplit(s, split):
+    """
+    Split a string (s) by the character sent in from split
+    Only used by parse_isoduration
+    """
+    if split in s:
+        n, s = s.split(split)
+    else:
+        n = 0
+    return n, s
+
+
+def parse_isoduration(s):
+    """
+    simple ISO 8601 duration parser, does not account for leap years and assumes 30 day months
+    """
+    # Remove prefix
+    s = s.split("P")[-1]
+
+    # Step through letter dividers
+    years, s = get_isosplit(s, "Y")
+    months, s = get_isosplit(s, "M")
+    days, s = get_isosplit(s, "D")
+
+    # Convert all to timedelta
+    dt = timedelta(days=int(days) + 365 * int(years) + 30 * int(months))
+    return int(dt.total_seconds() / 86400)
+
