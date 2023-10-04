@@ -12,7 +12,6 @@ import subprocess
 valid_scenarios=["all",
                  "standard",
                  "global-present",
-                 "global-present-T42",
                  "global-present-nldas",
                  "global-hist-4x5",
                  "tropics",
@@ -22,7 +21,6 @@ valid_scenarios=["all",
                  "crop-global-present-ne16np4",
                  "crop-global-present-ne120np4",
                  "crop-global-present-0.125",
-                 "crop-global-present-f05",
                  "crop-global-1850",
                  "crop-global-1850-ne120np4",
                  "crop-global-hist",
@@ -123,7 +121,6 @@ def main ():
     target_list = []
     if scenario == 'all':
         target_list = ["global-present",
-                       "global-present-T42",
                        "global-present-nldas",
                        "global-hist-4x5",
                        "crop-global-present",
@@ -143,7 +140,6 @@ def main ():
                        "crop-global-SSP5-8.5-other"]
     elif scenario == 'standard':
         target_list = ["global-present",
-                       "global-present-T42",
                        "global-present-nldas",
                        "global-hist-4x5"]
     elif scenario == "crop":
@@ -180,7 +176,6 @@ def main ():
         "ssp585_res"           : ['C96','ne30np4','ne0np4.ARCTICGRIS.ne30x8',
             'ne0np4.ARCTIC.ne30x4','ne0np4CONUS.ne30x8','ne120np4'],
         "4x5_res"              : ['4x5'],
-        "T42_res"              : ['T42'],
         "nldas_res"            : ['0.125nldas2'],
         "5x5_amazon_res"       : ['5x5_amazon'],
         "ne16np4_res"          : ['ne16np4'],
@@ -191,7 +186,6 @@ def main ():
     # Determine commands for each target list
     # --------------------------
     dataset_dict={"global-present"                  : ("--start-year 2000 --end-year 2000 --nocrop --vic                  --res", "standard_res_no_crop"),
-                  "global-present-T42"              : ("--start-year 2000 --end-year 2000 --nocrop --vic                  --res", "T42_res"),
                   "global-present-nldas"            : ("--start-year 2000 --end-year 2000 --nocrop --vic                  --res", "nldas_res"),
                   "global-hist-4x5"                 : ("--start-year 1850 --end-year 2015 --nocrop                        --res", "4x5_res"),
                   "crop-tropics-present"            : ("--start-year 2000 --end-year 2000                                 --res", "5x5_amazon_res"),
