@@ -191,31 +191,31 @@ def write_output(file, file_in, file_out, file_type):
     file.close()
 
 
-def get_isosplit(s, split):
+def get_isosplit(iso_string, split):
     """
-    Split a string (s) by the character sent in from split
+    Split a string (iso_string) by the character sent in from split
+    Returns the number for that character split
     Only used by parse_isoduration
     """
-    if split in s:
-        n, s = s.split(split)
+    if split in iso_string:
+        num, iso_string = iso_string.split(split)
     else:
-        n = 0
-    return n, s
+        num = 0
+    return num, iso_string
 
 
-def parse_isoduration(s):
+def parse_isoduration(iso_string):
     """
     simple ISO 8601 duration parser, does not account for leap years and assumes 30 day months
     """
     # Remove prefix
-    s = s.split("P")[-1]
+    iso_string = iso_string.split("P")[-1]
 
     # Step through letter dividers
-    years, s = get_isosplit(s, "Y")
-    months, s = get_isosplit(s, "M")
-    days, s = get_isosplit(s, "D")
+    years, iso_string = get_isosplit(iso_string, "Y")
+    months, iso_string = get_isosplit(iso_string, "M")
+    days, iso_string = get_isosplit(iso_string, "D")
 
     # Convert all to timedelta
-    dt = timedelta(days=int(days) + 365 * int(years) + 30 * int(months))
-    return int(dt.total_seconds() / 86400)
-
+    delta_t = timedelta(days=int(days) + 365 * int(years) + 30 * int(months))
+    return int(delta_t.total_seconds() / 86400)
