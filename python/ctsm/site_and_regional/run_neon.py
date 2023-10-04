@@ -72,6 +72,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm import add_cime_to_path
 from ctsm.path_utils import path_to_ctsm_root
+from ctsm.utils import parse_isoduration
 from ctsm.download_utils import download_file
 
 import CIME.build as build
@@ -326,32 +327,6 @@ def get_parser(args, description, valid_neon_sites):
         args.rerun,
         args.user_version,
     )
-
-
-def get_isosplit(s, split):
-    if split in s:
-        n, s = s.split(split)
-    else:
-        n = 0
-    return n, s
-
-
-def parse_isoduration(s):
-    """
-    simple ISO 8601 duration parser, does not account for leap years and assumes 30 day months
-    """
-    # Remove prefix
-    s = s.split("P")[-1]
-
-    # Step through letter dividers
-    years, s = get_isosplit(s, "Y")
-    months, s = get_isosplit(s, "M")
-    days, s = get_isosplit(s, "D")
-
-    # Convert all to timedelta
-    dt = datetime.timedelta(days=int(days) + 365 * int(years) + 30 * int(months))
-    return int(dt.total_seconds() / 86400)
-
 
 class NeonSite:
     """
