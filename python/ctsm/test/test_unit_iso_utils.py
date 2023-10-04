@@ -4,7 +4,6 @@
 """
 
 import unittest
-import os
 
 from ctsm import unit_testing
 from ctsm.utils import parse_isoduration, get_isosplit
@@ -22,15 +21,31 @@ class TestIsoUtils(unittest.TestCase):
         Tests the get_isosplit function for a strings with Years
         """
         iso_string = "0Y"
-        self.assertEqual( get_isosplit(iso_string, "Y"), ("0", "") )
+        self.assertEqual(get_isosplit(iso_string, "Y"), ("0", ""))
         iso_string = "1Y"
-        self.assertEqual( get_isosplit(iso_string, "Y"), ("1", "") )
+        self.assertEqual(get_isosplit(iso_string, "Y"), ("1", ""))
         iso_string = "4Y"
-        self.assertEqual( get_isosplit(iso_string, "Y"), ("4", "") )
+        self.assertEqual(get_isosplit(iso_string, "Y"), ("4", ""))
         iso_string = "100Y"
-        self.assertEqual( get_isosplit(iso_string, "Y"), ("100", "") )
+        self.assertEqual(get_isosplit(iso_string, "Y"), ("100", ""))
         iso_string = "999999Y"
-        self.assertEqual( get_isosplit(iso_string, "Y"), ("999999", "") )
+        self.assertEqual(get_isosplit(iso_string, "Y"), ("999999", ""))
+
+    def test_parse_isoduration_for_Years(self):
+        """
+        Tests the parse_isoduration function for iso strings with Years
+        """
+        days_in_year = 365
+        iso_string = "0Y"
+        self.assertEqual(parse_isoduration(iso_string), 0)
+        iso_string = "1Y"
+        self.assertEqual(parse_isoduration(iso_string), days_in_year)
+        iso_string = "4Y"
+        self.assertEqual(parse_isoduration(iso_string), 4 * days_in_year)
+        iso_string = "100Y"
+        self.assertEqual(parse_isoduration(iso_string), 100 * days_in_year)
+        iso_string = "999999Y"
+        self.assertEqual(parse_isoduration(iso_string), 999999 * days_in_year)
 
 
 if __name__ == "__main__":
