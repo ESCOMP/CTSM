@@ -67,8 +67,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <for_testing_use_repr_structure_pool>.false.</for_testing_use_repr_structure_pool>
 <for_testing_no_crop_seed_replenishment>.false.</for_testing_no_crop_seed_replenishment>
 
-<!-- Set to .true. in namelist to write hist fields master list file -->
-<hist_master_list_file>.false.</hist_master_list_file>
+<!-- Set to .true. in namelist to write file with all history fields -->
+<hist_fields_list_file>.false.</hist_fields_list_file>
 
 <!-- In accelerated spinup mode reduce the amount of history output -->
 <hist_empty_htapes clm_accelerated_spinup="on">.true.</hist_empty_htapes>
@@ -146,7 +146,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Supplmental Nitrogen mode -->
 <suplnitro use_cn=".true." >NONE</suplnitro>
-<suplnitro use_fates=".true." >NONE</suplnitro>
+<suplnitro use_fates=".true." >ALL</suplnitro>
 
 <!-- Albedo for glaciers -->
 <albice phys="clm5_1" >0.50,0.30</albice>
@@ -213,7 +213,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <zetamaxstable               use_biomass_heat_storage=".true." >2.0d00</zetamaxstable>
 <zetamaxstable phys="clm4_5"                                   >2.0d00</zetamaxstable>
 <zetamaxstable phys="clm5_0"                                   >0.5d00</zetamaxstable>
-<zetamaxstable phys="clm5_1"                                   >0.5d00</zetamaxstable>
+<zetamaxstable phys="clm5_1" z0param_method="ZengWang2007" >0.5d00</zetamaxstable>
+<zetamaxstable phys="clm5_1" z0param_method="Meier2022" >2.0d00</zetamaxstable>
 
 <!-- atm2lnd defaults -->
 <repartition_rain_snow phys="clm5_1" >.true.</repartition_rain_snow>
@@ -323,6 +324,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <itmax_canopy_fluxes structure="standard">40</itmax_canopy_fluxes>
 <itmax_canopy_fluxes structure="fast"    >3</itmax_canopy_fluxes>
+
 
 <!-- Canopy hydrology namelist defaults -->
 <use_clm5_fpi                 phys="clm5_1" >.true.</use_clm5_fpi>
@@ -495,6 +497,15 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <fates_paramfile>lnd/clm2/paramdata/fates_params_api.25.5.0_12pft_c230628.nc</fates_paramfile>
 
+<!-- ================================================================== -->
+<!-- Default surface roughness parameterization                         -->
+<!-- ================================================================== -->
+
+<z0param_method>ZengWang2007</z0param_method>
+
+<use_z0m_snowmelt z0param_method="Meier2022" >.true.</use_z0m_snowmelt>
+<use_z0m_snowmelt >.false.</use_z0m_snowmelt>
+
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
 <!-- ========================================================================================  -->
@@ -510,6 +521,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_luna phys="clm5_0"  >.true.</use_luna>
 <use_luna phys="clm5_0"  use_fates=".true." >.false.</use_luna>
 <use_luna phys="clm4_5"  >.false.</use_luna>
+<use_luna phys="clm4_5"  use_fates=".true." >.false.</use_luna>
 
 <!-- Flexible CN options -->
 <MM_Nuptake_opt             use_flexibleCN=".true." >.true.</MM_Nuptake_opt>
@@ -562,6 +574,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <min_critical_dayl_method         use_cn=".true." phys="clm5_1" >DependsOnLat</min_critical_dayl_method>
 <onset_thresh_depends_on_veg                                    >.false.</onset_thresh_depends_on_veg>
 <min_critical_dayl_method                                       >Constant</min_critical_dayl_method>
+<generate_crop_gdds                                             >.false.</generate_crop_gdds>
+<use_mxmat                                                      >.true.</use_mxmat>
 
 <!-- use additional stress deciduous onset trigger    -->
 <constrain_stress_deciduous_onset phys="clm4_5" >.false.</constrain_stress_deciduous_onset>
@@ -1138,6 +1152,8 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_C24_hist_78pfts_CMIP6_simyr2000
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_c190214.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".true." use_vichydro=".false.">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1.9x2.5_hist_78pfts_CMIP6_simyr2000_c190304.nc</fsurdat>
+<fsurdat hgrid="hcru_hcru"   sim_year="2000">
+lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_360x720cru_78pfts_CMIP6_simyr2000_c170824.nc</fsurdat>
 <fsurdat hgrid="0.125x0.125"  sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/release-clm5.0.24/surfdata_0.125x0.125_hist_78pfts_CMIP6_simyr2005_c190624.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="2000" use_crop=".true." use_vichydro=".false.">
@@ -1676,6 +1692,11 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <lai_mapalgo  hgrid="1x1_urbanc_alpha"    >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
+
+<!-- crop calendar streams namelist defaults -->
+<stream_year_first_cropcal  >1850</stream_year_first_cropcal>
+<stream_year_last_cropcal   >2100</stream_year_last_cropcal>
+<model_year_align_cropcal   >1850</model_year_align_cropcal>
 
 <!-- lightning streams namelist defaults -->
 
@@ -2717,5 +2738,15 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <!-- =========================================  -->
 
 <init_interp_method>general</init_interp_method>
+
+<!-- =========================================  -->
+<!-- Defaults for excess ice                    -->
+<!-- =========================================  -->
+
+<use_excess_ice>.false.</use_excess_ice>
+
+<stream_fldfilename_exice use_excess_ice=".true.">lnd/clm2/paramdata/exice_init_0.125x0.125_c20220516.nc</stream_fldfilename_exice>
+<stream_meshfile_exice    use_excess_ice=".true.">lnd/clm2/paramdata/exice_init_0.125x0.125_ESMFmesh_cdf5_c20220802.nc</stream_meshfile_exice>
+<stream_mapalgo_exice     use_excess_ice=".true.">bilinear</stream_mapalgo_exice>
 
 </namelist_defaults>

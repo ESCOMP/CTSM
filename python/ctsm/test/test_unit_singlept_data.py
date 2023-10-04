@@ -36,6 +36,7 @@ class TestSinglePointCase(unittest.TestCase):
     create_datm = True
     create_user_mods = True
     dom_pft = [8]
+    evenly_split_cropland = False
     pct_pft = None
     num_pft = 16
     include_nonveg = False
@@ -58,6 +59,7 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
             include_nonveg=self.include_nonveg,
@@ -84,6 +86,7 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
             include_nonveg=self.include_nonveg,
@@ -111,6 +114,7 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
             include_nonveg=self.include_nonveg,
@@ -138,6 +142,7 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
             include_nonveg=self.include_nonveg,
@@ -165,6 +170,7 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
             include_nonveg=self.include_nonveg,
@@ -193,6 +199,7 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
             include_nonveg=self.include_nonveg,
@@ -223,6 +230,7 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
             include_nonveg=self.include_nonveg,
@@ -254,6 +262,7 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
             include_nonveg=self.include_nonveg,
@@ -284,6 +293,7 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
             include_nonveg=self.include_nonveg,
@@ -314,6 +324,7 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
             include_nonveg=self.include_nonveg,
