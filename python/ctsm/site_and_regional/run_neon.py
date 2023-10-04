@@ -71,7 +71,8 @@ _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..
 sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm import add_cime_to_path
-from ctsm.path_utils import path_to_ctsm_root, parse_isoduration
+from ctsm.path_utils import path_to_ctsm_root
+from ctsm.utils import parse_isoduration
 from ctsm.download_utils import download_file
 
 import CIME.build as build
