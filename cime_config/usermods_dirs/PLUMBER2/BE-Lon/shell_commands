@@ -1,6 +1,6 @@
 ./xmlchange PLUMBER2SITE=BE-Lon
 ./xmlchange PTS_LON=4.74613
-./xmlchange PTS_LAT=50.55159
+./xmlchange PTS_LAT=50.551590000000004
 ./xmlchange RUN_STARTDATE=2004-12-31
 ./xmlchange DATM_YR_ALIGN=2005
 ./xmlchange DATM_YR_START=2005

@@ -1,6 +1,6 @@
 ./xmlchange PLUMBER2SITE=BR-Sa3
 ./xmlchange PTS_LON=-54.971436
-./xmlchange PTS_LAT=-3.018029
+./xmlchange PTS_LAT=-3.0180290000000003
 ./xmlchange RUN_STARTDATE=2001-01-01
 ./xmlchange DATM_YR_ALIGN=2001
 ./xmlchange DATM_YR_START=2001

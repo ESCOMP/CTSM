@@ -1,5 +1,5 @@
 ./xmlchange PLUMBER2SITE=UK-Gri
-./xmlchange PTS_LON=-3.798065
+./xmlchange PTS_LON=-3.7980650000000002
 ./xmlchange PTS_LAT=56.60722
 ./xmlchange RUN_STARTDATE=2000-01-01
 ./xmlchange DATM_YR_ALIGN=2000

@@ -1,6 +1,6 @@
 ./xmlchange PLUMBER2SITE=FR-Fon
-./xmlchange PTS_LON=2.78014
-./xmlchange PTS_LAT=48.476398
+./xmlchange PTS_LON=2.7801400000000003
+./xmlchange PTS_LAT=48.476397999999996
 ./xmlchange RUN_STARTDATE=2004-12-31
 ./xmlchange DATM_YR_ALIGN=2005
 ./xmlchange DATM_YR_START=2005

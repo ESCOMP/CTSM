@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+
 """
 
 Reads in .csv files with PLUMBER2 site information
@@ -89,19 +90,24 @@ def write_usermods(lat,lon,site,start_year,end_year,
         
 # End write_usermods function
 
-# For now we can just run the 'main' program as a loop
-plumber2_sites = pd.read_csv('PLUMBER2_sites.csv', skiprows=4)  
+def main():
+  # For now we can just run the 'main' program as a loop
+  plumber2_sites = pd.read_csv('PLUMBER2_sites.csv', skiprows=4)  
 
-for i, row in tqdm.tqdm(plumber2_sites.iterrows()):
-    lat = row['Lat']
-    lon = row['Lon']
-    site = row['Site']
-    start_year = row['start_year']
-    end_year = row['end_year']
-    start_date = row['RUN_STARTDATE']
-    start_tod = row['START_TOD']
-    atm_ncpl = row['ATM_NCPL']
-    stop_n = 1+end_year-start_year
+  for i, row in tqdm.tqdm(plumber2_sites.iterrows()):
+      lat = row['Lat']
+      lon = row['Lon']
+      site = row['Site']
+      start_year = row['start_year']
+      end_year = row['end_year']
+      start_date = row['RUN_STARTDATE']
+      start_tod = row['START_TOD']
+      atm_ncpl = row['ATM_NCPL']
+      stop_n = 1+end_year-start_year
     
-    write_usermods(lat,lon,site,start_year,end_year,
-                  start_date,start_tod,atm_ncpl,stop_n)
+      write_usermods(lat,lon,site,start_year,end_year,
+                    start_date,start_tod,atm_ncpl,stop_n)
+
+if __name__ == "__main__":
+    main()
+

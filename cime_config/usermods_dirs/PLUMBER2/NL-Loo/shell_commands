@@ -1,6 +1,6 @@
 ./xmlchange PLUMBER2SITE=NL-Loo
-./xmlchange PTS_LON=5.74356
-./xmlchange PTS_LAT=52.16658
+./xmlchange PTS_LON=5.7435599999999996
+./xmlchange PTS_LAT=52.166579999999996
 ./xmlchange RUN_STARTDATE=1996-12-31
 ./xmlchange DATM_YR_ALIGN=1997
 ./xmlchange DATM_YR_START=1997

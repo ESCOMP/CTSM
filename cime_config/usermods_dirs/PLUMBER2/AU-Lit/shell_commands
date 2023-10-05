@@ -1,6 +1,6 @@
 ./xmlchange PLUMBER2SITE=AU-Lit
-./xmlchange PTS_LON=130.794495
-./xmlchange PTS_LAT=-13.17904
+./xmlchange PTS_LON=130.79449499999998
+./xmlchange PTS_LAT=-13.179039999999999
 ./xmlchange RUN_STARTDATE=2015-12-31
 ./xmlchange DATM_YR_ALIGN=2016
 ./xmlchange DATM_YR_START=2016

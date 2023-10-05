@@ -1,5 +1,5 @@
 ./xmlchange PLUMBER2SITE=ID-Pag
-./xmlchange PTS_LON=114.036392
+./xmlchange PTS_LON=114.03639199999999
 ./xmlchange PTS_LAT=-2.345
 ./xmlchange RUN_STARTDATE=2001-12-31
 ./xmlchange DATM_YR_ALIGN=2002

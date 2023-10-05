@@ -1,5 +1,5 @@
 ./xmlchange PLUMBER2SITE=JP-SMF
-./xmlchange PTS_LON=137.078796
+./xmlchange PTS_LON=137.07879599999998
 ./xmlchange PTS_LAT=35.2617
 ./xmlchange RUN_STARTDATE=2002-12-31
 ./xmlchange DATM_YR_ALIGN=2003

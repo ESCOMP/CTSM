@@ -1,5 +1,5 @@
 ./xmlchange PLUMBER2SITE=CN-Cha
-./xmlchange PTS_LON=128.095795
+./xmlchange PTS_LON=128.09579499999998
 ./xmlchange PTS_LAT=42.4025
 ./xmlchange RUN_STARTDATE=2002-12-31
 ./xmlchange DATM_YR_ALIGN=2003

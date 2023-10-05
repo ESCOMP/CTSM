@@ -1,5 +1,5 @@
 ./xmlchange PLUMBER2SITE=IT-Mal
-./xmlchange PTS_LON=11.70334
+./xmlchange PTS_LON=11.703339999999999
 ./xmlchange PTS_LAT=46.114021
 ./xmlchange RUN_STARTDATE=2002-12-31
 ./xmlchange DATM_YR_ALIGN=2003

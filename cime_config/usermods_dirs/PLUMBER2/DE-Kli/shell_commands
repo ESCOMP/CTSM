@@ -1,5 +1,5 @@
 ./xmlchange PLUMBER2SITE=DE-Kli
-./xmlchange PTS_LON=13.52238
+./xmlchange PTS_LON=13.522379999999998
 ./xmlchange PTS_LAT=50.893059
 ./xmlchange RUN_STARTDATE=2004-12-31
 ./xmlchange DATM_YR_ALIGN=2005

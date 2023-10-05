@@ -1,5 +1,5 @@
 ./xmlchange PLUMBER2SITE=US-FPe
-./xmlchange PTS_LON=-105.101898
+./xmlchange PTS_LON=-105.10189799999999
 ./xmlchange PTS_LAT=48.307701
 ./xmlchange RUN_STARTDATE=2000-01-01
 ./xmlchange DATM_YR_ALIGN=2000

@@ -1,6 +1,6 @@
 ./xmlchange PLUMBER2SITE=RU-Fyo
 ./xmlchange PTS_LON=32.922081
-./xmlchange PTS_LAT=56.461529
+./xmlchange PTS_LAT=56.461529000000006
 ./xmlchange RUN_STARTDATE=2002-12-31
 ./xmlchange DATM_YR_ALIGN=2003
 ./xmlchange DATM_YR_START=2003

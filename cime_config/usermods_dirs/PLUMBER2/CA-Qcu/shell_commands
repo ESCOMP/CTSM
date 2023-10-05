@@ -1,6 +1,6 @@
 ./xmlchange PLUMBER2SITE=CA-Qcu
 ./xmlchange PTS_LON=-74.03653
-./xmlchange PTS_LAT=49.267078
+./xmlchange PTS_LAT=49.267078000000005
 ./xmlchange RUN_STARTDATE=2002-01-01
 ./xmlchange DATM_YR_ALIGN=2002
 ./xmlchange DATM_YR_START=2002

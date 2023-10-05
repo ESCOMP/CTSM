@@ -19,9 +19,9 @@
 !----------------------------------------------------------------------------------
 
 flanduse_timeseries = ' '   ! This isn't needed for a non transient case, but will be once we start using transient compsets
-!fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_map/PLUMBER2/surfdata_1x1_PLUMBER2_${PLUMBER2SITE}_hist_16pfts_CMIP6_simyr2000_c231005.nc"
+!fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_map/PLUMBER2/surfdata_1x1_PLUMBER2_${PLUMBER2SITE}_hist_16pfts_Irrig_CMIP6_simyr2000_c231005.nc"
 ! For testing only
-fsurdat = "/glade/u/home/wwieder/CTSM/tools/site_and_regional/subset_data_single_point/surfdata_1x1_PLUMBER2_${PLUMBER2SITE}_hist_16pfts_CMIP6_simyr2000_c231005.nc"
+fsurdat = "/glade/u/home/wwieder/CTSM/tools/site_and_regional/subset_data_single_point/surfdata_1x1_PLUMBER2_${PLUMBER2SITE}_hist_16pfts_Irrig_CMIP6_simyr2000_c231005.nc"
 
 ! this allows for large h1 data files, regardless or run length
 hist_nhtfrq = 0,1
@@ -34,7 +34,7 @@ hist_fincl2 = 'AR','ELAI','FCEV','FCTR','FGEV','FIRA','FSA','FSH','GPP','H2OSOI'
              'FSNO','SNO_T','RAIN','SNOW','QVEGT','QVEGE','QSOIL','QRUNOFF','QOVER','QH2OSFC',
              'QDRAI','QDRAI_PERCH','SNO_EXISTENCE','QSNOMELT','H2OCAN','H2OSNO','SNOCAN','SOILICE',
              'SOILLIQ','SOILWATER_10CM','TWS','SNOWLIQ','SNOWDP','RH2M','TSA','FLDS','Q2M','PBOT',
-             'TLAI','WIND','FIRE','FSM','COSZEN','BTRAN','TV','RSSUN','RSSHA','FSH_G','RHAF',
+             'TLAI','WIND','FIRE','FSM','COSZEN','BTRANMN','TV','RSSUN','RSSHA','FSH_G','RHAF',
              'RH_LEAF','RH','T10','TG','SABG','SABV','TBOT','TAUX','TAUY','QSNOEVAP','QFLX_SUB_SNOW',
              'QFLX_SNOW_DRAIN','H2OSFC'
 

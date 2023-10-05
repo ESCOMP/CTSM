@@ -1,5 +1,5 @@
 ./xmlchange PLUMBER2SITE=DK-Sor
-./xmlchange PTS_LON=11.64464
+./xmlchange PTS_LON=11.644639999999999
 ./xmlchange PTS_LAT=55.48587
 ./xmlchange RUN_STARTDATE=1996-12-31
 ./xmlchange DATM_YR_ALIGN=1997

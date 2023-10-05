@@ -1,5 +1,5 @@
 ./xmlchange PLUMBER2SITE=US-Ne1
-./xmlchange PTS_LON=-96.476593
+./xmlchange PTS_LON=-96.47659300000001
 ./xmlchange PTS_LAT=41.1651
 ./xmlchange RUN_STARTDATE=2002-01-01
 ./xmlchange DATM_YR_ALIGN=2002

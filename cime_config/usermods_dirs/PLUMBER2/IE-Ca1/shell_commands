@@ -1,6 +1,6 @@
 ./xmlchange PLUMBER2SITE=IE-Ca1
 ./xmlchange PTS_LON=-6.918152
-./xmlchange PTS_LAT=52.858791
+./xmlchange PTS_LAT=52.858791000000004
 ./xmlchange RUN_STARTDATE=2004-01-01
 ./xmlchange DATM_YR_ALIGN=2004
 ./xmlchange DATM_YR_START=2004

@@ -1,5 +1,5 @@
 ./xmlchange PLUMBER2SITE=AU-Sam
-./xmlchange PTS_LON=152.877808
+./xmlchange PTS_LON=152.87780800000002
 ./xmlchange PTS_LAT=-27.3881
 ./xmlchange RUN_STARTDATE=2010-12-31
 ./xmlchange DATM_YR_ALIGN=2011

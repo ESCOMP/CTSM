@@ -1,6 +1,6 @@
 ./xmlchange PLUMBER2SITE=DE-Bay
 ./xmlchange PTS_LON=11.86694
-./xmlchange PTS_LAT=50.141941
+./xmlchange PTS_LAT=50.141940999999996
 ./xmlchange RUN_STARTDATE=1996-12-31
 ./xmlchange DATM_YR_ALIGN=1997
 ./xmlchange DATM_YR_START=1997
