@@ -475,7 +475,6 @@ class NeonSite:
         rerun=False,
         experiment=False,
     ):
-        
         """
         Run case.
 
@@ -801,7 +800,7 @@ def parse_neon_listing(listing_file, valid_neon_sites):
 
 def main(description):
     """
-    Determine valid neon sites. Make an output directory if it does not exist.  
+    Determine valid neon sites. Make an output directory if it does not exist.
     Loop through requested sites and run CTSM at that site.
     """
     cesmroot = path_to_ctsm_root()
