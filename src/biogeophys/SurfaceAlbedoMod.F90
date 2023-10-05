@@ -297,7 +297,6 @@ contains
     real(r8) :: laisum                                                                    ! sum of canopy layer lai for error check
     real(r8) :: saisum                                                                    ! sum of canopy layer sai for error check
     integer  :: flg_slr                                                                   ! flag for SNICAR (=1 if direct, =2 if diffuse)
-    integer  :: flg_snw_ice                                                               ! flag for SNICAR (=1 when called from CLM, =2 when called from sea-ice)
     integer  :: num_vegsol                                                                ! number of vegetated patches where coszen>0
     integer  :: num_novegsol                                                              ! number of vegetated patches where coszen>0
     integer  :: filter_vegsol   (bounds%endp-bounds%begp+1)                               ! patch filter where vegetated and coszen>0
@@ -524,7 +523,6 @@ contains
 
     ! set variables to pass to SNICAR.
 
-    flg_snw_ice = 1   ! calling from CLM, not CSIM
     do c=bounds%begc,bounds%endc
        albsfc(c,:)     = albsoi(c,:)
        h2osno_liq(c,:) = h2osoi_liq(c,-nlevsno+1:0)
@@ -587,7 +585,7 @@ contains
 
        ! BC FORCING CALCULATIONS
           flg_slr = 1; ! direct-beam
-       call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
+       call SNICAR_RT(bounds, num_nourbanc, filter_nourbanc,    &
                       coszen_col(bounds%begc:bounds%endc), &
                       flg_slr, &
                       h2osno_liq(bounds%begc:bounds%endc, :), &
@@ -601,7 +599,7 @@ contains
                waterdiagnosticbulk_inst)
 
           flg_slr = 2; ! diffuse
-       call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
+       call SNICAR_RT(bounds, num_nourbanc, filter_nourbanc,    &
                       coszen_col(bounds%begc:bounds%endc), &
                       flg_slr, &
                       h2osno_liq(bounds%begc:bounds%endc, :), &
@@ -626,7 +624,7 @@ contains
 
           ! OC FORCING CALCULATIONS
              flg_slr = 1; ! direct-beam
-          call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
+          call SNICAR_RT(bounds, num_nourbanc, filter_nourbanc,    &
                          coszen_col(bounds%begc:bounds%endc), &
                          flg_slr, &
                          h2osno_liq(bounds%begc:bounds%endc, :), &
@@ -640,7 +638,7 @@ contains
                   waterdiagnosticbulk_inst)
 
              flg_slr = 2; ! diffuse
-          call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
+          call SNICAR_RT(bounds, num_nourbanc, filter_nourbanc,    &
                          coszen_col(bounds%begc:bounds%endc), &
                          flg_slr, &
                          h2osno_liq(bounds%begc:bounds%endc, :), &
@@ -665,7 +663,7 @@ contains
 
        ! DUST FORCING CALCULATIONS
           flg_slr = 1; ! direct-beam
-       call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
+       call SNICAR_RT(bounds, num_nourbanc, filter_nourbanc,    &
                       coszen_col(bounds%begc:bounds%endc), &
                       flg_slr, &
                       h2osno_liq(bounds%begc:bounds%endc, :), &
@@ -679,7 +677,7 @@ contains
                waterdiagnosticbulk_inst)
 
           flg_slr = 2; ! diffuse
-       call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
+       call SNICAR_RT(bounds, num_nourbanc, filter_nourbanc,    &
                       coszen_col(bounds%begc:bounds%endc), &
                       flg_slr, &
                       h2osno_liq(bounds%begc:bounds%endc, :), &
@@ -695,7 +693,7 @@ contains
        ! 4. ALL AEROSOL FORCING CALCULATION
        ! (pure snow albedo)
           flg_slr = 1; ! direct-beam
-       call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
+       call SNICAR_RT(bounds, num_nourbanc, filter_nourbanc,    &
                       coszen_col(bounds%begc:bounds%endc), &
                       flg_slr, &
                       h2osno_liq(bounds%begc:bounds%endc, :), &
@@ -709,7 +707,7 @@ contains
                waterdiagnosticbulk_inst)
 
           flg_slr = 2; ! diffuse
-       call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
+       call SNICAR_RT(bounds, num_nourbanc, filter_nourbanc,    &
                       coszen_col(bounds%begc:bounds%endc), &
                       flg_slr, &
                       h2osno_liq(bounds%begc:bounds%endc, :), &
@@ -725,7 +723,7 @@ contains
 
     ! CLIMATE FEEDBACK CALCULATIONS, ALL AEROSOLS:
        flg_slr = 1; ! direct-beam
-    call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
+    call SNICAR_RT(bounds, num_nourbanc, filter_nourbanc,    &
                    coszen_col(bounds%begc:bounds%endc), &
                    flg_slr, &
                    h2osno_liq(bounds%begc:bounds%endc, :), &
@@ -739,7 +737,7 @@ contains
             waterdiagnosticbulk_inst)
 
        flg_slr = 2; ! diffuse
-    call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
+    call SNICAR_RT(bounds, num_nourbanc, filter_nourbanc,    &
                    coszen_col(bounds%begc:bounds%endc), &
                    flg_slr, &
                    h2osno_liq(bounds%begc:bounds%endc, :), &

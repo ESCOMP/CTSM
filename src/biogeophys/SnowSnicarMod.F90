@@ -181,7 +181,7 @@ contains
   end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine SNICAR_RT (flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,  &
+  subroutine SNICAR_RT (bounds, num_nourbanc, filter_nourbanc,  &
                         coszen, flg_slr_in, h2osno_liq, h2osno_ice, h2osno_total, snw_rds,   &
                         mss_cnc_aer_in, albsfc, albout, flx_abs, waterdiagnosticbulk_inst)
     !
@@ -222,7 +222,6 @@ contains
     use shr_const_mod    , only : SHR_CONST_PI
     !
     ! !ARGUMENTS:
-    integer           , intent(in)  :: flg_snw_ice                                        ! flag: =1 when called from CLM, =2 when called from CSIM
     type (bounds_type), intent(in)  :: bounds                                    
     integer           , intent(in)  :: num_nourbanc                                       ! number of columns in non-urban filter
     integer           , intent(in)  :: filter_nourbanc(:)                                 ! column filter for non-urban points
@@ -647,7 +646,6 @@ contains
       nstep = get_nstep()
 
       ! Loop over all non-urban columns
-      ! (when called from CSIM, there is only one column)
       do fc = 1,num_nourbanc
          c_idx = filter_nourbanc(fc)
 
@@ -658,11 +656,7 @@ contains
          enddo
 
          ! set snow/ice mass to be used for RT:
-         if (flg_snw_ice == 1) then
-            h2osno_lcl = h2osno_total(c_idx)
-         else
-            h2osno_lcl = h2osno_ice(c_idx,0)
-         endif
+         h2osno_lcl = h2osno_total(c_idx)
 
          ! Qualifier for computing snow RT: 
          !  1) sunlight from atmosphere model 
@@ -671,46 +665,31 @@ contains
          if ((coszen(c_idx) > 0._r8) .and. (h2osno_lcl > min_snw)) then     
 
             ! Set variables specific to CLM
-            if (flg_snw_ice == 1) then
-               ! If there is snow, but zero snow layers, we must create a layer locally.
-               ! This layer is presumed to have the fresh snow effective radius.
-               if (snl(c_idx) > -1) then
-                  flg_nosnl         =  1
-                  snl_lcl           =  -1
-                  h2osno_ice_lcl(0) =  h2osno_lcl
-                  h2osno_liq_lcl(0) =  0._r8
-                  snw_rds_lcl(0)    =  snw_rds_min_int
-               else
-                  flg_nosnl         =  0
-                  snl_lcl           =  snl(c_idx)
-                  h2osno_liq_lcl(:) =  h2osno_liq(c_idx,:)
-                  h2osno_ice_lcl(:) =  h2osno_ice(c_idx,:)
-                  snw_rds_lcl(:)    =  snw_rds(c_idx,:)
-               endif
-
-               snl_btm   = 0
-               snl_top   = snl_lcl+1
-
-               ! for debugging only
-               l_idx     = col%landunit(c_idx)
-               g_idx     = col%gridcell(c_idx)
-               sfctype   = lun%itype(l_idx)
-               lat_coord = grc%latdeg(g_idx)
-               lon_coord = grc%londeg(g_idx)
-
-            ! Set variables specific to CSIM
+            ! If there is snow, but zero snow layers, we must create a layer locally.
+            ! This layer is presumed to have the fresh snow effective radius.
+            if (snl(c_idx) > -1) then
+               flg_nosnl         =  1
+               snl_lcl           =  -1
+               h2osno_ice_lcl(0) =  h2osno_lcl
+               h2osno_liq_lcl(0) =  0._r8
+               snw_rds_lcl(0)    =  snw_rds_min_int
             else
-               flg_nosnl         = 0
-               snl_lcl           = -1
-               h2osno_liq_lcl(:) = h2osno_liq(c_idx,:)
-               h2osno_ice_lcl(:) = h2osno_ice(c_idx,:)
-               snw_rds_lcl(:)    = snw_rds(c_idx,:)
-               snl_btm           = 0
-               snl_top           = 0
-               sfctype           = -1
-               lat_coord         = -90
-               lon_coord         = 0
-            endif ! end if flg_snw_ice == 1
+               flg_nosnl         =  0
+               snl_lcl           =  snl(c_idx)
+               h2osno_liq_lcl(:) =  h2osno_liq(c_idx,:)
+               h2osno_ice_lcl(:) =  h2osno_ice(c_idx,:)
+               snw_rds_lcl(:)    =  snw_rds(c_idx,:)
+            endif
+
+            snl_btm   = 0
+            snl_top   = snl_lcl+1
+
+            ! for debugging only
+            l_idx     = col%landunit(c_idx)
+            g_idx     = col%gridcell(c_idx)
+            sfctype   = lun%itype(l_idx)
+            lat_coord = grc%latdeg(g_idx)
+            lon_coord = grc%londeg(g_idx)
 
 
             ! Set local aerosol array
@@ -729,7 +708,6 @@ contains
                if ((snw_rds_lcl(i) < snw_rds_min_tbl) .or. (snw_rds_lcl(i) > snw_rds_max_tbl)) then
                   write (iulog,*) "SNICAR ERROR: snow grain radius of ", snw_rds_lcl(i), " out of bounds."
                   write (iulog,*) "NSTEP= ", nstep
-                  write (iulog,*) "flg_snw_ice= ", flg_snw_ice
                   write (iulog,*) "column: ", c_idx, " level: ", i, " snl(c)= ", snl_lcl
                   write (iulog,*) "lat= ", lat_coord, " lon= ", lon_coord
                   write (iulog,*) "h2osno_total(c)= ", h2osno_lcl
