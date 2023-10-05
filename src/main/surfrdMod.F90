@@ -899,8 +899,8 @@ contains
     use ncdio_pio,  only : ncd_inqdid, ncd_inqdlen
     use pftconMod , only : noveg
     use HillslopeHydrologyMod, only : pft_distribution_method, pft_from_file, pft_uniform_dominant_pft, pft_lowland_dominant_pft, pft_lowland_upland
-    use HillslopeHydrologyMod, only : HillslopeDominantPftIndex,HillslopeTwoLargestPftIndices
-
+    use array_utils, only: find_k_max_indices
+    
     !
     ! !ARGUMENTS:
     integer, intent(in) :: begg, endg
@@ -908,9 +908,10 @@ contains
     integer          ,intent(in)    :: ns     ! domain size
     !
     ! !LOCAL VARIABLES:
-    integer  :: g, nh, m, n                    ! index
+    integer  :: g, nh, m, n                       ! index
     integer  :: dimid,varid                    ! netCDF id's
     integer  :: ier                            ! error status	
+    integer, allocatable  :: max_indices(:)    ! largest weight pft indices
     logical  :: readvar                        ! is variable on dataset
     integer,pointer :: arrayl(:)               ! local array (needed because ncd_io expects a pointer)
     character(len=32) :: subname = 'surfrd_hillslope'  ! subroutine name
@@ -962,36 +963,50 @@ contains
     ! pft_uniform_dominant_pft uses the patch with the
     ! largest weight for all hillslope columns in the gridcell
     if (pft_distribution_method == pft_uniform_dominant_pft) then
+       allocate(max_indices(1))
        do g = begg, endg
           ! If hillslopes will be used in a gridcell, modify wt_nat_patch,
           ! otherwise use original patch distribution
           if(ncolumns_hillslope(g) > 0) then
-             call HillslopeDominantPftIndex(wt_nat_patch(g,:),natpft_lb,m)
+
+             call find_k_max_indices(wt_nat_patch(g,:),natpft_lb,1,max_indices)
              wt_nat_patch(g,:) = 0._r8
-             wt_nat_patch(g,m) = 100._r8
+             wt_nat_patch(g,max_indices(1)) = 100._r8
+             
           endif
        enddo
+       deallocate(max_indices)
     endif
 
     ! pft_lowland_dominant_pft uses the two patches with the
     ! largest weights for the hillslope columns in the gridcell
     if (pft_distribution_method == pft_lowland_dominant_pft) then
+       allocate(max_indices(2))
        do g = begg, endg
           ! If hillslopes will be used in a gridcell, modify wt_nat_patch, otherwise use original patch distribution
           if(ncolumns_hillslope(g) > 0) then
-             call HillslopeTwoLargestPftIndices(wt_nat_patch(g,:),natpft_lb,m,n)
+             
              ! Preserve the relative weights of the largest and
              ! next largest weights using arbitrarily chosen values
-             ! (i.e. m should be larger than n)  This will minimize
-             ! memory usage while still allowing HillslopeDominantLowlandPft
-             ! to pick out the two largest patch types.
-             if(m /= n) then
+             ! (i.e. 1 should be larger than 2) that sum to 100.
+             ! This will minimize memory usage while still allowing
+             ! HillslopeDominantLowlandPft to pick out the two largest patch types.
+
+             call find_k_max_indices(wt_nat_patch(g,:),natpft_lb,2,max_indices)
+             ! check that 2nd index weight is non-zero
+             if (wt_nat_patch(g,max_indices(2)) > 0._r8) then
                 wt_nat_patch(g,:) = 0._r8
-                wt_nat_patch(g,m) = 75._r8
-                wt_nat_patch(g,n) = 25._r8
+                wt_nat_patch(g,max_indices(1)) = 75._r8
+                wt_nat_patch(g,max_indices(2)) = 25._r8
+             else
+                ! if only one pft exists, set its weight to 100 per cent
+                wt_nat_patch(g,:) = 0._r8
+                wt_nat_patch(g,max_indices(1)) = 100._r8
              endif
+                
           endif
        enddo
+       deallocate(max_indices)
     endif
 
   end subroutine surfrd_hillslope

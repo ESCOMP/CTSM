@@ -809,8 +809,7 @@ contains
             g = col%gridcell(c)
             do n = 1,numrad
                ! absorbed energy is solar flux x area landunit (sum_wtgcell)
-               !if(sum_solar(g,n) > 0._r8) then
-               if(sum_solar(g,n) > 0._r8.and.illum_frac(g) > illumination_threshold) then
+               if(sum_solar(g,n) > 0._r8 .and. illum_frac(g) > illumination_threshold) then
                   norm(n) = sum_wtgcell(g)*forc_solad_grc(g,n)/sum_solar(g,n)
                   forc_solad_col(c,n)  = forc_solad_col(c,n)*norm(n)
                else

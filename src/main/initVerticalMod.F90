@@ -182,22 +182,6 @@ contains
     integer               :: begc, endc
     integer               :: begl, endl
     integer               :: jmin_bedrock
-    ! Possible values for levgrnd_class. The important thing is that, for a given column,
-    ! layers that are fundamentally different (e.g., soil vs bedrock) have different
-    ! values. This information is used in the vertical interpolation in init_interp.
-    !
-    ! IMPORTANT: These values should not be changed lightly. e.g., try to avoid changing
-    ! the values assigned to LEVGRND_CLASS_STANDARD, LEVGRND_CLASS_DEEP_BEDROCK, etc.  The
-    ! problem with changing these is that init_interp expects that layers with a value of
-    ! (e.g.) 1 on the source file correspond to layers with a value of 1 on the
-    ! destination file. So if you change the values of these constants, you either need to
-    ! adequately inform users of this change, or build in some translation mechanism in
-    ! init_interp (such as via adding more metadata to the restart file on the meaning of
-    ! these different values).
-    !
-    ! The distinction between "shallow" and "deep" bedrock is not made explicitly
-    ! elsewhere. But, since these classes have somewhat different behavior, they are
-    ! distinguished explicitly here.
     character(len=*), parameter :: subname = 'initVertical'
     !------------------------------------------------------------------------
 
