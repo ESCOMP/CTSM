@@ -36,20 +36,19 @@ Example:
 #  Import libraries
 from __future__ import print_function
 
+import argparse
+from datetime import date
+from getpass import getuser
+import glob
+import logging
 import os
 import sys
-import glob
-import argparse
 import requests
 
-import logging
 import numpy as np
 import pandas as pd
 import xarray as xr
 from packaging import version
-
-from datetime import date
-from getpass import getuser
 
 from ctsm.path_utils import path_to_ctsm_root
 
@@ -487,11 +486,12 @@ def main():
     pdvers = pd.__version__
     if version.parse(pdvers) < version.parse("1.1.0"):
         sys.exit(
-            "The pandas version in your python environment is too old, update to a newer version of pandas (>=1.1.0): version=%s",
+            """The pandas version in your python environment is too old,
+            update to a newer version of pandas (>=1.1.0): version=%s""",
             pdvers,
         )
 
-    file_time = check_neon_time()
+    # file_time = check_neon_time()
 
     # --  specify site from which to extract data
     site_name = args.site_name
@@ -502,7 +502,7 @@ def main():
 
     # --  directory structure
     current_dir = os.getcwd()
-    parent_dir = os.path.dirname(current_dir)
+    # parent_dir = os.path.dirname(current_dir)
     clone_dir = os.path.abspath(os.path.join(__file__, "../../../.."))
     neon_dir = os.path.join(clone_dir, "neon_surffiles")
 
@@ -538,7 +538,7 @@ def main():
     soil_mid = 0.5 * (soil_bot - soil_top) + soil_top
     # print ("Cumulative sum of soil bottom depths :", sum(soil_bot))
 
-    obs_top = df["biogeoTopDepth"] / 100
+    # obs_top = df["biogeoTopDepth"] / 100
     obs_bot = df["biogeoBottomDepth"] / 100
 
     # -- Mapping surface dataset and neon soil levels
@@ -587,8 +587,7 @@ def main():
         # -- Check to make sure the rounded oc is not higher than carbon_tot.
         # -- Use carbon_tot if estimated_oc is bigger than carbon_tot.
 
-        if estimated_oc > carbon_tot:
-            estimated_oc = carbon_tot
+        estimated_oc = min(estimated_oc, carbon_tot)
 
         layer_depth = (
             df["biogeoBottomDepth"][bin_index[soil_lev]] - df["biogeoTopDepth"][bin_index[soil_lev]]
