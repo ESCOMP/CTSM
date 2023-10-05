@@ -58,7 +58,7 @@ SUBSETDATA_1X1_MEXICOCITY  := --lat 19.5 --lon 260.5 --site 1x1_mexicocityMEX --
 SUBSETDATA_1X1_VANCOUVER   := --lat 49.5 --lon 236.5 --site 1x1_vancouverCAN --out-surface  $(VANCOUVER_TMP_FNAME)
 SUBSETDATA_1X1_URBALPHA    := --lat -37.7308 --lon 0 --site 1x1_urbanc_alpha --out-surface $(URBALPHA_TMP_FNAME)
 
-# ne120np4 and hi-res are for high resolution, ne16 is for mid-resolution testing
+# ne120np4 and hi-res are for high resolution, ne16np4 is for mid-resolution testing
 # low-res is for low resolutions for testing
 # nldas is for NWP working with WRF
 STANDARD = \
@@ -78,10 +78,6 @@ CROP = \
 	crop-global-1850-low-res \
 	crop-global-1850-ne16np4 \
 	crop-global-1850-ne120np4 \
-	crop-numa-present \
-	crop-numa-historical \
-	crop-smallville \
-	crop-smallville-historical \
 	crop-global-future
 all : standard tropics crop urban landuse-timeseries all-subset
 
@@ -149,11 +145,31 @@ crop-global-present : FORCE
 	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
 
-crop-global-present-ne16 : FORCE
+crop-global-present-low-res : FORCE
+	$(MKSURFDATA)  --number-of-nodes 10 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-present-ne16np4 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
 
 crop-global-present-ne120 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 96 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-1850 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-1850-low-res : FORCE
+	$(MKSURFDATA)  --number-of-nodes 10 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-1850-ne16np4 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-1850-ne120np4 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 96 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
 
@@ -231,9 +247,9 @@ urban-alpha : FORCE
 #
 # landuse timeseries with subset data
 #
-#landuse-timeseries : landuse-timeseries-smallville
+landuse-timeseries : landuse-timeseries-smallville
 # NOTE: TODO: This needs to be chagned to use subset_data when transient configurations are resolved (see Issue #1673
-#landuse-timeseries-smallville : FORCE
+landuse-timeseries-smallville : FORCE
 #	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-1855 -r 1x1_smallvilleIA \
 #		-pft_idx 17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78 \
 #		-pft_frc 6.5,1.5,1.6,1.7,1.8,1.9,1.5,1.6,1.7,1.8,1.9,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5 \
