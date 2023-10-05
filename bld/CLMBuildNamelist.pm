@@ -1995,6 +1995,60 @@ sub setup_logic_snicar_methods {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snicar_use_aerosol' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snicar_aerforc_diag' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'do_sno_oc' );
+  # Error checking
+  my $opt1 = 'snicar_snw_shape';
+  my $var1 = $nl->get_value($opt1);
+  my $sup1a = "'sphere'";  # supported value for this option
+  my $sup1b = "'hexagonal_plate'";  # supported value for this option
+  if (($var1 ne $sup1a) && ($var1 ne $sup1b)) {
+    $log->warning("$opt1=$sup1a and $sup1b are supported; $var1 is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!");
+  }
+  my $opt2 = 'snicar_solarspec';
+  my $var2 = $nl->get_value($opt2);
+  my $sup2 = "'mid_latitude_winter'";  # supported value for this option
+  if ($var2 ne $sup2) {
+    $log->warning("$opt2=$sup2 is the supported option; $var2 is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!");
+  }
+  my $opt3 = 'snicar_dust_optics';
+  my $var3 = $nl->get_value($opt3);
+  my $sup3 = "'sahara'";  # supported value for this option
+  if ($var3 ne $sup3) {
+    $log->warning("$opt3=$sup3 is the supported option; $var3 is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!");
+  }
+  my $opt4 = 'snicar_numrad_snw';
+  my $var4 = $nl->get_value($opt4);
+  my $sup4 = '5';  # supported value for this option
+  if ($var4 ne $sup4) {
+    $log->warning("$opt4=$sup4 is the supported option; $var4 is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!");
+  }
+  my $opt5 = 'snicar_snobc_intmix';
+  my $var5 = $nl->get_value($opt5);
+  my $sup5 = '.false.';  # supported value for this option
+  if ($var5 ne $sup5) {
+    $log->warning("$opt5=$sup5 is the supported option; $var5 is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!");
+  }
+  my $opt6 = 'snicar_snodst_intmix';
+  my $var6 = $nl->get_value($opt6);
+  my $sup6 = '.false.';  # supported value for this option
+  if ($var6 ne $sup6) {
+    $log->warning("$opt6=$sup6 is the supported option; $var6 is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!");
+  }
+  my $opt7 = 'snicar_use_aerosol';
+  my $var7 = $nl->get_value($opt7);
+  my $sup7 = '.true.';  # supported value for this option
+  if ($var7 ne $sup7) {
+    $log->warning("$opt7=$sup7 is the supported option; $var7 is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!");
+  }
+  my $opt8 = 'do_sno_oc';
+  my $var8 = $nl->get_value($opt8);
+  my $sup8 = '.false.';  # supported value for this option
+  if ($var8 ne $sup8) {
+    $log->warning("$opt8=$sup8 is the supported option; $var8 is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!");
+  }
+  # snicar_snobc_intmix and snicar_snodst_intmix cannot both be true
+  if (($var5 eq $var6) && ($var5 ne $sup5)) {
+    $log->warning("$opt5 = $var5 and $opt6 = $var6 do not work together!");
+  }
 }
 
 #-------------------------------------------------------------------------------
@@ -4482,7 +4536,6 @@ sub write_output_files {
   push @groups, "ch4finundated";
   push @groups, "exice_streams";
   push @groups, "soilbgc_decomp";
-  push @groups, "snicar_inparm";
   push @groups, "clm_canopy_inparm";
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
      push @groups, "scf_swenson_lawrence_2012_inparm";

@@ -202,9 +202,6 @@ contains
          soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
          crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
-         snicar_numrad_snw, snicar_solarspec, snicar_dust_optics, &
-         snicar_use_aerosol, snicar_snw_shape, snicar_snobc_intmix,&
-         snicar_snodst_intmix,do_sno_oc, &
          for_testing_use_second_grain_pool, for_testing_use_repr_structure_pool, &
          for_testing_no_crop_seed_replenishment, &
          z0param_method, use_z0m_snowmelt
@@ -286,9 +283,14 @@ contains
     namelist /clm_inparm/ &
          use_lch4, use_nitrif_denitrif, use_extralakelayers, &
          use_vichydro, use_cn, use_cndv, use_crop, use_fertilizer, &
-         use_grainproduct, snicar_aerforc_diag, use_vancouver, use_mexicocity, use_noio, &
+         use_grainproduct, use_vancouver, use_mexicocity, use_noio, &
          use_nguardrail
 
+    ! SNICAR
+    namelist /clm_inparm/ &
+         snicar_numrad_snw, snicar_solarspec, snicar_dust_optics, &
+         snicar_use_aerosol, snicar_snw_shape, snicar_snobc_intmix, &
+         snicar_snodst_intmix, snicar_aerforc_diag, do_sno_oc
 
     ! ----------------------------------------------------------------------
     ! Default values
@@ -604,15 +606,21 @@ contains
             errMsg(sourcefile, __LINE__))
     end if
 
-    ! check on snow albedo wavelength bands
-    if ( (snicar_numrad_snw /= 5) .and. (snicar_numrad_snw /= 480) ) then
-       call endrun(msg=' ERROR: snicar_numrad_snw is out of a reasonable range (5, 480)'//&
-            errMsg(sourcefile, __LINE__))
-    end if
-
     ! check on SNICAR BC-snow and dust-snow internal mixing
     if ( snicar_snobc_intmix .and. snicar_snodst_intmix ) then
        call endrun(msg=' ERROR: currently dust-snow and BC-snow internal mixing cannot be activated together'//&
+            errMsg(sourcefile, __LINE__))
+    end if
+
+    ! other SNICAR warnings
+    if ((snicar_snw_shape /= 'sphere' .and. snicar_snw_shape /= 'hexagonal_plate') .or.  &
+         snicar_solarspec /= 'mid_latitude_winter' .or.  &
+         snicar_dust_optics /= 'sahara' .or.  &
+         snicar_numrad_snw /= 5 .or.  &
+         snicar_snobc_intmix .or. snicar_snodst_intmix .or.  &
+         not(snicar_use_aerosol) .or.  &
+         do_sno_oc) then
+       call endrun(msg=' ERROR: You have selected an option that is EXPERIMENTAL, UNSUPPORTED, and UNTESTED. For guidance see namelist_defaults_ctsm.xml'//&
             errMsg(sourcefile, __LINE__))
     end if
 
@@ -1027,6 +1035,7 @@ contains
     else
        write(iulog,'(a)') '   snow aging parameters file = '//trim(fsnowaging)
     endif
+
     write(iulog,*) '   SNICAR: downward solar radiation spectrum type =', snicar_solarspec
     write(iulog,*) '   SNICAR: dust optics type = ', snicar_dust_optics
     write(iulog,*) '   SNICAR: number of bands in snow albedo calculation =', snicar_numrad_snw

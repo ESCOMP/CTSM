@@ -881,6 +881,8 @@ contains
                            gg_ice_F07_tmp(igb) = g_F07_p0(igb) + g_F07_p1(igb) * log(AR_tmp) + g_F07_p2(igb) * (log(AR_tmp) * log(AR_tmp)) ! Eqn. 3.3 in Fu (2007)
                         enddo
 
+                     case ('sphere')
+                        ! DO NOTHING
                      case default
                         write(iulog,*) subname//' ERROR: unknown sno_shp for i: ', sno_shp(i), i
                         call endrun(msg=errMsg(sourcefile, __LINE__))
