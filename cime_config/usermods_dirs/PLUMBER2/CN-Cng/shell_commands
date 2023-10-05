@@ -1,0 +1,29 @@
+./xmlchange PLUMBER2SITE=CN-Cng
+./xmlchange PTS_LON=123.509201
+./xmlchange PTS_LAT=44.593399
+./xmlchange START_DATE=2007-12-31
+./xmlchange DATM_YR_ALIGN=2008
+./xmlchange DATM_YR_START=2008
+./xmlchange DATM_YR_END=2009
+./xmlchange START_TOD=57600
+./xmlchange ATM_NCPL=48
+
+compset=`./xmlquery COMPSET --value` 
+CLM_USRDAT_NAME=`./xmlquery CLM_USRDAT_NAME --value` 
+TEST=`./xmlquery TEST --value` 
+
+# For a transient case run the whole length and do not cycle 
+if  [[ $compset =~ ^HIST ]]; then 
+  # Number of years that can be run for the full transient case 
+  if [[ $TEST != "TRUE" ]]; then  
+    ./xmlchange STOP_N=2
+  fi 
+fi 
+
+# Turn on LAI streams for a SP case 
+if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then 
+  echo "stream_fldfilename_lai='/glade/work/oleson/PLUMBER2/input_files/${PLUMBER2SITE}/LAI_stream_${PLUMBER2SITE}_2008-2009.nc'" >> user_nl_clm 
+  echo "model_year_align_lai=2008" >> user_nl_clm 
+  echo "stream_year_first_lai=2008" >> user_nl_clm 
+  echo "stream_year_last_lai=2009" >> user_nl_clm 
+fi 

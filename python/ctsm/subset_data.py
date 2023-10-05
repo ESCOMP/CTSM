@@ -168,6 +168,25 @@ def get_parser():
         default=None,
         nargs="*",
     )
+    pt_parser.add_argument(
+        "--cth",
+        help="canopy top height for pft",
+        action="store",
+        dest="cth",
+        type=float,
+        default=None,
+        nargs="*",
+    )
+    pt_parser.add_argument(
+        "--cbh",
+        help="canopy bottom height for pft",
+        action="store",
+        dest="cbh",
+        type=float,
+        default=None,
+        nargs="*",
+    )   
+
     # -- region-specific parser options
     rg_parser.add_argument(
         "--lat1",
@@ -553,6 +572,8 @@ def subset_point(args, file_dict: dict):
         dom_pft=args.dom_pft,
         pct_pft=args.pct_pft,
         num_pft=num_pft,
+        cth=args.cth,
+        cbh=args.cbh,
         include_nonveg=args.include_nonveg,
         uni_snow=args.uni_snow,
         cap_saturation=args.cap_saturation,
