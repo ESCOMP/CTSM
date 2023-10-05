@@ -33,7 +33,7 @@ class TestNeonSurfWrapper(unittest.TestCase):
         """
         Test that parser has same defaults as expected
         """
-        
+
         self.assertEqual(get_parser().argument_default, None, "Parser not working as expected")
 
 

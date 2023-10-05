@@ -58,8 +58,8 @@ myname = getuser()
 
 # -- valid neon sites
 valid_neon_sites = glob.glob(
-        os.path.join(path_to_ctsm_root(), "cime_config", "usermods_dirs", "NEON", "[!d]*")
-    )
+    os.path.join(path_to_ctsm_root(), "cime_config", "usermods_dirs", "NEON", "[!d]*")
+)
 
 
 def get_parser():
@@ -477,7 +477,6 @@ def fill_interpolate(f2, var, method):
 
 
 def main():
-
     args = get_parser().parse_args()
 
     # -- debugging option

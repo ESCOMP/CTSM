@@ -328,6 +328,7 @@ def get_parser(args, description, valid_neon_sites):
         args.user_version,
     )
 
+
 class NeonSite:
     """
     A class for encapsulating neon sites.
