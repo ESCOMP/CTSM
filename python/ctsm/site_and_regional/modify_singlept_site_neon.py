@@ -31,7 +31,6 @@ Example:
 """
 # TODO (NS)
 # --[] If subset file not found run subset_data.py
-# --[] List of valid neon sites for all scripts come from one place.
 # --[] Download files only when available.
 
 #  Import libraries
@@ -52,60 +51,15 @@ from packaging import version
 from datetime import date
 from getpass import getuser
 
+from ctsm.path_utils import path_to_ctsm_root
 
 myname = getuser()
 
 
 # -- valid neon sites
-valid_neon_sites = [
-    "ABBY",
-    "BARR",
-    "BART",
-    "BLAN",
-    "BONA",
-    "CLBJ",
-    "CPER",
-    "DCFS",
-    "DEJU",
-    "DELA",
-    "DSNY",
-    "GRSM",
-    "GUAN",
-    "HARV",
-    "HEAL",
-    "JERC",
-    "JORN",
-    "KONA",
-    "KONZ",
-    "LAJA",
-    "LENO",
-    "MLBS",
-    "MOAB",
-    "NIWO",
-    "NOGP",
-    "OAES",
-    "ONAQ",
-    "ORNL",
-    "OSBS",
-    "PUUM",
-    "RMNP",
-    "SCBI",
-    "SERC",
-    "SJER",
-    "SOAP",
-    "SRER",
-    "STEI",
-    "STER",
-    "TALL",
-    "TEAK",
-    "TOOL",
-    "TREE",
-    "UKFS",
-    "UNDE",
-    "WOOD",
-    "WREF",
-    "YELL",
-]
+valid_neon_sites = glob.glob(
+        os.path.join(path_to_ctsm_root(), "cime_config", "usermods_dirs", "NEON", "[!d]*")
+    )
 
 
 def get_parser():
