@@ -186,8 +186,6 @@ contains
     !
     !  Modified by Sam Rabin to fix a bug where idpp wasn't actually used, which
     !  would affect growing seasons that crossed over into a new calendar year.
-    !  Also avoids day=1 in last timestep of year by using DaysPastPlanting(), which
-    !  uses get_prev_calday() instead of get_curr_calday().
     !  Previous behavior can be requested with namelist variable use_original_tillage_phases.
     !
     !  Original code had two versions depending on cell's GDP, but this seems to
