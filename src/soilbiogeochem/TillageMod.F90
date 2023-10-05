@@ -21,7 +21,6 @@ module TillageMod
   public :: get_fraction_tilled
   ! !PUBLIC DATA MEMBERS
   character(len=CS), public :: tillage_mode     ! off, low, high
-  integer, parameter, public :: ntill_intensities_max = 2
   !
   ! !PRIVATE DATA MEMBERS
   integer             :: tillage_intensity
@@ -31,6 +30,7 @@ module TillageMod
   logical  :: use_original_tillage_phases ! Use buggy tillage phase determination?
   real(r8), pointer :: tillage_mults_allphases(:,:) ! (ndecomp_pools, ntill_stages_max)
   integer, parameter :: ntill_stages_max = 3 ! How many different tillage phases are there? (Not including all-1 phases.)
+  integer, parameter :: ntill_intensities_max = 2 ! How many different tillage intensities are allowed (other than "off")?
   real(r8)           :: max_tillage_depth ! Maximum depth to till (m)
 
 !==============================================================================
@@ -145,7 +145,7 @@ contains
     end select
 
     ! Read off of netcdf file
-    allocate(tempr(2,ndecomp_pools_max,ntill_stages_max))
+    allocate(tempr(ntill_stages_max,ndecomp_pools_max,ntill_stages_max))
     call ncd_io(trim(tString), tempr, 'read', ncid, readvar = readv)
     if (.not. readv) then
         call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
