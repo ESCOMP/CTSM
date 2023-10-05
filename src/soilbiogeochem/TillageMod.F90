@@ -284,7 +284,7 @@ contains
     ! Written by Sam Rabin, based on original code by Michael Graham.
     !
     ! !USES
-    use pftconMod , only : nc3crop
+    use pftconMod , only : npcropmin
     use clm_varcon, only : zisoi, dzsoi_decomp
     use landunit_varcon , only : istcrop
     use PatchType , only : patch
@@ -315,7 +315,12 @@ contains
     sumwt = 0.0_r8
     do p = col%patchi(c),col%patchf(c)
         if (patch%active(p) .and. patch%wtcol(p) /= 0._r8) then
-            call get_tillage_multipliers(tillage_mults_1patch, idop(p))
+            if (patch%itype(p) < npcropmin) then
+                ! Do not till generic crops
+                tillage_mults_1patch(:) = 1._r8
+            else
+                call get_tillage_multipliers(tillage_mults_1patch, idop(p))
+            end if
             tillage_mults = tillage_mults + tillage_mults_1patch * patch%wtcol(p)
             sumwt = sumwt + patch%wtcol(p)
         end if
