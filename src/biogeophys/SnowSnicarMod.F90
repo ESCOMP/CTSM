@@ -51,6 +51,11 @@ module SnowSnicarMod
   logical,  public, parameter :: DO_SNO_AER =   .true.    ! parameter to include aerosols in snowpack radiative calculations
 
   ! !PRIVATE DATA MEMBERS:
+  integer, parameter :: default_number_bands = 5  ! currently the only alternative is 480 bands
+  integer, parameter :: highest_default_band = 5
+  integer, parameter :: sec_highest_default_band = 4
+  integer, parameter :: high_number_bands = 480
+
   integer,  parameter :: idx_Mie_snw_mx = 1471           ! number of effective radius indices used in Mie lookup table [idx]
   integer,  parameter :: idx_T_max      = 11             ! maximum temperature index used in aging lookup table [idx]
   integer,  parameter :: idx_T_min      = 1              ! minimum temperature index used in aging lookup table [idx]
@@ -613,10 +618,10 @@ contains
       ! SNICAR/CLM snow band center wavelength (um)
       allocate(wvl_ct(snicar_numrad_snw))
       select case (snicar_numrad_snw)
-      case (5)
+      case (default_number_bands)
          nir_bnd_bgn = 2
          wvl_ct(:)  = (/ 0.5_r8, 0.85_r8, 1.1_r8, 1.35_r8, 3.25_r8 /)  ! 5-band
-      case (480)
+      case (high_number_bands)
          nir_bnd_bgn = 51
          do igb = 1, snicar_numrad_snw
             wvl_ct(igb) = 0.205_r8 + 0.01_r8 * (igb - 1._r8)  ! 480-band
@@ -770,11 +775,11 @@ contains
 
                   ! Pre-emptive error handling: aerosols can reap havoc on these absorptive bands.
                   ! Since extremely high soot concentrations have a negligible effect on these bands, zero them.
-                  if ( (snicar_numrad_snw == 5).and.((bnd_idx == 5).or.(bnd_idx == 4)) ) then
+                  if (snicar_numrad_snw == default_number_bands .and. (bnd_idx == highest_default_band .or. bnd_idx == sec_highest_default_band)) then
                      mss_cnc_aer_lcl(:,:) = 0._r8
                   endif
 
-                  if ( (snicar_numrad_snw == 480).and.(bnd_idx > 100) ) then ! >1.2um
+                  if ( (snicar_numrad_snw == high_number_bands).and.(bnd_idx > 100) ) then ! >1.2um
                      mss_cnc_aer_lcl(:,:) = 0._r8
                   endif
 
@@ -1376,10 +1381,10 @@ contains
 
             ! Weight output NIR albedo appropriately
             select case (snicar_numrad_snw)
-            case (5)  ! 5-band case
+            case (default_number_bands)  ! 5-band case
               ! VIS band
               albout(c_idx,ivis) = albout_lcl(ivis)
-            case (480)  ! 480-band case
+            case (high_number_bands)  ! 480-band case
               ! average for VIS band
               flx_sum = 0._r8
               do bnd_idx= 1, (nir_bnd_bgn-1)
@@ -1397,10 +1402,10 @@ contains
 
             ! Weight output NIR absorbed layer fluxes (flx_abs) appropriately
             select case (snicar_numrad_snw)
-            case (5)  ! 5-band case
+            case (default_number_bands)  ! 5-band case
               ! VIS band
               flx_abs(c_idx,:,1) = flx_abs_lcl(:,1)
-            case (480)  ! 480-band case
+            case (high_number_bands)  ! 480-band case
               ! average for VIS band
               do i=snl_top,1,1
                  flx_sum = 0._r8
@@ -1866,7 +1871,7 @@ contains
 
      !--------------------- for 5-band data
      select case (snicar_numrad_snw)
-     case (5)  ! 5-band case
+     case (default_number_bands)  ! 5-band case
 
         ! flux weights/spectrum
         tString = 'flx_wgt_dir5_'//short_case_solarspec
@@ -1996,7 +2001,7 @@ contains
         if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
      !-------------------- for 480-band data
-     case (480)
+     case (high_number_bands)
 
         ! BC species 1 Mie parameters, uncoated BC, same as bc_hphob before BC-snow internal mixing
         tString = 'ss_alb_bcphob'
