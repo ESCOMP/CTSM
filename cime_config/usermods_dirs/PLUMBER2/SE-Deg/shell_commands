@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=SE-Deg
 ./xmlchange PTS_LON=19.55669
 ./xmlchange PTS_LAT=64.181969
-./xmlchange START_DATE=2001-12-31
+./xmlchange RUN_STARTDATE=2001-12-31
 ./xmlchange DATM_YR_ALIGN=2002
 ./xmlchange DATM_YR_START=2002
 ./xmlchange DATM_YR_END=2005

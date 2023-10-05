@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=CZ-wet
 ./xmlchange PTS_LON=14.77035
 ./xmlchange PTS_LAT=49.024651
-./xmlchange START_DATE=2006-12-31
+./xmlchange RUN_STARTDATE=2006-12-31
 ./xmlchange DATM_YR_ALIGN=2007
 ./xmlchange DATM_YR_START=2007
 ./xmlchange DATM_YR_END=2014

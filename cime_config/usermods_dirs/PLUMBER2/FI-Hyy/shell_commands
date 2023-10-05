@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=FI-Hyy
 ./xmlchange PTS_LON=24.295
 ./xmlchange PTS_LAT=61.8475
-./xmlchange START_DATE=1995-12-31
+./xmlchange RUN_STARTDATE=1995-12-31
 ./xmlchange DATM_YR_ALIGN=1996
 ./xmlchange DATM_YR_START=1996
 ./xmlchange DATM_YR_END=2014

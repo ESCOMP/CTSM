@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=FI-Sod
 ./xmlchange PTS_LON=26.637831
 ./xmlchange PTS_LAT=67.361862
-./xmlchange START_DATE=2007-12-31
+./xmlchange RUN_STARTDATE=2007-12-31
 ./xmlchange DATM_YR_ALIGN=2008
 ./xmlchange DATM_YR_START=2008
 ./xmlchange DATM_YR_END=2014

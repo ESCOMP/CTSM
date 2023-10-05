@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=ZA-Kru
 ./xmlchange PTS_LON=31.496901
 ./xmlchange PTS_LAT=-25.019699
-./xmlchange START_DATE=1999-12-31
+./xmlchange RUN_STARTDATE=1999-12-31
 ./xmlchange DATM_YR_ALIGN=2000
 ./xmlchange DATM_YR_START=2000
 ./xmlchange DATM_YR_END=2002

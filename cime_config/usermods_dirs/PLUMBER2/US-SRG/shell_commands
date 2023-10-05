@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=US-SRG
 ./xmlchange PTS_LON=-110.827698
 ./xmlchange PTS_LAT=31.7894
-./xmlchange START_DATE=2009-01-01
+./xmlchange RUN_STARTDATE=2009-01-01
 ./xmlchange DATM_YR_ALIGN=2009
 ./xmlchange DATM_YR_START=2009
 ./xmlchange DATM_YR_END=2014

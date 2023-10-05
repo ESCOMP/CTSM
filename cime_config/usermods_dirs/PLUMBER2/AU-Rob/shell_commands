@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=AU-Rob
 ./xmlchange PTS_LON=145.630096
 ./xmlchange PTS_LAT=-17.1175
-./xmlchange START_DATE=2013-12-31
+./xmlchange RUN_STARTDATE=2013-12-31
 ./xmlchange DATM_YR_ALIGN=2014
 ./xmlchange DATM_YR_START=2014
 ./xmlchange DATM_YR_END=2017

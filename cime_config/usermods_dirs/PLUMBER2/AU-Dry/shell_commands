@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=AU-Dry
 ./xmlchange PTS_LON=132.370605
 ./xmlchange PTS_LAT=-15.2588
-./xmlchange START_DATE=2010-12-31
+./xmlchange RUN_STARTDATE=2010-12-31
 ./xmlchange DATM_YR_ALIGN=2011
 ./xmlchange DATM_YR_START=2011
 ./xmlchange DATM_YR_END=2015

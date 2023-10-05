@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=IT-CA2
 ./xmlchange PTS_LON=12.02604
 ./xmlchange PTS_LAT=42.37722
-./xmlchange START_DATE=2011-12-31
+./xmlchange RUN_STARTDATE=2011-12-31
 ./xmlchange DATM_YR_ALIGN=2012
 ./xmlchange DATM_YR_START=2012
 ./xmlchange DATM_YR_END=2013

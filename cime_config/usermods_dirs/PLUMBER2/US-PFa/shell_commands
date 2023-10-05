@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=US-PFa
 ./xmlchange PTS_LON=-90.272308
 ./xmlchange PTS_LAT=45.9459
-./xmlchange START_DATE=1995-01-01
+./xmlchange RUN_STARTDATE=1995-01-01
 ./xmlchange DATM_YR_ALIGN=1995
 ./xmlchange DATM_YR_START=1995
 ./xmlchange DATM_YR_END=2014

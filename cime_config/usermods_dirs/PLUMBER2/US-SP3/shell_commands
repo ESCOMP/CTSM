@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=US-SP3
 ./xmlchange PTS_LON=-82.163269
 ./xmlchange PTS_LAT=29.75477
-./xmlchange START_DATE=1999-01-01
+./xmlchange RUN_STARTDATE=1999-01-01
 ./xmlchange DATM_YR_ALIGN=1999
 ./xmlchange DATM_YR_START=1999
 ./xmlchange DATM_YR_END=2004

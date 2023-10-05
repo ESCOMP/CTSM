@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=DE-Seh
 ./xmlchange PTS_LON=6.44965
 ./xmlchange PTS_LAT=50.870625
-./xmlchange START_DATE=2007-12-31
+./xmlchange RUN_STARTDATE=2007-12-31
 ./xmlchange DATM_YR_ALIGN=2008
 ./xmlchange DATM_YR_START=2008
 ./xmlchange DATM_YR_END=2010

@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=IT-Ren
 ./xmlchange PTS_LON=11.43369
 ./xmlchange PTS_LAT=46.586861
-./xmlchange START_DATE=2009-12-31
+./xmlchange RUN_STARTDATE=2009-12-31
 ./xmlchange DATM_YR_ALIGN=2010
 ./xmlchange DATM_YR_START=2010
 ./xmlchange DATM_YR_END=2013

@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=UK-Ham
 ./xmlchange PTS_LON=-0.858307
 ./xmlchange PTS_LAT=51.15353
-./xmlchange START_DATE=2004-01-01
+./xmlchange RUN_STARTDATE=2004-01-01
 ./xmlchange DATM_YR_ALIGN=2004
 ./xmlchange DATM_YR_START=2004
 ./xmlchange DATM_YR_END=2004

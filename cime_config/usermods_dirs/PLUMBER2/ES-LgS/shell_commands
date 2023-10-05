@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=ES-LgS
 ./xmlchange PTS_LON=-2.96582
 ./xmlchange PTS_LAT=37.097935
-./xmlchange START_DATE=2006-12-31
+./xmlchange RUN_STARTDATE=2006-12-31
 ./xmlchange DATM_YR_ALIGN=2007
 ./xmlchange DATM_YR_START=2007
 ./xmlchange DATM_YR_END=2007

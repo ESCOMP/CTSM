@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=US-Goo
 ./xmlchange PTS_LON=-89.873505
 ./xmlchange PTS_LAT=34.2547
-./xmlchange START_DATE=2004-01-01
+./xmlchange RUN_STARTDATE=2004-01-01
 ./xmlchange DATM_YR_ALIGN=2004
 ./xmlchange DATM_YR_START=2004
 ./xmlchange DATM_YR_END=2006

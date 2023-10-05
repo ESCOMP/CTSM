@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=US-AR2
 ./xmlchange PTS_LON=-99.597504
 ./xmlchange PTS_LAT=36.635799
-./xmlchange START_DATE=2010-01-01
+./xmlchange RUN_STARTDATE=2010-01-01
 ./xmlchange DATM_YR_ALIGN=2010
 ./xmlchange DATM_YR_START=2010
 ./xmlchange DATM_YR_END=2011

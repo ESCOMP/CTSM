@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=US-Myb
 ./xmlchange PTS_LON=-121.765106
 ./xmlchange PTS_LAT=38.049801
-./xmlchange START_DATE=2011-01-01
+./xmlchange RUN_STARTDATE=2011-01-01
 ./xmlchange DATM_YR_ALIGN=2011
 ./xmlchange DATM_YR_START=2011
 ./xmlchange DATM_YR_END=2014

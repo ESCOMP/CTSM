@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=US-Blo
 ./xmlchange PTS_LON=-120.632751
 ./xmlchange PTS_LAT=38.895302
-./xmlchange START_DATE=2000-01-01
+./xmlchange RUN_STARTDATE=2000-01-01
 ./xmlchange DATM_YR_ALIGN=2000
 ./xmlchange DATM_YR_START=2000
 ./xmlchange DATM_YR_END=2006

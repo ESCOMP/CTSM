@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=US-Ha1
 ./xmlchange PTS_LON=-72.171509
 ./xmlchange PTS_LAT=42.5378
-./xmlchange START_DATE=1992-01-01
+./xmlchange RUN_STARTDATE=1992-01-01
 ./xmlchange DATM_YR_ALIGN=1992
 ./xmlchange DATM_YR_START=1992
 ./xmlchange DATM_YR_END=2012

@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=FR-Hes
 ./xmlchange PTS_LON=7.06556
 ./xmlchange PTS_LAT=48.67416
-./xmlchange START_DATE=1996-12-31
+./xmlchange RUN_STARTDATE=1996-12-31
 ./xmlchange DATM_YR_ALIGN=1997
 ./xmlchange DATM_YR_START=1997
 ./xmlchange DATM_YR_END=2006

@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=BE-Vie
 ./xmlchange PTS_LON=5.99805
 ./xmlchange PTS_LAT=50.305069
-./xmlchange START_DATE=1996-12-31
+./xmlchange RUN_STARTDATE=1996-12-31
 ./xmlchange DATM_YR_ALIGN=1997
 ./xmlchange DATM_YR_START=1997
 ./xmlchange DATM_YR_END=2014

@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=DE-Gri
 ./xmlchange PTS_LON=13.51253
 ./xmlchange PTS_LAT=50.949471
-./xmlchange START_DATE=2003-12-31
+./xmlchange RUN_STARTDATE=2003-12-31
 ./xmlchange DATM_YR_ALIGN=2004
 ./xmlchange DATM_YR_START=2004
 ./xmlchange DATM_YR_END=2014

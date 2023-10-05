@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=CN-Qia
 ./xmlchange PTS_LON=115.058098
 ./xmlchange PTS_LAT=26.7414
-./xmlchange START_DATE=2002-12-31
+./xmlchange RUN_STARTDATE=2002-12-31
 ./xmlchange DATM_YR_ALIGN=2003
 ./xmlchange DATM_YR_START=2003
 ./xmlchange DATM_YR_END=2005

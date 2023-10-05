@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=IT-BCi
 ./xmlchange PTS_LON=14.95744
 ./xmlchange PTS_LAT=40.5238
-./xmlchange START_DATE=2004-12-31
+./xmlchange RUN_STARTDATE=2004-12-31
 ./xmlchange DATM_YR_ALIGN=2005
 ./xmlchange DATM_YR_START=2005
 ./xmlchange DATM_YR_END=2010

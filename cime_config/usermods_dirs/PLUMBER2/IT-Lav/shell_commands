@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=IT-Lav
 ./xmlchange PTS_LON=11.28132
 ./xmlchange PTS_LAT=45.9562
-./xmlchange START_DATE=2004-12-31
+./xmlchange RUN_STARTDATE=2004-12-31
 ./xmlchange DATM_YR_ALIGN=2005
 ./xmlchange DATM_YR_START=2005
 ./xmlchange DATM_YR_END=2014

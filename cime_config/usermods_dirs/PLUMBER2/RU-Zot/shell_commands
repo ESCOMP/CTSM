@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=RU-Zot
 ./xmlchange PTS_LON=89.3508
 ./xmlchange PTS_LAT=60.8008
-./xmlchange START_DATE=2002-12-31
+./xmlchange RUN_STARTDATE=2002-12-31
 ./xmlchange DATM_YR_ALIGN=2003
 ./xmlchange DATM_YR_START=2003
 ./xmlchange DATM_YR_END=2003

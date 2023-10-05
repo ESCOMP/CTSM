@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=FI-Kaa
 ./xmlchange PTS_LON=27.295031
 ./xmlchange PTS_LAT=69.140694
-./xmlchange START_DATE=1999-12-31
+./xmlchange RUN_STARTDATE=1999-12-31
 ./xmlchange DATM_YR_ALIGN=2000
 ./xmlchange DATM_YR_START=2000
 ./xmlchange DATM_YR_END=2002

@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=IT-Amp
 ./xmlchange PTS_LON=13.60516
 ./xmlchange PTS_LAT=41.904099
-./xmlchange START_DATE=2002-12-31
+./xmlchange RUN_STARTDATE=2002-12-31
 ./xmlchange DATM_YR_ALIGN=2003
 ./xmlchange DATM_YR_START=2003
 ./xmlchange DATM_YR_END=2006

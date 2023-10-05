@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=DK-Ris
 ./xmlchange PTS_LON=12.09722
 ./xmlchange PTS_LAT=55.530281
-./xmlchange START_DATE=2003-12-31
+./xmlchange RUN_STARTDATE=2003-12-31
 ./xmlchange DATM_YR_ALIGN=2004
 ./xmlchange DATM_YR_START=2004
 ./xmlchange DATM_YR_END=2005

@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=US-Bo1
 ./xmlchange PTS_LON=-88.290405
 ./xmlchange PTS_LAT=40.006199
-./xmlchange START_DATE=1997-01-01
+./xmlchange RUN_STARTDATE=1997-01-01
 ./xmlchange DATM_YR_ALIGN=1997
 ./xmlchange DATM_YR_START=1997
 ./xmlchange DATM_YR_END=2006

@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=BE-Bra
 ./xmlchange PTS_LON=4.52056
 ./xmlchange PTS_LAT=51.309166
-./xmlchange START_DATE=2003-12-31
+./xmlchange RUN_STARTDATE=2003-12-31
 ./xmlchange DATM_YR_ALIGN=2004
 ./xmlchange DATM_YR_START=2004
 ./xmlchange DATM_YR_END=2014

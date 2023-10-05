@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=AU-Tum
 ./xmlchange PTS_LON=148.151703
 ./xmlchange PTS_LAT=-35.656601
-./xmlchange START_DATE=2001-12-31
+./xmlchange RUN_STARTDATE=2001-12-31
 ./xmlchange DATM_YR_ALIGN=2002
 ./xmlchange DATM_YR_START=2002
 ./xmlchange DATM_YR_END=2017

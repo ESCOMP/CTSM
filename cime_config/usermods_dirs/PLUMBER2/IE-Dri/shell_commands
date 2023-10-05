@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=IE-Dri
 ./xmlchange PTS_LON=-8.751801
 ./xmlchange PTS_LAT=51.986691
-./xmlchange START_DATE=2003-01-01
+./xmlchange RUN_STARTDATE=2003-01-01
 ./xmlchange DATM_YR_ALIGN=2003
 ./xmlchange DATM_YR_START=2003
 ./xmlchange DATM_YR_END=2005

@@ -19,9 +19,9 @@
 !----------------------------------------------------------------------------------
 
 flanduse_timeseries = ' '   ! This isn't needed for a non transient case, but will be once we start using transient compsets
-!fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_map/PLUMBER2/surfdata_1x1_PLUMBER2_${PLUMBER2SITE}_hist_16pfts_CMIP6_simyr2000_c231004.nc"
+!fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_map/PLUMBER2/surfdata_1x1_PLUMBER2_${PLUMBER2SITE}_hist_16pfts_CMIP6_simyr2000_c231005.nc"
 ! For testing only
-fsurdat = "/glade/u/home/wwieder/CTSM/tools/site_and_regional/subset_data_single_point/surfdata_1x1_PLUMBER2_${PLUMBER2SITE}_hist_16pfts_CMIP6_simyr2000_c231004.nc"
+fsurdat = "/glade/u/home/wwieder/CTSM/tools/site_and_regional/subset_data_single_point/surfdata_1x1_PLUMBER2_${PLUMBER2SITE}_hist_16pfts_CMIP6_simyr2000_c231005.nc"
 
 ! this allows for large h1 data files, regardless or run length
 hist_nhtfrq = 0,1

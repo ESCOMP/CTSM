@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=US-Cop
 ./xmlchange PTS_LON=-109.389999
 ./xmlchange PTS_LAT=38.09
-./xmlchange START_DATE=2002-01-01
+./xmlchange RUN_STARTDATE=2002-01-01
 ./xmlchange DATM_YR_ALIGN=2002
 ./xmlchange DATM_YR_START=2002
 ./xmlchange DATM_YR_END=2003

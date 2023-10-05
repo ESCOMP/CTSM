@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=BW-Ma1
 ./xmlchange PTS_LON=23.560329
 ./xmlchange PTS_LAT=-19.9165
-./xmlchange START_DATE=1999-12-31
+./xmlchange RUN_STARTDATE=1999-12-31
 ./xmlchange DATM_YR_ALIGN=2000
 ./xmlchange DATM_YR_START=2000
 ./xmlchange DATM_YR_END=2000

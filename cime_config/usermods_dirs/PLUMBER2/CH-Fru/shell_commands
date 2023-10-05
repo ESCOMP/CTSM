@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=CH-Fru
 ./xmlchange PTS_LON=8.53778
 ./xmlchange PTS_LAT=47.115833
-./xmlchange START_DATE=2006-12-31
+./xmlchange RUN_STARTDATE=2006-12-31
 ./xmlchange DATM_YR_ALIGN=2007
 ./xmlchange DATM_YR_START=2007
 ./xmlchange DATM_YR_END=2014

@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=US-Tw4
 ./xmlchange PTS_LON=-121.641403
 ./xmlchange PTS_LAT=38.103001
-./xmlchange START_DATE=2014-01-01
+./xmlchange RUN_STARTDATE=2014-01-01
 ./xmlchange DATM_YR_ALIGN=2014
 ./xmlchange DATM_YR_START=2014
 ./xmlchange DATM_YR_END=2014

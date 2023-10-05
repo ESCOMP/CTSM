@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=CA-SF3
 ./xmlchange PTS_LON=-106.00531
 ./xmlchange PTS_LAT=54.091599
-./xmlchange START_DATE=2003-01-01
+./xmlchange RUN_STARTDATE=2003-01-01
 ./xmlchange DATM_YR_ALIGN=2003
 ./xmlchange DATM_YR_START=2003
 ./xmlchange DATM_YR_END=2005

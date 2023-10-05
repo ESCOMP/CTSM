@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=DK-ZaH
 ./xmlchange PTS_LON=-20.550293
 ./xmlchange PTS_LAT=74.473282
-./xmlchange START_DATE=2000-01-01
+./xmlchange RUN_STARTDATE=2000-01-01
 ./xmlchange DATM_YR_ALIGN=2000
 ./xmlchange DATM_YR_START=2000
 ./xmlchange DATM_YR_END=2013

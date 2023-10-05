@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=AU-Gin
 ./xmlchange PTS_LON=115.650002
 ./xmlchange PTS_LAT=-31.375
-./xmlchange START_DATE=2011-12-31
+./xmlchange RUN_STARTDATE=2011-12-31
 ./xmlchange DATM_YR_ALIGN=2012
 ./xmlchange DATM_YR_START=2012
 ./xmlchange DATM_YR_END=2017

@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=CN-Du2
 ./xmlchange PTS_LON=116.2836
 ./xmlchange PTS_LAT=42.0467
-./xmlchange START_DATE=2006-12-31
+./xmlchange RUN_STARTDATE=2006-12-31
 ./xmlchange DATM_YR_ALIGN=2007
 ./xmlchange DATM_YR_START=2007
 ./xmlchange DATM_YR_END=2008

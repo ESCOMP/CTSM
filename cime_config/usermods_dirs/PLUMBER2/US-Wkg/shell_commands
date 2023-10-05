@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=US-Wkg
 ./xmlchange PTS_LON=-109.941895
 ./xmlchange PTS_LAT=31.7365
-./xmlchange START_DATE=2005-01-01
+./xmlchange RUN_STARTDATE=2005-01-01
 ./xmlchange DATM_YR_ALIGN=2005
 ./xmlchange DATM_YR_START=2005
 ./xmlchange DATM_YR_END=2014

@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=US-GLE
 ./xmlchange PTS_LON=-106.239899
 ./xmlchange PTS_LAT=41.366501
-./xmlchange START_DATE=2009-01-01
+./xmlchange RUN_STARTDATE=2009-01-01
 ./xmlchange DATM_YR_ALIGN=2009
 ./xmlchange DATM_YR_START=2009
 ./xmlchange DATM_YR_END=2014

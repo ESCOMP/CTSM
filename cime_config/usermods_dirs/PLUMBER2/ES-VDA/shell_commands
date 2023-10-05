@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=ES-VDA
 ./xmlchange PTS_LON=1.4485
 ./xmlchange PTS_LAT=42.15218
-./xmlchange START_DATE=2003-12-31
+./xmlchange RUN_STARTDATE=2003-12-31
 ./xmlchange DATM_YR_ALIGN=2004
 ./xmlchange DATM_YR_START=2004
 ./xmlchange DATM_YR_END=2004

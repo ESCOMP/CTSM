@@ -1,7 +1,7 @@
 ./xmlchange PLUMBER2SITE=AU-Emr
 ./xmlchange PTS_LON=148.474594
 ./xmlchange PTS_LAT=-23.8587
-./xmlchange START_DATE=2011-12-31
+./xmlchange RUN_STARTDATE=2011-12-31
 ./xmlchange DATM_YR_ALIGN=2012
 ./xmlchange DATM_YR_START=2012
 ./xmlchange DATM_YR_END=2013
