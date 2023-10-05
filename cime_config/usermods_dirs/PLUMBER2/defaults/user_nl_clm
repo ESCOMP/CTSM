@@ -37,4 +37,3 @@ hist_fincl2 = 'AR','ELAI','FCEV','FCTR','FGEV','FIRA','FSA','FSH','GPP','H2OSOI'
              'TLAI','WIND','FIRE','FSM','COSZEN','BTRANMN','TV','RSSUN','RSSHA','FSH_G','RHAF',
              'RH_LEAF','RH','T10','TG','SABG','SABV','TBOT','TAUX','TAUY','QSNOEVAP','QFLX_SUB_SNOW',
              'QFLX_SNOW_DRAIN','H2OSFC'
-

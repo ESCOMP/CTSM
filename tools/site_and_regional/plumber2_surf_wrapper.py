@@ -95,7 +95,6 @@ def main():
 
     plumber2_sites = pd.read_csv('PLUMBER2_sites.csv', skiprows=4)  
 
-
     for i, row in tqdm.tqdm(plumber2_sites.iterrows()):
         lat = row['Lat']
         lon = row['Lon']
