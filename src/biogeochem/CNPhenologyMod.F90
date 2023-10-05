@@ -2688,7 +2688,6 @@ contains
     else
       ! As long as crops have at most a 365-day growing season, using get_curr_days_per_year()
       ! should give the same result of this function as using get_prev_days_per_year().
-      ! TODO: Test identicality when using get_prev_days_per_year().
        DaysPastPlanting = jday - idop + get_curr_days_per_year()
     end if
 
