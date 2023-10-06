@@ -15,7 +15,7 @@ module WaterStateType
   use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_landunit, subgrid_level_gridcell
   use clm_varctl     , only : use_bedrock, use_excess_ice, iulog
   use spmdMod        , only : masterproc
-  use clm_varctl     , only : use_fates
+  use clm_varctl     , only : use_fates, use_hillslope
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevmaxurbgrnd, nlevsno   
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
@@ -300,6 +300,7 @@ contains
             avgflag='A', &
             long_name=this%info%lname('volume of water in stream channel (hillslope hydrology only)'), &
             ptr_lunit=this%stream_water_volume_lun, l2g_scale_type='natveg',  default='inactive')
+    end if
 
     ! Add excess ice fields to history
 
