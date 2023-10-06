@@ -3362,10 +3362,6 @@ sub setup_logic_hillslope {
   if ( (! &value_is_true($use_hillslope)) && &value_is_true($use_hillslope_routing) ) {
       $log->fatal_error("Cannot turn on use_hillslope_routing when use_hillslope is off\n" );
   }
-  my $downscale_hillslope_meteorology = $nl->get_value('use_hillslope_routing');
-  if ( (! &value_is_true($use_hillslope)) && &value_is_true($downscale_hillslope_meteorology) ) {
-     $log->fatal_error("Cannot turn on downscale_hillslope_meteorology when use_hillslope is off\n" );
-  }
 }
 
 #-------------------------------------------------------------------------------
