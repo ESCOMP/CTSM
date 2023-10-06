@@ -626,7 +626,7 @@ contains
          snicar_dust_optics /= 'sahara' .or.  &
          snicar_numrad_snw /= 5 .or.  &
          snicar_snobc_intmix .or. snicar_snodst_intmix .or.  &
-         not(snicar_use_aerosol) .or.  &
+         .not. snicar_use_aerosol .or.  &
          do_sno_oc) then
        call endrun(msg=' ERROR: You have selected an option that is EXPERIMENTAL, UNSUPPORTED, and UNTESTED. For guidance see namelist_defaults_ctsm.xml'//&
             errMsg(sourcefile, __LINE__))
