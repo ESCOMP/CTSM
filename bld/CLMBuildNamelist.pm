@@ -2576,6 +2576,8 @@ sub setup_logic_do_transient_pfts {
       $cannot_be_true = "$var cannot be combined with use_cndv";
    } elsif (&value_is_true($nl->get_value('use_fates'))) {
       $cannot_be_true = "$var cannot be combined with use_fates";
+   } elsif (&value_is_true($nl->get_value('use_hillslope'))) {
+      $cannot_be_true = "$var cannot be combined with use_hillslope";
    }
 
    if ($cannot_be_true) {
@@ -2651,6 +2653,8 @@ sub setup_logic_do_transient_crops {
       # do_transient_crops. However, this hasn't been tested, so to be safe,
       # we are not allowing this combination for now.
       $cannot_be_true = "$var has not been tested with FATES, so for now these two options cannot be combined";
+   } elsif (&value_is_true($nl->get_value('use_hillslope'))) {
+      $cannot_be_true = "$var cannot be combined with use_hillslope";
    }
 
    if ($cannot_be_true) {
@@ -2746,6 +2750,8 @@ sub setup_logic_do_transient_lakes {
    if (&value_is_true($nl->get_value($var))) {
       if (&value_is_true($nl->get_value('collapse_urban'))) {
          $log->fatal_error("$var cannot be combined with collapse_urban");
+      } elsif (&value_is_true($nl->get_value('use_hillslope'))) {
+         $log->fatal_error("$var cannot be combined with use_hillslope");
       }
       if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
          $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soil > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
@@ -2809,6 +2815,8 @@ sub setup_logic_do_transient_urban {
    if (&value_is_true($nl->get_value($var))) {
       if (&value_is_true($nl->get_value('collapse_urban'))) {
          $log->fatal_error("$var cannot be combined with collapse_urban");
+      } elsif (&value_is_true($nl->get_value('use_hillslope'))) {
+         $log->fatal_error("$var cannot be combined with use_hillslope");
       }
       if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
          $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soil > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
