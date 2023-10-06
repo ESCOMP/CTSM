@@ -72,7 +72,7 @@ def import_coord_2d(ds, coordName, varName):
 
 
 def main(
-    regrid_resolution, regrid_template_file_in, regrid_input_directory, regrid_output_directory
+    regrid_resolution, regrid_template_file_in, regrid_input_directory, regrid_output_directory, extension
 ):
     print(f"Regridding GGCMI crop calendars to {regrid_resolution}:")
 
@@ -129,12 +129,12 @@ def main(
     template_ds_out.to_netcdf(templatefile, mode="w")
 
     # Loop through original crop calendar files, interpolating using cdo with nearest-neighbor
-    input_files = glob.glob("*nc4")
+    input_files = glob.glob("*" + extension)
     input_files.sort()
     for f in input_files:
         print("    " + f[0:6])
         f2 = os.path.join(regrid_output_directory, f)
-        f3 = f2.replace(".nc4", f"_nninterp-{regrid_resolution}.nc4")
+        f3 = f2.replace(extension, f"_nninterp-{regrid_resolution}{extension}")
 
         if os.path.exists(f3):
             os.remove(f3)
@@ -179,6 +179,13 @@ if __name__ == "__main__":
         type=str,
         required=True,
     )
+    default = ".nc"
+    parser.add_argument(
+        "-x",
+        "--extension",
+        help=f"File extension of raw GGCMI sowing/harvest date files (default {default}).",
+        default=default,
+    )
 
     # Get arguments
     args = parser.parse_args(sys.argv[1:])
@@ -191,4 +198,5 @@ if __name__ == "__main__":
         os.path.realpath(args.regrid_template_file),
         os.path.realpath(args.regrid_input_directory),
         os.path.realpath(args.regrid_output_directory),
+        args.extension,
     )
