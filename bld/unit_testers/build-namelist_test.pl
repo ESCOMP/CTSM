@@ -163,9 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1975;
+my $ntests = 1999;
+
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1344;
+   $ntests += 1353;
 }
 plan( tests=>$ntests );
 
@@ -323,6 +324,8 @@ foreach my $driver ( "mct", "nuopc" ) {
                          "-res 0.9x1.25 -structure fast",
                          "-res 0.9x1.25 -namelist '&a irrigate=.true./'", "-res 0.9x1.25 -verbose", "-res 0.9x1.25 -ssp_rcp SSP1-2.6", "-res 0.9x1.25 -test", "-res 0.9x1.25 -sim_year 1850",
                          "-res 0.9x1.25 -namelist '&a use_lai_streams=.true.,use_soil_moisture_streams=.true./'",
+                         "-res 0.9x1.25 -namelist '&a use_excess_ice=.true. use_excess_ice_streams=.true./'",
+                         "-res 0.9x1.25 -namelist '&a use_excess_ice=.true. use_excess_ice_streams=.false./'",
                          "-res 0.9x1.25 -use_case 1850_control",
                          "-res 1x1pt_US-UMB -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
                          "-res 1x1_brazil",
@@ -337,6 +340,10 @@ foreach my $driver ( "mct", "nuopc" ) {
       my $base_options = "-envxml_dir . -driver $driver";
       if ( $driver eq "mct" ) {
          $base_options = "$base_options -lnd_frac $DOMFILE";
+         # Skip the MCT test for excess ice streams
+         if ( $options =~ /use_excess_ice_streams=.true./ ) {
+           next;
+         }
       } else {
          $base_options = "$base_options -namelist '&a force_send_to_atm = .false./'";
       }
@@ -524,8 +531,33 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
-     "soilm_stream wo use"       =>{ options=>"-res 0.9x1.25 -envxml_dir .",
-                                     namelst=>"use_soil_moisture_streams = .false.,stream_fldfilename_soilm='missing_file'",
+     "soilm_stream off w file"      =>{ options=>"-res 0.9x1.25 -envxml_dir .",
+                                     namelst=>"use_soil_moisture_streams = .false.,stream_fldfilename_soilm='file_provided_when_off'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "exice_stream off w file"  =>{ options=>"-res 0.9x1.25 -envxml_dir .",
+                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.,stream_fldfilename_exice='file_provided_when_off'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "exice_stream off w mesh"  =>{ options=>"-res 0.9x1.25 -envxml_dir .",
+                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.,stream_meshfile_exice='file_provided_when_off'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "exice off, but stream on"  =>{ options=>"-res 0.9x1.25 -envxml_dir .",
+                                     namelst=>"use_excess_ice=.false., use_excess_ice_streams = .true.,stream_fldfilename_exice='file_provided', stream_meshfile_exice='file_provided'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "exice stream off, but setmap"=>{ options=>"-res 0.9x1.25 -envxml_dir .",
+                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.,stream_mapalgo_exice='bilinear'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "exice stream on, but mct"    =>{ options=>"--res 0.9x1.25 --envxml_dir . --driver mct --lnd_frac $DOMFILE ",
+                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
@@ -984,6 +1016,21 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                    },
+     "useFATESWluna"             =>{ options=>"--bgc fates --envxml_dir . --no-megan",
+                                     namelst=>"use_luna=TRUE",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "useFATESWfun"              =>{ options=>"--bgc fates --envxml_dir . --no-megan",
+                                     namelst=>"use_fun=TRUE",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "useFATESWOsuplnitro"       =>{ options=>"--bgc fates --envxml_dir . --no-megan",
+                                     namelst=>"suplnitro='NONE'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
      "FireNoneButBGCfireon"    =>{ options=>"-bgc bgc -envxml_dir . -light_res none",
                                      namelst=>"fire_method='li2021gswpfrc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1179,6 +1226,26 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
+     "fates_non_sp_laistreams"   =>{ options=>"--envxml_dir . --bgc fates",
+                                     namelst=>"use_lai_streams=.true., use_fates_sp=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                     },
+     "bgc_non_sp_laistreams"     =>{ options=>"--envxml_dir . -bgc bgc",
+                                     namelst=>"use_lai_streams=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                     },
+     "bgc_laistreams_input"     =>{ options=>"--envxml_dir . --bgc bgc",
+                                     namelst=>"stream_year_first_lai=1999",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                     },
+     "crop_laistreams_input"     =>{ options=>"--envxml_dir . --bgc sp --crop",
+                                     namelst=>"use_lai_streams=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                     },
                );
 foreach my $key ( keys(%failtest) ) {
    print( "$key\n" );

@@ -54,7 +54,7 @@ contains
     type(bounds_type), intent(in) :: bounds          ! bounds
     !
     ! !LOCAL VARIABLES:
-    integer                 :: i,n                        ! index
+    integer                 :: i,n, ig, g                 ! index
     integer                 :: stream_year_first_lai      ! first year in Lai stream to use
     integer                 :: stream_year_last_lai       ! last year in Lai stream to use
     integer                 :: model_year_align_lai       ! align stream_year_first_lai with
@@ -150,6 +150,15 @@ contains
          rc                  = rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    end if
+    
+    if ( .not. allocated(g_to_ig) )then
+       allocate (g_to_ig(bounds%begg:bounds%endg) )
+       ig = 0
+       do g = bounds%begg,bounds%endg
+          ig = ig+1
+          g_to_ig(g) = ig
+       end do
     end if
 
   end subroutine lai_init
