@@ -129,7 +129,10 @@ def main(
     template_ds_out.to_netcdf(templatefile, mode="w")
 
     # Loop through original crop calendar files, interpolating using cdo with nearest-neighbor
-    input_files = glob.glob("*" + extension)
+    pattern = "*" + extension
+    input_files = glob.glob(pattern)
+    if len(input_files) == 0:
+        raise FileNotFoundError(f"No files found matching {os.path.join(os.getcwd(), pattern)}")
     input_files.sort()
     for f in input_files:
         print("    " + f[0:6])
