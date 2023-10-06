@@ -173,7 +173,11 @@ def main ():
         runfile.write(f"{output} \n")
         logger.info('run command is %s', output)
 
-    print (f"Successfully created jobscript {jobscript_file}")
+        check = f'if [ $? != 0 ]; then echo "Error running resolution {res}"; exit -4; fi'
+        runfile.write(f"{check} \n")
+        runfile.write(f"Successfully ran resolution\n")
+
+    print (f"Successfully created jobscript {jobscript_file}\n")
     sys.exit(0)
 
 if __name__ == "__main__":

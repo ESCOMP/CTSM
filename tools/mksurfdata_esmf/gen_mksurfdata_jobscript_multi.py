@@ -267,8 +267,13 @@ def main ():
                 print (f"generated namelist {namelist}")
                 output = f"mpiexec_mpt -p \"%g:\" -np {n_p} omplace -tm open64 {mksurfdata} < {namelist}"
                 runfile.write(f"{output} \n")
+                check = f"if [ $? != 0 ]; then echo 'Error running resolution {res}'; exit -4; fi"
+                runfile.write(f"{check} \n")
+                runfile.write(f"Successfully ran resolution {res}\n")
 
-    print (f"Successfully created jobscript {jobscript_file}")
+        runfile.write(f"Successfully ran {jobscript_file}\n")
+
+    print (f"Successfully created jobscript {jobscript_file}\n")
     sys.exit(0)
 
 if __name__ == "__main__":
