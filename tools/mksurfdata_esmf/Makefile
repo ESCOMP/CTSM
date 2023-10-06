@@ -153,7 +153,7 @@ crop-global-present-ne16np4 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
 
-crop-global-present-ne120 : FORCE
+crop-global-present-ne120np4 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 96 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
 
@@ -185,14 +185,6 @@ crop-numa-historical : FORCE
 
 crop-smallville : FORCE
 	$(SUBSETDATA_POINT) --create-surface $(SUBSETDATA_1X1_SMALL)
-
-crop-global-present-ne16np4 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
-	$(BATCHJOBS) $@.sh
-
-crop-global-present-ne120np4 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 96 --scenario $@ --jobscript-file $@.sh --walltime 03:00:00
-	$(BATCHJOBS) $@.sh
 
 # Note that the smallville 1850 dataset is entirely natural vegetation. This
 # facilitates testing a transient case that starts with no crop, and then later
