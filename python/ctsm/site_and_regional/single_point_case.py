@@ -18,9 +18,9 @@ from ctsm.utils import add_tag_to_filename
 
 logger = logging.getLogger(__name__)
 
-NAT_PFT = 15 # natural pfts
-NUM_PFT = 17 # for runs with generic crops
-MAX_PFT = 78 # for runs with explicit crops
+NAT_PFT = 15  # natural pfts
+NUM_PFT = 17  # for runs with generic crops
+MAX_PFT = 78  # for runs with explicit crops
 
 # -- constants to represent months of year
 FIRST_MONTH = 1
@@ -134,8 +134,8 @@ class SinglePointCase(BaseCase):
         self.dom_pft = dom_pft
         self.pct_pft = pct_pft
         self.num_pft = num_pft
-        self.cth = cth 
-        self.cbh = cbh 
+        self.cth = cth
+        self.cbh = cbh
         self.include_nonveg = include_nonveg
         self.uni_snow = uni_snow
         self.cap_saturation = cap_saturation
@@ -207,12 +207,16 @@ class SinglePointCase(BaseCase):
 
             # -- check dom_pft vs MAX_pft
             if self.num_pft - 1 < max_dom_pft < NUM_PFT:
-                logger.info("WARNING, you trying to run with generic crops (16 PFT surface dataset)")
-                #raise argparse.ArgumentTypeError(err_msg)
+                logger.info(
+                    "WARNING, you trying to run with generic crops (16 PFT surface dataset)"
+                )
+                # raise argparse.ArgumentTypeError(err_msg)
 
             # -- check if all dom_pft are in the same range:
             if min_dom_pft < NAT_PFT <= max_dom_pft:
-                logger.info("WARNING, you are subsetting using mixed land units that have both natural pfts and crop cfts. Check that your surface dataset looks correct.")
+                logger.info(
+                    "WARNING, you are subsetting using mixed land units that have both natural pfts and crop cfts. Check that your surface dataset looks correct."
+                )
 
     def check_nonveg(self):
         """
@@ -407,10 +411,10 @@ class SinglePointCase(BaseCase):
 
             # -- loop over all dom_pft and pct_pft
             zip_pfts = zip(self.dom_pft, self.pct_pft, self.cth, self.cbh)
-            for dom_pft, pct_pft,cth,cbh in zip_pfts:
+            for dom_pft, pct_pft, cth, cbh in zip_pfts:
                 if cth is not None:
-                    f_mod["MONTHLY_HEIGHT_TOP"][:,:,:,dom_pft] = cth
-                    f_mod["MONTHLY_HEIGHT_BOT"][:,:,:,dom_pft] = cbh
+                    f_mod["MONTHLY_HEIGHT_TOP"][:, :, :, dom_pft] = cth
+                    f_mod["MONTHLY_HEIGHT_BOT"][:, :, :, dom_pft] = cbh
                 if dom_pft < NAT_PFT:
                     f_mod["PCT_NAT_PFT"][:, :, dom_pft] = pct_pft
                 else:

@@ -185,7 +185,7 @@ def get_parser():
         type=float,
         default=None,
         nargs="*",
-    )   
+    )
 
     # -- region-specific parser options
     rg_parser.add_argument(
