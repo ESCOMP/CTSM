@@ -25,7 +25,7 @@ Example: Crop Simulation
 ------------------------------------
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case I1850Clm50BgcCrop_with_exice -res f19_g17_gl4 -compset I1850Clm50BgcCrop
    > cd I1850Clm50BgcCrop_with_exice
 
