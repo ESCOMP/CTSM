@@ -1873,6 +1873,8 @@ contains
      select case (snicar_numrad_snw)
      case (default_number_bands)  ! 5-band case
 
+        ! The argument posNOTonfile=.true. is used here because this is a non-spatial file.
+        ! This argument is relevant when running single_column.
         ! flux weights/spectrum
         tString = 'flx_wgt_dir5_'//short_case_solarspec
         call ncd_io(trim(tString), flx_wgt_dir, 'read', ncid, readv, posNOTonfile=.true.)
