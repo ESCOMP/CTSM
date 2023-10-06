@@ -161,7 +161,8 @@ contains
          h2osno_col = col_array(0._r8), &
          snow_depth_col = col_array(0._r8), &
          watsat_col = l_watsat_col, &
-         t_soisno_col = l_t_soisno_col)
+         t_soisno_col = l_t_soisno_col, &
+         NLFilename = ' ')
   end subroutine create_water_type
 
   subroutine teardown(this, water_inst)
