@@ -27,8 +27,6 @@ module HillslopeHydrologyMod
   public SetHillslopeSoilThickness
   public HillslopeSoilThicknessProfile
   public HillslopeSetLowlandUplandPfts
-  public HillslopeDominantPftIndex
-  public HillslopeTwoLargestPftIndices
   public HillslopeDominantPft
   public HillslopeDominantLowlandPft
   public HillslopePftFromFile
@@ -184,6 +182,7 @@ contains
     use fileutils       , only : getfil
     use clm_varcon      , only : spval, ispval, grlnd 
     use landunit_varcon , only : istsoil
+    use subgridWeightsMod , only : compute_higher_order_weights
     use ncdio_pio
     
     !
@@ -577,9 +576,6 @@ contains
     ! to ensure patch exists in every gridcell
     if (pft_distribution_method == pft_from_file) then
        call HillslopePftFromFile(bounds,col_pftndx)
-    else if (pft_distribution_method == pft_uniform_dominant_pft) then
-       ! Specify single dominant pft per gridcell
-       call HillslopeDominantPft(bounds)
     else if (pft_distribution_method == pft_lowland_dominant_pft) then
        ! Specify different pfts for uplands / lowlands
        call HillslopeDominantLowlandPft(bounds)
@@ -594,6 +590,9 @@ contains
        deallocate(hill_pftndx)
        deallocate(col_pftndx)
     endif
+    
+    ! Update higher order weights and check that weights sum to 1
+    call compute_higher_order_weights(bounds)
     
     call ncd_pio_closefile(ncid)
     
@@ -866,76 +865,6 @@ contains
   end subroutine HillslopeSetLowlandUplandPfts
 
   !------------------------------------------------------------------------
-  subroutine HillslopeDominantPftIndex(weights,lbound,pindex)
-    !
-    ! !DESCRIPTION:
-    ! Locate each gridcell's most dominant pft on the input dataset.
-    ! This is different than using n_dom_pts = 1, because it is meant
-    ! to be applied only to gridcells having active hillslope hydrology.
-    ! This routine is called from surfrd_hillslope.
-
-    !
-    ! !USES
-    !
-    ! !ARGUMENTS:
-    real(r8), intent(in)  :: weights(:)        ! array of patch weights
-    integer,  intent(in)  :: lbound            ! lower bound of weights
-    integer,  intent(out) :: pindex            ! index of largest weight
-    !
-    ! !LOCAL VARIABLES:
-    integer :: pdom(1)
-
-    !------------------------------------------------------------------------
-
-    pdom = maxloc(weights)
-    pindex = pdom(1) + (lbound - 1)
-
-  end subroutine HillslopeDominantPftIndex
-
-  !------------------------------------------------------------------------
-  subroutine HillslopeTwoLargestPftIndices(weights,lbound,pindex1,pindex2)
-    !
-    ! !DESCRIPTION:
-    ! Locate each gridcell's two most dominant patches on the input dataset.
-    ! This is different than using n_dom_pts = 2, because it is meant
-    ! to be applied only to gridcells having active hillslope hydrology.
-    ! This routine is called from surfrd_hillslope.
-
-    !
-    ! !USES
-    !
-    ! !ARGUMENTS:
-    real(r8), intent(in)  :: weights(:)        ! array of patch weights
-    integer,  intent(in)  :: lbound            ! lower bound of weights
-    integer,  intent(out) :: pindex1           ! index of largest weight
-    integer,  intent(out) :: pindex2           ! index of next largest weight
-    !
-    ! !LOCAL VARIABLES:
-    integer :: pdom(1),psubdom(1)
-    real(r8),allocatable :: mask(:)
-
-    !------------------------------------------------------------------------
-
-    pdom = maxloc(weights)
-    ! create mask to exclude pdom
-    allocate(mask(size(weights)))
-    mask(:) = 1.
-    mask(pdom(1)) = 0.
-    ! check that more than one nonzero patch weight exists,
-    ! if not return identical indices
-    if (sum(mask*weights) > 0) then
-       psubdom = maxloc(mask*weights)
-    else
-       psubdom = pdom
-    endif
-    deallocate(mask)
-
-    pindex1 = pdom(1) + (lbound - 1)
-    pindex2 = psubdom(1) + (lbound - 1)
-
-  end subroutine HillslopeTwoLargestPftIndices
-
-  !------------------------------------------------------------------------
   subroutine HillslopeDominantPft(bounds)
     !
     ! !DESCRIPTION: 
@@ -952,6 +881,7 @@ contains
     use decompMod       , only : get_clump_bounds, get_proc_clumps
     use clm_varcon      , only : ispval
     use PatchType       , only : patch
+    use array_utils     , only : find_k_max_indices
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -965,7 +895,8 @@ contains
 
     do c = bounds%begc,bounds%endc
        if (col%is_hillslope_column(c) .and. (col%npatches(c) > 1)) then
-          pdom = maxloc(patch%wtcol(col%patchi(c):col%patchf(c)))
+
+          call find_k_max_indices(patch%wtcol(col%patchi(c):col%patchf(c)),1,1,pdom)
           pdom = pdom + (col%patchi(c) - 1)
 
           sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
@@ -1003,32 +934,34 @@ contains
     use clm_varcon      , only : ispval
     use PatchType       , only : patch
     use pftconMod       , only : pftcon, ndllf_evr_tmp_tree, nc3_nonarctic_grass, nc4_grass
+    use array_utils     , only : find_k_max_indices
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: nc,p,pu,pl,l,c    ! indices
-    integer :: pdom(1),psubdom(1)
+    integer :: p,c    ! indices
     integer :: plow, phigh
+    integer :: max_index(1)
+    integer, allocatable  :: max_indices(:)    ! largest weight pft indices
     real(r8) :: sum_wtcol, sum_wtlun, sum_wtgrc
-    real(r8),allocatable :: mask(:)
 
     !------------------------------------------------------------------------
 
+    allocate(max_indices(2))
     do c = bounds%begc,bounds%endc
        if (col%is_hillslope_column(c)) then
-          pdom = maxloc(patch%wtcol(col%patchi(c):col%patchf(c)))
-          ! create mask to exclude pdom
-          allocate(mask(col%npatches(c)))
-          mask(:) = 1.
-          mask(pdom(1)) = 0.
 
-          pdom = pdom + (col%patchi(c) - 1)
-
-          psubdom = maxloc(mask*patch%wtcol(col%patchi(c):col%patchf(c)))
-          psubdom = psubdom + (col%patchi(c) - 1)
-          deallocate(mask)
+          ! if only one pft exists, find dominant pft index and set 2nd index to the same value
+          
+          if (size(patch%wtcol(col%patchi(c):col%patchf(c))) == 1) then
+             call find_k_max_indices(patch%wtcol(col%patchi(c):col%patchf(c)),1,1,max_index)
+             max_indices(1) = max_index(1) + (col%patchi(c) - 1)
+             max_indices(2) = max_indices(1)
+          else
+             call find_k_max_indices(patch%wtcol(col%patchi(c):col%patchf(c)),1,2,max_indices)
+             max_indices = max_indices + (col%patchi(c) - 1)
+          endif
 
           sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
           sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
@@ -1037,34 +970,36 @@ contains
           patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
           patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
           patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
-
-          ! assumes trees are 1-8, shrubs 9-11, and grasses 12-14
-          ! and puts the lowest ivt on the lowland column
-          if ((patch%itype(pdom(1)) > patch%itype(psubdom(1)) &
-               .and. patch%itype(psubdom(1)) > 0) .or. &
-               (patch%itype(pdom(1)) == 0)) then
-             plow = psubdom(1)
-             phigh = pdom(1)
+          
+          ! Put the highest stature vegetation on the lowland column
+          ! non-tree and tree       ; place tree on lowland
+          ! grass and shrub         ; place shrub on lowland
+          ! bare soil and vegetation; place vegetation on lowland
+          if ((.not. pftcon%is_tree(patch%itype(max_indices(1))) .and. pftcon%is_tree(patch%itype(max_indices(2)))) &
+               .or. (pftcon%is_grass(patch%itype(max_indices(1))) .and. pftcon%is_shrub(patch%itype(max_indices(2)))) &
+               .or. (patch%itype(max_indices(1)) == 0)) then
+             plow = max_indices(2)
+             phigh = max_indices(1)
           else
-             plow = pdom(1)
-             phigh = psubdom(1)
+             plow = max_indices(1)
+             phigh = max_indices(2)
           endif
 
           ! Special cases (subjective)
 
           ! if NET/BDT assign BDT to lowland
-          if ((patch%itype(pdom(1)) == ndllf_evr_tmp_tree) .and. pftcon%is_tree(patch%itype(psubdom(1)))) then
-             plow = psubdom(1)        
-             phigh = pdom(1)
+          if ((patch%itype(max_indices(1)) == ndllf_evr_tmp_tree) .and. pftcon%is_tree(patch%itype(max_indices(2)))) then
+             plow = max_indices(2)        
+             phigh = max_indices(1)
           endif
           ! if C3/C4 assign C4 to lowland
-          if ((patch%itype(pdom(1)) == nc4_grass) .and. (patch%itype(psubdom(1)) == nc3_nonarctic_grass)) then
-             plow = pdom(1)        
-             phigh = psubdom(1)
+          if ((patch%itype(max_indices(1)) == nc4_grass) .and. (patch%itype(max_indices(2)) == nc3_nonarctic_grass)) then
+             plow = max_indices(1)        
+             phigh = max_indices(2)
           endif
-          if ((patch%itype(pdom(1)) == nc3_nonarctic_grass) .and. (patch%itype(psubdom(1)) == nc4_grass)) then
-             plow = psubdom(1)        
-             phigh = pdom(1)
+          if ((patch%itype(max_indices(1)) == nc3_nonarctic_grass) .and. (patch%itype(max_indices(2)) == nc4_grass)) then
+             plow = max_indices(2)        
+             phigh = max_indices(1)
           endif
 
           if(col%cold(c) == ispval) then
@@ -1080,7 +1015,8 @@ contains
           endif
        endif
     enddo    ! end loop c
-
+    deallocate(max_indices)
+    
   end subroutine HillslopeDominantLowlandPft
 
   !------------------------------------------------------------------------
@@ -1095,6 +1031,7 @@ contains
     ! !USES
     use ColumnType      , only : col                
     use PatchType       , only : patch
+    use clm_varpar      , only : natpft_lb
 
     !
     ! !ARGUMENTS:
@@ -1115,6 +1052,8 @@ contains
           npatches_per_column = 0
           do p = col%patchi(c), col%patchf(c)
              patch%itype(p) = col_pftndx(c)
+             ! update mxy as is done in initSubgridMod.add_patch
+             patch%mxy(p) = patch%itype(p) + (1 - natpft_lb)
              npatches_per_column = npatches_per_column + 1
           enddo
           if (check_npatches) then

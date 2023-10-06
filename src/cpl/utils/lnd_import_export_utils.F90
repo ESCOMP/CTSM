@@ -163,7 +163,7 @@ contains
        write(iulog,*) 'Which are NaNs = ', isnan(array)
        do i = 1, size(array)
           if (isnan(array(i))) then
-             write(iulog,*) "NaN found in field ", trim(fname), ' at gridcell index ',begg+i-1,grc%londeg(begg+i-1),grc%latdeg(begg+i-1)
+             write(iulog,*) "NaN found in field ", trim(fname), ' at gridcell index/lon/lat: ',begg+i-1,grc%londeg(begg+i-1),grc%latdeg(begg+i-1)
           end if
        end do
        call shr_sys_abort(' ERROR: One or more of the CTSM cap '//direction//' fields are NaN ' )
