@@ -3,7 +3,7 @@
 .. include:: ../substitutions.rst
 
 ===================================
- Running-with-excess-ground-ice
+ Running with excess ground ice
 ===================================
 
 
