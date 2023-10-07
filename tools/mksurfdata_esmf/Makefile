@@ -124,7 +124,7 @@ global-present-nldas : FORCE
 tropics : $(TROPICS)
 
 crop-tropics-present : FORCE
-	$(MKSURFDATA)  --number-of-nodes 1 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
+	$(MKSURFDATA)  --number-of-nodes 2 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
 
 1x1_brazil-tropics-present : FORCE
