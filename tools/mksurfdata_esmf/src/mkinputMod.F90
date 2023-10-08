@@ -18,9 +18,10 @@ module mkinputMod
   ! routines
   ! ---------------------
 
-  public :: read_namelist_input
-  public :: check_namelist_input
-  public :: write_namelist_input
+  public :: read_namelist_input      ! Read the input control namelist
+  public :: bcast_namelist_input     ! Broadcast the namelist to all processors
+  public :: check_namelist_input     ! Check the input control namelist for errors
+  public :: write_namelist_input     ! Write information on the control namelist
 
   ! ---------------------
   ! variables
@@ -33,6 +34,8 @@ module mkinputMod
   character(CL) , public    :: fhrvname ! generic harvest filename
   character(CL) , public    :: furbname ! generic transient urban land cover filename
   character(CL) , public    :: flakname ! generic lake filename
+
+  character(CS) , public    :: mksrf_grid_name              = ' ' ! Name of this grid
 
   character(CX) , public    :: mksrf_fgrid_mesh             = ' ' ! land grid file name to use
   integer       , public    :: mksrf_fgrid_mesh_nx          = -999
@@ -126,11 +129,13 @@ contains
     integer :: ier
     integer :: k
     integer :: fileunit
+    integer :: grid_size    ! Number of columne in the grid
     logical :: lexist
     character(len=*), parameter :: subname = 'read_namelist_input'
     ! ------------------------------------------------------------
 
     namelist /mksurfdata_input/      &
+         mksrf_grid_name,           &
          mksrf_fvegtyp,             &
          mksrf_fvegtyp_mesh,        &
          mksrf_fhrvtyp,             &
@@ -213,6 +218,21 @@ contains
           call shr_sys_abort(subname//' error reading in mksurfdata_input namelist from standard input')
        end if
     end if
+    if ( mksrf_grid_name == ' ' )then
+       grid_size = mksrf_fgrid_mesh_nx * mksrf_fgrid_mesh_ny
+       write(mksrf_grid_name,'("Grid",I07)') grid_size
+    end if
+
+  end subroutine read_namelist_input
+
+  !===============================================================
+
+  subroutine bcast_namelist_input()
+
+    ! Braodcast the namelist to all processors
+
+    ! local variables
+    integer :: ier
 
     call mpi_bcast (mksrf_fgrid_mesh, len(mksrf_fgrid_mesh), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (mksrf_fgrid_mesh_nx, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -301,7 +321,7 @@ contains
     call mpi_bcast (logname, len(logname), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hostname, len(hostname), MPI_CHARACTER, 0, mpicom, ier)
 
-  end subroutine read_namelist_input
+  end subroutine bcast_namelist_input
 
   !===============================================================
   subroutine check_namelist_input()
@@ -338,6 +358,7 @@ contains
     ! ------------------------------------------------------------
 
     if (root_task) then
+       write(ndiag,'(a)')'Grid_name:                   '//trim(mksrf_grid_name)
        write(ndiag,'(a)')'Input rawdata files and corresponding meshes'
        write(ndiag,'(a)')' PFTs from:                  '//trim(mksrf_fvegtyp)
        write(ndiag,'(a)')' mesh for pft                '//trim(mksrf_fvegtyp_mesh)
@@ -434,6 +455,7 @@ contains
           write(ndiag, '(a)') " WARNING: aborting on invalid data check in urban has been disabled!"
           write(ndiag, '(a)') " WARNING: urban data may be invalid!"
        end if
+       flush(ndiag)
     end if
 
   end subroutine write_namelist_input

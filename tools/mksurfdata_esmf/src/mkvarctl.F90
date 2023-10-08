@@ -10,7 +10,7 @@ module mkvarctl
   private
 
   integer, public  :: ndiag             ! output log unit
-  logical, public  :: root_task         ! proc 0 logical for printing msgs
+  logical, public  :: root_task = .TRUE.! proc 0 logical for printing msgs
   integer, public  :: iam               ! processor number
   integer, public  :: npes              ! number of processors
   integer, public  :: mpicom            ! communicator group

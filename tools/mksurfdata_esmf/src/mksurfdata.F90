@@ -189,12 +189,18 @@ program mksurfdata
   logical                         :: create_esmf_pet_files = .false.
 
   ! character variables
+  character(len=CL)               :: default_log_suffix      ! default log file suffix to use for ESMF PET files
   character(len=CL)               :: string                  ! string read in
   character(len=CL)               :: fname
   character(len=*), parameter     :: subname = 'mksrfdata'   ! program name
 
   character(len=*), parameter :: u_FILE_u = &
        __FILE__
+
+  ! ======================================================================
+  ! Read in namelist before initializing MPI or ESMF
+  ! ======================================================================
+  call read_namelist_input()
 
   ! ======================================================================
   ! Initialize MPI
@@ -212,8 +218,9 @@ program mksurfdata
   else
      logkindflag = ESMF_LOGKIND_MULTI_ON_ERROR
   end if
+  default_log_suffix = mksrf_grid_name // 'ESMF_LogFile'
   call ESMF_Initialize(mpiCommunicator=MPICOM, logkindflag=logkindflag, logappendflag=.false., &
-       ioUnitLBound=5001, ioUnitUBound=5101, vm=vm, rc=rc)
+       defaultDefaultLogFilename=mksrf_grid_name, ioUnitLBound=5001, ioUnitUBound=5101, vm=vm, rc=rc)
   if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
   call ESMF_VMGetGlobal(vm, rc=rc)
   if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
@@ -252,13 +259,9 @@ program mksurfdata
 
   call ESMF_LogWrite("finished initializing PIO", ESMF_LOGMSG_INFO)
 
-  ! ======================================================================
-  ! Read in namelist
-  ! ======================================================================
-
-  ! Read input namelist on root_task and broadcast to all pes
+  ! Broadcast namelist to all pes
   ! root_task is a module variable in mkvarctl
-  call read_namelist_input()
+  call bcast_namelist_input()
 
   ! open output ndiag file
   if (fsurlog == ' ') then
@@ -271,6 +274,7 @@ program mksurfdata
      end if
      write (ndiag,'(a)') 'Attempting to create surface boundary data .....'
      write (ndiag,'(72a1)') ("-",n=1,60)
+     flush(ndiag)
   else
      ndiag = 6
   end if
@@ -316,6 +320,7 @@ program mksurfdata
      if (root_task)then
         write(ndiag,*)
         write(ndiag,'(1x,80a1)') ('=',k=1,80)
+        flush(ndiag)
      end if
 
      ! Open file
@@ -359,9 +364,11 @@ program mksurfdata
   if (fsurdat /= ' ') then
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out model grid"
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LONGXY"
+     if (root_task)  flush(ndiag)
      call mkfile_output(pioid, mesh_model, 'LONGXY', lon, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for LONGXY')
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LATIXY"
+     if (root_task)  flush(ndiag)
      call mkfile_output(pioid, mesh_model, 'LATIXY', lat, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for LATIXY')
      call pio_syncfile(pioid)
@@ -373,6 +380,7 @@ program mksurfdata
   ! -----------------------------------
   if (fsurdat /= ' ') then
      call mklai(mksrf_flai_mesh, mksrf_flai, mesh_model, pioid, rc=rc)
+     flush(ndiag)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklai')
   end if
 
@@ -387,6 +395,7 @@ program mksurfdata
   allocate(landfrac_pft(lsize_o))  ; landfrac_pft(:) = spval
   call mkpft( mksrf_fvegtyp_mesh, mksrf_fvegtyp, mesh_model, &
        pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft, rc=rc)
+  flush(ndiag)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
 
   do n = 1,lsize_o
@@ -394,6 +403,7 @@ program mksurfdata
   end do
   if (fsurdat /= ' ') then
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land fraction  from pft dataset"
+     if (root_task)  flush(ndiag)
      call mkfile_output(pioid,  mesh_model, 'LANDFRAC_PFT', landfrac_pft, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
      call pio_syncfile(pioid)
@@ -407,6 +417,7 @@ program mksurfdata
   if (fsurdat /= ' ') then
      call mkharvest( mksrf_fhrvtyp_mesh, mksrf_fhrvtyp, mesh_model, pioid, &
                      rc=rc )
+     flush(ndiag)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest_init')
   end if
 
@@ -419,14 +430,17 @@ program mksurfdata
   allocate ( pctlak_max(lsize_o)) ; pctlak_max(:) = spval
   call mkpctlak(mksrf_fpctlak_mesh, mksrf_fpctlak, mesh_model, pctlak, pioid, &
                 rc=rc)
+  flush(ndiag)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpctlak')
   call mklakdep(mksrf_flakdep_mesh, mksrf_flakdep, mesh_model, pioid, fsurdat, &
                 rc=rc)
+  flush(ndiag)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mklakdep')
 
   allocate ( pctwet(lsize_o)) ; pctwet(:) = spval
   allocate ( pctwet_orig(lsize_o)) ; pctwet_orig(:) = spval
   call mkwetlnd(mksrf_fwetlnd_mesh, mksrf_fwetlnd, mesh_model, pctwet, rc=rc)
+  flush(ndiag)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkwetlnd')
 
   ! -----------------------------------
@@ -435,6 +449,7 @@ program mksurfdata
   allocate (pctgla(lsize_o)) ; pctgla(:) = spval
   allocate (pctgla_orig(lsize_o)) ; pctgla_orig(:) = spval
   call mkglacier (mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, glac_o=pctgla, rc=rc)
+  flush(ndiag)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacier')
 
   ! -----------------------------------
@@ -443,6 +458,7 @@ program mksurfdata
   if (fsurdat /= ' ') then
      ! GLACIER_REGION is written out in the subroutine
      call mkglacierregion(mksrf_fglacierregion_mesh, mksrf_fglacierregion, mesh_model, pioid, rc)
+     flush(ndiag)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglacierregion')
   end if
 
@@ -452,6 +468,7 @@ program mksurfdata
   if (fsurdat /= ' ') then
      call mksoiltex( mksrf_fsoitex_mesh, file_mapunit_i=mksrf_fsoitex, file_lookup_i=mksrf_fsoitex_lookup, &
           mesh_o=mesh_model, pioid_o=pioid, rc=rc)
+     flush(ndiag)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoiltex')
   end if
 
@@ -461,6 +478,7 @@ program mksurfdata
   if (fsurdat /= ' ') then
      ! SOIL_COLOR and mxsoil_color is written out in the subroutine
      call mksoilcol( mksrf_fsoicol, mksrf_fsoicol_mesh, mesh_model, pioid, rc)
+     flush(ndiag)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilcol')
   end if
 
@@ -470,6 +488,7 @@ program mksurfdata
   if (fsurdat /= ' ') then
      ! FMAX is written out in the subroutine
      call mksoilfmax( mksrf_fmax_mesh, mksrf_fmax, mesh_model, pioid, rc)
+     flush(ndiag)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoilfmax')
   end if
 
@@ -479,6 +498,7 @@ program mksurfdata
   if (fsurdat /= ' ') then
      ! gdp is written out in the subroutine
      call mkgdp (mksrf_fgdp_mesh, mksrf_fgdp, mesh_model, pioid, rc=rc)
+     flush(ndiag)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkdomain')
   end if
 
@@ -487,6 +507,7 @@ program mksurfdata
   ! -----------------------------------
   if (fsurdat /= ' ') then
      call mkpeat (mksrf_fpeat_mesh, mksrf_fpeat, mesh_model, pioid, rc=rc)
+     flush(ndiag)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpeat')
   end if
 
@@ -495,6 +516,7 @@ program mksurfdata
   ! -----------------------------------
   if (fsurdat /= ' ') then
      call mksoildepth( mksrf_fsoildepth_mesh, mksrf_fsoildepth, mesh_model, pioid, rc)
+     flush(ndiag)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mksoildepth')
   end if
 
@@ -503,6 +525,7 @@ program mksurfdata
   ! -----------------------------------
   if (fsurdat /= ' ') then
      call mkagfirepkmon (mksrf_fabm_mesh, mksrf_fabm, mesh_model, pioid, rc=rc)
+     flush(ndiag)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkagfirepkmon')
   end if
 
@@ -515,9 +538,11 @@ program mksurfdata
   allocate (urban_region(lsize_o))           ; urban_region(:)      = -999
   call mkurban(mksrf_furban_mesh, mksrf_furban, mesh_model, pcturb, &
                urban_classes, urban_region, rc=rc)
+  flush(ndiag)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
   if (fsurdat /= ' ') then
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out urban region id"
+     if (root_task)  flush(ndiag)
      call mkfile_output(pioid,  mesh_model, 'URBAN_REGION_ID', urban_region, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
      call pio_syncfile(pioid)
@@ -534,6 +559,7 @@ program mksurfdata
   ! TODO(wjs, 2016-01-15) A better solution for this urban screening would probably
   ! be to modify the raw urban data; in that case, I believe we could remove furbtopo.
   call mkurban_topo ( mksrf_furbtopo_mesh, mksrf_furbtopo, mesh_model, varname='TOPO_ICE', elev_o=elev, rc=rc)
+  flush(ndiag)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban_topo')
   where (elev > elev_thresh)
      pcturb = 0._r8
@@ -545,6 +571,7 @@ program mksurfdata
   if (fsurdat /= ' ') then
      call mktopostats ( mksrf_ftopostats_mesh, mksrf_ftopostats, mksrf_ftopostats_override, &
           mesh_model, pioid, rc=rc)
+     flush(ndiag)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mktopostats')
   end if
 
@@ -554,6 +581,7 @@ program mksurfdata
   if (fsurdat /= ' ') then
      if (outnc_vic) then
         call mkVICparams ( mksrf_fvic_mesh, mksrf_fvic, mesh_model, pioid, rc)
+        flush(ndiag)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkVICparams')
      end if
   end if
@@ -563,6 +591,7 @@ program mksurfdata
   ! -----------------------------------
   if (fsurdat /= ' ')  then
      call mkvocef ( mksrf_fvocef_mesh, mksrf_fvocef, mesh_model, pioid, lat, rc)
+     flush(ndiag)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkvocef')
   end if
 
@@ -591,6 +620,7 @@ program mksurfdata
      call mpi_reduce(loc_suma, glob_suma, 1, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
      if (root_task) then
         write(ndiag,*) 'sum over domain of pft ',k,glob_suma
+        flush(ndiag)
      end if
   enddo
   if (root_task) write(ndiag,*)
@@ -605,18 +635,21 @@ program mksurfdata
      end if
   enddo
   if (root_task) write(ndiag,*)
+  if (root_task) flush(ndiag)
 
   ! Make final values of percent urban by class and compute urban parameters
   ! This call needs to occur after all corrections are made to pcturb
   allocate (urban_classes_g(lsize_o,numurbl)); urban_classes_g(:,:) = spval
   call normalize_classes_by_gcell(urban_classes, pcturb, urban_classes_g)
   if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out percnt urban"
+  if (root_task) flush(ndiag)
 
   ! Make Urban Parameters from raw input data and write to surface dataset
   ! Write to netcdf file is done inside mkurbanpar routine
   if (fsurdat /= ' ') then
      call mkurbanpar(mksrf_furban, pioid, mesh_model, urban_region, urban_classes_g, &
           urban_skip_abort_on_invalid_data_check)
+     flush(ndiag)
   end if
 
   ! -----------------------------------
@@ -633,32 +666,40 @@ program mksurfdata
 
   if (fsurdat /= ' ') then
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out PCT_URBAN"
+     if (root_task) flush(ndiag)
      call mkfile_output(pioid,  mesh_model,  'PCT_URBAN', urban_classes_g, lev1name='numurbl', rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_URBAN')
 
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out PCT_GLACIER"
+     if (root_task) flush(ndiag)
      call mkfile_output(pioid, mesh_model, 'PCT_GLACIER', pctgla, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in mkfile_output for pctgla')
 
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out PCT_LAKE"
+     if (root_task) flush(ndiag)
      call mkfile_output(pioid,  mesh_model,  'PCT_LAKE', pctlak, rc=rc)
+     if (root_task) flush(ndiag)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in mkfile_output for pctlak')
 
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out PCT_WETLAND"
+     if (root_task) flush(ndiag)
      call mkfile_output(pioid, mesh_model,  'PCT_WETLAND', pctwet, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in in mkfile_output for pctwet')
 
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing PCT_NATVEG"
+     if (root_task) flush(ndiag)
      call get_pct_l2g_array(pctnatpft, pctnatveg)
      call mkfile_output(pioid, mesh_model, 'PCT_NATVEG', pctnatveg, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_NATVEG')
 
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing PCT_CROP"
+     if (root_task) flush(ndiag)
      call get_pct_l2g_array(pctcft, pctcrop)
      call mkfile_output(pioid, mesh_model, 'PCT_CROP', pctcrop, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CROP')
 
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing PCT_NAT_PFT"
+     if (root_task) flush(ndiag)
      if (lsize_o /= 0) then
         call get_pct_p2l_array(pctnatpft, ndim1=lsize_o, ndim2=num_natpft+1, pct_p2l=pct_nat_pft)
      else
@@ -669,6 +710,7 @@ program mksurfdata
 
      if (num_cft > 0) then
         if (root_task)  write(ndiag, '(a)') trim(subname)//" writing PCT_CFT"
+        if (root_task) flush(ndiag)
         if (lsize_o /= 0) then
            call get_pct_p2l_array(pctcft, ndim1=lsize_o, ndim2=num_cft, pct_p2l=pct_cft)
         else
@@ -679,6 +721,7 @@ program mksurfdata
      end if
 
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing LANDFRAC_MKSURFDATA"
+     if (root_task) flush(ndiag)
      call mkfile_output(pioid, mesh_model, 'LANDFRAC_MKSURFDATA', landfrac_mksurfdata, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for LANDFRAC_MKSURFDATA')
   end if
@@ -690,6 +733,7 @@ program mksurfdata
   if (fsurdat /= ' ') then
      call mkglcmecInit (pioid)
      call mkglcmec(mksrf_fglacier_mesh, mksrf_fglacier, mesh_model, pioid, rc=rc)
+     flush(ndiag)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkglcmec')
   end if
 
@@ -703,6 +747,7 @@ program mksurfdata
         write(ndiag,'(a)') 'Successfully created surface data output file = '//trim(fsurdat)
         write(ndiag,'(a)') '   This file contains the land model surface data'
         write(ndiag,*)
+        flush(ndiag)
      end if
   end if
 
@@ -725,6 +770,7 @@ program mksurfdata
         write(ndiag,'(1x,80a1)') ('=',k=1,80)
         write(ndiag,*)
         write(ndiag,'(a)')'Creating dynamic land use dataset '//trim(fdyndat)
+        flush(ndiag)
      end if
 
      allocate(pctcft_max(lsize_o))    ;
@@ -748,25 +794,30 @@ program mksurfdata
 
      ! Write out model grid
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LONGXY"
+     if (root_task)  flush(ndiag)
      call mkfile_output(pioid, mesh_model, 'LONGXY', lon, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out LATIXY"
+     if (root_task)  flush(ndiag)
      call mkfile_output(pioid, mesh_model, 'LATIXY', lat, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output')
 
      ! Write out natpft
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out natpft"
+     if (root_task)  flush(ndiag)
      rcode = pio_inq_varid(pioid, 'natpft', pio_varid)
      rcode = pio_put_var(pioid, pio_varid, (/(n,n=natpft_lb,natpft_ub)/))
 
      ! Write out cft
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out cft"
+     if (root_task)  flush(ndiag)
      rcode = pio_inq_varid(pioid, 'cft', pio_varid)
      rcode = pio_put_var(pioid, pio_varid, (/(n,n=cft_lb,cft_ub)/))
 
      ! Write out LANDFRAC_PFT
      ! landfrac_pft was calculated ABOVE
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing land fraction calculated in fsurdata calc)"
+     if (root_task)  flush(ndiag)
      call mkfile_output(pioid,  mesh_model, 'LANDFRAC_PFT', landfrac_pft, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for LANDFRAC_PFT')
 
@@ -777,6 +828,7 @@ program mksurfdata
      ! Open txt file
      if (root_task) then
         write(ndiag,'(a)')' Opening '//trim(mksrf_fdynuse)//' to read dynamic data forcing '
+        flush(ndiag)
         open (newunit=nfdyn, file=trim(mksrf_fdynuse), form='formatted', iostat=ier)
         if (ier /= 0) then
            call shr_sys_abort(subname//" failed to open file "//trim(mksrf_fdynuse))
@@ -810,12 +862,14 @@ program mksurfdata
         if (root_task) then
            read(nfdyn, '(A195,1x,I4)', iostat=ier) fhrvname, year2
            write(ndiag,'(a,i8,a)')' input pft dynamic dataset for year ', year,' is : '//trim(fname)
+           flush(ndiag)
         end if
         call mpi_bcast (fhrvname, len(fhrvname), MPI_CHARACTER, 0, mpicom, ier)
         call mpi_bcast (year2, 1, MPI_INTEGER, 0, mpicom, ier)
         if ( year2 /= year ) then
            if (root_task) then
               write(ndiag,*) subname, ' error: year for harvest not equal to year for PFT files'
+              flush(ndiag)
            end if
            call shr_sys_abort()
         end if
@@ -823,12 +877,14 @@ program mksurfdata
         if (root_task) then
            read(nfdyn, '(A195,1x,I4)', iostat=ier) furbname, year2
            write(ndiag,*)'input urban dynamic dataset for year ', year2, ' is : ', trim(furbname)
+           flush(ndiag)
         end if
         call mpi_bcast (furbname, len(furbname), MPI_CHARACTER, 0, mpicom, ier)
         call mpi_bcast (year2, 1, MPI_INTEGER, 0, mpicom, ier)
         if ( year2 /= year ) then
            if (root_task) then
               write(ndiag,*) subname, ' error: year for urban not equal to year for PFT files'
+              flush(ndiag)
            end if
            call shr_sys_abort()
         end if
@@ -836,12 +892,14 @@ program mksurfdata
         if (root_task) then
            read(nfdyn, '(A195,1x,I4)', iostat=ier) flakname, year2
            write(ndiag,*)'input lake dynamic dataset for year ', year2, ' is : ', trim(flakname)
+           flush(ndiag)
         end if
         call mpi_bcast (flakname, len(flakname), MPI_CHARACTER, 0, mpicom, ier)
         call mpi_bcast (year2, 1, MPI_INTEGER, 0, mpicom, ier)
         if ( year2 /= year ) then
            if (root_task) then
               write(ndiag,*) subname, ' error: year for lake not equal to year for PFT files'
+              flush(ndiag)
            end if
            call shr_sys_abort()
         end if
@@ -849,6 +907,7 @@ program mksurfdata
         ntim = ntim + 1
         if (root_task) then
            write(ndiag,'(a,i8)')subname//' ntime = ',ntim
+           flush(ndiag)
         end if
 
         rcode = pio_inq_varid(pioid, 'YEAR', pio_varid)
@@ -864,6 +923,7 @@ program mksurfdata
         call mkpft( mksrf_fvegtyp_mesh, fname, mesh_model, &
              pctlnd_o=pctlnd_pft_dyn, pctnatpft_o=pctnatpft, pctcft_o=pctcft, &
              rc=rc)
+        flush(ndiag)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpft')
         call pio_syncfile(pioid)
 
@@ -879,6 +939,7 @@ program mksurfdata
               else
                  write(ndiag,*) ' PFT file = ', fname
               end if
+              flush(ndiag)
               call shr_sys_abort()
            end if
         end do
@@ -887,17 +948,20 @@ program mksurfdata
         ! Output data is written in mkharvest
         call mkharvest( mksrf_fhrvtyp_mesh, fhrvname, mesh_model, pioid, &
                         ntime=ntim, rc=rc )
+        flush(ndiag)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkharvest')
         call pio_syncfile(pioid)
 
         ! Create pctlak data at model resolution (use original mapping file from lake data)
         call mkpctlak(mksrf_fpctlak_mesh, flakname, mesh_model, pctlak, pioid, &
                       rc=rc)
+        flush(ndiag)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkpctlak')
         call pio_syncfile(pioid)
 
         call mkurban(mksrf_furban_mesh, furbname, mesh_model, pcturb, &
                      urban_classes, urban_region, rc=rc)
+        flush(ndiag)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkurban')
         call pio_syncfile(pioid)
         ! screen pcturb using elevation
@@ -916,6 +980,7 @@ program mksurfdata
            write(ndiag,*)
            write(ndiag,'(1x,80a1)') ('=',k=1,80)
            write(ndiag,'(a)')' calling normalize_and_check_landuse'
+           flush(ndiag)
         end if
         call normalize_and_check_landuse(lsize_o)
         call normalize_classes_by_gcell(urban_classes, pcturb, urban_classes_g)
@@ -927,6 +992,7 @@ program mksurfdata
         call update_max_array_lake(pctlak_max,pctlak)
 
         if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_NAT_PFT for year ",year
+        if (root_task)  flush(ndiag)
         rcode = pio_inq_varid(pioid, 'PCT_NAT_PFT', pio_varid)
         call pio_setframe(pioid, pio_varid, int(ntim, kind=Pio_Offset_Kind))
         call get_pct_p2l_array(pctnatpft, ndim1=lsize_o, ndim2=num_natpft+1, pct_p2l=pct_nat_pft)
@@ -935,6 +1001,7 @@ program mksurfdata
         call pio_syncfile(pioid)
 
         if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_CROP for year ",year
+        if (root_task)  flush(ndiag)
         rcode = pio_inq_varid(pioid, 'PCT_CROP', pio_varid)
         call pio_setframe(pioid, pio_varid, int(ntim, kind=Pio_Offset_Kind))
         call get_pct_l2g_array(pctcft, pctcrop)
@@ -943,6 +1010,7 @@ program mksurfdata
         call pio_syncfile(pioid)
 
         if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_URBAN for year ",year
+        if (root_task)  flush(ndiag)
         rcode = pio_inq_varid(pioid, 'PCT_URBAN', pio_varid)
         call pio_setframe(pioid, pio_varid, int(ntim, kind=Pio_Offset_Kind))
         call mkfile_output(pioid, mesh_model, 'PCT_URBAN', urban_classes_g, rc=rc)
@@ -950,6 +1018,7 @@ program mksurfdata
         call pio_syncfile(pioid)
 
         if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_LAKE for year ",year
+        if (root_task)  flush(ndiag)
         rcode = pio_inq_varid(pioid, 'PCT_LAKE', pio_varid)
         call pio_setframe(pioid, pio_varid, int(ntim, kind=Pio_Offset_Kind))
         call mkfile_output(pioid, mesh_model, 'PCT_LAKE', pctlak, rc=rc)
@@ -958,6 +1027,7 @@ program mksurfdata
 
         if (num_cft > 0) then
            if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_CFT for year ",year
+           if (root_task)  flush(ndiag)
            rcode = pio_inq_varid(pioid, 'PCT_CFT', pio_varid)
            call pio_setframe(pioid, pio_varid, int(ntim, kind=Pio_Offset_Kind))
            call get_pct_p2l_array(pctcft, ndim1=lsize_o, ndim2=num_cft, pct_p2l=pct_cft)
@@ -967,6 +1037,7 @@ program mksurfdata
         end if
 
         if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing LANDFRAC_MKSURFDATA for year ",year
+        if (root_task)  flush(ndiag)
         rcode = pio_inq_varid(pioid, 'LANDFRAC_MKSURFDATA', pio_varid)
         call pio_setframe(pioid, pio_varid, int(ntim, kind=Pio_Offset_Kind))
         call mkfile_output(pioid, mesh_model, 'LANDFRAC_MKSURFDATA', landfrac_mksurfdata, rc=rc)
@@ -976,30 +1047,36 @@ program mksurfdata
         if (root_task) then
            write(ndiag,'(1x,80a1)') ('=',k=1,80)
            write(ndiag,*)
+           flush(ndiag)
         end if
 
      end do   ! end of read loop
 
      if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_NAT_PFT_MAX "
+     if (root_task)  flush(ndiag)
      call get_pct_p2l_array(pctnatpft_max, ndim1=lsize_o, ndim2=num_natpft+1, pct_p2l=pct_nat_pft)
      call mkfile_output(pioid, mesh_model, 'PCT_NAT_PFT_MAX', pct_nat_pft, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_NAT_PFT')
 
      if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_CROP_MAX"
+     if (root_task)  flush(ndiag)
      call get_pct_l2g_array(pctcft_max, pctcrop)
      call mkfile_output(pioid, mesh_model, 'PCT_CROP_MAX', pctcrop, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CROP_MAX')
 
      if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_URBAN_MAX"
+     if (root_task)  flush(ndiag)
      call mkfile_output(pioid, mesh_model, 'PCT_URBAN_MAX', pcturb_max, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_URBAN_MAX')
 
      if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_LAKE_MAX"
+     if (root_task)  flush(ndiag)
      call mkfile_output(pioid, mesh_model, 'PCT_LAKE_MAX', pctlak_max, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_LAKE_MAX')
 
      if (num_cft > 0) then
         if (root_task)  write(ndiag, '(a,i8)') trim(subname)//" writing PCT_CFT_MAX"
+        if (root_task)  flush(ndiag)
         call get_pct_p2l_array(pctcft_max, ndim1=lsize_o, ndim2=num_cft, pct_p2l=pct_cft)
         call mkfile_output(pioid, mesh_model, 'PCT_CFT_MAX', pct_cft, rc=rc)
         if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for PCT_CFT')
@@ -1007,12 +1084,20 @@ program mksurfdata
 
      ! Close the file
      call pio_closefile(pioid)
+     if (root_task) then
+        write(ndiag,*)
+        write(ndiag,'(a)') 'Successfully created landuse timeseries data output file = '//trim(fdyndat)
+        write(ndiag,'(a)') '   This file contains the land model time series data'
+        write(ndiag,*)
+        flush(ndiag)
+     end if
 
   end if   ! end of if-create dynamic landust dataset
 
   ! -----------------------------------
   ! Wrap things up
   ! -----------------------------------
+  write(ndiag,'(a)') 'Successfully ran mksurfdata_esmf'
   close (ndiag)
 
   call ESMF_Finalize()
@@ -1060,26 +1145,31 @@ program mksurfdata
          if ( pctlak(n) < 0.0_r8 )then
             write(6,*) subname, ' ERROR: pctlak is negative!'
             write(6,*) 'n, pctlak = ', n, pctlak(n)
+            flush(6)
             call shr_sys_abort()
          end if
          if ( pctwet(n) < 0.0_r8 )then
             write(6,*) subname, ' ERROR: pctwet is negative!'
             write(6,*) 'n, pctwet = ', n, pctwet(n)
+            flush(6)
             call shr_sys_abort()
          end if
          if ( pcturb(n) < 0.0_r8 )then
             write(6,*) subname, ' ERROR: pcturb is negative!'
             write(6,*) 'n, pcturb = ', n, pcturb(n)
+            flush(6)
             call shr_sys_abort()
          end if
          if ( pctgla(n) < 0.0_r8 )then
             write(6,*) subname, ' ERROR: pctgla is negative!'
             write(6,*) 'n, pctgla = ', n, pctgla(n)
+            flush(6)
             call shr_sys_abort()
          end if
          if ( pctcft(n)%get_pct_l2g() < 0.0_r8 )then
             write(6,*) subname, ' ERROR: pctcrop is negative!'
             write(6,*) 'n, pctcrop = ', n, pctcft(n)%get_pct_l2g()
+            flush(6)
             call shr_sys_abort()
          end if
 
@@ -1101,6 +1191,7 @@ program mksurfdata
             write(6,*) '<= 100% before normalizing natural vegetation area'
             write(6,*) 'n, pctlak, pctwet, pcturb, pctgla, pctcrop = ', &
                  n, pctlak(n), pctwet(n), pcturb(n), pctgla(n), pctcft(n)%get_pct_l2g()
+            flush(6)
             call shr_sys_abort()
          end if
 
@@ -1228,6 +1319,7 @@ program mksurfdata
             write(6,*) 'n, suma, pctlak, pctwet, pctgla, pcturb, pctnatveg, pctcrop = '
             write(6,*) n, suma, pctlak(n), pctwet(n), pctgla(n), pcturb(n), &
                  pctnatpft(n)%get_pct_l2g(), pctcft(n)%get_pct_l2g()
+            flush(6)
             call shr_sys_abort()
          end if
 
@@ -1269,6 +1361,7 @@ program mksurfdata
               (pctnatpft(n)%get_pct_l2g() > 0.0_r8 .and. pctnatpft(n)%get_pct_l2g() <  1.e-6_r8) ) then
             write (6,*) 'Special plus crop land units near 100%, but not quite for n,suma =',n,suma
             write (6,*) 'Adjusting special plus crop land units to 100%'
+            flush(6)
             if (pctlak(n) >= 1.0_r8) then
                pctlak(n) = 100._r8 - (pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g())
             else if (pctwet(n) >= 1.0_r8) then
@@ -1284,6 +1377,7 @@ program mksurfdata
                     'n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),pctnatveg(n),pctcrop(n),suma = ', &
                     n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
                     pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(),suma
+               flush(6)
                call shr_sys_abort()
             end if
             call pctnatpft(n)%set_pct_l2g(0._r8)
@@ -1295,6 +1389,7 @@ program mksurfdata
             write (6,*) 'pctcft%pct_p2l = ', pctcft(n)%get_pct_p2l()
             write (6,*) 'pctnatpft%pct_l2g = ', pctnatpft(n)%get_pct_l2g()
             write (6,*) 'pctcft%pct_l2g = ', pctcft(n)%get_pct_l2g()
+            flush(6)
             call shr_sys_abort()
          end if
 
@@ -1306,6 +1401,7 @@ program mksurfdata
             write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop,sum= ', &
                  n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
                  pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(), suma
+            flush(6)
             call shr_sys_abort()
          end if
 
@@ -1320,6 +1416,7 @@ program mksurfdata
       do n = 1,ns_o
          if (abs(sum(urban_classes(n,:)) - 100._r8) > 1.e-12_r8) then
             write(6,*) 'sum(urban_classes(n,:)) != 100: ', n, sum(urban_classes(n,:))
+            flush(6)
             call shr_sys_abort()
          end if
       end do
@@ -1327,6 +1424,7 @@ program mksurfdata
       if (root_task) then
          if ( nsmall_tot > 0 )then
             write(ndiag,*)'number of small pft = ', nsmall_tot
+            flush(ndiag)
          end if
       end if
 
