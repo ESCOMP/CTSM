@@ -91,6 +91,10 @@ done
 echo "cime Machine is: $MACH..."
 if [ -d "$blddir" ]; then
   echo "A /tool_bld directory exists; remove it to do a clean build..."
+  echo " or if you want to use the existing build do (assuming using bash):"
+  echo "cd $blddir"
+  echo ". .env_mach_specific.sh"
+  echo "make"
   exit 1
 fi
 mkdir $blddir
