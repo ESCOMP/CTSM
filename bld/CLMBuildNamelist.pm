@@ -1580,6 +1580,7 @@ sub process_namelist_inline_logic {
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_z0param($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_misc($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
@@ -4378,6 +4379,28 @@ sub setup_logic_exice {
 
 
 } # end exice streams
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_z0param {
+   #
+   # Set default z0 paramterization
+   #
+   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'z0param_method');
+
+   my $z0param_method = remove_leading_and_trailing_quotes($nl->get_value('z0param_method' ));
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_z0m_snowmelt',
+           'z0param_method'=>$z0param_method );
+
+   my $use_z0m_snowmelt = $nl->get_value( 'use_z0m_snowmelt' );
+
+   if ( $z0param_method eq "ZengWang2007" && defined($use_z0m_snowmelt) && value_is_true($use_z0m_snowmelt)) {
+      $log->fatal_error("use_z0m_snowmelt must be .false. when z0param_method = $z0param_method.\n $@");
+   }
+
+}
 
 #-------------------------------------------------------------------------------
 

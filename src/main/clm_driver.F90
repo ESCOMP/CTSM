@@ -649,7 +649,7 @@ contains
             atm2lnd_inst, canopystate_inst, energyflux_inst, frictionvel_inst, &
             soilstate_inst, temperature_inst, &
             water_inst%wateratm2lndbulk_inst, water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterstatebulk_inst)
+            water_inst%waterstatebulk_inst, water_inst%waterfluxbulk_inst)
 
        call ozone_inst%CalcOzoneStress(bounds_clump, &
             filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
@@ -843,6 +843,7 @@ contains
        call SoilTemperature(bounds_clump,                                                      &
             filter(nc)%num_urbanl  , filter(nc)%urbanl,                                        &
             filter(nc)%num_urbanc  , filter(nc)%urbanc,                                        &
+            filter(nc)%num_nolakep , filter(nc)%nolakep,                                       &
             filter(nc)%num_nolakec , filter(nc)%nolakec,                                       &
             atm2lnd_inst, urbanparams_inst, canopystate_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst, &

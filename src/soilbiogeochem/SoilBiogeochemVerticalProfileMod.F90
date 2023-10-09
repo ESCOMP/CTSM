@@ -71,7 +71,7 @@ contains
     real(r8) :: rootfr_tot
     real(r8) :: cinput_rootfr(bounds%begp:bounds%endp, 1:nlevdecomp_full)      ! pft-native root fraction used for calculating inputs
     real(r8) :: col_cinput_rootfr(bounds%begc:bounds%endc, 1:nlevdecomp_full)  ! col-native root fraction used for calculating inputs
-    integer  :: c, j, fc, p, fp, pi
+    integer  :: c, j, fc, p, fp
     integer  :: alt_ind
     ! debugging temp variables
     real(r8) :: froot_prof_sum
@@ -174,20 +174,12 @@ contains
       !      cinput_rootfr(bounds%begp:bounds%endp, :), &
       !      col_cinput_rootfr(bounds%begc:bounds%endc, :), &
       !      'unity')
-
-
-      do fc = 1,num_bgc_soilc
-         c = filter_bgc_soilc(fc)
-         if(.not.col%is_fates(c))then
-            do pi = 1,col%npatches(c)  !maxsoil_patches
-               !if (pi <=  col%npatches(c)) then
-                  p = col%patchi(c) + pi - 1
-                  do j = 1,nlevdecomp
-                     col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * patch%wtcol(p)
-                  end do
-               !end if
-            end do
-         end if
+      do fp = 1,num_bgc_vegp
+         p = filter_bgc_vegp(fp)
+         c = patch%column(p)
+         do j = 1,nlevdecomp
+            col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * patch%wtcol(p)
+         end do
       end do
 
 
