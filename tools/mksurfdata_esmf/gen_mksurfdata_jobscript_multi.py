@@ -87,6 +87,14 @@ def get_parser():
         default="12:00:00",
     )
     parser.add_argument(
+        "--queue",
+        help="""Queue to submit to)""",
+        action="store",
+        dest="queue",
+        required=False,
+        default="regular",
+    )
+    parser.add_argument(
         "--scenario",
         help="""scenario""",
         choices=valid_scenarios,
@@ -119,6 +127,7 @@ def main ():
     tasks_per_node = args.tasks_per_node
     account = args.account
     walltime = args.walltime
+    queue = args.queue
 
     # --------------------------
     # Determine target list
@@ -238,9 +247,13 @@ def main ():
         runfile.write(f"#PBS -A {account} \n")
         runfile.write(f'#PBS -N mksrf_{scenario} \n')
         runfile.write('#PBS -j oe \n')
-        runfile.write('#PBS -q regular \n')
+        runfile.write('#PBS -k eod \n')
+        runfile.write('#PBS -S /bin/bash \n')
+        runfile.write(f'#PBS -q {queue} \n')
         runfile.write(f'#PBS -l walltime={walltime} \n')
-        runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
+        runfile.write(f"#PBS -l select={number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node}:mem=109GB \n")
+        runfile.write(f'# This is a batch script to run a set of resolutions for mksurfdata_esmf {scenario} \n')
+        runfile.write('# NOTE: THIS SCRIPT IS AUTOMATICALLY GENERATED SO IN GENERAL YOU SHOULD NOT EDIT it!!\n\n')
         runfile.write("\n")
 
         n_p = int(tasks_per_node) * int(number_of_nodes)
@@ -249,6 +262,8 @@ def main ():
         # environment including the paths to compilers and libraries
         # external to cime such as netcdf
         runfile.write('. '+env_specific_script + '\n')
+        check = f"if [ $? != 0 ]; then echo 'Error running env_specific_script'; exit -4; fi"
+        runfile.write(f"{check} \n")
         for target in target_list:
             res_set = dataset_dict[target][1]
             for res in resolution_dict[res_set]:
@@ -258,22 +273,22 @@ def main ():
                 print (f"command is {command}")
                 commands = [x for x in command.split(' ') if x]
                 try:
-                    run_cmd = subprocess.run(commands, check=True,
+                    run_cmd = subprocess.run(commands, check=True, shell=True,
                                              capture_output=True)
                 except subprocess.CalledProcessError as e:
                     sys.exit(f'{e} ERROR calling {command}')
                 output = run_cmd.stdout.decode('utf-8').strip()
                 namelist = output.split(' ')[-1]
                 print (f"generated namelist {namelist}")
-                output = f"mpiexec_mpt -p \"%g:\" -np {n_p} omplace -tm open64 {mksurfdata} < {namelist}"
+                output = f"time mpiexec_mpt -p \"%g:\" -np {n_p} {mksurfdata} < {namelist}"
                 runfile.write(f"{output} \n")
                 check = f"if [ $? != 0 ]; then echo 'Error running resolution {res}'; exit -4; fi"
                 runfile.write(f"{check} \n")
-                runfile.write(f"Successfully ran resolution {res}\n")
+                runfile.write(f"echo Successfully ran resolution {res}\n")
 
-        runfile.write(f"Successfully ran {jobscript_file}\n")
+        runfile.write(f"echo Successfully ran {jobscript_file}\n")
 
-    print (f"Successfully created jobscript {jobscript_file}\n")
+    print (f"echo Successfully created jobscript {jobscript_file}\n")
     sys.exit(0)
 
 if __name__ == "__main__":

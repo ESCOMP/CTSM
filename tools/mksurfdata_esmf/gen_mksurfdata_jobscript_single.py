@@ -112,18 +112,20 @@ def main ():
         runfile.write(f'# Below are default batch directives for {machine} \n')
         runfile.write('#PBS -N mksurfdata \n')
         runfile.write('#PBS -j oe \n')
+        runfile.write('#PBS -k eod \n')
+        runfile.write('#PBS -S /bin/bash \n')
         if machine == 'cheyenne':
             attribs = {'mpilib': 'default'}
             runfile.write('#PBS -l walltime=30:00 \n')
             runfile.write(f"#PBS -A {account} \n")
             runfile.write('#PBS -q regular \n')
-            runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=36:mpiprocs={tasks_per_node} \n")
+            runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=tasks_per_node}:mpiprocs={tasks_per_node} \n")
         elif machine == 'casper':
             attribs = {'mpilib': 'default'}
             runfile.write('#PBS -l walltime=1:00:00 \n')
             runfile.write(f"#PBS -A {account} \n")
             runfile.write('#PBS -q casper \n')
-            runfile.write(f'#PBS -l select={number_of_nodes}:ncpus=12:' \
+            runfile.write(f'#PBS -l select={number_of_nodes}:ncpus={tasks_per_node}:' \
                           f'mpiprocs={tasks_per_node}:mem=80GB \n')
         elif machine == 'izumi':
             attribs = {'mpilib': 'mvapich2'}
@@ -167,6 +169,8 @@ def main ():
                       'dependent environment including the paths to ' \
                       'compilers and libraries external to cime such as netcdf')
         runfile.write(f'\n. {env_mach_path}\n')
+        check = f'if [ $? != 0 ]; then echo "Error running env_mach_specific"; exit -4; fi'
+        runfile.write(f"{check} \n")
         runfile.write('# Edit the mpirun command to use the MPI executable ' \
                       'on your system and the arguments it requires \n')
         output = f'{executable} {mksurfdata_path} < {namelist_file}'
@@ -175,9 +179,9 @@ def main ():
 
         check = f'if [ $? != 0 ]; then echo "Error running resolution {res}"; exit -4; fi'
         runfile.write(f"{check} \n")
-        runfile.write(f"Successfully ran resolution\n")
+        runfile.write(f"echo Successfully ran resolution\n")
 
-    print (f"Successfully created jobscript {jobscript_file}\n")
+    print (f"echo Successfully created jobscript {jobscript_file}\n")
     sys.exit(0)
 
 if __name__ == "__main__":
