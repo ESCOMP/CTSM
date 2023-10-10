@@ -151,9 +151,9 @@ contains
     use_cropcal_rx_cultivar_gdds = stream_fldFileName_cultivar_gdds /= ''
     use_cropcal_streams = use_cropcal_rx_swindows .or. use_cropcal_rx_cultivar_gdds
 
-    ! Initialize the cdeps data type sdat_cropcal_swindow_start
-    ! NOTE: stream_dtlimit 1.5 didn't work for some reason
     if (use_cropcal_rx_swindows) then
+       ! Initialize the cdeps data type sdat_cropcal_swindow_start
+       ! NOTE: stream_dtlimit 1.5 didn't work for some reason
        call shr_strdata_init_from_inline(sdat_cropcal_swindow_start,  &
             my_task             = iam,                                &
             logunit             = iulog,                              &
@@ -178,11 +178,9 @@ contains
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
           call ESMF_Finalize(endflag=ESMF_END_ABORT)
        end if
-    end if
 
-    ! Initialize the cdeps data type sdat_cropcal_swindow_end
-    ! NOTE: stream_dtlimit 1.5 didn't work for some reason
-    if (use_cropcal_rx_swindows) then
+       ! Initialize the cdeps data type sdat_cropcal_swindow_end
+       ! NOTE: stream_dtlimit 1.5 didn't work for some reason
        call shr_strdata_init_from_inline(sdat_cropcal_swindow_end,    &
             my_task             = iam,                                &
             logunit             = iulog,                              &
