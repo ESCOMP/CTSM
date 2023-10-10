@@ -6,15 +6,13 @@ You can run this by:
     python -m unittest test_unit_modify_singlept_site_neon.py
 """
 
-import unittest
-import tempfile
-import shutil
-import configparser
-import argparse
 import os
+import shutil
 import sys
-from getpass import getuser
+import tempfile
+import unittest
 from datetime import date
+import xarray as xr
 
 # -- add python/ctsm  to path (needed if we want to run the test stand-alone)
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
@@ -23,18 +21,12 @@ sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
 from ctsm.site_and_regional.modify_singlept_site_neon import (
-    get_parser,
     get_neon,
     find_surffile,
-    find_soil_structure,
     update_metadata,
     update_time_tag,
-    sort_print_soil_layers,
     check_neon_time,
-    download_file,
-    fill_interpolate,
 )
-from ctsm.path_utils import path_to_ctsm_root
 
 # pylint: disable=invalid-name
 
@@ -84,19 +76,32 @@ class TestModifySingleptSiteNeon(unittest.TestCase):
         pft_16 = True
         with self.assertRaises(SystemExit):
             find_surffile(surf_dir, site_name, pft_16)
-        # TODO: it would be useful to also include an example where the surface file is actually found or correctly searched for
-        # Is there a default surface data file directory we can point to?
 
+    # TODO: need to fix unkown file type error?
     # def test_find_soil_structure(self):
     #    """
-    #    Test
+    #    Test to ensure that correct attributes are found for find_soil_structure.
+    #    soil_texture_raw_data_file_name should be found, and test should go through sysexit.
     #    """
-    #    find_soil_structure()
-    #    TODO: need file to use in test
+    #    surf_file = "testinputs/surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc"
+    #    f1 = xr.open_dataset(surf_file)
+    #    print(f1.attrs["Soil_texture_raw_data_file_name"])
+    #    self.assertEqual(f1.attrs["Soil_texture_raw_data_file_name"],
+    #                     "FIND FILENAME FROM ATTRIBUTES AND ADD HERE",
+    #                     "did not retrieve expected surface soil texture filename from surf file")
 
     # def test_update_metadata(self):
-    #    TODO: do we have a surface data file that we can put in tempdir to update?
-    #    update_metadata(nc, surf_file, neon_file, zb_flag)
+    #    """
+    #    Test to ensure that an attribute has changed when update_metadata() is run.
+    #    """
+    #    surf_file = "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc"
+    #    neon_file = "dummy_neon_file.nc"
+    #    zb_flag = True
+    #    f1 = xr.open_dataset("testinputs/" + surf_file)
+    #    f2 = update_metadata(f1, surf_file, neon_file, zb_flag)
+    #    self.assertNotEqual(f1.attrs["Updated_on"],
+    #                        f2.attrs["Updated_on"],
+    #                        "File was not updated as expected")
 
     def test_update_time_tag(self):
         """
@@ -120,12 +125,12 @@ class TestModifySingleptSiteNeon(unittest.TestCase):
             19,
             "last ABBY download has unexpected date format or does not exist",
         )
-        # TODO: this checks that data is not pulled from before 2021; we may want to update this occassionally or find another way to check data is actually newest?
+        # Note: this checks that data is not pulled from before 2021;
+        # we may want to update this occassionally,
+        # but in any case it confirms that the oldest data is not found
         self.assertGreater(
             int(last_abby_download[:4]), 2021, "ABBY download is older than expected"
         )
-
-    # TODO: test sort_print_soil_layers, fill_interpolate, find_soil_structure, and update_metadata
 
 
 if __name__ == "__main__":

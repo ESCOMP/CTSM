@@ -252,7 +252,7 @@ def find_surffile(surf_dir, site_name, pft_16):
 def find_soil_structure(args, surf_file):
     """
     Function for finding surface dataset soil
-    strucutre using surface data metadata.
+    structure using surface data metadata.
 
     In CLM surface data, soil layer information
     is in a file from surface data metadata
@@ -306,7 +306,7 @@ def find_soil_structure(args, surf_file):
 def update_metadata(nc, surf_file, neon_file, zb_flag):
     """
     Function for updating modified surface dataset
-    metadat for neon sites.
+    metadata for neon sites.
 
     Args:
         nc (xr Dataset): netcdf file including updated neon surface data
