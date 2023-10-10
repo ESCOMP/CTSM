@@ -383,9 +383,11 @@ contains
 
     ! Get terms from soil temperature equations to compute conduction flux
     ! Negative is toward surface - heat added
-    ! Note that the conduction flux here is in W m-2 wall area but for purposes of solving the set of
-    ! simultaneous equations this must be converted to W m-2 floor area. This is done below when 
-    ! setting up the equation coefficients.
+    ! Note that the convection and conduction fluxes for the walls are in W m-2 wall area 
+    ! but for purposes of solving the set of simultaneous equations this must be converted to W m-2 
+    ! floor or roof area. This is done below when setting up the equation coefficients by multiplying by building_hwr.
+    ! Note also that the longwave radiation terms for the walls are in terms of W m-2 floor area since the view
+    ! factors implicitly convert from per unit wall area to per unit floor or roof area.
 
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
