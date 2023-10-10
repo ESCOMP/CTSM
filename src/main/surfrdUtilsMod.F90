@@ -7,6 +7,7 @@ module surfrdUtilsMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod , only : r8 => shr_kind_r8
+  use clm_varcon   , only : sum_to_1_tol
   use clm_varctl   , only : iulog,use_fates
   use abortutils   , only : endrun
   use shr_log_mod  , only : errMsg => shr_log_errMsg
@@ -51,7 +52,6 @@ contains
     logical :: found
     integer :: nl
     integer :: nindx
-    real(r8), parameter :: eps = 1.e-13_r8
     real(r8), allocatable :: TotalSum(:)
     integer :: ub  ! upper bound of the first dimension of arr
     !-----------------------------------------------------------------------
@@ -64,7 +64,7 @@ contains
     found = .false.
 
     do nl = lb, ub
-       if (abs(sum(arr(nl,:)) - TotalSum(nl)) > eps) then
+       if (abs(sum(arr(nl,:)) - TotalSum(nl)) > sum_to_1_tol) then
           found = .true.
           nindx = nl
           exit

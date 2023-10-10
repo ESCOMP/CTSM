@@ -3890,8 +3890,7 @@ sub setup_logic_lai_streams {
   if ( &value_is_true($nl_flags->{'use_crop'}) && &value_is_true($nl->get_value('use_lai_streams'))  ) {
     $log->fatal_error("turning use_lai_streams on is incompatable with use_crop set to true.");
   }
-  if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
-
+  if ( $nl_flags->{'bgc_mode'} eq "sp" || ($nl_flags->{'bgc_mode'} eq "fates" && &value_is_true($nl->get_value('use_fates_sp')) )) {
      if ( &value_is_true($nl->get_value('use_lai_streams')) ) {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo',
@@ -3917,15 +3916,20 @@ sub setup_logic_lai_streams {
        }
      }
   } else {
-     # If bgc is CN/CNDV then make sure none of the LAI settings are set
-     if ( defined($nl->get_value('stream_year_first_lai')) ||
-          defined($nl->get_value('stream_year_last_lai'))  ||
-          defined($nl->get_value('model_year_align_lai'))  ||
-          defined($nl->get_value('lai_tintalgo'        ))  ||
+     # If bgc is BGC/BGCDV then make sure none of the LAI settings are set
+     if ( &value_is_true($nl->get_value('use_lai_streams'))) {
+        $log->fatal_error("When not in SP mode use_lai_streams cannot be .true.\n" .
+                          "(eg. don't use this option with BGC or non-SP FATES), \n" .
+                          "Update compset to use SP)");
+     }
+     if ( defined($nl->get_value('stream_year_first_lai'))  ||
+          defined($nl->get_value('stream_year_last_lai'))   ||
+          defined($nl->get_value('model_year_align_lai'))   ||
+          defined($nl->get_value('lai_tintalgo'        ))   ||
           defined($nl->get_value('stream_fldfilename_lai'))   ) {
-        $log->fatal_error("When bgc is NOT SP none of the following can be set: stream_year_first_lai,\n" .
+        $log->fatal_error("When not in SP mode none of the following can be set: stream_year_first_lai,\n" .
                           "stream_year_last_lai, model_year_align_lai, lai_tintalgo nor\n" .
-                          "stream_fldfilename_lai (eg. don't use this option with BGC,CN,CNDV nor BGDCV).");
+                          "stream_fldfilename_lai (eg. don't use this option with BGC or FATES-SP).");
      }
   }
 }

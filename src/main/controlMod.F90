@@ -491,6 +491,14 @@ contains
           
        end if
 
+       ! Check compatibility with use_lai_streams
+       if (use_lai_streams) then
+        if ((use_fates .and. .not. use_fates_sp) .or. use_cn) then 
+          call endrun(msg=' ERROR: cannot use LAI streams unless in SP mode (use_cn = .false. or use_fates_sp=.true.).'//&
+                  errMsg(sourcefile, __LINE__))
+        end if 
+       end if 
+
        ! If nfix_timeconst is equal to the junk default value, then it was not specified
        ! by the user namelist and we need to assign it the correct default value. If the
        ! user specified it in the namelist, we leave it alone.
