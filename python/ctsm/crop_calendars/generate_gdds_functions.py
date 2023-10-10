@@ -1,6 +1,3 @@
-# Import the CTSM Python utilities
-import cropcal_utils as utils
-
 import numpy as np
 import xarray as xr
 import warnings
@@ -9,11 +6,20 @@ import glob
 import datetime as dt
 from importlib import util as importlib_util
 
-import cropcal_module as cc
+# Import the CTSM Python utilities.
+# sys.path.insert() is necessary for RXCROPMATURITY to work. The fact that it's calling this script in the RUN phase seems to require the python/ directory to be manually added to path.
+_CTSM_PYTHON = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, os.pardir, "python"
+)
+import sys
+
+sys.path.insert(1, _CTSM_PYTHON)
+import ctsm.crop_calendars.cropcal_utils as utils
+import ctsm.crop_calendars.cropcal_module as cc
 
 can_plot = True
 try:
-    from cropcal_figs_module import *
+    from ctsm.crop_calendars.cropcal_figs_module import *
     from matplotlib.transforms import Bbox
 
     warnings.filterwarnings(
@@ -25,10 +31,10 @@ try:
         message="Iteration over multi-part geometries is deprecated and will be removed in Shapely 2.0. Use the `geoms` property to access the constituent parts of a multi-part geometry.",
     )
 
-    print("Will (attempt to) produce harvest requirement maps.")
+    print("Will (attempt to) produce harvest requirement map figure files.")
 
 except:
-    print("Will NOT produce harvest requirement maps.")
+    print("Will NOT produce harvest requirement map figure files.")
     can_plot = False
 
 
