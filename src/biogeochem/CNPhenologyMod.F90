@@ -2346,10 +2346,10 @@ contains
                ! Original harvest rule
                do_harvest = hui(p) >= gddmaturity(p) .or. idpp >= mxmat
 
-               ! Always harvest the day before the next prescribed sowing window starts, if still alive.
-               ! WARNING: This implementation assumes that sowing windows don't change over time!
+               ! Always harvest the day before the next prescribed sowing date, if still alive.
+               ! WARNING: This implementation assumes that prescribed sowing dates don't change over time!
                ! In order to avoid this, you'd have to read this year's AND next year's prescribed
-               ! sowing windows.
+               ! sowing dates.
                do_harvest = do_harvest .or. do_plant_prescribed_tomorrow
 
                if (hui(p) >= gddmaturity(p)) then
