@@ -1761,7 +1761,7 @@ contains
     ! Otherwise, use the first prescribed sowing window we find whose end is >= today.
     do w = 1, mxsowings_in
         ! If nothing prescribed at this w, stop looking and exit loop.
-        if (min(rx_starts(w), rx_ends(w)) < 0) then
+        if (min(rx_starts(w), rx_ends(w)) < 1) then
             exit
         end if
 
