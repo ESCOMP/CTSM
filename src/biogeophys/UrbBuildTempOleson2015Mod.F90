@@ -432,7 +432,10 @@ contains
          vf_wf(l)  = 0.5_r8*(1._r8 - vf_rf(l))
 
          ! This view factor implicitly converts from per unit floor area to per unit wall area
-         vf_fw(l) = vf_wf(l) / building_hwr(l)
+         ! Cathy [orig]
+         ! vf_fw(l) = vf_wf(l) / building_hwr(l)
+         ! Cathy [bugfix]
+         vf_fw(l) = vf_wf(l)
 
          ! This view factor implicitly converts from per unit roof area to per unit wall area
          vf_rw(l)  = vf_fw(l)
@@ -838,7 +841,10 @@ contains
                         + em_floori(l)*sb*t_floor_bef(l)**4._r8 &
                         + 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*(t_floor(l) - t_floor_bef(l))
 
-         qrd_building(l) = qrd_roof(l) + building_hwr(l)*(qrd_sunw(l) + qrd_shdw(l)) + qrd_floor(l)
+         ! Cathy [orig]
+         ! qrd_building(l) = qrd_roof(l) + building_hwr(l)*(qrd_sunw(l) + qrd_shdw(l)) + qrd_floor(l)
+         ! Cathy [bugfix]
+         qrd_building(l) = qrd_roof(l) + qrd_sunw(l) + qrd_shdw(l) + qrd_floor(l)
 
          if (abs(qrd_building(l)) > .10_r8 ) then
            write (iulog,*) 'urban inside building net longwave radiation balance error ',qrd_building(l)
