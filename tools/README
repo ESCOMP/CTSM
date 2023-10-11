@@ -198,8 +198,8 @@ III. Process sequence to create input datasets needed to run CTSM
         (See mksurfdata_esmf/README for more help on doing this)
 
        - gen_mksurfdata_build.sh to build
-       - gen_mksurfdata_namelist.py to build the namelist
-       - gen_mksurfdata_jobscript_single.py to build a batch script to run on cheyenne
+       - gen_mksurfdata_namelist to build the namelist
+       - gen_mksurfdata_jobscript_single to build a batch script to run on cheyenne
        - Submit the batch script just created above
 
        - This step uses the results of step (3) entered into the XML database
@@ -211,8 +211,8 @@ III. Process sequence to create input datasets needed to run CTSM
 
        cd mksurfdata_esmf
        ./gen_mksurfdata_build.sh
-       ./gen_mksurfdata_namelist.py --res 0.9x1.25 --start-year 1850 --end-year 1850
-       ./gen_mksurfdata_jobscript_single.py --number-of-nodes 24 --tasks-per-node 12 --namelist-file target.namelist
+       ./gen_mksurfdata_namelist --res 0.9x1.25 --start-year 1850 --end-year 1850
+       ./gen_mksurfdata_jobscript_single --number-of-nodes 24 --tasks-per-node 12 --namelist-file target.namelist
        qsub mksurfdata_jobscript_single
    
        NOTE that surface dataset will be used by default for fatmgrid - and it will 

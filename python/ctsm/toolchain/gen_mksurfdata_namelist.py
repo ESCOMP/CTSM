@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 gen_mksurfdata_namelist.py generates a namelist for use with the mksurfdata
 executable. For detailed instructions, see README.
@@ -12,12 +11,6 @@ import textwrap
 import subprocess
 from datetime import datetime
 import netCDF4
-
-_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                            os.pardir,
-                            os.pardir,
-                            'python')
-sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 
@@ -738,6 +731,3 @@ def main ():
 
     print (f"Successfully created input namelist file {nlfname}")
     sys.exit(0)
-
-if __name__ == "__main__":
-    main()

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 gen_mksurfdata_jobscript_multi.py generates a jobscript for running the
 mksurfdata executable to generate many fsurdat files at once. For detailed
@@ -290,6 +289,3 @@ def main ():
 
     print (f"echo Successfully created jobscript {jobscript_file}\n")
     sys.exit(0)
-
-if __name__ == "__main__":
-    main()

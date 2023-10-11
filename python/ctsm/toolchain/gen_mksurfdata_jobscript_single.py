@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 gen_mksurfdata_jobscript_single.py generates a jobscript for running the
 mksurfdata executable to generate a single fsurdat file. For detailed
@@ -8,12 +7,6 @@ import os
 import sys
 import argparse
 import logging
-
-_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                            os.pardir,
-                            os.pardir,
-                            'python')
-sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm import add_cime_to_path  # pylint: disable=unused-import
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
@@ -119,7 +112,7 @@ def main ():
             runfile.write('#PBS -l walltime=30:00 \n')
             runfile.write(f"#PBS -A {account} \n")
             runfile.write('#PBS -q regular \n')
-            runfile.write(f"#PBS -l select={number_of_nodes}:ncpus=tasks_per_node}:mpiprocs={tasks_per_node} \n")
+            runfile.write(f"#PBS -l select={number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node} \n")
         elif machine == 'casper':
             attribs = {'mpilib': 'default'}
             runfile.write('#PBS -l walltime=1:00:00 \n')
@@ -183,6 +176,3 @@ def main ():
 
     print (f"echo Successfully created jobscript {jobscript_file}\n")
     sys.exit(0)
-
-if __name__ == "__main__":
-    main()
