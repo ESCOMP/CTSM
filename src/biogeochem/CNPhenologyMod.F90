@@ -1758,9 +1758,9 @@ contains
         return
     end if
 
-    ! Otherwise, use the first prescribed sowing window we find whose end is >= today.
+    ! Otherwise, use the first prescribed sowing window we find whose end is >= today. This works only if sowing windows that span the new year are located at index w = 1.
     do w = 1, mxsowings_in
-        ! If nothing prescribed at this w, stop looking and exit loop.
+      ! If nothing prescribed at this w, stop looking and exit loop. Will trigger "No sowing window found" error, which we do not move here because it's possible that no start or end date is < 1.
         if (min(rx_starts(w), rx_ends(w)) < 1) then
             exit
         end if
