@@ -502,11 +502,8 @@ def main():
 
     # --  directory structure
     current_dir = os.getcwd()
-    # parent_dir = os.path.dirname(current_dir)
     clone_dir = os.path.abspath(os.path.join(__file__, "../../../.."))
     neon_dir = os.path.join(clone_dir, "neon_surffiles")
-
-    print("Present Directory", current_dir)
 
     # --  download neon data if needed
     neon_file = get_neon(neon_dir, site_name)
