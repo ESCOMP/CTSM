@@ -48,6 +48,7 @@ contains
        write(ndiag,'(1x,80a1)') ('=',k=1,80)
        write(ndiag,*)
        write(ndiag,'(a)') 'Attempting to create model lats and lons from model mesh .....'
+       flush(ndiag)
     end if
 
     call ESMF_MeshGet(mesh_o, spatialDim=spatialDim, numOwnedElements=ns_o, rc=rc)
@@ -62,6 +63,7 @@ contains
 
     if (root_task) then
        write (ndiag,'(a)') 'Successfully made model lats and lons'
+       flush(ndiag)
     end if
 
   end subroutine mkdomain

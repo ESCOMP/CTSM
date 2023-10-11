@@ -36,6 +36,7 @@ module mkinputMod
   character(CL) , public    :: flakname ! generic lake filename
 
   character(CS) , public    :: mksrf_grid_name              = ' ' ! Name of this grid
+  integer       , public    :: grid_size                          ! Number of columne in the grid
 
   character(CX) , public    :: mksrf_fgrid_mesh             = ' ' ! land grid file name to use
   integer       , public    :: mksrf_fgrid_mesh_nx          = -999
@@ -112,6 +113,7 @@ module mkinputMod
   character(CS) , public    :: logname                      = ' ' ! user name
   character(CS) , public    :: hostname                     = ' ' ! machine name
 
+  logical       , public    :: create_esmf_pet_files = .false.    ! Always create ESMF PET files (.false. if only on error)
   logical       , public    :: urban_skip_abort_on_invalid_data_check
 
   character(len=*), parameter :: u_FILE_u = &
@@ -129,7 +131,6 @@ contains
     integer :: ier
     integer :: k
     integer :: fileunit
-    integer :: grid_size    ! Number of columne in the grid
     logical :: lexist
     character(len=*), parameter :: subname = 'read_namelist_input'
     ! ------------------------------------------------------------
@@ -198,6 +199,7 @@ contains
          fdyndat,                   &
          fsurlog,                   &
          std_elev,                  &
+         create_esmf_pet_files,     &
          urban_skip_abort_on_invalid_data_check
 
     ! Set default namelist values - make these the defaults in gen_mksurfdata_namelist.py
@@ -209,7 +211,7 @@ contains
     urban_skip_abort_on_invalid_data_check = .false.   ! default value for bug work around
 
     if (root_task) then
-       write(6,*) 'Attempting to initialize control settings .....'
+       write(ndiag,*) 'Attempting to initialize control settings .....'
     end if
 
     if (root_task) then
@@ -217,10 +219,10 @@ contains
        if (ier > 0) then
           call shr_sys_abort(subname//' error reading in mksurfdata_input namelist from standard input')
        end if
-    end if
-    if ( mksrf_grid_name == ' ' )then
        grid_size = mksrf_fgrid_mesh_nx * mksrf_fgrid_mesh_ny
-       write(mksrf_grid_name,'("Grid",I07)') grid_size
+       if ( mksrf_grid_name == ' ' )then
+          write(mksrf_grid_name,'("Cols",I7.7)') grid_size
+       end if
     end if
 
   end subroutine read_namelist_input
@@ -237,6 +239,8 @@ contains
     call mpi_bcast (mksrf_fgrid_mesh, len(mksrf_fgrid_mesh), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (mksrf_fgrid_mesh_nx, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (mksrf_fgrid_mesh_ny, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (grid_size, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (mksrf_grid_name, len(mksrf_grid_name), MPI_CHARACTER, 0, mpicom, ier)
 
     call mpi_bcast (mksrf_fvegtyp, len(mksrf_fvegtyp), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (mksrf_fvegtyp_mesh, len(mksrf_fvegtyp_mesh), MPI_CHARACTER, 0, mpicom, ier)
@@ -313,6 +317,7 @@ contains
     call mpi_bcast (outnc_3dglc, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (urban_skip_abort_on_invalid_data_check, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (create_esmf_pet_files, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (numpft, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (no_inlandwet, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (std_elev, 1, MPI_REAL, 0, mpicom, ier)
@@ -428,6 +433,7 @@ contains
        write(ndiag,'(a)')' mksrf_fgrid_mesh = '//trim(mksrf_fgrid_mesh)
        write(ndiag,'(a,i8)')' nlon= ',mksrf_fgrid_mesh_nx
        write(ndiag,'(a,i8)')' nlat= ',mksrf_fgrid_mesh_ny
+       write(ndiag,'(a,i8)')'Grid_size:                ', grid_size
        write(ndiag,*)
        write(ndiag,'(1x,80a1)') ('=',k=1,80)
        write(ndiag,*)
@@ -450,6 +456,11 @@ contains
        end if
        if ( outnc_3dglc )then
           write(ndiag,'(a)')' Output optional 3D glacier fields (mostly used for verification of the glacier model)'
+       end if
+       if (create_esmf_pet_files) then
+          write(ndiag,'(a)')' Always output ESMF PET files'
+       else
+          write(ndiag,'(a)')' Only output ESMF PET files if fatal errors happen in ESMF'
        end if
        if (urban_skip_abort_on_invalid_data_check) then
           write(ndiag, '(a)') " WARNING: aborting on invalid data check in urban has been disabled!"

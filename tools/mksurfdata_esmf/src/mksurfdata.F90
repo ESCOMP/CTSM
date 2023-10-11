@@ -125,7 +125,10 @@ program mksurfdata
 
   ! indices
   integer                         :: k,n                     ! indices
-  integer                         :: lsize_o
+  integer                         :: lsize_o                 ! Size of the local mesh elments
+  integer                         :: node_count              ! Number of gridcells on the mesh
+  integer                         :: local_nodes(1)          ! Local gridcells on the mesh
+  integer                         :: total_nodes(1)          ! Total gridcells on the mesh
 
   ! error status
   integer                         :: ier,rcode               ! error status
@@ -186,7 +189,6 @@ program mksurfdata
   type(ESMF_LogKind_Flag)         :: logkindflag
   type(ESMF_VM)                   :: vm
   integer                         :: rc
-  logical                         :: create_esmf_pet_files = .false.
 
   ! character variables
   character(len=CL)               :: default_log_suffix      ! default log file suffix to use for ESMF PET files
@@ -198,16 +200,25 @@ program mksurfdata
        __FILE__
 
   ! ======================================================================
-  ! Read in namelist before initializing MPI or ESMF
-  ! ======================================================================
-  call read_namelist_input()
-
-  ! ======================================================================
-  ! Initialize MPI
+  ! Initialize MPI get the rank and determine root task
   ! ======================================================================
 
   call MPI_init(rc)
+  if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
   mpicom = mpi_comm_world
+
+  ! Determine root task
+  call MPI_comm_rank(mpicom, iam, rc)
+  if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+  root_task = (iam == 0)
+  call MPI_comm_size(mpicom, npes, rc)
+  if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+
+
+  ! ======================================================================
+  ! Read in namelist before initializing MPI or ESMF
+  ! ======================================================================
+  call read_namelist_input()
 
   ! ======================================================================
   ! Initialize ESMF and get mpicom from ESMF
@@ -218,19 +229,50 @@ program mksurfdata
   else
      logkindflag = ESMF_LOGKIND_MULTI_ON_ERROR
   end if
-  default_log_suffix = mksrf_grid_name // 'ESMF_LogFile'
+  default_log_suffix = trim(mksrf_grid_name) // '_ESMF_LogFile'
   call ESMF_Initialize(mpiCommunicator=MPICOM, logkindflag=logkindflag, logappendflag=.false., &
-       defaultDefaultLogFilename=mksrf_grid_name, ioUnitLBound=5001, ioUnitUBound=5101, vm=vm, rc=rc)
+       defaultDefaultLogFilename=trim(default_log_suffix), ioUnitLBound=5001, ioUnitUBound=5101, vm=vm, rc=rc)
   if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
   call ESMF_VMGetGlobal(vm, rc=rc)
   if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
   call ESMF_VMGet(vm, mpicommunicator=mpicom, localPet=iam, petcount=petcount, &
        ssiLocalPetCount=stride, rc=rc)
+  if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
   call ESMF_LogSet(flush=.true.)
   call ESMF_LogWrite("mksurfdata starting", ESMF_LOGMSG_INFO)
+  !
+  ! open output ndiag file
+  !
+  if (root_task) then
+     open (newunit=ndiag, file=trim(fsurlog), iostat=ier)
+     if (ier /= 0) then
+        call shr_sys_abort(' failed to open ndiag file '//trim(fsurlog))
+     end if
+     write (ndiag,'(a)') 'Attempting to create surface boundary data .....'
+     write (ndiag,'(72a1)') ("-",n=1,60)
+     flush(ndiag)
+  else
+     ndiag = 6
+  end if
+  !
+  ! Finish handling of the namelist control variables
+  !
+  ! Broadcast namelist to all pes
+  ! root_task is a module variable in mkvarctl
+  call bcast_namelist_input()
 
-  ! Determine root task
-  root_task = (iam == 0)
+  ! Write out namelist input to ndiag
+  call check_namelist_input()
+  call write_namelist_input()
+
+  ! Some checking
+   if (root_task) then
+     write(ndiag,'(2(a,I))') ' npes = ', npes, ' grid size = ', grid_size
+     flush(ndiag)
+  end if
+  if (petcount >  grid_size ) then
+     call shr_sys_abort(' ERROR: number of tasks exceeds the size of the grid' )
+  end if
 
   ! ======================================================================
   ! Initialize PIO
@@ -242,6 +284,7 @@ program mksurfdata
   ! Open txt file
   if (root_task) then
      write(ndiag,*)' Opening file and reading pio_iotype from txt file with the same name'
+     flush(ndiag)
      open (newunit=nfpio, file='pio_iotype.txt', status='old', &
            form='formatted', action='read', iostat=ier)
      if (ier /= 0) then
@@ -259,46 +302,39 @@ program mksurfdata
 
   call ESMF_LogWrite("finished initializing PIO", ESMF_LOGMSG_INFO)
 
-  ! Broadcast namelist to all pes
-  ! root_task is a module variable in mkvarctl
-  call bcast_namelist_input()
-
-  ! open output ndiag file
   if (fsurlog == ' ') then
      call shr_sys_abort(' ERROR: must specify fsurlog in namelist')
   end if
-  if (root_task) then
-     open (newunit=ndiag, file=trim(fsurlog), iostat=ier)
-     if (ier /= 0) then
-        call shr_sys_abort(' failed to open ndiag file '//trim(fsurlog))
-     end if
-     write (ndiag,'(a)') 'Attempting to create surface boundary data .....'
-     write (ndiag,'(72a1)') ("-",n=1,60)
-     flush(ndiag)
-  else
-     ndiag = 6
-  end if
-
-  ! Write out namelist input to ndiag
-  call check_namelist_input()
-  call write_namelist_input()
 
   ! ======================================================================
   ! Create fsurdat
   ! ======================================================================
 
   ! Read in model mesh to determine the number of local points
+  call ESMF_LogWrite("MESH creation (if this takes too long [more than an hour] and hangs, you may need more memory...)", ESMF_LOGMSG_INFO)
   mesh_model = ESMF_MeshCreate(filename=trim(mksrf_fgrid_mesh), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
 
   ! Get the number of local destination points on my processor (lsize_o)
   call ESMF_MeshGet(mesh_model, numOwnedElements=lsize_o, rc=rc)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
-
+  local_nodes(1) = lsize_o
+  call ESMF_VMAllReduce(vm, local_nodes, total_nodes, count=1, reduceflag=ESMF_REDUCE_SUM, rc=rc)
+  if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
+  node_count = total_nodes(1)
+  if (node_count /=  grid_size) then
+     if (root_task) then
+        write (ndiag,'(a, I, a, I)') ' node_count = ', node_count, ' grid_size = ', grid_size
+        flush(ndiag)
+     end if
+     call shr_sys_abort(' ERROR: size of input mesh file does not agree with expected size of nx*ny' )
+  end if
   ! Initialize urban dimensions (needed to initialize the dimensions in fsurdat)
+  call ESMF_LogWrite("mkurbanInit...")
   call mkurbanInit(mksrf_furban)
 
   ! Initialize pft/cft dimensions (needed to initialize the dimensions in fsurdat)
+  call ESMF_LogWrite("mkpftInit...")
   call mkpftInit( )
 
   ! If fsurdat is blank, then we do not write a surface dataset - but we may still
@@ -323,6 +359,7 @@ program mksurfdata
         flush(ndiag)
      end if
 
+     call ESMF_LogWrite("mkfile...")
      ! Open file
      ! TODO: what about setting no fill values?
      call mkpio_wopen(trim(fsurdat), clobber=.true., pioid=pioid)
@@ -372,6 +409,11 @@ program mksurfdata
      call mkfile_output(pioid, mesh_model, 'LATIXY', lat, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for LATIXY')
      call pio_syncfile(pioid)
+  end if
+
+  if (root_task)then
+     write(ndiag,*)' Initialization is complete, going on to process types of input files'
+     flush(ndiag)
   end if
 
   ! -----------------------------------
@@ -631,7 +673,7 @@ program mksurfdata
      enddo
      call mpi_reduce(loc_suma, glob_suma, 1, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
      if (root_task) then
-        write(6,*) 'sum over domain of cft ',k,glob_suma
+        write(ndiag,*) 'sum over domain of cft ',k,glob_suma
      end if
   enddo
   if (root_task) write(ndiag,*)
@@ -1097,8 +1139,10 @@ program mksurfdata
   ! -----------------------------------
   ! Wrap things up
   ! -----------------------------------
-  write(ndiag,'(a)') 'Successfully ran mksurfdata_esmf'
-  close (ndiag)
+  if (root_task) then
+     write(ndiag,'(a)') 'Successfully ran mksurfdata_esmf'
+     close (ndiag)
+  end if
 
   call ESMF_Finalize()
 
@@ -1143,33 +1187,33 @@ program mksurfdata
 
          ! Check preconditions
          if ( pctlak(n) < 0.0_r8 )then
-            write(6,*) subname, ' ERROR: pctlak is negative!'
-            write(6,*) 'n, pctlak = ', n, pctlak(n)
-            flush(6)
+            write(ndiag,*) subname, ' ERROR: pctlak is negative!'
+            write(ndiag,*) 'n, pctlak = ', n, pctlak(n)
+            flush(ndiag)
             call shr_sys_abort()
          end if
          if ( pctwet(n) < 0.0_r8 )then
-            write(6,*) subname, ' ERROR: pctwet is negative!'
-            write(6,*) 'n, pctwet = ', n, pctwet(n)
-            flush(6)
+            write(ndiag,*) subname, ' ERROR: pctwet is negative!'
+            write(ndiag,*) 'n, pctwet = ', n, pctwet(n)
+            flush(ndiag)
             call shr_sys_abort()
          end if
          if ( pcturb(n) < 0.0_r8 )then
-            write(6,*) subname, ' ERROR: pcturb is negative!'
-            write(6,*) 'n, pcturb = ', n, pcturb(n)
-            flush(6)
+            write(ndiag,*) subname, ' ERROR: pcturb is negative!'
+            write(ndiag,*) 'n, pcturb = ', n, pcturb(n)
+            flush(ndiag)
             call shr_sys_abort()
          end if
          if ( pctgla(n) < 0.0_r8 )then
-            write(6,*) subname, ' ERROR: pctgla is negative!'
-            write(6,*) 'n, pctgla = ', n, pctgla(n)
-            flush(6)
+            write(ndiag,*) subname, ' ERROR: pctgla is negative!'
+            write(ndiag,*) 'n, pctgla = ', n, pctgla(n)
+            flush(ndiag)
             call shr_sys_abort()
          end if
          if ( pctcft(n)%get_pct_l2g() < 0.0_r8 )then
-            write(6,*) subname, ' ERROR: pctcrop is negative!'
-            write(6,*) 'n, pctcrop = ', n, pctcft(n)%get_pct_l2g()
-            flush(6)
+            write(ndiag,*) subname, ' ERROR: pctcrop is negative!'
+            write(ndiag,*) 'n, pctcrop = ', n, pctcft(n)%get_pct_l2g()
+            flush(ndiag)
             call shr_sys_abort()
          end if
 
@@ -1187,11 +1231,11 @@ program mksurfdata
 
          suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
          if (suma > (100._r8 + tol_loose)) then
-            write(6,*) subname, ' ERROR: pctlak + pctwet + pcturb + pctgla + pctcrop must be'
-            write(6,*) '<= 100% before normalizing natural vegetation area'
-            write(6,*) 'n, pctlak, pctwet, pcturb, pctgla, pctcrop = ', &
+            write(ndiag,*) subname, ' ERROR: pctlak + pctwet + pcturb + pctgla + pctcrop must be'
+            write(ndiag,*) '<= 100% before normalizing natural vegetation area'
+            write(ndiag,*) 'n, pctlak, pctwet, pcturb, pctgla, pctcrop = ', &
                  n, pctlak(n), pctwet(n), pcturb(n), pctgla(n), pctcft(n)%get_pct_l2g()
-            flush(6)
+            flush(ndiag)
             call shr_sys_abort()
          end if
 
@@ -1315,11 +1359,11 @@ program mksurfdata
          suma = pctlak(n) + pctwet(n) + pctgla(n) + pcturb(n) + pctcft(n)%get_pct_l2g()
          suma = suma + pctnatpft(n)%get_pct_l2g()
          if (abs(suma - 100._r8) > tol_loose) then
-            write(6,*) subname, ' ERROR: landunits do not sum to 100%'
-            write(6,*) 'n, suma, pctlak, pctwet, pctgla, pcturb, pctnatveg, pctcrop = '
-            write(6,*) n, suma, pctlak(n), pctwet(n), pctgla(n), pcturb(n), &
+            write(ndiag,*) subname, ' ERROR: landunits do not sum to 100%'
+            write(ndiag,*) 'n, suma, pctlak, pctwet, pctgla, pcturb, pctnatveg, pctcrop = '
+            write(ndiag,*) n, suma, pctlak(n), pctwet(n), pctgla(n), pcturb(n), &
                  pctnatpft(n)%get_pct_l2g(), pctcft(n)%get_pct_l2g()
-            flush(6)
+            flush(ndiag)
             call shr_sys_abort()
          end if
 
@@ -1359,9 +1403,11 @@ program mksurfdata
          suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
          if ( (suma < 100._r8 .and. suma > (100._r8 - 1.e-6_r8)) .or. &
               (pctnatpft(n)%get_pct_l2g() > 0.0_r8 .and. pctnatpft(n)%get_pct_l2g() <  1.e-6_r8) ) then
-            write (6,*) 'Special plus crop land units near 100%, but not quite for n,suma =',n,suma
-            write (6,*) 'Adjusting special plus crop land units to 100%'
-            flush(6)
+            if ( root_task ) then
+               write (ndiag,*) 'Special plus crop land units near 100%, but not quite for n,suma =',n,suma
+               write (ndiag,*) 'Adjusting special plus crop land units to 100%'
+               flush(ndiag)
+            end if
             if (pctlak(n) >= 1.0_r8) then
                pctlak(n) = 100._r8 - (pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g())
             else if (pctwet(n) >= 1.0_r8) then
@@ -1373,11 +1419,11 @@ program mksurfdata
             else if (pctcft(n)%get_pct_l2g() >= 1.0_r8) then
                call pctcft(n)%set_pct_l2g(100._r8 - (pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)))
             else
-               write (6,*) subname, 'Error: sum of special plus crop land units nearly 100% but none is >= 1% at ', &
+               write (ndiag,*) subname, 'Error: sum of special plus crop land units nearly 100% but none is >= 1% at ', &
                     'n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),pctnatveg(n),pctcrop(n),suma = ', &
                     n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
                     pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(),suma
-               flush(6)
+               flush(ndiag)
                call shr_sys_abort()
             end if
             call pctnatpft(n)%set_pct_l2g(0._r8)
@@ -1415,8 +1461,8 @@ program mksurfdata
       ! is done internally by the pct_pft_type routines.)
       do n = 1,ns_o
          if (abs(sum(urban_classes(n,:)) - 100._r8) > 1.e-12_r8) then
-            write(6,*) 'sum(urban_classes(n,:)) != 100: ', n, sum(urban_classes(n,:))
-            flush(6)
+            write(ndiag,*) 'sum(urban_classes(n,:)) != 100: ', n, sum(urban_classes(n,:))
+            flush(ndiag)
             call shr_sys_abort()
          end if
       end do
