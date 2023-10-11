@@ -82,11 +82,15 @@ class TestModifySingleptSiteNeon(unittest.TestCase):
         Test to ensure that correct attributes are found for find_soil_structure.
         soil_texture_raw_data_file_name should be found, and test should go through sysexit.
         """
-        surf_file = "testinputs/surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc"
+        surf_file = (
+            "testinputs/surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc"
+        )
         f1 = xr.open_dataset(surf_file)
-        self.assertEqual(f1.attrs["Soil_texture_raw_data_file_name"],
-                         "mksrf_soitex.10level.c010119.nc",
-                         "did not retrieve expected surface soil texture filename from surf file")
+        self.assertEqual(
+            f1.attrs["Soil_texture_raw_data_file_name"],
+            "mksrf_soitex.10level.c010119.nc",
+            "did not retrieve expected surface soil texture filename from surf file",
+        )
 
     def test_update_metadata(self):
         """
@@ -99,8 +103,7 @@ class TestModifySingleptSiteNeon(unittest.TestCase):
         f2 = update_metadata(f1, surf_file, neon_file, zb_flag)
         today = date.today()
         today_string = today.strftime("%Y-%m-%d")
-        self.assertEqual(f1.attrs["Updated_on"], today_string,
-                         "File was not updated as expected")
+        self.assertEqual(f2.attrs["Updated_on"], today_string, "File was not updated as expected")
 
     def test_update_time_tag(self):
         """
