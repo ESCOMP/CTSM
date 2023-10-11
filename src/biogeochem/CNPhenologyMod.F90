@@ -1731,8 +1731,6 @@ contains
     integer,                          intent(out)   :: start_w, end_w ! Start and end dates of "next" sowing window
     !
     ! !LOCAL VARIABLES
-    integer :: next_swindow_start
-    integer :: i, x
     integer :: jday_tomorrow
     integer :: mxsowings_in ! Due to unit testing, we can't assume the length of the rx sowing window arrays is mxsowings as set in clm_varpar
 
@@ -1777,28 +1775,6 @@ contains
     ! Ensure that a window was found
     if (start_w < 1 .or. end_w < 1) then
         call endrun(msg="get_swindow(): No sowing window found")
-    end if
-
-    ! Get the start date of the NEXT sowing window (not including the sowing window we're currently in, if any)
-    if (is_doy_in_interval(start_w, end_w, jday)) then
-        next_swindow_start = -1
-        x = w
-        i = 0 ! For checking infinite loop
-        do while (next_swindow_start < 1)
-            ! Check for infinite loop
-            i = i + 1
-            if (i > mxsowings_in + 1) then
-                call endrun("Infinite loop in get_swindow()")
-            end if
-
-            x = x + 1
-            if (x > mxsowings_in) then
-                x = 1
-            end if
-            next_swindow_start = rx_starts(x)
-        end do
-    else
-        next_swindow_start = start_w
     end if
 
   end subroutine get_swindow
