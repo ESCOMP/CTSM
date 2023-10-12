@@ -10,8 +10,8 @@ import logging
 
 from ctsm import add_cime_to_path  # pylint: disable=unused-import
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
-from CIME.XML.env_mach_specific import EnvMachSpecific # pylint: disable=import-error
-from CIME.BuildTools.configure import FakeCase # pylint: disable=import-error
+from CIME.XML.env_mach_specific import EnvMachSpecific  # pylint: disable=import-error
+from CIME.BuildTools.configure import FakeCase  # pylint: disable=import-error
 
 logger = logging.getLogger(__name__)
 
@@ -186,7 +186,9 @@ def main():
         runfile.write(f"{output} \n")
         logger.info("run command is %s", output)
 
-        check = f'if [ $? != 0 ]; then echo "Error running for namelist  {namelist_file}"; exit -4; fi'
+        check = (
+            f'if [ $? != 0 ]; then echo "Error running for namelist  {namelist_file}"; exit -4; fi'
+        )
         runfile.write(f"{check} \n")
         runfile.write("echo Successfully ran resolution\n")
 

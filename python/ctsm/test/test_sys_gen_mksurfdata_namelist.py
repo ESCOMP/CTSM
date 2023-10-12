@@ -25,8 +25,7 @@ class TestSysGenMkSurfNML(unittest.TestCase):
     """System tests for gen_mksurfdata_namelist"""
 
     def setUp(self):
-        """
-        """
+        """ """
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         self._testinputs_path = testinputs_path
         self._tempdir = tempfile.mkdtemp()
