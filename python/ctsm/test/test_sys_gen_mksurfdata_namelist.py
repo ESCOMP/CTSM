@@ -49,7 +49,7 @@ class TestSysGenMkSurfNML(unittest.TestCase):
             "--res",
             "0.9x1.25",
         ]
-        gen_mksurfdata_namelist.main()
+        main()
 
 
 if __name__ == "__main__":

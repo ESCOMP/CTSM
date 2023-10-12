@@ -12,6 +12,7 @@ import subprocess
 from datetime import datetime
 import netCDF4
 
+from ctsm.path_utils import path_to_ctsm_root
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 
 logger = logging.getLogger(__name__)
@@ -414,7 +415,7 @@ def main():
 
     # determine input rawdata
     _must_run_download_input_data = False
-    tool_path = os.path.dirname(os.path.abspath(__file__))
+    tool_path = os.path.join( path_to_ctsm_root(), "tools", "mksurfdata_esmf" )
     xml_path = os.path.join(tool_path, "gen_mksurfdata_namelist.xml")
     tree1 = ET.parse(xml_path)
     root = tree1.getroot()
@@ -747,4 +748,3 @@ def main():
         nlfname = temp_nlfname
 
     print(f"Successfully created input namelist file {nlfname}")
-    sys.exit(0)
