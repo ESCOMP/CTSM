@@ -79,6 +79,7 @@
     <values match="last">
       <!-- Options for atm forcing are: CRU, CRUv7, GSWP3, cam6.0 (also used for DATM%CPLHIST), QIAN, WISOQIA, 1PT, NLDAS2, and ERA5) -->
       <!-- All the clm4_5 physics options -->
+      <value compset="SATM_CLM45"        >clm4_5_CRUv7</value>
       <value compset="DATM%CRUv7_CLM45"  >clm4_5_CRUv7</value>
       <value compset="DATM%CRU_CLM45"    >clm4_5_CRUv7</value>
       <value compset="DATM%GSWP3v1_CLM45">clm4_5_GSWP3v1</value>
@@ -92,6 +93,7 @@
       <!-- All the clm5_0 physics options -->
       <value compset="DATM%CRUv7_CLM50"  >clm5_0_CRUv7</value>
       <value compset="DATM%CRU_CLM50"    >clm5_0_CRUv7</value>
+      <value compset="SATM_CLM50"        >clm5_0_GSWP3v1</value>
       <value compset="DATM%GSWP3v1_CLM50">clm5_0_GSWP3v1</value>
       <value compset="CAM[^_]+_CLM50"    >clm5_0_cam6.0</value>
       <value compset="DATM%CPLHIST_CLM50">clm5_0_cam6.0</value>
@@ -103,6 +105,7 @@
       <!-- All the clm5_1 physics options -->
       <value compset="DATM%CRUv7_CLM51"  >clm5_1_CRUv7</value>
       <value compset="DATM%CRU_CLM51"    >clm5_1_CRUv7</value>
+      <value compset="SATM_CLM51"        >clm5_1_GSWP3v1</value>
       <value compset="DATM%GSWP3v1_CLM51">clm5_1_GSWP3v1</value>
       <value compset="CAM[^_]+_CLM51"    >clm5_1_cam6.0</value>
       <value compset="DATM%CPLHIST_CLM51">clm5_1_cam6.0</value>
