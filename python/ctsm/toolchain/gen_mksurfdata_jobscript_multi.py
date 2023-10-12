@@ -8,36 +8,39 @@ import sys
 import argparse
 import subprocess
 
-valid_scenarios=["all",
-                 "standard",
-                 "global-present",
-                 "global-present-low-res",
-                 "global-present-nldas",
-                 "global-hist-4x5",
-                 "crop-tropics-present",
-                 "crop",
-                 "crop-global-present",
-                 "crop-global-present-low-res",
-                 "crop-global-present-ne16np4",
-                 "crop-global-present-ne120np4",
-                 "crop-global-present-0.125",
-                 "crop-global-1850",
-                 "crop-global-1850-low-res",
-                 "crop-global-1850-ne16np4",
-                 "crop-global-1850-ne120np4",
-                 "crop-global-hist",
-                 "crop-global-future",
-                 "crop-global-SSP1-2.6",
-                 "crop-global-SSP3-7.0",
-                 "crop-global-SSP5-3.4",
-                 "crop-global-SSP2-4.5",
-                 "crop-global-SSP2-4.5-low-res",
-                 "crop-global-SSP2-4.5-hi-res",
-                 "crop-global-SSP1-1.9",
-                 "crop-global-SSP4-3.4",
-                 "crop-global-SSP4-6.0",
-                 "crop-global-SSP5-8.5",
-                 "crop-global-SSP5-8.5-other"]
+valid_scenarios = [
+    "all",
+    "standard",
+    "global-present",
+    "global-present-low-res",
+    "global-present-nldas",
+    "global-hist-4x5",
+    "crop-tropics-present",
+    "crop",
+    "crop-global-present",
+    "crop-global-present-low-res",
+    "crop-global-present-ne16np4",
+    "crop-global-present-ne120np4",
+    "crop-global-present-0.125",
+    "crop-global-1850",
+    "crop-global-1850-low-res",
+    "crop-global-1850-ne16np4",
+    "crop-global-1850-ne120np4",
+    "crop-global-hist",
+    "crop-global-future",
+    "crop-global-SSP1-2.6",
+    "crop-global-SSP3-7.0",
+    "crop-global-SSP5-3.4",
+    "crop-global-SSP2-4.5",
+    "crop-global-SSP2-4.5-low-res",
+    "crop-global-SSP2-4.5-hi-res",
+    "crop-global-SSP1-1.9",
+    "crop-global-SSP4-3.4",
+    "crop-global-SSP4-6.0",
+    "crop-global-SSP5-8.5",
+    "crop-global-SSP5-8.5-other",
+]
+
 
 def get_parser():
     """
@@ -50,7 +53,8 @@ def get_parser():
     parser.print_usage = parser.print_help
 
     parser.add_argument(
-        '-v', '--verbose',
+        "-v",
+        "--verbose",
         help="ncrease output verbosity",
         action="store_true",
     )
@@ -60,7 +64,7 @@ def get_parser():
         action="store",
         dest="account",
         required=False,
-        default="P93300606"
+        default="P93300606",
     )
     parser.add_argument(
         "--number-of-nodes",
@@ -108,11 +112,12 @@ def get_parser():
         action="store",
         dest="jobscript_file",
         required=False,
-        default="mksurfdata_jobscript_multi"
+        default="mksurfdata_jobscript_multi",
     )
     return parser
 
-def main ():
+
+def main():
     """
     See docstring at the top.
     """
@@ -132,38 +137,45 @@ def main ():
     # Determine target list
     # --------------------------
     target_list = []
-    if scenario == 'all':
-        target_list = ["global-present",
-                       "crop-global-present",
-                       "crop-global-1850",
-                       "crop-global-hist",
-                       "crop-tropics-present",
-                       "crop-global-SSP1-2.6",
-                       "crop-global-SSP3-7.0",
-                       "crop-global-SSP5-3.4",
-                       "crop-global-SSP2-4.5",
-                       "crop-global-SSP1-1.9",
-                       "crop-global-SSP4-3.4",
-                       "crop-global-SSP4-6.0",
-                       "crop-global-SSP5-8.5"],
-    elif scenario == 'standard':
-        target_list = ["global-present",
-                       "global-present-nldas",
-                      ],
+    if scenario == "all":
+        target_list = (
+            [
+                "global-present",
+                "crop-global-present",
+                "crop-global-1850",
+                "crop-global-hist",
+                "crop-tropics-present",
+                "crop-global-SSP1-2.6",
+                "crop-global-SSP3-7.0",
+                "crop-global-SSP5-3.4",
+                "crop-global-SSP2-4.5",
+                "crop-global-SSP1-1.9",
+                "crop-global-SSP4-3.4",
+                "crop-global-SSP4-6.0",
+                "crop-global-SSP5-8.5",
+            ],
+        )
+    elif scenario == "standard":
+        target_list = (
+            [
+                "global-present",
+                "global-present-nldas",
+            ],
+        )
     elif scenario == "crop":
-        target_list = ["crop-global-present",
-                       "crop-global-1850",
-                       "crop-global-hist"]
+        target_list = ["crop-global-present", "crop-global-1850", "crop-global-hist"]
     elif scenario == "crop-global-future":
-        target_list = ["crop-global-SSP1-2.6",
-                       "crop-global-SSP3-7.0",
-                       "crop-global-SSP5-3.4",
-                       "crop-global-SSP2-4.5",
-                       "crop-global-SSP1-1.9",
-                       "crop-global-SSP4-3.4",
-                       "crop-global-SSP4-6.0",
-                       "crop-global-SSP5-8.5",
-                       "crop-global-SSP5-8.5-other"]
+        target_list = [
+            "crop-global-SSP1-2.6",
+            "crop-global-SSP3-7.0",
+            "crop-global-SSP5-3.4",
+            "crop-global-SSP2-4.5",
+            "crop-global-SSP1-1.9",
+            "crop-global-SSP4-3.4",
+            "crop-global-SSP4-6.0",
+            "crop-global-SSP5-8.5",
+            "crop-global-SSP5-8.5-other",
+        ]
     elif scenario == "tropics":
         target_list = ["crop-tropics-present"]
     else:
@@ -173,49 +185,129 @@ def main ():
     # Determine resolution sets that are referenced in commands
     # --------------------------
     resolution_dict = {
-        "standard_res_no_crop" : ["0.9x1.25","1.9x2.5"],
-        "low_res_no_crop"      : ["10x15"],
-        "low_res_all"          : ['10x15', 'ne3np4.pg3'],
-        "hi_res_all"           : ['ne120np4.pg3'],
-        "standard_res"         : ['0.9x1.25','1.9x2.5','C96', 'ne30np4.pg3', 'mpasa120'],
-        "low_res"              : ['10x15', '4x5', 'ne3np4.pg3', 'ne5np4.pg3', 'C24', 'mpasa480'],
-        "4x5_res"              : ['10x15', '4x5', 'C24', 'mpasa480'],
-        "nldas_res"            : ['0.125nldas2'],
-        "5x5_amazon_res"       : ['5x5_amazon'],
-        "ne16np4_res"          : ['C48', 'ne16np4'],
-        "ne120np4_res"         : ['ne120np4.pg3',
-            'ne0np4.ARCTICGRIS.ne30x8','ne0np4.ARCTIC.ne30x4', 'ne0np4CONUS.ne30x8'],
+        "standard_res_no_crop": ["0.9x1.25", "1.9x2.5"],
+        "low_res_no_crop": ["10x15"],
+        "low_res_all": ["10x15", "ne3np4.pg3"],
+        "hi_res_all": ["ne120np4.pg3"],
+        "standard_res": ["0.9x1.25", "1.9x2.5", "C96", "ne30np4.pg3", "mpasa120"],
+        "low_res": ["10x15", "4x5", "ne3np4.pg3", "ne5np4.pg3", "C24", "mpasa480"],
+        "4x5_res": ["10x15", "4x5", "C24", "mpasa480"],
+        "nldas_res": ["0.125nldas2"],
+        "5x5_amazon_res": ["5x5_amazon"],
+        "ne16np4_res": ["C48", "ne16np4"],
+        "ne120np4_res": [
+            "ne120np4.pg3",
+            "ne0np4.ARCTICGRIS.ne30x8",
+            "ne0np4.ARCTIC.ne30x4",
+            "ne0np4CONUS.ne30x8",
+        ],
     }
 
     # --------------------------
     # Determine commands for each target list
     # --------------------------
-    dataset_dict={"global-present"                  : ("--start-year 2000 --end-year 2000 --nocrop --vic                  --res", "standard_res_no_crop"),
-                  "global-present-low-res"          : ("--start-year 2000 --end-year 2000 --nocrop --vic                  --res", "low_res_no_crop"),
-                  "global-present-nldas"            : ("--start-year 2000 --end-year 2000 --nocrop --vic                  --res", "nldas_res"),
-                  "global-hist-4x5"                 : ("--start-year 1850 --end-year 2015 --nocrop                        --res", "4x5_res"),
-                  "crop-tropics-present"            : ("--start-year 2000 --end-year 2000                                 --res", "5x5_amazon_res"),
-                  "crop-global-present"             : ("--start-year 2000 --end-year 2000                                 --res", "standard_res"),
-                  "crop-global-present-low-res"     : ("--start-year 2000 --end-year 2000                                 --res", "low_res"),
-                  "crop-global-present-ne16np4"     : ("--start-year 2000 --end-year 2000                                 --res", "ne16np4_res"),
-                  "crop-global-present-ne120np4"    : ("--start-year 2000 --end-year 2000                                 --res", "ne120np4_res"),
-                  "crop-global-present-0.125"       : ("--start-year 2000 --end-year 2000 --hirespft                      --res", "nldas_res"),
-                  "crop-global-1850"                : ("--start-year 1850 --end-year 1850                                 --res", "standard_res"),
-                  "crop-global-1850-low-res"        : ("--start-year 1850 --end-year 1850                                 --res", "low_res"),
-                  "crop-global-1850-ne16np4"        : ("--start-year 1850 --end-year 1850                                 --res", "ne16np4_res"),
-                  "crop-global-1850-ne120np4"       : ("--start-year 1850 --end-year 1850                                 --res", "ne120np4_res"),
-                  "crop-global-hist"                : ("--start-year 1850 --end-year 2015 --nosurfdata                    --res", "standard_res"),
-                  "crop-global-SSP1-1.9"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-1.9 --res", "standard_res"),
-                  "crop-global-SSP1-2.6"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-2.6 --res", "standard_res"),
-                  "crop-global-SSP2-4.5"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res", "standard_res"),
-                  "crop-global-SSP2-4.5-low-res"    : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res", "low_res_all"),
-                  "crop-global-SSP2-4.5-hi-res"     : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res", "hi_res_all"),
-                  "crop-global-SSP3-7.0"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP3-7.0 --res", "standard_res"),
-                  "crop-global-SSP4-3.4"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-3.4 --res", "standard_res"),
-                  "crop-global-SSP4-6.0"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-6.0 --res", "standard_res"),
-                  "crop-global-SSP5-3.4"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP5-3.4 --res", "standard_res"),
-                  "crop-global-SSP5-8.5"            : ("--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP5-8.5 --res", "standard_res"),
-                  }
+    dataset_dict = {
+        "global-present": (
+            "--start-year 2000 --end-year 2000 --nocrop --vic                  --res",
+            "standard_res_no_crop",
+        ),
+        "global-present-low-res": (
+            "--start-year 2000 --end-year 2000 --nocrop --vic                  --res",
+            "low_res_no_crop",
+        ),
+        "global-present-nldas": (
+            "--start-year 2000 --end-year 2000 --nocrop --vic                  --res",
+            "nldas_res",
+        ),
+        "global-hist-4x5": (
+            "--start-year 1850 --end-year 2015 --nocrop                        --res",
+            "4x5_res",
+        ),
+        "crop-tropics-present": (
+            "--start-year 2000 --end-year 2000                                 --res",
+            "5x5_amazon_res",
+        ),
+        "crop-global-present": (
+            "--start-year 2000 --end-year 2000                                 --res",
+            "standard_res",
+        ),
+        "crop-global-present-low-res": (
+            "--start-year 2000 --end-year 2000                                 --res",
+            "low_res",
+        ),
+        "crop-global-present-ne16np4": (
+            "--start-year 2000 --end-year 2000                                 --res",
+            "ne16np4_res",
+        ),
+        "crop-global-present-ne120np4": (
+            "--start-year 2000 --end-year 2000                                 --res",
+            "ne120np4_res",
+        ),
+        "crop-global-present-0.125": (
+            "--start-year 2000 --end-year 2000 --hirespft                      --res",
+            "nldas_res",
+        ),
+        "crop-global-1850": (
+            "--start-year 1850 --end-year 1850                                 --res",
+            "standard_res",
+        ),
+        "crop-global-1850-low-res": (
+            "--start-year 1850 --end-year 1850                                 --res",
+            "low_res",
+        ),
+        "crop-global-1850-ne16np4": (
+            "--start-year 1850 --end-year 1850                                 --res",
+            "ne16np4_res",
+        ),
+        "crop-global-1850-ne120np4": (
+            "--start-year 1850 --end-year 1850                                 --res",
+            "ne120np4_res",
+        ),
+        "crop-global-hist": (
+            "--start-year 1850 --end-year 2015 --nosurfdata                    --res",
+            "standard_res",
+        ),
+        "crop-global-SSP1-1.9": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-1.9 --res",
+            "standard_res",
+        ),
+        "crop-global-SSP1-2.6": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-2.6 --res",
+            "standard_res",
+        ),
+        "crop-global-SSP2-4.5": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
+            "standard_res",
+        ),
+        "crop-global-SSP2-4.5-low-res": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
+            "low_res_all",
+        ),
+        "crop-global-SSP2-4.5-hi-res": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
+            "hi_res_all",
+        ),
+        "crop-global-SSP3-7.0": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP3-7.0 --res",
+            "standard_res",
+        ),
+        "crop-global-SSP4-3.4": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-3.4 --res",
+            "standard_res",
+        ),
+        "crop-global-SSP4-6.0": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-6.0 --res",
+            "standard_res",
+        ),
+        "crop-global-SSP5-3.4": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP5-3.4 --res",
+            "standard_res",
+        ),
+        "crop-global-SSP5-8.5": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP5-8.5 --res",
+            "standard_res",
+        ),
+    }
 
     # --------------------------
     # TODO Here, reuse code from gen_mksurfdata_jobscript_single.py
@@ -226,33 +318,41 @@ def main ():
     # Make sure files exist or exit
     # --------------------------
     if not os.path.exists("./tool_bld"):
-        print( "tool_bld directory does NOT exist -- build mksurdata_esmf before running this script -- using ./gen_mksurfdata_build.sh")
+        print(
+            "tool_bld directory does NOT exist -- build mksurdata_esmf before running this script -- using ./gen_mksurfdata_build.sh"
+        )
         sys.exit(1)
 
     env_specific_script = "./tool_bld/.env_mach_specific.sh"
     if not os.path.exists(env_specific_script):
-        print( env_specific_script+" does NOT exist")
+        print(env_specific_script + " does NOT exist")
         sys.exit(1)
     mksurfdata = "./tool_bld/mksurfdata"
     if not os.path.exists(mksurfdata):
-        print( mksurfdata+" does NOT exist")
+        print(mksurfdata + " does NOT exist")
         sys.exit(1)
     # --------------------------
     # Write run script
     # --------------------------
-    with open(jobscript_file, "w",encoding='utf-8') as runfile:
+    with open(jobscript_file, "w", encoding="utf-8") as runfile:
 
-        runfile.write('#!/bin/bash \n')
+        runfile.write("#!/bin/bash \n")
         runfile.write(f"#PBS -A {account} \n")
-        runfile.write(f'#PBS -N mksrf_{scenario} \n')
-        runfile.write('#PBS -j oe \n')
-        runfile.write('#PBS -k eod \n')
-        runfile.write('#PBS -S /bin/bash \n')
-        runfile.write(f'#PBS -q {queue} \n')
-        runfile.write(f'#PBS -l walltime={walltime} \n')
-        runfile.write(f"#PBS -l select={number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node}:mem=109GB \n")
-        runfile.write(f'# This is a batch script to run a set of resolutions for mksurfdata_esmf {scenario} \n')
-        runfile.write('# NOTE: THIS SCRIPT IS AUTOMATICALLY GENERATED SO IN GENERAL YOU SHOULD NOT EDIT it!!\n\n')
+        runfile.write(f"#PBS -N mksrf_{scenario} \n")
+        runfile.write("#PBS -j oe \n")
+        runfile.write("#PBS -k eod \n")
+        runfile.write("#PBS -S /bin/bash \n")
+        runfile.write(f"#PBS -q {queue} \n")
+        runfile.write(f"#PBS -l walltime={walltime} \n")
+        runfile.write(
+            f"#PBS -l select={number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node}:mem=109GB \n"
+        )
+        runfile.write(
+            f"# This is a batch script to run a set of resolutions for mksurfdata_esmf {scenario} \n"
+        )
+        runfile.write(
+            "# NOTE: THIS SCRIPT IS AUTOMATICALLY GENERATED SO IN GENERAL YOU SHOULD NOT EDIT it!!\n\n"
+        )
         runfile.write("\n")
 
         n_p = int(tasks_per_node) * int(number_of_nodes)
@@ -260,26 +360,24 @@ def main ():
         # Run env_mach_specific.sh to control the machine dependent
         # environment including the paths to compilers and libraries
         # external to cime such as netcdf
-        runfile.write('. '+env_specific_script + '\n')
+        runfile.write(". " + env_specific_script + "\n")
         check = f"if [ $? != 0 ]; then echo 'Error running env_specific_script'; exit -4; fi"
         runfile.write(f"{check} \n")
         for target in target_list:
             res_set = dataset_dict[target][1]
             for res in resolution_dict[res_set]:
-                command = os.path.join(os.getcwd(),
-                                       "gen_mksurfdata_namelist.py")
+                command = os.path.join(os.getcwd(), "gen_mksurfdata_namelist.py")
                 command = command + " " + dataset_dict[target][0] + " " + res
-                print (f"command is {command}")
-                commands = [x for x in command.split(' ') if x]
+                print(f"command is {command}")
+                commands = [x for x in command.split(" ") if x]
                 try:
-                    run_cmd = subprocess.run(commands, check=True, shell=True,
-                                             capture_output=True)
+                    run_cmd = subprocess.run(commands, check=True, shell=True, capture_output=True)
                 except subprocess.CalledProcessError as e:
-                    sys.exit(f'{e} ERROR calling {command}')
-                output = run_cmd.stdout.decode('utf-8').strip()
-                namelist = output.split(' ')[-1]
-                print (f"generated namelist {namelist}")
-                output = f"time mpiexec_mpt -p \"%g:\" -np {n_p} {mksurfdata} < {namelist}"
+                    sys.exit(f"{e} ERROR calling {command}")
+                output = run_cmd.stdout.decode("utf-8").strip()
+                namelist = output.split(" ")[-1]
+                print(f"generated namelist {namelist}")
+                output = f'time mpiexec_mpt -p "%g:" -np {n_p} {mksurfdata} < {namelist}'
                 runfile.write(f"{output} \n")
                 check = f"if [ $? != 0 ]; then echo 'Error running resolution {res}'; exit -4; fi"
                 runfile.write(f"{check} \n")
@@ -287,5 +385,5 @@ def main ():
 
         runfile.write(f"echo Successfully ran {jobscript_file}\n")
 
-    print (f"echo Successfully created jobscript {jobscript_file}\n")
+    print(f"echo Successfully created jobscript {jobscript_file}\n")
     sys.exit(0)
