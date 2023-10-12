@@ -7,7 +7,7 @@ the 1-km topography raw dataset. The 1-km file causes the test to run out of
 memory on cheyenne.
 
 Currently casper complains that `git -C` is not a valid option.
-I added -C to the `git describe` in gen_mksurfdata_namelist.py for this
+I added -C to the `git describe` in gen_mksurfdata_namelist for this
 system test to work.
 """
 import os
@@ -61,9 +61,9 @@ class MKSURFDATAESMF(SystemTestsCommon):
             build_script_path = os.path.join(self._tool_path,
                 'gen_mksurfdata_build.sh')
             nml_script_path = os.path.join(self._tool_path,
-                'gen_mksurfdata_namelist.py')
+                'gen_mksurfdata_namelist')
             gen_jobscript_path = os.path.join(self._tool_path,
-                'gen_mksurfdata_jobscript_single.py')
+                'gen_mksurfdata_jobscript_single')
             gen_mksurfdata_namelist = f'{nml_script_path} --res {self._res} --start-year {self._model_yr} --end-year {self._model_yr}'
             gen_mksurfdata_jobscript = f'{gen_jobscript_path} --number-of-nodes 12 --tasks-per-node 12 --namelist-file {self._fsurdat_namelist}'
 
