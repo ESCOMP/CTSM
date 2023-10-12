@@ -17,7 +17,7 @@ Lakes have spatially variable depth prescribed in the surface data (section
 :ref:`External Data Lake`); the surface data optionally includes lake optical
 extinction coeffient and horizontal fetch, currently only used for site
 simulations. Lake physics includes freezing and thawing in the lake
-body, resolved snow layers, and “soil” and bedrock layers below the lake
+body, resolved snow layers, and "soil" and bedrock layers below the lake
 body. Temperatures and ice fractions are simulated for
 :math:`N_{levlak} =10` layers (for global simulations) or
 :math:`N_{levlak} =25` (for site simulations) with discretization
@@ -49,7 +49,7 @@ or assumed depth *d*, extinction coefficient :math:`\eta`, and fetch
 decomposition algorithm in future model versions. As currently
 implemented, the lake consists of 0-5 snow layers; water and ice layers
 (10 for global simulations and 25 for site simulations) comprising the
-“lake body;” 10 “soil” layers; and 5 bedrock layers. Each lake body
+"lake body;" 10 "soil" layers; and 5 bedrock layers. Each lake body
 layer has a fixed water mass (set by the nominal layer thickness and the
 liquid density), with frozen mass-fraction *I* a state variable.
 Resolved snow layers are present if the snow thickness
@@ -349,7 +349,7 @@ surface fluxes as
    \Delta T_{g} =\frac{\beta \overrightarrow{S}_{g} -\overrightarrow{L}_{g} -H_{g} -\lambda E_{g} -G}{\frac{\partial \overrightarrow{L}_{g} }{\partial T_{g} } +\frac{\partial H_{g} }{\partial T_{g} } +\frac{\partial \lambda E_{g} }{\partial T_{g} } +\frac{\partial G}{\partial T_{g} } }
 
 where :math:`\Delta T_{g} =T_{g}^{n+1} -T_{g}^{n}`  and the subscript
-“n” indicates the iteration. Therefore, the surface temperature
+"n" indicates the iteration. Therefore, the surface temperature
 :math:`T_{g}^{n+1}`  can be written as
 
 .. math::
@@ -928,7 +928,7 @@ Convection
 ^^^^^^^^^^^^^^^^
 
 Convective mixing is based on 
-:ref:`Hostetler et al.’s (1993, 1994)<Hostetleretal1993>` coupled
+:ref:`Hostetler et al.'s (1993, 1994)<Hostetleretal1993>` coupled
 lake-atmosphere model, adjusting the lake temperature after diffusion
 and phase change to maintain a stable density profile. Unfrozen lakes
 overturn when :math:`\rho _{i} >\rho _{i+1}` , in which case the layer
@@ -1126,7 +1126,7 @@ Snow-capping is invoked if the snow depth :math:`z_{sno} >1000{\rm m}`,
 in which case additional precipitation and frost deposition is added to
 :math:`q_{snwcp,\, ice}` .
 
-If there are resolved snow layers, the generalized “evaporation”
+If there are resolved snow layers, the generalized "evaporation"
 :math:`E_{g}`  (i.e., evaporation, dew, frost, and sublimation) is
 treated as over other land units, except that the allowed evaporation
 from the ground is unlimited (though the top snow layer cannot lose more

@@ -173,7 +173,7 @@ temperature :math:`T_{i}`  [K]; thermal conductivity
 volumetric heat capacity :math:`c_{i}`  [J m\ :sup:`-3`
 K\ :sup:`-1`]) are defined for soil layers at the node depths
 (:numref:`Figure Soil Temperature Schematic`) and for snow layers at the layer midpoints. When present,
-snow occupies a fraction of a grid cell’s area, therefore snow depth
+snow occupies a fraction of a grid cell's area, therefore snow depth
 represents the thickness of the snowpack averaged over only the snow
 covered area. The grid cell average snow depth is related to the depth
 of the snow covered area as :math:`\bar{z}_{sno} =f_{sno} z_{sno}` . By

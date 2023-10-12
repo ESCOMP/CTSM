@@ -524,7 +524,7 @@ The equations for :math:`c_{i}` , :math:`c_{s}` , :math:`r_{s}` , and
 :math:`A_{n}`  are solved iteratively until :math:`c_{i}`  converges.
 :ref:`Sun et al. (2012)<Sunetal2012>` pointed out that the CLM4 numerical approach does not
 always converge. Therefore, the model uses a hybrid algorithm that
-combines the secant method and Brent’s method to solve for
+combines the secant method and Brent's method to solve for
 :math:`c_{i}` . The equation set is solved separately for sunlit
 (:math:`A_{n}^{sun}` , :math:`r_{s}^{sun}` ) and shaded
 (:math:`A_{n}^{sha}` , :math:`r_{s}^{sha}` ) leaves.

@@ -15,7 +15,7 @@ warming (e.g., white roofs).
 
 Urban areas in CLM are represented by up to three urban landunits per
 gridcell according to density class. The urban landunit is based on the
-“urban canyon” concept of :ref:`Oke (1987) <Oke1987>` in which 
+"urban canyon" concept of :ref:`Oke (1987) <Oke1987>` in which 
 the canyon geometry is
 described by building height (:math:`H`) and street width (:math:`W`)
 (:numref:`Figure schematic representation of the urban landunit`). The canyon system 
@@ -76,7 +76,7 @@ model (e.g., the Community Atmosphere Model (CAM)) or
 observed forcing (e.g., reanalysis or field observations). The urban
 model produces sensible, latent heat, and momentum fluxes, emitted
 longwave, and reflected solar radiation, which are area-averaged with
-fluxes from non-urban “landunits” (e.g., vegetation, lakes) to supply
+fluxes from non-urban "landunits" (e.g., vegetation, lakes) to supply
 grid cell averaged fluxes to the atmospheric model.
 
 Present day global urban extent and urban properties were developed by
@@ -101,7 +101,7 @@ fraction, average building height, and pervious fraction of the canyon
 floor) properties are provided for each of the density classes. Building
 interior minimum and maximum temperatures are prescribed based on
 climate and socioeconomic considerations. The surface dataset creation
-routines (see CLM5.0 User’s Guide) aggregate the data to the desired
+routines (see CLM5.0 User's Guide) aggregate the data to the desired
 resolution.
 
 An optional urban properties dataset, including a tool that allows for generating future

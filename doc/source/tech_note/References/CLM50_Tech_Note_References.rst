@@ -135,13 +135,13 @@ quaternary climatic changes. J. Atmos. Sci. 35:2362-2367.
 .. _Berger1978b:
 
 Berger, A.L. 1978b. A simple algorithm to compute long-term variations
-of daily or monthly insolation. Contribution de l’Institut d’Astronomie
+of daily or monthly insolation. Contribution de l'Institut d'Astronomie
 et de Géophysique, Université Catholique de Louvain, Louvain-la-Neuve,
 No. 18.
 
 .. _Bergeretal1993:
 
-Berger, A., Loutre, M.-F., and Tricot, C. 1993. Insolation and Earth’s
+Berger, A., Loutre, M.-F., and Tricot, C. 1993. Insolation and Earth's
 orbital periods. J. Geophys. Res. 98:10341-10362.
 
 .. _BerkowitzBalberg1992:
@@ -163,7 +163,7 @@ light by small particles. John Wiley & Sons, New York, NY.
 .. _Bonan1996:
 
 Bonan, G.B. 1996. A land surface model (LSM version 1.0) for ecological,
-hydrological, and atmospheric studies: Technical description and user’s
+hydrological, and atmospheric studies: Technical description and user's
 guide. NCAR Technical Note NCAR/TN-417+STR, National Center for
 Atmospheric Research, Boulder, CO, 150 pp.
 
@@ -378,7 +378,7 @@ Adv. Atmos. Sci. 14:433-460.
 .. _Daietal2001:
 
 Dai, Y., et al. 2001. Common Land Model: Technical documentation and
-user’s guide [Available online at
+user's guide [Available online at
 http://climate.eas.gatech.edu/dai/clmdoc.pdf].
 
 .. _Daietal2003:
@@ -1131,8 +1131,8 @@ DOI:10.1029/2002JD003203.
 .. _Levisetal2004:
 
 Levis, S., Bonan, G.B., Vertenstein, M., and Oleson, K.W. 2004. The
-community land model’s dynamic global vegetation model (CLM-DGVM):
-technical description and user’s guide. NCAR Technical Note
+community land model's dynamic global vegetation model (CLM-DGVM):
+technical description and user's guide. NCAR Technical Note
 NCAR/TN-459+STR. National Center for Atmospheric Research, Boulder,
 Colorado. 50 pp.
 
@@ -1169,10 +1169,10 @@ Vegetation Model. Biogeosciences 9:2761-2780.
 
 .. _Lietal2012b:
 
-Li, F., Zeng, X. D., and Levis, S. 2012b. Corrigendum to “A
+Li, F., Zeng, X. D., and Levis, S. 2012b. Corrigendum to "A
 process-based fire parameterization of intermediate complexity in a
-Dynamic Global Vegetation Model” published in Biogeosciences, 9,
-2761–2780, 2012”. Biogeosciences 9: 4771-4772.
+Dynamic Global Vegetation Model" published in Biogeosciences, 9,
+2761–2780, 2012". Biogeosciences 9: 4771-4772.
 
 .. _Lietal2013a:
 
@@ -1228,7 +1228,7 @@ Lichstein, J.W. and S.W. Pacala, 2011. Local diversity in heterogeneous landscap
 .. _LipscombSacks2012:
 
 Lipscomb, W., and Sacks, W. 2012. The CESM land ice model documentation
-and user’s guide. 46 pp. [Available online at
+and user's guide. 46 pp. [Available online at
 http://www.cesm.ucar.edu/models/cesm1.1/cism/].
 
 .. _lischke2006:
@@ -1343,7 +1343,7 @@ doi:10.1111/j.1365-2486.2010.02375.x
 
 .. _MelzerOLeary1987:
 
-Melzer, E., and O’Leary, M.H. 1987. Anapleurotic CO2 Fixation by
+Melzer, E., and O'Leary, M.H. 1987. Anapleurotic CO2 Fixation by
 Phosphoenolpyruvate Carboxylase in C3 Plants. Plant. Physiol. 84:58.
 
 .. _Milleretal1994:
@@ -1523,7 +1523,7 @@ decomposers in ecological systems. Ecology 44:322-331.
 .. _Olsonetal2001:
 
 Olson, D.M., Dinerstein, E., Wikramanayake, E.D., Burgess, N.D., Powell,
-G.V.N., Underwood, E.C., D’Amico, J.A., Itoua, I., Strand, H. E.,
+G.V.N., Underwood, E.C., D'Amico, J.A., Itoua, I., Strand, H. E.,
 Morrison, J. C., Loucks, C. J., Allnutt, T. F., Ricketts, T. H., Kura,
 Y., Lamoreux, J. F., Wettengel, W. W., Heda, P., and Kassem, K. R.,
 2001. Terrestrial ecoregions of the world a new map of life on earth,

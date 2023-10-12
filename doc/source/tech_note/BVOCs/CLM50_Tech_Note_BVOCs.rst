@@ -20,8 +20,8 @@ has been implemented in the CLM to specify a subset of emissions. This
 allows for additional flexibility in grouping chemical compounds to form
 the lumped species frequently used in atmospheric chemistry. The mapping
 or grouping is therefore defined through a namelist parameter in
-drv\_flds\_in, e.g. megan\_specifier = ’ISOP = isoprene’, ’BIGALK =
-pentane + hexane + heptane + tricyclene’.
+drv\_flds\_in, e.g. megan\_specifier = 'ISOP = isoprene', 'BIGALK =
+pentane + hexane + heptane + tricyclene'.
 
 Terrestrial BVOC emissions from plants to the atmosphere are expressed
 as a flux, :math:`F_{i}` (:math:`\mu` \ g C m\ :sup:`-2` ground area h\ :sup:`-1`), for emission of chemical compound

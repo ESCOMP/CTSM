@@ -8,7 +8,7 @@ and is intended to represent the death of individuals from a stand of
 plants due to the aggregate of processes such as wind throw, insect
 attack, disease, extreme temperatures or drought, and age-related
 decline in vigor. These processes are referred to in aggregate as
-“gap-phase” mortality. Mortality due to fire and anthropogenic land
+"gap-phase" mortality. Mortality due to fire and anthropogenic land
 cover change are treated separately (see Chapters :numref:`rst_Fire` and :numref:`rst_Transient Landcover Change`,
 respectively).
 

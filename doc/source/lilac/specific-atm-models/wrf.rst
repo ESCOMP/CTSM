@@ -27,7 +27,7 @@ and :numref:`wrf-set-ctsm-runtime-options`.
   If CIME is not ported to your machine, please see `instructions on porting CIME
   <https://esmci.github.io/cime/versions/master/html/users_guide/porting-cime.html#porting>`_.
 
-  In this example we assume NCAR’s ``Cheyenne`` HPC system in particular.
+  In this example we assume NCAR's ``Cheyenne`` HPC system in particular.
 
 
 .. _clone-WRF-CTSM-repositories:

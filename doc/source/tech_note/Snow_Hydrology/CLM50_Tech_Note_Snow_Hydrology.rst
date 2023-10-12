@@ -264,7 +264,7 @@ evaporation as
 
    w_{liq,\, snl+1}^{n+1} =w_{liq,\, snl+1}^{n} +f_{sno} \left(q_{grnd,\, liq} +q_{sdew} -q_{seva} \right)\Delta t.
 
-When the liquid water within a snow layer exceeds the layer’s holding
+When the liquid water within a snow layer exceeds the layer's holding
 capacity, the excess water is added to the underlying layer, limited by
 the effective porosity (:math:`1-\theta _{ice}` ) of the layer. The flow
 of water is assumed to be zero (:math:`q_{liq,\, i} =0`) if the

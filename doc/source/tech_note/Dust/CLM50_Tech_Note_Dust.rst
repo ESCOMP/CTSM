@@ -21,7 +21,7 @@ The total vertical mass flux of dust, :math:`F_{j}`
 
    F_{j} =TSf_{m} \alpha Q_{s} \sum _{i=1}^{I}M_{i,j}
 
-where :math:`T` is a global factor that compensates for the DEAD model’s
+where :math:`T` is a global factor that compensates for the DEAD model's
 sensitivity to horizontal and temporal resolution and equals 5 x
 10\ :sup:`-4` in the CLM instead of 7 x 10\ :sup:`-4` in
 :ref:`Zender et al. (2003)<Zenderetal2003>`. :math:`S` is the source 
@@ -76,7 +76,7 @@ particles in the soil and %clay is determined from the surface dataset
 :math:`M_{clay} =0.2` to sandy loam.
 
 :math:`Q_{s}`  is the total horizontally saltating mass flux (kg
-m\ :sup:`-1` s\ :sup:`-1`) of “large” particles (:numref:`Table Dust Mass fraction`), 
+m\ :sup:`-1` s\ :sup:`-1`) of "large" particles (:numref:`Table Dust Mass fraction`), 
 also referred to as the vertically integrated streamwise mass flux
 
 .. math::

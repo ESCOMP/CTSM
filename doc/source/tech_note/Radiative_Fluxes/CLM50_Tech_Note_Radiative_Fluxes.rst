@@ -6,7 +6,7 @@ Radiative Fluxes
 The net radiation at the surface is
 :math:`\left(\vec{S}_{v} +\vec{S}_{g} \right)-\left(\vec{L}_{v} +\vec{L}_{g} \right)`,
 where :math:`\vec{S}` is the net solar flux absorbed by the vegetation
-(“v”) and the ground (“g”) and :math:`\vec{L}` is the net longwave flux
+("v") and the ground ("g") and :math:`\vec{L}` is the net longwave flux
 (positive toward the atmosphere) (W m\ :sup:`-2`).
 
 .. _Solar Fluxes:

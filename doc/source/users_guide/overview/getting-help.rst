@@ -76,7 +76,7 @@ CESM
   Community Earth System Model (CESM). The coupled earth system model that CLM is a component of.
 
 CIME
-  The Common Infrastructure for Modeling the Earth (CIME - pronounced “SEAM”) provides a Case Control System for configuring, compiling and executing Earth system models, data and stub model components, a driver and associated tools and libraries.
+  The Common Infrastructure for Modeling the Earth (CIME - pronounced "SEAM") provides a Case Control System for configuring, compiling and executing Earth system models, data and stub model components, a driver and associated tools and libraries.
 
 CLM
   Community Land Model (CLM). The prognostically active land model component of CESM.
@@ -126,7 +126,7 @@ ESMF
   Earth System Modeling Framework (ESMF). They are a software project that provides a software library to support Earth System modeling. We provide interfaces for ESMF as well as use their regridding capabilities for offline CLM tools.
 
 FATES
-  Functionally Assembled Terrestrial Ecosystem Simulator. This is being developed by the Next Generation Ecosystem Experiment Tropics’ (NGEE-T) 
+  Functionally Assembled Terrestrial Ecosystem Simulator. This is being developed by the Next Generation Ecosystem Experiment Tropics' (NGEE-T) 
   project and uses both |version| and the land model component of E3SM (Energy Exascale Earth System Model).
 
 FUN

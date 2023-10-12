@@ -374,7 +374,7 @@ where :math:`M_{livestem,2}`  is the corresponding mortality factor
 
 Fire nitrogen emissions and nitrogen transfers due to fire-induced
 mortality are calculated the same way as for carbon, using the same
-values for combustion completeness and mortality factors. With CLM’s
+values for combustion completeness and mortality factors. With CLM's
 dynamic vegetation option enabled, the number of tree PFT individuals
 killed by fire per km\ :sup:`2` (individual km\ :sup:`-2`
 s\ :sup:`-1`) is given by
@@ -438,7 +438,7 @@ for agricultural fires (:ref:`van der Werf et al. 2010  <vanderWerfetal2010>`);
 :math:`{f}_{t}` is set to 0 otherwise. Peak
 month in this dataset correlates with the month after harvesting or the
 month before planting. In CLM we use this dataset the same way whether
-the CROP option is active or not, without regard to the CROP option’s
+the CROP option is active or not, without regard to the CROP option's
 simulated planting and harvesting dates.
 
 In the post-fire region, fire impact is parameterized similar to section 

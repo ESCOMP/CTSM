@@ -138,7 +138,7 @@ effect. The kinetic isotope effect during diffusion of
 CO\ :sub:`2` through the stomatal opening is 4.4‰. The kinetic
 isotope effect during fixation of CO\ :sub:`2` with Rubisco is
 :math:`\sim`\ 30‰; however, since about 5-10% of carbon in C3 plants
-reacts with phosphoenolpyruvate carboxylase (PEPC) (Melzer and O’Leary,
+reacts with phosphoenolpyruvate carboxylase (PEPC) (Melzer and O'Leary,
 1987), the net kinetic isotope effect during fixation is
 :math:`\sim`\ 27‰ for C3 plants. In C4 plant photosynthesis, only the
 diffusion effect is important. The fractionation factor equations for C3

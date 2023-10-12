@@ -511,7 +511,7 @@ condition of the infiltration flux into the top soil layer
 bottom of the soil column (sub-surface runoff is removed later in the 
 timestep, section :numref:`Lateral Sub-surface Runoff`).
 
-The soil water flux :math:`q` in equation can be described by Darcy’s
+The soil water flux :math:`q` in equation can be described by Darcy's
 law :ref:`(Dingman 2002) <Dingman2002>`
 
 .. math::
@@ -533,7 +533,7 @@ related to the adsorptive and capillary forces within the soil matrix),
 and :math:`\psi _{z}`  is the gravitational potential (mm) (the vertical
 distance from an arbitrary reference elevation to a point in the soil).
 If the reference elevation is the soil surface, then
-:math:`\psi _{z} =z`. Letting :math:`\psi =\psi _{m}` , Darcy’s law
+:math:`\psi _{z} =z`. Letting :math:`\psi =\psi _{m}` , Darcy's law
 becomes
 
 .. math::
@@ -676,7 +676,7 @@ averages based on :math:`f_{om}`  may therefore be determined primarily
 by the organic soil properties even for values of :math:`f_{om}`  as low
 as 1 %. To better represent the influence of organic soil material on
 the grid cell average saturated hydraulic conductivity, the soil organic
-matter fraction is further subdivided into “connected” and “unconnected”
+matter fraction is further subdivided into "connected" and "unconnected"
 fractions using a result from percolation theory (:ref:`Stauffer and Aharony
 1994 <StaufferAharony1994>`, :ref:`Berkowitz and Balberg 1992 <BerkowitzBalberg1992>`). 
 Assuming that the organic and mineral fractions are randomly distributed throughout 

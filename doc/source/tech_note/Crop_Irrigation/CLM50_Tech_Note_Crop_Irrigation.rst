@@ -80,7 +80,7 @@ release of CLM4.5 were available by request (:ref:`Levis et al. 2016 <Levisetal2
 and those are now incorporated into CLM5.
 
 With interactive crop management and, therefore, a more accurate
-representation of agricultural landscapes, we hope to improve the CLM’s
+representation of agricultural landscapes, we hope to improve the CLM's
 simulated biogeophysics and biogeochemistry. These advances may improve
 fully coupled simulations with the Community Earth System Model (CESM),
 while helping human societies answer questions about changing food,
@@ -133,7 +133,7 @@ observation data collected at the University of Illinois Energy Farm
 located in Central Midwestern United States (:ref:`Cheng et al., 2019<Chengetal2019>`).
 
 
-In addition, CLM’s default list of plant functional types (pfts) includes an
+In addition, CLM's default list of plant functional types (pfts) includes an
 irrigated and unirrigated unmanaged C3 crop (:numref:`Table Crop plant functional types`) treated as a second C3 grass.
 The unmanaged C3 crop is only used when the crop model is not active and 
 has grid cell coverage assigned from satellite data, and 
@@ -278,7 +278,7 @@ the southern hemisphere (SH) the NH requirements apply 6 months later.
 
 At planting, each crop seed pool is assigned 3 gC m\ :sup:`-2` from its 
 grain product pool. The seed carbon is transferred to the leaves upon leaf emergence. An
-equivalent amount of seed leaf N is assigned given the pft’s C to N
+equivalent amount of seed leaf N is assigned given the pft's C to N
 ratio for leaves (:math:`{CN}_{leaf}` in :numref:`Table Crop allocation parameters`; this differs from AgroIBIS,
 which uses a seed leaf area index instead of seed C). The model updates the average growing degree-days necessary
 for the crop to reach vegetative and physiological maturity,
@@ -393,7 +393,7 @@ in the Southern Hemisphere apply 6 months later.
 :math:`T_{p}` and :math:`T_{p}^{ min }` are crop-specific average and coldest planting temperatures, respectively.
 :math:`{GDD}_{min}` is the lowest (for planting) 20-year running mean growing degree-days based 
 on the base temperature threshold in the 7\ :sup:`th` row, tracked from April to September (NH).
-:math:`{GDD}_{mat}` is a crop’s 20-year running mean growing
+:math:`{GDD}_{mat}` is a crop's 20-year running mean growing
 degree-days needed for vegetative and physiological maturity. Harvest
 occurs at 100%\ :math:`{GDD}_{mat}` or when the days past planting
 reach the number in the 11\ :sup:`th` row. Crop growth phases
@@ -412,7 +412,7 @@ Allocation
 Allocation changes based on the crop phenology phases phenology (section :numref:`Phenology`).
 Simulated C assimilation begins every year upon leaf emergence in phase
 2 and ends with harvest at the end of phase 3; therefore, so does the
-allocation of such C to the crop’s leaf, live stem, fine root, and
+allocation of such C to the crop's leaf, live stem, fine root, and
 reproductive pools.
 
 Typically, C:N ratios in plant tissue vary throughout the growing season and
@@ -723,7 +723,7 @@ Leaf area index (*L*) is calculated as a function of specific leaf area
 Stem area index (*S*) is equal to 0.1\ *L* for temperate and tropical corn, sugarcane, switchgrass, and miscanthus and 0.2\ *L* for
 other crops, as in AgroIBIS. All live
 C and N pools go to 0 after crop harvest, but the *S* is kept at 0.25 to
-simulate a post-harvest “stubble” on the ground.
+simulate a post-harvest "stubble" on the ground.
 
 Crop heights at the top and bottom of the canopy, :math:`{z}_{top}`
 and :math:`{z}_{bot}` (m), come from the AgroIBIS formulation:
@@ -745,7 +745,7 @@ and :math:`L_{\max }` is the maximum leaf area index (:numref:`Table Crop alloca
 Interactive Fertilization
 '''''''''''''''''''''''''
 CLM simulates fertilization by adding nitrogen directly to the soil mineral nitrogen pool to meet
-crop nitrogen demands using both industrial fertilizer and manure application. CLM’s separate crop land unit ensures that
+crop nitrogen demands using both industrial fertilizer and manure application. CLM's separate crop land unit ensures that
 natural vegetation will not access the fertilizer applied to crops.
 Fertilizer in CLM5BGCCROP is prescribed by crop functional types and varies spatially
 for each year based on the LUMIP land use and land cover change

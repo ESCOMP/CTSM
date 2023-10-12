@@ -347,8 +347,8 @@ Decomposition rates can also be limited by the availability of mineral
 nitrogen, but calculation of this limitation depends on first estimating
 the potential rates of decomposition, assuming an unlimited mineral
 nitrogen supply. The general case is described here first, referring to
-a generic decomposition flux from an “upstream” pool (*u*) to a
-“downstream” pool (*d*), with an intervening loss due to respiration.
+a generic decomposition flux from an "upstream" pool (*u*) to a
+"downstream" pool (*d*), with an intervening loss due to respiration.
 The potential carbon flux out of the upstream pool
 (:math:`{CF}_{pot,u}`, gC m\ :sup:`-2` s\ :sup:`-1`) is:
 
@@ -785,8 +785,8 @@ through N downregulation of photosynthesis, equilibration of the model
 for initialization purposes will take an extremely long time in the
 standard mode. This is particularly true for the CENTURY-based
 decomposition cascade, which includes a passive pool. In order to
-rapidly equilibrate the model, a modified version of the “accelerated
-decomposition” :ref:`(Thornton and Rosenbloon, 2005) <ThorntonRosenbloom2005>` is used. The fundamental
+rapidly equilibrate the model, a modified version of the "accelerated
+decomposition" :ref:`(Thornton and Rosenbloon, 2005) <ThorntonRosenbloom2005>` is used. The fundamental
 idea of this approach is to allow fluxes between the various pools (both
 turnover-defined and vertically-defined fluxes) adjust rapidly, while
 keeping the pool sizes themselves small so that they can fill quickly.

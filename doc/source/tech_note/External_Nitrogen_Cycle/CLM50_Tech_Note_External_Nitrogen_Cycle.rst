@@ -211,7 +211,7 @@ separately at each
 layer to define a profile of anoxic porespace fraction in the soil.
 
 The nitrification/denitrification models used here also predict fluxes
-of N\ :sub:`2`\ O via a “hole-in-the-pipe” approach (:ref:`Firestone and
+of N\ :sub:`2`\ O via a "hole-in-the-pipe" approach (:ref:`Firestone and
 Davidson, 1989 <FirestoneDavidson1989>`). A constant fraction 
 (6 \* 10\ :math:`{}^{-4}`, :ref:`Li et al. 2000 <Lietal2000>`) of the 
 nitrification flux is assumed to be N\ :sub:`2`\ O, while the fraction 

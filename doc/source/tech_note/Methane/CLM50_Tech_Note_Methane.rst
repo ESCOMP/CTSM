@@ -143,7 +143,7 @@ modified the base :math:`f_{CH_{4}}`  value.
 For the single-layer BGC version,  :math:`{R}_{H}` is distributed 
 among soil levels by assuming that 50% is associated with the roots
 (using the CLM PFT-specific rooting distribution) and the rest is evenly
-divided among the top 0.28 m of soil (to be consistent with CLM’s soil
+divided among the top 0.28 m of soil (to be consistent with CLM's soil
 decomposition algorithm). For the vertically resolved BGC version, the
 prognosed distribution of :math:`{R}_{H}` is used to estimate CH\ :sub:`4` production.
 
@@ -232,7 +232,7 @@ Ebullition
 Briefly, the simulated aqueous CH\ :sub:`4` concentration in each
 soil level is used to estimate the expected equilibrium gaseous partial
 pressure (:math:`C_{e}` ), as a function of temperature and depth below
-the water table, by first estimating the Henry’s law partitioning
+the water table, by first estimating the Henry's law partitioning
 coefficient (:math:`k_{h}^{C}` ) by the method described in 
 :ref:`Wania et al. (2010)<Waniaetal2010>`:
 
@@ -252,7 +252,7 @@ coefficient (:math:`k_{h}^{C}` ) by the method described in
    C_{e} =\frac{C_{w} R_{g} T}{\theta _{s} k_{H}^{C} p}
 
 where :math:`C_{H}` \ is a constant, :math:`R_{g}`  is the universal
-gas constant, :math:`k_{H}^{s}`  is Henry’s law partitioning coefficient
+gas constant, :math:`k_{H}^{s}`  is Henry's law partitioning coefficient
 at standard temperature (:math:`T^{s}` ),\ :math:`C_{w}` \ is local
 aqueous CH\ :sub:`4` concentration, and *p* is pressure.
 
@@ -293,7 +293,7 @@ area (m\ :sup:`2` m\ :sup:`-2`); :math:`{r}_{a}` is the
 aerodynamic resistance between the surface and the atmospheric reference
 height (s m\ :sup:`-1`); and :math:`\rho _{r}`  is the rooting
 density as a function of depth (-). The gaseous concentration is
-calculated with Henry’s law as described in equation :eq:`24.7`.
+calculated with Henry's law as described in equation :eq:`24.7`.
 
 Based on the ranges reported in :ref:`Colmer (2003)<Colmer2003>`, we have chosen 
 baseline aerenchyma porosity values of 0.3 for grass and crop PFTs and 0.1 for
@@ -477,7 +477,7 @@ parameters specific to the CH\ :sub:`4` model are given in
 soils below the water table, diffusion is limited to the remaining 
 liquid (CLM allows for some freezing point depression), and the diffusion 
 coefficients are scaled by the
-volume-fraction of liquid. For unsaturated soils, Henry’s law
+volume-fraction of liquid. For unsaturated soils, Henry's law
 equilibrium is assumed at the interface with the water table.
 
 .. _Boundary Conditions:
@@ -502,11 +502,11 @@ with a series combination:
 :math:`\left[\frac{1}{w} +\frac{\Delta x_{1} }{D_{1} } \right]^{-1}` ,
 and if the top layer is saturated, this term is replaced with
 :math:`\left[\frac{K_{H} }{w} +\frac{\frac{1}{2} \Delta x_{1} }{D_{1} } \right]^{-1}` ,
-where :math:`{K}_{H}` is the Henry’s law equilibrium constant.
+where :math:`{K}_{H}` is the Henry's law equilibrium constant.
 
 When snow is present, a resistance is added to account for diffusion
 through the snow based on the Millington-Quirk expression :eq:`24.13`
-and CLM’s prediction of the liquid water, ice, and air fractions of each
+and CLM's prediction of the liquid water, ice, and air fractions of each
 snow layer. When the soil is ponded, the diffusivity is assumed to be
 that of methane in pure water, and the resistance as the ratio of the
 ponding depth to diffusivity. The overall conductance is taken as the
@@ -567,7 +567,7 @@ production minus consumption) and carbon atoms.
 Interface between water table and unsaturated zone
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We assume Henry’s Law equilibrium at the interface between the saturated
+We assume Henry's Law equilibrium at the interface between the saturated
 and unsaturated zone and constant flux from the soil element below the
 interface to the center of the soil element above the interface. In this
 case, the coefficients are the same as described above, except for the

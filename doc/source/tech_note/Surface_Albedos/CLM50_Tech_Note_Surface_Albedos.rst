@@ -511,7 +511,7 @@ Ground Albedos
 
 The overall direct beam :math:`\alpha _{g,\, \Lambda }^{\mu }`  and diffuse 
 :math:`\alpha _{g,\, \Lambda }`  ground albedos are weighted
-combinations of “soil” and snow albedos
+combinations of "soil" and snow albedos
 
 .. math::
    :label: 3.58
@@ -789,7 +789,7 @@ Snowpack Optical Properties
 
 Ice optical properties for the five spectral bands are derived offline
 and stored in a namelist-defined lookup table for online retrieval (see
-CLM5.0 User’s Guide). Mie properties are first computed at fine spectral
+CLM5.0 User's Guide). Mie properties are first computed at fine spectral
 resolution (470 bands), and are then weighted into the five bands
 applied by CLM according to incident solar flux,
 :math:`I^{\downarrow } (\lambda )`. For example, the broadband
@@ -1064,7 +1064,7 @@ The solar declination angle :math:`\delta`  is calculated as in :ref:`Berger
 orbital parameters are calculated for the desired year. The required
 orbital parameters to be input by the user are the obliquity of the
 Earth :math:`\varepsilon`  (degrees,
-:math:`-90^{\circ } <\varepsilon <90^{\circ }` ), Earth’s eccentricity
+:math:`-90^{\circ } <\varepsilon <90^{\circ }` ), Earth's eccentricity
 :math:`e` (:math:`0.0<e<0.1`), and the longitude of the perihelion
 relative to the moving vernal equinox :math:`\tilde{\omega }`
 (:math:`0^{\circ } <\tilde{\omega }<360^{\circ }` ) (unadjusted for the
@@ -1076,7 +1076,7 @@ solar declination :math:`\delta`  (radians) is
 
    \delta =\sin ^{-1} \left[\sin \left(\varepsilon \right)\sin \left(\lambda \right)\right]
 
-where :math:`\varepsilon`  is Earth’s obliquity and :math:`\lambda`  is
+where :math:`\varepsilon`  is Earth's obliquity and :math:`\lambda`  is
 the true longitude of the Earth.
 
 The obliquity of the Earth :math:`\varepsilon`  (degrees) is
@@ -1103,7 +1103,7 @@ vernal equinox)
    \lambda =\lambda _{m} +\left(2e-\frac{1}{4} e^{3} \right)\sin \left(\lambda _{m} -\tilde{\omega }\right)+\frac{5}{4} e^{2} \sin 2\left(\lambda _{m} -\tilde{\omega }\right)+\frac{13}{12} e^{3} \sin 3\left(\lambda _{m} -\tilde{\omega }\right)
 
 where :math:`\lambda _{m}`  is the mean longitude of the Earth at the
-vernal equinox, :math:`e` is Earth’s eccentricity, and
+vernal equinox, :math:`e` is Earth's eccentricity, and
 :math:`\tilde{\omega }` is the longitude of the perihelion relative to
 the moving vernal equinox. The mean longitude :math:`\lambda _{m}`  is
 
@@ -1120,7 +1120,7 @@ where :math:`d_{ve} =80.5` is the calendar day at vernal equinox (March
 
    \lambda _{m0} =2\left[\left(\frac{1}{2} e+\frac{1}{8} e^{3} \right)\left(1+\beta \right)\sin \tilde{\omega }-\frac{1}{4} e^{2} \left(\frac{1}{2} +\beta \right)\sin 2\tilde{\omega }+\frac{1}{8} e^{3} \left(\frac{1}{3} +\beta \right)\sin 3\tilde{\omega }\right]
 
-where :math:`\beta =\sqrt{1-e^{2} }` . Earth’s eccentricity :math:`e`
+where :math:`\beta =\sqrt{1-e^{2} }` . Earth's eccentricity :math:`e`
 is
 
 .. math::
@@ -1150,7 +1150,7 @@ where :math:`\Pi`  is the longitude of the perihelion measured from the
 reference vernal equinox (i.e., the vernal equinox at 1950 A.D.) and
 describes the absolute motion of the perihelion relative to the fixed
 stars, and :math:`\psi`  is the annual general precession in longitude
-and describes the absolute motion of the vernal equinox along Earth’s
+and describes the absolute motion of the vernal equinox along Earth's
 orbit relative to the fixed stars. The general precession :math:`\psi` 
 (degrees) is
 

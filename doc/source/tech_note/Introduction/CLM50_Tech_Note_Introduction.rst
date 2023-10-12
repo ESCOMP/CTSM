@@ -176,7 +176,7 @@ biogeochemical parameterizations and numerical implementation of version
 5.0 of the Community Land Model (CLM5.0). Scientific justification and
 evaluation of these parameterizations can be found in the referenced
 scientific papers (:ref:`rst_References`). This document and the CLM5.0
-User’s Guide together provide the user with the scientific description
+User's Guide together provide the user with the scientific description
 and operating instructions for CLM.
 
 Model History
@@ -286,7 +286,7 @@ model. This involved changing data structures from a single vector of
 spatially independent sub-grid patches to one that recognizes three
 hierarchical scales within a model grid cell: land unit, snow/soil
 column, and PFT. Furthermore, as an option, the model can be configured
-so that PFTs can share a single soil column and thus “compete” for
+so that PFTs can share a single soil column and thus "compete" for
 water. This version of the model (CLM2.1) was released to the community
 in February 2003. CLM2.1, without the compete option turned on, produced
 only round off level changes when compared to CLM2.
@@ -316,7 +316,7 @@ changes in CLM3
 hydrological parameterizations on partitioning of evapotranspiration
 (ET) and its effect on the timescales of ET response to precipitation
 events, interseasonal soil moisture storage, soil moisture memory, and
-land-atmosphere coupling. :ref:`Qian et al. (2006)<Qianetal2006>` evaluate CLM3’s performance
+land-atmosphere coupling. :ref:`Qian et al. (2006)<Qianetal2006>` evaluate CLM3's performance
 in simulating soil moisture content, runoff, and river discharge when
 forced by observed precipitation, temperature and other atmospheric
 data.

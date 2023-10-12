@@ -32,7 +32,7 @@ to be run over Antarctica and ensures data is available along coastlines
 regardless of model resolution.
 
 The forcing data is ingested into a data atmosphere model in three
-“streams”; precipitation (:math:`P`) (mm s\ :sup:`-1`), solar
+"streams"; precipitation (:math:`P`) (mm s\ :sup:`-1`), solar
 radiation (:math:`S_{atm}` ) (W m\ :sup:`-2`), and four other
 fields [atmospheric pressure :math:`P_{atm}`  (Pa), atmospheric specific
 humidity :math:`q_{atm}`  (kg kg\ :sup:`-1`), atmospheric
@@ -75,7 +75,7 @@ numerical purposes, :math:`\mu \left(t_{M_{i} } \right)\ge 0.001`.
 The total incident solar radiation :math:`S_{atm}`  at the model time
 step :math:`t_{M}`  is then split into near-infrared and visible
 radiation and partitioned into direct and diffuse according to factors
-derived from one year’s worth of hourly CAM output from CAM version
+derived from one year's worth of hourly CAM output from CAM version
 cam3\_5\_55 as
 
 .. math::
@@ -204,7 +204,7 @@ temperature :math:`T_{dew}`  (K) and derive specific humidity
    q_{atm} = \frac{0.622e_{sat}^{T_{dew} } }{P_{atm} -0.378e_{sat}^{T_{dew} } } .
 
 Here, :math:`e_{sat}^{T}` , the saturation vapor pressure as a function
-of temperature, is derived from :ref:`Lowe’s (1977) <Lowe1977>` polynomials. If not
+of temperature, is derived from :ref:`Lowe's (1977) <Lowe1977>` polynomials. If not
 provided by the user, the atmospheric pressure :math:`P_{atm}`  (Pa) is
 set equal to the standard atmospheric pressure :math:`P_{std} =101325`
 Pa, and surface pressure :math:`P_{srf}`  (Pa) is set equal

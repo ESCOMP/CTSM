@@ -6,7 +6,7 @@ Glaciers
 This chapter describes features of CLM that are specific to coupling to
 an ice sheet model (in the CESM context, this is the CISM model;
 :ref:`Lipscomb and Sacks (2012)<LipscombSacks2012>` provide
-documentation and user’s guide for CISM). General information
+documentation and user's guide for CISM). General information
 about glacier land units can be found elsewhere in this document (see
 Chapter :numref:`rst_Surface Characterization, Vertical Discretization,
 and Model Input Requirements` for an overview).
@@ -64,7 +64,7 @@ ice sheet model:
 
 The ice sheet model is typically run at much higher resolution than CLM
 (e.g., :math:`\sim`\ 5 km rather than :math:`\sim`\ 100 km). To improve
-the downscaling from CLM’s grid to the ice sheet grid, the glaciated
+the downscaling from CLM's grid to the ice sheet grid, the glaciated
 portion of each grid cell is divided into multiple elevation classes
 (section :numref:`Multiple elevation class scheme`). The above
 quantities are computed separately in each elevation class. The CESM

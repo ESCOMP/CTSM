@@ -58,8 +58,8 @@ is not routed through MOSART, but instead is mapped directly from the spatial un
 where it is generated at any time step to the coupler.  
  
 In MOSART, the travel velocities of water across hillslopes, sub-network and main
-channel are all estimated using Manning’s equation with different levels of
-simplifications. Generally the Manning’s equation is in the form of
+channel are all estimated using Manning's equation with different levels of
+simplifications. Generally the Manning's equation is in the form of
 
 .. math::
    :label: 14.1
@@ -71,7 +71,7 @@ radius (m). :math:`S_{f}`  is the friction slope that accounts for the effects
 of gravity, friction, inertia and other forces on the water. If the channel slope
 is steep enough, the gravity force dominates over the others so one can approximate
 :math:`S_{f}` by the channel bed slope :math:`S` , which is the key assumption
-underpinning the kinematic wave method. :math:`n`  is the Manning’s roughness
+underpinning the kinematic wave method. :math:`n`  is the Manning's roughness
 coefficient, which is mainly controlled by surface roughness and sinuosity of the 
 flow path. 
 
@@ -180,7 +180,7 @@ parameters, e.g., bankfull width and depth, were estimated from empirical
 hydraulic geometry relationships as functions of the mean annual discharge. 
 The Manning roughness coefficients for overland and channel flow were 
 calculated as functions of landcover and water depth. For more details 
-on the methodology to derive channel geometry and the Manning’s roughness 
+on the methodology to derive channel geometry and the Manning's roughness 
 coefficients, please refer to 
 :ref:`Getirana et al. (2012) <Getiranaetal2012>` . The full list of 
 parameters included in this global hydrography dataset is provided in 
@@ -217,9 +217,9 @@ by MOSART using the aforementioned parameters is described in
  +-------------------------+---------------+------------------------------------------------------------------------------------------------------------------------------------+
  | :math:`W_{t}`           | m             | The average bankfull width of tributary channels                                                                                   |
  +-------------------------+---------------+------------------------------------------------------------------------------------------------------------------------------------+
- | :math:`n_{r}`           | \-            | Manning’s roughness coefficient for channel flow routing                                                                           |
+ | :math:`n_{r}`           | \-            | Manning's roughness coefficient for channel flow routing                                                                           |
  +-------------------------+---------------+------------------------------------------------------------------------------------------------------------------------------------+
- | :math:`n_{h}`           | \-            | Manning’s roughness coefficient for overland flow routing                                                                          |
+ | :math:`n_{h}`           | \-            | Manning's roughness coefficient for overland flow routing                                                                          |
  +-------------------------+---------------+------------------------------------------------------------------------------------------------------------------------------------+
 
 

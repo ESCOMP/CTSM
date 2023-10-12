@@ -463,7 +463,7 @@ dry hydrophobic rates,
 These fluxes are computed interactively by the atmospheric model (when
 prognostic aerosol representation is active) or are prescribed from a
 time-varying (annual cycle or transient), globally-gridded deposition
-file defined in the namelist (see the CLM4.5 User’s Guide). Aerosol
+file defined in the namelist (see the CLM4.5 User's Guide). Aerosol
 deposition rates were calculated in a transient 1850-2009 CAM simulation
 (at a resolution of 1.9x2.5x26L) with interactive chemistry (troposphere
 and stratosphere) driven by CCSM3 20\ :sup:`th` century
@@ -568,7 +568,7 @@ Initialization
 
 Initialization of the land model (i.e., providing the model with initial
 temperature and moisture states) depends on the type of run (startup or
-restart) (see the CLM4.5 User’s Guide). A startup run starts the model
+restart) (see the CLM4.5 User's Guide). A startup run starts the model
 from either initial conditions that are set internally in the Fortran
 code (referred to as arbitrary initial conditions) or from an initial
 conditions dataset that enables the model to start from a spun up state
@@ -634,7 +634,7 @@ elevation, biogenic volatile organic compounds (BVOCs) emissions
 factors, population density, gross domestic production, peat area
 fraction, and peak month of agricultural burning. Optional surface data
 include crop irrigation and managed crops. All fields are aggregated to
-the model’s grid from high-resolution input datasets (
+the model's grid from high-resolution input datasets (
 :numref:`Table Surface data required for CLM and their base spatial resolution`) that
 are obtained from a variety of sources described below.
 
@@ -826,9 +826,9 @@ cropland area of each grid cell is divided into an irrigated and unirrigated
 fraction according to a dataset of areas equipped for irrigation 
 (:ref:`Siebert et al. (2005) <Siebertetal2005>`). The area of irrigated 
 cropland in each grid cell is given by the
-smaller of the grid cell’s total cropland area, according to the default
-CLM4 dataset, and the grid cell’s area equipped for irrigation. The
-remainder of the grid cell’s cropland area (if any) is then assigned to
+smaller of the grid cell's total cropland area, according to the default
+CLM4 dataset, and the grid cell's area equipped for irrigation. The
+remainder of the grid cell's cropland area (if any) is then assigned to
 unirrigated cropland. Irrigated and unirrigated crops are placed on
 separate soil columns, so that irrigation is only applied to the soil
 beneath irrigated crops.
@@ -844,7 +844,7 @@ Database of the Global Environment version 3.1 (HYDEv3.1) with
 dataset (GPWv3) (CIESIN, 2005). Gross Domestic Production (GDP) per
 capita in 2000 at 0.5\ :sup:`o` is from :ref:`Van Vuuren et al. (2006) <VanVuurenetal2006>`,
 which is the base-year GDP data for IPCC-SRES and derived from
-country-level World Bank’s World Development Indicators (WDI) measured
+country-level World Bank's World Development Indicators (WDI) measured
 in constant 1995 US$ (:ref:`World Bank, 2004 <WorldBank2004>`) and the UN Statistics Database
 (:ref:`UNSTAT, 2005 <UNSTAT2005>`). The peatland area fraction at 0.5\ :sup:`o`
 resolution is derived from three vector datasets: peatland data in
@@ -879,7 +879,7 @@ of the components in the coupled modeling system, are presented in
    "Standard pressure", :math:`P_{std}`, 101325, "Pa"
    "Stefan-Boltzmann constant", :math:`\sigma`, 5.67 :math:`\times 10^{-8}`, W m :sup:`-2` K :math:`{}^{-4}`
    "Boltzmann constant", :math:`\kappa`, 1.38065 :math:`\times 10^{-23}`, J K :sup:`-1` molecule :sup:`-1`
-   "Avogadro’s number", :math:`N_{A}`, 6.02214 :math:`\times 10^{26}`, molecule kmol\ :sup:`-1`
+   "Avogadro's number", :math:`N_{A}`, 6.02214 :math:`\times 10^{26}`, molecule kmol\ :sup:`-1`
    "Universal gas constant", :math:`R_{gas}`, :math:`N_{A} \kappa`, J K :sup:`-1` kmol :sup:`-1`
    "Molecular weight of dry air", :math:`MW_{da}`, 28.966, kg kmol :sup:`-1`
    "Dry air gas constant", :math:`R_{da}`, :math:`{R_{gas} \mathord{\left/ {\vphantom {R_{gas}  MW_{da} }} \right.} MW_{da} }`, J K :sup:`-1` kg :sup:`-1`

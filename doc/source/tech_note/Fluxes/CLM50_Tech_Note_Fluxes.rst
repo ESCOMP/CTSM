@@ -539,7 +539,7 @@ where the aerodynamic resistances (s m\ :sup:`-1`) are
 
    \begin{array}{l} {r_{aw} =\frac{q_{atm} -q_{s} }{q_{*} u_{*} } =\frac{1}{k^{2} V_{a} } \left[\ln \left(\frac{z_{atm,\, m} -d}{z_{0m} } \right)-\psi _{m} \left(\frac{z_{atm,\, m} -d}{L} \right)+\psi _{m} \left(\frac{z_{0m} }{L} \right)\right]} \\ {\qquad \left[\ln \left(\frac{z_{atm,\, {\it w}} -d}{z_{0w} } \right)-\psi _{w} \left(\frac{z_{atm,\, w} -d}{L} \right)+\psi _{w} \left(\frac{z_{0w} }{L} \right)\right]} \end{array}.
 
-A 2-m height “screen” temperature is useful for comparison with
+A 2-m height "screen" temperature is useful for comparison with
 observations
 
 .. math::
@@ -547,7 +547,7 @@ observations
 
    T_{2m} =\theta _{s} +\frac{\theta _{*} }{k} \left[\ln \left(\frac{2+z_{0h} }{z_{0h} } \right)-\psi _{h} \left(\frac{2+z_{0h} }{L} \right)+\psi _{h} \left(\frac{z_{0h} }{L} \right)\right]
 
-where for convenience, “2-m” is defined as 2 m above the apparent sink
+where for convenience, "2-m" is defined as 2 m above the apparent sink
 for sensible heat (:math:`z_{0h} +d`). Similarly, a 2-m height specific
 humidity is defined as
 
@@ -1392,7 +1392,7 @@ non-linear systems of equations can be applied to iteratively solve for
    \Delta T_{v} =\frac{\overrightarrow{S}_{v} -\overrightarrow{L}_{v} -H_{v} -\lambda E_{v} }{\frac{\partial \overrightarrow{L}_{v} }{\partial T_{v} } +\frac{\partial H_{v} }{\partial T_{v} } +\frac{\partial \lambda E_{v} }{\partial T_{v} } }
 
 where :math:`\Delta T_{v} =T_{v}^{n+1} -T_{v}^{n}`  and the subscript
-“n” indicates the iteration.
+"n" indicates the iteration.
 
 The partial derivatives are
 
@@ -1418,7 +1418,7 @@ determined analytically, are ignored for
 :math:`\frac{\partial H_{v} }{\partial T_{v} }`  and
 :math:`\frac{\partial \lambda E_{v} }{\partial T_{v} }` . However, if
 :math:`\zeta`  changes sign more than four times during the temperature
-iteration, :math:`\zeta =-0.01`. This helps prevent “flip-flopping”
+iteration, :math:`\zeta =-0.01`. This helps prevent "flip-flopping"
 between stable and unstable conditions. The total water vapor flux
 :math:`E_{v}` , transpiration flux :math:`E_{v}^{t}` , and sensible heat
 flux :math:`H_{v}`  are updated for changes in leaf temperature as
