@@ -293,8 +293,6 @@ def main():
     else:
         hires_soitex = "off"
 
-    verbose = args.verbose
-
     if force_model_mesh_file is not None:
         # open mesh_file to read element_count and, if available, orig_grid_dims
         mesh_file = netCDF4.Dataset(force_model_mesh_file, "r")
@@ -617,11 +615,11 @@ def main():
         # The "git -C" option permits a system test to run this tool from
         # elsewhere while running the git command from the tool_path
         gitdescribe = subprocess.check_output(git_desc_cmd, shell=True).strip()
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError as error:
         # In case the "git -C" option is unavailable, as on casper (2022/5/24)
         # Still, this does NOT allow the system test to work on machines
         # without git -C
-        logger.info("git -C option unavailable on casper as of 2022/7/2 %s", e)
+        logger.info("git -C option unavailable on casper as of 2022/7/2 %s", error)
         gitdescribe = subprocess.check_output("git describe", shell=True).strip()
     gitdescribe = gitdescribe.decode("utf-8")
 

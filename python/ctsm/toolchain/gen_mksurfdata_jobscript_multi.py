@@ -361,7 +361,7 @@ def main():
         # environment including the paths to compilers and libraries
         # external to cime such as netcdf
         runfile.write(". " + env_specific_script + "\n")
-        check = f"if [ $? != 0 ]; then echo 'Error running env_specific_script'; exit -4; fi"
+        check = "if [ $? != 0 ]; then echo 'Error running env_specific_script'; exit -4; fi"
         runfile.write(f"{check} \n")
         for target in target_list:
             res_set = dataset_dict[target][1]
@@ -372,8 +372,8 @@ def main():
                 commands = [x for x in command.split(" ") if x]
                 try:
                     run_cmd = subprocess.run(commands, check=True, shell=True, capture_output=True)
-                except subprocess.CalledProcessError as e:
-                    sys.exit(f"{e} ERROR calling {command}")
+                except subprocess.CalledProcessError as error:
+                    sys.exit(f"{error} ERROR calling {command}")
                 output = run_cmd.stdout.decode("utf-8").strip()
                 namelist = output.split(" ")[-1]
                 print(f"generated namelist {namelist}")
