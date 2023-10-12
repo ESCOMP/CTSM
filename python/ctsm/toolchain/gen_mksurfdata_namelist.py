@@ -603,7 +603,10 @@ def main():
     if int(end_year) == int(start_year):
         fdyndat = ""
     else:
-        fdyndat = f"landuse.timeseries_{res}_{ssp_rcp_name}_{start_year}-{end_year}_{num_pft}_c{time_stamp}.nc"
+        fdyndat = (
+            f"landuse.timeseries_{res}_{ssp_rcp_name}"
+            "_{start_year}-{end_year}_{num_pft}_c{time_stamp}.nc"
+        )
 
     prefix = f"surfdata_{res}_{ssp_rcp_name}_{start_year}_{num_pft}pfts_c{time_stamp}."
 

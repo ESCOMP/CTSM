@@ -5,7 +5,6 @@
 """
 
 import os
-import re
 
 import unittest
 import tempfile
@@ -25,7 +24,7 @@ class TestSysGenMkSurfNML(unittest.TestCase):
     """System tests for gen_mksurfdata_namelist"""
 
     def setUp(self):
-        """ """
+        """Setp temporary directory to make the files in"""
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         self._testinputs_path = testinputs_path
         self._tempdir = tempfile.mkdtemp()
@@ -40,6 +39,7 @@ class TestSysGenMkSurfNML(unittest.TestCase):
         """
         Test that a standard simple namelist works
         """
+        # pylint: disable=no-self-use
         sys.argv = [
             "gen_mksurfdata_namelist",
             "--start-year",
@@ -55,6 +55,7 @@ class TestSysGenMkSurfNML(unittest.TestCase):
         """
         Test that a namelist with several options on
         """
+        # pylint: disable=no-self-use
         sys.argv = [
             "gen_mksurfdata_namelist",
             "--start-year",
@@ -74,6 +75,7 @@ class TestSysGenMkSurfNML(unittest.TestCase):
         """
         Test that a high resolution namelist works
         """
+        # pylint: disable=no-self-use
         sys.argv = [
             "gen_mksurfdata_namelist",
             "--start-year",
@@ -93,6 +95,7 @@ class TestSysGenMkSurfNML(unittest.TestCase):
         """
         Test that a SSP transient namelist works
         """
+        # pylint: disable=no-self-use
         sys.argv = [
             "gen_mksurfdata_namelist",
             "--start-year",
@@ -111,6 +114,7 @@ class TestSysGenMkSurfNML(unittest.TestCase):
         """
         Test that a potential vegetation namelist works
         """
+        # pylint: disable=no-self-use
         sys.argv = [
             "gen_mksurfdata_namelist",
             "--start-year",
