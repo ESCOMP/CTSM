@@ -9,7 +9,7 @@ fates_seed_dispersal_pdf_shape
 
 Given that the default fates parameter file has the above variables as unset,
 a custom fates parameter file must be supplied to appropriately test this mode.
-This testmod itself addresses CTSM issue #2151.
+This testmod itself addresses CTSM issue 2151: https://github.com/ESCOMP/CTSM/issues/2151
 
 The max_dist value will impact the size of the 'neighborhood' of gridcells
 that fates will attempt to distribute seeds to.  To limit the neighborhood to

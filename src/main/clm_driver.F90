@@ -1271,6 +1271,8 @@ contains
 
 
     ! Pass fates seed dispersal information to all nodes
+    ! Note that WrapSeedGlobal calls an MPI collective routine and as such
+    ! WrapSeedGlobal should be called outside of OMP threaded loop regions
     if (fates_seeddisp_cadence /= fates_dispersal_cadence_none) then
        if (use_fates .and. is_beg_curr_day()) call clm_fates%WrapSeedGlobal()
     end if

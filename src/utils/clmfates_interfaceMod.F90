@@ -2682,11 +2682,16 @@ module CLMFatesInterfaceMod
       this%fates_seed%incoming_global(:,:) = 0._r8
       this%fates_seed%outgoing_global(:,:) = 0._r8
 
-      ! Distribute outgoing seed data from all nodes to all nodes
+      ! Distribute outgoing seed data across all MPI tasks
+      ! This method of grid cell communications is inefficient in that it creates global information
+      ! across all processes.  A future update should communicate to the minimum set of neighbors.
       call MPI_Allgatherv(this%fates_seed%outgoing_local, procinfo%ncells*numpft_fates, MPI_REAL8, &
                           this%fates_seed%outgoing_global, this%fates_seed%ncells_array*numpft_fates, this%fates_seed%begg_array*numpft_fates, &
                           MPI_REAL8, mpicom, ier)
-      write(iulog,*) 'WSG: MPI_Allgatherv ier: ', ier
+      if (ier /= 0) then
+         call endrun(msg='clmfates interface error: MPI_Allgatherv failed'//&
+              errMsg(sourcefile, __LINE__))
+      end if
 
       ! zero outgoing local for all gridcells outside threaded region now that we've passed them out
       this%fates_seed%outgoing_local(:,:) = 0._r8
@@ -2716,7 +2721,9 @@ module CLMFatesInterfaceMod
 
  subroutine wrap_seed_dispersal(this,bounds_clump)
 
-    ! This subroutine pass seed_id_global to bc_in and reset seed_out
+    ! This subroutine passes the globally dispersed seed via WrapSeedGlobal, incoming_global
+    ! to the fates local process seed_in site object.  It also resets the fates seed_out
+    ! in preparation for fates to update the seeds being dispersed out.
 
     ! Arguments
     class(hlm_fates_interface_type), intent(inout) :: this

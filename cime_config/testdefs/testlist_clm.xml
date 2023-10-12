@@ -1841,6 +1841,7 @@
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
+      <option name="comment"  >This test should be convered to an ERP test once the PEM version of this test is passing COMPARE_base_modpes.</option>
     </options>
   </test>
   <test name="PEM_D_Ld15" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
@@ -1849,6 +1850,7 @@
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
+      <option name="comment"  >This checks that the FATES seed dispersal MPI communication is consistent when the PE layout changes.</option>
     </options>
   </test>
   <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTreeDamage">
