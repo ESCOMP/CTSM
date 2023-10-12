@@ -4,28 +4,28 @@ Land-Only Mode
 ================
 
 In land-only mode (uncoupled to an atmospheric model), the atmospheric
-forcing required by CLM (:numref:`Table Atmospheric input to land model`) 
+forcing required by CLM (:numref:`Table Atmospheric input to land model`)
 is supplied by observed datasets.  The standard forcing provided with the
 model is a 110-year (1901-2010) dataset provided by the Global Soil Wetness
 Project (GSWP3; NEED A REFERENCE). The GSWP3 dataset has a spatial resolution of
 0.5\ :sup:`o` X 0.5\ :sup:`o` and a temporal resolution of three
 hours.
 
-An alternative forcing dataset is also available, CRUNCEP, a 110-year (1901-2010) dataset 
+An alternative forcing dataset is also available, CRUNCEP, a 110-year (1901-2010) dataset
 (CRUNCEP; :ref:`Viovy 2011 <Viovy2011>`) that is a combination of two existing datasets;
-the CRU TS3.2 0.5\ :sup:`o` X 0.5\ :sup:`o` monthly data covering the period 
+the CRU TS3.2 0.5\ :sup:`o` X 0.5\ :sup:`o` monthly data covering the period
 1901 to 2002 (:ref:`Mitchell and Jones 2005 <MitchellJones2005>`)
 and the NCEP reanalysis 2.5\ :sup:`o` X 2.5\ :sup:`o`
 6-hourly data covering the period 1948 to 2010. The CRUNCEP dataset has
 been used to force CLM for studies of vegetation growth,
-evapotranspiration, and gross primary production (:ref:`Mao et al. 2012 <Maoetal2012>`, 
-:ref:`Mao et al. 2013 <Maoetal2013>`, :ref:`Shi et al. 2013 <Shietal2013>`) 
-and for the TRENDY (trends in net land-atmosphere carbon exchange over the period 
+evapotranspiration, and gross primary production (:ref:`Mao et al. 2012 <Maoetal2012>`,
+:ref:`Mao et al. 2013 <Maoetal2013>`, :ref:`Shi et al. 2013 <Shietal2013>`)
+and for the TRENDY (trends in net land-atmosphere carbon exchange over the period
 1980-2010) project (:ref:`Piao et al. 2012 <Piaoetal2012>`). Version 7 is available
 here (:ref:`Viovy 2011 <Viovy2011>`).
 
 Here, the GSWP3 dataset, which does not include data for particular fields over oceans,
-lakes, and Antarctica is modified. This missing data is filled with 
+lakes, and Antarctica is modified. This missing data is filled with
 :ref:`Qian et al. (2006) <Qianetal2006>` data from 1948 that is interpolated by the data atmosphere
 model to the 0.5\ :sup:`o` GSWP3 grid. This allows the model
 to be run over Antarctica and ensures data is available along coastlines
@@ -36,7 +36,7 @@ The forcing data is ingested into a data atmosphere model in three
 radiation (:math:`S_{atm}` ) (W m\ :sup:`-2`), and four other
 fields [atmospheric pressure :math:`P_{atm}`  (Pa), atmospheric specific
 humidity :math:`q_{atm}`  (kg kg\ :sup:`-1`), atmospheric
-temperature :math:`T_{atm}`  (K), and atmospheric wind :math:`W_{atm}` 
+temperature :math:`T_{atm}`  (K), and atmospheric wind :math:`W_{atm}`
 (m s\ :sup:`-1`)]. These are separate streams because they are
 handled differently according to the type of field. In the GSWP3
 dataset, the precipitation stream is provided at three hour intervals and
@@ -56,9 +56,9 @@ used. The solar radiation at model time step :math:`t_{M}`  is
 .. math::
    :label: 31.1
 
-   \begin{array}{lr} 
-   S_{atm} \left(t_{M} \right)=\frac{\frac{\Delta t_{FD} }{\Delta t_{M} } S_{atm} \left(t_{FD} \right)\mu \left(t_{M} \right)}{\sum _{i=1}^{\frac{\Delta t_{FD} }{\Delta t_{M} } }\mu \left(t_{M_{i} } \right) } & \qquad {\rm for\; }\mu \left(t_{M} \right)>0.001 \\ 
-   S_{atm} \left(t_{M} \right)=0 & \qquad {\rm for\; }\mu \left(t_{M} \right)\le 0.001 
+   \begin{array}{lr}
+   S_{atm} \left(t_{M} \right)=\frac{\frac{\Delta t_{FD} }{\Delta t_{M} } S_{atm} \left(t_{FD} \right)\mu \left(t_{M} \right)}{\sum _{i=1}^{\frac{\Delta t_{FD} }{\Delta t_{M} } }\mu \left(t_{M_{i} } \right) } & \qquad {\rm for\; }\mu \left(t_{M} \right)>0.001 \\
+   S_{atm} \left(t_{M} \right)=0 & \qquad {\rm for\; }\mu \left(t_{M} \right)\le 0.001
    \end{array}
 
 where :math:`\Delta t_{FD}`  is the time step of the forcing data (3
@@ -122,13 +122,13 @@ and in the near-infrared :math:`R_{nir}`  is
    R_{nir} =b_{0} +b_{1} \times \left(1-\alpha \right)S_{atm} +b_{2} \times \left[\left(1-\alpha \right)S_{atm} \right]^{2} +b_{3} \times \left[\left(1-\alpha \right)S_{atm} \right]^{3} \qquad 0.01\le R_{nir} \le 0.99
 
 where
-:math:`a_{0} =0.17639,\, a_{1} =0.00380,\, a_{2} =-9.0039\times 10^{-6} ,\, a_{3} =8.1351\times 10^{-9}` 
+:math:`a_{0} =0.17639,\, a_{1} =0.00380,\, a_{2} =-9.0039\times 10^{-6} ,\, a_{3} =8.1351\times 10^{-9}`
 and
-:math:`b_{0} =0.29548,b_{1} =0.00504,b_{2} =-1.4957\times 10^{-5} ,b_{3} =1.4881\times 10^{-8}` 
+:math:`b_{0} =0.29548,b_{1} =0.00504,b_{2} =-1.4957\times 10^{-5} ,b_{3} =1.4881\times 10^{-8}`
 are coefficients from polynomial fits to the CAM data.
 
 The additional atmospheric forcing variables required by :numref:`Table Atmospheric input to land model` are
-derived as follows. The atmospheric reference height :math:`z'_{atm}` 
+derived as follows. The atmospheric reference height :math:`z'_{atm}`
 (m) is set to 30 m. The directional wind components are derived as
 :math:`u_{atm} =v_{atm} ={W_{atm} \mathord{\left/ {\vphantom {W_{atm}  \sqrt{2} }} \right.} \sqrt{2} }` .
 The potential temperature :math:`\overline{\theta _{atm} }` (K) is set
@@ -172,8 +172,8 @@ where
    f_{P} =0<0.5\left(T_{atm} -T_{f} \right)<1.
 
 The aerosol deposition rates :math:`D_{sp}`  (14 rates as described in
-:numref:`Table Atmospheric input to land model`) are provided by a 
-time-varying, globally-gridded aerosol deposition file developed by 
+:numref:`Table Atmospheric input to land model`) are provided by a
+time-varying, globally-gridded aerosol deposition file developed by
 :ref:`Lamarque et al. (2010) <Lamarqueetal2010>`.
 
 If the user wishes to provide atmospheric forcing data from another
@@ -191,7 +191,7 @@ where the atmospheric vapor pressure :math:`e_{atm}`  (Pa) is derived
 from the water (:math:`T_{atm} >T_{f}` ) or ice
 (:math:`T_{atm} \le T_{f}` ) saturation vapor pressure
 :math:`e_{sat}^{T_{atm} }`  as
-:math:`e_{atm} =\frac{RH}{100} e_{sat}^{T_{atm} }`  where :math:`T_{f}` 
+:math:`e_{atm} =\frac{RH}{100} e_{sat}^{T_{atm} }`  where :math:`T_{f}`
 is the freezing temperature of water (K) (:numref:`Table Physical constants`), and
 :math:`P_{atm}`  is the pressure at height :math:`z_{atm}`  (Pa). The
 data atmosphere model will also accept a user-supplied dew point
@@ -223,33 +223,33 @@ into the visible and near-infrared wavebands (e.g.,
 Anomaly Forcing
 -----------------------------
 
-The 'Anomaly Forcing' atmospheric forcing mode provides a means to drive 
-CLM with projections of future climate conditions without the need for 
-large, high-frequency datasets.  From an existing climate simulation 
-spanning both the historical and future time periods, a set of anomalies 
-are created by removing a climatological seasonal cycle based on the end 
-of the historical period from each year of the future time period of the 
-simulation.  These anomalies can then be applied to a repeating 
-high-frequency forcing dataset of finite duration (e.g. 10 years).  State 
-and flux forcing variables are adjusted using additive and multiplicative 
+The 'Anomaly Forcing' atmospheric forcing mode provides a means to drive
+CLM with projections of future climate conditions without the need for
+large, high-frequency datasets.  From an existing climate simulation
+spanning both the historical and future time periods, a set of anomalies
+are created by removing a climatological seasonal cycle based on the end
+of the historical period from each year of the future time period of the
+simulation.  These anomalies can then be applied to a repeating
+high-frequency forcing dataset of finite duration (e.g. 10 years).  State
+and flux forcing variables are adjusted using additive and multiplicative
 anomalies, respectively:
 
 .. math::
    :label: 31.16
 
-   \begin{array}{lr} 
-   S^{'} = S + k_{anomaly} & \quad {\rm state \ variable} \\ 
-   F^{'} = f \times k_{anomaly} & \quad {\rm flux \ variable} 
+   \begin{array}{lr}
+   S^{'} = S + k_{anomaly} & \quad {\rm state \ variable} \\
+   F^{'} = f \times k_{anomaly} & \quad {\rm flux \ variable}
    \end{array}
 
-where :math:`S^{'}` is the adjusted atmospheric state variable, :math:`S` 
-is the state variable from the high-frequency reference atmospheric 
-forcing dataset, and :math:`k_{anomaly}` is an additive anomaly.  
-Similarly, :math:`F^{'}` is the adjusted atmospheric flux variable, 
-:math:`F` is the flux variable from the high-frequency reference 
-atmospheric forcing dataset, and :math:`k_{anomaly}` is a 
-multiplicative anomaly.  State variables are temperature :math:`T_{atm}`, 
-pressure :math:`P_{atm}`, humidity :math:`q_{atm}`, and wind 
+where :math:`S^{'}` is the adjusted atmospheric state variable, :math:`S`
+is the state variable from the high-frequency reference atmospheric
+forcing dataset, and :math:`k_{anomaly}` is an additive anomaly.
+Similarly, :math:`F^{'}` is the adjusted atmospheric flux variable,
+:math:`F` is the flux variable from the high-frequency reference
+atmospheric forcing dataset, and :math:`k_{anomaly}` is a
+multiplicative anomaly.  State variables are temperature :math:`T_{atm}`,
+pressure :math:`P_{atm}`, humidity :math:`q_{atm}`, and wind
 :math:`W_{atm}`.  Flux variables are precipitation :math:`P`, atmospheric
 shortwave radiation :math:`S_{atm} \, \downarrow`, and atmospheric
 longwave radiation :math:`L_{atm} \, \downarrow`.

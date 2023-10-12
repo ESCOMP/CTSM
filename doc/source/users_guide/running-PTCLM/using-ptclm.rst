@@ -9,13 +9,13 @@ Using PTCLMmkdata
 There are two types of options to PTCLMmkdata: required and optional.
 The three required options are the three settings that MUST be specified for PTCLMmkdata to work at all. The other settings have default values that will default to something useful. Most options use a double dash "--" "longname" such as "--list", but the most common options also have a short-name with a single dash.
 
-The required options to PTCLMmkdata are: inputdata directory (-d) and site-name (-s). 
+The required options to PTCLMmkdata are: inputdata directory (-d) and site-name (-s).
 Inputdata directory is the directory where you have the CESM inputdata files. Finally site-name is the name of the site that you want to run for. Site-name is a Fluxnet site name from the list of sites you are running on (see the --sitegroupname for more information about the site lists).
 
 After PTCLMmkdata is run you can run **create_newcase** to setup a case to use the datasets created.
 It also creates a ``README.PTCLM`` in that directory that documents the commandline options to PTCLMmkdata that were used to create it.
 
-After "help" the "list" option is one of the most useful options for getting help on using PTCLMmkdata. 
+After "help" the "list" option is one of the most useful options for getting help on using PTCLMmkdata.
 This option gives you information about some of the other options to PTCLMmkdata. To get a list of the sites that can be used for PTCLMmkdata use the "--list" option as follows.
 ::
 
@@ -41,12 +41,12 @@ Steps in running PTCLMmkdata
 2. Run PTCLMmkdata
    Next you actually run PTCLMmkdata which does the different things listed below:
 
-   a. PTCLMmkdata names your output file directory based on your input  
+   a. PTCLMmkdata names your output file directory based on your input
       ::
 
 	 [Prefix_]SiteCode
 
-      Where: 
+      Where:
 	 ``Prefix`` is from the caseidprefix option (or blank if not used).
 
 	 ``SiteCode`` is the site name you entered with the -s option.
@@ -61,10 +61,10 @@ Steps in running PTCLMmkdata
       It will populate $MYCSMDATA with new datasets it creates using the CLM tools.
 
    c. If a transient compset and PTCLMmkdata finds a _dynpftdata.txt file
-      If you are running a transient compset (such as the "I_1850-2000_CN" compset) AND you there is a file in the PTCLM_sitedata directory under the PTCLMmkdata directory called $SITE_dynpftdata.txt it will use this file for the land-use changes. 
-      Otherwise it will leave land-use constant, unless you use the pftgrid option so it uses the global dataset for landuse changes. 
-      See the Section called Dynamic Land-Use Change Files for use by PTCLMmkdata for more information on this. 
-      There is a sample transient dataset called US-Ha1_dynpftdata.txt. 
+      If you are running a transient compset (such as the "I_1850-2000_CN" compset) AND you there is a file in the PTCLM_sitedata directory under the PTCLMmkdata directory called $SITE_dynpftdata.txt it will use this file for the land-use changes.
+      Otherwise it will leave land-use constant, unless you use the pftgrid option so it uses the global dataset for landuse changes.
+      See the Section called Dynamic Land-Use Change Files for use by PTCLMmkdata for more information on this.
+      There is a sample transient dataset called US-Ha1_dynpftdata.txt.
       Transient compsets, are compsets that create transient land-use change and forcing conditions such as: 'I_1850-2000', 'I_1850-2000_CN', 'I_RCP8.5_CN', 'I_RCP6.0_CN', 'I_RCP4.5_CN', or 'I_RCP2.6_CN'.
 
    d. PTCLMmkdata creates a pft-physiology for you
@@ -93,7 +93,7 @@ Configure options include:
   This option is for running PTCLMmkdata with a different root directory to CESM than the version PTCLMmkdata exists in. Normally you do NOT need to use this option.
 
 ``--sitegroupname``
-  In the PTCLMmkdata directory there is a subdirectory "PTCLM_sitedata" that contains files with the site, PFT and soil data information for groups of sites. 
+  In the PTCLMmkdata directory there is a subdirectory "PTCLM_sitedata" that contains files with the site, PFT and soil data information for groups of sites.
   These site groups are all separate ASCII files with the same prefix followed by a "_*data.txt" name. See `the Section called PTCLMmkdata Group Site Lists <CLM-URL>`_ for more information on these files. By default we have provided three different valid group names:
 
 EXAMPLE
@@ -102,10 +102,10 @@ AmeriFlux
 
 Fluxnet-Canada
 
-The EXAMPLE is the group used by default and ONLY includes the US-UMB site as that is the only site we have data provided for. 
-The other two site groups include the site information for all of both the AmeriFlux and Fluxnet-Canada sites. 
-You can use the "sitegroupname" option to use one of the other lists, or you can create your own lists using the EXAMPLE file as an example. 
-Your list of sites could be real world locations or could be theoretical "virtual" sites given to exercise CLM on differing biomes for example. 
+The EXAMPLE is the group used by default and ONLY includes the US-UMB site as that is the only site we have data provided for.
+The other two site groups include the site information for all of both the AmeriFlux and Fluxnet-Canada sites.
+You can use the "sitegroupname" option to use one of the other lists, or you can create your own lists using the EXAMPLE file as an example.
+Your list of sites could be real world locations or could be theoretical "virtual" sites given to exercise CLM on differing biomes for example.
 Note, see `the Section called Converting AmeriFlux Data for use by PTCLMmkdata <CLM-URL>`_ with permission information to use the US-UMB data.
 
 ``--donot_use_tower_yrs``

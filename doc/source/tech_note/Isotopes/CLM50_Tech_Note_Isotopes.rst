@@ -31,7 +31,7 @@ respectively, i.e. the pools *from which* the fluxes of
 :math:`{f}_{frac}`:
 
 .. math::
-   :label: ZEqnNum629812 
+   :label: ZEqnNum629812
 
    CF_{13C} =\left\{\begin{array}{l} {CF_{totC} \frac{CS_{13C\_ up} }{CS_{totC\_ up} } f_{frac} \qquad {\rm for\; }CS_{totC} \ne 0} \\ {0\qquad {\rm for\; }CS_{totC} =0} \end{array}\right\}
 
@@ -61,7 +61,7 @@ about 99% of all carbon. The isotope ratio of a compound,
 :math:`{R}_{A}`, is the mass ratio of the rare isotope to the abundant isotope
 
 .. math::
-   :label: 30.2) 
+   :label: 30.2)
 
    R_{A} =\frac{{}^{13} C_{A} }{{}^{12} C_{A} } .
 
@@ -72,7 +72,7 @@ difference between the isotope ratio of the compound,
 :math:`{R}_{A}`, and that of the Pee Dee Belemnite standard, :math:`{R}_{PDB}`, in parts per thousand
 
 .. math::
-   :label: 30.3) 
+   :label: 30.3)
 
    \delta ^{13} C_{A} =\left(\frac{R_{A} }{R_{PDB} } -1\right)\times 1000
 
@@ -84,14 +84,14 @@ For example, the equilibrium fractionation between two reservoirs A and
 B can be written as:
 
 .. math::
-   :label: 30.4) 
+   :label: 30.4)
 
    \alpha _{A-B} =\frac{R_{A} }{R_{B} } =\frac{\delta _{A} +1000}{\delta _{B} +1000} .
 
 This can also be expressed using epsilon notation (:math:`\epsilon`), where
 
 .. math::
-   :label: 30.5) 
+   :label: 30.5)
 
    \alpha _{A-B} =\frac{\varepsilon _{A-B} }{1000} +1
 
@@ -101,7 +101,7 @@ In addition to the stable isotopes :sup:`1`\ :sup:`2`\ C and :sup:`1`\ :sup:`3`\
 :sup:`1`\ :sup:`4`\ C is included in CLM. :sup:`1`\ :sup:`4`\ C can also be described using the delta notation:
 
 .. math::
-   :label: 30.6) 
+   :label: 30.6)
 
    \delta ^{14} C=\left(\frac{A_{s} }{A_{abs} } -1\right)\times 1000
 
@@ -109,7 +109,7 @@ However, observations of :sup:`1`\ :sup:`4`\ C are typically
 fractionation-corrected using the following notation:
 
 .. math::
-   :label: 30.7) 
+   :label: 30.7)
 
    \Delta {}^{14} C=1000\times \left(\left(1+\frac{\delta {}^{14} C}{1000} \right)\frac{0.975^{2} }{\left(1+\frac{\delta {}^{13} C}{1000} \right)^{2} } -1\right)
 
@@ -117,7 +117,7 @@ where :math:`\delta^{14}`\ C is the measured isotopic
 fraction and :math:`\mathrm{\Delta}^{14}`\ C corrects for
 mass-dependent isotopic fractionation processes (assumed to be 0.975 for
 fractionation of :sup:`13`\ C by photosynthesis). CLM assumes a
-background preindustrial atmospheric :sup:`14`\ C /C ratio of 10\ :sup:`-12`, which is used for A\ :sub::`abs`. 
+background preindustrial atmospheric :sup:`14`\ C /C ratio of 10\ :sup:`-12`, which is used for A\ :sub::`abs`.
 For the reference standard A\ :math:`{}_{abs}`, which is a plant tissue and has
 a :math:`\delta^{13}`\ C value is :math:`\mathrm{-}`\ 25 ‰ due to photosynthetic discrimination,
 :math:`\delta`\ :sup:`14`\ C = :math:`\mathrm{\Delta}`\ :sup:`14`\ C. For CLM, in order to use
@@ -147,14 +147,14 @@ and C4 plants are given below:
 For C4 plants,
 
 .. math::
-   :label: 30.8) 
+   :label: 30.8)
 
    \alpha _{psn} =1+\frac{4.4}{1000}
 
 For C3 plants,
 
 .. math::
-   :label: 30.9) 
+   :label: 30.9)
 
    \alpha _{psn} =1+\frac{4.4+22.6\frac{c_{i}^{*} }{pCO_{2} } }{1000}
 
@@ -169,7 +169,7 @@ carbon assimilation. That is calculated during the photosynthesis
 calculation as follows:
 
 .. math::
-   :label: 30.10) 
+   :label: 30.10)
 
    c_{i} =pCO_{2} -a_{n} p\frac{\left(1.4g_{s} \right)+\left(1.6g_{b} \right)}{g_{b} g_{s} }
 
@@ -206,8 +206,8 @@ of the spinup mode.
 
 For variation of atmospheric :sup:`14`\ C and :sup:`13`\ C over the historical
 period, :math:`\mathrm{\Delta}`\ :sup:`14`\ C and :math:`\mathrm{\Delta}`\:sup:`13`\ C values can be set to
-either fixed concentrations  
-or time-varying concentrations read in from a file. A default file is provided that spans the historical period (:ref:`Graven et al., 2017 <Gravenetal2017>`).  For 
+either fixed concentrations
+or time-varying concentrations read in from a file. A default file is provided that spans the historical period (:ref:`Graven et al., 2017 <Gravenetal2017>`).  For
 :math:`\mathrm{\Delta}`\ :sup:`14`\ C, values are provided and read in for three latitude bands (30 :sup:`o`\ N-90 :sup:`o`\ N, 30 :sup:`o`\ S-30 :sup:`o`\ N, and 30 :sup:`o`\ S-90 :sup:`o`\ S).
 
 

@@ -32,7 +32,7 @@ For the single-level model structure, the fundamental equation for
 carbon balance of the decomposing pools is:
 
 .. math::
-   :label: 21.1) 
+   :label: 21.1)
 
    \frac{\partial C_{i} }{\partial t} =R_{i} +\sum _{j\ne i}\left(i-r_{j} \right)T_{ji} k_{j} C_{j} -k_{i} C_{i}
 
@@ -47,7 +47,7 @@ Adding the vertical dimension to the decomposing pools changes the
 balance equation to the following:
 
 .. math::
-   :label: 21.2) 
+   :label: 21.2)
 
    \begin{array}{l} {\frac{\partial C_{i} (z)}{\partial t} =R_{i} (z)+\sum _{i\ne j}\left(1-r_{j} \right)T_{ji} k_{j} (z)C_{j} (z) -k_{i} (z)C_{i} (z)} \\ {+\frac{\partial }{\partial z} \left(D(z)\frac{\partial C_{i} }{\partial z} \right)+\frac{\partial }{\partial z} \left(A(z)C_{i} \right)} \end{array}
 
@@ -67,7 +67,7 @@ structures is in :ref:`Koven et al. (2013) <Kovenetal2013>`.
 
 .. figure:: soil_C_pools_CN_century.png
 
- Pool structure, transitions, respired fractions (numbers at 
+ Pool structure, transitions, respired fractions (numbers at
  end of arrows), and turnover times (numbers in boxes) for the 2
  alternate soil decomposition models included in CLM.
 
@@ -135,12 +135,12 @@ new discrete-time value with a different timestep
 (:math:`{k}_{disc2}`) , following Olson (1963):
 
 .. math::
-   :label: ZEqnNum608251 
+   :label: ZEqnNum608251
 
    k_{cont} =-\log \left(1-k_{disc1} \right)
 
 .. math::
-   :label: ZEqnNum772630 
+   :label: ZEqnNum772630
 
    k_{disc2} =1-\exp \left(-k_{cont} \frac{\Delta t_{2} }{\Delta t_{1} } \right)
 
@@ -175,7 +175,7 @@ Biome-BGC (:numref:`Table Respiration fractions for litter and SOM pools`).
  |  :math:`{rf}_{SOM2}`      | 0.46                  |
  +---------------------------+-----------------------+
  |  :math:`{rf}_{SOM3}`      | 0.55                  |
- +---------------------------+-----------------------+ 
+ +---------------------------+-----------------------+
  |  :math:`{rf}_{SOM4}`      |  :math:`{1.0}^{a}`    |
  +---------------------------+-----------------------+
 
@@ -254,7 +254,7 @@ The Temperature scalar :math:`{r}_{tsoil}` is calculated in CLM
 using a :math:`{Q}_{10}` approach, with :math:`{Q}_{10} = 1.5`.
 
 .. math::
-   :label: 21.5) 
+   :label: 21.5)
 
    r_{tsoil} =Q_{10} ^{\left(\frac{T_{soil,\, j} -T_{ref} }{10} \right)}
 
@@ -266,7 +266,7 @@ unitless) is calculated using a relationship from Andrén and Paustian
 (1987) and supported by additional data in Orchard and Cook (1983):
 
 .. math::
-   :label: 21.6) 
+   :label: 21.6)
 
    r_{water} =\sum _{j=1}^{5}\left\{\begin{array}{l} {0\qquad {\rm for\; }\Psi _{j} <\Psi _{\min } } \\ {\frac{\log \left({\Psi _{\min } \mathord{\left/ {\vphantom {\Psi _{\min }  \Psi _{j} }} \right.} \Psi _{j} } \right)}{\log \left({\Psi _{\min } \mathord{\left/ {\vphantom {\Psi _{\min }  \Psi _{\max } }} \right.} \Psi _{\max } } \right)} w_{soil,\, j} \qquad {\rm for\; }\Psi _{\min } \le \Psi _{j} \le \Psi _{\max } } \\ {1\qquad {\rm for\; }\Psi _{j} >\Psi _{\max } \qquad \qquad } \end{array}\right\}
 
@@ -279,14 +279,14 @@ moisture at which decomposition proceeds at a moisture-unlimited
 rate. The default value of :math:`{\Psi}_{max,j}` for CLM5 is updated
 from a saturated value used in CLM4.5 and earlier, to a value
 nominally at field capacity, with a value of -0.002 MPa
-      
+
 For frozen soils, the bulk of the rapid dropoff in decomposition with
 decreasing temperature is due to the moisture limitation, since matric
 potential is limited by temperature in the supercooled water formulation
 of Niu and Yang (2006),
 
 .. math::
-   :label: 21.8) 
+   :label: 21.8)
 
    \psi \left(T\right)=-\frac{L_{f} \left(T-T_{f} \right)}{10^{3} T}
 
@@ -324,7 +324,7 @@ includes these unresolved depth controls via an exponential decrease in
 the soil turnover time with depth:
 
 .. math::
-   :label: 21.9) 
+   :label: 21.9)
 
    r_{depth} =\exp \left(-\frac{z}{z_{\tau } } \right)
 
@@ -336,7 +336,7 @@ intrinsic decomposition rates may proceed as quickly at depth as at the surface.
 The combined decomposition rate scalar (:math:`{r}_{total}`,unitless) is:
 
 .. math::
-   :label: 21.10) 
+   :label: 21.10)
 
    r_{total} =r_{tsoil} r_{water} r_{oxygen} r_{depth} .
 
@@ -353,7 +353,7 @@ The potential carbon flux out of the upstream pool
 (:math:`{CF}_{pot,u}`, gC m\ :sup:`-2` s\ :sup:`-1`) is:
 
 .. math::
-   :label: 21.11) 
+   :label: 21.11)
 
    CF_{pot,\, u} =CS_{u} k_{u}
 
@@ -369,7 +369,7 @@ mineral nitrogen
 (Thornton and Rosenbloom, 2005) is:
 
 .. math::
-   :label: 21.12) 
+   :label: 21.12)
 
    NF_{pot\_ min,\, u\to d} =\frac{CF_{pot,\, u} \left(1-rf_{u} -\frac{CN_{d} }{CN_{u} } \right)}{CN_{d} }
 
@@ -387,37 +387,37 @@ individual pools in the decomposition cascade, for the example of the
 CLM-CN pool structure, are given as:
 
 .. math::
-   :label: 21.13) 
+   :label: 21.13)
 
    CF_{pot,\, Lit1} ={CS_{Lit1} k_{Lit1} r_{total} \mathord{\left/ {\vphantom {CS_{Lit1} k_{Lit1} r_{total}  \Delta t}} \right.} \Delta t}
 
 .. math::
-   :label: 21.14) 
+   :label: 21.14)
 
    CF_{pot,\, Lit2} ={CS_{Lit2} k_{Lit2} r_{total} \mathord{\left/ {\vphantom {CS_{Lit2} k_{Lit2} r_{total}  \Delta t}} \right.} \Delta t}
 
 .. math::
-   :label: 21.15) 
+   :label: 21.15)
 
    CF_{pot,\, Lit3} ={CS_{Lit3} k_{Lit3} r_{total} \mathord{\left/ {\vphantom {CS_{Lit3} k_{Lit3} r_{total}  \Delta t}} \right.} \Delta t}
 
 .. math::
-   :label: 21.16) 
+   :label: 21.16)
 
    CF_{pot,\, SOM1} ={CS_{SOM1} k_{SOM1} r_{total} \mathord{\left/ {\vphantom {CS_{SOM1} k_{SOM1} r_{total}  \Delta t}} \right.} \Delta t}
 
 .. math::
-   :label: 21.17) 
+   :label: 21.17)
 
    CF_{pot,\, SOM2} ={CS_{SOM2} k_{SOM2} r_{total} \mathord{\left/ {\vphantom {CS_{SOM2} k_{SOM2} r_{total}  \Delta t}} \right.} \Delta t}
 
 .. math::
-   :label: 21.18) 
+   :label: 21.18)
 
    CF_{pot,\, SOM3} ={CS_{SOM3} k_{SOM3} r_{total} \mathord{\left/ {\vphantom {CS_{SOM3} k_{SOM3} r_{total}  \Delta t}} \right.} \Delta t}
 
 .. math::
-   :label: 21.19) 
+   :label: 21.19)
 
    CF_{pot,\, SOM4} ={CS_{SOM4} k_{SOM4} r_{total} \mathord{\left/ {\vphantom {CS_{SOM4} k_{SOM4} r_{total}  \Delta t}} \right.} \Delta t}
 
@@ -429,37 +429,37 @@ again for the example of the CLM-CN pool structure (the CENTURY
 structure will be similar but without the different terminal step):
 
 .. math::
-   :label: ZEqnNum934998 
+   :label: ZEqnNum934998
 
    NF_{pot\_ min,\, Lit1\to SOM1} ={CF_{pot,\, Lit1} \left(1-rf_{Lit1} -\frac{CN_{SOM1} }{CN_{Lit1} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, Lit1} \left(1-rf_{Lit1} -\frac{CN_{SOM1} }{CN_{Lit1} } \right) CN_{SOM1} }} \right.} CN_{SOM1} }
 
 .. math::
-   :label: 21.21) 
+   :label: 21.21)
 
    NF_{pot\_ min,\, Lit2\to SOM2} ={CF_{pot,\, Lit2} \left(1-rf_{Lit2} -\frac{CN_{SOM2} }{CN_{Lit2} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, Lit2} \left(1-rf_{Lit2} -\frac{CN_{SOM2} }{CN_{Lit2} } \right) CN_{SOM2} }} \right.} CN_{SOM2} }
 
 .. math::
-   :label: 21.22) 
+   :label: 21.22)
 
    NF_{pot\_ min,\, Lit3\to SOM3} ={CF_{pot,\, Lit3} \left(1-rf_{Lit3} -\frac{CN_{SOM3} }{CN_{Lit3} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, Lit3} \left(1-rf_{Lit3} -\frac{CN_{SOM3} }{CN_{Lit3} } \right) CN_{SOM3} }} \right.} CN_{SOM3} }
 
 .. math::
-   :label: 21.23) 
+   :label: 21.23)
 
    NF_{pot\_ min,\, SOM1\to SOM2} ={CF_{pot,\, SOM1} \left(1-rf_{SOM1} -\frac{CN_{SOM2} }{CN_{SOM1} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, SOM1} \left(1-rf_{SOM1} -\frac{CN_{SOM2} }{CN_{SOM1} } \right) CN_{SOM2} }} \right.} CN_{SOM2} }
 
 .. math::
-   :label: 21.24) 
+   :label: 21.24)
 
    NF_{pot\_ min,\, SOM2\to SOM3} ={CF_{pot,\, SOM2} \left(1-rf_{SOM2} -\frac{CN_{SOM3} }{CN_{SOM2} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, SOM2} \left(1-rf_{SOM2} -\frac{CN_{SOM3} }{CN_{SOM2} } \right) CN_{SOM3} }} \right.} CN_{SOM3} }
 
 .. math::
-   :label: 21.25) 
+   :label: 21.25)
 
    NF_{pot\_ min,\, SOM3\to SOM4} ={CF_{pot,\, SOM3} \left(1-rf_{SOM3} -\frac{CN_{SOM4} }{CN_{SOM3} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, SOM3} \left(1-rf_{SOM3} -\frac{CN_{SOM4} }{CN_{SOM3} } \right) CN_{SOM4} }} \right.} CN_{SOM4} }
 
 .. math::
-   :label: ZEqnNum473594 
+   :label: ZEqnNum473594
 
    NF_{pot\_ min,\, SOM4} =-{CF_{pot,\, SOM4} \mathord{\left/ {\vphantom {CF_{pot,\, SOM4}  CN_{SOM4} }} \right.} CN_{SOM4} }
 
@@ -490,36 +490,36 @@ N Competition between plant uptake and soil immobilization fluxes
 
 Once :math:`{NF}_{immob\_demand }` and :math:`{NF}_{nit\_demand }`  for each layer *j* are known, the competition between plant and microbial nitrogen demand can be resolved. Mineral nitrogen in
 the soil pool (:math:`{NS}_{sminn}`, gN m\ :sup:`-2`) at the
-beginning of the timestep is considered the available supply. 
+beginning of the timestep is considered the available supply.
 
-Here, the :math:`{NF}_{plant\_demand}` is the theoretical maximum demand for nitrogen by plants to meet the entire carbon uptake given an N cost of zero (and therefore represents the upper bound on N requirements). N uptake costs that are 
-:math:`>` 0 imply that the plant will take up less N that it demands, ultimately. However, given the heuristic nature of the N competition algorithm, this discrepancy is not explicitly resolved here. 
+Here, the :math:`{NF}_{plant\_demand}` is the theoretical maximum demand for nitrogen by plants to meet the entire carbon uptake given an N cost of zero (and therefore represents the upper bound on N requirements). N uptake costs that are
+:math:`>` 0 imply that the plant will take up less N that it demands, ultimately. However, given the heuristic nature of the N competition algorithm, this discrepancy is not explicitly resolved here.
 
 The hypothetical plant nitrogen demand from the soil mineral pool is distributed between layers in proportion to the profile of available mineral N:
 
 .. math::
    :label: 21.291
- 
-   NF_{plant\_ demand,j} =  NF_{plant\_ demand} NS_{sminn\_ j}  / \sum _{j=1}^{nj}NS_{sminn,j} 
+
+   NF_{plant\_ demand,j} =  NF_{plant\_ demand} NS_{sminn\_ j}  / \sum _{j=1}^{nj}NS_{sminn,j}
 
 Plants first compete for ammonia (NH4).   For each soil layer (*j*), we calculate the total NH4 demand as:
 
 .. math::
    :label: 21.292
 
-   NF_{total\_ demand_nh4,j}  = NF_{immob\_ demand,j}  + NF_{immob\_ demand,j} + NF_{nit\_ demand,j} 
+   NF_{total\_ demand_nh4,j}  = NF_{immob\_ demand,j}  + NF_{immob\_ demand,j} + NF_{nit\_ demand,j}
 
-where 
+where
 If :math:`{NF}_{total\_demand,j}`\ :math:`\Delta`\ *t* :math:`<`
 :math:`{NS}_{sminn,j}`, then the available pool is large enough to
 meet both the maximum plant and microbial demand, then immobilization proceeds at the maximum rate.
 
 .. math::
-   :label: 21.29) 
+   :label: 21.29)
 
    f_{immob\_demand,j} = 1.0
 
-where :math:`{f}_{immob\_demand,j}` is the fraction of potential immobilization demand that can be met given current supply of mineral nitrogen in this layer. We also set the actual nitrification flux to be the same as the potential flux (:math:`NF_{nit}` = :math:`NF_{nit\_ demand}`). 
+where :math:`{f}_{immob\_demand,j}` is the fraction of potential immobilization demand that can be met given current supply of mineral nitrogen in this layer. We also set the actual nitrification flux to be the same as the potential flux (:math:`NF_{nit}` = :math:`NF_{nit\_ demand}`).
 
 If :math:`{NF}_{total\_demand,j}`\ :math:`\Delta`\ *t*
 :math:`\mathrm{\ge}` :math:`{NS}_{sminn,j}`, then there is not enough
@@ -527,14 +527,14 @@ mineral nitrogen to meet the combined demands for plant growth and
 heterotrophic immobilization, immobilization is reduced proportional to the discrepancy, by :math:`f_{immob\_ demand,j}`, where
 
 .. math::
-   :label: 21.30) 
+   :label: 21.30)
 
    f_{immob\_ demand,j} = \frac{NS_{sminn,j} }{\Delta t\, NF_{total\_ demand,j} }
 
-The N available to the FUN model for plant uptake (:math:`{NF}_ {plant\_ avail\_ sminn}` (gN m\ :sup:`-2`), which determines both the cost of N uptake, and the absolute limit on the N which is available for acquisition, is calculated as the total mineralized pool minus the actual immobilized flux: 
+The N available to the FUN model for plant uptake (:math:`{NF}_ {plant\_ avail\_ sminn}` (gN m\ :sup:`-2`), which determines both the cost of N uptake, and the absolute limit on the N which is available for acquisition, is calculated as the total mineralized pool minus the actual immobilized flux:
 
 .. math::
-   :label: 21.311) 
+   :label: 21.311)
 
    NF_{plant\_ avail\_ sminn,j} = NS_{sminn,j} - f_{immob\_demand} NF_{immob\_ demand,j}
 
@@ -557,37 +557,37 @@ CENTURY structure will be similar but, again without the different
 terminal step), are calculated as:
 
 .. math::
-   :label: 21.32) 
+   :label: 21.32)
 
    CF_{Lit1} =\left\{\begin{array}{l} {CF_{pot,\, Lit1} f_{immob\_ demand} \qquad {\rm for\; }NF_{pot\_ min,\, Lit1\to SOM1} >0} \\ {CF_{pot,\, Lit1} \qquad {\rm for\; }NF_{pot\_ min,\, Lit1\to SOM1} \le 0} \end{array}\right\}
 
 .. math::
-   :label: 21.33) 
+   :label: 21.33)
 
    CF_{Lit2} =\left\{\begin{array}{l} {CF_{pot,\, Lit2} f_{immob\_ demand} \qquad {\rm for\; }NF_{pot\_ min,\, Lit2\to SOM2} >0} \\ {CF_{pot,\, Lit2} \qquad {\rm for\; }NF_{pot\_ min,\, Lit2\to SOM2} \le 0} \end{array}\right\}
 
 .. math::
-   :label: 21.34) 
+   :label: 21.34)
 
    CF_{Lit3} =\left\{\begin{array}{l} {CF_{pot,\, Lit3} f_{immob\_ demand} \qquad {\rm for\; }NF_{pot\_ min,\, Lit3\to SOM3} >0} \\ {CF_{pot,\, Lit3} \qquad {\rm for\; }NF_{pot\_ min,\, Lit3\to SOM3} \le 0} \end{array}\right\}
 
 .. math::
-   :label: 21.35) 
+   :label: 21.35)
 
    CF_{SOM1} =\left\{\begin{array}{l} {CF_{pot,\, SOM1} f_{immob\_ demand} \qquad {\rm for\; }NF_{pot\_ min,\, SOM1\to SOM2} >0} \\ {CF_{pot,\, SOM1} \qquad {\rm for\; }NF_{pot\_ min,\, SOM1\to SOM2} \le 0} \end{array}\right\}
 
 .. math::
-   :label: 21.36) 
+   :label: 21.36)
 
    CF_{SOM2} =\left\{\begin{array}{l} {CF_{pot,\, SOM2} f_{immob\_ demand} \qquad {\rm for\; }NF_{pot\_ min,\, SOM2\to SOM3} >0} \\ {CF_{pot,\, SOM2} \qquad {\rm for\; }NF_{pot\_ min,\, SOM2\to SOM3} \le 0} \end{array}\right\}
 
 .. math::
-   :label: 21.37) 
+   :label: 21.37)
 
    CF_{SOM3} =\left\{\begin{array}{l} {CF_{pot,\, SOM3} f_{immob\_ demand} \qquad {\rm for\; }NF_{pot\_ min,\, SOM3\to SOM4} >0} \\ {CF_{pot,\, SOM3} \qquad {\rm for\; }NF_{pot\_ min,\, SOM3\to SOM4} \le 0} \end{array}\right\}
 
 .. math::
-   :label: 21.38) 
+   :label: 21.38)
 
    CF_{SOM4} =CF_{pot,\, SOM4}
 
@@ -595,37 +595,37 @@ Heterotrophic respiration fluxes (losses of carbon as
 CO\ :sub:`2` to the atmosphere) are:
 
 .. math::
-   :label: 21.39) 
+   :label: 21.39)
 
    CF_{Lit1,\, HR} =CF_{Lit1} rf_{Lit1}
 
 .. math::
-   :label: 21.40) 
+   :label: 21.40)
 
    CF_{Lit2,\, HR} =CF_{Lit2} rf_{Lit2}
 
 .. math::
-   :label: 21.41) 
+   :label: 21.41)
 
    CF_{Lit3,\, HR} =CF_{Lit3} rf_{Lit3}
 
 .. math::
-   :label: 21.42) 
+   :label: 21.42)
 
    CF_{SOM1,\, HR} =CF_{SOM1} rf_{SOM1}
 
 .. math::
-   :label: 21.43) 
+   :label: 21.43)
 
    CF_{SOM2,\, HR} =CF_{SOM2} rf_{SOM2}
 
 .. math::
-   :label: 21.44) 
+   :label: 21.44)
 
    CF_{SOM3,\, HR} =CF_{SOM3} rf_{SOM3}
 
 .. math::
-   :label: 21.45) 
+   :label: 21.45)
 
    CF_{SOM4,\, HR} =CF_{SOM4} rf_{SOM4}
 
@@ -633,32 +633,32 @@ Transfers of carbon from upstream to downstream pools in the
 decomposition cascade are given as:
 
 .. math::
-   :label: 21.46) 
+   :label: 21.46)
 
    CF_{Lit1,\, SOM1} =CF_{Lit1} \left(1-rf_{Lit1} \right)
 
 .. math::
-   :label: 21.47) 
+   :label: 21.47)
 
    CF_{Lit2,\, SOM2} =CF_{Lit2} \left(1-rf_{Lit2} \right)
 
 .. math::
-   :label: 21.48) 
+   :label: 21.48)
 
    CF_{Lit3,\, SOM3} =CF_{Lit3} \left(1-rf_{Lit3} \right)
 
 .. math::
-   :label: 21.49) 
+   :label: 21.49)
 
    CF_{SOM1,\, SOM2} =CF_{SOM1} \left(1-rf_{SOM1} \right)
 
 .. math::
-   :label: 21.50) 
+   :label: 21.50)
 
    CF_{SOM2,\, SOM3} =CF_{SOM2} \left(1-rf_{SOM2} \right)
 
 .. math::
-   :label: 21.51) 
+   :label: 21.51)
 
    CF_{SOM3,\, SOM4} =CF_{SOM3} \left(1-rf_{SOM3} \right)
 
@@ -672,32 +672,32 @@ or from the downstream pool to the soil mineral nitrogen pool
 pools in the decomposition cascade are given as:
 
 .. math::
-   :label: 21.52) 
+   :label: 21.52)
 
    NF_{Lit1,\, SOM1} ={CF_{Lit1} \mathord{\left/ {\vphantom {CF_{Lit1}  CN_{Lit1} }} \right.} CN_{Lit1} }
 
 .. math::
-   :label: 21.53) 
+   :label: 21.53)
 
    NF_{Lit2,\, SOM2} ={CF_{Lit2} \mathord{\left/ {\vphantom {CF_{Lit2}  CN_{Lit2} }} \right.} CN_{Lit2} }
 
 .. math::
-   :label: 21.54) 
+   :label: 21.54)
 
    NF_{Lit3,\, SOM3} ={CF_{Lit3} \mathord{\left/ {\vphantom {CF_{Lit3}  CN_{Lit3} }} \right.} CN_{Lit3} }
 
 .. math::
-   :label: 21.55) 
+   :label: 21.55)
 
    NF_{SOM1,\, SOM2} ={CF_{SOM1} \mathord{\left/ {\vphantom {CF_{SOM1}  CN_{SOM1} }} \right.} CN_{SOM1} }
 
 .. math::
-   :label: 21.56) 
+   :label: 21.56)
 
    NF_{SOM2,\, SOM3} ={CF_{SOM2} \mathord{\left/ {\vphantom {CF_{SOM2}  CN_{SOM2} }} \right.} CN_{SOM2} }
 
 .. math::
-   :label: 21.57) 
+   :label: 21.57)
 
    NF_{SOM3,\, SOM4} ={CF_{SOM3} \mathord{\left/ {\vphantom {CF_{SOM3}  CN_{SOM3} }} \right.} CN_{SOM3} }
 
@@ -706,37 +706,37 @@ whether the decomposition step is an immobilization flux or a
 mineralization flux:
 
 .. math::
-   :label: 21.58) 
+   :label: 21.58)
 
    NF_{sminn,\, Lit1\to SOM1} =\left\{\begin{array}{l} {NF_{pot\_ min,\, Lit1\to SOM1} f_{immob\_ demand} \qquad {\rm for\; }NF_{pot\_ min,\, Lit1\to SOM1} >0} \\ {NF_{pot\_ min,\, Lit1\to SOM1} \qquad {\rm for\; }NF_{pot\_ min,\, Lit1\to SOM1} \le 0} \end{array}\right\}
 
 .. math::
-   :label: 21.59) 
+   :label: 21.59)
 
    NF_{sminn,\, Lit2\to SOM2} =\left\{\begin{array}{l} {NF_{pot\_ min,\, Lit2\to SOM2} f_{immob\_ demand} \qquad {\rm for\; }NF_{pot\_ min,\, Lit2\to SOM2} >0} \\ {NF_{pot\_ min,\, Lit2\to SOM2} \qquad {\rm for\; }NF_{pot\_ min,\, Lit2\to SOM2} \le 0} \end{array}\right\}
 
 .. math::
-   :label: 21.60) 
+   :label: 21.60)
 
    NF_{sminn,\, Lit3\to SOM3} =\left\{\begin{array}{l} {NF_{pot\_ min,\, Lit3\to SOM3} f_{immob\_ demand} \qquad {\rm for\; }NF_{pot\_ min,\, Lit3\to SOM3} >0} \\ {NF_{pot\_ min,\, Lit3\to SOM3} \qquad {\rm for\; }NF_{pot\_ min,\, Lit3\to SOM3} \le 0} \end{array}\right\}
 
 .. math::
-   :label: 21.61) 
+   :label: 21.61)
 
    NF_{sminn,SOM1\to SOM2} =\left\{\begin{array}{l} {NF_{pot\_ min,\, SOM1\to SOM2} f_{immob\_ demand} \qquad {\rm for\; }NF_{pot\_ min,\, SOM1\to SOM2} >0} \\ {NF_{pot\_ min,\, SOM1\to SOM2} \qquad {\rm for\; }NF_{pot\_ min,\, SOM1\to SOM2} \le 0} \end{array}\right\}
 
 .. math::
-   :label: 21.62) 
+   :label: 21.62)
 
    NF_{sminn,SOM2\to SOM3} =\left\{\begin{array}{l} {NF_{pot\_ min,\, SOM2\to SOM3} f_{immob\_ demand} \qquad {\rm for\; }NF_{pot\_ min,\, SOM2\to SOM3} >0} \\ {NF_{pot\_ min,\, SOM2\to SOM3} \qquad {\rm for\; }NF_{pot\_ min,\, SOM2\to SOM3} \le 0} \end{array}\right\}
 
 .. math::
-   :label: 21.63) 
+   :label: 21.63)
 
    NF_{sminn,SOM3\to SOM4} =\left\{\begin{array}{l} {NF_{pot\_ min,\, SOM3\to SOM4} f_{immob\_ demand} \qquad {\rm for\; }NF_{pot\_ min,\, SOM3\to SOM4} >0} \\ {NF_{pot\_ min,\, SOM3\to SOM4} \qquad {\rm for\; }NF_{pot\_ min,\, SOM3\to SOM4} \le 0} \end{array}\right\}
 
 .. math::
-   :label: 21.64) 
+   :label: 21.64)
 
    NF_{sminn,\, SOM4} =NF_{pot\_ min,\, SOM4}
 
@@ -820,11 +820,11 @@ the form of a logistic equation, where :math:`{a}_{i}` is equal to the
 product of the base acceleration term and :math:`{a}_{l}` below:
 
 .. math::
-   :label: 21.65) 
+   :label: 21.65)
 
     a_l = 1 + 50 / \left ( 1 + exp \left (-0.1 * (abs(latitude) -
     60 ) \right ) \right )
 
-   
+
 
 

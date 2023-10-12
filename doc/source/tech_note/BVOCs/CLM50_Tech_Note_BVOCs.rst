@@ -28,14 +28,14 @@ as a flux, :math:`F_{i}` (:math:`\mu` \ g C m\ :sup:`-2` ground area h\ :sup:`-1
 :math:`i`
 
 .. math::
-   :label: ZEqnNum964222 
+   :label: ZEqnNum964222
 
    F_{i} =\gamma _{i} \rho \sum _{j}\varepsilon _{i,j}  \left(wt\right)_{j}
 
 where :math:`\gamma _{i}`  is the emission activity factor accounting
 for responses to meteorological and phenological conditions,
 :math:`\rho`  is the canopy loss and production factor also known as
-escape efficiency (set to 1), and :math:`\varepsilon _{i,\, j}` 
+escape efficiency (set to 1), and :math:`\varepsilon _{i,\, j}`
 (:math:`\mu` \ g C m\ :sup:`-2` ground area h\ :sup:`-1`) is
 the emission factor at standard conditions of light, temperature, and
 leaf area for plant functional type *j* with fractional coverage
@@ -50,7 +50,7 @@ some monoterpenes, VOCs and acetone). The activity factor for the light
 response of emissions is therefore estimated as:
 
 .. math::
-   :label: 28.2) 
+   :label: 28.2)
 
    \gamma _{P,\, i} =\left(1-LDF_{i} \right)+\gamma _{P\_ LDF} LDF_{i}
 

@@ -5,7 +5,7 @@ Surface Characterization, Vertical Discretization, and Model Input Requirements
 
 .. _Surface Characterization:
 
-Surface Characterization 
+Surface Characterization
 -----------------------------
 
 .. _Surface Heterogeneity and Data Structure:
@@ -15,7 +15,7 @@ Surface Heterogeneity and Data Structure
 
 Spatial land surface heterogeneity in CLM is represented as a nested
 subgrid hierarchy in which grid cells are composed of multiple land
-units, snow/soil columns, and PFTs (:numref:`Figure CLM subgrid hierarchy`). 
+units, snow/soil columns, and PFTs (:numref:`Figure CLM subgrid hierarchy`).
 Each grid cell can have
 a different number of land units, each land unit can have a different
 number of columns, and each column can have multiple PFTs. The first
@@ -55,7 +55,7 @@ classes.
 
 .. Figure:: image1.png
 
-  Configuration of the CLM subgrid hierarchy.  Box in upper right shows hypothetical subgrid distribution for a single grid cell.  Note that the Crop land unit is only used when the model is run with the crop model active. Abbreviations: TBD – Tall Building District; HD – High Density; MD – Medium Density, G – Glacier, L – Lake, U – Urban, C – Crop, V – Vegetated, PFT – Plant Functional Type, Irr – Irrigated, UIrr – Unirrigated.  Red arrows indicate allowed land unit transitions.  Purple arrows indicate allowed patch-level transitions.  
+  Configuration of the CLM subgrid hierarchy.  Box in upper right shows hypothetical subgrid distribution for a single grid cell.  Note that the Crop land unit is only used when the model is run with the crop model active. Abbreviations: TBD – Tall Building District; HD – High Density; MD – Medium Density, G – Glacier, L – Lake, U – Urban, C – Crop, V – Vegetated, PFT – Plant Functional Type, Irr – Irrigated, UIrr – Unirrigated.  Red arrows indicate allowed land unit transitions.  Purple arrows indicate allowed patch-level transitions.
 
 The third subgrid level is referred to as the patch level. Patches can be PFTs or bare ground on the vegetated land unit
 and crop functional types (CFTs) on the crop land unit.
@@ -81,7 +81,7 @@ and the fraction of canopy that is wet are defined as physical state
 variables at the PFT level.
 
 The standard configuration of the model subgrid hierarchy is illustrated
-in :numref:`Figure CLM subgrid hierarchy`. Here, only four PFTs are shown 
+in :numref:`Figure CLM subgrid hierarchy`. Here, only four PFTs are shown
 associated with the single
 column beneath the vegetated land unit but up to sixteen are possible.
 The crop land unit is present only when the crop model is active.
@@ -102,9 +102,9 @@ Vegetation Composition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Vegetated surfaces are comprised of up to 15 possible plant functional
-types (PFTs) plus bare ground (:numref:`Table Plant functional types`). An 
-additional PFT is added if 
-the irrigation model is active and six additional PFTs are added if the 
+types (PFTs) plus bare ground (:numref:`Table Plant functional types`). An
+additional PFT is added if
+the irrigation model is active and six additional PFTs are added if the
 crop model is active (Chapter :numref:`rst_Crops and Irrigation`).
 In :numref:`Table Plant functional types`, IVT = 0,14 refers to the index of PCT_NAT_VEG
 on the surface dataset while IVT = 15,18 refers to the index of PCT_CFT on the surface dataset. These
@@ -114,7 +114,7 @@ distribution parameters that control the uptake of water from the soil
 (:numref:`Table Plant functional type root distribution parameters`), aerodynamic parameters that determine resistance to heat,
 moisture, and momentum transfer (:numref:`Table Plant functional type aerodynamic parameters`), and photosynthetic
 parameters that determine stomatal resistance, photosynthesis, and
-transpiration (:numref:`Table Plant functional type (PFT) stomatal conductance parameters`, 
+transpiration (:numref:`Table Plant functional type (PFT) stomatal conductance parameters`,
 :numref:`Table Temperature dependence parameters for C3 photosynthesis`). The composition and abundance of PFTs
 within a grid cell can either be prescribed as time-invariant fields
 (e.g., using the present day dataset described in section 21.3.3) or can
@@ -124,7 +124,7 @@ evolve with time if the model is run in transient landcover mode
 .. _Table Plant functional types:
 
 .. table:: Plant functional types
- 
+
  +-----+--------------------------------------------------------------+-------------------+
  | IVT | Plant functional type                                        | Acronym           |
  +=====+==============================================================+===================+
@@ -176,21 +176,21 @@ Vegetation Structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Vegetation structure is defined by leaf and stem area indices
-(:math:`L,\, S`) and canopy top and bottom heights (:math:`z_{top}`,\ :math:`z_{bot}` ). 
+(:math:`L,\, S`) and canopy top and bottom heights (:math:`z_{top}`,\ :math:`z_{bot}` ).
 Separate leaf and
-stem area indices and canopy heights are prescribed or calculated for each PFT. Daily leaf 
-and stem area indices are obtained from griddeddatasets of monthly values (section 
-:numref:`Surface Data`). Canopy top and bottom heights for trees are from ICESat (:ref:`Simard et al. (2011) <Simardetal2011>`). 
+stem area indices and canopy heights are prescribed or calculated for each PFT. Daily leaf
+and stem area indices are obtained from griddeddatasets of monthly values (section
+:numref:`Surface Data`). Canopy top and bottom heights for trees are from ICESat (:ref:`Simard et al. (2011) <Simardetal2011>`).
 Canopy top and bottom heights for short vegetation are obtained from gridded datasets but are invariant in space
 and time and were obtained from PFT-specific values (:ref:`Bonan et al. (2002a) <Bonanetal2002a>`) (:numref:`Table Plant functional type canopy top and bottom heights`).
-When the biogeochemistry model is active, 
-vegetation state (LAI, SAI, canopy top and bottom heights) are calculated prognostically 
+When the biogeochemistry model is active,
+vegetation state (LAI, SAI, canopy top and bottom heights) are calculated prognostically
 (see Chapter :numref:`rst_Vegetation Phenology and Turnover`).
 
 .. _Table Plant functional type canopy top and bottom heights:
 
 .. table:: Plant functional type canopy top and bottom heights
- 
+
  +--------------------------------------------------------------+-------------------+-------------------+
  | Plant functional type                                        | :math:`z_{top}`   | :math:`z_{bot}`   |
  +==============================================================+===================+===================+
@@ -224,15 +224,15 @@ When the biogeochemistry model is inactive, leaf and stem area indices
 (m\ :sup:`2` leaf area m\ :sup:`-2` ground area) are updated
 daily by linearly interpolating between monthly values. Monthly PFT leaf
 area index values are developed from the 1-km MODIS-derived monthly grid
-cell average leaf area index of :ref:`Myneni et al. (2002) <Mynenietal2002>`, 
-as described in :ref:`Lawrence and Chase (2007) <LawrenceChase2007>`. Stem area 
-ndex is calculated from the monthly PFT leaf area index using the methods of 
-:ref:`Zeng et al. (2002) <Zengetal2002>`. The leaf and stem area indices are 
-adjusted for vertical burying by snow (:ref:`Wang and Zeng 2009 <WangZeng2009>`) 
+cell average leaf area index of :ref:`Myneni et al. (2002) <Mynenietal2002>`,
+as described in :ref:`Lawrence and Chase (2007) <LawrenceChase2007>`. Stem area
+ndex is calculated from the monthly PFT leaf area index using the methods of
+:ref:`Zeng et al. (2002) <Zengetal2002>`. The leaf and stem area indices are
+adjusted for vertical burying by snow (:ref:`Wang and Zeng 2009 <WangZeng2009>`)
 as
 
 .. math::
-   :label: 2.1 
+   :label: 2.1
 
    A=A^{*} ( 1-f_{veg}^{sno} )
 
@@ -243,12 +243,12 @@ snow, :math:`A` is the remaining exposed leaf or stem area,
 .. math::
    :label: 2.2
 
-   {f_{veg}^{sno} = \frac{z_{sno} -z_{bot} }{z_{top} -z_{bot} }         \qquad {\rm for\; tree\; and\; shrub}} \\ 
-   {f_{veg}^{sno} = \frac{\min \left(z_{sno} ,\, z_{c} \right)}{z_{c} } \qquad {\rm for\; grass\; and\; crop}} 
+   {f_{veg}^{sno} = \frac{z_{sno} -z_{bot} }{z_{top} -z_{bot} }         \qquad {\rm for\; tree\; and\; shrub}} \\
+   {f_{veg}^{sno} = \frac{\min \left(z_{sno} ,\, z_{c} \right)}{z_{c} } \qquad {\rm for\; grass\; and\; crop}}
 
-where :math:`z_{sno} -z_{bot} \ge 0,{\rm \; }0\le f_{veg}^{sno} \le 1`, :math:`z_{sno}`  is the depth of snow (m) 
-(Chapter :numref:`rst_Snow Hydrology`), and :math:`z_{c} = 0.2` is the snow depth when short vegetation is assumed to 
-be completely buried by snow (m). For numerical reasons, exposed leaf and stem area are set to zero if less than 
+where :math:`z_{sno} -z_{bot} \ge 0,{\rm \; }0\le f_{veg}^{sno} \le 1`, :math:`z_{sno}`  is the depth of snow (m)
+(Chapter :numref:`rst_Snow Hydrology`), and :math:`z_{c} = 0.2` is the snow depth when short vegetation is assumed to
+be completely buried by snow (m). For numerical reasons, exposed leaf and stem area are set to zero if less than
 0.05. If the sum of exposed leaf and stem area is zero, then the surface is treated as snow-covered ground.
 
 .. _Vertical Discretization:
@@ -261,21 +261,21 @@ Vertical Discretization
  lakes have ten. For soil points, temperature calculations are done over
  all layers, :math:`N_{levgrnd} =15`, while hydrology calculations are
  done over the top ten layers, :math:`N_{levsoi} =10`, the bottom five
- layers being specified as bedrock. 
+ layers being specified as bedrock.
 
 .. _Soil Layers:
 
 Soil Layers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The soil column can be discretized into an arbitrary number of layers.  The default 
-vertical discretization (:numref:`Table Soil layer structure`) uses 
-:math:`N_{levgrnd} = 25` layers, of which :math:`N_{levsoi} = 20` are hydrologically and 
-biogeochemically active.  The deepest 5 layers are only included in the thermodynamical 
-calculations (:ref:`Lawrence et al. 2008 <Lawrenceetal2008>`) described in Chapter 
+The soil column can be discretized into an arbitrary number of layers.  The default
+vertical discretization (:numref:`Table Soil layer structure`) uses
+:math:`N_{levgrnd} = 25` layers, of which :math:`N_{levsoi} = 20` are hydrologically and
+biogeochemically active.  The deepest 5 layers are only included in the thermodynamical
+calculations (:ref:`Lawrence et al. 2008 <Lawrenceetal2008>`) described in Chapter
 :numref:`rst_Soil and Snow Temperatures`.
 
-The layer structure of the soil is described by the node depth, :math:`z_{i}`  
+The layer structure of the soil is described by the node depth, :math:`z_{i}`
 (m), the thickness of each layer, :math:`\Delta z_{i}`  (m), and the depths
 at the layer interfaces :math:`z_{h,\, i}`  (m).
 
@@ -337,7 +337,7 @@ at the layer interfaces :math:`z_{h,\, i}`  (m).
  |   25          |  41.998          |  15.115                |  49.556                |
  +---------------+------------------+------------------------+------------------------+
 
-Layer node depth (:math:`z_{i}` ), thickness (:math:`\Delta z_{i}` ), and depth at 
+Layer node depth (:math:`z_{i}` ), thickness (:math:`\Delta z_{i}` ), and depth at
 layer interface (:math:`z_{h,\, i}` ) for default soil column. All in meters.
 
 .. _Depth to Bedrock:
@@ -345,12 +345,12 @@ layer interface (:math:`z_{h,\, i}` ) for default soil column. All in meters.
 Depth to Bedrock
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The hydrologically and biogeochemically active portion of the soil column can be 
-restricted to a thickness less than that of the maximum soil depth.  By providing 
-a depth-to-bedrock dataset, which may vary spatially, the number of layers used 
-in the hydrologic and biogeochemical calculations, :math:`N_{bedrock}`, may be 
+The hydrologically and biogeochemically active portion of the soil column can be
+restricted to a thickness less than that of the maximum soil depth.  By providing
+a depth-to-bedrock dataset, which may vary spatially, the number of layers used
+in the hydrologic and biogeochemical calculations, :math:`N_{bedrock}`, may be
 specified, subject to the constraint :math:`N_{bedrock} \le N_{levsoi}`.
-The default depth-to-bedrock values are from 
+The default depth-to-bedrock values are from
 :ref:`Pelletier et al. [2016]<Pelletieretal2016>`.
 
 .. _Model Input Requirements:
@@ -363,7 +363,7 @@ Model Input Requirements
 Atmospheric Coupling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The current state of the atmosphere (:numref:`Table Atmospheric input to land model`) 
+The current state of the atmosphere (:numref:`Table Atmospheric input to land model`)
 at a given time step is
 used to force the land model. This atmospheric state is provided by an
 atmospheric model in coupled mode or from an observed dataset in land-only
@@ -428,7 +428,7 @@ conditions from the current time step.
 atmospheric model :math:`z'_{atm}`  is assumed to be the height above
 the surface as defined by the roughness length :math:`z_{0}`  plus
 displacement height :math:`d`. Thus, the reference height used for flux
-computations (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) 
+computations (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`)
 is :math:`z_{atm} =z'_{atm} +z_{0} +d`. The
 reference heights for temperature, wind, and specific humidity
 (:math:`z_{atm,\, h}` , :math:`z_{atm,\, {\it m}}` ,
@@ -491,7 +491,7 @@ data may be obtained directly from the atmosphere model.
 
 Density of air (:math:`\rho _{atm}` ) (kg m\ :sup:`-3`) is also
 required but is calculated directly from
-:math:`\rho _{atm} =\frac{P_{atm} -0.378e_{atm} }{R_{da} T_{atm} }` 
+:math:`\rho _{atm} =\frac{P_{atm} -0.378e_{atm} }{R_{da} T_{atm} }`
 where :math:`P_{atm}`  is atmospheric pressure (Pa), :math:`e_{atm}`  is
 atmospheric vapor pressure (Pa), :math:`R_{da}`  is the gas constant for
 dry air (J kg\ :sup:`-1` K\ :sup:`-1`) (:numref:`Table Physical constants`), and
@@ -604,7 +604,7 @@ of snow layers :math:`snl` and layer thickness) is initialized based on
 the snow depth (section 6.1). The snow liquid water and ice contents (kg
 m\ :sup:`-2`) are initialized as :math:`w_{liq,\, i} =0` and
 :math:`w_{ice,\, i} =\Delta z_{i} \rho _{sno}` , respectively, where
-:math:`i=snl+1,\ldots ,0` are the snow layers, and :math:`\Delta z_{i}` 
+:math:`i=snl+1,\ldots ,0` are the snow layers, and :math:`\Delta z_{i}`
 is the thickness of snow layer :math:`i` (m). The soil liquid water and
 ice contents are initialized as :math:`w_{liq,\, i} =0` and
 :math:`w_{ice,\, i} =\Delta z_{i} \rho _{ice} \theta _{i}`  for
@@ -612,7 +612,7 @@ ice contents are initialized as :math:`w_{liq,\, i} =0` and
 :math:`w_{liq,\, i} =\Delta z_{i} \rho _{liq} \theta _{i}`  and
 :math:`w_{ice,\, i} =0` for :math:`T_{i} >T_{f}` , where
 :math:`\rho _{ice}`  and :math:`\rho _{liq}`  are the densities of ice
-and liquid water (kg m\ :sup:`-3`) (:numref:`Table Physical constants`), and :math:`T_{f}` 
+and liquid water (kg m\ :sup:`-3`) (:numref:`Table Physical constants`), and :math:`T_{f}`
 is the freezing temperature of water (K) (:numref:`Table Physical constants`). All vegetated and
 glacier land units are initialized with water stored in the unconfined
 aquifer and unsaturated soil :math:`W_{a} =4000` mm and water table
@@ -623,7 +623,7 @@ depth :math:`z_{\nabla }`  at five meters below the soil column.
 Surface Data
 ^^^^^^^^^^^^^^^^^^
 
-Required surface data for each land grid cell are listed in 
+Required surface data for each land grid cell are listed in
 :numref:`Table Surface data required for CLM and their base spatial resolution`
 and include the glacier, lake, and urban fractions of the grid cell
 (vegetated and crop occupy the remainder), the fractional cover of each
@@ -734,7 +734,7 @@ resolution data of :ref:`Kourzeneva (2009, 2010) <Kourzeneva2009>` to the 0.05\ 
 resolution using the MODIS land-mask. Percent urban is derived from
 LandScan 2004, a population density dataset derived from census data,
 nighttime lights satellite observations, road proximity and slope
-(:ref:`Dobson et al. 2000 <Dobsonetal2000>`) as described by 
+(:ref:`Dobson et al. 2000 <Dobsonetal2000>`) as described by
 :ref:`Jackson et al. (2010) <Jacksonetal2010>` at 1km
 resolution and aggregated to 0.05\ :sup:`o`. A number of urban
 radiative, thermal, and morphological fields are also required and are
@@ -743,9 +743,9 @@ Table 3 of the Community Land Model Urban (CLMU) technical note (:ref:`Oleson
 et al. 2010b <Olesonetal2010b>`).
 
 Percent PFTs are derived from MODIS satellite data as described in
-:ref:`Lawrence and Chase (2007) <LawrenceChase2007>` (section 21.3.3). 
-Prescribed PFT leaf area index is derived from the MODIS satellite data of 
-:ref:`Myneni et al. (2002) <Mynenietal2002>` using the de-aggregation methods 
+:ref:`Lawrence and Chase (2007) <LawrenceChase2007>` (section 21.3.3).
+Prescribed PFT leaf area index is derived from the MODIS satellite data of
+:ref:`Myneni et al. (2002) <Mynenietal2002>` using the de-aggregation methods
 described in :ref:`Lawrence and Chase (2007) <LawrenceChase2007>`
 (section 2.2.3). Prescribed PFT stem area index is derived from PFT leaf
 area index phenology combined with the methods of :ref:`Zeng et al. (2002) <Zengetal2002>`.
@@ -754,7 +754,7 @@ described in :ref:`Bonan et al. (2002b) <Bonanetal2002b>`. If the biogeochemistr
 active, it supplies the leaf and stem area index and canopy top and
 bottom heights dynamically, and the prescribed values are ignored.
 
-Soil color determines dry and saturated soil albedo (section :numref:`Ground Albedos`). 
+Soil color determines dry and saturated soil albedo (section :numref:`Ground Albedos`).
 Soil colors are from :ref:`Lawrence and Chase (2007) <LawrenceChase2007>`.
 
 The soil texture and organic matter content determine soil thermal and
@@ -767,21 +767,21 @@ sources. The majority of the globe is from ISRIC-WISE (:ref:`Batjes, 2006 <Batje
 The high latitudes come from the 0.25\ :sup:`o` version of the
 Northern Circumpolar Soil Carbon Database (:ref:`Hugelius et al. 2012 <Hugeliusetal2012>`). Both
 datasets report carbon down to 1m depth. Carbon is partitioned across
-the top seven CLM4 layers (:math:`\sim`\ 1m depth) as in 
+the top seven CLM4 layers (:math:`\sim`\ 1m depth) as in
 :ref:`Lawrence and Slater (2008) <LawrenceSlater2008>`.
 
 The maximum fractional saturated area (:math:`f_{\max }` ) is used in
 determining surface runoff and infiltration (section 7.3). Maximum
 fractional saturated area at 0.125\ :sup:`o` resolution is
 calculated from 1-km compound topographic indices (CTIs) based on the
-USGS HYDRO1K dataset (:ref:`Verdin and Greenlee 1996 <VerdinGreenlee1996>`) 
-following the algorithm in :ref:`Niu et al. (2005) <Niuetal2005>`. 
+USGS HYDRO1K dataset (:ref:`Verdin and Greenlee 1996 <VerdinGreenlee1996>`)
+following the algorithm in :ref:`Niu et al. (2005) <Niuetal2005>`.
 :math:`f_{\max }`  is the ratio between the number
 of 1-km pixels with CTIs equal to or larger than the mean CTI and the
 total number of pixels in a 0.125\ :sup:`o` grid cell. See
 section 7.3.1 and :ref:`Li et al. (2013b) <Lietal2013b>` for further details. Slope and
-elevation are also obtained from the USGS HYDRO1K 1-km dataset 
-(:ref:`Verdin and Greenlee 1996 <VerdinGreenlee1996>`).  Slope is used in the 
+elevation are also obtained from the USGS HYDRO1K 1-km dataset
+(:ref:`Verdin and Greenlee 1996 <VerdinGreenlee1996>`).  Slope is used in the
 surface water parameterization (section :numref:`Surface Water Storage`), and
 elevation is used to calculate the grid cell standard deviation of
 topography for the snow cover fraction parameterization (section :numref:`Snow Covered Area Fraction`).
@@ -794,15 +794,15 @@ The default list of PFTs includes an unmanaged crop treated as a second
 C3 grass (:numref:`Table Plant functional types`). The unmanaged crop has grid cell fractional cover
 assigned from MODIS satellite data (:ref:`Lawrence and Chase (2007) <LawrenceChase2007>`). A managed
 crop option uses grid cell fractional cover from the present-day crop
-dataset of :ref:`Ramankutty and Foley (1998) <RamankuttyFoley1998>` 
-(CLM4CNcrop). Managed crops are assigned in the proportions given by 
+dataset of :ref:`Ramankutty and Foley (1998) <RamankuttyFoley1998>`
+(CLM4CNcrop). Managed crops are assigned in the proportions given by
 :ref:`Ramankutty and Foley (1998) <RamankuttyFoley1998>` without
 exceeding the area previously assigned to the unmanaged crop. The
 unmanaged crop continues to occupy any of its original area that remains
 and continues to be handled just by the CN part of CLM4CNcrop. The
 managed crop types (corn, soybean, and temperate cereals) were chosen
 based on the availability of corresponding algorithms in AgroIBIS
-(:ref:`Kucharik et al. 2000 <Kuchariketal2000>`; 
+(:ref:`Kucharik et al. 2000 <Kuchariketal2000>`;
 :ref:`Kucharik and Brye 2003 <KucharikBrye2003>`). Temperate cereals
 include wheat, barley, and rye here. All temperate cereals are treated
 as summer crops (like spring wheat, for example) at this time. Winter
@@ -819,12 +819,12 @@ not share soil columns and thus permit for differences in land
 management between crops.
 
 CLM includes the option to irrigate cropland areas that are equipped for
-irrigation. The application of irrigation responds dynamically to climate 
-(see Chapter :numref:`rst_Crops and Irrigation`). In CLM, irrigation is 
-implemented for the C3 generic crop only. When irrigation is enabled, the 
-cropland area of each grid cell is divided into an irrigated and unirrigated 
-fraction according to a dataset of areas equipped for irrigation 
-(:ref:`Siebert et al. (2005) <Siebertetal2005>`). The area of irrigated 
+irrigation. The application of irrigation responds dynamically to climate
+(see Chapter :numref:`rst_Crops and Irrigation`). In CLM, irrigation is
+implemented for the C3 generic crop only. When irrigation is enabled, the
+cropland area of each grid cell is divided into an irrigated and unirrigated
+fraction according to a dataset of areas equipped for irrigation
+(:ref:`Siebert et al. (2005) <Siebertetal2005>`). The area of irrigated
 cropland in each grid cell is given by the
 smaller of the grid cell's total cropland area, according to the default
 CLM4 dataset, and the grid cell's area equipped for irrigation. The
@@ -864,7 +864,7 @@ Values of certain adjustable parameters inherent in the biogeophysical
 or biogeochemical parameterizations have either been obtained from the
 literature or calibrated based on comparisons with observations. These
 are described in the text. Physical constants, generally shared by all
-of the components in the coupled modeling system, are presented in 
+of the components in the coupled modeling system, are presented in
 :numref:`Table Physical constants`.
 
 
@@ -875,7 +875,7 @@ of the components in the coupled modeling system, are presented in
    :widths: 40, 20, 20, 20
 
    "Pi", :math:`\pi`, 3.14159265358979323846, "\-"
-   "Acceleration of gravity", :math:`g`, 9.80616,  m s\ :sup:`-2` 
+   "Acceleration of gravity", :math:`g`, 9.80616,  m s\ :sup:`-2`
    "Standard pressure", :math:`P_{std}`, 101325, "Pa"
    "Stefan-Boltzmann constant", :math:`\sigma`, 5.67 :math:`\times 10^{-8}`, W m :sup:`-2` K :math:`{}^{-4}`
    "Boltzmann constant", :math:`\kappa`, 1.38065 :math:`\times 10^{-23}`, J K :sup:`-1` molecule :sup:`-1`

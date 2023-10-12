@@ -56,7 +56,7 @@ CLM is responsible for computing two quantities that are passed to the
 ice sheet model:
 
 #. Surface mass balance (SMB) - the net annual accumulation/ablation of
-   mass at the upper surface (section 
+   mass at the upper surface (section
    :numref:`Computation of the surface mass balance`)
 
 #. Ground surface temperature, which serves as an upper boundary

@@ -7,13 +7,13 @@
 The CLM FORTRAN tools all have similar makefiles, and similar options for building.  The tools
 **cprnc** and **gen_domain** use the CIME configure/build system which is described in the next section.
 
-The Makefiles (for **mksurfdata_map** and **mkprocdata_map**) use GNU Make extensions and thus require that you use GNU make to use them. 
-They also auto detect the type of platform you are on, using "uname -s" and set the compiler, compiler flags and such accordingly. 
-There are also environment variables that can be set to set things that must be customized. 
-All the tools use NetCDF and hence require the path to the NetCDF libraries and include files. 
-On some platforms (such as Linux) multiple compilers can be used, and hence there are env variables that can be set to change the FORTRAN and/or "C" compilers used. 
-The tools also allow finer control, by also allowing the user to add compiler flags they choose, for both FORTRAN and "C", as well as picking the compiler, linker and and add linker options. 
-Finally the tools allow you to turn optimization on (which is off by default but on for **mksurfdata_map**) with the OPT flag so that the tool will run faster. 
+The Makefiles (for **mksurfdata_map** and **mkprocdata_map**) use GNU Make extensions and thus require that you use GNU make to use them.
+They also auto detect the type of platform you are on, using "uname -s" and set the compiler, compiler flags and such accordingly.
+There are also environment variables that can be set to set things that must be customized.
+All the tools use NetCDF and hence require the path to the NetCDF libraries and include files.
+On some platforms (such as Linux) multiple compilers can be used, and hence there are env variables that can be set to change the FORTRAN and/or "C" compilers used.
+The tools also allow finer control, by also allowing the user to add compiler flags they choose, for both FORTRAN and "C", as well as picking the compiler, linker and and add linker options.
+Finally the tools allow you to turn optimization on (which is off by default but on for **mksurfdata_map**) with the OPT flag so that the tool will run faster.
 
 Options used by all:  **mksurfdata_map**
 
@@ -109,6 +109,6 @@ The *README.filecopies* (which can be found in ``$CTSMROOT/tools``) is repeated 
 **cprnc** and *gen_domain** both use the CIME configure/build system rather than the CLM specific version described above.
 
 See `CIME documentation on adding grids <http://esmci.github.io/cime/users_guide/grids.html?highlight=gen_domain#adding-grids>`_ for
-more information on adding grids, creating mapping files,  and running **gen_domain**. Also see the CIME file: 
+more information on adding grids, creating mapping files,  and running **gen_domain**. Also see the CIME file:
 ``$CTSMROOT/tools/mapping/gen_domain_files/INSTALL`` for how to build **gen_domain**.
 

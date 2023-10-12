@@ -226,7 +226,7 @@ Botta, A et al., 2000. A global prognostic scheme of leaf onset using satellite 
 .. _Brownetal1997:
 
 Brown J., Ferrians O. J. Jr, Heginbottom J. A. and Melnikov E. S. 1997.
- Circum-Arctic Map of Permafrost and Ground-Ice Conditions 
+ Circum-Arctic Map of Permafrost and Ground-Ice Conditions
 (Boulder, CO: National Snow and Ice Data Center) version 2,
 DOI: 10.3133/cp45
 
@@ -283,10 +283,10 @@ model. J. Geophys. Res. 101(D9):14,399-14,414.
 
 .. _Chengetal2019:
 
-Cheng, Y. et al., 2019. Parameterizing perennial bioenergy 
-crops in Version 5 of the Community Land Model Based on Site‐Level 
-Observations in the Central Midwestern United States. 
-Journal of Advances in Modeling Earth Systems, 
+Cheng, Y. et al., 2019. Parameterizing perennial bioenergy
+crops in Version 5 of the Community Land Model Based on Site‐Level
+Observations in the Central Midwestern United States.
+Journal of Advances in Modeling Earth Systems,
 2(2013), 1–24. https://doi.org/10.1029/2019MS001719
 
 .. _Chuangetal2006:
@@ -1513,7 +1513,7 @@ National Center for Atmospheric Research, Boulder, CO, 420 pp.
 
 Oleson, K.W., and Feddema, J. 2018. Parameterization and surface data
 improvements and new capabilities for the Community Land Model
-Urban (CLMU). JAMES, submitted. 
+Urban (CLMU). JAMES, submitted.
 
 .. _Olson1963:
 

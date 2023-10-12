@@ -47,26 +47,26 @@ al. 2008) <Lawrenceetal2008>` and :math:`\Delta t` is the time step (s).
 Canopy Water
 ----------------
 
-Liquid precipitation is either intercepted by the canopy, falls 
-directly to the snow/soil surface (throughfall), or drips off the 
-vegetation (canopy drip). Solid precipitation is treated similarly, 
-with the addition of unloading of previously intercepted snow.  
+Liquid precipitation is either intercepted by the canopy, falls
+directly to the snow/soil surface (throughfall), or drips off the
+vegetation (canopy drip). Solid precipitation is treated similarly,
+with the addition of unloading of previously intercepted snow.
 Interception by vegetation is divided between liquid and solid phases
-:math:`q_{intr,\,liq}` and :math:`q_{intr,\,ice}` 
-(kg m\ :sup:`-2` s\ :sup:`-1`) 
+:math:`q_{intr,\,liq}` and :math:`q_{intr,\,ice}`
+(kg m\ :sup:`-2` s\ :sup:`-1`)
 
 .. math::
    :label: 7.2
 
-   q_{intr,\,liq} = f_{pi,\,liq} \ q_{rain} 
+   q_{intr,\,liq} = f_{pi,\,liq} \ q_{rain}
 
 .. math::
    :label: 7.3
 
    q_{intr,\,ice} = f_{pi,\,ice} \ q_{sno}
 
-where :math:`f_{pi,\,liq}` and :math:`f_{pi,\,ice}` are the 
-fractions of intercepted precipitation of rain and snow, 
+where :math:`f_{pi,\,liq}` and :math:`f_{pi,\,ice}` are the
+fractions of intercepted precipitation of rain and snow,
 respectively
 
 .. math::
@@ -80,9 +80,9 @@ respectively
    f_{pi,\,ice} =\alpha_{sno} \ \left\{1-\exp \left[-0.5\left(L+S\right)\right]\right\} \ ,
 
 and :math:`L` and :math:`S` are the exposed leaf and stem area index,
-respectively (section :numref:`Phenology and vegetation burial by snow`), and 
-the :math:`\alpha`\'s scale the fractional area of a leaf that collects water 
-(:ref:`Lawrence et al. 2007 <Lawrenceetal2007>`).  Default values of 
+respectively (section :numref:`Phenology and vegetation burial by snow`), and
+the :math:`\alpha`\'s scale the fractional area of a leaf that collects water
+(:ref:`Lawrence et al. 2007 <Lawrenceetal2007>`).  Default values of
 :math:`\alpha_{liq}` and :math:`\alpha_{sno}` are set to 1.
 Throughfall (kg m\ :sup:`-2` s\ :sup:`-1`) is also divided into
 liquid and solid phases, reaching the ground (soil or snow surface) as
@@ -123,12 +123,12 @@ and
 
    W_{can,sno}^{intr} =W_{can,sno}^{n} +q_{intr,\, ice} \Delta t\ge 0
 
-	   
+
 are the the canopy liquid water and snow water equivalent after accounting for interception,
 :math:`W_{can,\,liq}^{n}` and :math:`W_{can,\,sno}^{n}` are the canopy liquid and snow water
 from the previous time step, and :math:`W_{can,\,liq}^{max }` and :math:`W_{can,\,snow}^{max }`
 (kg m\ :sup:`-2` or mm of H\ :sub:`2`\ O) are the maximum amounts of liquid water and snow the canopy can hold.
-They are defined by 
+They are defined by
 
 .. math::
    :label: 7.10
@@ -140,8 +140,8 @@ They are defined by
 
    W_{can,\,sno}^{max } =p_{sno}\left(L+S\right).
 
-The maximum storage of liquid water is :math:`p_{liq}=0.1` kg m\ :sup:`-2` 
-(:ref:`Dickinson et al. 1993 <Dickinsonetal1993>`), and that of snow 
+The maximum storage of liquid water is :math:`p_{liq}=0.1` kg m\ :sup:`-2`
+(:ref:`Dickinson et al. 1993 <Dickinsonetal1993>`), and that of snow
 is :math:`p_{sno}=6` kg m\ :sup:`-2`, consistent with reported
 field measurements (:ref:`Pomeroy et al. 1998 <Pomeroyetal1998>`).
 
@@ -150,7 +150,7 @@ fluxes and e-folding times similar to :ref:`Roesch et al. (2001) <Roeschetal2001
 
 .. math::
    :label: 7.12
-	   
+
    q_{unl,\, wind} =\frac{u W_{can,sno}}{1.56\times 10^5 \text{ m}}
 
 .. math::
@@ -167,14 +167,14 @@ fluxes and e-folding times similar to :ref:`Roesch et al. (2001) <Roeschetal2001
 The canopy liquid water and snow water equivalent are updated as
 
 .. math::
-   :label: 7.15 
+   :label: 7.15
 
     W_{can,\, liq}^{n+1} =W_{can,liq}^{n} + q_{intr,\, liq} - q_{drip,\, liq} \Delta t - E_{v}^{liq} \Delta t \ge 0
 
 and
 
 .. math::
-   :label: 7.16 
+   :label: 7.16
 
    W_{can,\, sno}^{n+1} =W_{can,sno}^{n} + q_{intr,\, ice} - \left(q_{drip,\, ice}+q_{unl,\, tot} \right)\Delta t
                          - E_{v}^{ice} \Delta t \ge 0
@@ -185,24 +185,24 @@ where :math:`E_{v}^{liq}` and :math:`E_{v}^{ice}` are partitioned from the stem 
 surface evaporation :math:`E_{v}^{w}` (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) based on the vegetation temperature :math:`T_{v}` (K) (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) and its relation to the freezing temperature of water :math:`T_{f}` (K) (:numref:`Table Physical Constants`)
 
 .. math::
-   :label: 7.17 
+   :label: 7.17
 
-   E_{v}^{liq} =  
-   \left\{\begin{array}{lr} 
+   E_{v}^{liq} =
+   \left\{\begin{array}{lr}
    E_{v}^{w} &  T_v > T_{f} \\
    0         &  T_v \le T_f
-   \end{array}\right\} 
+   \end{array}\right\}
 
 .. math::
-   :label: 7.18 
+   :label: 7.18
 
    E_{v}^{ice} =
-   \left\{\begin{array}{lr} 
+   \left\{\begin{array}{lr}
    0         & T_v > T_f \\
    E_{v}^{w} & T_v \le T_f
    \end{array}\right\}.
 
-..    \begin{array}{lr} 
+..    \begin{array}{lr}
 ..    E_{v}^{liq} = E_{v}^{w} \qquad T > 273 \text{K}  \\
 ..    E_{v}^{ice} = E_{v}^{w} \qquad T \le 273 \text{K}
 ..    \end{array}
@@ -221,10 +221,10 @@ The total rate of liquid and solid precipitation reaching the ground is then
 
 Solid precipitation reaching the soil or snow surface,
 :math:`q_{grnd,\, ice} \Delta t`, is added immediately to the snow pack
-(Chapter :numref:`rst_Snow Hydrology`). The liquid part, 
-:math:`q_{grnd,\, liq} \Delta t` is added after surface fluxes 
-(Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) 
-and snow/soil temperatures (Chapter :numref:`rst_Soil and Snow Temperatures`) 
+(Chapter :numref:`rst_Snow Hydrology`). The liquid part,
+:math:`q_{grnd,\, liq} \Delta t` is added after surface fluxes
+(Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`)
+and snow/soil temperatures (Chapter :numref:`rst_Soil and Snow Temperatures`)
 have been determined.
 
 The wetted fraction of the canopy (stems plus leaves), which is required
@@ -235,7 +235,7 @@ calculations, is (:ref:`Dickinson et al.1993 <Dickinsonetal1993>`)
    :label: 7.21
 
    f_{wet} =
-   \left\{\begin{array}{lr} 
+   \left\{\begin{array}{lr}
    \left[\frac{W_{can} }{p_{liq}\left(L+S\right)} \right]^{{2\mathord{\left/ {\vphantom {2 3}} \right.} 3} } \le 1 & \qquad L+S > 0 \\
    0 &\qquad L+S = 0
    \end{array}\right\}
@@ -246,19 +246,19 @@ while the fraction of the canopy that is dry and transpiring is
    :label: 7.22
 
    f_{dry} =
-   \left\{\begin{array}{lr} 
-   \frac{\left(1-f_{wet} \right)L}{L+S} & \qquad L+S > 0 \\ 
-   0 &\qquad L+S = 0 
+   \left\{\begin{array}{lr}
+   \frac{\left(1-f_{wet} \right)L}{L+S} & \qquad L+S > 0 \\
+   0 &\qquad L+S = 0
    \end{array}\right\}.
 
 Similarly, the snow-covered fraction of the canopy is used for surface alebdo when intercepted snow is present (Chapter :numref:`rst_Surface Albedos`)
-   
+
 
 .. math::
    :label: 7.23
 
-   f_{can,\, sno} = 
-   \left\{\begin{array}{lr} 
+   f_{can,\, sno} =
+   \left\{\begin{array}{lr}
    \left[\frac{W_{can,\, sno} }{p_{sno}\left(L+S\right)} \right]^{{3\mathord{\left/ {\vphantom {3 20}} \right.} 20} } \le 1 & \qquad L+S > 0 \\
    0 &\qquad L+S = 0
    \end{array}\right\}.
@@ -280,8 +280,8 @@ infiltration into the soil.
 Surface Runoff
 ^^^^^^^^^^^^^^^^^^^^
 
-The simple TOPMODEL-based (:ref:`Beven and Kirkby 1979 <BevenKirkby1979>`) 
-runoff model (SIMTOP) described by :ref:`Niu et al. (2005) <Niuetal2005>` 
+The simple TOPMODEL-based (:ref:`Beven and Kirkby 1979 <BevenKirkby1979>`)
+runoff model (SIMTOP) described by :ref:`Niu et al. (2005) <Niuetal2005>`
 is implemented to parameterize runoff. A
 key concept underlying this approach is that of fractional saturated
 area :math:`f_{sat}` , which is determined by the topographic
@@ -302,21 +302,21 @@ The fractional saturated area is a function of soil moisture
    f_{sat} =f_{\max } \ \exp \left(-0.5f_{over} z_{\nabla } \right)
 
 where :math:`f_{\max }`  is the potential or maximum value of
-:math:`f_{sat}` , :math:`f_{over}`  is a decay factor (m\ :sup:`-1`), and 
-:math:`z_{\nabla}` is the water table depth (m) (section 
-:numref:`Lateral Sub-surface Runoff`). The maximum saturated fraction, 
-:math:`f_{\max }`, is defined as the value of the discrete cumulative 
-distribution function (CDF) of the topographic index when the grid cell 
-mean water table depth is zero. Thus, :math:`f_{\max }`  is the percent of 
-pixels in a grid cell whose topographic index is larger than or equal to 
-the grid cell mean topographic index. It should be calculated explicitly 
-from the CDF at each grid cell at the resolution that the model is run.  
+:math:`f_{sat}` , :math:`f_{over}`  is a decay factor (m\ :sup:`-1`), and
+:math:`z_{\nabla}` is the water table depth (m) (section
+:numref:`Lateral Sub-surface Runoff`). The maximum saturated fraction,
+:math:`f_{\max }`, is defined as the value of the discrete cumulative
+distribution function (CDF) of the topographic index when the grid cell
+mean water table depth is zero. Thus, :math:`f_{\max }`  is the percent of
+pixels in a grid cell whose topographic index is larger than or equal to
+the grid cell mean topographic index. It should be calculated explicitly
+from the CDF at each grid cell at the resolution that the model is run.
 However, because this is a computationally intensive task for global
-applications, :math:`f_{\max }`  is calculated once at 0.125\ :sup:`o` 
-resolution using the 1-km compound topographic indices (CTIs) based on 
+applications, :math:`f_{\max }`  is calculated once at 0.125\ :sup:`o`
+resolution using the 1-km compound topographic indices (CTIs) based on
 the HYDRO1K dataset (:ref:`Verdin and Greenlee 1996 <VerdinGreenlee1996>`)
-from USGS following the algorithm in :ref:`Niu et al. (2005) <Niuetal2005>` 
-and then area-averaged to the desired model resolution (section 
+from USGS following the algorithm in :ref:`Niu et al. (2005) <Niuetal2005>`
+and then area-averaged to the desired model resolution (section
 :numref:`Surface Data`). Pixels
 with CTIs exceeding the 95 percentile threshold in each
 0.125\ :sup:`o` grid cell are excluded from the calculation to
@@ -337,12 +337,12 @@ A surface water store has been added to the model to represent wetlands
 and small, sub-grid scale water bodies. As a result, the wetland land
 unit has been removed as of CLM4.5. The state variables for surface water are the
 mass of water :math:`W_{sfc}`  (kg m\ :sup:`-2`) and temperature
-:math:`T_{h2osfc}`  (Chapter :numref:`rst_Soil and Snow Temperatures`). 
+:math:`T_{h2osfc}`  (Chapter :numref:`rst_Soil and Snow Temperatures`).
 Surface water storage and outflow are
 functions of fine spatial scale elevation variations called
 microtopography. The microtopography is assumed to be distributed
 normally around the grid cell mean elevation. Given the standard
-deviation of the microtopographic distribution, :math:`\sigma _{micro}` 
+deviation of the microtopographic distribution, :math:`\sigma _{micro}`
 (m), the fractional area of the grid cell that is inundated can be
 calculated. Surface water storage, :math:`Wsfc`, is related to the
 height (relative to the grid cell mean elevation) of the surface water,
@@ -404,7 +404,7 @@ where :math:`q_{out,h2osfc}` is the surface water runoff, :math:`k_{h2osfc}`
 is a constant, :math:`Wc` is the amount of surface water present when
 :math:`f_{h2osfc} =f_{c}` , and :math:`\Delta t` is the model time step.
 The linear storage coefficent :math:`k_{h2osfc} = \sin \left(\beta \right)`
-is a function of grid cell mean topographic slope where :math:`\beta` 
+is a function of grid cell mean topographic slope where :math:`\beta`
 is the slope in radians.
 
 .. _Infiltration:
@@ -507,8 +507,8 @@ of soil s\ :sup:`-1`) (ET loss). This equation is solved
 numerically by dividing the soil column into multiple layers in the
 vertical and integrating downward over each layer with an upper boundary
 condition of the infiltration flux into the top soil layer
-:math:`q_{infl}`  and a zero-flux lower boundary condition at the 
-bottom of the soil column (sub-surface runoff is removed later in the 
+:math:`q_{infl}`  and a zero-flux lower boundary condition at the
+bottom of the soil column (sub-surface runoff is removed later in the
 timestep, section :numref:`Lateral Sub-surface Runoff`).
 
 The soil water flux :math:`q` in equation can be described by Darcy's
@@ -555,12 +555,12 @@ the Richards equation :ref:`(Dingman 2002) <Dingman2002>`
 .. math::
    :label: 7.84
 
-   \frac{\partial \theta }{\partial t} = 
-   \frac{\partial }{\partial z} \left[k\left(\frac{\partial \psi }{\partial z} + 1 
+   \frac{\partial \theta }{\partial t} =
+   \frac{\partial }{\partial z} \left[k\left(\frac{\partial \psi }{\partial z} + 1
    \right)\right].
 
-In practice (Section :numref:`Numerical Solution Hydrology`), changes in soil 
-water content are predicted from :eq:`7.79` using finite-difference approximations 
+In practice (Section :numref:`Numerical Solution Hydrology`), changes in soil
+water content are predicted from :eq:`7.79` using finite-difference approximations
 for :eq:`7.84`.
 
 .. _Hydraulic Properties:
@@ -571,42 +571,42 @@ Hydraulic Properties
 The hydraulic conductivity :math:`k_{i}`  (mm s\ :sup:`-1`) and
 the soil matric potential :math:`\psi _{i}`  (mm) for layer :math:`i`
 vary with volumetric soil water :math:`\theta _{i}`  and soil texture.
-As with the soil thermal properties (section 
+As with the soil thermal properties (section
 :numref:`Soil And Snow Thermal Properties`) the hydraulic
 properties of the soil are assumed to be a weighted combination of the
 mineral properties, which are determined according to sand and clay
-contents based on work by :ref:`Clapp and Hornberger (1978) 
-<ClappHornberger1978>` and :ref:`Cosby et al. (1984) <Cosbyetal1984>`, 
-and organic properties of the soil 
+contents based on work by :ref:`Clapp and Hornberger (1978)
+<ClappHornberger1978>` and :ref:`Cosby et al. (1984) <Cosbyetal1984>`,
+and organic properties of the soil
 (:ref:`Lawrence and Slater 2008 <LawrenceSlater2008>`).
 
 The hydraulic conductivity is defined at the depth of the interface of
-two adjacent layers :math:`z_{h,\, i}`  (:numref:`Figure Water flux schematic`) 
+two adjacent layers :math:`z_{h,\, i}`  (:numref:`Figure Water flux schematic`)
 and is a function of the saturated hydraulic conductivity
 :math:`k_{sat} \left[z_{h,\, i} \right]`, the liquid volumetric soil
-moisture of the two layers :math:`\theta _{i}`  and :math:`\theta_{i+1}` 
-and an ice impedance factor :math:`\Theta_{ice}` 
+moisture of the two layers :math:`\theta _{i}`  and :math:`\theta_{i+1}`
+and an ice impedance factor :math:`\Theta_{ice}`
 
 .. math::
    :label: 7.85
 
    k\left[z_{h,\, i} \right] =
-   \left\{\begin{array}{lr} 
-   \Theta_{ice} k_{sat} \left[z_{h,\, i} \right]\left[\frac{0.5\left(\theta_{\, i} +\theta_{\, i+1} \right)}{0.5\left(\theta_{sat,\, i} +\theta_{sat,\, i+1} \right)} \right]^{2B_{i} +3} & \qquad 1 \le i \le N_{levsoi} - 1 \\ 
-   \Theta_{ice} k_{sat} \left[z_{h,\, i} \right]\left(\frac{\theta_{\, i} }{\theta_{sat,\, i} } \right)^{2B_{i} +3} & \qquad i = N_{levsoi} 
+   \left\{\begin{array}{lr}
+   \Theta_{ice} k_{sat} \left[z_{h,\, i} \right]\left[\frac{0.5\left(\theta_{\, i} +\theta_{\, i+1} \right)}{0.5\left(\theta_{sat,\, i} +\theta_{sat,\, i+1} \right)} \right]^{2B_{i} +3} & \qquad 1 \le i \le N_{levsoi} - 1 \\
+   \Theta_{ice} k_{sat} \left[z_{h,\, i} \right]\left(\frac{\theta_{\, i} }{\theta_{sat,\, i} } \right)^{2B_{i} +3} & \qquad i = N_{levsoi}
    \end{array}\right\}.
 
 The ice impedance factor is a function of ice content, and is meant to
 quantify the increased tortuosity of the water flow when part of the
-pore space is filled with ice. :ref:`Swenson et al. (2012) <Swensonetal2012>` 
-used a power law form 
+pore space is filled with ice. :ref:`Swenson et al. (2012) <Swensonetal2012>`
+used a power law form
 
 .. math::
    :label: 7.86
 
    \Theta_{ice} = 10^{-\Omega F_{ice} }
 
-where :math:`\Omega = 6`\ and :math:`F_{ice} = \frac{\theta_{ice} }{\theta_{sat} }` 
+where :math:`\Omega = 6`\ and :math:`F_{ice} = \frac{\theta_{ice} }{\theta_{sat} }`
 is the ice-filled fraction of the pore space.
 
 Because the hydraulic properties of mineral and organic soil may differ
@@ -678,8 +678,8 @@ as 1 %. To better represent the influence of organic soil material on
 the grid cell average saturated hydraulic conductivity, the soil organic
 matter fraction is further subdivided into "connected" and "unconnected"
 fractions using a result from percolation theory (:ref:`Stauffer and Aharony
-1994 <StaufferAharony1994>`, :ref:`Berkowitz and Balberg 1992 <BerkowitzBalberg1992>`). 
-Assuming that the organic and mineral fractions are randomly distributed throughout 
+1994 <StaufferAharony1994>`, :ref:`Berkowitz and Balberg 1992 <BerkowitzBalberg1992>`).
+Assuming that the organic and mineral fractions are randomly distributed throughout
 a soil layer, percolation theory predicts that above a threshold value
 :math:`f_{om} = f_{threshold}`, connected flow pathways consisting of
 organic material only exist and span the soil space. Flow through these
@@ -689,9 +689,9 @@ by :math:`k_{sat,\, om}`. This fraction of the grid cell is given by
 .. math::
    :label: 7.97
 
-   \begin{array}{lr} 
-   f_{perc} =\; N_{perc} \left(f_{om} {\rm \; }-f_{threshold} \right)^{\beta_{perc} } f_{om} {\rm \; } & \qquad f_{om} \ge f_{threshold}  \\ 
-   f_{perc} = 0 & \qquad f_{om} <f_{threshold}  
+   \begin{array}{lr}
+   f_{perc} =\; N_{perc} \left(f_{om} {\rm \; }-f_{threshold} \right)^{\beta_{perc} } f_{om} {\rm \; } & \qquad f_{om} \ge f_{threshold}  \\
+   f_{perc} = 0 & \qquad f_{om} <f_{threshold}
    \end{array}
 
 where :math:`\beta ^{perc} =0.139`, :math:`f_{threshold} =0.5`, and
@@ -752,7 +752,7 @@ where :math:`zsapric =0.5` \m is the depth that organic matter takes on the char
 Numerical Solution
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-With reference to :numref:`Figure Water flux schematic`, the equation for 
+With reference to :numref:`Figure Water flux schematic`, the equation for
 conservation of mass (equation :eq:`7.79`) can be integrated over each layer as
 
 .. math::
@@ -782,14 +782,14 @@ time and evaluating the fluxes implicitly at time :math:`n+1` yields
    \frac{\Delta z_{i} \Delta \theta_{liq,\, i} }{\Delta t} =-q_{i-1}^{n+1} +q_{i}^{n+1} -e_{i}
 
 where
-:math:`\Delta \theta_{liq,\, i} =\theta_{liq,\, i}^{n+1} -\theta_{liq,\, i}^{n}` 
+:math:`\Delta \theta_{liq,\, i} =\theta_{liq,\, i}^{n+1} -\theta_{liq,\, i}^{n}`
 is the change in volumetric soil liquid water of layer :math:`i` in time
 :math:`\Delta t`\ and :math:`\Delta z_{i}`  is the thickness of layer
 :math:`i` (mm).
 
 The water removed by transpiration in each layer :math:`e_{i}`  is a
 function of the total transpiration :math:`E_{v}^{t}`  (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) and
-the effective root fraction :math:`r_{e,\, i}` 
+the effective root fraction :math:`r_{e,\, i}`
 
 .. math::
    :label: 7.104
@@ -841,14 +841,14 @@ fraction for the :math:`j^{th}`  PFT
 .. math::
    :label: 7.107
 
-   \begin{array}{lr} 
-   \left(r_{e,\, i} \right)_{j} =\frac{\left(r_{i} \right)_{j} \left(w_{i} \right)_{j} }{\left(\beta _{t} \right)_{j} } & \qquad \left(\beta _{t} \right)_{j} >0 \\ 
+   \begin{array}{lr}
+   \left(r_{e,\, i} \right)_{j} =\frac{\left(r_{i} \right)_{j} \left(w_{i} \right)_{j} }{\left(\beta _{t} \right)_{j} } & \qquad \left(\beta _{t} \right)_{j} >0 \\
    \left(r_{e,\, i} \right)_{j} =0 & \qquad \left(\beta _{t} \right)_{j} =0
    \end{array}
- 
+
 and :math:`\left(r_{i} \right)_{j}`  is the fraction of roots in layer
-:math:`i` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), 
-:math:`\left(w_{i} \right)_{j}`  is a soil dryness or plant wilting factor 
+:math:`i` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`),
+:math:`\left(w_{i} \right)_{j}`  is a soil dryness or plant wilting factor
 for layer :math:`i` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), and :math:`\left(\beta_{t} \right)_{j}`  is a wetness factor for the total
 soil column for the :math:`j^{th}`  PFT (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`).
 
@@ -890,7 +890,7 @@ where
    b_{i} =\frac{\partial q_{i} }{\partial \theta_{liq,\, i} } -\frac{\partial q_{i-1} }{\partial \theta_{liq,\, i} } -\frac{\Delta z_{i} }{\Delta t}
 
 .. math::
-   :label: 7.113 
+   :label: 7.113
 
    c_{i} =\frac{\partial q_{i} }{\partial \theta_{liq,\, i+1} }
 
@@ -963,15 +963,15 @@ derived from :eq:`7.85`
 .. math::
    :label: 7.124
 
-   \begin{array}{l} 
-   {\frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i-1} } 
-   = \frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i} } 
+   \begin{array}{l}
+   {\frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i-1} }
+   = \frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i} }
    = \left(2B_{i-1} +3\right) \ \overline{\Theta}_{ice} \ k_{sat} \left[z_{h,\, i-1} \right] \ \left[\frac{\overline{\theta}_{liq}}{\overline{\theta}_{sat}} \right]^{2B_{i-1} +2} \left(\frac{0.5}{\overline{\theta}_{sat}} \right)} \end{array}
 
-where :math:`\overline{\Theta}_{ice} = \Theta(\overline{\theta}_{ice})` :eq:`7.86`, 
-:math:`\overline{\theta}_{ice} = 0.5\left(\theta_{ice\, i-1} +\theta_{ice\, i} \right)`, 
-:math:`\overline{\theta}_{liq} = 0.5\left(\theta_{liq\, i-1} +\theta_{liq\, i} \right)`, 
-and 
+where :math:`\overline{\Theta}_{ice} = \Theta(\overline{\theta}_{ice})` :eq:`7.86`,
+:math:`\overline{\theta}_{ice} = 0.5\left(\theta_{ice\, i-1} +\theta_{ice\, i} \right)`,
+:math:`\overline{\theta}_{liq} = 0.5\left(\theta_{liq\, i-1} +\theta_{liq\, i} \right)`,
+and
 :math:`\overline{\theta}_{sat} = 0.5\left(\theta_{sat,\, i-1} +\theta_{sat,\, i} \right)`
 
 and
@@ -979,12 +979,12 @@ and
 .. math::
    :label: 7.125
 
-   \begin{array}{l} 
-   {\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i} } 
-   = \frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i+1} } 
+   \begin{array}{l}
+   {\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i} }
+   = \frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i+1} }
    = \left(2B_{i} +3\right) \ \overline{\Theta}_{ice} \ k_{sat} \left[z_{h,\, i} \right] \ \left[\frac{\overline{\theta}_{liq}}{\overline{\theta}_{sat}} \right]^{2B_{i} +2} \left(\frac{0.5}{\overline{\theta}_{sat}} \right)} \end{array}.
 
-where :math:`\overline{\theta}_{liq} = 0.5\left(\theta_{\, i} +\theta_{\, i+1} \right)`, 
+where :math:`\overline{\theta}_{liq} = 0.5\left(\theta_{\, i} +\theta_{\, i+1} \right)`,
 :math:`\overline{\theta}_{sat} = 0.5\left(\theta_{sat,\, i} +\theta_{sat,\, i+1} \right)`.
 
 Equation set for layer :math:`i=1`
@@ -1052,7 +1052,7 @@ The coefficients of the tridiagonal set of equations for
 Equation set for layer :math:`i=N_{levsoi}`
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-For the lowest soil layer (:math:`i=N_{levsoi}` ), a zero-flux bottom boundary 
+For the lowest soil layer (:math:`i=N_{levsoi}` ), a zero-flux bottom boundary
 condition is applied (:math:`q_{i}^{n} =0`)
 and the coefficients of the tridiagonal set of equations for
 :math:`i=N_{levsoi}`  are
@@ -1080,23 +1080,23 @@ and the coefficients of the tridiagonal set of equations for
 Adaptive Time Stepping
 '''''''''''''''''''''''''''''
 
-The length of the time step is adjusted in order to improve the accuracy 
-and stability of the numerical solutions.  The difference between two numerical 
-approximations is used to  estimate the temporal truncation error, and then 
-the step size :math:`\Delta t_{sub}` is adjusted to meet a user-prescribed error tolerance 
-:ref:`[Kavetski et al., 2002]<Kavetskietal2002>`.  The temporal truncation 
-error is estimated by comparing the flux obtained from the first-order 
-Taylor series expansion (:math:`q_{i-1}^{n+1}` and :math:`q_{i}^{n+1}`, 
-equations :eq:`7.108` and :eq:`7.109`) against the flux at the start of the 
-time step (:math:`q_{i-1}^{n}` and :math:`q_{i}^{n}`). Since the tridiagonal 
-solution already provides an estimate of :math:`\Delta \theta_{liq,i}`, it is 
-convenient to compute the error for each of the :math:`i` layers from equation 
-:eq:`7.103` as 
+The length of the time step is adjusted in order to improve the accuracy
+and stability of the numerical solutions.  The difference between two numerical
+approximations is used to  estimate the temporal truncation error, and then
+the step size :math:`\Delta t_{sub}` is adjusted to meet a user-prescribed error tolerance
+:ref:`[Kavetski et al., 2002]<Kavetskietal2002>`.  The temporal truncation
+error is estimated by comparing the flux obtained from the first-order
+Taylor series expansion (:math:`q_{i-1}^{n+1}` and :math:`q_{i}^{n+1}`,
+equations :eq:`7.108` and :eq:`7.109`) against the flux at the start of the
+time step (:math:`q_{i-1}^{n}` and :math:`q_{i}^{n}`). Since the tridiagonal
+solution already provides an estimate of :math:`\Delta \theta_{liq,i}`, it is
+convenient to compute the error for each of the :math:`i` layers from equation
+:eq:`7.103` as
 
 .. math::
    :label: 7.152
 
-   \epsilon_{i} = \left[ \frac{\Delta \theta_{liq,\, i} \Delta z_{i}}{\Delta t_{sub}} - 
+   \epsilon_{i} = \left[ \frac{\Delta \theta_{liq,\, i} \Delta z_{i}}{\Delta t_{sub}} -
    \left( q_{i-1}^{n} - q_{i}^{n} + e_{i}\right) \right] \ \frac{\Delta t_{sub}}{2}
 
 and the maximum absolute error across all layers as
@@ -1108,17 +1108,17 @@ and the maximum absolute error across all layers as
    \epsilon_{crit} = {\rm max} \left( \left| \epsilon_{i} \right| \right) & \qquad 1 \le i \le nlevsoi
    \end{array} \ .
 
-The adaptive step size selection is based on specified upper and lower error 
-tolerances, :math:`\tau_{U}` and :math:`\tau_{L}`. The solution is accepted if 
-:math:`\epsilon_{crit} \le \tau_{U}` and the procedure repeats until the adaptive 
-sub-stepping  spans the full model time step (the sub-steps are doubled if 
-:math:`\epsilon_{crit} \le \tau_{L}`, i.e., if the solution is very  accurate).  
-Conversely, the solution is rejected if :math:`\epsilon_{crit} > \tau_{U}`.  In 
-this case the length of the sub-steps is halved and a new solution is obtained. 
-The halving of substeps continues until either :math:`\epsilon_{crit} \le \tau_{U}` 
-or the specified minimum time step length is reached.  
+The adaptive step size selection is based on specified upper and lower error
+tolerances, :math:`\tau_{U}` and :math:`\tau_{L}`. The solution is accepted if
+:math:`\epsilon_{crit} \le \tau_{U}` and the procedure repeats until the adaptive
+sub-stepping  spans the full model time step (the sub-steps are doubled if
+:math:`\epsilon_{crit} \le \tau_{L}`, i.e., if the solution is very  accurate).
+Conversely, the solution is rejected if :math:`\epsilon_{crit} > \tau_{U}`.  In
+this case the length of the sub-steps is halved and a new solution is obtained.
+The halving of substeps continues until either :math:`\epsilon_{crit} \le \tau_{U}`
+or the specified minimum time step length is reached.
 
-Upon solution of the tridiagonal equation set, the liquid water contents are updated 
+Upon solution of the tridiagonal equation set, the liquid water contents are updated
 as follows
 
 .. math::
@@ -1129,7 +1129,7 @@ as follows
 The volumetric water content is
 
 .. math::
-   :label: 7.165 
+   :label: 7.165
 
    \theta_{i} =\frac{w_{liq,\, i} }{\Delta z_{i} \rho _{liq} } +\frac{w_{ice,\, i} }{\Delta z_{i} \rho _{ice} } .
 
@@ -1139,8 +1139,8 @@ Frozen Soils and Perched Water Table
 ----------------------------------------
 
 When soils freeze, the power-law form of the ice impedance factor
-(section :numref:`Hydraulic Properties`) can greatly decrease the hydraulic 
-conductivity of the soil, leading to nearly impermeable soil layers. When unfrozen 
+(section :numref:`Hydraulic Properties`) can greatly decrease the hydraulic
+conductivity of the soil, leading to nearly impermeable soil layers. When unfrozen
 soil layers are present above relatively ice-rich frozen layers, the
 possibility exists for perched saturated zones. Lateral drainage from
 perched saturated regions is parameterized as a function of the
@@ -1159,7 +1159,7 @@ hydraulic conductivity,
 
    k_{drai,\, perch} =10^{-5} \sin (\beta )\left(\frac{\sum _{i=N_{perch} }^{i=N_{frost} }\Theta_{ice,i} k_{sat} \left[z_{i} \right]\Delta z_{i}  }{\sum _{i=N_{perch} }^{i=N_{frost} }\Delta z_{i}  } \right)
 
-where :math:`\Theta_{ice}`  is an ice impedance factor, :math:`\beta` 
+where :math:`\Theta_{ice}`  is an ice impedance factor, :math:`\beta`
 is the mean grid cell topographic slope in
 radians, :math:`z_{frost}` \ is the depth to the frost table, and
 :math:`z_{\nabla ,perch}`  is the depth to the perched saturated zone.
@@ -1168,7 +1168,7 @@ layer having an unfrozen layer above it, while the perched water table
 :math:`z_{\nabla ,perch}`  is defined as the depth at which the
 volumetric water content drops below a specified threshold. The default
 threshold is set to 0.9. Drainage from the perched saturated zone
-:math:`q_{drai,perch}`  is removed from layers :math:`N_{perch}` 
+:math:`q_{drai,perch}`  is removed from layers :math:`N_{perch}`
 through :math:`N_{frost}` , which are the layers containing
 :math:`z_{\nabla ,perch}`  and, :math:`z_{frost}` \ respectively.
 
@@ -1176,29 +1176,29 @@ through :math:`N_{frost}` , which are the layers containing
 
 Lateral Sub-surface Runoff
 ---------------------------------------
-Lateral sub-surface runoff occurs when saturated soil moisture conditions 
-exist within the soil column.  Sub-surface runoff is 
+Lateral sub-surface runoff occurs when saturated soil moisture conditions
+exist within the soil column.  Sub-surface runoff is
 
 .. math::
    :label: 7.168
 
-   q_{drai} = \Theta_{ice} K_{baseflow} tan \left( \beta \right) 
+   q_{drai} = \Theta_{ice} K_{baseflow} tan \left( \beta \right)
    \Delta z_{sat}^{N_{baseflow}} \ ,
 
-where :math:`K_{baseflow}` is a calibration parameter, :math:`\beta` is the 
-topographic slope, the exponent :math:`N_{baseflow}` = 1, and :math:`\Delta z_{sat}` 
-is the thickness of the saturated portion of the soil column.  
+where :math:`K_{baseflow}` is a calibration parameter, :math:`\beta` is the
+topographic slope, the exponent :math:`N_{baseflow}` = 1, and :math:`\Delta z_{sat}`
+is the thickness of the saturated portion of the soil column.
 
-The saturated thickness is 
+The saturated thickness is
 
 .. math::
    :label: 7.1681
 
-   \Delta z_{sat} = z_{bedrock} - z_{\nabla}, 
+   \Delta z_{sat} = z_{bedrock} - z_{\nabla},
 
-where the water table :math:`z_{\nabla}` is determined by finding the 
-first soil layer above the bedrock depth (section :numref:`Depth to Bedrock`) 
-in which the volumetric water content drops below a specified threshold. 
+where the water table :math:`z_{\nabla}` is determined by finding the
+first soil layer above the bedrock depth (section :numref:`Depth to Bedrock`)
+in which the volumetric water content drops below a specified threshold.
 The default threshold is set to 0.9.
 
 The specific yield, :math:`S_{y}` , which depends on the soil
@@ -1218,7 +1218,7 @@ are consistent with the soil water fluxes described in section :numref:`Soil Wat
 After the above calculations, two numerical adjustments are implemented
 to keep the liquid water content of each soil layer
 (:math:`w_{liq,\, i}` ) within physical constraints of
-:math:`w_{liq}^{\min } \le w_{liq,\, i} \le \left(\theta_{sat,\, i} -\theta_{ice,\, i} \right)\Delta z_{i}` 
+:math:`w_{liq}^{\min } \le w_{liq,\, i} \le \left(\theta_{sat,\, i} -\theta_{ice,\, i} \right)\Delta z_{i}`
 where :math:`w_{liq}^{\min } =0.01` (mm). First, beginning with the
 bottom soil layer :math:`i=N_{levsoi}` , any excess liquid water in each
 soil layer
@@ -1239,7 +1239,7 @@ found, then the water is removed from :math:`W_{t}`  and
 :math:`q_{drai}` .
 
 The soil surface layer liquid water and ice contents are then updated
-for dew :math:`q_{sdew}` , frost :math:`q_{frost}` , or sublimation :math:`q_{subl}` 
+for dew :math:`q_{sdew}` , frost :math:`q_{frost}` , or sublimation :math:`q_{subl}`
 (section :numref:`Update of Ground Sensible and Latent Heat Fluxes`) as
 
 .. math::
@@ -1266,14 +1266,14 @@ Runoff from glaciers and snow-capped surfaces
 
 All surfaces are constrained to have a snow water equivalent
 :math:`W_{sno} \le W_{cap} = 10,000` kg m\ :sup:`-2`. For snow-capped
-columns, any addition of mass at the top (precipitation, dew/riping) is 
-balanced by an equally large mass flux at the bottom of the snow column. 
+columns, any addition of mass at the top (precipitation, dew/riping) is
+balanced by an equally large mass flux at the bottom of the snow column.
 This so-called capping flux is separated into solid
 :math:`q_{snwcp,ice}` \ and liquid :math:`q_{snwcp,liq}`  runoff terms.
-The partitioning of these phases is based on the phase ratio in the bottom snow 
+The partitioning of these phases is based on the phase ratio in the bottom snow
 layer at the time of the capping, such that phase ratio in this layer is unaltered.
 
-The :math:`q_{snwcp,ice}` 
+The :math:`q_{snwcp,ice}`
 runoff is sent to the River Transport Model (RTM) (Chapter 11) where it
 is routed to the ocean as an ice stream and, if applicable, the ice is
 melted there.
@@ -1299,6 +1299,6 @@ at the beginning and ending of the time step defined as
 
 Currently, glaciers are non-vegetated and :math:`E_{v} =W_{can} =0`.
 The contribution of lake runoff to :math:`q_{rgwl}`  is described in
-section :numref:`Precipitation, Evaporation, and Runoff Lake`. The runoff 
-term :math:`q_{rgwl}`  may be negative for glaciers and lakes, which reduces 
+section :numref:`Precipitation, Evaporation, and Runoff Lake`. The runoff
+term :math:`q_{rgwl}`  may be negative for glaciers and lakes, which reduces
 the total amount of runoff available to the river routing model (Chapter :numref:`rst_River Transport Model (RTM)`).

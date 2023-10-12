@@ -18,14 +18,14 @@ CLM5 includes the following new changes to photosynthesis and stomatal conductan
 
 - Leaf N concentration and the fraction of leaf N in Rubisco used to calculate :math:`V_{cmax25}` are determined by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
 
-- Water stress is applied by the hydraulic conductance model (Chapter :numref:`rst_Plant Hydraulics`) 
+- Water stress is applied by the hydraulic conductance model (Chapter :numref:`rst_Plant Hydraulics`)
 
 
 Introduction
 -----------------------
 
 Leaf stomatal resistance, which is needed for the water vapor flux
-(Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`), 
+(Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`),
 is coupled to leaf photosynthesis similar to Collatz et al.
 (:ref:`1991 <Collatzetal1991>`, :ref:`1992 <Collatzetal1992>`). These equations are solved separately for sunlit and
 shaded leaves using average absorbed photosynthetically active radiation
@@ -39,7 +39,7 @@ photosynthesis is :math:`A^{sun} L^{sun} +A^{sha} L^{sha}` , where
 area indices (section :numref:`Solar Fluxes`). Canopy conductance is
 :math:`\frac{1}{r_{b} +r_{s}^{sun} } L^{sun} +\frac{1}{r_{b} +r_{s}^{sha} } L^{sha}` ,
 where :math:`r_{b}`  is the leaf boundary layer resistance (section
-:numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`). 
+:numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`).
 
 .. _Stomatal resistance:
 
@@ -49,15 +49,15 @@ Stomatal resistance
 CLM5 calculates stomatal conductance using the Medlyn stomatal conductance model (:ref:`Medlyn et al. 2011<Medlynetal2011>`).
 Previous versions of CLM calculated leaf stomatal resistance using the Ball-Berry conductance
 model as described by :ref:`Collatz et al. (1991)<Collatzetal1991>` and implemented in global
-climate models (:ref:`Sellers et al. 1996<Sellersetal1996>`). The Medlyn model 
+climate models (:ref:`Sellers et al. 1996<Sellersetal1996>`). The Medlyn model
 calculates stomatal conductance (i.e., the inverse of resistance) based on net leaf
-photosynthesis, the leaf-to-air vapor pressure difference, and the CO\ :sub:`2` concentration at the leaf surface. 
+photosynthesis, the leaf-to-air vapor pressure difference, and the CO\ :sub:`2` concentration at the leaf surface.
 Leaf stomatal resistance is:
 
 .. math::
-   :label: 9.1 
+   :label: 9.1
 
-   \frac{1}{r_{s} } =g_{s} = g_{o} + 1.6(1 + \frac{g_{1} }{\sqrt{D_{s}}}) \frac{A_{n} }{{c_{s} \mathord{\left/ {\vphantom {c_{s}  P_{atm} }} \right.} P_{atm} } } 
+   \frac{1}{r_{s} } =g_{s} = g_{o} + 1.6(1 + \frac{g_{1} }{\sqrt{D_{s}}}) \frac{A_{n} }{{c_{s} \mathord{\left/ {\vphantom {c_{s}  P_{atm} }} \right.} P_{atm} } }
 
 where :math:`r_{s}` is leaf stomatal resistance (s m\ :sup:`2`
 :math:`\mu`\ mol\ :sup:`-1`), :math:`g_{o}` is the minimum stomatal conductance
@@ -79,10 +79,10 @@ Photosynthesis is calculated for sunlit (:math:`A^{sun}`) and shaded
 resistance through plant hydraulic stress, detailed in
 the :ref:`rst_Plant Hydraulics` chapter.
 
-Resistance is converted from units of 
-s m\ :sup:`2` :math:`\mu` mol\ :sup:`-1` to  s m\ :sup:`-1` as: 
+Resistance is converted from units of
+s m\ :sup:`2` :math:`\mu` mol\ :sup:`-1` to  s m\ :sup:`-1` as:
 1 s m\ :sup:`-1` = :math:`1\times 10^{-9} R_{gas} \frac{\theta _{atm} }{P_{atm} }`
-:math:`\mu` mol\ :sup:`-1` m\ :sup:`2` s, 
+:math:`\mu` mol\ :sup:`-1` m\ :sup:`2` s,
 where :math:`R_{gas}` is the universal gas constant (J K\ :sup:`-1`
 kmol\ :sup:`-1`) (:numref:`Table Physical constants`) and :math:`\theta _{atm}` is the
 atmospheric potential temperature (K).
@@ -142,7 +142,7 @@ atmospheric potential temperature (K).
  +----------------------------------+-------------------+
  | Switchgrass                      |        1.79       |
  +----------------------------------+-------------------+
- 
+
 .. _Photosynthesis:
 
 Photosynthesis
@@ -183,18 +183,18 @@ C\ :sub:`4` plants :math:`A_{p}`  (:math:`\mu` \ mol
 CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`) is
 
 .. math::
-   :label: 9.5 
+   :label: 9.5
 
    A_{p} =\left\{\begin{array}{l} {3T_{p\qquad } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {k_{p} \frac{c_{i} }{P_{atm} } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}.
 
 In these equations, :math:`c_{i}`  is the internal leaf
-CO\ :sub:`2` partial pressure (Pa) and :math:`o_{i} =0.20P_{atm}` 
+CO\ :sub:`2` partial pressure (Pa) and :math:`o_{i} =0.20P_{atm}`
 is the O\ :sub:`2` partial pressure (Pa). :math:`K_{c}`  and
 :math:`K_{o}`  are the Michaelis-Menten constants (Pa) for
 CO\ :sub:`2` and O\ :sub:`2`. :math:`\Gamma _{\*}`  (Pa) is
 the CO\ :sub:`2` compensation point. :math:`V_{c\max }`  is the
 maximum rate of carboxylation (µmol m\ :sup:`-2`
-s\ :sup:`-1`, Chapter :numref:`rst_Photosynthetic Capacity`) 
+s\ :sup:`-1`, Chapter :numref:`rst_Photosynthetic Capacity`)
 and :math:`J_{x}` is the electron transport rate (µmol
 m\ :sup:`-2` s\ :sup:`-1`). :math:`T_{p}`  is the triose
 phosphate utilization rate (µmol m\ :sup:`-2` s\ :sup:`-1`),
@@ -253,29 +253,29 @@ smaller root of the equations
 Values are :math:`\Theta _{cj} =0.98` and :math:`\Theta _{ip} =0.95` for
 C\ :sub:`3` plants; and :math:`\Theta _{cj} =0.80`\ and
 :math:`\Theta _{ip} =0.95` for C\ :sub:`4` plants.
-:math:`A_{i}` is the intermediate co-limited photosynthesis. 
+:math:`A_{i}` is the intermediate co-limited photosynthesis.
 :math:`A_{n} =A-R_{d}` .
 
-The parameters :math:`K_{c}`, :math:`K_{o}`, and :math:`\Gamma` 
+The parameters :math:`K_{c}`, :math:`K_{o}`, and :math:`\Gamma`
 depend on temperature. Values at 25 :sup:`o` \ C are
 :math:`K_{c25} ={\rm 4}0{\rm 4}.{\rm 9}\times 10^{-6} P_{atm}`,
 :math:`K_{o25} =278.4\times 10^{-3} P_{atm}`, and
 :math:`\Gamma _{25} {\rm =42}.75\times 10^{-6} P_{atm}`.
 :math:`V_{c\max }`, :math:`J_{\max }`, :math:`T_{p}`, :math:`k_{p}`,
-and :math:`R_{d}` also vary with temperature. 
+and :math:`R_{d}` also vary with temperature.
 
-:math:`J_{\max 25}`  at 25 :sup:`\o`\ C: is calculated by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)  
+:math:`J_{\max 25}`  at 25 :sup:`\o`\ C: is calculated by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
 
 Parameter values at 25 :sup:`\o`\ C are calculated from :math:`V_{c\max }` \ at 25
-:sup:`\o`\ C:, including: 
+:sup:`\o`\ C:, including:
 :math:`T_{p25} =0.167V_{c\max 25}`, and
 :math:`R_{d25} =0.015V_{c\max 25}` (C\ :sub:`3`) and
-:math:`R_{d25} =0.025V_{c\max 25}` (C\ :sub:`4`). 
+:math:`R_{d25} =0.025V_{c\max 25}` (C\ :sub:`4`).
 
 For C\ :sub:`4` plants, :math:`k_{p25} =20000\; V_{c\max 25}`.
 
 However, when the biogeochemistry is active (the default mode), :math:`R_{d25}`  is
-calculated from leaf nitrogen as described in (Chapter :numref:`rst_Plant Respiration`) 
+calculated from leaf nitrogen as described in (Chapter :numref:`rst_Plant Respiration`)
 
 The parameters :math:`V_{c\max 25}`,
 :math:`J_{\max 25}`, :math:`T_{p25}`, :math:`k_{p25}`, and
@@ -302,13 +302,13 @@ and
 
 :numref:`Table Temperature dependence parameters for C3 photosynthesis`
 lists parameter values for :math:`\Delta H_{a}`  and
-:math:`\Delta H_{d}` . :math:`\Delta S` is calculated 
+:math:`\Delta H_{d}` . :math:`\Delta S` is calculated
 separately for :math:`V_{c\max }` and :math:`J_{max }`
-to allow for temperature acclimation of photosynthesis (see equation :eq:`9.16`), 
+to allow for temperature acclimation of photosynthesis (see equation :eq:`9.16`),
 and :math:`\Delta S` is 490 J mol :sup:`-1` K :sup:`-1` for :math:`R_d`
 (:ref:`Bonan et al. 2011<Bonanetal2011>`, :ref:`Lombardozzi et al. 2015<Lombardozzietal2015>`).
 Because :math:`T_{p}`  as implemented here varies with
-:math:`V_{c\max }` , :math:`T_{p}` uses the same temperature parameters as 
+:math:`V_{c\max }` , :math:`T_{p}` uses the same temperature parameters as
 :math:`V_{c\max}` . For C\ :sub:`4` plants,
 
 .. math::
@@ -319,7 +319,7 @@ Because :math:`T_{p}`  as implemented here varies with
 with :math:`Q_{10} =2`,
 :math:`s_{1} =0.3`\ K\ :sup:`-1`
 :math:`s_{2} =313.15` K,
-:math:`s_{3} =0.2`\ K\ :sup:`-1`, and :math:`s_{4} =288.15` K. 
+:math:`s_{3} =0.2`\ K\ :sup:`-1`, and :math:`s_{4} =288.15` K.
 Additionally,
 
 .. math::
@@ -359,8 +359,8 @@ with :math:`Q_{10} =2`.
  | :math:`\Gamma _{\*}`   | 37830                                                           | –                                                               |
  +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
 
-In the model, acclimation is 
-implemented as in :ref:`Kattge and Knorr (2007) <KattgeKnorr2007>`. In this parameterization, 
+In the model, acclimation is
+implemented as in :ref:`Kattge and Knorr (2007) <KattgeKnorr2007>`. In this parameterization,
 :math:`V_{c\max }` and :math:`J_{\max }`  vary with the plant growth temperature. This is
 achieved by allowing :math:`\Delta S`\  to vary with growth temperature
 according to
@@ -370,8 +370,8 @@ according to
 
    \begin{array}{l} {\Delta S=668.39-1.07(T_{10} -T_{f} )\qquad \qquad {\rm for\; }V_{c\max } } \\ {\Delta S=659.70-0.75(T_{10} -T_{f} )\qquad \qquad {\rm for\; }J_{\max } } \end{array}
 
-The effect is to cause the temperature optimum of :math:`V_{c\max }` 
-and :math:`J_{\max }`  to increase with warmer temperatures. 
+The effect is to cause the temperature optimum of :math:`V_{c\max }`
+and :math:`J_{\max }`  to increase with warmer temperatures.
 Additionally, the
 ratio :math:`J_{\max 25} /V_{c\max 25}`  at 25 :sup:`o`\ C decreases with growth temperature as
 
@@ -390,7 +390,7 @@ range :math:`T_{10} -T_{f} \ge 11`\ :sup:`o`\ C and :math:`T_{10} -T_{f} \le 35`
 Canopy scaling
 --------------------------------------------
 
-When LUNA is on, the :math:`V_{c\max 25}` for sun leaves is scaled to the shaded leaves 
+When LUNA is on, the :math:`V_{c\max 25}` for sun leaves is scaled to the shaded leaves
 :math:`J_{\max 25}` , :math:`T_{p25}` , :math:`k_{p25}`, and
 :math:`R_{d25}`  scale similarly.
 
@@ -398,12 +398,12 @@ When LUNA is on, the :math:`V_{c\max 25}` for sun leaves is scaled to the shaded
 .. math::
    :label: 9.17
 
-   \begin{array}{rcl} 
-   {V_{c\max 25 sha}} & {=} & {V_{c\max 25 sha} \frac{i_{v,sha}}{i_{v,sun}}}  \\ 
+   \begin{array}{rcl}
+   {V_{c\max 25 sha}} & {=} & {V_{c\max 25 sha} \frac{i_{v,sha}}{i_{v,sun}}}  \\
    {J_{\max 25 sha}}  & {=} & {J_{\max 25 sun}  \frac{i_{v,sha}}{i_{v,sun}}}  \\
-   {T_{p sha}}        & {=} & {T_{p sun}        \frac{i_{v,sha}}{i_{v,sun}}}  \end{array}  
+   {T_{p sha}}        & {=} & {T_{p sun}        \frac{i_{v,sha}}{i_{v,sun}}}  \end{array}
 
-Where :math:`i_{v,sun}` and :math:`i_{v,sha}` are the leaf-to-canopy scaling coefficients of the twostream radiation model, calculated as 
+Where :math:`i_{v,sun}` and :math:`i_{v,sha}` are the leaf-to-canopy scaling coefficients of the twostream radiation model, calculated as
 
 .. math::
    :label: 9.18
@@ -411,9 +411,9 @@ Where :math:`i_{v,sun}` and :math:`i_{v,sha}` are the leaf-to-canopy scaling coe
    i_{v,sun} = \frac{(1 - e^{-(k_{n,ext}+k_{b,ext})*lai_e)} / (k_{n,ext}+k_{b,ext})}{f_{sun}*lai_e}\\
    i_{v,sha} = \frac{(1 - e^{-(k_{n,ext}+k_{b,ext})*lai_e)} / (k_{n,ext}+k_{b,ext})}{(1 - f_{sun})*lai_e}
 
-k_{n,ext} is the extinction coefficient for N through the canopy (0.3).  k_{b,ext} is the direct beam extinction coefficient calculated in the surface albedo routine, and :math:`f_{sun}` is the fraction of sunlit leaves, both derived from Chapter :numref:`rst_Surface Albedos`. 
+k_{n,ext} is the extinction coefficient for N through the canopy (0.3).  k_{b,ext} is the direct beam extinction coefficient calculated in the surface albedo routine, and :math:`f_{sun}` is the fraction of sunlit leaves, both derived from Chapter :numref:`rst_Surface Albedos`.
 
-When LUNA is off, scaling defaults to the mechanism used in CLM4.5.  
+When LUNA is off, scaling defaults to the mechanism used in CLM4.5.
 
 .. _Numerical implementation photosynthesis:
 
@@ -436,7 +436,7 @@ CO\ :sub:`2` and water vapor at the leaf surface so that
 and the transpiration fluxes are related as
 
 .. math::
-   :label: 9.20 
+   :label: 9.20
 
    \frac{e_{a} -e_{i} }{r_{b} +r_{s} } =\frac{e_{a} -e_{s} }{r_{b} } =\frac{e_{s} -e_{i} }{r_{s} }
 
@@ -445,7 +445,7 @@ m\ :sup:`2` :math:`\mu` \ mol\ :sup:`-1`) (section :numref:`Sensible and Latent 
 terms 1.4 and 1.6 are the ratios of diffusivity of CO\ :sub:`2` to
 H\ :sub:`2`\ O for the leaf boundary layer resistance and stomatal
 resistance,
-:math:`c_{a} ={\rm CO}_{{\rm 2}} \left({\rm mol\; mol}^{{\rm -1}} \right)`, :math:`P_{atm}` 
+:math:`c_{a} ={\rm CO}_{{\rm 2}} \left({\rm mol\; mol}^{{\rm -1}} \right)`, :math:`P_{atm}`
 is the atmospheric pressure (Pa), :math:`e_{i}`  is the
 saturation vapor pressure (Pa) evaluated at the leaf temperature
 :math:`T_{v}` , and :math:`e_{a}`  is the vapor pressure of air (Pa).
@@ -458,9 +458,9 @@ determined from
    e_{a} =\frac{P_{atm} q_{s} }{0.622}
 
 where :math:`q_{s}`  is the specific humidity of canopy air (kg
-kg\ :sup:`-1`, section :numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`). 
+kg\ :sup:`-1`, section :numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`).
 Equations :eq:`9.19` and :eq:`9.20` are solved for
-:math:`c_{s}`  and :math:`e_{s}` 
+:math:`c_{s}`  and :math:`e_{s}`
 
 .. math::
    :label: 9.34
@@ -472,7 +472,7 @@ Equations :eq:`9.19` and :eq:`9.20` are solved for
 
    e_{s} =\frac{e_{a} r_{s} +e_{i} r_{b} }{r_{b} +r_{s} }
 
-In terms of conductance with 
+In terms of conductance with
 :math:`g_{s} =1/r_{s}`  and :math:`g_{b} =1/r_{b}`
 
 .. math::

@@ -4,18 +4,18 @@ Methane Model
 =================
 
 The representation of processes in the methane biogeochemical model
-integrated in CLM [CLM4Me; (:ref:`Riley et al. 2011a<Rileyetal2011a>`)] 
-is based on several previously published models 
-(:ref:`Cao et al. 1996<Caoetal1996>`; :ref:`Petrescu et al. 2010<Petrescuetal2010>`; 
-:ref:`Tianet al. 2010<Tianetal2010>`; :ref:`Walter et al. 2001<Walteretal2001>`; 
+integrated in CLM [CLM4Me; (:ref:`Riley et al. 2011a<Rileyetal2011a>`)]
+is based on several previously published models
+(:ref:`Cao et al. 1996<Caoetal1996>`; :ref:`Petrescu et al. 2010<Petrescuetal2010>`;
+:ref:`Tianet al. 2010<Tianetal2010>`; :ref:`Walter et al. 2001<Walteretal2001>`;
 :ref:`Wania et al. 2010<Waniaetal2010>`; :ref:`Zhang et al. 2002<Zhangetal2002>`;
-:ref:`Zhuang et al. 2004<Zhuangetal2004>`). Although the model has similarities 
+:ref:`Zhuang et al. 2004<Zhuangetal2004>`). Although the model has similarities
 with these precursor models, a number of new process representations and
 parameterization have been integrated into CLM.
 
-Mechanistically modeling net surface CH\ :sub:`4` emissions requires 
-representing a complex and interacting series of processes. We first 
-(section :numref:`Methane Model Structure and Flow`) describe the overall 
+Mechanistically modeling net surface CH\ :sub:`4` emissions requires
+representing a complex and interacting series of processes. We first
+(section :numref:`Methane Model Structure and Flow`) describe the overall
 model structure and flow of
 information in the CH\ :sub:`4` model, then describe the methods
 used to represent: CH\ :sub:`4` mass balance; CH\ :sub:`4`
@@ -46,11 +46,11 @@ the atmosphere.
 Governing Mass-Balance Relationship
 ----------------------------------------
 
-The model (:numref:`Figure Methane Schematic`) accounts for CH\ :sub:`4` 
-production in the anaerobic fraction of soil (*P*, mol m\ :sup:`-3` 
-s\ :sup:`-1`), ebullition (*E*, mol m\ :sup:`-3` s\ :sup:`-1`), 
-aerenchyma transport (*A*, mol m\ :sup:`-3` s\ :sup:`-1`), aqueous and 
-gaseous diffusion (:math:`{F}_{D}`, mol m\ :sup:`-2` s\ :sup:`-1`), and 
+The model (:numref:`Figure Methane Schematic`) accounts for CH\ :sub:`4`
+production in the anaerobic fraction of soil (*P*, mol m\ :sup:`-3`
+s\ :sup:`-1`), ebullition (*E*, mol m\ :sup:`-3` s\ :sup:`-1`),
+aerenchyma transport (*A*, mol m\ :sup:`-3` s\ :sup:`-1`), aqueous and
+gaseous diffusion (:math:`{F}_{D}`, mol m\ :sup:`-2` s\ :sup:`-1`), and
 oxidation (*O*, mol m\ :sup:`-3` s\ :sup:`-1`) via a transient reaction
 diffusion equation:
 
@@ -93,7 +93,7 @@ into the inundated concentration when the inundated fraction increases.
 
  Schematic representation of biological and physical
  processes integrated in CLM that affect the net CH\ :sub:`4`
- surface flux (:ref:`Riley et al. 2011a<Rileyetal2011a>`). (left) 
+ surface flux (:ref:`Riley et al. 2011a<Rileyetal2011a>`). (left)
  Fully inundated portion of a
  CLM gridcell and (right) variably saturated portion of a gridcell.
 
@@ -124,9 +124,9 @@ seasonal inundation fraction (*S*, described below):
 
    P=R_{H} f_{CH_{4} } f_{T} f_{pH} f_{pE} S.
 
-Here, :math:`f_{CH_{4} }`  is the baseline ratio between CO\ :sub:`2` 
-and CH\ :sub:`4` production (all parameters values are given in 
-:numref:`Table Methane Parameter descriptions`). Currently, :math:`f_{CH_{4} }` 
+Here, :math:`f_{CH_{4} }`  is the baseline ratio between CO\ :sub:`2`
+and CH\ :sub:`4` production (all parameters values are given in
+:numref:`Table Methane Parameter descriptions`). Currently, :math:`f_{CH_{4} }`
 is modified to account for our assumptions that methanogens may have a
 higher Q\ :math:`{}_{10}` than aerobic decomposers; are not N limited;
 and do not have a low-moisture limitation.
@@ -137,10 +137,10 @@ to or below freezing, even though CLM allows heterotrophic respiration
 below freezing. However, if the vertically resolved BGC soil column is
 used, CH\ :sub:`4` production continues below freezing because
 liquid water stress limits decomposition. The base temperature for the
-:math:`{Q}_{10}` factor, :math:`{T}_{B}`, is 22\ :sup:`o` C and effectively 
+:math:`{Q}_{10}` factor, :math:`{T}_{B}`, is 22\ :sup:`o` C and effectively
 modified the base :math:`f_{CH_{4}}`  value.
 
-For the single-layer BGC version,  :math:`{R}_{H}` is distributed 
+For the single-layer BGC version,  :math:`{R}_{H}` is distributed
 among soil levels by assuming that 50% is associated with the roots
 (using the CLM PFT-specific rooting distribution) and the rest is evenly
 divided among the top 0.28 m of soil (to be consistent with CLM's soil
@@ -148,7 +148,7 @@ decomposition algorithm). For the vertically resolved BGC version, the
 prognosed distribution of :math:`{R}_{H}` is used to estimate CH\ :sub:`4` production.
 
 The factor :math:`f_{pH}`  is nominally set to 1, although a static
-spatial map of *pH* can be used to determine this factor 
+spatial map of *pH* can be used to determine this factor
 (:ref:`Dunfield et al. 1993<Dunfieldetal1993>`) by applying:
 
 .. math::
@@ -160,7 +160,7 @@ The :math:`f_{pE}`  factor assumes that alternative electron acceptors
 are reduced with an e-folding time of 30 days after inundation. The
 default version of the model applies this factor to horizontal changes
 in inundated area but not to vertical changes in the water table depth
-in the upland fraction of the gridcell. We consider both :math:`f_{pH}` 
+in the upland fraction of the gridcell. We consider both :math:`f_{pH}`
 and :math:`f_{pE}`  to be poorly constrained in the model and identify
 these controllers as important areas for model improvement.
 
@@ -233,7 +233,7 @@ Briefly, the simulated aqueous CH\ :sub:`4` concentration in each
 soil level is used to estimate the expected equilibrium gaseous partial
 pressure (:math:`C_{e}` ), as a function of temperature and depth below
 the water table, by first estimating the Henry's law partitioning
-coefficient (:math:`k_{h}^{C}` ) by the method described in 
+coefficient (:math:`k_{h}^{C}` ) by the method described in
 :ref:`Wania et al. (2010)<Waniaetal2010>`:
 
 .. math::
@@ -262,7 +262,7 @@ ponding (if applicable). When the CH\ :sub:`4` partial pressure
 exceeds 15% of the local pressure (:ref:`Baird et al. 2004<Bairdetal2004>`; :ref:`Strack et al.
 2006<Stracketal2006>`; :ref:`Wania et al. 2010<Waniaetal2010>`), bubbling occurs to remove CH\ :sub:`4`
 to below this value, modified by the fraction of CH\ :sub:`4` in
-the bubbles [taken as 57%; (:ref:`Kellner et al. 2006<Kellneretal2006>`; 
+the bubbles [taken as 57%; (:ref:`Kellner et al. 2006<Kellneretal2006>`;
 :ref:`Wania et al. 2010<Waniaetal2010>`)].
 Bubbles are immediately added to the surface flux for saturated columns
 and are placed immediately above the water table interface in
@@ -285,7 +285,7 @@ The diffusive transport through aerenchyma (*A*, mol m\ :sup:`-2` s\ :sup:`-1`) 
    :label: 24.8
 
    A=\frac{C\left(z\right)-C_{a} }{{\raise0.7ex\hbox{$ r_{L} z $}\!\mathord{\left/ {\vphantom {r_{L} z D}} \right.}\!\lower0.7ex\hbox{$ D $}} +r_{a} } pT\rho _{r} ,
- 
+
 where *D* is the free-air gas diffusion coefficient (m\ :sup:`2` s\ :sup:`-1`); *C(z)* (mol m\ :sup:`-3`) is the gaseous
 concentration at depth *z* (m); :math:`r_{L}`  is the ratio of root
 length to depth; *p* is the porosity (-); *T* is specific aerenchyma
@@ -295,7 +295,7 @@ height (s m\ :sup:`-1`); and :math:`\rho _{r}`  is the rooting
 density as a function of depth (-). The gaseous concentration is
 calculated with Henry's law as described in equation :eq:`24.7`.
 
-Based on the ranges reported in :ref:`Colmer (2003)<Colmer2003>`, we have chosen 
+Based on the ranges reported in :ref:`Colmer (2003)<Colmer2003>`, we have chosen
 baseline aerenchyma porosity values of 0.3 for grass and crop PFTs and 0.1 for
 tree and shrub PFTs:
 
@@ -332,7 +332,7 @@ CH\ :sub:`4` Oxidation
 ---------------------------------
 
 CLM represents CH\ :sub:`4` oxidation with double Michaelis-Menten
-kinetics (:ref:`Arah and Stephen 1998<ArahStephen1998>`; :ref:`Segers 1998<Segers1998>`), 
+kinetics (:ref:`Arah and Stephen 1998<ArahStephen1998>`; :ref:`Segers 1998<Segers1998>`),
 dependent on both the gaseous CH\ :sub:`4` and O\ :sub:`2` concentrations:
 
 .. math::
@@ -348,9 +348,9 @@ m\ :sup:`-3` s\ :sup:`-1`); and :math:`{Q}_{10}`
 specifies the temperature dependence of the reaction with a base
 temperature set to 12 :sup:`o` C. The soil moisture limitation
 factor :math:`F_{\theta }` is applied above the water table to
-represent water stress for methanotrophs. Based on the data in 
-:ref:`Schnell and King (1996)<SchnellKing1996>`, we take 
-:math:`F_{\theta } = {e}^{-P/{P}_{c}}`, where *P* is the soil moisture 
+represent water stress for methanotrophs. Based on the data in
+:ref:`Schnell and King (1996)<SchnellKing1996>`, we take
+:math:`F_{\theta } = {e}^{-P/{P}_{c}}`, where *P* is the soil moisture
 potential and :math:`{P}_{c} = -2.4 \times {10}^{5}` mm.
 
 .. _Reactive Transport Solution:
@@ -360,16 +360,16 @@ Reactive Transport Solution
 
 The solution to equation :eq:`24.11` is solved in several sequential steps: resolve
 competition for CH\ :sub:`4` and O\ :sub:`2` (section
-:numref:`Competition for CH4and O2`); add the ebullition flux into the 
+:numref:`Competition for CH4and O2`); add the ebullition flux into the
 layer directly above the water
 table or into the atmosphere; calculate the overall CH\ :sub:`4`
 or O\ :sub:`2` source term based on production, aerenchyma
 transport, ebullition, and oxidation; establish boundary conditions,
 including surface conductance to account for snow, ponding, and
-turbulent conductances and bottom flux condition 
-(section :numref:`CH4 and O2 Source Terms`); calculate diffusivity 
-(section :numref:`Aqueous and Gaseous Diffusion`); and solve the resulting 
-mass balance using a tridiagonal solver (section 
+turbulent conductances and bottom flux condition
+(section :numref:`CH4 and O2 Source Terms`); calculate diffusivity
+(section :numref:`Aqueous and Gaseous Diffusion`); and solve the resulting
+mass balance using a tridiagonal solver (section
 :numref:`Crank-Nicholson Solution Methane`).
 
 .. _Competition for CH4and O2:
@@ -416,9 +416,9 @@ Aqueous and Gaseous Diffusion
 
 For gaseous diffusion, we adopted the temperature dependence of
 molecular free-air diffusion coefficients (:math:`{D}_{0}`
-(m\ :sup:`2` s\ :sup:`-1`)) as described by 
-:ref:`Lerman (1979) <Lerman1979>` and applied by 
-:ref:`Wania et al. (2010)<Waniaetal2010>` 
+(m\ :sup:`2` s\ :sup:`-1`)) as described by
+:ref:`Lerman (1979) <Lerman1979>` and applied by
+:ref:`Wania et al. (2010)<Waniaetal2010>`
 (:numref:`Table Temperature dependence of aqueous and gaseous diffusion`).
 
 .. _Table Temperature dependence of aqueous and gaseous diffusion:
@@ -434,9 +434,9 @@ molecular free-air diffusion coefficients (:math:`{D}_{0}`
  +----------------------------------------------------------+----------------------------------------------------------+--------------------------------------------------------+
 
 Gaseous diffusivity in soils also depends on the molecular diffusivity,
-soil structure, porosity, and organic matter content.  
-:ref:`Moldrup et al. (2003)<Moldrupetal2003>`, using observations across a 
-range of unsaturated mineral soils, showed that the relationship between 
+soil structure, porosity, and organic matter content.
+:ref:`Moldrup et al. (2003)<Moldrupetal2003>`, using observations across a
+range of unsaturated mineral soils, showed that the relationship between
 effective diffusivity (:math:`D_{e}`  (m\ :sup:`2` s\ :sup:`-1`)) and soil
 properties can be represented as:
 
@@ -449,7 +449,7 @@ where :math:`\theta _{a}`  and :math:`\theta _{s}`  are the air-filled
 and total (saturated water-filled) porosities (-), respectively, and *b*
 is the slope of the water retention curve (-). However, :ref:`Iiyama and
 Hasegawa (2005)<IiyamaHasegawa2005>` have shown that the original Millington-Quirk
-(:ref:`Millington and Quirk 1961<MillingtonQuirk1961>`) relationship matched 
+(:ref:`Millington and Quirk 1961<MillingtonQuirk1961>`) relationship matched
 measurements more closely in unsaturated peat soils:
 
 .. math::
@@ -472,10 +472,10 @@ aqueous diffusion in the saturated part of the soil column, we applied
 To simplify the solution, we assumed that gaseous diffusion dominates
 above the water table interface and aqueous diffusion below the water
 table interface. Descriptions, baseline values, and dimensions for
-parameters specific to the CH\ :sub:`4` model are given in 
-:numref:`Table Methane Parameter descriptions`. For freezing or frozen 
-soils below the water table, diffusion is limited to the remaining 
-liquid (CLM allows for some freezing point depression), and the diffusion 
+parameters specific to the CH\ :sub:`4` model are given in
+:numref:`Table Methane Parameter descriptions`. For freezing or frozen
+soils below the water table, diffusion is limited to the remaining
+liquid (CLM allows for some freezing point depression), and the diffusion
 coefficients are scaled by the
 volume-fraction of liquid. For unsaturated soils, Henry's law
 equilibrium is assumed at the interface with the water table.
@@ -492,7 +492,7 @@ the gaseous concentration in the first soil layer (unsaturated soils) or
 in equilibrium with the water (saturated
 soil\ :math:`w\left(C_{1}^{n} -C_{a} \right)` and
 :math:`w\left(C_{1}^{n+1} -C_{a} \right)` for the fully explicit and
-fully implicit cases, respectively (however, see 
+fully implicit cases, respectively (however, see
 :ref:`Tang and Riley (2013)<TangRiley2013>`
 for a more complete representation of this process). Here, *w* is the
 surface boundary layer conductance as calculated in the existing CLM
@@ -518,7 +518,7 @@ a zero flux gradient at the bottom of the soil column.
 Crank-Nicholson Solution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Equation :eq:`24.1` is solved using a Crank-Nicholson solution 
+Equation :eq:`24.1` is solved using a Crank-Nicholson solution
 (:ref:`Press et al., 1992<Pressetal1992>`),
 which combines fully explicit and implicit representations of the mass
 balance. The fully explicit decomposition of equation :eq:`24.1` can be written as
@@ -631,7 +631,7 @@ Seasonal Inundation
 
 A simple scaling factor is used to mimic the impact of
 seasonal inundation on CH\ :sub:`4` production (see appendix B in
-:ref:`Riley et al. (2011a)<Rileyetal2011a>` for a discussion of this 
+:ref:`Riley et al. (2011a)<Rileyetal2011a>` for a discussion of this
 simplified expression):
 
 .. math::

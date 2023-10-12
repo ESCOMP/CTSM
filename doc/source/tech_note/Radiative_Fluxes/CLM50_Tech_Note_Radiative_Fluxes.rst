@@ -22,16 +22,16 @@ unit incident direct beam and diffuse flux (section :numref:`Canopy Radiative Tr
 :math:`I\, \downarrow _{\Lambda }^{\mu }`  and
 :math:`I\, \downarrow _{\Lambda }` \ are the downward diffuse fluxes
 below the vegetation per unit incident direct beam and diffuse radiation
-(section :numref:`Canopy Radiative Transfer`). The direct beam flux 
+(section :numref:`Canopy Radiative Transfer`). The direct beam flux
 transmitted through the canopy, per
 unit incident flux, is :math:`e^{-K\left(L+S\right)}` .
-:math:`\vec{I}_{\Lambda }^{\mu }`  and :math:`\vec{I}_{\Lambda }^{}` 
+:math:`\vec{I}_{\Lambda }^{\mu }`  and :math:`\vec{I}_{\Lambda }^{}`
 are the fluxes absorbed by the vegetation, per unit incident direct beam
 and diffuse radiation (section :numref:`Canopy Radiative Transfer`).
 :math:`\alpha _{g,\, \Lambda }^{\mu }`  and
 :math:`\alpha _{g,\, \Lambda }`  are the direct beam and diffuse ground
 albedos (section :numref:`Ground Albedos`). :math:`L` and :math:`S` are the exposed leaf area
-index and stem area index (section :numref:`Phenology and vegetation burial by snow`). 
+index and stem area index (section :numref:`Phenology and vegetation burial by snow`).
 :math:`K` is the optical
 depth of direct beam per unit leaf and stem area (section :numref:`Canopy Radiative Transfer`).
 
@@ -85,7 +85,7 @@ Photosynthesis and transpiration depend non-linearly on solar radiation,
 via the light response of stomata. The canopy is treated as two leaves
 (sunlit and shaded) and the solar radiation in the visible waveband
 (:math:`<` 0.7 µm) absorbed by the vegetation is apportioned to the
-sunlit and shaded leaves (section :numref:`Canopy Radiative Transfer`). 
+sunlit and shaded leaves (section :numref:`Canopy Radiative Transfer`).
 The absorbed photosynthetically
 active (visible waveband) radiation averaged over the sunlit canopy (per
 unit plant area) is
@@ -125,7 +125,7 @@ two-stream approximation (section :numref:`Canopy Radiative Transfer`).
 The model uses the two-stream approximation to calculate radiative
 transfer of direct and diffuse radiation through a canopy that is
 differentiated into leaves that are sunlit and those that are shaded
-(section :numref:`Canopy Radiative Transfer`). The two-stream equations 
+(section :numref:`Canopy Radiative Transfer`). The two-stream equations
 are integrated over all plant
 area (leaf and stem area) in the canopy. The model has an optional
 (though not supported) multi-layer canopy, as described by
@@ -140,14 +140,14 @@ derives the light profile with depth in the canopy by taking the
 derivatives of the absorbed radiative fluxes with respect to plant area
 index (:math:`L'=L+S`) and evaluating them incrementally through the
 canopy with cumulative plant area index (:math:`x`). The terms
-:math:`{d\vec{I}_{sun,\Lambda }^{\mu } (x)\mathord{\left/ {\vphantom {d\vec{I}_{sun,\Lambda }^{\mu } (x) dL'}} \right.} dL'}` 
+:math:`{d\vec{I}_{sun,\Lambda }^{\mu } (x)\mathord{\left/ {\vphantom {d\vec{I}_{sun,\Lambda }^{\mu } (x) dL'}} \right.} dL'}`
 and
-:math:`{d\vec{I}_{sun,\Lambda }^{} (x)\mathord{\left/ {\vphantom {d\vec{I}_{sun,\Lambda }^{} (x) dL'}} \right.} dL'}` 
+:math:`{d\vec{I}_{sun,\Lambda }^{} (x)\mathord{\left/ {\vphantom {d\vec{I}_{sun,\Lambda }^{} (x) dL'}} \right.} dL'}`
 are the direct beam and diffuse solar radiation, respectively, absorbed
 by the sunlit fraction of the canopy (per unit plant area) at a depth
 defined by the cumulative plant area index :math:`x`;
 :math:`{d\vec{I}_{sha,\Lambda }^{\mu } (x)\mathord{\left/ {\vphantom {d\vec{I}_{sha,\Lambda }^{\mu } (x) dL'}} \right.} dL'}` \ and
-:math:`{d\vec{I}_{sha,\Lambda }^{} (x)\mathord{\left/ {\vphantom {d\vec{I}_{sha,\Lambda }^{} (x) dL'}} \right.} dL'}` 
+:math:`{d\vec{I}_{sha,\Lambda }^{} (x)\mathord{\left/ {\vphantom {d\vec{I}_{sha,\Lambda }^{} (x) dL'}} \right.} dL'}`
 are the corresponding fluxes for the shaded fraction of the canopy at
 depth :math:`x`. These fluxes are normalized by the sunlit or shaded
 fraction at depth :math:`x`, defined by
@@ -188,7 +188,7 @@ where :math:`\sigma`  is the Stefan-Boltzmann constant (W\ m\ :sup:`-2` K\ :sup:
 where :math:`L_{vg} \, \uparrow`  is the upward longwave radiation from
 the vegetation/soil system for exposed leaf and stem area
 :math:`L+S\ge 0.05`, :math:`\delta _{veg}`  is a step function and is
-zero for :math:`L+S<0.05` and one otherwise, :math:`\varepsilon _{g}` 
+zero for :math:`L+S<0.05` and one otherwise, :math:`\varepsilon _{g}`
 is the ground emissivity, and :math:`T_{g}^{n+1}`  and
 :math:`T_{g}^{n}`  are the snow/soil surface temperatures at the current
 and previous time steps, respectively (:ref:`rst_Soil and Snow Temperatures`).
@@ -224,7 +224,7 @@ where
 where :math:`\varepsilon _{v}`  is the vegetation emissivity and
 :math:`T_{v}^{n+1}`  and :math:`T_{v}^{n}`  are the vegetation
 temperatures at the current and previous time steps, respectively
-(:ref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`). 
+(:ref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`).
 The first term in the equation above is the atmospheric
 longwave radiation that is transmitted through the canopy, reflected by
 the ground, and transmitted through the canopy to the atmosphere. The
@@ -266,7 +266,7 @@ atmosphere)
 
 The above expression for :math:`\vec{L}_{g}`  is the net longwave
 radiation forcing that is used in the soil temperature calculation
-(:ref:`rst_Soil and Snow Temperatures`). Once updated soil 
+(:ref:`rst_Soil and Snow Temperatures`). Once updated soil
 temperatures have been obtained, the term
 :math:`4\varepsilon _{g} \sigma \left(T_{g}^{n} \right)^{3} \left(T_{g}^{n+1} -T_{g}^{n} \right)`
 is added to :math:`\vec{L}_{g}`  to calculate the ground heat flux
@@ -288,9 +288,9 @@ emissivity of the ground is
 
    \varepsilon _{g} =\varepsilon _{soi} \left(1-f_{sno} \right)+\varepsilon _{sno} f_{sno}
 
-where :math:`\varepsilon _{soi} =0.96` for soil, 0.97 for glacier, 
-:math:`\varepsilon _{sno} =0.97`, and :math:`f_{sno}` 
-is the fraction of ground covered by snow 
+where :math:`\varepsilon _{soi} =0.96` for soil, 0.97 for glacier,
+:math:`\varepsilon _{sno} =0.97`, and :math:`f_{sno}`
+is the fraction of ground covered by snow
 (section :numref:`Snow Covered Area Fraction`). The
 vegetation emissivity is
 
@@ -300,7 +300,7 @@ vegetation emissivity is
    \varepsilon _{v} =1-e^{-{\left(L+S\right)\mathord{\left/ {\vphantom {\left(L+S\right) \bar{\mu }}} \right.} \bar{\mu }} }
 
 where :math:`L` and :math:`S` are the leaf and stem area indices
-(section :numref:`Phenology and vegetation burial by snow`) and 
+(section :numref:`Phenology and vegetation burial by snow`) and
 :math:`\bar{\mu }=1` is the average inverse optical
 depth for longwave radiation.
 

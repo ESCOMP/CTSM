@@ -67,7 +67,7 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Figure Biological nitrogen fixation` Biological nitrogen fixation as a function of annual net primary production.
 
-- :numref:`Figure Methane Schematic` Schematic representation of biological and physical processes integrated in CLM that affect the net CH4 surface flux. 
+- :numref:`Figure Methane Schematic` Schematic representation of biological and physical processes integrated in CLM that affect the net CH4 surface flux.
 
 - :numref:`Figure Schematic of land cover change` Schematic of land cover change impacts on CLM carbon pools and fluxes.
 
@@ -141,9 +141,9 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Table Crop plant functional types` Crop plant functional types (PFTs).
 
-- :numref:`Table Crop phenology parameters`  Crop phenology and morphology parameters. 
+- :numref:`Table Crop phenology parameters`  Crop phenology and morphology parameters.
 
-- :numref:`Table Crop allocation parameters` Crop allocation parameters. 
+- :numref:`Table Crop allocation parameters` Crop allocation parameters.
 
 - :numref:`Table Dust Mass fraction` Mass fraction m\ :sub:`i` , mass median diameter :sub:`v, i` , and geometric standard deviation :sub:`g, i` , per dust source mode i
 
@@ -524,12 +524,12 @@ light capture, carboxylation, and respiration are co-limiting.
 
 CLM5 applies a fixed allocation scheme for woody vegetation.  The decision to use a fixed allocation scheme in CLM5, rather than a dynamic NPP-based allocation scheme, as was used in CLM4 and CLM4.5, was driven by the fact that observations indicate that biomass saturates with increasing productivity, in contrast to the behavior in CLM4 and CLM4.5 where biomass continuously increases with increasing productivity (:ref:`Negron-Juarez et al., 2015<NegronJuarezetal2015>`).  Soil carbon decomposition processes are unchanged in CLM5, but a new metric for apparent soil carbon turnover times (:ref:`Koven et al., 2017 <Kovenetal2017>`) suggested parameter changes that produce a weak intrinsic depth limitation on soil carbon turnover rates (rather than the strong depth limitaiton in CLM4.5) and that the thresholds for soil moisture limitation on soil carbon turnover rates in dry soils should be set at a wetter soil moisture level than that used in CLM4.5.
 
-Representation of human management of the land (agriculture, wood harvest) is augmented in several ways. 
-The CLM4.5 crop model is extended to operate globally through the addition of rice, sugarcane,  
-tropical varieties of corn and soybean :ref:`(Badger and Dirmeyer, 2015<BadgerandDirmeyer2015>` and :ref:`Levis et al., 2016)<Levisetal2016>`, 
+Representation of human management of the land (agriculture, wood harvest) is augmented in several ways.
+The CLM4.5 crop model is extended to operate globally through the addition of rice, sugarcane,
+tropical varieties of corn and soybean :ref:`(Badger and Dirmeyer, 2015<BadgerandDirmeyer2015>` and :ref:`Levis et al., 2016)<Levisetal2016>`,
 and perennial bioenergy crops :ref:`(Cheng et al., 2019)<Chengetal2019>`.
 These crop types are added to the existing temperate corn, temperate soybean, spring wheat, and cotton crop types.
-Fertilization rates and irrigation equipped area updated annually based on crop type and geographic region through an input dataset.  
+Fertilization rates and irrigation equipped area updated annually based on crop type and geographic region through an input dataset.
 The irrigation trigger is updated.  Additional minor changes include crop phenological triggers that
 vary by latitude for selected crop types, grain C and N is now removed at harvest to a 1-year product pool with
 the carbon for the next season's crop seed removed from the grain carbon at harvest.

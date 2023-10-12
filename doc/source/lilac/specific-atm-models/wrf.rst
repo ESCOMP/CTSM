@@ -18,7 +18,7 @@ A full description of all steps for a WRF-CTSM run are included here.
 
 Specific new steps that would not be completed in a standard WRF real case
 are described in sections :numref:`clone-WRF-CTSM-repositories`,
-:numref:`build-CTSM-and-dependencies` , 
+:numref:`build-CTSM-and-dependencies` ,
 and :numref:`wrf-set-ctsm-runtime-options`.
 
 .. important::
@@ -54,7 +54,7 @@ Clone the CTSM repository::
 Build CTSM and its dependencies
 -------------------------------
 
-In your CTSM directory, build CTSM and its dependencies based on the 
+In your CTSM directory, build CTSM and its dependencies based on the
 instructions from section :numref:`obtaining-and-building-ctsm`::
 
     ./lilac/build_ctsm /PATH/TO/CTSM/BUILD --machine MACHINE --compiler COMPILER
@@ -81,13 +81,13 @@ Building WRF with CTSM
 First, load the same modules and set the same environments as used for CTSM build by
 sourcing ``ctsm_build_environment.sh`` for Bash::
 
-    source ctsm_build_dir/ctsm_build_environment.sh 
+    source ctsm_build_dir/ctsm_build_environment.sh
 
 or sourcing ``ctsm_build_environment.csh`` for Cshell:
 
 .. code-block:: Tcsh
 
-    source ctsm_build_dir/ctsm_build_environment.csh 
+    source ctsm_build_dir/ctsm_build_environment.csh
 
 Set makefile variables from CTSM needed for the WRF build by setting the following environment.
 For example for Bash::
@@ -113,9 +113,9 @@ Explicitly define the model core to build by (Bash)::
 
     export WRF_EM_CORE=1
 
-or (Cshell):	
+or (Cshell):
 
-.. code-block:: Tcsh	
+.. code-block:: Tcsh
 
     setenv WRF_EM_CORE 1
 
@@ -124,13 +124,13 @@ Explicilty turn off data assimilation by (Bash)::
 
     export WRF_DA_CORE=0
 
-or (Cshell):	
+or (Cshell):
 
-.. code-block:: Tcsh	
+.. code-block:: Tcsh
 
     setenv WRF_DA_CORE 0
 
-Now in your WRF directory configure and build WRF for your machine 
+Now in your WRF directory configure and build WRF for your machine
 and intended compiler::
 
     ./clean -a
@@ -138,7 +138,7 @@ and intended compiler::
 
 At the prompt choose one of the options, based on the compiler used
 for building CTSM. Then you should choose if you'd like to build serially or
-in parallel. For example, you can choose to build with ``intel`` compiler with 
+in parallel. For example, you can choose to build with ``intel`` compiler with
 distributed memory parallelization (``dmpar``).
 
 .. tip::
@@ -259,10 +259,10 @@ Run real.exe
 
 Run ``real.exe`` to generate initial and boundary conditions.
 
-Follow WRF instructions for creating initial and boundary conditions. 
+Follow WRF instructions for creating initial and boundary conditions.
 In summary, complete the following steps:
 
-Move or link WPS output files (``met_em.d01*`` files) to your WRF test directory. 
+Move or link WPS output files (``met_em.d01*`` files) to your WRF test directory.
 
 Edit namelist.input for your WRF domain and desirable configurations.
 This should be the same domain as WPS namelist.
@@ -342,7 +342,7 @@ Run the script ``make_runtime_inputs`` to create ``lnd_in`` and
 Modify ``lilac_in`` as needed. For this example, you can use the following options::
 
  atm_mesh_filename = '/glade/scratch/negins/wrf_ctsm_files/wrf2ctsm_land_conus_ESMFMesh_c20201110.nc'
- lnd_mesh_filename = '/glade/scratch/negins/wrf_ctsm_files/wrf2ctsm_land_conus_ESMFMesh_c20201110.nc' 
+ lnd_mesh_filename = '/glade/scratch/negins/wrf_ctsm_files/wrf2ctsm_land_conus_ESMFMesh_c20201110.nc'
 
 
 Run ``download_input_data`` script to download any of CTSM's standard input
@@ -361,17 +361,17 @@ Run wrf.exe
 -----------
 
 If real.exe completed successfully, we should have ``wrfinput`` and ``wrfbdy`` files
-in our directory. 
+in our directory.
 
 If you plan to use this example's preexisting files, copy
 the following files to your WRF run directory::
 
-    cp /glade/scratch/negins/wrf_ctsm_files/namelist.input . 
+    cp /glade/scratch/negins/wrf_ctsm_files/namelist.input .
     cp /glade/scratch/negins/wrf_ctsm_files/wrfinput_d01 .
     cp /glade/scratch/negins/wrf_ctsm_files/wrfbdy_d01 .
 
 Now run WRF-CTSM. On Cheyenne this means submitting a batch job to PBS (Pro workload management system).
-Please check NCAR CISL's `instructions on running a batch job on Cheyenne. 
+Please check NCAR CISL's `instructions on running a batch job on Cheyenne.
 <https://www2.cisl.ucar.edu/resources/computational-systems/cheyenne/running-jobs/submitting-jobs-pbs>`__
 
 A simple PBS script to run WRF-CTSM on ``Cheyenne`` looks like this:
@@ -396,7 +396,7 @@ A simple PBS script to run WRF-CTSM on ``Cheyenne`` looks like this:
 (See :numref:`runtime-environment-variables` for a description of the need to set ``MPI_TYPE_DEPTH`` on ``Cheyenne``.)
 
 To submit a batch job to the ``Cheyenne`` queues, use ``qsub`` command followed
-by the PBS script name. 
+by the PBS script name.
 For example, if you named this script ``run_wrf_ctsm.csh``, submit the job like this::
 
     qsub run_wrf_ctsm.csh

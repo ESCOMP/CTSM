@@ -19,7 +19,7 @@ carbon cost for the synthesis of new growth.
 Maintenance Respiration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Atkin et al. (2016) propose a model for leaf respiration that is based on the leaf nitrogen content per unit area (:math:`NS_{narea}` (gN m :sup:`2` leaf), with an intercept parameter that is PFT dependant, and an acclimation term that depends upon the average temperature of the previous 10 day period :math:`t_{2m,10days}`, in Celsius. 
+Atkin et al. (2016) propose a model for leaf respiration that is based on the leaf nitrogen content per unit area (:math:`NS_{narea}` (gN m :sup:`2` leaf), with an intercept parameter that is PFT dependant, and an acclimation term that depends upon the average temperature of the previous 10 day period :math:`t_{2m,10days}`, in Celsius.
 
 .. math::
    :label: 17.46)
@@ -29,17 +29,17 @@ Atkin et al. (2016) propose a model for leaf respiration that is based on the le
 The temperature dependance of leaf maintenance (dark) respiration is described in Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`.
 
 .. math::
-   :label: 17.47) 
+   :label: 17.47)
 
    CF_{mr\_ livestem} \_ =NS_{livestem} MR_{base} MR_{Q10} ^{(T_{2m} -20)/10}
 
 .. math::
-   :label: 17.48) 
+   :label: 17.48)
 
    CF_{mr\_ livecroot} \_ =NS_{livecroot} MR_{base} MR_{Q10} ^{(T_{2m} -20)/10}
 
 .. math::
-   :label: 17.49) 
+   :label: 17.49)
 
    CF_{mr\_ froot} \_ =\sum _{j=1}^{nlevsoi}NS_{froot} rootfr_{j} MR_{base} MR_{Q10} ^{(Ts_{j} -20)/10}
 
@@ -52,10 +52,10 @@ of fine roots distributed in soil level *j*.
 
 .. table:: Atkin leaf respiration model intercept values.
 
- ========================  =============  
+ ========================  =============
  Plant functional type     :math:`i_{atkin}`
- ========================  =============  
- NET Temperate                       1.499 
+ ========================  =============
+ NET Temperate                       1.499
  NET Boreal                          1.499
  NDT Boreal                          1.499
  BET Tropical                        1.756
@@ -65,11 +65,11 @@ of fine roots distributed in soil level *j*.
  BDT boreal                          1.756
  BES temperate                       2.075
  BDS temperate                       2.075
- BDS boreal                          2.075 
+ BDS boreal                          2.075
  C\ :sub:`3` arctic grass            2.196
  C\ :sub:`3` grass                   2.196
  C\ :sub:`4` grass                   2.196
- ========================  ============= 
+ ========================  =============
 
 Note that, for woody vegetation, maintenance respiration costs are not
 calculated for the dead stem and dead coarse root components. These
@@ -82,7 +82,7 @@ common base maintenance respiration rate for all live tissue types.
 The total maintenance respiration cost is then given as:
 
 .. math::
-   :label: 17.50) 
+   :label: 17.50)
 
    CF_{mr} =CF_{mr\_ leaf} +CF_{mr\_ froot} +CF_{mr\_ livestem} +CF_{mr\_ livecroot} .
 
@@ -90,7 +90,7 @@ Growth Respiration
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Growth respiration is calculated as a factor of 0.11 times the total
-carbon allocation to new growth (:math:`CF_{growth}`, after allocating carbon for N acquisition, 
+carbon allocation to new growth (:math:`CF_{growth}`, after allocating carbon for N acquisition,
 Chapter :numref:`rst_FUN`.) on a given timestep, based on construction costs
 for a range of woody and non-woody tissues, with estimates of the growth
 respiration flux revised downswards following  (Atkin et al. 2017). For new

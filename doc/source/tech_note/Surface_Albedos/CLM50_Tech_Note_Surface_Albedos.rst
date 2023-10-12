@@ -9,7 +9,7 @@ Canopy Radiative Transfer
 -----------------------------
 
 Radiative transfer within vegetative canopies is calculated from the
-two-stream approximation of :ref:`Dickinson (1983) <Dickinson1983>` and 
+two-stream approximation of :ref:`Dickinson (1983) <Dickinson1983>` and
 :ref:`Sellers (1985) <Sellers1985>` as described by :ref:`Bonan (1996) <Bonan1996>`
 
 .. math::
@@ -24,7 +24,7 @@ two-stream approximation of :ref:`Dickinson (1983) <Dickinson1983>` and
 
 where :math:`I\, \uparrow`  and :math:`I\, \downarrow`  are the upward
 and downward diffuse radiative fluxes per unit incident flux,
-:math:`K={G\left(\mu \right)\mathord{\left/ {\vphantom {G\left(\mu \right) \mu }} \right.} \mu }` 
+:math:`K={G\left(\mu \right)\mathord{\left/ {\vphantom {G\left(\mu \right) \mu }} \right.} \mu }`
 is the optical depth of direct beam per unit leaf and stem area,
 :math:`\mu`  is the cosine of the zenith angle of the incident beam,
 :math:`G\left(\mu \right)` is the relative projected area of leaf and
@@ -33,8 +33,8 @@ stem elements in the direction :math:`\cos ^{-1} \mu` ,
 leaf and stem area, :math:`\omega`  is a scattering coefficient,
 :math:`\beta`  and :math:`\beta _{0}`  are upscatter parameters for
 diffuse and direct beam radiation, respectively, :math:`L` is the
-exposed leaf area index , and :math:`S` is the exposed stem area index 
-(section :numref:`Phenology and vegetation burial by snow`). Given the 
+exposed leaf area index , and :math:`S` is the exposed stem area index
+(section :numref:`Phenology and vegetation burial by snow`). Given the
 direct beam albedo :math:`\alpha _{g,\, \Lambda }^{\mu }`  and diffuse albedo
 :math:`\alpha _{g,\, \Lambda }`  of the ground (section :numref:`Ground Albedos`), these
 equations are solved to calculate the fluxes, per unit incident flux,
@@ -55,7 +55,7 @@ The relative projected area of leaves and stems in the direction
 
    G\left(\mu \right)=\phi _{1} +\phi _{2} \mu
 
-where :math:`\phi _{1} ={\rm 0.5}-0.633\chi _{L} -0.33\chi _{L}^{2}` 
+where :math:`\phi _{1} ={\rm 0.5}-0.633\chi _{L} -0.33\chi _{L}^{2}`
 and :math:`\phi _{2} =0.877\left(1-2\phi _{1} \right)` for
 :math:`-0.4\le \chi _{L} \le 0.6`. :math:`\chi _{L}`  is the departure
 of leaf angles from a random distribution and equals +1 for horizontal
@@ -70,16 +70,16 @@ The average inverse diffuse optical depth per unit leaf and stem area is
 
 where :math:`\mu '` is the direction of the scattered flux.
 
-The optical parameters :math:`\omega`, :math:`\beta`, and :math:`\beta _{0}`, 
-which vary with wavelength (:math:`\Lambda` ), are weighted combinations of values 
-for vegetation and snow, using the canopy snow-covered fraction :math:`f_{can,\, sno}` 
+The optical parameters :math:`\omega`, :math:`\beta`, and :math:`\beta _{0}`,
+which vary with wavelength (:math:`\Lambda` ), are weighted combinations of values
+for vegetation and snow, using the canopy snow-covered fraction :math:`f_{can,\, sno}`
 (Chapter :numref:`rst_Hydrology`). The optical parameters are
 
 
 ..
-   The model determines that snow is on the canopy if 
-   :math:`T_{v} \le T_{f}` , where :math:`T_{v}` is the vegetation temperature (K) (Chapter 
-   :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) and :math:`T_{f}` is the 
+   The model determines that snow is on the canopy if
+   :math:`T_{v} \le T_{f}` , where :math:`T_{v}` is the vegetation temperature (K) (Chapter
+   :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) and :math:`T_{f}` is the
    freezing temperature of water (K) (:numref:`Table Physical Constants`). In this case, the optical parameters are
 
 .. math::
@@ -128,7 +128,7 @@ stem reflectances
    \alpha _{\Lambda } =\alpha _{\Lambda }^{leaf} w_{leaf} +\alpha _{\Lambda }^{stem} w_{stem}
 
 where
-:math:`w_{leaf} ={L\mathord{\left/ {\vphantom {L \left(L+S\right)}} \right.} \left(L+S\right)}` 
+:math:`w_{leaf} ={L\mathord{\left/ {\vphantom {L \left(L+S\right)}} \right.} \left(L+S\right)}`
 and
 :math:`w_{stem} ={S\mathord{\left/ {\vphantom {S \left(L+S\right)}} \right.} \left(L+S\right)}` .
 :math:`\tau _{\Lambda }`  is a weighted combination of the leaf and stem transmittances (:math:`\tau _{\Lambda }^{leaf}, \tau _{\Lambda }^{stem}`)
@@ -164,7 +164,7 @@ and for horizontal leaves (:math:`\chi _{L} =1`,
 which agree with both :ref:`Dickinson (1983) <Dickinson1983>` and :ref:`Sellers (1985) <Sellers1985>`. For random
 (spherically distributed) leaves (:math:`\chi _{L} =0`,
 :math:`\bar{\theta }=60^{{\rm o}}` ), the approximation yields
-:math:`\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} ={5\mathord{\left/ {\vphantom {5 8}} \right.} 8} \alpha _{\Lambda } +{3\mathord{\left/ {\vphantom {3 8}} \right.} 8} \tau _{\Lambda }` 
+:math:`\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} ={5\mathord{\left/ {\vphantom {5 8}} \right.} 8} \alpha _{\Lambda } +{3\mathord{\left/ {\vphantom {3 8}} \right.} 8} \tau _{\Lambda }`
 whereas the approximate solution of :ref:`Dickinson (1983) <Dickinson1983>` is
 :math:`\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} ={2\mathord{\left/ {\vphantom {2 3}} \right.} 3} \alpha _{\Lambda } +{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} \tau _{\Lambda }` .
 This discrepancy arises from the fact that a spherical leaf angle
@@ -186,7 +186,7 @@ where the single scattering albedo is
    \begin{array}{rcl} {a_{s} \left(\mu \right)_{\Lambda } } & {=} & {\frac{\omega _{\Lambda }^{veg} }{2} \int _{0}^{1}\frac{\mu 'G\left(\mu \right)}{\mu G\left(\mu '\right)+\mu 'G\left(\mu \right)}  d\mu '} \\ {} & {=} & {\frac{\omega _{\Lambda }^{veg} }{2} \frac{G\left(\mu \right)}{\max (\mu \phi _{2} +G\left(\mu \right),1e-6)} \left[1-\frac{\mu \phi _{1} }{\max (\mu \phi _{2} +G\left(\mu \right),1e-6)} \ln \left(\frac{\mu \phi _{1} +\max (\mu \phi _{2} +G\left(\mu \right),1e-6)}{\mu \phi _{1} } \right)\right].} \end{array}
 
 Note here the restriction on :math:`\mu \phi _{2} +G\left(\mu \right)`.  We have seen cases where small values
-can cause unrealistic single scattering albedo associated with the log calculation, 
+can cause unrealistic single scattering albedo associated with the log calculation,
 thereby eventually causing a negative soil albedo.
 
 The upward diffuse fluxes per unit incident direct beam and diffuse flux
@@ -424,7 +424,7 @@ The parameters :math:`h_{1}` –:math:`h_{10}` , :math:`\sigma` ,
 
    h_{10} =\frac{-s_{1} \left(u_{2} -\bar{\mu }h\right)}{d_{2} } .
 
-Plant functional type optical properties (:numref:`Table Plant functional type optical properties`) 
+Plant functional type optical properties (:numref:`Table Plant functional type optical properties`)
 for trees and shrubs are from :ref:`Dorman and Sellers (1989) <DormanSellers1989>`. Leaf and stem optical
 properties (VIS and NIR reflectance and transmittance) were derived
 for grasslands and crops from full optical range spectra of measured
@@ -509,7 +509,7 @@ intercepted snow (:numref:`Table Intercepted snow optical properties`) are from
 Ground Albedos
 ------------------
 
-The overall direct beam :math:`\alpha _{g,\, \Lambda }^{\mu }`  and diffuse 
+The overall direct beam :math:`\alpha _{g,\, \Lambda }^{\mu }`  and diffuse
 :math:`\alpha _{g,\, \Lambda }`  ground albedos are weighted
 combinations of "soil" and snow albedos
 
@@ -523,7 +523,7 @@ combinations of "soil" and snow albedos
 
    \alpha _{g,\, \Lambda } =\alpha _{soi,\, \Lambda } \left(1-f_{sno} \right)+\alpha _{sno,\, \Lambda } f_{sno}
 
-where :math:`f_{sno}`  is the fraction of the ground covered with snow 
+where :math:`f_{sno}`  is the fraction of the ground covered with snow
 (section :numref:`Snow Covered Area Fraction`).
 
 :math:`\alpha _{soi,\, \Lambda }^{\mu }`  and
@@ -535,7 +535,7 @@ soil surfaces. Glacier albedos are from :ref:`Paterson (1994) <Paterson1994>`
 .. math:: \alpha _{soi,\, nir}^{\mu } =\alpha _{soi,\, nir} =0.4.
 
 Unfrozen lake albedos depend on the cosine of the solar
-zenith angle :math:`\mu` 
+zenith angle :math:`\mu`
 
 .. math::
    :label: 3.60
@@ -564,11 +564,11 @@ soil color classes (:numref:`Table Dry and saturated soil albedos`).
 
 CLM soil colors are prescribed so that they best reproduce observed
 MODIS local solar noon surface albedo values at the CLM grid cell
-following the methods of :ref:`Lawrence and Chase (2007) <LawrenceChase2007>`. 
-The soil colors are fitted over the range of 20 soil classes shown in 
+following the methods of :ref:`Lawrence and Chase (2007) <LawrenceChase2007>`.
+The soil colors are fitted over the range of 20 soil classes shown in
 :numref:`Table Dry and saturated soil albedos` and compared
 to the MODIS monthly local solar noon all-sky surface albedo as
-described in :ref:`Strahler et al. (1999) <Strahleretal1999>` and 
+described in :ref:`Strahler et al. (1999) <Strahleretal1999>` and
 :ref:`Schaaf et al. (2002) <Schaafetal2002>`. The CLM
 two-stream radiation model was used to calculate the model equivalent
 surface albedo using climatological monthly soil moisture along with the
@@ -618,17 +618,17 @@ Snow Albedo
 
 Snow albedo and solar absorption within each snow layer are simulated
 with the Snow, Ice, and Aerosol Radiative Model (SNICAR), which
-incorporates a two-stream radiative transfer solution from 
-:ref:`Toon et al. (1989) <Toonetal1989>`. Albedo and the vertical absorption 
+incorporates a two-stream radiative transfer solution from
+:ref:`Toon et al. (1989) <Toonetal1989>`. Albedo and the vertical absorption
 profile depend on solar zenith angle, albedo of the substrate underlying snow, mass
 concentrations of atmospheric-deposited aerosols (black carbon, mineral
 dust, and organic carbon), and ice effective grain size
 (:math:`r_{e}`), which is simulated with a snow aging routine
 described in section :numref:`Snow Aging`. Representation of impurity mass
-concentrations within the snowpack is described in section 
+concentrations within the snowpack is described in section
 :numref:`Black and organic carbon and mineral dust within snow`.
-Implementation of SNICAR in CLM is also described somewhat by 
-:ref:`Flanner and Zender (2005) <FlannerZender2005>` and 
+Implementation of SNICAR in CLM is also described somewhat by
+:ref:`Flanner and Zender (2005) <FlannerZender2005>` and
 :ref:`Flanner et al. (2007) <Flanneretal2007>`.
 
 The two-stream solution requires the following bulk optical properties
@@ -658,11 +658,11 @@ as
 
    g=\frac{\sum _{1}^{k}g_{k} \omega _{k} \tau _{k}  }{\sum _{1}^{k}\omega _{k} \tau _{k}  }
 
-For each constituent (ice, two black carbon species, two organic carbon species, and 
-four dust species), :math:`\omega`, *g*, and the mass extinction cross-section 
-:math:`\psi` (m\ :sup:`2` kg\ :sub:`-1`) are computed offline with Mie Theory, e.g., 
-applying the computational technique from :ref:`Bohren and Huffman (1983) <BohrenHuffman1983>`. 
-The extinction optical depth for each constituent depends on its mass  extinction 
+For each constituent (ice, two black carbon species, two organic carbon species, and
+four dust species), :math:`\omega`, *g*, and the mass extinction cross-section
+:math:`\psi` (m\ :sup:`2` kg\ :sub:`-1`) are computed offline with Mie Theory, e.g.,
+applying the computational technique from :ref:`Bohren and Huffman (1983) <BohrenHuffman1983>`.
+The extinction optical depth for each constituent depends on its mass  extinction
 cross-section and layer mass, :math:`w _{k}` (kg\ m\ :sup:`-1`) as
 
 .. math::
@@ -674,18 +674,18 @@ The two-stream solution (:ref:`Toon et al. (1989) <Toonetal1989>`) applies a tri
 solution to produce upward and downward radiative fluxes at each layer
 interface, from which net radiation, layer absorption, and surface
 albedo are easily derived. Solar fluxes are computed in five spectral
-bands, listed in :numref:`Table Spectral bands and weights used for snow radiative transfer`. 
+bands, listed in :numref:`Table Spectral bands and weights used for snow radiative transfer`.
 Because snow albedo varies strongly across
 the solar spectrum, it was determined that four bands were needed to
 accurately represent the near-infrared (NIR) characteristics of snow,
 whereas only one band was needed for the visible spectrum. Boundaries of
 the NIR bands were selected to capture broad radiative features and
-maximize accuracy and computational efficiency. We partition NIR (0.7-5.0 
-:math:`\mu` m) surface downwelling flux from CLM according to the weights listed 
-in :numref:`Table Spectral bands and weights used for snow radiative transfer`, 
-which are unique for diffuse and direct incident flux. These fixed weights were 
+maximize accuracy and computational efficiency. We partition NIR (0.7-5.0
+:math:`\mu` m) surface downwelling flux from CLM according to the weights listed
+in :numref:`Table Spectral bands and weights used for snow radiative transfer`,
+which are unique for diffuse and direct incident flux. These fixed weights were
 determined with offline hyperspectral radiative transfer calculations for an
-atmosphere typical of mid-latitude winter (:ref:`Flanner et al. (2007) <Flanneretal2007>`). 
+atmosphere typical of mid-latitude winter (:ref:`Flanner et al. (2007) <Flanneretal2007>`).
 The tri-diagonal solution includes intermediate terms that allow for easy
 interchange of two-stream techniques. We apply the Eddington solution
 for the visible band (following :ref:`Wiscombe and Warren 1980 <WiscombeWarren1980>`) and the
@@ -761,21 +761,21 @@ soil warming within a single timestep.
 The radiative transfer calculation is performed twice for each column
 containing a mass of snow greater than
 :math:`1 \times 10^{-30}` kg\ m\ :sup:`-2` (excluding lake and urban columns); once each for
-direct-beam and diffuse incident flux. Absorption in each layer 
+direct-beam and diffuse incident flux. Absorption in each layer
 :math:`i` of pure snow is initially recorded as absorbed flux per unit
 incident flux on the ground (:math:`S_{sno,\, i}` ), as albedos must be
 calculated for the next timestep with unknown incident flux. The snow
 absorption fluxes that are used for column temperature calculations are
 
 .. math::
-   :label: ZEqnNum275338 
+   :label: ZEqnNum275338
 
    S_{g,\, i} =S_{sno,\, i} \left(1-\alpha _{sno} \right)
 
 This weighting is performed for direct-beam and diffuse, visible and NIR
 fluxes. After the ground-incident fluxes (transmitted through the
 vegetation canopy) have been calculated for the current time step
-(sections :numref:`Canopy Radiative Transfer` and :numref:`Solar Fluxes`), 
+(sections :numref:`Canopy Radiative Transfer` and :numref:`Solar Fluxes`),
 the layer absorption factors
 
 (:math:`S_{g,\, i}`) are multiplied by the ground-incident fluxes to
@@ -812,19 +812,19 @@ weighted by the diffuse albedo for a semi-infinite snowpack (:math:`\alpha _{sno
 Inclusion of this additional albedo weight was found to improve accuracy
 of the five-band albedo solutions (relative to 470-band solutions)
 because of the strong dependence of optically-thick snowpack albedo on
-ice grain single-scatter albedo (:ref:`Flanner et al. (2007) <Flanneretal2007>`). 
-The lookup tables contain optical properties for lognormal distributions of ice 
+ice grain single-scatter albedo (:ref:`Flanner et al. (2007) <Flanneretal2007>`).
+The lookup tables contain optical properties for lognormal distributions of ice
 particles over the range of effective radii: 30\ :math:`\mu`\ m
-:math:`< r _{e} < \text{1500} \mu \text{m}`, at 1 :math:`\mu` m resolution. 
-Single-scatter albedos for the end-members of this size range are listed in 
+:math:`< r _{e} < \text{1500} \mu \text{m}`, at 1 :math:`\mu` m resolution.
+Single-scatter albedos for the end-members of this size range are listed in
 :numref:`Table Single-scatter albedo values used for snowpack impurities and ice`.
 
-Optical properties for black carbon are described in :ref:`Flanner et al. (2007) <Flanneretal2007>`. 
+Optical properties for black carbon are described in :ref:`Flanner et al. (2007) <Flanneretal2007>`.
 Single-scatter albedo, mass extinction cross-section, and
 asymmetry parameter values for all snowpack species, in the five
-spectral bands used, are listed in :numref:`Table Single-scatter albedo values used for snowpack impurities and ice`, 
-:numref:`Table Mass extinction values`, and 
-:numref:`Table Asymmetry scattering parameters used for snowpack impurities and ice`. 
+spectral bands used, are listed in :numref:`Table Single-scatter albedo values used for snowpack impurities and ice`,
+:numref:`Table Mass extinction values`, and
+:numref:`Table Asymmetry scattering parameters used for snowpack impurities and ice`.
 These properties were also derived with Mie Theory, using various published
 sources of indices of refraction and assumptions about particle size
 distribution. Weighting into the five CLM spectral bands was determined
@@ -923,9 +923,9 @@ Snow aging is represented as evolution of the ice effective grain size
 (:math:`r_{e}`). Previous studies have shown that use of spheres
 which conserve the surface area-to-volume ratio (or specific surface
 area) of ice media composed of more complex shapes produces relatively
-small errors in simulated hemispheric fluxes 
+small errors in simulated hemispheric fluxes
 (e.g., :ref:`Grenfell and Warren 1999 <GrenfellWarren1999>`).
-Effective radius is the surface area-weighted mean 
+Effective radius is the surface area-weighted mean
 radius of an ensemble of spherical particles and is directly related to specific
 surface area (*SSA*) as
 :math:`r_{e} ={3\mathord{\left/ {\vphantom {3 \left(\rho _{ice} SSA\right)}} \right.} \left(\rho _{ice} SSA\right)}` ,
@@ -960,16 +960,16 @@ each time step *t* as
    r_{e} \left(t\right)=\left[r_{e} \left(t-1\right)+dr_{e,\, dry} +dr_{e,\, wet} \right]f_{old} +r_{e,\, 0} f_{new} +r_{e,\, rfz} f_{rfrz}
 
 Here, the effective radius of freshly-fallen snow
-(:math:`r_{e,0}`) is based on a simple linear temperature-relationship. 
+(:math:`r_{e,0}`) is based on a simple linear temperature-relationship.
 Below -30 degrees Celsius, a minimum value is enforced of 54.5 :math:`\mu` m
 (corresponding to a specific surface area of 60 m\ :sup:`2` kg\ :sup:`-1`).
 Above 0 degrees Celsius, a maximum value is enforced of 204.5  :math:`\mu` m.
-Between -30 and 0 a linear ramp is used. 
+Between -30 and 0 a linear ramp is used.
 
 The effective radius of refrozen liquid water (:math:`r_{e,rfz}`) is set to 1000\ :math:`\mu` m.
 
 Dry snow aging is based on a microphysical model described by :ref:`Flanner
-and Zender (2006) <FlannerZender2006>`. This model simulates diffusive vapor flux 
+and Zender (2006) <FlannerZender2006>`. This model simulates diffusive vapor flux
 amongst collections of ice crystals with various size and inter-particle
 spacing. Specific surface area and effective radius are prognosed for
 any combination of snow temperature, temperature gradient, density, and
@@ -1151,7 +1151,7 @@ reference vernal equinox (i.e., the vernal equinox at 1950 A.D.) and
 describes the absolute motion of the perihelion relative to the fixed
 stars, and :math:`\psi`  is the annual general precession in longitude
 and describes the absolute motion of the vernal equinox along Earth's
-orbit relative to the fixed stars. The general precession :math:`\psi` 
+orbit relative to the fixed stars. The general precession :math:`\psi`
 (degrees) is
 
 .. math::
@@ -1169,13 +1169,13 @@ series expansions for the eccentricity :math:`e`\ as follows:
 .. math::
    :label: 3.87
 
-   \Pi =\left\{\begin{array}{lr} 
-   0 & \qquad {\rm for\; -1}\times {\rm 10}^{{\rm -8}} \le e^{\cos } \le 1\times 10^{-8} {\rm \; and\; }e^{\sin } = 0 \\ 
-   1.5\pi & \qquad {\rm for\; -1}\times {\rm 10}^{{\rm -8}} \le e^{\cos } \le 1\times 10^{-8} {\rm \; and\; }e^{\sin } < 0 \\ 
-   0.5\pi & \qquad {\rm for\; -1}\times {\rm 10}^{{\rm -8}} \le e^{\cos } \le 1\times 10^{-8} {\rm \; and\; }e^{\sin } > 0 \\ 
-   \tan ^{-1} \left[\frac{e^{\sin } }{e^{\cos } } \right]+\pi & \qquad {\rm for\; }e^{\cos } <{\rm -1}\times {\rm 10}^{{\rm -8}}  \\ 
-   \tan ^{-1} \left[\frac{e^{\sin } }{e^{\cos } } \right]+2\pi & \qquad {\rm for\; }e^{\cos } >{\rm 1}\times {\rm 10}^{{\rm -8}} {\rm \; and\; }e^{\sin } <0 \\ 
-   \tan ^{-1} \left[\frac{e^{\sin } }{e^{\cos } } \right] & \qquad {\rm for\; }e^{\cos } >{\rm 1}\times {\rm 10}^{{\rm -8}} {\rm \; and\; }e^{\sin } \ge 0 
+   \Pi =\left\{\begin{array}{lr}
+   0 & \qquad {\rm for\; -1}\times {\rm 10}^{{\rm -8}} \le e^{\cos } \le 1\times 10^{-8} {\rm \; and\; }e^{\sin } = 0 \\
+   1.5\pi & \qquad {\rm for\; -1}\times {\rm 10}^{{\rm -8}} \le e^{\cos } \le 1\times 10^{-8} {\rm \; and\; }e^{\sin } < 0 \\
+   0.5\pi & \qquad {\rm for\; -1}\times {\rm 10}^{{\rm -8}} \le e^{\cos } \le 1\times 10^{-8} {\rm \; and\; }e^{\sin } > 0 \\
+   \tan ^{-1} \left[\frac{e^{\sin } }{e^{\cos } } \right]+\pi & \qquad {\rm for\; }e^{\cos } <{\rm -1}\times {\rm 10}^{{\rm -8}}  \\
+   \tan ^{-1} \left[\frac{e^{\sin } }{e^{\cos } } \right]+2\pi & \qquad {\rm for\; }e^{\cos } >{\rm 1}\times {\rm 10}^{{\rm -8}} {\rm \; and\; }e^{\sin } <0 \\
+   \tan ^{-1} \left[\frac{e^{\sin } }{e^{\cos } } \right] & \qquad {\rm for\; }e^{\cos } >{\rm 1}\times {\rm 10}^{{\rm -8}} {\rm \; and\; }e^{\sin } \ge 0
    \end{array}\right\}.
 
 The numerical solution for the longitude of the perihelion

@@ -253,17 +253,17 @@ of CMIP6.
 LUH2 Transient Land Use and Land Cover Change Dataset
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To coordinate the processing and consistency of LULCC data between 
-the historical period (1850-2015) and the six 
+To coordinate the processing and consistency of LULCC data between
+the historical period (1850-2015) and the six
 SSP-RCP (2016-2100) scenarios derived from Integrated
 Assessment Models (IAM), the University of Maryland and the University of New Hampshire
 research groups (Louise Chini, George Hurtt, Steve
-Frolking and Ritvik Sahajpal; luh.umd.edu) produced a new version of the Land Use Harmonized version 2 
+Frolking and Ritvik Sahajpal; luh.umd.edu) produced a new version of the Land Use Harmonized version 2
 (LUH2) transient datasets for use with Earth System Model simulations. The new data sets
-are the product of the Land Use Model Intercomparison Project (LUMIP; https://cmip.ucar.edu/lumip) 
-as part of the Coupled Model Intercomparison Project 6 (CMIP6). The historical component of the 
-transient LULCC dataset has agriculture and urban 
-land use based on HYDE 3.2 with wood harvest based on FAO, Landsat and other sources, for the period 850-2015. 
+are the product of the Land Use Model Intercomparison Project (LUMIP; https://cmip.ucar.edu/lumip)
+as part of the Coupled Model Intercomparison Project 6 (CMIP6). The historical component of the
+transient LULCC dataset has agriculture and urban
+land use based on HYDE 3.2 with wood harvest based on FAO, Landsat and other sources, for the period 850-2015.
 The SSP-RCP transient LULCC components (2015-2100) are
 referred to as the LUH2 Future Scenario datasets. The LULCC information is provided at 0.25 degree grid resolution and includes
 fractional grid cell coverage by the 12 land units of:
@@ -275,13 +275,13 @@ Pasture, Rangeland, Urban,
 C3 Annual Crop, C4 Annual Crop, C3 Perennial Crop, C4 Perennial Crop, and C3 Nitrogen Fixing Crop.
 
 The new land unit format is an improvement on the CMIP5 LULCC
-datasets as they: provide Forest and Non Forest information in combination with Primary and Secondary 
-land; differentiate between Pasture and Rangelands for grazing livestock; and specify annual details 
-on the types of Crops grown and management practices applied in each grid cell. Like the CMIP5 LULCC datasets Primary vegetation 
+datasets as they: provide Forest and Non Forest information in combination with Primary and Secondary
+land; differentiate between Pasture and Rangelands for grazing livestock; and specify annual details
+on the types of Crops grown and management practices applied in each grid cell. Like the CMIP5 LULCC datasets Primary vegetation
 represents the fractional area of a grid cell with vegetation undisturbed by human activities. Secondary
-vegetation represents vegetated areas that have recovered from some human disturbance; this could include 
+vegetation represents vegetated areas that have recovered from some human disturbance; this could include
 re-vegetation of pasture and crop areas as well as primary vegetation areas that have been logged.
-In this manner the land units can change through deforestation from Forested to Non Forested land and in the 
+In this manner the land units can change through deforestation from Forested to Non Forested land and in the
 opposite direction from Non Forested to Forested land through reforestation or afforestation without going
 through the Crop, Pasture or Rangeland states.
 
@@ -290,7 +290,7 @@ the annual fraction of land that is transformed from one land unit category to
 another (e.g. Primary Forest to C3 Annual Crop, Pasture to C3 Perrenial Crop, etc.; Lawrence et al.
 2016). Included in these transition matrices is the total conversion of one land cover type to another referred to
 as Gross LULCC. This value can be larger than the sum of the changes in the state of a land unit from one time period
-to the next known as the Net LULCC. This difference is possible as land unit changes can occur both from the land unit 
+to the next known as the Net LULCC. This difference is possible as land unit changes can occur both from the land unit
 and to the land unit at the same time. An example of this difference occurs with shifting cultivation where Secondary Forest
 can be converted to C3 Annual Crop at the same time as C3 Annual Crop is abandoned to Secondary Forest.
 
@@ -303,39 +303,39 @@ Young Forest, and Secondary
 Non-Forest.
 
 Additional land use management is prescribed on the Crop land units for
-nitrogen fertilization and irrigation equipped land. The fertilizer application and the the irrigation fraction is 
-prescribed for each Crop land unit in a grid cell individually for each year of the time series. The wood harvest 
-and crop management are both prescribed spatially on the same 0.25 degree grid as the land use class transitions. 
+nitrogen fertilization and irrigation equipped land. The fertilizer application and the the irrigation fraction is
+prescribed for each Crop land unit in a grid cell individually for each year of the time series. The wood harvest
+and crop management are both prescribed spatially on the same 0.25 degree grid as the land use class transitions.
 
 Representing LUH2 Land Use and Land Cover Change in CLM5
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To represent the LUH2 transient LULCC dataset in CLM5, the annual fractional
 composition of the twelve land units specified in the dataset needs to be
-faithfully represented with a corresponding PFT and CFT mosaics of CLM. 
+faithfully represented with a corresponding PFT and CFT mosaics of CLM.
 CLM5 represents the land surface as a hierarchy of sub-grid types:
 glacier; lake;  urban; vegetated land; and crop land. The vegetated land is
-further divided into a mosaic of Plant Functional Types (PFTs), while the crop land 
-is divided into a mosaic of Crop Functional Types (CFTs). 
+further divided into a mosaic of Plant Functional Types (PFTs), while the crop land
+is divided into a mosaic of Crop Functional Types (CFTs).
 
 To support this translation task the CLM5 Land Use Data tool has been built that extends the
-methods described in Lawrence et al (2012) to include all the new functionality of CMIP6 and CLM5 LULCC. 
-The tool translates each of the LUH2 land units for a given year into fractional PFT and CFT values based on 
-the current day CLM5 data for the land unit in that grid cell. The current day land unit descriptions are generated from 
-from 1km resolution MODIS, MIRCA2000, ICESAT, AVHRR, SRTM, and CRU climate data products combined with reference year 
+methods described in Lawrence et al (2012) to include all the new functionality of CMIP6 and CLM5 LULCC.
+The tool translates each of the LUH2 land units for a given year into fractional PFT and CFT values based on
+the current day CLM5 data for the land unit in that grid cell. The current day land unit descriptions are generated from
+from 1km resolution MODIS, MIRCA2000, ICESAT, AVHRR, SRTM, and CRU climate data products combined with reference year
 LUH2 land unit data, usually set to 2005. Where the land unit does not exist in a grid cell for the current
 day, the land unit description is generated from nearest neighbors with an inverse distance weighted search
 algorithm.
- 
-The Land Use Data tool produces raw vegetation, crop, and management data files which are combined with 
+
+The Land Use Data tool produces raw vegetation, crop, and management data files which are combined with
 other raw land surface data to produce the CLM5 initial surface dataset and the dynamic
 *landuse.timeseries* dataset with the CLM5 mksurfdata_map tool. The schematic of this entire process from
-LUH2 time series and high resolution current day data to the output of CLM5 surface datasets from the 
+LUH2 time series and high resolution current day data to the output of CLM5 surface datasets from the
 mksurfdata_map tool is shown in Figure 21.2.
 
 The methodology for creating the CLM5 transient PFT and CFT dataset is based on four
-steps which are applied across all of the historical and future time series. 
-The first step involves generating the current day descriptions of natural and managed vegetation PFTs at 
+steps which are applied across all of the historical and future time series.
+The first step involves generating the current day descriptions of natural and managed vegetation PFTs at
 1km resolution from the global source datasets, and the current day description of crop CFTs at the 10km resolution
 from the MIRCA 2000 datasets. The second step combines the current day (2005) LUH2 land units with the current
 day CLM5 PFT and CFT distributions to get CLM5 land unit descriptions in either PFTs or CFTs at the LUH2 resolution of
@@ -356,7 +356,7 @@ data files in the mksurfdata_map tool.
 .. figure:: image2.png
 
  Schematic of translation of annual LUH2 land units to CLM5 plant and crop functional types.
- 
+
 .. _Figure Workflow of CLM5 Land Use Data Tool and Mksurfdata_map Tool:
 
 .. figure:: image3.png

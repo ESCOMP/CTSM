@@ -46,8 +46,8 @@ surface water temperatures for a 25-layer soil column with up to
 twelve overlying layers of snow and a single surface water layer with the
 boundary conditions of :math:`h` as the heat flux into the top soil,
 snow, and surface water layers from the overlying atmosphere (section
-:numref:`Numerical Solution Temperature`) and zero heat flux at the bottom 
-of the soil column. The temperature profile is calculated first without 
+:numref:`Numerical Solution Temperature`) and zero heat flux at the bottom
+of the soil column. The temperature profile is calculated first without
 phase change and then readjusted for phase change (section :numref:`Phase Change`).
 
 .. _Numerical Solution Temperature:
@@ -55,8 +55,8 @@ phase change and then readjusted for phase change (section :numref:`Phase Change
 Numerical Solution
 ----------------------
 
-The soil column is discretized into 25 layers (section 
-:numref:`Vertical Discretization`) where :math:`N_{levgrnd} = 25` is the 
+The soil column is discretized into 25 layers (section
+:numref:`Vertical Discretization`) where :math:`N_{levgrnd} = 25` is the
 number of soil layers (:numref:`Table Soil layer structure`).
 
 The overlying snow pack is modeled with up to twelve layers depending on
@@ -69,86 +69,86 @@ is the negative of the number of snow layers. The number of snow layers
 and the thickness of each layer is a function of snow depth
 :math:`z_{sno}`  (m) as follows.
 
-.. math:: 
+.. math::
 
    \left\{ \begin{array}{l}
-   snl=-1 \\ 
+   snl=-1 \\
    \Delta z_{0} = z_{sno}
    \end{array} \right\} & \qquad {\rm for\; 0.01}\le {\rm z}_{{\rm sno}} \le 0.03 \\
 
 .. math::
 
    \left\{ \begin{array}{l}
-   snl=-2  \\ 
+   snl=-2  \\
    \Delta z_{-1} ={z_{sno} \mathord{\left/ {\vphantom {z_{sno}  2}} \right.} 2} \\
    \Delta z_{0} = \Delta z_{-1}
-   \end{array} \right\} & \qquad {\rm for\; 0.03}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.04 \\ 
-   
+   \end{array} \right\} & \qquad {\rm for\; 0.03}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.04 \\
+
 .. math::
 
    \left\{ \begin{array}{l}
-   snl=-2 \\ 
+   snl=-2 \\
    \Delta z_{-1} = 0.02 \\
    \Delta z_{0} = z_{sno} -\Delta z_{-1}
-   \end{array} \right\} & \qquad {\rm for\; 0.04}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.07 \\ 
+   \end{array} \right\} & \qquad {\rm for\; 0.04}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.07 \\
 
 .. math::
 
    \left\{ \begin{array}{l}
-   snl=-3 \\ 
-   \Delta z_{-2} = 0.02 \\ 
+   snl=-3 \\
+   \Delta z_{-2} = 0.02 \\
    \Delta z_{-1} = {\left(z_{sno} -0.02\right)\mathord{\left/ {\vphantom {\left(z_{sno} -0.02\right) 2}} \right.} 2} \\
    \Delta z_{0} = \Delta z_{-1}
-   \end{array} \right\} & \qquad {\rm for\; 0.07}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.12 \\ 
-   
+   \end{array} \right\} & \qquad {\rm for\; 0.07}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.12 \\
+
 .. math::
 
    \left\{ \begin{array}{l}
-   snl=-3 \\ 
-   \Delta z_{-2} = 0.02 \\ 
+   snl=-3 \\
+   \Delta z_{-2} = 0.02 \\
    \Delta z_{-1} = 0.05 \\
-   \Delta z_{0} = z_{sno} -\Delta z_{-2} -\Delta z_{-1} 
-   \end{array} \right\} & \qquad {\rm for\; 0.12}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.18 \\ 
+   \Delta z_{0} = z_{sno} -\Delta z_{-2} -\Delta z_{-1}
+   \end{array} \right\} & \qquad {\rm for\; 0.12}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.18 \\
 
 .. math::
 
    \left\{ \begin{array}{l}
-   snl=-4  \\ 
-   \Delta z_{-3} = 0.02 \\ 
+   snl=-4  \\
+   \Delta z_{-3} = 0.02 \\
    \Delta z_{-2} = 0.05 \\
-   \Delta z_{-1} = {\left(z_{sno} -\Delta z_{-3} -\Delta z_{-2} \right)\mathord{\left/ {\vphantom {\left(z_{sno} -\Delta z_{-3} -\Delta z_{-2} \right) 2}} \right.} 2}  \\ 
-   \Delta z_{0} =\Delta z_{-1}  
-   \end{array} \right\} & \qquad {\rm for\; 0.18}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.29 \\ 
-   
+   \Delta z_{-1} = {\left(z_{sno} -\Delta z_{-3} -\Delta z_{-2} \right)\mathord{\left/ {\vphantom {\left(z_{sno} -\Delta z_{-3} -\Delta z_{-2} \right) 2}} \right.} 2}  \\
+   \Delta z_{0} =\Delta z_{-1}
+   \end{array} \right\} & \qquad {\rm for\; 0.18}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.29 \\
+
 .. math::
 
    \left\{ \begin{array}{l}
-   snl=-4 \\ 
-   \Delta z_{-3} = 0.02  \\ 
+   snl=-4 \\
+   \Delta z_{-3} = 0.02  \\
    \Delta z_{-2} = 0.05  \\
-   \Delta z_{-1} = 0.11  \\ 
+   \Delta z_{-1} = 0.11  \\
    \Delta z_{0} = z_{sno} -\Delta z_{-3} -\Delta z_{-2} -\Delta z_{-1}
-   \end{array} \right\} & \qquad {\rm for\; 0.29}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.41 \\ 
+   \end{array} \right\} & \qquad {\rm for\; 0.29}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.41 \\
 
 .. math::
 
    \left\{ \begin{array}{l}
-   snl=-5  \\ 
-   \Delta z_{-4} = 0.02  \\ 
+   snl=-5  \\
+   \Delta z_{-4} = 0.02  \\
    \Delta z_{-3} = 0.05  \\
-   \Delta z_{-2} = 0.11  \\ 
-   \Delta z_{-1} = {\left(z_{sno} -\Delta z_{-4} -\Delta z_{-3} -\Delta z_{-2} \right)\mathord{\left/ {\vphantom {\left(z_{sno} -\Delta z_{-4} -\Delta z_{-3} -\Delta z_{-2} \right) 2}} \right.} 2}  \\ 
+   \Delta z_{-2} = 0.11  \\
+   \Delta z_{-1} = {\left(z_{sno} -\Delta z_{-4} -\Delta z_{-3} -\Delta z_{-2} \right)\mathord{\left/ {\vphantom {\left(z_{sno} -\Delta z_{-4} -\Delta z_{-3} -\Delta z_{-2} \right) 2}} \right.} 2}  \\
    \Delta z_{0} = \Delta z_{-1}
-   \end{array} \right\} & \qquad {\rm for\; 0.41}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.64 \\ 
+   \end{array} \right\} & \qquad {\rm for\; 0.41}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.64 \\
 
 .. math::
 
    \left\{ \begin{array}{l}
-   snl=-5 \\ 
-   \Delta z_{-4} = 0.02  \\ 
+   snl=-5 \\
+   \Delta z_{-4} = 0.02  \\
    \Delta z_{-3} = 0.05  \\
-   \Delta z_{-2} = 0.11  \\ 
-   \Delta z_{-1} = 0.23  \\ 
+   \Delta z_{-2} = 0.11  \\
+   \Delta z_{-1} = 0.23  \\
    \Delta z_{0} = z_{sno} -\Delta z_{-4} -\Delta z_{-3} -\Delta z_{-2} -\Delta z_{-1}
    \end{array} \right\} & \qquad {\rm for\; 0.64}\, {\rm <}\, {\rm z}_{{\rm sno}}
 
@@ -196,7 +196,7 @@ where the thermal conductivity at the interface
 
    \lambda \left[z_{h,\, i} \right]=\left\{\begin{array}{l} {\frac{\lambda _{i} \lambda _{i+1} \left(z_{i+1} -z_{i} \right)}{\lambda _{i} \left(z_{i+1} -z_{h,\, i} \right)+\lambda _{i+1} \left(z_{h,\, i} -z_{i} \right)} \qquad i=snl+1,\ldots ,N_{levgrnd} -1} \\ {0\qquad i=N_{levgrnd} } \end{array}\right\}.
 
-These equations are derived, with reference to 
+These equations are derived, with reference to
 :numref:`Figure Soil Temperature Schematic`, assuming
 that the heat flux from :math:`i` (depth :math:`z_{i}` ) to the
 interface between :math:`i` and :math:`i+1` (depth :math:`z_{h,\, i}` )
@@ -330,13 +330,13 @@ The heat flux into the snow surface from the overlying atmosphere
    h=\overrightarrow{S}_{sno} -\overrightarrow{L}_{sno} -H_{sno} -\lambda E_{sno}
 
 where :math:`\overrightarrow{S}_{sno}`  is the solar radiation absorbed
-by the top snow layer (section :numref:`Snow Albedo`), :math:`\overrightarrow{L}_{sno}` 
+by the top snow layer (section :numref:`Snow Albedo`), :math:`\overrightarrow{L}_{sno}`
 is the longwave radiation absorbed by the snow (positive toward the
-atmosphere) (section :numref:`Longwave Fluxes`), :math:`H_{sno}`  is the 
-sensible heat flux from the snow (Chapter 
-:numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`), and 
-:math:`\lambda E_{sno}`  is the latent heat flux from the snow (Chapter 
-:numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`). The partial 
+atmosphere) (section :numref:`Longwave Fluxes`), :math:`H_{sno}`  is the
+sensible heat flux from the snow (Chapter
+:numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`), and
+:math:`\lambda E_{sno}`  is the latent heat flux from the snow (Chapter
+:numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`). The partial
 derivative of the heat flux :math:`h` with respect to temperature is
 
 .. math::
@@ -354,10 +354,10 @@ where the partial derivative of the net longwave radiation is
 and the partial derivatives of the sensible and latent heat fluxes are
 given by equations and for non-vegetated surfaces, and by equations and
 for vegetated surfaces. :math:`\sigma`  is the Stefan-Boltzmann constant
-(W m\ :sup:`-2` K\ :sup:`-4`) (:numref:`Table Physical Constants`) and 
-:math:`\varepsilon _{g}`  is the ground emissivity (section 
-:numref:`Longwave Fluxes`). For purposes of computing :math:`h` and 
-:math:`\frac{\partial h}{\partial T_{g} }` , the term :math:`\lambda` 
+(W m\ :sup:`-2` K\ :sup:`-4`) (:numref:`Table Physical Constants`) and
+:math:`\varepsilon _{g}`  is the ground emissivity (section
+:numref:`Longwave Fluxes`). For purposes of computing :math:`h` and
+:math:`\frac{\partial h}{\partial T_{g} }` , the term :math:`\lambda`
 is arbitrarily assumed to be
 
 .. math::
@@ -367,9 +367,9 @@ is arbitrarily assumed to be
 
 where :math:`\lambda _{sub}`  and :math:`\lambda _{vap}`  are the
 latent heat of sublimation and vaporization, respectively (J
-kg\ :sup:`-1`) (:numref:`Table Physical Constants`), and :math:`w_{liq,\, snl+1}`  
+kg\ :sup:`-1`) (:numref:`Table Physical Constants`), and :math:`w_{liq,\, snl+1}`
 and :math:`w_{ice,\, snl+1}`  are the liquid water and ice contents of the
-top snow/soil layer, respectively (kg m\ :sup:`-2`) 
+top snow/soil layer, respectively (kg m\ :sup:`-2`)
 (Chapter :numref:`rst_Hydrology`).
 
 For the top soil layer, :math:`i=1`, the coefficients are
@@ -552,26 +552,26 @@ phase change will take place as
 .. math::
    :label: 6.53a
 
-   \begin{array}{lr} 
+   \begin{array}{lr}
    T_{i}^{n+1} >T_{f} {\rm \; and\; }w_{ice,\, i} >0 & \qquad i=snl+1,\ldots ,N_{levgrnd} \qquad {\rm melting}   \end{array}
 
 .. math::
    :label: 6.53b
 
-   \begin{array}{lr} 
-   \begin{array}{lr} 
-   T_{i}^{n+1} <T_{f} {\rm \; and\; }w_{liq,\, i} >0 & \qquad i=snl+1,\ldots ,0 \\ 
+   \begin{array}{lr}
+   \begin{array}{lr}
+   T_{i}^{n+1} <T_{f} {\rm \; and\; }w_{liq,\, i} >0 & \qquad i=snl+1,\ldots ,0 \\
    T_{i}^{n+1} <T_{f} {\rm \; and\; }w_{liq,\, i} >w_{liq,\, \max ,\, i} & \quad i=1,\ldots ,N_{levgrnd}
-   \end{array} & \quad {\rm freezing} 
+   \end{array} & \quad {\rm freezing}
    \end{array}
 
 where :math:`T_{i}^{n+1}`  is the soil layer temperature after solution
 of the tridiagonal equation set, :math:`w_{ice,\, i}`  and
 :math:`w_{liq,\, i}`  are the mass of ice and liquid water (kg
-m\ :sup:`-2`) in each snow/soil layer, respectively, and :math:`T_{f}` 
-is the freezing temperature of water (K) (:numref:`Table Physical Constants`). 
-For the freezing process in soil layers, the concept of supercooled soil 
-water from :ref:`Niu and Yang (2006)<NiuYang2006>` is adopted. The supercooled 
+m\ :sup:`-2`) in each snow/soil layer, respectively, and :math:`T_{f}`
+is the freezing temperature of water (K) (:numref:`Table Physical Constants`).
+For the freezing process in soil layers, the concept of supercooled soil
+water from :ref:`Niu and Yang (2006)<NiuYang2006>` is adopted. The supercooled
 soil water is the liquid water that coexists with ice over a wide range of
 temperatures below freezing and is implemented through a freezing point
 depression equation
@@ -588,7 +588,7 @@ layer :math:`i` (kg m\ :sup:`-2`) when the soil temperature
 (:numref:`Table Physical Constants`), :math:`g` is the gravitational acceleration (m
 s\ :sup:`-2`) (:numref:`Table Physical Constants`), and :math:`\psi _{sat,\, i}`  and
 :math:`B_{i}`  are the soil texture-dependent saturated matric potential
-(mm) and :ref:`Clapp and Hornberger (1978)<ClappHornberger1978>` exponent 
+(mm) and :ref:`Clapp and Hornberger (1978)<ClappHornberger1978>` exponent
 (section :numref:`Soil Water`).
 
 For the special case when snow is present (snow mass :math:`W_{sno} >0`)
@@ -606,10 +606,10 @@ determined as follows
 .. math::
    :label: 6.55
 
-   H_{i} =\left\{\begin{array}{lr} 
-   \frac{\partial h}{\partial T} \left(T_{f} -T_{i}^{n} \right)-\frac{c_{i} \Delta z_{i} }{\Delta t} \left(T_{f} -T_{i}^{n} \right) & \quad \quad i=snl+1 \\ 
-   \left(1-f_{sno} -f_{h2osfc} \right)\frac{\partial h}{\partial T} \left(T_{f} -T_{i}^{n} \right)-\frac{c_{i} \Delta z_{i} }{\Delta t} \left(T_{f} -T_{i}^{n} \right)\quad {\kern 1pt} {\kern 1pt} {\kern 1pt} {\kern 1pt} & i=1 \\ 
-   -\frac{c_{i} \Delta z_{i} }{\Delta t} \left(T_{f} -T_{i}^{n} \right) & \quad \quad i\ne \left\{1,snl+1\right\} 
+   H_{i} =\left\{\begin{array}{lr}
+   \frac{\partial h}{\partial T} \left(T_{f} -T_{i}^{n} \right)-\frac{c_{i} \Delta z_{i} }{\Delta t} \left(T_{f} -T_{i}^{n} \right) & \quad \quad i=snl+1 \\
+   \left(1-f_{sno} -f_{h2osfc} \right)\frac{\partial h}{\partial T} \left(T_{f} -T_{i}^{n} \right)-\frac{c_{i} \Delta z_{i} }{\Delta t} \left(T_{f} -T_{i}^{n} \right)\quad {\kern 1pt} {\kern 1pt} {\kern 1pt} {\kern 1pt} & i=1 \\
+   -\frac{c_{i} \Delta z_{i} }{\Delta t} \left(T_{f} -T_{i}^{n} \right) & \quad \quad i\ne \left\{1,snl+1\right\}
    \end{array}\right\}.
 
 If the melting criteria is met :eq:`6.53a` and
@@ -634,10 +634,10 @@ and for :math:`i=1,\ldots ,N_{levgrnd}`  as
 .. math::
    :label: 6.58
 
-   w_{ice,\, i}^{n+1} = 
-   \left\{\begin{array}{lr} 
-   \min \left(w_{liq,\, i}^{n} +w_{ice,\, i}^{n} -w_{liq,\, \max ,\, i}^{n} ,\, w_{ice,\, i}^{n} -H_{m} \right) & \qquad w_{liq,\, i}^{n} +w_{ice,\, i}^{n} \ge w_{liq,\, \max ,\, i}^{n} {\rm \; } \\ 
-   {\rm 0} & \qquad w_{liq,\, i}^{n} +w_{ice,\, i}^{n} <w_{liq,\, \max ,\, i}^{n} {\rm \; \; }\, 
+   w_{ice,\, i}^{n+1} =
+   \left\{\begin{array}{lr}
+   \min \left(w_{liq,\, i}^{n} +w_{ice,\, i}^{n} -w_{liq,\, \max ,\, i}^{n} ,\, w_{ice,\, i}^{n} -H_{m} \right) & \qquad w_{liq,\, i}^{n} +w_{ice,\, i}^{n} \ge w_{liq,\, \max ,\, i}^{n} {\rm \; } \\
+   {\rm 0} & \qquad w_{liq,\, i}^{n} +w_{ice,\, i}^{n} <w_{liq,\, \max ,\, i}^{n} {\rm \; \; }\,
    \end{array}\right\}.
 
 Liquid water mass is readjusted as
@@ -661,10 +661,10 @@ and this energy is used to cool or warm the snow/soil layer (if
 .. math::
    :label: 6.61
 
-   T_{i}^{n+1} = 
-   \left\{\begin{array}{lr} 
-   T_{f} +{\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*} \mathord{\left/ {\vphantom {\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*}  \left(1-\frac{\Delta t}{c_{i} \Delta z_{i} } \frac{\partial h}{\partial T} \right)}} \right.} \left(1-\frac{\Delta t}{c_{i} \Delta z_{i} } \frac{\partial h}{\partial T} \right)} & \quad \quad \quad \quad \, i=snl+1 \\ 
-   T_{f} +{\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*} \mathord{\left/ {\vphantom {\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*}  \left(1-\left(1-f_{sno} -f_{h2osfc} \right)\frac{\Delta t}{c_{i} \Delta z_{i} } \frac{\partial h}{\partial T} \right)}} \right.} \left(1-\left(1-f_{sno} -f_{h2osfc} \right)\frac{\Delta t}{c_{i} \Delta z_{i} } \frac{\partial h}{\partial T} \right)} & \qquad i=1 \\ 
+   T_{i}^{n+1} =
+   \left\{\begin{array}{lr}
+   T_{f} +{\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*} \mathord{\left/ {\vphantom {\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*}  \left(1-\frac{\Delta t}{c_{i} \Delta z_{i} } \frac{\partial h}{\partial T} \right)}} \right.} \left(1-\frac{\Delta t}{c_{i} \Delta z_{i} } \frac{\partial h}{\partial T} \right)} & \quad \quad \quad \quad \, i=snl+1 \\
+   T_{f} +{\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*} \mathord{\left/ {\vphantom {\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*}  \left(1-\left(1-f_{sno} -f_{h2osfc} \right)\frac{\Delta t}{c_{i} \Delta z_{i} } \frac{\partial h}{\partial T} \right)}} \right.} \left(1-\left(1-f_{sno} -f_{h2osfc} \right)\frac{\Delta t}{c_{i} \Delta z_{i} } \frac{\partial h}{\partial T} \right)} & \qquad i=1 \\
    T_{f} +\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*} & \quad \quad \quad \quad \, i\ne \left\{1,snl+1\right\}
    \end{array}\right\}.
 
@@ -702,9 +702,9 @@ available to the top soil layer as
    H_{1} =H_{1*} .
 
 The ice mass, liquid water content, and temperature of the top soil
-layer are then determined from :eq:`6.56`, :eq:`6.59`, and :eq:`6.61` 
-using the recalculated energy from :eq:`6.65`. Snow melt :math:`M_{1S}` 
-(kg m\ :sup:`-2` s\ :sup:`-1`) and phase change energy :math:`E_{p,\, 1S}` 
+layer are then determined from :eq:`6.56`, :eq:`6.59`, and :eq:`6.61`
+using the recalculated energy from :eq:`6.65`. Snow melt :math:`M_{1S}`
+(kg m\ :sup:`-2` s\ :sup:`-1`) and phase change energy :math:`E_{p,\, 1S}`
 (W m\ :sup:`-2`) for this special case are
 
 .. math::
@@ -754,7 +754,7 @@ The solution for snow/soil temperatures conserves energy as
 
    G-E_{p} -\sum _{i=snl+1}^{i=N_{levgrnd} }\frac{c_{i} \Delta z_{i} }{\Delta t}  \left(T_{i}^{n+1} -T_{i}^{n} \right)=0
 
-where :math:`G` is the ground heat flux (section 
+where :math:`G` is the ground heat flux (section
 :numref:`Update of Ground Sensible and Latent Heat Fluxes`).
 
 .. _Surface Water:
@@ -773,7 +773,7 @@ energy available for freezing is
 
 where :math:`c_{h2osfc}`  is the volumetric heat capacity of water, and
 :math:`\Delta z_{h2osfc}`  is the depth of the surface water layer. If
-:math:`H_{m} =\frac{H_{h2osfc} \Delta t}{L_{f} } >0` then :math:`H_{m}` 
+:math:`H_{m} =\frac{H_{h2osfc} \Delta t}{L_{f} } >0` then :math:`H_{m}`
 is removed from surface water and added to the snow column as ice
 
 .. math::
@@ -802,9 +802,9 @@ cool the snow layer.
 Soil and Snow Thermal Properties
 ------------------------------------
 
-The thermal properties of the soil are assumed to be a weighted combination of 
-the mineral and organic properties of the soil 
-(:ref:`Lawrence and Slater 2008 <LawrenceSlater2008>`). 
+The thermal properties of the soil are assumed to be a weighted combination of
+the mineral and organic properties of the soil
+(:ref:`Lawrence and Slater 2008 <LawrenceSlater2008>`).
 The soil layer organic matter fraction :math:`f_{om,i}`  is
 
 .. math::
@@ -812,20 +812,20 @@ The soil layer organic matter fraction :math:`f_{om,i}`  is
 
    f_{om,i} =\rho _{om,i} /\rho _{om,\max } .
 
-Soil thermal conductivity :math:`\lambda _{i}`  (W m\ :sup:`-1` K\ :sup:`-1`) 
+Soil thermal conductivity :math:`\lambda _{i}`  (W m\ :sup:`-1` K\ :sup:`-1`)
 is from :ref:`Farouki (1981) <Farouki1981>`
 
 .. math::
    :label: 6.78
 
-   \begin{array}{lr} 
+   \begin{array}{lr}
    \lambda _{i} = \left\{
-   \begin{array}{lr} 
-   K_{e,\, i} \lambda _{sat,\, i} +\left(1-K_{e,\, i} \right)\lambda _{dry,\, i} &\qquad S_{r,\, i} > 1\times 10^{-7}  \\ 
-   \lambda _{dry,\, i} &\qquad S_{r,\, i} \le 1\times 10^{-7}  
-   \end{array}\right\} &\qquad i=1,\ldots ,N_{levsoi}  \\ 
+   \begin{array}{lr}
+   K_{e,\, i} \lambda _{sat,\, i} +\left(1-K_{e,\, i} \right)\lambda _{dry,\, i} &\qquad S_{r,\, i} > 1\times 10^{-7}  \\
+   \lambda _{dry,\, i} &\qquad S_{r,\, i} \le 1\times 10^{-7}
+   \end{array}\right\} &\qquad i=1,\ldots ,N_{levsoi}  \\
 
-   \lambda _{i} =\lambda _{bedrock} &\qquad i=N_{levsoi} +1,\ldots N_{levgrnd}  
+   \lambda _{i} =\lambda _{bedrock} &\qquad i=N_{levsoi} +1,\ldots N_{levgrnd}
    \end{array}
 
 where :math:`\lambda _{sat,\, i}`  is the saturated thermal
@@ -834,7 +834,7 @@ conductivity, :math:`K_{e,\, i}`  is the Kersten number,
 :math:`S_{r,\, i}`  is the wetness of the soil with respect to
 saturation, and :math:`\lambda _{bedrock} =3` W m\ :sup:`-1`
 K\ :sup:`-1` is the thermal conductivity assumed for the deep
-ground layers (typical of saturated granitic rock; 
+ground layers (typical of saturated granitic rock;
 :ref:`Clauser and Huenges 1995 <ClauserHuenges1995>`). For glaciers,
 
 .. math::
@@ -900,9 +900,9 @@ the degree of saturation :math:`S_{r}`  and phase of water
    :label: 6.85
 
    K_{e,\, i} = \left\{
-   \begin{array}{lr} 
-   \log \left(S_{r,\, i} \right)+1\ge 0 &\qquad T_{i} \ge T_{f}  \\ 
-   S_{r,\, i} &\qquad T_{i} <T_{f}  
+   \begin{array}{lr}
+   \log \left(S_{r,\, i} \right)+1\ge 0 &\qquad T_{i} \ge T_{f}  \\
+   S_{r,\, i} &\qquad T_{i} <T_{f}
    \end{array}\right\}
 
 where
@@ -920,7 +920,7 @@ K\ :sup:`-1`) for snow is from :ref:`Jordan (1991) <Jordan1991>`
 
    \lambda _{i} =\lambda _{air} +\left(7.75\times 10^{-5} \rho _{sno,\, i} +1.105\times 10^{-6} \rho _{sno,\, i}^{2} \right)\left(\lambda _{ice} -\lambda _{air} \right)
 
-where :math:`\lambda _{air}`  is the thermal conductivity of air (:numref:`Table Physical Constants`) 
+where :math:`\lambda _{air}`  is the thermal conductivity of air (:numref:`Table Physical Constants`)
 and :math:`\rho _{sno,\, i}`  is the bulk density of snow (kg m\ :sup:`-3`)
 
 .. math::
@@ -928,7 +928,7 @@ and :math:`\rho _{sno,\, i}`  is the bulk density of snow (kg m\ :sup:`-3`)
 
    \rho _{sno,\, i} =\frac{w_{ice,\, i} +w_{liq,\, i} }{\Delta z_{i} } .
 
-The volumetric heat capacity :math:`c_{i}`  (J m\ :sup:`-3` K\ :sup:`-1`) for 
+The volumetric heat capacity :math:`c_{i}`  (J m\ :sup:`-3` K\ :sup:`-1`) for
 soil is from :ref:`de Vries (1963) <deVries1963>` and depends on the
 heat capacities of the soil solid, liquid water, and ice constituents
 
@@ -953,9 +953,9 @@ where the heat capacity of mineral soil solids
 .. math::
    :label: 6.91
 
-   \begin{array}{lr} 
-   c_{s,\min ,\, i} =\left(\frac{2.128{\rm \; }\left(\% sand\right)_{i} +{\rm 2.385\; }\left(\% clay\right)_{i} }{\left(\% sand\right)_{i} +\left(\% clay\right)_{i} } \right)\times 10^{6} &\qquad i=1,\ldots ,N_{levsoi}  \\ 
-   c_{s,\, \min ,i} =c_{s,\, bedrock} &\qquad i=N_{levsoi} +1,\ldots ,N_{levgrnd}  
+   \begin{array}{lr}
+   c_{s,\min ,\, i} =\left(\frac{2.128{\rm \; }\left(\% sand\right)_{i} +{\rm 2.385\; }\left(\% clay\right)_{i} }{\left(\% sand\right)_{i} +\left(\% clay\right)_{i} } \right)\times 10^{6} &\qquad i=1,\ldots ,N_{levsoi}  \\
+   c_{s,\, \min ,i} =c_{s,\, bedrock} &\qquad i=N_{levsoi} +1,\ldots ,N_{levgrnd}
    \end{array}
 
 where :math:`c_{s,bedrock} =2\times 10^{6}`  J m\ :sup:`-3`
@@ -986,9 +986,9 @@ where :math:`c_{1}^{*}`  is calculated from :eq:`6.89` or :eq:`6.92`.
 Excess Ground Ice
 ------------------------------------
 
-An optional parameterization of excess ground ice melt and respective subsidence based on (:ref:`Lee et al., (2014) <Leeetal2014>`). 
-Initial excess ground ice concentrations for soil columns are derived from (:ref:`Brown et al., (1997) <Brownetal1997>`). 
-When the excess ground ice is present in the soil column, soil depth for a given layer (:math:`z_{i}`) 
+An optional parameterization of excess ground ice melt and respective subsidence based on (:ref:`Lee et al., (2014) <Leeetal2014>`).
+Initial excess ground ice concentrations for soil columns are derived from (:ref:`Brown et al., (1997) <Brownetal1997>`).
+When the excess ground ice is present in the soil column, soil depth for a given layer (:math:`z_{i}`)
 is adjusted by the amount of excess ice in the column:
 
 .. math::
@@ -996,7 +996,7 @@ is adjusted by the amount of excess ice in the column:
 
    z_{i}^{'}=\Sigma_{j=1}^{i} \ z_{j}^{'}+\frac{w_{exice,\, j}}{\rho_{ice} }
 
-where :math:`w_{exice,\,j}` is excess ground ice amount (kg m :sup:`-2`) in layer :math:`j` 
+where :math:`w_{exice,\,j}` is excess ground ice amount (kg m :sup:`-2`) in layer :math:`j`
 and :math:`\rho_{ice}` is the density of ice (kg m :sup:`-3`).
 After adjustment of layer depths have been made, all of the soil temperature equations  (from :eq:`6.80` to :eq:`6.89`)
 are calculted based on the adjusted depths. Thermal properties are additionally adjusted (:eq:`6.8` and :eq:`6.8`) in the following way:
@@ -1017,12 +1017,12 @@ Soil subsidence at the timestep :math:`n+1` (:math:`z_{exice}^{n+1}`, m) is then
 
    z_{exice}^{n+1}=\Sigma_{i=1}^{N_{levgrnd}} \ z_{j}^{',\ ,n+1}-z_{j}^{',\ ,n }
 
-With regards to hydraulic counductivity, excess ground ice is treated the same way normal soil 
-ice is treated in :numref:`Frozen Soils and Perched Water Table`. 
-When a soil layer thaws, excess ground ice is only allowed 
-to melt when no normals soil ice is present in the layer. 
-When a soil layer refreezes, liquid soil water can only turn into normal soil ice, thus, no new of excess ice can be created but only melted. 
-The excess liquid soil moisture from excess ice melt is distributed within the soil column according 
+With regards to hydraulic counductivity, excess ground ice is treated the same way normal soil
+ice is treated in :numref:`Frozen Soils and Perched Water Table`.
+When a soil layer thaws, excess ground ice is only allowed
+to melt when no normals soil ice is present in the layer.
+When a soil layer refreezes, liquid soil water can only turn into normal soil ice, thus, no new of excess ice can be created but only melted.
+The excess liquid soil moisture from excess ice melt is distributed within the soil column according
 to :numref:`Lateral Sub-surface Runoff`.
 
 

@@ -6,7 +6,7 @@
  Running Single Point Configurations
 ******************************************
 
-In addition to ``PTS_MODE``, CLM supports running using single-point or regional datasets that are customized to a particular region. 
+In addition to ``PTS_MODE``, CLM supports running using single-point or regional datasets that are customized to a particular region.
 CLM supports a a small number of out-of-the-box single-point and regional datasets.
 However, users can create their own dataset.
 
@@ -22,10 +22,10 @@ Which results in the following:
 
    CLM build-namelist - valid values for res (Horizontal resolutions
    Note: 0.5x0.5, 5x5min, 10x10min, 3x3min and 0.33x0.33 are only used for CLM tools):
-         Values: default 512x1024 360x720cru 128x256 64x128 48x96 32x64 8x16 94x192  \ 
-                 0.23x0.31 0.47x0.63 0.9x1.25 1.9x2.5 2.5x3.33 4x5 10x15 5x5_amazon 1x1_tropicAtl \ 
-                 1x1_vancouverCAN 1x1_mexicocityMEX 1x1_asphaltjungleNJ 1x1_brazil 1x1_urbanc_alpha 1x1_numaIA  \ 
-                 1x1_smallvilleIA 0.5x0.5 3x3min 5x5min 10x10min 0.33x0.33 ne4np4 ne16np4 ne30np4 ne60np4  \ 
+         Values: default 512x1024 360x720cru 128x256 64x128 48x96 32x64 8x16 94x192  \
+                 0.23x0.31 0.47x0.63 0.9x1.25 1.9x2.5 2.5x3.33 4x5 10x15 5x5_amazon 1x1_tropicAtl \
+                 1x1_vancouverCAN 1x1_mexicocityMEX 1x1_asphaltjungleNJ 1x1_brazil 1x1_urbanc_alpha 1x1_numaIA  \
+                 1x1_smallvilleIA 0.5x0.5 3x3min 5x5min 10x10min 0.33x0.33 ne4np4 ne16np4 ne30np4 ne60np4  \
                  ne120np4 ne240np4 wus12 us20
          Default = 1.9x2.5
         (NOTE: resolution and mask and other settings may influence what the default is)
@@ -40,7 +40,7 @@ Example: Running CLM over a single-point test site in Brazil
 
    > cd scripts
    > set SITE=1x1_brazil
-   > ./create_newcase -case testSPDATASET -res $SITE -compset I2000Clm50SpGs 
+   > ./create_newcase -case testSPDATASET -res $SITE -compset I2000Clm50SpGs
    > cd testSPDATASET
 
 Then setup, build and run normally.
@@ -54,7 +54,7 @@ Example: Running CLM over the single-point of Mexicocity Mexico with the default
    > cd scripts
    # Set a variable to the site you want to use (as it's used several times below)
    > set SITE=1x1_mexicocityMEX
-   > ./create_newcase -case testSPDATASET -res $SITE -compset I1PtClm50SpGs 
+   > ./create_newcase -case testSPDATASET -res $SITE -compset I1PtClm50SpGs
    > cd testSPDATASET
 
 Then setup, build and run normally.
@@ -68,21 +68,21 @@ Then setup, build and run normally.
 Using Supported Single-point Datasets that have their own Atmospheric Forcing
 ================================================================================
 
-Of the supported single-point datasets we have three that also have atmospheric forcing data that go with them: Mexico City (Mexico), Vancouver, (Canada, British Columbia), and ``urbanc_alpha`` (test data for an Urban inter-comparison project). 
-Mexico city and Vancouver also have namelist options in the source code for them to work with modified urban data parameters that are particular to these locations. 
+Of the supported single-point datasets we have three that also have atmospheric forcing data that go with them: Mexico City (Mexico), Vancouver, (Canada, British Columbia), and ``urbanc_alpha`` (test data for an Urban inter-comparison project).
+Mexico city and Vancouver also have namelist options in the source code for them to work with modified urban data parameters that are particular to these locations.
 To turn on the atmospheric forcing for these datasets, you set the ``env_run.xml DATM_MODE`` variable to ``CLM1PT``, and then the atmospheric forcing datasets will be used for the point picked.
 If you use one of the compsets that has "I1Pt" in the name that will be set automatically.
 
-When running with datasets that have their own atmospheric forcing you need to be careful to run over the period that data is available. 
-If you have at least one year of forcing it will cycle over the available data over and over again no matter how long of a simulation you run. 
-However, if you have less than a years worth of data (or if the start date doesn't start at the beginning of the year, or the end date doesn't end at the end of the year) then you won't be able to run over anything but the data extent. 
-In this case you will need to carefully set the ``RUN_STARTDATE``, ``START_TOD`` and ``STOP_N/STOP_OPTION`` variables for your case to run over the entire time extent of your data. 
+When running with datasets that have their own atmospheric forcing you need to be careful to run over the period that data is available.
+If you have at least one year of forcing it will cycle over the available data over and over again no matter how long of a simulation you run.
+However, if you have less than a years worth of data (or if the start date doesn't start at the beginning of the year, or the end date doesn't end at the end of the year) then you won't be able to run over anything but the data extent.
+In this case you will need to carefully set the ``RUN_STARTDATE``, ``START_TOD`` and ``STOP_N/STOP_OPTION`` variables for your case to run over the entire time extent of your data.
 For the supported data points, these values are in the XML database and you can use the **queryDefaultNamelist.pl** script to query the values and set them for your case (they are set for the three urban test cases: Mexicocity, Vancouver, and urbanc_alpha).
 
 In the example below we will show how to do this for the Vancouver, Canada point.
 
 Example: Running CLM over the single-point of Vancouver Canada with supplied atmospheric forcing data for Vancouver.
-------------------------------------------------------------------------------------------------------------------------- 
+-------------------------------------------------------------------------------------------------------------------------
 ::
 
    > cd scripts
@@ -123,7 +123,7 @@ Example: Running CLM over the single-point of Vancouver Canada with supplied atm
 Creating your own single-point dataset
 ===================================================
 
-The following provides an example of setting up a case using ``CLM_USRDAT_NAME`` where you rename the files according to the ``CLM_USRDAT_NAME`` convention. 
+The following provides an example of setting up a case using ``CLM_USRDAT_NAME`` where you rename the files according to the ``CLM_USRDAT_NAME`` convention.
 We have an example of such datafiles in the repository for a specific region over Alaska (actually just a sub-set of the global f19 grid).
 
 Example: Using CLM_USRDAT_NAME to run a simulation using user datasets for a specific region over Alaska
@@ -173,7 +173,7 @@ Example: Creating a surface dataset for a single point
    > setenv OCNDOM domain.ocn_noocean.nc
    > setenv ATMDOM domain.lnd.{$GRIDNAME}_noocean.nc
    > ./gen_domain -m $MAPFILE -o $OCNDOM -l $ATMDOM
-   # Save the location where the domain file was created 
+   # Save the location where the domain file was created
    > setenv GENDOM_PATH `pwd`
    # Finally create the surface dataset
    > cd ../../../../lnd/clm/tools/|version|/mksurfdata_map/src
@@ -189,11 +189,11 @@ Example: Setting up a case from the single-point surface dataset just created
 
    # First setup an environment variable that points to the top of the CESM directory.
    > setenv CESMROOT <directory-of-path-to-main-cesm-directory>
-   # Next make sure you have a inputdata location that you can write to 
+   # Next make sure you have a inputdata location that you can write to
    # You only need to do this step once, so you won't need to do this in the future
    > setenv MYCSMDATA $HOME/inputdata     # Set env var for the directory for input data
    > ./link_dirtree $CSMDATA $MYCSMDATA
-   # Copy the file you created above to your new $MYCSMDATA location following the CLMUSRDAT 
+   # Copy the file you created above to your new $MYCSMDATA location following the CLMUSRDAT
    # naming convention (leave off the creation date)
    > cp $CESMROOT/$CTSMROOT/tools/mksurfdata_map/surfdata_${GRIDNAME}_simyr1850_$CDATE.nc \
    $MYCSMDATA/lnd/clm2/surfdata_map/surfdata_${GRIDNAME}_simyr1850.nc

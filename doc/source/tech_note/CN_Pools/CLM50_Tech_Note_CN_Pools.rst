@@ -14,7 +14,7 @@ of new vegetation growth and litterfall is also prognostic, responding
 to soil and air temperature, soil water availability, daylength, and
 crop management practices in
 varying degrees depending on a specified phenology type or management for each PFT
-(Chapter 
+(Chapter
 :numref:`rst_Vegetation Phenology and Turnover`). The
 prognostic LAI, SAI,
 tissue stoichiometry, and vegetation heights are
@@ -46,7 +46,7 @@ decomposing carbon and nitrogen pools as vegetation successively
 breaks down to CWD, and/or litter, and subsequently to soil organic
 matter. Discussion of the decomposition model, alternate
 specifications of decomposition rates, and methods to rapidly
-equilibrate the decomposition model, is in Chapter 
+equilibrate the decomposition model, is in Chapter
 :numref:`rst_Decomposition`.
 
 Tissue Stoichiometry
@@ -54,20 +54,20 @@ Tissue Stoichiometry
 
 As of CLM5, vegetation tissues have a flexible stoichiometry, as
 described in :ref:`Ghimire et al. (2016) <Ghimireetal2016>`. Each
-tissue has a target C\:N ratio, with the target leaf C\:N varying by plant functional type 
+tissue has a target C\:N ratio, with the target leaf C\:N varying by plant functional type
 (see :numref:`Table Plant functional type (PFT) target CN parameters`), and nitrogen is allocated at each
 timestep in order to allow the plant to best match the target
 stoichiometry.  Nitrogen downregulation of productivity acts by
 increasing the C\:N ratio of leaves when insufficient nitrogen is
 available to meet stoichiometric demands of leaf growth, thereby
 reducing the N available for photosynthesis and reducing the :math:`V_{\text{c,max25}}` and
-:math:`J_{\text{max25}}` terms, as described in Chapter 
+:math:`J_{\text{max25}}` terms, as described in Chapter
 :numref:`rst_Photosynthetic Capacity`.  Details of the flexible tissue
 stoichiometry are described in Chapter :numref:`rst_CN Allocation`.
 
 .. _Table Plant functional type (PFT) target CN parameters:
 
-.. table:: Plant functional type (PFT) target C:N parameters. 
+.. table:: Plant functional type (PFT) target C:N parameters.
 
  +----------------------------------+-------------------+
  | PFT                              |  target leaf C:N  |

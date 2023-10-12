@@ -15,10 +15,10 @@ warming (e.g., white roofs).
 
 Urban areas in CLM are represented by up to three urban landunits per
 gridcell according to density class. The urban landunit is based on the
-"urban canyon" concept of :ref:`Oke (1987) <Oke1987>` in which 
+"urban canyon" concept of :ref:`Oke (1987) <Oke1987>` in which
 the canyon geometry is
 described by building height (:math:`H`) and street width (:math:`W`)
-(:numref:`Figure schematic representation of the urban landunit`). The canyon system 
+(:numref:`Figure schematic representation of the urban landunit`). The canyon system
 consists of roofs, walls, and canyon
 floor. Walls are further divided into shaded and sunlit components. The
 canyon floor is divided into pervious (e.g., to represent residential
@@ -28,29 +28,29 @@ pervious fraction; instead evaporation is parameterized by a simplified
 bulk scheme.
 
 Each of the five urban surfaces is treated as a column within the
-landunit (:numref:`Figure schematic representation of the urban landunit`). 
+landunit (:numref:`Figure schematic representation of the urban landunit`).
 Radiation parameterizations account for trapping
 of solar and longwave radiation inside the canyon. Momentum fluxes are
 determined for the urban landunit using a roughness length and
 displacement height appropriate for the urban canyon and stability
 formulations from CLM. A one-dimensional heat conduction equation is
 solved numerically for a multiple-layer (:math:`N_{levurb} =10`) column
-to determine conduction fluxes into and out of canyon surfaces. 
+to determine conduction fluxes into and out of canyon surfaces.
 
 A new building energy model has been developed for CLM5.0.  It accounts
 for the conduction of heat through interior surfaces (roof, sunlit and
-shaded walls, and floors), convection (sensible heat exchange) between 
+shaded walls, and floors), convection (sensible heat exchange) between
 interior surfaces and building air, longwave radiation exchange between
 interior surfaces, and ventilation (natural infiltration and exfiltration).
 Idealized HAC systems are assumed where the system capacity is infinite and
-the system supplies the amount of energy needed to keep the indoor air 
+the system supplies the amount of energy needed to keep the indoor air
 temperature (:math:`T_{iB}`) within maximum and minimum emperatures
 (:math:`T_{iB,\, \max } ,\, T_{iB,\, \min }` ), thus explicitly
 resolving space heating and air conditioning fluxes. Anthropogenic sources
 of waste heat (:math:`Q_{H,\, waste}` ) from HAC that account for inefficiencies
-in the heating and air conditioning equipment and from energy lost in the 
-conversion of primary energy sources to end use energy are derived from 
-:ref:`Sivak (2013) <Sivak2013>`.  These sources of waste heat are incorporated 
+in the heating and air conditioning equipment and from energy lost in the
+conversion of primary energy sources to end use energy are derived from
+:ref:`Sivak (2013) <Sivak2013>`.  These sources of waste heat are incorporated
 as modifications to the canyon energy budget.
 
 Turbulent [sensible heat (:math:`Q_{H,\, u}` ) and
@@ -109,19 +109,19 @@ urban development scenarios is also available (:ref:`Oleson and Feddema (2018) <
 This will become the default dataset in future model versions.
 As described in :ref:`Oleson and Feddema (2018) <OlesonFeddema2018>` the urban properties dataset
 in :ref:`Jackson et al. (2010) <Jacksonetal2010>` was modified with respect to wall and roof thermal
-properties to correct for biases in heat transfer due to layer and building type averaging. 
-Further changes to the dataset reflect the need for scenario development, thus allowing for 
+properties to correct for biases in heat transfer due to layer and building type averaging.
+Further changes to the dataset reflect the need for scenario development, thus allowing for
 the creation of hypothetical wall types, and the easier interchange of wall facets.
-The new urban properties tool is available as part of the Toolbox for Human-Earth System 
-Integration & Scaling (THESIS) tool set 
-(http://www.cgd.ucar.edu/iam/projects/thesis/thesis-urbanproperties-tool.html; 
-:ref:`Feddema and Kauffman (2016) <FeddemaKauffman2016>`). The driver script (urban_prop.csh) 
-specifies three input csv files (by default, mat_prop.csv, 
-lam_spec.csv, and city_spec.csv; (:numref:`Figure schematic of THESIS urban properties tool`)) 
-that describe the morphological, radiative, and thermal properties of urban areas, and 
+The new urban properties tool is available as part of the Toolbox for Human-Earth System
+Integration & Scaling (THESIS) tool set
+(http://www.cgd.ucar.edu/iam/projects/thesis/thesis-urbanproperties-tool.html;
+:ref:`Feddema and Kauffman (2016) <FeddemaKauffman2016>`). The driver script (urban_prop.csh)
+specifies three input csv files (by default, mat_prop.csv,
+lam_spec.csv, and city_spec.csv; (:numref:`Figure schematic of THESIS urban properties tool`))
+that describe the morphological, radiative, and thermal properties of urban areas, and
 generates a global dataset at 0.05° latitude by longitude in NetCDF format (urban_properties_data.05deg.nc).
-A standalone NCL routine (gen_data_clm.ncl) can be run separately after the mksurfdata_map tool creates 
-the CLM surface dataset.  This creates a supplementary streams file of setpoints for the maximum 
+A standalone NCL routine (gen_data_clm.ncl) can be run separately after the mksurfdata_map tool creates
+the CLM surface dataset.  This creates a supplementary streams file of setpoints for the maximum
 interior building temperature at yearly time resolution.
 
 .. Figure 12.1. Schematic representation of the urban land unit
@@ -146,7 +146,7 @@ interior building temperature at yearly time resolution.
 
 .. Figure:: image3.png
 
- Schematic of THESIS urban properties tool.  Executable scripts are in orange, input files are blue, and output files are green.  Items within the black box outline are either read in as input, executed, or output by the driver script (urban_prop.csh).  
+ Schematic of THESIS urban properties tool.  Executable scripts are in orange, input files are blue, and output files are green.  Items within the black box outline are either read in as input, executed, or output by the driver script (urban_prop.csh).
 
 
 The urban model that was first released as a component of CLM4.0 is separately
@@ -162,19 +162,19 @@ to eliminate urban areas in the surface dataset creation routines was
 increased from 2200 meters to 2600 meters, 5) hydrologic and thermal
 calculations for the pervious road followed CLM4.5 parameterizations.
 
-The main changes in the urban model from CLM4.5 to CLM5.0 are 1) a more 
-sophisticated and realistic building space heating and air conditioning 
+The main changes in the urban model from CLM4.5 to CLM5.0 are 1) a more
+sophisticated and realistic building space heating and air conditioning
 submodel that prognoses interior building air temperature and includes more
 realistic space heating and air conditioning wasteheat factors (see above), 2) the maximum
 building temperature (which determines air conditioning demand) is now read in
-from a namelist-defined file which allows for dynamic control of this input 
-variable.  The maximum building temperatures that are defined in 
+from a namelist-defined file which allows for dynamic control of this input
+variable.  The maximum building temperatures that are defined in
 :ref:`Jackson et al. (2010) <Jacksonetal2010>` are implemented in year 1950 (thus
 air conditioning is off in prior years) and air conditioning is turned off in year
 2100 (because the buildings are not suitable for air conditioning in some extreme
-global warming scenarios), 3) an optional updated urban properties dataset and new 
-scenario tool.  These features are described in more detail in :ref:`Oleson and Feddema (2018) <OlesonFeddema2018>`. 
+global warming scenarios), 3) an optional updated urban properties dataset and new
+scenario tool.  These features are described in more detail in :ref:`Oleson and Feddema (2018) <OlesonFeddema2018>`.
 In addition, a module of heat stress indices calculated online
 in the model that can be used to assess human thermal comfort for rural and urban
-areas has been added.  This last development is described and evaluated by 
+areas has been added.  This last development is described and evaluated by
 :ref:`Buzan et al. (2015) <Buzanetal2015>`.
