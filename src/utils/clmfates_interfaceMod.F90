@@ -615,7 +615,7 @@ module CLMFatesInterfaceMod
 
 
       ! Initialize dispersal
-      if (fates_seeddisp_cadence .ne. fates_dispersal_cadence_none) then
+      if (fates_seeddisp_cadence /= fates_dispersal_cadence_none) then
 
          ! Initialize fates global seed dispersal array for all nodes
          call get_proc_global(ng=numg)
@@ -920,7 +920,7 @@ module CLMFatesInterfaceMod
          lnfm24 = this%fates_fire_data_method%GetLight24()
       end if
       
-      if (fates_spitfire_mode .eq. anthro_suppression) then
+      if (fates_spitfire_mode == anthro_suppression) then
          allocate(gdp_lf_col(bounds_clump%begc:bounds_clump%endc), stat=ier)
          if (ier /= 0) then
             call endrun(msg="allocation error for gdp"//&
@@ -944,7 +944,7 @@ module CLMFatesInterfaceMod
 
             end do ! ifp
 
-            if (fates_spitfire_mode .eq. anthro_suppression) then
+            if (fates_spitfire_mode == anthro_suppression) then
                ! Placeholder for future fates use of gdp - comment out before integration
                !this%fates(nc)%bc_in(s)%gdp = gdp_lf_col(c) ! k US$/capita(g)
             end if
@@ -1040,9 +1040,9 @@ module CLMFatesInterfaceMod
             this%fates(nc)%bc_in(s)%hlm_harvest_catnames(1:num_harvest_inst) = harvest_varnames(1:num_harvest_inst)
 
             ! also pass the units that the harvest rates are specified in
-            if (trim(harvest_units) .eq. trim(unitless_units)) then
+            if (trim(harvest_units) == trim(unitless_units)) then
                this%fates(nc)%bc_in(s)%hlm_harvest_units = hlm_harvest_area_fraction
-            else if (trim(harvest_units) .eq. trim(mass_units)) then
+            else if (trim(harvest_units) == trim(mass_units)) then
                this%fates(nc)%bc_in(s)%hlm_harvest_units = hlm_harvest_carbon
             else
                write(iulog,*) 'units field not one of the specified options.'
@@ -1062,7 +1062,7 @@ module CLMFatesInterfaceMod
 
       ! Distribute any seeds from neighboring gridcells into the current gridcell
       ! Global seed availability array populated by WrapSeedGlobal call
-      if (fates_seeddisp_cadence .ne. fates_dispersal_cadence_none) then
+      if (fates_seeddisp_cadence /= fates_dispersal_cadence_none) then
          call this%wrap_seed_dispersal(bounds_clump)
       end if
 
@@ -1400,7 +1400,7 @@ module CLMFatesInterfaceMod
        patch%wt_ed(bounds_clump%begp:bounds_clump%endp)         = 0.0_r8
 
        ! Zero the outgoing_local seed values prior to populating with the most recent seed update
-       if (fates_seeddisp_cadence .ne. fates_dispersal_cadence_none) then
+       if (fates_seeddisp_cadence /= fates_dispersal_cadence_none) then
           this%fates_seed%outgoing_local(:,:) = 0._r8
        end if
 
@@ -1410,7 +1410,7 @@ module CLMFatesInterfaceMod
           g = col%gridcell(c)
 
           ! Accumulate seeds from sites to the gridcell local outgoing buffer
-          if (fates_seeddisp_cadence .ne. fates_dispersal_cadence_none) then
+          if (fates_seeddisp_cadence /= fates_dispersal_cadence_none) then
              if (IsItDispersalTime()) this%fates_seed%outgoing_local(:,g) = &
                                       this%fates(nc)%sites(s)%seed_out(:)
           end if
@@ -1849,7 +1849,7 @@ module CLMFatesInterfaceMod
          !$OMP END PARALLEL DO
 
          ! Disperse seeds
-         if (fates_seeddisp_cadence .ne. fates_dispersal_cadence_none) then
+         if (fates_seeddisp_cadence /= fates_dispersal_cadence_none) then
             call this%WrapSeedGlobal(is_restart_flag=.true.)
          end if
 
@@ -2530,7 +2530,7 @@ module CLMFatesInterfaceMod
            this%fates(ci)%bc_out(s)%hrv_deadstemc_to_prod100c
 
       ! If N cycling is on
-      if(fates_parteh_mode .eq. prt_cnp_flex_allom_hyp ) then
+      if(fates_parteh_mode == prt_cnp_flex_allom_hyp ) then
          
          !n_products_inst%hrv_deadstem_to_prod10_grc(g) = &
          !     n_products_inst%hrv_deadstem_to_prod10_grc(g) + &
@@ -3249,7 +3249,7 @@ module CLMFatesInterfaceMod
        end if
     end do
 
-    if(num_filter_fates .ne. this%fates(nc)%nsites )then
+    if(num_filter_fates /= this%fates(nc)%nsites )then
        write(iulog,*) 'The HLM list of natural veg columns during root water transfer'
        write(iulog,*) 'is not the same size as the fates site list?'
        call endrun(msg=errMsg(sourcefile, __LINE__))
