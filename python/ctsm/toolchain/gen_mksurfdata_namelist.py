@@ -415,7 +415,7 @@ def main():
 
     # determine input rawdata
     _must_run_download_input_data = False
-    tool_path = os.path.join( path_to_ctsm_root(), "tools", "mksurfdata_esmf" )
+    tool_path = os.path.join(path_to_ctsm_root(), "tools", "mksurfdata_esmf")
     xml_path = os.path.join(tool_path, "gen_mksurfdata_namelist.xml")
     tree1 = ET.parse(xml_path)
     root = tree1.getroot()

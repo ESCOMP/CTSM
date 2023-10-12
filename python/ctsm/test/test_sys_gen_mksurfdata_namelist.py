@@ -51,6 +51,78 @@ class TestSysGenMkSurfNML(unittest.TestCase):
         ]
         main()
 
+    def test_vic_nocrop_inlandwet_glc_namelist(self):
+        """
+        Test that a namelist with several options on
+        """
+        sys.argv = [
+            "gen_mksurfdata_namelist",
+            "--start-year",
+            "1850",
+            "--end-year",
+            "1850",
+            "--res",
+            "1.9x2.5",
+            "--vic",
+            "--nocrop",
+            "--inlandwet",
+            "--glc",
+        ]
+        main()
+
+    def test_hires_namelist(self):
+        """
+        Test that a high resolution namelist works
+        """
+        sys.argv = [
+            "gen_mksurfdata_namelist",
+            "--start-year",
+            "1850",
+            "--end-year",
+            "1850",
+            "--res",
+            "mpasa15",
+            "--glc-nec",
+            "10",
+            "--hires_pft",
+            "--hires_soitex",
+        ]
+        main()
+
+    def test_ssp_transient_namelist(self):
+        """
+        Test that a SSP transient namelist works
+        """
+        sys.argv = [
+            "gen_mksurfdata_namelist",
+            "--start-year",
+            "1850",
+            "--end-year",
+            "2100",
+            "--res",
+            "ne30np4.pg3",
+            "--ssp-rcp",
+            "SSP2-4.5",
+            "--nosurfdata",
+        ]
+        main()
+
+    def test_potveg_namelist(self):
+        """
+        Test that a potential vegetation namelist works
+        """
+        sys.argv = [
+            "gen_mksurfdata_namelist",
+            "--start-year",
+            "1850",
+            "--end-year",
+            "1850",
+            "--res",
+            "4x5",
+            "--potveg_flag",
+        ]
+        main()
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
