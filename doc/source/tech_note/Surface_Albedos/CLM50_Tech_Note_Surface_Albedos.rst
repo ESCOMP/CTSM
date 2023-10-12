@@ -24,7 +24,7 @@ two-stream approximation of :ref:`Dickinson (1983) <Dickinson1983>` and
 
 where :math:`I\, \uparrow`  and :math:`I\, \downarrow`  are the upward
 and downward diffuse radiative fluxes per unit incident flux,
-:math:`K={G\left(\mu \right)\mathord{\left/ {\vphantom {G\left(\mu \right) \mu }} \right. \kern-\nulldelimiterspace} \mu }` 
+:math:`K={G\left(\mu \right)\mathord{\left/ {\vphantom {G\left(\mu \right) \mu }} \right.} \mu }` 
 is the optical depth of direct beam per unit leaf and stem area,
 :math:`\mu`  is the cosine of the zenith angle of the incident beam,
 :math:`G\left(\mu \right)` is the relative projected area of leaf and
@@ -128,9 +128,9 @@ stem reflectances
    \alpha _{\Lambda } =\alpha _{\Lambda }^{leaf} w_{leaf} +\alpha _{\Lambda }^{stem} w_{stem}
 
 where
-:math:`w_{leaf} ={L\mathord{\left/ {\vphantom {L \left(L+S\right)}} \right. \kern-\nulldelimiterspace} \left(L+S\right)}` 
+:math:`w_{leaf} ={L\mathord{\left/ {\vphantom {L \left(L+S\right)}} \right.} \left(L+S\right)}` 
 and
-:math:`w_{stem} ={S\mathord{\left/ {\vphantom {S \left(L+S\right)}} \right. \kern-\nulldelimiterspace} \left(L+S\right)}` .
+:math:`w_{stem} ={S\mathord{\left/ {\vphantom {S \left(L+S\right)}} \right.} \left(L+S\right)}` .
 :math:`\tau _{\Lambda }`  is a weighted combination of the leaf and stem transmittances (:math:`\tau _{\Lambda }^{leaf}, \tau _{\Lambda }^{stem}`)
 
 .. math::
@@ -164,9 +164,9 @@ and for horizontal leaves (:math:`\chi _{L} =1`,
 which agree with both :ref:`Dickinson (1983) <Dickinson1983>` and :ref:`Sellers (1985) <Sellers1985>`. For random
 (spherically distributed) leaves (:math:`\chi _{L} =0`,
 :math:`\bar{\theta }=60^{{\rm o}}` ), the approximation yields
-:math:`\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} ={5\mathord{\left/ {\vphantom {5 8}} \right. \kern-\nulldelimiterspace} 8} \alpha _{\Lambda } +{3\mathord{\left/ {\vphantom {3 8}} \right. \kern-\nulldelimiterspace} 8} \tau _{\Lambda }` 
+:math:`\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} ={5\mathord{\left/ {\vphantom {5 8}} \right.} 8} \alpha _{\Lambda } +{3\mathord{\left/ {\vphantom {3 8}} \right.} 8} \tau _{\Lambda }` 
 whereas the approximate solution of :ref:`Dickinson (1983) <Dickinson1983>` is
-:math:`\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} ={2\mathord{\left/ {\vphantom {2 3}} \right. \kern-\nulldelimiterspace} 3} \alpha _{\Lambda } +{1\mathord{\left/ {\vphantom {1 3}} \right. \kern-\nulldelimiterspace} 3} \tau _{\Lambda }` .
+:math:`\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} ={2\mathord{\left/ {\vphantom {2 3}} \right.} 3} \alpha _{\Lambda } +{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} \tau _{\Lambda }` .
 This discrepancy arises from the fact that a spherical leaf angle
 distribution has a true mean leaf inclination
 :math:`\bar{\theta }\approx 57` :ref:`(Campbell and Norman 1998) <CampbellNorman1998>` in equation ,
@@ -252,12 +252,12 @@ with
 .. math::
    :label: 3.25
 
-   a_{1} =\frac{h_{1} }{\sigma } \left[\frac{1-s_{2}^{2} }{2K} \right]+h_{2} \left[\frac{1-s_{2} s_{1} }{K+h} \right]+h_{3} \left[\frac{1-{s_{2} \mathord{\left/ {\vphantom {s_{2}  s_{1} }} \right. \kern-\nulldelimiterspace} s_{1} } }{K-h} \right]
+   a_{1} =\frac{h_{1} }{\sigma } \left[\frac{1-s_{2}^{2} }{2K} \right]+h_{2} \left[\frac{1-s_{2} s_{1} }{K+h} \right]+h_{3} \left[\frac{1-{s_{2} \mathord{\left/ {\vphantom {s_{2}  s_{1} }} \right.} s_{1} } }{K-h} \right]
 
 .. math::
    :label: 3.26
 
-   a_{2} =\frac{h_{4} }{\sigma } \left[\frac{1-s_{2}^{2} }{2K} \right]+h_{5} \left[\frac{1-s_{2} s_{1} }{K+h} \right]+h_{6} \left[\frac{1-{s_{2} \mathord{\left/ {\vphantom {s_{2}  s_{1} }} \right. \kern-\nulldelimiterspace} s_{1} } }{K-h} \right].
+   a_{2} =\frac{h_{4} }{\sigma } \left[\frac{1-s_{2}^{2} }{2K} \right]+h_{5} \left[\frac{1-s_{2} s_{1} }{K+h} \right]+h_{6} \left[\frac{1-{s_{2} \mathord{\left/ {\vphantom {s_{2}  s_{1} }} \right.} s_{1} } }{K-h} \right].
 
 For diffuse radiation, the absorbed radiation for sunlit leaves is
 
@@ -278,12 +278,12 @@ with
 .. math::
    :label: 3.29
 
-   a_{1} =h_{7} \left[\frac{1-s_{2} s_{1} }{K+h} \right]+h_{8} \left[\frac{1-{s_{2} \mathord{\left/ {\vphantom {s_{2}  s_{1} }} \right. \kern-\nulldelimiterspace} s_{1} } }{K-h} \right]
+   a_{1} =h_{7} \left[\frac{1-s_{2} s_{1} }{K+h} \right]+h_{8} \left[\frac{1-{s_{2} \mathord{\left/ {\vphantom {s_{2}  s_{1} }} \right.} s_{1} } }{K-h} \right]
 
 .. math::
    :label: 3.30
 
-   a_{2} =h_{9} \left[\frac{1-s_{2} s_{1} }{K+h} \right]+h_{10} \left[\frac{1-{s_{2} \mathord{\left/ {\vphantom {s_{2}  s_{1} }} \right. \kern-\nulldelimiterspace} s_{1} } }{K-h} \right].
+   a_{2} =h_{9} \left[\frac{1-s_{2} s_{1} }{K+h} \right]+h_{10} \left[\frac{1-{s_{2} \mathord{\left/ {\vphantom {s_{2}  s_{1} }} \right.} s_{1} } }{K-h} \right].
 
 The parameters :math:`h_{1}` –:math:`h_{10}` , :math:`\sigma` ,
 :math:`h`, :math:`s_{1}` , and :math:`s_{2}`  are from :ref:`Sellers (1985) <Sellers1985>`
@@ -322,7 +322,7 @@ The parameters :math:`h_{1}` –:math:`h_{10}` , :math:`\sigma` ,
 .. math::
    :label: 3.37
 
-   u_{1} =b-{c\mathord{\left/ {\vphantom {c \alpha _{g,\, \Lambda }^{\mu } }} \right. \kern-\nulldelimiterspace} \alpha _{g,\, \Lambda }^{\mu } } {\rm \; or\; }u_{1} =b-{c\mathord{\left/ {\vphantom {c \alpha _{g,\, \Lambda } }} \right. \kern-\nulldelimiterspace} \alpha _{g,\, \Lambda } }
+   u_{1} =b-{c\mathord{\left/ {\vphantom {c \alpha _{g,\, \Lambda }^{\mu } }} \right.} \alpha _{g,\, \Lambda }^{\mu } } {\rm \; or\; }u_{1} =b-{c\mathord{\left/ {\vphantom {c \alpha _{g,\, \Lambda } }} \right.} \alpha _{g,\, \Lambda } }
 
 .. math::
    :label: 3.38
@@ -928,7 +928,7 @@ small errors in simulated hemispheric fluxes
 Effective radius is the surface area-weighted mean 
 radius of an ensemble of spherical particles and is directly related to specific
 surface area (*SSA*) as
-:math:`r_{e} ={3\mathord{\left/ {\vphantom {3 \left(\rho _{ice} SSA\right)}} \right. \kern-\nulldelimiterspace} \left(\rho _{ice} SSA\right)}` ,
+:math:`r_{e} ={3\mathord{\left/ {\vphantom {3 \left(\rho _{ice} SSA\right)}} \right.} \left(\rho _{ice} SSA\right)}` ,
 where :math:`\rho_{ice}` is the density of ice. Hence,
 :math:`r_{e}` is a simple and practical metric for relating the
 snowpack microphysical state to dry snow radiative characteristics.
@@ -985,7 +985,7 @@ equation is
 .. math::
    :label: 3.73
 
-   \frac{dr_{e,\, dry} }{dt} =\left(\frac{dr_{e} }{dt} \right)_{0} \left(\frac{\eta }{\left(r_{e} -r_{e,\, 0} \right)+\eta } \right)^{{1\mathord{\left/ {\vphantom {1 \kappa }} \right. \kern-\nulldelimiterspace} \kappa } }
+   \frac{dr_{e,\, dry} }{dt} =\left(\frac{dr_{e} }{dt} \right)_{0} \left(\frac{\eta }{\left(r_{e} -r_{e,\, 0} \right)+\eta } \right)^{{1\mathord{\left/ {\vphantom {1 \kappa }} \right.} \kappa } }
 
 The parameters :math:`{(\frac{dr_{e}}{dt}})_{0}`,
 :math:`\eta`, and :math:`\kappa` are retrieved interactively from a

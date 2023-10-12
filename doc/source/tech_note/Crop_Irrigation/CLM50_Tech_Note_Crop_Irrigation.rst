@@ -566,19 +566,19 @@ Root C and N pools are routed to the litter pools in the same manner as natural 
 .. math::
    :label: 25.9
 
-     CF_{leaf,biofuel} = \left({CS_{leaf} \mathord{\left/ {\vphantom {CS_{leaf}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} 
+     CF_{leaf,biofuel} = \left({CS_{leaf} \mathord{\left/ {\vphantom {CS_{leaf}  \Delta t}} \right.} \Delta t} 
      \right) * biofuel\_harvfrac
      
 .. math::
    :label: 25.10
 
-     CF_{livestem,biofuel} = \left({CS_{livestem} \mathord{\left/ {\vphantom {CS_{leaf}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} 
+     CF_{livestem,biofuel} = \left({CS_{livestem} \mathord{\left/ {\vphantom {CS_{leaf}  \Delta t}} \right.} \Delta t} 
      \right) * biofuel\_harvfrac 
      
 .. math::
    :label: 25.11
 
-     CF_{livestem,litter} = \left({CS_{livestem} \mathord{\left/ {\vphantom {CS_{livestem}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} 
+     CF_{livestem,litter} = \left({CS_{livestem} \mathord{\left/ {\vphantom {CS_{livestem}  \Delta t}} \right.} \Delta t} 
      \right) * \left( 1-biofuel\_harvfrac  \right) +CF_{alloc,livestem}
 
 with corresponding nitrogen fluxes:
@@ -586,19 +586,19 @@ with corresponding nitrogen fluxes:
 .. math::
    :label: 25.12
 
-     NF_{leaf,biofuel} = \left({NS_{leaf} \mathord{\left/ {\vphantom {NS_{leaf}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} 
+     NF_{leaf,biofuel} = \left({NS_{leaf} \mathord{\left/ {\vphantom {NS_{leaf}  \Delta t}} \right.} \Delta t} 
      \right) * biofuel\_harvfrac
      
 .. math::
    :label: 25.13
 
-     NF_{livestem,biofuel} = \left({NS_{livestem} \mathord{\left/ {\vphantom {NS_{livestem}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} 
+     NF_{livestem,biofuel} = \left({NS_{livestem} \mathord{\left/ {\vphantom {NS_{livestem}  \Delta t}} \right.} \Delta t} 
      \right) *  biofuel\_harvfrac
      
 .. math::
    :label: 25.14
 
-     NF_{livestem,litter} = \left({NS_{livestem} \mathord{\left/ {\vphantom {NS_{livestem}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} 
+     NF_{livestem,litter} = \left({NS_{livestem} \mathord{\left/ {\vphantom {NS_{livestem}  \Delta t}} \right.} \Delta t} 
      \right) *  \left( 1-biofuel\_harvfrac  \right)
 
 where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, 

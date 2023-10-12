@@ -194,7 +194,7 @@ default:
 .. math::
    :label: 12.6 
 
-   \begin{array}{l} {C=C_{\min } +(C_{\max } -C_{\min } )\exp \left\{-\min \left(A,B\right)\right\}} \\ {A={\left(\frac{Fg}{u_{\*} ^{2} } \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right. \kern-\nulldelimiterspace} 3} } \mathord{\left/ {\vphantom {\left(\frac{Fg}{u_{\*} ^{2} } \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right. \kern-\nulldelimiterspace} 3} }  f_{c} }} \right. \kern-\nulldelimiterspace} f_{c} } } \\ {B=\varepsilon \frac{\sqrt{dg} }{u} } \end{array}
+   \begin{array}{l} {C=C_{\min } +(C_{\max } -C_{\min } )\exp \left\{-\min \left(A,B\right)\right\}} \\ {A={\left(\frac{Fg}{u_{\*} ^{2} } \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} } \mathord{\left/ {\vphantom {\left(\frac{Fg}{u_{\*} ^{2} } \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} }  f_{c} }} \right.} f_{c} } } \\ {B=\varepsilon \frac{\sqrt{dg} }{u} } \end{array}
 
 where *A* and *B* define the fetch- and depth-limitation, respectively;
 :math:`C_{\min } =0.01` , :math:`C_{\max } =0.01`,

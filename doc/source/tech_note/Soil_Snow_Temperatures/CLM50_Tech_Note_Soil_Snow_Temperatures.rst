@@ -80,7 +80,7 @@ and the thickness of each layer is a function of snow depth
 
    \left\{ \begin{array}{l}
    snl=-2  \\ 
-   \Delta z_{-1} ={z_{sno} \mathord{\left/ {\vphantom {z_{sno}  2}} \right. \kern-\nulldelimiterspace} 2} \\
+   \Delta z_{-1} ={z_{sno} \mathord{\left/ {\vphantom {z_{sno}  2}} \right.} 2} \\
    \Delta z_{0} = \Delta z_{-1}
    \end{array} \right\} & \qquad {\rm for\; 0.03}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.04 \\ 
    
@@ -97,7 +97,7 @@ and the thickness of each layer is a function of snow depth
    \left\{ \begin{array}{l}
    snl=-3 \\ 
    \Delta z_{-2} = 0.02 \\ 
-   \Delta z_{-1} = {\left(z_{sno} -0.02\right)\mathord{\left/ {\vphantom {\left(z_{sno} -0.02\right) 2}} \right. \kern-\nulldelimiterspace} 2} \\
+   \Delta z_{-1} = {\left(z_{sno} -0.02\right)\mathord{\left/ {\vphantom {\left(z_{sno} -0.02\right) 2}} \right.} 2} \\
    \Delta z_{0} = \Delta z_{-1}
    \end{array} \right\} & \qquad {\rm for\; 0.07}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.12 \\ 
    
@@ -116,7 +116,7 @@ and the thickness of each layer is a function of snow depth
    snl=-4  \\ 
    \Delta z_{-3} = 0.02 \\ 
    \Delta z_{-2} = 0.05 \\
-   \Delta z_{-1} = {\left(z_{sno} -\Delta z_{-3} -\Delta z_{-2} \right)\mathord{\left/ {\vphantom {\left(z_{sno} -\Delta z_{-3} -\Delta z_{-2} \right) 2}} \right. \kern-\nulldelimiterspace} 2}  \\ 
+   \Delta z_{-1} = {\left(z_{sno} -\Delta z_{-3} -\Delta z_{-2} \right)\mathord{\left/ {\vphantom {\left(z_{sno} -\Delta z_{-3} -\Delta z_{-2} \right) 2}} \right.} 2}  \\ 
    \Delta z_{0} =\Delta z_{-1}  
    \end{array} \right\} & \qquad {\rm for\; 0.18}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.29 \\ 
    
@@ -137,7 +137,7 @@ and the thickness of each layer is a function of snow depth
    \Delta z_{-4} = 0.02  \\ 
    \Delta z_{-3} = 0.05  \\
    \Delta z_{-2} = 0.11  \\ 
-   \Delta z_{-1} = {\left(z_{sno} -\Delta z_{-4} -\Delta z_{-3} -\Delta z_{-2} \right)\mathord{\left/ {\vphantom {\left(z_{sno} -\Delta z_{-4} -\Delta z_{-3} -\Delta z_{-2} \right) 2}} \right. \kern-\nulldelimiterspace} 2}  \\ 
+   \Delta z_{-1} = {\left(z_{sno} -\Delta z_{-4} -\Delta z_{-3} -\Delta z_{-2} \right)\mathord{\left/ {\vphantom {\left(z_{sno} -\Delta z_{-4} -\Delta z_{-3} -\Delta z_{-2} \right) 2}} \right.} 2}  \\ 
    \Delta z_{0} = \Delta z_{-1}
    \end{array} \right\} & \qquad {\rm for\; 0.41}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.64 \\ 
 
@@ -579,7 +579,7 @@ depression equation
 .. math::
    :label: 6.54
 
-   w_{liq,\, \max ,\, i} =\Delta z_{i} \theta _{sat,\, i} \left[\frac{10^{3} L_{f} \left(T_{f} -T_{i} \right)}{gT_{i} \psi _{sat,\, i} } \right]^{{-1\mathord{\left/ {\vphantom {-1 B_{i} }} \right. \kern-\nulldelimiterspace} B_{i} } } \qquad T_{i} <T_{f}
+   w_{liq,\, \max ,\, i} =\Delta z_{i} \theta _{sat,\, i} \left[\frac{10^{3} L_{f} \left(T_{f} -T_{i} \right)}{gT_{i} \psi _{sat,\, i} } \right]^{{-1\mathord{\left/ {\vphantom {-1 B_{i} }} \right.} B_{i} } } \qquad T_{i} <T_{f}
 
 where :math:`w_{liq,\, \max ,\, i}`  is the maximum liquid water in
 layer :math:`i` (kg m\ :sup:`-2`) when the soil temperature
@@ -663,8 +663,8 @@ and this energy is used to cool or warm the snow/soil layer (if
 
    T_{i}^{n+1} = 
    \left\{\begin{array}{lr} 
-   T_{f} +{\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*} \mathord{\left/ {\vphantom {\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*}  \left(1-\frac{\Delta t}{c_{i} \Delta z_{i} } \frac{\partial h}{\partial T} \right)}} \right. \kern-\nulldelimiterspace} \left(1-\frac{\Delta t}{c_{i} \Delta z_{i} } \frac{\partial h}{\partial T} \right)} & \quad \quad \quad \quad \, i=snl+1 \\ 
-   T_{f} +{\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*} \mathord{\left/ {\vphantom {\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*}  \left(1-\left(1-f_{sno} -f_{h2osfc} \right)\frac{\Delta t}{c_{i} \Delta z_{i} } \frac{\partial h}{\partial T} \right)}} \right. \kern-\nulldelimiterspace} \left(1-\left(1-f_{sno} -f_{h2osfc} \right)\frac{\Delta t}{c_{i} \Delta z_{i} } \frac{\partial h}{\partial T} \right)} & \qquad i=1 \\ 
+   T_{f} +{\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*} \mathord{\left/ {\vphantom {\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*}  \left(1-\frac{\Delta t}{c_{i} \Delta z_{i} } \frac{\partial h}{\partial T} \right)}} \right.} \left(1-\frac{\Delta t}{c_{i} \Delta z_{i} } \frac{\partial h}{\partial T} \right)} & \quad \quad \quad \quad \, i=snl+1 \\ 
+   T_{f} +{\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*} \mathord{\left/ {\vphantom {\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*}  \left(1-\left(1-f_{sno} -f_{h2osfc} \right)\frac{\Delta t}{c_{i} \Delta z_{i} } \frac{\partial h}{\partial T} \right)}} \right.} \left(1-\left(1-f_{sno} -f_{h2osfc} \right)\frac{\Delta t}{c_{i} \Delta z_{i} } \frac{\partial h}{\partial T} \right)} & \qquad i=1 \\ 
    T_{f} +\frac{\Delta t}{c_{i} \Delta z_{i} } H_{i*} & \quad \quad \quad \quad \, i\ne \left\{1,snl+1\right\}
    \end{array}\right\}.
 

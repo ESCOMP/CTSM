@@ -268,7 +268,7 @@ unitless) is calculated using a relationship from Andrén and Paustian
 .. math::
    :label: 21.6) 
 
-   r_{water} =\sum _{j=1}^{5}\left\{\begin{array}{l} {0\qquad {\rm for\; }\Psi _{j} <\Psi _{\min } } \\ {\frac{\log \left({\Psi _{\min } \mathord{\left/ {\vphantom {\Psi _{\min }  \Psi _{j} }} \right. \kern-\nulldelimiterspace} \Psi _{j} } \right)}{\log \left({\Psi _{\min } \mathord{\left/ {\vphantom {\Psi _{\min }  \Psi _{\max } }} \right. \kern-\nulldelimiterspace} \Psi _{\max } } \right)} w_{soil,\, j} \qquad {\rm for\; }\Psi _{\min } \le \Psi _{j} \le \Psi _{\max } } \\ {1\qquad {\rm for\; }\Psi _{j} >\Psi _{\max } \qquad \qquad } \end{array}\right\}
+   r_{water} =\sum _{j=1}^{5}\left\{\begin{array}{l} {0\qquad {\rm for\; }\Psi _{j} <\Psi _{\min } } \\ {\frac{\log \left({\Psi _{\min } \mathord{\left/ {\vphantom {\Psi _{\min }  \Psi _{j} }} \right.} \Psi _{j} } \right)}{\log \left({\Psi _{\min } \mathord{\left/ {\vphantom {\Psi _{\min }  \Psi _{\max } }} \right.} \Psi _{\max } } \right)} w_{soil,\, j} \qquad {\rm for\; }\Psi _{\min } \le \Psi _{j} \le \Psi _{\max } } \\ {1\qquad {\rm for\; }\Psi _{j} >\Psi _{\max } \qquad \qquad } \end{array}\right\}
 
 where :math:`{\Psi}_{j}` is the soil water potential in
 layer *j*, :math:`{\Psi}_{min}` is a lower limit for soil
@@ -389,37 +389,37 @@ CLM-CN pool structure, are given as:
 .. math::
    :label: 21.13) 
 
-   CF_{pot,\, Lit1} ={CS_{Lit1} k_{Lit1} r_{total} \mathord{\left/ {\vphantom {CS_{Lit1} k_{Lit1} r_{total}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t}
+   CF_{pot,\, Lit1} ={CS_{Lit1} k_{Lit1} r_{total} \mathord{\left/ {\vphantom {CS_{Lit1} k_{Lit1} r_{total}  \Delta t}} \right.} \Delta t}
 
 .. math::
    :label: 21.14) 
 
-   CF_{pot,\, Lit2} ={CS_{Lit2} k_{Lit2} r_{total} \mathord{\left/ {\vphantom {CS_{Lit2} k_{Lit2} r_{total}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t}
+   CF_{pot,\, Lit2} ={CS_{Lit2} k_{Lit2} r_{total} \mathord{\left/ {\vphantom {CS_{Lit2} k_{Lit2} r_{total}  \Delta t}} \right.} \Delta t}
 
 .. math::
    :label: 21.15) 
 
-   CF_{pot,\, Lit3} ={CS_{Lit3} k_{Lit3} r_{total} \mathord{\left/ {\vphantom {CS_{Lit3} k_{Lit3} r_{total}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t}
+   CF_{pot,\, Lit3} ={CS_{Lit3} k_{Lit3} r_{total} \mathord{\left/ {\vphantom {CS_{Lit3} k_{Lit3} r_{total}  \Delta t}} \right.} \Delta t}
 
 .. math::
    :label: 21.16) 
 
-   CF_{pot,\, SOM1} ={CS_{SOM1} k_{SOM1} r_{total} \mathord{\left/ {\vphantom {CS_{SOM1} k_{SOM1} r_{total}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t}
+   CF_{pot,\, SOM1} ={CS_{SOM1} k_{SOM1} r_{total} \mathord{\left/ {\vphantom {CS_{SOM1} k_{SOM1} r_{total}  \Delta t}} \right.} \Delta t}
 
 .. math::
    :label: 21.17) 
 
-   CF_{pot,\, SOM2} ={CS_{SOM2} k_{SOM2} r_{total} \mathord{\left/ {\vphantom {CS_{SOM2} k_{SOM2} r_{total}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t}
+   CF_{pot,\, SOM2} ={CS_{SOM2} k_{SOM2} r_{total} \mathord{\left/ {\vphantom {CS_{SOM2} k_{SOM2} r_{total}  \Delta t}} \right.} \Delta t}
 
 .. math::
    :label: 21.18) 
 
-   CF_{pot,\, SOM3} ={CS_{SOM3} k_{SOM3} r_{total} \mathord{\left/ {\vphantom {CS_{SOM3} k_{SOM3} r_{total}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t}
+   CF_{pot,\, SOM3} ={CS_{SOM3} k_{SOM3} r_{total} \mathord{\left/ {\vphantom {CS_{SOM3} k_{SOM3} r_{total}  \Delta t}} \right.} \Delta t}
 
 .. math::
    :label: 21.19) 
 
-   CF_{pot,\, SOM4} ={CS_{SOM4} k_{SOM4} r_{total} \mathord{\left/ {\vphantom {CS_{SOM4} k_{SOM4} r_{total}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t}
+   CF_{pot,\, SOM4} ={CS_{SOM4} k_{SOM4} r_{total} \mathord{\left/ {\vphantom {CS_{SOM4} k_{SOM4} r_{total}  \Delta t}} \right.} \Delta t}
 
 where the factor (1/:math:`\Delta`\ *t*) is included because the rate
 constant is calculated for the entire timestep (Eqs. and ), but the
@@ -431,37 +431,37 @@ structure will be similar but without the different terminal step):
 .. math::
    :label: ZEqnNum934998 
 
-   NF_{pot\_ min,\, Lit1\to SOM1} ={CF_{pot,\, Lit1} \left(1-rf_{Lit1} -\frac{CN_{SOM1} }{CN_{Lit1} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, Lit1} \left(1-rf_{Lit1} -\frac{CN_{SOM1} }{CN_{Lit1} } \right) CN_{SOM1} }} \right. \kern-\nulldelimiterspace} CN_{SOM1} }
+   NF_{pot\_ min,\, Lit1\to SOM1} ={CF_{pot,\, Lit1} \left(1-rf_{Lit1} -\frac{CN_{SOM1} }{CN_{Lit1} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, Lit1} \left(1-rf_{Lit1} -\frac{CN_{SOM1} }{CN_{Lit1} } \right) CN_{SOM1} }} \right.} CN_{SOM1} }
 
 .. math::
    :label: 21.21) 
 
-   NF_{pot\_ min,\, Lit2\to SOM2} ={CF_{pot,\, Lit2} \left(1-rf_{Lit2} -\frac{CN_{SOM2} }{CN_{Lit2} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, Lit2} \left(1-rf_{Lit2} -\frac{CN_{SOM2} }{CN_{Lit2} } \right) CN_{SOM2} }} \right. \kern-\nulldelimiterspace} CN_{SOM2} }
+   NF_{pot\_ min,\, Lit2\to SOM2} ={CF_{pot,\, Lit2} \left(1-rf_{Lit2} -\frac{CN_{SOM2} }{CN_{Lit2} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, Lit2} \left(1-rf_{Lit2} -\frac{CN_{SOM2} }{CN_{Lit2} } \right) CN_{SOM2} }} \right.} CN_{SOM2} }
 
 .. math::
    :label: 21.22) 
 
-   NF_{pot\_ min,\, Lit3\to SOM3} ={CF_{pot,\, Lit3} \left(1-rf_{Lit3} -\frac{CN_{SOM3} }{CN_{Lit3} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, Lit3} \left(1-rf_{Lit3} -\frac{CN_{SOM3} }{CN_{Lit3} } \right) CN_{SOM3} }} \right. \kern-\nulldelimiterspace} CN_{SOM3} }
+   NF_{pot\_ min,\, Lit3\to SOM3} ={CF_{pot,\, Lit3} \left(1-rf_{Lit3} -\frac{CN_{SOM3} }{CN_{Lit3} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, Lit3} \left(1-rf_{Lit3} -\frac{CN_{SOM3} }{CN_{Lit3} } \right) CN_{SOM3} }} \right.} CN_{SOM3} }
 
 .. math::
    :label: 21.23) 
 
-   NF_{pot\_ min,\, SOM1\to SOM2} ={CF_{pot,\, SOM1} \left(1-rf_{SOM1} -\frac{CN_{SOM2} }{CN_{SOM1} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, SOM1} \left(1-rf_{SOM1} -\frac{CN_{SOM2} }{CN_{SOM1} } \right) CN_{SOM2} }} \right. \kern-\nulldelimiterspace} CN_{SOM2} }
+   NF_{pot\_ min,\, SOM1\to SOM2} ={CF_{pot,\, SOM1} \left(1-rf_{SOM1} -\frac{CN_{SOM2} }{CN_{SOM1} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, SOM1} \left(1-rf_{SOM1} -\frac{CN_{SOM2} }{CN_{SOM1} } \right) CN_{SOM2} }} \right.} CN_{SOM2} }
 
 .. math::
    :label: 21.24) 
 
-   NF_{pot\_ min,\, SOM2\to SOM3} ={CF_{pot,\, SOM2} \left(1-rf_{SOM2} -\frac{CN_{SOM3} }{CN_{SOM2} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, SOM2} \left(1-rf_{SOM2} -\frac{CN_{SOM3} }{CN_{SOM2} } \right) CN_{SOM3} }} \right. \kern-\nulldelimiterspace} CN_{SOM3} }
+   NF_{pot\_ min,\, SOM2\to SOM3} ={CF_{pot,\, SOM2} \left(1-rf_{SOM2} -\frac{CN_{SOM3} }{CN_{SOM2} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, SOM2} \left(1-rf_{SOM2} -\frac{CN_{SOM3} }{CN_{SOM2} } \right) CN_{SOM3} }} \right.} CN_{SOM3} }
 
 .. math::
    :label: 21.25) 
 
-   NF_{pot\_ min,\, SOM3\to SOM4} ={CF_{pot,\, SOM3} \left(1-rf_{SOM3} -\frac{CN_{SOM4} }{CN_{SOM3} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, SOM3} \left(1-rf_{SOM3} -\frac{CN_{SOM4} }{CN_{SOM3} } \right) CN_{SOM4} }} \right. \kern-\nulldelimiterspace} CN_{SOM4} }
+   NF_{pot\_ min,\, SOM3\to SOM4} ={CF_{pot,\, SOM3} \left(1-rf_{SOM3} -\frac{CN_{SOM4} }{CN_{SOM3} } \right)\mathord{\left/ {\vphantom {CF_{pot,\, SOM3} \left(1-rf_{SOM3} -\frac{CN_{SOM4} }{CN_{SOM3} } \right) CN_{SOM4} }} \right.} CN_{SOM4} }
 
 .. math::
    :label: ZEqnNum473594 
 
-   NF_{pot\_ min,\, SOM4} =-{CF_{pot,\, SOM4} \mathord{\left/ {\vphantom {CF_{pot,\, SOM4}  CN_{SOM4} }} \right. \kern-\nulldelimiterspace} CN_{SOM4} }
+   NF_{pot\_ min,\, SOM4} =-{CF_{pot,\, SOM4} \mathord{\left/ {\vphantom {CF_{pot,\, SOM4}  CN_{SOM4} }} \right.} CN_{SOM4} }
 
 where the special form of Eq. arises because there is no SOM pool
 downstream of SOM4 in the converging cascade: all carbon fluxes leaving
@@ -674,32 +674,32 @@ pools in the decomposition cascade are given as:
 .. math::
    :label: 21.52) 
 
-   NF_{Lit1,\, SOM1} ={CF_{Lit1} \mathord{\left/ {\vphantom {CF_{Lit1}  CN_{Lit1} }} \right. \kern-\nulldelimiterspace} CN_{Lit1} }
+   NF_{Lit1,\, SOM1} ={CF_{Lit1} \mathord{\left/ {\vphantom {CF_{Lit1}  CN_{Lit1} }} \right.} CN_{Lit1} }
 
 .. math::
    :label: 21.53) 
 
-   NF_{Lit2,\, SOM2} ={CF_{Lit2} \mathord{\left/ {\vphantom {CF_{Lit2}  CN_{Lit2} }} \right. \kern-\nulldelimiterspace} CN_{Lit2} }
+   NF_{Lit2,\, SOM2} ={CF_{Lit2} \mathord{\left/ {\vphantom {CF_{Lit2}  CN_{Lit2} }} \right.} CN_{Lit2} }
 
 .. math::
    :label: 21.54) 
 
-   NF_{Lit3,\, SOM3} ={CF_{Lit3} \mathord{\left/ {\vphantom {CF_{Lit3}  CN_{Lit3} }} \right. \kern-\nulldelimiterspace} CN_{Lit3} }
+   NF_{Lit3,\, SOM3} ={CF_{Lit3} \mathord{\left/ {\vphantom {CF_{Lit3}  CN_{Lit3} }} \right.} CN_{Lit3} }
 
 .. math::
    :label: 21.55) 
 
-   NF_{SOM1,\, SOM2} ={CF_{SOM1} \mathord{\left/ {\vphantom {CF_{SOM1}  CN_{SOM1} }} \right. \kern-\nulldelimiterspace} CN_{SOM1} }
+   NF_{SOM1,\, SOM2} ={CF_{SOM1} \mathord{\left/ {\vphantom {CF_{SOM1}  CN_{SOM1} }} \right.} CN_{SOM1} }
 
 .. math::
    :label: 21.56) 
 
-   NF_{SOM2,\, SOM3} ={CF_{SOM2} \mathord{\left/ {\vphantom {CF_{SOM2}  CN_{SOM2} }} \right. \kern-\nulldelimiterspace} CN_{SOM2} }
+   NF_{SOM2,\, SOM3} ={CF_{SOM2} \mathord{\left/ {\vphantom {CF_{SOM2}  CN_{SOM2} }} \right.} CN_{SOM2} }
 
 .. math::
    :label: 21.57) 
 
-   NF_{SOM3,\, SOM4} ={CF_{SOM3} \mathord{\left/ {\vphantom {CF_{SOM3}  CN_{SOM3} }} \right. \kern-\nulldelimiterspace} CN_{SOM3} }
+   NF_{SOM3,\, SOM4} ={CF_{SOM3} \mathord{\left/ {\vphantom {CF_{SOM3}  CN_{SOM3} }} \right.} CN_{SOM3} }
 
 Corresponding fluxes to or from the soil mineral nitrogen pool depend on
 whether the decomposition step is an immobilization flux or a

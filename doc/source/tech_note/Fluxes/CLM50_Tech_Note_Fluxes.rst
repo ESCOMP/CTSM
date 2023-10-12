@@ -75,7 +75,7 @@ where :math:`T_{atm}`  is the air temperature (K) at height
 :math:`z_{atm,\, h}`  and :math:`\Gamma _{d} =0.0098` K
 m\ :sup:`-1` is the negative of the dry adiabatic lapse rate [this
 expression is first-order equivalent to
-:math:`\theta _{atm} =T_{atm} \left({P_{srf} \mathord{\left/ {\vphantom {P_{srf}  P_{atm} }} \right. \kern-\nulldelimiterspace} P_{atm} } \right)^{{R_{da} \mathord{\left/ {\vphantom {R_{da}  C_{p} }} \right. \kern-\nulldelimiterspace} C_{p} } }` 
+:math:`\theta _{atm} =T_{atm} \left({P_{srf} \mathord{\left/ {\vphantom {P_{srf}  P_{atm} }} \right.} P_{atm} } \right)^{{R_{da} \mathord{\left/ {\vphantom {R_{da}  C_{p} }} \right.} C_{p} } }` 
 (:ref:`Stull 1988 <Stull1988>`), where :math:`P_{srf}`  is the surface pressure (Pa),
 :math:`P_{atm}`  is the atmospheric pressure (Pa), and :math:`R_{da}` 
 is the gas constant for dry air (J kg\ :sup:`-1` K\ :sup:`-1`) (:numref:`Table Physical constants`)]. By definition,
@@ -218,17 +218,17 @@ The functions :math:`\psi _{m} \left(\zeta \right)`,
 .. math::
    :label: 5.21
 
-   \psi _{m} \left(\zeta \right)=\int _{{z_{0m} \mathord{\left/ {\vphantom {z_{0m}  L}} \right. \kern-\nulldelimiterspace} L} }^{\zeta }\frac{\left[1-\phi _{m} \left(x\right)\right]}{x} \, dx
+   \psi _{m} \left(\zeta \right)=\int _{{z_{0m} \mathord{\left/ {\vphantom {z_{0m}  L}} \right.} L} }^{\zeta }\frac{\left[1-\phi _{m} \left(x\right)\right]}{x} \, dx
 
 .. math::
    :label: 5.22
 
-   \psi _{h} \left(\zeta \right)=\int _{{z_{0h} \mathord{\left/ {\vphantom {z_{0h}  L}} \right. \kern-\nulldelimiterspace} L} }^{\zeta }\frac{\left[1-\phi _{h} \left(x\right)\right]}{x} \, dx
+   \psi _{h} \left(\zeta \right)=\int _{{z_{0h} \mathord{\left/ {\vphantom {z_{0h}  L}} \right.} L} }^{\zeta }\frac{\left[1-\phi _{h} \left(x\right)\right]}{x} \, dx
 
 .. math::
    :label: 5.23
 
-   \psi _{w} \left(\zeta \right)=\int _{{z_{0w} \mathord{\left/ {\vphantom {z_{0w}  L}} \right. \kern-\nulldelimiterspace} L} }^{\zeta }\frac{\left[1-\phi _{w} \left(x\right)\right]}{x} \, dx
+   \psi _{w} \left(\zeta \right)=\int _{{z_{0w} \mathord{\left/ {\vphantom {z_{0w}  L}} \right.} L} }^{\zeta }\frac{\left[1-\phi _{w} \left(x\right)\right]}{x} \, dx
 
 where :math:`z_{0m}` , :math:`z_{0h}` , and :math:`z_{0w}`  are the
 roughness lengths (m) for momentum, sensible heat, and water vapor,
@@ -290,7 +290,7 @@ where :math:`w_{*}`  is the convective velocity scale
 .. math::
    :label: 5.29
 
-   w_{*} =\left(\frac{-gu_{\*} \theta _{v*} z_{i} }{\overline{\theta _{v,\, atm} }} \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right. \kern-\nulldelimiterspace} 3} } ,
+   w_{*} =\left(\frac{-gu_{\*} \theta _{v*} z_{i} }{\overline{\theta _{v,\, atm} }} \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} } ,
 
 :math:`z_{i} =1000` is the convective boundary layer height (m), and :math:`\beta =1`.
 
@@ -300,8 +300,8 @@ The momentum flux gradient relations are (:ref:`Zeng et al. 1998 <Zengetal1998>`
    :label: 5.30
 
    \begin{array}{llr} 
-   \phi _{m} \left(\zeta \right)=0.7k^{{2\mathord{\left/ {\vphantom {2 3}} \right. \kern-\nulldelimiterspace} 3} } \left(-\zeta \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right. \kern-\nulldelimiterspace} 3} } & \qquad {\rm for\; }\zeta <-1.574 & \ {\rm \; (very\; unstable)} \\ 
-   \phi _{m} \left(\zeta \right)=\left(1-16\zeta \right)^{-{1\mathord{\left/ {\vphantom {1 4}} \right. \kern-\nulldelimiterspace} 4} } & \qquad {\rm for\; -1.574}\le \zeta <0 & \ {\rm \; (unstable)} \\ 
+   \phi _{m} \left(\zeta \right)=0.7k^{{2\mathord{\left/ {\vphantom {2 3}} \right.} 3} } \left(-\zeta \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} } & \qquad {\rm for\; }\zeta <-1.574 & \ {\rm \; (very\; unstable)} \\ 
+   \phi _{m} \left(\zeta \right)=\left(1-16\zeta \right)^{-{1\mathord{\left/ {\vphantom {1 4}} \right.} 4} } & \qquad {\rm for\; -1.574}\le \zeta <0 & \ {\rm \; (unstable)} \\ 
    \phi _{m} \left(\zeta \right)=1+5\zeta & \qquad {\rm for\; }0\le \zeta \le 1& \ {\rm \; (stable)} \\ 
    \phi _{m} \left(\zeta \right)=5+\zeta & \qquad {\rm for\; }\zeta  >1 & \ {\rm\; (very\; stable).} 
    \end{array}
@@ -312,8 +312,8 @@ The sensible and latent heat flux gradient relations are (:ref:`Zeng et al. 1998
    :label: 5.31
 
    \begin{array}{llr} 
-   \phi _{h} \left(\zeta \right)=\phi _{w} \left(\zeta \right)=0.9k^{{4\mathord{\left/ {\vphantom {4 3}} \right. \kern-\nulldelimiterspace} 3} } \left(-\zeta \right)^{{-1\mathord{\left/ {\vphantom {-1 3}} \right. \kern-\nulldelimiterspace} 3} } & \qquad {\rm for\; }\zeta <-0.465 & \ {\rm \; (very\; unstable)} \\ 
-   \phi _{h} \left(\zeta \right)=\phi _{w} \left(\zeta \right)=\left(1-16\zeta \right)^{-{1\mathord{\left/ {\vphantom {1 2}} \right. \kern-\nulldelimiterspace} 2} } & \qquad {\rm for\; -0.465}\le \zeta <0 & \ {\rm \; (unstable)} \\ 
+   \phi _{h} \left(\zeta \right)=\phi _{w} \left(\zeta \right)=0.9k^{{4\mathord{\left/ {\vphantom {4 3}} \right.} 3} } \left(-\zeta \right)^{{-1\mathord{\left/ {\vphantom {-1 3}} \right.} 3} } & \qquad {\rm for\; }\zeta <-0.465 & \ {\rm \; (very\; unstable)} \\ 
+   \phi _{h} \left(\zeta \right)=\phi _{w} \left(\zeta \right)=\left(1-16\zeta \right)^{-{1\mathord{\left/ {\vphantom {1 2}} \right.} 2} } & \qquad {\rm for\; -0.465}\le \zeta <0 & \ {\rm \; (unstable)} \\ 
    \phi _{h} \left(\zeta \right)=\phi _{w} \left(\zeta \right)=1+5\zeta & \qquad {\rm for\; }0\le \zeta \le 1 & \ {\rm \; (stable)} \\ 
    \phi _{h} \left(\zeta \right)=\phi _{w} \left(\zeta \right)=5+\zeta & \qquad {\rm for\; }\zeta  >1 & \ {\rm \; (very\; stable).} 
    \end{array}
@@ -335,7 +335,7 @@ Very unstable :math:`\left(\zeta <-1.574\right)`
 .. math::
    :label: 5.32
 
-   V_{a} =\frac{u_{*} }{k} \left\{\left[\ln \frac{\zeta _{m} L}{z_{0m} } -\psi _{m} \left(\zeta _{m} \right)\right]+1.14\left[\left(-\zeta \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right. \kern-\nulldelimiterspace} 3} } -\left(-\zeta _{m} \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right. \kern-\nulldelimiterspace} 3} } \right]+\psi _{m} \left(\frac{z_{0m} }{L} \right)\right\}
+   V_{a} =\frac{u_{*} }{k} \left\{\left[\ln \frac{\zeta _{m} L}{z_{0m} } -\psi _{m} \left(\zeta _{m} \right)\right]+1.14\left[\left(-\zeta \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} } -\left(-\zeta _{m} \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} } \right]+\psi _{m} \left(\frac{z_{0m} }{L} \right)\right\}
 
 Unstable :math:`\left(-1.574\le \zeta <0\right)`
 
@@ -367,7 +367,7 @@ where
 
 and
 
-:math:`x=\left(1-16\zeta \right)^{{1\mathord{\left/ {\vphantom {1 4}} \right. \kern-\nulldelimiterspace} 4} }` .
+:math:`x=\left(1-16\zeta \right)^{{1\mathord{\left/ {\vphantom {1 4}} \right.} 4} }` .
 
 The potential temperature profiles are:
 
@@ -376,7 +376,7 @@ Very unstable :math:`\left(\zeta <-0.465\right)`
 .. math::
    :label: 5.37
 
-   \theta _{atm} -\theta _{s} =\frac{\theta _{*} }{k} \left\{\left[\ln \frac{\zeta _{h} L}{z_{0h} } -\psi _{h} \left(\zeta _{h} \right)\right]+0.8\left[\left(-\zeta _{h} \right)^{{-1\mathord{\left/ {\vphantom {-1 3}} \right. \kern-\nulldelimiterspace} 3} } -\left(-\zeta \right)^{{-1\mathord{\left/ {\vphantom {-1 3}} \right. \kern-\nulldelimiterspace} 3} } \right]+\psi _{h} \left(\frac{z_{0h} }{L} \right)\right\}
+   \theta _{atm} -\theta _{s} =\frac{\theta _{*} }{k} \left\{\left[\ln \frac{\zeta _{h} L}{z_{0h} } -\psi _{h} \left(\zeta _{h} \right)\right]+0.8\left[\left(-\zeta _{h} \right)^{{-1\mathord{\left/ {\vphantom {-1 3}} \right.} 3} } -\left(-\zeta \right)^{{-1\mathord{\left/ {\vphantom {-1 3}} \right.} 3} } \right]+\psi _{h} \left(\frac{z_{0h} }{L} \right)\right\}
 
 Unstable :math:`\left(-0.465\le \zeta <0\right)`
 
@@ -407,7 +407,7 @@ Very unstable :math:`\left(\zeta <-0.465\right)`
 .. math::
    :label: 5.41
 
-   q_{atm} -q_{s} =\frac{q_{*} }{k} \left\{\left[\ln \frac{\zeta _{w} L}{z_{0w} } -\psi _{w} \left(\zeta _{w} \right)\right]+0.8\left[\left(-\zeta _{w} \right)^{{-1\mathord{\left/ {\vphantom {-1 3}} \right. \kern-\nulldelimiterspace} 3} } -\left(-\zeta \right)^{{-1\mathord{\left/ {\vphantom {-1 3}} \right. \kern-\nulldelimiterspace} 3} } \right]+\psi _{w} \left(\frac{z_{0w} }{L} \right)\right\}
+   q_{atm} -q_{s} =\frac{q_{*} }{k} \left\{\left[\ln \frac{\zeta _{w} L}{z_{0w} } -\psi _{w} \left(\zeta _{w} \right)\right]+0.8\left[\left(-\zeta _{w} \right)^{{-1\mathord{\left/ {\vphantom {-1 3}} \right.} 3} } -\left(-\zeta \right)^{{-1\mathord{\left/ {\vphantom {-1 3}} \right.} 3} } \right]+\psi _{w} \left(\frac{z_{0w} }{L} \right)\right\}
 
 Unstable :math:`\left(-0.465\le \zeta <0\right)`
 
@@ -459,7 +459,7 @@ is related to :math:`\zeta`  (:ref:`Arya 2001 <Arya2001>`) as
    R_{iB} =\zeta \left[\ln \left(\frac{z_{atm,\, h} -d}{z_{0h} } \right)-\psi _{h} \left(\zeta \right)\right]\left[\ln \left(\frac{z_{atm,\, m} -d}{z_{0m} } \right)-\psi _{m} \left(\zeta \right)\right]^{-2} .
 
 Using
-:math:`\phi _{h} =\phi _{m}^{2} =\left(1-16\zeta \right)^{-{1\mathord{\left/ {\vphantom {1 2}} \right. \kern-\nulldelimiterspace} 2} }` 
+:math:`\phi _{h} =\phi _{m}^{2} =\left(1-16\zeta \right)^{-{1\mathord{\left/ {\vphantom {1 2}} \right.} 2} }` 
 for unstable conditions and :math:`\phi _{h} =\phi _{m} =1+5\zeta`  for
 stable conditions to determine :math:`\psi _{m} \left(\zeta \right)` and
 :math:`\psi _{h} \left(\zeta \right)`, the inverse relationship
@@ -799,10 +799,10 @@ across the interfacial sublayer. The following relation from
 .. math::
    :label: 5.82
 
-   z_{0h,\, g} =z_{0w,\, g} =z_{0m,\, g} e^{-a\left({u_{*} z_{0m,\, g} \mathord{\left/ {\vphantom {u_{*} z_{0m,\, g}  \upsilon }} \right. \kern-\nulldelimiterspace} \upsilon } \right)^{0.45} }
+   z_{0h,\, g} =z_{0w,\, g} =z_{0m,\, g} e^{-a\left({u_{*} z_{0m,\, g} \mathord{\left/ {\vphantom {u_{*} z_{0m,\, g}  \upsilon }} \right.} \upsilon } \right)^{0.45} }
 
 where the quantity
-:math:`{u_{\*} z_{0m,\, g} \mathord{\left/ {\vphantom {u_{*} z_{0m,\, g}  \upsilon }} \right. \kern-\nulldelimiterspace} \upsilon }` 
+:math:`{u_{\*} z_{0m,\, g} \mathord{\left/ {\vphantom {u_{*} z_{0m,\, g}  \upsilon }} \right.} \upsilon }` 
 is the roughness Reynolds number (and may be interpreted as the Reynolds number of the smallest turbulent eddy in the flow) with the kinematic
 viscosity of air :math:`\upsilon =1.5\times 10^{-5}`  m\ :sup:`2` s\ :sup:`-1` and :math:`a=0.13`.
 
@@ -1231,7 +1231,7 @@ The leaf boundary layer resistance :math:`r_{b}`  is
 .. math::
    :label: 5.122
 
-   r_{b} =\frac{1}{C_{v} } \left({U_{av} \mathord{\left/ {\vphantom {U_{av}  d_{leaf} }} \right. \kern-\nulldelimiterspace} d_{leaf} } \right)^{{-1\mathord{\left/ {\vphantom {-1 2}} \right. \kern-\nulldelimiterspace} 2} }
+   r_{b} =\frac{1}{C_{v} } \left({U_{av} \mathord{\left/ {\vphantom {U_{av}  d_{leaf} }} \right.} d_{leaf} } \right)^{{-1\mathord{\left/ {\vphantom {-1 2}} \right.} 2} }
 
 where :math:`C_{v} =0.01` m\ s\ :sup:`-1/2` is the turbulent
 transfer coefficient between the canopy surface and canopy air, and
@@ -1528,7 +1528,7 @@ where :math:`\Delta T_{v} =1{\rm \; or\; }-1`. The error
 #. The water vapor flux :math:`E_{v}`  is constrained to be less than or
    equal to the sum of transpiration :math:`E_{v}^{t}`  and the water
    available from wetted leaves and stems
-   :math:`{W_{can} \mathord{\left/ {\vphantom {W_{can}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t}` .
+   :math:`{W_{can} \mathord{\left/ {\vphantom {W_{can}  \Delta t}} \right.} \Delta t}` .
    The energy error due to this constraint is
 
    .. math::
@@ -1625,7 +1625,7 @@ support the updated ground evaporation, i.e., if :math:`E'_{g} > 0` and
 .. math::
    :label: 5.142 
 
-   f_{evap} =\frac{{\left(w_{ice,\; snl+1} +w_{liq,\, snl+1} \right)\mathord{\left/ {\vphantom {\left(w_{ice,\; snl+1} +w_{liq,\, snl+1} \right) \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} }{\sum _{j=1}^{npft}\left(E'_{g} \right)_{j} \left(wt\right)_{j}  } \le 1,
+   f_{evap} =\frac{{\left(w_{ice,\; snl+1} +w_{liq,\, snl+1} \right)\mathord{\left/ {\vphantom {\left(w_{ice,\; snl+1} +w_{liq,\, snl+1} \right) \Delta t}} \right.} \Delta t} }{\sum _{j=1}^{npft}\left(E'_{g} \right)_{j} \left(wt\right)_{j}  } \le 1,
 
 an adjustment is made to reduce the ground evaporation accordingly as
 

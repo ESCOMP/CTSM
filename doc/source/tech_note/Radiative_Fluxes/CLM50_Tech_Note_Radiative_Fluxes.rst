@@ -93,7 +93,7 @@ unit plant area) is
 .. math::
    :label: 4.5
 
-   \phi ^{sun} ={\left(\vec{I}_{sun,vis}^{\mu } S_{atm} \downarrow _{vis}^{\mu } +\vec{I}_{sun,vis}^{} S_{atm} \downarrow _{vis}^{} \right)\mathord{\left/ {\vphantom {\left(\vec{I}_{sun,vis}^{\mu } S_{atm} \downarrow _{vis}^{\mu } +\vec{I}_{sun,vis}^{} S_{atm} \downarrow _{vis}^{} \right) L^{sun} }} \right. \kern-\nulldelimiterspace} L^{sun} }
+   \phi ^{sun} ={\left(\vec{I}_{sun,vis}^{\mu } S_{atm} \downarrow _{vis}^{\mu } +\vec{I}_{sun,vis}^{} S_{atm} \downarrow _{vis}^{} \right)\mathord{\left/ {\vphantom {\left(\vec{I}_{sun,vis}^{\mu } S_{atm} \downarrow _{vis}^{\mu } +\vec{I}_{sun,vis}^{} S_{atm} \downarrow _{vis}^{} \right) L^{sun} }} \right.} L^{sun} }
 
 and the absorbed radiation for the average shaded leaf (per unit plant
 area) is
@@ -101,7 +101,7 @@ area) is
 .. math::
    :label: 4.6
 
-   \phi ^{sha} ={\left(\vec{I}_{sha,vis}^{\mu } S_{atm} \downarrow _{vis}^{\mu } +\vec{I}_{sha,vis}^{} S_{atm} \downarrow _{vis}^{} \right)\mathord{\left/ {\vphantom {\left(\vec{I}_{sha,vis}^{\mu } S_{atm} \downarrow _{vis}^{\mu } +\vec{I}_{sha,vis}^{} S_{atm} \downarrow _{vis}^{} \right) L^{sha} }} \right. \kern-\nulldelimiterspace} L^{sha} }
+   \phi ^{sha} ={\left(\vec{I}_{sha,vis}^{\mu } S_{atm} \downarrow _{vis}^{\mu } +\vec{I}_{sha,vis}^{} S_{atm} \downarrow _{vis}^{} \right)\mathord{\left/ {\vphantom {\left(\vec{I}_{sha,vis}^{\mu } S_{atm} \downarrow _{vis}^{\mu } +\vec{I}_{sha,vis}^{} S_{atm} \downarrow _{vis}^{} \right) L^{sha} }} \right.} L^{sha} }
 
 with :math:`L^{sun}`  and :math:`L^{sha}`  the sunlit and shaded plant
 area index, respectively. The sunlit plant area index is
@@ -140,14 +140,14 @@ derives the light profile with depth in the canopy by taking the
 derivatives of the absorbed radiative fluxes with respect to plant area
 index (:math:`L'=L+S`) and evaluating them incrementally through the
 canopy with cumulative plant area index (:math:`x`). The terms
-:math:`{d\vec{I}_{sun,\Lambda }^{\mu } (x)\mathord{\left/ {\vphantom {d\vec{I}_{sun,\Lambda }^{\mu } (x) dL'}} \right. \kern-\nulldelimiterspace} dL'}` 
+:math:`{d\vec{I}_{sun,\Lambda }^{\mu } (x)\mathord{\left/ {\vphantom {d\vec{I}_{sun,\Lambda }^{\mu } (x) dL'}} \right.} dL'}` 
 and
-:math:`{d\vec{I}_{sun,\Lambda }^{} (x)\mathord{\left/ {\vphantom {d\vec{I}_{sun,\Lambda }^{} (x) dL'}} \right. \kern-\nulldelimiterspace} dL'}` 
+:math:`{d\vec{I}_{sun,\Lambda }^{} (x)\mathord{\left/ {\vphantom {d\vec{I}_{sun,\Lambda }^{} (x) dL'}} \right.} dL'}` 
 are the direct beam and diffuse solar radiation, respectively, absorbed
 by the sunlit fraction of the canopy (per unit plant area) at a depth
 defined by the cumulative plant area index :math:`x`;
-:math:`{d\vec{I}_{sha,\Lambda }^{\mu } (x)\mathord{\left/ {\vphantom {d\vec{I}_{sha,\Lambda }^{\mu } (x) dL'}} \right. \kern-\nulldelimiterspace} dL'}` \ and
-:math:`{d\vec{I}_{sha,\Lambda }^{} (x)\mathord{\left/ {\vphantom {d\vec{I}_{sha,\Lambda }^{} (x) dL'}} \right. \kern-\nulldelimiterspace} dL'}` 
+:math:`{d\vec{I}_{sha,\Lambda }^{\mu } (x)\mathord{\left/ {\vphantom {d\vec{I}_{sha,\Lambda }^{\mu } (x) dL'}} \right.} dL'}` \ and
+:math:`{d\vec{I}_{sha,\Lambda }^{} (x)\mathord{\left/ {\vphantom {d\vec{I}_{sha,\Lambda }^{} (x) dL'}} \right.} dL'}` 
 are the corresponding fluxes for the shaded fraction of the canopy at
 depth :math:`x`. These fluxes are normalized by the sunlit or shaded
 fraction at depth :math:`x`, defined by
@@ -175,7 +175,7 @@ longwave radiation (W m\ :sup:`-2`). The radiative temperature
 .. math::
    :label: 4.10
 
-   T_{rad} =\left(\frac{L\, \uparrow }{\sigma } \right)^{{1\mathord{\left/ {\vphantom {1 4}} \right. \kern-\nulldelimiterspace} 4} }
+   T_{rad} =\left(\frac{L\, \uparrow }{\sigma } \right)^{{1\mathord{\left/ {\vphantom {1 4}} \right.} 4} }
 
 where :math:`\sigma`  is the Stefan-Boltzmann constant (W\ m\ :sup:`-2` K\ :sup:`-4`) (:numref:`Table Physical constants`). With reference to
 :numref:`Figure Radiation Schematic`, the upward longwave radiation from the surface to the atmosphere is
@@ -297,7 +297,7 @@ vegetation emissivity is
 .. math::
    :label: 4.20
 
-   \varepsilon _{v} =1-e^{-{\left(L+S\right)\mathord{\left/ {\vphantom {\left(L+S\right) \bar{\mu }}} \right. \kern-\nulldelimiterspace} \bar{\mu }} }
+   \varepsilon _{v} =1-e^{-{\left(L+S\right)\mathord{\left/ {\vphantom {\left(L+S\right) \bar{\mu }}} \right.} \bar{\mu }} }
 
 where :math:`L` and :math:`S` are the leaf and stem area indices
 (section :numref:`Phenology and vegetation burial by snow`) and 

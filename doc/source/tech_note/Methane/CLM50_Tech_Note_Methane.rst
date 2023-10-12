@@ -284,7 +284,7 @@ The diffusive transport through aerenchyma (*A*, mol m\ :sup:`-2` s\ :sup:`-1`) 
 .. math::
    :label: 24.8
 
-   A=\frac{C\left(z\right)-C_{a} }{{\raise0.7ex\hbox{$ r_{L} z $}\!\mathord{\left/ {\vphantom {r_{L} z D}} \right. \kern-\nulldelimiterspace}\!\lower0.7ex\hbox{$ D $}} +r_{a} } pT\rho _{r} ,
+   A=\frac{C\left(z\right)-C_{a} }{{\raise0.7ex\hbox{$ r_{L} z $}\!\mathord{\left/ {\vphantom {r_{L} z D}} \right.}\!\lower0.7ex\hbox{$ D $}} +r_{a} } pT\rho _{r} ,
  
 where *D* is the free-air gas diffusion coefficient (m\ :sup:`2` s\ :sup:`-1`); *C(z)* (mol m\ :sup:`-3`) is the gaseous
 concentration at depth *z* (m); :math:`r_{L}`  is the ratio of root
@@ -443,7 +443,7 @@ properties can be represented as:
 .. math::
    :label: 24.12
 
-   D_{e} =D_{0} \theta _{a}^{2} \left(\frac{\theta _{a} }{\theta _{s} } \right)^{{\raise0.7ex\hbox{$ 3 $}\!\mathord{\left/ {\vphantom {3 b}} \right. \kern-\nulldelimiterspace}\!\lower0.7ex\hbox{$ b $}} } ,
+   D_{e} =D_{0} \theta _{a}^{2} \left(\frac{\theta _{a} }{\theta _{s} } \right)^{{\raise0.7ex\hbox{$ 3 $}\!\mathord{\left/ {\vphantom {3 b}} \right.}\!\lower0.7ex\hbox{$ b $}} } ,
 
 where :math:`\theta _{a}`  and :math:`\theta _{s}`  are the air-filled
 and total (saturated water-filled) porosities (-), respectively, and *b*
@@ -455,7 +455,7 @@ measurements more closely in unsaturated peat soils:
 .. math::
    :label: 24.13
 
-   D_{e} =D_{0} \frac{\theta _{a} ^{{\raise0.7ex\hbox{$ 10 $}\!\mathord{\left/ {\vphantom {10 3}} \right. \kern-\nulldelimiterspace}\!\lower0.7ex\hbox{$ 3 $}} } }{\theta _{s} ^{2} }
+   D_{e} =D_{0} \frac{\theta _{a} ^{{\raise0.7ex\hbox{$ 10 $}\!\mathord{\left/ {\vphantom {10 3}} \right.}\!\lower0.7ex\hbox{$ 3 $}} } }{\theta _{s} ^{2} }
 
 In CLM, we applied equation :eq:`24.12` for soils with zero organic matter content
 and equation :eq:`24.13` for soils with more than 130 kg m\ :sup:`-3` organic

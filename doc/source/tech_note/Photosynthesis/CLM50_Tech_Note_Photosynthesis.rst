@@ -57,7 +57,7 @@ Leaf stomatal resistance is:
 .. math::
    :label: 9.1 
 
-   \frac{1}{r_{s} } =g_{s} = g_{o} + 1.6(1 + \frac{g_{1} }{\sqrt{D_{s}}}) \frac{A_{n} }{{c_{s} \mathord{\left/ {\vphantom {c_{s}  P_{atm} }} \right. \kern-\nulldelimiterspace} P_{atm} } } 
+   \frac{1}{r_{s} } =g_{s} = g_{o} + 1.6(1 + \frac{g_{1} }{\sqrt{D_{s}}}) \frac{A_{n} }{{c_{s} \mathord{\left/ {\vphantom {c_{s}  P_{atm} }} \right.} P_{atm} } } 
 
 where :math:`r_{s}` is leaf stomatal resistance (s m\ :sup:`2`
 :math:`\mu`\ mol\ :sup:`-1`), :math:`g_{o}` is the minimum stomatal conductance
@@ -166,7 +166,7 @@ s\ :sup:`-1`) is
 .. math::
    :label: 9.3
 
-   A_{c} =\left\{\begin{array}{l} {\frac{V_{c\max } \left(c_{i} -\Gamma _{\*} \right)}{c_{i} +K_{c} \left(1+{o_{i} \mathord{\left/ {\vphantom {o_{i}  K_{o} }} \right. \kern-\nulldelimiterspace} K_{o} } \right)} \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {V_{c\max } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{\*} \ge 0.
+   A_{c} =\left\{\begin{array}{l} {\frac{V_{c\max } \left(c_{i} -\Gamma _{\*} \right)}{c_{i} +K_{c} \left(1+{o_{i} \mathord{\left/ {\vphantom {o_{i}  K_{o} }} \right.} K_{o} } \right)} \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {V_{c\max } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{\*} \ge 0.
 
 The maximum rate of carboxylation allowed by the capacity to regenerate
 RuBP (i.e., the light-limited rate) :math:`A_{j}`  (:math:`\mu` \ mol

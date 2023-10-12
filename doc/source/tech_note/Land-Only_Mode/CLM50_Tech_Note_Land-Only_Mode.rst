@@ -130,7 +130,7 @@ are coefficients from polynomial fits to the CAM data.
 The additional atmospheric forcing variables required by :numref:`Table Atmospheric input to land model` are
 derived as follows. The atmospheric reference height :math:`z'_{atm}` 
 (m) is set to 30 m. The directional wind components are derived as
-:math:`u_{atm} =v_{atm} ={W_{atm} \mathord{\left/ {\vphantom {W_{atm}  \sqrt{2} }} \right. \kern-\nulldelimiterspace} \sqrt{2} }` .
+:math:`u_{atm} =v_{atm} ={W_{atm} \mathord{\left/ {\vphantom {W_{atm}  \sqrt{2} }} \right.} \sqrt{2} }` .
 The potential temperature :math:`\overline{\theta _{atm} }` (K) is set
 to the atmospheric temperature :math:`T_{atm}` . The atmospheric
 longwave radiation :math:`L_{atm} \, \downarrow`  (W m\ :sup:`-2`)

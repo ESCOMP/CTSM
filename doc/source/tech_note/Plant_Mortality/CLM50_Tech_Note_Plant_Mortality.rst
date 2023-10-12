@@ -25,7 +25,7 @@ is required to better constrain this process in different climate zones
 range from at least 0.7% to 3.0% yr\ :sup:`-1`. Taking the annual
 rate of mortality (*am*, proportion yr\ :sup:`-1`) as 0.02, a
 mortality rate per second (*m*) is calculated as
-:math:`m={am\mathord{\left/ {\vphantom {am \left(365\cdot 86400\right)}} \right. \kern-\nulldelimiterspace} \left(365\cdot 86400\right)}` .
+:math:`m={am\mathord{\left/ {\vphantom {am \left(365\cdot 86400\right)}} \right.} \left(365\cdot 86400\right)}` .
 All vegetation carbon and nitrogen pools for display, storage, and
 transfer are affected at rate *m*, with mortality fluxes out of
 vegetation pools eventually merged to the column level and deposited in
