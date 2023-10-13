@@ -1054,7 +1054,7 @@ module CLMFatesInterfaceMod
 
             call ed_update_site(this%fates(nc)%sites(s), &
                   this%fates(nc)%bc_in(s), &
-                  this%fates(nc)%bc_out(s))
+                  this%fates(nc)%bc_out(s),.false.)
       enddo
 
 
@@ -1716,7 +1716,7 @@ module CLMFatesInterfaceMod
 
                   call ed_update_site( this%fates(nc)%sites(s), &
                         this%fates(nc)%bc_in(s), &
-                        this%fates(nc)%bc_out(s) )
+                        this%fates(nc)%bc_out(s),.true. )
 
                end do
 
@@ -1940,7 +1940,7 @@ module CLMFatesInterfaceMod
 
               call ed_update_site(this%fates(nc)%sites(s), &
                     this%fates(nc)%bc_in(s), &
-                    this%fates(nc)%bc_out(s))
+                    this%fates(nc)%bc_out(s),.false.)
 
            end do
 
