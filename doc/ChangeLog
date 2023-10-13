@@ -1,4 +1,78 @@
 ===============================================================
+Tag name: ctsm5.1.dev143
+Originator(s): rgknox (Ryan Knox,LAWRENCE BERKELEY NATIONAL LABORATORY,510-495-)
+Date: Fri Oct 13 08:53:38 MDT 2023
+One-line Summary: Zeroing of wood product fluxes on fates columns
+
+Purpose and description of changes
+----------------------------------
+
+This is a small change that initializes wood product fluxes on fates columns to zero. These
+products are otherwise zero'd in a p2c() routine that is incompatible with fates. When
+wood product fluxes become available via fates, these routines will be updated. These fluxes
+were previously left as uninitialized, which was causing math issues on some compilers.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+There are no changes to scientifically-supported configurations.
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Fixes CTSM issue 2165
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+
+No caveats, no bugs, no issues of relevance.
+
+No noticable timing changes.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+None
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+  Compared against baseline: ctsm5.1.dev142
+
+
+Answer changes
+--------------
+
+Answer changes only on FATES tests, and only on the specific wood product fluxes modified. These values
+are now zeros, instead of being uninitialized. Everything else is b4b.
+
+
+Other details
+-------------
+
+No other details.
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev142
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Tue Sep 19 11:30:22 MDT 2023
