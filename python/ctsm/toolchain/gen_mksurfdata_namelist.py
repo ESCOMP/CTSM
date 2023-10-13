@@ -95,6 +95,18 @@ def get_parser():
         default=None,
     )
     parser.add_argument(
+        "--namelist",
+        help="""
+            name of output namelist filename
+            if NOT given the name will be the same as the surface 
+            dataset name with a *.namelist extension rather than *.nc
+            """,
+        action="store",
+        dest="namelist_fname",
+        required=False,
+        default=None,
+    )
+    parser.add_argument(
         "--model-mesh-nx",
         help="""
             model mesh [default: %(default)s]
@@ -129,17 +141,6 @@ def get_parser():
         dest="glc_nec",
         type=int,
         default=10,
-    )
-    parser.add_argument(
-        "--rundir",
-        help="""
-            Directory to run in.
-            [default: %(default)s]
-            """,
-        action="store",
-        dest="run_dir",
-        required=False,
-        default=os.getcwd(),
     )
     parser.add_argument(
         "--ssp-rcp",
@@ -610,7 +611,11 @@ def main():
 
     prefix = f"surfdata_{res}_{ssp_rcp_name}_{start_year}_{num_pft}pfts_c{time_stamp}."
 
-    nlfname = f"{prefix}namelist"
+    if args.namelist_fname is None:
+        nlfname = f"{prefix}namelist"
+    else:
+        nlfname = args.namelist_fname
+
     fsurdat = f"{prefix}nc"
     fsurlog = f"{prefix}log"
 

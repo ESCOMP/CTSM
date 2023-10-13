@@ -28,6 +28,13 @@ class TestSysGenMkSurfNML(unittest.TestCase):
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         self._testinputs_path = testinputs_path
         self._tempdir = tempfile.mkdtemp()
+        os.chdir(self._tempdir)
+        self.outfile = "surfdata.namelist"
+        sys.argv = [
+            "gen_mksurfdata_namelist",
+            "--namelist",
+            self.outfile,
+        ]
 
     def tearDown(self):
         """
@@ -40,92 +47,102 @@ class TestSysGenMkSurfNML(unittest.TestCase):
         Test that a standard simple namelist works
         """
         # pylint: disable=no-self-use
-        sys.argv = [
-            "gen_mksurfdata_namelist",
-            "--start-year",
-            "2000",
-            "--end-year",
-            "2000",
-            "--res",
-            "0.9x1.25",
-        ]
+        sys.argv.extend(
+            [
+                "--start-year",
+                "2000",
+                "--end-year",
+                "2000",
+                "--res",
+                "0.9x1.25",
+            ]
+        )
         main()
+        self.assertTrue(os.path.exists(self.outfile), "Output surface dataset file should exist")
 
     def test_vic_nocrop_inlandwet_glc_namelist(self):
         """
-        Test that a namelist with several options on
+        Test a namelist with several options on
         """
         # pylint: disable=no-self-use
-        sys.argv = [
-            "gen_mksurfdata_namelist",
-            "--start-year",
-            "1850",
-            "--end-year",
-            "1850",
-            "--res",
-            "1.9x2.5",
-            "--vic",
-            "--nocrop",
-            "--inlandwet",
-            "--glc",
-        ]
+        sys.argv.extend(
+            [
+                "--start-year",
+                "1850",
+                "--end-year",
+                "1850",
+                "--res",
+                "1.9x2.5",
+                "--vic",
+                "--nocrop",
+                "--inlandwet",
+                "--glc",
+            ]
+        )
         main()
+        self.assertTrue(os.path.exists(self.outfile), "Output surface dataset file should exist")
 
     def test_hires_namelist(self):
         """
         Test that a high resolution namelist works
         """
         # pylint: disable=no-self-use
-        sys.argv = [
-            "gen_mksurfdata_namelist",
-            "--start-year",
-            "1850",
-            "--end-year",
-            "1850",
-            "--res",
-            "mpasa15",
-            "--glc-nec",
-            "10",
-            "--hires_pft",
-            "--hires_soitex",
-        ]
+        sys.argv.extend(
+            [
+                "--start-year",
+                "1850",
+                "--end-year",
+                "1850",
+                "--res",
+                "mpasa15",
+                "--glc-nec",
+                "10",
+                "--hires_pft",
+                "--hires_soitex",
+            ]
+        )
         main()
+        self.assertTrue(os.path.exists(self.outfile), "Output surface dataset file should exist")
 
     def test_ssp_transient_namelist(self):
         """
         Test that a SSP transient namelist works
         """
         # pylint: disable=no-self-use
-        sys.argv = [
-            "gen_mksurfdata_namelist",
-            "--start-year",
-            "1850",
-            "--end-year",
-            "2100",
-            "--res",
-            "ne30np4.pg3",
-            "--ssp-rcp",
-            "SSP2-4.5",
-            "--nosurfdata",
-        ]
+        sys.argv.extend(
+            [
+                "--start-year",
+                "1850",
+                "--end-year",
+                "2100",
+                "--res",
+                "ne30np4.pg3",
+                "--ssp-rcp",
+                "SSP2-4.5",
+                "--nosurfdata",
+            ]
+        )
         main()
+        self.assertTrue(os.path.exists(self.outfile), "Output surface dataset file should exist")
 
     def test_potveg_namelist(self):
         """
         Test that a potential vegetation namelist works
         """
         # pylint: disable=no-self-use
-        sys.argv = [
-            "gen_mksurfdata_namelist",
-            "--start-year",
-            "1850",
-            "--end-year",
-            "1850",
-            "--res",
-            "4x5",
-            "--potveg_flag",
-        ]
+        sys.argv.extend(
+            [
+                "--start-year",
+                "1850",
+                "--end-year",
+                "1850",
+                "--res",
+                "4x5",
+                "--potveg_flag",
+            ]
+        )
         main()
+        self.assertTrue(os.path.exists(self.outfile), "Output surface dataset file should exist")
 
 
 if __name__ == "__main__":
