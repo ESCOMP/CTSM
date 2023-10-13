@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-    ctsm5.1.dev143   rgknox 10/11/2023 Zeroing of wood product fluxes on fates columns
+    ctsm5.1.dev143   rgknox 10/13/2023 Zeroing of wood product fluxes on fates columns
     ctsm5.1.dev142 samrabin 09/19/2023 Merge 5 bit-for-bit pull requests
     ctsm5.1.dev141   slevis 09/13/2023 Change small snocan to zero
     ctsm5.1.dev140  afoster 09/12/2023 add lai_streams capability for FATES
