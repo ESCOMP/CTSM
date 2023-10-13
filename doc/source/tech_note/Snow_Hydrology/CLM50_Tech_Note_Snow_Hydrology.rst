@@ -184,7 +184,6 @@ increases due to wind-driven compaction according to
 
 which is added to the temperature-dependent term (cf. equation :eq:`8.21a`).
 
-
 The mass of snow :math:`W_{sno}`  is
 
 .. math::
@@ -486,8 +485,6 @@ The snow layer thickness after compaction is
 
    \Delta z_{i}^{n+1} =\Delta z_{i}^{n} \left(1+C_{R,\, i} \Delta t\right).
 
-
-
 .. _Destructive metamorphism:
 
 Destructive metamorphism
@@ -520,7 +517,6 @@ and
 :math:`{w_{liq,\, i} \mathord{\left/ {\vphantom {w_{liq,\, i}  \left(f_{sno} \Delta z_{i} \right)}} \right.} \left(f_{sno} \Delta z_{i} \right)}`
 are the bulk densities of liquid water and ice (kg m\ :sup:`-3`).
 
-
 .. _Overburden pressure compaction:
 
 Overburden pressure compaction
@@ -542,7 +538,6 @@ water contents of the layer being compacted
    :label: 8.47
 
    P_{s,\, i} =\frac{w_{ice,\, i} +w_{liq,\, i} }{2} +\sum _{j=snl+1}^{j=i-1}\left(w_{ice,\, j} +w_{liq,\, j} \right) .
-
 
 Variable :math:`\eta` in :eq:`8.45` is a viscosity coefficient (kg s m\ :sup:`-2`) that varies with density and
 temperature as

@@ -25,7 +25,6 @@ But, even without meteorology data PTCLMmkdata is useful to setup datasets to ru
 
 The original authors of PTCLMmkdata are: Daniel M. Ricciuto, Dali Wang, Peter E. Thornton, Wilfred M. Post all at Environmental Sciences Division, Oak Ridge National Laboratory (ORNL) and R. Quinn Thomas at Cornell University. It was then modified fairly extensively by Erik Kluzek at NCAR. We want to thank all of these individuals for this contribution to the CESM effort. We also want to thank the folks at University of Michigan Biological Stations (US-UMB) who allowed us to use their Fluxnet station data and import it into our inputdata repository, especially Gil Bohrer the PI on record for this site.
 
-
 .. _details-of-ptclm:
 
 =======================
@@ -131,7 +130,6 @@ Example 6-1. Example of running PTCLMmkdata for US-UMB on cheyenne
    # Next setup, build and run as normal
    > cd $MYCASE
    > ./case.setup
-
 
 PTCLMmkdata includes a README file that gives some extra details and a simple example.
 

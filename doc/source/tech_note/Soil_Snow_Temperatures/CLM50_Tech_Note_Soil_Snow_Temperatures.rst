@@ -980,7 +980,6 @@ the top layer is a blend of ice and soil heat capacity
 
 where :math:`c_{1}^{*}`  is calculated from :eq:`6.89` or :eq:`6.92`.
 
-
 .. _Excess Ground Ice:
 
 Excess Ground Ice
@@ -1024,5 +1023,4 @@ to melt when no normals soil ice is present in the layer.
 When a soil layer refreezes, liquid soil water can only turn into normal soil ice, thus, no new of excess ice can be created but only melted.
 The excess liquid soil moisture from excess ice melt is distributed within the soil column according
 to :numref:`Lateral Sub-surface Runoff`.
-
 

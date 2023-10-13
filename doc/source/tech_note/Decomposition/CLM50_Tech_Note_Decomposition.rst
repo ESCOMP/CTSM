@@ -538,14 +538,12 @@ The N available to the FUN model for plant uptake (:math:`{NF}_ {plant\_ avail\_
 
    NF_{plant\_ avail\_ sminn,j} = NS_{sminn,j} - f_{immob\_demand} NF_{immob\_ demand,j}
 
-
 This treatment of competition for nitrogen as a limiting resource is
 referred to a demand-based competition, where the fraction of the
 available resource that eventually flows to a particular process depends
 on the demand from that process in comparison to the total demand from
 all processes. Processes expressing a greater demand acquire a larger
 vfraction of the available resource.
-
 
 Final Decomposition Fluxes
 -------------------------------
@@ -824,7 +822,4 @@ product of the base acceleration term and :math:`{a}_{l}` below:
 
     a_l = 1 + 50 / \left ( 1 + exp \left (-0.1 * (abs(latitude) -
     60 ) \right ) \right )
-
-
-
 

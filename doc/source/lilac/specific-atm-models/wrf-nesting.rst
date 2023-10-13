@@ -50,9 +50,7 @@ A full description of all steps for a WRF-CTSM run are included here.
   Therefore, we are not repeating the steps necessary for building WRF and
   CTSM.
 
-
 In this example we use a nested domain over the CONUS as shows below:
-
 
 .. _Figure ctsm-ndown:
 
@@ -128,7 +126,6 @@ Check ungrib log for the following message showing successful completion of ungr
 
 At this point, you should see ungrib output (intermediate files) in your WPS directory.
 
-
 Nested Simulations : Pre-processing (metgrid.exe)
 -------------------------------------------------
 Ensure that the `start_date` and `end_date` for domain two is set correctly for
@@ -144,14 +141,11 @@ metgrid step::
     !  Successful completion of metgrid.  !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
 Running metgrid for two domains will create files like
 below::
 
     met_em.d01.*
     met_em.d02.*
-
-
 
 Nested Simulations : real.exe
 ------------------------------
@@ -171,7 +165,6 @@ To run WRF-CTSM, in your namelist change land-surface option to 6 for both
 domains::
 
     sf_surface_physics = 6, 6,
-
 
 Run real.exe (if compiled parallel submit a batch job) to generate
 initail and boundary condition files for both domain.
@@ -226,7 +219,6 @@ have already created these files for the coarser domain.
     files for the finer domain you should follow the steps in section
     :numref:`setting-ctsm-runtime-options`.
 
-
 Again, the goal here is to create files that determine CTSM runtime options which
 are defined within these three files:
 
@@ -236,13 +228,11 @@ are defined within these three files:
 
 - ``lilac_in``: This namelist controls the operation of LILAC
 
-
 Run WRF for the finer domain
 -----------------------------
 First, save (rename or move) the data from the coarser domain simulation
 (``wrfout_d01_*`` files).
 Next, rename ``wrfinput_d02`` and ``wrfbdy_d02`` to ``wrfinput_d01`` and ``wrfbdy_d01``, respectively.
-
 
 Edit namelist.input, moving all of the fine-grid domain data from column 2 to column 1
 so that this run will be for the fine-grid domain only. Make sure you set
@@ -258,6 +248,4 @@ Now run wrf.exe by submitting a job similar to a not-nested case.
 
     The output for the finer domain is wrfout_d01_* not wrfout_d02_* and although
     in the name it is saying d01 it is technically d02 domain.
-
-
 

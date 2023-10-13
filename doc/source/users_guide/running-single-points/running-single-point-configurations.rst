@@ -16,7 +16,6 @@ To get the list of supported dataset resolutions do this:
    > cd $CTSMROOT/doc
    > ../bld/build-namelist -res list
 
-
 Which results in the following:
 ::
 
@@ -112,13 +111,11 @@ Example: Running CLM over the single-point of Vancouver Canada with supplied atm
 
    > ./case.setup
 
-
 .. warning:: If you don't set the start-year and run-length carefully as shown above the model will abort with a "dtlimit error" in the atmosphere model. Since, the forcing data for this site (and the MexicoCity site) is less than a year, the model won't be able to run for a full year. The ``1x1_urbanc_alpha`` site has data for more than a full year, but neither year is complete hence, it has the same problem (see the problem for this site above).
 
 .. note:: Just like ``PTS_MODE`` above, By default it sets up to run with ``MPILIB=mpi-serial`` (in the env_build.xml file) turned on, which allows you to run the model interactively.
 
 .. note:: When running a ``pt1_pt1`` resolution the number of processors is automatically set to one. When running a single grid point you can only use a single processor. You might also want to set the ``env_build.xml`` variable: ``MPILIB=mpi-serial`` to ``TRUE`` so that you can also run interactively without having to use mpi to start up your job.
-
 
 Creating your own single-point dataset
 ===================================================

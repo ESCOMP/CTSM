@@ -108,7 +108,6 @@ be written as
 
    \frac{dS}{dt} = Q_{in} - Q_{out} + R
 
-
 where :math:`Q_{in}` (m :sup:`3` s :sup:`-1` ) is the main channel flow from
 the upstream grid(s) into the main channel of the current grid, which is zero for
 hillslope and sub-network routing. :math:`Q_{out}` (m :sup:`3` s :sup:`-1` ) is
@@ -222,8 +221,6 @@ by MOSART using the aforementioned parameters is described in
  | :math:`n_{h}`           | \-            | Manning's roughness coefficient for overland flow routing                                                                          |
  +-------------------------+---------------+------------------------------------------------------------------------------------------------------------------------------------+
 
-
-
 Difference between CLM5.0 and CLM4.5
 -------------------------------------
 
@@ -243,5 +240,4 @@ are all available globally at 0.5 :sup:`o` resolution.
 4. Outputs: RTM only produces streamflow simulation, whilst MOSART
 additionally simulates the time-varying channel velocities, channel water depth, and
 channel surface water variations.
-
 

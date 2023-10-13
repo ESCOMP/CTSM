@@ -120,7 +120,6 @@ For solar ``taxmode`` is set to ``coszen`` so the offset is set to ``-10800`` se
 For everything else ``taxmode`` is set to ``linear`` so the offset is set to ``-5400`` seconds so that the ending time-step is adjusted by an hour and half to the middle of the interval.
 For an example of such a case see `the Section called Running with MOAR data as atmospheric forcing to spinup the model in Chapter 4 <CLM-URL>`_.
 
-
 Normally you wouldn't modify the DATM settings for this mode.
 However, if you had data at a different frequency than 3-hours you would need to modify the ``offset`` and possibly the ``taxmode``.
 The other two things that you might modify would be the path to the data or the domain file for the resolution (which is currently hardwired to f09).

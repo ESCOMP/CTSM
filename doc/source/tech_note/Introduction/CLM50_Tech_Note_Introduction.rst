@@ -16,7 +16,6 @@
 **Ashehad Ali, Andrew Badger, Gautam Bisht, Patrick Broxton, Michael Brunke, Jonathan Buzan, Yanyan Cheng, Martyn Clark, Tony Craig, Kyla Dahlin, Beth Drewniak, Louisa Emmons, Josh Fisher, Mark Flanner, Pierre Gentine, Maoyi Huang, Jan Lenaerts, Sam Levis,
 L. Ruby Leung, William Lipscomb, Jon Pelletier, Daniel M. Ricciuto, Ben Sanderson, Jacquelyn Shuman, Andrew Slater, Zachary Subin, Jinyun Tang, Ahmed Tawfik, Quinn Thomas, Simone Tilmes, Francis Vitt, Xubin Zeng**
 
-
 The National Center for Atmospheric Research (NCAR) is operated by the
 nonprofit University Corporation for Atmospheric Research (UCAR) under
 the sponsorship of the National Science Foundation. Any opinions,
@@ -26,8 +25,6 @@ the National Science Foundation.
 
 National Center for Atmospheric Research
 P. O. Box 3000, Boulder, Colorado 80307-300
-
-
 
 **LIST OF FIGURES**
 

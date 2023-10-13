@@ -23,4 +23,3 @@ If you also want to be able to give the resolution into **create_newcase** -- yo
 The second part is actually adding the new filenames which is done in the ``$CTSMROOT/bld/namelist_files/namelist_defaults_clm4_5.xml`` file (``$CTSMROOT/bld/namelist_files/namelist_defaults_clm4_5_tools.xml`` file for CLM tools).
 If you aren't adding any new resolutions, and you are just changing the files for existing resolutions, you don't need to edit the namelist_definition file.
 
-

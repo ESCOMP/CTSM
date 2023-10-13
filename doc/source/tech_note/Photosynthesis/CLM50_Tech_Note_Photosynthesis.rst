@@ -20,7 +20,6 @@ CLM5 includes the following new changes to photosynthesis and stomatal conductan
 
 - Water stress is applied by the hydraulic conductance model (Chapter :numref:`rst_Plant Hydraulics`)
 
-
 Introduction
 -----------------------
 
@@ -394,7 +393,6 @@ When LUNA is on, the :math:`V_{c\max 25}` for sun leaves is scaled to the shaded
 :math:`J_{\max 25}` , :math:`T_{p25}` , :math:`k_{p25}`, and
 :math:`R_{d25}`  scale similarly.
 
-
 .. math::
    :label: 9.17
 
@@ -480,7 +478,6 @@ In terms of conductance with
 
    e_{s} =\frac{e_{a} g_{b} +e_{i} g_{s} }{g_{b} +g_{s} } .
 
-
 Substitution of equation :eq:`9.36` into equation :eq:`9.1` gives an expression for the stomatal
 resistance
 (:math:`r_{s}`) as a function of photosynthesis
@@ -511,7 +508,6 @@ and
 
    D_{l} = \frac {max(e_{i} - e_{a},50)} {1000}
 
-
 Stomatal conductance, as solved by equation :eq:`9.36` (mol m :sup:`-2` s :sup:`-1`), is the larger of the two roots that satisfy the
 quadratic equation. Values for :math:`c_{i}`  are given by
 
@@ -528,5 +524,4 @@ combines the secant method and Brent's method to solve for
 :math:`c_{i}` . The equation set is solved separately for sunlit
 (:math:`A_{n}^{sun}` , :math:`r_{s}^{sun}` ) and shaded
 (:math:`A_{n}^{sha}` , :math:`r_{s}^{sha}` ) leaves.
-
 

@@ -46,7 +46,6 @@ depth of direct beam per unit leaf and stem area (section :numref:`Canopy Radiat
 For clarity, terms involving :math:`T^{n+1} -T^{n}`  are not shown in
 (c).
 
-
 The total solar radiation absorbed by the vegetation and ground is
 
 .. math::

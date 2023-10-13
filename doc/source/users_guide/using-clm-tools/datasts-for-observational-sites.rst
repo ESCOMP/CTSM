@@ -13,7 +13,6 @@ Note **mksurfdata_map** as documented previously has options to overwrite the ve
 For more information on this also see `the Section called Creating your own single-point/regional surface datasets in Chapter 5 <CLM-URL>`_.
 And PTCLM uses these methods to customize datasets see `Chapter 6 <CLM-URL>`_.
 
-
 Another aspect of customizing your input datasets is customizing the input atmospheric forcing datasets.
 See `the Section called Running with your own atmosphere forcing in Chapter 5 <CLM-URL>`_ for more information on this.
 Also the chapter on PTCLM in `the Section called Converting AmeriFlux Data for use by PTCLM in Chapter 6 <CLM-URL>`_ has information on using the AmeriFlux tower site data as atmospheric forcing.

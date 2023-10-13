@@ -500,4 +500,3 @@ the storage pool for retranslocated nitrogen, are calculated as:
 
    NF_{deadcroot\_ xfer\_ mort,lit1} =\sum _{p=0}^{npfts}NF_{deadcroot\_ xfer\_ mort} wcol_{p}  .
 
-

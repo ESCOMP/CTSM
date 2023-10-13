@@ -6,12 +6,10 @@ Carbon and Nitrogen Allocation
 Introduction
 -----------------
 
-
 The carbon and nitrogen allocation routines in CLM determine the fate of
 newly assimilated carbon, coming from the calculation of photosynthesis,
 and available mineral nitrogen, coming from plant uptake of mineral
 nitrogen in the soil or being drawn out of plant reserves. A significant change to CLM5 relative to prior versions is that allocation of carbon and nitrogen proceed independently rather than in a sequential manner.
-
 
 Carbon Allocation for Maintenance Respiration Costs
 --------------------------------------------------------
@@ -314,8 +312,6 @@ tissue types are given as:
    :label: 19.25
 
    CF_{alloc,deadcroot\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{2} a_{3} \left(1-a_{4} \right)\left(1-f_{cur} \right).
-
-
 
 Nitrogen allocation
 -----------------------------------------

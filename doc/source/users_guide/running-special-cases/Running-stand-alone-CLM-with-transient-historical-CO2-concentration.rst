@@ -31,7 +31,6 @@ The streams text file is the XML-like file that tells datm how to find the files
 First we are going to create a case, and we will edit the ``user_nl_datm`` so that we add a CO2 data stream in.
 There is a streams text file available in ``$CTSMROOT/doc/UsersGuide/co2_streams.txt``, that includes file with a CO2 time-series from 1765 to 2007.
 
-
 Example: Transient Simulation with Historical CO2
 --------------------------------------------------------------
 ::

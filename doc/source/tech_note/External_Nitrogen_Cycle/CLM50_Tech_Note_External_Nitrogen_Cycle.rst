@@ -80,7 +80,6 @@ supplied with previous versions of the model. In coupled simulations,
 N depositions fluxes are passed to the land model at the frequency of
 the time step (every half hour) through the coupler.
 
-
 Biological Nitrogen Fixation
 ---------------------------------
 
@@ -114,7 +113,6 @@ under global change scenarios (:ref:`Wieder et al. 2015
    NF_{nfix,sminn} ={0.0006\left(0.0117+CF_{ann\_ ET}\right)\mathord{\left/ {\vphantom {0.0006\left(0.0117+ CF_{ann\_ ET}\right) \left(86400\cdot 365\right)}} \right.} \left(86400\cdot 365\right)}
 
 Where :math:`{NF}_{nfix,sminn}` (gN m\ :sup:`-2` s\ :sup:`-1`) is the rate of free-living nitrogen fixation in :numref:`Figure Biological nitrogen fixation`.
-
 
 .. _Figure Biological nitrogen fixation:
 

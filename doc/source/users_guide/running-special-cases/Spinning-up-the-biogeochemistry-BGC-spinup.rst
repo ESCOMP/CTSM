@@ -112,5 +112,3 @@ To assess if the model is spunup, plot trends for CLMBGC variables of interest u
 
 .. note:: This same final spinup procedure works for |version|-CN as well.
 
-
-

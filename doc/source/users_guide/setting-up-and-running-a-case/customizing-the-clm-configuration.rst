@@ -247,8 +247,6 @@ CLM_BLDNML_OPTS
                               "-use_case list" to list valid use-cases.
      -version                 Echo the SVN tag name used to check out this CLM distribution.
 
-
-
      Note: The precedence for setting the values of namelist variables is (highest to lowest):
       0. namelist values set by specific command-line options, like, -d, -sim_year
              (i.e.  CLM_BLDNML_OPTS env_run variable)
@@ -261,7 +259,6 @@ CLM_BLDNML_OPTS
       4. values set from a use-case scenario, e.g., -use_case
              (i.e.  CLM_NML_USE_CASE env_run variable)
       5. values from the namelist defaults file.
-
 
 The **$CTSMROOT/cime_config/buildnml** script already sets the resolution and mask as well as the CLM **configure** file, and defines an input namelist and namelist input file, and the output namelist directory, and sets the start-type (from ``RUN_TYPE``), namelist options (from ``CLM_NAMELIST_OPTS``), co2_ppmv (from ``CCSM_CO2_PPMV``, co2_type (from ``CLM_CO2_TYPE``), lnd_frac (from ``LND_DOMAIN_PATH`` and ``LND_DOMAIN_FILE``), l_ncpl (from ``LND_NCPL``, glc_grid, glc_smb, glc_nec (from ``GLC_GRID``, ``GLC_SMB``, and ``GLC_NEC``), and "clm_usr_name" is set (to ``CLM_USRDAT_NAME >``when the grid is set to ``CLM_USRDAT_NAME``.
 Hence only the following different options can be set:
@@ -291,7 +288,6 @@ Hence only the following different options can be set:
 
 #. -verbose
 
-
 "-bgc_spinup" is an option only available for |version| for any configuration when CN is turned on (so either CLMCN or CLMBGC). It can be set to "on" or "off". If "on" the model will go into Accelerated Decomposition mode, while for "off" (the default) it will have standard decomposition rates. If you are starting up from initial condition files the model will check what mode the initial condition file is in and do the appropriate action on the first time-step to change the Carbon pools to the appropriate spinup setting. See `the Section called Spinning up the |version| biogeochemistry (CLMBGC spinup) in Chapter 4 <CLM-URL>`_ for an example using this option.
 
 "-chk_res" ensures that the resolution chosen is supported by CLM. If the resolution is NOT supported it will cause the CLM **build-namelist** to abort when run. So when either **preview_namelist**, **case.build** or **case.run** is executed it will abort early. Since, the CESM scripts only support certain resolutions anyway, in general this option is NOT needed in the context of running CESM cases.
@@ -306,7 +302,6 @@ To see a list of valid variables that you could set do this:
 
    > cd $CTSMROOT/doc
    > ../bld/build-namelist -clm_demand list
-
 
 .. note:: Using a 20th-Century transient compset or the ``20thC_transient`` use-case using ``CLM_NML_USE_CASE`` would set this as well, but would also use dynamic nitrogen and aerosol deposition files, so using ``-clm_demand`` would be a way to get *just* dynamic vegetation types and NOT the other files as well.
 
@@ -427,7 +422,6 @@ Example: user_nl_clm namelist file
    hist_fincl4 = 'TG', 'FSA', 'SWup', 'URBAN_AC', 'URBAN_HEAT'
    hist_mfilt  = 1, 30,  28, 24
    hist_nhtfrq = 0, -24, -6, -1
-
 
 **Note:** The comments at the top are some guidance given in the default user_nl_clm and just give some guidance on how to set variables and use the file.
 
@@ -699,7 +693,6 @@ The output to the above command is as follows:
                               no-cent     Turn CENTURY off
                               no-nitrif   Turn the Nitrification/denitrification off
                             [no-vert,no-cent,no-nitrif,no-vert:no-cent]
-
 
 We've given details on how to use the options in env_build.xml and env_run.xml to interact with the CLM "configure" and "build-namelist" scripts, as well as giving a good understanding of how these scripts work and the options to them.
 In the next section we give further details on the CLM namelist. You could customize the namelist for these options after "case.setup" is run.

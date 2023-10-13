@@ -393,7 +393,6 @@ from the characteristic root spacing (section :numref:`Root Spacing`).
 
    RAI=\left(LAI+SAI \right) \cdot r_i \cdot f_{root-leaf}
 
-
 .. math::
    :label: 11.113
 
@@ -511,8 +510,6 @@ Both plant water supply and demand are functions of vegetation water potential. 
 
 PHS finds the water potentials that match supply and demand. In the plant water transport equations :eq:`11.302`, the demand terms (left-hand side) are decreasing functions of absolute leaf water potential. As absolute leaf water potential becomes larger, water stress increases, causing a decrease in transpiration demand. The supply terms (right-hand side) are increasing functions of absolute leaf water potential. As absolute leaf water potential becomes larger, the gradients in water potential increase, causing an increase in vegetation water supply. PHS takes a Newton's method approach to iteratively solve for the vegetation water potentials that satisfy continuity :eq:`11.302`.
 
-
-
 .. _PHS Numerical Implementation:
 
 Numerical Implementation
@@ -537,7 +534,6 @@ The continuity of water flow through the system yields four equations
    q_{1a}+q_{1b}&=q_2\\
    q_2&=\sum_{i=1}^{nlevsoi}{q_{3,i}}
    \end{aligned}
-
 
 We seek the set of vegetation water potential values,
 

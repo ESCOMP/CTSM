@@ -10,7 +10,6 @@ What has changed
 
 - Introduction of FATES: The Functionally Assembled Terrestrial Ecosystem Simulator (FATES) is the actively developed DGVM for the CLM5.
 
-
 FATES
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -34,7 +33,6 @@ accumulation of seeds in the seed bank, for multi-layer multi-PFT
 radiation transfer, for drought-deciduous and cold-deciduous phenology,
 for carbon storage allocation, and for tree mortality under carbon
 stress, are also included.
-
 
 Further reading
 ^^^^^^^^^^^^^^^^^^^^

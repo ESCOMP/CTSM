@@ -628,7 +628,6 @@ the 2-m wind speed :math:`u_{2}`  (m s\ :sup:`-1`) (eq. ) is used to evaluate
 :math:`w^{*}`  and :math:`k^{*}`  rather than the 10-m wind used by
 :ref:`Henderson-Sellers  (1985) <Henderson-Sellers1985>`.
 
-
 The Richardson number is
 
 .. math::

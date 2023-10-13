@@ -148,7 +148,6 @@ interior building temperature at yearly time resolution.
 
  Schematic of THESIS urban properties tool.  Executable scripts are in orange, input files are blue, and output files are green.  Items within the black box outline are either read in as input, executed, or output by the driver script (urban_prop.csh).
 
-
 The urban model that was first released as a component of CLM4.0 is separately
 described in the urban technical note (:ref:`Oleson et al. (2010b) <Olesonetal2010b>`).
 The main changes in the urban model from CLM4.0 to CLM4.5 were 1)

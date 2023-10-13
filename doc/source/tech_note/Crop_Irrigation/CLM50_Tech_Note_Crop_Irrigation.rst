@@ -40,13 +40,9 @@ refers to the interactive crop management model and is included as an option wit
 These updates appear in detail in the sections below. Many also appear in
 :ref:`Levis et al. (2016) <Levisetal2016>`.
 
-
 Available new features since the CLM5 release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - Addition of bioenergy crops
-
-
-
 
 .. _The crop model:
 
@@ -131,7 +127,6 @@ such as longer growing seasons, higher productivity, and lower demands for nutri
 About 70% of biofuel aboveground biomass (leaf & livestem) is removed at harvest. Parameter values were developed by using
 observation data collected at the University of Illinois Energy Farm
 located in Central Midwestern United States (:ref:`Cheng et al., 2019<Chengetal2019>`).
-
 
 In addition, CLM's default list of plant functional types (pfts) includes an
 irrigated and unirrigated unmanaged C3 crop (:numref:`Table Crop plant functional types`) treated as a second C3 grass.
@@ -224,8 +219,6 @@ managed crop types that are using the same parameter set.
   77  rainfed tropical soybean     active            rainfed tropical soybean
   78  irrigated tropical soybean   active            irrigated tropical soybean
  ===  ===========================  ================  ===========================
-
-
 
 .. _Phenology:
 
@@ -360,7 +353,6 @@ the number of days past planting reaches a crop-specific maximum
 (:numref:`Table Crop phenology parameters`), then the crop is harvested.
 Harvest occurs in one time step using the BGC leaf offset algorithm.
 
-
 .. _Table Crop phenology parameters:
 
 .. table:: Crop phenology and morphology parameters for the active crop plant functional types (pfts) in CLM5BGCCROP. Numbers in the first row correspond to the list of pfts in :numref:`Table Crop plant functional types`.
@@ -443,7 +435,6 @@ the excess respiration pool is turned into a flux that extracts
 CO\ :sub:`2` directly from the atmosphere. This way
 any excess maintenance respiration remaining at harvest is eliminated as if such
 respiration had not taken place.
-
 
 .. _Leaf emergence to grain fill:
 
@@ -677,7 +668,6 @@ efficiency of 85%.
 
      Grain\ yield(g.m^{-2})=\frac{\sum(GRAINC\_ TO\_ FOOD)*0.85}{0.45}
 
-
 .. _Table Crop allocation parameters:
 
 .. table:: Crop allocation parameters for the active crop plant functional types (pfts) in CLM5BGCCROP. Numbers in the first row correspond to the list of pfts in :numref:`Table Crop plant functional types`.
@@ -708,7 +698,6 @@ Notes: Crop growth phases and corresponding variables are described throughout
 the text. :math:`{CN}_{leaf}`, :math:`{CN}_{stem}`, and :math:`{CN}_{froot}` are
 the target C:N ratios used during the leaf emergence phase (phase 2).
 
-
 .. _Other Features:
 
 Other Features
@@ -727,7 +716,6 @@ simulate a post-harvest "stubble" on the ground.
 
 Crop heights at the top and bottom of the canopy, :math:`{z}_{top}`
 and :math:`{z}_{bot}` (m), come from the AgroIBIS formulation:
-
 
 .. math::
    :label: 25.16
@@ -786,7 +774,6 @@ to the total fertilizer at each column within the grid cell divided by the initi
 Fertilizer is applied and *f* is decremented each time step until a zero balance on
 the counter is reached.
 
-
 .. _Biological nitrogen fixation for soybeans:
 
 Biological nitrogen fixation for soybeans
@@ -834,7 +821,6 @@ carbon and nitrogen allocation coefficients to the reproductive pool.
 In CLM5BGCCROP, as allocation declines in stem, leaf, and root pools (see section :numref:`Grain fill to harvest`)
 during the grain fill stage of growth, increasing amounts of carbon and
 nitrogen are available for grain development.
-
 
 .. _The irrigation model:
 

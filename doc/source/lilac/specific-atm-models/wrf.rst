@@ -29,7 +29,6 @@ and :numref:`wrf-set-ctsm-runtime-options`.
 
   In this example we assume NCAR's ``Cheyenne`` HPC system in particular.
 
-
 .. _clone-WRF-CTSM-repositories:
 
 Clone WRF and CTSM Repositories
@@ -41,13 +40,11 @@ Clone the WRF repository and checkout  ``develop`` branch::
     cd WRF-CTSM
     git checkout develop
 
-
 Clone the CTSM repository::
 
     git clone https://github.com/ESCOMP/CTSM.git
     cd CTSM
     ./manage_externals/checkout_externals
-
 
 .. _build-CTSM-and-dependencies:
 
@@ -63,7 +60,6 @@ For example on ``Cheyenne`` and for ``Intel`` compiler::
 
     ./lilac/build_ctsm ctsm_build_dir --compiler intel --machine cheyenne
 
-
 .. warning::
 
     The directory you provided for the build script (``/PATH/TO/CTSM/BUILD``) must *not* exist.
@@ -73,7 +69,6 @@ For example on ``Cheyenne`` and for ``Intel`` compiler::
 
     Run ``./lilac/build_ctsm -h`` to see all options available.
     For example if you would like to run with threading support you can use ``--build-with-openmp``.
-
 
 Building WRF with CTSM
 ----------------------
@@ -108,7 +103,6 @@ Some of these are not required, but might help if you face any compilation error
 For more information check
 `WRF Users' Guide <https://www2.mmm.ucar.edu/wrf/users/docs/user_guide_v4/v4.2/WRFUsersGuide_v42.pdf>`_.
 
-
 Explicitly define the model core to build by (Bash)::
 
     export WRF_EM_CORE=1
@@ -118,7 +112,6 @@ or (Cshell):
 .. code-block:: Tcsh
 
     setenv WRF_EM_CORE 1
-
 
 Explicilty turn off data assimilation by (Bash)::
 
@@ -149,11 +142,9 @@ distributed memory parallelization (``dmpar``).
 The next prompt requests an option for nesting. Currently nesting is not
 available for WRF-CTSM so select option ``1 (basic)``.
 
-
 Now compile em_real and save the log::
 
     ./compile em_real >& compile.log
-
 
 Check the bottom of your log file for a successful compilation message.
 
@@ -178,7 +169,6 @@ skip to section :numref:`wrf-set-ctsm-runtime-options`.
 
     Building WPS requires that WRF be already built successfully.
 
-
 Get WPS from this website::
 
     https://www2.mmm.ucar.edu/wrf/users/download/wrf-regist_or_download.php
@@ -201,7 +191,6 @@ Then, compile WPS::
 
     If wps builds succesfully you should see ``geogrid.exe``, ``ungrib.exe``, and ``metgrid.exe``.
     Alternatively, you can check the log for successful build messages.
-
 
 Run WPS Programs
 ----------------
@@ -253,7 +242,6 @@ metgrid step::
     !  Successful completion of metgrid.  !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
 Run real.exe
 ------------
 
@@ -267,22 +255,18 @@ Move or link WPS output files (``met_em.d01*`` files) to your WRF test directory
 Edit namelist.input for your WRF domain and desirable configurations.
 This should be the same domain as WPS namelist.
 
-
 To run WRF-CTSM, in your namelist change land-surface option to 6::
 
     sf_surface_physics = 6
 
-
 Run real.exe (if compiled parallel submit a batch job) to generate
 ``wrfinput`` and ``wrfbdy`` files.
-
 
 Check the last line of the real log file for the following message::
 
     SUCCESS COMPLETE REAL_EM INIT
 
 .. _wrf-set-ctsm-runtime-options:
-
 
 Set CTSM runtime options
 ------------------------
@@ -300,7 +284,6 @@ are defined within these three files:
 - ``lnd_modelio.nml``: This sets CTSM's PIO (parallel I/O library) configuration settings
 
 - ``lilac_in``: This namelist controls the operation of LILAC
-
 
 The basic process for creating the necessary input files are summarized as
 follows:
@@ -343,7 +326,6 @@ Modify ``lilac_in`` as needed. For this example, you can use the following optio
 
  atm_mesh_filename = '/glade/scratch/negins/wrf_ctsm_files/wrf2ctsm_land_conus_ESMFMesh_c20201110.nc'
  lnd_mesh_filename = '/glade/scratch/negins/wrf_ctsm_files/wrf2ctsm_land_conus_ESMFMesh_c20201110.nc'
-
 
 Run ``download_input_data`` script to download any of CTSM's standard input
 files that are needed based on settings in ``lnd_in`` and ``lilac_in``::
@@ -400,5 +382,4 @@ by the PBS script name.
 For example, if you named this script ``run_wrf_ctsm.csh``, submit the job like this::
 
     qsub run_wrf_ctsm.csh
-
 

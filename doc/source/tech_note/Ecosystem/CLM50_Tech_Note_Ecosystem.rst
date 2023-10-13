@@ -867,7 +867,6 @@ are described in the text. Physical constants, generally shared by all
 of the components in the coupled modeling system, are presented in
 :numref:`Table Physical constants`.
 
-
 .. _Table Physical constants:
 
 .. csv-table:: Physical constants

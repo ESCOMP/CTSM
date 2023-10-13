@@ -1235,7 +1235,6 @@ http://www.cesm.ucar.edu/models/cesm1.1/cism/].
 
 Lischke, H. et al., 2006. TreeMig: a forest-landscape model for simulating spatio-temporal patterns from stand to landscape scale. Ecological Modelling 199.4, pp. 409-420. 41
 
-
 .. _LloydTaylor1994:
 
 Lloyd, J. and Taylor, J.A., 1994. On the temperature dependence of soil
@@ -2058,7 +2057,6 @@ Dynamic Global Vegetation Model. Global Ecology and Biogeography
 .. _thonickeetal2010:
 
 Thonicke, K. et al., 2010. The influence of vegetation, fire spread and fire behaviour on biomass burning and trace gas emissions: results from a process-based model. Biogeosciences 7.6, pp. 1991-2011.
-
 
 .. _Thornton1998:
 

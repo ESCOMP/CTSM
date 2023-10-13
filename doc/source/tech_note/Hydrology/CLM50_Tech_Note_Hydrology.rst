@@ -123,7 +123,6 @@ and
 
    W_{can,sno}^{intr} =W_{can,sno}^{n} +q_{intr,\, ice} \Delta t\ge 0
 
-
 are the the canopy liquid water and snow water equivalent after accounting for interception,
 :math:`W_{can,\,liq}^{n}` and :math:`W_{can,\,sno}^{n}` are the canopy liquid and snow water
 from the previous time step, and :math:`W_{can,\,liq}^{max }` and :math:`W_{can,\,snow}^{max }`
@@ -162,7 +161,6 @@ fluxes and e-folding times similar to :ref:`Roesch et al. (2001) <Roeschetal2001
    :label: 7.14
 
    q_{unl,\, tot} =\min \left( q_{unl,\, wind} +q_{unl,\, temp} ,W_{can,\, sno} \right)
-
 
 The canopy liquid water and snow water equivalent are updated as
 
@@ -253,7 +251,6 @@ while the fraction of the canopy that is dry and transpiring is
 
 Similarly, the snow-covered fraction of the canopy is used for surface alebdo when intercepted snow is present (Chapter :numref:`rst_Surface Albedos`)
 
-
 .. math::
    :label: 7.23
 
@@ -262,7 +259,6 @@ Similarly, the snow-covered fraction of the canopy is used for surface alebdo wh
    \left[\frac{W_{can,\, sno} }{p_{sno}\left(L+S\right)} \right]^{{3\mathord{\left/ {\vphantom {3 20}} \right.} 20} } \le 1 & \qquad L+S > 0 \\
    0 &\qquad L+S = 0
    \end{array}\right\}.
-
 
 .. _Surface Runoff, Surface Water Storage, and Infiltration:
 
@@ -459,7 +455,6 @@ The balance of surface water is then calculated as
    :label: 7.76
 
    \Delta W_{sfc} =\left(q_{in,h2osfc} - q_{out,h2osfc} - q_{drain,h2osfc} \right) \ \Delta t.
-
 
 Bottom drainage from the surface water store
 
@@ -812,7 +807,6 @@ the interface of two layers :math:`z_{h}` . The layer thickness is
 term :math:`e` (ET loss) is defined as positive for flow out of the
 layer.
 
-
 Note that because more than one plant functional type (PFT) may share a
 soil column, the transpiration :math:`E_{v}^{t}`  is a weighted sum of
 transpiration from all PFTs whose weighting depends on PFT area as
@@ -924,7 +918,6 @@ equations :eq:`7.111` - :eq:`7.114` can be obtained from equation as
    :label: 7.118
 
    \frac{\partial q_{i-1} }{\partial \theta _{liq,\, i} } =\left[\frac{k\left[z_{h,\, i-1} \right]}{z_{i} -z_{i-1} } \frac{\partial \psi _{i} }{\partial \theta _{liq,\, i} } \right]-\frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i} } \left[\frac{\left(\psi _{i-1} -\psi _{i} \right)+\left(z_{i} - z_{i-1} \right)}{z_{i} - z_{i-1} } \right]
-
 
 .. math::
    :label: 7.119

@@ -66,14 +66,12 @@ Lastly, we kindly request that those publishing papers using AmeriFlux data prov
 
 The above agreement applies to the "US-UMB" dataset imported into our repository as well, and Gil Bohrer is the PI on record for that dataset.
 
-
 The CESM can NOT handle missing data, so we recommend using the "Level 4" Gap filled datasets.
 The fields will also need to be renamed.
 The "WS" column becomes "WIND", "PREC" becomes "PRECmms", "RH" stays as "RH", "TA" becomes "TBOT", "Rg" becomes "FSDS", "Rgl" becomes "FLDS", "PRESS" becomes "PSRF".
 "ZBOT" can just be set to the constant of "30" (m).
 The units of Temperature need to be converted from "Celsius" to "Kelvin" (use the value in ``SHR_CONST_TKFRZ`` in the file ``models/csm_share/shr/shr_const.F90`` of ``273.15``.
 The units of Pressure also need to be converted from "kPa" to "Pa". LATIXY, and LONGXY should also be set to the latitude and longitude of the site.
-
 
 -----------------------------------------------------------------
 Example: PTCLMmkdata transient example over a shorter time period

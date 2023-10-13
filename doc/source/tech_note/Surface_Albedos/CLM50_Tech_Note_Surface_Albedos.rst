@@ -75,7 +75,6 @@ which vary with wavelength (:math:`\Lambda` ), are weighted combinations of valu
 for vegetation and snow, using the canopy snow-covered fraction :math:`f_{can,\, sno}`
 (Chapter :numref:`rst_Hydrology`). The optical parameters are
 
-
 ..
    The model determines that snow is on the canopy if
    :math:`T_{v} \le T_{f}` , where :math:`T_{v}` is the vegetation temperature (K) (Chapter

@@ -40,16 +40,13 @@ Included in the table are the following pieces of information:
 
 - units
 
-
 Table 1-3. CLM History Fields from a BgcCrop case
 -------------------------------------------------
 For Table from a BgcCrop case, please see :doc:`history_fields_nofates`.
 
-
 Table 1-4. CLM History Fields from a Fates case
 -----------------------------------------------
 For Table from a Fates case, please see :doc:`history_fields_fates`.
-
 
 ---------------------------------------------
 Examples of using different namelist features
@@ -124,7 +121,6 @@ Example 1-3. Example user_nl_clm namelist adding and removing fields on primary 
    hist_fincl1 = 'COSZEN', 'DECL'
    hist_fexcl1 = 'TG', 'TV', 'TSOI', 'H2OSOI'
 
-
 Adding auxiliary history files and changing output frequency
 ------------------------------------------------------------
 
@@ -172,7 +168,6 @@ Example 1-5. Example user_nl_clm namelist removing all history fields
 
    hist_empty_htapes = .true.
    hist_fincl1 = 'TG', 'TV', 'FSA'
-
 
 Various ways to change history output averaging flags
 -----------------------------------------------------

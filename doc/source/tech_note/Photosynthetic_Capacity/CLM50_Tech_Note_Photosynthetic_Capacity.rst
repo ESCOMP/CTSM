@@ -42,7 +42,6 @@ still kept the same as CLM4.5. Namely, it is estimated based on the leaf nitroge
 however, because the sun-lit and shaded leaves can changes through the day based on the sun angles,
 we do not differentiate the photosynthetic capacity difference for sun-lit or shaded leaves.
 
-
 .. _Model structure:
 
 Model structure
@@ -187,7 +186,6 @@ The baseline electron transport rate, :math:`J_{\text{max}0}`, is calculated as 
 
   J_{\text{max}0} = J_{\text{max}b0}{\text{FNC}}_{\mathrm{a}}{\text{NUE}}_{J_{\text{{max}}}}
 
-
 where :math:`J_{\text{max}b0}` (unitless) is the baseline proportion of nitrogen
 allocated for electron transport rate.  :math:`{\text{NUE}}_{J_{\text{{max}}}}` ( :math:`{\mu} mol`  electron /s/g N)
 is the nitrogen use efficiency of :math:`J_{\text{{max}}}`. :math:`J_{\text{max}b1}` (unitless) is a coefficient determining the response of the electron
@@ -219,7 +217,6 @@ on the above assumptions, we have
   \right) = \left(1-\mathrm{e}^{\left(-H
         \frac{\text{max}\left(\text{RH}-{\text{RH}}_{0}, 0 \right)}{1-\text{RH}_{0}} \right)} \right),
 
-
 where :math:`H` (unitless) specifies the impact of relative humidity on electron transport rate.
 
 The efficiency of light energy absorption (unitless),  :math:`\alpha`, is calculated
@@ -230,7 +227,6 @@ depending on the amount of nitrogen allocated for light capture,
   :label: 10.9)
 
   \alpha =\frac{0.292}{1+\frac{0.076}{\mathrm{N}_{\text{lc}}C_{b}}}
-
 
 where 0.292 is the conversion factor from photon to electron. :math:`C_{b}`
 is the conversion factor (1.78) from nitrogen to chlorophyll. After we
@@ -243,7 +239,6 @@ empirical expression of  leaf (1937),
 
   J_{x} = \frac{\alpha \text{PAR}_{\text{max}}} {\left(1 + \frac{\alpha^{2}{\text{PAR}}_{\text{{max}}}^{2}}{J_{\text{{max}}}^{2}}
     \right)^{0.5}}
-
 
 where :math:`\text{PAR}_{\text{{max}}}` ( :math:`\mu mol`/m :sup:`2`/s) is the
 maximum photosynthetically active radiation during the day.
@@ -298,7 +293,6 @@ Based on :ref:`Farquhar et al. (1980)<Farquharetal1980>` and Wullschleger (1993)
 electron-limited photosynthetic rate under daily maximum radiation ( :math:`W_{jx}`)
 and the Rubisco-limited photosynthetic rate ( :math:`W_{\mathrm{c}}`) as follows,
 
-
 .. math::
   :label: 10.14)
 
@@ -308,7 +302,6 @@ and the Rubisco-limited photosynthetic rate ( :math:`W_{\mathrm{c}}`) as follows
   :label: 10.15)
 
   W_{\mathrm{c}} = K_{\mathrm{c}} V_{{\mathrm{c}, \text{max}}},
-
 
 where :math:`K_{j}` and :math:`K_{\mathrm{c}}` as the conversion factors for
 :math:`J_{x}` and  :math:`V_{{\mathrm{c}, \text{max}}}` ( :math:`V_{{\mathrm{c}, \text{max}}}` to
@@ -321,7 +314,6 @@ assume that :math:`W_{\mathrm{c}}` is proportional to
   :label: 10.16)
 
   W_{\mathrm{c}}=t_{\alpha}t_{\mathrm{c}, j0}W_{J_{x}}
-
 
 where :math:`t_{\mathrm{c}, j0}` is the baseline ratio of :math:`W_{\mathrm{c}}` to
 :math:`W_{J_{x}}`. We recognize that this ratio may change depending on the
@@ -340,22 +332,17 @@ calculated in proportion to :math:`V_{\text{c,max}}`,
 
   R_{\mathrm{t}} = 0.015 V_{\text{c,max}}.
 
-
 Accounting for the daytime and nighttime temperature, the daily respirations is calculated as follows,
-
 
 .. math::
   :label: 10.18)
 
-
    R_{\text{td}}={R}_{\mathrm{t}} [D_{\text{day}} + D_{\text{night}} f_{\mathrm{r}}{(T_{\text{night}})/f_{\mathrm{r}}{(T_{\text{day}})}}],
-
 
 where :math:`D_{\text{day}}` and :math:`D_{\text{night}}` are daytime and
 nighttime durations in seconds. :math:`f_{\mathrm{r}}(T_{\text{night}})` and
 :math:`f_{\mathrm{r}}(T_{\text{day}})` are the temperature response functions for
 respiration (see Appendix B in :ref:`Ali et al. (2016)<Alietal2016>` for details).
-
 
 .. _Numerical scheme:
 

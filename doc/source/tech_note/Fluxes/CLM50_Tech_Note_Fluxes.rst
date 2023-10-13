@@ -385,7 +385,6 @@ Unstable :math:`\left(-0.465\le \zeta <0\right)`
 
    \theta _{atm} -\theta _{s} =\frac{\theta _{*} }{k} \left\{\left[\ln \frac{z_{atm,\, h} -d}{z_{0h} } -\psi _{h} \left(\zeta \right)\right]+\psi _{h} \left(\frac{z_{0h} }{L} \right)\right\}
 
-
 Stable :math:`\left(0\le \zeta \le 1\right)`
 
 .. math::
@@ -449,7 +448,6 @@ bulk Richardson number
    :label: 5.46
 
    R_{iB} =\frac{\theta _{v,\, atm} -\theta _{v,\, s} }{\overline{\theta _{v,\, atm} }} \frac{g\left(z_{atm,\, m} -d\right)}{V_{a}^{2} }
-
 
 is related to :math:`\zeta`  (:ref:`Arya 2001 <Arya2001>`) as
 

@@ -60,7 +60,6 @@ Example: Simulation Forced with Data from the Previous Simulation
    > ./case.build
    > ./case.submit
 
-
 .. note:: We did this by editing the "namelist_defaults_datm.xml" which will change the settings for ALL future ``I1850Clm50BgcSpinup`` cases you run. You could also do this by editing the path in the resulting streams text files in the CaseDocs directory, and then create a "user\_" streams file with the correct path. This would change the streams file JUST for this case. The steps do it this way are:
 
 ::

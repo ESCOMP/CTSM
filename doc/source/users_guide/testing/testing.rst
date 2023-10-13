@@ -15,7 +15,6 @@ The first are the CESM test scripts, which utilize the **create_newcase** script
 The second are a set of stand-alone scripts that use the CLM **configure** and **build-namelist** scripts to build and test the model as well as testing the CLM tools as well.
 Below we will go into further details of how to use both methods.
 
-
 CIME Testing scripts
 ====================
 
@@ -47,7 +46,6 @@ Run the following perl tester that
    > cd bld/unit_testers
    > ./build-namelist_test.pl
 
-
 Testing PTCLM
 =============
 
@@ -55,7 +53,6 @@ Testing PTCLM
    :literal:
 
 To run on cheyenne, you do the following:
-
 
 .. include:: ../../../../tools/PTCLM/test/README.run_cheyenne
    :literal:

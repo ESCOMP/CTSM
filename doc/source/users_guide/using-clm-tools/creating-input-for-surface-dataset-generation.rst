@@ -39,7 +39,6 @@ If you want to create a regular latitude/longitude single-point or regional grid
 
 See :numref:`Figure mknoocnmap.pl` for a visual representation of this process.
 
-
 2. Creating mapping files for mksurfdata_map
 ==============================================
 
@@ -103,7 +102,6 @@ mkmapdata.sh has a help option with the following
    **pass environment variables by preceding above commands
      with 'env var1=setting var2=setting '
    **********************
-
 
 .. _Figure mkmapdata.sh:
 
