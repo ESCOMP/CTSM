@@ -2662,21 +2662,22 @@ module CLMFatesInterfaceMod
    integer :: ier  ! error code
    integer :: g    ! gridcell index
 
-   logical :: set_flag ! local logical variable to pass to IsItDispersalTime
+   logical :: set_restart_flag ! local logical variable to pass to IsItDispersalTime
+                               ! if optional is_restart_flag is true
 
    type (neighbor_type),  pointer :: neighbor
 
    ! If WrapSeedGlobal is being called at the end a fates restart call,
    ! pass .false. to the set_dispersed_flag to avoid updating the 
    ! global dispersal date
-   set_flag = .true.
+   set_restart_flag = .true.
    if (present(is_restart_flag)) then
-      if (is_restart_flag) set_flag = .false.   
+      if (is_restart_flag) set_restart_flag = .false.
    end if
 
    call t_startf('fates-seed-mpi_reduce')
 
-   if (IsItDispersalTime(setdispersedflag=set_flag)) then
+   if (IsItDispersalTime(setdispersedflag=set_restart_flag)) then
 
       ! Re-initialize incoming seed buffer for this time step
       this%fates_seed%incoming_global(:,:) = 0._r8
