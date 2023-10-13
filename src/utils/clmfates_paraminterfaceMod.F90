@@ -5,15 +5,29 @@ module CLMFatesParamInterfaceMod
   use shr_kind_mod,             only : r8 => shr_kind_r8, SHR_KIND_CL
   use FatesGlobals,             only : fates_log
   use FatesParametersInterface, only : fates_parameters_type
+  use FatesParametersInterface, only : fates_param_reader_type
   use EDParamsMod,              only : FatesRegisterParams, FatesReceiveParams
   use SFParamsMod,              only : SpitFireRegisterParams, SpitFireReceiveParams
   use PRTInitParamsFATESMod,    only : PRTRegisterParams, PRTReceiveParams
   use FatesSynchronizedParamsMod, only : FatesSynchronizedParamsInst
 
   implicit none
+   public :: fates_param_reader_ctsm_impl
+   !
+   type, extends(fates_param_reader_type) :: fates_param_reader_ctsm_impl
+      private
 
-  ! NOTE(bja, 2017-01) these methods can NOT be part of the clmi-fates
-  ! nterface type because they are called before the instance is
+      ! !PRIVATE MEMBER DATA:
+
+    contains
+      ! !PUBLIC MEMBER FUNCTIONS:
+      procedure, public :: Read ! Read params from disk
+
+   end type fates_param_reader_ctsm_impl
+
+
+  ! NOTE(bja, 2017-01) these methods can NOT be part of the clm-fates
+  ! interface type because they are called before the instance is
   ! initialized.
   public :: FatesReadParameters
   public :: FatesReadPFTs
@@ -236,6 +250,30 @@ contains
    deallocate(data)
    call ncd_pio_closefile(ncid)
  end subroutine ParametersFromNetCDF
+ !-----------------------------------------------------------------------
+
+ subroutine Read(this,  is_host_file, fates_params )
+    !
+    ! !DESCRIPTION:
+    ! Read 'fates_params' parameters from appropriate filename given 'is_host_file'.
+    !
+    ! USES
+    use clm_varctl, only : fname_len, paramfile, fates_paramfile
+    ! !ARGUMENTS:
+    class(fates_param_reader_ctsm_impl) :: this
+    logical, intent(in) :: is_host_file
+    class(fates_parameters_type), intent(inout) :: fates_params
+    !-----------------------------------------------------------------------
+    character(len=fname_len) :: filename ! file to read
+
+    filename = fates_paramfile
+    if (is_host_file) then
+      filename = paramfile
+    endif
+    call ParametersFromNetCDF(filename, is_host_file, fates_params)
+
+ end subroutine Read
+
  !-----------------------------------------------------------------------
 
 end module CLMFatesParamInterfaceMod
