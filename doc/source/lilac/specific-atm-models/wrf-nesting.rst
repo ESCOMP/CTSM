@@ -147,6 +147,7 @@ metgrid step::
 
 Running metgrid for two domains will create files like
 below::
+
     met_em.d01.*
     met_em.d02.*
 
@@ -182,7 +183,7 @@ Make sure the following three files have been created in your directory::
 
 The boundary condition file is only created for the outer domain.
 
-Check the last line of the real log file for the following message::
+Check the last line of the real log file for the following message:
 
 Rename wrfinput_d02
 -------------------
