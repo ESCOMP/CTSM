@@ -14,9 +14,9 @@ usage() {
   echo "[-v|--verbose]  "
   echo "     Run in verbose mode"
   echo "[-b|--blddir <blddir>]  "
-  echo "     Overwrites default, which is /tool_bld in the same directory as ./gen_mksurfdata_build.sh"
+  echo "     Overrides default, which is /tool_bld in the same directory as ./gen_mksurfdata_build.sh"
   echo "[-m|--machine <machine>]  "
-  echo "     Overwrites default MACH"
+  echo "     Overrides default MACH"
   echo "***********************************************************************"
 }
 
@@ -68,7 +68,7 @@ while [ $# -gt 0 ]; do
            exit 0
            ;;
        -v|--verbose )
-           verbose="Yes"
+           verbose="YES"
            ;;
        -b|--blddir )
            blddir=$2
@@ -88,57 +88,90 @@ while [ $# -gt 0 ]; do
 done
 
 # Create /tool_bld directory
-echo "cime Machine is: $MACH..."
-if [ -d "$blddir" ]; then
-  echo "A /tool_bld directory exists; remove it to do a clean build..."
-  echo " or if you want to use the existing build do (assuming using bash):"
-  echo "cd $blddir"
-  echo ". .env_mach_specific.sh"
-  echo "make"
-  exit 1
+if [ "$verbose" = "YES" ]; then
+   echo "cime Machine is: $MACH..."
 fi
-mkdir $blddir
+if [ -d "$blddir" ]; then
+  echo "Build directory exists so will skip the configure and cmake steps..."
+  existing_bld=YES
+else
+  if [ "$verbose" = "YES" ]; then echo "Build directory does NOT exist so do the configure and cmake steps"; fi
+  existing_bld=No
+fi
+if [ "existing_bld" = "No" ]; then
+   mkdir $blddir
+fi
 cd $blddir
 
 # Write pio_iotype to file with name pio_iotype.txt
 pio_iotype_filepath=../pio_iotype.txt  # one up from /tool_bld
-echo 'VALUE OF pio_iotype WRITTEN BY gen_mksurfdata_build.sh AND USED BY mksurfdata (i.e. THE FORTRAN EXECUTABLE):' > $pio_iotype_filepath
-echo $pio_iotype >> $pio_iotype_filepath
-
-# Run the cime configure tool to figure out what modules need to be loaded
-echo "Run cime configure for machine $MACH..."
-# You can specify the non-default compiler and mpi-library by adding --compiler and --mpilib settings
-if [ -z "$COMPILER" ] || [ -z "$MPILIB" ]; then
-  echo "configure for the default MPI-library and compiler..."
-  $cwd/../../cime/CIME/scripts/configure --macros-format CMake --machine $MACH
+if [ ! -f "$pio_iotype_filepath" ]; then
+   echo 'VALUE OF pio_iotype WRITTEN BY gen_mksurfdata_build.sh AND USED BY mksurfdata (i.e. THE FORTRAN EXECUTABLE):' > $pio_iotype_filepath
+   echo $pio_iotype >> $pio_iotype_filepath
 else
-  echo "configure for the specific MPILIB=$MPILIB and COMPILER=$COMPILER..."
-  $cwd/../../cime/CIME/scripts/configure --macros-format CMake --machine $MACH --compiler $COMPILER --mpilib $MPILIB
+   echo "Use existing $pio_iotype_filepath file" 
 fi
 
-if [ $? != 0 ]; then
-  echo "Error doing configure for machine name: $MACH"
-  exit 1
+#
+# If NOT an existing build, run the configure
+#
+if [ "existing_bld" = "No" ]; then
+   # Run the cime configure tool to figure out what modules need to be loaded
+   if [ "$verbose" = "YES" ]; then
+     echo "Run cime configure for machine $MACH..."
+   fi
+   # You can specify the non-default compiler and mpi-library by adding --compiler and --mpilib settings
+   if [ -z "$COMPILER" ] || [ -z "$MPILIB" ]; then
+     if [ "$verbose" = "YES" ]; then echo "configure for the default MPI-library and compiler..."; fi
+     options=""
+   else
+     if [ "$verbose" = "YES" ]; then echo "configure for the specific MPILIB=$MPILIB and COMPILER=$COMPILER..."; fi
+     options="-compiler $COMPILER --mpilib $MPILIB"
+   fi
+   if [ "$verbose" != "YES" ]; then
+     options="$options --silent"
+   fi
+   $cwd/../../cime/CIME/scripts/configure --macros-format CMake --machine $MACH $options
+
+   if [ $? != 0 ]; then
+     echo "Error doing configure for machine name: $MACH"
+     exit 1
+   fi
 fi
+
+#
+# Create the machine environment (always)
+#
 . ./.env_mach_specific.sh
-echo "COMPILER = $COMPILER, MPILIB = $MPILIB, DEBUG = $DEBUG, OS = $OS"
+if [ "$verbose" = "YES" ]; then echo "COMPILER = $COMPILER, MPILIB = $MPILIB, DEBUG = $DEBUG, OS = $OS"; fi
 if [ -z "$PIO" ]; then
   echo "The PIO directory for the PIO build is required and was not set in the configure"
   echo "Make sure a PIO build is provided for $MACH_$COMPILER with $MPILIB in config_machines"
   exit 1
 fi
 
-# Build the cmake files
-echo "Do the cmake build..."
-CC=mpicc FC=mpif90 cmake -DCMAKE_BUILD_TYPE=debug $cwd/src
-if [ $? != 0 ]; then
-  echo "Error doing cmake for $MACH $MPILIB $COMPILER"
-  exit 1
+# Build the cmake files (only if not an existing build)
+if [ "existing_bld" = "No" ]; then
+   if [ "$verbose" = "YES" ]; then
+      echo "Do the cmake build..."
+      options="-Wno-dev"
+   else
+      options="-Wno-dev -Wno-error=dev -Wno-deprecated -Wno-error=deprecated"
+   fi
+   CC=mpicc FC=mpif90 cmake $options -DCMAKE_BUILD_TYPE=Debug $cwd/src
+   if [ $? != 0 ]; then
+     echo "Error doing cmake for $MACH $MPILIB $COMPILER"
+     exit 1
+   fi
 fi
 
-# Build the executable
-echo "Build the mksurfdata_esmf build..."
-make VERBOSE=1
+# Build the executable (always)
+if [ "$verbose" = "YES" ]; then
+  echo "Build mksurfdata_esmf..."
+  make VERBOSE=1
+else
+  make
+fi
 if [ $? != 0 ]; then
   echo "Error doing make for $MACH $MPILIB $COMPILER"
   exit 1
