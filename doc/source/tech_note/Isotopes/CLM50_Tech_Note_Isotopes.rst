@@ -44,13 +44,13 @@ proportion to the masses :math:`{CS}_{13C\_up}` and
 heavier isotope. Currently, in all cases where Eq. is used to calculate
 a :sup:`13`\ C flux, :math:`{f}_{frac}` is set to 1.0.
 
-For :sup:`1`\ :sup:`4`\ C, no fractionation is used in
+For :sup:`14`\ C, no fractionation is used in
 either the initial photosynthetic step, nor in subsequent fluxes from
 upstream to downstream pools; as discussed below, this is because
-observations of :sup:`1`\ :sup:`4`\ C are typically
+observations of :sup:`14` C are typically
 described in units that implicitly correct out the fractionation of
-:sup:`1`\ :sup:`4`\ C by referencing them to
-:sup:`1`\ :sup:`3`\ C ratios.
+:sup:`14`\ C by referencing them to
+:sup:`13`\ C ratios.
 
 Isotope Symbols, Units, and Reference Standards
 ----------------------------------------------------
@@ -97,15 +97,15 @@ This can also be expressed using epsilon notation (:math:`\epsilon`), where
 
 In other words, if :math:`{\epsilon }_{A-B} = 4.4` ‰ , then :math:`{\alpha}_{A-B} =1.0044`.
 
-In addition to the stable isotopes :sup:`1`\ :sup:`2`\ C and :sup:`1`\ :sup:`3`\ C, the unstable isotope
-:sup:`1`\ :sup:`4`\ C is included in CLM. :sup:`1`\ :sup:`4`\ C can also be described using the delta notation:
+In addition to the stable isotopes :sup:`1`\ :sup:`2`\ C and :sup:`13`\ C, the unstable isotope
+:sup:`14`\ C is included in CLM. :sup:`14`\ C can also be described using the delta notation:
 
 .. math::
    :label: 30.6)
 
    \delta ^{14} C=\left(\frac{A_{s} }{A_{abs} } -1\right)\times 1000
 
-However, observations of :sup:`1`\ :sup:`4`\ C are typically
+However, observations of :sup:`14`\ C are typically
 fractionation-corrected using the following notation:
 
 .. math::
