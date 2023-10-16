@@ -271,7 +271,7 @@ to be 100% adsorbed onto mineral surfaces and unaffected by leaching.
 
    DIN=\frac{NS_{sminn} sf}{WS_{tot\_ soil} }
 
-where :math:`{WS}_{tot\_soil}` (kgH:sub:`2`\ O m\ :sup:`-2`) is the total mass of soil water content integrated
+where :math:`{WS}_{tot\_soil}` (kgH\ :sub:`2`\ O m\ :sup:`-2`) is the total mass of soil water content integrated
 over the column. The total mineral nitrogen leaching flux is limited on
 each time step to not exceed the soluble fraction of :math:`{NS}_{sminn}`
 

@@ -359,7 +359,7 @@ The potential carbon flux out of the upstream pool
 
 where :math:`{CS}_{u}` (gC m\ :sup:`-2`) is the initial mass
 in the upstream pool and :math:`{k}_{u}` is the decay rate constant
-(s:sup:`-1`) for the upstream pool, adjusted for temperature and
+(s\ :sup:`-1`) for the upstream pool, adjusted for temperature and
 moisture conditions. Depending on the C:N ratios of the upstream and
 downstream pools and the amount of carbon lost in the transformation due
 to respiration (the respiration fraction), the execution of this

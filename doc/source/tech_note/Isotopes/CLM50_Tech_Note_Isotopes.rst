@@ -205,7 +205,7 @@ accelerated by the same degree as the decomposition, such that the
 of the spinup mode.
 
 For variation of atmospheric :sup:`14`\ C and :sup:`13`\ C over the historical
-period, :math:`\mathrm{\Delta}`\ :sup:`14`\ C and :math:`\mathrm{\Delta}`\:sup:`13`\ C values can be set to
+period, :math:`\mathrm{\Delta}`\ :sup:`14`\ C and :math:`\mathrm{\Delta}`\ :sup:`13`\ C values can be set to
 either fixed concentrations
 or time-varying concentrations read in from a file. A default file is provided that spans the historical period (:ref:`Graven et al., 2017 <Gravenetal2017>`).  For
 :math:`\mathrm{\Delta}`\ :sup:`14`\ C, values are provided and read in for three latitude bands (30 :sup:`o`\ N-90 :sup:`o`\ N, 30 :sup:`o`\ S-30 :sup:`o`\ N, and 30 :sup:`o`\ S-90 :sup:`o`\ S).
