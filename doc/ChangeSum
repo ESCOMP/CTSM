@@ -1,5 +1,25 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev143   rgknox 10/13/2023 Zeroing of wood product fluxes on fates columns
+    ctsm5.1.dev142 samrabin 09/19/2023 Merge 5 bit-for-bit pull requests
+    ctsm5.1.dev141   slevis 09/13/2023 Change small snocan to zero
+    ctsm5.1.dev140  afoster 09/12/2023 add lai_streams capability for FATES
+    ctsm5.1.dev139   slevis 08/28/2023 Fix problems uncovered by nag -nan tests
+    ctsm5.1.dev138   slevis 08/25/2023 Refactor max_patch_per_col and maxsoil_patches loops
+    ctsm5.1.dev137   slevis 08/23/2023 Surface roughness modifications
+    ctsm5.1.dev136 multiple 08/22/2023 Change order of history fields to improve performance on derecho
+    ctsm5.1.dev135   slevis 08/21/2023 Rename hist fields to track them down more easily
+    ctsm5.1.dev134   rgknox 08/16/2023 Migration of FATES to share normal soil BGC call sequence and functionality
+    ctsm5.1.dev133 glemieux 08/09/2023 FATES API update to facilitate fates refactor
+    ctsm5.1.dev132   slevis 08/04/2023 Add parameterization to allow excess ice in soil and subsidence
+    ctsm5.1.dev131 samrabin 07/27/2023 Enable prescribed crop calendars
+    ctsm5.1.dev130 glemieux 07/09/2023 FATES parameter file and test definition update
+    ctsm5.1.dev129     erik 06/22/2023 NEON fixes for TOOL and user-mods, add SP for NEON, some history file updates, black refactor for buildlib/buildnml
+    ctsm5.1.dev128 glemieux 06/01/2023 Update FATES tests to double precision
+    ctsm5.1.dev127    sacks 05/19/2023 Fix nuopc cplhist test
+    ctsm5.1.dev126   jpalex 05/18/2023 Clean up some loops in UrbanTimeVarType
+    ctsm5.1.dev125   jpalex 05/17/2023 Added cache for clock step_size in clm_time_manager.F90
+    ctsm5.1.dev124     erik 05/09/2023 Initialization memory update, new surface datasets for new grids, add option for running NEON with PRISM data
     ctsm5.1.dev123    sacks 05/01/2023 Updates needed for pFUnit 4 and other externals updates
     ctsm5.1.dev122    sacks 04/23/2023 Rework handling of evaporation constraint in SoilFluxes
     ctsm5.1.dev121 glemieux 04/05/2023 Changes soil moisture initialization logic for FATES

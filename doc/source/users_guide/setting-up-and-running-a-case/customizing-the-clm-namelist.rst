@@ -43,12 +43,12 @@ Included in the table are the following pieces of information:
 
 Table 1-3. CLM History Fields from a BgcCrop case
 -------------------------------------------------
-For Table from a BgcCrop case, please see :doc:`master_list_nofates`.
+For Table from a BgcCrop case, please see :doc:`history_fields_nofates`.
 
 
 Table 1-4. CLM History Fields from a Fates case
 -----------------------------------------------
-For Table from a Fates case, please see :doc:`master_list_fates`.
+For Table from a Fates case, please see :doc:`history_fields_fates`.
 
 
 ---------------------------------------------

@@ -16,22 +16,28 @@ from CIME.SystemTests.test_utils.user_nl_utils import append_to_user_nl_files
 
 logger = logging.getLogger(__name__)
 
-class LVG(SystemTestsCompareTwo):
 
+class LVG(SystemTestsCompareTwo):
     def __init__(self, case):
-        SystemTestsCompareTwo.__init__(self, case,
-                                       separate_builds = False,
-                                       run_two_suffix = 'more_virtual',
-                                       run_one_description = 'standard set of virtual columns',
-                                       run_two_description = 'add virtual columns over Antarctica')
+        SystemTestsCompareTwo.__init__(
+            self,
+            case,
+            separate_builds=False,
+            run_two_suffix="more_virtual",
+            run_one_description="standard set of virtual columns",
+            run_two_description="add virtual columns over Antarctica",
+        )
 
     def _case_one_setup(self):
-        append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
-                                contents = "glacier_region_behavior = 'single_at_atm_topo', 'virtual', 'virtual', 'multiple'")
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(),
+            component="clm",
+            contents="glacier_region_behavior = 'single_at_atm_topo', 'virtual', 'virtual', 'multiple'",
+        )
 
     def _case_two_setup(self):
-        append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
-                                contents = "glacier_region_behavior = 'single_at_atm_topo', 'virtual', 'virtual', 'virtual'")
-
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(),
+            component="clm",
+            contents="glacier_region_behavior = 'single_at_atm_topo', 'virtual', 'virtual', 'virtual'",
+        )

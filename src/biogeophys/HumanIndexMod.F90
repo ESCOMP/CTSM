@@ -16,6 +16,9 @@ module HumanIndexMod
 ! !USES:
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use decompMod            , only : bounds_type
+  use abortutils           , only : endrun
+  use clm_varctl           , only : iulog
+  use shr_log_mod          , only : errMsg => shr_log_errMsg
 ! !PUBLIC TYPES:
   implicit none
   save
@@ -500,13 +503,10 @@ end subroutine InitHistory
 !       
 ! !USES:
     use shr_mpi_mod   , only : shr_mpi_bcast
-    use abortutils    , only : endrun
     use spmdMod       , only : masterproc, mpicom
     use fileutils     , only : getavu, relavu, opnfil
     use shr_nl_mod    , only : shr_nl_find_group_name
     use shr_mpi_mod   , only : shr_mpi_bcast
-    use clm_varctl    , only : iulog
-    use shr_log_mod   , only : errMsg => shr_log_errMsg
 !
 ! !ARGUMENTS:
     implicit none
@@ -1014,6 +1014,14 @@ end subroutine InitHistory
 ! !LOCAL VARIABLES:
 !EOP
 !
+    if ( rh < 0.0d00 )then
+       write(iulog,*) 'rh = ', rh
+       call endrun(msg="ERROR RH is negative "//errmsg(sourcefile, __LINE__))
+    else if ( rh > 100.d00 )then
+       write(iulog,*) 'rh = ', rh
+       call endrun(msg="ERROR RH is greater than a hundred "//errmsg(sourcefile, __LINE__))
+    end if
+
     wbt = Tc_6 * atan(0.151977_r8*sqrt(rh + 8.313659_r8)) + &
           atan(Tc_6+rh) - atan(rh-1.676331_r8) + &
           0.00391838_r8*rh**(3._r8/2._r8)*atan(0.023101_r8*rh) - &

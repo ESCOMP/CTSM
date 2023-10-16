@@ -146,6 +146,7 @@ contains
     real(r8) :: dth(bounds%begl:bounds%endl)                         ! diff of virtual temp. between ref. height and surface
     real(r8) :: dqh(bounds%begl:bounds%endl)                         ! diff of humidity between ref. height and surface
     real(r8) :: zldis(bounds%begl:bounds%endl)                       ! reference height "minus" zero displacement height (m)
+    real(r8) :: zeta_lunit(bounds%begl:bounds%endl)                  ! landunit-level dimensionless stability parameter
     real(r8) :: um(bounds%begl:bounds%endl)                          ! wind speed including the stablity effect (m/s)
     real(r8) :: obu(bounds%begl:bounds%endl)                         ! Monin-Obukhov length (m)
     real(r8) :: taf_numer(bounds%begl:bounds%endl)                   ! numerator of taf equation (K m/s)
@@ -187,7 +188,6 @@ contains
     real(r8) :: wtus_shadewall_unscl(bounds%begl:bounds%endl)        ! sensible heat conductance for shadewall (not scaled) (m/s)
     real(r8) :: wtuq_shadewall_unscl(bounds%begl:bounds%endl)        ! latent heat conductance for shadewall (not scaled) (m/s)
     real(r8) :: wc                                                   ! convective velocity (m/s)
-    real(r8) :: zeta                                                 ! dimensionless height used in Monin-Obukhov theory 
     real(r8) :: eflx_sh_grnd_scale(bounds%begp:bounds%endp)          ! scaled sensible heat flux from ground (W/m**2) [+ to atm] 
     real(r8) :: qflx_evap_soi_scale(bounds%begp:bounds%endp)         ! scaled soil evaporation (mm H2O/s) (+ = to atm) 
     real(r8) :: eflx_wasteheat_roof(bounds%begl:bounds%endl)         ! sensible heat flux from urban heating/cooling sources of waste heat for roof (W/m**2)
@@ -293,6 +293,7 @@ contains
          forc_hgt_u_patch    =>   frictionvel_inst%forc_hgt_u_patch         , & ! Input:  [real(r8) (:)   ]  observational height of wind at patch-level (m)     
          forc_hgt_t_patch    =>   frictionvel_inst%forc_hgt_t_patch         , & ! Input:  [real(r8) (:)   ]  observational height of temperature at patch-level (m)
          zetamax             =>   frictionvel_inst%zetamaxstable            , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
+         zeta                =>   frictionvel_inst%zeta_patch               , & ! Output: [real(r8) (:)   ]  dimensionless stability parameter
          ram1                =>   frictionvel_inst%ram1_patch               , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                    
          u10_clm             =>   frictionvel_inst%u10_clm_patch            , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
 
@@ -652,18 +653,18 @@ contains
             tstar = temp1(l)*dth(l)
             qstar = temp2(l)*dqh(l)
             thvstar = tstar*(1._r8+0.61_r8*forc_q(g)) + 0.61_r8*forc_th(g)*qstar
-            zeta = zldis(l)*vkc*grav*thvstar/(ustar(l)**2*thv_g(l))
+            zeta_lunit(l) = zldis(l)*vkc*grav*thvstar/(ustar(l)**2*thv_g(l))
 
-            if (zeta >= 0._r8) then                   !stable
-               zeta = min(zetamax,max(zeta,0.01_r8))
+            if (zeta_lunit(l) >= 0._r8) then                   !stable
+               zeta_lunit(l) = min(zetamax,max(zeta_lunit(l),0.01_r8))
                um(l) = max(ur(l),0.1_r8)
             else                                      !unstable
-               zeta = max(-100._r8,min(zeta,-0.01_r8))
+               zeta_lunit(l) = max(-100._r8,min(zeta_lunit(l),-0.01_r8))
                wc = beta(l)*(-grav*ustar(l)*thvstar*zii(l)/thv_g(l))**0.333_r8
                um(l) = sqrt(ur(l)*ur(l) + wc*wc)
             end if
 
-            obu(l) = zldis(l)/zeta
+            obu(l) = zldis(l)/zeta_lunit(l)
          end do
 
       end do   ! end iteration
@@ -682,7 +683,8 @@ contains
          g = patch%gridcell(p)
          l = patch%landunit(p)
 
-         ram1(p) = ramu(l)  !pass value to global variable
+         ram1(p) = ramu(l)       !pass value to global variable
+         zeta(p) = zeta_lunit(l) !pass value to global variable
 
          ! Upward and downward canopy longwave are zero
 
