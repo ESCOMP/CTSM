@@ -1282,6 +1282,12 @@ contains
 
     integer, intent(in) :: doy_today
     integer             :: doy_tomorrow
+    character(len=*), parameter :: sub = 'clm::get_doy_tomorrow'
+
+    if ( doy_today < 1 .or. doy_today > 367 )then
+       write(iulog,*) sub, ' = ', doy_today
+       call shr_sys_abort( sub//': error doy_today out of range' )
+    end if
 
     if (doy_today == get_curr_days_per_year()) then
         doy_tomorrow = 1

@@ -661,6 +661,8 @@ contains
   @Test
   subroutine check_get_doy_tomorrow(this)
     class(TestTimeManager), intent(inout) :: this
+    character(len=256) :: expected_msg
+    integer :: doy_tomorrow
 
     ! We don't care about the actual date here; we just want to enable get_curr_days_per_year()
     call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar=.true.)
@@ -669,6 +671,11 @@ contains
     @assertEqual(get_doy_tomorrow(1), 2)
     @assertEqual(get_doy_tomorrow(150), 151)
     @assertEqual(get_doy_tomorrow(get_curr_days_per_year()), 1)
+
+    doy_tomorrow = get_doy_tomorrow(400)
+    expected_msg = endrun_msg("clm::get_doy_tomorrow: error doy_today out of range" )
+    @assertExceptionRaised(expected_msg)
+
   end subroutine check_get_doy_tomorrow
 
 end module test_clm_time_manager
