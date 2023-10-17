@@ -1341,6 +1341,15 @@ Wingate, L., 2011. Reconciling the optimal and empirical approaches to
 modelling stomatal conductance. Global Change Biology, 17: 2134–2144.
 doi:10.1111/j.1365-2486.2010.02375.x
 
+.. _Meieretal2022:
+
+Meier, R., Davin, E. L., Bonan, G. B., Lawrence, D. M., Hu, X.,
+Duveiller, G., Prigent, C., and Seneviratne, S. I., 2022. Impacts of a
+revised surface roughness parameterization in the Community Land Model
+5.1, Geosci. Model Dev., 15, 2365–2393,
+https://doi.org/10.5194/gmd-15-2365-2022
+
+
 .. _MelzerOLeary1987:
 
 Melzer, E., and O’Leary, M.H. 1987. Anapleurotic CO2 Fixation by
