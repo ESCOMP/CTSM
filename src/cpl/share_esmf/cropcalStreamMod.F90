@@ -299,6 +299,7 @@ contains
     ! !USES:
     use CropType        , only : crop_type
     use PatchType       , only : patch
+    use clm_time_manager, only : get_curr_days_per_year
     use dshr_methods_mod , only : dshr_fldbun_getfldptr
     !
     ! !ARGUMENTS:
@@ -311,6 +312,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: ivt, p, ip, ig
     integer :: nc, fp
+    integer :: dayspyr
     integer           :: n, g
     integer           :: lsize
     integer           :: rc
@@ -334,6 +336,8 @@ contains
     ! Place all data from each type into a temporary 2d array
     lsize = bounds%endg - bounds%begg + 1
 
+    dayspyr = get_curr_days_per_year()
+
     ! Read prescribed sowing window start dates from input files
     allocate(dataptr2d_swindow_start(lsize, ncft))
     allocate(dataptr2d_swindow_end  (lsize, ncft))
@@ -355,8 +359,8 @@ contains
           do g = 1,lsize
 
              ! If read-in value is invalid, allow_unprescribed_planting in CropPhenology()
-             if (dataptr1d_swindow_start(g) <= 0 .or. dataptr1d_swindow_start(g) > 365 &
-                 .or. dataptr1d_swindow_end(g) <= 0 .or. dataptr1d_swindow_end(g) > 365) then
+             if (dataptr1d_swindow_start(g) <= 0 .or. dataptr1d_swindow_start(g) > dayspyr &
+                 .or. dataptr1d_swindow_end(g) <= 0 .or. dataptr1d_swindow_end(g) > dayspyr) then
                 dataptr1d_swindow_start(g) = -1
                 dataptr1d_swindow_end  (g) = -1
              end if
@@ -379,12 +383,12 @@ contains
              ends(p,1)   = dataptr2d_swindow_end  (ig,n)
    
              ! Sanity check: Should only read in valid values
-             if (starts(p,1) > 365) then
+             if (starts(p,1) > dayspyr) then
                  write(iulog,'(a,i0,a,i0)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has dataptr2d prescribed sowing window start date ',&
                                             starts(p,1)
                  call ESMF_Finalize(endflag=ESMF_END_ABORT)
              end if
-             if (ends(p,1) > 365) then
+             if (ends(p,1) > dayspyr) then
                  write(iulog,'(a,i0,a,i0)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has dataptr2d prescribed sowing window end date ',&
                                             ends(p,1)
                  call ESMF_Finalize(endflag=ESMF_END_ABORT)
