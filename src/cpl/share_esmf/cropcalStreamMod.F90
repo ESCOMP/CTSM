@@ -436,10 +436,6 @@ contains
        do fp = 1, num_pcropp
           p = filter_pcropp(fp)
 
-!          if (.not. patch%active(p)) then
-!              continue
-!          end if
-
           ivt = patch%itype(p)
           ! Will skip generic crops
           if (ivt >= npcropmin) then
