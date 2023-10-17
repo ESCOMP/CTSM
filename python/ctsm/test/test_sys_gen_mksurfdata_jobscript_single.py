@@ -29,8 +29,11 @@ class TestSysGenMkSurfJSSingle(unittest.TestCase):
         os.chdir(self._tempdir)
         self.outfile = "jobscript.sh"
         self.namelist = "res.namelist"
+        bld_path = os.path.join( path_to_ctsm_root(), "python", "ctsm", "test", "testinputs", "mksurfdata_esmf_bld" )
         sys.argv = [
             "gen_mksurfdata_jobscript_single",
+            "--bld-path",
+            bld_path,
             "--namelist",
             self.namelist,
             "--jobscript-file",
