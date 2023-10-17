@@ -10,6 +10,8 @@ import logging
 
 from ctsm import add_cime_to_path  # pylint: disable=unused-import
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
+from ctsm.utils import abort
+from ctsm.path_utils import path_to_ctsm_root
 from CIME.XML.env_mach_specific import EnvMachSpecific  # pylint: disable=import-error
 from CIME.BuildTools.configure import FakeCase  # pylint: disable=import-error
 
@@ -44,6 +46,13 @@ def get_parser():
         action="store",
         dest="number_of_nodes",
         required=True,
+    )
+    parser.add_argument(
+        "--bld-path",
+        help="""Path to build directory for mksurfdata_esmf""",
+        action="store",
+        dest="bld_path",
+        default=os.path.join(path_to_ctsm_root(), "tools", "mksurfdata_esmf", "tool_bld"),
     )
     parser.add_argument(
         "--tasks-per-node",
@@ -140,7 +149,9 @@ def main():
         # --------------------------
         # Obtain mpirun command from env_mach_specific.xml
         # --------------------------
-        bld_path = "./tool_bld"
+        bld_path = args.bld_path
+        if not os.path.exists(bld_path):
+            abort("Input Build path (" + bld_path + ") does NOT exist, aborting")
         # Get the ems_file object with standalone_configure=True
         # and the fake_case object with mpilib=attribs['mpilib']
         # so as to use the get_mpirun function pointing to fake_case
@@ -153,6 +164,7 @@ def main():
             fake_case,
             attribs,
             job="name",
+            exe_only=True,
             overrides={
                 "total_tasks": total_tasks,
             },
@@ -165,7 +177,19 @@ def main():
         executable = f'{cmd[0]} {" ".join(cmd[1])}'.replace("ENV{", "").replace("}", "")
 
         mksurfdata_path = os.path.join(bld_path, "mksurfdata")
+        if not os.path.exists(mksurfdata_path):
+            abort(
+                "mksurfdata_esmf executable ("
+                + mksurfdata_path
+                + ") does NOT exist in the bld-path, aborting"
+            )
         env_mach_path = os.path.join(bld_path, ".env_mach_specific.sh")
+        if not os.path.exists(env_mach_path):
+            abort(
+                "Environment machine specific file ("
+                + env_mach_path
+                + ") does NOT exist in the bld-path, aborting"
+            )
 
         # --------------------------
         # Write run script (part 2)
@@ -193,4 +217,3 @@ def main():
         runfile.write("echo Successfully ran resolution\n")
 
     print(f"echo Successfully created jobscript {jobscript_file}\n")
-    sys.exit(0)
