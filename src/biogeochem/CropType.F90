@@ -248,10 +248,6 @@ contains
     allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
     allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
 
-    this%rx_swindow_starts_thisyr_patch(:,:) = -1
-    this%rx_swindow_ends_thisyr_patch  (:,:) = -1
-    this%rx_cultivar_gdds_thisyr_patch(:,:) = spval
-
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
