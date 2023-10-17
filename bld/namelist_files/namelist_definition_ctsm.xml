@@ -1837,12 +1837,12 @@ Simulation year that aligns with stream_year_first_cropcal value
 
 <entry id="stream_fldFileName_swindow_start" type="char*256(30)" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
-Filename of input stream data for date (day of year) of start of sowing window
+Filename of input stream data for date (day of year) of start of sowing window. Cells with the same sowing window start and end date are always planted on that date, regardless of climatic conditions/history.
 </entry>
 
 <entry id="stream_fldFileName_swindow_end" type="char*256(30)" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
-Filename of input stream data for date (day of year) of end of sowing window
+Filename of input stream data for date (day of year) of end of sowing window. Cells with the same sowing window start and end date are always planted on that date, regardless of climatic conditions/history.
 </entry>
 
 <entry id="stream_fldfilename_cultivar_gdds" type="char*256(30)" category="datasets"

@@ -1772,7 +1772,8 @@ contains
         end if
     end do
 
-    ! Ensure that a window was found
+    ! Ensure that a window was found.
+    ! SSR 2023-10-17: This shouldn't currently be reachable, but its being here casts the widest possible net in case code changes in future.
     if (start_w < 1 .or. end_w < 1) then
         call endrun(msg="get_swindow(): No sowing window found")
     end if
@@ -2060,7 +2061,7 @@ contains
          crop_inst%sown_in_this_window(p) = was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop(p), crop_inst%sown_in_this_window(p))
          is_end_sowing_window = jday == sowing_window_enddate
          !
-         ! Save these diagnostic variables only on the first day of the window to ensure that windows spanning the new year aren't double-counted.
+         ! Save these diagnostic variables only on the last day of the window to ensure that windows spanning the new year aren't double-counted. Doing this on the last day ensures that outputs are ordered as inputs should be.
          if (jday == sowing_window_enddate) then
              crop_inst%swindow_starts_thisyr_patch(p,w) = sowing_window_startdate
              crop_inst%swindow_ends_thisyr_patch  (p,w) = sowing_window_enddate

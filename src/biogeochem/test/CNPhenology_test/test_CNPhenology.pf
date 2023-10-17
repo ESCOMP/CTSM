@@ -387,6 +387,7 @@ contains
 
     idop = 90
     @assertTrue(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    ! With jday 100 and idop 90 (as well as idop 100 below), if the existing value of sown_in_this_window is false, then even though it LOOKS like it was sown in the current window, it must have been in a previous year. If it had been sown in this window this year, sown_in_this_window would be true.
     @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
 
     idop = 100
@@ -426,6 +427,7 @@ contains
 
     idop = 205
     @assertTrue(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    ! With jday 300 and idop 205 (as well as jday 70 idop 60 below), if the existing value of sown_in_this_window is false, then even though it LOOKS like it was sown in the current window, it must have been in a previous year. If it had been sown in the actual current window, sown_in_this_window would be true.
     @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
 
     idop = 300
