@@ -340,7 +340,9 @@ contains
 
     ! Read prescribed sowing window start dates from input files
     allocate(dataptr2d_swindow_start(lsize, ncft))
+    dataptr2d_swindow_start(:,:) = -1._r8
     allocate(dataptr2d_swindow_end  (lsize, ncft))
+    dataptr2d_swindow_end(:,:) = -1._r8
     if (use_cropcal_rx_swindows) then
        ! Starting with npcropmin will skip generic crops
        do n = 1, ncft
@@ -381,18 +383,6 @@ contains
              ig = g_to_ig(patch%gridcell(p))
              starts(p,1) = dataptr2d_swindow_start(ig,n)
              ends(p,1)   = dataptr2d_swindow_end  (ig,n)
-   
-             ! Sanity check: Should only read in valid values
-             if (starts(p,1) > dayspyr) then
-                 write(iulog,'(a,i0,a,i0)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has dataptr2d prescribed sowing window start date ',&
-                                            starts(p,1)
-                 call ESMF_Finalize(endflag=ESMF_END_ABORT)
-             end if
-             if (ends(p,1) > dayspyr) then
-                 write(iulog,'(a,i0,a,i0)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has dataptr2d prescribed sowing window end date ',&
-                                            ends(p,1)
-                 call ESMF_Finalize(endflag=ESMF_END_ABORT)
-             end if
          else
              write(iulog,'(a,i0)') 'cropcal_interp(), prescribed sowing windows: Crop patch has ivt ',ivt
              call ESMF_Finalize(endflag=ESMF_END_ABORT)
