@@ -501,10 +501,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Default surface roughness parameterization                         -->
 <!-- ================================================================== -->
 
-<z0param_method>ZengWang2007</z0param_method>
+<z0param_method>Meier2022</z0param_method>
 
 <use_z0m_snowmelt z0param_method="Meier2022" >.true.</use_z0m_snowmelt>
-<use_z0m_snowmelt >.false.</use_z0m_snowmelt>
+<use_z0m_snowmelt >.true.</use_z0m_snowmelt>
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
@@ -1133,7 +1133,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_C24_hist_78pfts_CMIP6_simyr2000
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_0.9x1.25_hist_78pfts_CMIP6_2000_c230517.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".true." use_vichydro=".false.">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1.9x2.5_hist_78pfts_CMIP6_2000_c230517.nc</fsurdat>
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1.9x2.5_hist_78pfts_CMIP6_simyr2000_c190304.nc</fsurdat>
 <fsurdat hgrid="hcru_hcru"   sim_year="2000">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_360x720cru_78pfts_CMIP6_simyr2000_c170824.nc</fsurdat>
 <fsurdat hgrid="0.125x0.125"  sim_year="2000" use_crop=".true." >
@@ -1996,7 +1995,7 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <!-- Defaults for excess ice                    -->
 <!-- =========================================  -->
 
-<use_excess_ice>.false.</use_excess_ice>
+<use_excess_ice>.true.</use_excess_ice>
 
 <stream_fldfilename_exice use_excess_ice=".true.">lnd/clm2/paramdata/exice_init_0.125x0.125_c20220516.nc</stream_fldfilename_exice>
 <stream_meshfile_exice    use_excess_ice=".true.">lnd/clm2/paramdata/exice_init_0.125x0.125_ESMFmesh_cdf5_c20220802.nc</stream_meshfile_exice>
