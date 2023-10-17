@@ -12,7 +12,7 @@ module UrbanAlbedoMod
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type, subgrid_level_landunit
   use clm_varpar        , only : numrad
-  use clm_varcon        , only : isecspday, degpsec, spval
+  use clm_varcon        , only : isecspday, degpsec
   use clm_varctl        , only : iulog
   use abortutils        , only : endrun  
   use UrbanParamsType   , only : urbanparams_type
@@ -187,10 +187,6 @@ contains
             c = filter_urbanc(fc)
             albgrd(c,ib) = 0._r8
             albgri(c,ib) = 0._r8
-! add new snicar output variables for history files
-            albgrd_hst(c,ib) = spval
-            albgri_hst(c,ib) = spval
-! end add new snicar
          end do
 
          do fp = 1,num_urbanp  
@@ -212,10 +208,6 @@ contains
                albd(p,ib) = 1._r8
                albi(p,ib) = 1._r8
             endif
-! add new snicar output variables for history files
-            albd_hst(p,ib) = spval
-            albi_hst(p,ib) = spval
-! end add new snicar
             fabd(p,ib)     = 0._r8
             fabd_sun(p,ib) = 0._r8
             fabd_sha(p,ib) = 0._r8

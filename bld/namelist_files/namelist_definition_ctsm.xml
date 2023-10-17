@@ -1769,7 +1769,7 @@ to hydrologic variables (either TWS or ZWT)
 <!-- Prescribed soil moisture -->
 <entry id="use_soil_moisture_streams" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on use of input prescribed soil moisture streams rather than have CLM prognose it (EXPERIMENTAL, UNSUPPORTED!)
+Toggle to turn on use of input prescribed soil moisture streams rather than have CLM prognose it (EXPERIMENTAL)
 </entry>
 
 <entry id="stream_year_first_soilm" type="integer" category="datasets"
