@@ -73,6 +73,14 @@ class TestSysGenMkSurfJSSingle(unittest.TestCase):
         # pylint: disable=no-self-use
         self.createJS(nodes="4", tasks_per_node="12")
 
+    def test_bad_bld_path(self):
+        """
+        Test aborts if the input bld-path does NOT exist
+        """
+        # pylint: disable=no-self-use
+        with self.assertRaisesRegex(SystemExit, "Input Build path"):
+            self.createJS(nodes="4", tasks_per_node="12", options=["--bld-path", "zztop"])
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
