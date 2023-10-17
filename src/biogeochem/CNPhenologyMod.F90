@@ -2032,16 +2032,21 @@ contains
          ! Get dates of current or next sowing window.
          call get_swindow(jday, crop_inst%rx_swindow_starts_thisyr_patch(p,:), crop_inst%rx_swindow_ends_thisyr_patch(p,:), minplantjday(ivt(p),h), maxplantjday(ivt(p),h), w, sowing_window_startdate, sowing_window_enddate)
 
+         ! Are we currently in a sowing window?
+         ! This is outside the croplive check so that the "harvest if planting conditions were met today" conditional works.
+         is_in_sowing_window  = is_doy_in_interval(sowing_window_startdate, sowing_window_enddate, jday)
+         crop_inst%sown_in_this_window(p) = was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop(p), crop_inst%sown_in_this_window(p))
+         is_end_sowing_window = jday == sowing_window_enddate
+
          ! We only want to plant on a specific day if the prescribed sowing window starts AND ends on the same day. Also make sure we haven't planted yet today.
          ! TODO: ¿Allow use of NON-prescribed sowing with one-day-long windows?
          has_rx_sowing_date = sowing_window_startdate == sowing_window_enddate
          do_plant_prescribed = has_rx_sowing_date .and. &
                                sowing_window_startdate == jday .and. &
-                               sowing_count (p) < mxsowings
+                               .not. crop_inst%sown_in_this_window(p)
          do_plant_prescribed_tomorrow = &
              has_rx_sowing_date .and. &
-             sowing_window_startdate == get_doy_tomorrow(jday) .and. &
-             sowing_count (p) < mxsowings
+             sowing_window_startdate == get_doy_tomorrow(jday)
 
          ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-18)
          ! When resuming from a run with old code, may need to manually set these.
@@ -2055,12 +2060,6 @@ contains
              crop_inst%sdates_thisyr_patch(p,1) = real(idop(p), r8)
          end if
 
-         ! Are we currently in a sowing window?
-         ! This is outside the croplive check so that the "harvest if planting conditions were met today" conditional works.
-         is_in_sowing_window  = is_doy_in_interval(sowing_window_startdate, sowing_window_enddate, jday)
-         crop_inst%sown_in_this_window(p) = was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop(p), crop_inst%sown_in_this_window(p))
-         is_end_sowing_window = jday == sowing_window_enddate
-         !
          ! Save these diagnostic variables only on the last day of the window to ensure that windows spanning the new year aren't double-counted. Doing this on the last day ensures that outputs are ordered as inputs should be.
          if (jday == sowing_window_enddate) then
              crop_inst%swindow_starts_thisyr_patch(p,w) = sowing_window_startdate
