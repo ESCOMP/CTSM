@@ -223,7 +223,7 @@ the Century (:ref:`del Grosso et al. 2000 <delGrossoetal2000>`) approach:
 
 where :math:`{P}_{NO3:CO2}` is the ratio of CO\ :sub:`2`
 production in a given soil layer to the
-NO\ :sub:`3`\ :sup:`-`` concentration, :math:`{k}_{1}` is
+NO\ :sub:`3`\ :sup:`-` concentration, :math:`{k}_{1}` is
 a function of :math:`{d}_{g}`, the gas diffusivity through the soil
 matrix:
 
@@ -261,7 +261,7 @@ s\ :sup:`-1`, section :numref:`Lateral Sub-surface Runoff`), as
 of the remaining soil mineral N pool is in soluble form, and that this
 entire fraction is dissolved in the total soil water.  For the Century-
 based formulation in CLM5.0, the leaching acts only on the
-NO\ :sub:`3`\ :sup:`-`` pool (which is assumed to be 100%
+NO\ :sub:`3`\ :sup:`-` pool (which is assumed to be 100%
 soluble), while the NH\ :sub:`4`\ :sup:`+` pool is assumed
 to be 100% adsorbed onto mineral surfaces and unaffected by leaching.
 *DIN* is then given as
