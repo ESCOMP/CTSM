@@ -406,7 +406,7 @@ contains
        ! Handle invalid sowing window values
        if (any(starts < 1 .or. ends < 1)) then
            ! Fail if not allowing fallback to paramfile sowing windows
-           if ((.not. allow_invalid_swindow_inputs) .and. any(all(starts < 1, dim=2))) then
+           if ((.not. allow_invalid_swindow_inputs) .and. any(all(starts < 1, dim=2) .and. patch%wtgcell > 0._r8)) then
                write(iulog, *) 'At least one crop in one gridcell has invalid prescribed sowing window start date(s). To ignore and fall back to paramfile sowing windows, set allow_invalid_swindow_inputs to .true.'
                call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
