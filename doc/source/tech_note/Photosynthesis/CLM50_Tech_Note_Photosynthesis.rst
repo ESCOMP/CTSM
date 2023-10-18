@@ -494,9 +494,7 @@ where
    :label: 9.38
 
    \begin{array}{l}  a = 1 \\
-
    b = -[2(g_{o} * 10^{-6} + d) + \frac{(g_{1}d)^{2}}{g_{b}*10^{-6}D_{l}}] \\
-
    c = (g_{o}*10^{-6})^{2} + [2g_{o}*10^{-6} + d (1-\frac{g_{1}^{2}} {D_{l}})]d \end{array}
 
 and

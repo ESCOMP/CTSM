@@ -824,7 +824,6 @@ is from :ref:`Farouki (1981) <Farouki1981>`
    K_{e,\, i} \lambda _{sat,\, i} +\left(1-K_{e,\, i} \right)\lambda _{dry,\, i} &\qquad S_{r,\, i} > 1\times 10^{-7}  \\
    \lambda _{dry,\, i} &\qquad S_{r,\, i} \le 1\times 10^{-7}
    \end{array}\right\} &\qquad i=1,\ldots ,N_{levsoi}  \\
-
    \lambda _{i} =\lambda _{bedrock} &\qquad i=N_{levsoi} +1,\ldots N_{levgrnd}
    \end{array}
 
