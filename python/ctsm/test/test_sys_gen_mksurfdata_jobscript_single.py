@@ -48,12 +48,12 @@ class TestSysGenMkSurfJSSingle(unittest.TestCase):
         """
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
-    def createJS(self, nodes, tasks_per_node, options=[]):
+    def createJS(self, nodes, tasks_per_node, option_list=[]):
         """
         Create a JobScript by sending a list of options in
         """
-        if len(options) > 1:
-            sys.argv.extend(options)
+        if len(option_list) > 1:
+            sys.argv.extend(option_list)
         sys.argv.extend(
             [
                 "--number-of-nodes",
@@ -73,13 +73,29 @@ class TestSysGenMkSurfJSSingle(unittest.TestCase):
         # pylint: disable=no-self-use
         self.createJS(nodes="4", tasks_per_node="12")
 
+    def test_casper_jobscript_single(self):
+        """
+        Test that a standard simple namelist works for casper
+        """
+        # pylint: disable=no-self-use
+        opt_list = ["--machine", "casper"]
+        self.createJS(nodes="4", tasks_per_node="12", option_list=opt_list)
+
+    def test_izumi_jobscript_single(self):
+        """
+        Test that a standard simple namelist works for asper
+        """
+        # pylint: disable=no-self-use
+        opt_list = ["--machine", "izumi"]
+        self.createJS(nodes="4", tasks_per_node="12", option_list=opt_list)
+
     def test_bad_bld_path(self):
         """
         Test aborts if the input bld-path does NOT exist
         """
         # pylint: disable=no-self-use
         with self.assertRaisesRegex(SystemExit, "Input Build path"):
-            self.createJS(nodes="4", tasks_per_node="12", options=["--bld-path", "zztop"])
+            self.createJS(nodes="4", tasks_per_node="12", option_list=["--bld-path", "zztop"])
 
 
 if __name__ == "__main__":
