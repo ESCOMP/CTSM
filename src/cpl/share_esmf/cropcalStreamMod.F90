@@ -38,6 +38,7 @@ module cropcalStreamMod
   character(len=CS), allocatable :: stream_varnames_sdate(:) ! used for both start and end dates
   character(len=CS), allocatable :: stream_varnames_cultivar_gdds(:)
   integer                     :: ncft               ! Number of crop functional types (excl. generic crops)
+  logical                     :: allow_invalid_swindow_inputs ! Fall back on paramfile sowing windows in cases of invalid values in stream_fldFileName_swindow_start and _end?
   character(len=CL)       :: stream_fldFileName_swindow_start ! sowing window start stream filename to read
   character(len=CL)       :: stream_fldFileName_swindow_end   ! sowing window end stream filename to read
   character(len=CL)       :: stream_fldFileName_cultivar_gdds ! cultivar growing degree-days stream filename to read
@@ -84,6 +85,7 @@ contains
          stream_year_first_cropcal,    &
          stream_year_last_cropcal,     &
          model_year_align_cropcal,     &
+         allow_invalid_swindow_inputs, &
          stream_fldFileName_swindow_start, &
          stream_fldFileName_swindow_end,   &
          stream_fldFileName_cultivar_gdds, &
@@ -93,6 +95,7 @@ contains
     stream_year_first_cropcal  = 1      ! first year in stream to use
     stream_year_last_cropcal   = 1      ! last  year in stream to use
     model_year_align_cropcal   = 1      ! align stream_year_first_cropcal with this model year
+    allow_invalid_swindow_inputs = .false.
     stream_meshfile_cropcal    = ''
     stream_fldFileName_swindow_start = ''
     stream_fldFileName_swindow_end   = ''
@@ -124,6 +127,7 @@ contains
     call shr_mpi_bcast(stream_year_first_cropcal  , mpicom)
     call shr_mpi_bcast(stream_year_last_cropcal   , mpicom)
     call shr_mpi_bcast(model_year_align_cropcal   , mpicom)
+    call shr_mpi_bcast(allow_invalid_swindow_inputs, mpicom)
     call shr_mpi_bcast(stream_fldFileName_swindow_start, mpicom)
     call shr_mpi_bcast(stream_fldFileName_swindow_end  , mpicom)
     call shr_mpi_bcast(stream_fldFileName_cultivar_gdds, mpicom)
@@ -135,6 +139,7 @@ contains
        write(iulog,'(a,i8)') '  stream_year_first_cropcal  = ',stream_year_first_cropcal
        write(iulog,'(a,i8)') '  stream_year_last_cropcal   = ',stream_year_last_cropcal
        write(iulog,'(a,i8)') '  model_year_align_cropcal   = ',model_year_align_cropcal
+       write(iulog,'(a,i8)') '  allow_invalid_swindow_inputs = ',allow_invalid_swindow_inputs
        write(iulog,'(a,a)' ) '  stream_fldFileName_swindow_start   = ',trim(stream_fldFileName_swindow_start)
        write(iulog,'(a,a)' ) '  stream_fldFileName_swindow_end     = ',trim(stream_fldFileName_swindow_end)
        write(iulog,'(a,a)' ) '  stream_fldFileName_cultivar_gdds   = ',trim(stream_fldFileName_cultivar_gdds)
@@ -360,7 +365,7 @@ contains
           ! So an explicit loop is required here
           do g = 1,lsize
 
-             ! If read-in value is invalid, allow_unprescribed_planting in CropPhenology()
+             ! If read-in value is invalid, set to -1. Will be handled later in this subroutine.
              if (dataptr1d_swindow_start(g) <= 0 .or. dataptr1d_swindow_start(g) > dayspyr &
                  .or. dataptr1d_swindow_end(g) <= 0 .or. dataptr1d_swindow_end(g) > dayspyr) then
                 dataptr1d_swindow_start(g) = -1
@@ -398,10 +403,18 @@ contains
            end if
        end if
 
-       ! Fail if a sowing window start date is prescribed without an end date (or vice versa)
-       if (any((starts >= 1 .and. ends < 1) .or. (starts < 1 .and. ends >= 1))) then
-           write(iulog, *) 'Every prescribed sowing window start date must have a corresponding end date.'
-           call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       ! Handle invalid sowing window values
+       if (any(starts < 1 .or. ends < 1)) then
+           ! Fail if not allowing fallback to paramfile sowing windows
+           if ((.not. allow_invalid_swindow_inputs) .and. any(all(starts < 1, dim=2))) then
+               write(iulog, *) 'At least one crop in one gridcell has invalid prescribed sowing window start date(s). To ignore and fall back to paramfile sowing windows, set allow_invalid_swindow_inputs to .true.'
+               call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+           ! Fail if a sowing window start date is prescribed without an end date (or vice versa)
+           else if (any((starts >= 1 .and. ends < 1) .or. (starts < 1 .and. ends >= 1))) then
+               write(iulog, *) 'Every prescribed sowing window start date must have a corresponding end date.'
+               call ESMF_Finalize(endflag=ESMF_END_ABORT)
+           end if
        end if
 
     end if ! use_cropcal_rx_swindows
