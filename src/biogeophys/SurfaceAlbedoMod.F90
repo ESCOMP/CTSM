@@ -259,7 +259,7 @@ contains
     use shr_orb_mod
     use clm_time_manager   , only : get_nstep
     use abortutils         , only : endrun
-    use clm_varctl         , only : use_subgrid_fluxes, snicar_aerforc_diag, use_fates
+    use clm_varctl         , only : use_subgrid_fluxes, use_snicar_frc, use_fates
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
 
     ! !ARGUMENTS:
@@ -571,7 +571,7 @@ contains
 
     ! If radiative forcing is being calculated, first estimate clean-snow albedo
 
-    if (snicar_aerforc_diag) then
+    if (use_snicar_frc) then
        ! 1. BC input array:
        !  set dust and (optionally) OC concentrations, so BC_FRC=[(BC+OC+dust)-(OC+dust)]
        mss_cnc_aer_in_frc_bc(bounds%begc:bounds%endc,:,5) = mss_cnc_dst1(bounds%begc:bounds%endc,:)
@@ -761,7 +761,7 @@ contains
              albgri(c,ib) = albsoi(c,ib)*(1._r8-frac_sno(c)) + albsni(c,ib)*frac_sno(c)
 
              ! albedos for radiative forcing calculations:
-             if (snicar_aerforc_diag) then
+             if (use_snicar_frc) then
                 ! BC forcing albedo
                 albgrd_bc(c,ib) = albsod(c,ib)*(1.-frac_sno(c)) + albsnd_bc(c,ib)*frac_sno(c)
                 albgri_bc(c,ib) = albsoi(c,ib)*(1.-frac_sno(c)) + albsni_bc(c,ib)*frac_sno(c)

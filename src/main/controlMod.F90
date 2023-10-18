@@ -283,14 +283,14 @@ contains
     namelist /clm_inparm/ &
          use_lch4, use_nitrif_denitrif, use_extralakelayers, &
          use_vichydro, use_cn, use_cndv, use_crop, use_fertilizer, &
-         use_grainproduct, use_vancouver, use_mexicocity, use_noio, &
+         use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
          use_nguardrail
 
     ! SNICAR
     namelist /clm_inparm/ &
          snicar_numrad_snw, snicar_solarspec, snicar_dust_optics, &
          snicar_use_aerosol, snicar_snw_shape, snicar_snobc_intmix, &
-         snicar_snodst_intmix, snicar_aerforc_diag, do_sno_oc
+         snicar_snodst_intmix, do_sno_oc
 
     ! ----------------------------------------------------------------------
     ! Default values
@@ -694,7 +694,7 @@ contains
     call mpi_bcast (use_fertilizer, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_grainproduct, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (o3_veg_stress_method, len(o3_veg_stress_method), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (snicar_aerforc_diag, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_snicar_frc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vancouver, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_mexicocity, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_noio, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -954,7 +954,7 @@ contains
     write(iulog,*) '    use_fertilizer = ', use_fertilizer
     write(iulog,*) '    use_grainproduct = ', use_grainproduct
     write(iulog,*) '    o3_veg_stress_method = ', o3_veg_stress_method
-    write(iulog,*) '    snicar_aerforc_diag = ', snicar_aerforc_diag
+    write(iulog,*) '    use_snicar_frc = ', use_snicar_frc
     write(iulog,*) '    snicar_use_aerosol = ',snicar_use_aerosol
     write(iulog,*) '    use_vancouver = ', use_vancouver
     write(iulog,*) '    use_mexicocity = ', use_mexicocity

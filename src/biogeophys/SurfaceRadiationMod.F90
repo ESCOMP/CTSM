@@ -7,7 +7,7 @@ module SurfaceRadiationMod
   ! !USES:
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
-  use clm_varctl        , only : snicar_aerforc_diag, use_fates
+  use clm_varctl        , only : use_snicar_frc, use_fates
   use decompMod         , only : bounds_type, subgrid_level_column
   use atm2lndType       , only : atm2lnd_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
@@ -173,7 +173,7 @@ contains
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
 
-    if (snicar_aerforc_diag) then
+    if (use_snicar_frc) then
        this%sfc_frc_aer_patch(begp:endp) = spval
        call hist_addfld1d (fname='SNOAERFRCL', units='W/m^2', &
             avgflag='A', long_name='surface forcing of all aerosols in snow (land) ', &
@@ -477,7 +477,7 @@ contains
      use clm_varpar       , only : numrad, nlevsno
      use clm_varcon       , only : spval
      use landunit_varcon  , only : istsoil, istcrop 
-     use clm_varctl       , only : use_subgrid_fluxes, snicar_aerforc_diag, iulog, use_SSRE, do_sno_oc
+     use clm_varctl       , only : use_subgrid_fluxes, use_snicar_frc, iulog, use_SSRE, do_sno_oc
      use clm_time_manager , only : get_step_size_real, is_near_local_noon
      use abortutils       , only : endrun
      !
@@ -719,7 +719,7 @@ contains
                 sabg_soil(p) = sabg(p)
              endif
 
-             if (snicar_aerforc_diag) then
+             if (use_snicar_frc) then
                 ! Solar radiation absorbed by ground surface without BC
                 absrad_bc = trd(p,ib)*(1._r8-albgrd_bc(c,ib)) + tri(p,ib)*(1._r8-albgri_bc(c,ib))
                 sabg_bc(p) = sabg_bc(p) + absrad_bc
@@ -849,7 +849,7 @@ contains
              sabg_pen(p) = sabg(p) - sabg_lyr(p, snl(c)+1)
           end if
 
-          if (snicar_aerforc_diag) then
+          if (use_snicar_frc) then
 
              ! BC aerosol forcing (patch-level):
              sfc_frc_bc(p) = sabg(p) - sabg_bc(p)

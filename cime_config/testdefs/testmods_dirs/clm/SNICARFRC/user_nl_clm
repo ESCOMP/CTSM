@@ -1,1 +1,1 @@
- snicar_aerforc_diag = .true.
+ use_snicar_frc = .true.

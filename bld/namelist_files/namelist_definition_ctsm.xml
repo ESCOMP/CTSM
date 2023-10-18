@@ -1198,7 +1198,7 @@ DependsOnLatAndVeg - Arctic vegetation depends on latitude as above, but tempera
 (only used when CN is on)
 </entry>
 
-<entry id="snicar_aerforc_diag" type="logical" category="physics"
+<entry id="use_snicar_frc" type="logical" category="physics"
        group="clm_inparm" value=".false.">
 Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) albedo forcing diagnostics for each aerosol species
 </entry>

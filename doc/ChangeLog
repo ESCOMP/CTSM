@@ -74,7 +74,7 @@ Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
    activate bc-snow and dust-snow internal mixing
 
  do_sno_oc, default .false., already appeared in previous code but in caps
- snicar_aerforc_diag, default .false., existed before as use_snicar_frc
+ use_snicar_frc, default .false., existed before
  fsnowoptics now points to an updated 5-band file and gives the option for a
    480-band file
 
