@@ -238,7 +238,7 @@ module CLMFatesInterfaceMod
       procedure, public  :: wrap_hydraulics_drive
       procedure, public  :: WrapUpdateFatesRmean
       procedure, public  :: wrap_WoodProducts
-      procedure, public  :: WrapGlobalSeedDispersal
+      procedure, public  :: WrapSeedGlobal
       procedure, public  :: WrapUpdateFatesSeedInOut
       procedure, public  :: UpdateCLitterFluxes
       procedure, public  :: UpdateNLitterFluxes
@@ -1061,7 +1061,7 @@ module CLMFatesInterfaceMod
       call UnPackNutrientAquisitionBCs(this%fates(nc)%sites, this%fates(nc)%bc_in)
 
       ! Distribute any seeds from neighboring gridcells into the current gridcell
-      ! Global seed availability array populated by WrapGlobalSeedDispersal call
+      ! Global seed availability array populated by WrapSeedGlobal call
       if (fates_seeddisp_cadence /= fates_dispersal_cadence_none) then
          call this%WrapUpdateFatesSeedInOut(bounds_clump)
       end if
@@ -1296,6 +1296,7 @@ module CLMFatesInterfaceMod
      ! is this being called during a read from restart sequence (if so then use the restarted fates
      ! snow depth variable rather than the CLM variable).
      logical                 , intent(in)           :: is_initing_from_restart
+
      integer :: npatch  ! number of patches in each site
      integer :: ifp     ! index FATES patch
      integer :: p       ! HLM patch index
@@ -1303,6 +1304,7 @@ module CLMFatesInterfaceMod
      integer :: c       ! column index
      integer :: g       ! grid cell
 
+     logical :: dispersal_flag ! local flag to pass to the inside of the site loop
      real(r8) :: areacheck
      call t_startf('fates_wrap_update_hlmfates_dyn')
 
@@ -1399,9 +1401,13 @@ module CLMFatesInterfaceMod
        patch%is_bareground(bounds_clump%begp:bounds_clump%endp) = .false.
        patch%wt_ed(bounds_clump%begp:bounds_clump%endp)         = 0.0_r8
 
-       ! Zero the outgoing_local seed values prior to populating with the most recent seed update
        if (fates_seeddisp_cadence /= fates_dispersal_cadence_none) then
+          ! Zero the outgoing_local seed values prior to populating with the most recent seed update
           this%fates_seed%outgoing_local(:,:) = 0._r8
+
+          ! check the dispersal time once outside of the loop and set a flag to pass in
+          dispersal_flag = .false.
+          if (IsItDispersalTime()) dispersal_flag = .true.
        end if
 
       do s = 1,this%fates(nc)%nsites
@@ -1411,8 +1417,7 @@ module CLMFatesInterfaceMod
 
           ! Accumulate seeds from sites to the gridcell local outgoing buffer
           if (fates_seeddisp_cadence /= fates_dispersal_cadence_none) then
-             if (IsItDispersalTime()) this%fates_seed%outgoing_local(:,g) = &
-                                      this%fates(nc)%sites(s)%seed_out(:)
+             if (dispersal_flag) this%fates_seed%outgoing_local(:,g) = this%fates(nc)%sites(s)%seed_out(:)
           end if
 
           ! Other modules may have AI's we only flush values
@@ -1850,7 +1855,7 @@ module CLMFatesInterfaceMod
 
          ! Disperse seeds
          if (fates_seeddisp_cadence /= fates_dispersal_cadence_none) then
-            call this%WrapGlobalSeedDispersal(is_restart_flag=.true.)
+            call this%WrapSeedGlobal(is_restart_flag=.true.)
          end if
 
       end if
@@ -2643,7 +2648,7 @@ module CLMFatesInterfaceMod
 
  ! ======================================================================================
 
- subroutine WrapGlobalSeedDispersal(this,is_restart_flag)
+ subroutine WrapSeedGlobal(this,is_restart_flag)
 
    ! Call mpi procedure to provide the global seed output distribution array to every gridcell.
    ! This could be conducted with a more sophisticated halo-type structure or distributed graph.
@@ -2667,7 +2672,7 @@ module CLMFatesInterfaceMod
 
    type (neighbor_type),  pointer :: neighbor
 
-   ! If WrapGlobalSeedDispersal is being called at the end a fates restart call,
+   ! If WrapSeedGlobal is being called at the end a fates restart call,
    ! pass .false. to the set_dispersed_flag to avoid updating the 
    ! global dispersal date
    set_restart_flag = .true.
@@ -2716,13 +2721,13 @@ module CLMFatesInterfaceMod
    endif
    call t_stopf('fates-seed-mpi_reduce')
 
- end subroutine WrapGlobalSeedDispersal
+ end subroutine WrapSeedGlobal
 
  ! ======================================================================================
 
  subroutine WrapUpdateFatesSeedInOut(this,bounds_clump)
 
-    ! This subroutine passes the globally dispersed seed via WrapGlobalSeedDispersal, incoming_global
+    ! This subroutine passes the globally dispersed seed via WrapSeedGlobal, incoming_global
     ! to the fates local process seed_in site object.  It also resets the fates seed_out
     ! in preparation for fates to update the seeds being dispersed out.
 
