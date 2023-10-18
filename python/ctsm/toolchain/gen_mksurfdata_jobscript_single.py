@@ -45,6 +45,7 @@ def get_parser():
         help="""number of cheyenne nodes requested (required)""",
         action="store",
         dest="number_of_nodes",
+        type=int,
         required=True,
     )
     parser.add_argument(
@@ -59,6 +60,7 @@ def get_parser():
         help="""number of mpi tasks per node for cheyenne requested (required)""",
         action="store",
         dest="tasks_per_node",
+        type=int,
         required=True,
     )
     parser.add_argument(
@@ -103,7 +105,11 @@ def main():
     namelist_file = args.namelist_file
     jobscript_file = args.jobscript_file
     number_of_nodes = args.number_of_nodes
+    if number_of_nodes < 1:
+        abort("Input argument --number_of_nodes is zero or negative and needs to be positive")
     tasks_per_node = args.tasks_per_node
+    if tasks_per_node < 1:
+        abort("Input argument --tasks_per_node is zero or negative and needs to be positive")
     machine = args.machine
     account = args.account
 

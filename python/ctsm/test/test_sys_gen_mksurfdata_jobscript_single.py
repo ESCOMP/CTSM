@@ -97,6 +97,28 @@ class TestSysGenMkSurfJSSingle(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "Input Build path"):
             self.createJS(nodes="4", tasks_per_node="12", option_list=["--bld-path", "zztop"])
 
+    def test_neg_nodes(self):
+        """
+        Test aborts if the input node count is negative
+        """
+        # pylint: disable=no-self-use
+        with self.assertRaisesRegex(
+            SystemExit,
+            "Input argument --number_of_nodes is zero or negative and needs to be positive",
+        ):
+            self.createJS(nodes="-4", tasks_per_node="12")
+
+    def test_neg_tasks(self):
+        """
+        Test aborts if the input tasks_per_node is zero or negative
+        """
+        # pylint: disable=no-self-use
+        with self.assertRaisesRegex(
+            SystemExit,
+            "Input argument --tasks_per_node is zero or negative and needs to be positive",
+        ):
+            self.createJS(nodes="4", tasks_per_node="0")
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
