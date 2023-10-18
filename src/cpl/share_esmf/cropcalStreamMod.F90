@@ -305,6 +305,7 @@ contains
     use CropType        , only : crop_type
     use PatchType       , only : patch
     use clm_time_manager, only : get_curr_days_per_year
+    use pftconMod       , only : pftname
     use dshr_methods_mod , only : dshr_fldbun_getfldptr
     !
     ! !ARGUMENTS:
@@ -408,6 +409,16 @@ contains
            ! Fail if not allowing fallback to paramfile sowing windows
            if ((.not. allow_invalid_swindow_inputs) .and. any(all(starts < 1, dim=2) .and. patch%wtgcell > 0._r8 .and. patch%itype >= npcropmin)) then
                write(iulog, *) 'At least one crop in one gridcell has invalid prescribed sowing window start date(s). To ignore and fall back to paramfile sowing windows, set allow_invalid_swindow_inputs to .true.'
+               write(iulog, *) 'Affected crops:'
+               do ivt = npcropmin, mxpft
+                   do fp = 1, num_pcropp
+                       p = filter_pcropp(fp)
+                       if (ivt == patch%itype(p) .and. patch%wtgcell(p) > 0._r8 .and. all(starts(p,:) < 1)) then
+                           write(iulog, *) '    ',pftname(ivt),'  (',ivt,')'
+                           exit  ! Stop looking for patches of this type
+                       end if
+                   end do
+               end do
                call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
            ! Fail if a sowing window start date is prescribed without an end date (or vice versa)
