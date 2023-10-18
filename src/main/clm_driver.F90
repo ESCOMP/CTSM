@@ -1271,10 +1271,10 @@ contains
 
 
     ! Pass fates seed dispersal information to neighboring gridcells across
-    ! all MPI tasks.  Note that WrapSeedGlobal calls an MPI collective routine
-    ! and as such WrapSeedGlobal should be called outside of OMP threaded loop regions
+    ! all MPI tasks.  Note that WrapGlobalSeedDispersal calls an MPI collective routine
+    ! and as such WrapGlobalSeedDispersal should be called outside of OMP threaded loop regions
     if (fates_seeddisp_cadence /= fates_dispersal_cadence_none) then
-       if (use_fates .and. is_beg_curr_day()) call clm_fates%WrapSeedGlobal()
+       if (use_fates .and. is_beg_curr_day()) call clm_fates%WrapGlobalSeedDispersal()
     end if
 
     ! ============================================================================

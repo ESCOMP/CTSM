@@ -260,7 +260,7 @@ module clm_varctl
 
   ! These are INTERNAL to the FATES module
 
-  integer, public            :: fates_seeddisp_cadence = -9             ! 0 => no seed dispersal
+  integer, public            :: fates_seeddisp_cadence = iundef         ! 0 => no seed dispersal
                                                                         ! 1, 2, 3 => daily, monthly, or yearly dispersal
   integer, public            :: fates_parteh_mode = -9                  ! 1 => carbon only
                                                                         ! 2 => C+N+P (not enabled yet)
