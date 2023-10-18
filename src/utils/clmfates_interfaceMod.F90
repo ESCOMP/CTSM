@@ -2671,54 +2671,57 @@ module CLMFatesInterfaceMod
                                ! if optional is_restart_flag is true
 
    type (neighbor_type),  pointer :: neighbor
+   ! This should only be run once per day
+   if(is_beg_curr_day()) then
 
-   ! If WrapSeedGlobal is being called at the end a fates restart call,
-   ! pass .false. to the set_dispersed_flag to avoid updating the 
-   ! global dispersal date
-   set_restart_flag = .true.
-   if (present(is_restart_flag)) then
-      if (is_restart_flag) set_restart_flag = .false.
-   end if
-
-   call t_startf('fates-seed-mpi_reduce')
-
-   if (IsItDispersalTime(setdispersedflag=set_restart_flag)) then
-
-      ! Re-initialize incoming seed buffer for this time step
-      this%fates_seed%incoming_global(:,:) = 0._r8
-      this%fates_seed%outgoing_global(:,:) = 0._r8
-
-      ! Distribute outgoing seed data across all MPI tasks
-      ! This method of grid cell communications is inefficient in that it creates global information
-      ! across all processes.  A future update should communicate to the minimum set of neighbors.
-      call MPI_Allgatherv(this%fates_seed%outgoing_local, procinfo%ncells*numpft_fates, MPI_REAL8, &
-                          this%fates_seed%outgoing_global, this%fates_seed%ncells_array*numpft_fates, this%fates_seed%begg_array*numpft_fates, &
-                          MPI_REAL8, mpicom, ier)
-      if (ier /= 0) then
-         call endrun(msg='clmfates interface error: MPI_Allgatherv failed'//&
-              errMsg(sourcefile, __LINE__))
+      ! If WrapGlobalSeedDispersal is being called at the end a fates restart call,
+      ! pass .false. to the set_dispersed_flag to avoid updating the 
+      ! global dispersal date
+      set_restart_flag = .true.
+      if (present(is_restart_flag)) then
+         if (is_restart_flag) set_restart_flag = .false.
       end if
 
-      ! zero outgoing local for all gridcells outside threaded region now that we've passed them out
-      this%fates_seed%outgoing_local(:,:) = 0._r8
+      call t_startf('fates-seed-mpi_reduce')
 
-      ! Calculate the current gridcell incoming seed for each gridcell index
-      ! This should be conducted outside of a threaded region to provide access to
-      ! the neighbor%gindex which might not be available in via the clumped index
-      call get_proc_global(ng=numg)
-      do g = 1, numg
-         neighbor => lneighbors(g)%first_neighbor
-         do while (associated(neighbor))
-            ! This also applies the same neighborhood distribution scheme to all pfts
-            ! This needs to have a per pft density probability value
-            this%fates_seed%incoming_global(:,g) = this%fates_seed%incoming_global(:,g) + &
-                                                 this%fates_seed%outgoing_global(:,neighbor%gindex) * &
-                                                 neighbor%density_prob(:) / lneighbors(g)%neighbor_count
-            neighbor => neighbor%next_neighbor
+      if (IsItDispersalTime(setdispersedflag=set_restart_flag)) then
+
+         ! Re-initialize incoming seed buffer for this time step
+         this%fates_seed%incoming_global(:,:) = 0._r8
+         this%fates_seed%outgoing_global(:,:) = 0._r8
+
+         ! Distribute outgoing seed data across all MPI tasks
+         ! This method of grid cell communications is inefficient in that it creates global information
+         ! across all processes.  A future update should communicate to the minimum set of neighbors.
+         call MPI_Allgatherv(this%fates_seed%outgoing_local, procinfo%ncells*numpft_fates, MPI_REAL8, &
+                             this%fates_seed%outgoing_global, this%fates_seed%ncells_array*numpft_fates, this%fates_seed%begg_array*numpft_fates, &
+                             MPI_REAL8, mpicom, ier)
+         if (ier /= 0) then
+            call endrun(msg='clmfates interface error: MPI_Allgatherv failed'//&
+                 errMsg(sourcefile, __LINE__))
+         end if
+
+         ! zero outgoing local for all gridcells outside threaded region now that we've passed them out
+         this%fates_seed%outgoing_local(:,:) = 0._r8
+
+         ! Calculate the current gridcell incoming seed for each gridcell index
+         ! This should be conducted outside of a threaded region to provide access to
+         ! the neighbor%gindex which might not be available in via the clumped index
+         call get_proc_global(ng=numg)
+         do g = 1, numg
+            neighbor => lneighbors(g)%first_neighbor
+            do while (associated(neighbor))
+               ! This also applies the same neighborhood distribution scheme to all pfts
+               ! This needs to have a per pft density probability value
+               this%fates_seed%incoming_global(:,g) = this%fates_seed%incoming_global(:,g) + &
+                                                    this%fates_seed%outgoing_global(:,neighbor%gindex) * &
+                                                    neighbor%density_prob(:) / lneighbors(g)%neighbor_count
+               neighbor => neighbor%next_neighbor
+            end do
          end do
-      end do
-
-   endif
+      end if
+   end if
+  
    call t_stopf('fates-seed-mpi_reduce')
 
  end subroutine WrapSeedGlobal
@@ -2744,21 +2747,20 @@ module CLMFatesInterfaceMod
 
     nc = bounds_clump%clump_index
 
-    do s = 1, this%fates(nc)%nsites
-       c = this%f2hmap(nc)%fcolumn(s)
-       g = col%gridcell(c)
+    ! Check that it is the beginning of the current dispersal time step
+    if (IsItDispersalTime()) then
+       do s = 1, this%fates(nc)%nsites
+          c = this%f2hmap(nc)%fcolumn(s)
+          g = col%gridcell(c)
 
-       ! Check that it is the beginning of the current dispersal time step
-       if (IsItDispersalTime()) then
-          ! assuming equal area for all sites, seed_id_global in [kg/grid/day], seed_in in [kg/site/day]
-          this%fates(nc)%sites(s)%seed_in(:) = this%fates_seed%incoming_global(:,g)
-          this%fates(nc)%sites(s)%seed_out(:) = 0._r8  ! reset seed_out
-       else
-          ! if it is not the dispersing time, pass in zero
-          ! if this is a restart, then skip this entirely
-          this%fates(nc)%sites(s)%seed_in(:) = 0._r8
-       end if
-    end do
+             ! assuming equal area for all sites, seed_id_global in [kg/grid/day], seed_in in [kg/site/day]
+             this%fates(nc)%sites(s)%seed_in(:) = this%fates_seed%incoming_global(:,g)
+             this%fates(nc)%sites(s)%seed_out(:) = 0._r8  ! reset seed_out
+       end do
+    else
+       ! if it is not the dispersing time, pass in zero
+       this%fates(nc)%sites(s)%seed_in(:) = 0._r8
+    end if
 
     call t_stopf('fates-seed-disperse')
 
