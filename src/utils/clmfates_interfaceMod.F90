@@ -238,7 +238,7 @@ module CLMFatesInterfaceMod
       procedure, public  :: wrap_hydraulics_drive
       procedure, public  :: WrapUpdateFatesRmean
       procedure, public  :: wrap_WoodProducts
-      procedure, public  :: WrapSeedGlobal
+      procedure, public  :: WrapGlobalSeedDispersal
       procedure, public  :: WrapUpdateFatesSeedInOut
       procedure, public  :: UpdateCLitterFluxes
       procedure, public  :: UpdateNLitterFluxes
@@ -1061,7 +1061,7 @@ module CLMFatesInterfaceMod
       call UnPackNutrientAquisitionBCs(this%fates(nc)%sites, this%fates(nc)%bc_in)
 
       ! Distribute any seeds from neighboring gridcells into the current gridcell
-      ! Global seed availability array populated by WrapSeedGlobal call
+      ! Global seed availability array populated by WrapGlobalSeedDispersal call
       if (fates_seeddisp_cadence /= fates_dispersal_cadence_none) then
          call this%WrapUpdateFatesSeedInOut(bounds_clump)
       end if
@@ -1855,7 +1855,7 @@ module CLMFatesInterfaceMod
 
          ! Disperse seeds
          if (fates_seeddisp_cadence /= fates_dispersal_cadence_none) then
-            call this%WrapSeedGlobal(is_restart_flag=.true.)
+            call this%WrapGlobalSeedDispersal(is_restart_flag=.true.)
          end if
 
       end if
@@ -2648,7 +2648,7 @@ module CLMFatesInterfaceMod
 
  ! ======================================================================================
 
- subroutine WrapSeedGlobal(this,is_restart_flag)
+ subroutine WrapGlobalSeedDispersal(this,is_restart_flag)
 
    ! Call mpi procedure to provide the global seed output distribution array to every gridcell.
    ! This could be conducted with a more sophisticated halo-type structure or distributed graph.
@@ -2724,13 +2724,13 @@ module CLMFatesInterfaceMod
   
    call t_stopf('fates-seed-mpi_reduce')
 
- end subroutine WrapSeedGlobal
+ end subroutine WrapGlobalSeedDispersal
 
  ! ======================================================================================
 
  subroutine WrapUpdateFatesSeedInOut(this,bounds_clump)
 
-    ! This subroutine passes the globally dispersed seed via WrapSeedGlobal, incoming_global
+    ! This subroutine passes the globally dispersed seed via WrapGlobalSeedDispersal, incoming_global
     ! to the fates local process seed_in site object.  It also resets the fates seed_out
     ! in preparation for fates to update the seeds being dispersed out.
 
