@@ -2677,7 +2677,6 @@ module CLMFatesInterfaceMod
 
    ! Check to see if we are not in a threaded region.  Fail the run if this returns true.
 #ifdef _OPENMP
-   write(iulog,*) 'omp check: ', omp_in_parallel()
    if (omp_in_parallel()) then
       call endrun(msg='clmfates interface error: MPI routine called within threaded region'//&
            errMsg(sourcefile, __LINE__))
