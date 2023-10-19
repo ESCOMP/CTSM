@@ -306,10 +306,6 @@ contains
          ulrad(p)  = 0._r8
          dhsdt_canopy(p) = 0._r8
          eflx_sh_stem(p) = 0._r8
-         z0mv(p)   = 0._r8
-         z0hv(p)   = 0._r8
-         z0qv(p)   = 0._r8
-
 
          ur(p)    = max(params_inst%wind_min,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
          dth(p)   = thm(p)-t_grnd(c)
