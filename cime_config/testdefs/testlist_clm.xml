@@ -53,6 +53,33 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="ERP_D_Ld9" grid="ne30np4.pg3" compset="I1850Clm51BgcCrop" testmods="clm/clm51cam6lndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="cesm3_dev"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution</option>
+    </options>
+  </test>
+  <test name="ERI_D" grid="ne30np4.pg3" compset="I1850Clm51BgcCrop" testmods="clm/clm51cam6lndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="cesm3_dev"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">CESM3 development Exact restart test for all startup types at the standard coupled resolution</option>
+    </options>
+  </test>
+  <test name="SMS_Lm1" grid="ne30np4.pg3" compset="I1850Clm51BgcCrop" testmods="clm/clm51cam6lndTuningMode">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="cesm3_dev"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">CESM3 development test at the standard coupled resolution for a month</option>
+    </options>
+  </test>
   <test name="SMS_Ln9" grid="C96_t061" compset="I2000Clm50SpRs" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
