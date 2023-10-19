@@ -461,7 +461,7 @@ Gotangco Castillo C., Levis S., and Thornton P. 2012. Evaluation of the new CNDV
 
 .. _Grahametal1999:
 
-Graham, S.T., Famiglietti, J.S., and Maidment, D.R. 1999. Five-minute, 1/2º, and 1º data sets of continental watersheds and river networks for use in regional and global hydrologic and climate system modeling studies. Water Resour. Res. 35:583-587.
+Graham, S.T., Famiglietti, J.S., and Maidment, D.R. 1999. Five-minute, 1/2°, and 1° data sets of continental watersheds and river networks for use in regional and global hydrologic and climate system modeling studies. Water Resour. Res. 35:583-587.
 
 .. _Gravenetal2017:
 

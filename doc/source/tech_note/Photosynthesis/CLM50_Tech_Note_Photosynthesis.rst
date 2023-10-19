@@ -157,7 +157,7 @@ The model uses co-limitation as described by :ref:`Collatz et al. (1991, 1992) <
 
 Values are :math:`\Theta _{cj} =0.98` and :math:`\Theta _{ip} =0.95` for C\ :sub:`3` plants; and :math:`\Theta _{cj} =0.80`\ and :math:`\Theta _{ip} =0.95` for C\ :sub:`4` plants. :math:`A_{i}` is the intermediate co-limited photosynthesis. :math:`A_{n} =A-R_{d}`.
 
-The parameters :math:`K_{c}`, :math:`K_{o}`, and :math:`\Gamma` depend on temperature. Values at 25 :sup:`o` \ C are :math:`K_{c25} ={\rm 4}0{\rm 4}.{\rm 9}\times 10^{-6} P_{atm}`, :math:`K_{o25} =278.4\times 10^{-3} P_{atm}`, and :math:`\Gamma _{25} {\rm =42}.75\times 10^{-6} P_{atm}`. :math:`V_{c\max }`, :math:`J_{\max }`, :math:`T_{p}`, :math:`k_{p}`, and :math:`R_{d}` also vary with temperature.
+The parameters :math:`K_{c}`, :math:`K_{o}`, and :math:`\Gamma` depend on temperature. Values at 25 ° C are :math:`K_{c25} ={\rm 4}0{\rm 4}.{\rm 9}\times 10^{-6} P_{atm}`, :math:`K_{o25} =278.4\times 10^{-3} P_{atm}`, and :math:`\Gamma _{25} {\rm =42}.75\times 10^{-6} P_{atm}`. :math:`V_{c\max }`, :math:`J_{\max }`, :math:`T_{p}`, :math:`k_{p}`, and :math:`R_{d}` also vary with temperature.
 
 :math:`J_{\max 25}`  at 25 :sup:`\o`\ C: is calculated by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
 
@@ -246,14 +246,14 @@ In the model, acclimation is implemented as in :ref:`Kattge and Knorr (2007) <Ka
 
    \begin{array}{l} {\Delta S=668.39-1.07(T_{10} -T_{f} )\qquad \qquad {\rm for\; }V_{c\max } } \\ {\Delta S=659.70-0.75(T_{10} -T_{f} )\qquad \qquad {\rm for\; }J_{\max } } \end{array}
 
-The effect is to cause the temperature optimum of :math:`V_{c\max }` and :math:`J_{\max }` to increase with warmer temperatures. Additionally, the ratio :math:`J_{\max 25} /V_{c\max 25}` at 25 :sup:`o`\ C decreases with growth temperature as
+The effect is to cause the temperature optimum of :math:`V_{c\max }` and :math:`J_{\max }` to increase with warmer temperatures. Additionally, the ratio :math:`J_{\max 25} /V_{c\max 25}` at 25 ° C decreases with growth temperature as
 
 .. math::
    :label: 9.16
 
    J_{\max 25} /V_{c\max 25} =2.59-0.035(T_{10} -T_{f} ).
 
-In these acclimation functions, :math:`T_{10}` is the 10-day mean air temperature (K) and :math:`T_{f}` is the freezing point of water (K). For lack of data, :math:`T_{p}` acclimates similar to :math:`V_{c\max }`. Acclimation is restricted over the temperature range :math:`T_{10} -T_{f} \ge 11`\ :sup:`o`\ C and :math:`T_{10} -T_{f} \le 35`\ :sup:`o`\ C.
+In these acclimation functions, :math:`T_{10}` is the 10-day mean air temperature (K) and :math:`T_{f}` is the freezing point of water (K). For lack of data, :math:`T_{p}` acclimates similar to :math:`V_{c\max }`. Acclimation is restricted over the temperature range :math:`T_{10} -T_{f} \ge 11`° C and :math:`T_{10} -T_{f} \le 35`° C.
 
 .. _Canopy scaling:
 

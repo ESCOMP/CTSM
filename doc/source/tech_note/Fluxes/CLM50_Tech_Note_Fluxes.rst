@@ -1154,7 +1154,7 @@ The numerical solution for vegetation temperature and the fluxes of momentum, se
 
 #. If the latent heat flux has changed sign from the latent heat flux computed at the previous iteration (:math:`\lambda E_{v} ^{n+1} \times \lambda E_{v} ^{n} <0`), the latent heat flux is constrained to be 10% of the computed value. The difference between the constrained and computed value (:math:`\Delta _{1} =0.1\lambda E_{v} ^{n+1} -\lambda E_{v} ^{n+1}` ) is added to the sensible heat flux later.
 
-#. Change in vegetation temperature :math:`\Delta T_{v}` (:eq:`5.129` ) and update the vegetation temperature as :math:`T_{v}^{n+1} =T_{v}^{n} +\Delta T_{v}`. :math:`T_{v}` is constrained to change by no more than 1ºK in one iteration. If this limit is exceeded, the energy error is
+#. Change in vegetation temperature :math:`\Delta T_{v}` (:eq:`5.129` ) and update the vegetation temperature as :math:`T_{v}^{n+1} =T_{v}^{n} +\Delta T_{v}`. :math:`T_{v}` is constrained to change by no more than 1°K in one iteration. If this limit is exceeded, the energy error is
 
    .. math::
       :label: 5.138
@@ -1310,7 +1310,7 @@ The system balances energy as
 Saturation Vapor Pressure
 -----------------------------
 
-Saturation vapor pressure :math:`e_{sat}^{T}` (Pa) and its derivative :math:`\frac{de_{sat}^{T} }{dT}`, as a function of temperature :math:`T` (ºC), are calculated from the eighth-order polynomial fits of :ref:`Flatau et al. (1992) <Flatauetal1992>`
+Saturation vapor pressure :math:`e_{sat}^{T}` (Pa) and its derivative :math:`\frac{de_{sat}^{T} }{dT}`, as a function of temperature :math:`T` (°C), are calculated from the eighth-order polynomial fits of :ref:`Flatau et al. (1992) <Flatauetal1992>`
 
 .. math::
    :label: 5.154
