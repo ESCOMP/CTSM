@@ -6,9 +6,7 @@
  Running Single Point Configurations
 ******************************************
 
-In addition to ``PTS_MODE``, CLM supports running using single-point or regional datasets that are customized to a particular region.
-CLM supports a a small number of out-of-the-box single-point and regional datasets.
-However, users can create their own dataset.
+In addition to ``PTS_MODE``, CLM supports running using single-point or regional datasets that are customized to a particular region. CLM supports a a small number of out-of-the-box single-point and regional datasets. However, users can create their own dataset.
 
 To get the list of supported dataset resolutions do this:
 ::
@@ -67,16 +65,9 @@ Then setup, build and run normally.
 Using Supported Single-point Datasets that have their own Atmospheric Forcing
 ================================================================================
 
-Of the supported single-point datasets we have three that also have atmospheric forcing data that go with them: Mexico City (Mexico), Vancouver, (Canada, British Columbia), and ``urbanc_alpha`` (test data for an Urban inter-comparison project).
-Mexico city and Vancouver also have namelist options in the source code for them to work with modified urban data parameters that are particular to these locations.
-To turn on the atmospheric forcing for these datasets, you set the ``env_run.xml DATM_MODE`` variable to ``CLM1PT``, and then the atmospheric forcing datasets will be used for the point picked.
-If you use one of the compsets that has "I1Pt" in the name that will be set automatically.
+Of the supported single-point datasets we have three that also have atmospheric forcing data that go with them: Mexico City (Mexico), Vancouver, (Canada, British Columbia), and ``urbanc_alpha`` (test data for an Urban inter-comparison project). Mexico city and Vancouver also have namelist options in the source code for them to work with modified urban data parameters that are particular to these locations. To turn on the atmospheric forcing for these datasets, you set the ``env_run.xml DATM_MODE`` variable to ``CLM1PT``, and then the atmospheric forcing datasets will be used for the point picked. If you use one of the compsets that has "I1Pt" in the name that will be set automatically.
 
-When running with datasets that have their own atmospheric forcing you need to be careful to run over the period that data is available.
-If you have at least one year of forcing it will cycle over the available data over and over again no matter how long of a simulation you run.
-However, if you have less than a years worth of data (or if the start date doesn't start at the beginning of the year, or the end date doesn't end at the end of the year) then you won't be able to run over anything but the data extent.
-In this case you will need to carefully set the ``RUN_STARTDATE``, ``START_TOD`` and ``STOP_N/STOP_OPTION`` variables for your case to run over the entire time extent of your data.
-For the supported data points, these values are in the XML database and you can use the **queryDefaultNamelist.pl** script to query the values and set them for your case (they are set for the three urban test cases: Mexicocity, Vancouver, and urbanc_alpha).
+When running with datasets that have their own atmospheric forcing you need to be careful to run over the period that data is available. If you have at least one year of forcing it will cycle over the available data over and over again no matter how long of a simulation you run. However, if you have less than a years worth of data (or if the start date doesn't start at the beginning of the year, or the end date doesn't end at the end of the year) then you won't be able to run over anything but the data extent. In this case you will need to carefully set the ``RUN_STARTDATE``, ``START_TOD`` and ``STOP_N/STOP_OPTION`` variables for your case to run over the entire time extent of your data. For the supported data points, these values are in the XML database and you can use the **queryDefaultNamelist.pl** script to query the values and set them for your case (they are set for the three urban test cases: Mexicocity, Vancouver, and urbanc_alpha).
 
 In the example below we will show how to do this for the Vancouver, Canada point.
 
@@ -120,8 +111,7 @@ Example: Running CLM over the single-point of Vancouver Canada with supplied atm
 Creating your own single-point dataset
 ===================================================
 
-The following provides an example of setting up a case using ``CLM_USRDAT_NAME`` where you rename the files according to the ``CLM_USRDAT_NAME`` convention.
-We have an example of such datafiles in the repository for a specific region over Alaska (actually just a sub-set of the global f19 grid).
+The following provides an example of setting up a case using ``CLM_USRDAT_NAME`` where you rename the files according to the ``CLM_USRDAT_NAME`` convention. We have an example of such datafiles in the repository for a specific region over Alaska (actually just a sub-set of the global f19 grid).
 
 Example: Using CLM_USRDAT_NAME to run a simulation using user datasets for a specific region over Alaska
 -----------------------------------------------------------------------------------------------------------------------

@@ -6,14 +6,7 @@
 Adding PTCLMmkdata Site Data
 ============================
 
-The "sitegroupname" option to PTCLMmkdata looks for groups of sites in the files in the ``PTCLM_sitedata`` directory under the PTCLMmkdata directory.
-You can add new names available for this option including your own lists of sites, by adding more files in this directory.
-There are three files for each "sitegroupname": ``$SITEGROUP_sitedata.txt``, ``$SITEGROUP_soildata.txt`` and ``$SITEGROUP_pftdata.txt`` (where ``$SITEGROUP`` is the name that would be entered as "sitegroupname" to PTCLMmkdata).
-Each file needs to have the same list of sites, but gives different information: site data, PFT data, and soil data respectively.
-Although the site codes need to be the same between the three files, the files do NOT have to be in the same order.
-Each file has a one-line header that lists the contents of each column which are separated by commas.
-The first column for each of the files is the "site_code" which must be consistent between the three files.
-The site code can be any unique character string, but in general we use the AmeriFlux site code.
+The "sitegroupname" option to PTCLMmkdata looks for groups of sites in the files in the ``PTCLM_sitedata`` directory under the PTCLMmkdata directory. You can add new names available for this option including your own lists of sites, by adding more files in this directory. There are three files for each "sitegroupname": ``$SITEGROUP_sitedata.txt``, ``$SITEGROUP_soildata.txt`` and ``$SITEGROUP_pftdata.txt`` (where ``$SITEGROUP`` is the name that would be entered as "sitegroupname" to PTCLMmkdata). Each file needs to have the same list of sites, but gives different information: site data, PFT data, and soil data respectively. Although the site codes need to be the same between the three files, the files do NOT have to be in the same order. Each file has a one-line header that lists the contents of each column which are separated by commas. The first column for each of the files is the "site_code" which must be consistent between the three files. The site code can be any unique character string, but in general we use the AmeriFlux site code.
 
 Site data file:`` $SITEGROUP_sitedata.txt``): The header for this file is:
 ::
@@ -51,35 +44,21 @@ This file only requires a line for each year where a transition or harvest happe
 Converting AmeriFlux Data for use by PTCLMmkdata
 ------------------------------------------------
 
-AmeriFlux data comes in comma separated format and is available from:
-`http://public.ornl.gov/ameriflux/dataproducts.shtml <http://public.ornl.gov/ameriflux/dataproducts.shtml>`_. Before you download the data you need to agree to the usage terms.
+AmeriFlux data comes in comma separated format and is available from: `http://public.ornl.gov/ameriflux/dataproducts.shtml <http://public.ornl.gov/ameriflux/dataproducts.shtml>`_. Before you download the data you need to agree to the usage terms.
 
 Here is a copy of the usage terms from the web-site on June/13/2011.
 
-"The AmeriFlux data provided on this site are freely available and were furnished by individual AmeriFlux scientists who encourage their use.
-Please kindly inform the appropriate AmeriFlux scientist(s) of how you are using the data and of any publication plans.
-Please acknowledge the data source as a citation or in the acknowledgments if the data are not yet published.
-If the AmeriFlux Principal Investigators (PIs) feel that they should be acknowledged or offered participation as authors, they will let you know and we assume that an agreement on such matters will be reached before publishing and/or use of the data for publication.
-If your work directly competes with the PI's analysis they may ask that they have the opportunity to submit a manuscript before you submit one that uses unpublished data.
-In addition, when publishing, please acknowledge the agency that supported the research.
-Lastly, we kindly request that those publishing papers using AmeriFlux data provide preprints to the PIs providing the data and to the data archive at the Carbon Dioxide Information Analysis Center (CDIAC)."
+"The AmeriFlux data provided on this site are freely available and were furnished by individual AmeriFlux scientists who encourage their use. Please kindly inform the appropriate AmeriFlux scientist(s) of how you are using the data and of any publication plans. Please acknowledge the data source as a citation or in the acknowledgments if the data are not yet published. If the AmeriFlux Principal Investigators (PIs) feel that they should be acknowledged or offered participation as authors, they will let you know and we assume that an agreement on such matters will be reached before publishing and/or use of the data for publication. If your work directly competes with the PI's analysis they may ask that they have the opportunity to submit a manuscript before you submit one that uses unpublished data. In addition, when publishing, please acknowledge the agency that supported the research. Lastly, we kindly request that those publishing papers using AmeriFlux data provide preprints to the PIs providing the data and to the data archive at the Carbon Dioxide Information Analysis Center (CDIAC)."
 
 The above agreement applies to the "US-UMB" dataset imported into our repository as well, and Gil Bohrer is the PI on record for that dataset.
 
-The CESM can NOT handle missing data, so we recommend using the "Level 4" Gap filled datasets.
-The fields will also need to be renamed.
-The "WS" column becomes "WIND", "PREC" becomes "PRECmms", "RH" stays as "RH", "TA" becomes "TBOT", "Rg" becomes "FSDS", "Rgl" becomes "FLDS", "PRESS" becomes "PSRF".
-"ZBOT" can just be set to the constant of "30" (m).
-The units of Temperature need to be converted from "Celsius" to "Kelvin" (use the value in ``SHR_CONST_TKFRZ`` in the file ``models/csm_share/shr/shr_const.F90`` of ``273.15``.
-The units of Pressure also need to be converted from "kPa" to "Pa". LATIXY, and LONGXY should also be set to the latitude and longitude of the site.
+The CESM can NOT handle missing data, so we recommend using the "Level 4" Gap filled datasets. The fields will also need to be renamed. The "WS" column becomes "WIND", "PREC" becomes "PRECmms", "RH" stays as "RH", "TA" becomes "TBOT", "Rg" becomes "FSDS", "Rgl" becomes "FLDS", "PRESS" becomes "PSRF". "ZBOT" can just be set to the constant of "30" (m). The units of Temperature need to be converted from "Celsius" to "Kelvin" (use the value in ``SHR_CONST_TKFRZ`` in the file ``models/csm_share/shr/shr_const.F90`` of ``273.15``. The units of Pressure also need to be converted from "kPa" to "Pa". LATIXY, and LONGXY should also be set to the latitude and longitude of the site.
 
 -----------------------------------------------------------------
 Example: PTCLMmkdata transient example over a shorter time period
 -----------------------------------------------------------------
 
-This is an example of using PTCLMmkdata for Harvard Forest (AmeriFlux site code US-Ha1) for transient land use 1991-2006.
-In order to do this we would've needed to have converted the AmeriFlux data into NetCDF format as show in the `the Section called Converting AmeriFlux Data for use by PTCLMmkdata <CLM-URL>`_ section above.
-Also note that this site has a site-specific dynamic land-use change file for it ``PTCLM_sitedata/US-Ha1_dynpftdata.txt`` in the PTCLMmkdata directory and this file will be used for land-use change and harvesting rather than the global dataset.
+This is an example of using PTCLMmkdata for Harvard Forest (AmeriFlux site code US-Ha1) for transient land use 1991-2006. In order to do this we would've needed to have converted the AmeriFlux data into NetCDF format as show in the `the Section called Converting AmeriFlux Data for use by PTCLMmkdata <CLM-URL>`_ section above. Also note that this site has a site-specific dynamic land-use change file for it ``PTCLM_sitedata/US-Ha1_dynpftdata.txt`` in the PTCLMmkdata directory and this file will be used for land-use change and harvesting rather than the global dataset.
 
 ::
 

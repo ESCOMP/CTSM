@@ -9,8 +9,7 @@ Creating input for surface dataset generation
 1. Generating SCRIP grid files
 ==================================
 
-The utility ``mkmapdata.sh`` requires SCRIP format input files to describe the input and output grids that maps are generated for. CLM provides a utility, ``mkmapgrids`` that generates those files.
-The program converts old formats of CAM or CLM grid files to SCRIP grid format. There is also a NCL script (``mkscripgrid.ncl``) to create regular latitude longitude regional or single-point grids at the resolution the user desires.
+The utility ``mkmapdata.sh`` requires SCRIP format input files to describe the input and output grids that maps are generated for. CLM provides a utility, ``mkmapgrids`` that generates those files. The program converts old formats of CAM or CLM grid files to SCRIP grid format. There is also a NCL script (``mkscripgrid.ncl``) to create regular latitude longitude regional or single-point grids at the resolution the user desires.
 
 SCRIP grid files for all the standard model resolutions and the raw surface datasets have already been done and the files are in the XML database. Hence, this step doesn't need to be done -- EXCEPT WHEN YOU ARE CREATING YOUR OWN GRIDS.
 
@@ -44,13 +43,7 @@ See :numref:`Figure mknoocnmap.pl` for a visual representation of this process.
 
 ``mkmapdata.sh`` uses the above SCRIP grid input files to create SCRIP mapping data files (uses ESMF).
 
-The bash shell script ``$CTSMROOT/tools/mkmapgrids/mkmapdata.sh`` uses **ESMF_RegridWeightGen** to create a list of maps from the raw datasets that are input to **mksurfdata_map**.
-Each dataset that has a different grid, or land-mask needs a different mapping file for it, but many different raw datasets share the same grid/land-mask as other files.
-Hence, there doesn't need to be a different mapping file for EACH raw dataset -- just for each raw dataset that has a DIFFERENT grid or land-mask..
-See :numref:`Figure mkmapdata.sh` for a visual representation of how this works.
-The bash script figures out which mapping files it needs to create and then runs **ESMF_RegridWeightGen** for each one.
-You can then either enter the datasets into the XML database (see `Chapter 3 <CLM-URL>`_ or leave the files in place, and use the "-res usrspec -usr_gname -usr_gdate" options to **mksurfdata_map** (see `the Section called Running mksurfdata.pl <CLM-URL>`_ below).
-mkmapdata.sh has a help option with the following
+The bash shell script ``$CTSMROOT/tools/mkmapgrids/mkmapdata.sh`` uses **ESMF_RegridWeightGen** to create a list of maps from the raw datasets that are input to **mksurfdata_map**. Each dataset that has a different grid, or land-mask needs a different mapping file for it, but many different raw datasets share the same grid/land-mask as other files. Hence, there doesn't need to be a different mapping file for EACH raw dataset -- just for each raw dataset that has a DIFFERENT grid or land-mask.. See :numref:`Figure mkmapdata.sh` for a visual representation of how this works. The bash script figures out which mapping files it needs to create and then runs **ESMF_RegridWeightGen** for each one. You can then either enter the datasets into the XML database (see `Chapter 3 <CLM-URL>`_ or leave the files in place, and use the "-res usrspec -usr_gname -usr_gdate" options to **mksurfdata_map** (see `the Section called Running mksurfdata.pl <CLM-URL>`_ below). mkmapdata.sh has a help option with the following
 ::
 
    ../../tools/mkmapdata/mkmapdata.sh

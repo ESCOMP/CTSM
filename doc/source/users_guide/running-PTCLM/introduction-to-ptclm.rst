@@ -10,8 +10,7 @@
 
 PTCLMmkdata (pronounced Pee-Tee Cee-L-M make data is a Python script to help you set up PoinT CLM simulations.
 
-It runs the CLM tools for you to get datasets set up, and copies them to a location you can use them including the changes
-needed for a case to use the dataset with namelist and XML changes.
+It runs the CLM tools for you to get datasets set up, and copies them to a location you can use them including the changes needed for a case to use the dataset with namelist and XML changes.
 
 Then you run **create_newcase** and point to the directory so that the namelist and XML changes are automatically applied.
 
@@ -106,8 +105,7 @@ The output to the above command is as follows:
 
   Main Script Version Id: $Id: PTCLM.py 47576 2013-05-29 19:11:16Z erik $ Scripts URL: $HeadURL: https://svn-ccsm-models.cgd.ucar.edu/PTCLM/trunk_tags/PTCLM1_130529/PTCLM.py $:
 
-Here we give a simple example of using PTCLMmkdata for a straightforward case of running at the US-UMB Fluxnet site on cheyenne where we already have the meteorology data on the machine.
-Note, see `the Section called Converting AmeriFlux Data for use by PTCLMmkdata <CLM-URL>`_ for permission information to use this data.
+Here we give a simple example of using PTCLMmkdata for a straightforward case of running at the US-UMB Fluxnet site on cheyenne where we already have the meteorology data on the machine. Note, see `the Section called Converting AmeriFlux Data for use by PTCLMmkdata <CLM-URL>`_ for permission information to use this data.
 
 Example 6-1. Example of running PTCLMmkdata for US-UMB on cheyenne
 ------------------------------------------------------------------

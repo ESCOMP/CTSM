@@ -110,17 +110,14 @@ The second method is to use the local index along with the processor number::
       write(iulog,*)'CNCStateUpdate1Mod +leafc_xfer_to_leafc: ',cf_veg%leafc_xfer_to_leafc_patch(p)*dt
    end if
 
-By placing these write statements in the code, one can get a sense of how leafc is evolving toward a negative state and why.
-This is a very complex example of troubleshooting.  To make a long story short, as described `here <https://github.com/ESCOMP/CTSM/issues/1163>`_, the error turned out to be caused by a few lines in the phenology code that weren't handling a 20 minute time step properly, thus an actual bug in the code.  This was also a good example of where a much less computationally expensive land-only simulation was able to be used for debugging instead of the orginal expensive fully-coupled simulation.
+By placing these write statements in the code, one can get a sense of how leafc is evolving toward a negative state and why. This is a very complex example of troubleshooting. To make a long story short, as described `here <https://github.com/ESCOMP/CTSM/issues/1163>`_, the error turned out to be caused by a few lines in the phenology code that weren't handling a 20 minute time step properly, thus an actual bug in the code. This was also a good example of where a much less computationally expensive land-only simulation was able to be used for debugging instead of the orginal expensive fully-coupled simulation.
 
 Another method of troubleshooting is to use the **point_of_interest** module.
 
 Use the point_of_interest module
 --------------------------------
 
-It is common, when debugging, to want to print the values of various variables for all patches or columns of certain landunit types within a certain grid cell of interest. For example, one might be able to identify a certain grid cell with an erroneous value for a particular history field variable (e.g., GPP) using for example ncview.  Once the latitude and longitude of this grid cell has been determined, the point_of_interest module (**src/utils/point_of_interest.F90**) helps create the logical functions needed to do this.
-This module is compiled into every CTSM build, but is not invoked by default.
-To use it
+It is common, when debugging, to want to print the values of various variables for all patches or columns of certain landunit types within a certain grid cell of interest. For example, one might be able to identify a certain grid cell with an erroneous value for a particular history field variable (e.g., GPP) using for example ncview. Once the latitude and longitude of this grid cell has been determined, the point_of_interest module (**src/utils/point_of_interest.F90**) helps create the logical functions needed to do this. This module is compiled into every CTSM build, but is not invoked by default. To use it
 
 (1) Enter in the latitude/longitude of the point of interest in the function **at_poi** in **point_of_interest.F90** by setting the variables **poi_lat** and **poi_lon**.
 
@@ -196,9 +193,5 @@ Along the same lines, you might try running a simpler case, trying another comps
 Run with a debugger
 -------------------
 
-Another suggestion is to run the model with a debugger such as: **ddt**, **dbx**, **gdb**, or **totalview**.
-Often to run with a debugger you will need to reduce the number of processors as outlined above.
-Some debuggers such as **dbx** will only work with one processor, while more advanced debuggers such as **totalview** can work with both MPI tasks and OMP threads.
-Even simple debuggers though can be used to query core files, to see where the code was at when it died (for example using the **where** in **dbx** for a core file can be very helpful.
-For help in running with a debugger you will need to contact your system administrators for the machine you are running on.
+Another suggestion is to run the model with a debugger such as: **ddt**, **dbx**, **gdb**, or **totalview**. Often to run with a debugger you will need to reduce the number of processors as outlined above. Some debuggers such as **dbx** will only work with one processor, while more advanced debuggers such as **totalview** can work with both MPI tasks and OMP threads. Even simple debuggers though can be used to query core files, to see where the code was at when it died (for example using the **where** in **dbx** for a core file can be very helpful. For help in running with a debugger you will need to contact your system administrators for the machine you are running on.
 

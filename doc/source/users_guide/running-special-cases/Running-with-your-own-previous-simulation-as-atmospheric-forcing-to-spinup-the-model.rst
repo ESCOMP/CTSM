@@ -6,8 +6,7 @@
  Running with atmospheric forcing from a previous simulation
 =============================================================
 
-Another way that you might want to spinup the model is to run your own simulation for a relatively short period (either a B, E, or F compset) and then use it as forcing for your "I" case later.
-By only running 20 to 50 years for the fully coupled case, you'll save a substantial amount of computer time rather than running the entire spinup period with a fully coupled model.
+Another way that you might want to spinup the model is to run your own simulation for a relatively short period (either a B, E, or F compset) and then use it as forcing for your "I" case later. By only running 20 to 50 years for the fully coupled case, you'll save a substantial amount of computer time rather than running the entire spinup period with a fully coupled model.
 
 The first thing we need to do is to run a fully coupled case and save the atmospheric coupling fields on a three hourly basis. In this example, we will run on cheyenne and archive the data to a local disk that we can then use in the next simulation.
 
