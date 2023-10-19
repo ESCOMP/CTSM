@@ -81,7 +81,7 @@ MACHINE_DEFAULTS = {
                 # The following assumes a single node, with a single mpi proc; we may want
                 # to add more flexibility in the future, making the node / proc counts
                 # individually selectable
-                required_args="-l select=1:ncpus=128:mpiprocs=1 -V -r n -l inception=login -k oed",
+                required_args="-l select=1:ncpus=128:mpiprocs=1 -V -r n -k oed",
             )
         },
     ),
