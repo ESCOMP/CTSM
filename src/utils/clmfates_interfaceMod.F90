@@ -2669,8 +2669,21 @@ module CLMFatesInterfaceMod
 
    logical :: set_restart_flag ! local logical variable to pass to IsItDispersalTime
                                ! if optional is_restart_flag is true
+#ifdef _OPENMP
+   logical, external :: omp_in_parallel
+#endif
 
    type (neighbor_type),  pointer :: neighbor
+
+   ! Check to see if we are not in a threaded region.  Fail the run if this returns true.
+#ifdef _OPENMP
+   write(iulog,*) 'omp check: ', omp_in_parallel()
+   if (omp_in_parallel()) then
+      call endrun(msg='clmfates interface error: MPI routine called within threaded region'//&
+           errMsg(sourcefile, __LINE__))
+   end if
+#endif
+
    ! This should only be run once per day
    if(is_beg_curr_day()) then
 
