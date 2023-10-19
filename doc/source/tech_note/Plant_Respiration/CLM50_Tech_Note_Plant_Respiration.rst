@@ -38,7 +38,7 @@ The temperature dependance of leaf maintenance (dark) respiration is described i
 
    CF_{mr\_ froot} \_ =\sum _{j=1}^{nlevsoi}NS_{froot} rootfr_{j} MR_{base} MR_{Q10} ^{(Ts_{j} -20)/10}
 
-where :math:`MR_{q10}` (= 2.0) is the temperature sensitivity for maintenance respiration, :math:`T_{2m}` (° C) is the air temperature at 2m height, :math:`Ts_{j}`* (° C) is the soil temperature at level *j*, and :math:`rootfr_{j}` is the fraction of fine roots distributed in soil level *j*.
+where :math:`MR_{q10}` (= 2.0) is the temperature sensitivity for maintenance respiration, :math:`T_{2m}` (°C) is the air temperature at 2m height, :math:`Ts_{j}`* (°C) is the soil temperature at level *j*, and :math:`rootfr_{j}` is the fraction of fine roots distributed in soil level *j*.
 
 .. table:: Atkin leaf respiration model intercept values.
 

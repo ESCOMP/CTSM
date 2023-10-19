@@ -3,7 +3,7 @@
 Photosynthetic Capacity
 =======================
 
-The photosynthetic capacity is represented by two key parameters: 1) the maximum rate of carboxylation at 25 ° C, :math:`V_{\text{c,max25}}`; and 2) the maximum rate of electron transport at 25 ° C, :math:`J_{\text{max25}}`. They are predicted by a mechanistic model of leaf utilization of nitrogen for assimilation (LUNA V1.0) (:ref:`Ali et al. 2016<Alietal2016>`) based on an optimality hypothesis to nitrogen allocation among light capture, electron transport, carboxylation, respiration and storage. Specifically, the model allocates the nitrogen by maximizing the daily net photosynthetic carbon gain under following two key assumptions:
+The photosynthetic capacity is represented by two key parameters: 1) the maximum rate of carboxylation at 25 °C, :math:`V_{\text{c,max25}}`; and 2) the maximum rate of electron transport at 25 °C, :math:`J_{\text{max25}}`. They are predicted by a mechanistic model of leaf utilization of nitrogen for assimilation (LUNA V1.0) (:ref:`Ali et al. 2016<Alietal2016>`) based on an optimality hypothesis to nitrogen allocation among light capture, electron transport, carboxylation, respiration and storage. Specifically, the model allocates the nitrogen by maximizing the daily net photosynthetic carbon gain under following two key assumptions:
 
 - nitrogen allocated for light capture, electron transport and carboxylation are co-limiting;
 
@@ -183,14 +183,14 @@ where :math:`\text{PAR}_{\text{{max}}}` ( :math:`\mu mol`/m :sup:`2`/s) is the m
 Maximum rate of carboxylation
 ''''''''''''''''''''''''''''''
 
-The maximum rate of carboxylation at 25° C varies with foliage nitrogen concentration and specific leaf area and is calculated as in :ref:`Thornton and Zimmermann (2007)<ThorntonZimmermann2007>`. At 25°C,
+The maximum rate of carboxylation at 25°C varies with foliage nitrogen concentration and specific leaf area and is calculated as in :ref:`Thornton and Zimmermann (2007)<ThorntonZimmermann2007>`. At 25°C,
 
 .. math::
   :label: 10.11)
 
    V_{c\max 25} = N_{cb} NUE_{V_{c\max 25}}
 
-where :math:`N_{cb}` is nitrogen for carboxylation (g N m\ :sup:`-2` leaf, :numref:`Table Plant functional type (PFT) leaf N parameters`), and :math:`NUE_{V_{c\max 25}}` = 47.3 x 6.25 and is the nitrogen use efficiency for :math:`V_{c\max 25}`. The constant 47.3 is the specific Rubisco activity ( :math:`\mu` mol CO\ :sub:`2` g\ :sup:`-1` Rubisco s\ :sup:`-1`) measured at 25° C, and the constant 6.25 is the nitrogen binding factor for Rubisco (g Rubisco g\ :sup:`-1` N; :ref:`Rogers 2014<Rogers2014>`).
+where :math:`N_{cb}` is nitrogen for carboxylation (g N m\ :sup:`-2` leaf, :numref:`Table Plant functional type (PFT) leaf N parameters`), and :math:`NUE_{V_{c\max 25}}` = 47.3 x 6.25 and is the nitrogen use efficiency for :math:`V_{c\max 25}`. The constant 47.3 is the specific Rubisco activity ( :math:`\mu` mol CO\ :sub:`2` g\ :sup:`-1` Rubisco s\ :sup:`-1`) measured at 25°C, and the constant 6.25 is the nitrogen binding factor for Rubisco (g Rubisco g\ :sup:`-1` N; :ref:`Rogers 2014<Rogers2014>`).
 
 :math:`V_{c\max 25}` additionally varies with daylength (:math:`DYL`) using the function :math:`f(DYL)`, which introduces seasonal variation to :math:`V_{c\max }`
 

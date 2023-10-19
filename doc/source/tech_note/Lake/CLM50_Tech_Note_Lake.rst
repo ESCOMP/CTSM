@@ -283,7 +283,7 @@ Once the four iterations for lake surface temperature have been yielded a tentat
 
    \begin{array}{l} {{\rm 1)\; }T_{T} \le T_{f} <T_{g} ^{{'} } \Rightarrow T_{g} =T_{f} ,} \\ {{\rm 2)\; }T_{T} >T_{g} ^{{'} } >T_{m} \Rightarrow T_{g} =T_{T} ,} \\ {{\rm 3)\; }T_{m} >T_{g} ^{{'} } >T_{T} >T_{f} \Rightarrow T_{g} =T_{T} } \end{array}
 
-where :math:`T_{m}` \ is the temperature of maximum liquid water density, 3.85° C (:ref:`Hostetler and Bartlein (1990) <HostetlerBartlein1990>`). The first condition requires that, if there is any snow or ice present, the surface temperature is restricted to be less than or equal to freezing. The second and third conditions maintain convective stability in the top lake layer.
+where :math:`T_{m}` \ is the temperature of maximum liquid water density, 3.85°C (:ref:`Hostetler and Bartlein (1990) <HostetlerBartlein1990>`). The first condition requires that, if there is any snow or ice present, the surface temperature is restricted to be less than or equal to freezing. The second and third conditions maintain convective stability in the top lake layer.
 
 If eq. XXX is applied, the turbulent fluxes :math:`H_{g}` and :math:`E_{g}` are re-evaluated. The emitted longwave radiation and the momentum fluxes are re-evaluated in any case. The final ground heat flux :math:`G` is calculated from the residual of the energy balance eq. XXX in order to precisely conserve energy. XXX This ground heat flux is taken as a prescribed flux boundary condition for the lake temperature solution (section :numref:`Boundary Conditions Lake`). An energy balance check is included at each timestep to insure that eq. XXX is obeyed to within 0.1 W m\ :sup:`-2`.
 

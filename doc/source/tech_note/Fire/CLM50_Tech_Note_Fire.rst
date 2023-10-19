@@ -320,7 +320,7 @@ CLM focuses on deforestation fires in tropical closed forests. Tropical closed f
 
 where :math:`b` (s\ :sup:`-1`) is a global constant; :math:`f_{lu}` (fraction) represents the effect of decreasing fractional coverage of tree PFTs derived from land use data; :math:`f_{cli,d}` (fraction) represents the effect of climate conditions on the burned area.
 
-Constants :math:`b` and :math:`{f}_{lu}` are calibrated based on observations and reanalysis datasets in the Amazon rainforest (tropical closed forests within 15.5 ° S :math:`\text{-}` 10.5 ° N, 30.5 ° W :math:`\text{-}` 91 ° W). :math:`b` = 0.033 d\ :sup:`-1` and :math:`f_{lu}` is defined as
+Constants :math:`b` and :math:`{f}_{lu}` are calibrated based on observations and reanalysis datasets in the Amazon rainforest (tropical closed forests within 15.5 °S :math:`\text{-}` 10.5 °N, 30.5 ° W :math:`\text{-}` 91 ° W). :math:`b` = 0.033 d\ :sup:`-1` and :math:`f_{lu}` is defined as
 
 .. math::
    :label: 23.35
