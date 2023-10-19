@@ -107,8 +107,8 @@ The options that with a "grid" suffix all mean to create datasets using the glob
 Because supported single-point datasets already have the data created for them, you MUST use the "nopointdata" and "ndepgrid" options when you are using a supported single-point site. You must use "ndepgrid" even for a compset without CN. You also can NOT use the options: "soilgrid", "pftgrid", "aerdepgrid", or "owritesrfaer".
 
 ``--pftgrid``
-  This option says to use the PFT values provided on the global dataset rather than using the specific site based values from the PTCLM_sitedata/\*_pftdata.txt file when creating the surface dataset. This option must NOT be used when you you are using a site that is a supported single point dataset.
+  This option says to use the PFT values provided on the global dataset rather than using the specific site based values from the PTCLM_sitedata/*_pftdata.txt file when creating the surface dataset. This option must NOT be used when you you are using a site that is a supported single point dataset.
 
 ``--soilgrid``
-  This option says to use the soil values provided on the global dataset rather than using the specific site based values from the PTCLM_sitedata/\*_soildata.txt file when creating the surface dataset. This option must NOT be used when you you are using a site that is a supported single point dataset.
+  This option says to use the soil values provided on the global dataset rather than using the specific site based values from the PTCLM_sitedata/*_soildata.txt file when creating the surface dataset. This option must NOT be used when you you are using a site that is a supported single point dataset.
 

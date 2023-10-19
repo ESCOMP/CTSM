@@ -63,7 +63,7 @@ The surface roughnesses are functions of the lake state and atmospheric forcing.
 
    \begin{array}{l} {R_{0} =\frac{z_{0m} u_{*} }{\nu } ,} \\ {z_{0h} =z_{0q} =z_{0m} \exp \left\{-0.13R_{0} ^{0.45} \right\}} \end{array}
 
-where :math:`R_{0}` is the near-surface atmospheric roughness Reynolds number, :math:`z_{0h}` is the roughness length for sensible heat, :math:`z_{0q}` is the roughness length for latent heat, :math:`\nu` (m\ :sup:`2` s\ :sup:`-1`) is the kinematic viscosity of air, and :math:`u_{\*}` (m s\ :sup:`-1`) is the friction velocity in the atmospheric surface layer. For frozen lakes without resolved snow layers, :math:`z_{0m} =1\times 10^{-3} {\rm m}` (:ref:`Subin et al. (2012a) <Subinetal2012a>`), and the scalar roughness lengths are given by.
+where :math:`R_{0}` is the near-surface atmospheric roughness Reynolds number, :math:`z_{0h}` is the roughness length for sensible heat, :math:`z_{0q}` is the roughness length for latent heat, :math:`\nu` (m\ :sup:`2` s\ :sup:`-1`) is the kinematic viscosity of air, and :math:`u_{*}` (m s\ :sup:`-1`) is the friction velocity in the atmospheric surface layer. For frozen lakes without resolved snow layers, :math:`z_{0m} =1\times 10^{-3} {\rm m}` (:ref:`Subin et al. (2012a) <Subinetal2012a>`), and the scalar roughness lengths are given by.
 
 For unfrozen lakes, *z*\ :sub:`0m` is given by (:ref:`Subin et al. (2012a) <Subinetal2012a>`)
 
@@ -88,7 +88,7 @@ where
 .. math::
    :label: 12.6
 
-   \begin{array}{l} {C=C_{\min } +(C_{\max } -C_{\min } )\exp \left\{-\min \left(A,B\right)\right\}} \\ {A={\left(\frac{Fg}{u_{\*} ^{2} } \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} } \mathord{\left/ {\vphantom {\left(\frac{Fg}{u_{\*} ^{2} } \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} }  f_{c} }} \right.} f_{c} } } \\ {B=\varepsilon \frac{\sqrt{dg} }{u} } \end{array}
+   \begin{array}{l} {C=C_{\min } +(C_{\max } -C_{\min } )\exp \left\{-\min \left(A,B\right)\right\}} \\ {A={\left(\frac{Fg}{u_{*} ^{2} } \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} } \mathord{\left/ {\vphantom {\left(\frac{Fg}{u_{*} ^{2} } \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} }  f_{c} }} \right.} f_{c} } } \\ {B=\varepsilon \frac{\sqrt{dg} }{u} } \end{array}
 
 where *A* and *B* define the fetch- and depth-limitation, respectively;
 :math:`C_{\min } =0.01` , :math:`C_{\max } =0.01`,
@@ -231,7 +231,7 @@ where the partial derivatives are
 
    \frac{\partial G}{\partial T_{g} } =\frac{2\lambda _{T} }{\Delta z_{T} } .
 
-The fluxes of momentum, sensible heat, and water vapor are solved for simultaneously with lake surface temperature as follows. The stability-related equations are the same as for non-vegetated surfaces (section :numref:`Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces`), except that the surface roughnesses are here (weakly varying) functions of the friction velocity :math:`u_{\*}`. To begin, *z*\ :sub:`0m` is set based on the value calculated for the last timestep (for :math:`T_{g} >T_{f}` ) or based on the values in section :numref:`Surface Properties Lake` (otherwise), and the scalar roughness lengths are set based on the relationships in section :numref:`Surface Properties Lake`.
+The fluxes of momentum, sensible heat, and water vapor are solved for simultaneously with lake surface temperature as follows. The stability-related equations are the same as for non-vegetated surfaces (section :numref:`Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces`), except that the surface roughnesses are here (weakly varying) functions of the friction velocity :math:`u_{*}`. To begin, *z*\ :sub:`0m` is set based on the value calculated for the last timestep (for :math:`T_{g} >T_{f}` ) or based on the values in section :numref:`Surface Properties Lake` (otherwise), and the scalar roughness lengths are set based on the relationships in section :numref:`Surface Properties Lake`.
 
 #. An initial guess for the wind speed :math:`V_{a}` including the convective velocity :math:`U_{c}` is obtained from :eq:`5.24` assuming an initial convective velocity :math:`U_{c} =0` m s\ :sup:`-1` for stable conditions (:math:`\theta _{v,\, atm} -\theta _{v,\, s} \ge 0` as evaluated from :eq:`5.50`) and :math:`U_{c} =0.5` for unstable conditions (:math:`\theta _{v,\, atm} -\theta _{v,\, s} <0`).
 
@@ -243,11 +243,11 @@ The fluxes of momentum, sensible heat, and water vapor are solved for simultaneo
 
 #. Thermal conductivity :math:`\lambda _{T}` \ (above)
 
-#. Friction velocity :math:`u_{\*}` (:eq:`5.32`, :eq:`5.33`, :eq:`5.34`, :eq:`5.35`)
+#. Friction velocity :math:`u_{*}` (:eq:`5.32`, :eq:`5.33`, :eq:`5.34`, :eq:`5.35`)
 
-#. Potential temperature scale :math:`\theta _{\*}` (:eq:`5.37`, :eq:`5.38`, :eq:`5.39`, :eq:`5.40`)
+#. Potential temperature scale :math:`\theta _{*}` (:eq:`5.37`, :eq:`5.38`, :eq:`5.39`, :eq:`5.40`)
 
-#. Humidity scale :math:`q_{\*}` (:eq:`5.41`, :eq:`5.42`, :eq:`5.43`, :eq:`5.44`)
+#. Humidity scale :math:`q_{*}` (:eq:`5.41`, :eq:`5.42`, :eq:`5.43`, :eq:`5.44`)
 
 #. Aerodynamic resistances :math:`r_{am}`, :math:`r_{ah}`, and :math:`r_{aw}` (:eq:`5.55`, :eq:`5.56`, :eq:`5.57`)
 
@@ -268,7 +268,7 @@ where the last term on the right side of equation is the change in saturated spe
 
 #. Saturated specific humidity :math:`q_{sat}^{T_{g} }` and its derivative :math:`\frac{dq_{sat}^{T_{g} } }{dT_{g} }` are updated for :math:`T_{g}^{n+1}` (section :numref:`Monin-Obukhov Similarity Theory`).
 
-#. Virtual potential temperature scale :math:`\theta _{v\*}` (:eq:`5.17`)
+#. Virtual potential temperature scale :math:`\theta _{v*}` (:eq:`5.17`)
 
 #. Wind speed including the convective velocity, :math:`V_{a}` (:eq:`5.24`)
 

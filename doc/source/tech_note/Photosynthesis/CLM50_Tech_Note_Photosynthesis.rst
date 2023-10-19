@@ -114,14 +114,14 @@ The RuBP carboxylase (Rubisco) limited rate of carboxylation :math:`A_{c}` (:mat
 .. math::
    :label: 9.3
 
-   A_{c} =\left\{\begin{array}{l} {\frac{V_{c\max } \left(c_{i} -\Gamma _{\*} \right)}{c_{i} +K_{c} \left(1+{o_{i} \mathord{\left/ {\vphantom {o_{i}  K_{o} }} \right.} K_{o} } \right)} \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {V_{c\max } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{\*} \ge 0.
+   A_{c} =\left\{\begin{array}{l} {\frac{V_{c\max } \left(c_{i} -\Gamma _{*} \right)}{c_{i} +K_{c} \left(1+{o_{i} \mathord{\left/ {\vphantom {o_{i}  K_{o} }} \right.} K_{o} } \right)} \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {V_{c\max } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{*} \ge 0.
 
 The maximum rate of carboxylation allowed by the capacity to regenerate RuBP (i.e., the light-limited rate) :math:`A_{j}` (:math:`\mu` \ mol CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`) is
 
 .. math::
    :label: 9.4
 
-   A_{j} =\left\{\begin{array}{l} {\frac{J_{x}\left(c_{i} -\Gamma _{\*} \right)}{4c_{i} +8\Gamma _{\*} } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {\alpha (4.6\phi )\qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{\*} \ge 0.
+   A_{j} =\left\{\begin{array}{l} {\frac{J_{x}\left(c_{i} -\Gamma _{*} \right)}{4c_{i} +8\Gamma _{*} } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {\alpha (4.6\phi )\qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{*} \ge 0.
 
 The product-limited rate of carboxylation for C\ :sub:`3` plants and the PEP carboxylase-limited rate of carboxylation for C\ :sub:`4` plants :math:`A_{p}` (:math:`\mu` \ mol CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`) is
 
@@ -130,7 +130,7 @@ The product-limited rate of carboxylation for C\ :sub:`3` plants and the PEP car
 
    A_{p} =\left\{\begin{array}{l} {3T_{p\qquad } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {k_{p} \frac{c_{i} }{P_{atm} } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}.
 
-In these equations, :math:`c_{i}` is the internal leaf CO\ :sub:`2` partial pressure (Pa) and :math:`o_{i} =0.20P_{atm}` is the O\ :sub:`2` partial pressure (Pa). :math:`K_{c}` and :math:`K_{o}` are the Michaelis-Menten constants (Pa) for CO\ :sub:`2` and O\ :sub:`2`. :math:`\Gamma _{\*}` (Pa) is the CO\ :sub:`2` compensation point. :math:`V_{c\max }` is the maximum rate of carboxylation (µmol m\ :sup:`-2` s\ :sup:`-1`, Chapter :numref:`rst_Photosynthetic Capacity`) and :math:`J_{x}` is the electron transport rate (µmol m\ :sup:`-2` s\ :sup:`-1`). :math:`T_{p}` is the triose phosphate utilization rate (µmol m\ :sup:`-2` s\ :sup:`-1`), taken as :math:`T_{p} =0.167V_{c\max }` so that :math:`A_{p} =0.5V_{c\max }` for C\ :sub:`3` plants (as in :ref:`Collatz et al. 1992 <Collatzetal1992>`). For C\ :sub:`4` plants, the light-limited rate :math:`A_{j}` varies with :math:`\phi` in relation to the quantum efficiency (:math:`\alpha =0.05` mol CO\ :sub:`2` mol\ :sup:`-1` photon). :math:`\phi` is the absorbed photosynthetically active radiation (W m\ :sup:`-2`) (section :numref:`Solar Fluxes`), which is converted to photosynthetic photon flux assuming 4.6 :math:`\mu` \ mol photons per joule. :math:`k_{p}` is the initial slope of C\ :sub:`4` CO\ :sub:`2` response curve.
+In these equations, :math:`c_{i}` is the internal leaf CO\ :sub:`2` partial pressure (Pa) and :math:`o_{i} =0.20P_{atm}` is the O\ :sub:`2` partial pressure (Pa). :math:`K_{c}` and :math:`K_{o}` are the Michaelis-Menten constants (Pa) for CO\ :sub:`2` and O\ :sub:`2`. :math:`\Gamma _{*}` (Pa) is the CO\ :sub:`2` compensation point. :math:`V_{c\max }` is the maximum rate of carboxylation (µmol m\ :sup:`-2` s\ :sup:`-1`, Chapter :numref:`rst_Photosynthetic Capacity`) and :math:`J_{x}` is the electron transport rate (µmol m\ :sup:`-2` s\ :sup:`-1`). :math:`T_{p}` is the triose phosphate utilization rate (µmol m\ :sup:`-2` s\ :sup:`-1`), taken as :math:`T_{p} =0.167V_{c\max }` so that :math:`A_{p} =0.5V_{c\max }` for C\ :sub:`3` plants (as in :ref:`Collatz et al. 1992 <Collatzetal1992>`). For C\ :sub:`4` plants, the light-limited rate :math:`A_{j}` varies with :math:`\phi` in relation to the quantum efficiency (:math:`\alpha =0.05` mol CO\ :sub:`2` mol\ :sup:`-1` photon). :math:`\phi` is the absorbed photosynthetically active radiation (W m\ :sup:`-2`) (section :numref:`Solar Fluxes`), which is converted to photosynthetic photon flux assuming 4.6 :math:`\mu` \ mol photons per joule. :math:`k_{p}` is the initial slope of C\ :sub:`4` CO\ :sub:`2` response curve.
 
 For C\ :sub:`3` plants, the electron transport rate depends on the photosynthetically active radiation absorbed by the leaf. A common expression is the smaller of the two roots of the equation
 
@@ -236,7 +236,7 @@ with :math:`Q_{10} =2`.
  +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
  | :math:`K_{o}`          | 36380                                                           | –                                                               |
  +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
- | :math:`\Gamma _{\*}`   | 37830                                                           | –                                                               |
+ | :math:`\Gamma _{*}`   | 37830                                                           | –                                                               |
  +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
 
 In the model, acclimation is implemented as in :ref:`Kattge and Knorr (2007) <KattgeKnorr2007>`. In this parameterization, :math:`V_{c\max }` and :math:`J_{\max }` vary with the plant growth temperature. This is achieved by allowing :math:`\Delta S`\ to vary with growth temperature according to

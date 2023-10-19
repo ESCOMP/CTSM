@@ -134,7 +134,7 @@ When the biogeochemistry model is inactive, leaf and stem area indices (m\ :sup:
 
    A=A^{*} ( 1-f_{veg}^{sno} )
 
-where :math:`A^{\*}` is the leaf or stem area before adjustment for snow, :math:`A` is the remaining exposed leaf or stem area, :math:`f_{veg}^{sno}` is the vertical fraction of vegetation covered by snow
+where :math:`A^{*}` is the leaf or stem area before adjustment for snow, :math:`A` is the remaining exposed leaf or stem area, :math:`f_{veg}^{sno}` is the vertical fraction of vegetation covered by snow
 
 .. math::
    :label: 2.2
