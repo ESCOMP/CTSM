@@ -66,6 +66,25 @@ MACHINE_DEFAULTS = {
             )
         },
     ),
+    "derecho": MachineDefaults(
+        job_launcher_type=JOB_LAUNCHER_QSUB,
+        scratch_dir=os.path.join(os.path.sep, "glade", "derecho", "scratch", get_user()),
+        baseline_dir=os.path.join(os.path.sep, "glade", "p", "cgd", "tss", "ctsm_baselines"),
+        account_required=True,
+        create_test_retry=0,
+        create_test_queue="regular",
+        job_launcher_defaults={
+            JOB_LAUNCHER_QSUB: QsubDefaults(
+                queue="regular",
+                walltime="11:50:00",
+                extra_args="",
+                # The following assumes a single node, with a single mpi proc; we may want
+                # to add more flexibility in the future, making the node / proc counts
+                # individually selectable
+                required_args="-l select=1:ncpus=128:mpiprocs=1 -V -r n -l inception=login -k oed",
+            )
+        },
+    ),
     "hobart": MachineDefaults(
         job_launcher_type=JOB_LAUNCHER_QSUB,
         scratch_dir=os.path.join(os.path.sep, "scratch", "cluster", get_user()),
