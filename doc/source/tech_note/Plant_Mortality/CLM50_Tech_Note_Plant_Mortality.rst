@@ -3,34 +3,12 @@
 Plant Mortality
 ===================
 
-Plant mortality as described here applies to perennial vegetation types,
-and is intended to represent the death of individuals from a stand of
-plants due to the aggregate of processes such as wind throw, insect
-attack, disease, extreme temperatures or drought, and age-related
-decline in vigor. These processes are referred to in aggregate as
-"gap-phase" mortality. Mortality due to fire and anthropogenic land
-cover change are treated separately (see Chapters :numref:`rst_Fire` and :numref:`rst_Transient Landcover Change`,
-respectively).
+Plant mortality as described here applies to perennial vegetation types, and is intended to represent the death of individuals from a stand of plants due to the aggregate of processes such as wind throw, insect attack, disease, extreme temperatures or drought, and age-related decline in vigor. These processes are referred to in aggregate as "gap-phase" mortality. Mortality due to fire and anthropogenic land cover change are treated separately (see Chapters :numref:`rst_Fire` and :numref:`rst_Transient Landcover Change`, respectively).
 
 Mortality Fluxes Leaving Vegetation Pools
 ----------------------------------------------
 
-Whole-plant mortality is parameterized very simply, assuming a mortality
-rate of 2% yr\ :sup:`-1` for all vegetation types. This is clearly
-a gross oversimplification of an important process, and additional work
-is required to better constrain this process in different climate zones
-(:ref:`Keller et al. 2004<Kelleretal2004>`; :ref:`Sollins 1982<Sollins1982>`), for different species mixtures
-(:ref:`Gomes et al. 2003<Gomesetal2003>`), and for different size and age classes (:ref:`Busing
-2005<Busing2005>`; :ref:`Law et al. 2003<Lawetal2003>`). Literature values for forest mortality rates
-range from at least 0.7% to 3.0% yr\ :sup:`-1`. Taking the annual
-rate of mortality (*am*, proportion yr\ :sup:`-1`) as 0.02, a
-mortality rate per second (*m*) is calculated as
-:math:`m={am\mathord{\left/ {\vphantom {am \left(365\cdot 86400\right)}} \right.} \left(365\cdot 86400\right)}` .
-All vegetation carbon and nitrogen pools for display, storage, and
-transfer are affected at rate *m*, with mortality fluxes out of
-vegetation pools eventually merged to the column level and deposited in
-litter pools. Mortality (*mort*) fluxes out of displayed vegetation
-carbon and nitrogen pools are
+Whole-plant mortality is parameterized very simply, assuming a mortality rate of 2% yr\ :sup:`-1` for all vegetation types. This is clearly a gross oversimplification of an important process, and additional work is required to better constrain this process in different climate zones (:ref:`Keller et al. 2004<Kelleretal2004>`; :ref:`Sollins 1982<Sollins1982>`), for different species mixtures (:ref:`Gomes et al. 2003<Gomesetal2003>`), and for different size and age classes (:ref:`Busing 2005<Busing2005>`; :ref:`Law et al. 2003<Lawetal2003>`). Literature values for forest mortality rates range from at least 0.7% to 3.0% yr\ :sup:`-1`. Taking the annual rate of mortality (*am*, proportion yr\ :sup:`-1`) as 0.02, a mortality rate per second (*m*) is calculated as :math:`m={am\mathord{\left/ {\vphantom {am \left(365\cdot 86400\right)}} \right.} \left(365\cdot 86400\right)}`. All vegetation carbon and nitrogen pools for display, storage, and transfer are affected at rate *m*, with mortality fluxes out of vegetation pools eventually merged to the column level and deposited in litter pools. Mortality (*mort*) fluxes out of displayed vegetation carbon and nitrogen pools are
 
 .. math::
    :label: 33.1)
@@ -97,9 +75,7 @@ carbon and nitrogen pools are
 
    NF_{retrans\_ mort} =NS_{retrans} m.
 
-where CF are carbon fluxes, CS is carbon storage, NF are nitrogen
-fluxes, NS is nitrogen storage, *croot* refers to coarse roots, *froot*
-refers to fine roots, and *retrans* refers to retranslocated.
+where CF are carbon fluxes, CS is carbon storage, NF are nitrogen fluxes, NS is nitrogen storage, *croot* refers to coarse roots, *froot* refers to fine roots, and *retrans* refers to retranslocated.
 
 Mortality fluxes out of carbon and nitrogen storage (*stor)* pools are
 
@@ -170,8 +146,7 @@ Mortality fluxes out of carbon and nitrogen storage (*stor)* pools are
 
 where *gresp* refers to growth respiration.
 
-Mortality fluxes out of carbon and nitrogen transfer (*xfer)* growth
-pools are
+Mortality fluxes out of carbon and nitrogen transfer (*xfer)* growth pools are
 
 .. math::
    :label: 33.27)
@@ -241,12 +216,7 @@ pools are
 Mortality Fluxes Merged to the Column Level
 ------------------------------------------------
 
-Analogous to the treatment of litterfall fluxes, mortality fluxes
-leaving the vegetation pools are merged to the column level according to
-the weighted distribution of PFTs on the column (:math:`wcol_{p}` ), and
-deposited in litter and coarse woody debris pools, which are defined at
-the column level. Carbon and nitrogen fluxes from mortality of displayed
-leaf and fine root into litter pools are calculated as
+Analogous to the treatment of litterfall fluxes, mortality fluxes leaving the vegetation pools are merged to the column level according to the weighted distribution of PFTs on the column (:math:`wcol_{p}` ), and deposited in litter and coarse woody debris pools, which are defined at the column level. Carbon and nitrogen fluxes from mortality of displayed leaf and fine root into litter pools are calculated as
 
 .. math::
    :label: 33.40)
@@ -308,10 +278,7 @@ leaf and fine root into litter pools are calculated as
 
    NF_{froot\_ mort,lit3} =\sum _{p=0}^{npfts}NF_{froot\_ mort} f_{lig\_ froot,p} wcol_{p}  .
 
-where *lab* refers to labile, *cel* refers to cellulose, and *lig*
-refers to lignin. Carbon and nitrogen mortality fluxes from displayed
-live and dead stem and coarse root pools are merged to the column level
-and deposited in the coarse woody debris (*cwd*) pools:
+where *lab* refers to labile, *cel* refers to cellulose, and *lig* refers to lignin. Carbon and nitrogen mortality fluxes from displayed live and dead stem and coarse root pools are merged to the column level and deposited in the coarse woody debris (*cwd*) pools:
 
 .. math::
    :label: 33.52)
@@ -353,14 +320,7 @@ and deposited in the coarse woody debris (*cwd*) pools:
 
    NF_{deadcroot\_ mort,cwd} =\sum _{p=0}^{npfts}NF_{deadcroot\_ mort} wcol_{p}
 
-All vegetation storage and transfer pools for carbon and nitrogen are
-assumed to exist as labile pools within the plant (e.g. as carbohydrate
-stores, in the case of carbon pools). This assumption applies to storage
-and transfer pools for both non-woody and woody tissues. The mortality
-fluxes from these pools are therefore assumed to be deposited in the
-labile litter pools (:math:`{CS}_{lit1}`, :math:`{NS}_{lit1}`),
-after being merged to the column level. Carbon mortality fluxes out of
-storage and transfer pools are:
+All vegetation storage and transfer pools for carbon and nitrogen are assumed to exist as labile pools within the plant (e.g. as carbohydrate stores, in the case of carbon pools). This assumption applies to storage and transfer pools for both non-woody and woody tissues. The mortality fluxes from these pools are therefore assumed to be deposited in the labile litter pools (:math:`{CS}_{lit1}`, :math:`{NS}_{lit1}`), after being merged to the column level. Carbon mortality fluxes out of storage and transfer pools are:
 
 .. math::
    :label: 33.60)
@@ -432,8 +392,7 @@ storage and transfer pools are:
 
    CF_{gresp\_ xfer\_ mort,lit1} =\sum _{p=0}^{npfts}CF_{gresp\_ xfer\_ mort} wcol_{p}  .
 
-Nitrogen mortality fluxes out of storage and transfer pools, including
-the storage pool for retranslocated nitrogen, are calculated as:
+Nitrogen mortality fluxes out of storage and transfer pools, including the storage pool for retranslocated nitrogen, are calculated as:
 
 .. math::
    :label: 33.74)

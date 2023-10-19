@@ -21,18 +21,7 @@ Fisher, R. A., Muszala, S., Verteinstein, M., Lawrence, P., Xu, C., McDowell, N.
 
 The Ecosystem Demography ('ED'), concept within FATES is derived from the work of :ref:`Moorcroft et al. (2001)<mc_2001>` and is a cohort model of vegetation competition and co-existence, allowing a representation of the biosphere which accounts for the division of the land surface into successional stages, and for competition for light between height structured cohorts of representative trees of various plant functional types.
 
-The implementation of the Ecosystem Demography concept within FATES links the surface flux and canopy physiology concepts in CLM
-with numerous additional developments necessary to accommodate the new model. These include a version of the SPITFIRE
-(Spread and InTensity of Fire) model of :ref:`Thonicke et al. (2010)<thonickeetal2010>`, and an adoption of the concept of
-`Perfect Plasticity Approximation` approach of
-:ref:`Purves et al. 2008<purves2008>`, :ref:`Lichstein et al. 2011<lichstein2011>` and :ref:`Weng et al. 2014<weng2014>`, in accounting
-for the spatial arrangement of crowns. Novel algorithms accounting for
-the fragmentation of coarse woody debris into chemical litter streams,
-for the physiological optimization of canopy thickness, for the
-accumulation of seeds in the seed bank, for multi-layer multi-PFT
-radiation transfer, for drought-deciduous and cold-deciduous phenology,
-for carbon storage allocation, and for tree mortality under carbon
-stress, are also included.
+The implementation of the Ecosystem Demography concept within FATES links the surface flux and canopy physiology concepts in CLM with numerous additional developments necessary to accommodate the new model. These include a version of the SPITFIRE (Spread and InTensity of Fire) model of :ref:`Thonicke et al. (2010)<thonickeetal2010>`, and an adoption of the concept of `Perfect Plasticity Approximation` approach of :ref:`Purves et al. 2008<purves2008>`, :ref:`Lichstein et al. 2011<lichstein2011>` and :ref:`Weng et al. 2014<weng2014>`, in accounting for the spatial arrangement of crowns. Novel algorithms accounting for the fragmentation of coarse woody debris into chemical litter streams, for the physiological optimization of canopy thickness, for the accumulation of seeds in the seed bank, for multi-layer multi-PFT radiation transfer, for drought-deciduous and cold-deciduous phenology, for carbon storage allocation, and for tree mortality under carbon stress, are also included.
 
 Further reading
 ^^^^^^^^^^^^^^^^^^^^

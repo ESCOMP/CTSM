@@ -262,8 +262,7 @@ The original FUN model as developed by :ref:`Fisher et al. (2010)<Fisheretal2010
 
 Thus, in CLM5, we introduce the capacity for tissue C:N ratios to be prognostic, rather than static. Overall N and C availability (:math:`N_{uptake}` and :math:`C_{growth}`) and hence tissue C:N ratios, are both determined by FUN.  Allocation to individual tissues is discussed in the allocation chapter
 
-Here we introduce an algorithm which adjusts the C expenditure on uptake to allow varying tissue C:N ratios. Increasing C spent on uptake will directly reduce the C:N ratio, and reducing C spent on uptake (retaining more for tissue growth) will increase it. C spent on uptake is impacted by both the N cost in the environment, and the existing tissue C:N ratio of the plant.    The output of this algorithm is :math:`\gamma_{FUN}`, the fraction of the ideal :math:`C_{nuptake}` calculated from
-the FUN equation above
+Here we introduce an algorithm which adjusts the C expenditure on uptake to allow varying tissue C:N ratios. Increasing C spent on uptake will directly reduce the C:N ratio, and reducing C spent on uptake (retaining more for tissue growth) will increase it. C spent on uptake is impacted by both the N cost in the environment, and the existing tissue C:N ratio of the plant. The output of this algorithm is :math:`\gamma_{FUN}`, the fraction of the ideal :math:`C_{nuptake}` calculated from the FUN equation above
 
  .. math::
    C_{nuptake} = C_{nuptake}.\gamma_{FUN}

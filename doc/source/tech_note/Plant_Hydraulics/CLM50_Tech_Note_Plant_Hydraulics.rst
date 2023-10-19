@@ -13,8 +13,7 @@ Roots
 Vertical Root Distribution
 ---------------------------
 
-The root fraction :math:`r_{i}`  in each soil layer depends on the plant
-functional type
+The root fraction :math:`r_{i}` in each soil layer depends on the plant functional type
 
 .. math::
    :label: 11.1
@@ -24,12 +23,7 @@ functional type
    \left(\beta^{z_{h,\, i-1} \cdot 100} - \beta^{z_{h,\, i} \cdot 100} \right) & \qquad {\rm for\; }1 \le i \le N_{levsoi}
    \end{array}
 
-where :math:`z_{h,\, i}` (m) is the depth from the soil surface to the
-interface between layers :math:`i` and :math:`i+1` (:math:`z_{h,\, 0}` ,
-the soil surface) (section :numref:`Vertical Discretization`), the factor of 100
-converts from m to cm, and :math:`\beta` is a plant-dependent root
-distribution parameter adopted from :ref:`Jackson et al. (1996)<Jacksonetal1996>`
-(:numref:`Table Plant functional type root distribution parameters`).
+where :math:`z_{h,\, i}` (m) is the depth from the soil surface to the interface between layers :math:`i` and :math:`i+1` (:math:`z_{h,\, 0}`, the soil surface) (section :numref:`Vertical Discretization`), the factor of 100 converts from m to cm, and :math:`\beta` is a plant-dependent root distribution parameter adopted from :ref:`Jackson et al. (1996)<Jacksonetal1996>` (:numref:`Table Plant functional type root distribution parameters`).
 
 .. rootfr(p,lev) = ( &
                   beta ** (col%zi(c,lev-1)*m_to_cm) - &
@@ -107,11 +101,7 @@ distribution parameter adopted from :ref:`Jackson et al. (1996)<Jacksonetal1996>
 Root Spacing
 -----------------------------
 
-To determine the conductance along the soil to root pathway (section
-:numref:`Soil-to-root`) an estimate of the spacing between the roots within
-a soil layer is required.  The distance between roots :math:`dx_{root,i}` (m)
-is calculated by assuming that roots are distributed uniformly throughout
-the soil (:ref:`Gardner 1960<Gardner1960>`)
+To determine the conductance along the soil to root pathway (section :numref:`Soil-to-root`) an estimate of the spacing between the roots within a soil layer is required. The distance between roots :math:`dx_{root,i}` (m) is calculated by assuming that roots are distributed uniformly throughout the soil (:ref:`Gardner 1960<Gardner1960>`)
 
 .. math::
    :label: 11.12
@@ -132,11 +122,9 @@ where :math:`L_{i}` is the root length density (m m :sup:`-3`)
 
    B_{root,i} = \frac{c\_to\_b \cdot C_{fineroot} \cdot r_{i}}{dz_{i}}
 
-where :math:`c\_to\_b = 2` (kg biomass kg carbon :sup:`-1`) and
-:math:`C_{fineroot}` is the amount of fine root carbon (kg m :sup:`-2`).
+where :math:`c\_to\_b = 2` (kg biomass kg carbon :sup:`-1`) and :math:`C_{fineroot}` is the amount of fine root carbon (kg m :sup:`-2`).
 
-:math:`\rho_{root}` is the root density  (kg m :sup:`-3`), and
-:math:`{CA}_{root}` is the fine root cross sectional area (m :sup:`2`)
+:math:`\rho_{root}` is the root density (kg m :sup:`-3`), and :math:`{CA}_{root}` is the fine root cross sectional area (m :sup:`2`)
 
 .. math::
    :label: 11.15
@@ -150,20 +138,9 @@ where :math:`r_{root}` is the root radius (m).
 Plant Hydraulic Stress
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Plant Hydraulic Stress (PHS) routine explicitly models water transport
-through the vegetation according to a simple hydraulic framework following
-Darcy's Law for porous media flow equations influenced by
-:ref:`Bonan et al. (2014) <Bonanetal2014>`,
-:ref:`Chuang et al. (2006) <Chuangetal2006>`,
-:ref:`Sperry et al. (1998) <Sperryetal1998>`,
-:ref:`Sperry and Love (2015) <SperryandLove2015>`,
-:ref:`Williams et al (1996) <Williamsetal1996>`.
+The Plant Hydraulic Stress (PHS) routine explicitly models water transport through the vegetation according to a simple hydraulic framework following Darcy's Law for porous media flow equations influenced by :ref:`Bonan et al. (2014) <Bonanetal2014>`, :ref:`Chuang et al. (2006) <Chuangetal2006>`, :ref:`Sperry et al. (1998) <Sperryetal1998>`, :ref:`Sperry and Love (2015) <SperryandLove2015>`, :ref:`Williams et al (1996) <Williamsetal1996>`.
 
-PHS solves for the vegetation water potential that matches water supply with
-transpiration demand. Water supply is modeled according to the circuit analog
-in :numref:`Figure Plant hydraulic circuit`. Transpiration demand is modeled
-relative to maximum transpiration by a transpiration loss function dependent
-on leaf water potential.
+PHS solves for the vegetation water potential that matches water supply with transpiration demand. Water supply is modeled according to the circuit analog in :numref:`Figure Plant hydraulic circuit`. Transpiration demand is modeled relative to maximum transpiration by a transpiration loss function dependent on leaf water potential.
 
 .. _Figure Plant hydraulic circuit:
 
@@ -176,38 +153,20 @@ on leaf water potential.
 Plant Water Supply
 -----------------------
 
-The supply equations are used to solve for vegetation water potential forced
-by transpiration demand and the set of layer-by-layer soil water potentials.
-The water supply is discretized into segments: soil-to-root, root-to-stem, and
-stem-to-leaf. There are typically several (1-49) soil-to-root flows operating
-in parallel, one per soil layer. There are two stem-to-leaf flows operating in
-parallel, corresponding to the sunlit and shaded "leaves".
+The supply equations are used to solve for vegetation water potential forced by transpiration demand and the set of layer-by-layer soil water potentials. The water supply is discretized into segments: soil-to-root, root-to-stem, and stem-to-leaf. There are typically several (1-49) soil-to-root flows operating in parallel, one per soil layer. There are two stem-to-leaf flows operating in parallel, corresponding to the sunlit and shaded "leaves".
 
-In general the water fluxes (e.g. soil-to-root, root-to-stem, etc.) are
-modeled according to Darcy's Law for porous media flow as:
+In general the water fluxes (e.g. soil-to-root, root-to-stem, etc.) are modeled according to Darcy's Law for porous media flow as:
 
 .. math::
    :label: 11.101
 
    q = kA\left( \psi_1 - \psi_2 \right)
 
-:math:`q` is the flux of water (mmH\ :sub:`2`\ O/s) spanning the segment
-between :math:`\psi_1` and :math:`\psi_2`
+:math:`q` is the flux of water (mmH\ :sub:`2`\ O/s) spanning the segment between :math:`\psi_1` and :math:`\psi_2`
 
 :math:`k` is the hydraulic conductance (s\ :sup:`-1`\ )
 
-:math:`A` is the area basis (m\ :sup:`2`\ /m\ :sup:`2`\ ) relating the
-conducting area basis to ground area
-
-:math:`\psi_1 - \psi_2` is the gradient in water potential (mmH\ :sub:`2`\ O)
-across the segment
-
-The segments in :numref:`Figure Plant hydraulic circuit` have variable resistance,
-as the water potentials become lower, hydraulic conductance decreases.  This is
-captured by multiplying the maximum segment conductance by a sigmoidal function
-capturing the percent loss of conductivity. The function uses two parameters to
-fit experimental vulnerability curves: the water potential at 50% loss of
-conductivity (:math:`p50`) and a shape fitting parameter (:math:`c_k`).
+:math:`A` is the area basis (m\ :sup:`2`\ /m\ :sup:`2`\ ) relating the conducting area basis to ground area :math:`\psi_1 - \psi_2` is the gradient in water potential (mmH\ :sub:`2`\ O) across the segment The segments in :numref:`Figure Plant hydraulic circuit` have variable resistance, as the water potentials become lower, hydraulic conductance decreases. This is captured by multiplying the maximum segment conductance by a sigmoidal function capturing the percent loss of conductivity. The function uses two parameters to fit experimental vulnerability curves: the water potential at 50% loss of conductivity (:math:`p50`) and a shape fitting parameter (:math:`c_k`).
 
 .. math::
    :label: 11.102
@@ -225,21 +184,7 @@ conductivity (:math:`p50`) and a shape fitting parameter (:math:`c_k`).
 Stem-to-leaf
 ''''''''''''''''''''''''
 
-The area basis and conductance parameterization varies by segment. There
-are two stem-to-leaf fluxes in parallel, from stem to sunlit leaf and from
-stem to shaded leaf (:math:`q_{1a}` and :math:`q_{1a}`).  The water flux from
-stem-to-leaf is the product of the segment conductance, the conducting area
-basis, and the water potential gradient from stem to leaf. Stem-to-leaf
-conductance is defined as the maximum conductance multiplied by the percent
-of maximum conductance, as calculated by the sigmoidal vulnerability curve.
-The maximum conductance is a PFT parameter representing the maximum
-conductance of water from stem to leaf per unit leaf area.  This parameter
-can be defined separately for sunlit and shaded segments and should already
-include the appropriate length scaling (in other words this is a conductance,
-not conductivity). The water potential gradient is the difference between
-leaf water potential and stem water potential. There is no gravity term,
-assuming a negligible difference in height across the segment. The area
-basis is the leaf area index (either sunlit or shaded).
+The area basis and conductance parameterization varies by segment. There are two stem-to-leaf fluxes in parallel, from stem to sunlit leaf and from stem to shaded leaf (:math:`q_{1a}` and :math:`q_{1a}`). The water flux from stem-to-leaf is the product of the segment conductance, the conducting area basis, and the water potential gradient from stem to leaf. Stem-to-leaf conductance is defined as the maximum conductance multiplied by the percent of maximum conductance, as calculated by the sigmoidal vulnerability curve. The maximum conductance is a PFT parameter representing the maximum conductance of water from stem to leaf per unit leaf area. This parameter can be defined separately for sunlit and shaded segments and should already include the appropriate length scaling (in other words this is a conductance, not conductivity). The water potential gradient is the difference between leaf water potential and stem water potential. There is no gravity term, assuming a negligible difference in height across the segment. The area basis is the leaf area index (either sunlit or shaded).
 
 .. math::
    :label: 11.103
@@ -292,18 +237,7 @@ Parameters:
 Root-to-stem
 ''''''''''''''''''''''''
 
-There is one root-to-stem flux. This represents a flux from the root collar
-to the upper branch reaches. The water flux from root-to-stem is the product
-of the segment conductance, the conducting area basis, and the water
-potential gradient from root to stem. Root-to-stem conductance is defined
-as the maximum conductance multiplied by the percent of maximum conductance,
-as calculated by the sigmoidal vulnerability curve (two parameters). The
-maximum conductance is defined as the maximum root-to-stem conductivity per
-unit stem area (PFT parameter) divided by the length of the conducting path,
-which is taken to be the vegetation height. The area basis is the stem area
-index. The gradient in water potential is the difference between the root
-water potential and the stem water potential less the difference in
-gravitational potential.
+There is one root-to-stem flux. This represents a flux from the root collar to the upper branch reaches. The water flux from root-to-stem is the product of the segment conductance, the conducting area basis, and the water potential gradient from root to stem. Root-to-stem conductance is defined as the maximum conductance multiplied by the percent of maximum conductance, as calculated by the sigmoidal vulnerability curve (two parameters). The maximum conductance is defined as the maximum root-to-stem conductivity per unit stem area (PFT parameter) divided by the length of the conducting path, which is taken to be the vegetation height. The area basis is the stem area index. The gradient in water potential is the difference between the root water potential and the stem water potential less the difference in gravitational potential.
 
 .. math::
    :label: 11.107
@@ -340,38 +274,13 @@ Parameters:
 Soil-to-root
 ''''''''''''''''''''''''
 
-There are several soil-to-root fluxes operating in parallel (one for each
-root-containing soil layer). Each represents a flux from the given soil
-layer to the root collar. The water flux from soil-to-root is the product
-of the segment conductance, the conducting area basis, and the water
-potential gradient from soil to root. The area basis is a proxy for root
-area index, defined as the summed leaf and stem area index multiplied by
-the root-to-shoot ratio (PFT parameter) multiplied by the layer root
-fraction. The root fraction comes from an empirical root profile (section
-:numref:`Vertical Root Distribution`).
+There are several soil-to-root fluxes operating in parallel (one for each root-containing soil layer). Each represents a flux from the given soil layer to the root collar. The water flux from soil-to-root is the product of the segment conductance, the conducting area basis, and the water potential gradient from soil to root. The area basis is a proxy for root area index, defined as the summed leaf and stem area index multiplied by the root-to-shoot ratio (PFT parameter) multiplied by the layer root fraction. The root fraction comes from an empirical root profile (section :numref:`Vertical Root Distribution`).
 
-The gradient in water potential is the difference between the soil water
-potential and the root water potential less the difference in gravitational
-potential. There is only one root water potential to which all soil layers
-are connected in parallel. A soil-to-root flux can be either positive
-(vegetation water uptake) or negative (water deposition), depending on the
-relative values of the root and soil water potentials. This allows for the
-occurrence of hydraulic redistribution where water moves through vegetation
-tissue from one soil layer to another.
+The gradient in water potential is the difference between the soil water potential and the root water potential less the difference in gravitational potential. There is only one root water potential to which all soil layers are connected in parallel. A soil-to-root flux can be either positive (vegetation water uptake) or negative (water deposition), depending on the relative values of the root and soil water potentials. This allows for the occurrence of hydraulic redistribution where water moves through vegetation tissue from one soil layer to another.
 
-Soil-to-root conductance is the result of two resistances in series, first
-across the soil-root interface and then through the root tissue. The root
-tissue conductance is defined as the maximum conductance multiplied by the
-percent of maximum conductance, as calculated by the sigmoidal vulnerability
-curve. The maximum conductance is defined as the maximum root-tissue
-conductivity (PFT parameter) divided by the length of the conducting path,
-which is taken to be the soil layer depth plus lateral root length.
+Soil-to-root conductance is the result of two resistances in series, first across the soil-root interface and then through the root tissue. The root tissue conductance is defined as the maximum conductance multiplied by the percent of maximum conductance, as calculated by the sigmoidal vulnerability curve. The maximum conductance is defined as the maximum root-tissue conductivity (PFT parameter) divided by the length of the conducting path, which is taken to be the soil layer depth plus lateral root length.
 
-The soil-root interface conductance is defined as the soil conductivity
-divided by the conducting length from soil to root. The soil conductivity
-varies by soil layer and is calculated based on soil potential and soil
-properties, via the Brooks-Corey theory. The conducting length is determined
-from the characteristic root spacing (section :numref:`Root Spacing`).
+The soil-root interface conductance is defined as the soil conductivity divided by the conducting length from soil to root. The soil conductivity varies by soil layer and is calculated based on soil potential and soil properties, via the Brooks-Corey theory. The conducting length is determined from the characteristic root spacing (section :numref:`Root Spacing`).
 
 .. math::
    :label: 11.109
@@ -431,15 +340,7 @@ Parameters:
 Plant Water Demand
 -----------------------
 
-Plant water demand depends on stomatal conductance, which is described in section :numref:`Stomatal resistance`.
-Here we describe the influence of PHS and the coupling of vegetation water demand and supply.
-PHS models vegetation water demand as transpiration attenuated by a transpiration loss function based on leaf water potential.
-Sunlit leaf transpiration is modeled as the maximum sunlit leaf transpiration multiplied by the percent of maximum transpiration as modeled by the sigmoidal loss function.
-The same follows for shaded leaf transpiration.
-Maximum stomatal conductance is calculated from the Medlyn model :ref:`(Medlyn et al. 2011) <Medlynetal2011>` absent water stress and used to calculate the maximum transpiration (see section :numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`).
-Water stress is calculated as the ratio of attenuated stomatal conductance to maximum stomatal conductance.
-Water stress is calculated with distinct values for sunlit and shaded leaves.
-Vegetation water stress is calculated based on leaf water potential and is used to attenuate photosynthesis (see section :numref:`Photosynthesis`)
+Plant water demand depends on stomatal conductance, which is described in section :numref:`Stomatal resistance`. Here we describe the influence of PHS and the coupling of vegetation water demand and supply. PHS models vegetation water demand as transpiration attenuated by a transpiration loss function based on leaf water potential. Sunlit leaf transpiration is modeled as the maximum sunlit leaf transpiration multiplied by the percent of maximum transpiration as modeled by the sigmoidal loss function. The same follows for shaded leaf transpiration. Maximum stomatal conductance is calculated from the Medlyn model :ref:`(Medlyn et al. 2011) <Medlynetal2011>` absent water stress and used to calculate the maximum transpiration (see section :numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`). Water stress is calculated as the ratio of attenuated stomatal conductance to maximum stomatal conductance. Water stress is calculated with distinct values for sunlit and shaded leaves. Vegetation water stress is calculated based on leaf water potential and is used to attenuate photosynthesis (see section :numref:`Photosynthesis`)
 
 .. math::
    :label: 11.201
@@ -515,13 +416,7 @@ PHS finds the water potentials that match supply and demand. In the plant water 
 Numerical Implementation
 --------------------------------
 
-The four plant water potential nodes are ( :math:`\psi_{root}`, :math:`\psi_{xylem}`, :math:`\psi_{shadeleaf}`, :math:`\psi_{sunleaf}`).
-The fluxes between each pair of nodes are labeled in Figure 1.
-:math:`E_{sun}` and :math:`E_{sha}` are the transpiration from sunlit and shaded leaves, respectively.
-We use the circuit-analog model to calculate the vegetation water potential ( :math:`\psi`) for the four plant nodes, forced by soil matric potential and unstressed transpiration.
-The unstressed transpiration is acquired by running the photosynthesis model with :math:`\beta_t=1`.
-The unstressed transpiration flux is attenuated based on the leaf-level vegetation water potential.
-Using the attenuated transpiration, we solve for :math:`g_{s,stressed}` and output :math:`\beta_t=\dfrac{g_{s,stressed}}{g_{s,unstressed}}`.
+The four plant water potential nodes are ( :math:`\psi_{root}`, :math:`\psi_{xylem}`, :math:`\psi_{shadeleaf}`, :math:`\psi_{sunleaf}`). The fluxes between each pair of nodes are labeled in Figure 1. :math:`E_{sun}` and :math:`E_{sha}` are the transpiration from sunlit and shaded leaves, respectively. We use the circuit-analog model to calculate the vegetation water potential ( :math:`\psi`) for the four plant nodes, forced by soil matric potential and unstressed transpiration. The unstressed transpiration is acquired by running the photosynthesis model with :math:`\beta_t=1`. The unstressed transpiration flux is attenuated based on the leaf-level vegetation water potential. Using the attenuated transpiration, we solve for :math:`g_{s,stressed}` and output :math:`\beta_t=\dfrac{g_{s,stressed}}{g_{s,unstressed}}`.
 
 The continuity of water flow through the system yields four equations
 
@@ -544,8 +439,7 @@ We seek the set of vegetation water potential values,
    \psi_{sunleaf}\cr\psi_{shadeleaf}\cr\psi_{stem}\cr\psi_{root}
    \end {array} \right]
 
-that satisfies these equations, as forced by the soil moisture and atmospheric state.
-Each flux on the schematic can be represented in terms of the relevant water potentials. Defining the transpiration fluxes:
+that satisfies these equations, as forced by the soil moisture and atmospheric state. Each flux on the schematic can be represented in terms of the relevant water potentials. Defining the transpiration fluxes:
 
 .. math::
    :label: 11.403
@@ -567,11 +461,7 @@ Defining the water supply fluxes:
    q_{soil}&=\sum_{i=1}^{nlevsoi}{q_{3,i}}=\sum_{i=1}^{nlevsoi}{k_{3,i}\cdot RAI\cdot\left(\psi_{soil,i}-\psi_{root} + \Delta\psi_{z,i} \right)}
    \end{aligned}
 
-We're looking to find the vector :math:`\psi`
-that fits with soil and atmospheric forcings while satisfying water flow continuity.
-Due to the model non-linearity, we use a linearized explicit approach, iterating with Newton's method.
-The initial guess is the solution for :math:`\psi` (vector) from the previous time step.
-The general framework, from iteration `m` to `m+1` is:
+We're looking to find the vector :math:`\psi` that fits with soil and atmospheric forcings while satisfying water flow continuity. Due to the model non-linearity, we use a linearized explicit approach, iterating with Newton's method. The initial guess is the solution for :math:`\psi` (vector) from the previous time step. The general framework, from iteration `m` to `m+1` is:
 
 .. math::
    :label: 11.405
@@ -682,8 +572,7 @@ Now we compute all the entries for :math:`A` and :math:`b` based on the soil moi
 
    \psi_{m+1}=\psi_m+\Delta\psi
 
-We iterate until :math:`b\to 0`, signifying water flux balance through the system. The result is a final set of water potentials ( :math:`\psi_{root}`, :math:`\psi_{xylem}`, :math:`\psi_{shadeleaf}`, :math:`\psi_{sunleaf}`) satisfying non-divergent water flux through the system.
-The magnitude of the water flux is driven by soil matric potential and unstressed ( :math:`\beta_t=1`) transpiration.
+We iterate until :math:`b\to 0`, signifying water flux balance through the system. The result is a final set of water potentials ( :math:`\psi_{root}`, :math:`\psi_{xylem}`, :math:`\psi_{shadeleaf}`, :math:`\psi_{sunleaf}`) satisfying non-divergent water flux through the system. The magnitude of the water flux is driven by soil matric potential and unstressed ( :math:`\beta_t=1`) transpiration.
 
 We use the transpiration solution (corresponding to the final solution for :math:`\psi`) to compute stomatal conductance. The stomatal conductance is then used to compute :math:`\beta_t`.
 
@@ -697,25 +586,16 @@ We use the transpiration solution (corresponding to the final solution for :math
 
    \beta_{t,shade} = \dfrac{g_{s,shade}}{g_{s,shade,\beta_t=1}}
 
-The :math:`\beta_t` values are used in the Photosynthesis module (see section :numref:`Photosynthesis`) to apply water stress.
-The solution for :math:`\psi` is saved as a new variable (vegetation water potential) and is indicative of plant water status.
-The soil-to-root fluxes :math:`\left( q_{3,1},q_{3,2},\mbox{...},q_{3,n}\right)` are used as the soil transpiration sink in the Richards' equation subsurface flow equations (see section :numref:`Soil Water`).
+The :math:`\beta_t` values are used in the Photosynthesis module (see section :numref:`Photosynthesis`) to apply water stress. The solution for :math:`\psi` is saved as a new variable (vegetation water potential) and is indicative of plant water status. The soil-to-root fluxes :math:`\left( q_{3,1},q_{3,2},\mbox{...},q_{3,n}\right)` are used as the soil transpiration sink in the Richards' equation subsurface flow equations (see section :numref:`Soil Water`).
 
 .. _Flow Diagram of Leaf Flux Calculations:
 
 Flow Diagram of Leaf Flux Calculations:
 -------------------------------------------
 
-PHS runs nested in the loop that solves for sensible and latent heat fluxes and temperature for vegetated surfaces (see section :numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`).
-The scheme iterates for convergence of leaf temperature (:math:`T_l`), transpiration water stress (:math:`\beta_t`), and intercellular CO2 concentration (:math:`c_i`).
-PHS is forced by maximum transpiration (absent water stress, :math:`\beta_t=1`), whereby we first solve for assimilation, stomatal conductance, and intercellular CO2 with :math:`\beta_{t,sun}` and :math:`\beta_{t,shade}` both set to 1.
-This involves iterating to convergence of :math:`c_i` (see section :numref:`Photosynthesis`).
+PHS runs nested in the loop that solves for sensible and latent heat fluxes and temperature for vegetated surfaces (see section :numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`). The scheme iterates for convergence of leaf temperature (:math:`T_l`), transpiration water stress (:math:`\beta_t`), and intercellular CO2 concentration (:math:`c_i`). PHS is forced by maximum transpiration (absent water stress, :math:`\beta_t=1`), whereby we first solve for assimilation, stomatal conductance, and intercellular CO2 with :math:`\beta_{t,sun}` and :math:`\beta_{t,shade}` both set to 1. This involves iterating to convergence of :math:`c_i` (see section :numref:`Photosynthesis`).
 
-Next, using the solutions for :math:`E_{sun,max}` and :math:`E_{shade,max}`, PHS solves for :math:`\psi`, :math:`\beta_{t,sun}`, and :math:`\beta_{t,shade}`.
-The values for :math:`\beta_{t,sun}`, and :math:`\beta_{t,shade}` are inputs to the photosynthesis routine, which now solves for attenuated photosynthesis and stomatal conductance (reflecting water stress).
-Again this involves iterating to convergence of :math:`c_i`.
-Non-linearities between :math:`\beta_t` and transpiration require also iterating to convergence of :math:`\beta_t`.
-The outermost level of iteration works towards convergence of leaf temperature, reflecting leaf surface energy balance.
+Next, using the solutions for :math:`E_{sun,max}` and :math:`E_{shade,max}`, PHS solves for :math:`\psi`, :math:`\beta_{t,sun}`, and :math:`\beta_{t,shade}`. The values for :math:`\beta_{t,sun}`, and :math:`\beta_{t,shade}` are inputs to the photosynthesis routine, which now solves for attenuated photosynthesis and stomatal conductance (reflecting water stress). Again this involves iterating to convergence of :math:`c_i`. Non-linearities between :math:`\beta_t` and transpiration require also iterating to convergence of :math:`\beta_t`. The outermost level of iteration works towards convergence of leaf temperature, reflecting leaf surface energy balance.
 
 .. _Figure PHS Flow Diagram:
 
