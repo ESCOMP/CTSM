@@ -56,26 +56,19 @@ Surface Properties
 
 The fraction of shortwave radiation absorbed at the surface, :math:`\beta`, depends on the lake state. If resolved snow layers are present, then :math:`\beta` is set equal to the absorption fraction predicted by the snow-optics submodel (Chapter :numref:`rst_Surface Albedos`) for the top snow layer. Otherwise, :math:`\beta` is set equal to the near infrared fraction of the shortwave radiation reaching the surface simulated by the atmospheric model or atmospheric data model used for offline simulations (Chapter :numref:`rst_Land-only Mode`). The remainder of the shortwave radiation fraction (1 :math:`{-}` :math:`\beta`) is absorbed in the lake body or soil as described in section :numref:`Radiation Penetration`.
 
-The surface roughnesses are functions of the lake state and atmospheric forcing. For frozen lakes ( :math:`T_{g} \le T_{f}` ) with resolved snow layers, the momentum roughness length :math:`z_{0m} =2.4 \times 10^{-3} {\rm m}` (as over non-vegetated surfaces; Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`), and the scalar roughness lengths (*z*\ :sub:`0q` for latent heat; and *z*\ :sub:`0h`, for sensible heat) are given by (:ref:`Zilitinkevich 1970<Zilitinkevich1970>`)
+The surface roughnesses are functions of the lake state and atmospheric forcing. 
+
+For unfrozen lakes (:math:`T_{g} > T_{f}`), :math:`z_{0m}` is given by (:ref:`Subin et al. (2012a) <Subinetal2012a>`)
 
 .. math::
    :label: 12.3
 
-   \begin{array}{l} {R_{0} =\frac{z_{0m} u_{*} }{\nu } ,} \\ {z_{0h} =z_{0q} =z_{0m} \exp \left\{-0.13R_{0} ^{0.45} \right\}} \end{array}
-
-where :math:`R_{0}` is the near-surface atmospheric roughness Reynolds number, :math:`z_{0h}` is the roughness length for sensible heat, :math:`z_{0q}` is the roughness length for latent heat, :math:`\nu` (m\ :sup:`2` s\ :sup:`-1`) is the kinematic viscosity of air, and :math:`u_{*}` (m s\ :sup:`-1`) is the friction velocity in the atmospheric surface layer. For frozen lakes without resolved snow layers, :math:`z_{0m} =1\times 10^{-3} {\rm m}` (:ref:`Subin et al. (2012a) <Subinetal2012a>`), and the scalar roughness lengths are given by.
-
-For unfrozen lakes, *z*\ :sub:`0m` is given by (:ref:`Subin et al. (2012a) <Subinetal2012a>`)
-
-.. math::
-   :label: 12.4
-
    z_{0m} =\max \left(\frac{\alpha \nu }{u_{*} } ,C\frac{u_{*} ^{2} }{g} \right)
 
-where :math:`\alpha` = 0.1, :math:`\nu` is the kinematic viscosity of air given below, *C* is the effective Charnock coefficient given below, and *g* is the acceleration of gravity (:numref:`Table Physical Constants`). The kinematic viscosity is given by
+where :math:`\alpha` = 0.1, :math:`\nu` is the kinematic viscosity of air given below, *C* is the effective Charnock coefficient given below, :math:`u_{*}` is the friction velocity (m/s), and *g* is the acceleration of gravity (:numref:`Table Physical Constants`). The kinematic viscosity is given by
 
 .. math::
-   :label: 12.5
+   :label: 12.4 
 
    \nu =\nu _{0} \left(\frac{T_{g} }{T_{0} } \right)^{1.5} \frac{P_{0} }{P_{ref} }
 
@@ -86,7 +79,7 @@ where
 :math:`P_{ref}` is the pressure at the atmospheric reference height. The Charnock coefficient *C* is a function of the lake fetch *F* (m), given in the surface data or set to 25 times the lake depth *d* by default:
 
 .. math::
-   :label: 12.6
+   :label: 12.5 
 
    \begin{array}{l} {C=C_{\min } +(C_{\max } -C_{\min } )\exp \left\{-\min \left(A,B\right)\right\}} \\ {A={\left(\frac{Fg}{u_{*} ^{2} } \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} } \mathord{\left/ {\vphantom {\left(\frac{Fg}{u_{*} ^{2} } \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} }  f_{c} }} \right.} f_{c} } } \\ {B=\varepsilon \frac{\sqrt{dg} }{u} } \end{array}
 
@@ -94,6 +87,65 @@ where *A* and *B* define the fetch- and depth-limitation, respectively;
 :math:`C_{\min } =0.01` , :math:`C_{\max } =0.01`,
 :math:`\varepsilon =1` , :math:`f_{c} =100` , and
 *u* (m s\ :sup:`-1`) is the atmospheric forcing wind.
+
+The scalar roughness lengths
+(:math:`z_{0q}` for latent heat and :math:`z_{0h}` for sensible heat) are given by
+(:ref:`Subin  et al. 2012a<Subinetal2012a>`)
+
+.. math::
+   :label: 12.5a
+
+   \begin{array}{l} {R_{0} =(\frac{z_{0m} u_{*} }{\nu })^{0.5} ,} \\ {z_{0h} =z_{0m} \exp \left\{-\frac{k} {Pr} (4 R_{0} ^{0.5} -3.2) \right\},} \\ {z_{0q} =z_{0m} \exp \left\{-\frac{k} {Sc} (4 R_{0} ^{0.5} - 4.2) \right\}}\end{array}
+
+where :math:`R_{0}` is the near-surface atmospheric roughness Reynolds number, :math:`k` is the von Karman constant (:numref:`Table Physical Constants`), :math:`Pr = 0.713` is the molecular Prandt number for air at neutral stability, :math:`Sc = 0.66` is the Schmidt number for water in air at neutral stability.
+:math:`z_{0q}` and :math:`z_{0h}` are restricted to be no smaller than :math:`1 \times 10^{-10}`.
+
+For frozen lakes ( :math:`T_{g} \le T_{f}` ) without resolved snow
+layers ( :math:`snl = 0` ), :math:`z_{0m} =z_{0m_{ice}} =2.3\times 10^{-3} {\rm m}` (:ref:`Meier et al. (2022) <Meieretal2022>`).
+
+For frozen lakes with resolved
+snow layers ( :math:`snl > 0` ), the momentum roughness length is evaluated based on accumulated snow melt :math:`M_{a} {\rm }` (:ref:`Meier et al. (2022) <Meieretal2022>`). 
+For :math:`M_{a} >=1\times 10^{-5}`
+
+.. math::
+   :label: 12.5b
+
+   z_{0m} =\exp (b_{1} \tan ^{-1} \left[\frac{log_{10} (M_{a}) + 0.23)} {0.08}\right] + b_{4})\times 10^{-3}
+
+where :math:`M_{a}` is accumulated snow melt (meters water equivalent), :math:`b_{1} =1.4` and :math:`b_{4} =-0.31`.
+For :math:`M_{a} <1\times 10^{-5}`
+
+.. math::
+   :label: 12.5c
+
+   z_{0m} =\exp (-b_{1} 0.5 \pi + b_{4})\times 10^{-3}
+
+Accumulated snow melt :math:`M_{a}` at the current time step :math:`t` is defined as
+
+.. math::
+   :label: 12.5d   
+
+   M ^{t}_{a} = M ^{t-1}_{a} - (q ^{t}_{sno} \Delta t + q ^{t}_{snowmelt} \Delta t)\times 10^{-3}
+
+where :math:`M ^{t}_{a}` and :math:`M ^{t-1}_{a}` are the accumulated snowmelt at the current time step and previous time step, respectively (m), :math:`q ^{t}_{sno} \Delta t` is the freshly fallen snow (mm), and :math:`q ^{t}_{snowmelt} \Delta t` is the melted snow (mm).
+
+For frozen lakes without and with resolved snow layers, an initial guess for the scalar roughness lengths is derived by assuming :math:`\theta_{*} = 0 {\rm }` (:ref:`Meier et al. (2022) <Meieretal2022>`)
+
+.. math::
+   :label: 12.5e
+
+   z_{0h}=z_{0q}=\frac{70 \nu}{u_{*}}
+
+where :math:`\nu=1.5 \times 10^{-5}` is the kinematic viscosity of air (m\ :sup:`2`  s\ :sup:`-1`), and
+:math:`u_{*}` is the friction velocity in the atmospheric surface layer (m s\ :sup:`-1`).
+Thereafter, the scalar roughness lengths are updated within the stability iteration described in section :numref:`Surface Flux Solution Lake` as
+
+.. math::
+   :label: 12.6
+
+   z_{0h}=z_{0q}=\frac{70 \nu}{u_{*}} \exp (-\beta {u_{*}} ^{0.5} |{\theta_{*}}| ^{0.25} )
+
+where :math:`\beta` = 7.2, and :math:`\theta_{*}` is the potential temperature scale (section :numref:`Surface Flux Solution Lake`).
 
 .. _Surface Flux Solution Lake:
 
@@ -231,7 +283,7 @@ where the partial derivatives are
 
    \frac{\partial G}{\partial T_{g} } =\frac{2\lambda _{T} }{\Delta z_{T} } .
 
-The fluxes of momentum, sensible heat, and water vapor are solved for simultaneously with lake surface temperature as follows. The stability-related equations are the same as for non-vegetated surfaces (section :numref:`Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces`), except that the surface roughnesses are here (weakly varying) functions of the friction velocity :math:`u_{*}`. To begin, *z*\ :sub:`0m` is set based on the value calculated for the last timestep (for :math:`T_{g} >T_{f}` ) or based on the values in section :numref:`Surface Properties Lake` (otherwise), and the scalar roughness lengths are set based on the relationships in section :numref:`Surface Properties Lake`.
+The fluxes of momentum, sensible heat, and water vapor are solved for simultaneously with lake surface temperature as follows. To begin, :math:`z_{0m}` and the scalar roughness lengths are set as described in section :numref:`Surface Properties Lake`.
 
 #. An initial guess for the wind speed :math:`V_{a}` including the convective velocity :math:`U_{c}` is obtained from :eq:`5.24` assuming an initial convective velocity :math:`U_{c} =0` m s\ :sup:`-1` for stable conditions (:math:`\theta _{v,\, atm} -\theta _{v,\, s} \ge 0` as evaluated from :eq:`5.50`) and :math:`U_{c} =0.5` for unstable conditions (:math:`\theta _{v,\, atm} -\theta _{v,\, s} <0`).
 
@@ -274,7 +326,7 @@ where the last term on the right side of equation is the change in saturated spe
 
 #. Monin-Obukhov length :math:`L` (:eq:`5.49`)
 
-#. Roughness lengths (:eq:`12.3`, :eq:`12.4`).
+#. Roughness lengths (section :numref:`Surface Properties Lake`).
 
 Once the four iterations for lake surface temperature have been yielded a tentative solution :math:`T_{g} ^{{'} }`, several restrictions are imposed in order to maintain consistency with the top lake model layer temperature :math:`T_{T}` \ (:ref:`Subin et al. (2012a) <Subinetal2012a>`).
 
