@@ -46,7 +46,7 @@
   </test>
   <test name="ERP_D_Ld9" grid="ne30np4.pg3" compset="I1850Clm51BgcCrop" testmods="clm/clm51cam6lndTuningMode">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="cesm3_dev"/>
+      <machine name="derecho" compiler="intel" category="cesm3_dev"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -55,7 +55,7 @@
   </test>
   <test name="ERI_D" grid="ne30np4.pg3" compset="I1850Clm51BgcCrop" testmods="clm/clm51cam6lndTuningMode">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="cesm3_dev"/>
+      <machine name="derecho" compiler="intel" category="cesm3_dev"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -64,7 +64,7 @@
   </test>
   <test name="SMS_Lm1" grid="ne30np4.pg3" compset="I1850Clm51BgcCrop" testmods="clm/clm51cam6lndTuningMode">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="cesm3_dev"/>
+      <machine name="derecho" compiler="intel" category="cesm3_dev"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
