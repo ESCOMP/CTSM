@@ -72,8 +72,7 @@ CLM includes a detailed representation of nitrification and denitrification base
 
 where :math:`{f}_{nitr,p}` is the potential nitrification rate (prior to competition for NH\ :sub:`4`\ :sup:`+` by plant uptake and N immobilization), :math:`{k}_{nitr}` is the maximum nitrification rate (10 % day\ :math:`\mathrm{-}`\ 1, (:ref:`Parton et al. 2001 <Partonetal2001>`), and *f(T)* and *f(H\)*\ :sub:`2`\ O) are rate modifiers for temperature and moisture content. CLM uses the same rate modifiers as are used in the decomposition routine. *f(pH)* is a rate modifier for pH; however, because CLM does not calculate pH, instead a fixed pH value of 6.5 is used in the pH function of :ref:`Parton et al. (1996) <Partonetal1996>`.
 
-The potential denitrification rate is co-limited by
-NO\ :sup:`-3` concentration and C consumption rates, and occurs only in the anoxic fraction of soils:
+The potential denitrification rate is co-limited by NO\ :sup:`-3` concentration and C consumption rates, and occurs only in the anoxic fraction of soils:
 
 .. math::
    :label: 22.3)
@@ -137,5 +136,5 @@ where :math:`{WS}_{tot\_soil}` (kgH\ :sub:`2`\ O m\ :sup:`-2`) is the total mass
 Losses of Nitrogen Due to Fire
 -----------------------------------
 
-The final pathway for nitrogen loss is through combustion, also known as pyrodenitrification. Detailed equations are provided, together with the effects of fire on the carbon budget, in Chapter :numref:`rst_Fire`). It is assumed in CLM-CN that losses of N due to fire are restricted to vegetation and litter pools (including coarse woody debris). Loss rates of N are determined by the fraction of biomass lost to combustion, assuming that most of the nitrogen in the burned biomass is lost to the atmosphere (:ref:`Schlesinger, 1997 <Schlesinger1997>`; :ref:`Smith et al. 2005 <Smithetal2005>`). It is assumed that soil organic matter pools of carbon and nitrogen are not directly affected by fire (:ref:`Neff et al. 2005 <Neffetal2005>`).
+The final pathway for nitrogen loss is through combustion, also known as pyrodenitrification. Detailed equations are provided, together with the effects of fire on the carbon budget, in Chapter :numref:`rst_Fire`. It is assumed in CLM-CN that losses of N due to fire are restricted to vegetation and litter pools (including coarse woody debris). Loss rates of N are determined by the fraction of biomass lost to combustion, assuming that most of the nitrogen in the burned biomass is lost to the atmosphere (:ref:`Schlesinger, 1997 <Schlesinger1997>`; :ref:`Smith et al. 2005 <Smithetal2005>`). It is assumed that soil organic matter pools of carbon and nitrogen are not directly affected by fire (:ref:`Neff et al. 2005 <Neffetal2005>`).
 
