@@ -1,6 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-    ctsm5.1.dev144   slevis 10/18/2023 SNICAR snow albedo scheme updates
+    ctsm5.1.dev145   slevis 10/19/2023 SNICAR snow albedo scheme updates
+    ctsm5.1.dev144 samrabin 10/19/2023 Remove a deprecated shr_mpi_bcast call
     ctsm5.1.dev143   rgknox 10/13/2023 Zeroing of wood product fluxes on fates columns
     ctsm5.1.dev142 samrabin 09/19/2023 Merge 5 bit-for-bit pull requests
     ctsm5.1.dev141   slevis 09/13/2023 Change small snocan to zero

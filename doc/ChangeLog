@@ -1,7 +1,7 @@
 ===============================================================
-Tag name: ctsm5.1.dev144
+Tag name: ctsm5.1.dev145
 Originator(s): @cenlinhe (Cenlin He,UCAR/RAL), slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Tue Oct 17 14:48:50 MDT 2023
+Date: Thu Oct 19 14:34:25 MDT 2023
 One-line Summary: SNICAR snow albedo scheme updates
 
 Purpose and description of changes
@@ -58,8 +58,10 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed or introduced
 ------------------------
-CTSM issues fixed (include CTSM Issue #):
-
+CTSM issues fixed (all three unrelated to this PR):
+Fixes #2173
+Fixes #2107
+Fixes #2129
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -90,44 +92,13 @@ Changes to tests or testing:
 
 Testing summary:
 ----------------
-[Remove any lines that don't apply.]
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
-  build-namelist tests (if CLMBuildNamelist.pm has changed):
-
-    cheyenne -
-
-  tools-tests (test/tools) (if tools have been changed):
-
-    cheyenne -
-
-  python testing (if python code has changed; see instructions in python/README.md; document testing done):
-
-    (any machine) -
-
-    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
-     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
-     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
-     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
-     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
-     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
-     separately run the clm_pymods test suite, and you can remove the following line.]
-
-    clm_pymods test suite on cheyenne - 
-
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ----
-    izumi -------
-
-  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    cheyenne ----
-    izumi -------
-
-  any other testing (give details below):
-
-If the tag used for baseline comparisons was NOT the previous tag, note that here:
+    cheyenne ---- OK
+    izumi ------- OK
 
 
 Answer changes
@@ -146,17 +117,70 @@ Changes answers relative to baseline:
  Namelist defaults are such that phys="clm5.1" changes answers as a result of
  new parameterizations.
 
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename:
-
-   URL for LMWG diagnostics output used to validate new climate:
-
+ If this tag changes climate, I will document such information on
+ https://github.com/ESCOMP/CTSM/wiki/Answer-changing-tags
 
 Other details
 -------------
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/1861
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev144
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Thu Oct 19 13:30:02 MDT 2023
+One-line Summary: Remove a deprecated shr_mpi_bcast call
+
+Purpose and description of changes
+----------------------------------
+
+Removes a use of the deprecated shr_mpi_mod, replacing with ESMF_VMBroadcast. In addition, since the last tag, some minor documentation changes have been made.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: Compared ctsm5.1.dev142 to a version of this branch (1f39800e1) with ctsm5.1.dev142 merged in.
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids):
+* #1991 (https://github.com/ESCOMP/CTSM/pull/1991)
 
 ===============================================================
 ===============================================================
