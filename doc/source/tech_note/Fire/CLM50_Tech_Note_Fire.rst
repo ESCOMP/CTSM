@@ -73,7 +73,7 @@ Fuel combustibility :math:`f_{m}` is estimated by
 .. math::
    :label: 23.7
 
-   f_{m} = {f_{RH} f_{\beta}}, &\qquad T_{17cm} > T_{f}
+   f_{m} = {f_{RH} f_{\beta}}, \qquad T_{17cm} > T_{f}
 
 where :math:`f_{RH}` and :math:`f_{\beta }` represent the dependence of fuel combustibility on relative humidity :math:`RH` (%) and root-zone soil moisture limitation :math:`\beta` (fraction); :math:`T_{17cm}` is the temperature of the top 17 cm of soil (K) and :math:`T_{f}` is the freezing temperature. :math:`f_{RH}` is a weighted average of real time :math:`RH` (:math:`RH_{0}`) and 30-day running mean :math:`RH` (:math:`RH_{30d}`):
 
