@@ -113,7 +113,6 @@ module clm_varpar
   integer, public :: cft_size           ! Number of PFTs on crop landunit in arrays of PFTs
 
   integer, public :: maxpatch_glc    ! max number of elevation classes
-  integer, public :: max_patch_per_col
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public clm_varpar_init          ! set parameters
@@ -194,13 +193,6 @@ contains
     end if
     
     mxharvests = mxsowings + 1
-
-    ! TODO(wjs, 2015-10-04, bugz 2227) Using surf_numcft in this 'max' gives a significant
-    ! overestimate of max_patch_per_col when use_crop is true. This should be reworked -
-    ! or, better, removed from the code entirely (because it is a maintenance problem, and
-    ! I can't imagine that looping idioms that use it help performance that much, and
-    ! likely they hurt performance.)
-    max_patch_per_col= max(maxsoil_patches, surf_numcft, maxpatch_urb)
 
     nlevsoifl   =  10
     nlevurb     =  5

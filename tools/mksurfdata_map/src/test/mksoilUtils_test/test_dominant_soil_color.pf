@@ -2,7 +2,7 @@ module test_dominant_soil_color
 
   ! Tests of mksoilUtilsMod: dominant_soil_color
 
-  use pfunit_mod
+  use funit
   use mksoilUtilsMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use mkgridmapMod, only : gridmap_type, gridmap_clean, for_test_create_gridmap
