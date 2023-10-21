@@ -53,6 +53,33 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution</option>
     </options>
   </test>
+  <test name="PEM_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm51BgcCrop" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="derecho" compiler="intel" category="cesm3_dev"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">CESM3 development test with change in the processor count at the standard coupled resolution</option>
+    </options>
+  </test>
+  <test name="PEM_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm51BgcCrop" testmods="clm/clm51cam6LndTuningModeNoExIce">
+    <machines>
+      <machine name="derecho" compiler="intel" category="cesm3_dev"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">CESM3 development test with change in the processor count at the standard coupled resolution, wihout excess-ice</option>
+    </options>
+  </test>
+  <test name="ERS_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm51BgcCrop" testmods="clm/clm51cam6LndTuningMode">
+    <machines>
+      <machine name="derecho" compiler="intel" category="cesm3_dev"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">CESM3 development simple exact restart test with change in the processor count at the standard coupled resolution</option>
+    </options>
+  </test>
   <test name="ERI_D" grid="ne30pg3_t232" compset="I1850Clm51BgcCrop" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="cesm3_dev"/>
