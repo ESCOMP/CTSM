@@ -1,0 +1,3 @@
+! Turn off Meier roughness
+z0param_method = 'ZengWang2007'
+use_z0m_snowmelt = .false.
