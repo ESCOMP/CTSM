@@ -2143,7 +2143,7 @@ Land mask description
 
 <entry id="lnd_tuning_mode" type="char*20" category="default_settings"
        group="default_settings"
-       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_0_cam6.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_1_GSWP3v1">
+       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_0_cam6.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_1_GSWP3v1,clm5_1_cam6.0">
 General configuration of model version and atmospheric forcing to tune the model to run under.
 This sets the model to run with constants and initial conditions that were set to run well under 
 the configuration of model version and atmospheric forcing. To run well constants would need to be changed

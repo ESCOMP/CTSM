@@ -4394,6 +4394,8 @@ sub setup_logic_exice {
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
   my $use_exice = $nl->get_value( 'use_excess_ice' );
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice_streams', 'phys'=>$nl_flags->{'phys'});
   my $use_exice_streams = $nl->get_value( 'use_excess_ice_streams' );
   # IF excess ice streams is on
   if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
