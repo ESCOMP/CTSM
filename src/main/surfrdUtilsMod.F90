@@ -117,14 +117,15 @@ contains
   subroutine apply_convert_ocean_to_land(wt_lunit, begg, endg)
     !
     ! !DESCRIPTION:
-    ! Apply the conversion of ocean points to land, by changing all "wetland" points to
-    ! natveg; typically this will result in these points becoming bare ground.
+    ! Convert ocean points to land by changing ocean to natveg;
+    ! typically these points will become bare ground.
     !
-    ! The motivation for doing this is to avoid the negative runoff that sometimes comes
+    ! Originally ocean points were assigned to wetland, so the motivation for
+    ! for this subroutine was to avoid the negative runoff that sometimes comes
     ! from wetlands.
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istwet, max_lunit
+    use landunit_varcon, only : istsoil, istocn, max_lunit
     !
     ! !ARGUMENTS:
     integer, intent(in) :: begg  ! Beginning grid cell index
@@ -138,15 +139,9 @@ contains
     character(len=*), parameter :: subname = 'apply_convert_ocean_to_land'
     !-----------------------------------------------------------------------
 
-    ! BUG(wjs, 2022-10-27, ESCOMP/CTSM#1886) Ideally we would distinguish between ocean
-    ! vs. true wetland points on the surface dataset; for now oceans are included in the
-    ! wetland area on the surface dataset, so we convert all wetlands to land. (Typically
-    ! there are no true/inland wetlands on the surface dataset, so this is currently okay,
-    ! but this would become a problem if we started having inland wetlands on the surface
-    ! dataset again.)
     do g = begg, endg
-       wt_lunit(g,istsoil) = wt_lunit(g,istsoil) + wt_lunit(g,istwet)
-       wt_lunit(g,istwet) = 0._r8
+       wt_lunit(g,istsoil) = wt_lunit(g,istsoil) + wt_lunit(g,istocn)
+       wt_lunit(g,istocn) = 0._r8
     end do
 
   end subroutine apply_convert_ocean_to_land

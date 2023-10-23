@@ -370,7 +370,7 @@ contains
     !
     ! !USES:
     use clm_varpar      , only : maxpatch_glc, nlevurb
-    use landunit_varcon , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice
+    use landunit_varcon , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice, istocn
     use clm_instur      , only : wt_lunit, urban_valid, wt_glc_mec, topo_glc_mec
     use UrbanParamsType , only : CheckUrban
     !
@@ -507,10 +507,9 @@ contains
 
        ! Until ctsm5.1 we would label ocean points as wetland in fsurdat
        ! files. Starting with ctsm5.2 we label ocean points as ocean
-       ! (always 100%) and wetland points as wetland. Here we merge them
-       ! again to keep model behavior unchanged for now.
-       wt_lunit(nl,istwet) = (pctocn(nl) + pctwet(nl)) / 100._r8
-
+       ! (always 100%) and wetland points as wetland.
+       wt_lunit(nl,istwet) = pctwet(nl) / 100._r8
+       wt_lunit(nl,istocn) = pctocn(nl) / 100._r8
        wt_lunit(nl,istice) = pctgla(nl) / 100._r8
 
        do n = isturb_MIN, isturb_MAX
