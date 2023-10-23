@@ -26,7 +26,7 @@ ifeq ($(PROJECT),$(null))
 endif
 BATCHJOBS = $(BATCHJOBS_ch)
 
-MKSURFDATA = $(PWD)/gen_mksurfdata_jobscript_multi.py --account $(PROJECT)
+MKSURFDATA = $(PWD)/gen_mksurfdata_jobscript_multi --account $(PROJECT)
 SUBSETDATA = $(PWD)/../site_and_regional/subset_data
 MODIFYSURF = $(PWD)/../modify_input_files/fsurdat_modifier --overwrite
 

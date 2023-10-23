@@ -379,8 +379,8 @@ def main():
                 namelist = f"{scenario}_{res}.namelist"
                 command = os.path.join(os.getcwd(), "gen_mksurfdata_namelist")
                 command = command + " " + dataset_dict[target][0] + " " + res
-                command = command + "--silent"
-                command = command + "--namelist {namelist}"
+                command = command + " --silent"
+                command = command + f" --namelist {namelist}"
                 print(f"command is {command}")
                 sys.argv = [x for x in command.split(" ") if x]
                 main_nml()
