@@ -6,7 +6,9 @@ instructions, see README.
 import os
 import sys
 import argparse
-import subprocess
+
+from ctsm.path_utils import path_to_ctsm_root
+from ctsm.toolchain.gen_mksurfdata_namelist import main as main_nml
 
 valid_scenarios = [
     "all",
@@ -65,6 +67,13 @@ def get_parser():
         dest="account",
         required=False,
         default="P93300606",
+    )
+    parser.add_argument(
+        "--bld-path",
+        help="""Path to build directory for mksurfdata_esmf""",
+        action="store",
+        dest="bld_path",
+        default=os.path.join(path_to_ctsm_root(), "tools", "mksurfdata_esmf", "tool_bld"),
     )
     parser.add_argument(
         "--number-of-nodes",
@@ -310,24 +319,25 @@ def main():
     }
 
     # --------------------------
-    # TODO Here, reuse code from gen_mksurfdata_jobscript_single.py
+    # TODO Here, reuse code from gen_mksurfdata_jobscript_single
     # that's found in the section titled "Obtain mpirun command ..."
     # --------------------------
 
     # --------------------------
     # Make sure files exist or exit
     # --------------------------
-    if not os.path.exists("./tool_bld"):
+    if not os.path.exists(args.bld_path):
         print(
-            "tool_bld directory does NOT exist -- build mksurdata_esmf before running this script -- using ./gen_mksurfdata_build.sh"
+            args.bld_path
+            + " directory does NOT exist -- build mksurdata_esmf before running this script -- using ./gen_mksurfdata_build.sh"
         )
         sys.exit(1)
 
-    env_specific_script = "./tool_bld/.env_mach_specific.sh"
+    env_specific_script = os.path.join(args.bld_path, ".env_mach_specific.sh")
     if not os.path.exists(env_specific_script):
         print(env_specific_script + " does NOT exist")
         sys.exit(1)
-    mksurfdata = "./tool_bld/mksurfdata"
+    mksurfdata = os.path.join(args.bld_path, "mksurfdata")
     if not os.path.exists(mksurfdata):
         print(mksurfdata + " does NOT exist")
         sys.exit(1)
@@ -366,16 +376,14 @@ def main():
         for target in target_list:
             res_set = dataset_dict[target][1]
             for res in resolution_dict[res_set]:
-                command = os.path.join(os.getcwd(), "gen_mksurfdata_namelist.py")
+                namelist = f"{scenario}_{res}.namelist"
+                command = os.path.join(os.getcwd(), "gen_mksurfdata_namelist")
                 command = command + " " + dataset_dict[target][0] + " " + res
+                command = command + "--silent"
+                command = command + "--namelist {namelist}"
                 print(f"command is {command}")
-                commands = [x for x in command.split(" ") if x]
-                try:
-                    run_cmd = subprocess.run(commands, check=True, shell=True, capture_output=True)
-                except subprocess.CalledProcessError as error:
-                    sys.exit(f"{error} ERROR calling {command}")
-                output = run_cmd.stdout.decode("utf-8").strip()
-                namelist = output.split(" ")[-1]
+                sys.argv = [x for x in command.split(" ") if x]
+                main_nml()
                 print(f"generated namelist {namelist}")
                 output = f'time mpiexec_mpt -p "%g:" -np {n_p} {mksurfdata} < {namelist}'
                 runfile.write(f"{output} \n")
@@ -386,4 +394,3 @@ def main():
         runfile.write(f"echo Successfully ran {jobscript_file}\n")
 
     print(f"echo Successfully created jobscript {jobscript_file}\n")
-    sys.exit(0)
