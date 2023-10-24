@@ -17,6 +17,7 @@ Running Special Cases
    what-is-a-special-case.rst
    running-the-prognostic-crop-model.rst
    running-with-irrigation.rst
+   running-with-custom-crop-calendars.rst
    Spinning-up-the-Satellite-Phenology-Model-CLMSP-spinup.rst
    Spinning-up-the-biogeochemistry-BGC-spinup.rst
    Running-with-MOAR-data-as-atmospheric-forcing-to-spinup-the-model.rst
