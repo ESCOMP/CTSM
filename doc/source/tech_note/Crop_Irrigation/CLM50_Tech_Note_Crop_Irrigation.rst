@@ -420,7 +420,7 @@ Notes:
 
 - :math:`Date_{planting}^{min}` and :math:`Date_{planting}^{max}` are the minimum and maximum planting dates in the Northern Hemisphere; the corresponding dates in the Southern Hemisphere are shifted by 6 months. (See Sect. :numref:`Planting`.)
 - :math:`T_{p}` and :math:`T_{p}^{ min }` are crop-specific average and coldest planting temperatures, respectively. (See Sect. :numref:`Planting`.)
-- :math:`{GDD}_{min}` is the lowest (for planting) 20-year running mean growing degree-days based on the base temperature threshold in the 7\ :sup:`th` row, tracked from April to September (NH).
+- :math:`GDD_{min}` is a threshold describing the coolest historical climate a patch can have had in order for a crop to be sown there; see Sect. :numref:`Planting` for details. 
 - :math:`{GDD}_{mat}` is a crop's 20-year running mean growing degree-days needed for vegetative and physiological maturity. Harvest occurs at 100%\ :math:`{GDD}_{mat}` or when the days past planting reach the number in the 11\ :sup:`th` row.
 - Crop growth phases are described in the text.
 - :math:`z_{top}^{\max }` is the maximum top-of-canopy height of a crop.
