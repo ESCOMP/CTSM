@@ -421,7 +421,7 @@ Notes:
 - :math:`Date_{planting}^{min}` and :math:`Date_{planting}^{max}` are the minimum and maximum planting dates in the Northern Hemisphere; the corresponding dates in the Southern Hemisphere are shifted by 6 months. (See Sect. :numref:`Planting`.)
 - :math:`T_{p}` and :math:`T_{p}^{ min }` are crop-specific average and coldest planting temperatures, respectively. (See Sect. :numref:`Planting`.)
 - :math:`GDD_{min}` is a threshold describing the coolest historical climate a patch can have had in order for a crop to be sown there; see Sect. :numref:`Planting` for details. 
-- :math:`{GDD}_{mat}` is a crop's 20-year running mean growing degree-days needed for vegetative and physiological maturity. Harvest occurs at 100%\ :math:`{GDD}_{mat}` or when the days past planting reach the number in the 11\ :sup:`th` row.
+- :math:`GDD_{mat}` is the heat unit index, in units of accumulated growing degree-days, a crop needs to reach maturity. Heat unit index can be "boosted" to the Phase 3 (grain fill) threshold value if it is below that threshold but maximum leaf area index has been reached; see Sect. :numref:`Grain fill`.
 - Crop growth phases are described in the text.
 - :math:`z_{top}^{\max }` is the maximum top-of-canopy height of a crop.
 - *SLA* is specific leaf area.
