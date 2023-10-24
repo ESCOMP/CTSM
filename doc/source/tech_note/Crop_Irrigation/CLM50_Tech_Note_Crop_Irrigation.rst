@@ -214,29 +214,207 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When :math:`GD
 
 .. _Table Crop phenology parameters:
 
-.. table:: Crop phenology and morphology parameters for the active crop plant functional types (pfts) in CLM5BGCCROP. Numbers in the first row correspond to the list of pfts in :numref:`Table Crop plant functional types`.
+.. list-table:: Crop phenology and morphology parameters for the active crop plant functional types (pfts) in CLM5BGCCROP. Numbers in the first row correspond to the list of pfts in :numref:`Table Crop plant functional types`.
+   :header-rows: 1
 
- =========================================  =========================  ==========================  ==========================  ==========================  ==========================  =========================  =========================  ==========================  ==========================  ==========================
- \                                          temperate corn             spring wheat                temperate soybean           cotton                      rice                        sugarcane                  tropical corn              tropical soybean            miscanthus                  switchgrass
- =========================================  =========================  ==========================  ==========================  ==========================  ==========================  =========================  =========================  ==========================  ==========================  ==========================
- IVT                                        17, 18                     19, 20                      23, 24                      41, 42                      61, 62                      67, 68                     75, 76                     77, 78                      71, 72                      73, 74
- :math:`Date_{planting}^{min}`              April 1                    April 1                     May 1                       April 1                     Janurary 1                  Janurary 1                 March 20                   April 15                    April 1                     April 1
- :math:`Date_{planting}^{max}`              June 15                    June  15                    June 15                     May 31                      Feburary 28                 March 31                   April 15                   June 31                     June 15                     June 15
- :math:`T_{p}`\(K)                          283.15                     280.15                      286.15                      294.15                      294.15                      294.15                     294.15                     294.15                      283.15                      283.15
- :math:`T_{p}^{ min }`\(K)                  279.15                     272.15                      279.15                      283.15                      283.15                      283.15                     283.15                     283.15                      279.15                      279.15
- :math:`{GDD}_{min}` (degree-days)          50                         50                          50                          50                          50                          50                         50                         50                          50                          50
- base temperature for GDD (°C)              8                          0                           10                          10                          10                          10                         10                         10                          8                           8
- :math:`{GDD}_{mat}` (degree-days)          950-1850                   ≤ 1700                      ≤ 1900                      ≤ 1700                      ≤ 2100                      950-1850                   950-1850                   ≤ 2100                      950-1850                    950-1850
- Phase 2 % :math:`{GDD}_{mat}`              0.03                       0.05                        0.03                        0.03                        0.01                        0.03                       0.03                       0.03                        0.03                        0.03
- Phase 3 % :math:`{GDD}_{mat}`              0.65                       0.6                         0.5                         0.5                         0.4                         0.65                       0.5                        0.5                         0.4                         0.4
- Harvest: days past planting                ≤ 165                      ≤ 150                       ≤ 150                       ≤ 160                       ≤ 150                       ≤ 300                      ≤ 160                      ≤ 150                       ≤ 210                       ≤ 210                    
- :math:`z_{top}^{\max }` (m)                2.5                        1.2                         0.75                        1.5                         1.8                         4                          2.5                        1                           2.5                         2.5
- SLA (m :sup:`2` leaf g :sup:`-1` C)        0.05                       0.035                       0.035                       0.035                       0.035                       0.05                       0.05                       0.035                       0.057                       0.049
- :math:`\chi _{L}` index                    -0.5                       -0.5                        -0.5                        -0.5                        -0.5                        -0.5                       -0.5                       -0.5                        -0.5                        -0.5
- grperc                                     0.11                       0.11                        0.11                        0.11                        0.11                        0.11                       0.11                       0.11                        0.11                        0.11
- flnr                                       0.293                      0.41                        0.41                        0.41                        0.41                        0.293                      0.293                      0.41                        0.293                       0.293
- fcur                                       1                          1                           1                           1                           1                           1                          1                          1                           1                           1
- =========================================  =========================  ==========================  ==========================  ==========================  ==========================  =========================  =========================  ==========================  ==========================  ==========================
+   * - \
+     - temperate corn
+     - spring wheat
+     - temperate soybean
+     - cotton
+     - rice
+     - sugarcane
+     - tropical corn
+     - tropical soybean
+     - miscanthus
+     - switchgrass
+   * - IVT
+     - 17, 18
+     - 19, 20
+     - 23, 24
+     - 41, 42
+     - 61, 62
+     - 67, 68
+     - 75, 76
+     - 77, 78
+     - 71, 72
+     - 73, 74
+   * - :math:`Date_{planting}^{min}`
+     - April 1
+     - April 1
+     - May 1
+     - April 1
+     - Janurary 1
+     - Janurary 1
+     - March 20
+     - April 15
+     - April 1
+     - April 1
+   * - :math:`Date_{planting}^{max}`
+     - June 15
+     - June 15
+     - June 15
+     - May 31
+     - Feburary 28
+     - March 31
+     - April 15
+     - June 31
+     - June 15
+     - June 15
+   * - :math:`T_{p}`\(K)
+     - 283.15
+     - 280.15
+     - 286.15
+     - 294.15
+     - 294.15
+     - 294.15
+     - 294.15
+     - 294.15
+     - 283.15
+     - 283.15
+   * - :math:`T_{p}^{ min }`\(K)
+     - 279.15
+     - 272.15
+     - 279.15
+     - 283.15
+     - 283.15
+     - 283.15
+     - 283.15
+     - 283.15
+     - 279.15
+     - 279.15
+   * - :math:`{GDD}_{min}` (degree-days)
+     - 50
+     - 50
+     - 50
+     - 50
+     - 50
+     - 50
+     - 50
+     - 50
+     - 50
+     - 50
+   * - base temperature for GDD (°C)
+     - 8
+     - 0
+     - 10
+     - 10
+     - 10
+     - 10
+     - 10
+     - 10
+     - 8
+     - 8
+   * - :math:`{GDD}_{mat}` (degree-days)
+     - 950-1850
+     - ≤ 1700
+     - ≤ 1900
+     - ≤ 1700
+     - ≤ 2100
+     - 950-1850
+     - 950-1850
+     - ≤ 2100
+     - 950-1850
+     - 950-1850
+   * - Phase 2 % :math:`{GDD}_{mat}`
+     - 0.03
+     - 0.05
+     - 0.03
+     - 0.03
+     - 0.01
+     - 0.03
+     - 0.03
+     - 0.03
+     - 0.03
+     - 0.03
+   * - Phase 3 % :math:`{GDD}_{mat}`
+     - 0.65
+     - 0.6
+     - 0.5
+     - 0.5
+     - 0.4
+     - 0.65
+     - 0.5
+     - 0.5
+     - 0.4
+     - 0.4
+   * - Harvest: days past planting
+     - ≤ 165
+     - ≤ 150
+     - ≤ 150
+     - ≤ 160
+     - ≤ 150
+     - ≤ 300
+     - ≤ 160
+     - ≤ 150
+     - ≤ 210
+     - ≤ 210
+   * - :math:`z_{top}^{\max }` (m)
+     - 2.5
+     - 1.2
+     - 0.75
+     - 1.5
+     - 1.8
+     - 4
+     - 2.5
+     - 1
+     - 2.5
+     - 2.5
+   * - SLA (m :sup:`2` leaf g :sup:`-1` C)
+     - 0.05
+     - 0.035
+     - 0.035
+     - 0.035
+     - 0.035
+     - 0.05
+     - 0.05
+     - 0.035
+     - 0.057
+     - 0.049
+   * - :math:`\chi _{L}` index
+     - -0.5
+     - -0.5
+     - -0.5
+     - -0.5
+     - -0.5
+     - -0.5
+     - -0.5
+     - -0.5
+     - -0.5
+     - -0.5
+   * - grperc
+     - 0.11
+     - 0.11
+     - 0.11
+     - 0.11
+     - 0.11
+     - 0.11
+     - 0.11
+     - 0.11
+     - 0.11
+     - 0.11
+   * - flnr
+     - 0.293
+     - 0.41
+     - 0.41
+     - 0.41
+     - 0.41
+     - 0.293
+     - 0.293
+     - 0.41
+     - 0.293
+     - 0.293
+   * - fcur
+     - 1
+     - 1
+     - 1
+     - 1
+     - 1
+     - 1
+     - 1
+     - 1
+     - 1
+     - 1
 
 Notes: :math:`Date_{planting}^{min}` and :math:`Date_{planting}^{max}` are the minimum and maximum planting date in the Northern Hemisphere, the corresponding dates in the Southern Hemisphere apply 6 months later. :math:`T_{p}` and :math:`T_{p}^{ min }` are crop-specific average and coldest planting temperatures, respectively. :math:`{GDD}_{min}` is the lowest (for planting) 20-year running mean growing degree-days based on the base temperature threshold in the 7\ :sup:`th` row, tracked from April to September (NH). :math:`{GDD}_{mat}` is a crop's 20-year running mean growing degree-days needed for vegetative and physiological maturity. Harvest occurs at 100%\ :math:`{GDD}_{mat}` or when the days past planting reach the number in the 11\ :sup:`th` row. Crop growth phases are described in the text. :math:`z_{top}^{\max }` is the maximum top-of-canopy height of a crop, *SLA* is specific leaf area. :math:`\chi _{L}` is the leaf orientation index, equals -1 for vertical, 0 for random, and 1 for horizontal leaf orientation. grperc is the growth respiration factor. flnr is the fraction of leaf N in the Rubisco enzyme. fcur is the fraction of allocation that goes to currently displayed growth.
 
