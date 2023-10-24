@@ -416,7 +416,19 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When :math:`GD
      - 1
      - 1
 
-Notes: :math:`Date_{planting}^{min}` and :math:`Date_{planting}^{max}` are the minimum and maximum planting date in the Northern Hemisphere, the corresponding dates in the Southern Hemisphere apply 6 months later. :math:`T_{p}` and :math:`T_{p}^{ min }` are crop-specific average and coldest planting temperatures, respectively. :math:`{GDD}_{min}` is the lowest (for planting) 20-year running mean growing degree-days based on the base temperature threshold in the 7\ :sup:`th` row, tracked from April to September (NH). :math:`{GDD}_{mat}` is a crop's 20-year running mean growing degree-days needed for vegetative and physiological maturity. Harvest occurs at 100%\ :math:`{GDD}_{mat}` or when the days past planting reach the number in the 11\ :sup:`th` row. Crop growth phases are described in the text. :math:`z_{top}^{\max }` is the maximum top-of-canopy height of a crop, *SLA* is specific leaf area. :math:`\chi _{L}` is the leaf orientation index, equals -1 for vertical, 0 for random, and 1 for horizontal leaf orientation. grperc is the growth respiration factor. flnr is the fraction of leaf N in the Rubisco enzyme. fcur is the fraction of allocation that goes to currently displayed growth.
+Notes:
+
+- :math:`Date_{planting}^{min}` and :math:`Date_{planting}^{max}` are the minimum and maximum planting date in the Northern Hemisphere, the corresponding dates in the Southern Hemisphere apply 6 months later.
+- :math:`T_{p}` and :math:`T_{p}^{ min }` are crop-specific average and coldest planting temperatures, respectively.
+- :math:`{GDD}_{min}` is the lowest (for planting) 20-year running mean growing degree-days based on the base temperature threshold in the 7\ :sup:`th` row, tracked from April to September (NH).
+- :math:`{GDD}_{mat}` is a crop's 20-year running mean growing degree-days needed for vegetative and physiological maturity. Harvest occurs at 100%\ :math:`{GDD}_{mat}` or when the days past planting reach the number in the 11\ :sup:`th` row.
+- Crop growth phases are described in the text.
+- :math:`z_{top}^{\max }` is the maximum top-of-canopy height of a crop.
+- *SLA* is specific leaf area.
+- :math:`\chi _{L}` is the leaf orientation index, equals -1 for vertical, 0 for random, and 1 for horizontal leaf orientation.
+- grperc is the growth respiration factor.
+- flnr is the fraction of leaf N in the Rubisco enzyme.
+- fcur is the fraction of allocation that goes to currently displayed growth.
 
 .. _Allocation:
 
