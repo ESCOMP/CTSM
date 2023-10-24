@@ -424,7 +424,7 @@ Notes:
 - :math:`GDD_{mat}` is the heat unit index, in units of accumulated growing degree-days, a crop needs to reach maturity. Heat unit index can be "boosted" to the Phase 3 (grain fill) threshold value if it is below that threshold but maximum leaf area index has been reached; see Sect. :numref:`Grain fill`.
 - :math:`mxmat` is the maximum growing season length (days past planting), at which harvest occurs even if heat unit index has not reached :math:`GDD_{mat}`.
 - :math:`z_{top}^{\max }` is the maximum top-of-canopy height of a crop (see Sect. :numref:`Vegetation Structure`).
-- *SLA* is specific leaf area.
+- SLA is specific leaf area (see Chapter :numref:`rst_Photosynthetic Capacity`).
 - :math:`\chi _{L}` is the leaf orientation index, equals -1 for vertical, 0 for random, and 1 for horizontal leaf orientation.
 - grperc is the growth respiration factor.
 - flnr is the fraction of leaf N in the Rubisco enzyme.
