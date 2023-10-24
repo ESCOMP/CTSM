@@ -418,7 +418,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When :math:`GD
 
 Notes:
 
-- :math:`Date_{planting}^{min}` and :math:`Date_{planting}^{max}` are the minimum and maximum planting dates in the Northern Hemisphere; the corresponding dates in the Southern Hemisphere are shifted by 6 months. (See Sect. :numref:`Planting`.)
+- :math:`Date_{planting}^{min}` and :math:`Date_{planting}^{max}` are the minimum and maximum planting dates (defining the "sowing window") in the Northern Hemisphere; the corresponding dates in the Southern Hemisphere are shifted by 6 months. (See Sect. :numref:`Planting`.) These parameters can also be set with more geographic variation via input map stream files ``stream_fldFileName_swindow_start`` and ``stream_fldFileName_swindow_end``.
 - :math:`T_{p}` and :math:`T_{p}^{ min }` are crop-specific average and coldest planting temperatures, respectively. (See Sect. :numref:`Planting`.)
 - :math:`GDD_{min}` is a threshold describing the coolest historical climate a patch can have had in order for a crop to be sown there; see Sect. :numref:`Planting` for details. 
 - :math:`GDD_{mat}` is the heat unit index, in units of accumulated growing degree-days, a crop needs to reach maturity.
