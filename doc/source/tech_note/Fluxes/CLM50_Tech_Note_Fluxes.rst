@@ -803,7 +803,7 @@ When the expression for :math:`T_{s}` is substituted into equation :eq:`5.88`, t
 
    H_{v} = -\rho _{atm} C_{p} \left[c_{a}^{h} \theta _{atm} +c_{g}^{h} T_{g} -\left(c_{a}^{h} +c_{g}^{h} \right)T_{v} \right]\frac{c_{v}^{h} }{c_{a}^{h} +c_{v}^{h} +c_{g}^{h} } .
 
-Similarly, the expression for :math:`T_{s}` can be substituted into equation to obtain the sensible heat flux from ground :math:`H_{g}`
+Similarly, the expression for :math:`T_{s}` can be substituted into equations :eq:`5.89`, :eq:`5.90`, :eq:`5.91`, and :eq:`5.92` to obtain the sensible heat flux from ground :math:`H_{g}`
 
 .. math::
    :label: 5.98
@@ -1199,7 +1199,7 @@ The numerical solution for vegetation temperature and the fluxes of momentum, se
 
 #. An initial guess for the wind speed :math:`V_{a}` is obtained from :eq:`5.24` assuming an initial convective velocity :math:`U_{c} =0` m s\ :sup:`-1` for stable conditions (:math:`\theta _{v,\, atm} -\theta _{v,\, s} \ge 0` as evaluated from :eq:`5.50` ) and :math:`U_{c} =0.5` for unstable conditions (:math:`\theta _{v,\, atm} -\theta _{v,\, s} <0`).
 
-#. An initial guess for the Monin-Obukhov length :math:`L` is obtained from the bulk Richardson number using equation and :eq:`5.46` and :eq:`5.48`.
+#. An initial guess for the Monin-Obukhov length :math:`L` is obtained from the bulk Richardson number using equations :eq:`5.46` and :eq:`5.48`.
 
 #. Iteration proceeds on the following system of equations:
 
@@ -1296,7 +1296,7 @@ The sensible and water vapor heat fluxes derived above for bare soil and soil be
 
    E'_{g} =E_{g} +\left(T_{g}^{n+1} -T_{g}^{n} \right)\frac{\partial E_{g} }{\partial T_{g} }
 
-where :math:`H_{g}` and :math:`E_{g}` are the sensible heat and water vapor fluxes derived from equations and for non-vegetated surfaces and equations and for vegetated surfaces using :math:`T_{g}^{n}`. One further adjustment is made to :math:`H'_{g}` and :math:`E'_{g}`. If the soil moisture in the top snow/soil layer is not sufficient to support the updated ground evaporation, i.e., if :math:`E'_{g} > 0` and :math:`f_{evap} < 1` where
+where :math:`H_{g}`, :math:`E_{g}`, :math:`\frac{\partial H_{g} }{\partial T_{g} }`, and :math:`\frac{\partial E_{g} }{\partial T_{g} }` are the sensible heat and water vapor fluxes and their partial derivatives derived from equations :eq:`5.62`, :eq:`5.66`, :eq:`5.83`, and :eq:`5.84` for non-vegetated surfaces and equations :eq:`5.89`, :eq:`5.102`, :eq:`5.123`, and :eq:`5.124` for vegetated surfaces using :math:`T_{g}^{n}`. One further adjustment is made to :math:`H'_{g}` and :math:`E'_{g}`. If the soil moisture in the top snow/soil layer is not sufficient to support the updated ground evaporation, i.e., if :math:`E'_{g} > 0` and :math:`f_{evap} < 1` where
 
 .. math::
    :label: 5.142

@@ -358,7 +358,7 @@ For one-dimensional vertical water flow in soils, the conservation of mass is st
 
 where :math:`\theta` is the volumetric soil water content (mm\ :sup:`3` of water / mm\ :sup:`-3` of soil), :math:`t` is time (s), :math:`z` is height above some datum in the soil column (mm) (positive upwards), :math:`q` is soil water flux (kg m\ :sup:`-2` s\ :sup:`-1` or mm s\ :sup:`-1`) (positive upwards), and :math:`e` is a soil moisture sink term (mm of water mm\ :sup:`-1` of soil s\ :sup:`-1`) (ET loss). This equation is solved numerically by dividing the soil column into multiple layers in the vertical and integrating downward over each layer with an upper boundary condition of the infiltration flux into the top soil layer :math:`q_{infl}` and a zero-flux lower boundary condition at the bottom of the soil column (sub-surface runoff is removed later in the timestep, section :numref:`Lateral Sub-surface Runoff`).
 
-The soil water flux :math:`q` in equation can be described by Darcy's law :ref:`(Dingman 2002) <Dingman2002>`
+The soil water flux :math:`q` in equation :eq:`7.79` can be described by Darcy's law :ref:`(Dingman 2002) <Dingman2002>`
 
 .. math::
    :label: 7.80
@@ -641,7 +641,7 @@ where
 
 The tridiagonal equation set is solved over :math:`i=1,\ldots,N_{levsoi}`.
 
-The finite-difference forms of the fluxes and partial derivatives in equations :eq:`7.111` - :eq:`7.114` can be obtained from equation as
+The finite-difference forms of the fluxes and partial derivatives in equations :eq:`7.111` - :eq:`7.114` can be obtained from equation :eq:`7.82` as
 
 .. math::
    :label: 7.115
