@@ -29,6 +29,8 @@ The above four parameters are estimated by fitting the LUNA model to a global co
 Model structure
 ----------------------------------------------------------
 
+.. _Plant Nitrogen:
+
 Plant Nitrogen
 ''''''''''''''''''''''''''
 

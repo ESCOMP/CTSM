@@ -427,8 +427,8 @@ Notes:
 - SLA is specific leaf area (see Chapter :numref:`rst_Photosynthetic Capacity`).
 - :math:`\chi _{L}` is the leaf orientation index, equals -1 for vertical, 0 for random, and 1 for horizontal leaf orientation. (See Sect. :numref:`Canopy Radiative Transfer`.)
 - grperc is the growth respiration factor (see Sect. :numref:`Growth Respiration`). 
-- flnr is the fraction of leaf N in the Rubisco enzyme.
 - fcur is the fraction of allocation that goes to currently displayed growth.
+- flnr is the fraction of leaf N in the Rubisco enzyme (a.k.a. :math:`N_{cb}` in Sect. :numref:`Plant Nitrogen`).
 
 .. _Allocation:
 
