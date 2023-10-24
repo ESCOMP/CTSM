@@ -605,12 +605,14 @@ where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, NS is
  | Switchgrass                      |             0.70           |
  +----------------------------------+----------------------------+
 
-Whereas food C and N was formerly transferred to the litter pool, CLM5 routes food C and N to a grain product pool where the C and N decay to the atmosphere over one year, similar in structure to the wood product pools. The biofuel C and N is also routed to the grain product pool and decays to the atmosphere over one year. Additionally, CLM5 accounts for the C and N required for crop seeding by removing the seed C and N from the grain product pool during harvest. The crop seed pool is then used to seed crops in the subsequent year. Calcuating the crop yields (Equation :eq:`25.15`) requires that you sum the GRAINC_TO_FOOD variable for each year, and must account for the proportion of C in the dry crop weight. Here, we assume that grain C is 45% of the total dry weight. Additionally, harvest is not typically 100% efficient, so analysis needs to assume that harvest efficiency is less. We assume a harvest efficiency of 85%.
+Whereas food C and N was formerly transferred to the litter pool, CLM5 routes food C and N to a grain product pool where the C and N decay to the atmosphere over one year, similar in structure to the wood product pools. The biofuel C and N is also routed to the grain product pool and decays to the atmosphere over one year. Additionally, CLM5 accounts for the C and N required for crop seeding by removing the seed C and N from the grain product pool during harvest. The crop seed pool is then used to seed crops in the subsequent year.
+
+Annual food crop yields (g dry matter m\ :sup:`-2`) can be calculated by saving the GRAINC_TO_FOOD_ANN variable once per year, then postprocessing with Equation :eq:`25.15`. This calculation assumes that grain C is 45% of the total dry weight. Additionally, harvest is not typically 100% efficient, so analysis needs to assume that harvest efficiency is less---we use 85%.
 
 .. math::
    :label: 25.15
 
-     Grain\ yield(g.m^{-2})=\frac{\sum(GRAINC\_ TO\_ FOOD)*0.85}{0.45}
+     \text{Grain yield} = \frac{GRAINC\_TO\_FOOD\_ANN)*0.85}{0.45}
 
 .. _Table Crop allocation parameters:
 
