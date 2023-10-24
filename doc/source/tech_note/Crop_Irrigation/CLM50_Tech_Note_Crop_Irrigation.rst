@@ -426,7 +426,7 @@ Notes:
 - :math:`z_{top}^{\max }` is the maximum top-of-canopy height of a crop (see Sect. :numref:`Vegetation Structure`).
 - SLA is specific leaf area (see Chapter :numref:`rst_Photosynthetic Capacity`).
 - :math:`\chi _{L}` is the leaf orientation index, equals -1 for vertical, 0 for random, and 1 for horizontal leaf orientation.
-- grperc is the growth respiration factor.
+- grperc is the growth respiration factor (see Sect. :numref:`Growth Respiration`). 
 - flnr is the fraction of leaf N in the Rubisco enzyme.
 - fcur is the fraction of allocation that goes to currently displayed growth.
 
