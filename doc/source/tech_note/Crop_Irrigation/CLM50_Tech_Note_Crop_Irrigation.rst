@@ -533,25 +533,25 @@ The soil moisture deficit :math:`D_{irrig}` is
 
    D_{irrig} = \left\{
    \begin{array}{lr}
-   w_{thresh} - w_{avail} &\qquad w_{thresh} > w_{avail} \\
+   w_{target} - w_{avail} &\qquad w_{thresh} > w_{avail} \\
    0 &\qquad w_{thresh} \le w_{avail}
    \end{array} \right\}
-
-where :math:`w_{thresh}` is the irrigation moisture threshold (mm) and :math:`w_{avail}` is the available moisture (mm). The moisture threshold is
-
-.. math::
-   :label: 25.62
-
-   w_{thresh} = f_{thresh} \left(w_{target} - w_{wilt}\right) + w_{wilt}
 
 where :math:`w_{target}` is the irrigation target soil moisture (mm)
 
 .. math::
+   :label: 25.62
+
+   w_{target} = \sum_{j=1}^{N_{irr}} \theta_{target} \Delta z_{j} \ .
+
+The irrigation moisture threshold (mm) is
+
+.. math::
    :label: 25.63
 
-   w_{target} = \sum_{j=1}^{N_{irr}} \theta_{target} \Delta z_{j} \ ,
+   w_{thresh} = f_{thresh} \left(w_{target} - w_{wilt}\right) + w_{wilt}
 
-:math:`w_{wilt}` is the wilting point soil moisture (mm)
+where :math:`w_{wilt}` is the wilting point soil moisture (mm)
 
 .. math::
    :label: 25.64
@@ -559,12 +559,14 @@ where :math:`w_{target}` is the irrigation target soil moisture (mm)
    w_{wilt} = \sum_{j=1}^{N_{irr}} \theta_{wilt} \Delta z_{j} \ ,
 
 and :math:`f_{thresh}` is a tuning parameter.  The available moisture in
-the soil is
+the soil (mm) is
 
 .. math::
    :label: 25.65
 
    w_{avail} = \sum_{j=1}^{N_{irr}} \theta_{j} \Delta z_{j} \ ,
+
+Note that :math:`w_{target}` is truly supposed to give the target soil moisture value that we're shooting for whenever irrigation happens; then the soil moisture deficit :math:`D_{irrig}` gives the difference between this target value and the current soil moisture. The irrigation moisture threshold :math:`w_{thresh}`, on the other hand, gives a threshold at which we decide to do any irrigation at all. The way this is written allows for the possibility that one may not want to irrigate every time there becomes even a tiny soil moisture deficit. Instead, one may want to wait until the deficit is larger before initiating irrigation; at that point, one doesn't want to just irrigate up to the "threshold" but instead up to the higher "target". The target should always be greater than or equal to the threshold.
 
 :math:`N_{irr}` is the index of the soil layer corresponding to a specified depth :math:`z_{irrig}` (:numref:`Table Irrigation parameters`) and :math:`\Delta z_{j}` is the thickness of the soil layer in layer :math:`j` (section :numref:`Vertical Discretization`). :math:`\theta_{j}` is the volumetric soil moisture in layer :math:`j` (section :numref:`Soil Water`). :math:`\theta_{target}` and :math:`\theta_{wilt}` are the target and wilting point volumetric soil moisture values, respectively, and are determined by inverting :eq:`7.94` using soil matric potential parameters :math:`\Psi_{target}` and :math:`\Psi_{wilt}` (:numref:`Table Irrigation parameters`). After the soil moisture deficit :math:`D_{irrig}` is calculated, irrigation in an amount equal to :math:`\frac{D_{irrig}}{T_{irrig}}` (mm/s) is applied uniformly over the irrigation period :math:`T_{irrig}` (s). Irrigation water is applied directly to the ground surface, bypassing canopy interception (i.e., added to :math:`{q}_{grnd,liq}`: section :numref:`Canopy Water`).
 
