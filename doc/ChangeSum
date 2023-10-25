@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-    ctsm5.1.dev146 glemieux 10/23/2023 FATES cross-grid seed dispersal
+    ctsm5.1.dev146 glemieux 10/24/2023 FATES cross-grid seed dispersal
     ctsm5.1.dev145   slevis 10/19/2023 SNICAR snow albedo scheme updates
     ctsm5.1.dev144 samrabin 10/19/2023 Remove a deprecated shr_mpi_bcast call
     ctsm5.1.dev143   rgknox 10/13/2023 Zeroing of wood product fluxes on fates columns
