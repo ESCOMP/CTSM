@@ -88,7 +88,7 @@ def get_parser():
         action="store",
         dest="jobscript_file",
         required=False,
-        default="mksurfdata_jobscript_single",
+        default="mksurfdata_jobscript_single.sh",
     )
     return parser
 

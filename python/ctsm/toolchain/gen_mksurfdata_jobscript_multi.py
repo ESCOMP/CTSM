@@ -120,7 +120,7 @@ def get_parser():
         action="store",
         dest="jobscript_file",
         required=False,
-        default="mksurfdata_jobscript_multi",
+        default="mksurfdata_jobscript_multi.sh",
     )
     return parser
 
