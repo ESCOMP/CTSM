@@ -1054,7 +1054,7 @@ contains
           data1dptr => this%repr_grainn_to_food_patch(:,k)
           call hist_addfld1d ( &
                ! e.g., GRAINN_TO_FOOD
-               fname=get_repr_hist_fname(k)//'N_TO_FOOD (not scientifically)', &
+               fname=get_repr_hist_fname(k)//'N_TO_FOOD', &
                units='gN/m^2/s', &
                avgflag='A', &
                long_name=get_repr_longname(k)//' N to food', &
