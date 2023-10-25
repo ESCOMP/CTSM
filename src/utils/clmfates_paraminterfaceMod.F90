@@ -252,25 +252,20 @@ contains
  end subroutine ParametersFromNetCDF
  !-----------------------------------------------------------------------
 
- subroutine Read(this,  is_host_file, fates_params )
+ subroutine Read(this, fates_params )
     !
     ! !DESCRIPTION:
-    ! Read 'fates_params' parameters from appropriate filename given 'is_host_file'.
+    ! Read 'fates_params' parameters from storage.
     !
     ! USES
     use clm_varctl, only : fname_len, paramfile, fates_paramfile
     ! !ARGUMENTS:
     class(fates_param_reader_ctsm_impl) :: this
-    logical, intent(in) :: is_host_file
     class(fates_parameters_type), intent(inout) :: fates_params
     !-----------------------------------------------------------------------
-    character(len=fname_len) :: filename ! file to read
+    logical :: is_host_file = .false.
 
-    filename = fates_paramfile
-    if (is_host_file) then
-      filename = paramfile
-    endif
-    call ParametersFromNetCDF(filename, is_host_file, fates_params)
+    call ParametersFromNetCDF(fates_paramfile, is_host_file, fates_params)
 
  end subroutine Read
 
