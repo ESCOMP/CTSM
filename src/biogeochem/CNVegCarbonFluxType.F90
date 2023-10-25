@@ -981,6 +981,7 @@ contains
                ptr_patch=this%livestemc_to_biofuelc_patch)
 
           this%repr_grainc_to_seed_patch(begp:endp,:) = spval
+          this%repr_grainc_to_seed_perharv_patch(begp:endp,:,:) = spval
           this%repr_grainc_to_seed_thisyr_patch(begp:endp,:) = spval
           do k = repr_grain_min, repr_grain_max
              data1dptr => this%repr_grainc_to_seed_patch(:,k)
@@ -991,6 +992,16 @@ contains
                   avgflag='A', &
                   long_name=get_repr_longname(k)//' C to seed', &
                   ptr_patch=data1dptr)
+             data2dptr => this%repr_grainc_to_seed_perharv_patch(:,:,k)
+             call hist_addfld2d ( &
+                  ! e.g., GRAINC_TO_SEED_PERHARV
+                  fname=get_repr_hist_fname(k)//'C_TO_SEED_PERHARV', &
+                  units='gC/m^2', &
+                  type2d='mxharvests', &
+                  avgflag='I', &
+                  long_name=get_repr_longname(k)//' C to seed per harvest; should only be output annually', &
+                  ptr_patch=data2dptr, &
+                  default='inactive')
              data1dptr => this%repr_grainc_to_seed_thisyr_patch(:,k)
              call hist_addfld1d ( &
                   ! e.g., GRAINC_TO_SEED_ANN
