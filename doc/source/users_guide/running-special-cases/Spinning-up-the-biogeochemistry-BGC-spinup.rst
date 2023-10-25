@@ -1,6 +1,6 @@
-.. _spinning-up-clm50-bgc:
-
 .. include:: ../substitutions.rst
+
+.. _spinning-up-clm-bgc:
 
 ==========================
  Spinup of |version|-BGC-Crop

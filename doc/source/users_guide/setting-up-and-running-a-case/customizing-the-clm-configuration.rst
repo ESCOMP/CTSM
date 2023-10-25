@@ -431,6 +431,8 @@ Note: The precedence for setting the values of namelist variables with the diffe
 
 Thus a setting in ``CLM_BLDNML_OPTS`` will override a setting for the same thing given in a use case with ``CLM_NML_USE_CASE``. Likewise, a setting in ``CLM_NAMELIST_OPTS`` will override a setting in ``user_nl_clm``.
 
+.. _setting-initial-conditions:
+
 ------------------------------------
 Setting Your Initial Conditions File
 ------------------------------------

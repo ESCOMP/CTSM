@@ -1,6 +1,6 @@
-.. _spinning-up-sp:
-
 .. include:: ../substitutions.rst
+
+.. _spinning-up-sp:
 
 ===========================================
  Spinning up the Satellite Phenology Model
