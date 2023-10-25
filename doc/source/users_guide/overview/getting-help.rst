@@ -5,9 +5,7 @@
 ==============
  Getting Help
 ==============
-In addition to this users-guide there are several other resources that are available to help you use |version|. The first one is the |cesmrelease| User's-Guide, which documents the entire process of creating cases with |cesmrelease|. 
-And next is the CIME User's Guide which goes over the scripts and infrastructure used for running |version| in |cesmrelease|.
-The CESM bulletin board which is a web-site for exchanging information between users of CESM. There are also CLM web-pages specific for CLM, and finally there is an email address to report bugs that you find in |cesmrelease|.
+In addition to this users-guide there are several other resources that are available to help you use |version|. The first one is the |cesmrelease| User's-Guide, which documents the entire process of creating cases with |cesmrelease|. And next is the CIME User's Guide which goes over the scripts and infrastructure used for running |version| in |cesmrelease|. The CESM bulletin board which is a web-site for exchanging information between users of CESM. There are also CLM web-pages specific for CLM, and finally there is an email address to report bugs that you find in |cesmrelease|.
 
 ---------------------------
 The CESM User's-Guide
@@ -21,8 +19,7 @@ The CESM User's-Guide
 The CIME User's-Guide
 ---------------------------
 
-The CIME Users'-Guide goes into the how to use the scripts and infrastructure of the CESM.
-`CIME Users Guide <http://esmci.github.io/cime/>`_
+The CIME Users'-Guide goes into the how to use the scripts and infrastructure of the CESM. `CIME Users Guide <http://esmci.github.io/cime/>`_
 
 -----------------------
 The CESM Bulletin Board
@@ -59,11 +56,7 @@ Also note that several of the XML database files can be viewed in a web browser 
 Reporting bugs in |version|
 ----------------------------
 
-If you have any problems, additional questions, bug reports, or any other feedback, please report it as an issue
-on GitHub https://github.com/ESCOMP/ctsm/issues or for CIME scripts and infrastructure to https://github.com/ESMCI/CIME/issues. 
-Or send an email to 
-<`cesmhelp@cgd.ucar.edu <cesmhelp@cgd.ucar.edu>`_> or <`ctsm-software@ucar.edu <ctsm-software@ucar.edu>`_>. 
-If you find bad, wrong, or misleading information in this users guide report it as an issue on CTSM.
+If you have any problems, additional questions, bug reports, or any other feedback, please report it as an issue on GitHub https://github.com/ESCOMP/ctsm/issues or for CIME scripts and infrastructure to https://github.com/ESMCI/CIME/issues. Or send an email to <`cesmhelp@cgd.ucar.edu <cesmhelp@cgd.ucar.edu>`_> or <`ctsm-software@ucar.edu <ctsm-software@ucar.edu>`_>. If you find bad, wrong, or misleading information in this users guide report it as an issue on CTSM.
 
 ---------------------------------------
 Some Acronym's and Terms We'll be Using
@@ -76,7 +69,7 @@ CESM
   Community Earth System Model (CESM). The coupled earth system model that CLM is a component of.
 
 CIME
-  The Common Infrastructure for Modeling the Earth (CIME - pronounced “SEAM”) provides a Case Control System for configuring, compiling and executing Earth system models, data and stub model components, a driver and associated tools and libraries.
+  The Common Infrastructure for Modeling the Earth (CIME - pronounced "SEAM") provides a Case Control System for configuring, compiling and executing Earth system models, data and stub model components, a driver and associated tools and libraries.
 
 CLM
   Community Land Model (CLM). The prognostically active land model component of CESM.
@@ -108,7 +101,7 @@ CRUNCEP
   The Climate Research Unit (CRU) analysis of the NCEP atmosphere reanalysis atmosphere forcing data. This can be used to drive CLM with atmosphere forcing from 1901 to 2016. This data is updated every year, the version we are currently using is Version-7. The las CESM1.2.2 release used Version-4 data.
 
 CTSM
-  The Community Terrestrial Systems Model, of which |version| and CLM4.5 are namelist option sets of. CTSM is a wider community 
+  The Community Terrestrial Systems Model, of which |version| and CLM4.5 are namelist option sets of. CTSM is a wider community
   that includes using CTSM for Numerical Weather Prediction (NWP) as well as climate.
 
 DATM
@@ -126,7 +119,7 @@ ESMF
   Earth System Modeling Framework (ESMF). They are a software project that provides a software library to support Earth System modeling. We provide interfaces for ESMF as well as use their regridding capabilities for offline CLM tools.
 
 FATES
-  Functionally Assembled Terrestrial Ecosystem Simulator. This is being developed by the Next Generation Ecosystem Experiment Tropics’ (NGEE-T) 
+  Functionally Assembled Terrestrial Ecosystem Simulator. This is being developed by the Next Generation Ecosystem Experiment Tropics' (NGEE-T)
   project and uses both |version| and the land model component of E3SM (Energy Exascale Earth System Model).
 
 FUN
