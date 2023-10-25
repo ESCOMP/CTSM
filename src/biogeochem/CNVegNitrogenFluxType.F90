@@ -1057,7 +1057,7 @@ contains
                fname=get_repr_hist_fname(k)//'N_TO_FOOD', &
                units='gN/m^2/s', &
                avgflag='A', &
-               long_name=get_repr_longname(k)//' N to food', &
+               long_name=get_repr_longname(k)//' N to food (not scientifically supported)', &
                ptr_patch=data1dptr, &
                default='inactive')
           data1dptr => this%repr_grainn_to_seed_patch(:,k)
@@ -1066,7 +1066,7 @@ contains
                fname=get_repr_hist_fname(k)//'N_TO_SEED', &
                units='gN/m^2/s', &
                avgflag='A', &
-               long_name=get_repr_longname(k)//' N to seed', &
+               long_name=get_repr_longname(k)//' N to seed (not scientifically supported)', &
                ptr_patch=data1dptr, &
                default='inactive')
           data2dptr => this%repr_grainn_to_food_perharv_patch(:,:,k)
@@ -1076,7 +1076,7 @@ contains
                units='gN/m^2', &
                type2d='mxharvests', &
                avgflag='I', &
-               long_name=get_repr_longname(k)//' N to food per harvest; should only be output annually', &
+               long_name=get_repr_longname(k)//' N to food per harvest; should only be output annually (not scientifically supported)', &
                ptr_patch=data2dptr, &
                default='inactive')
           data1dptr => this%repr_grainn_to_food_thisyr_patch(:,k)
@@ -1085,7 +1085,7 @@ contains
                fname=get_repr_hist_fname(k)//'N_TO_FOOD_ANN', &
                units='gN/m^2', &
                avgflag='I', &
-               long_name=get_repr_longname(k)//' N to food harvested per calendar year; should only be output annually', &
+               long_name=get_repr_longname(k)//' N to food harvested per calendar year; should only be output annually (not scientifically supported)', &
                ptr_patch=data1dptr, &
                default='inactive')
           data2dptr => this%repr_grainn_to_seed_perharv_patch(:,:,k)
@@ -1095,7 +1095,7 @@ contains
                units='gN/m^2', &
                type2d='mxharvests', &
                avgflag='I', &
-               long_name=get_repr_longname(k)//' N to seed per harvest; should only be output annually', &
+               long_name=get_repr_longname(k)//' N to seed per harvest; should only be output annually (not scientifically supported)', &
                ptr_patch=data2dptr, &
                default='inactive')
           data1dptr => this%repr_grainn_to_seed_thisyr_patch(:,k)
@@ -1104,7 +1104,7 @@ contains
                fname=get_repr_hist_fname(k)//'N_TO_SEED_ANN', &
                units='gN/m^2', &
                avgflag='I', &
-               long_name=get_repr_longname(k)//' N to seed harvested per calendar year; should only be output annually', &
+               long_name=get_repr_longname(k)//' N to seed harvested per calendar year; should only be output annually (not scientifically supported)', &
                ptr_patch=data1dptr, &
                default='inactive')
        end do
