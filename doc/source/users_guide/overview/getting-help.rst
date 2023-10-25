@@ -1,6 +1,6 @@
-.. _getting-help:
-
 .. include:: ../substitutions.rst
+
+.. _getting-help:
 
 ==============
  Getting Help

@@ -1,6 +1,6 @@
-.. _quickstart:
-
 .. include:: ../substitutions.rst
+
+.. _quickstart:
 
 ============
  Quickstart
