@@ -58,6 +58,8 @@ Reporting bugs in |version|
 
 If you have any problems, additional questions, bug reports, or any other feedback, please report it as an issue on GitHub https://github.com/ESCOMP/ctsm/issues or for CIME scripts and infrastructure to https://github.com/ESMCI/CIME/issues. Or send an email to <`cesmhelp@cgd.ucar.edu <cesmhelp@cgd.ucar.edu>`_> or <`ctsm-software@ucar.edu <ctsm-software@ucar.edu>`_>. If you find bad, wrong, or misleading information in this users guide report it as an issue on CTSM.
 
+.. _acronyms-and-terms:
+
 ---------------------------------------
 Some Acronym's and Terms We'll be Using
 ---------------------------------------

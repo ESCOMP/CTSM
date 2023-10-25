@@ -1,6 +1,6 @@
-.. _trouble-shooting:
-
 .. include:: ../substitutions.rst
+
+.. _trouble-shooting:
 
 ***************
 Troubleshooting
