@@ -9,10 +9,9 @@ import argparse
 
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.toolchain.gen_mksurfdata_namelist import main as main_nml
+from ctsm.utils import abort
 
 valid_scenarios = [
-    "all",
-    "standard",
     "global-present",
     "global-present-low-res",
     "global-present-nldas",
@@ -146,32 +145,7 @@ def main():
     # Determine target list
     # --------------------------
     target_list = []
-    if scenario == "all":
-        target_list = (
-            [
-                "global-present",
-                "crop-global-present",
-                "crop-global-1850",
-                "crop-global-hist",
-                "crop-tropics-present",
-                "crop-global-SSP1-2.6",
-                "crop-global-SSP3-7.0",
-                "crop-global-SSP5-3.4",
-                "crop-global-SSP2-4.5",
-                "crop-global-SSP1-1.9",
-                "crop-global-SSP4-3.4",
-                "crop-global-SSP4-6.0",
-                "crop-global-SSP5-8.5",
-            ],
-        )
-    elif scenario == "standard":
-        target_list = (
-            [
-                "global-present",
-                "global-present-nldas",
-            ],
-        )
-    elif scenario == "crop":
+    if scenario == "crop":
         target_list = ["crop-global-present", "crop-global-1850", "crop-global-hist"]
     elif scenario == "crop-global-future":
         target_list = [
@@ -190,6 +164,12 @@ def main():
     else:
         target_list = [scenario]
 
+    # --------------------------
+    # Error checking
+    # --------------------------
+    for scenario_list in target_list:
+        if scenario_list not in valid_scenarios:
+            abort("Input scenario is NOT in valid_scenarios")
     # --------------------------
     # Determine resolution sets that are referenced in commands
     # --------------------------
@@ -375,6 +355,8 @@ def main():
         runfile.write(f"{check} \n")
         for target in target_list:
             res_set = dataset_dict[target][1]
+            if res_set not in resolution_dict:
+                abort(f"Resolution is not in the resolution_dict: {res_set}")
             for res in resolution_dict[res_set]:
                 namelist = f"{scenario}_{res}.namelist"
                 command = os.path.join(os.getcwd(), "gen_mksurfdata_namelist")

@@ -61,7 +61,6 @@ class TestSysGenMkSurfJSMulti(unittest.TestCase):
                 scenario,
             ]
         )
-        print(sys.argv)
         main()
         self.assertTrue(os.path.exists(self.outfile), "Output jobscript file should exist")
 
@@ -70,7 +69,7 @@ class TestSysGenMkSurfJSMulti(unittest.TestCase):
         Test that a standard simple namelist works
         """
         # pylint: disable=no-self-use
-        self.createJS(nodes="4", tasks_per_node="12", scenario="standard")
+        self.createJS(nodes="4", tasks_per_node="12", scenario="crop-global-present")
 
 
 if __name__ == "__main__":
