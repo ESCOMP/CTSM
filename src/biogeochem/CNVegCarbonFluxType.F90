@@ -958,7 +958,6 @@ contains
           end do
 
           this%repr_grainc_to_food_thisyr_patch(begp:endp,:) = spval
-          this%repr_grainc_to_seed_thisyr_patch(begp:endp,:) = spval
           do k = repr_grain_min, repr_grain_max
              data1dptr => this%repr_grainc_to_food_thisyr_patch(:,k)
              call hist_addfld1d ( &
@@ -967,15 +966,6 @@ contains
                   units='gC/m^2', &
                   avgflag='I', &
                   long_name=get_repr_longname(k)//' C to food harvested per calendar year; should only be output annually', &
-                  ptr_patch=data1dptr, &
-                  default='inactive')
-             data1dptr => this%repr_grainc_to_seed_thisyr_patch(:,k)
-             call hist_addfld1d ( &
-                  ! e.g., GRAINC_TO_SEED_ANN
-                  fname=get_repr_hist_fname(k)//'C_TO_SEED_ANN', &
-                  units='gC/m^2', &
-                  avgflag='I', &
-                  long_name=get_repr_longname(k)//' C to seed harvested per calendar year; should only be output annually', &
                   ptr_patch=data1dptr, &
                   default='inactive')
           end do
@@ -991,6 +981,7 @@ contains
                ptr_patch=this%livestemc_to_biofuelc_patch)
 
           this%repr_grainc_to_seed_patch(begp:endp,:) = spval
+          this%repr_grainc_to_seed_thisyr_patch(begp:endp,:) = spval
           do k = repr_grain_min, repr_grain_max
              data1dptr => this%repr_grainc_to_seed_patch(:,k)
              call hist_addfld1d ( &
@@ -1000,6 +991,15 @@ contains
                   avgflag='A', &
                   long_name=get_repr_longname(k)//' C to seed', &
                   ptr_patch=data1dptr)
+             data1dptr => this%repr_grainc_to_seed_thisyr_patch(:,k)
+             call hist_addfld1d ( &
+                  ! e.g., GRAINC_TO_SEED_ANN
+                  fname=get_repr_hist_fname(k)//'C_TO_SEED_ANN', &
+                  units='gC/m^2', &
+                  avgflag='I', &
+                  long_name=get_repr_longname(k)//' C to seed harvested per calendar year; should only be output annually', &
+                  ptr_patch=data1dptr, &
+                  default='inactive')
           end do
        end if
 
