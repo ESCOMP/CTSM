@@ -9,6 +9,7 @@
 Running the CLM requires a suite of UNIX utilities and programs and you should make sure you have all of these available before trying to go forward with using it. If you are missing one of these you should contact the systems administrator for the machine you wish to run on and make sure they are installed.
 
 List of utilities required for CESM in the "|cesmrelease| Software/Operating System Prerequisites" section in `http://www.cesm.ucar.edu/models/cesm1.2//cesm/doc/usersguide/book1.html <CLM-URL>`_
+
 - UNIX bash shell (for some of the CLM tools scripts)
 - NCL (for some of the offline tools for creating/modifying CLM input datasets see `Chapter 2 <CLM-URL>`_ for more information on NCL)
 - Python
