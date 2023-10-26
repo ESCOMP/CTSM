@@ -1,6 +1,6 @@
-.. _running-single-point-datasets:
-
 .. include:: ../substitutions.rst
+
+.. _running-single-point-datasets:
 
 ******************************************
  Running Single Point Configurations
@@ -29,7 +29,12 @@ Which results in the following:
 
 The resolution names that have an underscore in them ("_") are all single-point or regional resolutions.
 
-To run for the Brazil test site do the following:
+.. _warning-singleproc-on-batch:
+
+Warning about Running with a Single Processor on a Batch Machine
+----------------------------------------------------------------
+
+When running a single point, the number of processors is automatically set to one. When running a single grid point you can only use a single processor. You might also want to set the ``env_build.xml`` variable: ``MPILIB=mpi-serial`` to TRUE so that you can also run interactively without having to use mpi to start up your job.
 
 Example: Running CLM over a single-point test site in Brazil
 ------------------------------------------------------------
@@ -58,9 +63,9 @@ Then setup, build and run normally.
 
 **Important:** Just like PTS_MODE above, By default it sets up to run with ``MPILIB=mpi-serial`` (in the ``env_build.xml`` file) turned on, which allows you to run the model interactively. On some machines this mode is NOT supported and you may need to change it to FALSE before you are able to build.
 
-.. warning:: See `the Section called Warning about Running with a Single-Processor on a Batch Machine <CLM-URL>`_ for a warning about running single-point jobs on batch machines.
+.. warning:: See :ref:`warning-singleproc-on-batch` for a warning about running single-point jobs on batch machines.
 
-.. note:: When running a ``pt1_pt1`` resolution the number of processors is automatically set to one. When running a single grid point you can only use a single processor. You might also want to set the ``env_build.xml`` variable: ``MPILIB=mpi-serial`` to TRUE so that you can also run interactively without having to use mpi to start up your job.
+.. note:: 
 
 Using Supported Single-point Datasets that have their own Atmospheric Forcing
 ================================================================================
@@ -106,7 +111,7 @@ Example: Running CLM over the single-point of Vancouver Canada with supplied atm
 
 .. note:: Just like ``PTS_MODE`` above, By default it sets up to run with ``MPILIB=mpi-serial`` (in the env_build.xml file) turned on, which allows you to run the model interactively.
 
-.. note:: When running a ``pt1_pt1`` resolution the number of processors is automatically set to one. When running a single grid point you can only use a single processor. You might also want to set the ``env_build.xml`` variable: ``MPILIB=mpi-serial`` to ``TRUE`` so that you can also run interactively without having to use mpi to start up your job.
+.. warning:: See :ref:`warning-singleproc-on-batch` for a warning about running single-point jobs on batch machines.
 
 Creating your own single-point dataset
 ===================================================
@@ -134,7 +139,7 @@ Example: Using CLM_USRDAT_NAME to run a simulation using user datasets for a spe
    #> svn export $SVN_INP_URL/lnd/clm2/surfdata_map/surfdata_${GRIDNAME}_simyr2000.nc $CSMDATA/lnd/clm2/surfdata_map/surfdata_${GRIDNAME}_simyr2000.nc
    > ./case.setup
 
-The first step is to create the domain and surface datasets using the process outlined in `the Section called The File Creation Process in Chapter 2 <CLM-URL>`_. Below we show an example of the process.
+The first step is to create the domain and surface datasets using the process outlined in :ref:`using-clm-tools-section`. Below we show an example of the process.
 
 Example: Creating a surface dataset for a single point
 ---------------------------------------------------------------------
