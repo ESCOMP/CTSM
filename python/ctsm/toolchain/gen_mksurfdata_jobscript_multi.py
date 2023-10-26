@@ -14,6 +14,7 @@ from ctsm.utils import abort
 valid_scenarios = [
     "global-present",
     "global-present-low-res",
+    "global-present-ultra-hi-res",
     "global-present-nldas",
     "global-hist-4x5",
     "crop-tropics-present",
@@ -174,8 +175,9 @@ def main():
     # Determine resolution sets that are referenced in commands
     # --------------------------
     resolution_dict = {
-        "standard_res_no_crop": ["0.9x1.25", "1.9x2.5"],
+        "standard_res_no_crop": ["0.9x1.25", "1.9x2.5", "mpasa60"],
         "low_res_no_crop": ["10x15"],
+        "ultra_hi_res_no_crop": ["mpasa15", "mpasa15-3conus", "mpasa3p75"],
         "low_res_all": ["10x15", "ne3np4.pg3"],
         "hi_res_all": ["ne120np4.pg3"],
         "standard_res": ["0.9x1.25", "1.9x2.5", "C96", "ne30np4.pg3", "mpasa120"],
@@ -183,7 +185,7 @@ def main():
         "4x5_res": ["10x15", "4x5", "C24", "mpasa480"],
         "nldas_res": ["0.125nldas2"],
         "5x5_amazon_res": ["5x5_amazon"],
-        "ne16np4_res": ["C48", "ne16np4"],
+        "ne16np4_res": ["C48", "ne16np4.pg3"],
         "ne120np4_res": [
             "ne120np4.pg3",
             "ne0np4.ARCTICGRIS.ne30x8",
@@ -203,6 +205,10 @@ def main():
         "global-present-low-res": (
             "--start-year 2000 --end-year 2000 --nocrop --vic                  --res",
             "low_res_no_crop",
+        ),
+        "global-present-ultra-hi-res": (
+            "--start-year 2000 --end-year 2000 --nocrop                        --res",
+            "ultra_hi_res_no_crop",
         ),
         "global-present-nldas": (
             "--start-year 2000 --end-year 2000 --nocrop --vic                  --res",
