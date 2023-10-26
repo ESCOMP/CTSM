@@ -4,6 +4,7 @@
 
 """
 
+import glob
 import os
 import re
 
@@ -60,26 +61,18 @@ class TestSysRunNeon(unittest.TestCase):
         # run the run_neon tool
         # sys.argv = ["run_neon", "--neon_sites 'ABBY'"]
         # sys.argv = ["--neon_sites", ["ABBY"]]
+
         sys.argv = ["--neon-sites 'ABBY'"]
-        print("sys.argv:")
-        print(sys.argv)
         valid_neon_sites = ["ABBY", "OSBS", "BART"]  # ["all"]
         parser = get_parser(sys.argv, "description_for_parser", valid_neon_sites)
-        print("parser:")
-        print(parser)
         main("")
+
         # this seems to run OSBS (default site, instead of ABBY),
         #  but does create files! It takes a while though, should we do setup-only?
-        # Could assert that dir is created with files; we should also move this into a tempdir?
-        
-        # the critical piece of this test is that the above command
-        # doesn't generate errors; however, we also do some assertions below
+        # Could assert that dir is created with files
+        #we should also move this into a tempdir and delete files after running (and cancel queue?)
 
-        # fsurdat_in_data = xr.open_dataset(self._fsurdat_in)
-        # fsurdat_out_data = xr.open_dataset(self._fsurdat_out)
-        # assert that fsurdat_out equals fsurdat_in
-        # self.assertTrue(fsurdat_out_data.equals(fsurdat_in_data))
-
+        self.assertTrue("OSBS" in glob.glob("*"))
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()

@@ -84,8 +84,9 @@ class TestModifySingleptSiteNeon(unittest.TestCase):
         Test to ensure that correct attributes are found for find_soil_structure.
         soil_texture_raw_data_file_name should be found, and test should go through sysexit.
         """
-        surf_file = (
-            os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs/surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc")
+        surf_file = os.path.join(
+            path_to_ctsm_root(),
+            "python/ctsm/test/testinputs/surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc",
         )
         f1 = xr.open_dataset(surf_file)
         self.assertEqual(
@@ -101,7 +102,9 @@ class TestModifySingleptSiteNeon(unittest.TestCase):
         surf_file = "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc"
         neon_file = "dummy_neon_file.nc"
         zb_flag = True
-        f1 = xr.open_dataset(os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs/") + surf_file)
+        f1 = xr.open_dataset(
+            os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs/") + surf_file
+        )
         f2 = update_metadata(f1, surf_file, neon_file, zb_flag)
         today = date.today()
         today_string = today.strftime("%Y-%m-%d")
