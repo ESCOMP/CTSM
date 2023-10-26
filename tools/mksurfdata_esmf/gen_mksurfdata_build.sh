@@ -98,7 +98,7 @@ else
   if [ "$verbose" = "YES" ]; then echo "Build directory does NOT exist so do the configure and cmake steps"; fi
   existing_bld=No
 fi
-if [ "existing_bld" = "No" ]; then
+if [ "$existing_bld" = "No" ]; then
    mkdir $blddir
 fi
 cd $blddir
@@ -115,7 +115,7 @@ fi
 #
 # If NOT an existing build, run the configure
 #
-if [ "existing_bld" = "No" ]; then
+if [ "$existing_bld" = "No" ]; then
    # Run the cime configure tool to figure out what modules need to be loaded
    if [ "$verbose" = "YES" ]; then
      echo "Run cime configure for machine $MACH..."
@@ -143,6 +143,10 @@ fi
 # Create the machine environment (always)
 #
 . ./.env_mach_specific.sh
+if [ $? != 0 ]; then
+  echo "Error sourcing the env_mach_specific.sh file"
+  exit 1
+fi
 if [ "$verbose" = "YES" ]; then echo "COMPILER = $COMPILER, MPILIB = $MPILIB, DEBUG = $DEBUG, OS = $OS"; fi
 if [ -z "$PIO" ]; then
   echo "The PIO directory for the PIO build is required and was not set in the configure"
@@ -151,7 +155,7 @@ if [ -z "$PIO" ]; then
 fi
 
 # Build the cmake files (only if not an existing build)
-if [ "existing_bld" = "No" ]; then
+if [ "$existing_bld" = "No" ]; then
    if [ "$verbose" = "YES" ]; then
       echo "Do the cmake build..."
       options="-Wno-dev"
