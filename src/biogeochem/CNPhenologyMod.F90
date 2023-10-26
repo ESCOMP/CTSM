@@ -1812,10 +1812,10 @@ contains
         return
     end if
 
-    ! Sometimes we're in an active sowing window, and the patch was sown between the start and end dates of the window, but not *the currently active* window.
-    if (sowing_window_startdate <= sowing_window_enddate .and. idop > jday) then
+    ! Sometimes we're in an active sowing window, and the patch was sown between the start and end dates of the window, but not *the currently active* window. Note that windows with start==end are not checked here; we always trust the input value of sown_in_this_window in such cases.
+    if (sowing_window_startdate < sowing_window_enddate .and. idop > jday) then
         was_sown_in_this_window = .false.
-    else if (sowing_window_startdate >= sowing_window_enddate) then
+    else if (sowing_window_startdate > sowing_window_enddate) then
         if (jday <= sowing_window_enddate .and. idop <= sowing_window_enddate .and. idop > jday) then
             was_sown_in_this_window = .false.
         else if (jday >= sowing_window_startdate .and. (idop > jday .or. idop <= sowing_window_enddate)) then

@@ -452,4 +452,53 @@ contains
 
   end subroutine test_was_sown_in_this_window_endstart
 
+  @Test
+  subroutine test_was_sown_in_this_window_sameday(this)
+    use clm_time_manager , only : is_doy_in_interval
+    class(TestCNPhenology), intent(inout) :: this
+    integer, parameter :: sowing_window_startdate = 205
+    integer, parameter :: sowing_window_enddate   = 205
+    integer :: jday, idop
+
+    ! If today == start == end, we trust whatever the current value of sown_in_this_window is.
+    jday = 205
+    idop = 205
+    ! If it's false, then even if idop == jday, it that idop value must be left over from planting in a PREVIOUS year.
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+    ! The ONLY way was_sown_in_this_window() should return true is if today == start == end == idop AND the current value is true.
+    @assertTrue(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+
+    ! There is no other situation where was_sown_in_this_window() should return true.
+
+    jday = 300
+    idop = 60
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+
+    idop = 205
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+
+    idop = 300
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+
+    idop = 301
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+
+    jday = 70
+
+    idop = 60
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+
+    idop = 75
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+
+    idop = 301
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+
+  end subroutine test_was_sown_in_this_window_sameday
+
 end module test_CNPhenology
