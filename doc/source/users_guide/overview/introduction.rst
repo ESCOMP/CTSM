@@ -72,6 +72,8 @@ In the appendices we talk about some issues that are useful for advanced users a
 
 Finally on Github we give `instructions <https://github.com/ESCOMP/CTSM/wiki/Directions-for-editing-CLM-documentation-on-github-and-sphinx>`_ on how to build the documentation associated with |version| (i.e. how to build this document). This document is included in every CLM distribution and can be built so that you can view a local copy rather than having to go to the CESM website. This also could be useful for developers who need to update the documentation due to changes they have made.
 
+.. _readme:
+
 ================================
 README file describing |version|
 ================================
