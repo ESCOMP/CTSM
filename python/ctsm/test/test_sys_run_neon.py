@@ -70,9 +70,10 @@ class TestSysRunNeon(unittest.TestCase):
         # this seems to run OSBS (default site, instead of ABBY),
         #  but does create files! It takes a while though, should we do setup-only?
         # Could assert that dir is created with files
-        #we should also move this into a tempdir and delete files after running (and cancel queue?)
+        # we should also move this into a tempdir and delete files after running (and cancel queue?)
 
         self.assertTrue("OSBS" in glob.glob("*"))
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()

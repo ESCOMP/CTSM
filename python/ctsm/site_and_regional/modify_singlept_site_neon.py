@@ -524,12 +524,6 @@ def main():
     # better suggestion by WW to write dzsoi to neon surface dataset
     # This todo needs to go to the subset_data
 
-    # TODO Will: if I sum them up , are they 3.5? (m) YES
-    print("soil_top:", soil_top)
-    print("soil_bot:", soil_bot)
-    print("Sum of soil top depths    :", sum(soil_top))
-    print("Sum of soil bottom depths :", sum(soil_bot))
-
     soil_top = np.cumsum(soil_top)
     soil_bot = np.cumsum(soil_bot)
     soil_mid = 0.5 * (soil_bot - soil_top) + soil_top
@@ -656,9 +650,7 @@ def main():
         print("Updated  : ", f2.PCT_CROP.values)
 
         print("Updating PCT_NAT_PFT")
-        # print (f2.PCT_NAT_PFT)
         print(f2.PCT_NAT_PFT.values[0])
-        # f2.PCT_NAT_PFT.values[0] = [[100.0]]
         print(f2.PCT_NAT_PFT[0].values)
 
     out_dir = args.out_dir
