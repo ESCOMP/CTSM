@@ -110,6 +110,7 @@ In this example, we show how to use the atmospheric forcings specific to the Van
 
 .. warning:: If you don't set the start-year and run-length carefully as shown above the model will abort with a "dtlimit error" in the atmosphere model. Since, the forcing data for this site (and the MexicoCity site) is less than a year, the model won't be able to run for a full year. The ``1x1_urbanc_alpha`` site has data for more than a full year, but neither year is complete hence, it has the same problem (see the problem for this site above).
 
+.. _creating-your-own-singlepoint-dataset:
 
 Creating your own single-point dataset
 ===================================================
