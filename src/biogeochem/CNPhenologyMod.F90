@@ -2039,7 +2039,6 @@ contains
          is_end_sowing_window = jday == sowing_window_enddate
 
          ! We only want to plant on a specific day if the prescribed sowing window starts AND ends on the same day. Also make sure we haven't planted yet today.
-         ! TODO: ¿Allow use of NON-prescribed sowing with one-day-long windows?
          has_rx_sowing_date = sowing_window_startdate == sowing_window_enddate
          do_plant_prescribed = has_rx_sowing_date .and. &
                                sowing_window_startdate == jday .and. &
