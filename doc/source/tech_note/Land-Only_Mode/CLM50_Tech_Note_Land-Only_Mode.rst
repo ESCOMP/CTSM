@@ -1,4 +1,4 @@
- _rst_Land-only Mode:
+.. _rst_Land-only Mode:
 
 Land-Only Mode
 ================
