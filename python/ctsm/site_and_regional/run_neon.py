@@ -415,12 +415,12 @@ class NeonSite:
                 if re.search("^HIST", compset, flags=re.IGNORECASE) is None:
                     expect(
                         match is None,
-                        "Existing base case is a historical type and should not be  -- rerun with the --orverwrite option",
+                        "Existing base case is a historical type and should not be  -- rerun with the --overwrite option",
                     )
                 else:
                     expect(
                         match is not None,
-                        "Existing base case should be a historical type and is not -- rerun with the --orverwrite option",
+                        "Existing base case should be a historical type and is not -- rerun with the --overwrite option",
                     )
                 # reset the case
                 case.case_setup(reset=True)
@@ -534,12 +534,12 @@ class NeonSite:
                     if re.search("^HIST", compset, flags=re.IGNORECASE) is None:
                         expect(
                             match is None,
-                            "Existing base case is a historical type and should not be  -- rerun with the --orverwrite option",
+                            "Existing base case is a historical type and should not be  -- rerun with the --overwrite option",
                         )
                     else:
                         expect(
                             match is not None,
-                            "Existing base case should be a historical type and is not -- rerun with the --orverwrite option",
+                            "Existing base case should be a historical type and is not -- rerun with the --overwrite option",
                         )
                     if os.path.isfile(os.path.join(rundir, "ESMF_Profile.summary")):
                         print("Case {} appears to be complete, not rerunning.".format(case_root))

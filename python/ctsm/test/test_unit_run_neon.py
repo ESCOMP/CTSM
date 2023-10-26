@@ -29,15 +29,6 @@ class TestRunNeon(unittest.TestCase):
     Basic class for testing run_neon.py.
     """
 
-    # def setUp(self):
-    #    sys.argv = ["subset_data", "point", "--create-surface"]
-    #    DEFAULTS_FILE = os.path.join(os.getcwd(), "ctsm/test/testinputs/default_data.cfg")
-    #    self.parser = get_parser()
-    #    self.args = self.parser.parse_args()
-    #    self.cesmroot = path_to_ctsm_root()
-    #    self.defaults = configparser.ConfigParser()
-    #    self.defaults.read(os.path.join(self.cesmroot, "tools/site_and_regional", DEFAULTS_FILE))
-
     def test_check_neon_listing(self):
         """
         Test that neon listing is available for valid sites
@@ -55,7 +46,7 @@ class TestRunNeon(unittest.TestCase):
         """
         Test that neon listing is not available for invalid sites
         """
-        valid_neon_sites = ["ABY", "BRT"]
+        valid_neon_sites = ["INVALID_SITE1", "INVALID_SITE2"]
         available_list = check_neon_listing(valid_neon_sites)
         self.assertEqual(
             available_list, [], "available list of incorrect dummy site not as expected"

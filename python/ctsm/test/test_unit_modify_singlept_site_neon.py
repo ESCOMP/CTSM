@@ -18,6 +18,8 @@ import xarray as xr
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 sys.path.insert(1, _CTSM_PYTHON)
 
+from ctsm.path_utils import path_to_ctsm_root
+
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
 from ctsm.site_and_regional.modify_singlept_site_neon import (
@@ -62,7 +64,7 @@ class TestModifySingleptSiteNeon(unittest.TestCase):
         """
         Test to see if neon data for invalid site name is found
         """
-        site_name = "ABY"
+        site_name = "INVALID_SITE"
         neon_dir = self._tempdir
         with self.assertRaises(SystemExit):
             get_neon(neon_dir, site_name)
@@ -83,7 +85,7 @@ class TestModifySingleptSiteNeon(unittest.TestCase):
         soil_texture_raw_data_file_name should be found, and test should go through sysexit.
         """
         surf_file = (
-            "testinputs/surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc"
+            os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs/surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc")
         )
         f1 = xr.open_dataset(surf_file)
         self.assertEqual(
@@ -99,7 +101,7 @@ class TestModifySingleptSiteNeon(unittest.TestCase):
         surf_file = "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc"
         neon_file = "dummy_neon_file.nc"
         zb_flag = True
-        f1 = xr.open_dataset("testinputs/" + surf_file)
+        f1 = xr.open_dataset(os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs/") + surf_file)
         f2 = update_metadata(f1, surf_file, neon_file, zb_flag)
         today = date.today()
         today_string = today.strftime("%Y-%m-%d")
