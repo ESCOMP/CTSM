@@ -66,6 +66,9 @@ STANDARD = \
 	global-present-low-res \
 	global-present-nldas
 
+ULTRA_HIRES = \
+	global-present-ultra-hi-res
+
 TROPICS = \
 	crop-tropics-present
 
@@ -116,6 +119,15 @@ global-present-low-res : FORCE
 
 global-present-nldas : FORCE
 	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
+	$(BATCHJOBS) $@.sh
+
+#
+# Ultra high resolutions (Don't do by default user should select this by hand)
+#
+ultra_hires : $(ULTRA_HIRES)
+
+global-present-ultra-hi-res : FORCE
+	$(MKSURFDATA)  --number-of-nodes 200 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
 
 #
@@ -196,7 +208,7 @@ crop-smallville-historical : FORCE
 #
 # Crop with future scenarios
 #
-crop-global-future : crop-global-SSP2-4.5 crop-global-SSP2-4.5-low-res crop-global-SSP2-4.5-hi-res
+crop-global-future : crop-global-SSP2-4.5 crop-global-SSP2-4.5-low-res
 
 crop-global-SSP2-4.5 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
@@ -206,6 +218,7 @@ crop-global-SSP2-4.5-low-res : FORCE
 	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
 	$(BATCHJOBS) $@.sh
 
+# Don't do the high-resolution cases by default...
 crop-global-SSP2-4.5-hi-res : FORCE
 	$(MKSURFDATA)  --number-of-nodes 96 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
 	$(BATCHJOBS) $@.sh
