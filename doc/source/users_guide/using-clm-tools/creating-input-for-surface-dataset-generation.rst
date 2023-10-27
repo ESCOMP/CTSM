@@ -6,7 +6,7 @@
 Creating input for surface dataset generation
 *********************************************
 
-1. Generating SCRIP grid files
+Generating SCRIP grid files
 ==================================
 
 The utility ``mkmapdata.sh`` requires SCRIP format input files to describe the input and output grids that maps are generated for. CLM provides a utility, ``mkmapgrids`` that generates those files. The program converts old formats of CAM or CLM grid files to SCRIP grid format. There is also a NCL script (``mkscripgrid.ncl``) to create regular latitude longitude regional or single-point grids at the resolution the user desires.
@@ -38,7 +38,7 @@ If you want to create a regular latitude/longitude single-point or regional grid
 
 See :numref:`Figure mknoocnmap.pl` for a visual representation of this process.
 
-2. Creating mapping files for mksurfdata_map
+Creating mapping files for mksurfdata_map
 ==============================================
 
 ``mkmapdata.sh`` uses the above SCRIP grid input files to create SCRIP mapping data files (uses ESMF).
