@@ -80,6 +80,8 @@ In ``CLM1PT`` mode the model is assumed to have half-hourly or hourly data for a
 
 If you are using your own data for this mode and it's not at least hourly you'll want to adjust the DATM settings for it. If the data is three or six hourly, you'll need to divide it up into separate streams like in ``CLM_QIAN`` mode which will require fairly extensive changes to the DATM namelist and streams files. For an example of doing this see `Example 5-8 <CLM-URL>`_.
 
+.. _cplhistforcing:
+
 ------------------------------------------
 CPLHISTForcing mode and it's DATM settings
 ------------------------------------------

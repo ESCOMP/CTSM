@@ -69,6 +69,8 @@ Afterwards save the last restart file from this simulation to use in the next st
 **2. Final spinup for |version|-BGC**
      Next save the last restart file from this step and use it as the "finidat" file to use for one more spinup for at least 400+ years in normal mode. So do the following:
 
+.. _eg-final-clmbgc-spinup:
+
 Example: Final CLMBGC Spinup Simulation for |version|-BGC
 ------------------------------------------------------------------
 ::
