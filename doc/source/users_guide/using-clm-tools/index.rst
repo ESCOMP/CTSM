@@ -18,7 +18,6 @@ Using CLM tools
    building-the-clm-tools.rst
    creating-input-for-surface-dataset-generation.rst
    creating-surface-datasets.rst
-   datasts-for-observational-sites.rst
    creating-domain-files.rst
    observational-sites-datasets.rst
    cprnc.rst

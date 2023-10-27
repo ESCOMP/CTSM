@@ -14,9 +14,9 @@ When just creating a replacement file for an existing one, the relevant tool sho
 
   Data Flow for Creation of Surface Datasets from Raw SCRIP Grid Files
 
-Starting from a SCRIP grid file that describes the grid you will run the model on, you first run **mkmapdata.sh** to create a list of mapping files. See :numref:`Figure mkmapdata.sh` for a more detailed view of how **mkmapdata.sh** works. The mapping files tell **mksurfdata_map** how to map between the output grid and the raw datasets that it uses as input. The output of **mksurfdata_map** is a surface dataset that you then use for running the model. See `Figure :numref:`Figure mksurfdatamap` for a more detailed view of how **mksurfdata_map** works.
+Starting from a SCRIP grid file that describes the grid you will run the model on, you first run ```mkmapdata.sh`` to create a list of mapping files. See :numref:`Figure mkmapdata.sh` for a more detailed view of how ``mkmapdata.sh`` works. The mapping files tell ``mksurfdata_map`` how to map between the output grid and the raw datasets that it uses as input. The output of ``mksurfdata_map`` is a surface dataset that you then use for running the model. See :numref:`Figure Workflow of CLM5 Land Use Data Tool and Mksurfdata_map Tool` for a more detailed view of how ``mksurfdata_map`` works.
 
-:numref:`Figure Data_Flow_Legend` is the legend for this figure (:numref:`Figure Data_Flow`) and other figures in this chapter (:numref:`Figure Global_Domain`, :numref:`Figure mknoocnmap.pl` and :numref:`Figure mksurfdatamap`).
+:numref:`Figure Data_Flow_Legend` is the legend for this figure (:numref:`Figure Data_Flow`) and other figures in this chapter (:numref:`Figure Global-Domain` and :numref:`Figure mknoocnmap.pl`).
 
 .. _Figure Data_Flow_Legend:
 
