@@ -51,6 +51,26 @@ def write_usermods(lat,lon,site,start_year,end_year,
         './xmlchange ATM_NCPL='+str(atm_ncpl) + '\n' \
         '\n' \
 
+        'echo "presaero.SSP3-7.0:year_first='+str(start_year) + '" >> user_nl_datm_streams \n' \
+        'echo "presaero.SSP3-7.0:year_last='+str(end_year) + '" >> user_nl_datm_streams \n' \
+        'echo "presaero.SSP3-7.0:year_align='+str(start_year) + '" >> user_nl_datm_streams \n' \
+        '\n' \
+
+        'echo "presndep.SSP3-7.0:year_first='+str(start_year) + '" >> user_nl_datm_streams \n' \
+        'echo "presndep.SSP3-7.0:year_last='+str(end_year) + '" >> user_nl_datm_streams \n' \
+        'echo "presndep.SSP3-7.0:year_align='+str(start_year) + '" >> user_nl_datm_streams \n' \
+        '\n' \
+
+        'echo "preso3.hist:year_first='+str(start_year) + '" >> user_nl_datm_streams \n' \
+        'echo "preso3.hist:year_last='+str(end_year) + '" >> user_nl_datm_streams \n' \
+        'echo "preso3.hist:year_align='+str(start_year) + '" >> user_nl_datm_streams \n' \
+        '\n' \
+
+        'echo "co2tseries.SSP3-7.0:year_first='+str(start_year) + '" >> user_nl_datm_streams \n' \
+        'echo "co2tseries.SSP3-7.0:year_last='+str(end_year) + '" >> user_nl_datm_streams \n' \
+        'echo "co2tseries.SSP3-7.0:year_align='+str(start_year) + '" >> user_nl_datm_streams \n' \
+        '\n' \
+
         'compset=`./xmlquery COMPSET --value` \n' \
         'CLM_USRDAT_NAME=`./xmlquery CLM_USRDAT_NAME --value` \n' \
         'TEST=`./xmlquery TEST --value` \n' \
