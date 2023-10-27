@@ -606,7 +606,7 @@ def main():
     else:
         fdyndat = (
             f"landuse.timeseries_{res}_{ssp_rcp_name}"
-            "_{start_year}-{end_year}_{num_pft}_c{time_stamp}.nc"
+            f"_{start_year}-{end_year}_{num_pft}_c{time_stamp}.nc"
         )
 
     prefix = f"surfdata_{res}_{ssp_rcp_name}_{start_year}_{num_pft}pfts_c{time_stamp}."
