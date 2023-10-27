@@ -32,7 +32,7 @@ The resolution names that have an underscore in them ("_") are all single-point 
 .. note:: When running a single point, the number of processors is automatically set to one, which is the only value allowed.
 
 .. warning::
-   Just like ``PTS_MODE`` (Sect. :numref:`pts_mode`), by default these setups run with ``MPILIB=mpi-serial`` (in the ``env_build.xml`` file) turned on, which allows you to run the model interactively. On some machines this mode is NOT supported and you may need to change it to FALSE before you are able to build.
+   Just like ``PTS_MODE`` (Sect. :numref:`pts_mode`), by default these setups sometimes run with ``MPILIB=mpi-serial`` (in the ``env_build.xml`` file) turned on, which allows you to run the model interactively. On some machines this mode is NOT supported and you may need to change it to FALSE before you are able to build.
 
 .. _single-point-global-climate:
 
