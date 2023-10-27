@@ -26,6 +26,8 @@ Different types of simulations and different types of configurations for CLM req
 
 In the following table we list the different files used by CLM, they are listed in order of importance, dependencies, and customizing. So the required files are all near the top, and the files used only under different conditions are listed later, and files with the fewest dependencies are near the top, as are the files that are least likely to be customized.
 
+.. _reqd-files-table:
+
 Table 3-1. Required Files for Different Configurations and Simulation Types
 ---------------------------------------------------------------------------
 Insert table 3-1

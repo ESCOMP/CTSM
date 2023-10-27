@@ -6,7 +6,7 @@
  Creating Surface Datasets
 ===========================
 
-When just creating a replacement file for an existing one, the relevant tool should be used directly to create the file. When you are creating a set of files for a new resolution there are some dependencies between the tools that you need to keep in mind when creating them. The main dependency is that you MUST create a SCRIP grid file first as the SCRIP grid dataset is then input into the other tools. Also look at `Table 3-1 <CLM-URL>`_ which gives information on the files required and when. :numref:`Figure Data_Flow` shows an overview of the general data-flow for creation of the fsurdat datasets.
+When just creating a replacement file for an existing one, the relevant tool should be used directly to create the file. When you are creating a set of files for a new resolution there are some dependencies between the tools that you need to keep in mind when creating them. The main dependency is that you MUST create a SCRIP grid file first as the SCRIP grid dataset is then input into the other tools. Also look at Table :numref:`reqd-files-table` which gives information on the files required and when. :numref:`Figure Data_Flow` shows an overview of the general data-flow for creation of the fsurdat datasets.
 
 .. _Figure Data_Flow:
 
