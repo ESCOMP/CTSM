@@ -529,7 +529,6 @@ def main():
     soil_mid = 0.5 * (soil_bot - soil_top) + soil_top
     # print ("Cumulative sum of soil bottom depths :", sum(soil_bot))
 
-    # obs_top = df["biogeoTopDepth"] / 100
     obs_bot = df["biogeoBottomDepth"] / 100
 
     # -- Mapping surface dataset and neon soil levels
