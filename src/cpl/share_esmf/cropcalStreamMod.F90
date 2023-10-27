@@ -139,7 +139,7 @@ contains
        write(iulog,'(a,i8)') '  stream_year_first_cropcal  = ',stream_year_first_cropcal
        write(iulog,'(a,i8)') '  stream_year_last_cropcal   = ',stream_year_last_cropcal
        write(iulog,'(a,i8)') '  model_year_align_cropcal   = ',model_year_align_cropcal
-       write(iulog,'(a,i8)') '  allow_invalid_swindow_inputs = ',allow_invalid_swindow_inputs
+       write(iulog,'(a,l1)') '  allow_invalid_swindow_inputs = ',allow_invalid_swindow_inputs
        write(iulog,'(a,a)' ) '  stream_fldFileName_swindow_start   = ',trim(stream_fldFileName_swindow_start)
        write(iulog,'(a,a)' ) '  stream_fldFileName_swindow_end     = ',trim(stream_fldFileName_swindow_end)
        write(iulog,'(a,a)' ) '  stream_fldFileName_cultivar_gdds   = ',trim(stream_fldFileName_cultivar_gdds)
