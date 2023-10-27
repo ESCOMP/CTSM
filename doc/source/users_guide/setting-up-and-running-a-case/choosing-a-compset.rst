@@ -15,8 +15,6 @@ When working with CLM you usually want to start with a relevant "I" compset befo
 Compsets coupled to data atmosphere and stub ocean/sea-ice ("I" compsets)
 -------------------------------------------------------------------------
 
-`Supported CLM Configurations <CLM-URL>`_ are listed in `Table 1-1 <CLM-1.1-Choosing-a-compset-using-CLM#table-1-1-scientifically-supported-i-compsets>`_ for the Scientifically Supported compsets (have been scientifically validated with long simulations) and in `Table 1-2 <CLM-1.1-Choosing-a-compset-using-CLM#table-1-2-functionally-supported-i-compsets>`_ for the Functionally Supported compsets (we've only checked that they function).
-
 Here is the entire list of compsets available.
 
 `CESM compsets <http://www.cesm.ucar.edu/models/cesm2/config/compsets.html>`_
