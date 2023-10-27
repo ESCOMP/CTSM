@@ -19,7 +19,7 @@ Here is the entire list of compsets available.
 
 `CESM compsets <http://www.cesm.ucar.edu/models/cesm2/config/compsets.html>`_
 
-Note that using the "-user_compset" option even more combinations are possible. To get a list of the compsets use the "query_config" command as follows:
+Note that using the `compset longnames <https://docs.cesm.ucar.edu/models/cesm2/config/compsets.html>`_ even more combinations are possible. To get a list of the compsets use the ``query_config`` command as follows:
 ::
 
     $CTSMROOT/cime/scripts/query_config --compsets clm
