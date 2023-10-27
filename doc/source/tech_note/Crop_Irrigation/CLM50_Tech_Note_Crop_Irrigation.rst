@@ -40,6 +40,7 @@ Available new features since the CLM5 release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - Addition of bioenergy crops
 - Ablity to customize crop calendars (sowing windows/dates, maturity requirements) using stream files
+
 .. _The crop model:
 
 The crop model: cash and bioenergy crops
