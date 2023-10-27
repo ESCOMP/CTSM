@@ -1234,8 +1234,8 @@ program mksurfdata
 
          ! Confirm that we have done the rescaling correctly: now the sum of all landunits
          ! should be 100% within tol_loose
-         suma = pctlak(n) + pctwet(n) + pctgla(n) + pcturb(n) + pctcft(n)%get_pct_l2g()
-         suma = suma + pctnatpft(n)%get_pct_l2g() + pctocn(n)
+         suma = pctlak(n) + pctwet(n) + pctgla(n) + pcturb(n) + pctocn(n) +  &
+            pctcft(n)%get_pct_l2g() + pctnatpft(n)%get_pct_l2g()
          if (abs(suma - 100._r8) > tol_loose) then
             write(6,*) subname, ' ERROR: landunits do not sum to 100%'
             write(6,*) 'n, suma, pctlak, pctwet, pctgla, pcturb, pctnatveg, pctcrop, pctocn = '
@@ -1264,8 +1264,8 @@ program mksurfdata
          ! Include pctocn in suma but do not include in the
          ! renormalization. When pctocn /= 0, it is 100, and
          ! all other terms are 0.
-         suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctocn(n)
-         suma = suma + pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
+         suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctocn(n) +  &
+            pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
          if ( abs(suma - 100.0_r8) > 2.0*epsilon(suma) )then
             pctlak(n)    = pctlak(n)    * 100._r8/suma
             pctwet(n)    = pctwet(n)    * 100._r8/suma
@@ -1314,8 +1314,8 @@ program mksurfdata
             call shr_sys_abort()
          end if
 
-         suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
-         suma = suma + pctnatpft(n)%get_pct_l2g() + pctocn(n)
+         suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctocn(n) +  &
+            pctcft(n)%get_pct_l2g() + pctnatpft(n)%get_pct_l2g()
          if ( abs(suma-100._r8) > 1.e-10_r8) then
             write (6,*) subname, ' error: sum of pctocn, pctlak, pctwet,', &
                  'pcturb, pctgla, pctnatveg and pctcrop is NOT equal to 100'
