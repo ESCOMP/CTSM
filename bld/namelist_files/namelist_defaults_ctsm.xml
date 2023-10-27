@@ -1555,8 +1555,24 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 
 <!-- SNICAR (SNow, ICe, and Aerosol Radiative model) datasets -->
 <!--  ***********  Resolution independent:   ***********  -->
-<fsnowoptics >lnd/clm2/snicardata/snicar_optics_5bnd_c090915.nc</fsnowoptics>
-<fsnowaging  >lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc</fsnowaging>
+<fsnowaging>lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc</fsnowaging>
+
+<snicar_numrad_snw>5</snicar_numrad_snw>
+
+<fsnowoptics snicar_numrad_snw="480">lnd/clm2/snicardata/snicar_optics_480bnd_c012422.nc</fsnowoptics>
+<fsnowoptics snicar_numrad_snw="5"  >lnd/clm2/snicardata/snicar_optics_5bnd_c013122.nc</fsnowoptics>
+
+<snicar_snw_shape phys="clm5_1">hexagonal_plate</snicar_snw_shape>
+<snicar_snw_shape phys="clm5_0">sphere</snicar_snw_shape>
+<snicar_snw_shape phys="clm4_5">sphere</snicar_snw_shape>
+
+<use_snicar_frc>.false.</use_snicar_frc>
+<snicar_solarspec    >mid_latitude_winter</snicar_solarspec>
+<snicar_dust_optics  >sahara</snicar_dust_optics>
+<snicar_snodst_intmix>.false.</snicar_snodst_intmix>
+<snicar_snobc_intmix >.false.</snicar_snobc_intmix>
+<snicar_use_aerosol  >.true.</snicar_use_aerosol>
+<do_sno_oc           >.false.</do_sno_oc>
 
 <!-- Nitrogen deposition streams namelist defaults -->
 <stream_year_first_ndep phys="clm4_5"  use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_ndep>
@@ -2698,6 +2714,7 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <use_fates_inventory_init      use_fates=".true.">.false.</use_fates_inventory_init>
 <use_fates_sp                  use_fates=".true.">.false.</use_fates_sp>
 <fates_parteh_mode             use_fates=".true.">1</fates_parteh_mode>
+<fates_seeddisp_cadence        use_fates=".true.">0</fates_seeddisp_cadence>
 
 <use_fates_nocomp              use_fates=".true." use_fates_sp=".true.">.true.</use_fates_nocomp>
 <use_fates_nocomp              use_fates=".true."                      >.false.</use_fates_nocomp>
