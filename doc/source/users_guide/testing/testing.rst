@@ -1,6 +1,6 @@
-.. _testing:
-
 .. include:: ../substitutions.rst
+
+.. _testing:
 
 *******
 Testing

@@ -1,6 +1,6 @@
-.. _choosing-a-compset:
-
 .. include:: ../substitutions.rst
+
+.. _choosing-a-compset:
 
 ====================
 Choosing a compset

@@ -1,6 +1,6 @@
-.. customizing-the-datm-namelist:
-
 .. include:: ../substitutions.rst
+
+.. _customizing-the-datm-namelist:
 
 ===============================
  Customizing the DATM namelist

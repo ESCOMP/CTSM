@@ -1,6 +1,6 @@
-.. _adding-resolutions:
-
 .. include:: ../substitutions.rst
+
+.. _adding-resolutions:
 
 ========================
  Adding New Resolutions

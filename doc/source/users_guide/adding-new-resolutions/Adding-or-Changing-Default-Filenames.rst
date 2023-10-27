@@ -1,6 +1,6 @@
-.. _changing-default-filenames:
-
 .. include:: ../substitutions.rst
+
+.. _changing-default-filenames:
 
 ============================
  Changing Default Filenames

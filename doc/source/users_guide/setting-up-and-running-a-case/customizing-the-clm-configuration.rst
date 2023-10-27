@@ -1,6 +1,6 @@
-.. _configuring-clm:
-
 .. include:: ../substitutions.rst
+
+.. _configuring-clm:
 
 ********************************
  Customizing CLM's Configuration

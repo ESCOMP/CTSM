@@ -1,6 +1,6 @@
-.. _ptclm-examples:
-
 .. include:: ../substitutions.rst
+
+.. _ptclm-examples:
 
 ==============================
  Examples of using PTCLMmkdata

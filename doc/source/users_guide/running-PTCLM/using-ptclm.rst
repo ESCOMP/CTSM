@@ -1,6 +1,6 @@
-.. _using-ptclm.rst:
-
 .. include:: ../substitutions.rst
+
+.. _using-ptclm.rst:
 
 **************************
 Using PTCLMmkdata

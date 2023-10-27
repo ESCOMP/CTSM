@@ -1,6 +1,6 @@
-.. _customizing-a-case:
-
 .. include:: ../substitutions.rst
+
+.. _customizing-a-case:
 
 ============================
  Customizing CLM's namelist

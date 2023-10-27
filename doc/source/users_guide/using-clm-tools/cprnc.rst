@@ -1,6 +1,6 @@
-.. comparing-history-files:
-
 .. include:: ../substitutions.rst
+
+.. _comparing-history-files:
 
 =========================
  Comparing History Files
