@@ -1,6 +1,6 @@
-.. _running-with-moar-data:
-
 .. include:: ../substitutions.rst
+
+.. _running-with-moar-data:
 
 ========================
  Running with MOAR data

@@ -58,11 +58,15 @@ In ``CLMCRUNCEPv7`` mode the CRUNCEP dataset is used and all of it's data is on 
 
 For more information on CRUNCEP forcing see `http://dods.extra.cea.fr/data/p529viov/cruncep/ <http://dods.extra.cea.fr/data/p529viov/cruncep/>`_.
 
+.. _clmcruncep-and-its-datm:
+
 --------------------------------------
 CLMCRUNCEP mode and it's DATM settings
 --------------------------------------
 
 ``CLMCRUNCEP`` is similar to the ``CLMCRUNCEPv7`` mode above, except it uses Version 4 of the CRUNCEP data rather than version 7.
+
+.. _clmqian-and-its-datm:
 
 ------------------------------------
 CLM_QIAN mode and it's DATM settings
@@ -72,13 +76,15 @@ In ``CLM_QIAN`` mode the Qian dataset is used which has 6-hourly solar and preci
 
 Normally you wouldn't customize the ``CLM_QIAN`` settings, but you might replicate it's use for your own global data that had similar temporal characteristics.
 
+.. _clm1pt-and-its-datm:
+
 ----------------------------------
 CLM1PT mode and it's DATM settings
 ----------------------------------
 
 In ``CLM1PT`` mode the model is assumed to have half-hourly or hourly data for a single-point. For the supported datasets that is exactly what it has. But, if you add your own data you may need to make adjustments accordingly. Using the ``CLM_USRDAT_NAME`` resolution you can easily extend this mode for your own datasets that may be regional or even global and could be at different temporal frequencies. If you do so you'll need to make adjustments to your DATM settings. The dataset has all data in a single stream file. The time-stamps of the data were also adjusted so that they are at the middle of the interval. Because, of this the ``offset`` is set to zero, and the ``tintalgo`` is set to ``nearest``. ``taxmode`` is set to ``extend`` and ``mapalgo`` is set to ``nn`` so that simply the nearest point is used.
 
-If you are using your own data for this mode and it's not at least hourly you'll want to adjust the DATM settings for it. If the data is three or six hourly, you'll need to divide it up into separate streams like in ``CLM_QIAN`` mode which will require fairly extensive changes to the DATM namelist and streams files. For an example of doing this see `Example 5-8 <CLM-URL>`_.
+If you are using your own data for this mode and it's not at least hourly you'll want to adjust the DATM settings for it. If the data is three or six hourly, you'll need to divide it up into separate streams like in ``CLM_QIAN`` mode which will require fairly extensive changes to the DATM namelist and streams files. For an example of doing this see :ref:`eg-sim-data-from-prev-sim`.
 
 .. _cplhistforcing:
 
@@ -86,6 +92,6 @@ If you are using your own data for this mode and it's not at least hourly you'll
 CPLHISTForcing mode and it's DATM settings
 ------------------------------------------
 
-In ``CPLHISTForcing`` mode the model is assumed to have 3-hourly for a global grid from a previous CESM simulation. Like ``CLM_QIAN`` mode the data is divided into three streams: one for precipitation, one for solar, and one for everything else. The time-stamps for Coupler history files for CESM is at the end of the interval, so the ``offset`` needs to be set in order to adjust the time-stamps to what it needs to be for the ``tintalgo`` settings. For precipitation ``taxmode`` is set to ``nearest`` so the ``offset`` is set to ``-5400`` seconds so that the ending time-step is adjusted by an hour and half to the middle of the interval. For solar ``taxmode`` is set to ``coszen`` so the offset is set to ``-10800`` seconds so that the ending time-step is adjust by three hours to the beginning of the interval. For everything else ``taxmode`` is set to ``linear`` so the offset is set to ``-5400`` seconds so that the ending time-step is adjusted by an hour and half to the middle of the interval. For an example of such a case see `the Section called Running with MOAR data as atmospheric forcing to spinup the model in Chapter 4 <CLM-URL>`_.
+In ``CPLHISTForcing`` mode the model is assumed to have 3-hourly for a global grid from a previous CESM simulation. Like ``CLM_QIAN`` mode the data is divided into three streams: one for precipitation, one for solar, and one for everything else. The time-stamps for Coupler history files for CESM is at the end of the interval, so the ``offset`` needs to be set in order to adjust the time-stamps to what it needs to be for the ``tintalgo`` settings. For precipitation ``taxmode`` is set to ``nearest`` so the ``offset`` is set to ``-5400`` seconds so that the ending time-step is adjusted by an hour and half to the middle of the interval. For solar ``taxmode`` is set to ``coszen`` so the offset is set to ``-10800`` seconds so that the ending time-step is adjust by three hours to the beginning of the interval. For everything else ``taxmode`` is set to ``linear`` so the offset is set to ``-5400`` seconds so that the ending time-step is adjusted by an hour and half to the middle of the interval. For an example of such a case see :ref:`running-with-moar-data`.
 
 Normally you wouldn't modify the DATM settings for this mode. However, if you had data at a different frequency than 3-hours you would need to modify the ``offset`` and possibly the ``taxmode``. The other two things that you might modify would be the path to the data or the domain file for the resolution (which is currently hardwired to f09). For data at a different input resolution you would need to change the domain file in the streams file to use a domain file to the resolution that the data comes in on.

@@ -15,9 +15,7 @@ When working with CLM you usually want to start with a relevant "I" compset befo
 Compsets coupled to data atmosphere and stub ocean/sea-ice ("I" compsets)
 -------------------------------------------------------------------------
 
-Here is the entire list of compsets available.
-
-`CESM compsets <http://www.cesm.ucar.edu/models/cesm2/config/compsets.html>`_
+Here is the entire list of compsets available: `CESM compsets <http://www.cesm.ucar.edu/models/cesm2/config/compsets.html>`_
 
 Note that using the `compset longnames <https://docs.cesm.ucar.edu/models/cesm2/config/compsets.html>`_ even more combinations are possible. To get a list of the compsets use the ``query_config`` command as follows:
 ::
@@ -34,4 +32,4 @@ Fully coupled compsets are compsets that start with "B" in the name. They are de
 
 Conclusion to choosing a compset
 --------------------------------
-We've introduced the basic type of compsets that use CLM and given some further details for the "standalone CLM" (or "I" compsets). The `$CTSMROOT/cime_config/config_compsets.xml <CLM-URL>`_ lists all of the compsets and gives a full description of each of them. In the next section we look into customizing the setup time options for compsets using CLM.
+We've introduced the basic type of compsets that use CLM and given some further details for the "standalone CLM" (or "I" compsets). `$CTSMROOT/cime_config/config_compsets.xml <CLM-https://github.com/ESCOMP/CTSM/blob/master/cime_config/config_compsets.xml>`_ lists all of the compsets and gives a full description of each of them. In the next section we look into customizing the setup time options for compsets using CLM.
