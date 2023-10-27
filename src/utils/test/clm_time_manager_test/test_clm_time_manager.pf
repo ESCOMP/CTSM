@@ -672,7 +672,7 @@ contains
     @assertEqual(get_doy_tomorrow(150), 151)
     @assertEqual(get_doy_tomorrow(get_curr_days_per_year()), 1)
 
-    doy_tomorrow = get_doy_tomorrow(400)
+    doy_tomorrow = get_doy_tomorrow(get_curr_days_per_year() + 1)
     expected_msg = endrun_msg("clm::get_doy_tomorrow: error doy_today out of range" )
     @assertExceptionRaised(expected_msg)
 
