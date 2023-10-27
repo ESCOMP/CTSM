@@ -30,22 +30,15 @@ CLM_USRDAT.CLM_USRDAT:datavars = ZBOT     z, \
         PSRF     pbot, \ 
         FLDS     lwdn
 
-! TODO, get right first and last years.
-
-presaero.SSP3-7.0:datafiles = $DIN_LOC_ROOT/atm/cam/chem/trop_mozart_aero/aero/aerodep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.001_2018-2030_monthly_0.9x1.25_c210826.nc
-presaero.SSP3-7.0:year_first=2018
-presaero.SSP3-7.0:year_last=2022
-presaero.SSP3-7.0:year_align=2018
+presaero.SSP3-7.0:datafiles = $DIN_LOC_ROOT/atm/cam/chem/trop_mozart_aero/aero/aerodep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.001_1849-2101_monthly_0.9x1.25_c201103.nc
 presaero.SSP3-7.0:dtlimit=30
 
-presndep.SSP3-7.0:datafiles = $DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_2018-2030_monthly_c210826.nc
-presndep.SSP3-7.0:year_first=2018
-presndep.SSP3-7.0:year_last=2022
-presndep.SSP3-7.0:year_align=2018
+presndep.SSP3-7.0:datafiles = $DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.002_1849-2101_monthly_0.9x1.25_c211216.nc
 presndep.SSP3-7.0:dtlimit=30
 
-preso3.SSP3-7.0:year_first=2018
-preso3.SSP3-7.0:year_last=2022
-preso3.SSP3-7.0:year_align=2018
+!TODO, make this a hist and SSP file
+preso3.hist:datafiles = $DIN_LOC_ROOT/O3_surface.f09_g17.CMIP6-historical-WACCM.001.monthly.185001-201412.nc
 preso3.SSP3-7.0:dtlimit=30
+
+co2tseries.SSP3-7.0:datafiles = $DIN_LOC_ROOT/atm/datm7/CO2/fco2_datm_globalSSP3-7.0_simyr_1750-2501_CMIP6_c201101.nc
 

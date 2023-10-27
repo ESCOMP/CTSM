@@ -1,5 +1,5 @@
 ./xmlchange PLUMBER2SITE=CA-NS7
-./xmlchange PTS_LON=-99.94830300000001
+./xmlchange PTS_LON=-99.948303
 ./xmlchange PTS_LAT=56.635799
 ./xmlchange RUN_STARTDATE=2003-01-01
 ./xmlchange DATM_YR_ALIGN=2003
@@ -7,6 +7,22 @@
 ./xmlchange DATM_YR_END=2004
 ./xmlchange START_TOD=21600
 ./xmlchange ATM_NCPL=48
+
+echo "presaero.SSP3-7.0:year_first=2003" >> user_nl_datm_streams 
+echo "presaero.SSP3-7.0:year_last=2004" >> user_nl_datm_streams 
+echo "presaero.SSP3-7.0:year_align=2003" >> user_nl_datm_streams 
+
+echo "presndep.SSP3-7.0:year_first=2003" >> user_nl_datm_streams 
+echo "presndep.SSP3-7.0:year_last=2004" >> user_nl_datm_streams 
+echo "presndep.SSP3-7.0:year_align=2003" >> user_nl_datm_streams 
+
+echo "preso3.hist:year_first=2003" >> user_nl_datm_streams 
+echo "preso3.hist:year_last=2004" >> user_nl_datm_streams 
+echo "preso3.hist:year_align=2003" >> user_nl_datm_streams 
+
+echo "co2tseries.SSP3-7.0:year_first=2003" >> user_nl_datm_streams 
+echo "co2tseries.SSP3-7.0:year_last=2004" >> user_nl_datm_streams 
+echo "co2tseries.SSP3-7.0:year_align=2003" >> user_nl_datm_streams 
 
 compset=`./xmlquery COMPSET --value` 
 CLM_USRDAT_NAME=`./xmlquery CLM_USRDAT_NAME --value` 
