@@ -1285,6 +1285,7 @@ contains
     integer             :: days_in_year
     character(len=*), parameter :: sub = 'clm::get_doy_tomorrow'
 
+    ! Use get_prev_days_per_year() instead of get_curr_days_per_year() because the latter, in the last timestep of a year, actually returns the number of days in the NEXT year.
     days_in_year = get_prev_days_per_year()
 
     if ( doy_today < 1 .or. doy_today > days_in_year )then
