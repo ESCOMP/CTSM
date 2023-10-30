@@ -162,7 +162,7 @@ contains
          hist_fexcl4,  hist_fexcl5, hist_fexcl6, &
          hist_fexcl7,  hist_fexcl8,              &
          hist_fexcl9,  hist_fexcl10
-    namelist /clm_inparm/ hist_wrtch4diag, hist_master_list_file
+    namelist /clm_inparm/ hist_wrtch4diag, hist_fields_list_file
 
     ! BGC info
 
@@ -231,10 +231,11 @@ contains
           use_fates_sp,                                 &
           fates_inventory_ctrl_filename,                &
           fates_parteh_mode,                            &
+          fates_seeddisp_cadence,                       &
           use_fates_tree_damage
 
     ! Ozone vegetation stress method
-    namelist / clm_inparam / o3_veg_stress_method
+    namelist / clm_inparm / o3_veg_stress_method
 
     ! CLM 5.0 nitrogen flags
     namelist /clm_inparm/ use_flexibleCN, use_luna
@@ -282,10 +283,15 @@ contains
 
     namelist /clm_inparm/ &
          use_lch4, use_nitrif_denitrif, use_extralakelayers, &
-         use_vichydro, use_cn, use_cndv, use_crop, use_fertilizer, o3_veg_stress_method, &
+         use_vichydro, use_cn, use_cndv, use_crop, use_fertilizer, &
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
          use_nguardrail
 
+    ! SNICAR
+    namelist /clm_inparm/ &
+         snicar_numrad_snw, snicar_solarspec, snicar_dust_optics, &
+         snicar_use_aerosol, snicar_snw_shape, snicar_snobc_intmix, &
+         snicar_snodst_intmix, do_sno_oc
 
     ! ----------------------------------------------------------------------
     ! Default values
@@ -491,6 +497,14 @@ contains
           
        end if
 
+       ! Check compatibility with use_lai_streams
+       if (use_lai_streams) then
+        if ((use_fates .and. .not. use_fates_sp) .or. use_cn) then 
+          call endrun(msg=' ERROR: cannot use LAI streams unless in SP mode (use_cn = .false. or use_fates_sp=.true.).'//&
+                  errMsg(sourcefile, __LINE__))
+        end if 
+       end if 
+
        ! If nfix_timeconst is equal to the junk default value, then it was not specified
        ! by the user namelist and we need to assign it the correct default value. If the
        ! user specified it in the namelist, we leave it alone.
@@ -598,6 +612,24 @@ contains
     ! Consistency settings for co2_ppvm
     if ( (co2_ppmv <= 0.0_r8) .or. (co2_ppmv > 3000.0_r8) ) then
        call endrun(msg=' ERROR: co2_ppmv is out of a reasonable range'//&
+            errMsg(sourcefile, __LINE__))
+    end if
+
+    ! check on SNICAR BC-snow and dust-snow internal mixing
+    if ( snicar_snobc_intmix .and. snicar_snodst_intmix ) then
+       call endrun(msg=' ERROR: currently dust-snow and BC-snow internal mixing cannot be activated together'//&
+            errMsg(sourcefile, __LINE__))
+    end if
+
+    ! other SNICAR warnings
+    if ((snicar_snw_shape /= 'sphere' .and. snicar_snw_shape /= 'hexagonal_plate') .or.  &
+         snicar_solarspec /= 'mid_latitude_winter' .or.  &
+         snicar_dust_optics /= 'sahara' .or.  &
+         snicar_numrad_snw /= 5 .or.  &
+         snicar_snobc_intmix .or. snicar_snodst_intmix .or.  &
+         .not. snicar_use_aerosol .or.  &
+         do_sno_oc) then
+       call endrun(msg=' ERROR: You have selected an option that is EXPERIMENTAL, UNSUPPORTED, and UNTESTED. For guidance see namelist_defaults_ctsm.xml'//&
             errMsg(sourcefile, __LINE__))
     end if
 
@@ -751,6 +783,7 @@ contains
     call mpi_bcast (fates_inventory_ctrl_filename, len(fates_inventory_ctrl_filename), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (fates_seeddisp_cadence, 1, MPI_INTEGER, 0, mpicom, ier)
 
     ! flexibleCN nitrogen model
     call mpi_bcast (use_flexibleCN, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -828,6 +861,14 @@ contains
     call mpi_bcast (soil_layerstruct_predefined,len(soil_layerstruct_predefined), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (soil_layerstruct_userdefined,size(soil_layerstruct_userdefined), MPI_REAL8, 0, mpicom, ier)
     call mpi_bcast (soil_layerstruct_userdefined_nlevsoi, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (snicar_numrad_snw, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (snicar_solarspec, len(snicar_solarspec), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (snicar_dust_optics, len(snicar_dust_optics), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (snicar_snw_shape, len(snicar_snw_shape), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (snicar_use_aerosol, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (snicar_snobc_intmix, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (snicar_snodst_intmix, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (do_sno_oc, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! snow pack variables
     call mpi_bcast (nlevsno, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -849,7 +890,7 @@ contains
     if (use_lch4) then
        call mpi_bcast (hist_wrtch4diag, 1, MPI_LOGICAL, 0, mpicom, ier)
     end if
-    call mpi_bcast (hist_master_list_file, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (hist_fields_list_file, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (hist_fexcl1, max_namlen*size(hist_fexcl1), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fexcl2, max_namlen*size(hist_fexcl2), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fexcl3, max_namlen*size(hist_fexcl3), MPI_CHARACTER, 0, mpicom, ier)
@@ -916,6 +957,7 @@ contains
     write(iulog,*) '    use_grainproduct = ', use_grainproduct
     write(iulog,*) '    o3_veg_stress_method = ', o3_veg_stress_method
     write(iulog,*) '    use_snicar_frc = ', use_snicar_frc
+    write(iulog,*) '    snicar_use_aerosol = ',snicar_use_aerosol
     write(iulog,*) '    use_vancouver = ', use_vancouver
     write(iulog,*) '    use_mexicocity = ', use_mexicocity
     write(iulog,*) '    use_noio = ', use_noio
@@ -1004,6 +1046,14 @@ contains
        write(iulog,'(a)') '   snow aging parameters file = '//trim(fsnowaging)
     endif
 
+    write(iulog,*) '   SNICAR: downward solar radiation spectrum type =', snicar_solarspec
+    write(iulog,*) '   SNICAR: dust optics type = ', snicar_dust_optics
+    write(iulog,*) '   SNICAR: number of bands in snow albedo calculation =', snicar_numrad_snw
+    write(iulog,*) '   SNICAR: snow grain shape type = ', snicar_snw_shape
+    write(iulog,*) '   SNICAR: BC-snow internal mixing = ', snicar_snobc_intmix
+    write(iulog,*) '   SNICAR: dust-snow internal mixing = ', snicar_snodst_intmix
+    write(iulog,*) '   SNICAR: OC in snow = ', do_sno_oc
+
     write(iulog,'(a,i8)') '   Number of snow layers =', nlevsno
     write(iulog,'(a,d20.10)') '   Max snow depth (mm) =', h2osno_max
 
@@ -1083,7 +1133,6 @@ contains
        write(iulog, *) '    carbon_resp_opt = ', carbon_resp_opt
     end if
     write(iulog, *) '  use_luna = ', use_luna
-    write(iulog, *) '  ozone vegetation stress method = ', o3_veg_stress_method
 
     write(iulog, *) '  ED/FATES: '
     write(iulog, *) '    use_fates = ', use_fates
@@ -1101,6 +1150,8 @@ contains
        write(iulog, *) '    use_fates_fixed_biogeog = ', use_fates_fixed_biogeog
        write(iulog, *) '    use_fates_nocomp = ', use_fates_nocomp
        write(iulog, *) '    use_fates_sp = ', use_fates_sp
+       write(iulog, *) '    fates_seeddisp_cadence = ', fates_seeddisp_cadence
+       write(iulog, *) '    fates_seeddisp_cadence: 0, 1, 2, 3 => off, daily, monthly, or yearly dispersal'
        write(iulog, *) '    fates_inventory_ctrl_filename = ',fates_inventory_ctrl_filename
     end if
   end subroutine control_print

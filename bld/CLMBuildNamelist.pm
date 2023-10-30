@@ -769,8 +769,8 @@ sub setup_cmdl_fates_mode {
        # dis-allow fates specific namelist items with non-fates runs
        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                       "use_fates_cohort_age_tracking","use_fates_inventory_init","use_fates_fixed_biogeog",
-		      "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging",
-		      "fates_parteh_mode","use_fates_tree_damage" );
+                      "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging",
+                      "fates_parteh_mode","use_fates_tree_damage","fates_seeddisp_cadence" );
        # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
           if ( defined($nl->get_value($var)) ) {
@@ -1557,6 +1557,7 @@ sub process_namelist_inline_logic {
   setup_logic_irrigate($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_start_type($opts, $nl_flags, $nl);
   setup_logic_decomp_performance($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_snicar_methods($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snow($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_glacier($opts, $nl_flags, $definition, $defaults, $nl,  $envxml_ref);
   setup_logic_dynamic_plant_nitrogen_alloc($opts, $nl_flags, $definition, $defaults, $nl, $physv);
@@ -1982,10 +1983,57 @@ sub setup_logic_decomp_performance {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_snicar_methods {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snicar_snw_shape' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snicar_solarspec' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snicar_dust_optics' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snicar_numrad_snw' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snicar_snobc_intmix' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snicar_snodst_intmix' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snicar_use_aerosol' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_snicar_frc' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'do_sno_oc' );
+
+  # Error checking in loop
+  my %supportedSettings = ( 'snicar_solarspec' => "'mid_latitude_winter'", 'snicar_dust_optics' => "'sahara'", 'snicar_numrad_snw' => '5', 'snicar_snobc_intmix' => '.false.', 'snicar_snodst_intmix' => '.false.', 'snicar_use_aerosol' => '.true.', 'do_sno_oc' => '.false.' );
+  keys %supportedSettings;
+  while ( my ($key, $val) = each %supportedSettings ) {
+    my $var = $nl->get_value($key);
+    if ( $var ne $val ) {
+      $log->warning("$key=$val is the supported option; $var is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!");
+    }
+  }
+
+  # Error checking not in loop
+  my $key1 = 'snicar_snw_shape';
+  my $var1 = $nl->get_value($key1);
+  my $val1a = "'sphere'";  # supported value for this option
+  my $val1b = "'hexagonal_plate'";  # supported value for this option
+  if (($var1 ne $val1a) && ($var1 ne $val1b)) {
+    $log->warning("$key1=$val1a and $val1b are supported; $var1 is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!");
+  }
+
+  # snicar_snobc_intmix and snicar_snodst_intmix cannot both be true
+  my $key1 = 'snicar_snobc_intmix';
+  my $key2 = 'snicar_snodst_intmix';
+  my $var1 = $nl->get_value($key1);
+  my $var2 = $nl->get_value($key2);
+  my $val1 = $supportedSettings{$key1};  # supported value for this option
+  if (($var1 eq $var2) && ($var1 ne $val1)) {
+    $log->warning("$key1 = $var1 and $key2 = $var2 do not work together!");
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_snow {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsnowoptics' );
+  my $numrad_snw = $nl->get_value('snicar_numrad_snw');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsnowoptics',
+                'snicar_numrad_snw' => $numrad_snw);
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsnowaging' );
 }
 
@@ -3890,8 +3938,7 @@ sub setup_logic_lai_streams {
   if ( &value_is_true($nl_flags->{'use_crop'}) && &value_is_true($nl->get_value('use_lai_streams'))  ) {
     $log->fatal_error("turning use_lai_streams on is incompatable with use_crop set to true.");
   }
-  if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
-
+  if ( $nl_flags->{'bgc_mode'} eq "sp" || ($nl_flags->{'bgc_mode'} eq "fates" && &value_is_true($nl->get_value('use_fates_sp')) )) {
      if ( &value_is_true($nl->get_value('use_lai_streams')) ) {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo',
@@ -3917,15 +3964,20 @@ sub setup_logic_lai_streams {
        }
      }
   } else {
-     # If bgc is CN/CNDV then make sure none of the LAI settings are set
-     if ( defined($nl->get_value('stream_year_first_lai')) ||
-          defined($nl->get_value('stream_year_last_lai'))  ||
-          defined($nl->get_value('model_year_align_lai'))  ||
-          defined($nl->get_value('lai_tintalgo'        ))  ||
+     # If bgc is BGC/BGCDV then make sure none of the LAI settings are set
+     if ( &value_is_true($nl->get_value('use_lai_streams'))) {
+        $log->fatal_error("When not in SP mode use_lai_streams cannot be .true.\n" .
+                          "(eg. don't use this option with BGC or non-SP FATES), \n" .
+                          "Update compset to use SP)");
+     }
+     if ( defined($nl->get_value('stream_year_first_lai'))  ||
+          defined($nl->get_value('stream_year_last_lai'))   ||
+          defined($nl->get_value('model_year_align_lai'))   ||
+          defined($nl->get_value('lai_tintalgo'        ))   ||
           defined($nl->get_value('stream_fldfilename_lai'))   ) {
-        $log->fatal_error("When bgc is NOT SP none of the following can be set: stream_year_first_lai,\n" .
+        $log->fatal_error("When not in SP mode none of the following can be set: stream_year_first_lai,\n" .
                           "stream_year_last_lai, model_year_align_lai, lai_tintalgo nor\n" .
-                          "stream_fldfilename_lai (eg. don't use this option with BGC,CN,CNDV nor BGDCV).");
+                          "stream_fldfilename_lai (eg. don't use this option with BGC or FATES-SP).");
      }
   }
 }
@@ -4273,7 +4325,7 @@ sub setup_logic_fates {
     if (&value_is_true( $nl_flags->{'use_fates'})  ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
         my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
-                       "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp",
+                       "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp","fates_seeddisp_cadence",
                        "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage" );
         foreach my $var ( @list ) {
  	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
@@ -4409,7 +4461,7 @@ sub setup_logic_misc {
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_use_second_grain_pool');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_use_repr_structure_pool');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_no_crop_seed_replenishment');
-   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hist_master_list_file');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hist_fields_list_file');
 }
 
 #-------------------------------------------------------------------------------
