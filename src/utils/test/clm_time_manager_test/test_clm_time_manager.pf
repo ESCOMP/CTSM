@@ -15,7 +15,10 @@ module test_clm_time_manager
   save
 
   real(r8), parameter :: tol = 1.e-13_r8
-  integer, parameter :: dtime = 1800
+  integer,  parameter :: secs_in_day_int = 86400
+  real(r8), parameter :: secs_in_day_r8  = 86400._r8
+  integer,  parameter :: dtime_int = 1800
+  real(r8), parameter :: dtime_r8  = 1800._r8
 
   @TestCase
   type, extends(TestCase) :: TestTimeManager
@@ -42,11 +45,11 @@ contains
     class(TestTimeManager), intent(inout) :: this
     integer :: step_size
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     step_size = get_step_size()
 
-    @assertEqual(dtime, step_size)
+    @assertEqual(dtime_int, step_size)
   end subroutine getStepSize_returnsCorrectValue
 
   @Test
@@ -54,7 +57,7 @@ contains
     class(TestTimeManager), intent(inout) :: this
     real(r8) :: calday
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     calday = get_calday(101, 0)
 
@@ -66,7 +69,7 @@ contains
     class(TestTimeManager), intent(inout) :: this
     real(r8) :: calday
 
-    call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar=.true.)
+    call unittest_timemgr_setup(dtime=dtime_int, use_gregorian_calendar=.true.)
 
     calday = get_calday(41231, 43200)
 
@@ -78,7 +81,7 @@ contains
     class(TestTimeManager), intent(inout) :: this
     real(r8) :: calday
 
-    call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar=.true.)
+    call unittest_timemgr_setup(dtime=dtime_int, use_gregorian_calendar=.true.)
 
     calday = get_calday(41231, 43200, reuse_day_365_for_day_366=.true.)
 
@@ -90,7 +93,7 @@ contains
     class(TestTimeManager), intent(inout) :: this
     real(r8) :: calday
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     call set_date(yr=2000, mon=1, day=1, tod=0)
 
@@ -104,7 +107,7 @@ contains
     class(TestTimeManager), intent(inout) :: this
     real(r8) :: calday
 
-    call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar=.true.)
+    call unittest_timemgr_setup(dtime=dtime_int, use_gregorian_calendar=.true.)
 
     call set_date(yr=2000, mon=12, day=31, tod=43200)
 
@@ -118,7 +121,7 @@ contains
     class(TestTimeManager), intent(inout) :: this
     real(r8) :: calday
 
-    call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar=.true.)
+    call unittest_timemgr_setup(dtime=dtime_int, use_gregorian_calendar=.true.)
 
     call set_date(yr=2000, mon=12, day=31, tod=43200)
 
@@ -133,12 +136,12 @@ contains
     real(r8) :: calday
     real(r8) :: calday_expected
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     call set_date(yr=2000, mon=1, day=1, tod=0)
 
     calday = get_prev_calday()
-    calday_expected = 366._r8 - dtime/86400._r8
+    calday_expected = 366._r8 - dtime_int/secs_in_day_r8
 
     @assertEqual(calday_expected, calday, tolerance=tol)
   end subroutine getPrevCalday_jan1Time0_returnsCorrectValue
@@ -149,12 +152,12 @@ contains
     real(r8) :: calday
     real(r8) :: calday_expected
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     call set_date(yr=2000, mon=1, day=2, tod=0)
 
     calday = get_prev_calday()
-    calday_expected = 2._r8 - dtime/86400._r8
+    calday_expected = 2._r8 - dtime_int/secs_in_day_r8
 
     @assertEqual(calday_expected, calday, tolerance=tol)
   end subroutine getPrevCalday_jan2Time0_returnsCorrectValue
@@ -164,7 +167,7 @@ contains
     class(TestTimeManager), intent(inout) :: this
     real(r8) :: yearfrac
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     call set_date(yr=2, mon=1, day=1, tod=0)
     
@@ -179,7 +182,7 @@ contains
     real(r8) :: yearfrac
     real(r8) :: yearfrac_expected
     
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     call set_date(yr=2, mon=3, day=1, tod=43200)
 
@@ -195,7 +198,7 @@ contains
     real(r8) :: yearfrac
     real(r8) :: yearfrac_expected
 
-    call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar=.true.)
+    call unittest_timemgr_setup(dtime=dtime_int, use_gregorian_calendar=.true.)
 
     call set_date(yr=2000, mon=12, day=31, tod=43200)
 
@@ -209,16 +212,15 @@ contains
   subroutine getPrevYearfrac_atYearBoundary_returnsLargeValue(this)
     class(TestTimeManager), intent(inout) :: this
     real(r8) :: yearfrac
-    integer, parameter :: secs_in_day = 86400
     real(r8) :: yearfrac_expected
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     call set_date(yr=2, mon=1, day=1, tod=0)
     
     yearfrac = get_prev_yearfrac()
 
-    yearfrac_expected = (365._r8 - real(dtime, r8) / real(secs_in_day, r8)) / 365._r8
+    yearfrac_expected = (365._r8 - dtime_r8 / secs_in_day_r8) / 365._r8
     @assertEqual(yearfrac_expected, yearfrac)
   end subroutine getPrevYearfrac_atYearBoundary_returnsLargeValue
 
@@ -226,16 +228,15 @@ contains
   subroutine getPrevYearfrac_inMiddleOfYear_returnsCorrectValue(this)
     class(TestTimeManager), intent(inout) :: this
     real(r8) :: yearfrac
-    integer, parameter :: secs_in_day = 86400
     real(r8) :: yearfrac_expected
     
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     call set_date(yr=2, mon=3, day=1, tod=43200)
 
     yearfrac = get_prev_yearfrac()
 
-    yearfrac_expected = (59.5_r8 - real(dtime, r8) / real(secs_in_day, r8)) / 365._r8
+    yearfrac_expected = (59.5_r8 - dtime_r8 / secs_in_day_r8) / 365._r8
     @assertEqual(yearfrac_expected, yearfrac)
   end subroutine getPrevYearfrac_inMiddleOfYear_returnsCorrectValue
 
@@ -243,16 +244,15 @@ contains
   subroutine getPrevYearfrac_leapYearInMiddleOfYear_returnsCorrectValue(this)
     class(TestTimeManager), intent(inout) :: this
     real(r8) :: yearfrac
-    integer, parameter :: secs_in_day = 86400
     real(r8) :: yearfrac_expected
 
-    call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar = .true.)
+    call unittest_timemgr_setup(dtime=dtime_int, use_gregorian_calendar = .true.)
 
     call set_date(yr=2000, mon=3, day=1, tod=43200)
 
     yearfrac = get_prev_yearfrac()
 
-    yearfrac_expected = (60.5_r8 - real(dtime, r8) / real(secs_in_day, r8)) / 366._r8
+    yearfrac_expected = (60.5_r8 - dtime_r8 / secs_in_day_r8) / 366._r8
     @assertEqual(yearfrac_expected, yearfrac)
   end subroutine getPrevYearfrac_leapYearInMiddleOfYear_returnsCorrectValue
 
@@ -261,10 +261,9 @@ contains
     ! This ensures that the correct year is used in determining the number of days in the year
     class(TestTimeManager), intent(inout) :: this
     real(r8) :: yearfrac
-    integer, parameter :: secs_in_day = 86400
     real(r8) :: yearfrac_expected
 
-    call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar = .true.)
+    call unittest_timemgr_setup(dtime=dtime_int, use_gregorian_calendar = .true.)
 
     call set_date(yr=2000, mon=1, day=1, tod=0)
 
@@ -272,7 +271,7 @@ contains
 
     ! In the following, note that we have 365 and not 366, because the prev_yearfrac uses
     ! year 1999, which is not a leap year:
-    yearfrac_expected = (365._r8 - real(dtime, r8) / real(secs_in_day, r8)) / 365._r8
+    yearfrac_expected = (365._r8 - dtime_r8 / secs_in_day_r8) / 365._r8
     @assertEqual(yearfrac_expected, yearfrac)
   end subroutine getPrevYearfrac_leapYearAtYearBoundary_returnsCorrectValue
 
@@ -281,7 +280,7 @@ contains
     class(TestTimeManager), intent(inout) :: this
     integer :: nstep
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     nstep = get_nstep()
 
@@ -294,7 +293,7 @@ contains
     integer, parameter :: expected_nstep = 3
     integer :: nstep
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     call set_nstep(expected_nstep)
 
@@ -308,9 +307,9 @@ contains
     class(TestTimeManager), intent(inout) :: this
     logical :: is_beg
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
-    call set_date(yr=2, mon=1, day=1, tod=dtime)
+    call set_date(yr=2, mon=1, day=1, tod=dtime_int)
 
     is_beg = is_beg_curr_year()
 
@@ -322,9 +321,9 @@ contains
     class(TestTimeManager), intent(inout) :: this
     logical :: is_beg
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
-    call set_date(yr=2, mon=1, day=2, tod=dtime)
+    call set_date(yr=2, mon=1, day=2, tod=dtime_int)
 
     is_beg = is_beg_curr_year()
 
@@ -336,7 +335,7 @@ contains
     class(TestTimeManager), intent(inout) :: this
     logical :: is_end
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     call set_date(yr=2, mon=1, day=1, tod=0)
 
@@ -350,7 +349,7 @@ contains
     class(TestTimeManager), intent(inout) :: this
     logical :: is_end
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     call set_date(yr=2, mon=1, day=2, tod=0)
 
@@ -364,7 +363,7 @@ contains
     class(TestTimeManager), intent(inout) :: this
     logical :: is_first
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     is_first = is_first_step()
 
@@ -376,7 +375,7 @@ contains
     class(TestTimeManager), intent(inout) :: this
     logical :: is_first
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     call set_nstep(1)
 
@@ -390,7 +389,7 @@ contains
     class(TestTimeManager), intent(inout) :: this
     integer :: nstep
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     nstep = 100
     call set_nstep(nstep)
@@ -419,7 +418,7 @@ contains
     real(r8) :: londeg
     integer  :: expected
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     ! Check for local noon at Greenich
     londeg = 0.0_r8
@@ -446,7 +445,7 @@ contains
     integer :: secs
     real(r8) :: londeg
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     londeg = 0.0_r8
     do while ( londeg <= 360.0_r8 )
@@ -470,16 +469,16 @@ contains
     real(r8) :: londeg
     integer  :: expected
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     ! Check for local noon at Greenich for 1 time step ahead
     londeg = 0.0_r8
-    secs = 3600*12 + dtime
+    secs = 3600*12 + dtime_int
     call set_date(yr=2018, mon=9, day=3, tod=secs)
-    expected = secs - dtime
-    @assertEqual( expected, get_local_time( londeg, offset=-dtime ) )
+    expected = secs - dtime_int
+    @assertEqual( expected, get_local_time( londeg, offset=-dtime_int ) )
     londeg = 360.0_r8
-    @assertEqual( expected, get_local_time( londeg, offset=-dtime ) )
+    @assertEqual( expected, get_local_time( londeg, offset=-dtime_int ) )
   end subroutine check_local_time_woffset
 
 
@@ -490,7 +489,7 @@ contains
     integer :: secs
     real(r8) :: londeg
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     ! Check for local noon at Greenich will be true from 11 to 1pm
     londeg = 0.0_r8
@@ -528,7 +527,7 @@ contains
     integer :: secs
     logical :: check
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     londeg = 0.0_r8
     secs = get_local_time( londeg )
@@ -549,7 +548,7 @@ contains
     real(r8) :: londeg
     integer :: secs
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     londeg = -200.0_r8
     secs = get_local_time( londeg )
@@ -567,7 +566,7 @@ contains
     real(r8) :: londeg
     integer :: secs
 
-    call unittest_timemgr_setup(dtime=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int)
 
     londeg = 400.0_r8
     secs = get_local_time( londeg )
@@ -627,7 +626,7 @@ contains
 
     integer :: start, end
 
-    call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar=.true.)
+    call unittest_timemgr_setup(dtime=dtime_int, use_gregorian_calendar=.true.)
 
     start = 100 ! April 10
     end   = 300 ! October 27
@@ -641,7 +640,7 @@ contains
     @assertFalse(is_today_in_doy_interval(start, end))
 
     ! Test first timestep of interval
-    call set_date(yr=2009, mon=4, day=10, tod=dtime)
+    call set_date(yr=2009, mon=4, day=10, tod=dtime_int)
     @assertTrue(is_today_in_doy_interval(start, end))
 
     ! Test well within interval
@@ -653,7 +652,7 @@ contains
     @assertTrue(is_today_in_doy_interval(start, end))
 
     ! Test first timestep after interval
-    call set_date(yr=2009, mon=10, day=28, tod=dtime)
+    call set_date(yr=2009, mon=10, day=28, tod=dtime_int)
     @assertFalse(is_today_in_doy_interval(start, end))
 
   end subroutine check_is_today_in_doy_interval
@@ -662,11 +661,11 @@ contains
   subroutine check_get_doy_tomorrow(this)
     class(TestTimeManager), intent(inout) :: this
     character(len=256) :: expected_msg
-    integer :: doy_tomorrow
+    integer :: doy_tomorrow ! Dummy needed for exception tests
 
     ! We don't care about the actual date here; we just want to enable get_curr_days_per_year()
-    call unittest_timemgr_setup(dtime=dtime, use_gregorian_calendar=.true.)
-    call set_date(yr=2009, mon=10, day=28, tod=dtime)
+    call unittest_timemgr_setup(dtime=dtime_int, use_gregorian_calendar=.true.)
+    call set_date(yr=2009, mon=10, day=28, tod=dtime_int)
 
     @assertEqual(get_doy_tomorrow(1), 2)
     @assertEqual(get_doy_tomorrow(150), 151)
