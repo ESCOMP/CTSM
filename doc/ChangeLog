@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev147
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
-Date: Fri Oct 27 15:32:54 MDT 2023
+Date: Mon Oct 30 16:53:20 MDT 2023
 One-line Summary: Add sowing window input files
 
 Purpose and description of changes
@@ -43,50 +43,19 @@ Testing summary:
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    cheyenne -
+    cheyenne - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ----
-    izumi -------
+    cheyenne ---- OK (some diffs in field lists)
+    izumi ------- OK (some diffs in field lists)
 
   any other testing (give details below):
   * RXCROPMATURITY test passes.
 
-If the tag used for baseline comparisons was NOT the previous tag, note that here:
-
-
-Answer changes
---------------
-
-Changes answers relative to baseline:
-
-  [ If a tag changes answers relative to baseline comparison the
-    following should be filled in (otherwise remove this section).
-    And always remove these three lines and parts that don't apply. ]
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
-    - nature of change (roundoff; larger than roundoff/same climate; new climate):
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? Roundoff differences means one or more lines of code change results
-   only by roundoff level (because order of operation changes for example). Roundoff
-   changes to state fields usually grow to greater than roundoff as the simulation progresses.
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename:
-
-   URL for LMWG diagnostics output used to validate new climate:
-
 
 Other details
 -------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
-
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
 
 Pull Requests that document the changes (include PR ids):
 * #2193 (https://github.com/ESCOMP/CTSM/pull/2193)
