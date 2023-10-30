@@ -658,7 +658,7 @@ contains
   end subroutine check_is_today_in_doy_interval
 
   @Test
-  subroutine check_get_doy_tomorrow(this)
+  subroutine check_get_doy_tomorrow_noleap(this)
     class(TestTimeManager), intent(inout) :: this
     character(len=256) :: expected_msg
     integer :: doy_tomorrow ! Dummy needed for exception tests
@@ -678,6 +678,29 @@ contains
     expected_msg = endrun_msg("clm::get_doy_tomorrow: error doy_today out of range" )
     @assertExceptionRaised(expected_msg)
 
-  end subroutine check_get_doy_tomorrow
+  end subroutine check_get_doy_tomorrow_noleap
+
+  @Test
+  subroutine check_get_doy_tomorrow_leap(this)
+    class(TestTimeManager), intent(inout) :: this
+    character(len=256) :: expected_msg
+    integer :: doy_tomorrow ! Dummy needed for exception tests
+    integer :: days_in_year
+
+    call unittest_timemgr_setup(dtime=dtime_int, use_gregorian_calendar=.true.)
+
+    ! Ensure that things work even in the last timestep of a leap year...
+    call set_date(yr=2008, mon=12, day=31, tod=secs_in_day_int - dtime_int)
+    days_in_year = get_curr_days_per_year()
+    @assertEqual(get_doy_tomorrow(days_in_year), 1)
+    doy_tomorrow = get_doy_tomorrow(days_in_year + 1)
+    @assertExceptionRaised(expected_msg)
+
+    ! ... as well as in the first timestep after a leap year
+    call set_date(yr=2009, mon=1, day=1, tod=0)
+    @assertEqual(get_doy_tomorrow(1), 2)
+
+  end subroutine check_get_doy_tomorrow_leap
+
 
 end module test_clm_time_manager
