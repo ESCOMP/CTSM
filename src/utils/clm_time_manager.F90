@@ -1285,7 +1285,7 @@ contains
     integer             :: days_in_year
     character(len=*), parameter :: sub = 'clm::get_doy_tomorrow'
 
-    days_in_year = get_curr_days_per_year()
+    days_in_year = get_prev_days_per_year()
 
     if ( doy_today < 1 .or. doy_today > days_in_year )then
        write(iulog,*) 'doy_today    = ', doy_today
