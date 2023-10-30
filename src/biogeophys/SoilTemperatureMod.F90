@@ -47,7 +47,7 @@ module SoilTemperatureMod
   !     o The thermal conductivity of soil is computed from
   !       the algorithm of Johansen (as reported by Farouki 1981), and the
   !       conductivity of snow is from the formulation used in
-  !       Sturm (1997).
+  !       Sturm (1997) or Jordan (1991) p. 18 depending on namelist option.
   !     o Boundary conditions:
   !       F = Rnet - Hg - LEg (top),  F= 0 (base of the soil column).
   !     o Soil / snow temperature is predicted from heat conduction
@@ -100,7 +100,7 @@ contains
     ! o The thermal conductivity of soil is computed from
     !   the algorithm of Johansen (as reported by Farouki 1981), and the
     !   conductivity of snow is from the formulation used in
-    !   Sturm (1997).
+    !   Sturm (1997) or Jordan (1991) p. 18 depending on namelist option.
     ! o Boundary conditions:
     !   F = Rnet - Hg - LEg (top),  F= 0 (base of the soil column).
     ! o Soil / snow temperature is predicted from heat conduction
@@ -611,7 +611,8 @@ contains
     !
     ! (2) The thermal conductivity of soil is computed from the algorithm of
     !     Johansen (as reported by Farouki 1981), and of snow is from the
-    !     formulation used in Sturm (1997).
+    !     formulation used in Sturm (1997) or Jordan (1991) p. 18 depending on
+    !     namelist option.
     ! The thermal conductivities at the interfaces between two neighboring
     ! layers (j, j+1) are derived from an assumption that the flux across
     ! the interface is equal to that from the node j to the interface and the
@@ -734,16 +735,29 @@ contains
                endif
             endif
 
-            ! Thermal conductivity of snow, which from Sturm (1997)
+            ! Thermal conductivity of snow
             ! Only examine levels from snl(c)+1 -> 0 where snl(c) < 1
             if (snl(c)+1 < 1 .AND. (j >= snl(c)+1) .AND. (j <= 0)) then  
-               bw(c,j) = ((h2osoi_ice(c,j)*1)+h2osoi_liq(c,j))/(frac_sno(c)*dz(c,j)) ! ==RHOS
-               ! thk(c,j) = tkair + (7.75e-5_r8 *bw(c,j) + 1.105e-6_r8*bw(c,j)*bw(c,j))*(tkice-tkair) ! Original (Jordan) Parameterisation
-               if (bw(c,j)  <= 156) then !LMW or 0.156 ?
-		          thk(c,j) = 0.023 + 0.234*(bw(c,j)/1000) !LMW - units changed by VRD
-		       else !LMW
-		          thk(c,j) = 0.138 - 1.01*(bw(c,j)/1000) +(3.233*((bw(c,j)/1000)*(bw(c,j)/1000))) ! LMW Sturm I think
-	       	   end if
+               bw(c,j) = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/(frac_sno(c)*dz(c,j))
+!              TODO slevis: Add namelist option thermal_cond_snow and then
+!                           uncomment relevant lines below
+!              select case (thermal_cond_snow)
+!              case ('Jordan1991')
+!                 thk(c,j) = tkair + (7.75e-5_r8 *bw(c,j) + 1.105e-6_r8*bw(c,j)*bw(c,j))*(tkice-tkair)
+!              case ('Sturm1997')
+                  ! Implemented by Vicky Dutch (VRD), Nick Rutter, and
+                  ! Leanne Wake (LMW)
+                  ! https://tc.copernicus.org/articles/16/4201/2022/
+                  ! Code provided by Adrien Dams to Will Wieder
+                  if (bw(c,j) <= 156) then !LMW or 0.156 ?
+                     thk(c,j) = 0.023 + 0.234*(bw(c,j)/1000) !LMW - units changed by VRD
+                  else !LMW
+                     thk(c,j) = 0.138 - 1.01*(bw(c,j)/1000) +(3.233*((bw(c,j)/1000)*(bw(c,j)/1000))) ! LMW Sturm I think
+                  end if
+!              case default
+!                 write(iulog,*) subname//' ERROR: unknown thermal_cond_snow value: ', thermal_cond_snow 
+!                 call endrun(msg=errMsg(sourcefile, __LINE__))
+!              end select
             end if
 
          end do
