@@ -5,15 +5,10 @@ System tests for modify_singlept_site_neon.py
 """
 
 import os
-import re
-
 import unittest
 import tempfile
 import shutil
 import sys
-
-import xarray as xr
-import numpy as np
 
 # THESE LINES ARE JUST HERE FOR TESTING
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
@@ -21,7 +16,6 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm import unit_testing
-from ctsm.site_and_regional import modify_singlept_site_neon
 from ctsm.site_and_regional.modify_singlept_site_neon import main, get_parser
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
@@ -51,7 +45,8 @@ class TestSysModifySingleptSiteNeon(unittest.TestCase):
 
     def test_modify_site(self):
         """
-        Test modifying a singple point site. This test currently checks that the run fails due to dir structure
+        Test modifying a singple point site.
+        This test currently checks that the run fails due to dir structure
 
         TODO: The primary items to test here are the following:
         1) Fields are overwritten with site-specific data for neon sites
@@ -59,12 +54,21 @@ class TestSysModifySingleptSiteNeon(unittest.TestCase):
         3) Check specific fields listed in update_metadata for correct output
         4) Check that a netcdf with correct formatting is created
         """
-        sys.argv = ["modify_singlept_site_neon", "--neon_site", "/glade/work/tking/ctsm/cime_config/usermods_dirs/NEON/ABBY"]
-        # TODO: the above requires a full path instead of site name because of how run_neon is configured... This needs to be fixed/generalized.
+        sys.argv = [
+            "modify_singlept_site_neon",
+            "--neon_site",
+            "/glade/work/tking/ctsm/cime_config/usermods_dirs/NEON/ABBY",
+        ]
+        # TODO: the above requires a full path instead of site name because of how run_neon is configured.
+        # This needs to be fixed/generalized.
         parser = get_parser()
         with self.assertRaises(SystemExit):
-            print("This should currently fail due to directory structure in run_neon and the directory structure listed in sys.argv")
+            print(
+                """This should currently fail due to directory structure in run_neon
+                   and the directory structure listed in sys.argv"""
+            )
             main()
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()

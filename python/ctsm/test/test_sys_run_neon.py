@@ -6,23 +6,16 @@
 
 import glob
 import os
-import re
-
 import unittest
 import tempfile
 import shutil
 import sys
 
-import xarray as xr
-import numpy as np
-
 # THESE LINES ARE JUST HERE FOR TESTING
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 sys.path.insert(1, _CTSM_PYTHON)
 
-from ctsm.path_utils import path_to_ctsm_root, path_to_cime
 from ctsm import unit_testing
-from ctsm.site_and_regional import run_neon
 from ctsm.site_and_regional.run_neon import main, get_parser
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
@@ -53,13 +46,20 @@ class TestSysRunNeon(unittest.TestCase):
         """
 
         # run the run_neon tool
-        sys.argv = ["run_neon", "--neon-sites", "BART", "--setup-only", "--output-root", self._tempdir]
+        sys.argv = [
+            "run_neon",
+            "--neon-sites",
+            "BART",
+            "--setup-only",
+            "--output-root",
+            self._tempdir,
+        ]
         valid_neon_sites = ["ABBY", "OSBS", "BART"]  # ["all"]
         parser = get_parser(sys.argv, "description_for_parser", valid_neon_sites)
         main("")
 
         # assert that BART directories were created during setup
-        self.assertTrue("BART" in glob.glob(self._tempdir+"/*"))
+        self.assertTrue("BART" in glob.glob(self._tempdir + "/*"))
 
         # TODO: Would also be useful to test the following items:
         # It might be good to ensure the log files are working as expected?
