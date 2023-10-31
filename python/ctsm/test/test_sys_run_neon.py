@@ -49,30 +49,23 @@ class TestSysRunNeon(unittest.TestCase):
     def test_one_site(self):
         """
         This test specifies a site to run
-        Run the tool, check history file output exists
-        Could also check log files? Although this functionally doesn't change output,
-        it might be good to ensure the log files are working as expected?
-        Test running transient, ad and post ad cases.
-        Test use of base case root.
-        Test for using prism?
-        Test setup_only? This should be encapsulated within the full run?
+        Run the tool, check that file structure is set up correctly
         """
 
         # run the run_neon tool
-        # sys.argv = ["run_neon", "--neon_sites 'ABBY'"]
-        # sys.argv = ["--neon_sites", ["ABBY"]]
-
-        sys.argv = ["--neon-sites 'ABBY'"]
+        sys.argv = ["run_neon", "--neon-sites", "BART", "--setup-only", "--output-root", self._tempdir]
         valid_neon_sites = ["ABBY", "OSBS", "BART"]  # ["all"]
         parser = get_parser(sys.argv, "description_for_parser", valid_neon_sites)
         main("")
 
-        # this seems to run OSBS (default site, instead of ABBY),
-        #  but does create files! It takes a while though, should we do setup-only?
-        # Could assert that dir is created with files
-        # we should also move this into a tempdir and delete files after running (and cancel queue?)
+        # assert that BART directories were created during setup
+        self.assertTrue("BART" in glob.glob(self._tempdir+"/*"))
 
-        self.assertTrue("OSBS" in glob.glob("*"))
+        # TODO: Would also be useful to test the following items:
+        # It might be good to ensure the log files are working as expected?
+        # Test running transient, ad and post ad cases.
+        # Test use of base case root.
+        # Test for using prism?
 
 
 if __name__ == "__main__":
