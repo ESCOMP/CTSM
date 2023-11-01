@@ -217,7 +217,7 @@ def import_and_process_1yr(
     else:
         chunks = None
 
-    # Get h2 file (list)
+    # Get h1 file (list)
     h1_pattern = os.path.join(indir, "*h1.*.nc")
     h1_filelist = glob.glob(h1_pattern)
     if not h1_filelist:
