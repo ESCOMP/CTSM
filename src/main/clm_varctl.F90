@@ -221,6 +221,8 @@ module clm_varctl
 
   ! which snow cover fraction parameterization to use
   character(len=64), public :: snow_cover_fraction_method
+  ! which snow thermal conductivity parameterization to use
+  character(len=25), public :: snow_thermal_cond_method
 
   ! atmospheric CO2 molar ratio (by volume) (umol/mol)
   real(r8), public :: co2_ppmv     = 355._r8            !

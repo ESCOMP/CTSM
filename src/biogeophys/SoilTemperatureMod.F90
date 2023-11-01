@@ -623,7 +623,8 @@ contains
     use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock
     use landunit_varcon , only : istice, istwet
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
-    use clm_varctl      , only : iulog
+    use clm_varctl      , only : iulog, snow_thermal_cond_method
+
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds 
@@ -739,12 +740,10 @@ contains
             ! Only examine levels from snl(c)+1 -> 0 where snl(c) < 1
             if (snl(c)+1 < 1 .AND. (j >= snl(c)+1) .AND. (j <= 0)) then  
                bw(c,j) = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/(frac_sno(c)*dz(c,j))
-!              TODO slevis: Add namelist option thermal_cond_snow and then
-!                           uncomment relevant lines below
-!              select case (thermal_cond_snow)
-!              case ('Jordan1991')
-!                 thk(c,j) = tkair + (7.75e-5_r8 *bw(c,j) + 1.105e-6_r8*bw(c,j)*bw(c,j))*(tkice-tkair)
-!              case ('Sturm1997')
+               select case (snow_thermal_cond_method)
+               case ('Jordan1991')
+                  thk(c,j) = tkair + (7.75e-5_r8 *bw(c,j) + 1.105e-6_r8*bw(c,j)*bw(c,j))*(tkice-tkair)
+               case ('Sturm1997')
                   ! Implemented by Vicky Dutch (VRD), Nick Rutter, and
                   ! Leanne Wake (LMW)
                   ! https://tc.copernicus.org/articles/16/4201/2022/
@@ -754,10 +753,10 @@ contains
                   else !LMW
                      thk(c,j) = 0.138 - 1.01*(bw(c,j)/1000) +(3.233*((bw(c,j)/1000)*(bw(c,j)/1000))) ! LMW Sturm I think
                   end if
-!              case default
-!                 write(iulog,*) subname//' ERROR: unknown thermal_cond_snow value: ', thermal_cond_snow 
-!                 call endrun(msg=errMsg(sourcefile, __LINE__))
-!              end select
+               case default
+                  write(iulog,*) subname//' ERROR: unknown snow_thermal_cond_method value: ', snow_thermal_cond_method
+                  call endrun(msg=errMsg(sourcefile, __LINE__))
+               end select
             end if
 
          end do
