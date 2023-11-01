@@ -6,8 +6,7 @@
  Quickstart
 ============
 
-Running the CLM requires a suite of UNIX utilities and programs and you should make sure you have all of these available before trying to go forward with using it. 
-If you are missing one of these you should contact the systems administrator for the machine you wish to run on and make sure they are installed.
+Running the CLM requires a suite of UNIX utilities and programs and you should make sure you have all of these available before trying to go forward with using it. If you are missing one of these you should contact the systems administrator for the machine you wish to run on and make sure they are installed.
 
 List of utilities required for CESM in the "|cesmrelease| Software/Operating System Prerequisites" section in `http://www.cesm.ucar.edu/models/cesm1.2//cesm/doc/usersguide/book1.html <CLM-URL>`_
 - UNIX bash shell (for some of the CLM tools scripts)
@@ -24,8 +23,7 @@ The IMPORTANT_NOTES file talks about important things for users to know about us
 
 The ChangeLog/ChangeSum talk about advances in different versions of CLM. The content of these files is largely explained in the previous chapter on `"What is new with |version| in |cesmrelease| since previous public releases?" <CLM-URL>`_.
 
-The release-clm5.0.ChangeLog gives the specific changes that have gone on the release-clm5.0 branch. clm3_0_ChangeLog, clm4_0_ChangeLog, clm4_5_ChangeLog gives the changes that 
-culimated in that given version of the CLM.
+The release-clm5.0.ChangeLog gives the specific changes that have gone on the release-clm5.0 branch. clm3_0_ChangeLog, clm4_0_ChangeLog, clm4_5_ChangeLog gives the changes that culimated in that given version of the CLM.
 
 Note other directories have README files that explain different components and tools used when running CLM and are useful in understanding how those parts of the model work and should be consulted when using tools in those directories. For more details on configuring and customizing a case with CLM see `Chapter 1 <CLM-URL>`_.
 
