@@ -59,7 +59,8 @@ class TestSysRunNeon(unittest.TestCase):
         main("")
 
         # assert that BART directories were created during setup
-        self.assertTrue("BART" in glob.glob(self._tempdir + "/*"))
+        print(glob.glob(self._tempdir + "/BART*"))
+        self.assertTrue("BART" in glob.glob(self._tempdir + "/BART*")[0])
 
         # TODO: Would also be useful to test the following items:
         # It might be good to ensure the log files are working as expected?
