@@ -45,6 +45,7 @@ def log(logger, string):
 
 
 def error(logger, string):
+    print(string)
     logger.error(string)
     raise RuntimeError(string)
 
