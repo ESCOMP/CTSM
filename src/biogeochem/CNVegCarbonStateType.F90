@@ -1528,11 +1528,12 @@ contains
           ! BUG(kwo, 2023-10-19, ESCOMP/ctsm#2119) There is a bug that causes incorrect values for
           ! C isotopes if running from a case without C isotopes (an initial file) to a case with C
           ! isotopes (https://github.com/ESCOMP/ctsm/issues/2119). Here we check if the user
-          ! the user is doing this and abort if they are. This particular check is covering the case
+          ! is doing this and abort if they are. This particular check is covering the case
           ! when use_init_interp=.false.  There is a similar check (but for the purpose of working around
-          ! a different bug) in initInterp.F90. This check here should be removed once bug #2119 is resolved
-          ! and replaced by the logic shown below for .e.g, totvegc_col, where totvegc_cl is initialized with
-          ! atmospheric c13 values.
+          ! a different bug) in initInterp.F90. This check below should be removed if bug #2119 is ever
+          ! fully resolved (i.e., we decide we need to support going from a case without C isotopes (an 
+          ! initial file) to a case with C isotopes), and replaced by the logic shown below for .e.g, 
+          ! totvegc_col_13, where totvegc_col_13 is initialized with atmospheric c13 values.
           ! We arbitrarily check totvegc_13 (we could pick any c13 restart field).
           if (masterproc) then
              write(iulog,*) 'Cannot initialize from a run without c13 to a run with c13,'
@@ -1553,11 +1554,12 @@ contains
           ! BUG(kwo, 2023-10-19, ESCOMP/ctsm#2119) There is a bug that causes incorrect values for
           ! C isotopes if running from a case without C isotopes (an initial file) to a case with C
           ! isotopes (https://github.com/ESCOMP/ctsm/issues/2119). Here we check if the user
-          ! the user is doing this and abort if they are. This particular check is covering the case
+          ! is doing this and abort if they are. This particular check is covering the case
           ! when use_init_interp=.false.  There is a similar check (but for the purpose of working around
-          ! a different bug) in initInterp.F90. This check here should be removed once bug #2119 is resolved
-          ! and replaced by the logic shown below for .e.g, totvegc_col, where totvegc_cl is initialized with
-          ! atmospheric c14 values.
+          ! a different bug) in initInterp.F90. This check below should be removed if bug #2119 is ever
+          ! fully resolved (i.e., we decide we need to support going from a case without C isotopes (an 
+          ! initial file) to a case with C isotopes), and replaced by the logic shown below for .e.g, 
+          ! totvegc_col_14, where totvegc_col_l4 is initialized with atmospheric c14 values.
           ! We arbitrarily check totvegc_14 (we could pick any c14 restart field).
           if (masterproc) then
              write(iulog,*) 'Cannot interpolate from a run without c14 to a run with c14,'
