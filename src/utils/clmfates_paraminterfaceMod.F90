@@ -29,7 +29,6 @@ module CLMFatesParamInterfaceMod
   ! NOTE(bja, 2017-01) these methods can NOT be part of the clm-fates
   ! interface type because they are called before the instance is
   ! initialized.
-  public :: FatesReadParameters
   public :: FatesReadPFTs
   private :: ParametersFromNetCDF
   private :: SetParameterDimensions
@@ -41,44 +40,6 @@ module CLMFatesParamInterfaceMod
        __FILE__
 
 contains
-
- !-----------------------------------------------------------------------
- subroutine FatesReadParameters()
-  use clm_varctl, only : use_fates, paramfile, fates_paramfile
-  use spmdMod, only : masterproc
-
-   implicit none
-   
-   character(len=32)  :: subname = 'FatesReadParameters'
-   class(fates_parameters_type), allocatable :: fates_params
-   logical :: is_host_file
-
-    if (masterproc) then
-      write(fates_log(), *) 'clmfates_interfaceMod.F90::'//trim(subname)//' :: CLM reading ED/FATES '//' parameters '
-    end if
-
-    allocate(fates_params)
-    call fates_params%Init()   ! fates_params class, in FatesParameterInterfaceMod
-    call FatesRegisterParams(fates_params)  !EDParamsMod, only operates on fates_params class
-    call SpitFireRegisterParams(fates_params) !SpitFire Mod, only operates of fates_params class
-    call PRTRegisterParams(fates_params)     ! PRT mod, only operates on fates_params class
-    call FatesSynchronizedParamsInst%RegisterParams(fates_params) !Synchronized params class in Synchronized params mod, only operates on fates_params class
-
-    is_host_file = .false.
-    call ParametersFromNetCDF(fates_paramfile, is_host_file, fates_params)
-
-    is_host_file = .true.
-    call ParametersFromNetCDF(paramfile, is_host_file, fates_params)
-
-    call FatesReceiveParams(fates_params)
-    call SpitFireReceiveParams(fates_params)
-    call PRTReceiveParams(fates_params)
-    call FatesSynchronizedParamsInst%ReceiveParams(fates_params)
-
-    call fates_params%Destroy()
-    deallocate(fates_params)
-
- end subroutine FatesReadParameters
 
  !-----------------------------------------------------------------------
  subroutine FatesReadPFTs()
