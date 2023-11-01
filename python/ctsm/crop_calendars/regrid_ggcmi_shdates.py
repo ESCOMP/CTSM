@@ -93,6 +93,8 @@ def main(
     # Process crop list
     if crop_list is not None:
         crop_list = crop_list.split(",")
+    if extension[0] != ".":
+        extension = "." + extension
 
     # Import and format latitude
     if "lat" in template_ds_in:
