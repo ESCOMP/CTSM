@@ -72,7 +72,7 @@ def import_coord_2d(ds, coordName, varName):
 
 
 def main(
-    regrid_resolution, regrid_template_file_in, regrid_input_directory, regrid_output_directory, extension
+    regrid_resolution, regrid_template_file_in, regrid_input_directory, regrid_output_directory, extension, crop_list
 ):
     print(f"Regridding GGCMI crop calendars to {regrid_resolution}:")
 
@@ -89,6 +89,10 @@ def main(
         os.remove(templatefile)
 
     template_ds_in = xr.open_dataset(regrid_template_file_in)
+    
+    # Process crop list
+    if crop_list is not None:
+        crop_list = crop_list.split(",")
 
     # Import and format latitude
     if "lat" in template_ds_in:
@@ -135,7 +139,11 @@ def main(
         raise FileNotFoundError(f"No files found matching {os.path.join(os.getcwd(), pattern)}")
     input_files.sort()
     for f in input_files:
-        print("    " + f[0:6])
+        this_crop = f[0:6]
+        if crop_list is not None and this_crop not in crop_list:
+            continue
+        
+        print("    " + this_crop)
         f2 = os.path.join(regrid_output_directory, f)
         f3 = f2.replace(extension, f"_nninterp-{regrid_resolution}{extension}")
 
@@ -189,6 +197,12 @@ if __name__ == "__main__":
         help=f"File extension of raw GGCMI sowing/harvest date files (default {default}).",
         default=default,
     )
+    parser.add_argument(
+        "-c",
+        "--crop-list",
+        help="List of GGCMI crops to process; e.g., '--crop-list mai_rf,mai_ir'. If not provided, will process all GGCMI crops.",
+        default=None,
+    )
 
     # Get arguments
     args = parser.parse_args(sys.argv[1:])
@@ -202,4 +216,5 @@ if __name__ == "__main__":
         os.path.realpath(args.regrid_input_directory),
         os.path.realpath(args.regrid_output_directory),
         args.extension,
+        args.crop_list,
     )
