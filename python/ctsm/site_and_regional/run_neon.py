@@ -74,6 +74,8 @@ from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import parse_isoduration
 from ctsm.download_utils import download_file
 
+from ctsm import add_cime_to_path
+
 from standard_script_setup import *
 
 logger = logging.getLogger(__name__)

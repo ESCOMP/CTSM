@@ -84,9 +84,10 @@ class TestModifySingleptSiteNeon(unittest.TestCase):
         Test to ensure that correct attributes are found for find_soil_structure.
         soil_texture_raw_data_file_name should be found, and test should go through sysexit.
         """
+        surf_file_name = "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc"
         surf_file = os.path.join(
             path_to_ctsm_root(),
-            "python/ctsm/test/testinputs/surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc",
+            "python/ctsm/test/testinputs/", surf_file_name,
         )
         f1 = xr.open_dataset(surf_file)
         self.assertEqual(
@@ -140,7 +141,7 @@ class TestModifySingleptSiteNeon(unittest.TestCase):
         self.assertGreater(
             int(last_abby_download[:4]), 2021, "ABBY download is older than expected"
         )
-        # change back to previous dir once listing.csv file has been created in tempdir and test complete
+        # change back to previous dir once listing.csv file is created in tempdir and test complete
         os.chdir(previous_dir)
 
 

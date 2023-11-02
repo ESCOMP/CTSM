@@ -1,4 +1,142 @@
 ===============================================================
+Tag name: ctsm5.1.dev151
+Originator(s): tking (Teagan King,UCAR/CCR)
+Date: Thu Nov  2 16:03:44 MDT 2023
+One-line Summary: Move tools to python directory and add tests
+
+Purpose and description of changes
+----------------------------------
+
+Move the following scripts to /python/ctsm/site_and_regional
+and make wrapper scripts for them in /tools/site_and_regional:
+- run_neon.py
+- neon_surf_wrapper.py
+- modify_singlept_site_neon.py
+
+Add unit testing for:
+- iso_utils
+- modify_singlept_site_neon
+- neon_surf_wrapper
+- run_neon
+
+Add system testing for:
+- modify_singlept_site_neon
+- run_neon
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+#1441
+
+Known Issues:
+There were some previous pylint errors that still remain in this tag.
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+wrapper scripts don't have .py suffixes
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+Numerous changes were made to include new tests.
+README.md for testing was also updated to clarify that arguments should be used.
+
+Testing summary:
+----------------
+[... Remove before making master tag.
+
+Nearly all CTSM tags should undergo 'regular' (aux_clm) testing.
+However, it occasionally makes sense to do more or less system testing;
+here is guidance on different available levels of system testing:
+    a) no system testing (for use when the only changes are ones that
+                          have absolutely no impact on system runs; this
+                          includes documentation-only tags, tags that
+                          just change the tools or some python code that
+                          does not impact system runs, etc.)
+    b) minimal (for use in rare cases where only a small change with
+                known behavior is added ... eg. a minor bug fix. This
+		might be to just run the "short" test list, or to run
+		a single test. Whatever makes sense for the particular case.)
+    c) python only (for use where the only changes are in the python directory:
+                    run the python testing listed below)
+    d) regular (regular tests on normal machines if CTSM source is modified)
+    e) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
+                and normally all of the ancillary tests (build-namelist, python, ptclm, etc.)
+		would be run as well)
+
+In addition, various other tests of the tools, python and perl
+infrastructure should be run when appropriate, as described below.
+
+...]
+
+[Remove any lines that don't apply.]
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne -
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) -
+
+    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
+     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
+     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
+     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
+     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
+     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
+     separately run the clm_pymods test suite, and you can remove the following line.]
+
+    clm_pymods test suite on cheyenne - 
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ----
+    izumi -------
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ----
+    izumi -------
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+Answer changes
+--------------
+Changes answers relative to baseline: None
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull/2156)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev140
 Originator(s): afoster (Adrianna Foster)
 Date: Tue Sep 12 14:47:06 MDT 2023

@@ -54,7 +54,7 @@ class TestRunNeon(unittest.TestCase):
         self.assertEqual(
             available_list[1].name, "BART", "available list of actual sites not as expected"
         )
-        # change back to previous dir once listing.csv file has been created in tempdir and test complete
+        # change to previous dir once listing.csv file is created in tempdir and test complete
         os.chdir(previous_dir)
 
     def test_check_neon_listing_misspelled(self):
@@ -68,7 +68,7 @@ class TestRunNeon(unittest.TestCase):
         self.assertEqual(
             available_list, [], "available list of incorrect dummy site not as expected"
         )
-        # change back to previous dir once listing.csv file has been created in tempdir and test complete
+        # change to previous dir once listing.csv file is created in tempdir and test complete
         os.chdir(previous_dir)
 
 

@@ -13,6 +13,7 @@ import sys
 
 from ctsm import unit_testing
 from ctsm.site_and_regional.run_neon import main, get_parser
+from ctsm.path_utils import path_to_ctsm_root
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -44,21 +45,19 @@ class TestSysRunNeon(unittest.TestCase):
 
         # run the run_neon tool
         sys.argv = [
-            "run_neon",
+            os.path.join( path_to_ctsm_root(), "tools", "site_and_regional", "run_neon" ),
             "--neon-sites",
             "BART",
             "--setup-only",
             "--output-root",
-            # "FAKE_DIR"
             self._tempdir,
         ]
-        valid_neon_sites = ["ABBY", "OSBS", "BART"]  # ["all"]
+        valid_neon_sites = ["ABBY", "OSBS", "BART"]
         parser = get_parser(sys.argv, "description_for_parser", valid_neon_sites)
         main("")
 
         # assert that BART directories were created during setup
         self.assertTrue("BART" in glob.glob(self._tempdir + "/BART*")[0])
-        # self.assertTrue("BART" in glob.glob("BART*")[0])
 
         # TODO: Would also be useful to test the following items:
         # It might be good to ensure the log files are working as expected?

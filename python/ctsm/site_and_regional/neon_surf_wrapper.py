@@ -26,12 +26,10 @@ conda activate ctsm_pylib
 from __future__ import print_function
 
 import os
-import sys
-import tqdm
 import logging
 import argparse
 import subprocess
-
+import tqdm
 import pandas as pd
 
 
@@ -89,13 +87,13 @@ def execute(command):
         subprocess.check_call(command, stdout=open(os.devnull, "w"), stderr=subprocess.STDOUT)
 
     except subprocess.CalledProcessError as e:
-        # raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
-        # print (e.ouput)
         print(e)
 
 
 def main():
-
+    """
+    Loop through neon sites and execute subset and modify commands
+    """
     args = get_parser().parse_args()
 
     if args.verbose:

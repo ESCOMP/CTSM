@@ -57,7 +57,7 @@ class TestSysModifySingleptSiteNeon(unittest.TestCase):
         ]
         # TODO: the above requires a full path instead of site name
         #       because of how run_neon is configured.
-        # This needs to be fixed/generalized.
+        # This needs to be fixed in run_neon.
         parser = get_parser()
         with self.assertRaises(SystemExit):
             print(
