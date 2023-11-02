@@ -120,10 +120,9 @@ if os.path.exists(datapath):
     print("Input data directory:" + datapath)
 else:
     sys.exit("Could not find input directory: " + datapath)
-if os.path.exists(args.output_dir):
-    print("Output data directory:" + args.output_dir)
-else:
-    sys.exit("Could not find output directory: " + args.output_dir)
+if not os.path.exists(args.output_dir):
+    os.makedirs(args.output_dir)
+print("Output data directory:" + args.output_dir)
 
 # Settings to run with
 today = datetime.date.today()
