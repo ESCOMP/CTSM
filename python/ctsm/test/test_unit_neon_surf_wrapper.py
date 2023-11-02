@@ -7,8 +7,6 @@ You can run this by:
 """
 
 import unittest
-import configparser
-import argparse
 import os
 import sys
 
@@ -19,7 +17,6 @@ sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
 from ctsm.site_and_regional.neon_surf_wrapper import get_parser
-from ctsm.path_utils import path_to_ctsm_root
 
 # pylint: disable=invalid-name
 

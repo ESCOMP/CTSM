@@ -10,10 +10,6 @@ import tempfile
 import shutil
 import sys
 
-# THESE LINES ARE JUST HERE FOR TESTING
-_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
-sys.path.insert(1, _CTSM_PYTHON)
-
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm import unit_testing
 from ctsm.site_and_regional.modify_singlept_site_neon import main, get_parser
@@ -59,7 +55,8 @@ class TestSysModifySingleptSiteNeon(unittest.TestCase):
             "--neon_site",
             path_to_ctsm_root() + "/ctsm/cime_config/usermods_dirs/NEON/ABBY",
         ]
-        # TODO: the above requires a full path instead of site name because of how run_neon is configured.
+        # TODO: the above requires a full path instead of site name
+        #       because of how run_neon is configured.
         # This needs to be fixed/generalized.
         parser = get_parser()
         with self.assertRaises(SystemExit):

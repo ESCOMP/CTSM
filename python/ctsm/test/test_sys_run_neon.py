@@ -11,10 +11,6 @@ import tempfile
 import shutil
 import sys
 
-# THESE LINES ARE JUST HERE FOR TESTING
-_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
-sys.path.insert(1, _CTSM_PYTHON)
-
 from ctsm import unit_testing
 from ctsm.site_and_regional.run_neon import main, get_parser
 
@@ -32,6 +28,7 @@ class TestSysRunNeon(unittest.TestCase):
         Check tempdir for history files
         """
         self._tempdir = tempfile.mkdtemp()
+        os.chdir(self._tempdir)  # cd to tempdir
 
     def tearDown(self):
         """
@@ -52,6 +49,7 @@ class TestSysRunNeon(unittest.TestCase):
             "BART",
             "--setup-only",
             "--output-root",
+            #"FAKE_DIR"
             self._tempdir,
         ]
         valid_neon_sites = ["ABBY", "OSBS", "BART"]  # ["all"]
@@ -60,6 +58,7 @@ class TestSysRunNeon(unittest.TestCase):
 
         # assert that BART directories were created during setup
         self.assertTrue("BART" in glob.glob(self._tempdir + "/BART*")[0])
+        #self.assertTrue("BART" in glob.glob("BART*")[0])
 
         # TODO: Would also be useful to test the following items:
         # It might be good to ensure the log files are working as expected?
