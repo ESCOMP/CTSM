@@ -308,6 +308,15 @@ module clm_varctl
   logical, public            :: use_fates_inventory_init = .false.      ! true => initialize fates from inventory
   logical, public            :: use_fates_fixed_biogeog = .false.       ! true => use fixed biogeography mode
   logical, public            :: use_fates_nocomp = .false.              ! true => use no comopetition mode
+
+  ! History density level
+  ! fates can produce history at either the daily timescale (dynamics)
+  ! and the model step timescale. It can also generate output on the extra dimension
+  ! Performing this output can be expensive, so we allow different history density
+  ! levels
+  
+  logical, public            :: fates_hist_dense_level = 1              !
+  
   character(len=256), public :: fates_inventory_ctrl_filename = ''      ! filename for inventory control
 
   ! FATES SP AND FATES BGC are MUTUTALLY EXCLUSIVE, THEY CAN'T BOTH BE ON
