@@ -1563,14 +1563,14 @@
     </options>
   </test>
 
-  <test name="ERS_P144x1_Lm30" grid="f10_f10_mg37" compset="I2000Clm51Fates" testmods="clm/Fates">
+  <test name="ERS_P144x1_Lm25" grid="f10_f10_mg37" compset="I2000Clm51Fates" testmods="clm/Fates">
        <machines>
 	 <!-- no izumi tests since this has a pe layout specific for cheyenne -->
 	 <machine name="cheyenne" compiler="intel"   category="aux_clm"/>
 	 <machine name="cheyenne" compiler="intel"   category="fates"/>
        </machines>
        <options>
-	 <option name="wallclock">00:25:00</option>
+	 <option name="wallclock">00:40:00</option>
 	 <option name="comment"  >This is a long fates test on full dynamics. The 144 count is designed to minimize wall time.</option>
        </options>
   </test>
