@@ -87,7 +87,8 @@ class TestModifySingleptSiteNeon(unittest.TestCase):
         surf_file_name = "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc"
         surf_file = os.path.join(
             path_to_ctsm_root(),
-            "python/ctsm/test/testinputs/", surf_file_name,
+            "python/ctsm/test/testinputs/",
+            surf_file_name,
         )
         f1 = xr.open_dataset(surf_file)
         self.assertEqual(

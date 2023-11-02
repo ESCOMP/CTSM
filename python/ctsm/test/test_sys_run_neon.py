@@ -45,7 +45,7 @@ class TestSysRunNeon(unittest.TestCase):
 
         # run the run_neon tool
         sys.argv = [
-            os.path.join( path_to_ctsm_root(), "tools", "site_and_regional", "run_neon" ),
+            os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_neon"),
             "--neon-sites",
             "BART",
             "--setup-only",
