@@ -50,6 +50,8 @@ def write_usermods(lat,lon,site,start_year,end_year,
         './xmlchange START_TOD='+str(start_tod) + '\n' \
         './xmlchange ATM_NCPL='+str(atm_ncpl) + '\n' \
         '\n' \
+        
+        'echo "CLM_USRDAT.PLUMBER2:datafiles=\'/glade/work/oleson/PLUMBER2/datm_files/'+site+'/CLM1PT_data/CTSM_DATM_'+site+'_'+str(start_year)+'-'+str(end_year)+'.nc \'" >> user_nl_datm_streams \n' \
 
         'echo "presaero.SSP3-7.0:year_first='+str(start_year) + '" >> user_nl_datm_streams \n' \
         'echo "presaero.SSP3-7.0:year_last='+str(end_year) + '" >> user_nl_datm_streams \n' \

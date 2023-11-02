@@ -1,7 +1,11 @@
 #!/bin/bash
 ./xmlchange CLM_USRDAT_NAME=PLUMBER2
+./xlmchange DATM_MODE=1PT
 # Set data forcing data to future scenario so will have data from 2018 to present-day
 ./xmlchange DATM_PRESAERO=SSP3-7.0
+./xlmchange DATM_CO2_TSERIES=SSP3-7.0
+./xmlchange DATM_PRESNDEP=SSP3-7.0
+
 # Explicitly set the MPI library to mpi-serial so won't have the build/run complexity of a full MPI library
 ./xmlchange MPILIB=mpi-serial
 # Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)

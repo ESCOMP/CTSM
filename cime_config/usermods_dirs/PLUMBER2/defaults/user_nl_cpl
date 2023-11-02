@@ -17,4 +17,5 @@
 ! For example, rather than set username to 'foo' in user_nl_cpl, call
 ! ./xmlchange USER=foo
 !------------------------------------------------------------------------
-orb_iyear = 2018
+! average year of all PLUMBER2 170 sites is 2007
+orb_iyear = 2007

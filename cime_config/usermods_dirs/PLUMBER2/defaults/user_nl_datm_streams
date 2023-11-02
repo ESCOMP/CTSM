@@ -37,11 +37,11 @@ presaero.SSP3-7.0:dtlimit=30
 presndep.SSP3-7.0:datafiles = $DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.002_1849-2101_monthly_0.9x1.25_c211216.nc
 presndep.SSP3-7.0:dtlimit=30
 
-!Arbitrary start year for O3
+!Arbitrary start year for O3,average year of all 170 sites is 2007
 preso3.hist:dtlimit=30
-preso3.hist:year_first=2000
-preso3.hist:year_last=2000
-preso3.hist:year_align=2000
+preso3.hist:year_first=2007
+preso3.hist:year_last=2007
+preso3.hist:year_align=2007
 
 co2tseries.SSP3-7.0:datafiles = $DIN_LOC_ROOT/atm/datm7/CO2/fco2_datm_globalSSP3-7.0_simyr_1750-2501_CMIP6_c201101.nc
 
