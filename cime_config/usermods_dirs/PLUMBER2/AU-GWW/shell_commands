@@ -8,6 +8,7 @@
 ./xmlchange START_TOD=57600
 ./xmlchange ATM_NCPL=48
 
+echo "CLM_USRDAT.PLUMBER2:datafiles='/glade/work/oleson/PLUMBER2/datm_files/AU-GWW/CLM1PT_data/CTSM_DATM_AU-GWW_2013-2017.nc '" >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_first=2013" >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_last=2017" >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_align=2013" >> user_nl_datm_streams 
@@ -15,10 +16,6 @@ echo "presaero.SSP3-7.0:year_align=2013" >> user_nl_datm_streams
 echo "presndep.SSP3-7.0:year_first=2013" >> user_nl_datm_streams 
 echo "presndep.SSP3-7.0:year_last=2017" >> user_nl_datm_streams 
 echo "presndep.SSP3-7.0:year_align=2013" >> user_nl_datm_streams 
-
-echo "preso3.hist:year_first=2013" >> user_nl_datm_streams 
-echo "preso3.hist:year_last=2017" >> user_nl_datm_streams 
-echo "preso3.hist:year_align=2013" >> user_nl_datm_streams 
 
 echo "co2tseries.SSP3-7.0:year_first=2013" >> user_nl_datm_streams 
 echo "co2tseries.SSP3-7.0:year_last=2017" >> user_nl_datm_streams 

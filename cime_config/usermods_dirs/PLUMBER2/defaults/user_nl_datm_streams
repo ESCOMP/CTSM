@@ -26,10 +26,15 @@ CLM_USRDAT.PLUMBER2:datavars = ZBOT     Sa_z, \
         TBOT     Sa_tbot, \
         QBOT     Sa_shum, \
         WIND     Sa_wind, \
-        PRECTmms Sa_precn, \
+        PRECTmms Faxa_precn, \
         FSDS     Faxa_swdn, \
         PSRF     Sa_pbot, \
         FLDS     Faxa_lwdn
+
+!TODO, add $PLUMBER2SITE to this naming string + accurate years after moving files to inputdata
+!CLM_USRDAT.PLUMBER2:datafiles = /glade/work/oleson/PLUMBER2/datm_files/ZM-Mon/CLM1PT_data/CTSM_DATM_ZM-Mon_2008-2008.nc
+CLM_USRDAT.PLUMBER2:taxmode=cycle
+CLM_USRDAT.PLUMBER2:dtlimit=30
 
 presaero.SSP3-7.0:datafiles = $DIN_LOC_ROOT/atm/cam/chem/trop_mozart_aero/aero/aerodep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.001_1849-2101_monthly_0.9x1.25_c201103.nc
 presaero.SSP3-7.0:dtlimit=30
