@@ -21,6 +21,104 @@ import numpy as np
 import netCDF4 as netcdf4
 
 
+# Adds global attributes, returning hdir and fdir
+def add_global_attributes(ds, historydate, histdir, sspdir, num_ens, climo_year, climo_base_nyrs, dpath, dfile, hist_yrstart, hist_yrend, ssp_yrstart, ssp_yrend, timetag):
+    ds.Created_on = timetag
+
+    ds.title = "anomaly forcing data"
+    ds.note1 = (
+            "Anomaly/scale factors calculated relative to "
+            + str(climo_year - (climo_base_nyrs - 1) / 2)
+            + "-"
+            + str(climo_year + (climo_base_nyrs - 1) / 2)
+        )
+    ds.history = historydate + ": created by " + sys.argv[0]
+    stdout = os.popen("git describe")
+    ds.gitdescribe = stdout.read().rstrip()
+    ds.Source = "CMIP6 CESM simulations"
+    ds.Conventions = "CF-1.0"
+    ds.comment = (
+            "Monthly scale factors for given SSP scenario compared to a climatology based on"
+            + " data centered on "
+            + str(climo_year)
+            + " over the range given in note1"
+        )
+    ds.number_of_ensemble_members = str(num_ens)
+    ds.Created_by = getuser()
+
+    for nens in range(num_ens):
+        hdir = dpath + histdir[nens] + dfile
+        fdir = dpath + sspdir[nens] + dfile
+        if nens == 0:
+            ds.Created_from_historical_dirs = hdir
+            ds.Created_from_scenario_dirs = fdir
+        else:
+            ds.Created_from_historical_dirs += ", " + hdir
+            ds.Created_from_scenario_dirs += ", " + fdir
+
+    ds.History_years = str(hist_yrstart) + "," + str(hist_yrend)
+    ds.Scenario_years = str(ssp_yrstart) + "," + str(ssp_yrend)
+    ds.institution = "National Center for Atmospheric Research"
+    return hdir,fdir
+
+
+def create_fill_dims(ds, nlat, nlon, ssp_time_units, ssp_time_longname, lon, lat, ssp_time):
+    ds.createDimension("lat", size=int(nlat))
+    ds.createDimension("lon", size=int(nlon))
+    ds.createDimension("time", None)
+    
+    wtime = ds.createVariable("time", np.float64, ("time",))
+    wlat = ds.createVariable("lat", np.float64, ("lat",))
+    wlon = ds.createVariable("lon", np.float64, ("lon",))
+    
+    wtime.units = ssp_time_units
+    wlon.units = "degrees_east"
+    wlat.units = "degrees_north"
+    
+    wtime.long_name = ssp_time_longname
+    wlon.long_name = "Longitude"
+    wlat.long_name = "Latitude"
+    
+    wlon.mode = "time-invariant"
+    wlat.mode = "time-invariant"
+    
+    # adjust time to middle of month
+    wtime_offset = 15 - ssp_time[0]
+    wtime[:] = ssp_time + wtime_offset
+    
+    wtime.calendar = "noleap"
+    wlon[:] = lon
+    wlat[:] = lat
+    
+    return ds
+
+
+def create_fill_ancillary_vars(ds, landfrac, landmask, area):
+    
+    wmask = ds.createVariable("landmask", np.int32, ("lat", "lon"))
+    warea = ds.createVariable("area", np.float64, ("lat", "lon"))
+    wfrac = ds.createVariable("landfrac", np.float64, ("lat", "lon"))
+    
+    warea.units = "km2"
+    wfrac.units = "unitless"
+    wmask.units = "unitless"
+
+    warea.long_name = "Grid cell area"
+    wfrac.long_name = "Grid cell land fraction"
+    wmask.long_name = "Grid cell land mask"
+    
+    warea.mode = "time-invariant"
+    wfrac.mode = "time-invariant"
+    wmask.mode = "time-invariant"
+
+    # write to file  --------------------------------------------        
+    wmask[:, :] = landmask
+    wfrac[:, :] = landfrac
+    warea[:, :] = area
+    
+    return ds
+
+
 parser = argparse.ArgumentParser(description="Create anomaly forcing")
 parser.add_argument(
     "sspnum",
@@ -560,87 +658,14 @@ for f in range(nfields):
         x = x2.communicate()
         timetag = x[0].decode("utf-8").strip()
 
-        outfile.Created_on = timetag
+        # Add global attributes and get hdir/fdir
+        hdir, fdir = add_global_attributes(outfile, historydate, histdir, sspdir, num_ens, climo_year, climo_base_nyrs, dpath, dfile, hist_yrstart, hist_yrend, ssp_yrstart, ssp_yrend, timetag)
 
-        outfile.title = "anomaly forcing data"
-        outfile.note1 = (
-            "Anomaly/scale factors calculated relative to "
-            + str(climo_year - (climo_base_nyrs - 1) / 2)
-            + "-"
-            + str(climo_year + (climo_base_nyrs - 1) / 2)
-        )
-        outfile.history = historydate + ": created by " + sys.argv[0]
-        stdout = os.popen("git describe")
-        outfile.gitdescribe = stdout.read().rstrip()
-        outfile.Source = "CMIP6 CESM simulations"
-        outfile.Conventions = "CF-1.0"
-        outfile.comment = (
-            "Monthly scale factors for given SSP scenario compared to a climatology based on"
-            + " data centered on "
-            + str(climo_year)
-            + " over the range given in note1"
-        )
-        outfile.number_of_ensemble_members = str(num_ens)
-        outfile.Created_by = getuser()
+        # Create dimensions
+        outfile = create_fill_dims(outfile, nlat, nlon, ssp_time_units, ssp_time_longname, lon, lat, ssp_time)
 
-        for nens in range(num_ens):
-            hdir = dpath + histdir[nens] + dfile
-            fdir = dpath + sspdir[nens] + dfile
-            if nens == 0:
-                outfile.Created_from_historical_dirs = hdir
-                outfile.Created_from_scenario_dirs = fdir
-            else:
-                outfile.Created_from_historical_dirs += ", " + hdir
-                outfile.Created_from_scenario_dirs += ", " + fdir
-
-        outfile.History_years = str(hist_yrstart) + "," + str(hist_yrend)
-        outfile.Scenario_years = str(ssp_yrstart) + "," + str(ssp_yrend)
-        outfile.institution = "National Center for Atmospheric Research"
-
-        outfile.createDimension("lat", size=int(nlat))
-        outfile.createDimension("lon", size=int(nlon))
-        outfile.createDimension("time", None)
-
-        wtime = outfile.createVariable("time", np.float64, ("time",))
-        wlat = outfile.createVariable("lat", np.float64, ("lat",))
-        wlon = outfile.createVariable("lon", np.float64, ("lon",))
-        wmask = outfile.createVariable("landmask", np.int32, ("lat", "lon"))
-        warea = outfile.createVariable("area", np.float64, ("lat", "lon"))
-        wfrac = outfile.createVariable("landfrac", np.float64, ("lat", "lon"))
-        wtime.units = ssp_time_units
-        wlon.units = "degrees_east"
-        wlat.units = "degrees_north"
-        warea.units = "km2"
-        wfrac.units = "unitless"
-        wmask.units = "unitless"
-
-        # wtime.long_name = 'Months since January '+str(fut_yrstart)
-        wtime.long_name = ssp_time_longname
-        wlon.long_name = "Longitude"
-        wlat.long_name = "Latitude"
-        warea.long_name = "Grid cell area"
-        wfrac.long_name = "Grid cell land fraction"
-        wmask.long_name = "Grid cell land mask"
-        wlon.mode = "time-invariant"
-        wlat.mode = "time-invariant"
-        warea.mode = "time-invariant"
-        wfrac.mode = "time-invariant"
-        wmask.mode = "time-invariant"
-
-        wtime.calendar = "noleap"
-
-        # write to file  --------------------------------------------
-        # wtime_offset = 0
-        # adjust time to middle of month
-        # wtime_offset = -15
-        wtime_offset = 15 - ssp_time[0]
-        wtime[:] = ssp_time + wtime_offset
-        wtime.calendar = "noleap"
-        wlon[:] = lon
-        wlat[:] = lat
-        wmask[:, :] = landmask
-        wfrac[:, :] = landfrac
-        warea[:, :] = area
+        # Create and fill ancillary variables ()
+        outfile = create_fill_ancillary_vars(outfile, landfrac, landmask, area)
     # -- End if on open file
 
     if field_out[f] == "sfcWind":
