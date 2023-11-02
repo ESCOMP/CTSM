@@ -49,7 +49,7 @@ class TestSysRunNeon(unittest.TestCase):
             "BART",
             "--setup-only",
             "--output-root",
-            #"FAKE_DIR"
+            # "FAKE_DIR"
             self._tempdir,
         ]
         valid_neon_sites = ["ABBY", "OSBS", "BART"]  # ["all"]
@@ -58,7 +58,7 @@ class TestSysRunNeon(unittest.TestCase):
 
         # assert that BART directories were created during setup
         self.assertTrue("BART" in glob.glob(self._tempdir + "/BART*")[0])
-        #self.assertTrue("BART" in glob.glob("BART*")[0])
+        # self.assertTrue("BART" in glob.glob("BART*")[0])
 
         # TODO: Would also be useful to test the following items:
         # It might be good to ensure the log files are working as expected?

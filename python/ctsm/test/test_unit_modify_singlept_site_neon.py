@@ -124,6 +124,8 @@ class TestModifySingleptSiteNeon(unittest.TestCase):
         """
         Test that dictionary containing last modified information is correctly downloaded
         """
+        previous_dir = os.getcwd()
+        os.chdir(self._tempdir)  # cd to tempdir
         last_abby_download = check_neon_time()[
             "https://storage.neonscience.org/neon-ncar/NEON/surf_files/v1/ABBY_surfaceData.csv"
         ]
@@ -138,6 +140,8 @@ class TestModifySingleptSiteNeon(unittest.TestCase):
         self.assertGreater(
             int(last_abby_download[:4]), 2021, "ABBY download is older than expected"
         )
+        # change back to previous dir once listing.csv file has been created in tempdir and test complete
+        os.chdir(previous_dir)
 
 
 if __name__ == "__main__":

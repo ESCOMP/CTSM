@@ -7,6 +7,8 @@ You can run this by:
 """
 
 import unittest
+import tempfile
+import shutil
 import os
 import sys
 
@@ -26,11 +28,25 @@ class TestRunNeon(unittest.TestCase):
     Basic class for testing run_neon.py.
     """
 
+    def setUp(self):
+        """
+        Make /_tempdir for use by these tests.
+        """
+        self._tempdir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        """
+        Remove temporary directory
+        """
+        shutil.rmtree(self._tempdir, ignore_errors=True)
+
     def test_check_neon_listing(self):
         """
         Test that neon listing is available for valid sites
         """
         valid_neon_sites = ["ABBY", "BART"]
+        previous_dir = os.getcwd()
+        os.chdir(self._tempdir)  # cd to tempdir
         available_list = check_neon_listing(valid_neon_sites)
         self.assertEqual(
             available_list[0].name, "ABBY", "available list of actual sites not as expected"
@@ -38,16 +54,22 @@ class TestRunNeon(unittest.TestCase):
         self.assertEqual(
             available_list[1].name, "BART", "available list of actual sites not as expected"
         )
+        # change back to previous dir once listing.csv file has been created in tempdir and test complete
+        os.chdir(previous_dir)
 
     def test_check_neon_listing_misspelled(self):
         """
         Test that neon listing is not available for invalid sites
         """
         valid_neon_sites = ["INVALID_SITE1", "INVALID_SITE2"]
+        previous_dir = os.getcwd()
+        os.chdir(self._tempdir)  # cd to tempdir
         available_list = check_neon_listing(valid_neon_sites)
         self.assertEqual(
             available_list, [], "available list of incorrect dummy site not as expected"
         )
+        # change back to previous dir once listing.csv file has been created in tempdir and test complete
+        os.chdir(previous_dir)
 
 
 if __name__ == "__main__":
