@@ -58,6 +58,8 @@ module CNPhenologyMod
   public :: CNPhenologySetParams      ! Set the parameters explicitly for unit tests
   public :: SeasonalDecidOnset        ! Logical function to determine is seasonal decidious onset should be triggered
   public :: SeasonalCriticalDaylength ! Critical day length needed for Seasonal decidious offset
+  public :: get_swindow
+  public :: was_sown_in_this_window
 
   ! !PRIVITE MEMBER FIUNCTIONS:
   private :: CNPhenologyClimate             ! Get climatological everages to figure out triggers for Phenology
@@ -441,7 +443,7 @@ contains
     !
     ! !USES:
     use clm_time_manager, only: get_step_size_real
-    use clm_varctl      , only: use_crop, use_cropcal_rx_sdates
+    use clm_varctl      , only: use_crop, use_cropcal_rx_swindows
     use clm_varcon      , only: secspday
     !
     ! !ARGUMENTS:
@@ -1712,6 +1714,118 @@ contains
 
   end subroutine CNStressDecidPhenology
 
+
+  !-----------------------------------------------------------------------
+  subroutine get_swindow(jday, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w)
+    ! !DESCRIPTION:
+    ! Determine when the "next" sowing window is. This is either the sowing window we are
+    ! currently in or, if not in a sowing window, the next one that will occur.
+
+    ! !USES:
+    use clm_time_manager , only : get_curr_days_per_year, is_doy_in_interval, get_doy_tomorrow
+    ! !ARGUMENTS:
+    integer,                          intent(in)    :: jday ! Day of year
+    integer, dimension(:), intent(in)               :: rx_starts, rx_ends ! All prescribed sowing window start and end dates for this patch
+    integer,                          intent(in)    :: param_start, param_end ! Sowing window start and end dates from parameter file
+    integer,                          intent(out)   :: w ! Index of "next" sowing window
+    integer,                          intent(out)   :: start_w, end_w ! Start and end dates of "next" sowing window
+    !
+    ! !LOCAL VARIABLES
+    integer :: jday_tomorrow
+    integer :: mxsowings_in ! Due to unit testing, we can't assume the length of the rx sowing window arrays is mxsowings as set in clm_varpar
+
+    ! Initialize
+    w = -1
+    start_w = -1
+    end_w   = -1
+
+    ! Get info
+    jday_tomorrow = get_doy_tomorrow(jday)
+    mxsowings_in = size(rx_starts)
+
+    ! If no sowing windows are prescribed, use the values from the parameter file.
+    if (maxval(rx_starts) < 1) then
+        w = 1
+        start_w = param_start
+        end_w   = param_end
+        return
+
+    ! Otherwise, if today is after the latest sowing window end date, use the first sowing window. This works only if sowing windows that span the new year are located at index w = 1.
+    else if (jday > maxval(rx_ends)) then
+        w = 1
+        start_w = rx_starts(w)
+        end_w   = rx_ends(w)
+        return
+    end if
+
+    ! Otherwise, use the first prescribed sowing window we find whose end is >= today. This works only if sowing windows that span the new year are located at index w = 1.
+    do w = 1, mxsowings_in
+      ! If nothing prescribed at this w, stop looking and exit loop. Will trigger "No sowing window found" error, which we do not move here because it's possible that no start or end date is < 1.
+        if (min(rx_starts(w), rx_ends(w)) < 1) then
+            exit
+        end if
+
+        if (jday <= rx_ends(w)) then
+            start_w = rx_starts(w)
+            end_w   = rx_ends(w)
+            exit
+        end if
+    end do
+
+    ! Ensure that a window was found.
+    ! SSR 2023-10-17: This shouldn't currently be reachable, but its being here casts the widest possible net in case code changes in future.
+    if (start_w < 1 .or. end_w < 1) then
+        call endrun(msg="get_swindow(): No sowing window found")
+    end if
+
+  end subroutine get_swindow
+
+
+  !-----------------------------------------------------------------------
+  function was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, sown_in_this_window)
+    ! !DESCRIPTION:
+    ! Determine whether the crop was sown in the current sowing window. Although sown_in_this_window is set to false in last timestep of sowing window at the end of CropPhenology(), these extra checks may be necessary if sowing windows change.
+    !
+    ! !USES:
+    use clm_time_manager , only : is_doy_in_interval
+    ! !ARGUMENTS:
+    integer, intent(in)    :: sowing_window_startdate, sowing_window_enddate, jday, idop
+    logical, intent(in)    :: sown_in_this_window
+    ! !LOCAL VARIABLES
+    logical :: is_in_sowing_window, idop_in_sowing_window
+    ! !RESULT
+    logical :: was_sown_in_this_window
+
+    was_sown_in_this_window = sown_in_this_window
+
+    ! If not in a sowing window, sown_in_this_window must be false.
+    is_in_sowing_window  = is_doy_in_interval(sowing_window_startdate, sowing_window_enddate, jday)
+    if (.not. is_in_sowing_window) then
+        was_sown_in_this_window = .false.
+        return
+    end if
+
+    ! If we're in a sowing window but the day of planting isn't in the active sowing window, we must be in a different sowing window.
+    idop_in_sowing_window  = is_doy_in_interval(sowing_window_startdate, sowing_window_enddate, idop)
+    if (is_in_sowing_window .and. .not. idop_in_sowing_window) then
+        was_sown_in_this_window = .false.
+        return
+    end if
+
+    ! Sometimes we're in an active sowing window, and the patch was sown between the start and end dates of the window, but not *the currently active* window. Note that windows with start==end are not checked here; we always trust the input value of sown_in_this_window in such cases.
+    if (sowing_window_startdate < sowing_window_enddate .and. idop > jday) then
+        was_sown_in_this_window = .false.
+    else if (sowing_window_startdate > sowing_window_enddate) then
+        if (jday <= sowing_window_enddate .and. idop <= sowing_window_enddate .and. idop > jday) then
+            was_sown_in_this_window = .false.
+        else if (jday >= sowing_window_startdate .and. (idop > jday .or. idop <= sowing_window_enddate)) then
+            was_sown_in_this_window = .false.
+        end if
+    end if
+
+  end function was_sown_in_this_window
+
+
   !-----------------------------------------------------------------------
   subroutine CropPhenology(num_pcropp, filter_pcropp                     , &
        waterdiagnosticbulk_inst, temperature_inst, crop_inst, canopystate_inst, cnveg_state_inst , &
@@ -1726,7 +1840,8 @@ contains
     use clm_time_manager , only : get_prev_calday, get_curr_days_per_year, is_beg_curr_year
     use clm_time_manager , only : get_average_days_per_year
     use clm_time_manager , only : get_prev_date
-    use clm_time_manager , only : is_doy_in_interval
+    use clm_time_manager , only : is_doy_in_interval, is_end_curr_day
+    use clm_time_manager , only : get_doy_tomorrow
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -1738,7 +1853,7 @@ contains
     use clm_varctl       , only : use_fertilizer 
     use clm_varctl       , only : use_c13, use_c14
     use clm_varcon       , only : c13ratio, c14ratio
-    use clm_varctl       , only : use_cropcal_rx_sdates, use_cropcal_rx_cultivar_gdds, use_cropcal_streams
+    use clm_varctl       , only : use_cropcal_rx_swindows, use_cropcal_rx_cultivar_gdds, use_cropcal_streams
     !
     ! !ARGUMENTS:
     integer                        , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
@@ -1763,30 +1878,34 @@ contains
     integer h         ! hemisphere indices
     integer s         ! growing season indices
     integer k         ! grain pool indices
+    integer w         ! sowing window index
     integer idpp      ! number of days past planting
     integer mxmat     ! maximum growing season length
     integer kyr       ! current year
     integer kmo       ! month of year  (1, ..., 12)
     integer kda       ! day of month   (1, ..., 31)
     integer mcsec     ! seconds of day (0, ..., seconds/day)
+    integer sowing_window_startdate ! date (day of year) of first day of sowing window
+    integer sowing_window_enddate   ! date (day of year) of last  day of sowing window
     real(r8) harvest_reason
     real(r8) dayspyr  ! days per year in this year
     real(r8) avg_dayspyr ! average number of days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
+    logical has_rx_sowing_date ! does the crop have a single sowing date instead of a window?
     logical is_in_sowing_window ! is the crop in its sowing window?
     logical is_end_sowing_window ! is it the last day of the crop's sowing window?
     logical sowing_gdd_requirement_met ! has the gridcell historically been warm enough to support the crop?
     logical do_plant_normal ! are the normal planting rules defined and satisfied?
     logical do_plant_lastchance ! if not the above, what about relaxed rules for the last day of the planting window?
     logical do_plant_prescribed ! is today the prescribed sowing date?
+    logical do_plant_prescribed_tomorrow  ! is tomorrow the prescribed sowing date?
     logical do_plant  ! are we planting in this time step for any reason?
     logical did_plant ! did we plant the crop in this time step?
     logical allow_unprescribed_planting ! should crop be allowed to be planted according to sowing window rules?
     logical do_harvest    ! Are harvest conditions satisfied?
     logical fake_harvest  ! Dealing with incorrect Dec. 31 planting
     logical did_plant_prescribed_today    ! Was the crop sown today?
-    logical will_plant_prescribed_tomorrow ! Is tomorrow a prescribed sowing day?
     logical vernalization_forces_harvest ! Was the crop killed by freezing during vernalization?
     !------------------------------------------------------------------------
 
@@ -1811,11 +1930,10 @@ contains
 
          fertnitro         =>    crop_inst%fertnitro_patch                     , & ! Input:  [real(r8) (:) ]  fertilizer nitrogen
          hui               =>    crop_inst%hui_patch                           , & ! Input:  [real(r8) (:) ]  crop patch heat unit index (growing degree-days); set to 0 at sowing and accumulated until harvest
-         leafout           =>    crop_inst%gddtsoi_patch                       , & ! Input:  [real(r8) (:) ]  gdd from top soil layer temperature              
+         leafout           =>    crop_inst%gddtsoi_patch                       , & ! Input:  [real(r8) (:) ]  gdd from top soil layer temperature
          harvdate          =>    crop_inst%harvdate_patch                      , & ! Output: [integer  (:) ]  harvest date                                       
-         croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested               
+         croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
          vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
-         next_rx_sdate     =>    crop_inst%next_rx_sdate_patch                 , & ! Inout:  [integer  (:) ]  prescribed sowing date of next growing season this year
          sowing_count      =>    crop_inst%sowing_count                        , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
          harvest_count     =>    crop_inst%harvest_count                       , & ! Inout:  [integer  (:) ]  number of harvest events this year for this patch
          peaklai           =>    cnveg_state_inst%peaklai_patch                , & ! Output: [integer  (:) ]  1: max allowed lai; 0: not at max
@@ -1889,6 +2007,8 @@ contains
             harvest_count(p) = 0
             do s = 1, mxsowings
                crop_inst%sdates_thisyr_patch(p,s) = -1._r8
+               crop_inst%swindow_starts_thisyr_patch(p,s) = -1._r8
+               crop_inst%swindow_ends_thisyr_patch  (p,s) = -1._r8
                crop_inst%sowing_reason_thisyr_patch(p,s) = -1._r8
             end do
             do s = 1, mxharvests
@@ -1913,17 +2033,26 @@ contains
                cnveg_nitrogenflux_inst%repr_grainn_to_food_thisyr_patch(p,k) = 0._r8
                cnveg_nitrogenflux_inst%repr_grainn_to_seed_thisyr_patch(p,k) = 0._r8
             end do
-            next_rx_sdate(p) = crop_inst%rx_sdates_thisyr_patch(p,1)
          end if
 
-         ! Get next sowing date
-         if (sowing_count(p) < mxsowings) then
-             next_rx_sdate(p) = crop_inst%rx_sdates_thisyr_patch(p,sowing_count(p)+1)
-         end if
+         ! Get dates of current or next sowing window.
+         call get_swindow(jday, crop_inst%rx_swindow_starts_thisyr_patch(p,:), crop_inst%rx_swindow_ends_thisyr_patch(p,:), minplantjday(ivt(p),h), maxplantjday(ivt(p),h), w, sowing_window_startdate, sowing_window_enddate)
 
-         ! CropType->InitAllocate() initializes next_rx_sdate to -1. It's only changed from that, by cropCalStreamMod->cropcal_interp(),  when use_cropcal_rx_sdates is true. So if not using prescribed sowing dates, this boolean will always be false, because jday can never be -1.
-         do_plant_prescribed = next_rx_sdate(p) == jday .and. sowing_count(p) < mxsowings
-         
+         ! Are we currently in a sowing window?
+         ! This is outside the croplive check so that the "harvest if planting conditions were met today" conditional works.
+         is_in_sowing_window  = is_doy_in_interval(sowing_window_startdate, sowing_window_enddate, jday)
+         crop_inst%sown_in_this_window(p) = was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop(p), crop_inst%sown_in_this_window(p))
+         is_end_sowing_window = jday == sowing_window_enddate
+
+         ! We only want to plant on a specific day if the prescribed sowing window starts AND ends on the same day. Also make sure we haven't planted yet today.
+         has_rx_sowing_date = sowing_window_startdate == sowing_window_enddate
+         do_plant_prescribed = has_rx_sowing_date .and. &
+                               sowing_window_startdate == jday .and. &
+                               .not. crop_inst%sown_in_this_window(p)
+         do_plant_prescribed_tomorrow = &
+             has_rx_sowing_date .and. &
+             sowing_window_startdate == get_doy_tomorrow(jday)
+
          ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-18)
          ! When resuming from a run with old code, may need to manually set these.
          ! Will be needed until we can rely on all restart files have been generated
@@ -1936,14 +2065,15 @@ contains
              crop_inst%sdates_thisyr_patch(p,1) = real(idop(p), r8)
          end if
 
-         ! This is outside the croplive check so that the "harvest if planting conditions were met today" conditional works.
-         is_in_sowing_window = is_doy_in_interval(minplantjday(ivt(p),h), maxplantjday(ivt(p),h), jday)
-         is_end_sowing_window = jday == maxplantjday(ivt(p),h)
+         ! Save these diagnostic variables only on the last day of the window to ensure that windows spanning the new year aren't double-counted. Doing this on the last day ensures that outputs are ordered as inputs should be.
+         if (jday == sowing_window_enddate) then
+             crop_inst%swindow_starts_thisyr_patch(p,w) = sowing_window_startdate
+             crop_inst%swindow_ends_thisyr_patch  (p,w) = sowing_window_enddate
+         end if
          !
          ! Only allow sowing according to normal "window" rules if not using prescribed
-         ! sowing dates at all, or if this cell had no values in the prescribed sowing
-         ! date file.
-         allow_unprescribed_planting = (.not. use_cropcal_rx_sdates) .or. crop_inst%rx_sdates_thisyr_patch(p,1)<0
+         ! sowing dates.
+         allow_unprescribed_planting = .not. has_rx_sowing_date
          if (sowing_count(p) == mxsowings) then
             do_plant_normal = .false.
             do_plant_lastchance = .false.
@@ -1980,6 +2110,7 @@ contains
                                   gdd820(p) /= spval
          end if
          do_plant = do_plant_prescribed .or. do_plant_normal .or. do_plant_lastchance
+         do_plant = do_plant .and. .not. crop_inst%sown_in_this_window(p)
          did_plant = .false.
 
          ! Once outputs can handle >1 planting per year, remove 2nd condition.
@@ -2146,7 +2277,7 @@ contains
             do_harvest = .false.
             fake_harvest = .false.
             did_plant_prescribed_today = .false.
-            if (use_cropcal_rx_sdates .and. sowing_count(p) > 0) then
+            if (use_cropcal_rx_swindows .and. sowing_count(p) > 0) then
                 did_plant_prescribed_today = crop_inst%sdates_thisyr_patch(p,sowing_count(p)) == real(jday, r8)
             end if
 
@@ -2167,45 +2298,23 @@ contains
                 harvest_reason = HARVEST_REASON_SOWTODAY
 
             ! If generate_crop_gdds and this patch has prescribed sowing inputs
-            else if (generate_crop_gdds .and. crop_inst%rx_sdates_thisyr_patch(p,1) .gt. 0) then
-               if (next_rx_sdate(p) >= 0) then
-                  ! Harvest the day before the next sowing date this year.
-                  do_harvest = jday == next_rx_sdate(p) - 1
+            else if (generate_crop_gdds .and. crop_inst%rx_swindow_starts_thisyr_patch(p,1) .gt. 0) then
+               ! Harvest the day before the next prescribed sowing.
+               do_harvest = do_plant_prescribed_tomorrow
 
-                  ! ... unless that will lead to growing season length 365 (or 366,
-                  ! if last year was a leap year). This would result in idop==jday,
-                  ! which would invoke the "manually setting sowing_count and 
-                  ! sdates_thisyr" code. This would lead to crops never getting
-                  ! harvested. Instead, always harvest the day before idop.
-                  if ((.not. do_harvest) .and. &
-                      (idop(p) > 1 .and. jday == idop(p) - 1) .or. &
-                      (idop(p) == 1 .and. jday == dayspyr)) then
-                      do_harvest = .true.
-                      if (do_harvest) then
-                          harvest_reason = HARVEST_REASON_IDOPTOMORROW
-                      end if
-                  else if (do_harvest) then
-                      harvest_reason = HARVEST_REASON_SOWTOMORROW
-                  end if
-
-               else
-                  ! If this patch has already had all its plantings for the year, don't harvest
-                  ! until some time next year.
-                  do_harvest = .false.
-
-                  ! ... unless first sowing next year happens Jan. 1.
-                  ! WARNING: This implementation assumes that sowing dates don't change over time!
-                  ! In order to avoid this, you'd have to read this year's AND next year's prescribed
-                  ! sowing dates.
-                  if (crop_inst%rx_sdates_thisyr_patch(p,1) == 1) then
-                      do_harvest = jday == dayspyr
-                  end if
-
-                  if (do_harvest) then
-                      harvest_reason = HARVEST_REASON_SOWTOMORROW
-                  end if
-
-               endif
+               ! ... unless that will lead to growing season length 365 (or 366,
+               ! if last year was a leap year). This would result in idop==jday,
+               ! which would invoke the "manually setting sowing_count and
+               ! sdates_thisyr" code. This would lead to crops never getting
+               ! harvested. Instead, always harvest the day before idop.
+               if ((.not. do_harvest) .and. &
+                   (idop(p) > 1 .and. jday == idop(p) - 1) .or. &
+                   (idop(p) == 1 .and. jday == dayspyr)) then
+                   do_harvest = .true.
+                   harvest_reason = HARVEST_REASON_IDOPTOMORROW
+               else if (do_harvest) then
+                   harvest_reason = HARVEST_REASON_SOWTOMORROW
+               end if
 
             else if (did_plant_prescribed_today) then
                ! Do not harvest on the day this growing season began;
@@ -2218,25 +2327,17 @@ contains
                ! Original harvest rule
                do_harvest = hui(p) >= gddmaturity(p) .or. idpp >= mxmat
 
-               ! Always harvest the day before the next prescribed sowing, if still alive.
-               ! WARNING: This implementation assumes that sowing dates don't change over time!
+               ! Always harvest the day before the next prescribed sowing date, if still alive.
+               ! WARNING: This implementation assumes that prescribed sowing dates don't change over time!
                ! In order to avoid this, you'd have to read this year's AND next year's prescribed
                ! sowing dates.
-               ! WARNING: This implementation assumes that all patches use prescribed sowing dates.
-               if (use_cropcal_rx_sdates) then
-                  will_plant_prescribed_tomorrow = (jday == next_rx_sdate(p) - 1) .or. &
-                                              (crop_inst%sdates_thisyr_patch(p,1) == 1 .and. &
-                                               jday == dayspyr)
-               else
-                  will_plant_prescribed_tomorrow = .false.
-               end if
-               do_harvest = do_harvest .or. will_plant_prescribed_tomorrow
+               do_harvest = do_harvest .or. do_plant_prescribed_tomorrow
 
                if (hui(p) >= gddmaturity(p)) then
                    harvest_reason = HARVEST_REASON_MATURE
                else if (idpp >= mxmat) then
                    harvest_reason = HARVEST_REASON_MAXSEASLENGTH
-               else if (will_plant_prescribed_tomorrow) then
+               else if (do_plant_prescribed_tomorrow) then
                    harvest_reason = HARVEST_REASON_SOWTOMORROW
                end if
             endif
@@ -2286,7 +2387,7 @@ contains
                   crop_inst%gddaccum_thisyr_patch(p, harvest_count(p)) = crop_inst%gddaccum_patch(p)
                   crop_inst%hui_thisyr_patch(p, harvest_count(p)) = hui(p)
                   crop_inst%sowing_reason_perharv_patch(p, harvest_count(p)) = real(crop_inst%sowing_reason_patch(p), r8)
-                  crop_inst%sowing_reason_patch(p) = -1
+                  crop_inst%sowing_reason_patch(p) = -1 ! "Reason for most recent sowing of this patch." So in the line above we save, and here we reset.
                   crop_inst%harvest_reason_thisyr_patch(p, harvest_count(p)) = harvest_reason
                endif
 
@@ -2353,6 +2454,11 @@ contains
                c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
             endif
          end if ! croplive
+
+         ! At the end of the sowing window, AFTER we've done everything crop-related, set this to false
+         if (is_end_sowing_window .and. is_end_curr_day()) then
+            crop_inst%sown_in_this_window(p) = .false.
+         end if
 
       end do ! prognostic crops loop
 
@@ -2503,7 +2609,7 @@ contains
 
     ! !USES:
     use clm_varctl       , only : use_c13, use_c14
-    use clm_varctl       , only : use_cropcal_rx_sdates, use_cropcal_rx_cultivar_gdds, use_cropcal_streams
+    use clm_varctl       , only : use_cropcal_rx_cultivar_gdds, use_cropcal_streams
     use clm_varcon       , only : c13ratio, c14ratio
     use clm_varpar       , only : mxsowings
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
@@ -2543,7 +2649,6 @@ contains
          ivt               =>    patch%itype                                     , & ! Input:  [integer  (:) ]  patch vegetation type
          croplive          =>    crop_inst%croplive_patch                        , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
          harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
-         next_rx_sdate     =>    crop_inst%next_rx_sdate_patch                   , & ! Inout:  [integer  (:) ]  prescribed sowing date of next growing season this year
          sowing_count      =>    crop_inst%sowing_count                          , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
          sowing_reason     =>    crop_inst%sowing_reason_thisyr_patch            , & ! Output:  [real(r8)  (:) ]  reason for each sowing this year for this patch
          gddmaturity       =>    cnveg_state_inst%gddmaturity_patch            , & ! Output: [real(r8) (:) ]  gdd needed to harvest
@@ -2569,16 +2674,12 @@ contains
       ! impose limit on growing season length needed
       ! for crop maturity - for cold weather constraints
       croplive(p)  = .true.
+      crop_inst%sown_in_this_window(p) = .true.
       idop(p)      = jday
       iyop(p)      = kyr
       harvdate(p)  = NOT_Harvested
       sowing_count(p) = sowing_count(p) + 1
 
-      if (use_cropcal_rx_sdates .and. sowing_count(p) < mxsowings) then
-         next_rx_sdate(p) = crop_inst%rx_sdates_thisyr_patch(p, sowing_count(p)+1)
-      else
-         next_rx_sdate(p) = -1
-      endif
       crop_inst%sdates_thisyr_patch(p,sowing_count(p)) = real(jday, r8)
 
       this_sowing_reason = 0._r8

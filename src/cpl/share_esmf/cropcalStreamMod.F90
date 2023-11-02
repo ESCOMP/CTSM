@@ -13,8 +13,9 @@ module cropcalStreamMod
   use decompMod        , only : bounds_type
   use abortutils       , only : endrun
   use clm_varctl       , only : iulog
-  use clm_varctl       , only : use_cropcal_rx_sdates, use_cropcal_rx_cultivar_gdds, use_cropcal_streams
+  use clm_varctl       , only : use_cropcal_rx_swindows, use_cropcal_rx_cultivar_gdds, use_cropcal_streams
   use clm_varpar       , only : mxpft
+  use clm_varpar       , only : mxsowings
   use perf_mod         , only : t_startf, t_stopf
   use spmdMod          , only : masterproc, mpicom, iam
   use pftconMod        , only : npcropmin
@@ -31,12 +32,15 @@ module cropcalStreamMod
 
   ! !PRIVATE MEMBER DATA:
   integer, allocatable        :: g_to_ig(:)         ! Array matching gridcell index to data index
-  type(shr_strdata_type)      :: sdat_cropcal_sdate           ! sdate input data stream
+  type(shr_strdata_type)      :: sdat_cropcal_swindow_start   ! sowing window start input data stream
+  type(shr_strdata_type)      :: sdat_cropcal_swindow_end     ! sowing window end input data stream
   type(shr_strdata_type)      :: sdat_cropcal_cultivar_gdds   ! sdate input data stream
-  character(len=CS), allocatable :: stream_varnames_sdate(:)
+  character(len=CS), allocatable :: stream_varnames_sdate(:) ! used for both start and end dates
   character(len=CS), allocatable :: stream_varnames_cultivar_gdds(:)
   integer                     :: ncft               ! Number of crop functional types (excl. generic crops)
-  character(len=CL)       :: stream_fldFileName_sdate   ! sdate stream filename to read
+  logical                     :: allow_invalid_swindow_inputs ! Fall back on paramfile sowing windows in cases of invalid values in stream_fldFileName_swindow_start and _end?
+  character(len=CL)       :: stream_fldFileName_swindow_start ! sowing window start stream filename to read
+  character(len=CL)       :: stream_fldFileName_swindow_end   ! sowing window end stream filename to read
   character(len=CL)       :: stream_fldFileName_cultivar_gdds ! cultivar growing degree-days stream filename to read
 
   character(len=*), parameter :: sourcefile = &
@@ -81,7 +85,9 @@ contains
          stream_year_first_cropcal,    &
          stream_year_last_cropcal,     &
          model_year_align_cropcal,     &
-         stream_fldFileName_sdate,     &
+         allow_invalid_swindow_inputs, &
+         stream_fldFileName_swindow_start, &
+         stream_fldFileName_swindow_end,   &
          stream_fldFileName_cultivar_gdds, &
          stream_meshfile_cropcal
 
@@ -89,8 +95,10 @@ contains
     stream_year_first_cropcal  = 1      ! first year in stream to use
     stream_year_last_cropcal   = 1      ! last  year in stream to use
     model_year_align_cropcal   = 1      ! align stream_year_first_cropcal with this model year
+    allow_invalid_swindow_inputs = .false.
     stream_meshfile_cropcal    = ''
-    stream_fldFileName_sdate = ''
+    stream_fldFileName_swindow_start = ''
+    stream_fldFileName_swindow_end   = ''
     stream_fldFileName_cultivar_gdds = ''
     ! Will need modification to work with mxsowings > 1
     ncft = mxpft - npcropmin + 1 ! Ignores generic crops
@@ -119,7 +127,9 @@ contains
     call shr_mpi_bcast(stream_year_first_cropcal  , mpicom)
     call shr_mpi_bcast(stream_year_last_cropcal   , mpicom)
     call shr_mpi_bcast(model_year_align_cropcal   , mpicom)
-    call shr_mpi_bcast(stream_fldFileName_sdate   , mpicom)
+    call shr_mpi_bcast(allow_invalid_swindow_inputs, mpicom)
+    call shr_mpi_bcast(stream_fldFileName_swindow_start, mpicom)
+    call shr_mpi_bcast(stream_fldFileName_swindow_end  , mpicom)
     call shr_mpi_bcast(stream_fldFileName_cultivar_gdds, mpicom)
     call shr_mpi_bcast(stream_meshfile_cropcal    , mpicom)
 
@@ -129,7 +139,9 @@ contains
        write(iulog,'(a,i8)') '  stream_year_first_cropcal  = ',stream_year_first_cropcal
        write(iulog,'(a,i8)') '  stream_year_last_cropcal   = ',stream_year_last_cropcal
        write(iulog,'(a,i8)') '  model_year_align_cropcal   = ',model_year_align_cropcal
-       write(iulog,'(a,a)' ) '  stream_fldFileName_sdate   = ',trim(stream_fldFileName_sdate)
+       write(iulog,'(a,l1)') '  allow_invalid_swindow_inputs = ',allow_invalid_swindow_inputs
+       write(iulog,'(a,a)' ) '  stream_fldFileName_swindow_start   = ',trim(stream_fldFileName_swindow_start)
+       write(iulog,'(a,a)' ) '  stream_fldFileName_swindow_end     = ',trim(stream_fldFileName_swindow_end)
        write(iulog,'(a,a)' ) '  stream_fldFileName_cultivar_gdds   = ',trim(stream_fldFileName_cultivar_gdds)
        write(iulog,'(a,a)' ) '  stream_meshfile_cropcal    = ',trim(stream_meshfile_cropcal)
        do n = 1,ncft
@@ -139,14 +151,15 @@ contains
        write(iulog,*)
     endif
 
-    use_cropcal_rx_sdates = stream_fldFileName_sdate /= ''
+    ! CLMBuildNamelist checks that both start and end files are provided if either is
+    use_cropcal_rx_swindows      = stream_fldFileName_swindow_start /= ''
     use_cropcal_rx_cultivar_gdds = stream_fldFileName_cultivar_gdds /= ''
-    use_cropcal_streams = use_cropcal_rx_sdates .or. use_cropcal_rx_cultivar_gdds
+    use_cropcal_streams = use_cropcal_rx_swindows .or. use_cropcal_rx_cultivar_gdds
 
-    ! Initialize the cdeps data type sdat_cropcal_sdate
-    ! NOTE: stream_dtlimit 1.5 didn't work for some reason
-    if (use_cropcal_rx_sdates) then
-       call shr_strdata_init_from_inline(sdat_cropcal_sdate,          &
+    if (use_cropcal_rx_swindows) then
+       ! Initialize the cdeps data type sdat_cropcal_swindow_start
+       ! NOTE: stream_dtlimit 1.5 didn't work for some reason
+       call shr_strdata_init_from_inline(sdat_cropcal_swindow_start,  &
             my_task             = iam,                                &
             logunit             = iulog,                              &
             compname            = 'LND',                              &
@@ -155,7 +168,7 @@ contains
             stream_meshfile     = trim(stream_meshfile_cropcal),      &
             stream_lev_dimname  = 'null',                             &
             stream_mapalgo      = trim(cropcal_mapalgo),              &
-            stream_filenames    = (/trim(stream_fldFileName_sdate)/), &
+            stream_filenames    = (/trim(stream_fldFileName_swindow_start)/), &
             stream_fldlistFile  = stream_varnames_sdate,              &
             stream_fldListModel = stream_varnames_sdate,              &
             stream_yearFirst    = stream_year_first_cropcal,          &
@@ -165,7 +178,34 @@ contains
             stream_taxmode      = 'extend',                           &
             stream_dtlimit      = 1.0e30_r8,                          &
             stream_tintalgo     = cropcal_tintalgo,                   &
-            stream_name         = 'sowing date data',                 &
+            stream_name         = 'sowing window start data',         &
+            rc                  = rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       end if
+
+       ! Initialize the cdeps data type sdat_cropcal_swindow_end
+       ! NOTE: stream_dtlimit 1.5 didn't work for some reason
+       call shr_strdata_init_from_inline(sdat_cropcal_swindow_end,    &
+            my_task             = iam,                                &
+            logunit             = iulog,                              &
+            compname            = 'LND',                              &
+            model_clock         = model_clock,                        &
+            model_mesh          = mesh,                               &
+            stream_meshfile     = trim(stream_meshfile_cropcal),      &
+            stream_lev_dimname  = 'null',                             &
+            stream_mapalgo      = trim(cropcal_mapalgo),              &
+            stream_filenames    = (/trim(stream_fldFileName_swindow_end)/), &
+            stream_fldlistFile  = stream_varnames_sdate,              &
+            stream_fldListModel = stream_varnames_sdate,              &
+            stream_yearFirst    = stream_year_first_cropcal,          &
+            stream_yearLast     = stream_year_last_cropcal,           &
+            stream_yearAlign    = model_year_align_cropcal,           &
+            stream_offset       = cropcal_offset,                     &
+            stream_taxmode      = 'extend',                           &
+            stream_dtlimit      = 1.0e30_r8,                          &
+            stream_tintalgo     = cropcal_tintalgo,                   &
+            stream_name         = 'sowing window end data',           &
             rc                  = rc)
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
           call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -227,8 +267,12 @@ contains
 
     call get_curr_date(year, mon, day, sec)
     mcdate = year*10000 + mon*100 + day
-    if (use_cropcal_rx_sdates) then
-       call shr_strdata_advance(sdat_cropcal_sdate, ymd=mcdate, tod=sec, logunit=iulog, istr='cropcaldyn', rc=rc)
+    if (use_cropcal_rx_swindows) then
+       call shr_strdata_advance(sdat_cropcal_swindow_start, ymd=mcdate, tod=sec, logunit=iulog, istr='cropcaldyn', rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       end if
+       call shr_strdata_advance(sdat_cropcal_swindow_end, ymd=mcdate, tod=sec, logunit=iulog, istr='cropcaldyn', rc=rc)
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
           call ESMF_Finalize(endflag=ESMF_END_ABORT)
        end if
@@ -260,6 +304,8 @@ contains
     ! !USES:
     use CropType        , only : crop_type
     use PatchType       , only : patch
+    use clm_time_manager, only : get_curr_days_per_year
+    use pftconMod       , only : pftname
     use dshr_methods_mod , only : dshr_fldbun_getfldptr
     !
     ! !ARGUMENTS:
@@ -272,14 +318,22 @@ contains
     ! !LOCAL VARIABLES:
     integer :: ivt, p, ip, ig
     integer :: nc, fp
+    integer :: dayspyr
     integer           :: n, g
     integer           :: lsize
     integer           :: rc
-    real(r8), pointer :: dataptr1d_sdate(:)
-    real(r8), pointer :: dataptr2d_sdate(:,:)
+    real(r8), pointer :: dataptr1d_swindow_start(:)
+    real(r8), pointer :: dataptr1d_swindow_end  (:)
     real(r8), pointer :: dataptr1d_cultivar_gdds(:)
+    real(r8), pointer :: dataptr2d_swindow_start(:,:)
+    real(r8), pointer :: dataptr2d_swindow_end  (:,:)
     real(r8), pointer :: dataptr2d_cultivar_gdds(:,:)
     !-----------------------------------------------------------------------
+
+    associate( &
+         starts => crop_inst%rx_swindow_starts_thisyr_patch, &
+         ends   => crop_inst%rx_swindow_ends_thisyr_patch    &
+         )
 
     SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
@@ -288,30 +342,43 @@ contains
     ! Place all data from each type into a temporary 2d array
     lsize = bounds%endg - bounds%begg + 1
 
-    ! Read prescribed sowing dates from input files
-    allocate(dataptr2d_sdate(lsize, ncft))
-    if (use_cropcal_rx_sdates) then
+    dayspyr = get_curr_days_per_year()
+
+    ! Read prescribed sowing window start dates from input files
+    allocate(dataptr2d_swindow_start(lsize, ncft))
+    dataptr2d_swindow_start(:,:) = -1._r8
+    allocate(dataptr2d_swindow_end  (lsize, ncft))
+    dataptr2d_swindow_end(:,:) = -1._r8
+    if (use_cropcal_rx_swindows) then
        ! Starting with npcropmin will skip generic crops
        do n = 1, ncft
-          call dshr_fldbun_getFldPtr(sdat_cropcal_sdate%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
-               fldptr1=dataptr1d_sdate,  rc=rc)
+          call dshr_fldbun_getFldPtr(sdat_cropcal_swindow_start%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
+               fldptr1=dataptr1d_swindow_start,  rc=rc)
+          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+             call ESMF_Finalize(endflag=ESMF_END_ABORT)
+          end if
+          call dshr_fldbun_getFldPtr(sdat_cropcal_swindow_end%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
+               fldptr1=dataptr1d_swindow_end,  rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
              call ESMF_Finalize(endflag=ESMF_END_ABORT)
           end if
           ! Note that the size of dataptr1d includes ocean points so it will be around 3x larger than lsize
           ! So an explicit loop is required here
           do g = 1,lsize
-   
-             ! If read-in value is invalid, allow_unprescribed_planting in CropPhenology()
-             if (dataptr1d_sdate(g) <= 0 .or. dataptr1d_sdate(g) > 365) then
-                dataptr1d_sdate(g) = -1
+
+             ! If read-in value is invalid, set to -1. Will be handled later in this subroutine.
+             if (dataptr1d_swindow_start(g) <= 0 .or. dataptr1d_swindow_start(g) > dayspyr &
+                 .or. dataptr1d_swindow_end(g) <= 0 .or. dataptr1d_swindow_end(g) > dayspyr) then
+                dataptr1d_swindow_start(g) = -1
+                dataptr1d_swindow_end  (g) = -1
              end if
-   
-            dataptr2d_sdate(g,n) = dataptr1d_sdate(g)
+
+            dataptr2d_swindow_start(g,n) = dataptr1d_swindow_start(g)
+            dataptr2d_swindow_end  (g,n) = dataptr1d_swindow_end  (g)
           end do
        end do
-   
-       ! Set rx_sdate for each gridcell/patch combination
+
+       ! Set sowing window for each gridcell/patch combination
        do fp = 1, num_pcropp
           p = filter_pcropp(fp)
           ivt = patch%itype(p)
@@ -320,27 +387,50 @@ contains
              n = ivt - npcropmin + 1
              ! vegetated pft
              ig = g_to_ig(patch%gridcell(p))
-             crop_inst%rx_sdates_thisyr_patch(p,1) = dataptr2d_sdate(ig,n)
-   
-             ! Sanity check: Should only read in valid values
-             if (crop_inst%rx_sdates_thisyr_patch(p,1) > 365) then
-                 write(iulog,'(a,i0,a,i0)') 'cropcal_interp(): Crop patch (ivt ',ivt,') has dataptr2d prescribed sowing date ',&
-                                            crop_inst%rx_sdates_thisyr_patch(p,1)
-                 call ESMF_Finalize(endflag=ESMF_END_ABORT)
-             end if
-   
-             ! Only for first sowing date of the year
-             ! The conditional here is to ensure nothing weird happens if it's called incorrectly on day 365
-             if (crop_inst%sdates_thisyr_patch(p,1) <= 0) then
-                 crop_inst%next_rx_sdate_patch(p) = crop_inst%rx_sdates_thisyr_patch(p,1)
-             end if
+             starts(p,1) = dataptr2d_swindow_start(ig,n)
+             ends(p,1)   = dataptr2d_swindow_end  (ig,n)
          else
-             write(iulog,'(a,i0)') 'cropcal_interp(), rx_sdates: Crop patch has ivt ',ivt
+             write(iulog,'(a,i0)') 'cropcal_interp(), prescribed sowing windows: Crop patch has ivt ',ivt
              call ESMF_Finalize(endflag=ESMF_END_ABORT)
           endif
        end do
-    end if ! use_cropcal_rx_sdates
-    deallocate(dataptr2d_sdate)
+
+       ! Ensure that, if mxsowings > 1, sowing windows are ordered such that ENDS are monotonically increasing. This is necessary because of how get_swindow() works.
+       if (mxsowings > 1) then
+           if (any(ends(:,2:mxsowings) <= ends(:,1:mxsowings-1) .and. &
+                   ends(:,2:mxsowings) >= 1)) then
+               write(iulog, *) 'Sowing window inputs must be ordered such that end dates are monotonically increasing.'
+               call ESMF_Finalize(endflag=ESMF_END_ABORT)
+           end if
+       end if
+
+       ! Handle invalid sowing window values
+       if (any(starts < 1 .or. ends < 1)) then
+           ! Fail if not allowing fallback to paramfile sowing windows
+           if ((.not. allow_invalid_swindow_inputs) .and. any(all(starts < 1, dim=2) .and. patch%wtgcell > 0._r8 .and. patch%itype >= npcropmin)) then
+               write(iulog, *) 'At least one crop in one gridcell has invalid prescribed sowing window start date(s). To ignore and fall back to paramfile sowing windows, set allow_invalid_swindow_inputs to .true.'
+               write(iulog, *) 'Affected crops:'
+               do ivt = npcropmin, mxpft
+                   do fp = 1, num_pcropp
+                       p = filter_pcropp(fp)
+                       if (ivt == patch%itype(p) .and. patch%wtgcell(p) > 0._r8 .and. all(starts(p,:) < 1)) then
+                           write(iulog, *) '    ',pftname(ivt),'  (',ivt,')'
+                           exit  ! Stop looking for patches of this type
+                       end if
+                   end do
+               end do
+               call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+           ! Fail if a sowing window start date is prescribed without an end date (or vice versa)
+           else if (any((starts >= 1 .and. ends < 1) .or. (starts < 1 .and. ends >= 1))) then
+               write(iulog, *) 'Every prescribed sowing window start date must have a corresponding end date.'
+               call ESMF_Finalize(endflag=ESMF_END_ABORT)
+           end if
+       end if
+
+    end if ! use_cropcal_rx_swindows
+    deallocate(dataptr2d_swindow_start)
+    deallocate(dataptr2d_swindow_end)
    
     allocate(dataptr2d_cultivar_gdds(lsize, ncft))
     if (use_cropcal_rx_cultivar_gdds) then
@@ -369,10 +459,6 @@ contains
        ! Set rx_cultivar_gdd for each gridcell/patch combination
        do fp = 1, num_pcropp
           p = filter_pcropp(fp)
-
-!          if (.not. patch%active(p)) then
-!              continue
-!          end if
 
           ivt = patch%itype(p)
           ! Will skip generic crops
@@ -403,6 +489,8 @@ contains
    end if ! use_cropcal_rx_cultivar_gdds
 
    deallocate(dataptr2d_cultivar_gdds)
+
+   end associate
 
   end subroutine cropcal_interp
 

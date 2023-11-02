@@ -357,7 +357,8 @@ class RXCROPMATURITY(SystemTestsCommon):
     def _modify_user_nl_allruns(self):
         nl_additions = [
             "stream_meshfile_cropcal = '{}'".format(self._case.get_value("LND_DOMAIN_MESH")),
-            "stream_fldFileName_sdate = '{}'".format(self._sdatefile),
+            "stream_fldFileName_swindow_start = '{}'".format(self._sdatefile),
+            "stream_fldFileName_swindow_end   = '{}'".format(self._sdatefile),
             "stream_year_first_cropcal = 2000",
             "stream_year_last_cropcal = 2000",
             "model_year_align_cropcal = 2000",
