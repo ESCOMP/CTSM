@@ -22,7 +22,7 @@ The LUNA model includes the following four unitless parameters:
 -  :math:`t_{c,j0}` , which defines the baseline ratio of Rubisco-limited rate to light-limited rate;
 -  :math:`H` , which determines the response of electron transport rate to relative humidity.
 
-The above four parameters are estimated by fitting the LUNA model to a global compilation of >800 obervations located at different biomes, canopy locations, and time of the year from 1993-2013 (Ali et al. 2015). The model inputs are area-based leaf nitrogen content, leaf mass per unit leaf area and the driving environmental conditions (average of past 10 days) including temperature, CO :sub:`2` concentrations, daily mean and maximum radiation, relative humidity and day length. The estimated values in CLM5 for the listed parameters are 0.0311, 0.1745, 0.8054, and 6.0999, repectively. In LUNA V1.0, the estimated parameter values are for C3 natural vegetations. In view that potentially large differences in photosythetic capacity could exist between crops and natural vegetations due to human selection and genetic modifications, in CLM5, the LUNA model are used only for C3 natural vegetations. The photosynthetic capacity for crops and C4 plants are thus still kept the same as CLM4.5. Namely, it is estimated based on the leaf nitrogen content, fixed RUBISCO allocations for :math:`V_{c\max 25}` and an adjusting factor to account for the impact of day length. In CLM5, the model simulates both sun-lit and shaded leaves; however, because the sun-lit and shaded leaves can changes through the day based on the sun angles, we do not differentiate the photosynthetic capacity difference for sun-lit or shaded leaves.
+The above four parameters are estimated by fitting the LUNA model to a global compilation of >800 obervations located at different biomes, canopy locations, and time of the year from 1993-2013 (Ali et al. 2015). The model inputs are area-based leaf nitrogen content, leaf mass per unit leaf area and the driving environmental conditions (average of past 10 days) including temperature, CO :sub:`2` concentrations, daily mean and maximum radiation, relative humidity and day length. The estimated values in CLM5 for the listed parameters are 0.0311, 0.17, 0.8054, and 6.0999, repectively. In LUNA V1.0, the estimated parameter values are for C3 natural vegetations. In view that potentially large differences in photosythetic capacity could exist between crops and natural vegetations due to human selection and genetic modifications, in CLM5, the LUNA model are used only for C3 natural vegetations. The photosynthetic capacity for crops and C4 plants are thus still kept the same as CLM4.5. Namely, it is estimated based on the leaf nitrogen content, fixed RUBISCO allocations for :math:`V_{c\max 25}` and an adjusting factor to account for the impact of day length. In CLM5, the model simulates both sun-lit and shaded leaves; however, because the sun-lit and shaded leaves can changes through the day based on the sun angles, we do not differentiate the photosynthetic capacity difference for sun-lit or shaded leaves.
 
 .. _Model structure:
 
@@ -55,65 +55,65 @@ The structural nitrogen, :math:`N_{\text{str}}`, is calculated as the multiplica
 
    N_{\text{str}} = \text{SNC} \cdot \text{LMA}
 
-where :math:`\text{SNC}` is set to be fixed at 0.002 (gN/g biomass), based on data on C:N ratio from dead wood (White etal.,2000), and :math:`\text{LMA}` is the inverse of specific leaf area at the canopy top (:math:`SLA_{\text{0}}`), a PFT-level parameter (:numref:`Table Plant functional type (PFT) leaf N parameters`).
+where :math:`\text{SNC}` is set to be fixed at 0.004 (gN/g biomass), based on data on C:N ratio from dead wood (White etal.,2000), and :math:`\text{LMA}` is the inverse of specific leaf area at the canopy top (:math:`SLA_{\text{0}}`), a PFT-level parameter (:numref:`Table Plant functional type (PFT) leaf N parameters`).
 
 .. _Table Plant functional type (PFT) leaf N parameters:
 
 .. table:: Plant functional type (PFT) leaf N parameters.
 
- +----------------------------------+--------------------------+--------------------------+
- | PFT                              |  :math:`SLA_{\text{0}}`  |  :math:`N_{\text{cb}}`   |
- +==================================+==========================+==========================+
- | NET Temperate                    |          0.0100          |           0.0509         |
- +----------------------------------+--------------------------+--------------------------+
- | NET Boreal                       |          0.0100          |           0.0466         |
- +----------------------------------+--------------------------+--------------------------+
- | NDT Boreal                       |          0.0202          |           0.0546         |
- +----------------------------------+--------------------------+--------------------------+
- | BET Tropical                     |          0.0190          |           0.0461         |
- +----------------------------------+--------------------------+--------------------------+
- | BET temperate                    |          0.0190          |           0.0515         |
- +----------------------------------+--------------------------+--------------------------+
- | BDT tropical                     |          0.0308          |           0.0716         |
- +----------------------------------+--------------------------+--------------------------+
- | BDT temperate                    |          0.0308          |           0.1007         |
- +----------------------------------+--------------------------+--------------------------+
- | BDT boreal                       |          0.0308          |           0.1007         |
- +----------------------------------+--------------------------+--------------------------+
- | BES temperate                    |          0.0180          |           0.0517         |
- +----------------------------------+--------------------------+--------------------------+
- | BDS temperate                    |          0.0307          |           0.0943         |
- +----------------------------------+--------------------------+--------------------------+
- | BDS boreal                       |          0.0307          |           0.0943         |
- +----------------------------------+--------------------------+--------------------------+
- | C\ :sub:`3` arctic grass         |          0.0402          |           0.1365         |
- +----------------------------------+--------------------------+--------------------------+
- | C\ :sub:`3` grass                |          0.0402          |           0.1365         |
- +----------------------------------+--------------------------+--------------------------+
- | C\ :sub:`4` grass                |          0.0385          |           0.0900         |
- +----------------------------------+--------------------------+--------------------------+
- | Temperate Corn                   |          0.0500          |           0.2930         |
- +----------------------------------+--------------------------+--------------------------+
- | Spring Wheat                     |          0.0350          |           0.4102         |
- +----------------------------------+--------------------------+--------------------------+
- | Temperate Soybean                |          0.0350          |           0.4102         |
- +----------------------------------+--------------------------+--------------------------+
- | Cotton                           |          0.0350          |           0.4102         |
- +----------------------------------+--------------------------+--------------------------+
- | Rice                             |          0.0350          |           0.4102         |
- +----------------------------------+--------------------------+--------------------------+
- | Sugarcane                        |          0.0500          |           0.2930         |
- +----------------------------------+--------------------------+--------------------------+
- | Tropical Corn                    |          0.0500          |           0.2930         |
- +----------------------------------+--------------------------+--------------------------+
- | Tropical Soybean                 |          0.0350          |           0.4102         |
- +----------------------------------+--------------------------+--------------------------+
- | Miscanthus                       |          0.0570          |           0.2930         |
- +----------------------------------+--------------------------+--------------------------+
- | Switchgrass                      |          0.0490          |           0.2930         |
- +----------------------------------+--------------------------+--------------------------+
+ +----------------------------------+--------------------------+
+ | PFT                              |  :math:`SLA_{\text{0}}`  |
+ +==================================+==========================+
+ | NET Temperate                    |          0.01000         |
+ +----------------------------------+--------------------------+
+ | NET Boreal                       |          0.01000         |
+ +----------------------------------+--------------------------+
+ | NDT Boreal                       |          0.02018         |
+ +----------------------------------+--------------------------+
+ | BET Tropical                     |          0.01900         |
+ +----------------------------------+--------------------------+
+ | BET temperate                    |          0.01900         |
+ +----------------------------------+--------------------------+
+ | BDT tropical                     |          0.03080         |
+ +----------------------------------+--------------------------+
+ | BDT temperate                    |          0.03080         |
+ +----------------------------------+--------------------------+
+ | BDT boreal                       |          0.03080         |
+ +----------------------------------+--------------------------+
+ | BES temperate                    |          0.01798         |
+ +----------------------------------+--------------------------+
+ | BDS temperate                    |          0.03072         |
+ +----------------------------------+--------------------------+
+ | BDS boreal                       |          0.02800         |
+ +----------------------------------+--------------------------+
+ | C\ :sub:`3` arctic grass         |          0.02100         |
+ +----------------------------------+--------------------------+
+ | C\ :sub:`3` grass                |          0.04024         |
+ +----------------------------------+--------------------------+
+ | C\ :sub:`4` grass                |          0.03846         |
+ +----------------------------------+--------------------------+
+ | Temperate Corn                   |          0.05000         |
+ +----------------------------------+--------------------------+
+ | Spring Wheat                     |          0.03500         |
+ +----------------------------------+--------------------------+
+ | Temperate Soybean                |          0.03500         |
+ +----------------------------------+--------------------------+
+ | Cotton                           |          0.03500         |
+ +----------------------------------+--------------------------+
+ | Rice                             |          0.03500         |
+ +----------------------------------+--------------------------+
+ | Sugarcane                        |          0.05000         |
+ +----------------------------------+--------------------------+
+ | Tropical Corn                    |          0.05000         |
+ +----------------------------------+--------------------------+
+ | Tropical Soybean                 |          0.03500         |
+ +----------------------------------+--------------------------+
+ | Miscanthus                       |          0.03500         |
+ +----------------------------------+--------------------------+
+ | Switchgrass                      |          0.03500         |
+ +----------------------------------+--------------------------+
 
-Notes: :math:`SLA_{\text{0}}` is the specific leaf area at the canopy top (m :sup:`2` leaf/g biomass), and :math:`N_{\text{cb}}` is the fraction of leaf nitrogen in Rubisco (g N in Rubisco g :sup:`-1` N)
+Notes: :math:`SLA_{\text{0}}` is the specific leaf area at the canopy top (m :sup:`2` leaf/g biomass)
 
 We assume that plants optimize their nitrogen allocations (i.e., :math:`N_{\text{store}}`, :math:`N_{\text{resp}}`, :math:`N_{\text{lc}}`, :math:`N_{\text{et}}`, :math:`N_{\text{cb}}`) to maximize the photosynthetic carbon gain, defined as the gross photosynthesis ( :math:`A` ) minus the maintenance respiration for photosynthetic enzymes ( :math:`R_{\text{psn}}` ), under specific environmental conditions and given plant's strategy of leaf nitrogen use. Namely, the solutions of nitrogen allocations \{ :math:`N_{\text{store}}`, :math:`N_{\text{resp}}`, :math:`N_{\text{lc}}`, :math:`N_{\text{et}}`, :math:`N_{\text{cb}}` \} can be estimated as follows,
 

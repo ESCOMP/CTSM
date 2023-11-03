@@ -316,7 +316,7 @@ The fluxes of momentum, sensible heat, and water vapor are solved for simultaneo
 
       E_{g} =-\frac{\rho _{atm} }{r_{aw} } \left[q_{atm} -q_{sat}^{T_{g} } -\frac{\partial q_{sat}^{T_{g} } }{\partial T_{g} } \left(T_{g}^{n+1} -T_{g}^{n} \right)\right]
 
-where the last term on the right side of equation is the change in saturated specific humidity due to the change in :math:`T_{g}` between iterations.
+where the last term on the right side of equation :eq:`12.23` is the change in saturated specific humidity due to the change in :math:`T_{g}` between iterations.
 
 #. Saturated specific humidity :math:`q_{sat}^{T_{g} }` and its derivative :math:`\frac{dq_{sat}^{T_{g} } }{dT_{g} }` are updated for :math:`T_{g}^{n+1}` (section :numref:`Monin-Obukhov Similarity Theory`).
 
@@ -337,7 +337,7 @@ Once the four iterations for lake surface temperature have been yielded a tentat
 
 where :math:`T_{m}` \ is the temperature of maximum liquid water density, 3.85°C (:ref:`Hostetler and Bartlein (1990) <HostetlerBartlein1990>`). The first condition requires that, if there is any snow or ice present, the surface temperature is restricted to be less than or equal to freezing. The second and third conditions maintain convective stability in the top lake layer.
 
-If eq. XXX is applied, the turbulent fluxes :math:`H_{g}` and :math:`E_{g}` are re-evaluated. The emitted longwave radiation and the momentum fluxes are re-evaluated in any case. The final ground heat flux :math:`G` is calculated from the residual of the energy balance eq. XXX in order to precisely conserve energy. XXX This ground heat flux is taken as a prescribed flux boundary condition for the lake temperature solution (section :numref:`Boundary Conditions Lake`). An energy balance check is included at each timestep to insure that eq. XXX is obeyed to within 0.1 W m\ :sup:`-2`.
+If equation :eq:`12.24` is applied, the turbulent fluxes :math:`H_{g}` and :math:`E_{g}` are re-evaluated. The emitted longwave radiation and the momentum fluxes are re-evaluated in any case. The final ground heat flux :math:`G` is calculated from the residual of the energy balance (equation :eq:`12.7`) in order to precisely conserve energy. This ground heat flux is taken as a prescribed flux boundary condition for the lake temperature solution (section :numref:`Boundary Conditions Lake`). A check is included at each timestep to insure that energy balance is obeyed to within 0.1 W m\ :sup:`-2` (see :numref:`Energy Conservation Lake`).
 
 .. _Lake Temperature:
 
@@ -678,7 +678,7 @@ The ice is lumped together at the top. For each lake layer *j* from 1 to *i* + 1
 Energy Conservation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To check energy conservation, the left-hand side of eq. XXX is re-written to yield the total enthalpy of the lake system (J m\ :sup:`-2`) :math:`H_{tot}` :
+To check energy conservation, the left-hand side of equation :eq:`12.27` is re-written to yield the total enthalpy of the lake system (J m\ :sup:`-2`) :math:`H_{tot}` :
 
 .. math::
    :label: 12.57
