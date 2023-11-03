@@ -2034,7 +2034,7 @@ sub setup_logic_snow {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_thermal_cond_method' );
 
   my $var = $nl->get_value('snow_thermal_cond_method');
-  if ( $var ne 'Jordan1991' && $var ne 'Sturm1997' ) {
+  if ( $var ne "'Jordan1991'" && $var ne "'Sturm1997'" ) {
     $log->fatal_error("$var is incorrect entry for the namelist variable snow_thermal_cond_method; expected Jordan1991 or Sturm1997");
   }
 

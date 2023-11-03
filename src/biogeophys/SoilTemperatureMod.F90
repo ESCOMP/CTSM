@@ -619,6 +619,7 @@ contains
     ! flux from the interface to the node j+1.
     !
     ! !USES:
+    use shr_log_mod     , only : errMsg => shr_log_errMsg
     use clm_varpar      , only : nlevsno, nlevgrnd, nlevurb, nlevsoi, nlevmaxurbgrnd
     use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock
     use landunit_varcon , only : istice, istwet
@@ -648,6 +649,8 @@ contains
     real(r8) :: fl                        ! volume fraction of liquid or unfrozen water to total water
     real(r8) :: satw                      ! relative total water content of soil.
     real(r8) :: zh2osfc
+
+    character(len=*),parameter :: subname = 'SoilThermProp'
     !-----------------------------------------------------------------------
 
     call t_startf( 'SoilThermProp' )
