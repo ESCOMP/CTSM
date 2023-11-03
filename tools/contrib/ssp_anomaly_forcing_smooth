@@ -195,12 +195,14 @@ parser.add_argument(
 )
 parser.add_argument(
     "--write_climo",
+    "--write-climo",
     help="write out climatology files and exit",
     action="store_true",
     default=False,
 )
 parser.add_argument(
     "--print_ssps",
+    "--print-ssps",
     help="Just print out directory names and exit",
     action="store_true",
     default=False,
