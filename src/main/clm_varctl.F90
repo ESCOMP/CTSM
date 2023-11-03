@@ -354,7 +354,7 @@ module clm_varctl
   !----------------------------------------------------------
 
   logical, public :: use_cropcal_streams = .false.
-  logical, public :: use_cropcal_rx_sdates = .false.
+  logical, public :: use_cropcal_rx_swindows = .false.
   logical, public :: use_cropcal_rx_cultivar_gdds = .false.
 
   !----------------------------------------------------------

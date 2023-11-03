@@ -4017,21 +4017,28 @@ sub setup_logic_cropcal_streams {
   # Option checks
   my $generate_crop_gdds = $nl->get_value('generate_crop_gdds') ;
   my $use_mxmat = $nl->get_value('use_mxmat') ;
-  my $sdate_file = $nl->get_value('stream_fldFileName_sdate') ;
+  my $swindow_start_file = $nl->get_value('stream_fldFileName_swindow_start') ;
+  my $swindow_end_file = $nl->get_value('stream_fldFileName_swindow_end') ;
   my $gdd_file = $nl->get_value('stream_fldFileName_cultivar_gdds') ;
   my $mesh_file = $nl->get_value('stream_meshfile_cropcal') ;
+  if ( ($swindow_start_file eq '' and $swindow_start_file ne '') or ($swindow_start_file ne '' and $swindow_start_file eq '') ) {
+    $log->fatal_error("When specifying sowing window dates, you must provide both swindow_start_file and swindow_end_file. To specify exact sowing dates, use the same file." );
+  }
   if ( $generate_crop_gdds eq '.true.' ) {
       if ( $use_mxmat eq '.true.' ) {
           $log->fatal_error("If generate_crop_gdds is true, you must also set use_mxmat to false" );
       }
-      if ( $sdate_file eq '' ) {
-          $log->fatal_error("If generate_crop_gdds is true, you must specify stream_fldFileName_sdate")
+      if ( $swindow_start_file eq '' or $swindow_end_file eq '' ) {
+          $log->fatal_error("If generate_crop_gdds is true, you must specify stream_fldFileName_swindow_start and stream_fldFileName_swindow_end")
+      }
+      if ( $swindow_start_file ne $swindow_end_file ) {
+          $log->fatal_error("If generate_crop_gdds is true, you must specify exact sowing dates by setting stream_fldFileName_swindow_start and stream_fldFileName_swindow_end to the same file")
       }
       if ( $gdd_file ne '' ) {
           $log->fatal_error("If generate_crop_gdds is true, do not specify stream_fldFileName_cultivar_gdds")
       }
   }
-  if ( $mesh_file eq '' and ( $sdate_file ne '' or $gdd_file ne '' ) ) {
+  if ( $mesh_file eq '' and ( $swindow_start_file ne '' or $gdd_file ne '' ) ) {
       $log->fatal_error("If prescribing crop sowing dates and/or maturity requirements, you must specify stream_meshfile_cropcal")
   }
 }
