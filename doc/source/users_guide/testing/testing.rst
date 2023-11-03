@@ -28,11 +28,20 @@ CTSM Fortran Unit Tests
 CTSM Build-namelist Tests
 =========================
 
-Run the following perl tester that
+Test the namelist build script by running the following:
 
 ::
+
    > cd bld/unit_testers
-   > ./build-namelist_test.pl
+   > ./build-namelist_test.pl 1>namelist_test.log 2>&1
+
+When that's complete, inspect ``namelist_test.log`` (e.g., with ``less namelist_test.log``). If you see ``Successfully ran all testing for build-namelist`` but nothing like ``# Looks like you failed 4 tests of 1999.``, then everything went fine.
+
+If something went wrong, you can find the failing tests like so:
+
+::
+
+   > grep -E "^[0-9]+/[0-9]+ < [a-zA-Z]+" namelist_test.log | grep -v "PASS"
 
 Testing PTCLM
 =============
