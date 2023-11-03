@@ -19,6 +19,7 @@ import argparse
 from getpass import getuser
 import numpy as np
 import netCDF4 as netcdf4
+import xarray as xr
 
 
 # Adds global attributes, returning hdir and fdir
@@ -64,41 +65,45 @@ def add_global_attributes(ds, historydate, histdir, sspdir, num_ens, climo_year,
 
 def create_fill_latlon(ds, data, var_name):
     
-    ds.createDimension(var_name, int(data.size))
-    wl = ds.createVariable(var_name, np.float64, (var_name,))
-    
+    attrs = {}
     if var_name == "lat":
-        wl.units = "degrees_north"
-        wl.long_name = "Latitude"
+        attrs["units"] = "degrees_north"
+        attrs["long_name"] = "Latitude"
     elif var_name == "lon":
-        wl.units = "degrees_east"
-        wl.long_name = "Longitude"
-    wl.mode = "time-invariant"
+        attrs["units"] = "degrees_east"
+        attrs["long_name"] = "Longitude"
+    attrs["mode"] = "time-invariant"
     
-    wl[:] = data
-        
+    da = xr.DataArray(
+        data=data,
+        dims=var_name,
+        attrs=attrs,
+        )
+    ds[var_name] = da
+    
     return ds
 
 
-def create_fill_time(ds, time, ntime, ssp_time_units=None, ssp_time_longname=None, adj_time=False):
-    if ntime is not None:
-        ntime = int(ntime)
-    ds.createDimension("time", ntime)
+def create_fill_time(ds, time, ssp_time_units=None, ssp_time_longname=None, adj_time=False):
     
-    wtime = ds.createVariable("time", np.float64, ("time",))
-    
+    attrs = {}
     if ssp_time_units is not None:
-        wtime.units = ssp_time_units
+        attrs["units"] = ssp_time_units
     if ssp_time_longname is not None:
-        wtime.long_name = ssp_time_longname
-    wtime.calendar = "noleap"
+        attrs["long_name"] = ssp_time_longname
+    attrs["calendar"] = "noleap"
     
     # adjust time to middle of month
     if adj_time:
         wtime_offset = 15 - time[0]
-        wtime[:] = time + wtime_offset
-    else:
-        wtime[:] = time
+        time += wtime_offset
+    
+    var_name = "time"
+    ds[var_name] = xr.DataArray(
+        data=time,
+        dims=[var_name],
+        attrs=attrs,
+    )
     
     return ds
 
@@ -641,49 +646,59 @@ for f in range(nfields):
 
     # write out climo to check field  -------------------------
     if write_climo:
-        # Use NetCDF4 format, because using older NetCDF formats are too slow
-        w = netcdf4.Dataset(
-            os.path.join(outdir, field_out[f] + "_climo" + creationdate + ".nc"),
-            "w",
-            format=output_format,
-        )
+        w = xr.Dataset()
         w = create_fill_latlon(w, lat, "lat")
         w = create_fill_latlon(w, lon, "lon")
-        w = create_fill_time(w, time[0:12], nmo)
+        w = create_fill_time(w, time[0:12])
         
-        wvar = w.createVariable(
-            field_out[f],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
+        w[field_out[f]] = xr.DataArray(
+            data=climo,
+            dims=["time", "lat", "lon"],
+            coords={
+                "time": w["time"],
+                "lat": w["lat"],
+                "lon": w["lon"]},
+            attrs={"_FillValue": np.float64(1.0e36)}
         )
-        wvar[:, :, :] = climo
+        w.to_netcdf(os.path.join(outdir, field_out[f] + "_climo" + creationdate + ".nc"),
+            format=output_format,
+            encoding={
+                "lat": {"_FillValue": None},
+                "lon": {"_FillValue": None},
+                "time": {"_FillValue": None},
+            })
         w.close()
 
-        # Use NetCDF4 format, because using older NetCDF formats are too slow
-        w = netcdf4.Dataset(
-            os.path.join(outdir, field_out[f] + "_smooth" + creationdate + ".nc"),
-            "w",
-            format=output_format,
-        )
+        w = xr.Dataset()
         w = create_fill_latlon(w, lat, "lat")
         w = create_fill_latlon(w, lon, "lon")
-        w = create_fill_time(w, time, tm)
+        w = create_fill_time(w, time)
+        w[field_out[f]] = xr.DataArray(
+            data=temp_fld,
+            dims=["time", "lat", "lon"],
+            coords={
+                "time": w["time"],
+                "lat": w["lat"],
+                "lon": w["lon"]},
+            attrs={"_FillValue": np.float64(1.0e36)}
+        )
+        w["smooth_" + field_out[f]] = xr.DataArray(
+            data=stemp_fld,
+            dims=["time", "lat", "lon"],
+            coords={
+                "time": w["time"],
+                "lat": w["lat"],
+                "lon": w["lon"]},
+            attrs={"_FillValue": np.float64(1.0e36)}
+        )
         
-        wvar = w.createVariable(
-            field_out[f],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-        wvar2 = w.createVariable(
-            "smooth_" + field_out[f],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-        wvar[:, :, :] = temp_fld
-        wvar2[:, :, :] = stemp_fld
+        w.to_netcdf(os.path.join(outdir, field_out[f] + "_smooth" + creationdate + ".nc"),
+            format=output_format,
+            encoding={
+                "lat": {"_FillValue": None},
+                "lon": {"_FillValue": None},
+                "time": {"_FillValue": None},
+            })
         w.close()
         print("Exit early after writing out climatology\n\n")
         sys.exit()
@@ -710,7 +725,7 @@ for f in range(nfields):
         # Create dimensions
         outfile = create_fill_latlon(outfile, lat, "lat")
         outfile = create_fill_latlon(outfile, lon, "lon")
-        outfile = create_fill_time(outfile, ssp_time, None, ssp_time_units=ssp_time_units, ssp_time_longname=ssp_time_longname, adj_time=True)
+        outfile = create_fill_time(outfile, ssp_time, ssp_time_units=ssp_time_units, ssp_time_longname=ssp_time_longname, adj_time=True)
 
         # Create and fill ancillary variables ()
         outfile = create_fill_ancillary_vars(outfile, landfrac, landmask, area)
