@@ -7,7 +7,8 @@ module cropcalStreamMod
   ! Read crop calendars from streams
   !
   ! !USES:
-  use ESMF
+  use ESMF             , only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU, ESMF_Finalize
+  use ESMF             , only : ESMF_END_ABORT
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_CL, CS => shr_kind_CS
   use dshr_strdata_mod , only : shr_strdata_type
   use decompMod        , only : bounds_type
@@ -54,7 +55,7 @@ contains
     !
     ! Initialize data stream information for crop calendars.
     !
-    ! !USES:
+    !USES:
     use shr_mpi_mod      , only : shr_mpi_bcast
     use clm_nlUtilsMod   , only : find_nlgroup_name
     use lnd_comp_shr     , only : mesh, model_clock
@@ -62,7 +63,7 @@ contains
     use controlMod       , only : NLFilename
     !
     ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds          ! bounds
+     type(bounds_type), intent(in) :: bounds          ! bounds
     !
     ! !LOCAL VARIABLES:
     integer                 :: i,n,ivt                    ! index
@@ -248,12 +249,12 @@ contains
     !
     ! Advance crop calendar streams
     !
-    ! !USES:
+    !USES:
     use clm_time_manager , only : get_curr_date
     use dshr_strdata_mod , only : shr_strdata_advance
     !
     ! !ARGUMENTS:
-    type(bounds_type), intent(in)    :: bounds
+     type(bounds_type), intent(in)    :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: g, ig   ! Indices
@@ -298,22 +299,22 @@ contains
   !================================================================
 
   subroutine cropcal_interp(bounds, num_pcropp, filter_pcropp, crop_inst)
-    !
-    ! Interpolate data stream information for crop calendars.
-    !
-    ! !USES:
-    use CropType        , only : crop_type
-    use PatchType       , only : patch
-    use clm_time_manager, only : get_curr_days_per_year
-    use pftconMod       , only : pftname
-    use dshr_methods_mod , only : dshr_fldbun_getfldptr
-    !
-    ! !ARGUMENTS:
-    implicit none
-    type(bounds_type)      , intent(in)    :: bounds
-    integer                , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
-    integer                , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
-    type(crop_type)        , intent(inout) :: crop_inst
+     !
+     ! Interpolate data stream information for crop calendars.
+     !
+     ! !USES:
+     use CropType        , only : crop_type
+     use PatchType       , only : patch
+     use clm_time_manager, only : get_curr_days_per_year
+     use pftconMod       , only : pftname
+     use dshr_methods_mod , only : dshr_fldbun_getfldptr
+     !
+     ! !ARGUMENTS:
+     implicit none
+     type(bounds_type)      , intent(in)    :: bounds
+     integer                , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
+     integer                , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
+     type(crop_type)        , intent(inout) :: crop_inst
     !
     ! !LOCAL VARIABLES:
     integer :: ivt, p, ip, ig
@@ -322,6 +323,7 @@ contains
     integer           :: n, g
     integer           :: lsize
     integer           :: rc
+    integer           :: begp, endp
     real(r8), pointer :: dataptr1d_swindow_start(:)
     real(r8), pointer :: dataptr1d_swindow_end  (:)
     real(r8), pointer :: dataptr1d_cultivar_gdds(:)
@@ -341,6 +343,9 @@ contains
     ! Get pointer for stream data that is time and spatially interpolate to model time and grid
     ! Place all data from each type into a temporary 2d array
     lsize = bounds%endg - bounds%begg + 1
+
+    begp = bounds%begp
+    endp= bounds%endp
 
     dayspyr = get_curr_days_per_year()
 
@@ -397,17 +402,17 @@ contains
 
        ! Ensure that, if mxsowings > 1, sowing windows are ordered such that ENDS are monotonically increasing. This is necessary because of how get_swindow() works.
        if (mxsowings > 1) then
-           if (any(ends(:,2:mxsowings) <= ends(:,1:mxsowings-1) .and. &
-                   ends(:,2:mxsowings) >= 1)) then
+           if (any(ends(begp:endp,2:mxsowings) <= ends(begp:endp,1:mxsowings-1) .and. &
+                   ends(begp:endp,2:mxsowings) >= 1)) then
                write(iulog, *) 'Sowing window inputs must be ordered such that end dates are monotonically increasing.'
                call ESMF_Finalize(endflag=ESMF_END_ABORT)
            end if
        end if
 
        ! Handle invalid sowing window values
-       if (any(starts < 1 .or. ends < 1)) then
+        if (any(starts(begp:endp,:) < 1 .or. ends(begp:endp,:) < 1)) then 
            ! Fail if not allowing fallback to paramfile sowing windows
-           if ((.not. allow_invalid_swindow_inputs) .and. any(all(starts < 1, dim=2) .and. patch%wtgcell > 0._r8 .and. patch%itype >= npcropmin)) then
+           if ((.not. allow_invalid_swindow_inputs) .and. any(all(starts(begp:endp,:) < 1, dim=2) .and. patch%wtgcell > 0._r8 .and. patch%itype >= npcropmin)) then
                write(iulog, *) 'At least one crop in one gridcell has invalid prescribed sowing window start date(s). To ignore and fall back to paramfile sowing windows, set allow_invalid_swindow_inputs to .true.'
                write(iulog, *) 'Affected crops:'
                do ivt = npcropmin, mxpft
@@ -422,11 +427,11 @@ contains
                call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
            ! Fail if a sowing window start date is prescribed without an end date (or vice versa)
-           else if (any((starts >= 1 .and. ends < 1) .or. (starts < 1 .and. ends >= 1))) then
+           else if (any((starts(begp:endp,:) >= 1 .and. ends(begp:endp,:) < 1) .or. (starts(begp:endp,:) < 1 .and. ends(begp:endp,:) >= 1))) then
                write(iulog, *) 'Every prescribed sowing window start date must have a corresponding end date.'
                call ESMF_Finalize(endflag=ESMF_END_ABORT)
            end if
-       end if
+        end if
 
     end if ! use_cropcal_rx_swindows
     deallocate(dataptr2d_swindow_start)
