@@ -1,0 +1,5 @@
+fsurdat = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata/surfdata_10x15_78pfts_simyr2000_synthetic_cosphill_1.0.nc'
+use_hillslope = .true.
+use_hillslope_routing = .true.
+hillslope_pft_distribution_method = 'PftLowlandUpland'
+use_ssre = .false.
