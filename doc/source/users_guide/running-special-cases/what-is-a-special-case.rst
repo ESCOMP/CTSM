@@ -1,6 +1,6 @@
-.. _what is a special case:
-
 .. include:: ../substitutions.rst
+
+.. _what is a special case:
 
 =========================
  What is a special case?

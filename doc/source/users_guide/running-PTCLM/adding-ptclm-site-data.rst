@@ -1,6 +1,6 @@
-.. _adding-ptclm-site-data:
-
 .. include:: ../substitutions.rst
+
+.. _adding-ptclm-site-data:
 
 ============================
 Adding PTCLMmkdata Site Data
@@ -40,6 +40,8 @@ There is a mechanism for giving site-specific land-use change in PTCLMmkdata. Ad
 
 This file only requires a line for each year where a transition or harvest happens. As in the "pftdata" file above "pft_f" refers to the fraction and "pft_c" refers to the PFT index, and only up to five vegetation types are allowed to co-exist. The last eight columns have to do with harvesting and grazing. The last two columns are whether to hold harvesting and/or grazing constant until the next transition year and will just be either 1 or 0. This file will be converted by the **PTCLM_sitedata/cnvrt_trnsyrs2_pftdyntxtfile.pl** script in the PTCLMmkdata directory to a format that **mksurfdata_map** can read that has an entry for each year for the range of years valid for the compset in question.
 
+.. _converting-ameriflux-for-ptclmmkdata:
+
 ------------------------------------------------
 Converting AmeriFlux Data for use by PTCLMmkdata
 ------------------------------------------------
@@ -58,7 +60,7 @@ The CESM can NOT handle missing data, so we recommend using the "Level 4" Gap fi
 Example: PTCLMmkdata transient example over a shorter time period
 -----------------------------------------------------------------
 
-This is an example of using PTCLMmkdata for Harvard Forest (AmeriFlux site code US-Ha1) for transient land use 1991-2006. In order to do this we would've needed to have converted the AmeriFlux data into NetCDF format as show in the `the Section called Converting AmeriFlux Data for use by PTCLMmkdata <CLM-URL>`_ section above. Also note that this site has a site-specific dynamic land-use change file for it ``PTCLM_sitedata/US-Ha1_dynpftdata.txt`` in the PTCLMmkdata directory and this file will be used for land-use change and harvesting rather than the global dataset.
+This is an example of using PTCLMmkdata for Harvard Forest (AmeriFlux site code US-Ha1) for transient land use 1991-2006. In order to do this we would've needed to have converted the AmeriFlux data into NetCDF format as shown in :ref:`converting-ameriflux-for-ptclmmkdata` section above. Also note that this site has a site-specific dynamic land-use change file for it ``PTCLM_sitedata/US-Ha1_dynpftdata.txt`` in the PTCLMmkdata directory and this file will be used for land-use change and harvesting rather than the global dataset.
 
 ::
 

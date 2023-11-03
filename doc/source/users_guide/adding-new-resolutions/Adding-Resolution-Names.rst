@@ -1,6 +1,6 @@
-.. _adding-resolution-names:
-
 .. include:: ../substitutions.rst
+
+.. _adding-resolution-names:
 
 =========================
  Adding Resolution Names
