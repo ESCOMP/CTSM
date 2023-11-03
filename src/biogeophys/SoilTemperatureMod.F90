@@ -624,7 +624,6 @@ contains
     use landunit_varcon , only : istice, istwet
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
     use clm_varctl      , only : iulog, snow_thermal_cond_method
-
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds 
