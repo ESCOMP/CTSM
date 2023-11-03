@@ -225,7 +225,7 @@ For gaseous diffusion, we adopted the temperature dependence of molecular free-a
  +==========================================================+==========================================================+========================================================+
  | Aqueous                                                  | 0.9798 + 0.02986\ *T* + 0.0004381\ *T*\ :sup:`2`         | 1.172+ 0.03443\ *T* + 0.0005048\ *T*\ :sup:`2`         |
  +----------------------------------------------------------+----------------------------------------------------------+--------------------------------------------------------+
- | Gaseous                                                  | 0.1875 + 0.0013\ *T*                                     | 0.1759 + 0.0011\ *T*                                   |
+ | Gaseous                                                  | 0.1875 + 0.0013\ *T*                                     | 0.1759 + 0.00117\ *T*                                   |
  +----------------------------------------------------------+----------------------------------------------------------+--------------------------------------------------------+
 
 Gaseous diffusivity in soils also depends on the molecular diffusivity, soil structure, porosity, and organic matter content. :ref:`Moldrup et al. (2003)<Moldrupetal2003>`, using observations across a range of unsaturated mineral soils, showed that the relationship between effective diffusivity (:math:`D_{e}` (m\ :sup:`2` s\ :sup:`-1`)) and soil properties can be represented as:
