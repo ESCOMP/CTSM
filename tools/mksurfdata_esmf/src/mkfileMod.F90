@@ -128,6 +128,7 @@ contains
     rcode = pio_put_att (pioid, pio_global, 'Version', trim(gitdescribe))
     rcode = pio_put_att (pioid, pio_global, 'Logname', trim(logname))
     rcode = pio_put_att (pioid, pio_global, 'Host', trim(hostname))
+    rcode = pio_put_att (pioid, pio_global, 'Number-of-tasks', npes)
 
     ! TODO: check that this works
     !rcode = pio_put_att_int(pioid, pio_global, 'nglcec', nglcec)
