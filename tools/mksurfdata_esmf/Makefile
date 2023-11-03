@@ -166,7 +166,7 @@ crop-global-present-ne16np4 : FORCE
 	$(BATCHJOBS) $@.sh
 
 crop-global-present-ne120np4 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 96 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
 
 crop-global-1850 : FORCE
@@ -182,11 +182,11 @@ crop-global-1850-ne16np4 : FORCE
 	$(BATCHJOBS) $@.sh
 
 crop-global-1850-ne120np4 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 96 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
 
 crop-global-present-0.125 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
 
 crop-numa-present : FORCE
@@ -208,19 +208,81 @@ crop-smallville-historical : FORCE
 #
 # Crop with future scenarios
 #
-crop-global-future : crop-global-SSP2-4.5 crop-global-SSP2-4.5-low-res
+crop-global-future : crop-global-SSP1-1.9-f09 crop-global-SSP1-2.6-f09 crop-global-SSP2-4.5 crop-global-SSP2-4.5-low-res \
+                     crop-global-SSP3-7.0-f09 crop-global-SSP4-3.4-f09 crop-global-SSP4-6.0-f09 crop-global-SSP5-8.5-f09
 
-crop-global-SSP2-4.5 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
+crop-global-SSP2-4.5-low-res : crop-global-SSP2-4.5-f10 crop-global-SSP2-4.5-ne3
+crop-global-SSP2-4.5         : crop-global-SSP2-4.5-f19 crop-global-SSP2-4.5-f09 crop-global-SSP2-4.5-f45 \
+                               crop-global-SSP2-4.5-hcru crop-global-SSP2-4.5-ne16 crop-global-SSP2-4.5-ne30 \
+                               crop-global-SSP2-4.5-C96 crop-global-SSP2-4.5-mpasa120
+
+crop-global-SSP1-1.9-f09 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
 	$(BATCHJOBS) $@.sh
 
-crop-global-SSP2-4.5-low-res : FORCE
-	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
+crop-global-SSP1-2.6-f09 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-SSP2-4.5-f09 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-SSP2-4.5-f19 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-SSP2-4.5-f45 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-SSP2-4.5-hcru : FORCE
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-SSP2-4.5-ne16 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-SSP2-4.5-ne30 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-SSP2-4.5-C96 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-SSP2-4.5-mpasa120 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-SSP2-4.5-f10 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 10 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-SSP2-4.5-ne3 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 10 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
 	$(BATCHJOBS) $@.sh
 
 # Don't do the high-resolution cases by default...
 crop-global-SSP2-4.5-hi-res : FORCE
-	$(MKSURFDATA)  --number-of-nodes 96 --scenario $@ --jobscript-file $@.sh --walltime 04:00:00
+	$(MKSURFDATA)  --number-of-nodes 96 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-SSP3-7.0-f09 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-SSP4-3.4-f09 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-SSP4-6.0-f09 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-SSP5-8.5-f09 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 48 --scenario $@ --jobscript-file $@.sh --walltime 02:00:00
 	$(BATCHJOBS) $@.sh
 
 #
