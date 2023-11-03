@@ -62,22 +62,21 @@ def add_global_attributes(ds, historydate, histdir, sspdir, num_ens, climo_year,
     return hdir,fdir
 
 
-def create_fill_latlon(ds, lon, lat):
-    ds.createDimension("lat", int(lat.size))
-    ds.createDimension("lon", int(lon.size))
-    wlat = ds.createVariable("lat", np.float64, ("lat",))
-    wlon = ds.createVariable("lon", np.float64, ("lon",))
+def create_fill_latlon(ds, data, var_name):
     
-    wlon.units = "degrees_east"
-    wlat.units = "degrees_north"
-    wlon.long_name = "Longitude"
-    wlat.long_name = "Latitude"
-    wlon.mode = "time-invariant"
-    wlat.mode = "time-invariant"
+    ds.createDimension(var_name, int(data.size))
+    wl = ds.createVariable(var_name, np.float64, (var_name,))
     
-    wlon[:] = lon
-    wlat[:] = lat
+    if var_name == "lat":
+        wl.units = "degrees_north"
+        wl.long_name = "Latitude"
+    elif var_name == "lon":
+        wl.units = "degrees_east"
+        wl.long_name = "Longitude"
+    wl.mode = "time-invariant"
     
+    wl[:] = data
+        
     return ds
 
 
@@ -648,7 +647,8 @@ for f in range(nfields):
             "w",
             format=output_format,
         )
-        w = create_fill_latlon(w, lon, lat)
+        w = create_fill_latlon(w, lat, "lat")
+        w = create_fill_latlon(w, lon, "lon")
         w = create_fill_time(w, time[0:12], nmo)
         
         wvar = w.createVariable(
@@ -666,7 +666,8 @@ for f in range(nfields):
             "w",
             format=output_format,
         )
-        w = create_fill_latlon(w, lon, lat)
+        w = create_fill_latlon(w, lat, "lat")
+        w = create_fill_latlon(w, lon, "lon")
         w = create_fill_time(w, time, tm)
         
         wvar = w.createVariable(
@@ -707,7 +708,8 @@ for f in range(nfields):
         hdir, fdir = add_global_attributes(outfile, historydate, histdir, sspdir, num_ens, climo_year, climo_base_nyrs, dpath, dfile, hist_yrstart, hist_yrend, ssp_yrstart, ssp_yrend, timetag)
 
         # Create dimensions
-        outfile = create_fill_latlon(outfile, lon, lat)
+        outfile = create_fill_latlon(outfile, lat, "lat")
+        outfile = create_fill_latlon(outfile, lon, "lon")
         outfile = create_fill_time(outfile, ssp_time, None, ssp_time_units=ssp_time_units, ssp_time_longname=ssp_time_longname, adj_time=True)
 
         # Create and fill ancillary variables ()
