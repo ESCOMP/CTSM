@@ -30,17 +30,24 @@ valid_scenarios = [
     "crop-global-1850-ne120np4",
     "crop-global-hist",
     "crop-global-future",
-    "crop-global-SSP1-2.6",
-    "crop-global-SSP3-7.0",
-    "crop-global-SSP5-3.4",
-    "crop-global-SSP2-4.5",
-    "crop-global-SSP2-4.5-low-res",
+    "crop-global-SSP1-2.6-f09",
+    "crop-global-SSP3-7.0-f09",
+    "crop-global-SSP5-3.4-f09",
+    "crop-global-SSP2-4.5-f09",
+    "crop-global-SSP2-4.5-f19",
+    "crop-global-SSP2-4.5-f10",
+    "crop-global-SSP2-4.5-f45",
+    "crop-global-SSP2-4.5-ne3",
+    "crop-global-SSP2-4.5-ne30",
+    "crop-global-SSP2-4.5-ne16",
+    "crop-global-SSP2-4.5-hcru",
+    "crop-global-SSP2-4.5-C96",
+    "crop-global-SSP2-4.5-mpasa120",
     "crop-global-SSP2-4.5-hi-res",
-    "crop-global-SSP1-1.9",
-    "crop-global-SSP4-3.4",
-    "crop-global-SSP4-6.0",
-    "crop-global-SSP5-8.5",
-    "crop-global-SSP5-8.5-other",
+    "crop-global-SSP1-1.9-f09",
+    "crop-global-SSP4-3.4-f09",
+    "crop-global-SSP4-6.0-f09",
+    "crop-global-SSP5-8.5-f09",
 ]
 
 
@@ -147,19 +154,7 @@ def main():
     # --------------------------
     target_list = []
     if scenario == "crop":
-        target_list = ["crop-global-present", "crop-global-1850", "crop-global-hist"]
-    elif scenario == "crop-global-future":
-        target_list = [
-            "crop-global-SSP1-2.6",
-            "crop-global-SSP3-7.0",
-            "crop-global-SSP5-3.4",
-            "crop-global-SSP2-4.5",
-            "crop-global-SSP1-1.9",
-            "crop-global-SSP4-3.4",
-            "crop-global-SSP4-6.0",
-            "crop-global-SSP5-8.5",
-            "crop-global-SSP5-8.5-other",
-        ]
+        target_list = ["crop-global-present", "crop-global-1850"]
     elif scenario == "tropics":
         target_list = ["crop-tropics-present"]
     else:
@@ -176,6 +171,16 @@ def main():
     # --------------------------
     resolution_dict = {
         "standard_res_no_crop": ["0.9x1.25", "1.9x2.5", "mpasa60"],
+        "f09": ["0.9x1.25"],
+        "f19": ["1.9x2.5"],
+        "hcru": ["360x720cru"],
+        "C96": ["C96"],
+        "mpasa120": ["mpasa120"],
+        "f10": ["10x15"],
+        "f45": ["4x5"],
+        "ne3": ["ne3np4.pg3"],
+        "ne16": ["ne16np4.pg3"],
+        "ne30": ["ne30np4.pg3"],
         "low_res_no_crop": ["10x15"],
         "ultra_hi_res_no_crop": ["mpasa15", "mpasa15-3conus", "mpasa3p75"],
         "low_res_all": ["10x15", "ne3np4.pg3"],
@@ -257,45 +262,73 @@ def main():
             "--start-year 1850 --end-year 2015 --nosurfdata                    --res",
             "standard_res",
         ),
-        "crop-global-SSP1-1.9": (
+        "crop-global-SSP1-1.9-f09": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-1.9 --res",
-            "standard_res",
+            "f09",
         ),
-        "crop-global-SSP1-2.6": (
+        "crop-global-SSP1-2.6-f09": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-2.6 --res",
-            "standard_res",
+            "f09",
         ),
-        "crop-global-SSP2-4.5": (
+        "crop-global-SSP2-4.5-f09": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
-            "standard_res",
+            "f09",
         ),
-        "crop-global-SSP2-4.5-low-res": (
+        "crop-global-SSP2-4.5-hcru": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
-            "low_res_all",
+            "hcru",
+        ),
+        "crop-global-SSP2-4.5-f19": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
+            "f19",
+        ),
+        "crop-global-SSP2-4.5-f10": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
+            "f10",
+        ),
+        "crop-global-SSP2-4.5-ne3": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
+            "ne3",
+        ),
+        "crop-global-SSP2-4.5-ne30": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
+            "ne30",
+        ),
+        "crop-global-SSP2-4.5-ne16": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
+            "ne16",
+        ),
+        "crop-global-SSP2-4.5-C96": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
+            "C96",
+        ),
+        "crop-global-SSP2-4.5-mpasa120": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
+            "mpasa120",
         ),
         "crop-global-SSP2-4.5-hi-res": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
             "hi_res_all",
         ),
-        "crop-global-SSP3-7.0": (
+        "crop-global-SSP3-7.0-f09": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP3-7.0 --res",
-            "standard_res",
+            "f09",
         ),
-        "crop-global-SSP4-3.4": (
+        "crop-global-SSP4-3.4-f09": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-3.4 --res",
-            "standard_res",
+            "f09",
         ),
-        "crop-global-SSP4-6.0": (
+        "crop-global-SSP4-6.0-f09": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP4-6.0 --res",
-            "standard_res",
+            "f09",
         ),
-        "crop-global-SSP5-3.4": (
+        "crop-global-SSP5-3.4-f09": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP5-3.4 --res",
-            "standard_res",
+            "f09",
         ),
-        "crop-global-SSP5-8.5": (
+        "crop-global-SSP5-8.5-f09": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP5-8.5 --res",
-            "standard_res",
+            "f09",
         ),
     }
 
