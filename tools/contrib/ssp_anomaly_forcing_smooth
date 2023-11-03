@@ -119,6 +119,61 @@ def create_fill_ancillary_vars(ds, landfrac, landmask, area):
     return ds
 
 
+def create_fill_forcing(ds, field_out, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld):
+    if field_out[f] == "sfcWind":
+        wvar = ds.createVariable(
+            field_out_wind[0],
+            np.float64,
+            ("time", "lat", "lon"),
+            fill_value=np.float64(1.0e36),
+        )
+    else:
+        wvar = ds.createVariable(
+            field_out[f],
+            np.float64,
+            ("time", "lat", "lon"),
+            fill_value=np.float64(1.0e36),
+        )
+    wvar.units = units[f]
+    wvar.mode = "time-dependent"
+    if field_out[f] == "sfcWind":
+        wvar.long_name = str(long_name) + " U component " + anomsf[f]
+    else:
+        wvar.long_name = str(long_name) + " " + anomsf[f]
+    # List of source files
+    wvar.historical_source_files = "".join(histfiles).replace(hdir, "")
+    wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
+
+    # write to file  --------------------------------------------
+    if field_out[f] == "sfcWind":
+        wvar[:, :, :] = anom_fld / np.sqrt(2)
+    else:
+        wvar[:, :, :] = anom_fld
+    
+    return ds
+
+
+def create_fill_windv(ds, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld):
+
+    wvar = ds.createVariable(
+            field_out_wind[1],
+            np.float64,
+            ("time", "lat", "lon"),
+            fill_value=np.float64(1.0e36),
+        )
+    wvar.units = units[f]
+    wvar.cell_methods = "time: mean"
+    wvar.long_name = str(long_name) + " V component " + anomsf[f]
+    # List of source files
+    wvar.historical_source_files = "".join(histfiles).replace(hdir, "")
+    wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
+
+    # write to file  --------------------------------------------
+    wvar[:, :, :] = anom_fld / np.sqrt(2)
+    
+    return ds
+
+
 parser = argparse.ArgumentParser(description="Create anomaly forcing")
 parser.add_argument(
     "sspnum",
@@ -668,63 +723,14 @@ for f in range(nfields):
         outfile = create_fill_ancillary_vars(outfile, landfrac, landmask, area)
     # -- End if on open file
 
+    outfile = create_fill_forcing(outfile, field_out, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld)
+
+     # create second wind field for V component
     if field_out[f] == "sfcWind":
-        wvar = outfile.createVariable(
-            field_out_wind[0],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-    else:
-        wvar = outfile.createVariable(
-            field_out[f],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-    wvar.units = units[f]
-    wvar.mode = "time-dependent"
-
-    # write to file  --------------------------------------------
-    if field_out[f] == "sfcWind":
-        wvar.long_name = str(long_name) + " U component " + anomsf[f]
-    else:
-        wvar.long_name = str(long_name) + " " + anomsf[f]
-
-    if field_out[f] == "sfcWind":
-        wvar[:, :, :] = anom_fld / np.sqrt(2)
-    else:
-        wvar[:, :, :] = anom_fld
-
-    # List of source files
-    wvar.historical_source_files = "".join(histfiles).replace(hdir, "")
-    wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
-
-    # create second wind field for V component
-    if field_out[f] == "sfcWind":
-        command = 'date "+%y%m%d"'
-        x2 = subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
-        x = x2.communicate()
-        timetag = x[0].decode("utf-8").strip()
-
-        wvar = outfile.createVariable(
-            field_out_wind[1],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-        wvar.units = units[f]
-        wvar.cell_methods = "time: mean"
-        wvar.long_name = str(long_name) + " V component " + anomsf[f]
-
-        # write to file  --------------------------------------------
-        wvar[:, :, :] = anom_fld / np.sqrt(2)
-
-        # List of source files
-        wvar.historical_source_files = "".join(histfiles).replace(hdir, "")
-        wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
+        create_fill_windv(outfile, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld)
 
     # -- end if statement for write for V field --------
+    break
 
 # --  End Loop over forcing fields  ------------------------------------
 outfile.close()
