@@ -1,6 +1,6 @@
-.. comparing-history-files:
-
 .. include:: ../substitutions.rst
+
+.. _comparing-history-files:
 
 =========================
  Comparing History Files
@@ -20,5 +20,5 @@ Options:
 
 -kpr
 
-See the **cprnc** `README <CLM-URL>`_ file for more details.
+See the ``cprnc`` `README <https://github.com/ESMCI/cime/blob/master/CIME/non_py/cprnc/README>`_ file for more details.
 

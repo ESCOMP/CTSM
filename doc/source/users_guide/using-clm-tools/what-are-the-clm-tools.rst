@@ -1,6 +1,6 @@
-.. _what-are-the-clm-tools:
-
 .. include:: ../substitutions.rst
+
+.. _what-are-the-clm-tools:
 
 ========================
  What are the CLM tools
@@ -57,6 +57,8 @@ Running FORTRAN tools built with SMP=TRUE
 -----------------------------------------
 
 When you enable ``SMP=TRUE`` on your build of one of the tools that make use of it, you are using OpenMP for shared memory parallelism (SMP). In SMP loops are run in parallel with different threads run on different processors all of which access the same memory (called on-node). Thus you can only usefully run up to the number of processors that are available on a single-node of the machine you are running on. For example, on the NCAR machine cheyenne there are 36 processors per node, so you can use up to 36 processors.
+
+.. _using-ncl:
 
 ---------
 Using NCL

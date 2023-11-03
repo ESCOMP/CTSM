@@ -1,6 +1,6 @@
-.. _running-with-previous-simulation-forcing:
-
 .. include:: ../substitutions.rst
+
+.. _running-with-previous-simulation-forcing:
 
 =============================================================
  Running with atmospheric forcing from a previous simulation
@@ -36,7 +36,9 @@ Example: Fully Coupled Simulation to Create Data to Force Next Example Simulatio
    # Now run as normal
    > ./case.submit
 
-Now we run an I compset forced with the data from the previous simulation using the CPLHISTForcing`` option to DATM_MODE. See `the Section called CPLHISTForcing mode and it's DATM settings in Chapter 1 <CLM-URL>`_ for more information on the DATM settings for ``CPLHISTForcing`` mode.
+Now we run an I compset forced with the data from the previous simulation using the ``CPLHISTForcing`` option to DATM_MODE. See :ref:`cplhistforcing` for more information.
+
+.. _eg-sim-data-from-prev-sim:
 
 Example: Simulation Forced with Data from the Previous Simulation
 ------------------------------------------------------------------------------

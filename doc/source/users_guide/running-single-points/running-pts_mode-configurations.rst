@@ -1,6 +1,6 @@
-.. _pts_mode:
-
 .. include:: ../substitutions.rst
+
+.. _pts_mode:
 
 ****************************************************
 Running a single point using global data - PTS_MODE

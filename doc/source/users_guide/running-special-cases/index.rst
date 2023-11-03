@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. _running-special-cases-section:
-
 .. include:: ../substitutions.rst
+
+.. _running-special-cases-section:
 
 #####################################
 Running Special Cases
