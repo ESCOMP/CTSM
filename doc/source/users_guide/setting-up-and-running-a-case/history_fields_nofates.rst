@@ -4,9 +4,9 @@ CTSM History Fields (nofates)
 
 CAUTION: Not all variables are relevant / present for all CTSM cases.
 Key flags used in this CTSM case:
-use_cn =  T
-use_crop =  T
-use_fates =  F
+use_cn = T
+use_crop = T
+use_fates = F
 
 =================================== ================ ============================================================================================== ================================================================= =======
 CTSM History Fields
@@ -359,10 +359,12 @@ GRAINC                              -                grain C (does not equal yie
 GRAINC_TO_FOOD                      -                grain C to food                                                                                gC/m^2/s                                                               T
 GRAINC_TO_FOOD_ANN                  -                grain C to food harvested per calendar year; should only be output annually                    gC/m^2                                                                 F
 GRAINC_TO_SEED                      -                grain C to seed                                                                                gC/m^2/s                                                               T
+GRAINC_TO_SEED_ANN                  -                grain C to seed harvested per calendar year; should only be output annually                    gC/m^2                                                                 F
 GRAINN                              -                grain N                                                                                        gN/m^2                                                                 T
-GRAINN_TO_FOOD                      -                grain N to food                                                                                gN/m^2/s                                                               F
-GRAINN_TO_FOOD_ANN                  -                grain N to food harvested per calendar year; should only be output annually                    gN/m^2                                                                 F
-GRAINN_TO_SEED                      -                grain N to seed                                                                                gN/m^2/s                                                               F
+GRAINN_TO_FOOD                      -                grain N to food (not scientifically supported)                                                 gN/m^2/s                                                               F
+GRAINN_TO_FOOD_ANN                  -                grain N to food harvested per calendar year; should only be output annually (not scientificall gN/m^2                                                                 F
+GRAINN_TO_SEED                      -                grain N to seed (not scientifically supported)                                                 gN/m^2/s                                                               F
+GRAINN_TO_SEED_ANN                  -                grain N to seed harvested per calendar year; should only be output annually (not scientificall gN/m^2                                                                 F
 GRESP_STORAGE                       -                growth respiration storage                                                                     gC/m^2                                                                 F
 GRESP_STORAGE_TO_XFER               -                growth respiration shift storage to transfer                                                   gC/m^2/s                                                               F
 GRESP_XFER                          -                growth respiration transfer                                                                    gC/m^2                                                                 F
@@ -1330,7 +1332,9 @@ W_SCALAR                            levsoi           Moisture (dryness) inhibiti
 GDDACCUM_PERHARV                    mxharvests       At-harvest accumulated growing degree days past planting date for crop; should only be output  ddays                                                                  F
 GDDHARV_PERHARV                     mxharvests       Growing degree days (gdd) needed to harvest; should only be output annually                    ddays                                                                  F
 GRAINC_TO_FOOD_PERHARV              mxharvests       grain C to food per harvest; should only be output annually                                    gC/m^2                                                                 F
-GRAINN_TO_FOOD_PERHARV              mxharvests       grain N to food per harvest; should only be output annually                                    gN/m^2                                                                 F
+GRAINC_TO_SEED_PERHARV              mxharvests       grain C to seed per harvest; should only be output annually                                    gC/m^2                                                                 F
+GRAINN_TO_FOOD_PERHARV              mxharvests       grain N to food per harvest; should only be output annually (not scientifically supported)     gN/m^2                                                                 F
+GRAINN_TO_SEED_PERHARV              mxharvests       grain N to seed per harvest; should only be output annually (not scientifically supported)     gN/m^2                                                                 F
 HARVEST_REASON_PERHARV              mxharvests       Reason for each crop harvest; should only be output annually                                   1 = mature; 2 = max season length; 3 = incorrect Dec. 31 sowing;       F
 HDATES                              mxharvests       actual crop harvest dates; should only be output annually                                      day of year                                                            F
 HUI_PERHARV                         mxharvests       At-harvest accumulated heat unit index for crop; should only be output annually                ddays                                                                  F
@@ -1339,6 +1343,8 @@ SOWING_REASON_PERHARV               mxharvests       Reason for sowing of each c
 SYEARS_PERHARV                      mxharvests       actual sowing years for crops harvested this year; should only be output annually              year                                                                   F
 SDATES                              mxsowings        actual crop sowing dates; should only be output annually                                       day of year                                                            F
 SOWING_REASON                       mxsowings        Reason for each crop sowing; should only be output annually                                    unitless                                                               F
+SWINDOW_ENDS                        mxsowings        crop sowing window end dates; should only be output annually                                   day of year                                                            F
+SWINDOW_STARTS                      mxsowings        crop sowing window start dates; should only be output annually                                 day of year                                                            F
 ALBD                                numrad           surface albedo (direct)                                                                        proportion                                                             T
 ALBDSF                              numrad           diagnostic snow-free surface albedo (direct)                                                   proportion                                                             T
 ALBGRD                              numrad           ground albedo (direct)                                                                         proportion                                                             F
