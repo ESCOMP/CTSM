@@ -1,4 +1,49 @@
 ===============================================================
+Tag name: ctsm5.1.dev148
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Fri Nov  3 07:56:43 MDT 2023
+One-line Summary: Add GRAINN outputs
+
+Purpose and description of changes
+----------------------------------
+
+In response to a user request for GRAINN_TO_FOOD outputs, this adds *_N_TO_FOOD(_ANN) and *_N_TO_SEED(_ANN) outputs for reproductive N pools. These are off by default, unlike their C counterparts. Note that the results are not scientifically supported, and tests have revealed unrealistic values. (Also adds GRAINC_TO_SEED_ANN output.)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK (with some fieldlist diffs)
+    izumi ------- PASS (with some fieldlist diffs)
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+* #2074 (https://github.com/ESCOMP/CTSM/pull/2074)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev147
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Mon Oct 30 16:53:20 MDT 2023

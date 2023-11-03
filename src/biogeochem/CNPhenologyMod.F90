@@ -2022,10 +2022,16 @@ contains
                crop_inst%harvest_reason_thisyr_patch(p,s) = -1._r8
                do k = repr_grain_min, repr_grain_max
                   cnveg_carbonflux_inst%repr_grainc_to_food_perharv_patch(p,s,k) = 0._r8
+                  cnveg_carbonflux_inst%repr_grainc_to_seed_perharv_patch(p,s,k) = 0._r8
+                  cnveg_nitrogenflux_inst%repr_grainn_to_food_perharv_patch(p,s,k) = 0._r8
+                  cnveg_nitrogenflux_inst%repr_grainn_to_seed_perharv_patch(p,s,k) = 0._r8
                end do
             end do
             do k = repr_grain_min, repr_grain_max
                cnveg_carbonflux_inst%repr_grainc_to_food_thisyr_patch(p,k) = 0._r8
+               cnveg_carbonflux_inst%repr_grainc_to_seed_thisyr_patch(p,k) = 0._r8
+               cnveg_nitrogenflux_inst%repr_grainn_to_food_thisyr_patch(p,k) = 0._r8
+               cnveg_nitrogenflux_inst%repr_grainn_to_seed_thisyr_patch(p,k) = 0._r8
             end do
          end if
 
@@ -3081,6 +3087,7 @@ contains
     real(r8) :: cropseedc_deficit_to_restore ! amount of crop seed C deficit that will be restored from this grain pool (gC/m2)
     real(r8) :: cropseedn_deficit_to_restore ! amount of crop seed N deficit that will be restored from this grain pool (gN/m2)
     real(r8) :: repr_grainc_to_food_thispool ! amount added to / subtracted from repr_grainc_to_food for the pool in question (gC/m2/s)
+    real(r8) :: repr_grainn_to_food_thispool ! amount added to / subtracted from repr_grainn_to_food for the pool in question (gN/m2/s)
     !-----------------------------------------------------------------------
 
     associate(                                                                           & 
@@ -3121,6 +3128,8 @@ contains
          repr_grainc_to_food_perharv => cnveg_carbonflux_inst%repr_grainc_to_food_perharv_patch, & ! Output: [real(r8) (:,:,:) ]  grain C to food per harvest (gC/m2)
          repr_grainc_to_food_thisyr => cnveg_carbonflux_inst%repr_grainc_to_food_thisyr_patch, & ! Output: [real(r8) (:,:) ]  grain C to food harvested this calendar year (gC/m2)
          repr_grainc_to_seed   =>    cnveg_carbonflux_inst%repr_grainc_to_seed_patch   , & ! Output: [real(r8) (:,:) ]  grain C to seed (gC/m2/s)
+         repr_grainc_to_seed_perharv => cnveg_carbonflux_inst%repr_grainc_to_seed_perharv_patch, & ! Output: [real(r8) (:,:,:) ]  grain C to seed per harvest (gC/m2)
+         repr_grainc_to_seed_thisyr => cnveg_carbonflux_inst%repr_grainc_to_seed_thisyr_patch, & ! Output: [real(r8) (:,:) ]  grain C to seed harvested this calendar year (gC/m2)
          repr_structurec_to_cropprod => cnveg_carbonflux_inst%repr_structurec_to_cropprod_patch, & ! Output: [real(r8) (:,:) ] reproductive structure C to crop product pool (gC/m2/s)
          repr_structurec_to_litter   => cnveg_carbonflux_inst%repr_structurec_to_litter_patch,   & ! Output: [real(r8) (:,:) ] reproductive structure C to litter (gC/m2/s)
          leafc_to_biofuelc     =>    cnveg_carbonflux_inst%leafc_to_biofuelc_patch     , & ! Output: [real(r8) (:) ]  leaf C to biofuel C (gC/m2/s)
@@ -3130,7 +3139,11 @@ contains
 
          livestemn_to_litter   =>    cnveg_nitrogenflux_inst%livestemn_to_litter_patch , & ! Output: [real(r8) (:) ]  livestem N to litter (gN/m2/s)                    
          repr_grainn_to_food        =>    cnveg_nitrogenflux_inst%repr_grainn_to_food_patch      , & ! Output: [real(r8) (:,:) ]  grain N to food (gN/m2/s)
+         repr_grainn_to_food_perharv => cnveg_nitrogenflux_inst%repr_grainn_to_food_perharv_patch, & ! Output: [real(r8) (:,:,:) ]  grain N to food per harvest (gN/m2)
+         repr_grainn_to_food_thisyr => cnveg_nitrogenflux_inst%repr_grainn_to_food_thisyr_patch, & ! Output: [real(r8) (:,:) ]  grain N to food harvested this calendar year (gN/m2)
          repr_grainn_to_seed        =>    cnveg_nitrogenflux_inst%repr_grainn_to_seed_patch      , & ! Output: [real(r8) (:,:) ]  grain N to seed (gN/m2/s)
+         repr_grainn_to_seed_perharv => cnveg_nitrogenflux_inst%repr_grainn_to_seed_perharv_patch, & ! Output: [real(r8) (:,:,:) ]  grain N to seed per harvest (gN/m2)
+         repr_grainn_to_seed_thisyr => cnveg_nitrogenflux_inst%repr_grainn_to_seed_thisyr_patch, & ! Output: [real(r8) (:,:) ]  grain N to seed harvested this calendar year (gN/m2)
          repr_structuren_to_cropprod => cnveg_nitrogenflux_inst%repr_structuren_to_cropprod_patch, & ! Output: [real(r8) (:,:) ] reproductive structure N to crop product pool (gN/m2/s)
          repr_structuren_to_litter   => cnveg_nitrogenflux_inst%repr_structuren_to_litter_patch,   & ! Output: [real(r8) (:,:) ] reproductive structure N to litter (gN/m2/s)
          leafn_to_biofueln     =>    cnveg_nitrogenflux_inst%leafn_to_biofueln_patch   , & ! Output: [real(r8) (:) ]  leaf N to biofuel N (gN/m2/s)
@@ -3192,10 +3205,19 @@ contains
                      cropseedc_deficit_to_restore = min(cropseedc_deficit_remaining, reproductivec(p,k))
                      cropseedc_deficit_remaining = cropseedc_deficit_remaining - cropseedc_deficit_to_restore
                      repr_grainc_to_seed(p,k) = t1 * cropseedc_deficit_to_restore
-
+                     if (cropseedc_deficit_to_restore > 0._r8) then
+                         repr_grainc_to_seed_perharv(p,h,k) = cropseedc_deficit_to_restore
+                         repr_grainc_to_seed_thisyr(p,k) = repr_grainc_to_seed_thisyr(p,k) &
+                             + repr_grainc_to_seed_perharv(p,h,k)
+                     end if
                      cropseedn_deficit_to_restore = min(cropseedn_deficit_remaining, reproductiven(p,k))
                      cropseedn_deficit_remaining = cropseedn_deficit_remaining - cropseedn_deficit_to_restore
                      repr_grainn_to_seed(p,k) = t1 * cropseedn_deficit_to_restore
+                     if (cropseedn_deficit_to_restore > 0._r8) then
+                         repr_grainn_to_seed_perharv(p,h,k) = cropseedn_deficit_to_restore
+                         repr_grainn_to_seed_thisyr(p,k) = repr_grainn_to_seed_thisyr(p,k) &
+                             + repr_grainn_to_seed_perharv(p,h,k)
+                     end if
 
                      ! Send the remaining grain to the food product pool
                      repr_grainc_to_food_thispool = cpool_to_reproductivec(p,k) - repr_grainc_to_seed(p,k)
@@ -3207,8 +3229,15 @@ contains
                          repr_grainc_to_food_thisyr(p,k) = repr_grainc_to_food_thisyr(p,k) &
                              + repr_grainc_to_food_perharv(p,h,k)
                      end if
+                     repr_grainn_to_food_thispool = npool_to_reproductiven(p,k) - repr_grainn_to_seed(p,k)
                      repr_grainn_to_food(p,k) = t1 * reproductiven(p,k) &
                           + npool_to_reproductiven(p,k) - repr_grainn_to_seed(p,k)
+                     if (reproductiven(p,k) + repr_grainn_to_food_thispool * dt > 0._r8) then
+                         repr_grainn_to_food_perharv(p,h,k) = reproductiven(p,k) &
+                             + repr_grainn_to_food_thispool * dt
+                         repr_grainn_to_food_thisyr(p,k) = repr_grainn_to_food_thisyr(p,k) &
+                             + repr_grainn_to_food_perharv(p,h,k)
+                     end if
                   end do
 
                   do k = repr_structure_min, repr_structure_max

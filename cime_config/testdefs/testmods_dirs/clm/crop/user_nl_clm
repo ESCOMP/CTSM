@@ -1,7 +1,7 @@
  hist_fincl1   += 'GDD0', 'GDD8', 'GDD10', 
                   'GDD020', 'GDD820', 'GDD1020',
                   'GDDACCUM', 'GDDTSOI', 'A5TMIN', 'A10TMIN',
-                  'HUI'
+                  'HUI', 'GRAINN_TO_FOOD'
 
 ! The main point of including this field is to test the SUM history field infrastructure
 ! This is in the crop testmods because this field is mainly useful in transient crop runs
@@ -10,7 +10,7 @@ hist_fincl2  += 'DYN_COL_SOIL_ADJUSTMENTS_C'
 
 
 ! Annual crop variables on per-sowing/per-harvest axes, per PFT.
-hist_fincl3 = 'SDATES', 'SDATES_PERHARV', 'SYEARS_PERHARV', 'HDATES', 'GRAINC_TO_FOOD_PERHARV', 'GRAINC_TO_FOOD_ANN', 'HDATES', 'GDDHARV_PERHARV', 'GDDACCUM_PERHARV', 'HUI_PERHARV', 'SOWING_REASON_PERHARV', 'HARVEST_REASON_PERHARV', 'SWINDOW_STARTS', 'SWINDOW_ENDS'
+hist_fincl3 = 'SDATES', 'SDATES_PERHARV', 'SYEARS_PERHARV', 'HDATES', 'GRAINC_TO_FOOD_PERHARV', 'GRAINC_TO_FOOD_ANN', 'GRAINN_TO_FOOD_PERHARV', 'GRAINN_TO_FOOD_ANN', 'GRAINC_TO_SEED_PERHARV', 'GRAINC_TO_SEED_ANN', 'GRAINN_TO_SEED_PERHARV', 'GRAINN_TO_SEED_ANN', 'HDATES', 'GDDHARV_PERHARV', 'GDDACCUM_PERHARV', 'HUI_PERHARV', 'SOWING_REASON_PERHARV', 'HARVEST_REASON_PERHARV', 'SWINDOW_STARTS', 'SWINDOW_ENDS'
 hist_nhtfrq(3) = 17520
 hist_mfilt(3) = 1
 hist_type1d_pertape(3) = 'PFTS'
