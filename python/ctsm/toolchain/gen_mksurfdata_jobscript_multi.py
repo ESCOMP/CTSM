@@ -180,7 +180,7 @@ def main():
         "ultra_hi_res_no_crop": ["mpasa15", "mpasa15-3conus", "mpasa3p75"],
         "low_res_all": ["10x15", "ne3np4.pg3"],
         "hi_res_all": ["ne120np4.pg3"],
-        "standard_res": ["0.9x1.25", "1.9x2.5", "C96", "ne30np4.pg3", "mpasa120"],
+        "standard_res": ["360x720cru", "0.9x1.25", "1.9x2.5", "C96", "ne30np4.pg3", "mpasa120"],
         "low_res": ["10x15", "4x5", "ne3np4.pg3", "mpasa480"],
         "nldas_res": ["0.125nldas2"],
         "5x5_amazon_res": ["5x5_amazon"],
