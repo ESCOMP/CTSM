@@ -274,6 +274,7 @@ module CLMFatesInterfaceMod
 
    public  :: CLMFatesGlobals1
    public  :: CLMFatesGlobals2
+   public  :: CrossRefHistoryFields
 
  contains
 
@@ -571,6 +572,70 @@ module CLMFatesInterfaceMod
      return
    end subroutine CLMFatesGlobals2
 
+   ! ===================================================================================
+
+   subroutine CrossRefHistoryFields
+
+     ! This routine only needs to be called on the masterproc.
+     ! Here we cross reference the CLM history master
+     ! list and make sure that all fields that start
+     ! with fates have been allocated. If it has
+     ! not, then we give a more constructive error
+     ! message than what is possible in PIO. The user
+     ! most likely needs to increase the history density
+     ! level
+
+     use histFileMod, only: getname
+     use histFileMod, only: fincl, hist_fincl1
+     use histFileMod, only: max_tapes, max_flds
+
+     integer :: t     ! iterator index for history tapes
+     integer :: f     ! iterator index for registered history field names
+     integer :: nh    ! iterator index for fates registered history
+     logical :: found ! if true, than the history field is either
+                      ! not part of the fates set, or was found in
+                      ! the fates set
+     character(len=64) :: fincl_name
+     
+     do t = 1,max_tapes
+
+        f = 1
+        search_fields: do while (f < max_flds .and. fincl(f,t) /= ' ')
+
+           ! This fincl array might not be ready by the time
+           ! this is called
+           fincl_name = getname(fincl(f,t))
+        
+           if(scan(fincl_name,'FATES_'))then
+              found = .false.
+              do_fates_hist: do nh = 1,fates_hist%num_history_vars
+                 if(trim(fates_hist%hvars(nh)%vname) == &
+                      trim(fincl_name)) then
+                    found=.true.
+                    exit do_fates_hist
+                 end if
+              end do do_fates_hist
+              
+              if(.not.found)then
+                 write(iulog,*) 'the history field: ',trim(fincl_name)
+                 write(iulog,*) 'was requested in the namelist, but was'
+                 write(iulog,*) 'not found in the list of fates_hist%hvars.'
+                 write(iulog,*) 'Most likely, this is because this history variable'
+                 write(iulog,*) 'was specified in the user namelist, but the user'
+                 write(iulog,*) 'specified a FATES history output density level'
+                 write(iulog,*) 'that does not contain that variable in its valid set.'
+                 write(iulog,*) 'You may have to increase the namelist setting: fates_hist_dens_level'
+                 write(iulog,*) 'current fates_hist_dens_level: ',hlm_hist_dens_level
+                 call endrun(msg=errMsg(sourcefile, __LINE__))
+              end if
+           end if
+           f = f + 1
+        end do search_fields
+     end do
+     
+   end subroutine CrossRefHistoryFields
+
+   
    ! ===================================================================================
   
    subroutine CLMFatesTimesteps()
