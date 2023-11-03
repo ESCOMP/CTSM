@@ -62,33 +62,44 @@ def add_global_attributes(ds, historydate, histdir, sspdir, num_ens, climo_year,
     return hdir,fdir
 
 
-def create_fill_dims(ds, nlat, nlon, ssp_time_units, ssp_time_longname, lon, lat, ssp_time):
-    ds.createDimension("lat", size=int(nlat))
-    ds.createDimension("lon", size=int(nlon))
-    ds.createDimension("time", None)
-    
-    wtime = ds.createVariable("time", np.float64, ("time",))
+def create_fill_latlon(ds, lon, lat):
+    ds.createDimension("lat", int(lat.size))
+    ds.createDimension("lon", int(lon.size))
     wlat = ds.createVariable("lat", np.float64, ("lat",))
     wlon = ds.createVariable("lon", np.float64, ("lon",))
     
-    wtime.units = ssp_time_units
     wlon.units = "degrees_east"
     wlat.units = "degrees_north"
-    
-    wtime.long_name = ssp_time_longname
     wlon.long_name = "Longitude"
     wlat.long_name = "Latitude"
-    
     wlon.mode = "time-invariant"
     wlat.mode = "time-invariant"
     
-    # adjust time to middle of month
-    wtime_offset = 15 - ssp_time[0]
-    wtime[:] = ssp_time + wtime_offset
-    
-    wtime.calendar = "noleap"
     wlon[:] = lon
     wlat[:] = lat
+    
+    return ds
+
+
+def create_fill_time(ds, time, ntime, ssp_time_units=None, ssp_time_longname=None, adj_time=False):
+    if ntime is not None:
+        ntime = int(ntime)
+    ds.createDimension("time", ntime)
+    
+    wtime = ds.createVariable("time", np.float64, ("time",))
+    
+    if ssp_time_units is not None:
+        wtime.units = ssp_time_units
+    if ssp_time_longname is not None:
+        wtime.long_name = ssp_time_longname
+    wtime.calendar = "noleap"
+    
+    # adjust time to middle of month
+    if adj_time:
+        wtime_offset = 15 - time[0]
+        wtime[:] = time + wtime_offset
+    else:
+        wtime[:] = time
     
     return ds
 
@@ -392,6 +403,8 @@ nfields = len(field_in)
 output_format = "NETCDF3_64BIT_DATA"
 
 # --  Loop over forcing fields  ------------------------------------
+
+
 for f in range(nfields):
 
     # --  Loop over ensemble members  ------------------------------
@@ -633,28 +646,15 @@ for f in range(nfields):
             "w",
             format=output_format,
         )
-        w.createDimension("lat", int(nlat))
-        w.createDimension("lon", int(nlon))
-        w.createDimension("time", int(nmo))
-
-        wtime = w.createVariable("time", np.float64, ("time",))
-        wlat = w.createVariable("lat", np.float64, ("lat",))
-        wlon = w.createVariable("lon", np.float64, ("lon",))
+        w = create_fill_latlon(w, lon, lat)
+        w = create_fill_time(w, time[0:12], nmo)
+        
         wvar = w.createVariable(
             field_out[f],
             np.float64,
             ("time", "lat", "lon"),
             fill_value=np.float64(1.0e36),
         )
-        wtime[
-            :,
-        ] = time[0:12]
-        wlon[
-            :,
-        ] = lon
-        wlat[
-            :,
-        ] = lat
         wvar[:, :, :] = climo
         w.close()
 
@@ -664,13 +664,9 @@ for f in range(nfields):
             "w",
             format=output_format,
         )
-        w.createDimension("lat", int(nlat))
-        w.createDimension("lon", int(nlon))
-        w.createDimension("time", int(tm))
-
-        wtime = w.createVariable("time", np.float64, ("time",))
-        wlat = w.createVariable("lat", np.float64, ("lat",))
-        wlon = w.createVariable("lon", np.float64, ("lon",))
+        w = create_fill_latlon(w, lon, lat)
+        w = create_fill_time(w, time, tm)
+        
         wvar = w.createVariable(
             field_out[f],
             np.float64,
@@ -683,14 +679,6 @@ for f in range(nfields):
             ("time", "lat", "lon"),
             fill_value=np.float64(1.0e36),
         )
-
-        wtime[:] = time
-        wlon[
-            :,
-        ] = lon
-        wlat[
-            :,
-        ] = lat
         wvar[:, :, :] = temp_fld
         wvar2[:, :, :] = stemp_fld
         w.close()
@@ -717,7 +705,8 @@ for f in range(nfields):
         hdir, fdir = add_global_attributes(outfile, historydate, histdir, sspdir, num_ens, climo_year, climo_base_nyrs, dpath, dfile, hist_yrstart, hist_yrend, ssp_yrstart, ssp_yrend, timetag)
 
         # Create dimensions
-        outfile = create_fill_dims(outfile, nlat, nlon, ssp_time_units, ssp_time_longname, lon, lat, ssp_time)
+        outfile = create_fill_latlon(outfile, lon, lat)
+        outfile = create_fill_time(outfile, ssp_time, None, ssp_time_units=ssp_time_units, ssp_time_longname=ssp_time_longname, adj_time=True)
 
         # Create and fill ancillary variables ()
         outfile = create_fill_ancillary_vars(outfile, landfrac, landmask, area)
