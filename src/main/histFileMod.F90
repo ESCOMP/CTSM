@@ -179,7 +179,7 @@ module histFileMod
   private :: hist_set_snow_field_2d    ! Set values in history field dimensioned by levsno
   private :: list_index                ! Find index of field in exclude list
   private :: set_hist_filename         ! Determine history dataset filenames
-  private :: getname                   ! Retrieve name portion of input "inname"
+  public  :: getname                   ! Retrieve name portion of input "inname" (PUBLIC FOR FATES)
   private :: getflag                   ! Retrieve flag
   private :: next_history_pointer_index ! Latest index into raw history data (clmptr_r*) arrays
   private :: max_nFields               ! The max number of fields on any tape
