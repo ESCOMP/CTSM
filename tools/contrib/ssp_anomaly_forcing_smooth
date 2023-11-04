@@ -19,6 +19,197 @@ import argparse
 from getpass import getuser
 import numpy as np
 import netCDF4 as netcdf4
+import xarray as xr
+from time import sleep
+
+
+# Adds global attributes, returning hdir and fdir
+def add_global_attributes(ds, historydate, histdir, sspdir, num_ens, climo_year, climo_base_nyrs, dpath, dfile, hist_yrstart, hist_yrend, ssp_yrstart, ssp_yrend, timetag):
+    ds.attrs["Created_on"] = timetag
+
+    ds.attrs["title"] = "anomaly forcing data"
+    ds.attrs["note1"] = (
+            "Anomaly/scale factors calculated relative to "
+            + str(climo_year - (climo_base_nyrs - 1) / 2)
+            + "-"
+            + str(climo_year + (climo_base_nyrs - 1) / 2)
+        )
+    ds.attrs["history"] = historydate + ": created by " + sys.argv[0]
+    stdout = os.popen("git describe")
+    ds.attrs["gitdescribe"] = stdout.read().rstrip()
+    ds.attrs["Source"] = "CMIP6 CESM simulations"
+    ds.attrs["Conventions"] = "CF-1.0"
+    ds.attrs["comment"] = (
+            "Monthly scale factors for given SSP scenario compared to a climatology based on"
+            + " data centered on "
+            + str(climo_year)
+            + " over the range given in note1"
+        )
+    ds.attrs["number_of_ensemble_members"] = str(num_ens)
+    ds.attrs["Created_by"] = getuser()
+
+    for nens in range(num_ens):
+        hdir = dpath + histdir[nens] + dfile
+        fdir = dpath + sspdir[nens] + dfile
+        if nens == 0:
+            hdirs = hdir
+            fdirs = fdir
+        else:
+            hdirs += ", " + hdir
+            fdirs += ", " + fdir
+    ds.attrs["Created_from_historical_dirs"] = hdirs
+    ds.attrs["Created_from_scenario_dirs"] = fdirs
+
+    ds.attrs["History_years"] = str(hist_yrstart) + "," + str(hist_yrend)
+    ds.attrs["Scenario_years"] = str(ssp_yrstart) + "," + str(ssp_yrend)
+    ds.attrs["institution"] = "National Center for Atmospheric Research"
+    return hdir,fdir
+
+
+def create_fill_latlon(ds, data, var_name):
+    
+    attrs = {}
+    if var_name == "lat":
+        attrs["units"] = "degrees_north"
+        attrs["long_name"] = "Latitude"
+    elif var_name == "lon":
+        attrs["units"] = "degrees_east"
+        attrs["long_name"] = "Longitude"
+    attrs["mode"] = "time-invariant"
+    
+    da = xr.DataArray(
+        data=data,
+        dims=var_name,
+        attrs=attrs,
+        )
+    ds[var_name] = da
+    
+    return ds
+
+
+def create_fill_time(ds, time, ssp_time_units=None, ssp_time_longname=None, adj_time=False):
+    
+    attrs = {}
+    if ssp_time_units is not None:
+        attrs["units"] = ssp_time_units
+    if ssp_time_longname is not None:
+        attrs["long_name"] = ssp_time_longname
+    attrs["calendar"] = "noleap"
+    
+    # adjust time to middle of month
+    if adj_time:
+        wtime_offset = 15 - time[0]
+        time += wtime_offset
+    
+    var_name = "time"
+    ds[var_name] = xr.DataArray(
+        data=time,
+        dims=[var_name],
+        attrs=attrs,
+    )
+    
+    return ds
+
+
+def create_fill_ancillary_vars(ds, landfrac, landmask, area):
+    
+    dims = ["lat", "lon"]
+    coords = {
+        "lat": ds["lat"],
+        "lon": ds["lon"],
+    }
+        
+    ds["area"] = xr.DataArray(
+        data=area,
+        dims=dims,
+        coords=coords,
+        attrs={
+            "units": "km2",
+            "long_name": "Grid cell area",
+            "mode": "time-invariant",
+        }
+    )
+    
+    ds["landmask"] = xr.DataArray(
+        data=np.int32(landmask),
+        dims=dims,
+        coords=coords,
+        attrs={
+            "units": "unitless",
+            "long_name": "Grid cell land mask",
+            "mode": "time-invariant",
+        }
+    )
+    
+    ds["landfrac"] = xr.DataArray(
+        data=landfrac,
+        dims=dims,
+        coords=coords,
+        attrs={
+            "units": "unitless",
+            "long_name": "Grid cell land fraction",
+            "mode": "time-invariant",
+        }
+    )
+    
+    return ds
+
+
+def create_fill_forcing(ds, field_out, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld):
+    attrs = {
+        "units": units[f],
+        "mode": "time-dependent",
+        "historical_source_files": "".join(histfiles).replace(hdir, ""),
+        "scenario_source_files": "".join(sspfiles).replace(fdir, ""),
+    }
+    
+    if field_out[f] == "sfcWind":
+        attrs["long_name"] = str(long_name) + " U component " + anomsf[f]
+        var_name = field_out_wind[0]
+        data = anom_fld / np.sqrt(2)
+    else:
+        attrs["long_name"] = str(long_name) + " " + anomsf[f]
+        var_name = field_out[f]
+        data = anom_fld
+    ds = add_dataarray_to_dataset(ds, var_name, data, attrs=attrs)
+    
+    # create second wind field for V component
+    if field_out[f] == "sfcWind":
+        attrs["long_name"] = attrs["long_name"].replace("U component", "V component")
+        attrs["cell_methods"] = "time: mean"
+        var_name = field_out_wind[1]
+        ds = add_dataarray_to_dataset(ds, var_name, data, attrs=attrs)
+    
+    return ds
+
+
+def add_dataarray_to_dataset(ds, var_name, data, attrs={}):
+    print(var_name)
+    
+    attrs["_FillValue"] = np.float64(1.0e36)
+    
+    ds[var_name] = xr.DataArray(
+        data=data,
+        dims=["time", "lat", "lon"],
+        coords={
+            "time": ds["time"],
+            "lat": ds["lat"],
+            "lon": ds["lon"]},
+        attrs=attrs,
+    )
+    return ds
+
+def write_to_netcdf(ds, filepath, output_format, mode="w"):
+    ds.to_netcdf(
+        filepath,
+        mode=mode,
+        format=output_format,
+        encoding={
+            "lat": {"_FillValue": None},
+            "lon": {"_FillValue": None},
+            "time": {"_FillValue": None},
+        }
+    )
 
 
 parser = argparse.ArgumentParser(description="Create anomaly forcing")
@@ -31,12 +222,14 @@ parser.add_argument(
 )
 parser.add_argument(
     "--write_climo",
+    "--write-climo",
     help="write out climatology files and exit",
     action="store_true",
     default=False,
 )
 parser.add_argument(
     "--print_ssps",
+    "--print-ssps",
     help="Just print out directory names and exit",
     action="store_true",
     default=False,
@@ -120,10 +313,9 @@ if os.path.exists(datapath):
     print("Input data directory:" + datapath)
 else:
     sys.exit("Could not find input directory: " + datapath)
-if os.path.exists(args.output_dir):
-    print("Output data directory:" + args.output_dir)
-else:
-    sys.exit("Could not find output directory: " + args.output_dir)
+if not os.path.exists(args.output_dir):
+    os.makedirs(args.output_dir)
+print("Output data directory:" + args.output_dir)
 
 # Settings to run with
 today = datetime.date.today()
@@ -237,18 +429,11 @@ field_out_wind = ["uas", "vas"]
 
 nfields = len(field_in)
 
-# We can't seem to output in CDF5 format using netCDF4 python interfaces.
-# Instead, write to netCDF-4 and then convert to CDF5.
-output_format = "NETCDF4_CLASSIC"
-def convert_to_cdf5(outfilename):
-    outfilename_cdf5 = outfilename.replace(".nc4", ".nc")
-    subprocess.Popen(
-        f"module load nco && nccopy -k 'cdf5' {outfilename} {outfilename_cdf5} && rm {outfilename}",
-        stdout=subprocess.PIPE,
-        shell="True",
-    )
+output_format = "NETCDF3_64BIT_DATA"
 
 # --  Loop over forcing fields  ------------------------------------
+
+
 for f in range(nfields):
 
     # --  Loop over ensemble members  ------------------------------
@@ -385,7 +570,7 @@ for f in range(nfields):
                 + "-"
                 + str(ssp_yrend)
                 + creationdate
-                + ".nc4"
+                + ".nc"
             )
 
         ssp_fld += np.asfarray(f1.variables[field_in[f]][ssp_ind, :, :], np.float64)
@@ -484,77 +669,23 @@ for f in range(nfields):
 
     # write out climo to check field  -------------------------
     if write_climo:
-        # Use NetCDF4 format, because using older NetCDF formats are too slow
-        output_filename_climo = os.path.join(outdir, field_out[f] + "_climo" + creationdate + ".nc4")
-        w = netcdf4.Dataset(
-            output_filename_climo,
-            "w",
-            format=output_format,
-        )
-        w.createDimension("lat", int(nlat))
-        w.createDimension("lon", int(nlon))
-        w.createDimension("time", int(nmo))
-
-        wtime = w.createVariable("time", np.float64, ("time",))
-        wlat = w.createVariable("lat", np.float64, ("lat",))
-        wlon = w.createVariable("lon", np.float64, ("lon",))
-        wvar = w.createVariable(
-            field_out[f],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-        wtime[
-            :,
-        ] = time[0:12]
-        wlon[
-            :,
-        ] = lon
-        wlat[
-            :,
-        ] = lat
-        wvar[:, :, :] = climo
+        w = xr.Dataset()
+        w = create_fill_latlon(w, lat, "lat")
+        w = create_fill_latlon(w, lon, "lon")
+        w = create_fill_time(w, time[0:12])
+        
+        w = add_dataarray_to_dataset(w, field_out[f], climo)
+        write_to_netcdf(w, os.path.join(outdir, field_out[f] + "_climo" + creationdate + ".nc"), output_format)
         w.close()
-        convert_to_cdf5(output_filename_climo)
 
-        # Use NetCDF4 format, because using older NetCDF formats are too slow
-        output_filename_smooth = os.path.join(outdir, field_out[f] + "_smooth" + creationdate + ".nc4")
-        w = netcdf4.Dataset(
-            output_filename_smooth,
-            "w",
-            format=output_format,
-        )
-        w.createDimension("lat", int(nlat))
-        w.createDimension("lon", int(nlon))
-        w.createDimension("time", int(tm))
-
-        wtime = w.createVariable("time", np.float64, ("time",))
-        wlat = w.createVariable("lat", np.float64, ("lat",))
-        wlon = w.createVariable("lon", np.float64, ("lon",))
-        wvar = w.createVariable(
-            field_out[f],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-        wvar2 = w.createVariable(
-            "smooth_" + field_out[f],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-
-        wtime[:] = time
-        wlon[
-            :,
-        ] = lon
-        wlat[
-            :,
-        ] = lat
-        wvar[:, :, :] = temp_fld
-        wvar2[:, :, :] = stemp_fld
+        w = xr.Dataset()
+        w = create_fill_latlon(w, lat, "lat")
+        w = create_fill_latlon(w, lon, "lon")
+        w = create_fill_time(w, time)
+        w = add_dataarray_to_dataset(w, field_out[f], temp_fld)
+        w = add_dataarray_to_dataset(w, "smooth_" + field_out[f], stemp_fld)
+        write_to_netcdf(w, os.path.join(outdir, field_out[f] + "_smooth" + creationdate + ".nc"), output_format)
         w.close()
-        convert_to_cdf5(output_filename_smooth)
         print("Exit early after writing out climatology\n\n")
         sys.exit()
 
@@ -563,7 +694,7 @@ for f in range(nfields):
     if f == 0:
         outfilename = os.path.join(outdir, "af.allvars" + outfile_suffix)
         print("Creating: " + outfilename)
-        outfile = netcdf4.Dataset(outfilename, "w", format=output_format)
+        outfile = xr.Dataset()
 
         # creation date on the file
         command = 'date "+%Y/%m/%d"'
@@ -571,149 +702,36 @@ for f in range(nfields):
         x = x2.communicate()
         timetag = x[0].decode("utf-8").strip()
 
-        outfile.Created_on = timetag
+        # Add global attributes and get hdir/fdir
+        hdir, fdir = add_global_attributes(outfile, historydate, histdir, sspdir, num_ens, climo_year, climo_base_nyrs, dpath, dfile, hist_yrstart, hist_yrend, ssp_yrstart, ssp_yrend, timetag)
 
-        outfile.title = "anomaly forcing data"
-        outfile.note1 = (
-            "Anomaly/scale factors calculated relative to "
-            + str(climo_year - (climo_base_nyrs - 1) / 2)
-            + "-"
-            + str(climo_year + (climo_base_nyrs - 1) / 2)
-        )
-        outfile.history = historydate + ": created by " + sys.argv[0]
-        stdout = os.popen("git describe")
-        outfile.gitdescribe = stdout.read().rstrip()
-        outfile.Source = "CMIP6 CESM simulations"
-        outfile.Conventions = "CF-1.0"
-        outfile.comment = (
-            "Monthly scale factors for given SSP scenario compared to a climatology based on"
-            + " data centered on "
-            + str(climo_year)
-            + " over the range given in note1"
-        )
-        outfile.number_of_ensemble_members = str(num_ens)
-        outfile.Created_by = getuser()
+        # Create dimensions
+        outfile = create_fill_latlon(outfile, lat, "lat")
+        outfile = create_fill_latlon(outfile, lon, "lon")
+        outfile = create_fill_time(outfile, ssp_time, ssp_time_units=ssp_time_units, ssp_time_longname=ssp_time_longname, adj_time=True)
 
-        for nens in range(num_ens):
-            hdir = dpath + histdir[nens] + dfile
-            fdir = dpath + sspdir[nens] + dfile
-            if nens == 0:
-                outfile.Created_from_historical_dirs = hdir
-                outfile.Created_from_scenario_dirs = fdir
-            else:
-                outfile.Created_from_historical_dirs += ", " + hdir
-                outfile.Created_from_scenario_dirs += ", " + fdir
-
-        outfile.History_years = str(hist_yrstart) + "," + str(hist_yrend)
-        outfile.Scenario_years = str(ssp_yrstart) + "," + str(ssp_yrend)
-        outfile.institution = "National Center for Atmospheric Research"
-
-        outfile.createDimension("lat", size=int(nlat))
-        outfile.createDimension("lon", size=int(nlon))
-        outfile.createDimension("time", None)
-
-        wtime = outfile.createVariable("time", np.float64, ("time",))
-        wlat = outfile.createVariable("lat", np.float64, ("lat",))
-        wlon = outfile.createVariable("lon", np.float64, ("lon",))
-        wmask = outfile.createVariable("landmask", np.int32, ("lat", "lon"))
-        warea = outfile.createVariable("area", np.float64, ("lat", "lon"))
-        wfrac = outfile.createVariable("landfrac", np.float64, ("lat", "lon"))
-        wtime.units = ssp_time_units
-        wlon.units = "degrees_east"
-        wlat.units = "degrees_north"
-        warea.units = "km2"
-        wfrac.units = "unitless"
-        wmask.units = "unitless"
-
-        # wtime.long_name = 'Months since January '+str(fut_yrstart)
-        wtime.long_name = ssp_time_longname
-        wlon.long_name = "Longitude"
-        wlat.long_name = "Latitude"
-        warea.long_name = "Grid cell area"
-        wfrac.long_name = "Grid cell land fraction"
-        wmask.long_name = "Grid cell land mask"
-        wlon.mode = "time-invariant"
-        wlat.mode = "time-invariant"
-        warea.mode = "time-invariant"
-        wfrac.mode = "time-invariant"
-        wmask.mode = "time-invariant"
-
-        wtime.calendar = "noleap"
-
-        # write to file  --------------------------------------------
-        # wtime_offset = 0
-        # adjust time to middle of month
-        # wtime_offset = -15
-        wtime_offset = 15 - ssp_time[0]
-        wtime[:] = ssp_time + wtime_offset
-        wtime.calendar = "noleap"
-        wlon[:] = lon
-        wlat[:] = lat
-        wmask[:, :] = landmask
-        wfrac[:, :] = landfrac
-        warea[:, :] = area
+        # Create and fill ancillary variables
+        outfile = create_fill_ancillary_vars(outfile, landfrac, landmask, area)
+        outfile.to_netcdf(
+            outfilename,
+            format=output_format,
+            mode="w",
+            encoding={
+                "area": {"_FillValue": None},
+                "landmask": {"_FillValue": None},
+                "landfrac": {"_FillValue": None},
+            })
+    else:
+        # https://github.com/pydata/xarray/issues/3961
+        sleep(1)
+        outfile = xr.open_dataset(outfilename, lock=False)
     # -- End if on open file
 
-    if field_out[f] == "sfcWind":
-        wvar = outfile.createVariable(
-            field_out_wind[0],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-    else:
-        wvar = outfile.createVariable(
-            field_out[f],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-    wvar.units = units[f]
-    wvar.mode = "time-dependent"
-
-    # write to file  --------------------------------------------
-    if field_out[f] == "sfcWind":
-        wvar.long_name = str(long_name) + " U component " + anomsf[f]
-    else:
-        wvar.long_name = str(long_name) + " " + anomsf[f]
-
-    if field_out[f] == "sfcWind":
-        wvar[:, :, :] = anom_fld / np.sqrt(2)
-    else:
-        wvar[:, :, :] = anom_fld
-
-    # List of source files
-    wvar.historical_source_files = "".join(histfiles).replace(hdir, "")
-    wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
-
-    # create second wind field for V component
-    if field_out[f] == "sfcWind":
-        command = 'date "+%y%m%d"'
-        x2 = subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
-        x = x2.communicate()
-        timetag = x[0].decode("utf-8").strip()
-
-        wvar = outfile.createVariable(
-            field_out_wind[1],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-        wvar.units = units[f]
-        wvar.cell_methods = "time: mean"
-        wvar.long_name = str(long_name) + " V component " + anomsf[f]
-
-        # write to file  --------------------------------------------
-        wvar[:, :, :] = anom_fld / np.sqrt(2)
-
-        # List of source files
-        wvar.historical_source_files = "".join(histfiles).replace(hdir, "")
-        wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
-
-    # -- end if statement for write for V field --------
+    outfile = create_fill_forcing(outfile, field_out, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld)
+    write_to_netcdf(outfile, outfilename, output_format, mode="a")
+    outfile.close()
 
 # --  End Loop over forcing fields  ------------------------------------
 outfile.close()
-convert_to_cdf5(outfilename)
 
 print("\n\nSuccessfully made anomaly forcing datasets\n")
