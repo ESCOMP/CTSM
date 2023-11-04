@@ -24,42 +24,44 @@ import xarray as xr
 
 # Adds global attributes, returning hdir and fdir
 def add_global_attributes(ds, historydate, histdir, sspdir, num_ens, climo_year, climo_base_nyrs, dpath, dfile, hist_yrstart, hist_yrend, ssp_yrstart, ssp_yrend, timetag):
-    ds.Created_on = timetag
+    ds.attrs["Created_on"] = timetag
 
-    ds.title = "anomaly forcing data"
-    ds.note1 = (
+    ds.attrs["title"] = "anomaly forcing data"
+    ds.attrs["note1"] = (
             "Anomaly/scale factors calculated relative to "
             + str(climo_year - (climo_base_nyrs - 1) / 2)
             + "-"
             + str(climo_year + (climo_base_nyrs - 1) / 2)
         )
-    ds.history = historydate + ": created by " + sys.argv[0]
+    ds.attrs["history"] = historydate + ": created by " + sys.argv[0]
     stdout = os.popen("git describe")
-    ds.gitdescribe = stdout.read().rstrip()
-    ds.Source = "CMIP6 CESM simulations"
-    ds.Conventions = "CF-1.0"
-    ds.comment = (
+    ds.attrs["gitdescribe"] = stdout.read().rstrip()
+    ds.attrs["Source"] = "CMIP6 CESM simulations"
+    ds.attrs["Conventions"] = "CF-1.0"
+    ds.attrs["comment"] = (
             "Monthly scale factors for given SSP scenario compared to a climatology based on"
             + " data centered on "
             + str(climo_year)
             + " over the range given in note1"
         )
-    ds.number_of_ensemble_members = str(num_ens)
-    ds.Created_by = getuser()
+    ds.attrs["number_of_ensemble_members"] = str(num_ens)
+    ds.attrs["Created_by"] = getuser()
 
     for nens in range(num_ens):
         hdir = dpath + histdir[nens] + dfile
         fdir = dpath + sspdir[nens] + dfile
         if nens == 0:
-            ds.Created_from_historical_dirs = hdir
-            ds.Created_from_scenario_dirs = fdir
+            hdirs = hdir
+            fdirs = fdir
         else:
-            ds.Created_from_historical_dirs += ", " + hdir
-            ds.Created_from_scenario_dirs += ", " + fdir
+            hdirs += ", " + hdir
+            fdirs += ", " + fdir
+    ds.attrs["Created_from_historical_dirs"] = hdirs
+    ds.attrs["Created_from_scenario_dirs"] = fdirs
 
-    ds.History_years = str(hist_yrstart) + "," + str(hist_yrend)
-    ds.Scenario_years = str(ssp_yrstart) + "," + str(ssp_yrend)
-    ds.institution = "National Center for Atmospheric Research"
+    ds.attrs["History_years"] = str(hist_yrstart) + "," + str(hist_yrend)
+    ds.attrs["Scenario_years"] = str(ssp_yrstart) + "," + str(ssp_yrend)
+    ds.attrs["institution"] = "National Center for Atmospheric Research"
     return hdir,fdir
 
 
@@ -110,104 +112,103 @@ def create_fill_time(ds, time, ssp_time_units=None, ssp_time_longname=None, adj_
 
 def create_fill_ancillary_vars(ds, landfrac, landmask, area):
     
-    wmask = ds.createVariable("landmask", np.int32, ("lat", "lon"))
-    warea = ds.createVariable("area", np.float64, ("lat", "lon"))
-    wfrac = ds.createVariable("landfrac", np.float64, ("lat", "lon"))
+    dims = ["lat", "lon"]
+    coords = {
+        "lat": ds["lat"],
+        "lon": ds["lon"],
+    }
+        
+    ds["area"] = xr.DataArray(
+        data=area,
+        dims=dims,
+        coords=coords,
+        attrs={
+            "units": "km2",
+            "long_name": "Grid cell area",
+            "mode": "time-invariant",
+        }
+    )
     
-    warea.units = "km2"
-    wfrac.units = "unitless"
-    wmask.units = "unitless"
-
-    warea.long_name = "Grid cell area"
-    wfrac.long_name = "Grid cell land fraction"
-    wmask.long_name = "Grid cell land mask"
+    ds["landmask"] = xr.DataArray(
+        data=np.int32(landmask),
+        dims=dims,
+        coords=coords,
+        attrs={
+            "units": "unitless",
+            "long_name": "Grid cell land mask",
+            "mode": "time-invariant",
+        }
+    )
     
-    warea.mode = "time-invariant"
-    wfrac.mode = "time-invariant"
-    wmask.mode = "time-invariant"
-
-    # write to file  --------------------------------------------        
-    wmask[:, :] = landmask
-    wfrac[:, :] = landfrac
-    warea[:, :] = area
+    ds["landfrac"] = xr.DataArray(
+        data=landfrac,
+        dims=dims,
+        coords=coords,
+        attrs={
+            "units": "unitless",
+            "long_name": "Grid cell land fraction",
+            "mode": "time-invariant",
+        }
+    )
     
     return ds
 
 
 def create_fill_forcing(ds, field_out, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld):
+    attrs = {
+        "units": units[f],
+        "mode": "time-dependent",
+        "historical_source_files": "".join(histfiles).replace(hdir, ""),
+        "scenario_source_files": "".join(sspfiles).replace(fdir, ""),
+    }
+    
     if field_out[f] == "sfcWind":
-        wvar = ds.createVariable(
-            field_out_wind[0],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
+        attrs["long_name"] = str(long_name) + " U component " + anomsf[f]
+        var_name = field_out_wind[0]
+        data = anom_fld / np.sqrt(2)
     else:
-        wvar = ds.createVariable(
-            field_out[f],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-    wvar.units = units[f]
-    wvar.mode = "time-dependent"
+        attrs["long_name"] = str(long_name) + " " + anomsf[f]
+        var_name = field_out[f]
+        data = anom_fld
+    ds = add_dataarray_to_dataset(ds, var_name, data, attrs=attrs)
+    
+    # create second wind field for V component
     if field_out[f] == "sfcWind":
-        wvar.long_name = str(long_name) + " U component " + anomsf[f]
-    else:
-        wvar.long_name = str(long_name) + " " + anomsf[f]
-    # List of source files
-    wvar.historical_source_files = "".join(histfiles).replace(hdir, "")
-    wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
-
-    # write to file  --------------------------------------------
-    if field_out[f] == "sfcWind":
-        wvar[:, :, :] = anom_fld / np.sqrt(2)
-    else:
-        wvar[:, :, :] = anom_fld
+        attrs["long_name"] = attrs["long_name"].replace("U component", "V component")
+        attrs["cell_methods"] = "time: mean"
+        var_name = field_out_wind[1]
+        ds = add_dataarray_to_dataset(ds, var_name, data, attrs=attrs)
     
     return ds
 
 
-def create_fill_windv(ds, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld):
-
-    wvar = ds.createVariable(
-            field_out_wind[1],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-    wvar.units = units[f]
-    wvar.cell_methods = "time: mean"
-    wvar.long_name = str(long_name) + " V component " + anomsf[f]
-    # List of source files
-    wvar.historical_source_files = "".join(histfiles).replace(hdir, "")
-    wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
-
-    # write to file  --------------------------------------------
-    wvar[:, :, :] = anom_fld / np.sqrt(2)
+def add_dataarray_to_dataset(ds, var_name, data, attrs={}):
+    print(var_name)
     
-    return ds
-
-def add_dataarray_to_dataset(ds, var_name, data):
+    attrs["_FillValue"] = np.float64(1.0e36)
+    
     ds[var_name] = xr.DataArray(
         data=data,
         dims=["time", "lat", "lon"],
         coords={
-            "time": w["time"],
-            "lat": w["lat"],
-            "lon": w["lon"]},
-        attrs={"_FillValue": np.float64(1.0e36)}
+            "time": ds["time"],
+            "lat": ds["lat"],
+            "lon": ds["lon"]},
+        attrs=attrs,
     )
     return ds
 
-def write_to_netcdf(ds, filepath, output_format):
-    ds.to_netcdf(filepath,
-    format=output_format,
-    encoding={
-        "lat": {"_FillValue": None},
-        "lon": {"_FillValue": None},
-        "time": {"_FillValue": None},
-    })
+def write_to_netcdf(ds, filepath, output_format, mode="w"):
+    ds.to_netcdf(
+        filepath,
+        mode=mode,
+        format=output_format,
+        encoding={
+            "lat": {"_FillValue": None},
+            "lon": {"_FillValue": None},
+            "time": {"_FillValue": None},
+        }
+    )
 
 
 parser = argparse.ArgumentParser(description="Create anomaly forcing")
@@ -690,12 +691,9 @@ for f in range(nfields):
     # create netcdf file  ---------------------------------
 
     if f == 0:
-        # Use NetCDF4 format, because using older NetCDF formats are too slow
-        # Will need to convert to CDF5 format at the end, as we can't seem to
-        # output in CDF5 format using netCDF4 python interfaces
         outfilename = os.path.join(outdir, "af.allvars" + outfile_suffix)
         print("Creating: " + outfilename)
-        outfile = netcdf4.Dataset(outfilename, "w", format=output_format)
+        outfile = xr.Dataset()
 
         # creation date on the file
         command = 'date "+%Y/%m/%d"'
@@ -711,18 +709,21 @@ for f in range(nfields):
         outfile = create_fill_latlon(outfile, lon, "lon")
         outfile = create_fill_time(outfile, ssp_time, ssp_time_units=ssp_time_units, ssp_time_longname=ssp_time_longname, adj_time=True)
 
-        # Create and fill ancillary variables ()
+        # Create and fill ancillary variables
         outfile = create_fill_ancillary_vars(outfile, landfrac, landmask, area)
+        outfile.to_netcdf(
+            outfilename,
+            format=output_format,
+            mode="w",
+            encoding={
+                "area": {"_FillValue": None},
+                "landmask": {"_FillValue": None},
+                "landfrac": {"_FillValue": None},
+            })
     # -- End if on open file
 
     outfile = create_fill_forcing(outfile, field_out, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld)
-
-     # create second wind field for V component
-    if field_out[f] == "sfcWind":
-        create_fill_windv(outfile, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld)
-
-    # -- end if statement for write for V field --------
-    break
+    write_to_netcdf(outfile, outfilename, output_format, mode="a")
 
 # --  End Loop over forcing fields  ------------------------------------
 outfile.close()
