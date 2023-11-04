@@ -3088,6 +3088,8 @@ contains
     real(r8) :: cropseedn_deficit_to_restore ! amount of crop seed N deficit that will be restored from this grain pool (gN/m2)
     real(r8) :: repr_grainc_to_food_thispool ! amount added to / subtracted from repr_grainc_to_food for the pool in question (gC/m2/s)
     real(r8) :: repr_grainn_to_food_thispool ! amount added to / subtracted from repr_grainn_to_food for the pool in question (gN/m2/s)
+    real(r8) :: leafc_remaining, livestemc_remaining
+    real(r8) :: leafn_remaining, livestemn_remaining
     !-----------------------------------------------------------------------
 
     associate(                                                                           & 
@@ -3171,9 +3173,6 @@ contains
                t1 = 1.0_r8 / dt
                frootc_to_litter(p) = t1 * frootc(p) + cpool_to_frootc(p)
                
-               ! biofuel_harvfrac is only non-zero for prognostic crops.
-               leafc_to_litter(p)  = t1 * leafc(p)*(1._r8-biofuel_harvfrac(ivt(p)))  + cpool_to_leafc(p)
-
                ! leafc_litter and frootc_to_litter for matrix
                if (use_matrixcn) then
                else
@@ -3254,13 +3253,24 @@ contains
                   ! Cut a certain fraction (i.e., biofuel_harvfrac(ivt(p))) (e.g., biofuel_harvfrac(ivt(p)=70% for bioenergy crops) of leaf C
                   ! and move this fration of leaf C to biofuel C, rather than move it to litter
                   leafc_to_biofuelc(p) = t1 * leafc(p) * biofuel_harvfrac(ivt(p))
+                  leafc_remaining = leafc(p)*(1._r8-biofuel_harvfrac(ivt(p)))
                   leafn_to_biofueln(p) = t1 * leafn(p) * biofuel_harvfrac(ivt(p))
+                  leafn_remaining = leafn(p)*(1._r8-biofuel_harvfrac(ivt(p)))
 
                   ! Cut a certain fraction (i.e., biofuel_harvfrac(ivt(p))) (e.g., biofuel_harvfrac(ivt(p)=70% for bioenergy crops) of livestem C
                   ! and move this fration of leaf C to biofuel C, rather than move it to litter
-                  livestemc_to_litter(p)   = t1 * livestemc(p)*(1._r8-biofuel_harvfrac(ivt(p)))  + cpool_to_livestemc(p)
                   livestemc_to_biofuelc(p) = t1 * livestemc(p) * biofuel_harvfrac(ivt(p))
                   livestemn_to_biofueln(p) = t1 * livestemn(p) * biofuel_harvfrac(ivt(p))
+                  livestemc_remaining = livestemc(p)*(1._r8-biofuel_harvfrac(ivt(p)))
+                  livestemn_remaining = livestemn(p)*(1._r8-biofuel_harvfrac(ivt(p)))
+
+                  leafc_to_litter(p)  = t1 * leafc_remaining  + cpool_to_leafc(p)
+                  livestemc_to_litter(p)   = t1 * livestemc_remaining  + cpool_to_livestemc(p)
+                  livestemn_to_litter(p)   = t1 * livestemn_remaining
+                  ! Sam Rabin 2023-09-11:
+                  ! leafn_to_litter is calculated below based on leafc_to_litter (updated above)
+                  ! as well as leaf C:N ratio (unaffected by biofuel harvest). It thus does not
+                  ! need to be updated here.
 
                   ! Matrix for grain, livestem to litter and biofuel
                   if(use_matrixcn)then
@@ -3396,18 +3406,6 @@ contains
                      ! Matrix update for frootn to litter
                   end if
                endif    
-            end if
-
-            if (ivt(p) >= npcropmin) then
-               ! NOTE(slevis, 2014-12) results in -ve livestemn and -ve totpftn
-               !X! livestemn_to_litter(p) = livestemc_to_litter(p) / livewdcn(ivt(p))
-               ! NOTE(slevis, 2014-12) Beth Drewniak suggested this instead
-               livestemn_to_litter(p) = livestemn(p) / dt * (1._r8 - biofuel_harvfrac(ivt(p)))
-
-               ! Matrix update for livestemn to litter
-               if(use_matrixcn)then
-               else
-               end if
             end if
 
             ! save the current litterfall fluxes
