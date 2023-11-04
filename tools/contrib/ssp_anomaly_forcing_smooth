@@ -20,6 +20,7 @@ from getpass import getuser
 import numpy as np
 import netCDF4 as netcdf4
 import xarray as xr
+from time import sleep
 
 
 # Adds global attributes, returning hdir and fdir
@@ -720,10 +721,15 @@ for f in range(nfields):
                 "landmask": {"_FillValue": None},
                 "landfrac": {"_FillValue": None},
             })
+    else:
+        # https://github.com/pydata/xarray/issues/3961
+        sleep(1)
+        outfile = xr.open_dataset(outfilename, lock=False)
     # -- End if on open file
 
     outfile = create_fill_forcing(outfile, field_out, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld)
     write_to_netcdf(outfile, outfilename, output_format, mode="a")
+    outfile.close()
 
 # --  End Loop over forcing fields  ------------------------------------
 outfile.close()
