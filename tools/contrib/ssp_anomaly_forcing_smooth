@@ -188,6 +188,27 @@ def create_fill_windv(ds, units, anomsf, field_out_wind, f, hdir, fdir, histfile
     
     return ds
 
+def add_dataarray_to_dataset(ds, var_name, data):
+    ds[var_name] = xr.DataArray(
+        data=data,
+        dims=["time", "lat", "lon"],
+        coords={
+            "time": w["time"],
+            "lat": w["lat"],
+            "lon": w["lon"]},
+        attrs={"_FillValue": np.float64(1.0e36)}
+    )
+    return ds
+
+def write_to_netcdf(ds, filepath, output_format):
+    ds.to_netcdf(filepath,
+    format=output_format,
+    encoding={
+        "lat": {"_FillValue": None},
+        "lon": {"_FillValue": None},
+        "time": {"_FillValue": None},
+    })
+
 
 parser = argparse.ArgumentParser(description="Create anomaly forcing")
 parser.add_argument(
@@ -651,54 +672,17 @@ for f in range(nfields):
         w = create_fill_latlon(w, lon, "lon")
         w = create_fill_time(w, time[0:12])
         
-        w[field_out[f]] = xr.DataArray(
-            data=climo,
-            dims=["time", "lat", "lon"],
-            coords={
-                "time": w["time"],
-                "lat": w["lat"],
-                "lon": w["lon"]},
-            attrs={"_FillValue": np.float64(1.0e36)}
-        )
-        w.to_netcdf(os.path.join(outdir, field_out[f] + "_climo" + creationdate + ".nc"),
-            format=output_format,
-            encoding={
-                "lat": {"_FillValue": None},
-                "lon": {"_FillValue": None},
-                "time": {"_FillValue": None},
-            })
+        w = add_dataarray_to_dataset(w, field_out[f], climo)
+        write_to_netcdf(w, os.path.join(outdir, field_out[f] + "_climo" + creationdate + ".nc"), output_format)
         w.close()
 
         w = xr.Dataset()
         w = create_fill_latlon(w, lat, "lat")
         w = create_fill_latlon(w, lon, "lon")
         w = create_fill_time(w, time)
-        w[field_out[f]] = xr.DataArray(
-            data=temp_fld,
-            dims=["time", "lat", "lon"],
-            coords={
-                "time": w["time"],
-                "lat": w["lat"],
-                "lon": w["lon"]},
-            attrs={"_FillValue": np.float64(1.0e36)}
-        )
-        w["smooth_" + field_out[f]] = xr.DataArray(
-            data=stemp_fld,
-            dims=["time", "lat", "lon"],
-            coords={
-                "time": w["time"],
-                "lat": w["lat"],
-                "lon": w["lon"]},
-            attrs={"_FillValue": np.float64(1.0e36)}
-        )
-        
-        w.to_netcdf(os.path.join(outdir, field_out[f] + "_smooth" + creationdate + ".nc"),
-            format=output_format,
-            encoding={
-                "lat": {"_FillValue": None},
-                "lon": {"_FillValue": None},
-                "time": {"_FillValue": None},
-            })
+        w = add_dataarray_to_dataset(w, field_out[f], temp_fld)
+        w = add_dataarray_to_dataset(w, "smooth_" + field_out[f], stemp_fld)
+        write_to_netcdf(w, os.path.join(outdir, field_out[f] + "_smooth" + creationdate + ".nc"), output_format)
         w.close()
         print("Exit early after writing out climatology\n\n")
         sys.exit()
