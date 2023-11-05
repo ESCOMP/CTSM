@@ -1,2 +1,4 @@
 paramfile = '/glade/p/cesm/cseg/inputdata/lnd/clm2/paramdata/ctsm51_ciso_cwd_hr_params.c211112.nc'
 hist_fincl1 = 'CWDC_HR','C13_CWDC_HR','C14_CWDC_HR','CWD_HR_L2','CWD_HR_L2_vr','CWD_HR_L3','CWD_HR_L3_vr'
+! Turn off Meier roughness as need a parameter file with the above changes as well as Meier roughness changes
+z0param_method = 'ZengWang2007'
