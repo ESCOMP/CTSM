@@ -1893,9 +1893,19 @@ Last year to loop over for crop calendar data
 Simulation year that aligns with stream_year_first_cropcal value
 </entry>
 
-<entry id="stream_fldfilename_sdate" type="char*256(30)" category="datasets"
+<entry id="allow_invalid_swindow_inputs" type="logical" category="datasets"
+       group="cropcal_streams" valid_values="" >
+By default, a value in stream_fldFileName_swindow_start or _end outside the range [1, 365] (or 366 in leap years) will cause the run to fail. Set this to .true. to instead fall back on the paramfile sowing windows.
+</entry>
+
+<entry id="stream_fldFileName_swindow_start" type="char*256(30)" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
-Filename of input stream data for sowing dates
+Filename of input stream data for date (day of year) of start of sowing window. Cells with the same sowing window start and end date are always planted on that date, regardless of climatic conditions/history.
+</entry>
+
+<entry id="stream_fldFileName_swindow_end" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for date (day of year) of end of sowing window. Cells with the same sowing window start and end date are always planted on that date, regardless of climatic conditions/history.
 </entry>
 
 <entry id="stream_fldfilename_cultivar_gdds" type="char*256(30)" category="datasets"

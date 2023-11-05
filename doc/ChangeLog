@@ -1,4 +1,184 @@
 ===============================================================
+Tag name: ctsm5.1.dev149
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Fri Nov  3 19:52:44 MDT 2023
+One-line Summary: Rearrange leaf/stem "harvest" and fix soil gas diffusivity
+
+Purpose and description of changes
+----------------------------------
+
+1. Rearranges the calculation of how much leaf and livestem C and N goes to biofuels vs. litter, in anticipation of adding crop residue removal. Also makes the affected subroutine easier to read.
+2. Resolves two bugs in the calculation of diffusion in SoilBiogeochemNitrifDenitrif(). Also does some rearranging and renaming to improve clarity.
+3. Includes unrelated documentation updates from Documentation Week Oct. 2023.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[X] clm5_1
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+* Resolves #1990: Problems about the soil gas diffusivity in methane code and nitrification-denitrification mod (https://github.com/ESCOMP/CTSM/issues/1990)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- DIFF
+    izumi ------- DIFF
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: virtually all
+    - what platforms/compilers: cheyenne and izumi; intel, gnu, and nag
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff/same climate
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? Roundoff differences means one or more lines of code change results
+   only by roundoff level (because order of operation changes for example). Roundoff
+   changes to state fields usually grow to greater than roundoff as the simulation progresses.
+
+   * Roundoff-level differences were observed for the rearrangement of leaf/stem "harvest" code.
+   * Notable differences were observed for the soil gas diffusivity bugfix, but only for output variable diffus.
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+* #2154: Rearrange calculation of leaf/livestem C and N to biofuels/litter (https://github.com/ESCOMP/CTSM/pull/2154)
+* #2157: Soil gas diffusivity bugfix (https://github.com/ESCOMP/CTSM/pull/2157)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev148
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Fri Nov  3 07:56:43 MDT 2023
+One-line Summary: Add GRAINN outputs
+
+Purpose and description of changes
+----------------------------------
+
+In response to a user request for GRAINN_TO_FOOD outputs, this adds *_N_TO_FOOD(_ANN) and *_N_TO_SEED(_ANN) outputs for reproductive N pools. These are off by default, unlike their C counterparts. Note that the results are not scientifically supported, and tests have revealed unrealistic values. (Also adds GRAINC_TO_SEED_ANN output.)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK (with some fieldlist diffs)
+    izumi ------- PASS (with some fieldlist diffs)
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+* #2074 (https://github.com/ESCOMP/CTSM/pull/2074)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev147
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Mon Oct 30 16:53:20 MDT 2023
+One-line Summary: Add sowing window input files
+
+Purpose and description of changes
+----------------------------------
+
+Previously, one could run crops with either (a) sowing windows defined by the hemisphere-specific start and end dates on the paramfile or (b) prescribed sowing dates specified by input file stream_fldFileName_sdate. This PR replaces the latter with two new input files, stream_fldFileName_swindow_start and stream_fldFileName_swindow_end.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+* Replaces input file stream_fldfilename_sdate (prescribed sowing date) with stream_fldFileName_swindow_start (start of sowing window) and stream_fldFileName_swindow_end (end of sowing window).
+* Any gridcell with sowing window start == end will experience prescribed sowing, matching previous behavior with stream_fldfilename_sdate.
+* Setting new parameter allow_invalid_swindow_inputs to .true. makes it so that gridcell-crops without values in provided sowing window files will fall back to paramfile sowing windows. Otherwise, such cells will cause an error.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK (some diffs in field lists)
+    izumi ------- OK (some diffs in field lists)
+
+  any other testing (give details below):
+  * RXCROPMATURITY test passes.
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+* #2193 (https://github.com/ESCOMP/CTSM/pull/2193)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev146
 Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
 Date: Tue Oct 24 20:13:17 MDT 2023

@@ -1,6 +1,6 @@
-.. _running-with-anomaly-forcing:
-
 .. include:: ../substitutions.rst
+
+.. _running-with-anomaly-forcing:
 
 ==============================
  Running with anomaly forcing

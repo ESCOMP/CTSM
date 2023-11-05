@@ -336,7 +336,7 @@ where If :math:`{NF}_{total\_demand,j}`\ :math:`\Delta`\ *t* :math:`<` :math:`{N
 
 where :math:`{f}_{immob\_demand,j}` is the fraction of potential immobilization demand that can be met given current supply of mineral nitrogen in this layer. We also set the actual nitrification flux to be the same as the potential flux (:math:`NF_{nit}` = :math:`NF_{nit\_ demand}`).
 
-If :math:`{NF}_{total\_demand,j}`\ :math:`\Delta`\ *t :math:`\mathrm{\ge}` :math:`{NS}_{sminn,j}`, then there is not enough mineral nitrogen to meet the combined demands for plant growth and heterotrophic immobilization, immobilization is reduced proportional to the discrepancy, by :math:`f_{immob\_ demand,j}`, where
+If :math:`{NF}_{total\_demand,j} \Delta t \mathrm{\ge} {NS}_{sminn,j}`, then there is not enough mineral nitrogen to meet the combined demands for plant growth and heterotrophic immobilization, immobilization is reduced proportional to the discrepancy, by :math:`f_{immob\_ demand,j}`, where
 
 .. math::
    :label: 21.30)

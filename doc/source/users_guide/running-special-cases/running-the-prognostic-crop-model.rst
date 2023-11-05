@@ -1,6 +1,6 @@
-.. running-prognostic-crop-model:
-
 .. include:: ../substitutions.rst
+
+.. _running-prognostic-crop-model:
 
 ===================================
  Running the prognostic crop model

@@ -1,6 +1,6 @@
-.. _customizing-a-case:
-
 .. include:: ../substitutions.rst
+
+.. _customizing-a-case:
 
 ============================
  Customizing CLM's namelist
@@ -10,41 +10,22 @@ Once a case has run **case.setup**, we can then customize the case further, by e
 
 In the following, various examples of namelists are provided that feature the use of different namelist options to customize a case for particular uses. Most the examples revolve around how to customize the output history fields. This should give you a good basis for setting up your own CLM namelist.
 
+.. _def-nl-items-and-defaults:
+
 -----------------------------------------------------
 Definition of Namelist items and their default values
 -----------------------------------------------------
 
 Here we point to you where you can find the definition of each namelist item and separately the default values for them. The default values may change depending on the resolution, land-mask, simulation-year and other attributes. Both of these files are viewable in your web browser, and then expand each in turn.
 
-1. `Definition of Namelists Relevant for |version| <CLM-URL>`_
+1. `Definition of Namelists <https://github.com/ESCOMP/CTSM/blob/master/bld/namelist_files/namelist_definition_ctsm.xml>`_
 
-2. `Default values of each CLM4.0 Namelist Item <CLM-URL>`_
-
-3. `Default values of each |version| Namelist Item <CLM-URL>`_
+2. `Default values of each Namelist Item <https://github.com/ESCOMP/CTSM/blob/master/bld/namelist_files/namelist_defaults_ctsm.xml>`_
 
 List of fields that can be added to your output history files by namelist
 -------------------------------------------------------------------------
 
-One set of the namelist items allows you to add fields to the output history files: ``hist_fincl1``, ``hist_fincl2``, ``hist_fincl3``, ``hist_fincl4``, ``hist_fincl5``, and ``hist_fincl6``. The following links for `CLM4.0 History Fields <CLM-URL>`_ and `|version| History Fields <CLM-URL>`_ documents all of the history fields available and gives the long-name and units for each. The table below lists all the |version| history fields.
-
-Definition of CLM history variables
------------------------------------
-
-Included in the table are the following pieces of information:
-
-- Variable name.
-
-- Long name description.
-
-- units
-
-Table 1-3. CLM History Fields from a BgcCrop case
--------------------------------------------------
-For Table from a BgcCrop case, please see :doc:`history_fields_nofates`.
-
-Table 1-4. CLM History Fields from a Fates case
------------------------------------------------
-For Table from a Fates case, please see :doc:`history_fields_fates`.
+One set of the namelist items allows you to add fields to the output history files: ``hist_fincl1``, ``hist_fincl2``, ``hist_fincl3``, ``hist_fincl4``, ``hist_fincl5``, and ``hist_fincl6``. The :doc:`history_fields_nofates` and :doc:`history_fields_fates` files list all of the history fields available and gives the long-name and units for each.
 
 ---------------------------------------------
 Examples of using different namelist features

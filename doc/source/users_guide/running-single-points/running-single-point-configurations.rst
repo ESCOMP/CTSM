@@ -1,12 +1,12 @@
-.. _running-single-point-datasets:
-
 .. include:: ../substitutions.rst
+
+.. _running-single-point-datasets:
 
 ******************************************
  Running Single Point Configurations
 ******************************************
 
-In addition to ``PTS_MODE``, CLM supports running using single-point or regional datasets that are customized to a particular region. CLM supports a a small number of out-of-the-box single-point and regional datasets. However, users can create their own dataset.
+In addition to ``PTS_MODE`` (Sect. :numref:`pts_mode`), CLM supports running using single-point or regional datasets that are customized to a particular region. CLM supports a a small number of out-of-the-box single-point and regional datasets. However, users can create their own dataset.
 
 To get the list of supported dataset resolutions do this:
 ::
@@ -29,10 +29,20 @@ Which results in the following:
 
 The resolution names that have an underscore in them ("_") are all single-point or regional resolutions.
 
-To run for the Brazil test site do the following:
+.. note:: When running a single point, the number of processors is automatically set to one, which is the only value allowed.
 
-Example: Running CLM over a single-point test site in Brazil
-------------------------------------------------------------
+.. warning::
+   Just like ``PTS_MODE`` (Sect. :numref:`pts_mode`), by default these setups sometimes run with ``MPILIB=mpi-serial`` (in the ``env_build.xml`` file) turned on, which allows you to run the model interactively. On some machines this mode is NOT supported and you may need to change it to FALSE before you are able to build.
+
+.. _single-point-global-climate:
+
+Single-point runs with global climate forcings
+==============================================
+
+Example: Use global forcings at a site without its own special forcings
+-----------------------------------------------------------------------
+
+This example uses the single-point site in Brazil.
 ::
 
    > cd scripts
@@ -42,10 +52,11 @@ Example: Running CLM over a single-point test site in Brazil
 
 Then setup, build and run normally.
 
-Then to run for the urban Mexico City Mexico test site that also has atmosphere forcing data, but to run it with the Qian forcing data, but over the period for which it's own forcing data is provided do the following:
+Example: Use global forcings at a site WITH its own special forcings
+--------------------------------------------------------------------
 
-Example: Running CLM over the single-point of Mexicocity Mexico with the default Qian atmosphere data forcing.
--------------------------------------------------------------------------------------------------------------------------
+The urban Mexico City test site has its own atmosphere forcing data (see Sect. :numref:`single-point-with-own-forcing`). To ignore that and run it with the default global forcing data, but over the period for which its own forcing data is provided, do the following:
+
 ::
 
    > cd scripts
@@ -54,25 +65,20 @@ Example: Running CLM over the single-point of Mexicocity Mexico with the default
    > ./create_newcase -case testSPDATASET -res $SITE -compset I1PtClm50SpGs
    > cd testSPDATASET
 
-Then setup, build and run normally.
+(Note the use of ``I1Pt`` instead of ``I2000`` as in the example above.) Then setup, build and run normally.
 
-**Important:** Just like PTS_MODE above, By default it sets up to run with ``MPILIB=mpi-serial`` (in the ``env_build.xml`` file) turned on, which allows you to run the model interactively. On some machines this mode is NOT supported and you may need to change it to FALSE before you are able to build.
+.. _single-point-with-own-forcing:
 
-.. warning:: See `the Section called Warning about Running with a Single-Processor on a Batch Machine <CLM-URL>`_ for a warning about running single-point jobs on batch machines.
-
-.. note:: When running a ``pt1_pt1`` resolution the number of processors is automatically set to one. When running a single grid point you can only use a single processor. You might also want to set the ``env_build.xml`` variable: ``MPILIB=mpi-serial`` to TRUE so that you can also run interactively without having to use mpi to start up your job.
-
-Using Supported Single-point Datasets that have their own Atmospheric Forcing
-================================================================================
+Supported single-point runs for sites with their own atmospheric forcing
+========================================================================
 
 Of the supported single-point datasets we have three that also have atmospheric forcing data that go with them: Mexico City (Mexico), Vancouver, (Canada, British Columbia), and ``urbanc_alpha`` (test data for an Urban inter-comparison project). Mexico city and Vancouver also have namelist options in the source code for them to work with modified urban data parameters that are particular to these locations. To turn on the atmospheric forcing for these datasets, you set the ``env_run.xml DATM_MODE`` variable to ``CLM1PT``, and then the atmospheric forcing datasets will be used for the point picked. If you use one of the compsets that has "I1Pt" in the name that will be set automatically.
 
 When running with datasets that have their own atmospheric forcing you need to be careful to run over the period that data is available. If you have at least one year of forcing it will cycle over the available data over and over again no matter how long of a simulation you run. However, if you have less than a years worth of data (or if the start date doesn't start at the beginning of the year, or the end date doesn't end at the end of the year) then you won't be able to run over anything but the data extent. In this case you will need to carefully set the ``RUN_STARTDATE``, ``START_TOD`` and ``STOP_N/STOP_OPTION`` variables for your case to run over the entire time extent of your data. For the supported data points, these values are in the XML database and you can use the **queryDefaultNamelist.pl** script to query the values and set them for your case (they are set for the three urban test cases: Mexicocity, Vancouver, and urbanc_alpha).
 
-In the example below we will show how to do this for the Vancouver, Canada point.
-
-Example: Running CLM over the single-point of Vancouver Canada with supplied atmospheric forcing data for Vancouver.
--------------------------------------------------------------------------------------------------------------------------
+Example: Use site-specific atmospheric forcings
+-----------------------------------------------
+In this example, we show how to use the atmospheric forcings specific to the Vancouver, Canada point.
 ::
 
    > cd scripts
@@ -104,9 +110,7 @@ Example: Running CLM over the single-point of Vancouver Canada with supplied atm
 
 .. warning:: If you don't set the start-year and run-length carefully as shown above the model will abort with a "dtlimit error" in the atmosphere model. Since, the forcing data for this site (and the MexicoCity site) is less than a year, the model won't be able to run for a full year. The ``1x1_urbanc_alpha`` site has data for more than a full year, but neither year is complete hence, it has the same problem (see the problem for this site above).
 
-.. note:: Just like ``PTS_MODE`` above, By default it sets up to run with ``MPILIB=mpi-serial`` (in the env_build.xml file) turned on, which allows you to run the model interactively.
-
-.. note:: When running a ``pt1_pt1`` resolution the number of processors is automatically set to one. When running a single grid point you can only use a single processor. You might also want to set the ``env_build.xml`` variable: ``MPILIB=mpi-serial`` to ``TRUE`` so that you can also run interactively without having to use mpi to start up your job.
+.. _creating-your-own-singlepoint-dataset:
 
 Creating your own single-point dataset
 ===================================================
@@ -134,7 +138,7 @@ Example: Using CLM_USRDAT_NAME to run a simulation using user datasets for a spe
    #> svn export $SVN_INP_URL/lnd/clm2/surfdata_map/surfdata_${GRIDNAME}_simyr2000.nc $CSMDATA/lnd/clm2/surfdata_map/surfdata_${GRIDNAME}_simyr2000.nc
    > ./case.setup
 
-The first step is to create the domain and surface datasets using the process outlined in `the Section called The File Creation Process in Chapter 2 <CLM-URL>`_. Below we show an example of the process.
+The first step is to create the domain and surface datasets using the process outlined in :ref:`using-clm-tools-section`. Below we show an example of the process.
 
 Example: Creating a surface dataset for a single point
 ---------------------------------------------------------------------

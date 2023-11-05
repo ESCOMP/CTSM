@@ -172,6 +172,8 @@ Since the C:N stoichiometry for new growth allocation is defined, from Eq., as :
 
    NF_{plant\_ demand} =CF_{avail\_ alloc} \frac{N_{allom} }{C_{allom} } .
 
+.. _Carbon Allocation to New Growth:
+
 Carbon Allocation to New Growth
 -----------------------------------------
 
