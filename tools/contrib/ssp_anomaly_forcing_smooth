@@ -129,58 +129,58 @@ def create_fill_ancillary_vars(ds, landfrac, landmask, area):
     return ds
 
 
-def create_fill_forcing(ds, field_out, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld):
-    if field_out[f] == "sfcWind":
-        wvar = ds.createVariable(
-            field_out_wind[0],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-    else:
-        wvar = ds.createVariable(
-            field_out[f],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-    wvar.units = units[f]
-    wvar.mode = "time-dependent"
-    if field_out[f] == "sfcWind":
-        wvar.long_name = str(long_name) + " U component " + anomsf[f]
-    else:
-        wvar.long_name = str(long_name) + " " + anomsf[f]
-    # List of source files
-    wvar.historical_source_files = "".join(histfiles).replace(hdir, "")
-    wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
-
-    # write to file  --------------------------------------------
-    if field_out[f] == "sfcWind":
-        wvar[:, :, :] = anom_fld / np.sqrt(2)
-    else:
-        wvar[:, :, :] = anom_fld
+def add_to_dataset(ds, var_name, data, units=None, mode=None, historical_source_files=None, scenario_source_files=None, long_name=None, cell_methods=None):
+    dims = ("time", "lat", "lon")
+    data_type = np.float64
+    
+    wvar = ds.createVariable(
+        var_name,
+        data_type,
+        dims,
+        fill_value=data_type(1.0e36),
+    )
+    
+    wvar[:, :, :] = data
+    
+    if units is not None:
+        wvar.units = units
+    if mode is not None:
+        wvar.mode = mode
+    if historical_source_files is not None:
+        wvar.historical_source_files = historical_source_files
+    if scenario_source_files is not None:
+        wvar.scenario_source_files = scenario_source_files
+    if long_name is not None:
+        wvar.long_name = long_name
+    if cell_methods is not None:
+        wvar.cell_methods = cell_methods
     
     return ds
 
 
-def create_fill_windv(ds, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld):
-
-    wvar = ds.createVariable(
-            field_out_wind[1],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-    wvar.units = units[f]
-    wvar.cell_methods = "time: mean"
-    wvar.long_name = str(long_name) + " V component " + anomsf[f]
-    # List of source files
-    wvar.historical_source_files = "".join(histfiles).replace(hdir, "")
-    wvar.scenario_source_files = "".join(sspfiles).replace(fdir, "")
-
-    # write to file  --------------------------------------------
-    wvar[:, :, :] = anom_fld / np.sqrt(2)
+def create_fill_forcing(ds, field_out, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld):
     
+    historical_source_files = "".join(histfiles).replace(hdir, "")
+    scenario_source_files = "".join(sspfiles).replace(fdir, "")
+    mode = "time-dependent"
+    
+    if field_out[f] == "sfcWind":
+        long_name = str(long_name) + " U component " + anomsf[f]
+        var_name = field_out_wind[0]
+        data = anom_fld / np.sqrt(2)
+    else:
+        long_name = str(long_name) + " " + anomsf[f]
+        var_name = field_out[f]
+        data = anom_fld
+    # Was missing cell_methods attribute in original
+    ds = add_to_dataset(ds, var_name, data, units=units[f], mode=mode, historical_source_files=historical_source_files, scenario_source_files=scenario_source_files, long_name=long_name)
+    
+    if field_out[f] == "sfcWind":
+        long_name = long_name.replace("U component", "V component")
+        var_name = field_out_wind[1]
+        # Was missing mode attribute in original
+        ds = add_to_dataset(ds, var_name, data, units=units[f], historical_source_files=historical_source_files, scenario_source_files=scenario_source_files, long_name=long_name, cell_methods="time: mean")
+
     return ds
 
 
@@ -651,13 +651,7 @@ for f in range(nfields):
         w = create_fill_latlon(w, lon, "lon")
         w = create_fill_time(w, time[0:12], nmo)
         
-        wvar = w.createVariable(
-            field_out[f],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-        wvar[:, :, :] = climo
+        add_to_dataset(w, field_out[f], climo)
         w.close()
 
         # Use NetCDF4 format, because using older NetCDF formats are too slow
@@ -670,21 +664,10 @@ for f in range(nfields):
         w = create_fill_latlon(w, lon, "lon")
         w = create_fill_time(w, time, tm)
         
-        wvar = w.createVariable(
-            field_out[f],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-        wvar2 = w.createVariable(
-            "smooth_" + field_out[f],
-            np.float64,
-            ("time", "lat", "lon"),
-            fill_value=np.float64(1.0e36),
-        )
-        wvar[:, :, :] = temp_fld
-        wvar2[:, :, :] = stemp_fld
+        add_to_dataset(w, field_out[f], temp_fld)
+        add_to_dataset(w, "smooth_" + field_out[f], stemp_fld)
         w.close()
+        
         print("Exit early after writing out climatology\n\n")
         sys.exit()
 
@@ -712,18 +695,11 @@ for f in range(nfields):
         outfile = create_fill_latlon(outfile, lon, "lon")
         outfile = create_fill_time(outfile, ssp_time, None, ssp_time_units=ssp_time_units, ssp_time_longname=ssp_time_longname, adj_time=True)
 
-        # Create and fill ancillary variables ()
+        # Create and fill ancillary variables
         outfile = create_fill_ancillary_vars(outfile, landfrac, landmask, area)
     # -- End if on open file
 
     outfile = create_fill_forcing(outfile, field_out, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld)
-
-     # create second wind field for V component
-    if field_out[f] == "sfcWind":
-        create_fill_windv(outfile, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld)
-
-    # -- end if statement for write for V field --------
-    break
 
 # --  End Loop over forcing fields  ------------------------------------
 outfile.close()
