@@ -3742,6 +3742,20 @@ contains
                    readvar=readvar, &
                    scale_by_thickness=.false., &
                    interpinic_flag='interp', data=data2dptr)
+               
+              ! e.g., grainc_to_seed_perharv
+              data2dptr => this%repr_grainc_to_seed_perharv_patch(:,:,k)
+              varname = get_repr_rest_fname(k)//'c_to_seed_perharv'
+              call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+                   xtype=ncd_double,  &
+                   dim1name='pft', &
+                   dim2name='mxharvests', &
+                   switchdim=.true., &
+                   long_name=get_repr_longname(k)//' C to seed per harvest; should only be output annually', &
+                   units='gC/m2', &
+                   readvar=readvar, &
+                   scale_by_thickness=.false., &
+                   interpinic_flag='interp', data=data2dptr)
           end do
        end if
 
