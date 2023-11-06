@@ -320,13 +320,19 @@ module clm_varctl
   logical, public            :: use_fates_fixed_biogeog = .false.       ! true => use fixed biogeography mode
   logical, public            :: use_fates_nocomp = .false.              ! true => use no comopetition mode
 
-  ! History density level
+  ! FATES history density level
   ! fates can produce history at either the daily timescale (dynamics)
   ! and the model step timescale. It can also generate output on the extra dimension
   ! Performing this output can be expensive, so we allow different history density
-  ! levels
+  ! levels.
+  ! The first index is output at the model timescale
+  ! The second index is output at the dynamics (daily) timescale      
+  ! 0 - no output
+  ! 1 - include only column level means
+  ! 2 - include only output with only 1 additional dimension
+  ! 3 - include all multiplexed dimensions
   
-  logical, public            :: fates_hist_dense_level = 1              !
+  character(len=2), public   :: fates_hist_dense_level = '11'
   
   character(len=256), public :: fates_inventory_ctrl_filename = ''      ! filename for inventory control
 

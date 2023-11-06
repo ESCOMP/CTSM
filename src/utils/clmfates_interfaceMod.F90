@@ -64,6 +64,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : fates_inventory_ctrl_filename
    use clm_varctl        , only : use_nitrif_denitrif
    use clm_varctl        , only : use_lch4
+   use clm_varctl        , only : fates_hist_dense_level
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval
    use clm_varcon        , only : denice
@@ -407,6 +408,8 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
         call set_fates_ctrlparms('seeddisp_cadence',ival=fates_seeddisp_cadence)
 
+        call set_fates_ctrlparms('hist_dense_level',cval=fates_hist_dense_level)
+        
         ! CTSM-FATES is not fully coupled (yet)
         ! So lets tell fates to use the RD competition mechanism
         ! which has fewer boundary conditions (simpler)
@@ -624,8 +627,8 @@ module CLMFatesInterfaceMod
                  write(iulog,*) 'was specified in the user namelist, but the user'
                  write(iulog,*) 'specified a FATES history output density level'
                  write(iulog,*) 'that does not contain that variable in its valid set.'
-                 write(iulog,*) 'You may have to increase the namelist setting: fates_hist_dens_level'
-                 write(iulog,*) 'current fates_hist_dens_level: ',hlm_hist_dens_level
+                 write(iulog,*) 'You may have to increase the namelist setting: fates_hist_dense_level'
+                 write(iulog,*) 'current fates_hist_dens_level: ',hlm_hist_dense_level
                  call endrun(msg=errMsg(sourcefile, __LINE__))
               end if
            end if
