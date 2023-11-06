@@ -3729,8 +3729,8 @@ contains
        ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-06-10) See note in CallRestartvarDimOK()
        if (CallRestartvarDimOK(ncid, flag, 'mxharvests')) then
           do k = repr_grain_min, repr_grain_max
-              data2dptr => this%repr_grainc_to_food_perharv_patch(:,:,k)
               ! e.g., grainc_to_food_perharv
+              data2dptr => this%repr_grainc_to_food_perharv_patch(:,:,k)
               varname = get_repr_rest_fname(k)//'c_to_food_perharv'
               call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                    xtype=ncd_double,  &
@@ -3746,8 +3746,8 @@ contains
        end if
 
        do k = repr_grain_min, repr_grain_max
-          data1dptr => this%repr_grainc_to_food_thisyr_patch(:,k)
           ! e.g., grainc_to_food_thisyr
+          data1dptr => this%repr_grainc_to_food_thisyr_patch(:,k)
           varname = get_repr_rest_fname(k)//'c_to_food_thisyr'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
@@ -3755,8 +3755,9 @@ contains
                long_name=get_repr_longname(k)//' C to food per calendar year; should only be output annually', &
                units='gC/m2', &
                interpinic_flag='interp', readvar=readvar, data=data1dptr)
-          data1dptr => this%repr_grainc_to_seed_thisyr_patch(:,k)
+
           ! e.g., grainc_to_seed_thisyr
+          data1dptr => this%repr_grainc_to_seed_thisyr_patch(:,k)
           varname = get_repr_rest_fname(k)//'c_to_seed_thisyr'
           call restartvar(ncid=ncid, flag=flag,  varname=varname, &
                xtype=ncd_double,  &
