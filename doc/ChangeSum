@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev150   rgknox 11/06/2023 FATES API fix to support future fates npp-fixation coupling, and urgent coupling fixes with E3SM.
     ctsm5.1.dev149 samrabin 11/03/2023 Rearrange leaf/stem "harvest" and fix soil gas diffusivity
     ctsm5.1.dev148 samrabin 11/03/2023 Add GRAINN outputs
     ctsm5.1.dev147 samrabin 10/30/2023 Add sowing window input files

@@ -1,4 +1,78 @@
 ===============================================================
+Tag name: ctsm5.1.dev150
+Originator(s): rgknox (Ryan Knox,LAWRENCE BERKELEY NATIONAL LABORATORY,510-495-2153)
+Date: Mon Nov  6 14:12:37 MST 2023
+One-line Summary: FATES API fix to support future fates npp-fixation coupling, and urgent coupling fixes with E3SM.
+
+Purpose and description of changes
+----------------------------------
+
+This set of changes accomodates an API change on the FATES side of the code. Those changes are needed
+to accomodate a bug-fix in E3SM. These changes will also accomodate correct coupling with free-living nitrogen
+fixation when it is enabled in clm-fates.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+none
+
+Bugs fixed or introduced
+------------------------
+
+Supports fixes FATES issues:
+https://github.com/NGEET/fates/issues/1113
+https://github.com/NGEET/fates/issues/1106
+
+CTSM issues fixed (include CTSM Issue #): none
+
+Known bugs introduced in this tag (include issue #):
+
+Notes of particular relevance for users
+---------------------------------------
+
+none
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+This set of changes is introduced, while there is a known test failure in:
+ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianRs.izumi_gnu.clm-cropMonthlyNoinitial
+
+This is documented in issue: 2236 and a fix is slated for integration. The nature of the changes
+in this PR where obviously orthogonal to the issue.
+
+Changes to tests or testing: none
+
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- ok
+
+
+Answer changes
+--------------
+
+no answer changes
+
+Other details
+-------------
+
+none
+
+Pull Requests that document the changes (include PR ids):
+
+https://github.com/ESCOMP/CTSM/pull/2231
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev149
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Fri Nov  3 19:52:44 MDT 2023
