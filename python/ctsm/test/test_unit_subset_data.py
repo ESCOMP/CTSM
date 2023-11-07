@@ -46,7 +46,7 @@ class TestSubsetData(unittest.TestCase):
         files = setup_files(self.args, self.defaults, self.cesmroot)
         self.assertEqual(
             files["fsurf_in"],
-            "surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
+            "surfdata_0.9x1.25_hist_16pfts_CMIP6_1850-2015_c231031.nc",
             "fsurf_in filename not whats expected",
         )
         self.assertEqual(
@@ -134,7 +134,7 @@ class TestSubsetData(unittest.TestCase):
         outfile = os.path.join(
             os.getcwd(),
             "ctsm/test/testinputs/",
-            "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc",
+            "surfdata_1x1_mexicocityMEX_hist_16pfts_CMIP6_2000_c231103.nc",
         )
         self.assertTrue(os.path.exists(outfile), str(outfile) + " outfile should exist")
 
