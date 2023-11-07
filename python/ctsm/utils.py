@@ -206,7 +206,7 @@ def import_coord_2d(ds, coordName, varName):
     thisDim = [x for x in da.dims if coordName in x]
     if len(thisDim) != 1:
         abort(
-            f"Expected 1 dimension name containing {coordName}; found {len(otherDim)}: {otherDim}"
+            f"Expected 1 dimension name containing {coordName}; found {len(thisDim)}: {thisDim}"
         )
     thisDim = thisDim[0]
     otherDim = [x for x in da.dims if coordName not in x]
