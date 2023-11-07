@@ -6,6 +6,12 @@ import sys
 import xarray as xr
 import numpy as np
 
+# -- add python/ctsm  to path (needed if we want to run regrid_ggcmi_shdates stand-alone)
+_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
+sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm.utils import import_coord_1d, import_coord_2d
+
 
 def run_and_check(cmd):
     result = run(
@@ -38,37 +44,6 @@ def define_arguments(parser):
         required=True,
     )
     return parser
-
-
-# lat or lon
-def import_coord_1d(ds, coordName):
-    da = ds[coordName]
-    if len(da.dims) != 1:
-        raise RuntimeError(f"Expected 1 dimension for {coordName}; found {len(da.dims)}: {da.dims}")
-    return da, len(da)
-
-
-# LATIXY or LONGXY
-def import_coord_2d(ds, coordName, varName):
-    da = ds[varName]
-    thisDim = [x for x in da.dims if coordName in x]
-    if len(thisDim) != 1:
-        raise RuntimeError(
-            f"Expected 1 dimension name containing {coordName}; found {len(otherDim)}: {otherDim}"
-        )
-    thisDim = thisDim[0]
-    otherDim = [x for x in da.dims if coordName not in x]
-    if len(otherDim) != 1:
-        raise RuntimeError(
-            f"Expected 1 dimension name not containing {coordName}; found {len(otherDim)}: {otherDim}"
-        )
-    otherDim = otherDim[0]
-    da = da.astype(np.float32)
-    da = da.isel({otherDim: [0]}).squeeze().rename({thisDim: coordName}).rename(coordName)
-    da = da.assign_coords({coordName: da.values})
-    da.attrs["long_name"] = "coordinate " + da.attrs["long_name"]
-    da.attrs["units"] = da.attrs["units"].replace(" ", "_")
-    return da, len(da)
 
 
 def main(

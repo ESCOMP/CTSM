@@ -6,6 +6,7 @@ import sys
 import string
 import re
 import pdb
+import numpy as np
 
 from datetime import date
 from getpass import getuser
@@ -189,3 +190,34 @@ def write_output(file, file_in, file_out, file_type):
     file.to_netcdf(path=file_out, mode="w", format="NETCDF3_64BIT")
     logger.info("Successfully created: %s", file_out)
     file.close()
+
+
+# Import 1-d latitude or longitude variable from a CESM history file (e.g., name lat or lon) and return it as a DataArray that can be used for writing CESM input files
+def import_coord_1d(ds, coordName):
+    da = ds[coordName]
+    if len(da.dims) != 1:
+        raise RuntimeError(f"Expected 1 dimension for {coordName}; found {len(da.dims)}: {da.dims}")
+    return da, len(da)
+
+
+# Import 1-d latitude or longitude variable from a CESM history file (e.g., name LATIXY or LONGXY) and return it as a 1-d DataArray that can be used as a coordinate for writing CESM input files
+def import_coord_2d(ds, coordName, varName):
+    da = ds[varName]
+    thisDim = [x for x in da.dims if coordName in x]
+    if len(thisDim) != 1:
+        raise RuntimeError(
+            f"Expected 1 dimension name containing {coordName}; found {len(otherDim)}: {otherDim}"
+        )
+    thisDim = thisDim[0]
+    otherDim = [x for x in da.dims if coordName not in x]
+    if len(otherDim) != 1:
+        raise RuntimeError(
+            f"Expected 1 dimension name not containing {coordName}; found {len(otherDim)}: {otherDim}"
+        )
+    otherDim = otherDim[0]
+    da = da.astype(np.float32)
+    da = da.isel({otherDim: [0]}).squeeze().rename({thisDim: coordName}).rename(coordName)
+    da = da.assign_coords({coordName: da.values})
+    da.attrs["long_name"] = "coordinate " + da.attrs["long_name"]
+    da.attrs["units"] = da.attrs["units"].replace(" ", "_")
+    return da, len(da)
