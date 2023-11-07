@@ -11,6 +11,11 @@ _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pard
 sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm.utils import import_coord_1d, import_coord_2d
+from ctsm.ctsm_logging import (
+    setup_logging_pre_config,
+    add_logging_args,
+    process_logging_args,
+)
 
 
 def run_and_check(cmd):
@@ -65,7 +70,7 @@ def main(
 
     template_ds_in = xr.open_dataset(regrid_template_file_in)
     
-    # Process crop list
+    # Process inputs
     if crop_list is not None:
         crop_list = crop_list.split(",")
     if extension[0] != ".":
@@ -142,11 +147,12 @@ def main(
     # Delete template file, which is no longer needed
     os.remove(templatefile)
 
-
-if __name__ == "__main__":
-    ###############################
-    ### Process input arguments ###
-    ###############################
+# Process input arguments
+def regrid_ggcmi_shdates_arg_process():
+    
+    # set up logging allowing user control
+    setup_logging_pre_config()
+    
     parser = argparse.ArgumentParser(
         description="Regrids raw sowing and harvest date files provided by GGCMI to a target CLM resolution."
     )
@@ -183,6 +189,15 @@ if __name__ == "__main__":
 
     # Get arguments
     args = parser.parse_args(sys.argv[1:])
+    
+    return args
+
+
+if __name__ == "__main__":
+    ###############################
+    ### Process input arguments ###
+    ###############################
+    args = regrid_ggcmi_shdates_arg_process()
 
     ###########
     ### Run ###
