@@ -10,7 +10,7 @@ import numpy as np
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 sys.path.insert(1, _CTSM_PYTHON)
 
-from ctsm.utils import import_coord_1d, import_coord_2d
+from ctsm.utils import abort, import_coord_1d, import_coord_2d
 from ctsm.ctsm_logging import (
     setup_logging_pre_config,
     add_logging_args,
@@ -26,7 +26,7 @@ def run_and_check(cmd):
         text=True,
     )
     if result.returncode != 0:
-        raise RuntimeError(
+        abort(
             f"Trouble running `{result.args}` in shell:\n{result.stdout}\n{result.stderr}"
         )
 
@@ -83,7 +83,7 @@ def main(
         lat, Nlat = import_coord_2d(template_ds_in, "lat", "LATIXY")
         lat.attrs["axis"] = "Y"
     else:
-        raise RuntimeError("No latitude variable found in regrid template file")
+        abort("No latitude variable found in regrid template file")
 
     # Flip latitude, if needed
     if lat.values[0] < lat.values[1]:
@@ -96,7 +96,7 @@ def main(
         lon, Nlon = import_coord_2d(template_ds_in, "lon", "LONGXY")
         lon.attrs["axis"] = "Y"
     else:
-        raise RuntimeError("No longitude variable found in regrid template file")
+        abort("No longitude variable found in regrid template file")
     template_da_out = xr.DataArray(
         data=np.full((Nlat, Nlon), 0.0),
         dims={"lat": lat, "lon": lon},
@@ -118,7 +118,7 @@ def main(
     pattern = "*" + extension
     input_files = glob.glob(pattern)
     if len(input_files) == 0:
-        raise FileNotFoundError(f"No files found matching {os.path.join(os.getcwd(), pattern)}")
+        abort(f"No files found matching {os.path.join(os.getcwd(), pattern)}")
     input_files.sort()
     for f in input_files:
         this_crop = f[0:6]
