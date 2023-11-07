@@ -38,21 +38,23 @@ class TestRegridGgcmiShdates(unittest.TestCase):
         testinputs_path = os.path.join(path_to_ctsm_root(), "python", "ctsm", "test", "testinputs")
         testinputs_cc_path = os.path.join(testinputs_path, "cropcals")
         self._testinputs_cc_path = testinputs_cc_path
-        
+
         # Make /_tempdir for use by these tests.
         self._tempdir = tempfile.mkdtemp()
-        
+
         # Obtain path for the directory being created in /_tempdir
         self._regridded_cropcals = os.path.join(self._tempdir, "regridded_cropcals")
-        
+
         # What extension do the raw crop calendar file(s) have?
         self._extension = ".nc4"
-        
+
         # Which crop(s) should we test? (comma-separated string)
         self._crop_list = "swh_rf"
-        
+
         # What is the complete set of input arguments (including script name)?
-        regrid_template_file = os.path.join(testinputs_path, "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc")
+        regrid_template_file = os.path.join(
+            testinputs_path, "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc"
+        )
         self._function_call_list = [
             "regrid_ggcmi_shdates",
             "-i",
@@ -74,9 +76,9 @@ class TestRegridGgcmiShdates(unittest.TestCase):
         Remove temporary directory
         """
         shutil.rmtree(self._tempdir, ignore_errors=True)
-    
+
     def test_regrid_ggcmi_shdates(self):
-        
+
         # Call script
         sys.argv = self._function_call_list
         args = regrid_ggcmi_shdates_arg_process()
@@ -88,32 +90,36 @@ class TestRegridGgcmiShdates(unittest.TestCase):
             args.extension,
             args.crop_list,
         )
-        
+
         # Read output file
         regrid_out_file = os.path.join(
             self._regridded_cropcals,
             "swh_rf_ggcmi_crop_calendar_phase3_v1.01_nninterp-5x5amazon.nc4",
         )
         regrid_out_ds = xr.open_dataset(regrid_out_file)
-        
+
         # Check sowing dates
         expected_sow_dates = np.array(
-            [[120, 120, 120, 120, 120],
-            [120, 120, 120, 120, 120],
-            [120, 120, 120, 120, 120],
-            [330, 335, 335, 120, 120],
-            [325, 335, 335, 335, 120]]
-            )
+            [
+                [120, 120, 120, 120, 120],
+                [120, 120, 120, 120, 120],
+                [120, 120, 120, 120, 120],
+                [330, 335, 335, 120, 120],
+                [325, 335, 335, 335, 120],
+            ]
+        )
         np.testing.assert_array_equal(expected_sow_dates, regrid_out_ds["planting_day"].values)
-        
+
         # Check maturity dates
         expected_mat_dates = np.array(
-            [[221, 221, 221, 221, 221],
-            [221, 221, 221, 221, 221],
-            [221, 221, 221, 221, 221],
-            [153, 128, 128, 221, 221],
-            [163, 128, 128, 128, 221]]
-            )
+            [
+                [221, 221, 221, 221, 221],
+                [221, 221, 221, 221, 221],
+                [221, 221, 221, 221, 221],
+                [153, 128, 128, 221, 221],
+                [163, 128, 128, 128, 221],
+            ]
+        )
         np.testing.assert_array_equal(expected_mat_dates, regrid_out_ds["maturity_day"].values)
 
 

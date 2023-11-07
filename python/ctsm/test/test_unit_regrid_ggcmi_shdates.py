@@ -40,16 +40,20 @@ class TestRegridGgcmiShdates(unittest.TestCase):
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         self._testinputs_path = testinputs_path
         self._tempdir = tempfile.mkdtemp()
-        
-        self._1d_lonlat_file = os.path.join(self._testinputs_path, "cropcals", "swh_rf_ggcmi_crop_calendar_phase3_v1.01.nc4")
-        self._2d_lonlat_file = os.path.join(self._testinputs_path, "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_modified.nc")
+
+        self._1d_lonlat_file = os.path.join(
+            self._testinputs_path, "cropcals", "swh_rf_ggcmi_crop_calendar_phase3_v1.01.nc4"
+        )
+        self._2d_lonlat_file = os.path.join(
+            self._testinputs_path,
+            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_modified.nc",
+        )
 
     def tearDown(self):
         """
         Remove temporary directory
         """
         shutil.rmtree(self._tempdir, ignore_errors=True)
-
 
     def test_importcoord1d(self):
         ds = xr.open_dataset(self._1d_lonlat_file)
@@ -58,7 +62,7 @@ class TestRegridGgcmiShdates(unittest.TestCase):
         np.testing.assert_equal(Nlat, 360)
         np.testing.assert_array_equal(lat.values[:4], [89.75, 89.25, 88.75, 88.25])
         np.testing.assert_array_equal(lat.values[-4:], [-88.25, -88.75, -89.25, -89.75])
-    
+
     def test_importcoord1d_attrs(self):
         ds = xr.open_dataset(self._1d_lonlat_file)
         lat, _ = import_coord_1d(ds, "lat")
@@ -91,12 +95,12 @@ class TestRegridGgcmiShdates(unittest.TestCase):
             "units": "degrees_north",
         }
         self.assertDictEqual(lat.attrs, expected_attributes)
-    
+
     def test_importcoord2d_rename_dim(self):
         ds = xr.open_dataset(self._2d_lonlat_file)
         lat, _ = import_coord_2d(ds, "lat", "LATIXY")
         self.assertTupleEqual(lat.dims, ("lat",))
-    
+
     def test_importcoord2d_no_dim_contains_coordName(self):
         ds = xr.open_dataset(self._2d_lonlat_file)
         ds = ds.rename({"lsmlat": "abc"})
@@ -105,7 +109,7 @@ class TestRegridGgcmiShdates(unittest.TestCase):
             "ERROR: Expected 1 dimension name containing lat; found 0: \[\]",
         ):
             import_coord_2d(ds, "lat", "LATIXY")
-    
+
     def test_importcoord2d_1_dim_containing(self):
         ds = xr.open_dataset(self._2d_lonlat_file)
         ds = ds.rename({"lsmlon": "lsmlat2"})
