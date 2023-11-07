@@ -26,9 +26,7 @@ def run_and_check(cmd):
         text=True,
     )
     if result.returncode != 0:
-        abort(
-            f"Trouble running `{result.args}` in shell:\n{result.stdout}\n{result.stderr}"
-        )
+        abort(f"Trouble running `{result.args}` in shell:\n{result.stdout}\n{result.stderr}")
 
 
 # Functionized because these are shared by process_ggcmi_shdates
@@ -52,7 +50,12 @@ def define_arguments(parser):
 
 
 def main(
-    regrid_resolution, regrid_template_file_in, regrid_input_directory, regrid_output_directory, extension, crop_list
+    regrid_resolution,
+    regrid_template_file_in,
+    regrid_input_directory,
+    regrid_output_directory,
+    extension,
+    crop_list,
 ):
     print(f"Regridding GGCMI crop calendars to {regrid_resolution}:")
 
@@ -69,7 +72,7 @@ def main(
         os.remove(templatefile)
 
     template_ds_in = xr.open_dataset(regrid_template_file_in)
-    
+
     # Process inputs
     if crop_list is not None:
         crop_list = crop_list.split(",")
@@ -124,7 +127,7 @@ def main(
         this_crop = f[0:6]
         if crop_list is not None and this_crop not in crop_list:
             continue
-        
+
         print("    " + this_crop)
         f2 = os.path.join(regrid_output_directory, f)
         f3 = f2.replace(extension, f"_nninterp-{regrid_resolution}{extension}")
@@ -147,12 +150,13 @@ def main(
     # Delete template file, which is no longer needed
     os.remove(templatefile)
 
+
 # Process input arguments
 def regrid_ggcmi_shdates_arg_process():
-    
+
     # set up logging allowing user control
     setup_logging_pre_config()
-    
+
     parser = argparse.ArgumentParser(
         description="Regrids raw sowing and harvest date files provided by GGCMI to a target CLM resolution."
     )
@@ -189,12 +193,12 @@ def regrid_ggcmi_shdates_arg_process():
 
     # Get arguments
     args = parser.parse_args(sys.argv[1:])
-    
+
     # Process arguments
     args.regrid_template_file = os.path.realpath(args.regrid_template_file)
     args.regrid_input_directory = os.path.realpath(args.regrid_input_directory)
     args.regrid_output_directory = os.path.realpath(args.regrid_output_directory)
-    
+
     return args
 
 
