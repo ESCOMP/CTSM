@@ -51,6 +51,24 @@ class TestRegridGgcmiShdates(unittest.TestCase):
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
 
+    def test_importcoord1d(self):
+        ds = xr.open_dataset(self._1d_lonlat_file)
+        lat, Nlat = import_coord_1d(ds, "lat")
+        print(lat)
+        np.testing.assert_equal(Nlat, 360)
+        np.testing.assert_array_equal(lat.values[:4], [89.75, 89.25, 88.75, 88.25])
+        np.testing.assert_array_equal(lat.values[-4:], [-88.25, -88.75, -89.25, -89.75])
+    
+    def test_importcoord1d_attrs(self):
+        ds = xr.open_dataset(self._1d_lonlat_file)
+        lat, _ = import_coord_1d(ds, "lat")
+        # Unlike import_coord_2d, import_coord_1d doesn't rename the long name.
+        expected_attributes = {
+            "long_name": ds["lat"].attrs["long_name"],
+            "units": "degrees_north",
+        }
+        self.assertDictEqual(lat.attrs, expected_attributes)
+
     def test_importcoord1d_too_many_dims(self):
         ds = xr.open_dataset(self._2d_lonlat_file)
         with self.assertRaisesRegex(
