@@ -190,6 +190,11 @@ def regrid_ggcmi_shdates_arg_process():
     # Get arguments
     args = parser.parse_args(sys.argv[1:])
     
+    # Process arguments
+    args.regrid_template_file = os.path.realpath(args.regrid_template_file)
+    args.regrid_input_directory = os.path.realpath(args.regrid_input_directory)
+    args.regrid_output_directory = os.path.realpath(args.regrid_output_directory)
+    
     return args
 
 
@@ -204,9 +209,9 @@ if __name__ == "__main__":
     ###########
     main(
         args.regrid_resolution,
-        os.path.realpath(args.regrid_template_file),
-        os.path.realpath(args.regrid_input_directory),
-        os.path.realpath(args.regrid_output_directory),
+        args.regrid_template_file,
+        args.regrid_input_directory,
+        args.regrid_output_directory,
         args.extension,
         args.crop_list,
     )

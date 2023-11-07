@@ -15,9 +15,15 @@ import sys
 import xarray as xr
 import numpy as np
 
+# -- add python/ctsm  to path (needed if we want to run test stand-alone)
+_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
+sys.path.insert(1, _CTSM_PYTHON)
+
+
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm import unit_testing
 from ctsm.crop_calendars.regrid_ggcmi_shdates import main as regrid_ggcmi_shdates
+from ctsm.crop_calendars.regrid_ggcmi_shdates import regrid_ggcmi_shdates_arg_process
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -29,7 +35,8 @@ class TestRegridGgcmiShdates(unittest.TestCase):
 
     def setUp(self):
         # Where in the /testinputs directory are the raw crop calendar file(s)?
-        testinputs_cc_path = os.path.join(path_to_ctsm_root(), "python", "ctsm", "test", "testinputs", "cropcals")
+        testinputs_path = os.path.join(path_to_ctsm_root(), "python", "ctsm", "test", "testinputs")
+        testinputs_cc_path = os.path.join(testinputs_path, "cropcals")
         self._testinputs_cc_path = testinputs_cc_path
         
         # Make /_tempdir for use by these tests.
@@ -44,480 +51,70 @@ class TestRegridGgcmiShdates(unittest.TestCase):
         # Which crop(s) should we test? (comma-separated string)
         self._crop_list = "swh_rf"
         
+        # What is the complete set of input arguments (including script name)?
+        regrid_template_file = os.path.join(testinputs_path, "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc")
+        self._function_call_list = [
+            "regrid_ggcmi_shdates",
+            "-i",
+            testinputs_cc_path,
+            "-x",
+            ".nc4",
+            "-o",
+            self._regridded_cropcals,
+            "-rr",
+            "5x5amazon",
+            "-rt",
+            regrid_template_file,
+            "--crop-list",
+            "swh_rf",
+        ]
 
     def tearDown(self):
         """
         Remove temporary directory
         """
         shutil.rmtree(self._tempdir, ignore_errors=True)
-
-    # def test_no_files_given_fail(self):
-    #     """
-    #     Test that if no input or output files are given that it will gracefully fail
-    #     """
-    #     self._cfg_file_path = os.path.join(
-    #         self._testinputs_cc_path, "modify_fsurdat_short_nofiles.cfg"
-    #     )
-    #     sys.argv = ["fsurdat_modifier", self._cfg_file_path]
-    #     parser = fsurdat_modifier_arg_process()
-    #     with self.assertRaisesRegex(SystemExit, "must contain item 'fsurdat_in'"):
-    #         fsurdat_modifier(parser)
-
-    # def test_short_config(self):
-    #     """
-    #     Test that a short config file works
-    #     """
-    #     self._cfg_file_path = os.path.join(self._testinputs_cc_path, "modify_fsurdat_short.cfg")
-    #     sys.argv = ["fsurdat_modifier", self._cfg_file_path]
-    #     parser = fsurdat_modifier_arg_process()
-    #     fsurdat_out = (
-    #         "ctsm/test/testinputs/surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_out.nc"
-    #     )
-    #     if os.path.exists(fsurdat_out):
-    #         os.remove(fsurdat_out)
-    #     fsurdat_modifier(parser)
-    #     # Run it again with the overwrite option so that it will overwrite the file just created
-    #     sys.argv = ["fsurdat_modifier", self._cfg_file_path, "--overwrite"]
-    #     parser = fsurdat_modifier_arg_process()
-    #     fsurdat_modifier(parser)
-    #     # Cleanup
-    #     os.remove(fsurdat_out)
-
-    # def test_short_infile_both_cmdline_and_cfg(self):
-    #     """
-    #     Test that a graceful fail happens when the infile
-    #     is given both in the command line and the config file
-    #     """
-    #     self._cfg_file_path = os.path.join(self._testinputs_cc_path, "modify_fsurdat_short.cfg")
-    #     sys.argv = [
-    #         "fsurdat_modifier",
-    #         self._cfg_file_path,
-    #         "-i",
-    #         "specify_fsurdat_in_on_cmd_line.nc",
-    #     ]
-    #     parser = fsurdat_modifier_arg_process()
-    #     with self.assertRaisesRegex(
-    #         SystemExit,
-    #         "fsurdat_in is specified in both the command line and the config file, pick one",
-    #     ):
-    #         fsurdat_modifier(parser)
-
-    # def test_short_outfile_both_cmdline_and_cfg(self):
-    #     """
-    #     Test that a graceful fail happens when the outfile is given
-    #     both in the command line and the config file
-    #     """
-    #     self._cfg_file_path = os.path.join(self._testinputs_cc_path, "modify_fsurdat_short.cfg")
-    #     sys.argv = [
-    #         "fsurdat_modifier",
-    #         self._cfg_file_path,
-    #         "-o",
-    #         "specify_fsurdat_out_on_cmd_line.nc",
-    #     ]
-    #     parser = fsurdat_modifier_arg_process()
-    #     with self.assertRaisesRegex(
-    #         SystemExit,
-    #         "fsurdat_out is specified in both the command line and the config file, pick one",
-    #     ):
-    #         fsurdat_modifier(parser)
-
-    # def test_opt_sections(self):
-    #     """
-    #     Test that a simple file with the optional sections works
-    #     """
-    #     self._cfg_file_path = os.path.join(self._testinputs_cc_path, "modify_fsurdat_opt_sections.cfg")
-    #     outfile = os.path.join(
-    #         self._tempdir,
-    #         "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_output_urban.nc",
-    #     )
-    #     sys.argv = [
-    #         "fsurdat_modifier",
-    #         self._cfg_file_path,
-    #         "-i",
-    #         os.path.join(
-    #             self._testinputs_cc_path, "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc"
-    #         ),
-    #         "-o",
-    #         outfile,
-    #     ]
-    #     parser = fsurdat_modifier_arg_process()
-    #     fsurdat_modifier(parser)
-    #     # Read the resultant output file and make sure the fields are changed as expected
-    #     fsurdat_out_data = xr.open_dataset(outfile)
-    #     zero0d = np.zeros((5, 5))
-    #     one0d = np.ones((5, 5))
-    #     pct_urban = np.array(
-    #         [
-    #             [
-    #                 [100.0, 100.0, 100.0, 100.0, 100.0],
-    #                 [100.0, 100.0, 100.0, 100.0, 100.0],
-    #                 [100.0, 100.0, 100.0, 100.0, 100.0],
-    #                 [100.0, 100.0, 100.0, 100.0, 100.0],
-    #                 [100.0, 100.0, 100.0, 100.0, 100.0],
-    #             ],
-    #             [
-    #                 [0.0, 0.0, 0.0, 0.0, 0.0],
-    #                 [0.0, 0.0, 0.0, 0.0, 0.0],
-    #                 [0.0, 0.0, 0.0, 0.0, 0.0],
-    #                 [0.0, 0.0, 0.0, 0.0, 0.0],
-    #                 [0.0, 0.0, 0.0, 0.0, 0.0],
-    #             ],
-    #             [
-    #                 [0.0, 0.0, 0.0, 0.0, 0.0],
-    #                 [0.0, 0.0, 0.0, 0.0, 0.0],
-    #                 [0.0, 0.0, 0.0, 0.0, 0.0],
-    #                 [0.0, 0.0, 0.0, 0.0, 0.0],
-    #                 [0.0, 0.0, 0.0, 0.0, 0.0],
-    #             ],
-    #         ]
-    #     )
-    #     lev2_two = np.empty((2, 3, 5, 5))
-    #     lev2_two[0, :, :, :] = 200.0
-    #     lev2_two[1, :, :, :] = 100.0
-    #     lev2_five = np.empty((5, 3, 5, 5))
-    #     lev2_five[0, :, :, :] = 1.0
-    #     lev2_five[1, :, :, :] = 2.0
-    #     lev2_five[2, :, :, :] = 3.0
-    #     lev2_five[3, :, :, :] = 4.0
-    #     lev2_five[4, :, :, :] = 5.0
-    #     lev1 = np.array(
-    #         [
-    #             [
-    #                 [200.0, 200.0, 200.0, 200.0, 200.0],
-    #                 [200.0, 200.0, 200.0, 200.0, 200.0],
-    #                 [200.0, 200.0, 200.0, 200.0, 200.0],
-    #                 [200.0, 200.0, 200.0, 200.0, 200.0],
-    #                 [200.0, 200.0, 200.0, 200.0, 200.0],
-    #             ],
-    #             [
-    #                 [150.0, 150.0, 150.0, 150.0, 150.0],
-    #                 [150.0, 150.0, 150.0, 150.0, 150.0],
-    #                 [150.0, 150.0, 150.0, 150.0, 150.0],
-    #                 [150.0, 150.0, 150.0, 150.0, 150.0],
-    #                 [150.0, 150.0, 150.0, 150.0, 150.0],
-    #             ],
-    #             [
-    #                 [100.0, 100.0, 100.0, 100.0, 100.0],
-    #                 [100.0, 100.0, 100.0, 100.0, 100.0],
-    #                 [100.0, 100.0, 100.0, 100.0, 100.0],
-    #                 [100.0, 100.0, 100.0, 100.0, 100.0],
-    #                 [100.0, 100.0, 100.0, 100.0, 100.0],
-    #             ],
-    #         ]
-    #     )
-    #     np.testing.assert_array_equal(fsurdat_out_data.PCT_NATVEG, zero0d)
-    #     np.testing.assert_array_equal(fsurdat_out_data.PCT_CROP, zero0d)
-    #     np.testing.assert_array_equal(fsurdat_out_data.PCT_LAKE, zero0d)
-    #     np.testing.assert_array_equal(fsurdat_out_data.PCT_WETLAND, zero0d)
-    #     np.testing.assert_array_equal(fsurdat_out_data.PCT_GLACIER, zero0d)
-    #     np.testing.assert_array_equal(fsurdat_out_data.PCT_URBAN, pct_urban)
-    #     np.testing.assert_array_equal(fsurdat_out_data.LAKEDEPTH, one0d * 200.0)
-    #     np.testing.assert_array_equal(fsurdat_out_data.T_BUILDING_MIN, lev1)
-    #     np.testing.assert_array_equal(fsurdat_out_data.ALB_ROOF_DIR, lev2_two)
-    #     np.testing.assert_array_equal(fsurdat_out_data.TK_ROOF, lev2_five)
-
-    # def test_evenly_split_cropland(self):
-    #     """
-    #     Test that evenly splitting cropland works
-    #     """
-    #     self._create_config_file_evenlysplitcrop()
-    #     sys.argv = [
-    #         "fsurdat_modifier",
-    #         self._cfg_file_path,
-    #     ]
-    #     parser = fsurdat_modifier_arg_process()
-    #     fsurdat_modifier(parser)
-    #     # Read the resultant output file and make sure the fields are changed as expected
-    #     fsurdat_in_data = xr.open_dataset(self._fsurdat_in)
-    #     fsurdat_out_data = xr.open_dataset(self._regridded_cropcals)
-    #     Ncrops = fsurdat_out_data.dims["cft"]
-    #     pct_cft = np.full_like(fsurdat_out_data.PCT_CFT, 100 / Ncrops)
-    #     np.testing.assert_array_equal(fsurdat_in_data.PCT_NATVEG, fsurdat_out_data.PCT_NATVEG)
-    #     np.testing.assert_array_equal(fsurdat_in_data.PCT_CROP, fsurdat_out_data.PCT_CROP)
-    #     np.testing.assert_array_equal(fsurdat_in_data.PCT_LAKE, fsurdat_out_data.PCT_LAKE)
-    #     np.testing.assert_array_equal(fsurdat_in_data.PCT_WETLAND, fsurdat_out_data.PCT_WETLAND)
-    #     np.testing.assert_array_equal(fsurdat_in_data.PCT_GLACIER, fsurdat_out_data.PCT_GLACIER)
-    #     np.testing.assert_array_equal(fsurdat_in_data.PCT_URBAN, fsurdat_out_data.PCT_URBAN)
-    #     np.testing.assert_array_equal(fsurdat_out_data.PCT_CFT, pct_cft)
-
-    # def test_1x1_mexicocity(self):
-    #     """
-    #     Test that the mexicocity file is handled correctly
-    #     """
-    #     self._cfg_file_path = os.path.join(
-    #         self._testinputs_cc_path, "modify_fsurdat_1x1mexicocity.cfg"
-    #     )
-    #     expectfile = os.path.join(
-    #         self._testinputs_cc_path,
-    #         "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206_modified.nc",
-    #     )
-    #     outfile = os.path.join(
-    #         self._tempdir,
-    #         "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206_modified.nc",
-    #     )
-    #     infile = os.path.join(
-    #         self._testinputs_cc_path,
-    #         "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc",
-    #     )
-    #     sys.argv = [
-    #         "fsurdat_modifier",
-    #         self._cfg_file_path,
-    #         "-i",
-    #         infile,
-    #         "-o",
-    #         outfile,
-    #     ]
-    #     parser = fsurdat_modifier_arg_process()
-    #     fsurdat_modifier(parser)
-
-    #     # Read the resultant output file and make sure the fields are changed as expected
-    #     fsurdat_out_data = xr.open_dataset(outfile)
-    #     fsurdat_inp_data = xr.open_dataset(infile)
-    #     fsurdat_exp_data = xr.open_dataset(expectfile)
-
-    #     self.assertFalse(fsurdat_out_data.equals(fsurdat_inp_data))
-    #     # assert that fsurdat_out equals fsurdat_out_baseline
-    #     self.assertTrue(fsurdat_out_data.equals(fsurdat_exp_data))
-
-    # def test_cfg_file_DNE_fail(self):
-    #     """
-    #     Test that if the config file does not exist that it gracefully fails
-    #     """
-    #     self._cfg_file_path = os.path.join(self._tempdir, "FILE_DOES_NOT_EXIST.cfg")
-    #     sys.argv = ["fsurdat_modifier", self._cfg_file_path]
-    #     with self.assertRaisesRegex(SystemExit, "Config file does NOT exist"):
-    #         fsurdat_modifier_arg_process()
-
-    # def test_input_fsurdat_DNE_fail(self):
-    #     """
-    #     Test that if the input fsurdat  file does not exist that it gracefully fails
-    #     """
-    #     self._cfg_file_path = os.path.join(
-    #         self._testinputs_cc_path, "modify_fsurdat_short_nofiles.cfg"
-    #     )
-    #     sys.argv = ["fsurdat_modifier", self._cfg_file_path, "-i", "FILE_DOES_NOT_EXIST.nc"]
-    #     parser = fsurdat_modifier_arg_process()
-    #     with self.assertRaisesRegex(SystemExit, "Input fsurdat_in file does NOT exist"):
-    #         fsurdat_modifier(parser)
-
-    # def test_output_fsurdat_EXISTS_fail(self):
-    #     """
-    #     Test that if the output fsurdat file does exist that it gracefully fails
-    #     without --overwrite option
-    #     """
-    #     self._cfg_file_path = os.path.join(
-    #         self._testinputs_cc_path, "modify_fsurdat_short_nofiles.cfg"
-    #     )
-    #     sys.argv = [
-    #         "fsurdat_modifier",
-    #         self._cfg_file_path,
-    #         "-i",
-    #         self._cfg_file_path,
-    #         "-o",
-    #         self._cfg_file_path,
-    #     ]
-    #     parser = fsurdat_modifier_arg_process()
-    #     with self.assertRaisesRegex(SystemExit, "Output file already exists"):
-    #         fsurdat_modifier(parser)
-
-    # def test_cfg_file_empty_fail(self):
-    #     """
-    #     Test that if the config file is empty it gracefully fails
-    #     """
-    #     self._cfg_file_path = os.path.join(self._tempdir, "EMPTY_FILE.cfg")
-    #     fil = open(self._cfg_file_path, "w")
-    #     fil.close()
-    #     sys.argv = ["fsurdat_modifier", self._cfg_file_path]
-    #     parser = fsurdat_modifier_arg_process()
-    #     with self.assertRaisesRegex(SystemExit, "Config file does not have the expected section"):
-    #         fsurdat_modifier(parser)
-
-    # def test_minimalInfo(self):
-    #     """
-    #     This test specifies a minimal amount of information
-    #     Create .cfg file, run the tool, compare fsurdat_in to fsurdat_out
-    #     """
-
-    #     self._create_config_file_minimal()
-
-    #     # run the fsurdat_modifier tool
-    #     sys.argv = ["fsurdat_modifier", self._cfg_file_path]
-    #     parser = fsurdat_modifier_arg_process()
-    #     fsurdat_modifier(parser)
-    #     # the critical piece of this test is that the above command
-    #     # doesn't generate errors; however, we also do some assertions below
-
-    #     fsurdat_in_data = xr.open_dataset(self._fsurdat_in)
-    #     fsurdat_out_data = xr.open_dataset(self._regridded_cropcals)
-    #     # assert that fsurdat_out equals fsurdat_in
-    #     self.assertTrue(fsurdat_out_data.equals(fsurdat_in_data))
-
-    # def test_crop(self):
-    #     """
-    #     This version replaces the vegetation with a crop
-    #     Create .cfg file, run the tool, compare fsurdat_in to fsurdat_out
-    #     """
-
-    #     self._create_config_file_crop()
-
-    #     # run the fsurdat_modifier tool
-    #     sys.argv = ["fsurdat_modifier", self._cfg_file_path]
-    #     parser = fsurdat_modifier_arg_process()
-    #     fsurdat_modifier(parser)
-    #     # the critical piece of this test is that the above command
-    #     # doesn't generate errors; however, we also do some assertions below
-
-    #     # compare fsurdat_out to fsurdat_in
-    #     fsurdat_in_data = xr.open_dataset(self._fsurdat_in)
-    #     fsurdat_out_data = xr.open_dataset(self._regridded_cropcals)
-    #     # assert that fsurdat_out does not equal fsurdat_in
-    #     self.assertFalse(fsurdat_out_data.equals(fsurdat_in_data))
-
-    #     # compare fsurdat_out to fsurdat_out_baseline located in /testinputs
-    #     fsurdat_out_baseline = self._fsurdat_in[:-3] + "_modified_with_crop" + self._fsurdat_in[-3:]
-    #     fsurdat_out_base_data = xr.open_dataset(fsurdat_out_baseline)
-    #     # assert that fsurdat_out equals fsurdat_out_baseline
-    #     self.assertTrue(fsurdat_out_data.equals(fsurdat_out_base_data))
-
-    # def test_allInfo(self):
-    #     """
-    #     This version specifies all possible information
-    #     Create .cfg file, run the tool, compare fsurdat_in to fsurdat_out
-    #     """
-
-    #     self._create_config_file_complete()
-
-    #     # run the fsurdat_modifier tool
-    #     sys.argv = [
-    #         "fsurdat_modifier",
-    #         self._cfg_file_path,
-    #     ]
-    #     parser = fsurdat_modifier_arg_process()
-    #     fsurdat_modifier(parser)
-    #     # the critical piece of this test is that the above command
-    #     # doesn't generate errors; however, we also do some assertions below
-
-    #     # compare fsurdat_out to fsurdat_in
-    #     fsurdat_in_data = xr.open_dataset(self._fsurdat_in)
-    #     fsurdat_out_data = xr.open_dataset(self._regridded_cropcals)
-    #     # assert that fsurdat_out does not equal fsurdat_in
-    #     self.assertFalse(fsurdat_out_data.equals(fsurdat_in_data))
-
-    #     # compare fsurdat_out to fsurdat_out_baseline located in /testinputs
-    #     fsurdat_out_baseline = self._fsurdat_in[:-3] + "_modified" + self._fsurdat_in[-3:]
-    #     fsurdat_out_base_data = xr.open_dataset(fsurdat_out_baseline)
-    #     # assert that fsurdat_out equals fsurdat_out_baseline
-    #     self.assertTrue(fsurdat_out_data.equals(fsurdat_out_base_data))
-
-    # def _create_config_file_minimal(self):
-    #     """
-    #     Open the new and the template .cfg files
-    #     Loop line by line through the template .cfg file
-    #     When string matches, replace that line's content
-    #     """
-    #     with open(self._cfg_file_path, "w", encoding="utf-8") as cfg_out:
-    #         with open(self._cfg_template_path, "r", encoding="utf-8") as cfg_in:
-    #             for line in cfg_in:
-    #                 if re.match(r" *fsurdat_in *=", line):
-    #                     line = f"fsurdat_in = {self._fsurdat_in}"
-    #                 elif re.match(r" *fsurdat_out *=", line):
-    #                     line = f"fsurdat_out = {self._regridded_cropcals}"
-    #                 cfg_out.write(line)
-
-    # def _create_config_file_evenlysplitcrop(self):
-    #     """
-    #     Open the new and the template .cfg files
-    #     Loop line by line through the template .cfg file
-    #     When string matches, replace that line's content
-    #     """
-    #     with open(self._cfg_file_path, "w", encoding="utf-8") as cfg_out:
-    #         with open(self._cfg_template_path, "r", encoding="utf-8") as cfg_in:
-    #             for line in cfg_in:
-    #                 if re.match(r" *evenly_split_cropland *=", line):
-    #                     line = "evenly_split_cropland = True"
-    #                 elif re.match(r" *fsurdat_in *=", line):
-    #                     line = f"fsurdat_in = {self._fsurdat_in}"
-    #                 elif re.match(r" *fsurdat_out *=", line):
-    #                     line = f"fsurdat_out = {self._regridded_cropcals}"
-    #                 cfg_out.write(line)
-
-    # def _create_config_file_crop(self):
-    #     """
-    #     Open the new and the template .cfg files
-    #     Loop line by line through the template .cfg file
-    #     When string matches, replace that line's content
-    #     """
-    #     with open(self._cfg_file_path, "w", encoding="utf-8") as cfg_out:
-    #         with open(self._cfg_template_path, "r", encoding="utf-8") as cfg_in:
-    #             for line in cfg_in:
-    #                 if re.match(r" *fsurdat_in *=", line):
-    #                     line = f"fsurdat_in = {self._fsurdat_in}"
-    #                 elif re.match(r" *fsurdat_out *=", line):
-    #                     line = f"fsurdat_out = {self._regridded_cropcals}"
-    #                 elif re.match(r" *lnd_lat_1 *=", line):
-    #                     line = "lnd_lat_1 = -10\n"
-    #                 elif re.match(r" *lnd_lat_2 *=", line):
-    #                     line = "lnd_lat_2 = -7\n"
-    #                 elif re.match(r" *lnd_lon_1 *=", line):
-    #                     line = "lnd_lon_1 = 295\n"
-    #                 elif re.match(r" *lnd_lon_2 *=", line):
-    #                     line = "lnd_lon_2 = 300\n"
-    #                 elif re.match(r" *dom_pft *=", line):
-    #                     line = "dom_pft = 15"
-    #                 elif re.match(r" *evenly_split_cropland *=", line):
-    #                     line = "evenly_split_cropland = False"
-    #                 elif re.match(r" *lai *=", line):
-    #                     line = "lai = 0 1 2 3 4 5 5 4 3 2 1 0\n"
-    #                 elif re.match(r" *sai *=", line):
-    #                     line = "sai = 1 1 1 1 1 1 1 1 1 1 1 1\n"
-    #                 elif re.match(r" *hgt_top *=", line):
-    #                     line = "hgt_top = 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5\n"
-    #                 elif re.match(r" *hgt_bot *=", line):
-    #                     line = "hgt_bot = 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1\n"
-    #                 cfg_out.write(line)
-
-    # def _create_config_file_complete(self):
-    #     """
-    #     Open the new and the template .cfg files
-    #     Loop line by line through the template .cfg file
-    #     When string matches, replace that line's content
-    #     """
-    #     with open(self._cfg_file_path, "w", encoding="utf-8") as cfg_out:
-    #         with open(self._cfg_template_path, "r", encoding="utf-8") as cfg_in:
-    #             for line in cfg_in:
-    #                 if re.match(r" *fsurdat_in *=", line):
-    #                     line = f"fsurdat_in = {self._fsurdat_in}"
-    #                 elif re.match(r" *fsurdat_out *=", line):
-    #                     line = f"fsurdat_out = {self._regridded_cropcals}"
-    #                 elif re.match(r" *idealized *=", line):
-    #                     line = "idealized = True"
-    #                 elif re.match(r" *lnd_lat_1 *=", line):
-    #                     line = "lnd_lat_1 = -10\n"
-    #                 elif re.match(r" *lnd_lat_2 *=", line):
-    #                     line = "lnd_lat_2 = -7\n"
-    #                 elif re.match(r" *lnd_lon_1 *=", line):
-    #                     line = "lnd_lon_1 = 295\n"
-    #                 elif re.match(r" *lnd_lon_2 *=", line):
-    #                     line = "lnd_lon_2 = 300\n"
-    #                 elif re.match(r" *dom_pft *=", line):
-    #                     line = "dom_pft = 1"
-    #                 elif re.match(r" *evenly_split_cropland *=", line):
-    #                     line = "evenly_split_cropland = False"
-    #                 elif re.match(r" *lai *=", line):
-    #                     line = "lai = 0 1 2 3 4 5 5 4 3 2 1 0\n"
-    #                 elif re.match(r" *sai *=", line):
-    #                     line = "sai = 1 1 1 1 1 1 1 1 1 1 1 1\n"
-    #                 elif re.match(r" *hgt_top *=", line):
-    #                     line = "hgt_top = 5 5 5 5 5 5 5 5 5 5 5 5\n"
-    #                 elif re.match(r" *hgt_bot *=", line):
-    #                     line = "hgt_bot = 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5\n"
-    #                 elif re.match(r" *soil_color *=", line):
-    #                     line = "soil_color = 5"
-    #                 elif re.match(r" *std_elev *=", line):
-    #                     line = "std_elev = 0.1"
-    #                 elif re.match(r" *max_sat_area *=", line):
-    #                     line = "max_sat_area = 0.2"
-    #                 cfg_out.write(line)
+    
+    def test_regrid_ggcmi_shdates(self):
+        
+        # Call script
+        sys.argv = self._function_call_list
+        args = regrid_ggcmi_shdates_arg_process()
+        regrid_ggcmi_shdates(
+            args.regrid_resolution,
+            args.regrid_template_file,
+            args.regrid_input_directory,
+            args.regrid_output_directory,
+            args.extension,
+            args.crop_list,
+        )
+        
+        # Read output file
+        regrid_out_file = os.path.join(
+            self._regridded_cropcals,
+            "swh_rf_ggcmi_crop_calendar_phase3_v1.01_nninterp-5x5amazon.nc4",
+        )
+        regrid_out_ds = xr.open_dataset(regrid_out_file)
+        
+        # Check sowing dates
+        expected_sow_dates = np.array(
+            [[120, 120, 120, 120, 120],
+            [120, 120, 120, 120, 120],
+            [120, 120, 120, 120, 120],
+            [330, 335, 335, 120, 120],
+            [325, 335, 335, 335, 120]]
+            )
+        np.testing.assert_array_equal(expected_sow_dates, regrid_out_ds["planting_day"].values)
+        
+        # Check maturity dates
+        expected_mat_dates = np.array(
+            [[221, 221, 221, 221, 221],
+            [221, 221, 221, 221, 221],
+            [221, 221, 221, 221, 221],
+            [153, 128, 128, 221, 221],
+            [163, 128, 128, 128, 221]]
+            )
+        np.testing.assert_array_equal(expected_mat_dates, regrid_out_ds["maturity_day"].values)
 
 
 if __name__ == "__main__":
