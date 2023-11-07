@@ -150,6 +150,54 @@ specify spatially variable soil thickness. If not present, use bottom
 of soil column (nlevsoi).
 </entry>
 
+<entry id="snicar_numrad_snw" type="integer" category="clm_physics"
+       group="clm_inparm" valid_values="5,480" value="5" >
+number of wavelength bands used in SNICAR snow albedo calculation
+(snicar_numrad_snw=5 is the only supported option; others are EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
+</entry>
+
+<entry id="snicar_solarspec" type="char*25" category="clm_physics"
+       group="clm_inparm" valid_values="mid_latitude_winter,mid_latitude_summer,sub_arctic_winter,sub_arctic_summer,summit_greenland_summer,high_mountain_summer" value="mid_latitude_winter" >
+type of downward solar radiation spectrum for SNICAR snow albedo calculation
+(snicar_solarspec='mid_latitude_winter' is the only supported option; others are EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
+</entry>
+
+<entry id="snicar_dust_optics" type="char*25" category="clm_physics"
+       group="clm_inparm" valid_values="sahara,san_juan_mtns_colorado,greenland" value="sahara" >
+dust optics type for SNICAR snow albedo calculation
+(snicar_dust_optics='sahara' is the only supported option; others are EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
+</entry>
+
+<entry id="snicar_snw_shape" type="char*25" category="clm_physics"
+       group="clm_inparm" valid_values="sphere,spheroid,hexagonal_plate,koch_snowflake" value="hexagonal_plate" >
+snow grain shape used in SNICAR snow albedo calculation
+(snicar_dust_optics='hexagonal_plate' is supported in ctsm5.1 and 'sphere' in older model versions; others are EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
+</entry>
+
+<entry id="snicar_use_aerosol" type="logical" category="clm_physics"
+       group="clm_inparm" value=".true.">
+Toggle to turn on/off aerosol deposition flux in snow in SNICAR
+(snicar_use_aerosol='.false.' is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
+</entry>
+
+<entry id="snicar_snobc_intmix" type="logical" category="clm_physics"
+       group="clm_inparm" value=".false." >
+option to activate BC-snow internal mixing in SNICAR snow albedo calculation
+(snicar_snobc_intmix='.true.' is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
+</entry>
+
+<entry id="snicar_snodst_intmix" type="logical" category="clm_physics"
+       group="clm_inparm" value=".false." >
+option to activate dust-snow internal mixing in SNICAR snow albedo calculation
+(snicar_snodst_intmix='.true.' is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
+</entry>
+
+<entry id="do_sno_oc" type="logical" category="clm_physics"
+       group="clm_inparm" value=".false." >
+option to activate organic carbon (OC) in SNICAR snow albedo calculation
+(do_sno_oc='.true.' is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
+</entry>
+
 <entry id="rooting_profile_method_water" type="integer" category="clm_physics"
        group="rooting_profile_inparm" valid_values="0,1,2" >
 Index of rooting profile for water
@@ -638,6 +686,17 @@ Switch deciding which nutrient model to use in FATES.
 (Only relevant if FATES is on)
 </entry>
 
+<entry id="fates_seeddisp_cadence" type="integer" category="physics"
+        group="clm_inparm" valid_values="0,1,2,3">
+Switch defining the cadence at which seeds are dispersed across
+gridcells.  Setting the switch value to zero turns off dispersal.
+Setting the switch to 1, 2, or 3 sets the dispersal cadence to
+daily, monthly or yearly.  The daily cadence is primarily
+recommended for test and debug only. Note that turning this
+feature on will result in more memory usage.
+(Only relevant if FATES is on)
+</entry>
+
 <entry id="use_fates_tree_damage" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false."> 
 Toggle to turn on the tree damage module in FATES
@@ -1065,13 +1124,13 @@ Maximum nitrification rate constant (1/s)
 <entry id="use_extralakelayers" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to use 25 lake layers instead of 10
-(extralaklayers=".true." is EXPERIMENTAL NOT SUPPORTED! Nor is it Tested!)
+(extralaklayers=".true." is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <entry id="use_vichydro" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the VIC hydrologic parameterizations
-(vichydro=".true." is EXPERIMENTAL NOT SUPPORTED!)
+(vichydro=".true." is EXPERIMENTAL, UNSUPPORTED!)
 </entry>
 
 <entry id="use_crop" type="logical" category="physics"
@@ -1151,9 +1210,8 @@ DependsOnLatAndVeg - Arctic vegetation depends on latitude as above, but tempera
 </entry>
 
 <entry id="use_snicar_frc" type="logical" category="physics"
-       group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) radiative forcing
-(snicar_frc=".true." is EXPERIMENTAL NOT SUPPORTED!)
+       group="clm_inparm" value=".false.">
+Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) albedo forcing diagnostics for each aerosol species
 </entry>
 
 <entry id="use_noio" type="logical" category="default_settings"
@@ -1771,7 +1829,7 @@ prescribed data.
 <entry id="use_lai_streams" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on use of LAI streams in place of the LAI on the surface dataset when using Satellite Phenology mode.
-(EXPERIMENTAL and NOT tested)
+(EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <entry id="stream_year_first_lai" type="integer" category="datasets"
@@ -1835,9 +1893,19 @@ Last year to loop over for crop calendar data
 Simulation year that aligns with stream_year_first_cropcal value
 </entry>
 
-<entry id="stream_fldfilename_sdate" type="char*256(30)" category="datasets"
+<entry id="allow_invalid_swindow_inputs" type="logical" category="datasets"
+       group="cropcal_streams" valid_values="" >
+By default, a value in stream_fldFileName_swindow_start or _end outside the range [1, 365] (or 366 in leap years) will cause the run to fail. Set this to .true. to instead fall back on the paramfile sowing windows.
+</entry>
+
+<entry id="stream_fldFileName_swindow_start" type="char*256(30)" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
-Filename of input stream data for sowing dates
+Filename of input stream data for date (day of year) of start of sowing window. Cells with the same sowing window start and end date are always planted on that date, regardless of climatic conditions/history.
+</entry>
+
+<entry id="stream_fldFileName_swindow_end" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for date (day of year) of end of sowing window. Cells with the same sowing window start and end date are always planted on that date, regardless of climatic conditions/history.
 </entry>
 
 <entry id="stream_fldfilename_cultivar_gdds" type="char*256(30)" category="datasets"
@@ -2224,7 +2292,7 @@ Profile over which to distribute C and N coming from surface pools (leaves, stem
 <entry id="no_frozen_nitrif_denitrif" type="logical" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
 If true, no denitrification or nitrification in frozen soil layers.
-(EXPERIMENTAL and NOT tested)
+(EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <entry id="nfix_timeconst" type="real" category="clm_vertcn"
@@ -2303,13 +2371,13 @@ tests. This namelist flag bypasses this error-check.
        group="clm_inparm" valid_values="" >
 If TRUE, weight btran (vegetation soil moisture availability) by unfrozen layers only, assuming that vegetation
 will allocate roots preferentially to the active layer.
-(EXPERIMENTAL and NOT tested)
+(EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <entry id="perchroot_alt" type="logical" category="clm_permafrost"
        group="clm_inparm" valid_values="" >
 If TRUE, weight btran (vegetation soil moisture availability) by the active layer, as defined by the greatest thaw depth over the current and prior years.
-(EXPERIMENTAL and NOT tested)
+(EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <!-- stress deciduous onset trigger    -->
@@ -2345,7 +2413,7 @@ How much Carbon to initialize vegetation pools (leafc/frootc and storage) to whe
 <entry id="CNratio_floating" type="logical" category="clm_nitrogen"
        group="clm_nitrogen" value=".false.">
    Flexible CN ratio used for Phenology
-(EXPERIMENTAL and NOT tested)
+(EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <entry id="reduce_dayl_factor" type="logical" category="clm_nitrogen"
@@ -2357,7 +2425,7 @@ How much Carbon to initialize vegetation pools (leafc/frootc and storage) to whe
 <entry id="vcmax_opt" type="integer" category="clm_nitrogen"
        group="clm_nitrogen" valid_values="0,3,4">
 Vcmax calculation for Photosynthesis
-    vcmax_opt = 4 As for vcmax_opt=0, but using leafN, and exponential if tree  (EXPERIMENTAL NOT TESTED!)
+    vcmax_opt = 4 As for vcmax_opt=0, but using leafN, and exponential if tree (EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
     vcmax_opt = 3 Based on leafN and VCAD (used with Luna for crop and C4 vegetation)
     vcmax_opt = 0 Based on canopy top and foilage Nitrogen limitation factor from params file (clm4.5)
 </entry>
@@ -2365,13 +2433,13 @@ Vcmax calculation for Photosynthesis
 <entry id="CN_evergreen_phenology_opt" type="integer" category="clm_nitrogen"
        group="clm_nitrogen" valid_values="0,1">
 Evergreen phenology option for CNPhenology
-(EXPERIMENTAL and NOT tested)
+(EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <entry id="carbon_resp_opt" type="integer" category="clm_nitrogen"
        group="clm_nitrogen" valid_values="0,1">
 Carbon respiration option to burn off carbon when CN ratio is too high (do NOT use when FUN is on)
-(EXPERIMENTAL and NOT tested)
+(EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 
@@ -2429,7 +2497,7 @@ then don't fix aere (see ch4Mod.F90).
 <entry id="allowlakeprod" type="logical" category="clm_methane"
        group="ch4par_in" valid_values="" >
 If TRUE, turn on methane biogeochemistry model for lake columns, using a simplified version of the CH4 submodel.
-(EXPERIMENTAL)
+(EXPERIMENTAL, UNSUPPORTED!)
 </entry>
 
 <entry id="usephfact" type="logical" category="clm_methane"
@@ -2448,7 +2516,7 @@ If TRUE, maintain constant soil carbon under lakes, and use the methane submodel
 CO2 (via biological assimilation, decomposition, and methanogenesis) to CH4. If FALSE, transiently decompose initial
 soil carbon stock based on soil carbon dataset.  NOTE: if FALSE, a new transient source of C is added to the climate system,
 so the coupled system will NOT conserve carbon in this mode if the methane model is coupled to the atmosphere.
-(EXPERIMENTAL and NOT tested)
+(EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <entry id="finundation_method" type="char*50" category="clm_methane"
@@ -2461,14 +2529,14 @@ ZWT_inversion ---- Use inversion of Prigent Satellite data to model ZWT
 TWS_inversion ---- Use inversion of Prigent Satellite data to model TWS
 
 Inversion options require additional data on fsurdat or use of stream_fldfilename_ch4finundated files.
-(h2osfc option is EXPERIMENTAL and NOT tested)
+(h2osfc option is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <entry id="usefrootc" type="logical" category="clm_methane"
        group="ch4par_in" valid_values="" >
 If TRUE, use the fine root carbon predicted by CN when calculating the aerenchyma area, rather than the parametrization
 based on annual NPP, aboveground NPP fraction, and LAI.
-(EXPERIMENTAL and NOT tested)
+(EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <entry id="ch4offline" type="logical" category="clm_methane"
@@ -2476,7 +2544,7 @@ based on annual NPP, aboveground NPP fraction, and LAI.
 If TRUE, run the methane submodel decoupled from the atmosphere. The atmospheric methane concentration is prescribed by
 atmch4, the methane flux is not passed to the atmosphere, and the CO2 flux to the atmosphere is not adjusted for
 net methane production. NOTE: Currently this must be TRUE.
-(EXPERIMENTAL and NOT functional)
+(EXPERIMENTAL, UNSUPPORTED, and NOT functional!)
 </entry>
 
 <!-- ========================================================================================  -->
