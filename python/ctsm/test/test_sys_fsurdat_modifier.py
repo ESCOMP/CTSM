@@ -76,7 +76,9 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_short.cfg")
         sys.argv = ["fsurdat_modifier", self._cfg_file_path]
         parser = fsurdat_modifier_arg_process()
-        fsurdat_out = os.path.join(self._testinputs_path, "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031.out.nc")
+        fsurdat_out = os.path.join(
+            self._testinputs_path, "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031.out.nc"
+        )
         if os.path.exists(fsurdat_out):
             os.remove(fsurdat_out)
         fsurdat_modifier(parser)

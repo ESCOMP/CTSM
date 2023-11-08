@@ -264,7 +264,12 @@ class ModifyFsurdat:
                     )
                 if len(val) != dim1:
                     abort(
-                        "Variable " + varname + " is " + str(len(val)) + ". It should be = " + str(dim1)
+                        "Variable "
+                        + varname
+                        + " is "
+                        + str(len(val))
+                        + ". It should be = "
+                        + str(dim1)
                     )
         return settings_return
 

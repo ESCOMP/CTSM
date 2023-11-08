@@ -110,7 +110,15 @@ def read_cfg_subgrid(config, cfg_path, numurbl=3):
 
     subgrid_settings = {}
     var_list = config.options(section)
-    valid_list = ["pct_natveg", "pct_crop", "pct_lake", "pct_glacier", "pct_wetland", "pct_urban","pct_ocean"]
+    valid_list = [
+        "pct_natveg",
+        "pct_crop",
+        "pct_lake",
+        "pct_glacier",
+        "pct_wetland",
+        "pct_urban",
+        "pct_ocean",
+    ]
     varsum = 0
     for var in var_list:
         if valid_list.count(var) == 0:
