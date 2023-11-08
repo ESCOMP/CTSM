@@ -974,17 +974,17 @@ contains
     real(r8), intent(in) :: latdeg
     real(r8), intent(in) :: baset_latvary_intercept
     real(r8), intent(in) :: baset_latvary_slope
-    !
-    ! !LOCAL VARIABLES
-    real(r8) :: maxlat  ! Outside latitude range defined by ±maxlat, use baset
 
-    maxlat = latbaset_max_lat(baset_latvary_intercept, baset_latvary_slope)
+    ! Was originally
+    !     maxlat = latbaset_max_lat(baset_latvary_intercept, baset_latvary_slope)
+    !     if (abs(latdeg) > maxlat) then
+    !         latbaset = baset
+    !     else
+    !         latbaset = baset + baset_latvary_intercept - baset_latvary_slope*abs(latdeg)
+    !     end if
+    ! But the one-liner below should improve efficiency, at least marginally.
 
-    if (abs(latdeg) > maxlat) then
-        latbaset = baset
-    else
-        latbaset = baset + baset_latvary_intercept - baset_latvary_slope*abs(latdeg)
-    end if
+    latbaset = baset + baset_latvary_intercept - min(baset_latvary_intercept, baset_latvary_slope * abs(latdeg))
 
   end function latbaset
 
