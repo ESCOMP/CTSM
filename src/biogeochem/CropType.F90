@@ -23,6 +23,7 @@ module CropType
   private
   !
   ! !PUBLIC DATA TYPES:
+  public :: latbaset
   !
 
   ! Possible values of cphase
@@ -383,13 +384,7 @@ contains
 
        this%nyrs_crop_active_patch(p) = 0
 
-       if ( grc%latdeg(g) >= 0.0_r8 .and. grc%latdeg(g) <= 30.0_r8) then
-          this%latbaset_patch(p)=pftcon%baset(ivt)+12._r8-0.4_r8*grc%latdeg(g)
-       else if (grc%latdeg(g) < 0.0_r8 .and. grc%latdeg(g) >= -30.0_r8) then
-          this%latbaset_patch(p)=pftcon%baset(ivt)+12._r8+0.4_r8*grc%latdeg(g)
-       else
-          this%latbaset_patch(p)=pftcon%baset(ivt)
-       end if
+       this%latbaset_patch(p) = latbaset(pftcon%baset(ivt), grc%latdeg(g), this%baset_latvary_intercept, this%baset_latvary_slope)
        if ( trim(this%baset_mapping) == baset_map_constant ) then
           this%latbaset_patch(p) = nan
        end if
@@ -971,5 +966,21 @@ contains
     end if
 
   end subroutine checkDates
+
+  real(r8) function latbaset(baset, latdeg, baset_latvary_intercept, baset_latvary_slope)
+    ! !ARGUMENTS:
+    real(r8), intent(in) :: baset
+    real(r8), intent(in) :: latdeg
+    real(r8), intent(in) :: baset_latvary_intercept
+    real(r8), intent(in) :: baset_latvary_slope
+
+    if ( latdeg >= 0.0_r8 .and. latdeg <= 30.0_r8) then
+        latbaset = baset + 12._r8 - 0.4_r8*latdeg
+    else if (latdeg < 0.0_r8 .and. latdeg >= -30.0_r8) then
+        latbaset = baset + 12._r8 + 0.4_r8*latdeg
+    else
+        latbaset = baset
+    end if
+  end function latbaset
 
 end module CropType
