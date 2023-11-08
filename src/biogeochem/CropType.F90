@@ -975,9 +975,9 @@ contains
     real(r8), intent(in) :: baset_latvary_slope
 
     if ( latdeg >= 0.0_r8 .and. latdeg <= 30.0_r8) then
-        latbaset = baset + 12._r8 - 0.4_r8*latdeg
+        latbaset = baset + baset_latvary_intercept - baset_latvary_slope*latdeg
     else if (latdeg < 0.0_r8 .and. latdeg >= -30.0_r8) then
-        latbaset = baset + 12._r8 + 0.4_r8*latdeg
+        latbaset = baset + baset_latvary_intercept + baset_latvary_slope*latdeg
     else
         latbaset = baset
     end if
