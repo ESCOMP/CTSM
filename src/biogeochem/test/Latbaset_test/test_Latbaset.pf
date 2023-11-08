@@ -7,7 +7,7 @@ module test_Latbaset
   use unittestSubgridMod
   use unittestSimpleSubgridSetupsMod
   use unittestFilterBuilderMod
-  use CropType, only : latbaset
+  use CropType, only : latbaset, latbaset_max_lat
 
   implicit none
 
@@ -41,9 +41,9 @@ contains
     class(TestLatbaset), intent(inout) :: this
 
     baset = 5._r8
-    latdeg = 80._r8
     baset_latvary_intercept = 8.7_r8
     baset_latvary_slope     = 0.5_r8
+    latdeg = 10._r8 + latbaset_max_lat(baset_latvary_intercept, baset_latvary_slope)
 
     @assertEqual(baset, latbaset(baset, latdeg, baset_latvary_intercept, baset_latvary_slope))
   end subroutine too_far_north
@@ -53,9 +53,9 @@ contains
     class(TestLatbaset), intent(inout) :: this
 
     baset = 5._r8
-    latdeg = -80._r8
     baset_latvary_intercept = 8.7_r8
     baset_latvary_slope     = 0.5_r8
+    latdeg = -10._r8 - latbaset_max_lat(baset_latvary_intercept, baset_latvary_slope)
 
     @assertEqual(baset, latbaset(baset, latdeg, baset_latvary_intercept, baset_latvary_slope))
   end subroutine too_far_south
@@ -65,9 +65,9 @@ contains
     class(TestLatbaset), intent(inout) :: this
 
     baset = 5._r8
-    latdeg = 30._r8
     baset_latvary_intercept = 12._r8
     baset_latvary_slope     = 0.4_r8
+    latdeg = latbaset_max_lat(baset_latvary_intercept, baset_latvary_slope)
 
     @assertEqual(baset, latbaset(baset, latdeg, baset_latvary_intercept, baset_latvary_slope))
   end subroutine at_northern_limit
@@ -77,9 +77,9 @@ contains
     class(TestLatbaset), intent(inout) :: this
 
     baset = 5._r8
-    latdeg = -30._r8
     baset_latvary_intercept = 12._r8
     baset_latvary_slope     = 0.4_r8
+    latdeg = -latbaset_max_lat(baset_latvary_intercept, baset_latvary_slope)
 
     @assertEqual(baset, latbaset(baset, latdeg, baset_latvary_intercept, baset_latvary_slope))
   end subroutine at_southern_limit

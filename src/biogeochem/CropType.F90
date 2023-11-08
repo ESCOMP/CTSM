@@ -24,6 +24,7 @@ module CropType
   !
   ! !PUBLIC DATA TYPES:
   public :: latbaset
+  public :: latbaset_max_lat
   !
 
   ! Possible values of cphase
@@ -977,7 +978,7 @@ contains
     ! !LOCAL VARIABLES
     real(r8) :: maxlat  ! Outside latitude range defined by ±maxlat, use baset
 
-    maxlat = 30._r8
+    maxlat = latbaset_max_lat(baset_latvary_intercept, baset_latvary_slope)
 
     if (abs(latdeg) > maxlat) then
         latbaset = baset
@@ -986,5 +987,12 @@ contains
     end if
 
   end function latbaset
+
+  real(r8) function latbaset_max_lat(intercept, slope)
+    real(r8), intent(in) :: intercept
+    real(r8), intent(in) :: slope
+
+    latbaset_max_lat = intercept / slope
+  end function latbaset_max_lat
 
 end module CropType
