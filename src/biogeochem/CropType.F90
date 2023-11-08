@@ -973,14 +973,18 @@ contains
     real(r8), intent(in) :: latdeg
     real(r8), intent(in) :: baset_latvary_intercept
     real(r8), intent(in) :: baset_latvary_slope
+    !
+    ! !LOCAL VARIABLES
+    real(r8) :: maxlat  ! Outside latitude range defined by ±maxlat, use baset
 
-    if ( latdeg >= 0.0_r8 .and. latdeg <= 30.0_r8) then
-        latbaset = baset + baset_latvary_intercept - baset_latvary_slope*latdeg
-    else if (latdeg < 0.0_r8 .and. latdeg >= -30.0_r8) then
-        latbaset = baset + baset_latvary_intercept + baset_latvary_slope*latdeg
-    else
+    maxlat = 30._r8
+
+    if (abs(latdeg) > maxlat) then
         latbaset = baset
+    else
+        latbaset = baset + baset_latvary_intercept - baset_latvary_slope*abs(latdeg)
     end if
+
   end function latbaset
 
 end module CropType
