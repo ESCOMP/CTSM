@@ -373,37 +373,32 @@ contains
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: c, l, g, p, m, ivt ! indices
+    integer :: l, g, p, ivt ! indices
+    logical :: latvary_baset
 
     character(len=*), parameter :: subname = 'InitCold'
     !-----------------------------------------------------------------------
 
-!DLL - added wheat & sugarcane restrictions to base T vary by lat
+    latvary_baset = trim(this%baset_mapping) == baset_map_latvary
+    if (.not. latvary_baset) then
+        this%latbaset_patch(bounds%begp:bounds%endp) = nan
+    end if
+
     do p= bounds%begp,bounds%endp
-       g   = patch%gridcell(p)
-       ivt = patch%itype(p)
+       l = patch%landunit(p)
 
        this%nyrs_crop_active_patch(p) = 0
 
-       this%latbaset_patch(p) = latbaset(pftcon%baset(ivt), grc%latdeg(g), this%baset_latvary_intercept, this%baset_latvary_slope)
-       if ( trim(this%baset_mapping) == baset_map_constant ) then
-          this%latbaset_patch(p) = nan
+       if (lun%itype(l) == istcrop) then
+          g = patch%gridcell(p)
+          ivt = patch%itype(p)
+          this%fertnitro_patch(p) = fert_cft(g,ivt)
+
+          if (latvary_baset) then
+              this%latbaset_patch(p) = latbaset(pftcon%baset(ivt), grc%latdeg(g), this%baset_latvary_intercept, this%baset_latvary_slope)
+          end if
        end if
     end do
-!DLL -- end of mods
-
-    if (use_crop) then
-       do p= bounds%begp,bounds%endp
-          g = patch%gridcell(p)
-          l = patch%landunit(p)
-          c = patch%column(p)
-
-          if (lun%itype(l) == istcrop) then
-             m = patch%itype(p)
-             this%fertnitro_patch(p) = fert_cft(g,m)
-          end if
-       end do
-    end if
 
   end subroutine InitCold
 
