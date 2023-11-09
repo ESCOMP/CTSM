@@ -38,10 +38,9 @@
   <test name="ERP_D_Ld9.ne30pg3_t232.I1850Clm51BgcCrop.derecho_intel.clm-clm51cam6LndTuningMode">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
-      <issue>#2210</issue>
+      <issue>#2234</issue>
     </phase>
   </test>
-
 
   <!-- aux_clm test suite failures -->
   <test name="SMS_D_Ld1_Mmpi-serial_Vmct.f45_f45_mg37.I2000Clm50SpRs.izumi_gnu.clm-ptsRLA">
