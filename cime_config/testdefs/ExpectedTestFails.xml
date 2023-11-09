@@ -61,11 +61,13 @@
   <test name="LII2FINIDATAREAS_D_P72x2_Ld1.f09_g17.I1850Clm50BgcCrop.cheyenne_intel.clm-default">
     <phase name="RUN">
       <status>FAIL</status>
+      <issue>#2241</issue>
     </phase>
   </test>
   <test name="LII_D_Ld3_PS.f19_g17.I2000Clm50BgcCrop.cheyenne_intel.clm-default">
     <phase name="RUN">
       <status>FAIL</status>
+      <issue>#2241</issue>
     </phase>
   </test>
   <--  LILAC issues -->
