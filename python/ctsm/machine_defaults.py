@@ -69,7 +69,7 @@ MACHINE_DEFAULTS = {
     "derecho": MachineDefaults(
         job_launcher_type=JOB_LAUNCHER_QSUB,
         scratch_dir=os.path.join(os.path.sep, "glade", "derecho", "scratch", get_user()),
-        baseline_dir=os.path.join(os.path.sep, "glade", "p", "cgd", "tss", "ctsm_baselines"),
+        baseline_dir=os.path.join(os.path.sep, "glade", "campaign", "cgd", "tss", "ctsm_baselines"),
         account_required=True,
         create_test_retry=0,
         create_test_queue="regular",
