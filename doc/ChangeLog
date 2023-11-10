@@ -1,4 +1,78 @@
 ===============================================================
+Tag name: ctsm5.1.dev151
+Originator(s): rgknox (Ryan Knox,LAWRENCE BERKELEY NATIONAL LABORATORY,510-495-2153)
+Date: Fri Nov 10 15:33:37 MST 2023
+One-line Summary: Fixes to FATES long run restarts
+
+Purpose and description of changes
+----------------------------------
+
+This is a set of changes that enables exact restart tests to pass with FATES, for 
+	longer periods, particularly those that have elapsed over a year.
+	We removed calls that were incrementing, uncecessary calls, and added key new
+	variables to the restart file (such as the leaf layer carbon balance vector).
+
+Collaborators: @mvdebolskiy, @mvertens, @glemieux, @ekluzek, @ckoven, @rosiealice
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+No changes to scientifically-supported configurations.
+
+Bugs fixed or introduced
+------------------------
+
+Fixes: FATES#1051 https://github.com/NGEET/fates/issues/1051
+
+Notes of particular relevance for users
+---------------------------------------
+
+This set of changes is introduced, while there is a known test failure in:
+ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianRs.izumi_gnu.clm-cropMonthlyNoinitial
+
+This is documented in issue: 2236 and a fix is slated for integration. The nature of the changes 
+	in this PR where obviously orthogonal to the issue.
+
+Substantial timing or memory changes: None
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+A new test was added to aux_clm and fates test suites. The walltime for this test 
+	was 29 minutes. This is an important new test for FATES because it is the 
+	first gridded test that spans significantly over a year (and passes). Various test
+	configurations were explored to find a gridded test that completed 25 months
+	with some attempt at expedience in walltime. A walltime
+	allowance of 60 minutes is set in the test.  Here is the test:
+	ERS_P144x1_Lm25.f10_f10_mg37.I2000Clm51Fates   clm-FatesColdNoComp
+
+
+Testing summary:
+----------------
+  regular tests:
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+Answer changes
+--------------
+
+No answer changes
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates API30
+
+Pull Requests that document the changes (include PR ids):
+	
+https://github.com/ESCOMP/CTSM/pull/2199
+https://github.com/NGEET/fates/pull/1098
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev150
 Originator(s): rgknox (Ryan Knox,LAWRENCE BERKELEY NATIONAL LABORATORY,510-495-2153)
 Date: Mon Nov  6 14:12:37 MST 2023
