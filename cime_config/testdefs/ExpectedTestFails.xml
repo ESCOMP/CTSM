@@ -35,6 +35,12 @@
       <issue>#2234</issue>
     </phase>
   </test>
+  <test name="ERP_D_Ld10_P36x2.f10_f10_mg37.IHistClm51BgcCrop.cheyenne_intel.clm-ciso_decStart">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2238</issue>
+    </phase>
+  </test>
   <test name="LCISO_Lm13.f10_f10_mg37.IHistClm51BgcCrop.cheyenne_intel.clm-ciso_monthly">
     <phase name="RUN">
       <status>FAIL</status>
