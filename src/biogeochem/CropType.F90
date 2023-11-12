@@ -24,7 +24,6 @@ module CropType
   !
   ! !PUBLIC DATA TYPES:
   public :: latbaset
-  public :: latbaset_max_lat
   !
 
   ! Possible values of cphase
@@ -971,7 +970,7 @@ contains
     real(r8), intent(in) :: baset_latvary_slope
 
     ! Was originally
-    !     maxlat = latbaset_max_lat(baset_latvary_intercept, baset_latvary_slope)
+    !     maxlat = baset_latvary_intercept / baset_latvary_slope
     !     if (abs(latdeg) > maxlat) then
     !         latbaset = baset
     !     else
@@ -982,12 +981,5 @@ contains
     latbaset = baset + baset_latvary_intercept - min(baset_latvary_intercept, baset_latvary_slope * abs(latdeg))
 
   end function latbaset
-
-  real(r8) function latbaset_max_lat(intercept, slope)
-    real(r8), intent(in) :: intercept
-    real(r8), intent(in) :: slope
-
-    latbaset_max_lat = intercept / slope
-  end function latbaset_max_lat
 
 end module CropType

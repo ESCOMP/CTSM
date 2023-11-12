@@ -7,7 +7,7 @@ module test_Latbaset
   use unittestSubgridMod
   use unittestSimpleSubgridSetupsMod
   use unittestFilterBuilderMod
-  use CropType, only : latbaset, latbaset_max_lat
+  use CropType, only : latbaset
 
   implicit none
 
@@ -35,6 +35,13 @@ contains
 
     call unittest_subgrid_teardown()
   end subroutine tearDown
+
+  real(r8) function latbaset_max_lat(intercept, slope)
+    real(r8), intent(in) :: intercept
+    real(r8), intent(in) :: slope
+
+    latbaset_max_lat = intercept / slope
+  end function latbaset_max_lat
 
   @Test
   subroutine too_far_north(this)
