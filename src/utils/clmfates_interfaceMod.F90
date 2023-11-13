@@ -146,7 +146,7 @@ module CLMFatesInterfaceMod
    use EDInitMod             , only : init_patches
    use EDInitMod             , only : set_site_properties
    use EDPftVarcon           , only : EDpftvarcon_inst
-   use EDSurfaceRadiationMod , only : ED_SunShadeFracs, ED_Norman_Radiation
+   use FatesRadiationDriveMod, only : FatesSunShadeFracs, FatesNormalizedCanopyRadiation
    use EDBtranMod            , only : btran_ed, &
                                       get_active_suction_layers
    use EDCanopyStructureMod  , only : canopy_summarization, update_hlm_dynamics
@@ -560,29 +560,45 @@ module CLMFatesInterfaceMod
      ! level
 
      use histFileMod, only: getname
-     use histFileMod, only: fincl, hist_fincl1
-     use histFileMod, only: max_tapes, max_flds
+     use histFileMod, only: hist_fincl1,hist_fincl2,hist_fincl3,hist_fincl4
+     use histFileMod, only: hist_fincl5,hist_fincl6,hist_fincl7,hist_fincl8
+     use histFileMod, only: hist_fincl9,hist_fincl10
+     use histFileMod, only: max_tapes, max_flds, max_namlen
 
      integer :: t     ! iterator index for history tapes
      integer :: f     ! iterator index for registered history field names
      integer :: nh    ! iterator index for fates registered history
+     logical :: is_fates_field ! Does this start with FATES_ ?
      logical :: found ! if true, than the history field is either
                       ! not part of the fates set, or was found in
                       ! the fates set
      character(len=64) :: fincl_name
+     ! This is a copy of the public in histFileMod, copied
+     ! here because it isn't filled at the time of this call
+     character(len=max_namlen+2) :: fincl(max_flds,max_tapes)
+     
+     fincl(:,1)  = hist_fincl1(:)
+     fincl(:,2)  = hist_fincl2(:)
+     fincl(:,3)  = hist_fincl3(:)
+     fincl(:,4)  = hist_fincl4(:)
+     fincl(:,5)  = hist_fincl5(:)
+     fincl(:,6)  = hist_fincl6(:)
+     fincl(:,7)  = hist_fincl7(:)
+     fincl(:,8)  = hist_fincl8(:)
+     fincl(:,9)  = hist_fincl9(:)
+     fincl(:,10) = hist_fincl10(:)
      
      do t = 1,max_tapes
 
         f = 1
         search_fields: do while (f < max_flds .and. fincl(f,t) /= ' ')
-
-           ! This fincl array might not be ready by the time
-           ! this is called
+           
            fincl_name = getname(fincl(f,t))
-        
-           if(scan(fincl_name,'FATES_'))then
+           is_fates_field = fincl_name(1:6)=='FATES_'
+           
+           if(is_fates_field) then
               found = .false.
-              do_fates_hist: do nh = 1,fates_hist%num_history_vars
+              do_fates_hist: do nh = 1,fates_hist%num_history_vars()
                  if(trim(fates_hist%hvars(nh)%vname) == &
                       trim(fincl_name)) then
                     found=.true.
@@ -599,14 +615,14 @@ module CLMFatesInterfaceMod
                  write(iulog,*) 'specified a FATES history output density level'
                  write(iulog,*) 'that does not contain that variable in its valid set.'
                  write(iulog,*) 'You may have to increase the namelist setting: fates_hist_dense_level'
-                 write(iulog,*) 'current fates_hist_dens_level: ',hlm_hist_dense_level
+                 write(iulog,*) 'current fates_hist_dens_level: ',fates_hist_dense_level
                  call endrun(msg=errMsg(sourcefile, __LINE__))
               end if
            end if
            f = f + 1
         end do search_fields
+        
      end do
-     
    end subroutine CrossRefHistoryFields
 
    
@@ -1178,7 +1194,7 @@ module CLMFatesInterfaceMod
       call fates_hist%update_history_dyn( nc,                    &
                                           this%fates(nc)%nsites, &
                                           this%fates(nc)%sites,  &
-                                          this%fates(nc)%bc_in)
+                                          this%fates(nc)%bc_in )
 
       if (masterproc) then
          write(iulog, *) 'clm: leaving fates model', bounds_clump%begg, &
@@ -2160,7 +2176,7 @@ module CLMFatesInterfaceMod
         ! as well as total patch sun/shade fraction output boundary condition
         ! -------------------------------------------------------------------------------
 
-        call ED_SunShadeFracs(this%fates(nc)%nsites, &
+        call FatesSunShadeFracs(this%fates(nc)%nsites, &
              this%fates(nc)%sites,  &
              this%fates(nc)%bc_in,  &
              this%fates(nc)%bc_out)
@@ -2679,7 +2695,7 @@ module CLMFatesInterfaceMod
        end do
     end do
 
-    call ED_Norman_Radiation(this%fates(nc)%nsites,  &
+    call FatesNormalizedCanopyRadiation(this%fates(nc)%nsites,  &
          this%fates(nc)%sites, &
          this%fates(nc)%bc_in,  &
          this%fates(nc)%bc_out)
@@ -2891,12 +2907,20 @@ module CLMFatesInterfaceMod
       dtime = get_step_size_real()
 
       ! Update history variables that track these variables
-      call fates_hist%update_history_hifrq(nc, &
+      call fates_hist%update_history_hifrq1(nc, &
             this%fates(nc)%nsites,  &
             this%fates(nc)%sites,   &
             this%fates(nc)%bc_in,   &
+            this%fates(nc)%bc_out,  &
             dtime)
 
+      call fates_hist%update_history_hifrq2(nc, &
+            this%fates(nc)%nsites,  &
+            this%fates(nc)%sites,   &
+            this%fates(nc)%bc_in,   &
+            this%fates(nc)%bc_out,  &
+            dtime)
+      
     end associate
 
     call t_stopf('fates_wrap_update_hifrq_hist')
@@ -3110,7 +3134,7 @@ module CLMFatesInterfaceMod
        end do
     end do
 
-    call UpdateFatesRMeansTStep(this%fates(nc)%sites,this%fates(nc)%bc_in)
+    call UpdateFatesRMeansTStep(this%fates(nc)%sites,this%fates(nc)%bc_in,this%fates(nc)%bc_out)
     
   end subroutine WrapUpdateFatesRmean
   
@@ -3207,6 +3231,8 @@ module CLMFatesInterfaceMod
    call fates_hist%initialize_history_vars()
    nvar = fates_hist%num_history_vars()
 
+   call CrossRefHistoryFields()
+   
    do ivar = 1, nvar
 
       associate( vname    => fates_hist%hvars(ivar)%vname, &
