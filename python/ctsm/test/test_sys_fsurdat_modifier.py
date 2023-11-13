@@ -45,7 +45,6 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._testinputs_path = testinputs_path
         self._fsurdat_in = os.path.join(
             testinputs_path,
-            "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031.nc",
         )
         self._tempdir = tempfile.mkdtemp()
         self._cfg_file_path = os.path.join(self._tempdir, "modify_fsurdat.cfg")

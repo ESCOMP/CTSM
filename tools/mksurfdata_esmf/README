@@ -93,10 +93,10 @@ Running for a single submission:
 =======================
 Running for the generation of multiple datasets
 =======================
-# Notes:
-# - gen_mksurfdata_jobscript_multi.py runs ./gen_mksurfdata_namelist.py for you
-# - The regional grid 5x5_amazon may fail with 24 nodes.
-#   Task geometry that worked: #PBS -l select=4:ncpus=36:mpiprocs=4
+# Work in the ctsm_pylib environment, as explained in earlier section.
+# gen_mksurfdata_jobscript_multi.py runs ./gen_mksurfdata_namelist.py for you
+# The regional grid 5x5_amazon may fail with 24 nodes.
+# Task geometry that worked: #PBS -l select=4:ncpus=36:mpiprocs=4
 > ./gen_mksurfdata_jobscript_multi.py --help
 > ./gen_mksurfdata_jobscript_multi.py --number-of-nodes 24 --scenario all
 > qsub mksurfdata_jobscript_multi
