@@ -421,6 +421,7 @@ class SinglePointCase(BaseCase):
             f_mod["PCT_WETLAND"][:, :] = 0.0
             f_mod["PCT_URBAN"][:, :, :] = 0.0
             f_mod["PCT_GLACIER"][:, :] = 0.0
+            f_mod["PCT_OCEAN"][:, :] = 0.0
 
             if self.dom_pft is not None:
                 max_dom_pft = max(self.dom_pft)

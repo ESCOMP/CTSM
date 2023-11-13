@@ -46,7 +46,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         fsurdat_in = os.path.join(
             testinputs_path,
-            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc",
+            "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031.nc",
         )
         self._tempdir = tempfile.mkdtemp()
         self._cfg_file_path = os.path.join(self._tempdir, "modify_mesh_mask.cfg")
@@ -96,8 +96,8 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         self._lon_dimname = fsurdat_in_data[self._lat_varname].dims[1]
 
         ncap2_cmd = (
-            "ncap2 -A -v -s 'mod_lnd_props=PFTDATA_MASK' "
-            + "-A -v -s 'landmask=PFTDATA_MASK' "
+            "ncap2 -A -v -s 'mod_lnd_props=LANDFRAC_MKSURFDATA' "
+            + "-A -v -s 'landmask=LANDFRAC_MKSURFDATA' "
             + f"-A -v -s {self._lat_varname}={self._lat_varname} "
             + f"-A -v -s {self._lon_varname}={self._lon_varname} "
             + f"{fsurdat_in} {self._landmask_file}"

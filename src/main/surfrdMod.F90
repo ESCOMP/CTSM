@@ -370,7 +370,7 @@ contains
     !
     ! !USES:
     use clm_varpar      , only : maxpatch_glc, nlevurb
-    use landunit_varcon , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice
+    use landunit_varcon , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice, istocn
     use clm_instur      , only : wt_lunit, urban_valid, wt_glc_mec, topo_glc_mec
     use UrbanParamsType , only : CheckUrban
     !
@@ -390,6 +390,7 @@ contains
     real(r8),pointer :: pctgla(:)     ! percent of grid cell is glacier
     real(r8),pointer :: pctlak(:)     ! percent of grid cell is lake
     real(r8),pointer :: pctwet(:)     ! percent of grid cell is wetland
+    real(r8),pointer :: pctocn(:)     ! percent of grid cell is ocean
     real(r8),pointer :: pcturb(:,:)   ! percent of grid cell is urbanized
     integer ,pointer :: urban_region_id(:)
     real(r8),pointer :: pcturb_tot(:) ! percent of grid cell is urban (sum over density classes)
@@ -403,6 +404,7 @@ contains
     allocate(pctgla(begg:endg))
     allocate(pctlak(begg:endg))
     allocate(pctwet(begg:endg))
+    allocate(pctocn(begg:endg))
     allocate(pcturb(begg:endg,numurbl))
     allocate(pcturb_tot(begg:endg))
     allocate(urban_region_id(begg:endg))
@@ -411,6 +413,10 @@ contains
     call check_dim_size(ncid, 'nlevsoi', nlevsoifl)
 
        ! Obtain non-grid surface properties of surface dataset other than percent patch
+
+    call ncd_io(ncid=ncid, varname='PCT_OCEAN', flag='read', data=pctocn, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( msg=' ERROR: PCT_OCEAN NOT on surfdata file'//errMsg(sourcefile, __LINE__))
 
     call ncd_io(ncid=ncid, varname='PCT_WETLAND', flag='read', data=pctwet, &
          dim1name=grlnd, readvar=readvar)
@@ -475,9 +481,9 @@ contains
 
     topo_glc_mec(:,:) = max(topo_glc_mec(:,:), 0._r8)
 
-    pctspec = pctwet + pctlak + pcturb_tot + pctgla
+    pctspec = pctwet + pctlak + pcturb_tot + pctgla + pctocn
 
-    ! Error check: glacier, lake, wetland, urban sum must be less than 100
+    ! Error check: sum of glacier, lake, wetland, urban, ocean must be < 100
 
     found = .false.
     do nl = begg,endg
@@ -497,22 +503,25 @@ contains
 
     do nl = begg,endg
 
-       wt_lunit(nl,istdlak)     = pctlak(nl)/100._r8
+       wt_lunit(nl,istdlak) = pctlak(nl) / 100._r8
 
-       wt_lunit(nl,istwet)      = pctwet(nl)/100._r8
-
-       wt_lunit(nl,istice)  = pctgla(nl)/100._r8
+       ! Until ctsm5.1 we would label ocean points as wetland in fsurdat
+       ! files. Starting with ctsm5.2 we label ocean points as ocean
+       ! (always 100%) and wetland points as wetland.
+       wt_lunit(nl,istwet) = pctwet(nl) / 100._r8
+       wt_lunit(nl,istocn) = pctocn(nl) / 100._r8
+       wt_lunit(nl,istice) = pctgla(nl) / 100._r8
 
        do n = isturb_MIN, isturb_MAX
           dens_index = n - isturb_MIN + 1
-          wt_lunit(nl,n)        = pcturb(nl,dens_index) / 100._r8
+          wt_lunit(nl,n) = pcturb(nl,dens_index) / 100._r8
        end do
 
     end do
 
     call CheckUrban(begg, endg, pcturb(begg:endg,:), subname)
 
-    deallocate(pctgla,pctlak,pctwet,pcturb,pcturb_tot,urban_region_id,pctspec)
+    deallocate(pctgla,pctlak,pctwet,pctocn,pcturb,pcturb_tot,urban_region_id,pctspec)
 
   end subroutine surfrd_special
 
