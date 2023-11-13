@@ -148,6 +148,8 @@ module CNVegCarbonFluxType
      real(r8), pointer :: leafc_to_biofuelc_patch                   (:)     ! leaf C to biofuel C (gC/m2/s)
      real(r8), pointer :: livestemc_to_biofuelc_patch               (:)     ! livestem C to biofuel C (gC/m2/s)
      real(r8), pointer :: repr_grainc_to_seed_patch               (:,:)     ! grain C to seed for prognostic crop(gC/m2/s) [patch, repr_grain_min:repr_grain_max]
+     real(r8), pointer :: repr_grainc_to_seed_perharv_patch       (:,:,:)   ! grain C to seed for prognostic crop accumulated by harvest (gC/m2) [patch, harvest, repr_grain_min:repr_grain_max]. Not per-second because this variable represents an accumulation over each growing season, to be instantaneously at the end of each calendar year, to provide output that's easier to work with.
+     real(r8), pointer :: repr_grainc_to_seed_thisyr_patch        (:,:)     ! grain C to seed for prognostic crop accumulated this calendar year (gC/m2) [patch, repr_grain_min:repr_grain_max]. Not per-second because this variable represents an accumulation over an entire calendar year, to be saved instantaneously at the end of each calendar year, to provide output that's easier to work with.
 
      ! maintenance respiration fluxes     
      real(r8), pointer :: cpool_to_resp_patch                       (:)     ! CNflex excess C maintenance respiration (gC/m2/s)
@@ -672,6 +674,8 @@ contains
     allocate(this%leafc_to_biofuelc_patch                   (begp:endp)) ; this%leafc_to_biofuelc_patch                   (:) = nan
     allocate(this%livestemc_to_biofuelc_patch               (begp:endp)) ; this%livestemc_to_biofuelc_patch               (:) = nan
     allocate(this%repr_grainc_to_seed_patch(begp:endp, repr_grain_min:repr_grain_max)) ; this%repr_grainc_to_seed_patch (:,:) = nan
+    allocate(this%repr_grainc_to_seed_perharv_patch(begp:endp, 1:mxharvests, repr_grain_min:repr_grain_max)) ; this%repr_grainc_to_seed_perharv_patch (:,:,:) = nan
+    allocate(this%repr_grainc_to_seed_thisyr_patch(begp:endp, repr_grain_min:repr_grain_max)) ; this%repr_grainc_to_seed_thisyr_patch (:,:) = nan
     allocate(this%reproductivec_xfer_to_reproductivec_patch(begp:endp, nrepr))
     this%reproductivec_xfer_to_reproductivec_patch(:,:) = nan
     allocate(this%cpool_reproductive_gr_patch        (begp:endp, nrepr)) ; this%cpool_reproductive_gr_patch             (:,:) = nan
@@ -977,6 +981,8 @@ contains
                ptr_patch=this%livestemc_to_biofuelc_patch)
 
           this%repr_grainc_to_seed_patch(begp:endp,:) = spval
+          this%repr_grainc_to_seed_perharv_patch(begp:endp,:,:) = spval
+          this%repr_grainc_to_seed_thisyr_patch(begp:endp,:) = spval
           do k = repr_grain_min, repr_grain_max
              data1dptr => this%repr_grainc_to_seed_patch(:,k)
              call hist_addfld1d ( &
@@ -986,6 +992,25 @@ contains
                   avgflag='A', &
                   long_name=get_repr_longname(k)//' C to seed', &
                   ptr_patch=data1dptr)
+             data2dptr => this%repr_grainc_to_seed_perharv_patch(:,:,k)
+             call hist_addfld2d ( &
+                  ! e.g., GRAINC_TO_SEED_PERHARV
+                  fname=get_repr_hist_fname(k)//'C_TO_SEED_PERHARV', &
+                  units='gC/m^2', &
+                  type2d='mxharvests', &
+                  avgflag='I', &
+                  long_name=get_repr_longname(k)//' C to seed per harvest; should only be output annually', &
+                  ptr_patch=data2dptr, &
+                  default='inactive')
+             data1dptr => this%repr_grainc_to_seed_thisyr_patch(:,k)
+             call hist_addfld1d ( &
+                  ! e.g., GRAINC_TO_SEED_ANN
+                  fname=get_repr_hist_fname(k)//'C_TO_SEED_ANN', &
+                  units='gC/m^2', &
+                  avgflag='I', &
+                  long_name=get_repr_longname(k)//' C to seed harvested per calendar year; should only be output annually', &
+                  ptr_patch=data1dptr, &
+                  default='inactive')
           end do
        end if
 
@@ -3728,6 +3753,15 @@ contains
                xtype=ncd_double,  &
                dim1name='pft', &
                long_name=get_repr_longname(k)//' C to food per calendar year; should only be output annually', &
+               units='gC/m2', &
+               interpinic_flag='interp', readvar=readvar, data=data1dptr)
+          data1dptr => this%repr_grainc_to_seed_thisyr_patch(:,k)
+          ! e.g., grainc_to_seed_thisyr
+          varname = get_repr_rest_fname(k)//'c_to_seed_thisyr'
+          call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+               xtype=ncd_double,  &
+               dim1name='pft', &
+               long_name=get_repr_longname(k)//' C to seed per calendar year; should only be output annually', &
                units='gC/m2', &
                interpinic_flag='interp', readvar=readvar, data=data1dptr)
       end do

@@ -769,8 +769,8 @@ sub setup_cmdl_fates_mode {
        # dis-allow fates specific namelist items with non-fates runs
        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                       "use_fates_cohort_age_tracking","use_fates_inventory_init","use_fates_fixed_biogeog",
-		      "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging",
-		      "fates_parteh_mode","use_fates_tree_damage" );
+                      "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging",
+                      "fates_parteh_mode","use_fates_tree_damage","fates_seeddisp_cadence" );
        # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
           if ( defined($nl->get_value($var)) ) {
@@ -4010,21 +4010,28 @@ sub setup_logic_cropcal_streams {
   # Option checks
   my $generate_crop_gdds = $nl->get_value('generate_crop_gdds') ;
   my $use_mxmat = $nl->get_value('use_mxmat') ;
-  my $sdate_file = $nl->get_value('stream_fldFileName_sdate') ;
+  my $swindow_start_file = $nl->get_value('stream_fldFileName_swindow_start') ;
+  my $swindow_end_file = $nl->get_value('stream_fldFileName_swindow_end') ;
   my $gdd_file = $nl->get_value('stream_fldFileName_cultivar_gdds') ;
   my $mesh_file = $nl->get_value('stream_meshfile_cropcal') ;
+  if ( ($swindow_start_file eq '' and $swindow_start_file ne '') or ($swindow_start_file ne '' and $swindow_start_file eq '') ) {
+    $log->fatal_error("When specifying sowing window dates, you must provide both swindow_start_file and swindow_end_file. To specify exact sowing dates, use the same file." );
+  }
   if ( $generate_crop_gdds eq '.true.' ) {
       if ( $use_mxmat eq '.true.' ) {
           $log->fatal_error("If generate_crop_gdds is true, you must also set use_mxmat to false" );
       }
-      if ( $sdate_file eq '' ) {
-          $log->fatal_error("If generate_crop_gdds is true, you must specify stream_fldFileName_sdate")
+      if ( $swindow_start_file eq '' or $swindow_end_file eq '' ) {
+          $log->fatal_error("If generate_crop_gdds is true, you must specify stream_fldFileName_swindow_start and stream_fldFileName_swindow_end")
+      }
+      if ( $swindow_start_file ne $swindow_end_file ) {
+          $log->fatal_error("If generate_crop_gdds is true, you must specify exact sowing dates by setting stream_fldFileName_swindow_start and stream_fldFileName_swindow_end to the same file")
       }
       if ( $gdd_file ne '' ) {
           $log->fatal_error("If generate_crop_gdds is true, do not specify stream_fldFileName_cultivar_gdds")
       }
   }
-  if ( $mesh_file eq '' and ( $sdate_file ne '' or $gdd_file ne '' ) ) {
+  if ( $mesh_file eq '' and ( $swindow_start_file ne '' or $gdd_file ne '' ) ) {
       $log->fatal_error("If prescribing crop sowing dates and/or maturity requirements, you must specify stream_meshfile_cropcal")
   }
 }
@@ -4325,7 +4332,7 @@ sub setup_logic_fates {
     if (&value_is_true( $nl_flags->{'use_fates'})  ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
         my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
-                       "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp",
+                       "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp","fates_seeddisp_cadence",
                        "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage" );
         foreach my $var ( @list ) {
  	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
