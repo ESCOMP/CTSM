@@ -1,8 +1,12 @@
 <?xml version="1.0"?>
 
+<!-- This use-case is mainly in use for NEON sites -->
+
 <namelist_defaults>
 
-<use_case_desc>Simulate transient land-use, and aerosol deposition changes from 2018 to current day with a mix of historical data, and future scenario data</use_case_desc>
+<use_case_desc use_cn=".true.">Simulate transient Nitrogen-deposition, aerosol deposition, urban, and fire related (pop-density, lightning) changes from 2018 to current day with a mix of historical data, and future scenario data</use_case_desc>
+<use_case_desc use_cn=".false." use_fates=".true.">Simulate transient Nitrogen-deposition, aerosol deposition, urban, and fire related (pop-density, lightning) changes from 2018 to current day with a mix of historical data, and future scenario data</use_case_desc>
+<use_case_desc use_cn=".false." use_fates=".false.">Simulate transient urban and aerosol deposition changes from 2018 to current day with a mix of historical data, and future scenario data</use_case_desc>
 
 <!-- Have a minimal list of things set here, sim_year, sim_year_range, and ssp_rcp, other things should be dependent on these and
      set in a namelist_defaults xml file -->

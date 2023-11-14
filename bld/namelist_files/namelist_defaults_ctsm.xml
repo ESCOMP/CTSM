@@ -1290,7 +1290,24 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <fsurdat hgrid="0.9x1.25"     sim_year="PtVg" use_crop=".false." irrigate=".false."
 >lnd/clm2/surfdata_map/surfdata_0.9x1.25_hist_16pfts_nourb_CMIP6_simyrPtVg_c181114.nc</fsurdat>
 
+<!-- for NEON sites present day simulations - year 2000 -->
+<fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".true.">
+lnd/clm2/surfdata_map/NEON/16PFT_mixed/surfdata_1x1_NEON_${NEONSITE}_hist_16pfts_Irrig_CMIP6_simyr2000_c230120.nc</fsurdat>
+<fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".false.">
+lnd/clm2/surfdata_map/NEON/surfdata_1x1_NEON_${NEONSITE}_hist_78pfts_CMIP6_simyr2000_c230601.nc</fsurdat>
+<!-- If there are cases where only a few datasets change - they can be listed here for the particular NEONSITE -->
+<!-- for example to override the above for the TOOL site do something like this...
+<fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".false." neonsite="TOOL">
+lnd/clm2/surfdata_map/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c230699.nc</fsurdat>
+-->
+
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
+
+<!-- When NEON landuse datasets are available uncomment the following for something like this...
+     Also change the setting for clm_demand in the namelist_defaults_overall.xml file
+<flanduse_timeseries hgrid="CLM_USRDAT" neon=".true." sim_year_range="1850-2100">
+>lnd/clm2/surfdata_map/NEON/landuse.timeseries_NEON_${NEONSITE}_hist_78pfts_simyr2018-2023_c230931.nc</flanduse_timeseries>
+-->
 
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2000" irrigate=".true." use_vichydro=".true."
  use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
