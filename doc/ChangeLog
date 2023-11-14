@@ -24,7 +24,7 @@ Add system testing for:
 - modify_singlept_site_neon
 - run_neon
 
-#2148 Adrien Damseaux, Victoria Dutch, Leanne Wake
+#2148 Adrien Damseaux (AWI, Germany), Victoria Dutch, Leanne Wake
 Add namelist option snow_thermal_cond_method to select between Jordan (1991) (default) and
 Sturm et al. (1997). Sturm option described for single point runs by Dutch et al. (2022).
 
