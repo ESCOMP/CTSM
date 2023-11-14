@@ -15,6 +15,7 @@ module AerosolMod
   use WaterDiagnosticBulkType   , only : waterdiagnosticbulk_type
   use ColumnType       , only : col               
   use abortutils       , only : endrun
+  use CLM_varctl       , only : snicar_use_aerosol
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -805,6 +806,32 @@ contains
                                forc_aer(g,10) + forc_aer(g,11) + forc_aer(g,12) + &
                                forc_aer(g,13) + forc_aer(g,14)
       end do
+
+      ! if turn off aerosol effect in snow, zero out deposition flux
+      if (.not. snicar_use_aerosol) then
+         do c = bounds%begc,bounds%endc
+
+            flx_bc_dep_dry(c)   = 0._r8
+            flx_bc_dep_wet(c)   = 0._r8
+            flx_bc_dep_phi(c)   = 0._r8
+            flx_bc_dep_pho(c)   = 0._r8
+            flx_bc_dep(c)       = 0._r8
+            flx_oc_dep_dry(c)   = 0._r8
+            flx_oc_dep_wet(c)   = 0._r8
+            flx_oc_dep_phi(c)   = 0._r8
+            flx_oc_dep_pho(c)   = 0._r8
+            flx_oc_dep(c)       = 0._r8
+            flx_dst_dep_wet1(c) = 0._r8
+            flx_dst_dep_dry1(c) = 0._r8
+            flx_dst_dep_wet2(c) = 0._r8
+            flx_dst_dep_dry2(c) = 0._r8
+            flx_dst_dep_wet3(c) = 0._r8
+            flx_dst_dep_dry3(c) = 0._r8
+            flx_dst_dep_wet4(c) = 0._r8
+            flx_dst_dep_dry4(c) = 0._r8
+            flx_dst_dep(c)      = 0._r8
+         end do
+      end if
 
       ! aerosol deposition fluxes into top layer
       ! This is done after the inter-layer fluxes so that some aerosol
