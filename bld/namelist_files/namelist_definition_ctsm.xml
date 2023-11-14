@@ -2845,6 +2845,11 @@ NiuYang2007: Niu and Yang 2007
 SwensonLawrence2012: Swenson and Lawrence 2012
 </entry>
 
+<entry id="snow_thermal_cond_method" type="char*25" category="clm_physics"
+       group="clm_inparm" valid_values="Jordan1991,Sturm1997" >
+Parameterization to use for snow thermal conductivity
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Namelist options related to water tracers                                                 -->
 <!-- ========================================================================================  -->
