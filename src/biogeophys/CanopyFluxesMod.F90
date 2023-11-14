@@ -47,6 +47,7 @@ module CanopyFluxesMod
   use EDTypesMod            , only : ed_site_type
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
   use LunaMod               , only : Update_Photosynthesis_Capacity, Acc24_Climate_LUNA,Acc240_Climate_LUNA,Clear24_Climate_LUNA
+  use NumericsMod           , only : truncate_small_values
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -422,6 +423,7 @@ contains
     real(r8) :: uuc(bounds%begp:bounds%endp)             ! undercanopy windspeed
     real(r8) :: carea_stem                               ! cross-sectional area of stem
     real(r8) :: dlrad_leaf                               ! Downward longwave radition from leaf
+    real(r8) :: snocan_baseline(bounds%begp:bounds%endp)  ! baseline of snocan for use in truncate_small_values
 
     ! Indices for raw and rah
     integer, parameter :: above_canopy = 1         ! Above canopy
@@ -1599,6 +1601,9 @@ bioms:   do f = 1, fn
          cgrndl(p) = cgrndl(p) + forc_rho(c)*wtgq(p)*wtalq(p)*dqgdT(c)
          cgrnd(p)  = cgrnds(p) + cgrndl(p)*htvp(c)
 
+         ! save before updating
+         snocan_baseline(p) = snocan(p)
+
          ! Update dew accumulation (kg/m2)
          if (t_veg(p) > tfrz ) then ! above freezing, update accumulation in liqcan
             if ((qflx_evap_veg(p)-qflx_tran_veg(p))*dtime > liqcan(p)) then ! all liq evap
@@ -1616,6 +1621,12 @@ bioms:   do f = 1, fn
          end if
 
       end do
+
+      ! Remove snocan that got reduced by more than a factor of rel_epsilon
+      ! snocan < rel_epsilon * snocan_baseline will be set to zero
+      ! See NumericsMod for rel_epsilon value
+      call truncate_small_values(fn, filterp, begp, endp, &
+         snocan_baseline(begp:endp), snocan(begp:endp))
       
       if ( use_fates ) then
          

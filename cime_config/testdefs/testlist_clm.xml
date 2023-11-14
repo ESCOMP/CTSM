@@ -1007,7 +1007,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Among other extra outputs, ensure that writing the history field master list to a separate file does not cause failure"</option>
+      <option name="comment"  >Among other extra outputs, ensure that writing the list of all history fields to a separate file does not cause failure"</option>
     </options>
   </test>
   <test name="ERS_D_Ld3" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/default">
@@ -1562,6 +1562,19 @@
       <option name="comment"  >Add at least one test of a NEON site with PRISM precipitation</option>
     </options>
   </test>
+
+  <test name="ERS_P144x1_Lm25" grid="f10_f10_mg37" compset="I2000Clm51Fates" testmods="clm/FatesColdNoComp">
+       <machines>
+	 <!-- no izumi tests since this has a pe layout specific for cheyenne -->
+	 <machine name="cheyenne" compiler="intel"   category="aux_clm"/>
+	 <machine name="cheyenne" compiler="intel"   category="fates"/>
+       </machines>
+       <options>
+	 <option name="wallclock">00:60:00</option>
+	 <option name="comment"  >This is a long fates test on full dynamics. The 144 count is designed to minimize wall time.</option>
+       </options>
+  </test>
+
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Fates" testmods="clm/FatesFireLightningPopDens--clm/NEON/FATES/NIWO">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
@@ -1833,6 +1846,24 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+  <test name="ERS_D_Ld15" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment"  >This test should be convered to an ERP test once the PEM version of this test is passing COMPARE_base_modpes.</option>
+    </options>
+  </test>
+  <test name="PEM_D_Ld15" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment"  >This checks that the FATES seed dispersal MPI communication is consistent when the PE layout changes.</option>
     </options>
   </test>
   <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTreeDamage">
@@ -2590,7 +2621,7 @@
     </machines>
   </test>
 
-  <test name="RXCROPMATURITY_Lm61" grid="f09_g17" compset="IHistClm50BgcCrop">
+  <test name="RXCROPMATURITY_Lm61" grid="f09_g17" compset="IHistClm50BgcCrop"  testmods="clm/cropMonthOutput">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci">
         <options>
