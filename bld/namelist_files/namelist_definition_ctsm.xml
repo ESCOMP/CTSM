@@ -781,7 +781,6 @@ Full pathname to the inventory initialization control file.
 <entry id="use_fates_luh" type="logical" category="physics"
        group="elm_inparm" valid_values="" >
 If TRUE, enable use of land use harmonization (LUH) state and transition data from luh_timeseries file.
-(Only valid for fates land use change runs, where there is a luh_timeseries file.)
 (Also, only valid for use_fates = true and is incompatible with transient runs currently.)
 </entry>
 
