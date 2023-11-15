@@ -111,10 +111,12 @@ contains
     ! the calling tree is given in the description of this module.
     !
     ! !USES:
-    use clm_time_manager     , only : get_curr_date
-    use clm_varctl           , only : use_lai_streams, fates_spitfire_mode
-    use laiStreamMod         , only : lai_advance
-    use FATESFireFactoryMod  , only : scalar_lightning
+    use clm_time_manager      , only : get_curr_date
+    use clm_varctl            , only : use_lai_streams, fates_spitfire_mode
+    use clm_varctl            , only : fates_seeddisp_cadence
+    use laiStreamMod          , only : lai_advance
+    use FATESFireFactoryMod   , only : scalar_lightning
+    use FatesInterfaceTypesMod, only : fates_dispersal_cadence_none
     !
     ! !ARGUMENTS:
     implicit none
@@ -225,7 +227,7 @@ contains
     ! Specified phenology
     ! Done in SP mode, FATES-SP mode and also when dry-deposition is active
     ! ============================================================================
-
+    
     if (use_cn) then
        ! For dry-deposition need to call CLMSP so that mlaidiff is obtained
        ! NOTE: This is also true of FATES below
@@ -264,7 +266,7 @@ contains
        end if
 
     end if
-
+    
     ! ==================================================================================
     ! Determine decomp vertical profiles
     !
@@ -468,8 +470,8 @@ contains
 
     ! When LAI streams are being used
     ! NOTE: This call needs to happen outside loops over nclumps (as streams are not threadsafe)
-    if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb) .and. use_lai_streams) then
-       call lai_advance( bounds_proc )
+    if (doalb .and. use_lai_streams) then
+       call lai_advance(bounds_proc)
     endif
 
     ! When crop calendar streams are being used
@@ -1266,6 +1268,14 @@ contains
 
     end do
     !$OMP END PARALLEL DO
+
+
+    ! Pass fates seed dispersal information to neighboring gridcells across
+    ! all MPI tasks.  Note that WrapGlobalSeedDispersal calls an MPI collective routine
+    ! and as such WrapGlobalSeedDispersal should be called outside of OMP threaded loop regions
+    if (use_fates) then
+       if (fates_seeddisp_cadence /= fates_dispersal_cadence_none) call clm_fates%WrapGlobalSeedDispersal()
+    end if
 
     ! ============================================================================
     ! Determine gridcell averaged properties to send to atm

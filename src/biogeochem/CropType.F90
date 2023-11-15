@@ -47,10 +47,13 @@ module CropType
      character(len=20) :: baset_mapping
      real(r8) :: baset_latvary_intercept
      real(r8) :: baset_latvary_slope
-     integer , pointer :: next_rx_sdate_patch     (:)   ! prescribed sowing date for the next growing season this year
-     integer , pointer :: rx_sdates_thisyr_patch  (:,:) ! all prescribed sowing dates for this patch this year (day of year) [patch, mxsowings]
+     logical , pointer :: sown_in_this_window           (:)   ! patch flag. True if the crop has already been sown during the current sowing window. False otherwise or if not in a sowing window.
+     integer , pointer :: rx_swindow_starts_thisyr_patch(:,:) ! all prescribed sowing window start dates for this patch this year (day of year) [patch, mxsowings]
+     integer , pointer :: rx_swindow_ends_thisyr_patch  (:,:) ! all prescribed sowing window end   dates for this patch this year (day of year) [patch, mxsowings]
      real(r8), pointer :: rx_cultivar_gdds_thisyr_patch (:,:) ! all cultivar GDD targets for this patch this year (ddays) [patch, mxsowings]
      real(r8), pointer :: sdates_thisyr_patch     (:,:) ! all actual sowing dates for this patch this year (day of year) [patch, mxsowings]
+     real(r8), pointer :: swindow_starts_thisyr_patch(:,:) ! all sowing window start dates for this patch this year (day of year) [patch, mxsowings]
+     real(r8), pointer :: swindow_ends_thisyr_patch  (:,:) ! all sowing window end   dates for this patch this year (day of year) [patch, mxsowings]
      real(r8), pointer :: sdates_perharv_patch    (:,:) ! all actual sowing dates for crops *harvested* this year (day of year) [patch, mxharvests]
      real(r8), pointer :: syears_perharv_patch    (:,:) ! all actual sowing years for crops *harvested* this year (day of year) [patch, mxharvests]
      real(r8), pointer :: hdates_thisyr_patch     (:,:) ! all actual harvest dates for this patch this year (day of year) [patch, mxharvests]
@@ -227,10 +230,13 @@ contains
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = cphase_not_planted
     allocate(this%sowing_reason_patch (begp:endp)) ; this%sowing_reason_patch (:) = -1
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
-    allocate(this%next_rx_sdate_patch(begp:endp)) ; this%next_rx_sdate_patch(:) = -1
-    allocate(this%rx_sdates_thisyr_patch(begp:endp,1:mxsowings)) ; this%rx_sdates_thisyr_patch(:,:) = -1
+    allocate(this%sown_in_this_window(begp:endp)) ; this%sown_in_this_window(:) = .false.
+    allocate(this%rx_swindow_starts_thisyr_patch(begp:endp,1:mxsowings)); this%rx_swindow_starts_thisyr_patch(:,:) = -1
+    allocate(this%rx_swindow_ends_thisyr_patch(begp:endp,1:mxsowings))  ; this%rx_swindow_ends_thisyr_patch  (:,:) = -1
     allocate(this%rx_cultivar_gdds_thisyr_patch(begp:endp,1:mxsowings)) ; this%rx_cultivar_gdds_thisyr_patch(:,:) = spval
     allocate(this%sdates_thisyr_patch(begp:endp,1:mxsowings)) ; this%sdates_thisyr_patch(:,:) = spval
+    allocate(this%swindow_starts_thisyr_patch(begp:endp,1:mxsowings)) ; this%swindow_starts_thisyr_patch(:,:) = spval
+    allocate(this%swindow_ends_thisyr_patch  (begp:endp,1:mxsowings)) ; this%swindow_ends_thisyr_patch  (:,:) = spval
     allocate(this%sdates_perharv_patch(begp:endp,1:mxharvests)) ; this%sdates_perharv_patch(:,:) = spval
     allocate(this%syears_perharv_patch(begp:endp,1:mxharvests)) ; this%syears_perharv_patch(:,:) = spval
     allocate(this%hdates_thisyr_patch(begp:endp,1:mxharvests)) ; this%hdates_thisyr_patch(:,:) = spval
@@ -241,9 +247,6 @@ contains
     allocate(this%harvest_reason_thisyr_patch(begp:endp,1:mxharvests)) ; this%harvest_reason_thisyr_patch(:,:) = spval
     allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
     allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
-
-    this%rx_sdates_thisyr_patch(:,:) = -1
-    this%rx_cultivar_gdds_thisyr_patch(:,:) = spval
 
   end subroutine InitAllocate
 
@@ -301,6 +304,16 @@ contains
     call hist_addfld2d (fname='SDATES', units='day of year', type2d='mxsowings', &
          avgflag='I', long_name='actual crop sowing dates; should only be output annually', &
          ptr_patch=this%sdates_thisyr_patch, default='inactive')
+
+    this%swindow_starts_thisyr_patch(begp:endp,:) = spval
+    call hist_addfld2d (fname='SWINDOW_STARTS', units='day of year', type2d='mxsowings', &
+         avgflag='I', long_name='crop sowing window start dates; should only be output annually', &
+         ptr_patch=this%swindow_starts_thisyr_patch, default='inactive')
+
+    this%swindow_ends_thisyr_patch(begp:endp,:) = spval
+    call hist_addfld2d (fname='SWINDOW_ENDS', units='day of year', type2d='mxsowings', &
+         avgflag='I', long_name='crop sowing window end dates; should only be output annually', &
+         ptr_patch=this%swindow_ends_thisyr_patch, default='inactive')
 
     this%sdates_perharv_patch(begp:endp,:) = spval
     call hist_addfld2d (fname='SDATES_PERHARV', units='day of year', type2d='mxharvests', &
@@ -586,6 +599,31 @@ contains
        end if
        deallocate(temp1d)
 
+       allocate(temp1d(bounds%begp:bounds%endp))
+       if (flag == 'write') then
+          do p= bounds%begp,bounds%endp
+             if (this%sown_in_this_window(p)) then
+                temp1d(p) = 1
+             else
+                temp1d(p) = 0
+             end if
+          end do
+       end if
+       call restartvar(ncid=ncid, flag=flag,  varname='sown_in_this_window', xtype=ncd_log,  &
+            dim1name='pft', &
+            long_name='Flag that patch was sown already during the current sowing window', &
+            interpinic_flag='interp', readvar=readvar, data=temp1d)
+       if (flag == 'read') then
+          do p= bounds%begp,bounds%endp
+             if (temp1d(p) == 1) then
+                this%sown_in_this_window(p) = .true.
+             else
+                this%sown_in_this_window(p) = .false.
+             end if
+          end do
+       end if
+       deallocate(temp1d)
+
        call restartvar(ncid=ncid, flag=flag,  varname='harvdate', xtype=ncd_int,  &
             dim1name='pft', long_name='harvest date', units='jday', nvalid_range=(/1,366/), &
             interpinic_flag='interp', readvar=readvar, data=this%harvdate_patch)
@@ -617,6 +655,16 @@ contains
                 long_name='crop sowing dates for this patch this year', units='day of year', &
                 scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=this%sdates_thisyr_patch)
+           call restartvar(ncid=ncid, flag=flag, varname='swindow_starts_thisyr_patch', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxsowings', switchdim=.true., &
+                long_name='sowing window start dates for this patch this year', units='day of year', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%swindow_starts_thisyr_patch)
+           call restartvar(ncid=ncid, flag=flag, varname='swindow_ends_thisyr_patch', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxsowings', switchdim=.true., &
+                long_name='sowing window end dates for this patch this year', units='day of year', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%swindow_ends_thisyr_patch)
            ! Fill variable(s) derived from read-in variable(s)
            if (flag == 'read' .and. readvar) then
              do p = bounds%begp,bounds%endp

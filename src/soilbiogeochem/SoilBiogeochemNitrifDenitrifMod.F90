@@ -169,10 +169,11 @@ contains
     real(r8) :: mu, sigma
     real(r8) :: t
     real(r8) :: pH(bounds%begc:bounds%endc)
+    real(r8) :: D0  ! temperature dependence of gaseous diffusion coefficients
     !debug-- put these type structure for outing to hist files
     real(r8) :: co2diff_con(2)                      ! diffusion constants for CO2
-    real(r8) :: eps
-    real(r8) :: f_a
+    real(r8) :: fc_air_frac                         ! Air-filled fraction of soil volume at field capacity
+    real(r8) :: fc_air_frac_as_frac_porosity        ! fc_air_frac as fraction of total porosity 
     real(r8) :: surface_tension_water ! (J/m^2), Arah and Vinten 1995
     real(r8) :: rij_kro_a             !  Arah and Vinten 1995
     real(r8) :: rij_kro_alpha         !  Arah and Vinten 1995
@@ -183,7 +184,7 @@ contains
     real(r8) :: r_max
     real(r8) :: r_min(bounds%begc:bounds%endc,1:nlevdecomp)
     real(r8) :: ratio_diffusivity_water_gas(bounds%begc:bounds%endc,1:nlevdecomp)
-    real(r8) :: om_frac
+    real(r8) :: om_frac, diffus_millingtonquirk, diffus_moldrup
     real(r8) :: anaerobic_frac_sat, r_psi_sat, r_min_sat ! scalar values in sat portion for averaging
     real(r8) :: organic_max              ! organic matter content (kg/m3) where
                                          ! soil is assumed to act like peat
@@ -233,7 +234,7 @@ contains
          fmax_denit_carbonsubstrate_vr =>    soilbiogeochem_nitrogenflux_inst%fmax_denit_carbonsubstrate_vr_col , & ! Output:  [real(r8) (:,:) ]                                                  
          fmax_denit_nitrate_vr         =>    soilbiogeochem_nitrogenflux_inst%fmax_denit_nitrate_vr_col         , & ! Output:  [real(r8) (:,:) ]                                                  
          f_denit_base_vr               =>    soilbiogeochem_nitrogenflux_inst%f_denit_base_vr_col               , & ! Output:  [real(r8) (:,:) ]                                                  
-         diffus                        =>    soilbiogeochem_nitrogenflux_inst%diffus_col                        , & ! Output:  [real(r8) (:,:) ] diffusivity (unitless fraction of total diffusivity)
+         diffus                        =>    soilbiogeochem_nitrogenflux_inst%diffus_col                        , & ! Output:  [real(r8) (:,:) ] diffusivity (m2/s)
          ratio_k1                      =>    soilbiogeochem_nitrogenflux_inst%ratio_k1_col                      , & ! Output:  [real(r8) (:,:) ]                                                  
          ratio_no3_co2                 =>    soilbiogeochem_nitrogenflux_inst%ratio_no3_co2_col                 , & ! Output:  [real(r8) (:,:) ]                                                  
          soil_co2_prod                 =>    soilbiogeochem_nitrogenflux_inst%soil_co2_prod_col                 , & ! Output:  [real(r8) (:,:) ]  (ug C / g soil / day)                           
@@ -267,8 +268,11 @@ contains
             !---------------- calculate soil anoxia state
             ! calculate gas diffusivity of soil at field capacity here
             ! use expression from methane code, but neglect OM for now
-            f_a = 1._r8 - watfc(c,j) / watsat(c,j)
-            eps =  watsat(c,j)-watfc(c,j) ! Air-filled fraction of total soil volume
+            fc_air_frac =  watsat(c,j)-watfc(c,j) ! theta_a in Riley et al. (2011)
+            fc_air_frac_as_frac_porosity = 1._r8 - watfc(c,j) / watsat(c,j)
+            ! This calculation of fc_air_frac_as_frac_porosity is algebraically equivalent to
+            ! fc_air_frac/watsat(c,j). In that form, it's easier to see its correspondence
+            ! to theta_a/theta_s in Riley et al. (2011).
 
             ! use diffusivity calculation including peat
             if (use_lch4) then
@@ -279,9 +283,20 @@ contains
                else
                   om_frac = 1._r8
                end if
-               diffus (c,j) = (d_con_g(2,1) + d_con_g(2,2)*t_soisno(c,j)) * 1.e-4_r8 * &
-                    (om_frac * f_a**(10._r8/3._r8) / watsat(c,j)**2 + &
-                    (1._r8-om_frac) * eps**2 * f_a**(3._r8 / bsw(c,j)) ) 
+
+               ! Diffusitivity after Moldrup et al. (2003)
+               ! Eq. 8 in Riley et al. (2011, Biogeosciences)
+               diffus_moldrup = fc_air_frac**2 * fc_air_frac_as_frac_porosity**(3._r8 / bsw(c,j))
+
+               ! Diffusivity after Millington & Quirk (1961)
+               ! Eq. 9 in Riley et al. (2011, Biogeosciences)
+               diffus_millingtonquirk = fc_air_frac**(10._r8/3._r8) / watsat(c,j)**2
+
+               ! First, get diffusivity as a unitless constant, which is what's needed to
+               ! calculate ratio_k1 below.
+               diffus (c,j) = &
+                    (om_frac        * diffus_millingtonquirk + &
+                    (1._r8-om_frac) * diffus_moldrup ) 
 
                ! calculate anoxic fraction of soils
                ! use rijtema and kroess model after Riley et al., 2000
@@ -373,9 +388,18 @@ contains
             ! limit to anoxic fraction of soils
             pot_f_denit_vr(c,j) = f_denit_base_vr(c,j) * anaerobic_frac(c,j)
 
-            ! now calculate the ratio of N2O to N2 from denitrifictaion, following Del Grosso et al., 2000
+            ! now calculate the ratio of N2O to N2 from denitrification, following Del Grosso et al., 2000
             ! diffusivity constant (figure 6b)
             ratio_k1(c,j) = max(1.7_r8, 38.4_r8 - 350._r8 * diffus(c,j))
+
+            ! Del Grosso et al. (2000) have diffus (their D_FC, "a relative index of gas diffusivity
+            ! through soil assuming a water content of field capacity") as unitless, but diffus history
+            ! field wants m2/s. Here, we use the same theoretical construct as for methane diffusivity
+            ! to convert to m2/s: We multiply by the temperature-dependent free-air diffusion rate.
+            ! NOTE that the coefficients for oxygen are used here; it may be more appropriate to use
+            ! coefficients for the gases being dealt with in this subroutine.
+            D0 = (d_con_g(2,1) + d_con_g(2,2)*t_soisno(c,j)) * 1.e-4_r8
+            diffus(c,j) = diffus(c,j) * D0
 
             ! ratio function (figure 7c)
             if ( soil_co2_prod(c,j) > 1.0e-9_r8 ) then
