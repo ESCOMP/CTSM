@@ -430,10 +430,10 @@ contains
             long_name='soil depth', units='m')
 
        call mkpio_def_spatial_var(pioid=pioid, varname='abm', xtype=PIO_INT, &
-            long_name='agricultural fire peak month', units='unitless')
+            long_name='agricultural fire peak month', units='month')
 
        call mkpio_def_spatial_var(pioid=pioid, varname='gdp', xtype=xtype, &
-            long_name='gdp', units='unitless')
+            long_name='gdp', units='k 1995US$ capita-1')
 
        call mkpio_def_spatial_var(pioid=pioid, varname='SLOPE', xtype=PIO_REAL, &
             long_name='mean topographic slope', units='degrees')
