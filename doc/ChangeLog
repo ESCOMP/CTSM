@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev152
 Originator(s): multiple (tking (Teagan King); slevis (Sam Levis); AdrienDams (Adrien Damseaux); afoster (Adrianna Foster); samrabin (Sam Rabin); ekluzek (Erik Kluzek); wwieder (Will Wieder); sacks (Bill Sacks); a few others listed below)
-Date: Tue Nov 14 10:54:43 MST 2023
+Date: Tue Nov 14 17:09:43 MST 2023
 One-line Summary: Mv tools to /python and add tests; add snow_thermal_cond_method; a few fixes / refactors
 
 Purpose and description of changes
@@ -115,8 +115,14 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ---- IN PROGRESS
-    izumi -------
+    cheyenne ---- OK
+    izumi ------- OK, the following PASS/FAILs are expected:
+
+PASS ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianRs.izumi_gnu.clm-cropMonthlyNoinitial COMPARE_base_rest (UNEXPECTED: expected FAIL)
+FAIL ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianRs.izumi_gnu.clm-cropMonthlyNoinitial BASELINE ctsm5.1.dev151: DIFF
+
+FAIL SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Bgc.izumi_nag.clm-default--clm-NEON-NIWO BASELINE ctsm5.1.dev151: DIFF
+FAIL SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Bgc.izumi_nag.clm-NEON-MOAB--clm-PRISM BASELINE ctsm5.1.dev151: DIFF
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
     cheyenne ----
@@ -132,10 +138,18 @@ Changes answers relative to baseline:
 #2156 NO
 #2148 NO
 #2233 NO
-#2235 Adds attributes to write_climo files' dimension variables
-#2237 ONLY Smallville "no initial" restarts; specifically, this previously failing (COMPARE_base_rest)
-aux_clm test ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianRs.izumi_gnu.clm-cropMonthlyNoinitial
-#2044 For NEON cases?
+#2235 NO, adds attributes to write_climo files' dimension variables
+#2237 ONLY Smallville "no initial" restarts; specifically, this previously
+failing (COMPARE_base_rest) aux_clm test
+ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianRs.izumi_gnu.clm-cropMonthlyNoinitial
+now differs from the baseline as follows:
+ SUMMARY of cprnc:
+ A total number of     76 fields were compared
+               and      3 had differences in fill patterns
+ A total number of      2 fields could not be analyzed
+  diff_test: the two files seem to be DIFFERENT
+#2044 ONLY the NEON tests listed above due to the one-line change in
+cime_config/usermods_dirs/NEON/defaults/shell_commands in #2044
 
 Other details
 -------------
