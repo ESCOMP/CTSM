@@ -4406,7 +4406,7 @@ sub setup_logic_fates {
         if ( defined($nl->get_value($var))  ) {
            if ( &value_is_true($nl->get_value($var)) ) {
               $var = "fates_inventory_ctrl_filename";
-              my $fname = substr $nl->get_value($var), 1, -1;  # ignore first and last positions of string because those are quote characters
+              my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
               if ( ! defined($nl->get_value($var))  ) {
                  $log->fatal_error("$var is required when use_fates_inventory_init is set" );
               } elsif ( ! -f "$fname" ) {
@@ -4418,7 +4418,7 @@ sub setup_logic_fates {
         if ( defined($nl->get_value($var))  ) {
            if ( &value_is_true($nl->get_value($var)) ) {
               $var = "fluh_timeseries";
-              my $fname = substr $nl->get_value($var), 1, -1;  # ignore first and last positions of string because those are quote characters
+              my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
               if ( ! defined($nl->get_value($var))  ) {
                  $log->fatal_error("$var is required when use_fates_luh is set" );
               } elsif ( ! -f "$fname" ) {
