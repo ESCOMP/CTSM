@@ -655,6 +655,16 @@ contains
                 long_name='crop sowing dates for this patch this year', units='day of year', &
                 scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=this%sdates_thisyr_patch)
+           call restartvar(ncid=ncid, flag=flag, varname='swindow_starts_thisyr_patch', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxsowings', switchdim=.true., &
+                long_name='sowing window start dates for this patch this year', units='day of year', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%swindow_starts_thisyr_patch)
+           call restartvar(ncid=ncid, flag=flag, varname='swindow_ends_thisyr_patch', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxsowings', switchdim=.true., &
+                long_name='sowing window end dates for this patch this year', units='day of year', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%swindow_ends_thisyr_patch)
            ! Fill variable(s) derived from read-in variable(s)
            if (flag == 'read' .and. readvar) then
              do p = bounds%begp,bounds%endp
