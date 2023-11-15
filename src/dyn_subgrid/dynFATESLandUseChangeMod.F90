@@ -20,12 +20,17 @@ module dynFATESLandUseChangeMod
 
   private
 
+  ! Yearly landuse transition rate (fraction of gridcell), landuse transition name x gridcell
   real(r8), allocatable, public :: landuse_transitions(:,:)
+
+  ! Landuse state at beginning of year (fraction of gridcell), landuse state name x gridcell
   real(r8), allocatable, public :: landuse_states(:,:)
 
+  ! Number of landuse transition and state names
   integer, public, parameter    :: num_landuse_transition_vars = 108
   integer, public, parameter    :: num_landuse_state_vars = 12
 
+  ! landuse filename
   type(dyn_file_type), target   :: dynFatesLandUse_file
 
   ! Land use name arrays
@@ -112,9 +117,8 @@ contains
 
     if (use_fates_luh) then
 
-       ! Generate the dyn_file_type object
-       ! TO DO: check whether to initialize with start or end
-       ! dynFatesLandUse_file = dyn_file_type(landuse_filename, YEAR_POSITION_START_OF_TIMESTEP)
+       ! Generate the dyn_file_type object.  Note that the land use data being read in is for the
+       ! transitions occuring within the current year
        dynFatesLandUse_file = dyn_file_type(landuse_filename, YEAR_POSITION_END_OF_TIMESTEP)
 
        ! Get initial land use data
@@ -144,6 +148,16 @@ contains
   !-----------------------------------------------------------------------
   subroutine dynFatesLandUseInterp(bounds, init_state)
 
+
+    ! !DESCRIPTION:
+    ! Get landuse state and transition rate data
+    !
+    ! Note that the landuse state and transition rates are stored as fractions
+    ! of a gridcell for a given year, which is constant throughout the year.
+    ! This routine does not interpolate the rate at this time; any interpolation
+    ! is handled by FATES.
+
+    ! !USES:
     use dynTimeInfoMod , only : time_info_type
     use clm_varctl     , only : use_cn
 
@@ -152,17 +166,16 @@ contains
     logical, optional, intent(in) :: init_state   ! fates needs state for initialization
 
     ! !LOCAL VARIABLES:
-    integer                     :: varnum
-    integer                     :: i
-    logical                     :: init_flag
-    real(r8), allocatable       :: this_data(:)
+    integer                     :: varnum        ! variable number index
+    logical                     :: init_flag     ! local variable to take optional argument value
+    real(r8), allocatable       :: this_data(:)  ! temporary array to take get_current_date results
+
     character(len=*), parameter :: subname = 'dynFatesLandUseInterp'
     !-----------------------------------------------------------------------
     SHR_ASSERT_ALL(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
-    ! This shouldn't be called by cn currently, but return if it is
-    if (use_cn) return ! Use this as a protection in lieu of build namelist check?
-
+    ! Determine if the optional initialization state flag is present and if so
+    ! set the init_flag to that optional input value
     init_flag = .false.
     if (present(init_state)) then
        init_flag = init_state
@@ -176,7 +189,8 @@ contains
        landuse_transitions(1:num_landuse_transition_vars,bounds%begg:bounds%endg) = 0._r8
        landuse_states(1:num_landuse_state_vars,bounds%begg:bounds%endg) = 0._r8
     else
-       ! Right now we don't account for the topounits
+       ! Loop through all variables on the data file and put data into the temporary array
+       ! then update the global state and transitions array.
        allocate(this_data(bounds%begg:bounds%endg))
        do varnum = 1, num_landuse_transition_vars
           call landuse_transition_vars(varnum)%get_current_data(this_data)
