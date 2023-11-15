@@ -364,12 +364,10 @@ contains
 
             z0qg_patch(p) = z0hg_patch(p)
             ! Update the forcing heights for new roughness lengths
-            ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
-            if (z0param_method == 'Meier2022') then
-               forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg_patch(p) + displa(p)
-               forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hg_patch(p) + displa(p)
-               forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qg_patch(p) + displa(p)
-            end if
+            forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg_patch(p) + displa(p)
+            forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hg_patch(p) + displa(p)
+            forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qg_patch(p) + displa(p)
+
             thvstar = tstar*(1._r8+0.61_r8*forc_q(c)) + 0.61_r8*forc_th(c)*qstar
             zeta(p) = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
 
