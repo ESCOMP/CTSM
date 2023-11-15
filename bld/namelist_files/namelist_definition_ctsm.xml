@@ -780,7 +780,7 @@ Full pathname to the inventory initialization control file.
 <!-- This may eventually migrate to the dynamic_subgrid group-->
 <entry id="use_fates_luh" type="logical" category="physics"
        group="elm_inparm" valid_values="" >
-If TRUE, enable use of land use state and transition data from luh_timeseries file.
+If TRUE, enable use of land use harmonization (LUH) state and transition data from luh_timeseries file.
 (Only valid for fates land use change runs, where there is a luh_timeseries file.)
 (Also, only valid for use_fates = true and is incompatible with transient runs currently.)
 </entry>
@@ -788,7 +788,7 @@ If TRUE, enable use of land use state and transition data from luh_timeseries fi
 <!-- This could eventually be included in the "dynamic_subgrid" -->
 <entry id="fluh_timeseries" type="char*256" category="datasets"
        input_pathname="abs" group="elm_inparm" valid_values="" >
-Full pathname of unified land use harmonization data file. This causes the land-use
+Full pathname of unified land use harmonization (LUH) data file. This causes the land-use
 types to vary over time.
 (Required, if use_fates_luh=T)
 (Only relevant if FATES is on).
