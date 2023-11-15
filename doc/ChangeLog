@@ -1,4 +1,168 @@
 ===============================================================
+Tag name: ctsm5.1.dev152
+Originator(s): multiple (tking (Teagan King); slevis (Sam Levis); AdrienDams (Adrien Damseaux); afoster (Adrianna Foster); samrabin (Sam Rabin); ekluzek (Erik Kluzek); wwieder (Will Wieder); sacks (Bill Sacks); a few others listed below)
+Date: Tue Nov 14 17:09:43 MST 2023
+One-line Summary: Mv tools to /python and add tests; add snow_thermal_cond_method; a few fixes / refactors
+
+Purpose and description of changes
+----------------------------------
+
+#2156 tking, slevis
+Move the following scripts to /python/ctsm/site_and_regional
+and make wrapper scripts for them in /tools/site_and_regional:
+- run_neon.py
+- neon_surf_wrapper.py
+- modify_singlept_site_neon.py
+
+Add unit testing for:
+- iso_utils
+- modify_singlept_site_neon
+- neon_surf_wrapper
+- run_neon
+
+Add system testing for:
+- modify_singlept_site_neon
+- run_neon
+
+#2148 Adrien Damseaux (AWI, Germany), Victoria Dutch, Leanne Wake
+Add namelist option snow_thermal_cond_method to select between Jordan (1991) (default) and
+Sturm et al. (1997). Sturm option described for single point runs by Dutch et al. (2022).
+
+#2233 afoster, sacks
+Fix a compiler error (for GNU 13.2) within cropcalStreamMod.
+Simple fix was to change whole-array assignments/references for the starts and ends arrays to specifically
+reference bounds (begp and endp).
+
+#2235 srabin, wwieder
+Refactor ssp_anomaly_forcing script to make it easier to read and more amenable to future development.
+- Adds --output-dir option; default ./anomaly_forcing reproduces previous behavior
+- Makes synonyms for options with hyphens replacing underscores
+
+#2237 srabin
+Add the following fields to restart files:
+- repr_grainc_to_seed_perharv_patch
+- swindow_starts_thisyr_patch
+- swindow_ends_thisyr_patch
+
+#2044 ekluzek
+More confined regular expression for NEON and a few simple fixes.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+Closes #2156 Fixes #1441
+Closes #2148
+Closes #2233 Fixes #2232
+Closes #2235
+Closes #2237 Fixes #2236
+Closes #2044 Fixes #2039 Fixes #2103 Fixes #2028 Fixes #1506 Fixes #1499
+
+Known Issues:
+pylint errors from previous work remain in this tag.
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+#2156 New wrapper scripts don't have .py suffixes.
+#2148 New namelist option snow_thermal_cond_method as described above.
+#2133 None
+#2135 New --output-dir option; default ./anomaly_forcing reproduces previous behavior.
+Also makes synonyms for options with hyphens replacing underscores.
+#2137 None
+#2044 None
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+#2156 Numerous changes were made to include new tests.
+README.md for testing was updated to clarify that arguments should be used.
+
+Testing summary:
+----------------
+[Remove any lines that don't apply.]
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne -
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) - cheyenne OK (pylint suggestions from previous work remain)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK, the following PASS/FAILs are expected:
+
+PASS ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianRs.izumi_gnu.clm-cropMonthlyNoinitial COMPARE_base_rest (UNEXPECTED: expected FAIL)
+FAIL ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianRs.izumi_gnu.clm-cropMonthlyNoinitial BASELINE ctsm5.1.dev151: DIFF
+
+FAIL SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Bgc.izumi_nag.clm-default--clm-NEON-NIWO BASELINE ctsm5.1.dev151: DIFF
+FAIL SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Bgc.izumi_nag.clm-NEON-MOAB--clm-PRISM BASELINE ctsm5.1.dev151: DIFF
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ----
+    izumi -------
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+Answer changes
+--------------
+Changes answers relative to baseline:
+#2156 NO
+#2148 NO
+#2233 NO
+#2235 NO, adds attributes to write_climo files' dimension variables
+#2237 ONLY Smallville "no initial" restarts; specifically, this previously
+failing (COMPARE_base_rest) aux_clm test
+ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianRs.izumi_gnu.clm-cropMonthlyNoinitial
+now differs from the baseline as follows:
+ SUMMARY of cprnc:
+ A total number of     76 fields were compared
+               and      3 had differences in fill patterns
+ A total number of      2 fields could not be analyzed
+  diff_test: the two files seem to be DIFFERENT
+#2044 ONLY the NEON tests listed above due to the one-line change in
+cime_config/usermods_dirs/NEON/defaults/shell_commands in #2044
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2156
+ https://github.com/ESCOMP/ctsm/pull/2148
+ https://github.com/ESCOMP/ctsm/pull/2233
+ https://github.com/ESCOMP/ctsm/pull/2235
+ https://github.com/ESCOMP/ctsm/pull/2237
+ https://github.com/ESCOMP/ctsm/pull/2044
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev151
 Originator(s): rgknox (Ryan Knox,LAWRENCE BERKELEY NATIONAL LABORATORY,510-495-2153)
 Date: Sat Nov 11 16:53:01 MST 2023
