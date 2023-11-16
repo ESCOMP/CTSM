@@ -89,8 +89,6 @@ ctsm.input_data_list.previous
 /tools/mksurfdata_esmf/PET*
 /tools/mksurfdata_esmf/job_name.o*
 /tools/mksurfdata_esmf/mksurfdata_in
-/tools/mksurfdata_esmf/bld
-/tools/mksurfdata_esmf/src
 /tools/mksurfdata_esmf/surfdata_*.nc
 /tools/mksurfdata_esmf/landuse.timeseries_*.nc
 /tools/mksurfdata_esmf/mksurfdata_jobscript_multi

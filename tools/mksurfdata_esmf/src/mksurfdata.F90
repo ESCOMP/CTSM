@@ -165,6 +165,7 @@ program mksurfdata
   real(r8), allocatable           :: pctlak(:)               ! percent of grid cell that is lake
   real(r8), allocatable           :: pctlak_max(:)           ! maximum percent of grid cell that is lake
   real(r8), allocatable           :: pctwet(:)               ! percent of grid cell that is wetland
+  real(r8), allocatable           :: pctocn(:)               ! percent of grid cell that is ocean
   real(r8), allocatable           :: pctgla(:)               ! percent of grid cell that is glacier
   integer , allocatable           :: urban_region(:)         ! urban region ID
   real(r8), allocatable           :: pcturb(:)               ! percent of grid cell that is urbanized (total across all urban classes)
@@ -485,6 +486,13 @@ program mksurfdata
   flush(ndiag)
   if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkwetlnd')
 
+  ! Initialize pctocn to zero.
+  ! Until ctsm5.1 we set pctwet = 100 at ocean points rather than
+  ! setting a pctocn. Starting with ctsm5.2, we set pctocn = 100 at
+  ! ocean points in subroutine normalize_and_check_landuse.
+  ! No regridding required.
+  allocate ( pctocn(lsize_o)); pctocn(:) = 0._r8
+
   ! -----------------------------------
   ! Make glacier fraction [pctgla] from [fglacier] dataset
   ! -----------------------------------
@@ -727,6 +735,10 @@ program mksurfdata
      if (root_task) flush(ndiag)
      call mkfile_output(pioid, mesh_model,  'PCT_WETLAND', pctwet, rc=rc)
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in in mkfile_output for pctwet')
+
+     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out PCT_OCEAN"
+     call mkfile_output(pioid, mesh_model,  'PCT_OCEAN', pctocn, rc=rc)
+     if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in in mkfile_output for pctocn')
 
      if (root_task)  write(ndiag, '(a)') trim(subname)//" writing PCT_NATVEG"
      if (root_task) flush(ndiag)
@@ -1306,7 +1318,7 @@ program mksurfdata
 
          if (pct_land < 1.e-6_r8) then
             ! If we have essentially 0 land area, set land area to exactly 0 and put all
-            ! area in wetlands (to simulate ocean). Note that, based on the formulation
+            ! area in pctocn. Note that, based on the formulation
             ! for pct_land above, this should only arise if the non-natveg landunits
             ! already have near-zero area (and the natveg landunit should also have
             ! near-zero area in this case, because its area should be no greater than the
@@ -1319,7 +1331,8 @@ program mksurfdata
             pctlak(n) = 0._r8
             pcturb(n) = 0._r8
             pctgla(n) = 0._r8
-            pctwet(n) = 100._r8
+            pctwet(n) = 0._r8
+            pctocn(n) = 100._r8  ! the only asignment of non-zero ocean
          else
             ! Fill the rest of the land area with natveg, then renormalize landunits so
             ! that they are expressed as percent of the land area rather than percent of
@@ -1356,13 +1369,13 @@ program mksurfdata
 
          ! Confirm that we have done the rescaling correctly: now the sum of all landunits
          ! should be 100% within tol_loose
-         suma = pctlak(n) + pctwet(n) + pctgla(n) + pcturb(n) + pctcft(n)%get_pct_l2g()
-         suma = suma + pctnatpft(n)%get_pct_l2g()
+         suma = pctlak(n) + pctwet(n) + pctgla(n) + pcturb(n) + pctocn(n) +  &
+            pctcft(n)%get_pct_l2g() + pctnatpft(n)%get_pct_l2g()
          if (abs(suma - 100._r8) > tol_loose) then
             write(ndiag,*) subname, ' ERROR: landunits do not sum to 100%'
-            write(ndiag,*) 'n, suma, pctlak, pctwet, pctgla, pcturb, pctnatveg, pctcrop = '
-            write(ndiag,*) n, suma, pctlak(n), pctwet(n), pctgla(n), pcturb(n), &
-                 pctnatpft(n)%get_pct_l2g(), pctcft(n)%get_pct_l2g()
+            write(ndiag,*) 'n, suma, pctlak, pctwet, pctgla, pcturb, pctnatveg, pctcrop, pctocn = '
+            write(ndiag6,*) n, suma, pctlak(n), pctwet(n), pctgla(n), pcturb(n), &
+                 pctnatpft(n)%get_pct_l2g(), pctcft(n)%get_pct_l2g(), pctocn(n)
             flush(ndiag)
             call shr_sys_abort()
          end if
@@ -1384,8 +1397,11 @@ program mksurfdata
          call pctcft(n)%remove_small_cover(toosmallPFT, nsmall)
          nsmall_tot = nsmall_tot + nsmall
 
-         suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
-         suma = suma + pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
+         ! Include pctocn in suma but do not include in the
+         ! renormalization. When pctocn /= 0, it is 100, and
+         ! all other terms are 0.
+         suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctocn(n) +  &
+            pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
          if ( abs(suma - 100.0_r8) > 2.0*epsilon(suma) )then
             pctlak(n)    = pctlak(n)    * 100._r8/suma
             pctwet(n)    = pctwet(n)    * 100._r8/suma
@@ -1439,13 +1455,13 @@ program mksurfdata
             call shr_sys_abort()
          end if
 
-         suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctcft(n)%get_pct_l2g()
-         suma = suma + pctnatpft(n)%get_pct_l2g()
+         suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctocn(n) +  &
+            pctcft(n)%get_pct_l2g() + pctnatpft(n)%get_pct_l2g()
          if ( abs(suma-100._r8) > 1.e-10_r8) then
-            write (6,*) subname, ' error: sum of pctlak, pctwet,', &
+            write (6,*) subname, ' error: sum of pctocn, pctlak, pctwet,', &
                  'pcturb, pctgla, pctnatveg and pctcrop is NOT equal to 100'
-            write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop,sum= ', &
-                 n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
+            write (6,*)'n,pctcon,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop,sum= ', &
+                 n,pctocn(n),pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
                  pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(), suma
             flush(6)
             call shr_sys_abort()

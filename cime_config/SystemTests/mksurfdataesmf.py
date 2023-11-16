@@ -128,4 +128,5 @@ class MKSURFDATAESMF(SystemTestsCommon):
         """
         append_to_user_nl_files(caseroot = self._get_caseroot(),
                                 component = "clm",
-                                contents = "fsurdat = '{}'".format(self._fsurdat_nc))
+                                contents = "fsurdat = '{}'".format(self._fsurdat_nc) + "\n" +
+                                           "convert_ocean_to_land = .true.")

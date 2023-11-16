@@ -43,8 +43,11 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         self._cfg_template_path = os.path.join(
             path_to_ctsm_root(), "tools/modify_input_files/modify_mesh_template.cfg"
         )
-        self.testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
-        self.fsurdat_in = None
+        testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
+        fsurdat_in = os.path.join(
+            testinputs_path,
+            "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031.nc",
+        )
         self._tempdir = tempfile.mkdtemp()
         self._cfg_file_path = os.path.join(self._tempdir, "modify_mesh_mask.cfg")
         self._mesh_mask_in = os.path.join(self._tempdir, "mesh_mask_in.nc")
@@ -116,8 +119,8 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         if os.path.exists(self._landmask_file):
             os.remove(self._landmask_file)
         ncap2_cmd = (
-            "ncap2 -A -v -s 'mod_lnd_props=LANDFRAC_PFT.convert(NC_INT)' "
-            + "-A -v -s 'landmask=LANDFRAC_PFT.convert(NC_INT)' "
+            "ncap2 -A -v -s 'mod_lnd_props=LANDFRAC_MKSURFDATA.convert(NC_INT)' "
+            + "-A -v -s 'landmask=LANDFRAC_MKSURFDATA.convert(NC_INT)' "
             + f"-A -v -s {self._lat_varname}={self._lat_varname} "
             + f"-A -v -s {self._lon_varname}={self._lon_varname} "
             + f"{self.fsurdat_in} {self._landmask_file}"
