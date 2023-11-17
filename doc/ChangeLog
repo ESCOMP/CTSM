@@ -1,4 +1,66 @@
 ===============================================================
+Tag name: ctsm5.1.dev153
+Originator(s): afoster (Adrianna Foster) and johnpaulalex (John Paul Alex)
+Date: Fri Nov 17 11:53:14 MST 2023
+One-line Summary: Call new FATES-side FatesReadParameters
+
+Purpose and description of changes
+----------------------------------
+
+Have CTSM use the new code path in FATES that allows passing in a `fates_param_reader_type`, which does the actual work reading the parameter files, in lieu of calling CTSM methods.
+
+Also updated NEON usermods to use version 2 data by default, rather than latest.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- OK 
+    izumi ------- OK
+
+    fates baseline: `fates-sci.1.68.2_api.31.0.0-ctsm5.1.dev153`
+
+
+Answer changes
+--------------
+
+None
+
+
+Other details
+--------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates
+
+Pull Requests that document the changes (include PR ids): 
+https://github.com/NGEET/fates/pull/1096
+https://github.com/ESCOMP/CTSM/pull/2198
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev152
 Originator(s): multiple (tking (Teagan King); slevis (Sam Levis); AdrienDams (Adrien Damseaux); afoster (Adrianna Foster); samrabin (Sam Rabin); ekluzek (Erik Kluzek); wwieder (Will Wieder); sacks (Bill Sacks); a few others listed below)
 Date: Tue Nov 14 17:09:43 MST 2023
