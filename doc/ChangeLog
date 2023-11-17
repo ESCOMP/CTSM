@@ -26,7 +26,10 @@ Does this tag change answers significantly for any of the following physics conf
 
 [ ] clm4_5
 
+Bugs fixed or introduced
+------------------------
 
+Some progress towards CTSM#2006 and FATES#1076
 
 Testing summary:
 ----------------
