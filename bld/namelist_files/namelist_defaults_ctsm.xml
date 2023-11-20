@@ -498,8 +498,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Default surface roughness parameterization                         -->
 <!-- ================================================================== -->
 
-<z0param_method phys="clm4_5">ZengWang2007</z0param_method>
-<z0param_method phys="clm5_0">ZengWang2007</z0param_method>
+<z0param_method>ZengWang2007</z0param_method>
 <z0param_method phys="clm5_1">Meier2022</z0param_method>
 
 <use_z0m_snowmelt z0param_method="Meier2022" >.true.</use_z0m_snowmelt>
