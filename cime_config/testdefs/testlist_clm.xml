@@ -17,13 +17,13 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ln6" grid="f09_g17" compset="I1850Clm50BgcNoAnthro" testmods="clm/Meier2022_surf_rough">
+  <test name="SMS_D_Ln6" grid="f09_g17" compset="I1850Clm51BgcNoAnthro">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Meier Surface roughness with no-anthro compset</option>
+      <option name="comment"  >Clm51 with no-anthro compset</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f09_g17" compset="I1850Clm45BgcCru" testmods="clm/default">
@@ -1163,16 +1163,16 @@
       <option name="comment"  >include a long Clm45 test, and include a production intel test of Clm45</option>
     </options>
   </test>
-  <test name="ERS_Ly3" grid="f10_f10_mg37" compset="I2000Clm51BgcCrop" testmods="clm/Meier2022_surf_rough">
+  <test name="ERS_Ly3" grid="f10_f10_mg37" compset="I2000Clm51BgcCrop">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
-      <option name="comment"  >include a long exact restart test with Meier surface roughness</option>
+      <option name="comment"  >include a long exact restart test with clm51</option>
     </options>
   </test>
-  <test name="SMS_D" grid="f10_f10_mg37" compset="I2000Clm51Bgc" testmods="clm/Meier2022_surf_rough">
+  <test name="SMS_D" grid="f10_f10_mg37" compset="I2000Clm51Bgc">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu"   category="aux_clm"/>
@@ -1182,16 +1182,16 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >include a short DEBUG test with Meier surface roughness without crop</option>
+      <option name="comment"  >include a short DEBUG test with clm51 without crop</option>
     </options>
   </test>
-  <test name="ERS_D" grid="f10_f10_mg37" compset="I1850Clm51Sp" testmods="clm/Meier2022_surf_rough">
+  <test name="ERS_D" grid="f10_f10_mg37" compset="I1850Clm51Sp">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Exact restart short DEBUG SP test with Meier surface roughness</option>
+      <option name="comment"  >Exact restart short DEBUG SP test with clm51</option>
     </options>
   </test>
   <test name="ERS_Ly6_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/cropMonthOutput">
