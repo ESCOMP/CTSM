@@ -1,4 +1,97 @@
 ===============================================================
+Tag name: ctsm5.1.dev154
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Mon Nov 20 11:09:45 MST 2023
+One-line Summary: New params files: Changes for Meier roughness, MIMICS, and SNICAR, and changes to leafcn and k*_nonmyc
+
+Purpose and description of changes
+----------------------------------
+
+This PR (#2258) addresses several issues:
+1) Start using existing new params file for Meier roughness:
+/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/paramdata/ctsm51_params.RMz0.c231011.nc
+and include bug-fix #2219.
+2) Update forcing heights per #2071.
+3) Update params file for MIMICS per #1845.
+4) Make leafcn for pfts 15 and 16 the same per #2184.
+5) Switch the values of params kc_nonmyc and kn_nonmyc per #2120.
+6) Move SNICAR parameters to ctsm51, clm50, and clm45 params files per #2247.
+
+See #2258 and the above issues for a list of contributors.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm5_1
+
+[x] clm5_0
+
+[x] ctsm5_0-nwp
+
+[x] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+Fixes #2219
+Fixes #2071
+Fixes #1845
+Fixes #2184
+Fixes #2120
+Fixes #2247
+
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ SNICAR namelist variable fresh_snw_rds_max moved to the params file.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ SNICAR namelist variable fresh_snw_rds_max moved to the params file.
+ Pointing to new params files for clm4_5, clm5_0, clm5_1.
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ New clm5_1 params file with new parameters and with modified values of existing parameters.
+ New clm5_0 and clm4_5 params files with new parameters for SNICAR.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ----
+    izumi -------
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ALL
+    - what platforms/compilers: ALL
+    - nature of change: larger than roundoff/same climate?
+      I will post this tag on the Answer changing tags wiki page as "SIGNIFICANT"
+      and will run a simulation and diagnostics to compare against dev145.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2258
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev153
 Originator(s): afoster (Adrianna Foster) and johnpaulalex (John Paul Alex)
 Date: Fri Nov 17 11:53:14 MST 2023
@@ -162,17 +255,8 @@ README.md for testing was updated to clarify that arguments should be used.
 
 Testing summary:
 ----------------
-[Remove any lines that don't apply.]
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
-
-  build-namelist tests (if CLMBuildNamelist.pm has changed):
-
-    cheyenne -
-
-  tools-tests (test/tools) (if tools have been changed):
-
-    cheyenne -
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
@@ -189,13 +273,6 @@ FAIL ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianRs.izumi_gnu.clm
 FAIL SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Bgc.izumi_nag.clm-default--clm-NEON-NIWO BASELINE ctsm5.1.dev151: DIFF
 FAIL SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Bgc.izumi_nag.clm-NEON-MOAB--clm-PRISM BASELINE ctsm5.1.dev151: DIFF
 
-  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    cheyenne ----
-    izumi -------
-
-  any other testing (give details below):
-
-If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
 Answer changes
 --------------

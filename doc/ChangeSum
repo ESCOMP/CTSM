@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev154   slevis 11/20/2023 New params files with changes for Meier roughness, MIMICS, and SNICAR, and changes to leafcn and k*_nonmyc
     ctsm5.1.dev153  afoster 11/17/2023 Call new FATES-side FatesReadParameters
     ctsm5.1.dev152 multiple 11/14/2023 Mv tools to /python and add tests; add snow_thermal_cond_method; a few fixes / refactors
     ctsm5.1.dev151   rgknox 11/11/2023 Fixes to FATES long run restarts
