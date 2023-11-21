@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev154
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Mon Nov 20 11:09:45 MST 2023
+Date: Tue Nov 21 13:13:57 MST 2023
 One-line Summary: New params files: Changes for Meier roughness, MIMICS, and SNICAR, and changes to leafcn and k*_nonmyc
 
 Purpose and description of changes
@@ -65,7 +65,9 @@ Notes of particular relevance for developers:
 ---------------------------------------------
 Changes to tests or testing:
 - Remove clm50 Meier test. Should be clm51 but the compset I1850Clm51BgcNoAnthro does not exist.
-- Remove Meier testmod directory. Remove from corresponding tests.
+- Remove Meier testmod directory and remove such reference from corresponding tests.
+- Change mimics tests from clm50 to clm51.
+- For details, see the updated testlist_clm.xml file.
 
 Testing summary:
 ----------------
