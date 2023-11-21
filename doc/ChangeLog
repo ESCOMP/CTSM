@@ -61,6 +61,11 @@ Changes to the datasets (e.g., parameter, surface or initial files):
  New clm5_1 params file with new parameters and with modified values of existing parameters.
  New clm5_0 and clm4_5 params files with new parameters for SNICAR.
 
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+- Remove clm50 Meier test. Should be clm51 but the compset I1850Clm51BgcNoAnthro does not exist.
+- Remove Meier testmod directory. Remove from corresponding tests.
 
 Testing summary:
 ----------------
@@ -69,8 +74,8 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ----
-    izumi -------
+    cheyenne ---- OK
+    izumi ------- OK
 
 
 Answer changes
