@@ -1167,9 +1167,6 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu"   category="aux_clm"/>
-      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
-      <machine name="izumi"    compiler="intel" category="aux_clm"/>
-      <machine name="izumi"    compiler="gnu"   category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1408,10 +1405,11 @@
   </test>
   <test name="SMS_D" grid="f10_f10_mg37" compset="I2000Clm51BgcCrop" testmods="clm/crop">
     <machines>
-      <machine name="izumi" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="nvhpc" category="aux_clm"/>
       <machine name="cheyenne" compiler="nvhpc" category="prebeta"/>
+      <machine name="izumi" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
