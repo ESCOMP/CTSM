@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev154
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Tue Nov 21 13:13:57 MST 2023
+Date: Wed Nov 22 09:53:01 MST 2023
 One-line Summary: New params files: Changes for Meier roughness, MIMICS, and SNICAR, and changes to leafcn and k*_nonmyc
 
 Purpose and description of changes
@@ -60,6 +60,8 @@ Changes made to namelist defaults (e.g., changed parameter values):
 Changes to the datasets (e.g., parameter, surface or initial files):
  New clm5_1 params file with new parameters and with modified values of existing parameters.
  New clm5_0 and clm4_5 params files with new parameters for SNICAR.
+ ./rimport on the new params files fails with "No space left on device" but the 4 files are safe here:
+ /glade/u/home/slevis/paramfiles/*_params.c231117.nc
 
 Notes of particular relevance for developers:
 ---------------------------------------------
@@ -88,9 +90,25 @@ Changes answers relative to baseline: YES
   Summarize any changes to answers, i.e.,
     - what code configurations: ALL
     - what platforms/compilers: ALL
-    - nature of change: larger than roundoff/same climate?
+    - nature of change:
+      Larger than roundoff/same climate?
       I will post this tag on the Answer changing tags wiki page as "SIGNIFICANT"
       and will run a simulation and diagnostics to compare against dev145.
+
+      I used the izumi test-suite to perform one bfb sanity test:
+      I backed up my branch to 6dc1966 (before the snicar mods), then I put back the changes of the
+      commit right after snicar (71e174f). Comparing to dev154 (this tag's new baseline),
+      the izumi test-suite passed bfb (12 gnu, 18 intel, and 32 nag tests).
+      Other mods are quite confined and clear, so I will not pursue other sanity tests.
+
+ Changes to answers commit-by-commit in this PR:
+ f9978db and b8c71fa: These two change answers for Meier2022 and, therefore, clm51 only
+ 626f520: Takes out if (z0param_method == 'Meier2022'), so changes answers for all three CLMs
+ 319d194: Changes answers for mimics and, therefore clm51 only (order of ops, so roundoff)
+ 2ee6943: Changes clm51 params file, so affects clm51 only (expect more than roundoff)
+ f185a31: bfb
+ 6dc1966: This git merge escomp/master probably does change answers from previous commit
+ 29ca5ad and 71e174f: Puts snicar params on the params files for all three CLMs; sanity test gave bfb
 
 Other details
 -------------
