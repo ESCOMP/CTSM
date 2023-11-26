@@ -29,7 +29,6 @@
 
 
   <!-- aux_clm test suite failures -->
-
   <test name="SMS_D_Ld1_Mmpi-serial_Vmct.f45_f45_mg37.I2000Clm50SpRs.izumi_gnu.clm-ptsRLA">
     <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
@@ -44,10 +43,17 @@
     </phase>
   </test>
 
-  <test name="SMS_D_Ld1_PS.f09_g17.I1850Clm50BgcSpinup.cheyenne_intel.clm-cplhist">
+  <test name="SMS.f45_f45_mg37.I2000Clm51FatesSpRsGs.cheyenne_nvhpc.clm-FatesColdSatPhen">
     <phase name="RUN">
       <status>FAIL</status>
-      <issue>#1844</issue>
+      <issue>#1733</issue>
+    </phase>
+  </test>
+
+  <test name="SMS.f10_f10_mg37.I2000Clm50BgcCrop.cheyenne_nvhpc.clm-crop">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#1733</issue>
     </phase>
   </test>
 
