@@ -1943,7 +1943,6 @@ contains
                       start(4) = nt; count(4) = 1
                       n=4
                    end if
-                   write(iulog,*) trim(subname),' ==grlnd',trim(subgrid_level_name),'start=',start,'count=',count,'nt',nt,'size data=',size(data),trim(varname)
                 else
                    n=2
                    if (present(switchdim)) then
@@ -1959,7 +1958,6 @@ contains
                       n=3
                       start(3) = nt ; count(3) = 1
                    end if
-                   write(iulog,*) trim(subname),' else grlnd',trim(subgrid_level_name),'start=',start,'count=',count,'nt',nt,'size data=',size(data),trim(varname)
                 end if
              else
                 n=2
