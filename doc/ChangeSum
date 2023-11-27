@@ -1,5 +1,9 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev154   slevis 11/22/2023 New params files with changes for Meier roughness, MIMICS, and SNICAR, and changes to leafcn and k*_nonmyc
+    ctsm5.1.dev153  afoster 11/17/2023 Call new FATES-side FatesReadParameters
+    ctsm5.1.dev152 multiple 11/14/2023 Mv tools to /python and add tests; add snow_thermal_cond_method; a few fixes / refactors
+    ctsm5.1.dev151   rgknox 11/11/2023 Fixes to FATES long run restarts
     ctsm5.1.dev150   rgknox 11/06/2023 FATES API fix to support future fates npp-fixation coupling, and urgent coupling fixes with E3SM.
     ctsm5.1.dev149 samrabin 11/03/2023 Rearrange leaf/stem "harvest" and fix soil gas diffusivity
     ctsm5.1.dev148 samrabin 11/03/2023 Add GRAINN outputs

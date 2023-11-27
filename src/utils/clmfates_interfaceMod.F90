@@ -7,11 +7,9 @@ module CLMFatesInterfaceMod
    !
    ! This is also the only location where CLM code is allowed to see FATES memory
    ! structures.
-   ! The routines here, that call FATES library routines, will not pass any types defined
-   ! by the driving land model (HLM).
-   !
-   ! either native type arrays (int,real,log, etc) or packed into fates boundary condition
-   ! structures.
+   ! The routines here, that call FATES library routines, cannot pass most types defined
+   ! by the driving land model (HLM), only native type arrays (int,real,log, etc), implementations
+   ! of fates abstract classes, and references into fates boundary condition structures.
    !
    ! Note that CLM/ALM does use Shared Memory Parallelism (SMP), where processes such as
    ! the update of state variables are forked.  However, IO is not assumed to be
@@ -112,6 +110,7 @@ module CLMFatesInterfaceMod
    use shr_log_mod       , only : errMsg => shr_log_errMsg
    use clm_varcon        , only : dzsoi_decomp
    use FuncPedotransferMod, only: get_ipedof
+   use CLMFatesParamInterfaceMod, only: fates_param_reader_ctsm_impl
 !   use SoilWaterPlantSinkMod, only : Compute_EffecRootFrac_And_VertTranSink_Default
 
    ! Used FATES Modules
@@ -128,6 +127,10 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : set_fates_ctrlparms
    use FatesInterfaceMod     , only : UpdateFatesRMeansTStep
    use FatesInterfaceMod     , only : InitTimeAveragingGlobals
+   
+   use FatesParametersInterface, only : fates_param_reader_type
+   use FatesParametersInterface, only : fates_parameters_type
+
    use FatesInterfaceMod     , only : DetermineGridCellNeighbors
 
    use FatesHistoryInterfaceMod, only : fates_hist
@@ -283,6 +286,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_sp
      integer                                        :: pass_masterproc
      logical                                        :: verbose_output
+     type(fates_param_reader_ctsm_impl)             :: var_reader
      
      call t_startf('fates_globals1')
 
@@ -326,6 +330,7 @@ module CLMFatesInterfaceMod
 
      end if
 
+
      ! The following call reads in the parameter file
      ! and then uses that to determine the number of patches
      ! FATES requires. We pass that to CLM here
@@ -334,7 +339,7 @@ module CLMFatesInterfaceMod
      ! and allocations on the FATES side, which require
      ! some allocations from CLM (like soil layering)
 
-     call SetFatesGlobalElements1(use_fates,surf_numpft,surf_numcft)
+     call SetFatesGlobalElements1(use_fates,surf_numpft,surf_numcft,var_reader)
 
      maxsoil_patches = fates_maxPatchesPerSite
      
@@ -1087,7 +1092,8 @@ module CLMFatesInterfaceMod
 
             call ed_update_site(this%fates(nc)%sites(s), &
                   this%fates(nc)%bc_in(s), &
-                  this%fates(nc)%bc_out(s))
+                  this%fates(nc)%bc_out(s), &
+                  is_restarting = .false.)
       enddo
 
 
@@ -1764,9 +1770,17 @@ module CLMFatesInterfaceMod
                   this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
                        min(this%fates(nc)%bc_in(s)%nlevsoil, active_layer_inst%altmax_lastyear_indx_col(c))
 
+                  ! When restarting the model, this subroutine has several
+                  ! procedures that are incremental or don't need to be performed for 
+                  ! during the restart sequence. For the prior, we don't want the restarted
+                  ! run to call these routines more than would had been called during
+                  ! a continuous simulation period, as it would change results. So 
+                  ! we pass in the "is_restarting=.true." flag so we can bypass those procedures
+
                   call ed_update_site( this%fates(nc)%sites(s), &
                         this%fates(nc)%bc_in(s), &
-                        this%fates(nc)%bc_out(s) )
+                        this%fates(nc)%bc_out(s), &
+                        is_restarting = .true. )
 
                end do
 
@@ -1995,7 +2009,8 @@ module CLMFatesInterfaceMod
 
               call ed_update_site(this%fates(nc)%sites(s), &
                     this%fates(nc)%bc_in(s), &
-                    this%fates(nc)%bc_out(s))
+                    this%fates(nc)%bc_out(s), &
+                    is_restarting = .false.)
 
            end do
 
@@ -3579,5 +3594,7 @@ module CLMFatesInterfaceMod
    call t_stopf('fates_getandsettime')
 
  end subroutine GetAndSetTime
+
+ !-----------------------------------------------------------------------
 
 end module CLMFatesInterfaceMod

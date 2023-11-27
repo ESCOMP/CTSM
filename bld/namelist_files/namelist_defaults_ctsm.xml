@@ -431,10 +431,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <upplim_destruct_metamorph   phys="clm5_0" >175.d00</upplim_destruct_metamorph>
 <upplim_destruct_metamorph   phys="clm5_1" >175.d00</upplim_destruct_metamorph>
 
-<fresh_snw_rds_max phys="clm4_5" >54.526d00</fresh_snw_rds_max>
-<fresh_snw_rds_max phys="clm5_0" >204.526d00</fresh_snw_rds_max>
-<fresh_snw_rds_max phys="clm5_1" >204.526d00</fresh_snw_rds_max>
-
 <overburden_compress_tfactor>0.08d00</overburden_compress_tfactor>
 
 <reset_snow>.false.</reset_snow>
@@ -445,6 +441,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <reset_snow_glc_ela>1.e9</reset_snow_glc_ela>
 
 <snow_cover_fraction_method>SwensonLawrence2012</snow_cover_fraction_method>
+<snow_thermal_cond_method>Jordan1991</snow_thermal_cond_method>
 
 <!-- Default glacier behavior is:
      Mountain glaciers: single_at_atm_topo
@@ -487,9 +484,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c211112.nc</paramfile>
-<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c211112.nc</paramfile>
-<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c211112.nc</paramfile>
+<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c231117.nc</paramfile>
+<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c231117.nc</paramfile>
+<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c231117.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
@@ -502,6 +499,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- ================================================================== -->
 
 <z0param_method>ZengWang2007</z0param_method>
+<z0param_method phys="clm5_1">Meier2022</z0param_method>
 
 <use_z0m_snowmelt z0param_method="Meier2022" >.true.</use_z0m_snowmelt>
 <use_z0m_snowmelt >.false.</use_z0m_snowmelt>
@@ -1289,7 +1287,24 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <fsurdat hgrid="0.9x1.25"     sim_year="PtVg" use_crop=".false." irrigate=".false."
 >lnd/clm2/surfdata_map/surfdata_0.9x1.25_hist_16pfts_nourb_CMIP6_simyrPtVg_c181114.nc</fsurdat>
 
+<!-- for NEON sites present day simulations - year 2000 -->
+<fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".true.">
+lnd/clm2/surfdata_map/NEON/16PFT_mixed/surfdata_1x1_NEON_${NEONSITE}_hist_16pfts_Irrig_CMIP6_simyr2000_c230120.nc</fsurdat>
+<fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".false.">
+lnd/clm2/surfdata_map/NEON/surfdata_1x1_NEON_${NEONSITE}_hist_78pfts_CMIP6_simyr2000_c230601.nc</fsurdat>
+<!-- If there are cases where only a few datasets change - they can be listed here for the particular NEONSITE -->
+<!-- for example to override the above for the TOOL site do something like this...
+<fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".false." neonsite="TOOL">
+lnd/clm2/surfdata_map/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c230699.nc</fsurdat>
+-->
+
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
+
+<!-- When NEON landuse datasets are available uncomment the following for something like this...
+     Also change the setting for clm_demand in the namelist_defaults_overall.xml file
+<flanduse_timeseries hgrid="CLM_USRDAT" neon=".true." sim_year_range="1850-2100">
+>lnd/clm2/surfdata_map/NEON/landuse.timeseries_NEON_${NEONSITE}_hist_78pfts_simyr2018-2023_c230931.nc</flanduse_timeseries>
+-->
 
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2000" irrigate=".true." use_vichydro=".true."
  use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
