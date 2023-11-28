@@ -1,13 +1,11 @@
-.. _getting-help:
-
 .. include:: ../substitutions.rst
+
+.. _getting-help:
 
 ==============
  Getting Help
 ==============
-In addition to this users-guide there are several other resources that are available to help you use |version|. The first one is the |cesmrelease| User's-Guide, which documents the entire process of creating cases with |cesmrelease|. 
-And next is the CIME User's Guide which goes over the scripts and infrastructure used for running |version| in |cesmrelease|.
-The CESM bulletin board which is a web-site for exchanging information between users of CESM. There are also CLM web-pages specific for CLM, and finally there is an email address to report bugs that you find in |cesmrelease|.
+In addition to this users-guide there are several other resources that are available to help you use |version|. The first one is the |cesmrelease| User's-Guide, which documents the entire process of creating cases with |cesmrelease|. And next is the CIME User's Guide which goes over the scripts and infrastructure used for running |version| in |cesmrelease|. The CESM bulletin board which is a web-site for exchanging information between users of CESM. There are also CLM web-pages specific for CLM, and finally there is an email address to report bugs that you find in |cesmrelease|.
 
 ---------------------------
 The CESM User's-Guide
@@ -21,8 +19,7 @@ The CESM User's-Guide
 The CIME User's-Guide
 ---------------------------
 
-The CIME Users'-Guide goes into the how to use the scripts and infrastructure of the CESM.
-`CIME Users Guide <http://esmci.github.io/cime/>`_
+The CIME Users'-Guide goes into the how to use the scripts and infrastructure of the CESM. `CIME Users Guide <http://esmci.github.io/cime/>`_
 
 -----------------------
 The CESM Bulletin Board
@@ -38,32 +35,30 @@ There is a rich and diverse set of people that use the CESM, and often it is use
 The CLM web pages
 -----------------
 
-The main CLM web page contains information on the CLM, it's history, developers, as well as downloads for previous model versions. There are also documentation text files in the $CTSMROOT/doc directory that give some quick information on using CLM.
+The main `CLM web page <http://www.cgd.ucar.edu/tss/clm/>`_ contains information on the CLM, its history, developers, as well as downloads for previous model versions. Some other links are available at the `CESM2 land component webpage <http://www.cesm.ucar.edu/models/cesm2/land>`. There are also documentation text files in the `$CTSMROOT/doc directory <https://github.com/ESCOMP/CTSM/tree/master/doc>`_ that give some quick information on using CLM.
 
-`CLM web page <http://www.cgd.ucar.edu/tss/clm/>`_
-`|cesmrelease| |version| web page <http://www.cesm.ucar.edu/models/cesm2/land/>`_
-`CLM Documentation Text Files <CLM-URL>`_
+Also note that several of the XML database files can help with namelist options, namelist defaults, or compsets. For the most recent release:
 
-Also note that several of the XML database files can be viewed in a web browser to get a nice table of namelist options, namelist defaults, or compsets. Simply view them as a local file and bring up one of the following files:
+- `$CTSMROOT/bld/namelist_files/namelist_definition_ctsm.xml <https://github.com/ESCOMP/CTSM/blob/master/bld/namelist_files/namelist_definition_ctsm.xml>`_ -- definition of latest CTSM namelist items.
+- `$CTSMROOT/bld/namelist_files/namelist_defaults_ctsm.xml <https://github.com/ESCOMP/CTSM/blob/master/bld/namelist_files/namelist_defaults_ctsm.xml>`_ -- default values for latest CTSM namelist items.
+- `$CTSMROOT/cime_config/config_component.xml <https://github.com/ESCOMP/CTSM/blob/master/cime_config/config_component.xml>`_ -- definition of all the CLM specific XML variables.
+- `$CTSMROOT/cime_config/config_compsets.xml <https://github.com/ESCOMP/CTSM/blob/master/cime_config/config_compsets.xml>`_ -- definition of all the CLM compsets.
 
-- `$CTSMROOT/bld/namelist_files/namelist_definition_clm4_0.xml <CLM-URL>`_ -- definition of CLM4.0 namelist items.
-- `$CTSMROOT/bld/namelist_files/namelist_definition_clm4_5.xml <CLM-URL>`_ -- definition of CLM4.5/CLM5.0 namelist items.
-- `$CTSMROOT/bld/namelist_files/namelist_defaults_clm4_0.xml <CLM-URL>`_ -- default values for CLM4.0 namelist items.
-- `$CTSMROOT/bld/namelist_files/namelist_defaults_clm4_5.xml <CLM-URL>`_ -- default values for CLM4.5/CLM5.0 namelist items.
-- `$CTSMROOT/cime_config/config_component.xml <CLM-URL>`_ -- definition of all the CLM specific XML variables.
-- `$CTSMROOT/cime_config/config_compsets.xml <CLM-URL>`_ -- definition of all the CLM compsets.
-- `$CTSMROOT/bld/namelist_files/history_fields_clm4_0.xml <CLM-URL>`_ -- definition of CLM4.0 history fields.
-- `$CTSMROOT/bld/namelist_files/history_fields_clm4_5.xml <CLM-URL>`_ -- definition of CLM4.5/CLM5.0 history fields.
+Some archives are available for previous versions:
+
+- `Archive of namelist_definition_clm4_0.xml <https://github.com/ESCOMP/CTSM/blob/clm5.0.000/bld/namelist_files/namelist_definition_clm4_0.xml>`_ -- definition of CLM4.0 namelist items.
+- `Archive of namelist_definition_clm4_5.xml <https://github.com/ESCOMP/CTSM/blob/clm5.0.000/bld/namelist_files/namelist_definition_clm4_5.xml>`_ -- definition of CLM4.5/CLM5.0 namelist items.
+- `Archive of namelist_defaults_clm4_0.xml <https://github.com/ESCOMP/CTSM/blob/clm5.0.000/bld/namelist_files/namelist_defaults_clm4_0.xml>`_ -- default values for CLM4.0 namelist items.
+- `Archive of namelist_defaults_clm4_5.xml <https://github.com/ESCOMP/CTSM/blob/clm5.0.000/bld/namelist_files/namelist_defaults_clm4_5.xml>`_ -- default values for CLM4.5/CLM5.0 namelist items.
+
 
 ----------------------------
 Reporting bugs in |version|
 ----------------------------
 
-If you have any problems, additional questions, bug reports, or any other feedback, please report it as an issue
-on GitHub https://github.com/ESCOMP/ctsm/issues or for CIME scripts and infrastructure to https://github.com/ESMCI/CIME/issues. 
-Or send an email to 
-<`cesmhelp@cgd.ucar.edu <cesmhelp@cgd.ucar.edu>`_> or <`ctsm-software@ucar.edu <ctsm-software@ucar.edu>`_>. 
-If you find bad, wrong, or misleading information in this users guide report it as an issue on CTSM.
+If you have any problems, additional questions, bug reports, or any other feedback, please report it as an issue on GitHub https://github.com/ESCOMP/ctsm/issues or for CIME scripts and infrastructure to https://github.com/ESMCI/CIME/issues. Or send an email to <`cesmhelp@cgd.ucar.edu <cesmhelp@cgd.ucar.edu>`_> or <`ctsm-software@ucar.edu <ctsm-software@ucar.edu>`_>. If you find bad, wrong, or misleading information in this users guide report it as an issue on CTSM.
+
+.. _acronyms-and-terms:
 
 ---------------------------------------
 Some Acronym's and Terms We'll be Using
@@ -76,7 +71,7 @@ CESM
   Community Earth System Model (CESM). The coupled earth system model that CLM is a component of.
 
 CIME
-  The Common Infrastructure for Modeling the Earth (CIME - pronounced “SEAM”) provides a Case Control System for configuring, compiling and executing Earth system models, data and stub model components, a driver and associated tools and libraries.
+  The Common Infrastructure for Modeling the Earth (CIME - pronounced "SEAM") provides a Case Control System for configuring, compiling and executing Earth system models, data and stub model components, a driver and associated tools and libraries.
 
 CLM
   Community Land Model (CLM). The prognostically active land model component of CESM.
@@ -108,7 +103,7 @@ CRUNCEP
   The Climate Research Unit (CRU) analysis of the NCEP atmosphere reanalysis atmosphere forcing data. This can be used to drive CLM with atmosphere forcing from 1901 to 2016. This data is updated every year, the version we are currently using is Version-7. The las CESM1.2.2 release used Version-4 data.
 
 CTSM
-  The Community Terrestrial Systems Model, of which |version| and CLM4.5 are namelist option sets of. CTSM is a wider community 
+  The Community Terrestrial Systems Model, of which |version| and CLM4.5 are namelist option sets of. CTSM is a wider community
   that includes using CTSM for Numerical Weather Prediction (NWP) as well as climate.
 
 DATM
@@ -126,7 +121,7 @@ ESMF
   Earth System Modeling Framework (ESMF). They are a software project that provides a software library to support Earth System modeling. We provide interfaces for ESMF as well as use their regridding capabilities for offline CLM tools.
 
 FATES
-  Functionally Assembled Terrestrial Ecosystem Simulator. This is being developed by the Next Generation Ecosystem Experiment Tropics’ (NGEE-T) 
+  Functionally Assembled Terrestrial Ecosystem Simulator. This is being developed by the Next Generation Ecosystem Experiment Tropics' (NGEE-T)
   project and uses both |version| and the land model component of E3SM (Energy Exascale Earth System Model).
 
 FUN

@@ -59,26 +59,6 @@
 
   <!-- fates test suite failures -->
 
-  <test name="ERS_Lm12.1x1_brazil.I2000Clm50FatesCruRsGs.cheyenne_intel.clm-FatesFireLightningPopDens">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>#667</issue>
-    </phase>
-  </test>
-  
-    <test name="ERS_Lm13.f45_f45_mg37.I2000Clm50Fates.cheyenne_intel.clm-FatesColdNoComp">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>FATES#897</issue>
-    </phase>
-  </test>
-
-  <test name="ERS_Lm13.f10_f10_mg37.I2000Clm50Fates.cheyenne_gnu.clm-FatesCold">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>FATES#897</issue>
-    </phase>
-  </test>
   
     <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdHydro">
     <phase name="COMPARE_base_rest">
@@ -94,7 +74,7 @@
     </phase>
   </test>
 
-  <test name="ERP_P72x2_Ld30.f45_f45_mg37.I2000Clm50FatesRs.cheyenne_intel.clm-mimicsFatesCold">
+  <test name="ERP_P72x2_Ld30.f45_f45_mg37.I2000Clm51FatesRs.cheyenne_intel.clm-mimicsFatesCold">
     <phase name="SHAREDLIB_BUILD">
       <status>PEND</status>
       <issue>#1045</issue>
@@ -103,13 +83,18 @@
 
   <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdPRT2">
     <phase name="RUN">
-      <status>FAIL</status>
+      <status>PEND</status>
       <issue>FATES#983</issue>
       <comment>This job should time out on izumi, seems to be hanging on history output.</comment>
     </phase>
   </test>
 
-
+  <test name="PEM_D_Ld15.5x5_amazon.I2000Clm50FatesRs.cheyenne_gnu.clm-FatesColdSeedDisp">
+    <phase name="COMPARE_base_modpes">
+      <status>FAIL</status>
+      <issue>FATES#1089</issue>
+    </phase>
+  </test>
 
 
 </expectedFails>

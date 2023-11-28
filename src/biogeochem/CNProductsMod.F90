@@ -503,12 +503,12 @@ contains
        ! no veg patches are active. This is what happens
        ! when fates is on. Woodproduct fluxes use a p2g
        ! upscaling for the gru_ pools. Must zero it here then.
-       !if(use_fates_bgc)then
-       !   do g = bounds%begg, bounds%endg
-       !      this%gru_prod10_gain_grc(g) = 0._r8
-       !      this%gru_prod100_gain_grc(g) = 0._r8
-       !   end do
-       ! end if
+       if(use_fates_bgc)then
+          do g = bounds%begg, bounds%endg
+             this%gru_prod10_gain_grc(g) = 0._r8
+             this%gru_prod100_gain_grc(g) = 0._r8
+          end do
+        end if
        
        call this%ComputeSummaryVars(bounds)
 
@@ -857,10 +857,6 @@ contains
     
     do g = bounds%begg, bounds%endg
 
-       print*,this%prod10_grc(g),this%prod100_grc(g), this%prod10_loss_grc(g), &
-            this%prod100_loss_grc(g),  this%cropprod1_loss_grc(g),this%dwt_prod100_gain_grc(g), &
-            this%dwt_prod10_gain_grc(g), this%gru_prod100_gain_grc(g), this%gru_prod10_gain_grc(g)
-       
        ! total wood products
        this%tot_woodprod_grc(g) = &
             this%prod10_grc(g) + &
