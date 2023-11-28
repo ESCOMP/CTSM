@@ -66,6 +66,8 @@ import pandas as pd
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "python"))
 sys.path.insert(1, _CTSM_PYTHON)
 
+from ctsm import add_cime_to_path
+
 from CIME import build
 from CIME.case import Case
 from CIME.utils import safe_copy, expect, symlink_force
@@ -73,8 +75,6 @@ from CIME.utils import safe_copy, expect, symlink_force
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import parse_isoduration
 from ctsm.download_utils import download_file
-
-from ctsm import add_cime_to_path
 
 from standard_script_setup import *
 
