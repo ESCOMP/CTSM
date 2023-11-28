@@ -782,8 +782,8 @@ contains
       sum_wtgcell(bounds%begg:bounds%endg) = 0._r8
       illum_frac(bounds%begg:bounds%endg)  = 0._r8
       do c = bounds%begc,bounds%endc
-         g = col%gridcell(c)
          if (col%is_hillslope_column(c) .and. col%active(c)) then
+            g = col%gridcell(c)
             if (coszen_grc(g) > 0._r8) then
                forc_solad_col(c,1:numrad)  = forc_solad_grc(g,1:numrad)*(coszen_col(c)/coszen_grc(g))
                if (coszen_col(c) > 0._r8) then
