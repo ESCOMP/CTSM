@@ -1283,25 +1283,7 @@
       <option name="comment"  >Basic LII test, covering the standard range of subgrid heterogeneity - particularly, including crop. Uses a year-2000 restart file so that the restart file has non-zero product pools, so that we exercise the gridcell-level code in init_interp.</option>
     </options>
   </test>
-  <test name="LII_D_Ld3_PS" grid="ne30pg3_g17" compset="I1850Clm50BgcCrop" testmods="clm/clm51cam6LndTuningModeCiso">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Basic LII test</option>
-    </options>
-  </test>
   <test name="LII2FINIDATAREAS_D_P72x2_Ld1" grid="f09_g17" compset="I1850Clm50BgcCrop" testmods="clm/default">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Exercise the init_interp_method='use_finidat_areas' option. See documentation at the top of the python script implementing this test for more details and rationale. This test requires a compatible finidat file (i.e., a file that can be used without interpolation). If no such file is available out-of-the-box, then the test will need to use a testmod that points to a compatible file.</option>
-    </options>
-  </test>
-  <test name="LII2FINIDATAREAS_D_P72x2_Ld1" grid="ne30pg3_g17" compset="I1850Clm50BgcCrop" testmods="clm/clm51cam6LndTuningModeCiso">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
