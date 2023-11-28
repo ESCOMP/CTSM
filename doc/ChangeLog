@@ -1,4 +1,50 @@
 ===============================================================
+Tag name: ctsm5.1.dev155
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Mon Nov 27 21:16:51 MST 2023
+One-line Summary: Use baset_latvary parameters
+
+Purpose and description of changes
+----------------------------------
+
+Namelist parameters baset_latvary_slope and baset_latvary_intercept were never actually used, with values of 0.4 and 12 being hard-coded in the relevant subroutine instead. This PR fixes that, and also adds unit testing of a refactored function that uses them.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+* #2240: Use baset_latvary parameters (https://github.com/ESCOMP/CTSM/pull/2240)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev154
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Wed Nov 22 09:53:01 MST 2023
