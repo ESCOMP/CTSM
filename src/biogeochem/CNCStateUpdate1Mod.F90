@@ -325,14 +325,8 @@ ptch: do fp = 1,num_soilp
               cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
                    - cf_veg%crop_seedc_to_leaf_patch(p) * dt
               do k = repr_grain_min, repr_grain_max
-                 cs_veg%reproductivec_patch(p,k)   = cs_veg%reproductivec_patch(p,k) &
-                      - (cf_veg%repr_grainc_to_food_patch(p,k) + cf_veg%repr_grainc_to_seed_patch(p,k))*dt
                  cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
                       + cf_veg%repr_grainc_to_seed_patch(p,k) * dt
-              end do
-              do k = repr_structure_min, repr_structure_max
-                 cs_veg%reproductivec_patch(p,k) = cs_veg%reproductivec_patch(p,k) &
-                      - (cf_veg%repr_structurec_to_cropprod_patch(p,k) + cf_veg%repr_structurec_to_litter_patch(p,k))*dt
               end do
            end if
         end if !not use_matrixcn

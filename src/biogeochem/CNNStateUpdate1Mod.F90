@@ -226,20 +226,22 @@ contains
                ns_veg%leafn_patch(p)        = ns_veg%leafn_patch(p)      - nf_veg%leafn_to_biofueln_patch(p)*dt
                ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_retransn_patch(p)*dt
                ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livestemn_to_retransn_patch(p)*dt
+               do k = repr_grain_min, repr_grain_max
+                  ns_veg%reproductiven_patch(p,k)   = ns_veg%reproductiven_patch(p,k) &
+                       - (nf_veg%repr_grainn_to_food_patch(p,k) + nf_veg%repr_grainn_to_seed_patch(p,k))*dt
+               end do
+               do k = repr_structure_min, repr_structure_max
+                  ns_veg%reproductiven_patch(p,k) = ns_veg%reproductiven_patch(p,k) &
+                       - (nf_veg%repr_structuren_to_cropprod_patch(p,k) + nf_veg%repr_structuren_to_litter_patch(p,k))*dt
+               end do
             else
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
             ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
                     - nf_veg%crop_seedn_to_leaf_patch(p) * dt
             do k = repr_grain_min, repr_grain_max
-               ns_veg%reproductiven_patch(p,k)   = ns_veg%reproductiven_patch(p,k) &
-                    - (nf_veg%repr_grainn_to_food_patch(p,k) + nf_veg%repr_grainn_to_seed_patch(p,k))*dt
                ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
                     + nf_veg%repr_grainn_to_seed_patch(p,k) * dt
-            end do
-            do k = repr_structure_min, repr_structure_max
-               ns_veg%reproductiven_patch(p,k) = ns_veg%reproductiven_patch(p,k) &
-                    - (nf_veg%repr_structuren_to_cropprod_patch(p,k) + nf_veg%repr_structuren_to_litter_patch(p,k))*dt
             end do
          end if
 
