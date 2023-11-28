@@ -1,3 +1,0 @@
-! Turn off excess ice
-use_exice = .true.
-use_exice_streams = .true.
