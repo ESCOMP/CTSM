@@ -805,8 +805,8 @@ contains
       
       ! Normalize column level solar
       do c = bounds%begc,bounds%endc
-         g = col%gridcell(c)
          if (col%is_hillslope_column(c) .and. col%active(c)) then
+            g = col%gridcell(c)
             do n = 1,numrad
                ! absorbed energy is solar flux x area landunit (sum_wtgcell)
                if(sum_solar(g,n) > 0._r8 .and. illum_frac(g) > illumination_threshold) then
@@ -816,12 +816,12 @@ contains
                   forc_solad_col(c,n)  = forc_solad_grc(g,n)
                endif
             enddo
+            forc_solar_col(c) = sum(forc_solad_col(c,1:numrad))+sum(forc_solai_grc(g,1:numrad))
          end if
-         forc_solar_col(c) = sum(forc_solad_col(c,1:numrad))+sum(forc_solai_grc(g,1:numrad))
          
       end do
 
-            ! check conservation
+      ! check conservation
       if(checkConservation)  then
          sum_solar(bounds%begg:bounds%endg,1:numrad) = 0._r8
          sum_wtgcell(bounds%begg:bounds%endg)   = 0._r8
