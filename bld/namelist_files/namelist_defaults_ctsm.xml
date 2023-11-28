@@ -903,6 +903,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >hgrid=ne0np4CONUS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
 </init_interp_attributes>
 
+<!-- This is needded for NE30.pg3 presumably because the finidat file is based on ctsm5.2 surface datasets? -->
+<init_interp_fill_missing_with_natveg hgrid="ne30np4.pg3">.true.</init_interp_fill_missing_with_natveg>
 
 <!--
      1850 preindustrial IC (if use_init_interp is added and set to .true. then MUST still interpolate even on an exact match)
