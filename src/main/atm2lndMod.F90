@@ -805,8 +805,8 @@ contains
       
       ! Normalize column level solar
       do c = bounds%begc,bounds%endc
+         g = col%gridcell(c)
          if (col%is_hillslope_column(c) .and. col%active(c)) then
-            g = col%gridcell(c)
             do n = 1,numrad
                ! absorbed energy is solar flux x area landunit (sum_wtgcell)
                if(sum_solar(g,n) > 0._r8 .and. illum_frac(g) > illumination_threshold) then
