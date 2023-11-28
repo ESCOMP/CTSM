@@ -47,6 +47,7 @@
   <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm51BgcCrop" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="cesm3_dev"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -77,12 +78,13 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">CESM3 development simple exact restart test with change in the processor count at the standard coupled resolution</option>
+      <option name="comment">CESM3 development simple exact restart test at the standard coupled resolution</option>
     </options>
   </test>
   <test name="ERI_D" grid="ne30pg3_t232" compset="I1850Clm51BgcCrop" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="cesm3_dev"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
