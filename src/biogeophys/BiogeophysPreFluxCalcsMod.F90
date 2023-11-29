@@ -200,16 +200,11 @@ contains
                          / 2._r8)**(-0.5_r8) /  (pftcon%z0v_LAImax(patch%itype(p))) / pftcon%z0v_c(patch%itype(p))
 
                if ( htop(p) <= 1.e-10_r8 )then
-                  if (lun%itype(l) == istcrop) then
-                     z0m(p) = 0._r8
-                     displa(p) = 0._r8
-                  else
-                     write(iulog,*) ' nstep = ', get_nstep(), ' htop = ', htop(p)
-                     call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errMsg(sourcefile, __LINE__))
-                  end if
+                  z0m(p) = 0._r8
+                  displa(p) = 0._r8
                else
-                   z0m(p) = htop(p) * (1._r8 - displa(p) / htop(p)) * exp(-0.4_r8 * U_ustar + &
-                               log(pftcon%z0v_cw(patch%itype(p))) - 1._r8 + pftcon%z0v_cw(patch%itype(p))**(-1._r8))
+                  z0m(p) = htop(p) * (1._r8 - displa(p) / htop(p)) * exp(-0.4_r8 * U_ustar + &
+                              log(pftcon%z0v_cw(patch%itype(p))) - 1._r8 + pftcon%z0v_cw(patch%itype(p))**(-1._r8))
                end if
 
             end if
