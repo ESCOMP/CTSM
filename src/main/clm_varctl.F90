@@ -321,7 +321,7 @@ module clm_varctl
   ! 2 - include only output with only 1 additional dimension
   ! 3 - include all multiplexed dimensions
   
-  character(len=2), public   :: fates_hist_dense_level = '11'
+  integer, dimension(2), public   :: fates_hist_dense_level = (/1,1/)
   
   character(len=256), public :: fates_inventory_ctrl_filename = ''      ! filename for inventory control
 
