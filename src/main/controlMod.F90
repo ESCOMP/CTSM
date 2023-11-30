@@ -235,7 +235,7 @@ contains
           fates_inventory_ctrl_filename,                &
           fates_parteh_mode,                            &
           fates_seeddisp_cadence,                       &
-          use_fates_tree_damage
+          use_fates_tree_damage, fates_hist_dense_level
 
     ! Ozone vegetation stress method
     namelist / clm_inparm / o3_veg_stress_method
@@ -495,7 +495,7 @@ contains
              call endrun(msg=' ERROR: C13 and C14 dynamics are not compatible with FATES.'//&
                   errMsg(sourcefile, __LINE__))
           end if
-          
+
        else
           
           ! These do default to false anyway, but this emphasizes they
