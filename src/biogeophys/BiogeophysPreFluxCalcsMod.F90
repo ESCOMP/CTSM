@@ -92,7 +92,7 @@ contains
     !-----------------------------------------------------------------------
 
     call SetZ0mDisp(bounds, num_nolakep, filter_nolakep, &
-         clm_fates, canopystate_inst)
+         clm_fates, frictionvel_inst, canopystate_inst)
 
     call frictionvel_inst%SetRoughnessLengthsAndForcHeightsNonLake(bounds, &
          num_nolakec, filter_nolakec,                       &
@@ -120,7 +120,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SetZ0mDisp(bounds, num_nolakep, filter_nolakep, &
-       clm_fates, canopystate_inst)
+       clm_fates, frictionvel_inst, canopystate_inst)
     !
     ! !DESCRIPTION:
     ! Set z0m and displa
@@ -135,10 +135,11 @@ contains
     integer                        , intent(in)    :: num_nolakep       ! number of column non-lake points in patch filter
     integer                        , intent(in)    :: filter_nolakep(:) ! patch filter for non-lake points
     type(hlm_fates_interface_type) , intent(in)    :: clm_fates
+    type(frictionvel_type)         , intent(in)    :: frictionvel_inst
     type(canopystate_type)         , intent(inout) :: canopystate_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: fp, p, l
+    integer :: fp, p, c
 
     character(len=*), parameter :: subname = 'SetZ0mDisp'
     real(r8) :: U_ustar                                                 ! wind at canopy height divided by friction velocity (unitless)
@@ -146,6 +147,7 @@ contains
     !-----------------------------------------------------------------------
 
     associate( &
+         z0mg             =>    frictionvel_inst%z0mg_col             , & ! Input:  [real(r8) (:)   ]  roughness length of ground, momentum [m]
          htop             =>    canopystate_inst%htop_patch           , & ! Input:  [real(r8) (:)   ] canopy top (m)                           
          z0m              =>    canopystate_inst%z0m_patch            , & ! Output: [real(r8) (:)   ] momentum roughness length (m)
          displa           =>    canopystate_inst%displa_patch           & ! Output: [real(r8) (:)   ] displacement height (m)
@@ -164,7 +166,7 @@ contains
 
     do fp = 1, num_nolakep
        p = filter_nolakep(fp)
-       l = patch%landunit(p)
+       c = patch%column(p)
 
        if( .not.(patch%is_fates(p))) then
          select case (z0param_method)
@@ -200,8 +202,7 @@ contains
                          / 2._r8)**(-0.5_r8) /  (pftcon%z0v_LAImax(patch%itype(p))) / pftcon%z0v_c(patch%itype(p))
 
                if ( htop(p) <= 1.e-10_r8 )then
-                  z0m(p) = 0._r8
-                  displa(p) = 0._r8
+                  z0m(p) = z0mg(c)
                else
                   z0m(p) = htop(p) * (1._r8 - displa(p) / htop(p)) * exp(-0.4_r8 * U_ustar + &
                               log(pftcon%z0v_cw(patch%itype(p))) - 1._r8 + pftcon%z0v_cw(patch%itype(p))**(-1._r8))
