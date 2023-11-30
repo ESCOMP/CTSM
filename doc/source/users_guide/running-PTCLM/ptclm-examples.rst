@@ -1,6 +1,6 @@
-.. _ptclm-examples:
-
 .. include:: ../substitutions.rst
+
+.. _ptclm-examples:
 
 ==============================
  Examples of using PTCLMmkdata
@@ -13,7 +13,7 @@ Now, let's demonstrate using a different group list, doing a spinup, running wit
 Example: Running PTCLMmkdata without tower years
 ------------------------------------------------
 ::
-   
+
    > cd $CTSMROOT/tools/PTCLM
    > ./PTCLMmkdata -s US-Ha1 -d $CSMDATA --sitegroupname AmeriFlux --donot_use_tower_yrs
    > cd ../../../../../US-Ha1_ICRUCLM45BGC_QIAN

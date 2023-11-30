@@ -45,7 +45,10 @@ def main(description):
 
 
 def _commandline_args(description):
-    """Parse and return command-line arguments"""
+    """Parse and return command-line arguments
+    Note that run_ctsm_py_tests is not intended to be
+    used without argument specifications
+    """
     parser = argparse.ArgumentParser(
         description=description, formatter_class=argparse.RawTextHelpFormatter
     )

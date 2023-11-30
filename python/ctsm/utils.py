@@ -8,7 +8,7 @@ import re
 import pdb
 import numpy as np
 
-from datetime import date
+from datetime import date, timedelta
 from getpass import getuser
 
 from ctsm.git_utils import get_ctsm_git_short_hash
@@ -219,3 +219,33 @@ def import_coord_2d(ds, coordName, varName):
     da.attrs["long_name"] = "coordinate " + da.attrs["long_name"]
     da.attrs["units"] = da.attrs["units"].replace(" ", "_")
     return da, len(da)
+
+
+def get_isosplit(iso_string, split):
+    """
+    Split a string (iso_string) by the character sent in from split
+    Returns the number for that character split
+    Only used by parse_isoduration
+    """
+    if split in iso_string:
+        num, iso_string = iso_string.split(split)
+    else:
+        num = 0
+    return num, iso_string
+
+
+def parse_isoduration(iso_string):
+    """
+    simple ISO 8601 duration parser, does not account for leap years and assumes 30 day months
+    """
+    # Remove prefix
+    iso_string = iso_string.split("P")[-1]
+
+    # Step through letter dividers
+    years, iso_string = get_isosplit(iso_string, "Y")
+    months, iso_string = get_isosplit(iso_string, "M")
+    days, iso_string = get_isosplit(iso_string, "D")
+
+    # Convert all to timedelta
+    delta_t = timedelta(days=int(days) + 365 * int(years) + 30 * int(months))
+    return int(delta_t.total_seconds() / 86400)
