@@ -147,7 +147,7 @@ contains
     !-----------------------------------------------------------------------
 
     associate( &
-         z0mg             =>    frictionvel_inst%z0mg_col             , & ! Input:  [real(r8) (:)   ]  roughness length of ground, momentum [m]
+         z0mg             =>    frictionvel_inst%z0mg_col             , & ! Input:  [real(r8) (:)   ] roughness length of ground, momentum [m]
          htop             =>    canopystate_inst%htop_patch           , & ! Input:  [real(r8) (:)   ] canopy top (m)                           
          z0m              =>    canopystate_inst%z0m_patch            , & ! Output: [real(r8) (:)   ] momentum roughness length (m)
          displa           =>    canopystate_inst%displa_patch           & ! Output: [real(r8) (:)   ] displacement height (m)
