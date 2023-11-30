@@ -44,6 +44,34 @@
     </phase>
   </test>
 
+  <test name="LGRAIN2_Ly1_P72x1.f10_f10_mg37.I1850Clm50BgcCrop.cheyenne_gnu.clm-ciso--clm-cropMonthOutput">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#640, same test with clm-ciso_soil_matrixcn_only works</issue>
+    </phase>
+  </test>
+
+  <test name="LGRAIN2_Ly2_P72x1.f10_f10_mg37.I1850Clm45BgcCrop.cheyenne_gnu.clm-ciso--clm-cropMonthOutput">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#640, same test with clm-ciso_soil_matrixcn_only works</issue>
+    </phase>
+  </test>
+
+  <test name="LREPRSTRUCT_Ly1_P72x1.f10_f10_mg37.I1850Clm50BgcCrop.cheyenne_gnu.clm-ciso--clm-cropMonthOutput">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#640, same test with clm-ciso_soil_matrixcn_only works</issue>
+    </phase>
+  </test>
+
+  <test name="LREPRSTRUCT_Ly2_P72x1.f10_f10_mg37.I1850Clm45BgcCrop.cheyenne_gnu.clm-ciso--clm-cropMonthOutput">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#640, same test with clm-ciso_soil_matrixcn_only works</issue>
+    </phase>
+  </test>
+
   <!-- fates test suite failures -->
 
   <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdDefHydro">

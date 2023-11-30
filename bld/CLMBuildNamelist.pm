@@ -4222,6 +4222,13 @@ sub setup_logic_cnmatrix {
        }
     # Otherwise for CN or BGC mode
     } else {
+      # If matrixcn is on, for_testing_use_second_grain_pool and for_testing_use_repr_structure_pool must be off
+      if ( &value_is_true($nl->get_value("use_matrixcn")) && &value_is_true($nl_flags->{"for_testing_use_second_grain_pool"}) ) {
+         $log->fatal_error("for_testing_use_second_grain_pool can NOT be on when use_matrixcn is on" );
+      }
+      if ( &value_is_true($nl->get_value("use_matrixcn")) && &value_is_true($nl_flags->{"for_testing_use_repr_structure_pool"}) ) {
+         $log->fatal_error("for_testing_use_repr_structure_pool can NOT be on when use_matrixcn is on" );
+      }
       # If both matrixcn and soil_matrix are off outmatrix can't be on
       if ( ! &value_is_true($nl->get_value("use_matrixcn")) && ! &value_is_true($nl_flags->{"use_soil_matrixcn"}) ) {
          my $var = "is_outmatrix";
