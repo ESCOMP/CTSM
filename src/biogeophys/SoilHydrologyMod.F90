@@ -2300,13 +2300,16 @@ contains
             ! should a warning be used instead?
             head_gradient = min(max(head_gradient,-2._r8),2._r8)
             
-            ! Calculate transmissivity of source column
+            ! Determine source and destination columns
             if (head_gradient >= 0._r8) then
                c_src = c
+               c_dst = col%cold(c)
             else
                c_src = col%cold(c)
+               c_dst = c
             endif
-
+           
+            ! Calculate transmissivity of source column
             transmis = 0._r8
             if(c_src /= ispval) then 
                ! transmissivity non-zero only when saturated conditions exist

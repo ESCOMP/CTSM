@@ -27,7 +27,6 @@ module HillslopeHydrologyMod
   public SetHillslopeSoilThickness
   public HillslopeSoilThicknessProfile
   public HillslopeSetLowlandUplandPfts
-  public HillslopeDominantPft
   public HillslopeDominantLowlandPft
   public HillslopePftFromFile
   public HillslopeStreamOutflow
@@ -863,57 +862,6 @@ contains
     enddo
 
   end subroutine HillslopeSetLowlandUplandPfts
-
-  !------------------------------------------------------------------------
-  subroutine HillslopeDominantPft(bounds)
-    !
-    ! !DESCRIPTION: 
-    ! Reassign patch weights of each column based on each gridcell's
-    ! most dominant pft on the input dataset. 
-    ! Assumes each column has a single pft.
-    ! If n_dom_pfts = 1 or if HillslopeDominantPftIndex is called
-    ! in surfrd_hillslope, this routine does not act on hillslope columns.
-
-    !
-    ! !USES
-    use LandunitType    , only : lun                
-    use ColumnType      , only : col                
-    use decompMod       , only : get_clump_bounds, get_proc_clumps
-    use clm_varcon      , only : ispval
-    use PatchType       , only : patch
-    use array_utils     , only : find_k_max_indices
-    !
-    ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds
-    !
-    ! !LOCAL VARIABLES:
-    integer :: c                                ! indices
-    integer :: pdom(1)                          ! patch index
-    real(r8) :: sum_wtcol, sum_wtlun, sum_wtgrc ! sum of patch weights
-
-    !------------------------------------------------------------------------
-
-    do c = bounds%begc,bounds%endc
-       if (col%is_hillslope_column(c) .and. (col%npatches(c) > 1)) then
-
-          call find_k_max_indices(patch%wtcol(col%patchi(c):col%patchf(c)),1,1,pdom)
-          pdom = pdom + (col%patchi(c) - 1)
-
-          sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
-          sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
-          sum_wtgrc = sum(patch%wtgcell(col%patchi(c):col%patchf(c)))
-
-          patch%wtcol(col%patchi(c):col%patchf(c))   = 0._r8
-          patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
-          patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
-
-          patch%wtcol(pdom(1))   = sum_wtcol
-          patch%wtlunit(pdom(1)) = sum_wtlun
-          patch%wtgcell(pdom(1)) = sum_wtgrc
-       endif
-    enddo    ! end loop c
-
-  end subroutine HillslopeDominantPft
 
   !------------------------------------------------------------------------
   subroutine HillslopeDominantLowlandPft(bounds)

@@ -782,8 +782,8 @@ contains
       sum_wtgcell(bounds%begg:bounds%endg) = 0._r8
       illum_frac(bounds%begg:bounds%endg)  = 0._r8
       do c = bounds%begc,bounds%endc
-         g = col%gridcell(c)
          if (col%is_hillslope_column(c) .and. col%active(c)) then
+            g = col%gridcell(c)
             if (coszen_grc(g) > 0._r8) then
                forc_solad_col(c,1:numrad)  = forc_solad_grc(g,1:numrad)*(coszen_col(c)/coszen_grc(g))
                if (coszen_col(c) > 0._r8) then
@@ -816,12 +816,12 @@ contains
                   forc_solad_col(c,n)  = forc_solad_grc(g,n)
                endif
             enddo
+            forc_solar_col(c) = sum(forc_solad_col(c,1:numrad))+sum(forc_solai_grc(g,1:numrad))
          end if
-         forc_solar_col(c) = sum(forc_solad_col(c,1:numrad))+sum(forc_solai_grc(g,1:numrad))
          
       end do
 
-            ! check conservation
+      ! check conservation
       if(checkConservation)  then
          sum_solar(bounds%begg:bounds%endg,1:numrad) = 0._r8
          sum_wtgcell(bounds%begg:bounds%endg)   = 0._r8
