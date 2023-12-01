@@ -816,7 +816,7 @@ contains
     end if
 
     ! Obtain hillslope hydrology information and modify pft weights
-    if(use_hillslope) then 
+    if (use_hillslope) then
        call surfrd_hillslope(begg, endg, ncid, ns)
     endif
 
@@ -900,7 +900,7 @@ contains
     use pftconMod , only : noveg
     use HillslopeHydrologyMod, only : pft_distribution_method, pft_from_file, pft_uniform_dominant_pft, pft_lowland_dominant_pft, pft_lowland_upland
     use array_utils, only: find_k_max_indices
-    
+
     !
     ! !ARGUMENTS:
     integer, intent(in) :: begg, endg
@@ -910,7 +910,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: g, nh, m, n                       ! index
     integer  :: dimid,varid                    ! netCDF id's
-    integer  :: ier                            ! error status	
+    integer  :: ier                            ! error status
     integer, allocatable  :: max_indices(:)    ! largest weight pft indices
     logical  :: readvar                        ! is variable on dataset
     integer,pointer :: arrayl(:)               ! local array (needed because ncd_io expects a pointer)
@@ -918,7 +918,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! number of hillslopes per landunit
-    call ncd_inqdid(ncid,'nhillslope',dimid,readvar) 
+    call ncd_inqdid(ncid,'nhillslope',dimid,readvar)
     if (.not. readvar) then
        call endrun( msg=' ERROR: nhillslope not on surface data file'//errMsg(sourcefile, __LINE__))
     else
@@ -926,7 +926,7 @@ contains
        nhillslope = nh
     endif
     ! maximum number of columns per landunit
-    call ncd_inqdid(ncid,'nmaxhillcol',dimid,readvar) 
+    call ncd_inqdid(ncid,'nmaxhillcol',dimid,readvar)
     if (.not. readvar) then
        call endrun( msg=' ERROR: nmaxhillcol not on surface data file'//errMsg(sourcefile, __LINE__))
     else
@@ -972,7 +972,7 @@ contains
              call find_k_max_indices(wt_nat_patch(g,:),natpft_lb,1,max_indices)
              wt_nat_patch(g,:) = 0._r8
              wt_nat_patch(g,max_indices(1)) = 100._r8
-             
+
           endif
        enddo
        deallocate(max_indices)
@@ -985,7 +985,7 @@ contains
        do g = begg, endg
           ! If hillslopes will be used in a gridcell, modify wt_nat_patch, otherwise use original patch distribution
           if(ncolumns_hillslope(g) > 0) then
-             
+
              ! Preserve the relative weights of the largest and
              ! next largest weights using arbitrarily chosen values
              ! (i.e. 1 should be larger than 2) that sum to 100.
@@ -1003,7 +1003,7 @@ contains
                 wt_nat_patch(g,:) = 0._r8
                 wt_nat_patch(g,max_indices(1)) = 100._r8
              endif
-                
+
           endif
        enddo
        deallocate(max_indices)

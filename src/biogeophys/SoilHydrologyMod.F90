@@ -1615,7 +1615,7 @@ contains
      associate(                                                            & 
           dz                 =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
           z                  =>    col%z                                 , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
-          zi                 =>    col%zi                                , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)
+          zi                 =>    col%zi                                , & ! Input:  [real(r8) (:,:) ] interface level below a "z" level (m)
           t_soisno           =>    temperature_inst%t_soisno_col         , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)                       
 
           h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
@@ -1633,14 +1633,14 @@ contains
 
           ! define frost table as first frozen layer with unfrozen layer above it
           if(t_soisno(c,1) > tfrz) then 
-             k_frz = nlevsoi
+             k_frz=nlevsoi
           else
-             k_frz = 1
+             k_frz=1
           endif
 
-          do k=2,nlevsoi
+          do k=2, nlevsoi
              if (t_soisno(c,k-1) > tfrz .and. t_soisno(c,k) <= tfrz) then
-                k_frz = k
+                k_frz=k
                 exit
              endif
           enddo
@@ -1660,7 +1660,7 @@ contains
              ! frost table sat_lev is an arbitrary saturation level 
              ! used to determine perched water table
 
-             k_perch=1
+             k_perch = 1
              do k=k_frz,1,-1
                 h2osoi_vol(c,k) = h2osoi_liq(c,k)/(dz(c,k)*denh2o) &
                      + h2osoi_ice(c,k)/(dz(c,k)*denice)
@@ -1673,7 +1673,7 @@ contains
 
              ! if frost_table = nlevsoi, check temperature of layer, 
              ! and only compute perched water table if frozen
-             if (t_soisno(c,k_frz) > tfrz) k_perch = k_frz
+             if (t_soisno(c,k_frz) > tfrz) k_perch=k_frz
 
              ! if perched water table exists above frost table, 
              ! interpolate between k_perch and k_perch+1 to find 
@@ -1748,7 +1748,7 @@ contains
      real(r8) :: qflx_drain_perched_out(bounds%begc:bounds%endc)   ! lateral subsurface flow through active layer [mm/s]
 
      associate(                                                            & 
-          nbedrock           =>    col%nbedrock                          , & ! Input:  [real(r8) (:,:) ]  depth to bedrock (m)           
+          nbedrock           =>    col%nbedrock                          , & ! Input:  [real(r8) (:,:) ]  depth to bedrock (m)
           z                  =>    col%z                                 , & ! Input:  [real(r8) (:,:) ] layer depth (m)                                 
           zi                 =>    col%zi                                , & ! Input:  [real(r8) (:,:) ] interface level below a "z" level (m)           
           dz                 =>    col%dz                                , & ! Input:  [real(r8) (:,:) ] layer depth (m)                                 
@@ -1775,21 +1775,21 @@ contains
 
        dtime = get_step_size_real()
 
-       ! locate frost table and perched water table   
+       ! locate frost table and perched water table
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
           k_frost(c) = nbedrock(c)
           k_perch(c) = nbedrock(c)
-          do k=1,nbedrock(c)
+          do k = 1,nbedrock(c)
              if (frost_table(c) >= zi(c,k-1) .and. frost_table(c) < zi(c,k)) then
-                k_frost(c)=k
+                k_frost(c) = k
                 exit
              endif
           enddo
-          
-          do k=1,nbedrock(c)
+
+          do k = 1,nbedrock(c)
              if (zwt_perched(c) >= zi(c,k-1) .and. zwt_perched(c) < zi(c,k)) then
-                k_perch(c)=k
+                k_perch(c) = k
                 exit
              endif
           enddo
@@ -1806,7 +1806,7 @@ contains
 
           if (frost_table(c) > zwt_perched(c)) then
              ! Hillslope columns
-             if (col%is_hillslope_column(c) .and. col%active(c)) then 
+             if (col%is_hillslope_column(c) .and. col%active(c)) then
 
                 ! calculate head gradient
 
@@ -1820,7 +1820,7 @@ contains
                            - (col%hill_elev(col%cold(c))-zwt_perched(col%cold(c)))
                       head_gradient = head_gradient / (col%hill_distance(c) - col%hill_distance(col%cold(c)))
                    else
-                      if(use_hillslope_routing) then
+                      if (use_hillslope_routing) then
                          stream_water_depth = stream_water_volume(l) &
                               /lun%stream_channel_length(l)/lun%stream_channel_width(l)
                          stream_channel_depth = lun%stream_channel_depth(l)
@@ -1977,8 +1977,8 @@ contains
              
           enddo
 
-          ! if drainage_tot is greater than available water 
-          ! (above frost table), then decrease qflx_drain_perched 
+          ! if drainage_tot is greater than available water
+          ! (above frost table), then decrease qflx_drain_perched
           ! by residual amount for water balance
           qflx_drain_perched(c) = qflx_drain_perched(c) - drainage_tot/dtime
        enddo
@@ -2044,7 +2044,7 @@ contains
 
           ! locate water table from bottom up starting at bottom of soil column
           ! sat_lev is an arbitrary saturation level used to determine water table
-          sat_lev = 0.9
+          sat_lev=0.9
           
           k_zwt=nbedrock(c)
           sat_flag=1 !will remain unchanged if all layers at saturation
@@ -2263,7 +2263,7 @@ contains
                        - (col%hill_elev(col%cold(c))-zwt(col%cold(c)))
                   head_gradient = head_gradient / (col%hill_distance(c) - col%hill_distance(col%cold(c)))
                else
-                  if(use_hillslope_routing) then
+                  if (use_hillslope_routing) then
                      stream_water_depth = stream_water_volume(l) &
                           /lun%stream_channel_length(l)/lun%stream_channel_width(l)
                      stream_channel_depth = lun%stream_channel_depth(l)

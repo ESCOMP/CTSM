@@ -907,8 +907,8 @@ contains
        ! subsurface runoff is the sum of qflx_drain and qflx_perched_drain
        do g = begg, endg
           data1d(g) = waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc(g) + &
-               waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(g)
-          if(use_hillslope_routing) then
+                      waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(g)
+          if (use_hillslope_routing) then
              data1d(g) = data1d(g) + &
                   waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g)
           endif

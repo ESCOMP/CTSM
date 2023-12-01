@@ -162,7 +162,7 @@ contains
 
     if (npatches > 0) then
        nlunits = 1
-       if(use_hillslope) then 
+       if (use_hillslope) then
           ! ensure ncols is > 0
           ncols = max(ncolumns_hillslope(gi),1)
        else

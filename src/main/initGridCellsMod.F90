@@ -11,7 +11,7 @@ module initGridCellsMod
   ! these modules (or the two modules should be combined into one).
   !
   ! !USES:
-#include "shr_assert.h"  
+#include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use spmdMod        , only : masterproc,iam
@@ -216,7 +216,7 @@ contains
     integer , intent(inout) :: pi                ! patch index
     !
     ! !LOCAL VARIABLES:
-    integer  :: m,ci2                            ! index
+    integer  :: m, ci2                           ! index
     integer  :: npatches                         ! number of patches in landunit
     integer  :: ncols
     integer  :: nlunits

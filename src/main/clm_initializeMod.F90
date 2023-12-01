@@ -67,7 +67,6 @@ contains
     use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_par_init
     use CropReprPoolsMod     , only: crop_repr_pools_init
     use HillslopeHydrologyMod, only: hillslope_properties_init
-    
     !
     ! !ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
@@ -118,7 +117,7 @@ contains
     call dynSubgridControl_init(NLFilename)
     call crop_repr_pools_init()
     call hillslope_properties_init(NLFilename)
-    
+
     call t_stopf('clm_init1')
 
   end subroutine initialize1
@@ -181,7 +180,6 @@ contains
     use NutrientCompetitionFactoryMod , only : create_nutrient_competition_method
     use FATESFireFactoryMod           , only : scalar_lightning
     use HillslopeHydrologyMod         , only : InitHillslope
-    
     !
     ! !ARGUMENTS
     integer, intent(in) :: ni, nj         ! global grid sizes
@@ -242,7 +240,7 @@ contains
     allocate (wt_glc_mec   (begg:endg, maxpatch_glc     ))
     allocate (topo_glc_mec (begg:endg, maxpatch_glc     ))
     allocate (haslake      (begg:endg                      ))
-    if(use_hillslope) then 
+    if (use_hillslope) then
        allocate (ncolumns_hillslope  (begg:endg            ))
     endif
     allocate (pct_urban_max(begg:endg, numurbl             ))
@@ -302,7 +300,7 @@ contains
     ! Set global seg maps for gridcells, landlunits, columns and patches
     call decompInit_glcp(ni, nj, glc_behavior)
 
-    if(use_hillslope) then
+    if (use_hillslope) then
        ! Initialize hillslope properties
        call InitHillslope(bounds_proc, fsurdat)
     endif
@@ -332,7 +330,7 @@ contains
     ! end of the run for error checking, pct_urban_max is kept through the end of the run
     ! for reweighting in subgridWeights.
     deallocate (wt_lunit, wt_cft, wt_glc_mec, haslake)
-    if(use_hillslope)  deallocate (ncolumns_hillslope)
+    if (use_hillslope)  deallocate (ncolumns_hillslope)
 
     ! Determine processor bounds and clumps for this processor
     call get_proc_bounds(bounds_proc)

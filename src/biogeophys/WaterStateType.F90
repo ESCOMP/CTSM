@@ -184,8 +184,7 @@ contains
     ! !USES:
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     use clm_varctl     , only : use_soil_moisture_streams
-    use GridcellType   , only : grc  
-
+    use GridcellType   , only : grc
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(in) :: this

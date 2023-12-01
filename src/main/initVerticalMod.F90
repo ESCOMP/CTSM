@@ -145,7 +145,7 @@ contains
     end do
 
   end subroutine setSoilLayerClass
-    
+
   !------------------------------------------------------------------------
   subroutine initVertical(bounds, glc_behavior, thick_wall, thick_roof)
     use clm_varcon           , only : zmin_bedrock
@@ -730,7 +730,6 @@ contains
        slope0 = params_inst%slopemax**(1._r8/params_inst%slopebeta)
 
        if (col%is_hillslope_column(c)) then
-          
           col%micro_sigma(c) = (atan(col%hill_slope(c)) + slope0)**(params_inst%slopebeta)
        else
           col%micro_sigma(c) = (col%topo_slope(c) + slope0)**(params_inst%slopebeta)

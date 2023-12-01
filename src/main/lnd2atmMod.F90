@@ -340,7 +340,7 @@ contains
     ! lnd -> rof
     !----------------------------------------------------
 
-    if(use_hillslope_routing) then
+    if (use_hillslope_routing) then
        ! streamflow is volume/time, so sum over landunits (do not weight)
        water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(bounds%begg:bounds%endg) = 0._r8
        do l = bounds%begl, bounds%endl
@@ -451,7 +451,7 @@ contains
          water_inst%waterlnd2atmbulk_inst%qflx_rofliq_grc(g) - &
          water_inst%waterfluxbulk_inst%qflx_liq_dynbal_grc(g)
     enddo
-    
+
     call c2g( bounds, &
          water_inst%waterfluxbulk_inst%qflx_sfc_irrig_col (bounds%begc:bounds%endc), &
          water_inst%waterlnd2atmbulk_inst%qirrig_grc(bounds%begg:bounds%endg), &

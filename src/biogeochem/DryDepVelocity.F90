@@ -323,12 +323,12 @@ CONTAINS
             g = patch%gridcell(pi)
             pg         = forc_pbot(c)
             spec_hum   = forc_q(c)
-            rain       = forc_rain(c) 
-            sfc_temp   = forc_t(c) 
-            solar_flux = forc_solad(c,1) 
-            lat        = grc%latdeg(g) 
-            lon        = grc%londeg(g) 
-            clmveg     = patch%itype(pi) 
+            rain       = forc_rain(c)
+            sfc_temp   = forc_t(c)
+            solar_flux = forc_solad(c,1)
+            lat        = grc%latdeg(g)
+            lon        = grc%londeg(g)
+            clmveg     = patch%itype(pi)
             soilw      = h2osoi_vol(c,1)
 
             !map CLM veg type into Wesely veg type
