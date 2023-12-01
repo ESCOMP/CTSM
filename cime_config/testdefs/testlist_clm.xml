@@ -2104,6 +2104,7 @@
   </test>
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/default--clm/NEON/NIWO">
     <machines>
+      <machine name="derecho"  compiler="intel" category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
     </machines>
     <options>
@@ -2115,6 +2116,7 @@
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51SpRs" testmods="clm/default--clm/NEON/TOOL">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+      <machine name="derecho"  compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2125,6 +2127,7 @@
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/NEON/MOAB--clm/PRISM">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+      <machine name="derecho"  compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2158,6 +2161,8 @@
 
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Fates" testmods="clm/FatesFireLightningPopDens--clm/NEON/FATES/NIWO">
     <machines>
+      <machine name="derecho"  compiler="intel" category="aux_clm"/>
+      <machine name="derecho"  compiler="intel" category="fates"/>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="fates"/>
     </machines>
@@ -2171,6 +2176,8 @@
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="fates"/>
+      <machine name="derecho"  compiler="intel" category="aux_clm"/>
+      <machine name="derecho"  compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
