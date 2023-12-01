@@ -1548,7 +1548,7 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <!-- Land Use Harmonization unified data sets for dynamic FATES land use change -->
 
 <fluh_timeseries hgrid="4x5" sim_year_range="1850-2015" use_cn=".false."
- use_crop=".false." >lnd/clm2/luh/LUH2_states_transitions_management.timeseries_4x5_hist_simyr1850-2015_c230415.nc</fluh_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/LUH2_states_transitions_management.timeseries_4x5_hist_simyr1850-2015_c231101.nc</fluh_timeseries>
 
 <!-- Fixation and Uptake of Nitrogen Model (FUN2.0) -->
 <use_fun phys="clm5_1"  use_cn=".true." use_nitrif_denitrif=".true.">.true.</use_fun>
