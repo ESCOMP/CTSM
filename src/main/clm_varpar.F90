@@ -203,7 +203,7 @@ contains
     max_patch_per_col= max(maxsoil_patches, surf_numcft, maxpatch_urb)
 
     nlevsoifl   =  10
-    ![Cathy: to run prod.02 using new surf data from Keer, changed below from 5 to 10]
+    ! X. Li: changed below from 5 to 10 to match new surface data
     nlevurb     =  10 ! originally 5
 
     if ( masterproc ) write(iulog, *) 'soil_layerstruct_predefined varpar ', soil_layerstruct_predefined

@@ -12,7 +12,7 @@ module UrbanTimeVarType
   use abortutils      , only : endrun
   use decompMod       , only : bounds_type, subgrid_level_landunit
   use clm_varctl      , only : iulog
-  use landunit_varcon , only : isturb_MIN, isturb_MAX ! Cathy: min and max types urban; equals 7 and 9, resp.
+  use landunit_varcon , only : isturb_MIN, isturb_MAX ! X. Li: min and max types urban; equals 7 and 9, resp.
   use clm_varcon      , only : spval
   use LandunitType    , only : lun
   use GridcellType    , only : grc
@@ -24,7 +24,7 @@ module UrbanTimeVarType
   type, public :: urbantv_type
      !
      real(r8), public, pointer :: t_building_max(:)    ! lun maximum internal building air temperature (K)
-     ! Cathy [dev]
+     ! X. Li [dev]
      real(r8), public, pointer :: p_ac(:)              ! lun air-conditioning ownership rate (unitless, between 0 and 1)
      type(shr_strdata_type)    :: sdat_urbantv         ! urban time varying input data stream
    contains
@@ -34,9 +34,9 @@ module UrbanTimeVarType
      procedure, public :: urbantv_interp    ! Interpolate urban time varying stream
   end type urbantv_type
   
-  ! Cathy [orig]
+  ! X. Li [orig]
   ! character(15), private :: stream_varnames(isturb_MIN:isturb_MAX)
-  ! Cathy [dev]: 
+  ! X. Li [dev]: 
   character(15), private :: stream_varnames(1:6)       ! 1-3 for t_building_max, 4-6 for p_ac
 
   character(len=*), parameter, private :: sourcefile = &
@@ -60,7 +60,7 @@ contains
     character(len=*)  , intent(in) :: NLFilename   ! Namelist filename
     !
     ! !LOCAL VARIABLES:
-    integer		:: begl, endl                       ! Cathy: beginning and ending landunit index, from src/main/decompMod
+    integer		:: begl, endl                       ! X. Li: beginning and ending landunit index, from src/main/decompMod
     !---------------------------------------------------------------------
 
     begl = bounds%begl; endl = bounds%endl
@@ -68,18 +68,18 @@ contains
     ! Allocate urbantv data structure
 
     allocate(this%t_building_max(begl:endl)); this%t_building_max(:) = nan
-    ! Cathy [dev]
+    ! X. Li [dev]
     allocate(this%p_ac(begl:endl)); this%p_ac(:) = nan
 
     call this%urbantv_init(bounds, NLFilename)
     call this%urbantv_interp(bounds)
 
-    ! Add history fields     ! Cathy: this adds an output field. the subroutine is in scr/main/histFileMod.F90
+    ! Add history fields     ! X. Li: this adds an output field. the subroutine is in scr/main/histFileMod.F90
     call hist_addfld1d (fname='TBUILD_MAX', units='K',      &
           avgflag='A', long_name='prescribed maximum interior building temperature',   &
           ptr_lunit=this%t_building_max, default='inactive', set_nourb=spval, &
           l2g_scale_type='unity')
-    ! Cathy [dev] 
+    ! X. Li [dev] 
     call hist_addfld1d (fname='P_AC', units='unitless',      &
           avgflag='A', long_name='prescribed air-conditioning ownership rate (decimal)',   &
           ptr_lunit=this%p_ac, default='inactive', set_nourb=spval, &
@@ -97,7 +97,7 @@ contains
     use clm_nlUtilsMod   , only : find_nlgroup_name
     use spmdMod          , only : masterproc, mpicom, iam
     use shr_mpi_mod      , only : shr_mpi_bcast
-    use landunit_varcon  , only : isturb_tbd, isturb_hd, isturb_md ! Cathy: equals 7, 8 and 9
+    use landunit_varcon  , only : isturb_tbd, isturb_hd, isturb_md ! X. Li: equals 7, 8 and 9
     use dshr_strdata_mod , only : shr_strdata_init_from_inline
     use lnd_comp_shr     , only : mesh, model_clock
     !
@@ -119,7 +119,7 @@ contains
     character(len=CL)  :: urbantvmapalgo = 'nn'             ! mapping alogrithm for urban ac ???
     character(len=CL)  :: urbantv_tintalgo = 'linear'       ! time interpolation alogrithm
     integer            :: rc                                ! error code
-    ! Cathy [orig]: this is taken out because field strings are now hard coded in
+    ! X. Li [orig]: this is taken out because field strings are now hard coded in
     ! character(*), parameter :: urbantvString = "tbuildmax_" ! base string for field string
     character(*), parameter :: subName = "('urbantv_init')" ! ???
     !-----------------------------------------------------------------------
@@ -139,11 +139,11 @@ contains
     model_year_align_urbantv   = 1       ! align stream_year_first_urbantv with this model year
     stream_fldFileName_urbantv = ' '
     stream_meshfile_urbantv    = ' '
-    ! Cathy [orig]
+    ! X. Li [orig]
     ! stream_varnames(isturb_tbd) = urbantvString//"TBD"
     ! stream_varnames(isturb_hd)  = urbantvString//"HD"
     ! stream_varnames(isturb_md)  = urbantvString//"MD"
-    ! Cathy [dev]
+    ! X. Li [dev]
     stream_varnames(1) = "tbuildmax_TBD"
     stream_varnames(2) = "tbuildmax_HD"
     stream_varnames(3) = "tbuildmax_MD"
@@ -180,9 +180,9 @@ contains
        write(iulog,'(a,a)' ) '  stream_fldFileName_urbantv = ',stream_fldFileName_urbantv
        write(iulog,'(a,a)' ) '  stream_meshfile_urbantv    = ',stream_meshfile_urbantv
        write(iulog,'(a,a)' ) '  urbantv_tintalgo           = ',urbantv_tintalgo
-       ! Cathy [orig]
+       ! X. Li [orig]
        ! do n = isturb_tbd,isturb_md
-       ! Cathy [dev]
+       ! X. Li [dev]
        do n = 1,6
           write(iulog,'(a,a)' ) '  stream_varname         = ',trim(stream_varnames(n))
        end do
@@ -200,10 +200,10 @@ contains
          stream_lev_dimname  = 'null',                               &
          stream_mapalgo      = trim(urbantvmapalgo),                 &
          stream_filenames    = (/trim(stream_fldfilename_urbantv)/), &
-         ! Cathy [orig]
+         ! X. Li [orig]
          ! stream_fldlistFile  = stream_varnames(isturb_tbd:isturb_md),&
          ! stream_fldListModel = stream_varnames(isturb_tbd:isturb_md),&
-         ! Cathy [dev]
+         ! X. Li [dev]
          stream_fldlistFile  = stream_varnames(1:6),                 &
          stream_fldListModel = stream_varnames(1:6),                 &
          stream_yearFirst    = stream_year_first_urbantv,            &
@@ -265,10 +265,10 @@ contains
 
     ! Create 2d array for all stream variable data
     lsize = bounds%endg - bounds%begg + 1
-    ! Cathy [orig]
+    ! X. Li [orig]
     ! allocate(dataptr2d(lsize, isturb_MIN:isturb_MAX))
     ! do n = isturb_MIN,isturb_MAX
-    ! Cathy [dev]
+    ! X. Li [dev]
     allocate(dataptr2d(lsize, 1:6))
     do n = 1,6
        call dshr_fldbun_getFldPtr(this%sdat_urbantv%pstrm(1)%fldbun_model, trim(stream_varnames(n)), &
@@ -291,13 +291,13 @@ contains
              ig = ig+1
              if (g == lun%gridcell(l)) exit
           end do
-          ! Cathy [orig]
+          ! X. Li [orig]
           ! do n = isturb_MIN,isturb_MAX
-          ! Cathy [dev]
+          ! X. Li [dev]
           do n = 1,6
-             ! Cathy [orig]
+             ! X. Li [orig]
              ! if (stream_varnames(lun%itype(l)) == stream_varnames(n)) then
-             ! Cathy [dev.02]
+             ! X. Li [dev.02]
              if (stream_varnames((lun%itype(l)-6)) == stream_varnames(n)) then
                 this%t_building_max(l) = dataptr2d(ig,n)
              end if
@@ -306,9 +306,9 @@ contains
              end if
           end do
        else
-          this%t_building_max(l) = spval ! Cathy: special value for real data, set to 1.e36 in src/main/clm_varcon
-          ! Cathy [dev]
-          this%p_ac(l) = 0._r8 ! Cathy: set to 0 for non-urban landunit
+          this%t_building_max(l) = spval ! X. Li: special value for real data, set to 1.e36 in src/main/clm_varcon
+          ! X. Li [dev]
+          this%p_ac(l) = 0._r8 ! X. Li: set to 0 for non-urban landunit
        end if
     end do
     deallocate(dataptr2d)
@@ -322,9 +322,9 @@ contains
              ig = ig+1
              if (g == lun%gridcell(l)) exit
           end do
-          ! Cathy [orig]
+          ! X. Li [orig]
           ! if ( .not. urban_valid(g) .or. (this%t_building_max(l) <= 0._r8)) then
-          ! Cathy [dev]
+          ! X. Li [dev]
           if ( .not. urban_valid(g) .or. (this%t_building_max(l) <= 0._r8) &
              .or. (this%p_ac(l) < 0._r8) .or. (this%p_ac(l) > 1._r8)) then
              found = .true.
@@ -339,7 +339,7 @@ contains
        write(iulog,*)'landunit type:   ',lun%itype(lindx)
        write(iulog,*)'urban_valid:     ',urban_valid(gindx)
        write(iulog,*)'t_building_max:  ',this%t_building_max(lindx)
-       ! Cathy [dev]
+       ! X. Li [dev]
        write(iulog,*)'p_ac:            ',this%p_ac(lindx)
        call endrun(subgrid_index=lindx, subgrid_level=subgrid_level_landunit, &
             msg=errmsg(sourcefile, __LINE__))
