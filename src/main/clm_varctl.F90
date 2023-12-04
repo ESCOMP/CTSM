@@ -227,6 +227,8 @@ module clm_varctl
 
   ! which snow cover fraction parameterization to use
   character(len=64), public :: snow_cover_fraction_method
+  ! which snow thermal conductivity parameterization to use
+  character(len=25), public :: snow_thermal_cond_method
 
   ! atmospheric CO2 molar ratio (by volume) (umol/mol)
   real(r8), public :: co2_ppmv     = 355._r8            !
@@ -235,6 +237,36 @@ module clm_varctl
   character(len=64), public    :: o3_veg_stress_method = 'unset'
 
   real(r8), public  :: o3_ppbv = 100._r8
+
+  ! number of wavelength bands used in SNICAR snow albedo calculation
+  integer, public :: snicar_numrad_snw = 5 
+
+  ! type of downward solar radiation spectrum for SNICAR snow albedo calculation
+  ! options:
+  ! mid_latitude_winter, mid_latitude_summer, sub_arctic_winter,
+  ! sub_arctic_summer, summit_greenland_summer, high_mountain_summer;
+  character(len=25), public :: snicar_solarspec = 'mid_latitude_winter'
+
+  ! dust optics type for SNICAR snow albedo calculation
+  ! options:
+  ! sahara: Saharan dust (Balkanski et al., 2007, central hematite)
+  ! san_juan_mtns_colorado: San Juan Mountains dust, CO (Skiles et al, 2017)
+  ! greenland: Greenland dust (Polashenski et al., 2015, central absorptivity)
+  character(len=25), public :: snicar_dust_optics = 'sahara'
+  ! option to turn off aerosol effect in snow in SNICAR
+  logical, public :: snicar_use_aerosol = .true. ! if .false., turn off aerosol deposition flux
+
+  ! option for snow grain shape in SNICAR (He et al. 2017 JC)
+  character(len=25), public :: snicar_snw_shape = 'hexagonal_plate'  ! sphere, spheroid, hexagonal_plate, koch_snowflake
+
+  ! option to activate BC-snow internal mixing in SNICAR (He et al. 2017 JC), ceniln
+  logical, public :: snicar_snobc_intmix = .false.   ! false->external mixing for all BC; true->internal mixing for hydrophilic BC
+
+  ! option to activate dust-snow internal mixing in SNICAR (He et al. 2017 JC), ceniln
+  logical, public :: snicar_snodst_intmix = .false.   ! false->external mixing for all dust; true->internal mixing for all dust
+
+  ! option to activate OC in snow in SNICAR
+  logical, public :: do_sno_oc = .false.  ! control to include organic carbon (OC) in snow
 
   !----------------------------------------------------------
   ! C isotopes
@@ -266,6 +298,8 @@ module clm_varctl
 
   ! These are INTERNAL to the FATES module
 
+  integer, public            :: fates_seeddisp_cadence = iundef         ! 0 => no seed dispersal
+                                                                        ! 1, 2, 3 => daily, monthly, or yearly dispersal
   integer, public            :: fates_parteh_mode = -9                  ! 1 => carbon only
                                                                         ! 2 => C+N+P (not enabled yet)
                                                                         ! no others enabled
@@ -326,7 +360,7 @@ module clm_varctl
   !----------------------------------------------------------
 
   logical, public :: use_cropcal_streams = .false.
-  logical, public :: use_cropcal_rx_sdates = .false.
+  logical, public :: use_cropcal_rx_swindows = .false.
   logical, public :: use_cropcal_rx_cultivar_gdds = .false.
 
   !----------------------------------------------------------
