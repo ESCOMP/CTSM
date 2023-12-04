@@ -18,6 +18,7 @@ begin
  print ("Start Time: "+systemfunc("date") )
  print ("=========================================")
 
+ ; IMPORTANT NOTE: The path for these files needs to be updated with the removal of Cheyenne and /glade/p (See history note below as well)
  infile  = "/glade/p/cgd/tss/people/oleson/modify_surfdata/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_c160127.nc"
  outfile = "/glade/p/cgd/tss/people/oleson/modify_surfdata/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_dynUrban_c220223.nc" 
 

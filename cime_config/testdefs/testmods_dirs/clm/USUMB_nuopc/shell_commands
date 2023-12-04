@@ -11,7 +11,6 @@
 ./xmlchange ATM_NCPL=24
 ./xmlchange RUN_STARTDATE=1999-01-01
 ./xmlchange DATM_YR_ALIGN=1999
-./xmlchange DIN_LOC_ROOT=/glade/p/cesm/cseg/inputdata
-./xmlchange DIN_LOC_ROOT_CLMFORC=/glade/p/cesm/cseg/inputdata/lnd/clm2/PTCLMmydatafiles.c171024
+./xmlchange DIN_LOC_ROOT_CLMFORC='$DIN_LOC_ROOT/lnd/clm2/PTCLMmydatafiles.c171024'
 ./xmlchange PTS_LON=275.2862
 ./xmlchange PTS_LAT=45.5598
