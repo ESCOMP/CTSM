@@ -1,4 +1,68 @@
 ===============================================================
+Tag name: ctsm5.1.dev156
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Thu Nov 30 15:27:18 MST 2023
+One-line Summary: Do not use Meier roughness by default
+
+Purpose and description of changes
+----------------------------------
+
+ctsm5.1.dev155 had turned on Meier2022 surface roughness calculation by default for 5.1 compsets. Several bugs have recently emerged that were not caught by pre-merge testing, so this tag reverts that change. Thus, the ZengWang2007 method is default for all compsets again.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values): 5.1 compsets now use ZengWang2007 method (instead of Meier2022) for roughness calculation.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: 5.1 compsets
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): new climate
+
+  No climate-evaluating run performed, as this change is reverting part of a commit thats barely a week old.
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+* #2273: Do not use Meier roughness by default, even with 5.1. (https://github.com/ESCOMP/CTSM/pull/2273)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev155
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Mon Nov 27 21:16:51 MST 2023
