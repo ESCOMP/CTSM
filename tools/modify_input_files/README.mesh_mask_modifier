@@ -56,7 +56,7 @@ In your copy of the CTSM (say, ~user/ctsm), go to the appropriate tool:
 
 Enter the following (or similar) selections in modify_fill_indianocean.cfg:
 
-mesh_mask_in = /glade/p/cesmdata/cseg/inputdata/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc
+mesh_mask_in = /glade/campaign/cesm/cesmdata/cseg/inputdata/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc
 mesh_mask_out = fv0.9x1.25_141008_polemod_ESMFmesh_modified.nc
 landmask_file = .../path_to_your_copy_of/fill_indianocean.nc
 
