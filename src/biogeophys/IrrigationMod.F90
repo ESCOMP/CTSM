@@ -362,7 +362,6 @@ contains
     use spmdMod        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-
     !
     ! !ARGUMENTS:
     class(irrigation_type) , intent(inout) :: this

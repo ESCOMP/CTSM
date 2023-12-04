@@ -183,7 +183,6 @@ contains
     use landunit_varcon , only : istsoil
     use subgridWeightsMod , only : compute_higher_order_weights
     use ncdio_pio
-
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -615,7 +614,6 @@ contains
     use fileutils       , only : getfil
     use clm_varcon      , only : spval, ispval, grlnd
     use ncdio_pio
-
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -716,7 +714,6 @@ contains
     use fileutils       , only : getfil
     use clm_varcon      , only : spval, ispval, grlnd
     use ncdio_pio
-
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -816,7 +813,6 @@ contains
     ! Assumes each column has a single pft.
     ! In preparation for this reassignment of patch type, only the
     ! first patch was given a non-zero weight in surfrd_hillslope
-
     !
     ! !USES
     use LandunitType    , only : lun
@@ -873,7 +869,6 @@ contains
     ! prepare the patch weights for this routine.
     ! Assumes each column has a single pft.
     ! Use largest weight for lowland, 2nd largest weight for uplands
-
     !
     ! !USES
     use LandunitType    , only : lun
@@ -980,7 +975,6 @@ contains
     use ColumnType      , only : col
     use PatchType       , only : patch
     use clm_varpar      , only : natpft_lb
-
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -1032,7 +1026,6 @@ contains
     use landunit_varcon , only : istsoil
     use ncdio_pio
     use clm_time_manager , only : get_step_size_real
-
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -1141,7 +1134,6 @@ contains
     use clm_varcon      , only : spval, ispval, grlnd
     use landunit_varcon , only : istsoil
     use clm_time_manager, only : get_step_size_real
-
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds

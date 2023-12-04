@@ -36,7 +36,7 @@ Module HydrologyNoDrainageMod
   !
   ! !PUBLIC TYPES:
   implicit none
-  save 
+  save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public  :: CalcAndWithdrawIrrigationFluxes  ! Calculates irrigation withdrawal fluxes and withdraws from groundwater
@@ -131,7 +131,6 @@ contains
   end subroutine HandleNewSnow
 
   !-----------------------------------------------------------------------
-
   subroutine HydrologyNoDrainage(bounds, &
        num_nolakec, filter_nolakec, &
        num_hydrologyc, filter_hydrologyc, &
@@ -165,7 +164,7 @@ contains
     use SoilWaterMovementMod , only : SoilWater
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use SoilWaterMovementMod , only : use_aquifer_layer
-    use SoilWaterPlantSinkMod, only : Compute_EffecRootFrac_And_VertTranSink
+    use SoilWaterPlantSinkMod , only : Compute_EffecRootFrac_And_VertTranSink
     use SurfaceWaterMod      , only : UpdateH2osfc
 
     !
@@ -182,7 +181,6 @@ contains
     integer                  , intent(inout) :: num_nosnowc          ! number of column non-snow points
     integer                  , intent(inout) :: filter_nosnowc(:)    ! column filter for non-snow points
     type(hlm_fates_interface_type), intent(inout) :: clm_fates
-
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
     type(soilstate_type)     , intent(inout) :: soilstate_inst
     type(energyflux_type)    , intent(in)    :: energyflux_inst
