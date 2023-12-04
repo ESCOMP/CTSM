@@ -23,7 +23,7 @@ use Getopt::Long;
    my $scriptName;
    ($scriptName = $0) =~ s!(.*)/!!; # get name of script
    my $cwd = getcwd();
-   my $CSMDATA = "/glade/p/cesm/cseg/inputdata";
+   my $CSMDATA = "/glade/campaign/cesm/cesmdata/cseg/inputdata";
 
    if ($#ARGV != 0 ) {
       usage();

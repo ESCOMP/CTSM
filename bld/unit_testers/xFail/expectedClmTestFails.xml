@@ -34,19 +34,6 @@
          </goldbach>
    </tools_test_driver>
 
-   <PTCLM>
-         <yellowstone>
-            <INTEL>
-               <entry testId="no_towerdata.-d+/glade/p/cesmdata/cseg/inputdata++-s+RF-Bra+--debug+--pftgrid+--soilgrid."
-                      failType="FAIL">Doesn't check for valid values</entry>
-            </INTEL>
-         </yellowstone>
-         <goldbach>
-            <PGI>
-            </PGI>
-         </goldbach>
-   </PTCLM>
-
    <unit_tests>
          <yellowstone>
             <INTEL>
