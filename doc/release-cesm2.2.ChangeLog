@@ -1,4 +1,64 @@
 ===============================================================
+Tag name:  release-cesm2.2.03
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date:  Mon 04 Dec 2023 10:21:10 PM MST
+One-line Summary: Quick tag with history update needed for SCAM
+
+Purpose of this version:
+------------------------
+
+Quick tag to fix a problem running PTS_MODE (SCAM) on Derecho.
+Update externals to work on Derecho.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev108 (with most changes from ctsm1.0.dev111)
+
+Summary of changes:
+-------------------
+
+Science changes since:  None
+
+Software changes since: 
+   Backported change to ncdio_pio.F90.in from latest development CTSM by Jim Edwards
+
+Changes to User Interface since:  None
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  Derecho tests done that PASS:
+
+    ERP_D_Ld3.f09_g17.I2000Clm50SpGs.derecho_intel.clm-prescribed
+    SMS_D_Ld1_Mmpi-serial.f45_f45_mg37.I2000Clm50SpGs.derecho_intel.clm-ptsRLA
+    SMS_Ld1_Mmpi-serial.f45_f45_mg37.I2000Clm50SpGs.derecho_intel.clm-ptsRLB
+    SMS_Ld1_Mmpi-serial.f45_f45_mg37.I2000Clm50SpGs.derecho_intel.clm-ptsROA
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+      cism2_1_69_a
+      rtm1_0_72
+      mosart1_0_37_1
+      cime5.8.32.7
+      FATES tag -- sci.1.30.0_api.8.0.0
+      cdeps hash -- 45b7a85
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): None, went direct to branch
+
+===============================================================
+===============================================================
 Tag name:  release-cesm2.2.02
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed Aug 23 13:18:00 MDT 2023
