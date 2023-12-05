@@ -7,6 +7,9 @@ import os
 import subprocess
 from datetime import datetime
 
+from CIME.test_utils import get_tests_from_xml  # pylint: disable=import-error
+from CIME.cs_status_creator import create_cs_status  # pylint: disable=import-error
+
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.machine_utils import get_machine_name
 from ctsm.machine import create_machine, get_possibly_overridden_baseline_dir
@@ -14,9 +17,6 @@ from ctsm.machine_defaults import MACHINE_DEFAULTS
 from ctsm.os_utils import make_link
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_NOBATCH
-
-from CIME.test_utils import get_tests_from_xml  # pylint: disable=import-error
-from CIME.cs_status_creator import create_cs_status  # pylint: disable=import-error
 
 logger = logging.getLogger(__name__)
 
