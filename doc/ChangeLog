@@ -1,4 +1,76 @@
 ===============================================================
+Tag name: ctsm5.1.dev157
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Tue Dec  5 09:48:26 MST 2023
+One-line Summary: Update Externals to work on Derecho
+
+Purpose and description of changes
+----------------------------------
+
+Updates Externals.cfg to work on Derecho.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+* Resolves #2217 ("Tags for building CTSM library on Derecho [WRF-CTSM]", https://github.com/ESCOMP/CTSM/issues/2217)
+* Resolves #2090 ("Update to cesm2_3_beta16 externals.", https://github.com/ESCOMP/CTSM/issues/2090)
+
+Known bugs introduced in this tag (include issue #):
+* #2280: Updating Externals for Derecho causes Izumi nag tests to fail (https://github.com/ESCOMP/CTSM/issues/2280)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+* All Izumi nag tests fail early in the run phase. This should be fixed in the next tag, which will be a more comprehensive Derecho-focused update.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS (except nag)
+
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+* cime: cime6.0.125 -> cime6.0.175
+* cmeps: cmeps0.14.21 -> cmeps0.14.43
+* cdeps: cdeps1.0.13 -> cdeps1.0.23
+* cpl7: cpl77.0.5 -> cpl77.0.7
+* parallelio: pio2_5_10 -> pio2_6_2
+
+Pull Requests that document the changes (include PR ids):
+* #2270: Update Externals.cfg to work on Derecho (https://github.com/ESCOMP/CTSM/pull/2270)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev156
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Thu Nov 30 15:27:18 MST 2023
