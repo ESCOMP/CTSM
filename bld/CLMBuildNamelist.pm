@@ -4356,11 +4356,6 @@ sub setup_logic_initinterp {
          $log->fatal_error("$var can only be set if use_init_interp is true");
       }
    }
-   # This only seems to be important for this one grid...
-   if ( $nl_flags->{'res'} eq "ne30np4.pg3" ) {
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_fill_missing_with_natveg",
-                   'hgrid'=>$nl_flags->{'res'} );
-   }
 }
 
 #-------------------------------------------------------------------------------
