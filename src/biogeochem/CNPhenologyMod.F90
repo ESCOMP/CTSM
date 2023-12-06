@@ -20,7 +20,7 @@ module CNPhenologyMod
                                                ilivecroot,ilivecroot_st,ilivecroot_xf,&
                                                ideadcroot,ideadcroot_st,ideadcroot_xf,&
                                                igrain,igrain_st,igrain_xf,iretransn,ioutc,ioutn
-  use clm_varpar                      , only : maxveg, nlevdecomp_full
+  use clm_varpar                      , only : maxveg, nlevdecomp_full, mxsowings, mxharvests
   use clm_varpar                      , only : i_litr_min, i_litr_max
   use clm_varctl                      , only : iulog, use_cndv, use_matrixcn
   use clm_varctl                      , only : for_testing_no_crop_seed_replenishment
@@ -1919,7 +1919,7 @@ contains
     ! handle CN fluxes during the phenological onset                       & offset periods.
     
     ! !USES:
-    use clm_time_manager , only : get_prev_date, get_prev_calday, get_curr_days_per_year
+    use clm_time_manager , only : get_prev_calday, get_curr_days_per_year, is_beg_curr_year
     use clm_time_manager , only : get_average_days_per_year
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
@@ -1949,15 +1949,12 @@ contains
     type(cnveg_carbonstate_type)   , intent(inout) :: c14_cnveg_carbonstate_inst
     !
     ! LOCAL VARAIBLES:
-    integer kyr       ! current year
-    integer kmo       ! month of year  (1, ..., 12)
-    integer kda       ! day of month   (1, ..., 31)
-    integer mcsec     ! seconds of day (0, ..., seconds/day)
     integer jday      ! julian day of the year
     integer fp,p      ! patch indices
     integer c         ! column indices
     integer g         ! gridcell indices
     integer h         ! hemisphere indices
+    integer s         ! growing season indices
     integer idpp      ! number of days past planting
     real(r8) dayspyr  ! days per year in this year
     real(r8) avg_dayspyr ! average number of days per year
@@ -1990,12 +1987,13 @@ contains
          gdd1020           =>    temperature_inst%gdd1020_patch                , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd10                               
 
          fertnitro         =>    crop_inst%fertnitro_patch                     , & ! Input:  [real(r8) (:) ]  fertilizer nitrogen
-         hui               =>    crop_inst%gddplant_patch                      , & ! Input:  [real(r8) (:) ]  gdd since planting (gddplant)                    
+         hui               =>    crop_inst%hui_patch                           , & ! Input:  [real(r8) (:) ]  crop patch heat unit index (growing degree-days); set to 0 at sowing and accumulated until harvest
          leafout           =>    crop_inst%gddtsoi_patch                       , & ! Input:  [real(r8) (:) ]  gdd from top soil layer temperature              
          harvdate          =>    crop_inst%harvdate_patch                      , & ! Output: [integer  (:) ]  harvest date                                       
          croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested               
-         cropplant         =>    crop_inst%cropplant_patch                     , & ! Output: [logical  (:) ]  Flag, true if crop may be planted                  
          vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
+         sowing_count      =>    crop_inst%sowing_count                        , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
+         harvest_count     =>    crop_inst%harvest_count                       , & ! Inout:  [integer  (:) ]  number of harvest events this year for this patch
          peaklai           =>    cnveg_state_inst%peaklai_patch                , & ! Output: [integer  (:) ]  1: max allowed lai; 0: not at max
          tlai              =>    canopystate_inst%tlai_patch                   , & ! Input:  [real(r8) (:) ]  one-sided leaf area index, no burying by snow     
          
@@ -2028,7 +2026,6 @@ contains
       dayspyr = get_curr_days_per_year()
       avg_dayspyr = get_average_days_per_year()
       jday    = get_prev_calday()
-      call get_prev_date(kyr, kmo, kda, mcsec)
 
       if (use_fertilizer) then
        ndays_on = 20._r8 ! number of days to fertilize
@@ -2052,36 +2049,37 @@ contains
          ! from AgroIBIS subroutine planting
          ! ---------------------------------
 
-         ! in order to allow a crop to be planted only once each year
-         ! initialize cropplant = .false., but hold it = .true. through the end of the year
-
          ! initialize other variables that are calculated for crops
          ! on an annual basis in cropresidue subroutine
 
-         if ( jday == jdayyrstart(h) .and. mcsec == 0 )then
-
-            ! make sure variables aren't changed at beginning of the year
-            ! for a crop that is currently planted, such as
-            ! WINTER TEMPERATE CEREAL = winter (wheat + barley + rye)
-            ! represented here by the winter wheat pft
-
-            if (.not. croplive(p))  then
-               cropplant(p) = .false.
-               idop(p)      = NOT_Planted
-
-               ! keep next for continuous, annual winter temperate cereal crop;
-               ! if we removed elseif,
-               ! winter cereal grown continuously would amount to a cereal/fallow
-               ! rotation because cereal would only be planted every other year
-
-            else if (croplive(p) .and. (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat)) then
-               cropplant(p) = .false.
-               !           else ! not possible to have croplive and ivt==cornORsoy? (slevis)
-            end if
-
+         ! Second condition ensures everything is correctly set when resuming from a run with old code
+         ! OR starting a run mid-year without any restart file OR handling a new crop column that just
+         ! came into existence (and not at the year boundary for some reason).
+         if ( is_beg_curr_year() .or. crop_inst%sdates_thisyr(p,1) == spval ) then
+            sowing_count(p) = 0
+            harvest_count(p) = 0
+            do s = 1, mxsowings
+               crop_inst%sdates_thisyr(p,s) = -1._r8
+            end do
+            do s = 1, mxharvests
+               crop_inst%hdates_thisyr(p,s) = -1._r8
+            end do
          end if
 
-         if ( (.not. croplive(p)) .and. (.not. cropplant(p)) ) then
+         ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-18)
+         ! When resuming from a run with old code, may need to manually set these.
+         ! Will be needed until we can rely on all restart files have been generated
+         ! with CropPhenology() getting the day of the year from the START of the timestep
+         ! (i.e., jday = get_prev_calday()) instead of the END of the timestep (i.e.,
+         ! jday = get_calday()). See CTSM issue #1623.
+         if (croplive(p) .and. idop(p) <= jday .and. sowing_count(p) == 0) then
+             sowing_count(p) = 1
+             crop_inst%sdates_thisyr(p,1) = real(idop(p), r8)
+         end if
+
+
+         ! Once outputs can handle >1 planting per year, remove 2nd condition.
+         if ( (.not. croplive(p)) .and. sowing_count(p) == 0 ) then
 
             ! gdd needed for * chosen crop and a likely hybrid (for that region) *
             ! to reach full physiological maturity
@@ -2101,22 +2099,6 @@ contains
             ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
 
             if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
-
-               ! add check to only plant winter cereal after other crops (soybean, maize)
-               ! have been harvested
-
-               ! *** remember order of planting is crucial - in terms of which crops you want
-               ! to be grown in what order ***
-
-               ! in this case, corn or soybeans are assumed to be planted before
-               ! cereal would be in any particular year that both patches are allowed
-               ! to grow in the same grid cell (e.g., double-cropping)
-
-               ! slevis: harvdate below needs cropplant(p) above to be cropplant(p,ivt(p))
-               !         where ivt(p) has rotated to winter cereal because
-               !         cropplant through the end of the year for a harvested crop.
-               !         Also harvdate(p) should be harvdate(p,ivt(p)) and should be
-               !         updated on Jan 1st instead of at harvest (slevis)
 
                ! Are all the normal requirements for planting met?
                do_plant_normal = a5tmin(p)   /= spval                  .and. &
@@ -2292,7 +2274,7 @@ contains
 
             ! call vernalization if winter temperate cereal planted, living, and the
             ! vernalization factor is not 1;
-            ! vf affects the calculation of gddtsoi & gddplant
+            ! vf affects the calculation of gddtsoi & hui
 
             if (t_ref2m_min(p) < 1.e30_r8 .and. vf(p) /= 1._r8 .and. &
                (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat)) then
@@ -2349,6 +2331,8 @@ contains
 
             else if (hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))) then
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
+               harvest_count(p) = harvest_count(p) + 1
+               crop_inst%hdates_thisyr(p, harvest_count(p)) = real(jday, r8)
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = 4._r8
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
@@ -2517,8 +2501,8 @@ contains
 
     associate(                                                                     & 
          croplive          =>    crop_inst%croplive_patch                        , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
-         cropplant         =>    crop_inst%cropplant_patch                       , & ! Output: [logical  (:) ]  Flag, true if crop may be planted
          harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
+         sowing_count      =>    crop_inst%sowing_count                          , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
          idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting                                   
          leafc_xfer        =>    cnveg_carbonstate_inst%leafc_xfer_patch         , & ! Output: [real(r8) (:) ]  (gC/m2)   leaf C transfer
          leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch       , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer
@@ -2529,9 +2513,10 @@ contains
       ! impose limit on growing season length needed
       ! for crop maturity - for cold weather constraints
       croplive(p)  = .true.
-      cropplant(p) = .true.
       idop(p)      = jday
       harvdate(p)  = NOT_Harvested
+      sowing_count(p) = sowing_count(p) + 1
+      crop_inst%sdates_thisyr(p,sowing_count(p)) = jday
 
       leafc_xfer(p)  = initial_seed_at_planting
       leafn_xfer(p) = leafc_xfer(p) / leafcn_in ! with onset
@@ -2623,7 +2608,7 @@ contains
       ! vernalization factor calculation
       ! if vf(p) = 1.  then plant is fully vernalized - and thermal time
       ! accumulation in phase 1 will be unaffected
-      ! refers to gddtsoi & gddplant, defined in the accumulation routines (slevis)
+      ! refers to gddtsoi & hui, defined in the accumulation routines (slevis)
       ! reset vf, cumvd, and hdidx to 0 at planting of crop (slevis)
 
       if (t_ref2m_max(p) > tfrz) then
