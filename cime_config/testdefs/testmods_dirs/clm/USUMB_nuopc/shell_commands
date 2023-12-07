@@ -1,5 +1,4 @@
-# shell commands to execute xmlchange commands written by PTCLMmkdata:
-# ./PTCLMmkdata --cesm_root ../../../.. -s US-UMB -d /glade/p/cesm/cseg/inputdata --mydatadir=/glade/p/cesm/cseg/inputdata/lnd/clm2/PTCLMmydatafiles.c171024 
+# shell commands to execute xmlchange commands written by PTCLMmkdata: which is now unsupported
 ./xmlchange CLM_USRDAT_NAME=1x1pt_US-UMB
 ./xmlchange DATM_YR_START=1999
 ./xmlchange DATM_YR_END=2006
