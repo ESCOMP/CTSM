@@ -2140,7 +2140,7 @@
       <!-- Until Derecho works with intel/Debug use gnu
       <machine name="derecho"  compiler="intel" category="aux_clm"/>
       -->
-      <machine name="derecho"  compiler="derecho" category="aux_clm"/>
+      <machine name="derecho"  compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
