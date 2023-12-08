@@ -1,7 +1,8 @@
 #
-#  NOTE: Changes here should be coordinated with the cgd python environment file
+# NOTE: Changes here should be coordinated with the cgd python environment file
 #
-# To install this on cheyenne with conda loaded in modules
+# NOTE: Derecho already has conda installed for you, so you just need to do the following...
+#
 # use the top level bash script:
 # ../py_env_create                                           # Do this each time you update your CTSM Version
 # conda activate ctsm_pylib                                  # Do this anytime you want to run a CTSM python script
