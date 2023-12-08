@@ -137,15 +137,23 @@ def main(
 
         # Sometimes cdo fails for no apparent reason. In testing this never happened more than 3x in a row.
         try:
-            run_and_check(f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
+            run_and_check(
+                f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'"
+            )
         except:
             try:
-                run_and_check(f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
+                run_and_check(
+                    f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'"
+                )
             except:
                 try:
-                    run_and_check(f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
+                    run_and_check(
+                        f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'"
+                    )
                 except:
-                    run_and_check(f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
+                    run_and_check(
+                        f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'"
+                    )
 
     # Delete template file, which is no longer needed
     os.remove(templatefile)
