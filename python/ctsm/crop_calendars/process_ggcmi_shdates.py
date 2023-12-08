@@ -1,5 +1,6 @@
 import numpy as np
 import xarray as xr
+import shutil
 import os
 import datetime as dt
 import cftime
@@ -169,11 +170,9 @@ def main(
 
     # Create output files
     datetime_string = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
-    nninterp_suffix = "nninterp-" + regrid_resolution
     for v in variable_dict:
         outfile = os.path.join(
-            output_directory,
-            f"{v}s_{file_specifier}_{nninterp_suffix}.{first_year}-{last_year}.{datetime_string}.nc",
+            output_directory, f"{v}s_{file_specifier}.{first_year}-{last_year}.{datetime_string}.nc"
         )
         variable_dict[v]["outfile"] = outfile
         template_ds.to_netcdf(
@@ -213,8 +212,7 @@ def main(
                 )
 
             file_ggcmi = os.path.join(
-                regridded_ggcmi_files_dir,
-                f"{thiscrop_ggcmi}_{file_specifier}_{nninterp_suffix}.nc4",
+                regridded_ggcmi_files_dir, f"{thiscrop_ggcmi}_{file_specifier}.nc4"
             )
             if not os.path.exists(file_ggcmi):
                 raise Exception("Input file not found: " + file_ggcmi)
