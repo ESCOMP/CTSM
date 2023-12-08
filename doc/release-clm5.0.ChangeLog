@@ -1,4 +1,69 @@
 ===============================================================
+Tag name:  release-clm5.0.36
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date:  Fri 08 Dec 2023 02:24:39 PM MST
+One-line Summary: Tech note update, and update externals to ones that work on Derecho
+
+Purpose of this version:
+------------------------
+
+Update the externals to work on Derecho.
+Include a Technical Note update.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #):
+   #2285 -- CTSM tag for CESM2.1.5 release, updated externals
+
+Science changes since: release-clm5.0.35
+   None
+
+Software changes since: release-clm5.0.35
+   Update externals
+
+Changes to User Interface since:  release-clm5.0.35
+   None
+
+Testing: Limited
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    derecho - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+   cism   -> cism-release-cesm2.1.2_03
+   mosart -> release-cesm2.0.04
+   rtm    -> release-cesm2.0.04
+   cime   -> cime5.6.47
+   fates  -> sci.1.30.0_api.8.0.0
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): None
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.35
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Tue Feb  8 16:09:57 MST 2022
@@ -18,7 +83,7 @@ SSP5-3.4, and SSP5-8.5).
 Fix several issues.
 
 
-CTSM Master Tag This Corresponds To:
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
 
 Summary of changes:
 -------------------

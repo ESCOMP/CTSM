@@ -31,7 +31,7 @@ Testing:
 
   build-namelist tests:
 
-    cheyenne - 
+    derecho - 
 
   unit-tests (components/clm/src):
 
@@ -43,29 +43,21 @@ Testing:
     cheyenne - 
     izumi ----
 
-  PTCLM testing (components/clm/tools/shared/PTCLM/test):
-
-     cheyenne - 
-     izumi ----
-
   regular tests (aux_clm):
 
-    cheyenne_intel ---- 
-    cheyenne_gnu ------ 
+    derecho_intel ---- 
     izumi_nag --------- 
     izumi_pgi --------- 
     izumi_intel ------- 
 
   regular tests (prealpha):
 
-    cheyenne_intel -
-    cheyenne_gnu ---
+    derecho_intel -
     izumi_nag ------
 
   regular tests (prebeta):
 
-    cheyenne_intel -
-    cheyenne_gnu ---
+    derecho_intel -
     izumi_nag ------
 
 Summary of Answer changes:

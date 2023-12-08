@@ -77,7 +77,7 @@ CTSM testing:
 
   build-namelist tests:
 
-    cheyenne - 
+    derecho - 
 
   unit-tests (components/clm/src):
 
@@ -87,14 +87,9 @@ CTSM testing:
 
     cheyenne - 
 
-  PTCLM testing (components/clm/tools/shared/PTCLM/test):
-
-     cheyenne - 
-
   regular tests (aux_clm):
 
-    cheyenne_intel ---- 
-    cheyenne_gnu ------ 
+    derecho_intel ---- 
     izumi_nag --------- 
     izumi_pgi --------- 
     izumi_intel ------- 
