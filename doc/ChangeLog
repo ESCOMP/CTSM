@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev158
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Thu 07 Dec 2023 10:15:56 PM MST
+Date: Thu 07 Dec 2023 10:22:46 PM MST
 One-line Summary: First tag with testing moved to Derecho and working PE-layouts for Derecho
 
 Purpose and description of changes
@@ -11,7 +11,8 @@ First tag for CTSM working and tested on Derecho.  Update CDEPS so that we can r
 Working PE layouts. Changes from CESM3_dev over to main-dev.  Testing added for Derecho.
 Do some work to get tools testing working on Derecho, not completed.
 Add Derecho to the README files under tools/modify_input_files and tools/site_and_regional
-Make sure there are no /glade/p references in the code (other than in the doc directory).
+Remove some /glade/p references in the code. This is still an issue in the: doc, lilac, tools/mksurfdata_map,
+tools/contrib, tools/mkmapdata directories, and the namelist_defaults_ctsm_tools file.
 
 
 Significant changes to scientifically-supported configurations
