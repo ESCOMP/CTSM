@@ -61,7 +61,7 @@ def main(
 
     # Ensure we can call necessary shell script(s)
     for cmd in ["cdo"]:
-        run_and_check(f"module load {cmd}; {cmd} --help")
+        run_and_check(f"{cmd} --help")
 
     os.chdir(regrid_input_directory)
     if not os.path.exists(regrid_output_directory):
@@ -137,15 +137,15 @@ def main(
 
         # Sometimes cdo fails for no apparent reason. In testing this never happened more than 3x in a row.
         try:
-            run_and_check(f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
+            run_and_check(f"cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
         except:
             try:
-                run_and_check(f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
+                run_and_check(f"cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
             except:
                 try:
-                    run_and_check(f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
+                    run_and_check(f"cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
                 except:
-                    run_and_check(f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
+                    run_and_check(f"cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
 
     # Delete template file, which is no longer needed
     os.remove(templatefile)
