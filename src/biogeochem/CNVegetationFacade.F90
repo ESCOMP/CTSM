@@ -96,6 +96,7 @@ module CNVegetationFacade
   use SoilBiogeochemPrecisionControlMod , only: SoilBiogeochemPrecisionControl
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
   use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
+  use DryDepVelocity                  , only : drydepvel_type !mvm for soil NOx canopy reduction 06/20/2023
   !
   implicit none
   private
@@ -127,6 +128,7 @@ module CNVegetationFacade
      type(cn_balance_type)          :: cn_balance_inst
      class(fire_method_type), allocatable :: cnfire_method
      type(dgvs_type)                :: dgvs_inst
+     type(drydepvel_type)           :: drydepvel_inst  !mvm for soil NOx canopy reduction
 
      ! Control variables
      logical, private :: reseed_dead_plants              ! Flag to indicate if should reseed dead plants when starting up the model
@@ -906,7 +908,7 @@ contains
        wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
        soil_water_retention_curve, crop_inst, ch4_inst, &
        photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
-       nutrient_competition_method, fireemis_inst)
+       nutrient_competition_method, fireemis_inst, drydepvel_inst) !mvm
     !
     ! !DESCRIPTION:
     ! Do the main science for CN vegetation that needs to be done before hydrology-drainage
@@ -962,6 +964,7 @@ contains
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     type(fireemis_type)                     , intent(inout) :: fireemis_inst
     type(hlm_fates_interface_type)          , intent(inout) :: clm_fates
+    type(drydepvel_type)                    , intent(inout) :: drydepvel_inst  !mvm for soil NOx canopy reduction
     !
     ! !LOCAL VARIABLES:
 
@@ -996,7 +999,7 @@ contains
          wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
          soil_water_retention_curve, crop_inst, ch4_inst, &
          this%dgvs_inst, photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
-         nutrient_competition_method, this%cnfire_method, this%dribble_crophrv_xsmrpool_2atm)
+         nutrient_competition_method, this%cnfire_method, this%dribble_crophrv_xsmrpool_2atm, drydepvel_inst) !mvm
 
     ! fire carbon emissions 
     call CNFireEmisUpdate(bounds, num_soilp, filter_soilp, &

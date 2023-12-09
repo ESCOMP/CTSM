@@ -472,6 +472,13 @@ contains
          smin_no3_leached    => soilbiogeochem_nitrogenflux_inst%smin_no3_leached_col    , & ! Input:  [real(r8) (:) ]  (gN/m2/s) soil mineral NO3 pool loss to leaching 
          smin_no3_runoff     => soilbiogeochem_nitrogenflux_inst%smin_no3_runoff_col     , & ! Input:  [real(r8) (:) ]  (gN/m2/s) soil mineral NO3 pool loss to runoff   
          f_n2o_nit           => soilbiogeochem_nitrogenflux_inst%f_n2o_nit_col           , & ! Input:  [real(r8) (:) ]  (gN/m2/s) flux of N2o from nitrification 
+!mvm soil NOx 06/19/2023
+         f_n2o_denit         => soilbiogeochem_nitrogenflux_inst%f_n2o_denit_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s) flux of N2o from denitrification
+         f_n2_denit         => soilbiogeochem_nitrogenflux_inst%f_n2_denit_col        , & ! Input:  [real(r8) (:) ]  (gN/m2/s) flux of N2 from denitrification
+         f_nox_denit_atmos    => soilbiogeochem_nitrogenflux_inst%f_nox_denit_atmos_col   , & ! Input:[real(r8) (:) ]  (gN/m2/s) flux of NOx from denitrification; added by mvm for NOx emission
+         f_nox_denit         => soilbiogeochem_nitrogenflux_inst%f_nox_denit_col   , & ! Input:[real(r8) (:) ]  (gN/m2/s) flux of NOx from denitrification; added by mvm for NOx emission
+         f_nox_nit_atmos      => soilbiogeochem_nitrogenflux_inst%f_nox_nit_atmos_col, & ! Input:  [real(r8) (:) ]  (gN/m2/s) flux of NOx from nitrification; added by mvm for NOx emission
+
          som_n_leached       => soilbiogeochem_nitrogenflux_inst%som_n_leached_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total SOM N loss from vertical transport
 
          col_fire_nloss      => cnveg_nitrogenflux_inst%fire_nloss_col                   , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total column-level fire N loss 
@@ -513,7 +520,12 @@ contains
          col_ninputs_partial(c) = col_ninputs(c)
 
          ! calculate total column-level outputs
-         col_noutputs(c) = denit(c) + col_fire_nloss(c) + gru_conv_nflux(c)
+         !mvm commneted as denit equals now N2Odenit+N2+NOxdenit
+         !col_noutputs(c) = denit(c) + col_fire_nloss(c) + gru_conv_nflux(c)
+         col_noutputs(c) = f_n2_denit(c)+f_n2o_denit(c) + col_fire_nloss(c)+ gru_conv_nflux(c)
+         !mvm: only atmos NOx denit leaves the system, NOx denit trapped in the canopy stays in the system.
+         col_noutputs(c) = col_noutputs(c)+f_nox_denit_atmos(c) 
+
 
          ! Fluxes to product pools are included in column-level outputs: the product
          ! pools are not included in totcoln, so are outside the system with respect to
@@ -529,6 +541,8 @@ contains
             col_noutputs(c) = col_noutputs(c) + sminn_leached(c)
          else
             col_noutputs(c) = col_noutputs(c) + f_n2o_nit(c)
+   !mvm added for NOx nit 06/19/2023
+            col_noutputs(c) = col_noutputs(c) + f_nox_nit_atmos(c) 
 
             col_noutputs(c) = col_noutputs(c) + smin_no3_leached(c) + smin_no3_runoff(c)
          end if
@@ -551,7 +565,7 @@ contains
          if (abs(col_errnb(c)) > this%nwarning) then
             write(iulog,*) 'nbalance warning at c =', c, col_errnb(c), col_endnb(c)
             write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
-            write(iulog,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+            write(iulog,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,denit(c)*dt
          end if
 
       end do ! end of columns loop
@@ -567,7 +581,7 @@ contains
          write(iulog,*)'output mass              = ',col_noutputs(c)*dt
          write(iulog,*)'net flux                 = ',(col_ninputs(c)-col_noutputs(c))*dt
          write(iulog,*)'inputs,ffix,nfix,ndep    = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
-         write(iulog,*)'outputs,lch,roff,dnit    = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+         write(iulog,*)'outputs,lch,roff,dnit    = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,denit(c)*dt
          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
 

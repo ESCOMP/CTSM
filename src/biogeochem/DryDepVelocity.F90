@@ -84,7 +84,8 @@ Module DryDepVelocity
 
      real(r8), pointer, public  :: velocity_patch (:,:) ! Dry Deposition Velocity
      real(r8), pointer, private :: rs_drydep_patch (:)  ! Stomatal resistance associated with dry deposition velocity for Ozone
-
+!mvm for soil Nox canopy reduction function
+     real(r8), pointer, public :: crf_drydep_patch (:)  ! Canopy reduction factor for NO associated with dry deposition velocity
    contains
 
      procedure , public  :: Init
@@ -136,6 +137,8 @@ CONTAINS
     if ( n_drydep > 0 )then
        allocate(this%velocity_patch(begp:endp, n_drydep));  this%velocity_patch(:,:) = nan
        allocate(this%rs_drydep_patch(begp:endp))         ;  this%rs_drydep_patch(:)  = nan
+!mvm 06/19/2023 soil NOx 
+       allocate(this%crf_drydep_patch(begp:endp))        ;  this%crf_drydep_patch(:)  = nan
     end if
 
   end subroutine InitAllocate
@@ -179,6 +182,11 @@ CONTAINS
     call hist_addfld1d ( fname='RS_DRYDEP_O3', units='s/m',  &
          avgflag='A', long_name='Stomatal Resistance Associated with Ozone Dry Deposition Velocity', &
          ptr_patch=this%rs_drydep_patch, default='inactive' )
+!mvm for soil NOx
+    this%crf_drydep_patch(begp:endp)= spval
+    call hist_addfld1d ( fname='CRF_DRYDEP', units='unitless',  &
+         avgflag='A', long_name='Canopy Reduction Factor Associated with NO Dry Deposition Velocity', &
+         ptr_patch=this%crf_drydep_patch, default='inactive')
 
   end subroutine InitHistory
 
@@ -250,7 +258,8 @@ CONTAINS
     real(r8) :: minlai       ! minimum of monthly lai
     real(r8) :: maxlai       ! maximum of monthly lai
     real(r8) :: rds         ! resistance for aerosols
-
+   !mvm 06/16/2023 for canopy redcution factor
+    real(r8) :: ratio_sai_lai     !ratio of stomata area index to lai [unitless]
     !mvm 11/30/2013
     real(r8) :: rlu_lai      ! constant to calculate rlu over bulk canopy
 
@@ -308,7 +317,8 @@ CONTAINS
          annlai     =>    canopystate_inst%annlai_patch         , & ! Input:  [real(r8) (:,:) ] 12 months of monthly lai from input data set
 
          velocity   =>    drydepvel_inst%velocity_patch         , & ! Output: [real(r8) (:,:) ] cm/sec
-         rs_drydep  =>    drydepvel_inst%rs_drydep_patch          & ! Output: [real(r8) (:)   ]  stomatal resistance associated with Ozone dry deposition velocity (s/m)
+         rs_drydep  =>    drydepvel_inst%rs_drydep_patch         , & ! Output: [real(r8) (:)   ]  stomatal resistance associated with Ozone dry deposition velocity (s/m)
+         crf_drydep  =>   drydepvel_inst%crf_drydep_patch       &    ! Output: [real(r8) (:)   ]  canopy reduction factor for NO associated with dry deposition velocity [unitless] mvm for soil NOx
          )
 
       !_________________________________________________________________
@@ -654,6 +664,60 @@ CONTAINS
                rc = 1._r8/((1._r8/rsmx(ispec))+(1._r8/rlux(ispec)) + &
                     (1._r8/(rdc+rclx(ispec)))+(1._r8/(rac(index_season,wesveg)+rgsx(ispec))))
                rc = max( 10._r8, rc)
+
+
+
+            !!!! CANOPY REDUCTION FACTOR FOR soil NO fluxes!!!! mvm 06/15/2023
+               ! canopy reduction factor for soil NO emission flux
+               ! based on Yan et al 2005 and Yienger and Levy 1995
+               !Probably there may be a cleaner way to code this. 
+               if ( drydep_list(ispec) == 'NO') then
+                  
+       !no canopy reduction factor (ie zero update) over bare land or elai < 0. 
+                  if( clmveg == noveg) then
+                     crf_drydep(pi)=1._r8                 
+                  else
+                     !sai=elai(pi)*ratio_sai_lai
+                     !ratio_sai_lai from Yienger and Levy 1995 Table 6      
+
+!needleaf forest (coniferous forest)              
+                     if (clmveg == ndllf_evr_tmp_tree .or. clmveg == ndllf_evr_brl_tree .or.  clmveg == ndllf_dcd_brl_tree ) ratio_sai_lai = 0.03_r8 
+
+!broadleaf evergreen (rainforest)
+                     if (clmveg == nbrdlf_evr_trp_tree .or. clmveg == nbrdlf_evr_tmp_tree ) ratio_sai_lai = 0.015_r8 
+            
+!broadleaf decidouos 
+                     if (clmveg == nbrdlf_dcd_trp_tree .or. clmveg == nbrdlf_dcd_tmp_tree .or. clmveg == nbrdlf_dcd_brl_tree) then
+                        if (index_season == 1 .or. index_season == 5) then 
+                           ! spring/summer
+                           ratio_sai_lai = 0.015_r8 
+                        else 
+                           !winter/fall
+                           ratio_sai_lai = 0.005_r8
+                        endif
+                     endif
+                     
+!shrubs
+                     if (clmveg == nbrdlf_evr_shrub  .or. clmveg == nbrdlf_dcd_tmp_shrub .or.  clmveg == nbrdlf_dcd_brl_shrub ) ratio_sai_lai = 0.005_r8 
+                     
+                     !grass
+                     if (clmveg == nc3_arctic_grass .or. clmveg == nc3_nonarctic_grass .or. clmveg == nc4_grass ) ratio_sai_lai = 0.005_r8 
+                     
+                     !crops
+                     if (clmveg == nc3crop .or. clmveg == nc3irrig ) ratio_sai_lai = 0.008_r8 
+                     if (clmveg >= npcropmin .and. clmveg <= npcropmax ) ratio_sai_lai = 0.008_r8 
+                     
+                     !CRF=exp((-ks*SAI)+exp(-kc*LAI))/2
+                     !ks=11.6 m2/m2  kc=0.32 m2/m2 (Yan et al 2005)
+                     !ks=8.75 kc=0.24  (Yienger and levy 1995)
+                     
+                     crf_drydep(pi)=(exp(-11.6_r8*elai(pi)*ratio_sai_lai)+exp(-0.32*elai(pi)))/2
+            
+                  endif !no veg 
+               endif ! CRF for NOx
+
+
+
                !
                ! assume no surface resistance for SO2 over water
                !

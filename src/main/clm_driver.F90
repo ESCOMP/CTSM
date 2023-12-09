@@ -1019,7 +1019,8 @@ contains
                water_inst%wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
                soil_water_retention_curve, crop_inst, ch4_inst, &
                photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
-               nutrient_competition_method, fireemis_inst)
+               nutrient_competition_method, fireemis_inst,                      &
+               drydepvel_inst)             !mvm 06/19/2023 for canopy reduction in soil NOx)
 
           call t_stopf('ecosysdyn')
 
@@ -1526,6 +1527,9 @@ contains
          h2osoi_ice         => waterstatebulk_inst%h2osoi_ice_col            , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)
          h2osoi_liq         => waterstatebulk_inst%h2osoi_liq_col            , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
          frac_iceold        => waterdiagnosticbulk_inst%frac_iceold_col           , & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
+         h2osoi_vol          => waterstatebulk_inst%h2osoi_vol_col           , & ! Input: [real(r8) (:,:) ]  volumetric soil water (m3/m3)   mvm 06/19/2023
+         h2osoi_vol_old     => waterstatebulk_inst%h2osoi_vol_old_col        , & ! Output: [real(r8) (:,:) ]  volumetric soil water for previous time step m3/m3   mvm 06/19/2023
+
          elai               => canopystate_inst%elai_patch               , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index with burying by snow
          esai               => canopystate_inst%esai_patch               , & ! Input:  [real(r8) (:)   ]  one-sided stem area index with burying by snow
          frac_veg_nosno     => canopystate_inst%frac_veg_nosno_patch     , & ! Output: [integer  (:)   ]  fraction of vegetation not covered by snow (0 OR 1) [-]
@@ -1544,6 +1548,8 @@ contains
       end do
 
       do c = bounds%begc,bounds%endc
+         !save volumetric water from previous time step (mvm)
+         h2osoi_vol_old(c, :)=h2osoi_vol(c, :)
          ! Reset flux from beneath soil/ice column
          eflx_bot(c)  = 0._r8
       end do

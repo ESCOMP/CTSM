@@ -247,12 +247,28 @@ contains
 
                ! Account for nitrification fluxes
                ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) - nf%f_nit_vr_col(c,j) * dt
+ 
+           !mvm 06/19/2023 --commented to consider removal of N2O and NOx 
+           !    ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) + nf%f_nit_vr_col(c,j) * dt &
+           !         * (1._r8 - nitrif_n2o_loss_frac)
 
-               ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) + nf%f_nit_vr_col(c,j) * dt &
-                    * (1._r8 - nitrif_n2o_loss_frac)
+              !mvm: Adding nitrified NH4 to NO3
+               ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) + nf%f_nit_vr_col(c,j) * dt
+              !mvm: Deducting N2O leakage from nitrification
+               ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%f_n2o_nit_vr_col(c,j) * dt
+              !mvm: Deducting NOx leakage from nitrification. Only NOx_nit not trapped in the canopy leaves the system 
+               ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%f_nox_nit_atmos_vr_col(c,j) * dt
+               
 
-               ! Account for denitrification fluxes
-               ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%f_denit_vr_col(c,j) * dt
+               !mvm: 06/19/2023 commented Account for denitrification fluxes
+        !      ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%f_denit_vr_col(c,j) * dt
+      
+               ! Deducting denitrification fluxes (denit accounts for N2O denit, N2 and NOx denit)
+               ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%f_n2o_denit_vr_col(c,j) * dt
+               ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%f_n2_denit_vr_col(c,j) * dt
+               ! Not all NOx denit leaves the system, only f_nox_denit_atmos         
+               ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%f_nox_denit_atmos_vr_col(c,j)* dt
+                          
 
                ! flux that prevents N limitation (when Carbon_only is set; put all into NH4)
                ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) + nf%supplement_to_sminn_vr_col(c,j)*dt

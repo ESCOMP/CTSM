@@ -61,6 +61,9 @@ module SoilBiogeochemNitrogenStateType
      real(r8)          :: totvegcthresh                  ! threshold for total vegetation carbon to zero out decomposition pools
 
      ! Matrix-cn
+! rain pulse for soil NOx (mvm 06/23/2023)
+     real(r8), pointer :: ldry_vr_col                              (:,:)   ! dry period for rain pulses for NOx from nitrification [hours]
+     real(r8), pointer :: pfactor_vr_col                              (:,:)   ! pulsing factor [unitless]
 
    contains
 
@@ -143,6 +146,10 @@ contains
     end if
     allocate(this%decomp_soiln_vr_col(begc:endc,1:nlevdecomp_full))
     this%decomp_soiln_vr_col(:,:)= nan
+
+!mvm 06/19/2023 rain pulse for NOx: dry period and pulse factor
+    allocate(this%ldry_vr_col      (begc:endc,1:nlevdecomp_full)) ; this%ldry_vr_col      (:,:) = nan
+    allocate(this%pfactor_vr_col      (begc:endc,1:nlevdecomp_full)) ; this%pfactor_vr_col      (:,:) = nan 
 
   end subroutine InitAllocate
 
@@ -409,6 +416,10 @@ contains
              do j = 1, nlevdecomp_full
                 this%smin_nh4_vr_col(c,j) = 0._r8
                 this%smin_no3_vr_col(c,j) = 0._r8
+!mvm 06/19/2023 soil nox rain pulse
+                this%ldry_vr_col(c,j) = 0._r8 
+                this%pfactor_vr_col(c,j) = 0._r8
+  
              end do
              this%smin_nh4_col(c) = 0._r8
              this%smin_no3_col(c) = 0._r8
@@ -729,6 +740,10 @@ contains
           if (use_nitrif_denitrif) then
              this%smin_no3_vr_col(i,j) = value_column
              this%smin_nh4_vr_col(i,j) = value_column
+!mvm 06/19/2023 soil Nox rain pulse
+             this%ldry_vr_col(i,j)     = value_column 
+             this%pfactor_vr_col(i,j)  = value_column
+ 
           end if
        end do
     end do
