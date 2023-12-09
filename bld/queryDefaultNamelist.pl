@@ -250,8 +250,6 @@ EOF
      $settings{'csmdata'}      = $inputopts{csmdata};
   } else {
      my @files = ( "$cfgdir/namelist_files/namelist_defaults_${model}.xml",
-                   "$cfgdir/namelist_files/namelist_defaults_${model}_tools.xml",
-                   "$cfgdir/namelist_files/namelist_defaults_drv.xml",
                    "$cfgdir/namelist_files/namelist_defaults_drydep.xml",
                  );
      push( @nl_defaults_files, @files );
