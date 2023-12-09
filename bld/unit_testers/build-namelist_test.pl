@@ -100,7 +100,7 @@ if (defined($opts{'csmdata'})) {
     $inputdata_rootdir = $ENV{'CSMDATA'};
 } else {
    # use yellowstone location as default
-   $inputdata_rootdir="/glade/p/cesm/cseg/inputdata";
+   $inputdata_rootdir="/glade/campaign/cesm/cesmdata/cseg/inputdata";
    print("WARNING:  -csmdata nor CSMDATA are set, using default yellowstone location: $inputdata_rootdir\n");
 }
 
