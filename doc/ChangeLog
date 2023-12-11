@@ -1,4 +1,248 @@
 ===============================================================
+Tag name: ctsm5.1.dev158
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu 07 Dec 2023 10:22:46 PM MST
+One-line Summary: First tag with testing moved to Derecho and working PE-layouts for Derecho
+
+Purpose and description of changes
+----------------------------------
+
+First tag for CTSM working and tested on Derecho.  Update CDEPS so that we can run with the NAG compiler.
+Working PE layouts. Changes from CESM3_dev over to main-dev.  Testing added for Derecho.
+Do some work to get tools testing working on Derecho, not completed.
+Add Derecho to the README files under tools/modify_input_files and tools/site_and_regional
+Remove some /glade/p references in the code. This is still an issue in the: doc, lilac, tools/mksurfdata_map,
+tools/contrib, tools/mkmapdata directories, and the namelist_defaults_ctsm_tools file.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+   Resolves Derecho transition: Tests and test infrastructure #1995
+   Resolves Updating Externals for Derecho causes Izumi nag tests to fail #2280
+   Resolves Transient simulation with ne30np4.pg3 fails due to floating point error #2268
+   Resolves Need to move location of DA_multidrv finidat files from /glade/p to /glade/campaign #2282
+   Works on Add support to test/tools/test_driver.sh for Derecho for NEON tools #2276
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   Added clm5_1_cam6 option to LND_TUNING_MODE
+   This is important in order to enable using latest clm5_1 physics with fully coupled cases
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   Make sure there are finidat files for clm5_1 with CAM6 for 1850 and 2000 (from clm5_0 version at f09
+   Make sure ne30np4.pg3 is setup
+   Some adjustments for ne30np4 and ne30np4.pg3 to make sure landuse.timeseries files are correct
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+   Add cesm3_dev test list from the CESM3_dev branch
+   Make sure ne30np4.pg3
+
+   Unit tests fail on Derecho because of ESMCI/ccs_config_cesm#131
+   Derecho tests with DEBUG=T, intel compiler, and mpi-serial fail because of ESMCI/ccs_config_cesm#130
+
+
+Testing summary: regular + fates + ctsm_sci + cesm3_dev
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No, bit-for-bit
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cdeps
+   cdeps -> cdeps1.0.24 (allows to run with NAG compiler)
+
+Pull Requests that document the changes (include PR ids):
+  #2269 -- First tag with testing moved to Derecho and working PE layouts
+(https://github.com/ESCOMP/ctsm/pull)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev157
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Tue Dec  5 09:48:26 MST 2023
+One-line Summary: Update Externals to work on Derecho
+
+Purpose and description of changes
+----------------------------------
+
+Updates Externals.cfg to work on Derecho.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+* Resolves #2217 ("Tags for building CTSM library on Derecho [WRF-CTSM]", https://github.com/ESCOMP/CTSM/issues/2217)
+* Resolves #2090 ("Update to cesm2_3_beta16 externals.", https://github.com/ESCOMP/CTSM/issues/2090)
+
+Known bugs introduced in this tag (include issue #):
+* #2280: Updating Externals for Derecho causes Izumi nag tests to fail (https://github.com/ESCOMP/CTSM/issues/2280)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+* All Izumi nag tests fail early in the run phase. This should be fixed in the next tag, which will be a more comprehensive Derecho-focused update.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS (except nag)
+
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+* cime: cime6.0.125 -> cime6.0.175
+* cmeps: cmeps0.14.21 -> cmeps0.14.43
+* cdeps: cdeps1.0.13 -> cdeps1.0.23
+* cpl7: cpl77.0.5 -> cpl77.0.7
+* parallelio: pio2_5_10 -> pio2_6_2
+
+Pull Requests that document the changes (include PR ids):
+* #2270: Update Externals.cfg to work on Derecho (https://github.com/ESCOMP/CTSM/pull/2270)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev156
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Thu Nov 30 15:27:18 MST 2023
+One-line Summary: Do not use Meier roughness by default
+
+Purpose and description of changes
+----------------------------------
+
+ctsm5.1.dev155 had turned on Meier2022 surface roughness calculation by default for 5.1 compsets. Several bugs have recently emerged that were not caught by pre-merge testing, so this tag reverts that change. Thus, the ZengWang2007 method is default for all compsets again.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values): 5.1 compsets now use ZengWang2007 method (instead of Meier2022) for roughness calculation.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- DIFF
+    izumi ------- DIFF
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: 5.1 compsets
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): new climate
+
+  No climate-evaluating run performed, as this change is reverting part of a commit thats barely a week old.
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+* #2273: Do not use Meier roughness by default, even with 5.1. (https://github.com/ESCOMP/CTSM/pull/2273)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev155
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Mon Nov 27 21:16:51 MST 2023
