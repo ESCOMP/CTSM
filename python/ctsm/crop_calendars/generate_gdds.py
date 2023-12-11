@@ -1,4 +1,4 @@
-paramfile_dir = "/glade/p/cesmdata/cseg/inputdata/lnd/clm2/paramdata"
+paramfile_dir = "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/paramdata"
 
 # Import other shared functions
 import os

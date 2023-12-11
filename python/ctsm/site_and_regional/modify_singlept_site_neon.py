@@ -31,81 +31,34 @@ Example:
 """
 # TODO (NS)
 # --[] If subset file not found run subset_data.py
-# --[] List of valid neon sites for all scripts come from one place.
 # --[] Download files only when available.
 
 #  Import libraries
 from __future__ import print_function
 
+import argparse
+from datetime import date
+from getpass import getuser
+import glob
+import logging
 import os
 import sys
-import glob
-import argparse
 import requests
 
-import logging
 import numpy as np
 import pandas as pd
 import xarray as xr
 from packaging import version
 
-from datetime import date
-from getpass import getuser
-
+from ctsm.path_utils import path_to_ctsm_root
 
 myname = getuser()
 
 
 # -- valid neon sites
-valid_neon_sites = [
-    "ABBY",
-    "BARR",
-    "BART",
-    "BLAN",
-    "BONA",
-    "CLBJ",
-    "CPER",
-    "DCFS",
-    "DEJU",
-    "DELA",
-    "DSNY",
-    "GRSM",
-    "GUAN",
-    "HARV",
-    "HEAL",
-    "JERC",
-    "JORN",
-    "KONA",
-    "KONZ",
-    "LAJA",
-    "LENO",
-    "MLBS",
-    "MOAB",
-    "NIWO",
-    "NOGP",
-    "OAES",
-    "ONAQ",
-    "ORNL",
-    "OSBS",
-    "PUUM",
-    "RMNP",
-    "SCBI",
-    "SERC",
-    "SJER",
-    "SOAP",
-    "SRER",
-    "STEI",
-    "STER",
-    "TALL",
-    "TEAK",
-    "TOOL",
-    "TREE",
-    "UKFS",
-    "UNDE",
-    "WOOD",
-    "WREF",
-    "YELL",
-]
+valid_neon_sites = glob.glob(
+    os.path.join(path_to_ctsm_root(), "cime_config", "usermods_dirs", "NEON", "[!d]*")
+)
 
 
 def get_parser():
@@ -153,14 +106,14 @@ def get_parser():
     parser.add_argument(
         "--inputdata-dir",
         help="""
-                Directory to write updated single point surface dataset.
+                Directory containing standard input files from CESM input data such as the surf_soildepth_file.
                 [default: %(default)s]
                 """,
         action="store",
         dest="inputdatadir",
         type=str,
         required=False,
-        default="/glade/p/cesmdata/cseg/inputdata"
+        default="/glade/p/cesmdata/cseg/inputdata",
     )
     parser.add_argument(
         "-d",
@@ -233,10 +186,7 @@ def get_neon(neon_dir, site_name):
             print("Download finished successfully for", site_name)
         elif response.status_code == 404:
             sys.exit(
-                "Data for this site "
-                + site_name
-                + " was not available on the neon server:"
-                + url
+                "Data for this site " + site_name + " was not available on the neon server:" + url
             )
 
         print("Download exit status code:  ", response.status_code)
@@ -270,12 +220,12 @@ def find_surffile(surf_dir, site_name, pft_16):
     """
 
     if pft_16:
-        sf_name = "surfdata_1x1_NEON_"+site_name+"*hist_16pfts_Irrig_CMIP6_simyr2000_*.nc"
+        sf_name = "surfdata_1x1_NEON_" + site_name + "*hist_16pfts_Irrig_CMIP6_simyr2000_*.nc"
     else:
-        sf_name = "surfdata_1x1_NEON_" +site_name+"*hist_78pfts_CMIP6_simyr2000_*.nc"
+        sf_name = "surfdata_1x1_NEON_" + site_name + "*hist_78pfts_CMIP6_simyr2000_*.nc"
 
-    print (os.path.join(surf_dir , sf_name))
-    surf_file = sorted(glob.glob(os.path.join(surf_dir , sf_name)))
+    print(os.path.join(surf_dir, sf_name))
+    surf_file = sorted(glob.glob(os.path.join(surf_dir, sf_name)))
 
     if len(surf_file) > 1:
         print("The following files found :", *surf_file, sep="\n- ")
@@ -287,10 +237,14 @@ def find_surffile(surf_dir, site_name, pft_16):
         surf_file = surf_file[0]
     else:
         sys.exit(
-            "Surface data for this site " + str(site_name) + " was not found:" + str(surf_dir) + str(sf_name) +
-            "." +
-            "\n" +
-            "Please run ./subset_data.py for this site."
+            "Surface data for this site "
+            + str(site_name)
+            + " was not found:"
+            + str(surf_dir)
+            + str(sf_name)
+            + "."
+            + "\n"
+            + "Please run ./subset_data.py for this site."
         )
     return surf_file
 
@@ -298,7 +252,7 @@ def find_surffile(surf_dir, site_name, pft_16):
 def find_soil_structure(args, surf_file):
     """
     Function for finding surface dataset soil
-    strucutre using surface data metadata.
+    structure using surface data metadata.
 
     In CLM surface data, soil layer information
     is in a file from surface data metadata
@@ -324,10 +278,8 @@ def find_soil_structure(args, surf_file):
     print("------------")
     # print (f1.attrs["Soil_texture_raw_data_file_name"])
 
-    clm_input_dir = os.path.join( args.inputdatadir, "lnd/clm2/rawdata/" )
-    surf_soildepth_file = os.path.join(
-        clm_input_dir, f1.attrs["Soil_texture_raw_data_file_name"]
-    )
+    clm_input_dir = os.path.join(args.inputdatadir, "lnd/clm2/rawdata/")
+    surf_soildepth_file = os.path.join(clm_input_dir, f1.attrs["Soil_texture_raw_data_file_name"])
 
     if os.path.exists(surf_soildepth_file):
         print(
@@ -345,9 +297,7 @@ def find_soil_structure(args, surf_file):
 
     else:
         sys.exit(
-            "Cannot find soil structure file : "
-            + surf_soildepth_file
-            + "for the surface dataset."
+            "Cannot find soil structure file : " + surf_soildepth_file + "for the surface dataset."
         )
 
     return soil_bot, soil_top
@@ -356,7 +306,7 @@ def find_soil_structure(args, surf_file):
 def update_metadata(nc, surf_file, neon_file, zb_flag):
     """
     Function for updating modified surface dataset
-    metadat for neon sites.
+    metadata for neon sites.
 
     Args:
         nc (xr Dataset): netcdf file including updated neon surface data
@@ -492,9 +442,9 @@ def download_file(url, fname):
         elif response.status_code == 404:
             print("File " + fname + "was not available on the neon server:" + url)
     except Exception as err:
-        print ('The server could not fulfill the request.')
-        print ('Something went wrong in downloading', fname)
-        print ('Error code:', err.code)
+        print("The server could not fulfill the request.")
+        print("Something went wrong in downloading", fname)
+        print("Error code:", err.code)
 
 
 def fill_interpolate(f2, var, method):
@@ -526,7 +476,6 @@ def fill_interpolate(f2, var, method):
 
 
 def main():
-
     args = get_parser().parse_args()
 
     # -- debugging option
@@ -536,10 +485,13 @@ def main():
     # Check if pandas is a recent enough version
     pdvers = pd.__version__
     if version.parse(pdvers) < version.parse("1.1.0"):
-        sys.exit("The pandas version in your python environment is too old, update to a newer version of pandas (>=1.1.0): version=%s", pdvers )
+        sys.exit(
+            """The pandas version in your python environment is too old,
+            update to a newer version of pandas (>=1.1.0): version=%s""",
+            pdvers,
+        )
 
-
-    file_time = check_neon_time()
+    # file_time = check_neon_time()
 
     # --  specify site from which to extract data
     site_name = args.site_name
@@ -550,11 +502,8 @@ def main():
 
     # --  directory structure
     current_dir = os.getcwd()
-    parent_dir = os.path.dirname(current_dir)
     clone_dir = os.path.abspath(os.path.join(__file__, "../../../.."))
     neon_dir = os.path.join(clone_dir, "neon_surffiles")
-
-    print("Present Directory", current_dir)
 
     # --  download neon data if needed
     neon_file = get_neon(neon_dir, site_name)
@@ -575,18 +524,11 @@ def main():
     # better suggestion by WW to write dzsoi to neon surface dataset
     # This todo needs to go to the subset_data
 
-    # TODO Will: if I sum them up , are they 3.5? (m) YES
-    print("soil_top:", soil_top)
-    print("soil_bot:", soil_bot)
-    print("Sum of soil top depths    :", sum(soil_top))
-    print("Sum of soil bottom depths :", sum(soil_bot))
-
     soil_top = np.cumsum(soil_top)
     soil_bot = np.cumsum(soil_bot)
     soil_mid = 0.5 * (soil_bot - soil_top) + soil_top
     # print ("Cumulative sum of soil bottom depths :", sum(soil_bot))
 
-    obs_top = df["biogeoTopDepth"] / 100
     obs_bot = df["biogeoBottomDepth"] / 100
 
     # -- Mapping surface dataset and neon soil levels
@@ -635,12 +577,10 @@ def main():
         # -- Check to make sure the rounded oc is not higher than carbon_tot.
         # -- Use carbon_tot if estimated_oc is bigger than carbon_tot.
 
-        if estimated_oc > carbon_tot:
-            estimated_oc = carbon_tot
+        estimated_oc = min(estimated_oc, carbon_tot)
 
         layer_depth = (
-            df["biogeoBottomDepth"][bin_index[soil_lev]]
-            - df["biogeoTopDepth"][bin_index[soil_lev]]
+            df["biogeoBottomDepth"][bin_index[soil_lev]] - df["biogeoTopDepth"][bin_index[soil_lev]]
         )
 
         # f2["ORGANIC"][soil_lev] = estimated_oc * bulk_den / 0.58
@@ -709,9 +649,7 @@ def main():
         print("Updated  : ", f2.PCT_CROP.values)
 
         print("Updating PCT_NAT_PFT")
-        #print (f2.PCT_NAT_PFT)
         print(f2.PCT_NAT_PFT.values[0])
-        #f2.PCT_NAT_PFT.values[0] = [[100.0]]
         print(f2.PCT_NAT_PFT[0].values)
 
     out_dir = args.out_dir
@@ -729,13 +667,4 @@ def main():
     print(f2.attrs)
     f2.to_netcdf(path=wfile, mode="w", format="NETCDF3_64BIT")
 
-    print(
-        "Successfully updated surface data file for neon site("
-        + site_name
-        + "):\n - "
-        + wfile
-    )
-
-
-if __name__ == "__main__":
-    main()
+    print("Successfully updated surface data file for neon site(" + site_name + "):\n - " + wfile)

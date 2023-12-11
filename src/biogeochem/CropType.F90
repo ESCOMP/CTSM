@@ -23,6 +23,7 @@ module CropType
   private
   !
   ! !PUBLIC DATA TYPES:
+  public :: latbaset
   !
 
   ! Possible values of cphase
@@ -371,43 +372,32 @@ contains
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: c, l, g, p, m, ivt ! indices
+    integer :: l, g, p, ivt ! indices
+    logical :: latvary_baset
 
     character(len=*), parameter :: subname = 'InitCold'
     !-----------------------------------------------------------------------
 
-!DLL - added wheat & sugarcane restrictions to base T vary by lat
+    latvary_baset = trim(this%baset_mapping) == baset_map_latvary
+    if (.not. latvary_baset) then
+        this%latbaset_patch(bounds%begp:bounds%endp) = nan
+    end if
+
     do p= bounds%begp,bounds%endp
-       g   = patch%gridcell(p)
-       ivt = patch%itype(p)
+       l = patch%landunit(p)
 
        this%nyrs_crop_active_patch(p) = 0
 
-       if ( grc%latdeg(g) >= 0.0_r8 .and. grc%latdeg(g) <= 30.0_r8) then
-          this%latbaset_patch(p)=pftcon%baset(ivt)+12._r8-0.4_r8*grc%latdeg(g)
-       else if (grc%latdeg(g) < 0.0_r8 .and. grc%latdeg(g) >= -30.0_r8) then
-          this%latbaset_patch(p)=pftcon%baset(ivt)+12._r8+0.4_r8*grc%latdeg(g)
-       else
-          this%latbaset_patch(p)=pftcon%baset(ivt)
-       end if
-       if ( trim(this%baset_mapping) == baset_map_constant ) then
-          this%latbaset_patch(p) = nan
+       if (lun%itype(l) == istcrop) then
+          g = patch%gridcell(p)
+          ivt = patch%itype(p)
+          this%fertnitro_patch(p) = fert_cft(g,ivt)
+
+          if (latvary_baset) then
+              this%latbaset_patch(p) = latbaset(pftcon%baset(ivt), grc%latdeg(g), this%baset_latvary_intercept, this%baset_latvary_slope)
+          end if
        end if
     end do
-!DLL -- end of mods
-
-    if (use_crop) then
-       do p= bounds%begp,bounds%endp
-          g = patch%gridcell(p)
-          l = patch%landunit(p)
-          c = patch%column(p)
-
-          if (lun%itype(l) == istcrop) then
-             m = patch%itype(p)
-             this%fertnitro_patch(p) = fert_cft(g,m)
-          end if
-       end do
-    end if
 
   end subroutine InitCold
 
@@ -655,6 +645,16 @@ contains
                 long_name='crop sowing dates for this patch this year', units='day of year', &
                 scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=this%sdates_thisyr_patch)
+           call restartvar(ncid=ncid, flag=flag, varname='swindow_starts_thisyr_patch', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxsowings', switchdim=.true., &
+                long_name='sowing window start dates for this patch this year', units='day of year', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%swindow_starts_thisyr_patch)
+           call restartvar(ncid=ncid, flag=flag, varname='swindow_ends_thisyr_patch', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxsowings', switchdim=.true., &
+                long_name='sowing window end dates for this patch this year', units='day of year', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%swindow_ends_thisyr_patch)
            ! Fill variable(s) derived from read-in variable(s)
            if (flag == 'read' .and. readvar) then
              do p = bounds%begp,bounds%endp
@@ -971,5 +971,25 @@ contains
     end if
 
   end subroutine checkDates
+
+  real(r8) function latbaset(baset, latdeg, baset_latvary_intercept, baset_latvary_slope)
+    ! !ARGUMENTS:
+    real(r8), intent(in) :: baset
+    real(r8), intent(in) :: latdeg
+    real(r8), intent(in) :: baset_latvary_intercept
+    real(r8), intent(in) :: baset_latvary_slope
+
+    ! Was originally
+    !     maxlat = baset_latvary_intercept / baset_latvary_slope
+    !     if (abs(latdeg) > maxlat) then
+    !         latbaset = baset
+    !     else
+    !         latbaset = baset + baset_latvary_intercept - baset_latvary_slope*abs(latdeg)
+    !     end if
+    ! But the one-liner below should improve efficiency, at least marginally.
+
+    latbaset = baset + baset_latvary_intercept - min(baset_latvary_intercept, baset_latvary_slope * abs(latdeg))
+
+  end function latbaset
 
 end module CropType

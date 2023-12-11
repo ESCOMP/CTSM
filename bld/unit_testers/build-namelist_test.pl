@@ -42,7 +42,7 @@ sub make_env_run {
     my %settings = @_;
 
     # Set default settings
-    my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE" );
+    my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE", NEONSITE=>"" );
     # Set any settings that came in from function call
     foreach my $item ( keys(%settings) ) {
        $env_vars{$item} = $settings{$item};
@@ -139,7 +139,7 @@ if (defined($opts{'csmdata'})) {
     $inputdata_rootdir = $ENV{'CSMDATA'};
 } else {
    # use yellowstone location as default
-   $inputdata_rootdir="/glade/p/cesm/cseg/inputdata";
+   $inputdata_rootdir="/glade/campaign/cesm/cesmdata/cseg/inputdata";
    print("WARNING:  -csmdata nor CSMDATA are set, using default yellowstone location: $inputdata_rootdir\n");
 }
 
@@ -381,7 +381,7 @@ foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO
                    "JORN", "LAJA", "MOAB", "OAES", "OSBS", "SCBI", "SOAP", "STER", "TOOL",
                    "UNDE", "YELL"
  ) {
-   &make_env_run();
+   &make_env_run( NEONSITE=>"$site" );
    #
    # Concatonate  default usermods and specific sitetogether expanding env variables while doing that
    #
@@ -400,7 +400,7 @@ foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO
    #
    # Now run  the site
    #
-   my $options = "-res CLM_USRDAT -clm_usr_name NEON -no-megan -bgc bgc -sim_year 2018 -infile $namelistfile";
+   my $options = "--res CLM_USRDAT --clm_usr_name NEON --no-megan --bgc bgc --use_case 2018_control --infile $namelistfile";
    eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
    $cfiles->checkfilesexist( "$options", $mode );
