@@ -100,16 +100,7 @@ infrastructure should be run when appropriate, as described below.
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    cheyenne - 
-
-  tools-tests (test/tools) (if tools have been changed):
-
-    cheyenne - 
-
-  PTCLM testing (tools/shared/PTCLM/test): (if cime or cime_config are changed)
-  (PTCLM is being deprecated, so we only expect this to be done on occasion)
-
-    cheyenne - 
+    derecho - 
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
@@ -117,13 +108,10 @@ infrastructure should be run when appropriate, as described below.
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ---- 
-    izumi ------- 
-  
-  fates tests:
-    cheyenne ---- 
-
-  any other testing (give details below):
+    derecho_intel ----- 
+    izumi_intel ------- 
+    izumi_nag --------- 
+    izumi_gnu --------- 
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
