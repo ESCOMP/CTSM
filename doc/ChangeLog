@@ -1,12 +1,11 @@
 ===============================================================
 Tag name: ctsm5.1.dev159
 Originator(s): multiple (slevis (Sam Levis), afoster (Adrianna Foster), erik (Erik Kluzek), wwieder (Will Wieder), glemieux (Greg Lemieux), oleson (Keith Oleson), sacks (Bill Sacks), samrabin (Sam Rabin), santos (Sean Patrick Santos))
-Date: Fri Dec  8 16:36:37 MST 2023
+Date: Tue 12 Dec 2023 11:10:26 AM MST
 One-line Summary: Various BFB fixes and updates
 
 Purpose and description of changes
 ----------------------------------
-
 #2253 Fix subset_data error (slevis)
 #2271 bfb bug-fix allowing us to make Meier2022 the default; making it
 the default comes in a later tag (slevis)
@@ -17,7 +16,6 @@ the default comes in a later tag (slevis)
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
-
 Does this tag change answers significantly for any of the following physics configurations?
 (Details of any changes will be given in the "Answer changes" section below.)
 
@@ -31,7 +29,6 @@ Does this tag change answers significantly for any of the following physics conf
 
 [ ] clm4_5
 
-
 Bugs fixed or introduced
 ------------------------
 CTSM issues fixed (include CTSM Issue #):
@@ -42,30 +39,9 @@ Fixes #2075
 Fixes #2229
 Fixes #2239
 
-Known bugs introduced in this tag (include issue #):
-
-Notes of particular relevance for users
----------------------------------------
-None
-
-Notes of particular relevance for developers:
----------------------------------------------
-Changes to tests or testing:
-Follow up with Erik about "does not exist" failures
-
 Testing summary:
 ----------------
-[Remove any lines that don't apply.]
-
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
-
-  build-namelist tests (if CLMBuildNamelist.pm has changed):
-
-    derecho -
-
-  tools-tests (test/tools) (if tools have been changed):
-
-    derecho -
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
@@ -73,21 +49,11 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho ----- 2 FAILs that already appear in dev158, follow up w Erik, else OK
-    izumi ------- 1 FAIL, follow up w Erik, else PASS
-
-  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    derecho -----
-    izumi -------
-
-  any other testing (give details below):
-
-If the tag used for baseline comparisons was NOT the previous tag, note that here:
-
+    derecho ----- OK
+    izumi ------- PASS
 
 Answer changes
 --------------
-
 Changes answers relative to baseline: NO
 
 Other details
