@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+release-cesm2.2.04   erik 12/12/2023 Update PElayout and tests to work on Derecho, remove tools add notes around that, fix some tests
 release-cesm2.2.03   erik 12/04/2023 Quick tag with history update needed for SCAM
 release-cesm2.2.02   erik 08/23/2023 Change the sorting method for history files to help with performance on lustre filesystems
 release-cesm2.2.01   erik 09/02/2020 Fix clm4_5 initial conditions

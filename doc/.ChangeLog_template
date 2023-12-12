@@ -77,15 +77,7 @@ CTSM testing:
 
   build-namelist tests:
 
-    cheyenne - 
-
-  tools-tests (test/tools):
-
-    cheyenne - 
-
-  PTCLM testing (tools/shared/PTCLM/test):
-
-    cheyenne - 
+    derecho - 
 
   python testing (see instructions in python/README.md; document testing done):
 
@@ -93,8 +85,10 @@ CTSM testing:
 
   regular tests (aux_clm):
 
-    cheyenne ---- 
-    izumi ------- 
+    derecho_intel ----- 
+    izumi_intel ------- 
+    izumi_nag --------- 
+    izumi_gnu --------- 
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
