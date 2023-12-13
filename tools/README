@@ -1,4 +1,4 @@
-$CTSMROOT/tools/README					Dec/08/2023
+$CTSMROOT/tools/README					Dec/05/2023
 
 IMPORTANT NOTE: Normally tools for creating input datasets for CLM
 such as surface dataset creation would be here. As well as post processing
@@ -14,3 +14,9 @@ Let us know if you run into issues here by posting to the CESM Forum
 or sending email to ctsm-software@ucar.edu
 
    https://bb.cgd.ucar.edu/cesm/forums/ctsm-clm-mosart-rtm.134/
+
+See this file for the latest information:
+
+   https//docs.google.com/document/d/1FOluB3C7RTHu8vArWGjACwFjGJfxkLcaGP00l0585_k
+
+  And the discussions/issues on github.com/CTSM regarding this 
