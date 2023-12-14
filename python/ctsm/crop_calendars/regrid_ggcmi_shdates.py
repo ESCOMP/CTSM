@@ -151,8 +151,12 @@ def main(
     os.remove(templatefile)
 
 
-# Process input arguments
 def regrid_ggcmi_shdates_arg_process():
+    """Process input arguments
+
+    Returns:
+        argparse.ArgumentParser: Arguments/options
+    """
 
     # set up logging allowing user control
     setup_logging_pre_config()
