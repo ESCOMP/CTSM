@@ -32,8 +32,8 @@ from ctsm.utils import import_coord_1d, import_coord_2d
 # pylint: disable=too-many-public-methods
 # Allow all the instance attributes that we need
 # pylint: disable=too-many-instance-attributes
-class TestRegridGgcmiShdates(unittest.TestCase):
-    # Tests the regrid_ggcmi_shdates subroutines
+class TestUtilsImportCoord(unittest.TestCase):
+    # Tests the importcoord* subroutines from utils.py
 
     def setUp(self):
         """Setup for trying out the methods"""
