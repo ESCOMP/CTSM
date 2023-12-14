@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Unit tests for regrid_ggcmi_shdates subroutines:
+Unit tests for utils.py functions related to importing coordinate variables
 """
 
 import unittest

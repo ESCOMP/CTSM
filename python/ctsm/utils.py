@@ -192,16 +192,34 @@ def write_output(file, file_in, file_out, file_type):
     file.close()
 
 
-# Import 1-d latitude or longitude variable from a CESM history file (e.g., name lat or lon) and return it as a DataArray that can be used for writing CESM input files
 def import_coord_1d(ds, coordName):
+    """Import 1-d coordinate variable
+
+    Args:
+        ds (xarray Dataset): Dataset whose coordinate you want to import.
+        coordName (str): Name of coordinate to import
+
+    Returns:
+        xarray DataArray: DataArray corresponding to the requested coordinate.
+    """
     da = ds[coordName]
     if len(da.dims) != 1:
         abort(f"Expected 1 dimension for {coordName}; found {len(da.dims)}: {da.dims}")
     return da, len(da)
 
-
-# Import 1-d latitude or longitude variable from a CESM history file (e.g., name LATIXY or LONGXY) and return it as a 1-d DataArray that can be used as a coordinate for writing CESM input files
+# 
 def import_coord_2d(ds, coordName, varName):
+    """Import 2-d latitude or longitude variable from a CESM history file (e.g., name LATIXY or LONGXY) and return it as a 1-d DataArray that can be used as a coordinate for writing CESM input files
+
+    Args:
+        ds (xarray Dataset): Dataset whose coordinate you want to import.
+        coordName (str): Name of coordinate to import
+        varName (str): Name of variable with dimension coordName
+
+    Returns:
+        xarray DataArray: 1-d variable that can be used as a coordinate for writing CESM input files
+        int: Length of that variable
+    """
     da = ds[varName]
     thisDim = [x for x in da.dims if coordName in x]
     if len(thisDim) != 1:

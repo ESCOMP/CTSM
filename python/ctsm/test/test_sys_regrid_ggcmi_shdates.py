@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""System tests for fsurdat_modifier
+"""System tests for regrid_ggcmi_shdates.py
 
 """
 
