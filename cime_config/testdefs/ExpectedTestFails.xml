@@ -8,6 +8,14 @@
     <entry issue="#840"            >FAIL PEPEM_Ld1.f10_f10_musgs.I2000Clm50BgcCrop.hobart_intel.clm-crop RUN</entry>
     <entry issue="#1637"           >FAIL SMS.f10_f10_musgs.I2000Clm50BgcCrop.izumi_pgi.clm-crop RUN</entry>
     <entry issue="#1637"           >FAIL SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.izumi_pgi.clm-crop RUN</entry>
+    <entry issue="#2289"           >FAIL ERP_P180x2_D.f19_g17.I2000Clm50SpRtmFl.derecho_intel.clm-default RUN</entry>
+    <entry issue="#2289"           >FAIL ERP_P180x2_D_Ld5.f19_g17.I2000Clm50Sp.derecho_intel.clm-default RUN</entry>
+    <entry issue="#2289"           >FAIL ERP_P180x2_D_Ld5.f19_g17_gl4.I1850Clm50BgcCropG.derecho_intel.clm-default RUN</entry>
+    <entry issue="#2289"           >FAIL ERP_P180x2_D_Ld5.f19_g17_gl4.I1850Clm50BgcCropG.derecho_intel.clm-default RUN</entry>
+    <entry issue="#2296"           >FAIL ERS_D_Ld5_P512x3.f19_g16.I2000Clm50SpGs.derecho_intel.clm-waccmx_offline RUN</entry>
+    <entry issue="#2296"           >FAIL ERP_P180x2_D.f19_g17.I2000Clm50SpRtmFl.derecho_intel.clm-default RUN</entry>
+    <entry issue="#2296"           >FAIL ERP_P180x2_D_Ld5.f19_g17.I2000Clm50BgcDvCrop.derecho_intel.clm-crop RUN</entry>
+    <entry issue="#2296"           >FAIL LII2FINIDATAREAS_D_P360x2_Ld1.f09_g16_gl4.I1850Clm50BgcCrop.derecho_intel.clm-compatible_finidat_f09 RUN</entry>
   </category>
   <category name="fates">
     <entry issue="NGEET/fates/#559" >FAIL SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruGs.derecho_intel.clm-FatesHydro RUN</entry>
