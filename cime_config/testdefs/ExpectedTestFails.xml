@@ -12,10 +12,18 @@
     <entry issue="#2289"           >FAIL ERP_P180x2_D_Ld5.f19_g17.I2000Clm50Sp.derecho_intel.clm-default RUN</entry>
     <entry issue="#2289"           >FAIL ERP_P180x2_D_Ld5.f19_g17_gl4.I1850Clm50BgcCropG.derecho_intel.clm-default RUN</entry>
     <entry issue="#2289"           >FAIL ERP_P180x2_D_Ld5.f19_g17_gl4.I1850Clm50BgcCropG.derecho_intel.clm-default RUN</entry>
+    <entry issue="#2289"           >FAIL ERS_Ly3_P128x2.f10_f10_musgs.IHistClm50BgcCropG.derecho_intel.clm-cropMonthOutput RUN</entry>
+    <entry issue="#2289"           >FAIL ERP_P64x2_Lm25.f10_f10_musgs.I2000Clm50BgcDvCrop.derecho_intel.clm-monthly RUN</entry>
+    <entry issue="#2289"           >FAIL ERP_P128x2_Lm36.f10_f10_musgs.I2000Clm50BgcCrop.derecho_intel.clm-clm50cropIrrigMonth_interp RUN</entry>
+    <entry issue="#2289"           >FAIL ERP_P128x2_Ly3.f10_f10_musgs.I2000Clm50BgcCrop.derecho_intel.clm-irrig_o3_reduceOutput RUN</entry>
+    <entry issue="#2289"           >FAIL ERP_Ly3_P128x2.f10_f10_musgs.IHistClm50BgcCrop.derecho_intel.clm-cropMonthOutput RUN</entry>
+    <entry issue="#2289"           >FAIL ERP_P128x2_Lm25.f10_f10_musgs.I2000Clm50BgcDvCrop.derecho_intel.clm-monthly RUN</entry>
     <entry issue="#2296"           >FAIL ERS_D_Ld5_P512x3.f19_g16.I2000Clm50SpGs.derecho_intel.clm-waccmx_offline RUN</entry>
     <entry issue="#2296"           >FAIL ERP_P180x2_D.f19_g17.I2000Clm50SpRtmFl.derecho_intel.clm-default RUN</entry>
     <entry issue="#2296"           >FAIL ERP_P180x2_D_Ld5.f19_g17.I2000Clm50BgcDvCrop.derecho_intel.clm-crop RUN</entry>
-    <entry issue="#2296"           >FAIL LII2FINIDATAREAS_D_P360x2_Ld1.f09_g16_gl4.I1850Clm50BgcCrop.derecho_intel.clm-compatible_finidat_f09 RUN</entry>
+    <entry issue="#2296"           >FAIL LII2FINIDATAREAS_D_P384x2_Ld1.f09_g16_gl4.I1850Clm50BgcCrop.derecho_intel.clm-compatible_finidat_f09 RUN</entry>
+    <entry issue="#2296"           >FAIL ERP_D_Ld3_P64x2.f10_f10_musgs.I2000Clm50BgcCruGs.derecho_intel.clm-default RUN</entry>
+
   </category>
   <category name="fates">
     <entry issue="NGEET/fates/#559" >FAIL SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruGs.derecho_intel.clm-FatesHydro RUN</entry>
