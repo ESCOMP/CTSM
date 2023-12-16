@@ -1,4 +1,80 @@
 ===============================================================
+Tag name:  release-clm5.0.37
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date:  Fri 15 Dec 2023 07:38:12 PM MST
+One-line Summary: Update test list to Derecho, and add working PE layouts
+
+Purpose of this version:
+------------------------
+
+Changes needed to run on Derecho. Flip the test list from Cheyenne to Derecho.
+Add working PE layouts. Remove tools and tools testing. Update readme files.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #):
+   #2285 -- release-clm5.0 tag for Derecho
+
+Science changes since: release-clm5.0.36
+   None
+
+Software changes since: release-clm5.0.36
+   Move testing from Cheyenne to Derecho
+   Add working PE-layouts for Derecho
+   Remove tools and tools testing
+   Update README files
+
+Changes to User Interface since:  release-clm5.0.36
+   None
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    derecho - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    derecho_intel ----- OK
+    izumi_nag --------- OK
+    izumi_intel ------- OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+   cism   -> cism-release-cesm2.1.2_03
+   mosart -> release-cesm2.0.04
+   rtm    -> release-cesm2.0.04
+   cime   -> cime5.6.47
+   fates  -> sci.1.30.0_api.8.0.0
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #2286 -- Port of PE-layouts and tests to Derecho
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.36
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date:  Fri 08 Dec 2023 02:24:39 PM MST

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+release-clm5.0.37     erik 12/15/2023 Update test list to Derecho, and add working PE layouts
 release-clm5.0.36     erik 12/08/2023 Tech note update, and update externals to ones that work on Derecho
 release-clm5.0.35     erik 02/08/2022 Add SSP3-7.0 extension, and SMYLE 1850 and transient, compsets and use-cases
 release-clm5.0.34     erik 04/20/2020 Update documentation for release-clm5.0 branch, and fix issues with no-anthro surface dataset creation
