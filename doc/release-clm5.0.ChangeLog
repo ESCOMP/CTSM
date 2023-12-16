@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  release-clm5.0.37
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date:  Fri 15 Dec 2023 07:38:12 PM MST
+Date: Fri 15 Dec 2023 08:32:56 PM MST
 One-line Summary: Update test list to Derecho, and add working PE layouts
 
 Purpose of this version:
@@ -46,8 +46,8 @@ Testing:
   regular tests (aux_clm):
 
     derecho_intel ----- OK
-    izumi_nag --------- OK
-    izumi_intel ------- OK
+    izumi_nag --------- PASS
+    izumi_intel ------- PASS
 
 Summary of Answer changes:
 -------------------------
