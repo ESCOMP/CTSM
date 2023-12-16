@@ -38,26 +38,20 @@ Testing:
     cheyenne - 
     izumi ----
 
-  tools-tests (components/clm/test/tools):
-
-    cheyenne - 
-    izumi ----
-
   regular tests (aux_clm):
 
-    derecho_intel ---- 
+    derecho_intel ----- 
     izumi_nag --------- 
-    izumi_pgi --------- 
     izumi_intel ------- 
 
   regular tests (prealpha):
 
-    derecho_intel -
+    derecho_intel --
     izumi_nag ------
 
   regular tests (prebeta):
 
-    derecho_intel -
+    derecho_intel --
     izumi_nag ------
 
 Summary of Answer changes:
