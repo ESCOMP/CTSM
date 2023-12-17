@@ -62,6 +62,7 @@ def main(
     for cmd in ["module load cdo; cdo"]:
         run_and_check(f"{cmd} --help")
 
+    previous_dir = os.getcwd()
     os.chdir(regrid_input_directory)
     if not os.path.exists(regrid_output_directory):
         os.makedirs(regrid_output_directory)
@@ -148,6 +149,7 @@ def main(
 
     # Delete template file, which is no longer needed
     os.remove(templatefile)
+    os.chdir(previous_dir)
 
 
 def regrid_ggcmi_shdates_arg_process():
