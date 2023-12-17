@@ -17,6 +17,24 @@ from ctsm import ctsm_logging
 logger = logging.getLogger(__name__)
 
 
+def main():
+    """
+    Description
+    -----------
+    Calls function that regrids GGCMI sowing and harvest dates.
+    """
+
+    args = regrid_ggcmi_shdates_arg_process()
+    regrid_ggcmi_shdates(
+        args.regrid_resolution,
+        args.regrid_template_file,
+        args.regrid_input_directory,
+        args.regrid_output_directory,
+        args.extension,
+        args.crop_list,
+    )
+
+
 def run_and_check(cmd):
     result = run(
         cmd,
@@ -48,7 +66,7 @@ def define_arguments(parser):
     return parser
 
 
-def main(
+def regrid_ggcmi_shdates(
     regrid_resolution,
     regrid_template_file_in,
     regrid_input_directory,
@@ -208,21 +226,3 @@ def regrid_ggcmi_shdates_arg_process():
 
     return args
 
-
-if __name__ == "__main__":
-    ###############################
-    ### Process input arguments ###
-    ###############################
-    args = regrid_ggcmi_shdates_arg_process()
-
-    ###########
-    ### Run ###
-    ###########
-    main(
-        args.regrid_resolution,
-        args.regrid_template_file,
-        args.regrid_input_directory,
-        args.regrid_output_directory,
-        args.extension,
-        args.crop_list,
-    )

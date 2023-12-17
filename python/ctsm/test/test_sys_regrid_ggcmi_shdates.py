@@ -22,7 +22,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm import unit_testing
-from ctsm.crop_calendars.regrid_ggcmi_shdates import main as regrid_ggcmi_shdates
+from ctsm.crop_calendars.regrid_ggcmi_shdates import regrid_ggcmi_shdates
 from ctsm.crop_calendars.regrid_ggcmi_shdates import regrid_ggcmi_shdates_arg_process
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
