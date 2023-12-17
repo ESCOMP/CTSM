@@ -5,17 +5,16 @@ import argparse
 import sys
 import xarray as xr
 import numpy as np
+import logging
 
 # -- add python/ctsm  to path (needed if we want to run regrid_ggcmi_shdates stand-alone)
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm.utils import abort, import_coord_1d, import_coord_2d
-from ctsm.ctsm_logging import (
-    setup_logging_pre_config,
-    add_logging_args,
-    process_logging_args,
-)
+from ctsm import ctsm_logging
+
+logger = logging.getLogger(__name__)
 
 
 def run_and_check(cmd):
@@ -57,7 +56,7 @@ def main(
     extension,
     crop_list,
 ):
-    print(f"Regridding GGCMI crop calendars to {regrid_resolution}:")
+    logger.info(f"Regridding GGCMI crop calendars to {regrid_resolution}:")
 
     # Ensure we can call necessary shell script(s)
     for cmd in ["module load cdo; cdo"]:
@@ -128,7 +127,7 @@ def main(
         if crop_list is not None and this_crop not in crop_list:
             continue
 
-        print("    " + this_crop)
+        logger.info("    " + this_crop)
         f2 = os.path.join(regrid_output_directory, f)
         f3 = f2.replace(extension, f"_nninterp-{regrid_resolution}{extension}")
 
@@ -159,7 +158,7 @@ def regrid_ggcmi_shdates_arg_process():
     """
 
     # set up logging allowing user control
-    setup_logging_pre_config()
+    ctsm_logging.setup_logging_pre_config()
 
     parser = argparse.ArgumentParser(
         description="Regrids raw sowing and harvest date files provided by GGCMI to a target CLM resolution."
@@ -194,9 +193,11 @@ def regrid_ggcmi_shdates_arg_process():
         help="List of GGCMI crops to process; e.g., '--crop-list mai_rf,mai_ir'. If not provided, will process all GGCMI crops.",
         default=None,
     )
+    ctsm_logging.add_logging_args(parser)
 
     # Get arguments
     args = parser.parse_args(sys.argv[1:])
+    ctsm_logging.process_logging_args(args)
 
     # Process arguments
     args.regrid_template_file = os.path.realpath(args.regrid_template_file)

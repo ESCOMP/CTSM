@@ -5,9 +5,18 @@ import datetime as dt
 import cftime
 import sys
 import argparse
+import logging
 
 import cropcal_utils as utils
 import regrid_ggcmi_shdates
+
+# -- add python/ctsm  to path (needed if we want to run regrid_ggcmi_shdates stand-alone)
+_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
+sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm import ctsm_logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_cft(y):
@@ -200,17 +209,16 @@ def main(
         if thiscrop_ggcmi == None:
             if c == 1:
                 raise ValueError(f"First crop ({thiscrop_clm}) must have a GGCMI type")
-            print(
+            logger.info(
                 "Filling %s with dummy data (%d of %d)..." % (str(thiscrop_clm), c, len(crop_dict))
             )
 
         # Otherwise, import crop calendar file
         else:
-            if verbose:
-                print(
-                    "Importing %s -> %s (%d of %d)..."
-                    % (str(thiscrop_ggcmi), str(thiscrop_clm), c, len(crop_dict))
-                )
+            logger.info(
+                "Importing %s -> %s (%d of %d)..."
+                % (str(thiscrop_ggcmi), str(thiscrop_clm), c, len(crop_dict))
+            )
 
             file_ggcmi = os.path.join(
                 regridded_ggcmi_files_dir,
@@ -227,8 +235,7 @@ def main(
         for thisvar_clm in variable_dict:
             # Get GGCMI netCDF info
             varname_ggcmi = variable_dict[thisvar_clm]["name_ggcmi"]
-            if verbose:
-                print("    Processing %s..." % varname_ggcmi)
+            logger.info("    Processing %s..." % varname_ggcmi)
 
             # Get CLM netCDF info
             varname_clm = thisvar_clm + "1_" + str(thiscrop_int)
@@ -299,19 +306,22 @@ def main(
             )
 
             # Save
-            if verbose:
-                print("    Saving %s..." % varname_ggcmi)
+            logger.info("    Saving %s..." % varname_ggcmi)
             thisvar_da.to_netcdf(file_clm, mode="a", format="NETCDF3_CLASSIC")
 
         cropcal_ds.close()
 
-    print("Done!")
+    logger.info("Done!")
 
 
 if __name__ == "__main__":
     ###############################
     ### Process input arguments ###
     ###############################
+    
+    # set up logging allowing user control
+    ctsm_logging.setup_logging_pre_config()
+    
     parser = argparse.ArgumentParser(
         description="Converts raw sowing and harvest date files provided by GGCMI into a format that CLM can read, optionally at a target resolution."
     )
@@ -361,24 +371,19 @@ if __name__ == "__main__":
         default=2000,
     )
     parser.add_argument(
-        "-v",
-        "--verbose",
-        help="Whether to print verbose messages",
-        type=bool,
-        default=True,
-    )
-    parser.add_argument(
         "--ggcmi-author",
         help="Author of original GGCMI files",
         type=str,
         default="Jonas Jägermeyr (jonas.jaegermeyr@columbia.edu)",
     )
+    ctsm_logging.add_logging_args(parser)
 
     # Arguments for regridding
     parser = regrid_ggcmi_shdates.define_arguments(parser)
 
     # Get arguments
     args = parser.parse_args(sys.argv[1:])
+    ctsm_logging.process_logging_args(args)
 
     ###########
     ### Run ###
