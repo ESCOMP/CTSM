@@ -67,7 +67,7 @@ class TestRegridGgcmiShdates(unittest.TestCase):
             "5x5amazon",
             "-rt",
             regrid_template_file,
-            "--crop-list",
+            "--regrid-crop-list",
             "swh_rf",
         ]
 
@@ -87,8 +87,8 @@ class TestRegridGgcmiShdates(unittest.TestCase):
             args.regrid_template_file,
             args.regrid_input_directory,
             args.regrid_output_directory,
-            args.extension,
-            args.crop_list,
+            args.regrid_extension,
+            args.regrid_crop_list,
         )
 
         # Read output file

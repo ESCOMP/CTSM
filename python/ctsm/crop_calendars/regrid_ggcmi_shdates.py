@@ -30,8 +30,8 @@ def main():
         args.regrid_template_file,
         args.regrid_input_directory,
         args.regrid_output_directory,
-        args.extension,
-        args.crop_list,
+        args.regrid_extension,
+        args.regrid_crop_list,
     )
 
 
@@ -63,6 +63,20 @@ def define_arguments(parser):
         type=str,
         required=True,
     )
+    
+    default = ".nc"
+    parser.add_argument(
+        "-x",
+        "--regrid-extension",
+        help=f"File regrid_extension of raw GGCMI sowing/harvest date files (default {default}).",
+        default=default,
+    )
+    parser.add_argument(
+        "-c",
+        "--regrid-crop-list",
+        help="List of GGCMI crops to process; e.g., '--crop-list mai_rf,mai_ir'. If not provided, will process all GGCMI crops.",
+        default=None,
+    )
     return parser
 
 
@@ -71,8 +85,8 @@ def regrid_ggcmi_shdates(
     regrid_template_file_in,
     regrid_input_directory,
     regrid_output_directory,
-    extension,
-    crop_list,
+    regrid_extension,
+    regrid_crop_list,
 ):
     logger.info(f"Regridding GGCMI crop calendars to {regrid_resolution}:")
 
@@ -92,10 +106,10 @@ def regrid_ggcmi_shdates(
     template_ds_in = xr.open_dataset(regrid_template_file_in)
 
     # Process inputs
-    if crop_list is not None:
-        crop_list = crop_list.split(",")
-    if extension[0] != ".":
-        extension = "." + extension
+    if regrid_crop_list is not None:
+        regrid_crop_list = regrid_crop_list.split(",")
+    if regrid_extension[0] != ".":
+        regrid_extension = "." + regrid_extension
 
     # Import and format latitude
     if "lat" in template_ds_in:
@@ -136,19 +150,19 @@ def regrid_ggcmi_shdates(
     template_ds_out.to_netcdf(templatefile, mode="w")
 
     # Loop through original crop calendar files, interpolating using cdo with nearest-neighbor
-    pattern = "*" + extension
+    pattern = "*" + regrid_extension
     input_files = glob.glob(pattern)
     if len(input_files) == 0:
         abort(f"No files found matching {os.path.join(os.getcwd(), pattern)}")
     input_files.sort()
     for f in input_files:
         this_crop = f[0:6]
-        if crop_list is not None and this_crop not in crop_list:
+        if regrid_crop_list is not None and this_crop not in regrid_crop_list:
             continue
 
         logger.info("    " + this_crop)
         f2 = os.path.join(regrid_output_directory, f)
-        f3 = f2.replace(extension, f"_nninterp-{regrid_resolution}{extension}")
+        f3 = f2.replace(regrid_extension, f"_nninterp-{regrid_resolution}{regrid_extension}")
 
         if os.path.exists(f3):
             os.remove(f3)
@@ -199,19 +213,6 @@ def regrid_ggcmi_shdates_arg_process():
         help="Directory where regridded output files should be saved.",
         type=str,
         required=True,
-    )
-    default = ".nc"
-    parser.add_argument(
-        "-x",
-        "--extension",
-        help=f"File extension of raw GGCMI sowing/harvest date files (default {default}).",
-        default=default,
-    )
-    parser.add_argument(
-        "-c",
-        "--crop-list",
-        help="List of GGCMI crops to process; e.g., '--crop-list mai_rf,mai_ir'. If not provided, will process all GGCMI crops.",
-        default=None,
     )
     ctsm_logging.add_logging_args(parser)
 

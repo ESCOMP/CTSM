@@ -42,6 +42,8 @@ def main(
     ggcmi_author,
     regrid_resolution,
     regrid_template_file,
+    regrid_extension,
+    regrid_crop_list,
 ):
 
     ############################################################
@@ -52,8 +54,8 @@ def main(
         output_directory, f"regridded_ggcmi_files-{regrid_resolution}"
     )
 
-    regrid_ggcmi_shdates.main(
-        regrid_resolution, regrid_template_file, input_directory, regridded_ggcmi_files_dir
+    regrid_ggcmi_shdates.regrid_ggcmi_shdates(
+        regrid_resolution, regrid_template_file, input_directory, regridded_ggcmi_files_dir, regrid_extension, regrid_crop_list
     )
 
     ###########################
@@ -399,4 +401,6 @@ if __name__ == "__main__":
         args.ggcmi_author,
         args.regrid_resolution,
         args.regrid_template_file,
+        args.regrid_extension,
+        args.regrid_crop_list,
     )
