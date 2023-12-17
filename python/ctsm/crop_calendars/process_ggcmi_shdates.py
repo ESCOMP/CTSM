@@ -227,7 +227,8 @@ def main(
                 f"{thiscrop_ggcmi}_{file_specifier}_{nninterp_suffix}.nc4",
             )
             if not os.path.exists(file_ggcmi):
-                raise Exception("Input file not found: " + file_ggcmi)
+                logger.warning(f"Skipping {thiscrop_ggcmi} because input file not found: {file_ggcmi}")
+                continue
             cropcal_ds = xr.open_dataset(file_ggcmi)
             # Flip latitude to match destination
             cropcal_ds = cropcal_ds.reindex(lat=cropcal_ds.lat[::-1])
