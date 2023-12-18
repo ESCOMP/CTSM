@@ -1,5 +1,5 @@
 ./xmlchange DATM_CPLHIST_CASE=cam6ctsm51_cesm23a12c_ne30pg3g17_CPLHIST_1850
-./xmlchange DATM_CPLHIST_DIR=/glade/p/cgd/tss/CTSM_datm_forcing_data/atm_forcing.cdeps_datm.CPLHIST_cam6ctsm51_cesm23a12c_ne30pg3g17_1850
+./xmlchange DATM_CPLHIST_DIR='$DIN_LOC_ROOT/atm/datm7/atm_forcing.cdeps_datm.CPLHIST_cam6ctsm51_cesm23a12c_ne30pg3g17_1850'
 ./xmlchange DATM_YR_START=1
 ./xmlchange DATM_YR_END=1
 ./xmlchange DATM_YR_ALIGN=1

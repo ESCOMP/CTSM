@@ -5,10 +5,17 @@ that the CTSM does not fail using the just-generated modified fsurdat file
 
 import os
 import re
-import systemtest_utils as stu
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
 from CIME.XML.standard_module_setup import *
 from CIME.SystemTests.test_utils.user_nl_utils import append_to_user_nl_files
+
+# For calling fsurdat_modifier
+from argparse import Namespace
+
+_CTSM_PYTHON = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python"
+)
+sys.path.insert(1, _CTSM_PYTHON)
 
 logger = logging.getLogger(__name__)
 
@@ -66,16 +73,18 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
                     cfg_out.write(line)
 
     def _run_modify_fsurdat(self):
-        tool_path = os.path.join(self._ctsm_root, "tools/modify_input_files/fsurdat_modifier")
-
-        self._case.load_env(reset=True)
-        command = f"python3 {tool_path} {self._cfg_file_path}"
-        stu.run_python_script(
-            self._get_caseroot(),
-            "ctsm_pylib",
-            command,
-            tool_path,
+        fsurdat_modifier_args = Namespace(
+            cfg_path=self._cfg_file_path,
+            debug=False,
+            fsurdat_in="UNSET",
+            fsurdat_out="UNSET",
+            overwrite=False,
+            silent=False,
+            verbose=False,
         )
+        from ctsm.modify_input_files.fsurdat_modifier import fsurdat_modifier
+
+        fsurdat_modifier(fsurdat_modifier_args)
 
     def _modify_user_nl(self):
         append_to_user_nl_files(

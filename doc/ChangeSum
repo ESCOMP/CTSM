@@ -1,5 +1,32 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev159 multiple 12/12/2023 Various BFB fixes and updates
+    ctsm5.1.dev158     erik 12/07/2023 First tag with testing moved to Derecho and working PE-layouts for Derecho
+    ctsm5.1.dev157 samrabin 12/05/2023 Update Externals to work on Derecho
+    ctsm5.1.dev156 samrabin 11/30/2023 Do not use Meier roughness by default.
+    ctsm5.1.dev155 samrabin 11/27/2023 Use baset_latvary parameters
+    ctsm5.1.dev154   slevis 11/22/2023 New params files with changes for Meier roughness, MIMICS, and SNICAR, and changes to leafcn and k*_nonmyc
+    ctsm5.1.dev153  afoster 11/17/2023 Call new FATES-side FatesReadParameters
+    ctsm5.1.dev152 multiple 11/14/2023 Mv tools to /python and add tests; add snow_thermal_cond_method; a few fixes / refactors
+    ctsm5.1.dev151   rgknox 11/11/2023 Fixes to FATES long run restarts
+    ctsm5.1.dev150   rgknox 11/06/2023 FATES API fix to support future fates npp-fixation coupling, and urgent coupling fixes with E3SM.
+    ctsm5.1.dev149 samrabin 11/03/2023 Rearrange leaf/stem "harvest" and fix soil gas diffusivity
+    ctsm5.1.dev148 samrabin 11/03/2023 Add GRAINN outputs
+    ctsm5.1.dev147 samrabin 10/30/2023 Add sowing window input files
+    ctsm5.1.dev146 glemieux 10/24/2023 FATES cross-grid seed dispersal
+    ctsm5.1.dev145   slevis 10/19/2023 SNICAR snow albedo scheme updates
+    ctsm5.1.dev144 samrabin 10/19/2023 Remove a deprecated shr_mpi_bcast call
+    ctsm5.1.dev143   rgknox 10/13/2023 Zeroing of wood product fluxes on fates columns
+    ctsm5.1.dev142 samrabin 09/19/2023 Merge 5 bit-for-bit pull requests
+    ctsm5.1.dev141   slevis 09/13/2023 Change small snocan to zero
+    ctsm5.1.dev140  afoster 09/12/2023 add lai_streams capability for FATES
+    ctsm5.1.dev139   slevis 08/28/2023 Fix problems uncovered by nag -nan tests
+    ctsm5.1.dev138   slevis 08/25/2023 Refactor max_patch_per_col and maxsoil_patches loops
+    ctsm5.1.dev137   slevis 08/23/2023 Surface roughness modifications
+    ctsm5.1.dev136 multiple 08/22/2023 Change order of history fields to improve performance on derecho
+    ctsm5.1.dev135   slevis 08/21/2023 Rename hist fields to track them down more easily
+    ctsm5.1.dev134   rgknox 08/16/2023 Migration of FATES to share normal soil BGC call sequence and functionality
+    ctsm5.1.dev133 glemieux 08/09/2023 FATES API update to facilitate fates refactor
     ctsm5.1.dev132   slevis 08/04/2023 Add parameterization to allow excess ice in soil and subsidence
     ctsm5.1.dev131 samrabin 07/27/2023 Enable prescribed crop calendars
     ctsm5.1.dev130 glemieux 07/09/2023 FATES parameter file and test definition update

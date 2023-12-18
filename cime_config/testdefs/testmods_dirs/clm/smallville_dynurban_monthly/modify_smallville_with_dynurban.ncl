@@ -18,8 +18,8 @@ begin
  print ("Start Time: "+systemfunc("date") )
  print ("=========================================")
 
- infile  = "/glade/p/cgd/tss/people/oleson/modify_surfdata/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_c160127.nc"
- outfile = "/glade/p/cgd/tss/people/oleson/modify_surfdata/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_dynUrban_c220223.nc" 
+ infile  = "/glade/campaign/cgd/tss/people/oleson/modify_surfdata/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_c160127.nc"
+ outfile = "/glade/campaign/cgd/tss/people/oleson/modify_surfdata/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_dynUrban_c220223.nc" 
 
  system("cp " + infile + " " + outfile)
 
@@ -61,7 +61,9 @@ begin
  outf->PCT_URBAN = pct_urban
  outf->PCT_CROP = pct_crop
 
- outf@history = "This file was created with the following NCL script: /glade/p/cgd/tss/people/oleson/modify_surfdata/modify_smallville_with_dynurban.ncl.  The file used as a template is: /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_c160127.nc.  Key points are that urban area starts as 0, increases after the first year, then decreases after the second year.  Medium density urban is set to zero to test the memory-saving behavior of PCT_URBAN_MAX.  PCT_CROP is also changed so that PCT_URBAN + PCT_CROP <= 100. (Here, PCT_CROP increases and decreases at the same time as PCT_URBAN in order to exercise the simultaneous increase or decrease of two landunits, but that isn't a critical part of this test.). Note that the use of this file means that this testmod can only be used with the 1x1_smallvilleIA grid."
+ outf@history = "This file was created with the following NCL script:
+/glade/campaign/cgd/tss/people/oleson/modify_surfdata/modify_smallville_with_dynurban.ncl.  The file used as a template is:
+/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/surfdata_map/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_c160127.nc.  Key points are that urban area starts as 0, increases after the first year, then decreases after the second year.  Medium density urban is set to zero to test the memory-saving behavior of PCT_URBAN_MAX.  PCT_CROP is also changed so that PCT_URBAN + PCT_CROP <= 100. (Here, PCT_CROP increases and decreases at the same time as PCT_URBAN in order to exercise the simultaneous increase or decrease of two landunits, but that isn't a critical part of this test.). Note that the use of this file means that this testmod can only be used with the 1x1_smallvilleIA grid."
 
  print ("=========================================")
  print ("Finish Time: "+systemfunc("date") )
