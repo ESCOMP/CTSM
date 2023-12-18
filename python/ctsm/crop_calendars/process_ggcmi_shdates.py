@@ -43,7 +43,7 @@ def main(
     regrid_resolution,
     regrid_template_file,
     regrid_extension,
-    regrid_crop_list,
+    crop_list,
 ):
 
     ############################################################
@@ -55,7 +55,7 @@ def main(
     )
 
     regrid_ggcmi_shdates.regrid_ggcmi_shdates(
-        regrid_resolution, regrid_template_file, input_directory, regridded_ggcmi_files_dir, regrid_extension, regrid_crop_list
+        regrid_resolution, regrid_template_file, input_directory, regridded_ggcmi_files_dir, regrid_extension, crop_list
     )
 
     ###########################
@@ -205,6 +205,10 @@ def main(
         this_dict = crop_dict[thiscrop_clm]
         thiscrop_int = this_dict["clm_num"]
         thiscrop_ggcmi = this_dict["thiscrop_ggcmi"]
+
+        # If --regrid-crop-list specified, only process crops from that list
+        if crop_list is not None and thiscrop_ggcmi is not None and thiscrop_ggcmi not in crop_list:
+            continue
 
         # If no corresponding GGCMI crop, skip opening dataset.
         # Will use previous cropcal_ds as a template.
@@ -403,5 +407,5 @@ if __name__ == "__main__":
         args.regrid_resolution,
         args.regrid_template_file,
         args.regrid_extension,
-        args.regrid_crop_list,
+        args.crop_list,
     )

@@ -31,7 +31,7 @@ def main():
         args.regrid_input_directory,
         args.regrid_output_directory,
         args.regrid_extension,
-        args.regrid_crop_list,
+        args.crop_list,
     )
 
 
@@ -73,7 +73,7 @@ def define_arguments(parser):
     )
     parser.add_argument(
         "-c",
-        "--regrid-crop-list",
+        "--crop-list",
         help="List of GGCMI crops to process; e.g., '--crop-list mai_rf,mai_ir'. If not provided, will process all GGCMI crops.",
         default=None,
     )
@@ -86,7 +86,7 @@ def regrid_ggcmi_shdates(
     regrid_input_directory,
     regrid_output_directory,
     regrid_extension,
-    regrid_crop_list,
+    crop_list,
 ):
     logger.info(f"Regridding GGCMI crop calendars to {regrid_resolution}:")
 
@@ -106,8 +106,8 @@ def regrid_ggcmi_shdates(
     template_ds_in = xr.open_dataset(regrid_template_file_in)
 
     # Process inputs
-    if regrid_crop_list is not None:
-        regrid_crop_list = regrid_crop_list.split(",")
+    if crop_list is not None:
+        crop_list = crop_list.split(",")
     if regrid_extension[0] != ".":
         regrid_extension = "." + regrid_extension
 
@@ -157,7 +157,7 @@ def regrid_ggcmi_shdates(
     input_files.sort()
     for f in input_files:
         this_crop = f[0:6]
-        if regrid_crop_list is not None and this_crop not in regrid_crop_list:
+        if crop_list is not None and this_crop not in crop_list:
             continue
 
         logger.info("    " + this_crop)
