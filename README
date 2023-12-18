@@ -21,6 +21,7 @@ src/biogeochem/CNNStateUpdate1Mod.F90
 src/biogeochem/CNPhenologyMod.F90
 src/biogeochem/CNVegCarbonFluxType.F90
 src/biogeochem/CNVegCarbonStateType.F90
+src/biogeochem/CNVegComputeSeedMod.F90
 src/biogeochem/CNVegNitrogenFluxType.F90
 src/biogeochem/CNVegNitrogenStateType.F90
 src/biogeochem/CNVegStateType.F90
