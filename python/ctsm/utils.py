@@ -207,7 +207,7 @@ def import_coord_1d(ds, coordName):
         abort(f"Expected 1 dimension for {coordName}; found {len(da.dims)}: {da.dims}")
     return da, len(da)
 
- 
+
 def import_coord_2d(ds, coordName, varName):
     """Import 2-d latitude or longitude variable from a CESM history file (e.g., name LATIXY or LONGXY) and return it as a 1-d DataArray that can be used as a coordinate for writing CESM input files
 

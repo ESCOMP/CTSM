@@ -63,7 +63,7 @@ def define_arguments(parser):
         type=str,
         required=True,
     )
-    
+
     default = ".nc"
     parser.add_argument(
         "-x",
@@ -169,15 +169,23 @@ def regrid_ggcmi_shdates(
 
         # Sometimes cdo fails for no apparent reason. In testing this never happened more than 3x in a row.
         try:
-            run_and_check(f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
+            run_and_check(
+                f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'"
+            )
         except:
             try:
-                run_and_check(f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
+                run_and_check(
+                    f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'"
+                )
             except:
                 try:
-                    run_and_check(f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
+                    run_and_check(
+                        f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'"
+                    )
                 except:
-                    run_and_check(f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'")
+                    run_and_check(
+                        f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'"
+                    )
 
     # Delete template file, which is no longer needed
     os.remove(templatefile)
@@ -226,4 +234,3 @@ def regrid_ggcmi_shdates_arg_process():
     args.regrid_output_directory = os.path.realpath(args.regrid_output_directory)
 
     return args
-

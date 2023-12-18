@@ -144,7 +144,12 @@ def process_ggcmi_shdates(
     )
 
     regrid.regrid_ggcmi_shdates(
-        regrid_resolution, regrid_template_file, input_directory, regridded_ggcmi_files_dir, regrid_extension, crop_list
+        regrid_resolution,
+        regrid_template_file,
+        input_directory,
+        regridded_ggcmi_files_dir,
+        regrid_extension,
+        crop_list,
     )
 
     ###########################
@@ -320,7 +325,9 @@ def process_ggcmi_shdates(
                 f"{thiscrop_ggcmi}_{file_specifier}_{nninterp_suffix}.nc4",
             )
             if not os.path.exists(file_ggcmi):
-                logger.warning(f"Skipping {thiscrop_ggcmi} because input file not found: {file_ggcmi}")
+                logger.warning(
+                    f"Skipping {thiscrop_ggcmi} because input file not found: {file_ggcmi}"
+                )
                 continue
             cropcal_ds = xr.open_dataset(file_ggcmi)
             # Flip latitude to match destination
@@ -408,4 +415,3 @@ def process_ggcmi_shdates(
         cropcal_ds.close()
 
     logger.info("Done!")
-
