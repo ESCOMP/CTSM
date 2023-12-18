@@ -2903,6 +2903,7 @@
   <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLUH2">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
     <options>
