@@ -7,14 +7,13 @@ import sys
 import argparse
 import logging
 
-import cropcal_utils as utils
-import regrid_ggcmi_shdates
-
-# -- add python/ctsm  to path (needed if we want to run regrid_ggcmi_shdates stand-alone)
+# -- add python/ctsm  to path (needed if we want to run process_ggcmi_shdates stand-alone)
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm import ctsm_logging
+import ctsm.crop_calendars.cropcal_utils as utils
+import ctsm.crop_calendars.regrid_ggcmi_shdates as regrid
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +30,94 @@ def get_dayssince_jan1y1(y1, y):
     return time_delta_secs / (60 * 60 * 24)
 
 
-def main(
+def main():
+    ctsm_logging.setup_logging_pre_config()
+    args = process_ggcmi_shdates_args()
+    process_ggcmi_shdates(
+        args.input_directory,
+        args.output_directory,
+        args.author,
+        args.file_specifier,
+        args.first_year,
+        args.last_year,
+        args.verbose,
+        args.ggcmi_author,
+        args.regrid_resolution,
+        args.regrid_template_file,
+        args.regrid_extension,
+        args.crop_list,
+    )
+
+
+def process_ggcmi_shdates_args():
+    parser = argparse.ArgumentParser(
+        description="Converts raw sowing and harvest date files provided by GGCMI into a format that CLM can read, optionally at a target resolution."
+    )
+
+    # Required
+    parser.add_argument(
+        "-i",
+        "--input-directory",
+        help="Directory containing the raw GGCMI sowing/harvest date files",
+        type=str,
+        required=True,
+    )
+    parser.add_argument(
+        "-o",
+        "--output-directory",
+        help="Where to save the CLM-compatible sowing and harvest date files",
+        type=str,
+        required=True,
+    )
+    parser.add_argument(
+        "-a",
+        "--author",
+        help="String to be saved in author_thisfile attribute of output files. E.g., 'Author Name (authorname@ucar.edu)'",
+        type=str,
+        required=True,
+    )
+
+    # Optional
+    parser.add_argument(
+        "--file-specifier",
+        help="String following CROP_IRR_ in input filenames. E.g., mai_ir_FILESPECIFIER.nc4. Will also be saved to output filenames.",
+        type=str,
+        default="ggcmi_crop_calendar_phase3_v1.01",
+    )
+    parser.add_argument(
+        "-y1",
+        "--first-year",
+        help="First year in output files. Must be present in template file, unless it's the same as the last year.",
+        type=int,
+        default=2000,
+    )
+    parser.add_argument(
+        "-yN",
+        "--last-year",
+        help="Last year in output files. Must be present in template file, unless it's the same as the first year.",
+        type=int,
+        default=2000,
+    )
+    parser.add_argument(
+        "--ggcmi-author",
+        help="Author of original GGCMI files",
+        type=str,
+        default="Jonas Jägermeyr (jonas.jaegermeyr@columbia.edu)",
+    )
+
+    ctsm_logging.add_logging_args(parser)
+
+    # Arguments for regridding
+    parser = regrid.define_arguments(parser)
+
+    # Get arguments
+    args = parser.parse_args(sys.argv[1:])
+    ctsm_logging.process_logging_args(args)
+
+    return args
+
+
+def process_ggcmi_shdates(
     input_directory,
     output_directory,
     author,
@@ -46,6 +132,9 @@ def main(
     crop_list,
 ):
 
+    input_directory = os.path.realpath(input_directory)
+    output_directory = os.path.realpath(output_directory)
+
     ############################################################
     ### Regrid original GGCMI files to target CLM resolution ###
     ############################################################
@@ -54,7 +143,7 @@ def main(
         output_directory, f"regridded_ggcmi_files-{regrid_resolution}"
     )
 
-    regrid_ggcmi_shdates.regrid_ggcmi_shdates(
+    regrid.regrid_ggcmi_shdates(
         regrid_resolution, regrid_template_file, input_directory, regridded_ggcmi_files_dir, regrid_extension, crop_list
     )
 
@@ -320,92 +409,3 @@ def main(
 
     logger.info("Done!")
 
-
-if __name__ == "__main__":
-    ###############################
-    ### Process input arguments ###
-    ###############################
-    
-    # set up logging allowing user control
-    ctsm_logging.setup_logging_pre_config()
-    
-    parser = argparse.ArgumentParser(
-        description="Converts raw sowing and harvest date files provided by GGCMI into a format that CLM can read, optionally at a target resolution."
-    )
-
-    # Required
-    parser.add_argument(
-        "-i",
-        "--input-directory",
-        help="Directory containing the raw GGCMI sowing/harvest date files",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "-o",
-        "--output-directory",
-        help="Where to save the CLM-compatible sowing and harvest date files",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "-a",
-        "--author",
-        help="String to be saved in author_thisfile attribute of output files. E.g., 'Author Name (authorname@ucar.edu)'",
-        type=str,
-        required=True,
-    )
-
-    # Optional
-    parser.add_argument(
-        "--file-specifier",
-        help="String following CROP_IRR_ in input filenames. E.g., mai_ir_FILESPECIFIER.nc4. Will also be saved to output filenames.",
-        type=str,
-        default="ggcmi_crop_calendar_phase3_v1.01",
-    )
-    parser.add_argument(
-        "-y1",
-        "--first-year",
-        help="First year in output files. Must be present in template file, unless it's the same as the last year.",
-        type=int,
-        default=2000,
-    )
-    parser.add_argument(
-        "-yN",
-        "--last-year",
-        help="Last year in output files. Must be present in template file, unless it's the same as the first year.",
-        type=int,
-        default=2000,
-    )
-    parser.add_argument(
-        "--ggcmi-author",
-        help="Author of original GGCMI files",
-        type=str,
-        default="Jonas Jägermeyr (jonas.jaegermeyr@columbia.edu)",
-    )
-    ctsm_logging.add_logging_args(parser)
-
-    # Arguments for regridding
-    parser = regrid_ggcmi_shdates.define_arguments(parser)
-
-    # Get arguments
-    args = parser.parse_args(sys.argv[1:])
-    ctsm_logging.process_logging_args(args)
-
-    ###########
-    ### Run ###
-    ###########
-    main(
-        os.path.realpath(args.input_directory),
-        os.path.realpath(args.output_directory),
-        args.author,
-        args.file_specifier,
-        args.first_year,
-        args.last_year,
-        args.verbose,
-        args.ggcmi_author,
-        args.regrid_resolution,
-        args.regrid_template_file,
-        args.regrid_extension,
-        args.crop_list,
-    )
