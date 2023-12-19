@@ -1,4 +1,72 @@
 ===============================================================
+Tag name: ctsm5.1.dev093
+Originator(s): slevis (Samuel Levis)
+Date: Tue May  3 21:50:20 MDT 2022
+One-line Summary: Modifications for FATES-MIMICS to work
+
+Purpose and description of changes
+----------------------------------
+
+ 1) For FATES-MIMICS cases, use ligninNratioAvg calculated by FATES.
+ 2) For FATES-MIMICS cases, use annsum_npp_col calculated by FATES.
+ 3) Small modification to allow carbon-only to work with MIMICS.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #): 
+   Fixes #1636 -- FATES tests fail with MIMICS active
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ MIMICS-FATES now do work together, but only as long as use_lch4 = .true.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ To confirm that MIMICS-FATES works, I added the testmod mimicsFatesColdDef.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+ ...but made history variable CWDC_HR active.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1643
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev092
 Originator(s): sacks (Bill Sacks)
 Date: Fri Apr 29 18:31:48 MDT 2022
