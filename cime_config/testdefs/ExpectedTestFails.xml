@@ -52,7 +52,7 @@
   </test>
 
   <test name="SMS_D.f10_f10_mg37.I2000Clm51BgcCrop.derecho_nvhpc.clm-crop">
-    <phase name="RUN">
+    <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
       <issue>#1733</issue>
     </phase>

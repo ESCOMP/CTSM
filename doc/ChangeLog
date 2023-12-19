@@ -1,4 +1,75 @@
 ===============================================================
+Tag name: ctsm5.1.dev159
+Originator(s): multiple (slevis (Sam Levis), afoster (Adrianna Foster), erik (Erik Kluzek), wwieder (Will Wieder), glemieux (Greg Lemieux), oleson (Keith Oleson), sacks (Bill Sacks), samrabin (Sam Rabin), santos (Sean Patrick Santos))
+Date: Tue 12 Dec 2023 11:10:26 AM MST
+One-line Summary: Various BFB fixes and updates
+
+Purpose and description of changes
+----------------------------------
+#2253 Fix subset_data error (slevis)
+#2271 bfb bug-fix allowing us to make Meier2022 the default; making it
+the default comes in a later tag (slevis)
+#2267 Fix run_neon CIME path import (afoster, erik, wwieder)
+#2075 Add xesmf to the standard python env (glemieux)
+#2229 Fix misplaced if statement and end model run if no-isotope to isotope run with user_init_interp=.false. (oleson, sacks, wwieder)
+#2239 Add comment in LakeHydrology (samrabin, santos)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+Fixes #2253
+Fixes #2271
+Fixes #2267
+Fixes #2075
+Fixes #2229
+Fixes #2239
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- PASS
+
+Answer changes
+--------------
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2253
+ https://github.com/ESCOMP/ctsm/pull/2271
+ https://github.com/ESCOMP/ctsm/pull/2267
+ https://github.com/ESCOMP/ctsm/pull/2075
+ https://github.com/ESCOMP/ctsm/pull/2229
+ https://github.com/ESCOMP/ctsm/pull/2239
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev158
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Thu 07 Dec 2023 10:22:46 PM MST
