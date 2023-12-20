@@ -5,6 +5,16 @@
 To run all tests (unit tests, system tests and pylint), simply run `make
 all` from this directory.
 
+## Python environment
+
+One way to get a python environment for this to work together on cheyenne is to use
+
+ncar\_pylib
+
+Another way is to use the file conda\_env\_ctsm\_py.txt to setup
+a python environment. Comments in the file tell how to do this
+on cheyenne.
+
 ## Unit and system tests
 
 Unit and system tests can be run in one of two ways; these do the same
@@ -31,5 +41,12 @@ thing, but support different options:
 
 You can run pylint on everything in the ctsm package with `make lint`.
 
-Note: you should expect some errors if using a python2 version of
-pylint, but this should be clean if running with a python3 version.
+Note, that the listing of errors with pylint is very specific to the version
+of pylint being used. Using a python environment as detailed earlier is important
+in order to get a clean run of pylint.
+
+## black
+
+You can run a check for the black formatting with `make black`.
+This won't change the code, but check if it would be reformatted
+with black.

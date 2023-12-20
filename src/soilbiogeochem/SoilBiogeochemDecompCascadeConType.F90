@@ -81,7 +81,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine decomp_cascade_par_init( NLFilename )
-    use clm_varctl         , only : use_fates, use_cn
+    use clm_varctl         , only : use_fates, use_cn, use_fates_sp
     use clm_varpar         , only : ndecomp_pools_max
     use spmdMod            , only : masterproc, mpicom
     use clm_nlUtilsMod     , only : find_nlgroup_name
@@ -124,10 +124,21 @@ contains
     ! Broadcast namelist items to all processors
     call shr_mpi_bcast(decomp_method, mpicom)
     ! Don't do anything if neither FATES or BGC is on
-    if ( use_fates .or. use_cn ) then
+    if ( use_cn ) then
        if ( decomp_method == no_soil_decomp )then
-          call endrun('When running with FATES or BGC an active soil_decomp_method must be used')
+          call endrun('When running with BGC an active soil_decomp_method must be used')
        end if
+    else if ( use_fates ) then
+       if ( .not. use_fates_sp .and. (decomp_method == no_soil_decomp) )then
+          call endrun('When running with FATES and without FATES-SP an active soil_decomp_method must be used')
+       end if
+    else
+       if ( decomp_method /= no_soil_decomp )then
+          call endrun('When running without FATES or BGC soil_decomp_method must be None')
+       end if
+    end if
+     
+    if ( decomp_method /= no_soil_decomp )then
        ! We hardwire these parameters here because we use them
        ! in InitAllocate (in SoilBiogeochemStateType) which is called earlier than
        ! init_decompcascade_bgc where they might have otherwise been derived on the
@@ -156,10 +167,6 @@ contains
        ! c210418.nc and later
        ndecomp_pools_max = 8  ! largest ndecomp_pools value above
     else
-       if ( decomp_method /= no_soil_decomp )then
-          call endrun('When running without FATES or BGC soil_decomp_method must be None')
-       end if
-
        ndecomp_pools               = 7
        ndecomp_cascade_transitions = 7
        ndecomp_pools_max           = 8

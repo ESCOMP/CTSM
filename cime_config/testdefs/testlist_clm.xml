@@ -1356,6 +1356,7 @@
   <test name="SMS" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/crop">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="nvhpc" category="aux_clm"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
@@ -1376,7 +1377,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >pgi test for MCT driver since nuopc is not passing</option>
+      <option name="comment"  >Spinup test with MCT driver</option>
     </options>
   </test>
   <test name="SMS_D_Ld1_PS" grid="f19_f19_mg17" compset="I2010Clm50Sp" testmods="clm/clm50cam6LndTuningMode">
@@ -1463,6 +1464,8 @@
   <test name="SMS_D" grid="f10_f10_mg37" compset="I2000Clm51BgcCrop" testmods="clm/crop">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="nvhpc" category="aux_clm"/>
+      <machine name="cheyenne" compiler="nvhpc" category="prebeta"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
@@ -1717,7 +1720,7 @@
       <option name="comment"  >include a production gnu test of Clm45</option>
     </options>
   </test>
-  <test name="SMS_Ld2_D_PS" grid="f09_g17" compset="I1850Clm50BgcCropCmip6" testmods="clm/basic_interp">
+  <test name="SMS_Ld2_D" grid="f09_g17" compset="I1850Clm50BgcCropCmip6" testmods="clm/basic_interp">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -2314,17 +2317,36 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="SMS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen">
+  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Test with DEBUG on for FatesSP mode, NOTE: FatesSp has the largest difference in CTSM code for any FATES mode</option>
+    </options>
+  </test>
+<!--    Don't active this test until #1722 is fixed
+  <test name="SMS_Ld3" grid="f09_f09_mg17" compset="I2000Clm51FatesCruRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen_prescribed">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Test with prescribed LAI and soil-moisture with FatesSP mode, has to be at f09 and 2000</option>
+    </options>
+  </test>
+-->
+  <test name="SMS_Ld30" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
       <option name="comment">Temporary smoke test.  This test should be removed once the ERS version of this test passes COMPARE_base_rest</option>
     </options>
   </test>
-  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdDefReducedComplexSatPhen">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>

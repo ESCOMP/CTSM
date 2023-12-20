@@ -875,9 +875,14 @@ sub setup_cmdl_bgc {
   my $soil_decomp_method = remove_leading_and_trailing_quotes( $nl->get_value( $var ) );
   $nl_flags->{$var} = $soil_decomp_method;
 
-  if ( &value_is_true($nl_flags->{'use_cn'}) ||  &value_is_true($nl_flags->{'use_fates'}))  {
+  if (      &value_is_true($nl_flags->{'use_cn'}) ) {
      if ( $soil_decomp_method eq "None" ) {
-        $log->fatal_error("$var must NOT be None if use_cn or use_fates are on");
+        $log->fatal_error("$var must NOT be None if use_cn is on");
+     }
+  } elsif ( &value_is_true($nl_flags->{'use_fates'}) && (not &value_is_true($nl->get_value('use_fates_sp')))  )  {
+     print  "use_fates_sp = ", $nl_flags->{'use_fates_sp'}, "\n";
+     if ( $soil_decomp_method eq "None" ) {
+        $log->fatal_error("$var must NOT be None if use_fates is on and use_fates_sp is not TRUE");
      }
   } elsif ( $soil_decomp_method ne "None" ) {
      $log->fatal_error("$var must be None if use_cn and use_fates are off");

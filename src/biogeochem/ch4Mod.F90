@@ -2632,12 +2632,14 @@ contains
             end if
 
             ! If switched on, use pH factor for production based on spatial pH data defined in surface data.
-            if (.not. lake .and. usephfact .and. pH(c) >  pHmin .and.pH(c) <  pHmax) then
-               pH_fact_ch4 = 10._r8**(-0.2235_r8*pH(c)*pH(c) + 2.7727_r8*pH(c) - 8.6_r8)
-               ! fitted function using data from Dunfield et al. 1993  
-               ! Strictly less than one, with optimum at 6.5
-               ! From Lei Meng
-               f_ch4_adj = f_ch4_adj * pH_fact_ch4
+            if (.not. lake .and. usephfact )then 
+               if (  pH(c) >  pHmin .and.pH(c) <  pHmax) then
+                  pH_fact_ch4 = 10._r8**(-0.2235_r8*pH(c)*pH(c) + 2.7727_r8*pH(c) - 8.6_r8)
+                  ! fitted function using data from Dunfield et al. 1993  
+                  ! Strictly less than one, with optimum at 6.5
+                  ! From Lei Meng
+                  f_ch4_adj = f_ch4_adj * pH_fact_ch4
+               end if
             else
                ! if no data, then no pH effects
             end if
