@@ -1135,15 +1135,17 @@ module CLMFatesInterfaceMod
        ! but rgknox explains that accomplishing this is more complex given the
        ! current FATES treatment of other litter fluxes passed to the CTSM.
        !------------------------------------------------------------------------
-       do s = 1, this%fates(nc)%nsites
-          c = this%f2hmap(nc)%fcolumn(s)
-          if (is_first_restart_step() .and. .not. copy_fates_var(c)) then
-             copy_fates_var(c) = .true.
-          else
-             soilbiogeochem_carbonflux_inst%litr_lig_c_to_n_col(c) = &
-               this%fates(nc)%bc_out(s)%litt_flux_ligc_per_n
-          end if
-       end do
+       if ( decomp_method /= no_soil_decomp )then
+          do s = 1, this%fates(nc)%nsites
+             c = this%f2hmap(nc)%fcolumn(s)
+             if (is_first_restart_step() .and. .not. copy_fates_var(c)) then
+                copy_fates_var(c) = .true.
+             else
+                soilbiogeochem_carbonflux_inst%litr_lig_c_to_n_col(c) = &
+                  this%fates(nc)%bc_out(s)%litt_flux_ligc_per_n
+             end if
+          end do
+       end if
 
        !---------------------------------------------------------------------------------
        ! CHANGING STORED WATER DURING PLANT DYNAMICS IS NOT FULLY IMPLEMENTED
