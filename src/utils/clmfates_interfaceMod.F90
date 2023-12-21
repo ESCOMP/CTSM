@@ -2885,7 +2885,6 @@ module CLMFatesInterfaceMod
             this%fates(nc)%nsites,  &
             this%fates(nc)%sites,   &
             this%fates(nc)%bc_in,   &
-            this%fates(nc)%bc_out,  &
             dtime)
       
     end associate
