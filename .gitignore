@@ -96,3 +96,5 @@ core.*
 *.log !run.log
 *.pyc
 Depends
+
+.vscode
