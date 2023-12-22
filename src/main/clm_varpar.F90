@@ -59,16 +59,18 @@ module clm_varpar
   integer, public, parameter :: nlayer      =   3     ! number of VIC soil layer --Added by AWang
   integer, public    :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
   integer, public, parameter :: nvariants   =   2     ! number of variants of PFT constants
+
+  ! CN Matrix solution sizes
   integer, public, parameter :: nvegpool_natveg = 18  ! number of vegetation matrix pool without crop
   integer, public, parameter :: nvegpool_crop   =  3  ! number of vegetation matrix pool with crop
   integer, public, parameter :: nveg_retransn   =  1  ! number of vegetation retranslocation pool
-  integer, public    :: nvegcpool             ! number of vegetation C pools
-  integer, public    :: nvegnpool             ! number of vegetation N pools
+  integer, public :: nvegcpool                        ! number of vegetation C pools
+  integer, public :: nvegnpool                        ! number of vegetation N pools
 
-  integer, public :: maxveg                ! # of pfts + cfts
-  integer, public :: maxpatch_urb= 5       ! max number of urban patches (columns) in urban landunit
+  integer, public :: maxveg                           ! # of pfts + cfts
+  integer, public :: maxpatch_urb= 5                  ! max number of urban patches (columns) in urban landunit
 
-  integer, public :: maxsoil_patches  ! # of pfts + cfts + bare ground; replaces maxpatch_pft, which is obsolete
+  integer, public :: maxsoil_patches                  ! # of pfts + cfts + bare ground; replaces maxpatch_pft, which is obsolete
 
   ! constants for decomposition cascade
 
@@ -106,32 +108,31 @@ module clm_varpar
   integer, public, parameter :: igrain_st     = 20    ! grain storage pool index
   integer, public, parameter :: igrain_xf     = 21    ! grain transfer pool index
 
-  integer, public    :: ncphtrans             !maximum number of vegetation C transfers through phenology
-  integer, public    :: ncphouttrans          !maximum number of vegetation C transfers out of vegetation through phenology
-  integer, public    :: ncgmtrans             !maximum number of vegetation C transfers through gap mortality
-  integer, public    :: ncgmouttrans          !maximum number of vegetation C transfers out of vegetation through gap mortality
-  integer, public    :: ncfitrans             !maximum number of vegetation C transfers through fire
-  integer, public    :: ncfiouttrans          !maximum number of vegetation C transfers out of vegetation trhough fire
-  integer, public    :: nnphtrans             !maximum number of vegetation N transfers through phenology
-  integer, public    :: nnphouttrans          !maximum number of vegetation N transfers out of vegetation through phenology
-  integer, public    :: nngmtrans             !maximum number of vegetation N transfers through gap mortality
-  integer, public    :: nngmouttrans          !maximum number of vegetation N transfers out of vegetation through gap mortality
-  integer, public    :: nnfitrans             !maximum number of vegetation N transfers through fire
-  integer, public    :: nnfiouttrans          !maximum number of vegetation N transfers out of vegetation trhough fire
+  integer, public :: ncphtrans      !maximum number of vegetation C transfers through phenology
+  integer, public :: ncphouttrans   !maximum number of vegetation C transfers out of vegetation through phenology
+  integer, public :: ncgmtrans      !maximum number of vegetation C transfers through gap mortality
+  integer, public :: ncgmouttrans   !maximum number of vegetation C transfers out of vegetation through gap mortality
+  integer, public :: ncfitrans      !maximum number of vegetation C transfers through fire
+  integer, public :: ncfiouttrans   !maximum number of vegetation C transfers out of vegetation trhough fire
+  integer, public :: nnphtrans      !maximum number of vegetation N transfers through phenology
+  integer, public :: nnphouttrans   !maximum number of vegetation N transfers out of vegetation through phenology
+  integer, public :: nngmtrans      !maximum number of vegetation N transfers through gap mortality
+  integer, public :: nngmouttrans   !maximum number of vegetation N transfers out of vegetation through gap mortality
+  integer, public :: nnfitrans      !maximum number of vegetation N transfers through fire
+  integer, public :: nnfiouttrans   !maximum number of vegetation N transfers out of vegetation trhough fire
 
-  
-  integer, public    :: iretransn             ! retranslocation pool index
-     
-  integer, public    :: ioutc                 ! external C pool index
-  integer, public    :: ioutn                 ! external N pool index
+  integer, public :: iretransn      ! retranslocation pool index
+
+  integer, public :: ioutc          ! external C pool index
+  integer, public :: ioutn          ! external N pool index
 
   integer, public :: ndecomp_pools_max
-  integer, public :: ndecomp_pools
+  integer, public :: ndecomp_pools  ! total number of pools
   integer, public :: ndecomp_cascade_transitions
   integer, public :: ndecomp_cascade_outtransitions
 
-  ! for soil matrix 
-  integer, public  :: ndecomp_pools_vr   !total number of pools ndecomp_pools*vertical levels
+  ! for soil matrix
+  integer, public  :: ndecomp_pools_vr  ! ndecomp_pools * levels in the vertical
 
   ! Indices used in surface file read and set in clm_varpar_init
 
@@ -345,18 +346,19 @@ contains
        ncphouttrans = 3
        nnphouttrans = 4
     end if
-    ncgmtrans = 18   
-    ncgmouttrans = 18   
-    ncfitrans = 20 
-    ncfiouttrans = 18   
-    nngmtrans = 19   
-    nngmouttrans = 19   
-    nnfitrans = 21 
-    nnfiouttrans = 19 
+    ncgmtrans = 18
+    ncgmouttrans = 18
+    ncfitrans = 20
+    ncfiouttrans = 18
+    nngmtrans = 19
+    nngmouttrans = 19
+    nnfitrans = 21
+    nnfiouttrans = 19
     nvegnpool = nvegcpool + 1
     iretransn = nvegnpool
     ioutc = nvegcpool + 1
     ioutn = nvegnpool + 1
+
   end subroutine clm_varpar_init
 
 end module clm_varpar

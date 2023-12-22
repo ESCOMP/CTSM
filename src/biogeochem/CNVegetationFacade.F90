@@ -94,7 +94,6 @@ module CNVegetationFacade
   use dynCNDVMod                      , only : dynCNDV_init, dynCNDV_interp
   use CNPrecisionControlMod           , only: CNPrecisionControl
   use SoilBiogeochemPrecisionControlMod , only: SoilBiogeochemPrecisionControl
-  use GridcellType                    , only : grc
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
   use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
   !
@@ -441,7 +440,8 @@ contains
     ! !USES:
     use ncdio_pio,       only : file_desc_t
     use clm_varcon,      only : c3_r2, c14ratio
-    use clm_varctl,      only : use_soil_matrixcn, use_matrixcn
+    use SoilBiogeochemDecompCascadeConType, only : use_soil_matrixcn
+    use CNSharedParamsMod, only : use_matrixcn
     use CNVegMatrixMod,  only : CNVegMatrixRest
     use CNSoilMatrixMod, only : CNSoilMatrixRest
     !
@@ -973,10 +973,10 @@ contains
     call CNDriverNoLeaching(bounds,                                         &
          num_soilc, filter_soilc,                       &
          num_soilp, filter_soilp,                       &
-         num_actfirec, filter_actfirec, &
-         num_actfirep, filter_actfirep, &
          num_pcropp, filter_pcropp,                     &
          num_soilnopcropp, filter_soilnopcropp,         &
+         num_actfirec, filter_actfirec, &
+         num_actfirep, filter_actfirep, &
          num_exposedvegp, filter_exposedvegp,           &
          num_noexposedvegp, filter_noexposedvegp,       &
          this%cnveg_state_inst,                                                        &

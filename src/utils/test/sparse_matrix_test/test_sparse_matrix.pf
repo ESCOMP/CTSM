@@ -3,7 +3,7 @@ module test_sparse_matrix
   ! Tests of Sparse Matrix Multiply module
 
   use pfunit_mod
-  use SPMMod
+  use SparseMatrixMultiplyMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestUtils, only : endrun_msg
 

@@ -10,7 +10,8 @@ module clm_driver
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
   use clm_varctl             , only : iulog, use_fates, use_fates_sp
-  use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14, use_matrixcn
+  use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
+  use CNSharedParamsMod      , only : use_matrixcn
   use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
   use clm_varctl             , only : use_soil_moisture_streams
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
@@ -672,7 +673,7 @@ contains
             frictionvel_inst, ch4_inst, energyflux_inst, temperature_inst, &
             water_inst%waterfluxbulk_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%wateratm2lndbulk_inst, &
-            photosyns_inst, humanindex_inst)
+            photosyns_inst, humanindex_inst, canopystate_inst)
        call t_stopf('bgflux')
 
        ! non-bareground fluxes for all patches except lakes and urban landunits

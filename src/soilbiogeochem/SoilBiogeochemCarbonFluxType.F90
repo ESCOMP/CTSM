@@ -9,12 +9,12 @@ module SoilBiogeochemCarbonFluxType
   use pftconMod                          , only : pftcon
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
   use ch4varcon                          , only : allowlakeprod
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, mimics_decomp, decomp_method
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, mimics_decomp, decomp_method, use_soil_matrixcn
   use PatchType                          , only : patch
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
-  use clm_varctl                         , only : use_fates, use_soil_matrixcn
-  use SPMMod                             , only : sparse_matrix_type, diag_matrix_type, vector_type
+  use SparseMatrixMultiplyMod            , only : sparse_matrix_type, diag_matrix_type, vector_type
+  use clm_varctl                         , only : use_fates
   
   ! 
   ! !PUBLIC TYPES:
@@ -40,14 +40,14 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: rf_decomp_cascade_col                     (:,:,:) ! (frac) respired fraction in decomposition step
      real(r8), pointer :: pathfrac_decomp_cascade_col               (:,:,:) ! (frac) what fraction of C passes from donor to receiver pool through a given transition
      real(r8), pointer :: decomp_k_col                              (:,:,:) ! rate coefficient for decomposition (1./sec)
-     ! for soil-matrix
-     real(r8), pointer :: hr_vr_col                                 (:,:)   ! (gC/m3/s) total vertically-resolved het. resp. from decomposing C pools 
-     real(r8), pointer :: o_scalar_col                              (:,:)   ! fraction by which decomposition is limited by anoxia
-     real(r8), pointer :: w_scalar_col                              (:,:)   ! fraction by which decomposition is limited by moisture availability
-     real(r8), pointer :: t_scalar_col                              (:,:)   ! fraction by which decomposition is limited by temperature
-     real(r8), pointer :: som_c_leached_col                         (:)     ! (gC/m^2/s) total SOM C loss from vertical transport 
-     real(r8), pointer :: decomp_cpools_leached_col                 (:,:)   ! (gC/m^2/s) C loss from vertical transport from each decomposing C pool 
-     real(r8), pointer :: decomp_cpools_transport_tendency_col      (:,:,:) ! (gC/m^3/s) C tendency due to vertical transport in decomposing C pools 
+     ! foi soil-matrix
+     real(r8), pointer :: hr_vr_col                                 (:,:)   !  (gC/m3/s) total vertically-resolved het. resp. from decomposing C pools 
+     real(r8), pointer :: o_scalar_col                              (:,:)   !  fraction by which decomposition is limited by anoxia
+     real(r8), pointer :: w_scalar_col                              (:,:)   !  fraction by which decomposition is limited by moisture availability
+     real(r8), pointer :: t_scalar_col                              (:,:)   !  fraction by which decomposition is limited by temperature
+     real(r8), pointer :: som_c_leached_col                         (:)     !  (gC/m^2/s) total SOM C loss from vertical transport 
+     real(r8), pointer :: decomp_cpools_leached_col                 (:,:)   !  (gC/m^2/s) C loss from vertical transport from each decomposing C pool 
+     real(r8), pointer :: decomp_cpools_transport_tendency_col      (:,:,:) !  (gC/m^3/s) C tendency due to vertical transport in decomposing C pools 
 
      ! nitrif_denitrif
      real(r8), pointer :: phr_vr_col                                (:,:)   ! (gC/m3/s) potential hr (not N-limited) 
@@ -70,7 +70,6 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: matrix_decomp_fire_k_col                  (:,:)   ! decomposition rate due to fire (gC*m3)/(gC*m3*step))
      real(r8), pointer :: tri_ma_vr                                 (:,:)   ! vertical C transfer rate in sparse matrix format (gC*m3)/(gC*m3*step))
 
-
      type(sparse_matrix_type)         :: AKsoilc                            ! A*K for C transfers between pools
      type(sparse_matrix_type)         :: AVsoil                             ! V for C and N transfers between soil layers
      type(sparse_matrix_type)         :: AKfiresoil                         ! Kfire for CN transfers from soil to atm due to fire
@@ -83,7 +82,7 @@ module SoilBiogeochemCarbonFluxType
 
      type(diag_matrix_type)           :: Ksoil                              ! CN turnover rate in different soil pools and layers
      type(diag_matrix_type)           :: Xdiagsoil                          ! Temporary C and N state variable to calculate accumulation transfers
-     
+
      type(vector_type)                :: matrix_Cinput                      ! C input to different soil compartments (pools and layers) (gC/m3/step)
 
    contains
@@ -124,8 +123,9 @@ contains
      type(bounds_type), intent(in)    :: bounds 
      !
      ! !LOCAL VARIABLES:
-     integer           :: begp,endp
-     integer           :: begc,endc,Ntrans,Ntrans_diag
+     integer           :: begp,endp            ! Begin and end patch
+     integer           :: begc,endc            ! Begin and end column
+     integer           :: Ntrans,Ntrans_diag   ! N trans size for matrix solution
      !------------------------------------------------------------------------
 
      begp = bounds%begp; endp = bounds%endp
@@ -199,8 +199,7 @@ contains
         call this%Ksoil%InitDM                  (ndecomp_pools*nlevdecomp,begc,endc)
         call this%Xdiagsoil%InitDM              (ndecomp_pools*nlevdecomp,begc,endc)
         call this%matrix_Cinput%InitV(ndecomp_pools*nlevdecomp,begc,endc)
-     end if
-     if(use_soil_matrixcn)then
+
         allocate(this%tri_ma_vr(begc:endc,1:decomp_cascade_con%Ntri_setup))
      else
         allocate(this%tri_ma_vr(1,1)); this%tri_ma_vr(:,:) = nan
@@ -816,7 +815,7 @@ contains
        end do
     end do
 
-! for matrix 
+    ! for matrix 
     if(use_soil_matrixcn)then
        do k = 1, ndecomp_pools
           do j = 1, nlevdecomp

@@ -29,7 +29,8 @@ module NutrientCompetitionFlexibleCNMod
   use CropReprPoolsMod    , only : nrepr
   use CNPhenologyMod      , only : CropPhase
   use CropType            , only : cphase_leafemerge, cphase_grainfill
-  use clm_varctl          , only : use_crop_agsys, use_matrixcn
+  use clm_varctl          , only : use_crop_agsys
+  use CNSharedParamsMod   , only : use_matrixcn
   !
   implicit none
   private
@@ -59,12 +60,13 @@ module NutrientCompetitionFlexibleCNMod
      module procedure constructor
   end interface nutrient_competition_FlexibleCN_type
   !
-
-  logical,parameter :: matrixcheck_ph = .True.
-  logical,parameter :: acc_ph = .False.
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: calc_npool_to_components_flexiblecn  ! Calculate npool_to_* terms for a single patch using the FlexibleCN approach
   private :: calc_npool_to_components_agsys       ! Calculate npool_to_* terms for a single crop patch when using AgSys
+
+  ! !PRIVATE DATA:
+  logical,parameter :: matrixcheck_ph = .True.
+  logical,parameter :: acc_ph = .False.
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -849,7 +851,7 @@ contains
               psnsun_to_cpool   => cnveg_carbonflux_inst%psnsun_to_cpool_patch,  & ! 
               psnshade_to_cpool => cnveg_carbonflux_inst%psnshade_to_cpool_patch & ! 
            )
-           if(use_c13 .and. psnsun_to_cpool(p)+psnshade_to_cpool(p).ne. 0.)then
+           if(use_c13 .and. psnsun_to_cpool(p)+psnshade_to_cpool(p).ne. 0._r8)then
                associate( &
                    matrix_C13input => cnveg_carbonflux_inst%matrix_C13input_patch & ! C13 input of matrix
                )
@@ -858,7 +860,7 @@ contains
                                 (psnsun_to_cpool(p)+psnshade_to_cpool(p)))
                end associate
            end if
-           if(use_c14 .and. psnsun_to_cpool(p)+psnshade_to_cpool(p).ne. 0.)then
+           if(use_c14 .and. psnsun_to_cpool(p)+psnshade_to_cpool(p).ne. 0._r8)then
                associate( &
                   matrix_C14input => cnveg_carbonflux_inst%matrix_C14input_patch & ! C14 input of matrix
                )
@@ -876,7 +878,7 @@ contains
            if (ivt(p) >= npcropmin)then
                npool_to_veg = npool_to_veg + npool_to_reproductiven(p,1) + npool_to_reproductiven_storage(p,1)
            end if
-           if(npool_to_veg .ne. 0)then
+           if(npool_to_veg .ne. 0._r8)then
                matrix_nalloc(p,ileaf         ) = npool_to_leafn(p)              / npool_to_veg
                matrix_nalloc(p,ileaf_st      ) = npool_to_leafn_storage(p)      / npool_to_veg
                matrix_nalloc(p,ifroot        ) = npool_to_frootn(p)             / npool_to_veg
@@ -895,12 +897,12 @@ contains
                end if
                matrix_Ninput(p) = npool_to_veg - retransn_to_npool(p)
            else
-               if(retransn(p) .ne. 0)then
+               if(retransn(p) .ne. 0._r8)then
                   retransn_to_npool(p) = retransn(p) * matrix_update_phn(p,iretransn_to_iout,retransn_to_npool(p)/retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
                end if
            end if
 
-           if(retransn(p) .ne. 0)then
+           if(retransn(p) .ne. 0._r8)then
                tmp = matrix_update_phn(p,iretransn_to_ileaf             ,matrix_nalloc(p,ileaf )         * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
                tmp = matrix_update_phn(p,iretransn_to_ileafst           ,matrix_nalloc(p,ileaf_st )      * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
                tmp = matrix_update_phn(p,iretransn_to_ifroot            ,matrix_nalloc(p,ifroot )        * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)

@@ -9,9 +9,10 @@ module CNVegCarbonStateType
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use shr_const_mod  , only : SHR_CONST_PDB
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use pftconMod	     , only : noveg, npcropmin, pftcon, nc3crop, nc3irrig
+  use pftconMod      , only : noveg, npcropmin, pftcon, nc3crop, nc3irrig
   use clm_varcon     , only : spval, c3_r2, c4_r2, c14ratio
-  use clm_varctl     , only : iulog, use_cndv, use_crop, use_matrixcn
+  use clm_varctl     , only : iulog, use_cndv, use_crop
+  use CNSharedParamsMod, only : use_matrixcn
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc 
@@ -554,7 +555,7 @@ contains
     ! add history fields for all CN variables, always set as default='inactive'
     !
     ! !USES:
-    use clm_varctl , only : use_c13, use_c14, use_matrixcn
+    use clm_varctl , only : use_c13, use_c14
     use histFileMod, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
     !
     ! !ARGUMENTS:
@@ -1470,9 +1471,9 @@ contains
     ! Initializes time varying variables used only in coupled carbon-nitrogen mode (CN):
     !
     ! !USES:
-    use landunit_varcon	 , only : istsoil, istcrop 
+    use landunit_varcon  , only : istsoil, istcrop
     use clm_time_manager , only : is_restart, get_nstep
-    use clm_varctl, only : MM_Nuptake_opt, spinup_state, use_matrixcn
+    use clm_varctl, only : MM_Nuptake_opt, spinup_state
     !
     ! !ARGUMENTS:
     class(cnveg_carbonstate_type)                       :: this 
@@ -1818,10 +1819,10 @@ contains
     ! !USES:
     use shr_infnan_mod   , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
     use clm_varcon       , only : c13ratio, c14ratio
-    use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt, use_matrixcn
+    use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt
     use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt
     use clm_time_manager , only : is_restart
-    use landunit_varcon	 , only : istsoil, istcrop 
+    use landunit_varcon  , only : istsoil, istcrop 
     use spmdMod          , only : mpicom
     use shr_mpi_mod      , only : shr_mpi_sum
     use restUtilMod

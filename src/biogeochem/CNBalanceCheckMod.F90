@@ -60,12 +60,15 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Init(this, bounds)
-    use clm_varctl       , only : use_matrixcn
+    use CNSharedParamsMod, only : use_matrixcn
     class(cn_balance_type)         :: this
     type(bounds_type) , intent(in) :: bounds  
 
     call this%InitAllocate(bounds)
 
+    ! Set warning and error levels for Carbon and Nitrogen balance
+    ! These could become namelist items if we want them to change for different
+    ! types of cases
     this%cwarning = 1.e-8_r8
     this%nwarning = 1.e-7_r8
     this%nerror   = 1.e-3_r8
@@ -287,7 +290,7 @@ contains
               (col_endcb(c) - col_begcb(c))
 
          ! check for significant errors
-         if (abs(col_errcb(c)) > this%cerror) then 
+         if (abs(col_errcb(c)) > this%cerror) then
             err_found = .true.
             err_index = c
          end if
@@ -523,8 +526,8 @@ contains
          ! calculate the total column-level nitrogen balance error for this time step
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &
               (col_endnb(c) - col_begnb(c))
-        
-         if (abs(col_errnb(c)) > this%nerror) then 
+
+         if (abs(col_errnb(c)) > this%nerror) then
             err_found = .true.
             err_index = c
          end if

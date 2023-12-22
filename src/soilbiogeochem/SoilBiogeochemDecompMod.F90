@@ -11,9 +11,9 @@ module SoilBiogeochemDecompMod
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
   use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varctl                         , only : use_nitrif_denitrif, use_lch4, use_fates, iulog, use_soil_matrixcn
+  use clm_varctl                         , only : use_nitrif_denitrif, use_lch4, use_fates, iulog
   use clm_varcon                         , only : dzsoi_decomp
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, mimics_decomp, decomp_method
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, mimics_decomp, decomp_method, use_soil_matrixcn
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
@@ -179,8 +179,8 @@ contains
                      p_decomp_cpool_loss(c,j,k) = p_decomp_cpool_loss(c,j,k) * fpi_vr(c,j)
                      pmnf_decomp_cascade(c,j,k) = pmnf_decomp_cascade(c,j,k) * fpi_vr(c,j)
                      if (use_soil_matrixcn)then ! correct only when one transfer from each litter pool
-                        Ksoil%DM(c,j+nlevdecomp*(cascade_donor_pool(k)-1)) &
-                        = Ksoil%DM(c,j+nlevdecomp*(cascade_donor_pool(k)-1)) * fpi_vr(c,j)
+                        Ksoil%DM(c,j+nlevdecomp*(cascade_donor_pool(k)-1)) =  &
+                          Ksoil%DM(c,j+nlevdecomp*(cascade_donor_pool(k)-1)) * fpi_vr(c,j)
                      end if
                      if (.not. use_nitrif_denitrif) then
                         sminn_to_denit_decomp_cascade_vr(c,j,k) = 0._r8

@@ -58,9 +58,9 @@ contains
     ! Initialize module-level data
     !
     ! !USES:
-    use clm_varctl, only: use_matrixcn
     use abortutils, only: endrun
     use shr_log_mod, only: errmsg => shr_log_errMsg
+    use CNSharedParamsMod, only: use_matrixcn
     !
     ! !ARGUMENTS:
     !

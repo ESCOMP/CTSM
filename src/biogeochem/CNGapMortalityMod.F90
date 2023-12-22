@@ -23,7 +23,7 @@ module CNGapMortalityMod
   use ColumnType                     , only : col
   use PatchType                      , only : patch
   use GridcellType                   , only : grc
-  use clm_varctl                     , only : use_matrixcn
+  use CNSharedParamsMod              , only : use_matrixcn
   use clm_varpar                     , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
                                               ilivestem,ilivestem_st,ilivestem_xf,&
                                               ideadstem,ideadstem_st,ideadstem_xf,&
@@ -129,7 +129,7 @@ contains
     real(r8):: m                ! rate for fractional mortality (1/s)
     real(r8):: mort_max         ! asymptotic max mortality rate (/yr)
     real(r8):: k_mort = 0.3_r8  ! coeff of growth efficiency in mortality equation
-    logical,parameter :: matrixcheck_gm = .False. ! If matrix check shoudl be done
+    logical,parameter :: matrixcheck_gm = .False. ! If matrix check should be done
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
@@ -149,7 +149,7 @@ contains
          livewdcn                 => pftcon%livewdcn             , & ! Input:  [real(r8) (:)]  live wood (phloem and ray parenchyma) C:N (gC/gN) 
          laisun                   => canopystate_inst%laisun_patch  , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index      
          laisha                   => canopystate_inst%laisha_patch  , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index   
-         nind                     => dgvs_inst%nind_patch                           , & ! Output:[real(r8)(:)] number of individuals (#/m2) added by F. Li and S. Levis		
+         nind                     => dgvs_inst%nind_patch                           , & ! Output:[real(r8)(:)] number of individuals (#/m2) added by F. Li and S. Levis
          ileaf_to_iout_gmc        => cnveg_carbonflux_inst%ileaf_to_iout_gm         , & ! Input: [integer (:)] Index of gap mortality related C transfer from leaf pool to outside of vegetation pools
          ileafst_to_iout_gmc      => cnveg_carbonflux_inst%ileafst_to_iout_gm       , & ! Input: [integer (:)] Index of gap mortality related C transfer from leaf storage pool to outside of vegetation pools
          ileafxf_to_iout_gmc      => cnveg_carbonflux_inst%ileafxf_to_iout_gm       , & ! Input: [integer (:)] Index of gap mortality related C transfer from leaf transfer pool to outside of vegetation pools
@@ -234,8 +234,8 @@ contains
          ! patch-level gap mortality carbon fluxes
          !------------------------------------------------------
 
-         ! displayed pools
          if(.not. use_matrixcn)then
+            ! displayed pools
             cnveg_carbonflux_inst%m_leafc_to_litter_patch(p)               = cnveg_carbonstate_inst%leafc_patch(p)               * m
             cnveg_carbonflux_inst%m_frootc_to_litter_patch(p)              = cnveg_carbonstate_inst%frootc_patch(p)              * m
             cnveg_carbonflux_inst%m_livestemc_to_litter_patch(p)           = cnveg_carbonstate_inst%livestemc_patch(p)           * m
@@ -256,8 +256,8 @@ contains
                                                                              m*spinup_factor_deadwood,dt,cnveg_carbonflux_inst,matrixcheck_gm,.True.)
          end if !use_matrixcn
 
-         ! storage pools
          if(.not. use_matrixcn)then
+            ! storage pools
             cnveg_carbonflux_inst%m_leafc_storage_to_litter_patch(p)       = cnveg_carbonstate_inst%leafc_storage_patch(p)       * m
             cnveg_carbonflux_inst%m_frootc_storage_to_litter_patch(p)      = cnveg_carbonstate_inst%frootc_storage_patch(p)      * m
             cnveg_carbonflux_inst%m_livestemc_storage_to_litter_patch(p)   = cnveg_carbonstate_inst%livestemc_storage_patch(p)   * m
@@ -266,7 +266,7 @@ contains
             cnveg_carbonflux_inst%m_deadcrootc_storage_to_litter_patch(p)  = cnveg_carbonstate_inst%deadcrootc_storage_patch(p)  * m
             cnveg_carbonflux_inst%m_gresp_storage_to_litter_patch(p)       = cnveg_carbonstate_inst%gresp_storage_patch(p)       * m
          
-         ! transfer pools
+            ! transfer pools
             cnveg_carbonflux_inst%m_leafc_xfer_to_litter_patch(p)          = cnveg_carbonstate_inst%leafc_xfer_patch(p)          * m
             cnveg_carbonflux_inst%m_frootc_xfer_to_litter_patch(p)         = cnveg_carbonstate_inst%frootc_xfer_patch(p)         * m
             cnveg_carbonflux_inst%m_livestemc_xfer_to_litter_patch(p)      = cnveg_carbonstate_inst%livestemc_xfer_patch(p)      * m
@@ -340,7 +340,7 @@ contains
          end if
             
          if(.not. use_matrixcn)then
-         ! storage pools
+            ! storage pools
             cnveg_nitrogenflux_inst%m_leafn_storage_to_litter_patch(p)       = cnveg_nitrogenstate_inst%leafn_storage_patch(p)      * m
             cnveg_nitrogenflux_inst%m_frootn_storage_to_litter_patch(p)      = cnveg_nitrogenstate_inst%frootn_storage_patch(p)     * m
             cnveg_nitrogenflux_inst%m_livestemn_storage_to_litter_patch(p)   = cnveg_nitrogenstate_inst%livestemn_storage_patch(p)  * m
@@ -348,7 +348,7 @@ contains
             cnveg_nitrogenflux_inst%m_livecrootn_storage_to_litter_patch(p)  = cnveg_nitrogenstate_inst%livecrootn_storage_patch(p) * m
             cnveg_nitrogenflux_inst%m_deadcrootn_storage_to_litter_patch(p)  = cnveg_nitrogenstate_inst%deadcrootn_storage_patch(p) * m
 
-         ! transfer pools
+            ! transfer pools
             cnveg_nitrogenflux_inst%m_leafn_xfer_to_litter_patch(p)          = cnveg_nitrogenstate_inst%leafn_xfer_patch(p)         * m
             cnveg_nitrogenflux_inst%m_frootn_xfer_to_litter_patch(p)         = cnveg_nitrogenstate_inst%frootn_xfer_patch(p)        * m
             cnveg_nitrogenflux_inst%m_livestemn_xfer_to_litter_patch(p)      = cnveg_nitrogenstate_inst%livestemn_xfer_patch(p)     * m

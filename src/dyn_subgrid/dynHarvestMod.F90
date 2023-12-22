@@ -23,7 +23,8 @@ module dynHarvestMod
   use clm_varcon              , only : grlnd
   use ColumnType              , only : col                
   use PatchType               , only : patch                
-  use clm_varctl              , only : use_fates, use_matrixcn  
+  use CNSharedParamsMod       , only : use_matrixcn
+  use clm_varctl              , only : use_fates
   use clm_varpar              , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
                                        ilivestem,ilivestem_st,ilivestem_xf,&
                                        ideadstem,ideadstem_st,ideadstem_xf,&

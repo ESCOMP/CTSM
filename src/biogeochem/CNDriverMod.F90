@@ -11,7 +11,6 @@ module CNDriverMod
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_nitrif_denitrif, use_nguardrail
-  use clm_varctl                      , only : use_matrixcn,use_soil_matrixcn
   use clm_varctl                      , only : use_crop, use_crop_agsys
   use SoilBiogeochemDecompCascadeConType, only : mimics_decomp, century_decomp, decomp_method
   use CNSharedParamsMod               , only : use_fun
@@ -86,8 +85,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNDriverNoLeaching(bounds,                                                    &
        num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       num_actfirec, filter_actfirec, num_actfirep, filter_actfirep, &
        num_pcropp, filter_pcropp, num_soilnopcropp, filter_soilnopcropp, &
+       num_actfirec, filter_actfirec, num_actfirep, filter_actfirep, &
        num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp,       &
        cnveg_state_inst,                                                                   &
        cnveg_carbonflux_inst, cnveg_carbonstate_inst,                                      &
@@ -929,6 +928,8 @@ contains
     use CNVegMatrixMod            , only: CNVegMatrix
     use CNSoilMatrixMod           , only: CNSoilMatrix
     use clm_time_manager          , only : is_first_step_of_this_run_segment,is_beg_curr_year,is_end_curr_year,get_curr_date
+    use CNSharedParamsMod         , only : use_matrixcn
+    use SoilBiogeochemDecompCascadeConType , only : use_soil_matrixcn
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  

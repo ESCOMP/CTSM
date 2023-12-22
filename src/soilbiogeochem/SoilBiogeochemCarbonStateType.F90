@@ -7,16 +7,16 @@ module SoilBiogeochemCarbonStateType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi, zsoi, c3_r2
-  use clm_varctl                         , only : iulog, spinup_state, use_fates , use_soil_matrixcn
+  use clm_varctl                         , only : iulog, spinup_state, use_fates
   use landunit_varcon                    , only : istcrop, istsoil
   use abortutils                         , only : endrun
   use spmdMod                            , only : masterproc 
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
-  use SPMMod                             , only : sparse_matrix_type, vector_type
+  use SparseMatrixMultiplyMod            , only : sparse_matrix_type, vector_type
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -521,10 +521,9 @@ contains
 
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)
-!matrix-spinup
+       ! matrix spinup
        if(use_soil_matrixcn)then
           this%in_acc(c,:) = 0._r8
-!          this%tran_acc(c,:,:) = 0._r8
           this%AKXcacc%M(c,:) = 0._r8
        end if
 

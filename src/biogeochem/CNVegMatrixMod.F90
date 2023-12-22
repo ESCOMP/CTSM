@@ -43,7 +43,7 @@ module CNVegMatrixMod
   use SoilBiogeochemNitrogenFluxType , only : soilbiogeochem_nitrogenflux_type
   use clm_varctl                     , only : isspinup, is_outmatrix, nyr_forcing, nyr_SASU, iloop_avg 
   use clm_varctl                     , only : use_c13, use_c14 
-  use SPMMod                         , only : sparse_matrix_type,diag_matrix_type,vector_type
+  use SparseMatrixMultiplyMod        , only : sparse_matrix_type,diag_matrix_type,vector_type
   use MatrixMod                      , only : inverse
   !
   implicit none

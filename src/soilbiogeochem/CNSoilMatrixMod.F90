@@ -24,7 +24,7 @@ module CNSoilMatrixMod
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_cascade_outtransitions
   use clm_varpar                         , only : i_cwd
   use clm_varcon                         , only : dzsoi_decomp,zsoi,secspday,c3_r2,c14ratio
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con    
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
   use CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
@@ -34,12 +34,12 @@ module CNSoilMatrixMod
   use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type  
   use CNSharedParamsMod                  , only : CNParamsShareInst
   use SoilStateType                      , only : soilstate_type  
-  use clm_varctl                         , only : isspinup, use_soil_matrixcn, is_outmatrix, nyr_forcing, nyr_SASU, iloop_avg
+  use clm_varctl                         , only : isspinup, is_outmatrix, nyr_forcing, nyr_SASU, iloop_avg
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
   use clm_varctl                         , only : use_c13, use_c14, iulog
   use perf_mod                           , only : t_startf, t_stopf
-  use SPMMod                             , only : sparse_matrix_type, diag_matrix_type, vector_type
+  use SparseMatrixMultiplyMod            , only : sparse_matrix_type, diag_matrix_type, vector_type
   use MatrixMod                          , only : inverse
 !
   implicit none

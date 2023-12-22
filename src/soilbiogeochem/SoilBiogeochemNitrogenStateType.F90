@@ -11,16 +11,16 @@ module SoilBiogeochemNitrogenStateType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, dzsoi_decomp, zisoi
-  use clm_varctl                         , only : use_nitrif_denitrif, use_soil_matrixcn
+  use clm_varctl                         , only : use_nitrif_denitrif
   use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, century_decomp, decomp_method
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump, spinup_state
   use landunit_varcon                    , only : istcrop, istsoil 
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
-  use SPMMOD                             , only : sparse_matrix_type, vector_type
+  use SparseMatrixMultiplyMod            , only : sparse_matrix_type, vector_type
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -410,10 +410,9 @@ contains
 
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)
-!matrix-spinup
+       ! matrix-spinup
        if(use_soil_matrixcn)then
           this%in_nacc(c,:) = 0._r8
-!          this%tran_nacc(c,:,:) = 0._r8
        end if
 
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
@@ -463,11 +462,11 @@ contains
                       this%decomp0_npools_vr_col(c,j,k) = this%decomp_npools_vr_col(c,j,k)
                    end if
                 end do
-               if(use_soil_matrixcn)then
-                  do k = 1, ndecomp_cascade_transitions
-                     this%hori_tran_nacc(c,j,k) = 0._r8
-                  end do
-               end if
+                if(use_soil_matrixcn)then
+                   do k = 1, ndecomp_cascade_transitions
+                      this%hori_tran_nacc(c,j,k) = 0._r8
+                   end do
+                end if
                 this%sminn_vr_col(c,j) = 0._r8
                 this%ntrunc_vr_col(c,j) = 0._r8
              end do
@@ -579,8 +578,8 @@ contains
                errMsg(sourcefile, __LINE__))
        end if
     end do
-    if(flag=='write')then
-       if(use_soil_matrixcn)then
+    if(use_soil_matrixcn)then
+       if(flag=='write')then
           do i = 1,ndecomp_pools
              do j = 1,nlevdecomp
                 this%in_nacc_2d(:,j,i) = this%in_nacc(:,j+(i-1)*nlevdecomp)
@@ -618,8 +617,7 @@ contains
              if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i,i_decomp,j_decomp,i_lev,j_lev
           end do
        end if
-    end if
-    if(use_soil_matrixcn)then
+
        do k = 1, ndecomp_pools
           varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'n'
           ptr2d => this%matrix_cap_decomp_npools_vr_col(:,:,k)
@@ -653,9 +651,7 @@ contains
              long_name='',  units='', scale_by_thickness=.false., &
              interpinic_flag='interp', readvar=readvar, data=ptr2d)
        end do
-    end if
 
-    if(use_soil_matrixcn)then
        do i = 1, ndecomp_cascade_transitions
           varname=trim(decomp_cascade_con%cascade_step_name(i))//'n'
           ptr2d => this%hori_tran_nacc(:,:,i)

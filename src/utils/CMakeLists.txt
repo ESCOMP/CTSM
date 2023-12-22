@@ -19,7 +19,7 @@ list(APPEND clm_sources
   quadraticMod.F90
   fileutils.F90
   MatrixMod.F90
-  SPMMod.F90
+  SparseMatrixMultiplyMod.F90
   IssueFixedMetadataHandler.F90
   NumericsMod.F90
   )

@@ -85,7 +85,7 @@ contains
     ! for allocation
     !
     ! !USES:
-    use clm_varctl, only: use_matrixcn
+    use CNSharedParamsMod           , only : use_matrixcn
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds
@@ -199,7 +199,8 @@ contains
              mr = mr + livestem_mr(p) + reproductive_mr_tot
           end if
        end if
-       if (mr < -1.e-15 .and. use_matrixcn) mr = 0._r8
+       ! For Matrix solution if mr is very small set it to zero
+       if(mr < -1.e-15_r8 .and. use_matrixcn) mr = 0.0_r8
 
        ! carbon flux available for allocation
        availc(p) = gpp(p) - mr

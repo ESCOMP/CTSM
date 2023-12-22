@@ -7,13 +7,13 @@ module SoilBiogeochemNitrogenFluxType
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, ndecomp_pools_vr
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use decompMod                          , only : bounds_type
-  use clm_varctl                         , only : use_nitrif_denitrif, use_crop, use_soil_matrixcn
+  use clm_varctl                         , only : use_nitrif_denitrif, use_crop
   use CNSharedParamsMod                  , only : use_fun
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use abortutils                         , only : endrun
   use LandunitType                       , only : lun                
-  use ColumnType                         , only : col                
-  use SPMMod                             , only : sparse_matrix_type, diag_matrix_type, vector_type
+  use ColumnType                         , only : col
+  use SparseMatrixMultiplyMod            , only : sparse_matrix_type, diag_matrix_type, vector_type
   ! 
   ! !PUBLIC TYPES:
   implicit none

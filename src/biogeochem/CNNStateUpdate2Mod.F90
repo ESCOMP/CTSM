@@ -3,13 +3,18 @@ module CNNStateUpdate2Mod
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Module for nitrogen state variable update, mortality fluxes.
+  ! When the matrix solution is being used (use_matrixcn and use_soil_matrixcn)
+  ! only some state updates are done here, the other state updates happen
+  ! after the matrix is solved in VegMatrix and SoilMatrix.
   !
   ! !USES:
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use clm_time_manager                , only : get_step_size_real
   use clm_varpar                      , only : nlevsoi, nlevdecomp
   use clm_varpar                      , only : i_litr_min, i_litr_max, i_cwd
-  use clm_varctl                      , only : iulog, use_matrixcn,use_soil_matrixcn
+  use clm_varctl                      , only : iulog
+  use SoilBiogeochemDecompCascadeConType, only : use_soil_matrixcn
+  use CNSharedParamsMod               , only : use_matrixcn
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
@@ -68,6 +73,9 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
 
+            !
+            ! State update without the matrix solution
+            !
             if (.not. use_soil_matrixcn)then 
                do i = i_litr_min, i_litr_max
                   ns_soil%decomp_npools_vr_col(c,j,i) = &
@@ -78,7 +86,14 @@ contains
                !           i_cwd = 0 if fates, so not including in the i-loop
                ns_soil%decomp_npools_vr_col(c,j,i_cwd)     = &
                  ns_soil%decomp_npools_vr_col(c,j,i_cwd)     + nf_veg%gap_mortality_n_to_cwdn_col(c,j)       * dt
+            !
+            ! For the matrix solution the actual state update comes after the matrix
+            ! multiply in SoilMatrix, but the matrix needs to be setup with
+            ! the equivalent of above. Those changes can be here or in the
+            ! native subroutines dealing with that field
+            !
             else
+               ! Do above for the matrix solution
                do i = i_litr_min, i_litr_max
                   nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) = &
                     nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) + nf_veg%gap_mortality_n_to_litr_n_col(c,j,i) * dt
@@ -96,8 +111,11 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
 
+         !
+         ! State update without the matrix solution
+         !
          if(.not.  use_matrixcn)then
-         ! displayed pools
+            ! displayed pools
             ns_veg%leafn_patch(p) =  ns_veg%leafn_patch(p)                           &
               - nf_veg%m_leafn_to_litter_patch(p) * dt
             ns_veg%frootn_patch(p) =  ns_veg%frootn_patch(p)                         &
@@ -113,7 +131,7 @@ contains
             ns_veg%retransn_patch(p) =  ns_veg%retransn_patch(p)                     &
               - nf_veg%m_retransn_to_litter_patch(p) * dt
 
-         ! storage pools
+            ! storage pools
             ns_veg%leafn_storage_patch(p) =  ns_veg%leafn_storage_patch(p)           &
               - nf_veg%m_leafn_storage_to_litter_patch(p) * dt
             ns_veg%frootn_storage_patch(p) =  ns_veg%frootn_storage_patch(p)         &
@@ -127,7 +145,7 @@ contains
             ns_veg%deadcrootn_storage_patch(p) =  ns_veg%deadcrootn_storage_patch(p) &
               - nf_veg%m_deadcrootn_storage_to_litter_patch(p) * dt
 
-         ! transfer pools
+            ! transfer pools
             ns_veg%leafn_xfer_patch(p) =  ns_veg%leafn_xfer_patch(p)                 &
               - nf_veg%m_leafn_xfer_to_litter_patch(p) * dt
             ns_veg%frootn_xfer_patch(p) =  ns_veg%frootn_xfer_patch(p)               &
@@ -141,6 +159,12 @@ contains
             ns_veg%deadcrootn_xfer_patch(p) =  ns_veg%deadcrootn_xfer_patch(p)       &
               - nf_veg%m_deadcrootn_xfer_to_litter_patch(p) * dt
 
+         !
+         ! For the matrix solution the actual state update comes after the matrix
+         ! multiply in VegMatrix, but the matrix needs to be setup with
+         ! the equivalent of above. Those changes can be here or in the
+         ! native subroutines dealing with that field
+         !
          else
             ! NOTE: The equivalent changes for matrix code are in dynHarvest::CNHarvest EBK (11/26/2019)
          end if !not use_matrixcn
@@ -192,6 +216,9 @@ contains
       do j = 1,nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
+            !
+            ! State update without the matrix solution
+            !
             if (.not. use_soil_matrixcn)then
                do i = i_litr_min, i_litr_max
                   ns_soil%decomp_npools_vr_col(c,j,i) = &
@@ -202,7 +229,14 @@ contains
                !           i_cwd = 0 if fates, so not including in the i-loop
                ns_soil%decomp_npools_vr_col(c,j,i_cwd)     = &
                  ns_soil%decomp_npools_vr_col(c,j,i_cwd)     + nf_veg%harvest_n_to_cwdn_col(c,j)       * dt
+            !
+            ! For the matrix solution the actual state update comes after the matrix
+            ! multiply in SoilMatrix, but the matrix needs to be setup with
+            ! the equivalent of above. Those changes can be here or in the
+            ! native subroutines dealing with that field
+            !
             else
+               ! Do above for the matrix solution
                do i = i_litr_min, i_litr_max
                   nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) = &
                     nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) + nf_veg%harvest_n_to_litr_n_col(c,j,i) * dt
@@ -220,8 +254,12 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
 
-         ! displayed pools
+
+         !
+         ! State update without the matrix solution
+         !
          if(.not. use_matrixcn)then
+            ! displayed pools
             ns_veg%leafn_patch(p) = ns_veg%leafn_patch(p)                           &
               - nf_veg%hrv_leafn_to_litter_patch(p) * dt
             ns_veg%frootn_patch(p) = ns_veg%frootn_patch(p)                         &
@@ -237,7 +275,7 @@ contains
             ns_veg%retransn_patch(p) = ns_veg%retransn_patch(p)                     &
               - nf_veg%hrv_retransn_to_litter_patch(p) * dt
 
-         ! storage pools
+            ! storage pools
             ns_veg%leafn_storage_patch(p) = ns_veg%leafn_storage_patch(p)           &
               - nf_veg%hrv_leafn_storage_to_litter_patch(p) * dt
             ns_veg%frootn_storage_patch(p) = ns_veg%frootn_storage_patch(p)         &
@@ -251,7 +289,7 @@ contains
             ns_veg%deadcrootn_storage_patch(p) = ns_veg%deadcrootn_storage_patch(p) &
               - nf_veg%hrv_deadcrootn_storage_to_litter_patch(p) * dt
 
-         ! transfer pools
+            ! transfer pools
             ns_veg%leafn_xfer_patch(p) = ns_veg%leafn_xfer_patch(p)                 &
               - nf_veg%hrv_leafn_xfer_to_litter_patch(p) *dt
             ns_veg%frootn_xfer_patch(p) = ns_veg%frootn_xfer_patch(p)               &
@@ -264,6 +302,12 @@ contains
               - nf_veg%hrv_livecrootn_xfer_to_litter_patch(p) *dt
             ns_veg%deadcrootn_xfer_patch(p) = ns_veg%deadcrootn_xfer_patch(p)       &
               - nf_veg%hrv_deadcrootn_xfer_to_litter_patch(p) *dt
+         !
+         ! For the matrix solution the actual state update comes after the matrix
+         ! multiply in VegMatrix, but the matrix needs to be setup with
+         ! the equivalent of above. Those changes can be here or in the
+         ! native subroutines dealing with that field
+         !
          else
             ! NOTE: The equivalent changes for matrix code are in dynHarvest::CNHarvest EBK (11/26/2019)
          end if !not use_matrixcn

@@ -240,8 +240,6 @@ module clm_varctl
   !----------------------------------------------------------
   ! CN matrix
   !----------------------------------------------------------  
-  logical, public :: use_matrixcn = .true. !.false.              ! true => use cn matrix
-  logical, public :: use_soil_matrixcn = .false.! true => use cn matrix  
   logical, public :: isspinup = .false.  !.false.              ! true => use acc spinup
   logical, public :: is_outmatrix = .false.!.false.              ! true => use acc spinup
   ! SASU 

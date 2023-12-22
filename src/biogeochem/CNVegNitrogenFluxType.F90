@@ -14,8 +14,8 @@ module CNVegNitrogenFluxType
                                                   ideadcroot,ideadcroot_st,ideadcroot_xf,&
                                                   igrain,igrain_st,igrain_xf,iretransn,ioutn
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
-  use clm_varctl                         , only : use_nitrif_denitrif, use_crop, use_matrixcn
-  use CNSharedParamsMod                  , only : use_fun
+  use clm_varctl                         , only : use_nitrif_denitrif, use_crop
+  use CNSharedParamsMod                  , only : use_fun, use_matrixcn
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
@@ -24,7 +24,7 @@ module CNVegNitrogenFluxType
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
-  use SPMMod                             , only : sparse_matrix_type, diag_matrix_type, vector_type
+  use SparseMatrixMultiplyMod            , only : sparse_matrix_type, diag_matrix_type, vector_type
   ! 
   ! !PUBLIC TYPES:
   implicit none

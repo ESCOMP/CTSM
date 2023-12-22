@@ -11,8 +11,8 @@ module SoilBiogeochemDecompCascadeConType
   use clm_varpar     , only : ndecomp_cascade_transitions, ndecomp_pools, nlevdecomp, ndecomp_pools_vr
   use clm_varpar     , only : ndecomp_cascade_outtransitions
   use clm_varcon     , only : ispval
-  use clm_varctl     , only : use_soil_matrixcn, iulog
-  use SPMMod         , only : sparse_matrix_type, diag_matrix_type, vector_type
+  use clm_varctl     , only : iulog
+  use SparseMatrixMultiplyMod, only : sparse_matrix_type, diag_matrix_type, vector_type
   !
   implicit none
 
@@ -21,7 +21,7 @@ module SoilBiogeochemDecompCascadeConType
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: decomp_cascade_par_init          ! Initialize the parameters
   public :: init_decomp_cascade_constants    ! Initialize the constants
-  public :: InitSoilTransfer                 ! Initialize soil transfer
+  public :: InitSoilTransfer                 ! Initialize soil transfer (for soil matrix)
   !
   type, public :: decomp_cascade_type
      !-- properties of each pathway along decomposition cascade 
@@ -47,6 +47,7 @@ module SoilBiogeochemDecompCascadeConType
      logical           , pointer  :: is_lignin(:)                      ! TRUE => pool is lignin
      real(r8)          , pointer  :: spinup_factor(:)                  ! factor by which to scale AD and relevant processes by
 
+     ! Matrix data
      integer,pointer :: spm_tranlist_a(:,:)                            ! Prescribed subscripts to map 2D variables (transitions,soil layer) to 1D sparse matrix format in a_ma_vr and na_ma_vr
      integer,pointer :: A_i(:)                                         ! Prescribed row number of all elements in a_ma_vr
      integer,pointer :: A_j(:)                                         ! Prescribed column number of all elements in na_ma_vr
@@ -74,6 +75,7 @@ module SoilBiogeochemDecompCascadeConType
   integer, public, parameter :: century_decomp = 1                     ! CENTURY decomposition method type
   integer, public, parameter :: mimics_decomp = 2                      ! MIMICS decomposition method type
   integer, public            :: decomp_method  = ispval                ! Type of decomposition to use
+  logical, public :: use_soil_matrixcn = .false.  ! true => use cn matrix solution for soil BGC
   type(decomp_cascade_type), public :: decomp_cascade_con
   !------------------------------------------------------------------------
 
@@ -259,7 +261,7 @@ contains
 ! Initialize sparse matrix variables and index. Count possible non-zero entries and record their x and y in the matrix.
 ! Collect those non-zero entry information, and save them into the list.
 
-  use SPMMod         , only : sparse_matrix_type, diag_matrix_type, vector_type
+  use SparseMatrixMultiplyMod, only : sparse_matrix_type, diag_matrix_type, vector_type
 
   integer i,j,k,m,n
   integer,dimension(:) :: ntrans_per_donor(1:ndecomp_pools)
