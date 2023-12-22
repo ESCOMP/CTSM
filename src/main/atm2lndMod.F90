@@ -15,13 +15,13 @@ module atm2lndMod
   use clm_varcon     , only : wv_to_dair_weight_ratio
   use clm_varctl     , only : iulog, use_c13, use_cn, use_lch4, iulog
   use abortutils     , only : endrun
-  use decompMod      , only : bounds_type
+  use decompMod      , only : bounds_type, subgrid_level_gridcell, subgrid_level_column
   use atm2lndType    , only : atm2lnd_type
   use TopoMod        , only : topo_type
   use filterColMod   , only : filter_col_type
   use LandunitType   , only : lun                
   use ColumnType     , only : col
-  use landunit_varcon, only : istice_mec
+  use landunit_varcon, only : istice
   use WaterType      , only : water_type
   use Wateratm2lndBulkType, only : wateratm2lndbulk_type
   !
@@ -128,10 +128,9 @@ contains
     ! temporaries for topo downscaling
     real(r8) :: hsurf_g,hsurf_c
     real(r8) :: Hbot, zbot
-    real(r8) :: tbot_g, pbot_g, thbot_g, qbot_g, qs_g, es_g, rhos_g
-    real(r8) :: tbot_c, pbot_c, thbot_c, qbot_c, qs_c, es_c, rhos_c
+    real(r8) :: tbot_g, pbot_g, thbot_g, qbot_g, qs_g, rhos_g
+    real(r8) :: tbot_c, pbot_c, thbot_c, qbot_c, qs_c, rhos_c
     real(r8) :: rhos_c_estimate, rhos_g_estimate
-    real(r8) :: dum1,   dum2
 
     character(len=*), parameter :: subname = 'downscale_forcings'
     !-----------------------------------------------------------------------
@@ -223,8 +222,8 @@ contains
 
          thbot_c= thbot_g + (tbot_c - tbot_g)*exp((zbot/Hbot)*(rair/cpair))  ! pot temp calc
 
-         call Qsat(tbot_g,pbot_g,es_g,dum1,qs_g,dum2)
-         call Qsat(tbot_c,pbot_c,es_c,dum1,qs_c,dum2)
+         call Qsat(tbot_g,pbot_g,qs_g)
+         call Qsat(tbot_c,pbot_c,qs_c)
 
          qbot_c = qbot_g*(qs_c/qs_g)
 
@@ -344,7 +343,7 @@ contains
              l = col%landunit(c)
              rain_orig = forc_rain_c(c)
              snow_orig = forc_snow_c(c)
-             if (lun%itype(l) == istice_mec) then
+             if (lun%itype(l) == istice) then
                 all_snow_t = atm2lnd_inst%params%precip_repartition_glc_all_snow_t
                 frac_rain_slope = atm2lnd_inst%params%precip_repartition_glc_frac_rain_slope
              else
@@ -525,7 +524,7 @@ contains
             ! Keep track of the gridcell-level weighted sum for later normalization.
             !
             ! This gridcell-level weighted sum just includes points for which we do the
-            ! downscaling (e.g., glc_mec points). Thus the contributing weights
+            ! downscaling (e.g., glacier points). Thus the contributing weights
             ! generally do not add to 1. So to do the normalization properly, we also
             ! need to keep track of the weights that have contributed to this sum.
             sum_lwrad_g(g) = sum_lwrad_g(g) + col%wtgcell(c)*forc_lwrad_c(c)
@@ -557,7 +556,8 @@ contains
                if (abs((newsum_lwrad_g(g) / sum_wts_g(g)) - forc_lwrad_g(g)) > 1.e-8_r8) then
                   write(iulog,*) 'g, newsum_lwrad_g, sum_wts_g, forc_lwrad_g: ', &
                        g, newsum_lwrad_g(g), sum_wts_g(g), forc_lwrad_g(g)
-                  call endrun(msg=' ERROR: Energy conservation error downscaling longwave'//&
+                  call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
+                       msg=' ERROR: Energy conservation error downscaling longwave'//&
                        errMsg(sourcefile, __LINE__))
                end if
             end if
@@ -708,7 +708,8 @@ contains
                 write(iulog,*) 'forc_pbot_c, forc_pbot_g = ', forc_pbot_c(c), forc_pbot_g(g)
                 write(iulog,*) 'forc_rho_c, forc_rho_g = ', forc_rho_c(c), forc_rho_g(g)
                 write(iulog,*) 'forc_lwrad_c, forc_lwrad_g = ', forc_lwrad_c(c), forc_lwrad_g(g)
-                call endrun(msg=errMsg(sourcefile, __LINE__))
+                call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                     msg=errMsg(sourcefile, __LINE__))
              end if  ! inequal
           end if  ! urbpoi
        end if  ! active

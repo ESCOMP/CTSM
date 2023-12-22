@@ -11,11 +11,15 @@ Ending suffix requires one of these endings: _transient, _control or _pd
 
 Transient cases:
 
-   yyyy-yyyy_$rcp$desc_transient (for example 1850-2100_rcp8.5_transient)
+   yyyy-yyyy_$ssp_rcp$desc_transient (for example 1850-2100_SSP5-8.5_transient)
 
    or
 
    20thC$desc_transient  (means nominal 1850-2000 although some datasets are 1850-2005)
+
+   or
+
+   yyyy-PD_$desc_transient (means nominal year yyyy through present day (PD) (with the year for PD advancing)
 
 Control cases:
 
@@ -30,9 +34,10 @@ Where
 
 yyyy      = Simulation year (such as 1850 or 2000).
 yyyy-yyyy = Range of simulation years to run over (i.e.. 1850-2000).
-$rcp      = Representative concentration pathway (rcp) description string
+yyyy-PD   = Range of simulation years to run over until present day (i.e.. 2018-2024).
+$ssp_rcp  = Shared Socieconomic Pathway (SSP) Representative concentration pathway (RCP) description string
             for future scenarios:
-            rcp#.# (for example: rcp8.5, rcp6, rcp4.5, rcp2.6)
+            SSP#-#.# (for example: SSP5-8.5, SSP1-2.6, SSP4-6.0
             [can be blank for historical cases].
 $desc     = Description of anything else -- alpha-numeric.
             Should start with an underscore ("_") if not by itself 

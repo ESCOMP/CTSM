@@ -1,5 +1,204 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev142 samrabin 09/19/2023 Merge 5 bit-for-bit pull requests
+    ctsm5.1.dev141   slevis 09/13/2023 Change small snocan to zero
+    ctsm5.1.dev140  afoster 09/12/2023 add lai_streams capability for FATES
+    ctsm5.1.dev139   slevis 08/28/2023 Fix problems uncovered by nag -nan tests
+    ctsm5.1.dev138   slevis 08/25/2023 Refactor max_patch_per_col and maxsoil_patches loops
+    ctsm5.1.dev137   slevis 08/23/2023 Surface roughness modifications
+    ctsm5.1.dev136 multiple 08/22/2023 Change order of history fields to improve performance on derecho
+    ctsm5.1.dev135   slevis 08/21/2023 Rename hist fields to track them down more easily
+    ctsm5.1.dev134   rgknox 08/16/2023 Migration of FATES to share normal soil BGC call sequence and functionality
+    ctsm5.1.dev133 glemieux 08/09/2023 FATES API update to facilitate fates refactor
+    ctsm5.1.dev132   slevis 08/04/2023 Add parameterization to allow excess ice in soil and subsidence
+    ctsm5.1.dev131 samrabin 07/27/2023 Enable prescribed crop calendars
+    ctsm5.1.dev130 glemieux 07/09/2023 FATES parameter file and test definition update
+    ctsm5.1.dev129     erik 06/22/2023 NEON fixes for TOOL and user-mods, add SP for NEON, some history file updates, black refactor for buildlib/buildnml
+    ctsm5.1.dev128 glemieux 06/01/2023 Update FATES tests to double precision
+    ctsm5.1.dev127    sacks 05/19/2023 Fix nuopc cplhist test
+    ctsm5.1.dev126   jpalex 05/18/2023 Clean up some loops in UrbanTimeVarType
+    ctsm5.1.dev125   jpalex 05/17/2023 Added cache for clock step_size in clm_time_manager.F90
+    ctsm5.1.dev124     erik 05/09/2023 Initialization memory update, new surface datasets for new grids, add option for running NEON with PRISM data
+    ctsm5.1.dev123    sacks 05/01/2023 Updates needed for pFUnit 4 and other externals updates
+    ctsm5.1.dev122    sacks 04/23/2023 Rework handling of evaporation constraint in SoilFluxes
+    ctsm5.1.dev121 glemieux 04/05/2023 Changes soil moisture initialization logic for FATES
+    ctsm5.1.dev120    sacks 03/25/2023 Update externals and minor fixes
+    ctsm5.1.dev119   slevis 03/16/2023 Allow gross unrepresented land use transition (PR #309)
+    ctsm5.1.dev118   slevis 02/05/2023 Use conda environment rather than ncar_pylib with the fsurdat_modifier system test
+    ctsm5.1.dev117  afoster 02/02/2023 Updates to facilitate running FATES at NEON sites
+    ctsm5.1.dev116     erik 01/26/2023 Small answer changes with bug fixes, zetamaxstable=2 for BHS, new single point fsurdat files
+    ctsm5.1.dev115   rgknox 12/02/2022 API compatability with FATES V2 nutrient dynamics
+    ctsm5.1.dev114 multiple 11/19/2022 Some NEON updates fixing AG sites, update MOSART, small fixes
+    ctsm5.1.dev113 multiple 10/28/2022 Fix some compsets; add only clauses for ESMF use statements
+    ctsm5.1.dev112 multiple 10/15/2022 Rework fates test definitions and add new fates tests
+    ctsm5.1.dev111 multiple 10/05/2022 Fixes for NEON cases
+    ctsm5.1.dev110   slevis 09/26/2022 Introduction of modify_meshes tool for use in I-cases and F-cases
+    ctsm5.1.dev109   slevis 09/26/2022 If not MIMICS, do not output certain MIMICS history fields
+    ctsm5.1.dev108  afoster 09/08/2022 Connect ozone from atmosphere
+    ctsm5.1.dev107  afoster 09/07/2022 Update Externals
+    ctsm5.1.dev106 multiple 08/04/2022 Reuse some files generated in initialization when rerunning
+    ctsm5.1.dev105   slevis 07/26/2022 make interfaces more similar between fsurdat_modifier and subset_data tools
+    ctsm5.1.dev104 glemieux 07/15/2022 Update to FATES history names and machine configuration
+    ctsm5.1.dev103    sacks 07/12/2022 Fix accumulation variables when changing model time step
+    ctsm5.1.dev102    sacks 07/11/2022 Fix LILAC interface to PIO
+    ctsm5.1.dev101 samrabin 07/11/2022 Fix winter wheat sowing window bugs
+    ctsm5.1.dev100     erik 07/05/2022 Start bringing in matrixcn overall options and sparse matrix multiplier code, misc updates
+    ctsm5.1.dev099   rgknox 06/21/2022 Enabling FATES control over the number of patches on the natural land unit
+    ctsm5.1.dev098 swensosc 05/20/2022 Correct perched water table calculation
+    ctsm5.1.dev097    sacks 05/20/2022 Update ccs_config to fix issue on izumi and maybe elsewhere
+    ctsm5.1.dev096     erik 05/18/2022 Fix a few glitches from the last tag
+    ctsm5.1.dev095     erik 05/09/2022 Turn soil BGC off for FATES-SP mode, externals updates, FatesSP user-mod directory and compset
+    ctsm5.1.dev094   negins 05/06/2022 subset_data allows zeroing out nonveg landunits without any dompft selected
+    ctsm5.1.dev093   slevis 05/03/2022 Modifications for FATES-MIMICS to work
+    ctsm5.1.dev092    sacks 04/29/2022 Refactor NutrientCompetition / CNAllocation to provide hooks for AgSys
+    ctsm5.1.dev091   rgknox 04/22/2022 clm decomp method is now passed to fates to enabled mimics coupling
+    ctsm5.1.dev090 samrabin 03/31/2022 Fix misleading name of "gddplant"
+    ctsm5.1.dev089    sacks 03/31/2022 For CLM45 apply peaklai to aleaf in grainfill
+    ctsm5.1.dev088 samrabin 03/28/2022 Add outputs for annual crop sowing and harvest dates
+    ctsm5.1.dev087    sacks 03/24/2022 Reduce aux_clm testing cost
+    ctsm5.1.dev086   negins 03/22/2022 Updates necessary for NEON v2 files and server updates
+    ctsm5.1.dev085    sacks 03/16/2022 Expand crop reproductive pools; remove some unused options
+    ctsm5.1.dev084 glemieux 03/15/2022 FATES parameter file updated to align with clm pft optical parameters
+    ctsm5.1.dev083 multiple 03/08/2022 Implement PCT_URBAN_MAX to minimize dynamic urban memory
+    ctsm5.1.dev082   slevis 02/28/2022 Replace dom_nat_pft with dom_plant to enable crop in fsurdat_modifier tool
+    ctsm5.1.dev081 swensosc 02/24/2022 Do not subtract irrigation from QRUNOFF diagnostic
+    ctsm5.1.dev080    sacks 02/24/2022 Use avg days per year when converting param units
+    ctsm5.1.dev079    sacks 02/24/2022 Changes to CropPhenology timing
+    ctsm5.1.dev078    sacks 02/24/2022 Rework single-point testing
+    ctsm5.1.dev077   rgknox 02/22/2022 Updates to FATES API, including removal of patch dimensions from fates history and using soil instead of ground layers for fates history
+    ctsm5.1.dev076   negins 02/18/2022 updating subset_data.py script and move to the Python package.
+    ctsm5.1.dev075     erik 02/16/2022 Small answer changes: urban ventilation, fire-emission, irrigate off when not crop, fix two SSP ndep files
+    ctsm5.1.dev074   slevis 02/02/2022 Introduce vert. resolved MIMICS as new method to solve below ground decomp.
+    ctsm5.1.dev073    sacks 01/25/2022 Some fixes for Gregorian calendar
+    ctsm5.1.dev072   negins 01/17/2022 mksurfdat toolchain part 1: gen_mksurf_namelist
+    ctsm5.1.dev071 glemieux 01/16/2022 Small changes to enable new fates dimension and update fates tag
+    ctsm5.1.dev070 multiple 01/10/2022 Update externals, remove need for LND_DOMAIN_FILE and LND_DOMAIN_PATH, etc.
+    ctsm5.1.dev069 multiple 12/15/2021 Implement dynamic (transient) urban capability
+    ctsm5.1.dev068 multiple 12/13/2021 Adding fsurdat_modifier tool
+    ctsm5.1.dev067 jedwards 12/13/2021 NEON UI update, externals updates, small miscellanouse fixes
+    ctsm5.1.dev066   rgknox 12/04/2021 API change with FATES to enable running means inside fates, includes passing in of model timestep
+    ctsm5.1.dev065 glemieux 12/02/2021 Refactor static fire data input by moving variables into fire_base_type from cnveg_state_type
+    ctsm5.1.dev064  afoster 11/29/2021 Updates to facilitate FATES history variable overhaul
+    ctsm5.1.dev063 glemieux 11/23/2021 Provide access to the fraction of canopy covered by snow variable to fates
+    ctsm5.1.dev062     erik 11/19/2021 Make NUOPC the default driver rather than MCT
+    ctsm5.1.dev061 mvertens 10/19/2021 Changes needed to get aux history output with cmeps
+    ctsm5.1.dev060 glemieux 10/18/2021 Izumi aux_clm test fixes for fates testmods
+    ctsm5.1.dev059 glemieux 10/13/2021 Update fates tests and list for diversity and coverage
+    ctsm5.1.dev058     erik 10/07/2021 Some miscellaneous small answer changes
+    ctsm5.1.dev057 samrabin 09/20/2021 Consolidate duplicated crop phenology code
+    ctsm5.1.dev056 glemieux 09/17/2021 FATES Satellite Phenology mode implemented
+    ctsm5.1.dev055   slevis 09/10/2021 Updates to master_list_file.rst
+    ctsm5.1.dev054     erik 09/02/2021 New parameters on paramsfile, many bit-for-bit changes, new history fields for IWUELN,VPD_2M, allow Medlyn Photosynthesis for non-PHS cases, fixes to HumanStressIndex
+    ctsm5.1.dev053    sacks 08/13/2021 Add Antarctica compset and change min_snow_to_keep
+    ctsm5.1.dev052   negins 08/11/2021 Wrapper script for running NEON sites, and some NEON updates
+    ctsm5.1.dev051 multiple 08/06/2021 New LUNA-specific ozone stress option
+    ctsm5.1.dev050    sacks 08/02/2021 Improve and document method for getting diagnostics on a problem point
+    ctsm5.1.dev049 jedwards 07/26/2021 Update externals, NEON updates, fix stop_option=date, move neon niwo test to match user_mods, local time option
+    ctsm5.1.dev048   slevis 07/10/2021 Make certain history fields descriptive inst. of labeling by number
+    ctsm5.1.dev047 mvertens 07/08/2021 Start bounds at 1; remove references to MCT
+    ctsm5.1.dev046   rgknox 07/02/2021 Updating external fates has to tag sci.1.46.2_api.16.1.0
+    ctsm5.1.dev045   slevis 06/29/2021 Include CWD in heterotrophic respiration
+    ctsm5.1.dev044 mvertens 06/24/2021 New stream functionality when using NUOPC or LILAC
+    ctsm5.1.dev043   slevis 06/03/2021 Refactor of CascadeBGC code in preparation for MIMICS
+    ctsm5.1.dev042     erik 05/28/2021 Small answer changes for double precision constants and soil limits
+    ctsm5.1.dev041   rgknox 05/27/2021 bring FATES API up to sci.1.46.0_api.16.0.0 (methane and cn hooks)
+    ctsm5.1.dev040   slevis 05/20/2021 mksurfdata_map: replace SRC files of various masks with SRC files w no mask
+    ctsm5.1.dev039 jedwards 05/18/2021 Add NEON sites
+    ctsm5.1.dev038     erik 04/27/2021 Bring in minor changes from the cesm2.2.0 release tag
+release-cesm2.2.01     erik 09/02/2020 Fix clm4_5 initial conditions
+  ctsm5.1.dev037     slevis 04/23/2021 Correct vertical interpolation in init_interp when soil thicknesses change
+  ctsm5.1.dev036   glemieux 04/21/2021 FATES tag update and snow occlusion of LAI fix
+  ctsm5.1.dev035      sacks 04/20/2021 Misc bfb enhancements and fixes
+  ctsm5.1.dev034       erik 04/19/2021 Bring in Arctic changes to LUNA from Leah Birch
+  ctsm5.1.dev033   mvertens 04/10/2021 Remove unnecessary settings of nextsw_cday
+  ctsm5.1.dev032   mvertens 04/10/2021 Fix bugs in co2 from atmosphere
+  ctsm5.1.dev031   jedwards 04/10/2021 Update externals and fixes for nuopc threading
+  ctsm5.1.dev030       erik 03/31/2021 New single column functionality for the NUOPC cap
+  ctsm5.1.dev029   mvertens 03/18/2021 Rework domain initialization for nuopc
+  ctsm5.1.dev028   swensosc 03/17/2021 Change limitation of top layer evaporation/sublimation
+  ctsm5.1.dev027      sacks 03/15/2021 Update cime and other externals; includes switch to pio2
+  ctsm5.1.dev026      sacks 03/08/2021 Change f10 tests to use mg37 mask
+  ctsm5.1.dev025      sacks 02/23/2021 Refactor ozone code, and misc. small fixes
+  ctsm5.1.dev024     slevis 02/20/2021 Grid cell-level error check for H2O
+  ctsm5.1.dev023       erik 02/11/2021 Calculate leaf biomass for non-woody PFTS, and a few other small answer changes
+  ctsm5.1.dev022   glemieux 02/05/2021 Merge fates_main_api into ctsm master
+  ctsm5.1.dev021       erik 01/12/2021 Add option for biomass heat storage (BHS) to clm5_1 physics
+  ctsm5.1.dev020       erik 12/30/2020 Potential roundoff changes in preparation for bio-mass heat storage option
+  ctsm5.1.dev019      sacks 12/19/2020 Fix ndep from coupler
+  ctsm5.1.dev018     slevis 12/08/2020 Add ACTIVE (T/F) column to master hist fields table and alphabetize
+  ctsm5.1.dev017     slevis 11/17/2020 Write history fields master list to separate optional file
+  ctsm5.1.dev016   multiple 11/17/2020 Updates for nuopc
+  ctsm5.1.dev015      sacks 11/13/2020 A few small fixes
+  ctsm5.1.dev014   dll/oles 11/07/2020 Grass/crop snow burial fraction fix, and some other fixes
+  ctsm5.1.dev013   jedwards 11/04/2020 Allow pnetcdf for vector history files
+  ctsm5.1.dev012   oleson/s 11/03/2020 Allow nlevgrnd < nlevurb
+  ctsm5.1.dev011      sacks 11/02/2020 Change CISM2%NOEVOLVE compsets to use SGLC; documentation updates
+  ctsm5.1.dev010   sacks/je 10/23/2020 Fix reading netcdf variable into a different data type
+  ctsm5.1.dev009     negins 10/21/2020 BFB changes for Perturbed Parameter Ensemble and  Hydraulic redistribution
+  ctsm5.1.dev008       erik 10/07/2020 Two answer changes: Clm45/50/51 with crop, and for 2000Clm51
+  ctsm5.1.dev007      sacks 10/06/2020 CNFire: btran2 fixes and general cleanup
+  ctsm5.1.dev006      sacks 10/03/2020 Call correct routine to calculate btran2 for CNFireLi2021
+  ctsm5.1.dev005      sacks 10/02/2020 Answer changing bug fixes for clm51: fire and organic_frac_squared
+  ctsm5.1.dev004     oleson 09/30/2020 Improve robustness of onset and offset counters when changing dt
+  ctsm5.1.dev003   ivanderk 09/29/2020 Add capability for dynamic lakes
+  ctsm5.1.dev002     slevis 09/25/2020 Reduce duplication between caps
+  ctsm5.1.dev001       erik 09/23/2020 Start the clm5_1 physics series, with some changes to the fire model from Fang Li
+  ctsm1.0.dev113   negins 09/08/2020 Some bit-for-bit changes needed for the Perturbed Parameter Ensemble work
+  ctsm1.0.dev112 sacks/ww 08/28/2020 Small changes to mksurfdata_map, singlept tool and run_sys_tests
+  ctsm1.0.dev111     erik 08/28/2020 Compsets don't use 2014 for GSWP3 forcing, LUNA prevyr changed back
+  ctsm1.0.dev110 jedwards 08/21/2020 Fixes needed for PIO2
+  ctsm1.0.dev109   negins 08/20/2020 Allow for resorbtion in transition from live to dead wood N
+  ctsm1.0.dev108     erik 08/19/2020  Update default PE layouts for new SE/FV3 grids
+  ctsm1.0.dev107     erik 08/10/2020 Answer changes needed for CESM2.2.0
+  ctsm1.0.dev106     erik 08/06/2020 Bit-for-bit updates for the CESM2.2.0 release
+release-clm5.0.34    erik 04/20/2020 Update doc for release-clm5.0 (SKIPPED), and fix issues with no-anthro surface dataset creation
+release-clm5.0.33    erik 04/07/2020 SKIPPED ON MASTER -- Turn irrigation on for 2300 SSP extensions
+release-clm5.0.32    erik 04/02/2020 SKIPPED ON MASTER -- Extensions to 2300 for SSP5-8.5,SSP5-3.4, and SSP1-2.6
+release-clm5.0.31    erik 03/29/2020 Bring raw 2100-2300 extension (SKIPPED), some other misc. changes
+  ctsm1.0.dev105 erik/fis 07/23/2020 Bring in some new SE grids for CAM as well as initial condition files for them
+  ctsm1.0.dev104    sacks 07/06/2020 Add LILAC
+  ctsm1.0.dev103   slevis 06/29/2020 Gridcell-level error-check for methane (CH4)
+  ctsm1.0.dev102 erik/ole 06/26/2020 Some important fixes for LUNA in clm5_0, and small urban issue in clm5_0
+  ctsm1.0.dev101 ole/erik 06/17/2020 Changes from Keith to bring a list of variables to the parameter file
+  ctsm1.0.dev100    sacks 06/09/2020 Deallocate memory after running init_interp
+  ctsm1.0.dev099    sacks 06/08/2020 Update cime, needed for izumi machine updates
+  ctsm1.0.dev098 jet/erik 05/28/2020 Bring in GFDL fv3 cubed sphere grids C24, C48, C96, C192, C384
+  ctsm1.0.dev097   ycheng 05/25/2020 Add two bioenergy crops (switchgrass and miscanthus)
+  ctsm1.0.dev096   slevis 05/21/2020 Gridcell-level balance checks for carbon and nitrogen
+  ctsm1.0.dev095    sacks 05/21/2020 Update cime and cmeps externals; rework initialization of CNFire object
+  ctsm1.0.dev094    sacks 05/15/2020 Minor bug fixes needed for latest cime
+  ctsm1.0.dev093     erik 05/01/2020 Bring in changes from release-clm5.0 branch to master
+release-clm5.0.30    erik 01/21/2020 Update FATES to sci.1.30.0_api.8.0.0
+release-clm5.0.29    erik 11/19/2019 Some answer changes needed for prescribed soil-moisture and clm4_5 defaults (1850-ndep, and urbantv settings)
+release-clm5.0.28    erik 11/14/2019 Several bit-for-bit fixes especially around soil-moisture streams
+release-clm5.0.27    erik 08/13/2019 Add presoribed soil moisture streams as an option, and a few fixes
+release-clm5.0.26   sacks 07/29/2019 Add a CN precision control call to fix problems related to small negative values
+release-clm5.0.25    erik 05/29/2019 Change two files from NetCDF-4 format to NetCDF-3 (because some machines have trouble with NetCDF-4 in pnetcdf)
+release-clm5.0.24    erik 05/22/2019 Correct ndep end year for SSPs, 2-degree CMIP6WACCMDECK with C-isotopes off, fixes mksurfdata for high resolution
+release-clm5.0.23    erik 05/15/2019 Update cime to bring in CO2 transient files for the CMIP6 SSP's as well as presaero for three of them
+release-clm5.0.22    erik 05/08/2019 Fix carbon isotope bug that caused wrong answers for isotopes under transient land-use change
+release-clm5.0.21    erik 05/03/2019 New ndep files, update fates, fix some issues
+release-clm5.0.20    erik 03/12/2019 Update all fsurdat files and bring in files for future scenarios, remove CMIP5 rcp options, bring in some bug fixes
+release-clm5.0.19    erik 03/08/2019 SKIPPED ON MASTER -- Update cime version
+release-clm5.0.18    erik 02/13/2019 Add NoAnthro compset, reduce fields on fsurdat in mksurfdata_map, initial add of tools/contrib directory
+release-clm5.0.17   sacks 01/23/2019 History fields for vertically-resolved sums of soil C and N, and minor fixes
+release-clm5.0.16    erik 01/15/2019 PtVg and ssp_rcp future scenario options and Antarctica wetlands fix to mksurfdata, and option to dribble crop harvest XSMRPOOL flux to atmosphere
+release-clm5.0.15   sacks 12/06/2018 SKIPPED ON MASTER -- Option for rain-to-snow
+release-clm5.0.14    erik 11/29/2018 Update cime and fix surface dataset for f05 1850 non-crop case
+release-clm5.0.13    erik 11/14/2018 Update externals with new CO2/presearo/rtm/mosart, add science_support, change testing
+release-clm5.0.12    erik 11/03/2018 New IC files for clm45/clm50 coupled cases, add 2010 compset (IC FILES UPDATE SKIPPED ON MASTER)
+  ctsm1.0.dev092     erik 04/27/2020 Update cime to version in cesm2_2_beta04
+  ctsm1.0.dev091    sacks 04/24/2020 Increase tolerance on near-zero truncation for a snow state update
+  ctsm1.0.dev090   negins 04/23/2020 Refactoring banded diagonal matrix code in SoilTemperature module
+  ctsm1.0.dev089    sacks 04/07/2020 Bring documentation source to master
+  ctsm1.0.dev088    sacks 04/07/2020 Fix bug in snow aerosol numerics (causes occasional HUGE aerosol values)
+  ctsm1.0.dev087    sacks 04/06/2020 Change hard-coded soil layers in phenology to use a target depth
+  ctsm1.0.dev086 mvertens 03/19/2020 Updates to NUOPC cap and minor fixes to ncdio_pio
+  ctsm1.0.dev085    sacks 03/16/2020 Update cime
+  ctsm1.0.dev084   negins 02/19/2020 Bounds assertion for C isotopes when threading is on
+  ctsm1.0.dev083   negins 02/06/2020 Some BFB Fixes: Resolve issues #683, # 874, #878, # 885, # 745, #838
+  ctsm1.0.dev082   oleson 02/01/2020 Rename variables to avoid confusion; fix QSNOEVAP diagnostic
+  ctsm1.0.dev081   slevis 01/13/2020 Speed up restart writes
   ctsm1.0.dev080    sacks 12/02/2019 Update externals, minor fixes to work with latest cime, get nuopc cap working
   ctsm1.0.dev079    sacks 11/04/2019 Change a few uses of shr_kind
   ctsm1.0.dev078   oleson 10/31/2019 Fix rootr calculation with use_hydrstress true
@@ -37,7 +236,7 @@ Tag                   Who      Date  Summary
   ctsm1.0.dev046    sacks 06/15/2019 Separate the two uses of h2osno
   ctsm1.0.dev045    sacks 06/06/2019 Recalculate h2osno for the sake of SnowCapping
   ctsm1.0.dev044    sacks 06/06/2019 Make wetland snow resetting behavior more explicit
-  ctsm1.0.dev043     erik 06/05/2019 Fix FUN bug (frac_ideal_C_use was backwards in regard to delta_CN), 
+  ctsm1.0.dev043     erik 06/05/2019 Fix FUN bug (frac_ideal_C_use was backwards in regard to delta_CN),
                                      and replace Ball-Berry mbbopt with the CLM4.5 version
   ctsm1.0.dev042   slevis 05/21/2019 Rename, correct, and simplify parameters dewmx and sno_stor_max
   ctsm1.0.dev041    sacks 05/17/2019 Add water tracers to CanopyHydrologyMod
@@ -73,21 +272,21 @@ Tag                   Who      Date  Summary
   ctsm1.0.dev011    sacks 09/12/2018 Add water tracer consistency checks, and other water tracer work
   ctsm1.0.dev010    sacks 08/30/2018 Update cime to cime5.7.3
   ctsm1.0.dev009    sacks 08/22/2018 Fix initialization of AnnET in InitAccVars
-  ctsm1.0.dev008     erik 08/14/2018 Update 1850 ndep file and last year for streams for Historical transient cases
+  ctsm1.0.dev008     erik 08/14/2018 Update 1850 ndep file and last year for streams for Historical transient cases (corresponds to release-clm5.0.05)
   ctsm1.0.dev007    sacks 08/05/2018 Avoid glacier dynamic landunit adjustments in first time step
   ctsm1.0.dev006    sacks 08/04/2018 Minor bug fixes, cleanup, documentation and enhancements
-  ctsm1.0.dev005    sacks 08/03/2018 Rework water data types to accommodate isotopes and other tracers
-  ctsm1.0.dev004     erik 07/18/2018 Add some new diagnostic fields, fix a few issues, update cmip6 output
+  ctsm1.0.dev005    sacks 08/03/2018 Rework water data types to accommodate isotopes and other tracers (skipped on release-clm5.0)
+  ctsm1.0.dev004     erik 07/18/2018 Add some new diagnostic fields, fix a few issues, update cmip6 output (corresponds to release-clm5.0.04)
   ctsm1.0.dev003     erik 07/15/2018 Update cime/cism to work on upgraded hobart and with glade changes on cheyenne
   ctsm1.0.dev002     erik 07/06/2018 Fix NFIX flux variables so special land-units are zeroed out, tools update, add some *_MAX fields on mksurfdata_map for transient cases
-  ctsm1.0.dev001    sacks 06/22/2018 Begin separating SoilHydrology flux calculations
-   clm5.0.dev013     erik 06/12/2018 cleanup and update cime and cism
-   clm5.0.dev012    sacks 05/17/2018 Fixes for variable_year orbital mode
+  ctsm1.0.dev001    sacks 06/22/2018 Begin separating SoilHydrology flux calculations (this was skipped on release branch)
+   clm5.0.dev013     erik 06/12/2018 cleanup and update cime and cism (corresponds to release-clm5.0.03)
+   clm5.0.dev012    sacks 05/17/2018 Fixes for variable_year orbital mode (corresponds to release-clm5.0.01 and release-clm5.0.02)
    clm5.0.dev011     erik 05/16/2018 1850 ndep update, cism update, PE layouts, turn BFBFLAG for testing
    clm5.0.dev010     erik 05/15/2018 Update cime version to version in cesm2.0.beta10, changes answers for 1850 compsets because of orbit
    clm5.0.dev009    sacks 05/10/2018 New init_interp method
    clm5.0.dev008     erik 04/27/2018 With FUN subtract out soil nitrification flux of plant uptake of soil NH3 and NO3
-   clm5.0.dev007     erik 04/24/2018 Bring in a few answer changing things: FATES, cism updates, IC file fix, 
+   clm5.0.dev007     erik 04/24/2018 Bring in a few answer changing things: FATES, cism updates, IC file fix,
                                      testing 1850 compset use 1850 orbit
    clm5.0.dev006    sacks 04/12/2018 Don't allocate memory for zero-weight natveg patches and urban
    clm5.0.dev005    sacks 04/10/2018 Two fixes for init_interp
@@ -122,14 +321,14 @@ Tag                   Who      Date  Summary
   clm4_5_16_r253     erik 08/04/2017 Check on reasonable import/export from CLM, check ndep units from input file
   clm4_5_16_r252     erik 07/24/2017 Update parameter file for some crop albedo issues, and fix a bug in urban albedo for nightime
   clm4_5_16_r251     erik 07/14/2017 Update mksurfdata_map for soil depth/color, add new mapping files
-  clm4_5_16_r250     erik 07/13/2017 Update finundation dataset, new fsurdat files with updated soil color and soil depth, 
+  clm4_5_16_r250     erik 07/13/2017 Update finundation dataset, new fsurdat files with updated soil color and soil depth,
                                      update mosart areas, fix cheyenne_gnu
   clm4_5_16_r249    sacks 07/06/2017 All new compsets, reworked test lists, and related fixes
   clm4_5_16_r248    sacks 06/28/2017 Melt most ice runoff
   clm4_5_16_r247    sacks 06/26/2017 New GLACIER_REGION field with CISM domain split in two
   clm4_5_16_r246    sacks 06/14/2017 Update to latest cime
   clm4_5_16_r245    sacks 06/14/2017 Only adjust glc_mec topographic heights if glc_do_dynglacier is true
-  clm4_5_16_r244     erik 06/09/2017 Update cime and cism externals, changes answers for IG compsets, test g17 grids, fix a few 
+  clm4_5_16_r244     erik 06/09/2017 Update cime and cism externals, changes answers for IG compsets, test g17 grids, fix a few
                                      issues, update mksurfdata_map
   clm4_5_16_r243    andre 05/23/2017 History output cleanup from Dave Lawrence
   clm4_5_16_r242     erik 05/21/2017 Use finundated streams for CLM50, and use ndep if it comes from cpl
@@ -138,7 +337,7 @@ Tag                   Who      Date  Summary
   clm4_5_16_r239    sacks 05/13/2017 Avoid division by zero in snow WindDriftCompaction
   clm4_5_16_r238    andre 05/13/2017 ED is now an external library 'fates'
   clm4_5_16_r237     erik 05/09/2017 Latest parameter file and some changes for CLM50, CLM45-transient changes answers also
-  clm4_5_15_r236     erik 05/01/2017 New surface datasets, and landuse.timeseries files, as well as interpolating initial conditions for 
+  clm4_5_15_r236     erik 05/01/2017 New surface datasets, and landuse.timeseries files, as well as interpolating initial conditions for
                                      almost all cases
   clm4_5_15_r235    sacks 04/27/2017 Zero dynbal fluxes if namelist variable is set
   clm4_5_15_r234    andre 04/14/2017 Update rtm and mosart externals
@@ -160,7 +359,7 @@ Tag                   Who      Date  Summary
   clm4_5_14_r218    sacks 01/13/2017 For newly initiating columns: do not copy snow state
   clm4_5_14_r217    sacks 01/13/2017 Bug fix for snow radiation absorption
   clm4_5_14_r216     erik 01/12/2017 Fix previous broken tag
-  clm4_5_14_r215     erik 01/12/2017 Update mksurfdata_map to work with new updated datasets from Peter, and use hand-edited 
+  clm4_5_14_r215     erik 01/12/2017 Update mksurfdata_map to work with new updated datasets from Peter, and use hand-edited
                                      surfdata/landuse.timeseries datasets for f09/f19
   clm4_5_14_r214    sacks 01/03/2017 Update column states based on dwt terms between dyn_cnbal_patch and dyn_cnbal_col, and minor fixes
   clm4_5_14_r213    sacks 12/30/2016 Convert buildnml to python
@@ -176,7 +375,7 @@ Tag                   Who      Date  Summary
   clm4_5_12_r203    sacks 11/10/2016 Bug fixes for snow-on-lake
   clm4_5_12_r202    sacks 11/09/2016 Update to cime version used in cesm2_0_beta03
   clm4_5_12_r201    sacks 11/09/2016 Rework initialization of transient weights - important with use_init_interp
-  clm4_5_12_r200     erik 11/08/2016 Latest parameter updates from simulations, ignore surface soil layer for plant hydraulic stress 
+  clm4_5_12_r200     erik 11/08/2016 Latest parameter updates from simulations, ignore surface soil layer for plant hydraulic stress
                                      for greater variability in surface soil moisture
   clm4_5_12_r199    sacks 10/29/2016 Use CISM2 by default
   clm4_5_12_r198    sacks 10/20/2016 Rework mapping of irrigation from CLM to ROF
@@ -190,13 +389,13 @@ Tag                   Who      Date  Summary
   clm4_5_12_r190    sacks 08/20/2016 Fix snow capping bug
   clm4_5_11_r189     erik 08/18/2016 Bring in time varying streams for urban data (currently triggers AC use)
   clm4_5_11_r188     erik 08/05/2016 A set of small answer changing issues for both clm45 and clm50
-  clm4_5_10_r187     erik 07/26/2016 CLM45/50 changes: seperate carbon and water root profile, turn off undercanopystability, 
+  clm4_5_10_r187     erik 07/26/2016 CLM45/50 changes: seperate carbon and water root profile, turn off undercanopystability,
                                      really turn PHS on, LUNA predict sunlit fraction N fractionation
    clm4_5_9_r186    sacks 07/13/2016 Initialize biogeochem balance checks AFTER column area updates
    clm4_5_9_r185    sacks 07/07/2016 Revert glacial melt behavior to the old treatment for mountain glaciers
-   clm4_5_9_r184     erik 07/06/2016 CLM50 changes: Atkin form of lmr changed, new parameters and files, turn PHS on by default, 
+   clm4_5_9_r184     erik 07/06/2016 CLM50 changes: Atkin form of lmr changed, new parameters and files, turn PHS on by default,
                                      new cold snow density, reseed at exit AD spinup, fix fire bug, fix npool and cpool errors
-   clm4_5_9_r183     erik 07/02/2016 Decomposition is not water limited after reaching a field capacity parameter (maxpsi_hr) 
+   clm4_5_9_r183     erik 07/02/2016 Decomposition is not water limited after reaching a field capacity parameter (maxpsi_hr)
                                      rather than only at soil saturation
    clm4_5_8_r182     erik 06/24/2016 Bring in option for plant hydraulic stress for clm50
    clm4_5_8_r181     erik 06/17/2016 Update cime version which fixes several issues and changes answers
@@ -225,14 +424,14 @@ Tag                   Who      Date  Summary
    clm4_5_6_r158    andre 12/04/2015 misc clm 5.0 bugfixes
    clm4_5_6_r157    sacks 11/27/2015 Reduce memory use for init_interp
    clm4_5_6_r156    sacks 11/24/2015 Fix QSNWCPICE and glacial inception
-   clm4_5_6_r155     erik 11/23/2015 Bring FUN (Fixation and Uptake of Nitrogen) code option to trunk 
-                                     from Mingjie, as well as latitude varying spinup from Charlie, 
+   clm4_5_6_r155     erik 11/23/2015 Bring FUN (Fixation and Uptake of Nitrogen) code option to trunk
+                                     from Mingjie, as well as latitude varying spinup from Charlie,
                                      and a fix for crop with dynamic roots from Beth
    clm4_5_6_r154    andre 11/18/2015 one year grain product pool
    clm4_5_6_r153    sacks 11/17/2015 Fix snow cover fraction bug
    clm4_5_5_r152    sacks 11/17/2015 Fix glc_mec energy conservation bug
    clm4_5_4_r151     erik 11/13/2015 Fix broken r150 tag, with bgc_spinup issue in it
-   clm4_5_4_r150     erik 11/13/2015 Some needed answer changing fixes for: fire, disallow 
+   clm4_5_4_r150     erik 11/13/2015 Some needed answer changing fixes for: fire, disallow
                                      negative photosynthis, and reduce LAI of DBT in evergreen state
    clm4_5_3_r149    sacks 11/08/2015 Change cold start initialization of snow pack
    clm4_5_3_r148    sacks 11/07/2015 For CLM5, increase max snow depth to 20 m
@@ -291,8 +490,8 @@ Tag                   Who      Date  Summary
    clm4_5_1_r095    andre 11/10/2014 N comp refactoring by Jinyun Tang (LBL) and transpiration sink isolation by Gautam Bisht (LBL)
    clm4_5_1_r094    sacks 11/07/2014 misc. glacier-related updates
    clm4_5_1_r093    sacks 11/07/2014 change cold-start snow initialization, update cism external
-   clm4_5_1_r092  muszala 11/04/2014  bug fixes from santos that address valgrind problems.  update rtm external 
-   clm4_5_1_r091  muszala 10/27/2014 update externals.  fix bug so CLM runs with Intel 14x. 
+   clm4_5_1_r092  muszala 11/04/2014  bug fixes from santos that address valgrind problems.  update rtm external
+   clm4_5_1_r091  muszala 10/27/2014 update externals.  fix bug so CLM runs with Intel 14x.
    clm4_5_1_r090    sacks 10/16/2014 modularize irrigation; do some unit test rework
    clm4_5_1_r089     erik 10/13/2014 Bring new urban building temperature to trunk as a clm5.0 feature as well as human-stress index calculations
    clm4_5_1_r088  muszala 10/01/2014 pull out ED deps. in TemperatureTypeMod, can now compile with pgi 14.7
@@ -358,7 +557,7 @@ Tag                   Who      Date  Summary
    clm4_5_28        sacks 09/20/2013 fix FracH2oSfc bug
    clm4_5_27        sacks 09/20/2013 fix crop nyrs bug
    clm4_5_26      muszala 09/19/2013 water balance and SMS_Ly1.f19_g16.ICLM45BGCCROP fix
-   clm4_5_25         erik 09/13/2013 Bring in Tony's changes to kick sno all the way up to the coupler layer, makes all 
+   clm4_5_25         erik 09/13/2013 Bring in Tony's changes to kick sno all the way up to the coupler layer, makes all
                                      CESM components more similar to each other
    clm4_5_24        sacks 09/03/2013 update externals to cesm1_3_beta02 or later
    clm4_5_23      muszala 08/22/2013 refactor to allow CH4 params. to be read from netcdf file and clean up clm4_5_20
@@ -386,7 +585,7 @@ Tag                   Who      Date  Summary
    clm4_5_01      muszala 05/06/2013 update externals
    clm4_5_00         erik 05/02/2013 Official end to CLM4.5 development for CLM offline
    clm4_0_81       bandre 04/29/2013 Charlie Koven's variable consolidation, cryoturbation and BSW CPP changes
-   clm4_0_80         erik 04/26/2013 Bring Fang Li. Fire model into CLM4.5 science, update ALL CLM4.5 surface datasets, 
+   clm4_0_80         erik 04/26/2013 Bring Fang Li. Fire model into CLM4.5 science, update ALL CLM4.5 surface datasets,
                                      provide a working initial condition file for CLM45BGC@f19_g16-1850
    clm4_0_79      muszala 04/24/2013 pftdyn, pft-phys*.nc and datm8 update
    clm4_0_78      muszala 04/23/2013 MEGAN fixes
@@ -399,7 +598,7 @@ Tag                   Who      Date  Summary
    clm4_0_71      muszala 04/10/2013 compsets refactoring by mvertens
    clm4_0_70      muszala 04/01/2013 bring in vic hydrology
    clm4_0_69      muszala 03/26/2013 remove hydro reorder, volr and esmf mods
-   clm4_0_68         erik 03/16/2013 Fix some issues in mksurfdata_map for generation of ne120np surface data file. 
+   clm4_0_68         erik 03/16/2013 Fix some issues in mksurfdata_map for generation of ne120np surface data file.
                                      Put error back in CLM if weights don't sum to 100. Add in Keith's photosynthesis change for  CLM45.
    clm4_0_67      muszala 03/12/2013 Jinyun photosynthesis and hydrology reorder
    clm4_0_66        sacks 03/07/2013 turn off subgrid topography snow parameterization for glc_mec landunits
@@ -464,21 +663,21 @@ Tag                   Who      Date  Summary
    clm4_0_07         erik 06/03/2010 Some cleanup/fix bugs, add RTM var, add albice to namelist, allow last-millenium in mksurfdata, allow setting of datm_presaero in clm test-suite
    clm4_0_06         erik 05/26/2010 Update gglc to cism
    clm4_0_05         erik 05/25/2010 Move Nitrogen deposition stream branch to trunk
-   clm4_0_04         erik 05/20/2010 New namelist items: ice_runoff, scaled_harvest, carbon_only, 
+   clm4_0_04         erik 05/20/2010 New namelist items: ice_runoff, scaled_harvest, carbon_only,
                      new RTM hist vars, new finidat files, update esmf interface, turn off aerosol read quicker
    clm4_0_03         erik 05/17/2010 Changes from Francis for VOC and drydep
    clm4_0_02         erik 05/13/2010 Make sure dtime is initialized, so that answers are consistently the same as clm4_0_00
    clm4_0_01         erik 05/11/2010 Move glacier multiple elevation class branch to the trunk so that we can work with the active glacier model
-   clm4_0_00         erik 05/04/2010  Update to datm8, redirect aquifer overflow 
-                     to drainage, add gx3v7 masks, script to extract regional 
-                     datasets, add harvesting for CN, modify shrubs, include urban 
-                     model, ice stream for snowcapping, new build-namelist system, 
-                     scale solar by solar zenith angle in datm, deep soil with 
-                     bedrock at bottom, organic matter in soils, SNICAR for snow 
+   clm4_0_00         erik 05/04/2010  Update to datm8, redirect aquifer overflow
+                     to drainage, add gx3v7 masks, script to extract regional
+                     datasets, add harvesting for CN, modify shrubs, include urban
+                     model, ice stream for snowcapping, new build-namelist system,
+                     scale solar by solar zenith angle in datm, deep soil with
+                     bedrock at bottom, organic matter in soils, SNICAR for snow
                      radiation, sparce dense aero, snow cover changes
-   clm3_8_00         erik 05/04/2010 Get future scenarios working, finalize 
-                     documentation, bring in MEGAN VOC and CNDV, simplify, 
-                     mksurfdata optimization, fix bugs: snow enthalpy, BMOZ, pergro, 
+   clm3_8_00         erik 05/04/2010 Get future scenarios working, finalize
+                     documentation, bring in MEGAN VOC and CNDV, simplify,
+                     mksurfdata optimization, fix bugs: snow enthalpy, BMOZ, pergro,
                      use pft weights from fsurdat NOT finidat
    clm3_7_15         erik 04/27/2010 Finish User's Guide, surfdata files for urban-1pt, fix mksurfdata ifort bugs, work with testing
    clm3_7_14         erik 04/08/2010 Fix rcp=2.6/4.5 1-degree fndepdyn filenames
@@ -515,8 +714,8 @@ used
    clm3_6_49         erik 08/25/2009 Fix ncl interpolation scripts, update externals, turn on CLM_CCSM_BLD for bluefire,jaguar, ESMF3 compliance
    clm3_6_48         erik 08/12/2009 New aerosol/nitrogen deposition datasets, mksurfdata work, scm work, clm_usr_name option to build-namelist
    clm3_6_47         erik 08/03/2009 Fix hybrid bug for dynpft case, update externals
-   clm3_6_46         erik 07/22/2009 Get more tests to work/document them, add use cases for 1850_control, 2000_control, and 
-                                     20thC_transient, straighten out single-point grids, Listen to LND_CDF64 env variable from 
+   clm3_6_46         erik 07/22/2009 Get more tests to work/document them, add use cases for 1850_control, 2000_control, and
+                                     20thC_transient, straighten out single-point grids, Listen to LND_CDF64 env variable from
                                      template, remove CLM_ARB_IC.
    clm3_6_45         erik 07/10/2009 Remove inconsistent finidat file in clm3_6_44
    clm3_6_44         erik 07/09/2009 Fix C13 bug, update scripts, drv, datm. Add domain files for idmap atm-ocn grids for datm. Remove SEQ_MCT, add new ESMF env vars to template. Work with ndeplintInterp
@@ -545,51 +744,51 @@ used
    clm3_6_17       oleson 02/26/2009 Urban model changes and mksurfdata changes to incorporate urban data
    clm3_6_16         erik 02/12/2009 Multiple elevation classes on surface dataset, urban fixes, mpi-serial and testing fixes
    clm3_6_15         erik 01/19/2009 Bring clm36sci branch to the trunk
-   clm3_6_14         erik 10/10/2008 Fix some global urban issues, fix pftdyn, really get compile-only option 
+   clm3_6_14         erik 10/10/2008 Fix some global urban issues, fix pftdyn, really get compile-only option
                                      working in testing
-   clm3_6_13         erik 10/01/2008 Update to new version of cpl7 scripts and build, update externals for versions 
+   clm3_6_13         erik 10/01/2008 Update to new version of cpl7 scripts and build, update externals for versions
                                      needed for clm36sci branch, add new CASA tests
-   clm3_6_12         erik 09/21/2008 Fix restarts for urban, add capability to do global urban experiments, 
+   clm3_6_12         erik 09/21/2008 Fix restarts for urban, add capability to do global urban experiments,
                                      add in new forcing height changes
    clm3_6_11      dlawren 08/26/2008 Ice stream for snow capped regions
    clm3_6_10       tcraig 08/15/2008 extend rtm tracer, ascale for tri-grids, AIX O3 to O2
    clm3_6_09         erik 08/11/2008 Fix clm.cpl7.template to run hybrid and branch cases
    clm3_6_08         erik 08/06/2008 Fix bugs, and build changes for inputdata repo
    clm3_6_07         erik 07/08/2008 Implement new build namelist system from Vertenstein/Eaton, bluefire, and BGP updates
-   clm3_6_06         erik 05/30/2008 Small fix needed for ccsm4_alpha30 
+   clm3_6_06         erik 05/30/2008 Small fix needed for ccsm4_alpha30
                                      (use gx1v5 for some resolutions when OCN_GRID==ATM_GRID)
-   clm3_6_05         erik 05/27/2008 Fix to compile with PGI-6, update scripts, fix cpl7.template for new scripts LND_GRID, 
+   clm3_6_05         erik 05/27/2008 Fix to compile with PGI-6, update scripts, fix cpl7.template for new scripts LND_GRID,
                                      fix 2.65x3.33 frac dataset.
-   clm3_6_04         erik 05/20/2008 Remove all MCT permutes, fix cpl7 script issues, remove offline mode, 
+   clm3_6_04         erik 05/20/2008 Remove all MCT permutes, fix cpl7 script issues, remove offline mode,
                                      add ability to run over a range of years
    clm3_6_03         erik 05/08/2008 Fix so listen to next_swcday to calculate albedo rather than using irad
    clm3_6_02         erik 03/25/2008 Minor fix in configure remove perl5lib version under models/lnd/clm/bld
    clm3_6_01         erik 03/20/2008 40 m forcing height changes for clm
-   clm3_6_00         erik 03/20/2008 Fully implement sequential-ccsm mode, upgrade configure, build-namelist and testing, 
-                                     upgrade interpolation tool, add mkdatadomain, write to iulog rather than 6 explicitly, 
-                                     SCAM update, Update datasets, add archiving, and build-streams, add in point version 
+   clm3_6_00         erik 03/20/2008 Fully implement sequential-ccsm mode, upgrade configure, build-namelist and testing,
+                                     upgrade interpolation tool, add mkdatadomain, write to iulog rather than 6 explicitly,
+                                     SCAM update, Update datasets, add archiving, and build-streams, add in point version
                                      of Urban model, change directory structure to mimic CCSM
-   clm3_5_20         erik 03/17/2008 Bug fixes before spinning off clm3_6_00, put in changes from ccsm4a01_clm3_5_18 
+   clm3_5_20         erik 03/17/2008 Bug fixes before spinning off clm3_6_00, put in changes from ccsm4a01_clm3_5_18
                                      to ccsm4a04_clm3_5_18
-   clm3_5_19         erik 03/06/2008 Change directory structure to mimic CCSM, fix so no NaNS on BGC interpinic output, 
+   clm3_5_19         erik 03/06/2008 Change directory structure to mimic CCSM, fix so no NaNS on BGC interpinic output,
                                      new half degree CN clmi dataset
    clm3_5_18         erik 02/21/2008 Update to latest seq-ccsm4.alpha tag
    clm3_5_17         erik 02/06/2008 Merge Tony Craig's FMI branch fmi12_clm3_5_16 to the clm trunk
    clm3_5_16         erik 01/28/2008 Get point version of Urban code onto trunk (urban code can not restart)
-   clm3_5_15         erik 12/10/2007 Fix interpinic for half degree grid, add in large-file support, 
+   clm3_5_15         erik 12/10/2007 Fix interpinic for half degree grid, add in large-file support,
                                      allow configure to work with ccsm directory structure
    clm3_5_14         erik 11/27/2007 Use build-streams, and archiving, multiple bug-fixes
    clm3_5_13         erik 11/16/2007 Update xml file with file needed for ccsm3_5_beta18
    clm3_5_12         erik 11/08/2007 Tag with new files needed for ccsm3_5_beta17
-   clm3_5_11         erik 09/28/2007 Update datasets in the DefaultCLM file for 0.23x0.31, 0.47x0.63, 0.9x1.25 and 
+   clm3_5_11         erik 09/28/2007 Update datasets in the DefaultCLM file for 0.23x0.31, 0.47x0.63, 0.9x1.25 and
                                      add fndepdyn file for 1.9x2.5
    clm3_5_10         jet  09/18/2007 SCAM update
-   clm3_5_09         erik 08/31/2007 Change configure to NOT have csm_share code for ccsm_con option, and add in 1x1.25 file, 
+   clm3_5_09         erik 08/31/2007 Change configure to NOT have csm_share code for ccsm_con option, and add in 1x1.25 file,
                                      and update datm7 and csm_share
    clm3_5_08       tcraig 08/20/2007 convert 6 to iulog in logfile, updates for I/O
    clm3_5_07         erik 08/17/2007 Add mkdatadomain tool, add cprnc and perl5lib as externals
-   clm3_5_06         erik 08/10/2007 Update: interpolation, testing, script namelist build, and scripts. Fix bugs, 
-                                     and fix possible 
+   clm3_5_06         erik 08/10/2007 Update: interpolation, testing, script namelist build, and scripts. Fix bugs,
+                                     and fix possible
    clm3_5_05       tcraig 07/11/2007 seq clm mods and first hist refactor mods
    clm3_5_04     mvertens 06/05/2007 lnd_comp_mct.F90 change to work with sequential diagnostics
    clm3_5_03       tcraig 05/23/2007 reduce memory, partial I/O refactor, downscaling implementation

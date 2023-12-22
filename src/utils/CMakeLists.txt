@@ -5,7 +5,7 @@ set(genf90_files
   array_utils.F90.in
   )
 
-process_genf90_source_list("${genf90_files}" ${CMAKE_CURRENT_SOURCE_DIR} clm_genf90_sources)
+process_genf90_source_list("${genf90_files}" ${CMAKE_CURRENT_BINARY_DIR} clm_genf90_sources)
 
 sourcelist_to_parent(clm_genf90_sources)
 
@@ -18,6 +18,8 @@ list(APPEND clm_sources
   clm_time_manager.F90
   quadraticMod.F90
   fileutils.F90
+  MatrixMod.F90
+  SparseMatrixMultiplyMod.F90
   IssueFixedMetadataHandler.F90
   NumericsMod.F90
   )

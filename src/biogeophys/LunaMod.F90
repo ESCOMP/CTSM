@@ -12,9 +12,8 @@ module LunaMod
   use clm_varcon            , only : rgas, tfrz,spval
   use abortutils            , only : endrun
   use clm_varctl            , only : iulog
-  use clm_varcon            , only : namep 
   use clm_varpar            , only : nlevcan
-  use decompMod             , only : bounds_type
+  use decompMod             , only : bounds_type, subgrid_level_patch
   use pftconMod             , only : pftcon
   use FrictionvelocityMod   , only : frictionvel_type 
   use atm2lndType           , only : atm2lnd_type
@@ -31,7 +30,7 @@ module LunaMod
   
   implicit none
   save
-  
+
   !------------------------------------------------------------------------------
   ! PUBLIC MEMBER FUNCTIONS:
   public  :: LunaReadNML                                   !subroutine to read in the Luna namelist
@@ -39,13 +38,20 @@ module LunaMod
   public  :: Acc24_Climate_LUNA                            !subroutine to accumulate 24 hr climates
   public  :: Acc240_Climate_LUNA                           !subroutine to accumulate 10 day climates
   public  :: Clear24_Climate_LUNA                          !subroutine to clear 24 hr climates
-  public :: readParams
+  public  :: readParams                                    ! Read in parameters on parameter file
+  public  :: is_time_to_run_LUNA                           !check if we should we run luna
 
   type, private :: params_type
-! cp25, kc25, ko25: Bernacchi et al (2001) Plant, Cell & Environment 24:253-259
-      real(r8) :: cp25_yr2000  ! CO2 compensation point at 25°C at present day O2 (mol/mol)
-      real(r8) :: kc25_coef  ! Michaelis-Menten const. at 25°C for CO2 (unitless)
-      real(r8) :: ko25_coef  ! Michaelis-Menten const. at 25°C for O2 (unitless)
+      ! cp25, kc25, ko25: Bernacchi et al (2001) Plant, Cell & Environment 24:253-259
+      real(r8) :: cp25_yr2000   ! CO2 compensation point at 25°C at present day O2 (mol/mol)
+      real(r8) :: kc25_coef     ! Michaelis-Menten const. at 25°C for CO2 (unitless)
+      real(r8) :: ko25_coef     ! Michaelis-Menten const. at 25°C for O2 (unitless)
+      real(r8) :: luna_theta_cj ! LUNA empirical curvature parameter for ac, aj photosynthesis co-limitation (unitless)
+      real(r8) :: jmaxb0        ! The baseline proportion of nitrogen allocated for electron transport (J)
+      real(r8) :: wc2wjb0       ! The baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) (unitless)
+      real(r8) :: enzyme_turnover_daily ! The daily turnover rate for photosynthetic enzyme at 25oC in view of ~7 days of half-life time for Rubisco (Suzuki et al. 2001) (unitless)
+      real(r8) :: relhExp       ! Specifies the impact of relative humidity on electron transport rate (unitless)
+      real(r8) :: minrelh       ! Minimum relative humidity for nitrogen optimization (fraction)
   end type params_type
   type(params_type), private ::  params_inst
 
@@ -72,18 +78,13 @@ module LunaMod
   real(r8), parameter :: CO2ref = 380.0_r8                   ! reference CO2 concentration for calculation of reference NUE. 
   real(r8), parameter :: forc_pbot_ref = 101325.0_r8       ! reference air pressure for calculation of reference NUE
   real(r8), parameter :: Q10Enz = 2.0_r8                   ! Q10 value for enzyme decay rate
-  real(r8), parameter :: Jmaxb0 = 0.0311_r8                ! the baseline proportion of nitrogen allocated for electron transport (J)     
   real(r8)            :: Jmaxb1 = 0.1_r8                   ! the baseline proportion of nitrogen allocated for electron transport (J)    
-  real(r8), parameter :: Wc2Wjb0 = 0.8054_r8               ! the baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) 
-  real(r8), parameter :: relhExp = 6.0999_r8               ! electron transport parameters related to relative humidity
-  real(r8), parameter :: Enzyme_turnover_daily = 0.1_r8    ! the daily turnover rate for photosynthetic enzyme at 25oC in view of ~7 days of half-life time for Rubisco (Suzuki et al. 2001)
   real(r8), parameter :: NMCp25 = 0.715_r8                 ! estimated by assuming 80% maintenance respiration is used for photosynthesis enzyme maintenance
   real(r8), parameter :: Trange1 = 5.0_r8                  ! lower temperature limit (oC) for nitrogen optimization  
   real(r8), parameter :: Trange2 = 42.0_r8                 ! upper temperature limit (oC) for nitrogen optimization
   real(r8), parameter :: SNC = 0.004_r8                    ! structural nitrogen concentration (g N g-1 dry mass carbon)
   real(r8), parameter :: mp = 9.0_r8                       ! slope of stomatal conductance; this is used to estimate model parameter, but may need to be updated from the physiology file, 
   real(r8), parameter :: PARLowLim = 200.0_r8              ! minimum photosynthetically active radiation for nitrogen optimization
-  real(r8), parameter :: minrelh = 0.25_r8                 ! minimum relative humdity for nitrogen optimization
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -174,14 +175,49 @@ module LunaMod
     ! Michaelis-Menten constant at 25°C for CO2 (unitless)
     call readNcdioScalar(ncid, 'kc25_coef', subname, params_inst%kc25_coef)
     params_inst%kc25_coef = params_inst%kc25_coef * 1.e5_r8  ! from mol/mol to Luna units
+    ! LUNA empirical curvature parameter for ac, aj photosynthesis co-limitation
+    call readNcdioScalar(ncid, 'luna_theta_cj', subname, params_inst%luna_theta_cj)
+    ! The baseline proportion of nitrogen allocated for electron transport (J)
+    call readNcdioScalar(ncid, 'jmaxb0', subname, params_inst%jmaxb0)
+    ! The baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) (unitless)
+    call readNcdioScalar(ncid, 'wc2wjb0', subname, params_inst%wc2wjb0)
+    ! The daily turnover rate for photosynthetic enzyme at 25oC in view of ~7 days of half-life time for Rubisco (Suzuki et al. 2001) (unitless)
+    call readNcdioScalar(ncid, 'enzyme_turnover_daily', subname, params_inst%enzyme_turnover_daily)
+    ! Specifies the impact of relative humidity on electron transport rate (unitless)
+    call readNcdioScalar(ncid, 'relhExp', subname, params_inst%relhExp)
+    ! Minimum relative humidity for nitrogen optimization (fraction)
+    call readNcdioScalar(ncid, 'minrelh', subname, params_inst%minrelh)
 
    end subroutine readParams
+
+  !-----------------------------------------------------------------------
+  function is_time_to_run_LUNA() result(run_luna)
+   ! 
+   ! !DESCRIPTION:
+   ! A logical check to see if we are on the end of our current day and 
+   ! if it is time to run the LUNA module 
+   ! 
+   ! !USES
+   use clm_time_manager   , only : is_end_curr_day
+   !
+   ! !ARGUMENTS 
+   logical                        :: run_luna 
+
+   if (is_end_curr_day()) then 
+      run_luna = .true. 
+   else 
+      run_luna = .false. 
+   end if 
+
+  end function is_time_to_run_LUNA 
+
+
 
   !********************************************************************************************************************************************************************** 
   ! this subroutine updates the photosynthetic capacity as determined by Vcmax25 and Jmax25
   subroutine Update_Photosynthesis_Capacity(bounds, fn, filterp, &
     dayl_factor, atm2lnd_inst, temperature_inst, canopystate_inst, photosyns_inst, &
-    surfalb_inst, solarabs_inst, waterdiagnosticbulk_inst, frictionvel_inst)
+    surfalb_inst, solarabs_inst, waterdiagnosticbulk_inst, frictionvel_inst, ozone_inst)
     !
     ! !DESCRIPTION:
     ! Calculates Nitrogen fractionation within the leaf, based on optimum calculated fractions in rubisco, cholorophyll, 
@@ -196,13 +232,14 @@ module LunaMod
     ! subroutine CanopyFluxes 
   
     ! !USES:
-    use clm_time_manager      , only : get_step_size_real, is_end_curr_day
+    use clm_time_manager      , only : get_step_size_real
     use clm_varpar            , only : nlevsoi, mxpft
     use perf_mod              , only : t_startf, t_stopf
     use clm_varctl            , only : use_cn
     use quadraticMod          , only : quadratic
     use CNSharedParamsMod     , only : CNParamsShareInst
     use shr_infnan_mod, only : isnan => shr_infnan_isnan
+    use OzoneBaseMod,  only : ozone_base_type
         
     implicit none
     
@@ -221,7 +258,7 @@ module LunaMod
     type(solarabs_type)    , intent(inout) :: solarabs_inst
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     type(frictionvel_type) , intent(inout) :: frictionvel_inst
-
+    class(ozone_base_type) , intent(in)    :: ozone_inst
     
     ! !LOCAL VARIABLES:
     !
@@ -272,7 +309,6 @@ module LunaMod
     real (r8) :: jmx25_opt	                                          ! optimal Jmax25 (umol electron/m**2/s)        
     real (r8) :: chg                                                      ! change in Vcmax25  or Jmax25     
     real (r8) :: chg_constrn                                              ! constrained change in Vcmax25  or Jmax25
-    logical   :: is_end_day                                               ! is end of current day
     !-------------------------------------------------------------------------------------------------------------------------------------------------       
     associate(                                                          &
     c3psn         => pftcon%c3psn                                     , & ! photosynthetic pathway: 0.  =  c4, 1.  =  c3
@@ -300,21 +336,22 @@ module LunaMod
     t_veg_night   => temperature_inst%t_veg_night_patch               , & ! Input:  [real(r8) (:)   ] nighttime mean vegetation temperature (Kelvin)
     t_veg10_day   => temperature_inst%t_veg10_day_patch               , & ! Input:  [real(r8) (:)   ] 10-day mean daytime vegetation temperature (Kelvin)  
     t_veg10_night => temperature_inst%t_veg10_night_patch             , & ! Input:  [real(r8) (:)   ] 10-day mean nighttime vegetation temperature (Kelvin)
-    rh10_p	  => waterdiagnosticbulk_inst%rh10_af_patch                    , & ! Input:  [real(r8) (:)   ] 10-day mean canopy air relative humidity at the pacth (unitless)
+    rh10_p	  => waterdiagnosticbulk_inst%rh10_af_patch               , & ! Input:  [real(r8) (:)   ] 10-day mean canopy air relative humidity at the pacth (unitless)
     rb10_p        => frictionvel_inst%rb10_patch                      , & ! Input:  [real(r8) (:)   ] 10-day mean boundary layer resistance at the pacth (s/m)
     gpp_day       => photosyns_inst%fpsn24_patch                      , & ! Input:  [real(r8) (:)   ] patch 24 hours mean gpp(umol CO2/m**2 ground/day) for canopy layer
     vcmx25_z      => photosyns_inst%vcmx25_z_patch                    , & ! Output: [real(r8) (:,:) ] patch leaf Vc,max25 (umol/m2 leaf/s) for canopy layer 
     jmx25_z       => photosyns_inst%jmx25_z_patch                     , & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 (umol electron/m**2/s) for canopy layer
     pnlc_z        => photosyns_inst%pnlc_z_patch                      , & ! Output: [real(r8) (:,:) ] patch proportion of leaf nitrogen allocated for light capture for canopy layer 
-    enzs_z        => photosyns_inst%enzs_z_patch                        & ! Output: [real(r8) (:,:) ] enzyme decay status 1.0-fully active; 0-all decayed during stress
-    )  
+    enzs_z        => photosyns_inst%enzs_z_patch                      , & ! Output: [real(r8) (:,:) ] enzyme decay status 1.0-fully active; 0-all decayed during stress
+    vcmx25_z_last_valid_patch   => photosyns_inst%vcmx25_z_last_valid_patch , & ! Output: [real(r8) (:,:) ] patch leaf Vc,max25 from end of the growing season for the previous year
+    jmx25_z_last_valid_patch    => photosyns_inst%jmx25_z_last_valid_patch                         , & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 from the end of the growing season for the previous year
+    o3coefjmax => ozone_inst%o3coefjmaxsun_patch                        & ! Input: [real(r8) (:)] ozone coef jmax sun
+  )  
     !----------------------------------------------------------------------------------------------------------------------------------------------------------
     !set timestep
 
-    !Initialize enzyme decay Q10
+      !Initialize enzyme decay Q10
     dtime        =  get_step_size_real()
-
-    is_end_day   =  is_end_curr_day()
     fnps         =  0.15_r8
     call t_startf('LUNA')
     do f  =  1,fn
@@ -332,24 +369,24 @@ module LunaMod
          hourpd = dayl(g) / 3600._r8             
          tleafd10 = t_veg10_day(p) - tfrz
          tleafn10 = t_veg10_night(p) - tfrz
-         tleaf10  = (dayl(g)*tleafd10 +(86400._r8-dayl(g)) * tleafd10)/86400._r8 	     
+         tleaf10  = (dayl(g)*tleafd10 +(86400._r8-dayl(g)) * tleafn10)/86400._r8
          tair10 = t10(p)- tfrz
          relh10 = min(1.0_r8, rh10_p(p))  
 	 rb10v = rb10_p(p)	     
          !--------------------------------------------------------------------
          !calculate the enzyme ternover rate
          EnzTurnoverTFactor = Q10Enz**(0.1_r8*(min(40.0_r8, tleaf10) - 25.0_r8))            
-         max_daily_pchg = EnzTurnoverTFactor * Enzyme_turnover_daily
+         max_daily_pchg = EnzTurnoverTFactor * params_inst%enzyme_turnover_daily
          !-----------------------------------------------------------------
          rabsorb = 1.0_r8-rhol(ft,1)-taul(ft,1)
          !Implemented the nitrogen allocation model
          if(tlai(p) > 0.0_r8 .and. lnc(p) > 0._r8)then   
                 RadTop = par240d_z(p,1)/rabsorb
-                PARTop = RadTop*4.6    !conversion from w/m2 to umol/m2/s. PAR is still in umol photons, not electrons. Also the par240d_z is only for radiation at visible range. Hence 4.6 not 2.3 multiplier. 
+                PARTop = RadTop*4.6_r8    !conversion from w/m2 to umol/m2/s. PAR is still in umol photons, not electrons. Also the par240d_z is only for radiation at visible range. Hence 4.6 not 2.3 multiplier. 
                 !-------------------------------------------------------------
                 !the nitrogen allocation model, may need to be feed from the parameter file in CLM
                 if (nint(c3psn(ft)) == 1)then
-                   if(gpp_day(p)>0.0 )then   !only optimize if there is growth and it is C3 plants
+                   if(gpp_day(p)>0.0_r8 )then   !only optimize if there is growth and it is C3 plants
                       !-------------------------------------------------------------
                       do z = 1, nrad(p)
                          if(tlai_z(p,z)>0.0_r8)then
@@ -402,22 +439,24 @@ module LunaMod
                          PNcbold   = 0.0_r8                                     
                          call NitrogenAllocation(FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, hourpd, &
                               tair10, tleafd10, tleafn10, &
-                              Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp, PNlcold, PNetold, PNrespold, &
-                              PNcbold, PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
+                              Jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor(p), o3coefjmax(p), &
+                              PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
                          vcmx25_opt= PNcbopt * FNCa * Fc25
                          jmx25_opt= PNetopt * FNCa * Fj25
                           
                          chg = vcmx25_opt-vcmx25_z(p, z)
                          chg_constrn = min(abs(chg),vcmx25_z(p, z)*max_daily_pchg)
                          vcmx25_z(p, z)  = vcmx25_z(p, z)+sign(1.0_r8,chg)*chg_constrn
+                         vcmx25_z_last_valid_patch(p,z) = vcmx25_z(p,z)
                           
                          chg = jmx25_opt-jmx25_z(p, z)
                          chg_constrn = min(abs(chg),jmx25_z(p, z)*max_daily_pchg)
                          jmx25_z(p, z)  = jmx25_z(p, z)+sign(1.0_r8,chg)*chg_constrn 
+                         jmx25_z_last_valid_patch(p,z) = jmx25_z(p,z)
 
                          PNlc_z(p, z)= PNlcopt
 
-                         if(enzs_z(p,z)<1.0) then
+                         if(enzs_z(p,z)<1.0_r8) then
                             enzs_z(p,z) = enzs_z(p,z)* (1.0_r8 + max_daily_pchg)
                          endif
                          !nitrogen allocastion model-end  
@@ -429,7 +468,7 @@ module LunaMod
                                   p, 'z=', z, "pft=", ft
                              write(iulog, *) 'LUNA env:',FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, &
                                   hourpd, tair10, tleafd10, tleafn10
-                             call endrun(msg=errmsg(sourcefile, __LINE__))
+                             call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
                          endif
                          if(vcmx25_z(p, z)>1000._r8 .or. vcmx25_z(p, z)<0._r8)then
                              write(iulog, *) 'Warning: Vc,mx25 become unrealistic (>1000 or negative) for patch=', &
@@ -443,7 +482,7 @@ module LunaMod
                                   p, 'z=', z, "pft=", ft
                              write(iulog, *) 'LUNA env:', FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, &
                                   hourpd, tair10, tleafd10, tleafn10
-                             call endrun(msg=errmsg(sourcefile, __LINE__))
+                             call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
                          endif
                          if(jmx25_z(p, z)>2000._r8 .or.  jmx25_z(p, z)<0._r8)then
                              write(iulog, *) 'Warning: Jmx25 become unrealistic (>2000, or negative) for patch=', &
@@ -472,8 +511,8 @@ module LunaMod
                 endif !if not C3 plants                   
          else
             do z = 1 , nrad(p)
-               jmx25_z(p, z) = 85._r8
-               vcmx25_z(p, z) = 50._r8
+               jmx25_z(p, z)  = jmx25_z_last_valid_patch(p,z)
+               vcmx25_z(p, z) = vcmx25_z_last_valid_patch(p,z)
             end do
          endif !checking for LAI and LNC
      endif !the first daycheck 
@@ -500,7 +539,7 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
     ! subroutine CanopyFluxes 
   
     ! !USES:
-    use clm_time_manager      , only : get_step_size_real, is_end_curr_day
+    use clm_time_manager      , only : get_step_size_real
     implicit none
     
       ! !ARGUMENTS:
@@ -532,7 +571,6 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
     real (r8) :: t_veg_dayi                                               ! daytime mean vegetation temperature (Kelvin)
     real (r8) :: t_veg_nighti                                             ! nighttime mean vegetation temperature (Kelvin)
     real (r8) :: par24d_z_i(1:nlevcan)                                    ! daytime mean radiation (w/m**2)             
-    logical   :: is_end_day                                               ! is end of current day
     !-------------------------------------------------------------------------------------------------------------------------------------------------       
     associate(                                                          &
     par24d_z      => solarabs_inst%par24d_z_patch                     , & ! Input:  [real(r8) (:,:) ] daily accumulated absorbed PAR for leaves in canopy layer (W/m**2) 
@@ -555,7 +593,6 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
 
     !Initialize enzyme decay Q10
     dtime        =  get_step_size_real()
-    is_end_day   =  is_end_curr_day()
     do f  =  1,fn
       p  =  filterp(f)
       ft =  patch%itype(p)
@@ -564,7 +601,7 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
       if(t_veg_day(p).ne.spval) then    !check whether it is the first day            
              !---------------------------------------------------------
              !calculate the 10 day running mean radiations
-             if(ndaysteps(p)>0.0) then
+             if(ndaysteps(p)>0.0_r8) then
                  par24d_z_i=par24d_z(p,:)/(dtime * ndaysteps(p))
              else
                  par24d_z_i = 0._r8
@@ -578,7 +615,7 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
              endif
              !-------------------------------------------------------
              !calculate the 10 day running mean daytime temperature
-             if(ndaysteps(p)>0.0)then
+             if(ndaysteps(p)>0.0_r8)then
                 t_veg_dayi    =  t_veg_day(p)   / ndaysteps(p)
              else
                 t_veg_dayi    =  t_veg_night(p) / nnightsteps(p)
@@ -727,7 +764,7 @@ subroutine Clear24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns
     ! subroutine CanopyFluxes 
   
     ! !USES:
-    use clm_time_manager      , only : get_step_size_real, is_end_curr_day
+    use clm_time_manager      , only : get_step_size_real
     implicit none
     
     ! !ARGUMENTS:
@@ -750,7 +787,6 @@ subroutine Clear24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns
     integer   :: ft                                                       ! plant functional type
     integer   :: z                                                        ! the index across leaf layers
     real (r8) :: dtime                                                    ! stepsize in seconds
-    logical   :: is_end_day                                               ! is end of current day
     !-------------------------------------------------------------------------------------------------------------------------------------------------       
     associate(                                                          &
     par24d_z      => solarabs_inst%par24d_z_patch                     , & ! Output:  [real(r8) (:,:) ] daily accumulated absorbed PAR for leaves in canopy layer (W/m**2) 
@@ -766,7 +802,6 @@ subroutine Clear24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns
 
     !Initialize enzyme decay Q10
     dtime        =  get_step_size_real()
-    is_end_day   =  is_end_curr_day()
     do f  =  1,fn
       p  =  filterp(f)
       ft =  patch%itype(p)
@@ -790,8 +825,7 @@ end subroutine Clear24_Climate_LUNA
 !************************************************************************************************************************************************
 !Use the LUNA model to calculate the Nitrogen partioning 
 subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PARimx10,rb10, hourpd, tair10, tleafd10, tleafn10, &
-     Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp,&
-     PNlcold, PNetold, PNrespold, PNcbold, &
+     Jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor,o3coefjmax, &
      PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
   implicit none
   real(r8), intent (in) :: FNCa                       !Area based functional nitrogen content (g N/m2 leaf)
@@ -806,20 +840,19 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   real(r8), intent (in) :: tair10                     !10-day running mean of the 2m temperature (oC)
   real(r8), intent (in) :: tleafd10                   !10-day running mean of daytime leaf temperature (oC) 
   real(r8), intent (in) :: tleafn10                   !10-day running mean of nighttime leaf temperature (oC) 
-  real(r8), intent (in) :: Jmaxb0                     !baseline proportion of nitrogen allocated for electron transport rate (unitless)
   real(r8), intent (in) :: Jmaxb1                     !coefficient determining the response of electron transport rate to light availability (unitless) 
-  real(r8), intent (in) :: Wc2Wjb0                    !the baseline ratio of rubisco-limited rate vs light-limited photosynthetic rate (Wc:Wj)
-  real(r8), intent (in) :: relhExp                    !specifies the impact of relative humidity on electron transport rate (unitless)
   real(r8), intent (in) :: PNlcold                    !old value of the proportion of nitrogen allocated to light capture (unitless)
   real(r8), intent (in) :: PNetold                    !old value of the proportion of nitrogen allocated to electron transport (unitless)
   real(r8), intent (in) :: PNrespold                  !old value of the proportion of nitrogen allocated to respiration (unitless)
   real(r8), intent (in) :: PNcbold                    !old value of the proportion of nitrogen allocated to carboxylation (unitless)  
+  real(r8), intent (in) :: dayl_factor                !daylight scale factor
+  real(r8), intent (in) :: o3coefjmax                 !ozone coef jmax 
+
   real(r8), intent (out):: PNstoreopt                 !optimal proportion of nitrogen for storage 
   real(r8), intent (out):: PNlcopt                    !optimal proportion of nitrogen for light capture 
   real(r8), intent (out):: PNetopt                    !optimal proportion of nitrogen for electron transport 
   real(r8), intent (out):: PNrespopt                  !optimal proportion of nitrogen for respiration 
   real(r8), intent (out):: PNcbopt                    !optial proportion of nitrogen for carboxyaltion  
- 
   !-------------------------------------------------------------------------------------------------------------------------------
   !intermediate variables
   real(r8) :: Carboncost1                             !absolute amount of carbon cost associated with maintenance respiration due to deccrease in light capture nitrogen(g dry mass per day) 
@@ -872,7 +905,6 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   real(r8) :: chg_per_step                            !the nitrogen change per interation
   real(r8) :: Vcmaxnight                              !Vcmax during night (umol/m2/s)
   real(r8) :: ci                                      !inter-cellular CO2 concentration (Pa)
-  real(r8) :: theta_cj                                !interpolation coefficient
   real(r8) :: tleafd10c                               !10-day mean daytime leaf temperature, contrained for physiological range (oC)
   real(r8) :: tleafn10c                               !10-day mean leaf temperature for night, constrained for physiological range (oC)
   real(r8) :: Vcmax                                   !the maximum carboxyaltion rate (umol/m2/s) 
@@ -881,13 +913,12 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   integer  :: increase_flag                           !whether to increase or decrease
 
   call NUEref(NUEjref, NUEcref, Kj2Kcref)
-  theta_cj = 0.95_r8
   Nlc = PNlcold * FNCa                                !proportion of light capturing nitrogen in functional nitrogen
   Net = PNetold * FNCa                                !proportion of light harvesting (electron transport) nitrogen in functional nitrogen
   Nresp = PNrespold * FNCa                            !proportion of respirational nitrogen in functional nitrogen
   Ncb = PNcbold * FNCa                                !proportion of carboxylation nitrogen in functional nitrogen
   if (Nlc > FNCa * 0.5_r8) Nlc = 0.5_r8 * FNCa
-  chg_per_step = 0.02* FNCa
+  chg_per_step = 0.02_r8* FNCa
   PNlc = PNlcold
   PNlcoldi = PNlcold  - 0.001_r8
   PARi10c = max(PARLowLim, PARi10)
@@ -897,8 +928,8 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   tleafd10c = min(max(tleafd10, Trange1), Trange2)    !constrain the physiological range
   tleafn10c = min(max(tleafn10, Trange1), Trange2)    !constrain the physiological range
   ci = 0.7_r8 * CO2a10 
-  JmaxCoef = Jmaxb1 * ((hourpd / 12.0_r8)**2.0_r8) * (1.0_r8 - exp(-relhExp * max(relh10 - minrelh, 0.0_r8) / &
-       (1.0_r8 - minrelh)))
+  JmaxCoef = Jmaxb1 * dayl_factor * (1.0_r8 - exp(-params_inst%relhExp * max(relh10 - &
+      params_inst%minrelh, 0.0_r8) / (1.0_r8 - params_inst%minrelh)))
   do while (PNlcoldi .NE. PNlc .and. jj < 100)      
      Fc = VcmxTKattge(tair10, tleafd10c) * Fc25
      Fj = JmxTKattge(tair10, tleafd10c) * Fj25
@@ -910,7 +941,8 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
      call NUE(O2a10, ci, tair10, tleafd10c, NUEj, NUEc, Kj2Kc)
      call Nitrogen_investments (KcKjFlag,FNCa, Nlc, forc_pbot10, relh10, CO2a10,O2a10, PARi10c, PARimx10c,rb10, hourpd, tair10, &
           tleafd10c,tleafn10c, &
-          Kj2Kc, Wc2Wjb0, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref, NUEr, Kc, Kj, ci, &
+          Kj2Kc, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref, NUEr, o3coefjmax, & 
+          Kc, Kj, ci, &
           Vcmax, Jmax,JmeanL,JmaxL, Net, Ncb, Nresp, PSN, RESP)
 
      Npsntarget = Nlc + Ncb + Net                                                         !target nitrogen allocated to photosynthesis, which may be lower or higher than Npsn_avail
@@ -924,7 +956,8 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
         KcKjFlag = 1
         call Nitrogen_investments (KcKjFlag,FNCa, Nlc2, forc_pbot10, relh10, CO2a10,O2a10, PARi10c, PARimx10c,rb10, hourpd, &
              tair10, tleafd10c,tleafn10c, &
-             Kj2Kc, Wc2Wjb0, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref,NUEr, Kc, Kj, ci, &
+             Kj2Kc, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref,NUEr, o3coefjmax, &
+             Kc, Kj, ci, &
              Vcmax, Jmax,JmeanL,JmaxL, Net2, Ncb2, Nresp2, PSN2, RESP2)
 
         Npsntarget2 = Nlc2 + Ncb2 + Net2
@@ -952,7 +985,8 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
         KcKjFlag = 1
         call Nitrogen_investments (KcKjFlag,FNCa, Nlc1,forc_pbot10, relh10, CO2a10,O2a10, PARi10c, PARimx10c,rb10, hourpd, &
              tair10, tleafd10c,tleafn10c, &
-             Kj2Kc, Wc2Wjb0, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref,NUEr, Kc, Kj, ci,&
+             Kj2Kc, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref,NUEr, o3coefjmax, &
+             Kc, Kj, ci,&
              Vcmax, Jmax,JmeanL,JmaxL, Net1, Ncb1, Nresp1, PSN1, RESP1)
         Npsntarget1 = Nlc1 + Ncb1 + Net1
         Carboncost1 = (Npsntarget - Npsntarget1) * NMCp25 * Cv * (RespTBernacchi(tleafd10c) * hourpd + &
@@ -982,8 +1016,8 @@ end subroutine NitrogenAllocation
 
 subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
      CO2a10, O2a10, PARi10, PARimx10, rb10, hourpd, tair10, tleafd10, tleafn10, &
-     Kj2Kc, Wc2Wjb0, JmaxCoef, Fc, Fj, NUEc, NUEj, NUEcref, NUEjref, NUEr, Kc, &
-     Kj, ci, Vcmax, Jmax, JmeanL, JmaxL, Net, Ncb, Nresp, PSN, RESP)
+     Kj2Kc, JmaxCoef, Fc, Fj, NUEc, NUEj, NUEcref, NUEjref, NUEr, o3coefjmax, &
+     Kc,  Kj, ci, Vcmax, Jmax, JmeanL, JmaxL, Net, Ncb, Nresp, PSN, RESP)
   implicit none
   integer,  intent (in) :: KcKjFlag                   !flag to indicate whether to update the Kc and Kj using the photosynthesis subroutine; 0--Kc and Kj need to be calculated; 1--Kc and Kj is prescribed.
   real(r8), intent (in) :: FNCa                       !Area based functional nitrogen content (g N/m2 leaf)
@@ -1000,7 +1034,6 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   real(r8), intent (in) :: tleafd10                   !10-day mean daytime leaf temperature (oC) 
   real(r8), intent (in) :: tleafn10                   !10-day mean nighttime leaf temperature (oC) 
   real(r8), intent (in) :: Kj2Kc                      !ratio:  Kj / Kc
-  real(r8), intent (in) :: Wc2Wjb0                    !the baseline ratio of rubisco-limited rate vs light-limited photosynthetic rate (Wc:Wj)
   real(r8), intent (in) :: JmaxCoef                   !coefficient determining the response of electron transport rate to light availability (unitless) and humidity
   real(r8), intent (in) :: Fc                         !the temperature adjustment factor for Vcmax 
   real(r8), intent (in) :: Fj                         !the temperature adjustment factor for Jmax 
@@ -1009,9 +1042,12 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   real(r8), intent (in) :: NUEcref                    !nitrogen use efficiency for carboxylation under reference climates
   real(r8), intent (in) :: NUEjref                    !nitrogen use efficiency for electron transport under reference climates
   real(r8), intent (in) :: NUEr                       !nitrogen use efficiency for respiration
+  real(r8), intent (in) :: o3coefjmax                 !ozone coef jmax 
+
   real(r8), intent (inout) :: Kc                      !conversion factors from Vc,max to Wc 
   real(r8), intent (inout) :: Kj                      !conversion factor from electron transport rate to Wj 
   real(r8), intent (inout) :: ci                      !inter-cellular CO2 concentration (Pa) 
+
   real(r8), intent (out) :: Vcmax                     !the maximum carboxyaltion rate (umol/m2/s) 
   real(r8), intent (out) :: Jmax                      !the maximum electron transport rate (umol/m2/s) 
   real(r8), intent (out) :: JmaxL                     !the electron transport rate with maximum daily radiation (umol/m2/s)  
@@ -1027,7 +1063,6 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   real(r8) :: Wc2Wj                                   !ratio: Wc/Wj  
   real(r8) :: ELTRNabsorb                             !absorbed electron rate, umol electron/m2 leaf /s
   real(r8) :: Jmaxb0act                               !base value of Jmax (umol/m2/s) 
-  real(r8) :: theta_cj                                !interpolation coefficient
   real(r8) :: theta                                   !light absorption rate (0-1)
   real(r8) :: Vcmaxnight                              !Vcmax during night (umol/m2/s)
   real(r8) :: Wc                                      !rubisco-limited photosynthetic rate (umol/m2/s)
@@ -1035,15 +1070,19 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   real(r8) :: NUECHG                                  !the nitrogen use efficiency change under current conidtions compared to reference climate conditions (25oC and 385 ppm )
   real(r8), parameter :: leaf_mr_vcm = 0.015_r8       !Scalar constant of leaf respiration with Vcmax (should use parameter in CanopyStateMod)
   
-  theta_cj = 0.95_r8
   theta = 0.292_r8 / (1.0_r8 + 0.076_r8 / (Nlc * Cb))
   ELTRNabsorb = theta * PARi10
-  Jmaxb0act = Jmaxb0 * FNCa * Fj
-  Jmax = Jmaxb0act + JmaxCoef * ELTRNabsorb
+  Jmaxb0act = params_inst%jmaxb0 * FNCa * Fj
+
+  ! Default value of o3coefjmax is 1 -->
+  ! o3coefjmax is only different from 1 if ozone_inst%stress_method == 'stress_falk'
+  ! BUG(si, 2021-05-26, ESCOMP/CTSM#1381)
+  Jmax = Jmaxb0act + JmaxCoef * ELTRNabsorb * o3coefjmax 
+
+
   JmaxL = theta * PARimx10 / (sqrt(1.0_r8 + (theta * PARimx10 / Jmax)**2.0_r8))        
   NUEchg = (NUEc / NUEcref) * (NUEjref / NUEj)
-  Wc2Wj = Wc2Wjb0 * (NUEchg**0.5_r8)
-  Wc2Wj = min(1.0_r8, Wc2Wj)
+  Wc2Wj = params_inst%wc2wjb0 * (NUEchg**0.5_r8)
   Vcmax = Wc2Wj * JmaxL * Kj2Kc
   JmeanL = theta * PARi10 / (sqrt(1.0_r8 + (ELTRNabsorb / Jmax)**2.0_r8))
   if(KcKjFlag.eq.0)then      !update the Kc,Kj, anc ci information
@@ -1051,7 +1090,7 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   else
     Wc = Kc * Vcmax
     Wj = Kj * JmeanL
-    A = (1.0_r8 - theta_cj) * max(Wc, Wj) + theta_cj * min(Wc, Wj) 
+    A = (1.0_r8 - params_inst%luna_theta_cj) * max(Wc, Wj) + params_inst%luna_theta_cj * min(Wc, Wj) 
   endif
   PSN = Cv * A * hourpd
   Vcmaxnight = VcmxTKattge(tair10, tleafn10) / VcmxTKattge(tair10, tleafd10) * Vcmax
@@ -1113,17 +1152,15 @@ subroutine Photosynthesis_luna(forc_pbot, tleafd, relh, CO2a,O2a, rb, Vcmax, Jme
   real(r8) :: rsmax0                                  !maximum stomata conductance (s/m)
   real(r8) :: tleaf                                   !daytime leaf temperature (oC)
   real(r8) :: tleafk                                  !the temperature of the leaf in Kelvin
-  real(r8) :: theta_cj                                !the interpolation coefficient for Wj and Wc
   real(r8) :: relhc                                   !constrained relative humidity (unitless)
   integer  :: i                                       !index record the number of iterations
   
-  theta_cj = 0.95_r8
   rsmax0 = 2.0_r8 * 1.0e4_r8
   bp = 2000.0_r8
   tleaf = tleafd
   tleafk = tleaf + tfrz
   aquad = 1.0_r8
-  relhc = max(minrelh, relh)
+  relhc = max(params_inst%minrelh, relh)
   bbb = 1.0_r8 / bp
   mbb = mp
   CO2c = CO2a 
@@ -1175,7 +1212,7 @@ subroutine Photosynthesis_luna(forc_pbot, tleafd, relh, CO2a,O2a, rb, Vcmax, Jme
     Wc = Kc * Vcmax
     Wj = Kj * JmeanL
   end if                
-  A = (1.0_r8 - theta_cj) * max(Wc, Wj) + theta_cj * min(Wc, Wj)   !use this instead of the quadratic to avoid values not in the range of wc and wj
+  A = (1.0_r8 - params_inst%luna_theta_cj) * max(Wc, Wj) + params_inst%luna_theta_cj * min(Wc, Wj)   !use this instead of the quadratic to avoid values not in the range of wc and wj
   rs = cf / gs_mol
   rs =  min(rsmax0, rs)
                       

@@ -1,0 +1,3 @@
+./xmlchange CLM_BLDNML_OPTS='--drydep' --append
+# The following would be required if you want to run with DryDep and FATES without Fates-SP mode
+#./xmlchange CLM_BLDNML_OPTS="--ignore_warnings" --append

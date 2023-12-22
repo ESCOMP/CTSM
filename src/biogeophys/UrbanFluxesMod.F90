@@ -8,9 +8,8 @@ module UrbanFluxesMod
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_sys_mod          , only : shr_sys_flush 
   use shr_log_mod          , only : errMsg => shr_log_errMsg
-  use decompMod            , only : bounds_type
+  use decompMod            , only : bounds_type, subgrid_level_landunit
   use clm_varpar           , only : numrad
-  use clm_varcon           , only : namel
   use clm_varctl           , only : iulog
   use abortutils           , only : endrun  
   use UrbanParamsType      , only : urbanparams_type
@@ -38,6 +37,7 @@ module UrbanFluxesMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: UrbanFluxes       ! Urban physics - turbulent fluxes
+  public :: readParams
   !-----------------------------------------------------------------------
 
   ! !PRIVATE FUNCTIONS:
@@ -45,10 +45,35 @@ module UrbanFluxesMod
   private :: simple_wasteheatfromac  ! Calculate waste heat from air-conditioning with the simpler method (CLM4.5)
   private :: calc_simple_internal_building_temp ! Calculate internal building temperature by simpler method (CLM4.5)
 
+  type, private :: params_type
+     real(r8) :: wind_min ! Minimum wind speed at the atmospheric forcing height (m/s)
+  end type params_type
+  type(params_type), private ::  params_inst
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 contains
+
+  !------------------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_UrbanFluxes'
+    !--------------------------------------------------------------------
+
+    ! Minimum wind speed at the atmospheric forcing height (m/s)
+    call readNcdioScalar(ncid, 'wind_min', subname, params_inst%wind_min)
+
+  end subroutine readParams
 
   !-----------------------------------------------------------------------
   subroutine UrbanFluxes (bounds, num_nourbanl, filter_nourbanl,                        &
@@ -121,6 +146,7 @@ contains
     real(r8) :: dth(bounds%begl:bounds%endl)                         ! diff of virtual temp. between ref. height and surface
     real(r8) :: dqh(bounds%begl:bounds%endl)                         ! diff of humidity between ref. height and surface
     real(r8) :: zldis(bounds%begl:bounds%endl)                       ! reference height "minus" zero displacement height (m)
+    real(r8) :: zeta_lunit(bounds%begl:bounds%endl)                  ! landunit-level dimensionless stability parameter
     real(r8) :: um(bounds%begl:bounds%endl)                          ! wind speed including the stablity effect (m/s)
     real(r8) :: obu(bounds%begl:bounds%endl)                         ! Monin-Obukhov length (m)
     real(r8) :: taf_numer(bounds%begl:bounds%endl)                   ! numerator of taf equation (K m/s)
@@ -162,7 +188,6 @@ contains
     real(r8) :: wtus_shadewall_unscl(bounds%begl:bounds%endl)        ! sensible heat conductance for shadewall (not scaled) (m/s)
     real(r8) :: wtuq_shadewall_unscl(bounds%begl:bounds%endl)        ! latent heat conductance for shadewall (not scaled) (m/s)
     real(r8) :: wc                                                   ! convective velocity (m/s)
-    real(r8) :: zeta                                                 ! dimensionless height used in Monin-Obukhov theory 
     real(r8) :: eflx_sh_grnd_scale(bounds%begp:bounds%endp)          ! scaled sensible heat flux from ground (W/m**2) [+ to atm] 
     real(r8) :: qflx_evap_soi_scale(bounds%begp:bounds%endp)         ! scaled soil evaporation (mm H2O/s) (+ = to atm) 
     real(r8) :: eflx_wasteheat_roof(bounds%begl:bounds%endl)         ! sensible heat flux from urban heating/cooling sources of waste heat for roof (W/m**2)
@@ -184,9 +209,7 @@ contains
     integer  :: indexl                                               ! index of first found in search loop
     integer  :: nstep                                                ! time step number
     real(r8) :: e_ref2m                                              ! 2 m height surface saturated vapor pressure [Pa]
-    real(r8) :: de2mdT                                               ! derivative of 2 m height surface saturated vapor pressure on t_ref2m
     real(r8) :: qsat_ref2m                                           ! 2 m height surface saturated specific humidity [kg/kg]
-    real(r8) :: dqsat2mdT                                            ! derivative of 2 m height surface saturated specific humidity on t_ref2m
     !
     real(r8), parameter :: lapse_rate = 0.0098_r8 ! Dry adiabatic lapse rate (K/m)
     integer , parameter  :: niters = 3            ! maximum number of iterations for surface temperature
@@ -270,6 +293,7 @@ contains
          forc_hgt_u_patch    =>   frictionvel_inst%forc_hgt_u_patch         , & ! Input:  [real(r8) (:)   ]  observational height of wind at patch-level (m)     
          forc_hgt_t_patch    =>   frictionvel_inst%forc_hgt_t_patch         , & ! Input:  [real(r8) (:)   ]  observational height of temperature at patch-level (m)
          zetamax             =>   frictionvel_inst%zetamaxstable            , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
+         zeta                =>   frictionvel_inst%zeta_patch               , & ! Output: [real(r8) (:)   ]  dimensionless stability parameter
          ram1                =>   frictionvel_inst%ram1_patch               , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                    
          u10_clm             =>   frictionvel_inst%u10_clm_patch            , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
 
@@ -335,7 +359,7 @@ contains
             write (iulog,*) 'ht_roof, z_d_town, z_0_town: ', ht_roof(l), z_d_town(l), &
                  z_0_town(l)
             write (iulog,*) 'clm model is stopping'
-            call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, msg=errmsg(sourcefile, __LINE__))
          end if
          if (forc_hgt_u_patch(lun%patchi(l)) - z_d_town(l) <= z_0_town(l)) then
             write (iulog,*) 'aerodynamic parameter error in UrbanFluxes'
@@ -343,12 +367,12 @@ contains
             write (iulog,*) 'forc_hgt_u_patch, z_d_town, z_0_town: ', forc_hgt_u_patch(lun%patchi(l)), z_d_town(l), &
                  z_0_town(l)
             write (iulog,*) 'clm model is stopping'
-            call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, msg=errmsg(sourcefile, __LINE__))
          end if
 
          ! Magnitude of atmospheric wind
 
-         ur(l) = max(1.0_r8,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
+         ur(l) = max(params_inst%wind_min,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
 
          ! Canyon top wind
 
@@ -580,7 +604,8 @@ contains
                write(iulog,*) 'c, ctype, pi = ', c, ctype(c), pi
                write(iulog,*) 'Column indices for: shadewall, sunwall, road_imperv, road_perv, roof: '
                write(iulog,*) icol_shadewall, icol_sunwall, icol_road_imperv, icol_road_perv, icol_roof
-               call endrun(decomp_index=l, clmlevel=namel, msg="ERROR, ctype out of range"//errmsg(sourcefile, __LINE__))
+               call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, &
+                    msg="ERROR, ctype out of range"//errmsg(sourcefile, __LINE__))
             end if
 
             taf_numer(l) = taf_numer(l) + t_grnd(c)*wtus(c)
@@ -628,18 +653,18 @@ contains
             tstar = temp1(l)*dth(l)
             qstar = temp2(l)*dqh(l)
             thvstar = tstar*(1._r8+0.61_r8*forc_q(g)) + 0.61_r8*forc_th(g)*qstar
-            zeta = zldis(l)*vkc*grav*thvstar/(ustar(l)**2*thv_g(l))
+            zeta_lunit(l) = zldis(l)*vkc*grav*thvstar/(ustar(l)**2*thv_g(l))
 
-            if (zeta >= 0._r8) then                   !stable
-               zeta = min(zetamax,max(zeta,0.01_r8))
+            if (zeta_lunit(l) >= 0._r8) then                   !stable
+               zeta_lunit(l) = min(zetamax,max(zeta_lunit(l),0.01_r8))
                um(l) = max(ur(l),0.1_r8)
             else                                      !unstable
-               zeta = max(-100._r8,min(zeta,-0.01_r8))
+               zeta_lunit(l) = max(-100._r8,min(zeta_lunit(l),-0.01_r8))
                wc = beta(l)*(-grav*ustar(l)*thvstar*zii(l)/thv_g(l))**0.333_r8
                um(l) = sqrt(ur(l)*ur(l) + wc*wc)
             end if
 
-            obu(l) = zldis(l)/zeta
+            obu(l) = zldis(l)/zeta_lunit(l)
          end do
 
       end do   ! end iteration
@@ -658,7 +683,8 @@ contains
          g = patch%gridcell(p)
          l = patch%landunit(p)
 
-         ram1(p) = ramu(l)  !pass value to global variable
+         ram1(p) = ramu(l)       !pass value to global variable
+         zeta(p) = zeta_lunit(l) !pass value to global variable
 
          ! Upward and downward canopy longwave are zero
 
@@ -800,7 +826,7 @@ contains
             write(iulog,*)'eflx_scale    = ',eflx_scale(indexl)
             write(iulog,*)'eflx_sh_grnd_scale: ',eflx_sh_grnd_scale(lun%patchi(indexl):lun%patchf(indexl))
             write(iulog,*)'eflx          = ',eflx(indexl)
-            call endrun(decomp_index=indexl, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=indexl, subgrid_level=subgrid_level_landunit, msg=errmsg(sourcefile, __LINE__))
          end if
       end if
 
@@ -821,7 +847,7 @@ contains
             write(iulog,*)'clm model is stopping - error is greater than 4.e-9 kg/m**2/s'
             write(iulog,*)'qflx_scale    = ',qflx_scale(indexl)
             write(iulog,*)'qflx          = ',qflx(indexl)
-            call endrun(decomp_index=indexl, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=indexl, subgrid_level=subgrid_level_landunit, msg=errmsg(sourcefile, __LINE__))
          end if
       end if
 
@@ -861,7 +887,8 @@ contains
 
          ! 2 m height relative humidity
 
-         call QSat(t_ref2m(p), forc_pbot(g), e_ref2m, de2mdT, qsat_ref2m, dqsat2mdT)
+         call QSat(t_ref2m(p), forc_pbot(g), qsat_ref2m, &
+              es = e_ref2m)
          rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
          rh_ref2m_u(p) = rh_ref2m(p)
 

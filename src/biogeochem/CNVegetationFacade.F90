@@ -44,7 +44,7 @@ module CNVegetationFacade
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use perf_mod                        , only : t_startf, t_stopf
   use decompMod                       , only : bounds_type
-  use clm_varctl                      , only : iulog, use_cn, use_cndv, use_c13, use_c14
+  use clm_varctl                      , only : iulog, use_cn, use_cndv, use_c13, use_c14, use_fates_bgc
   use abortutils                      , only : endrun
   use spmdMod                         , only : masterproc
   use clm_time_manager                , only : get_curr_date, get_ref_date
@@ -55,7 +55,7 @@ module CNVegetationFacade
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
-  use CNFireMethodMod                 , only : cnfire_method_type
+  use FireMethodType                  , only : fire_method_type
   use CNProductsMod                   , only : cn_products_type
   use NutrientCompetitionMethodMod    , only : nutrient_competition_method_type
   use SpeciesIsotopeType              , only : species_isotope_type
@@ -94,6 +94,8 @@ module CNVegetationFacade
   use dynCNDVMod                      , only : dynCNDV_init, dynCNDV_interp
   use CNPrecisionControlMod           , only: CNPrecisionControl
   use SoilBiogeochemPrecisionControlMod , only: SoilBiogeochemPrecisionControl
+  use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
+  use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
   !
   implicit none
   private
@@ -123,11 +125,12 @@ module CNVegetationFacade
      type(cn_products_type)         :: n_products_inst
 
      type(cn_balance_type)          :: cn_balance_inst
-     class(cnfire_method_type), allocatable :: cnfire_method
+     class(fire_method_type), allocatable :: cnfire_method
      type(dgvs_type)                :: dgvs_inst
 
      ! Control variables
-     logical, private :: reseed_dead_plants    ! Flag to indicate if should reseed dead plants when starting up the model
+     logical, private :: reseed_dead_plants              ! Flag to indicate if should reseed dead plants when starting up the model
+     logical, private :: dribble_crophrv_xsmrpool_2atm = .False. ! Flag to indicate if should harvest xsmrpool to the atmosphere
 
      ! TODO(wjs, 2016-02-19) Evaluate whether some other variables should be moved in
      ! here. Whether they should be moved in depends on how tightly they are tied in with
@@ -162,6 +165,7 @@ module CNVegetationFacade
      procedure, public :: UpdateSubgridWeights          ! Update subgrid weights if running with prognostic patch weights
      procedure, public :: DynamicAreaConservation       ! Conserve C & N with updates in subgrid weights
      procedure, public :: InitColumnBalance             ! Set the starting point for col-level balance checks
+     procedure, public :: InitGridcellBalance           ! Set the starting point for gridcell-level balance checks
      procedure, public :: EcosystemDynamicsPreDrainage  ! Do the main science that needs to be done before hydrology-drainage
      procedure, public :: EcosystemDynamicsPostDrainage ! Do the main science that needs to be done after hydrology-drainage
      procedure, public :: BalanceCheck                  ! Check the carbon and nitrogen balance
@@ -191,7 +195,7 @@ module CNVegetationFacade
 contains
 
   !-----------------------------------------------------------------------
-  subroutine Init(this, bounds, NLFilename, nskip_steps)
+  subroutine Init(this, bounds, NLFilename, nskip_steps, params_ncid)
     !
     ! !DESCRIPTION:
     ! Initialize a CNVeg object.
@@ -201,24 +205,42 @@ contains
     ! !USES:
     use CNFireFactoryMod , only : create_cnfire_method
     use clm_varcon       , only : c13ratio, c14ratio
+    use ncdio_pio        , only : file_desc_t
+    use filterMod        , only : filter
+    use decompMod        , only : get_proc_clumps
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
     character(len=*) , intent(in)    :: NLFilename  ! namelist filename
     integer          , intent(in)    :: nskip_steps ! Number of steps to skip at startup
+    type(file_desc_t), intent(inout) :: params_ncid ! NetCDF handle to parameter file
     !
     ! !LOCAL VARIABLES:
-    integer :: begp, endp
+    integer :: begp, endp, ci
+    integer :: nclumps       ! number of clumps on the proc
+    logical :: alloc_full_veg  ! Signal to allocate vegetation data fully or trivialy
+                        
 
     character(len=*), parameter :: subname = 'Init'
     !-----------------------------------------------------------------------
 
-    begp = bounds%begp
-    endp = bounds%endp
-
     ! Note - always initialize the memory for cnveg_state_inst (used in biogeophys/)
-    call this%cnveg_state_inst%Init(bounds)
+    !      - Even if FATES is the only vegetation option, we still allocate
+    !      - a single value for both column and patch, using index 0 only
+    !      - that is why we pass the number of bgc veg patches here
+
+    if(use_fates_bgc)then
+       alloc_full_veg=.false.
+       begp = 0
+       endp = 0
+    else
+       alloc_full_veg=.true.
+       begp = bounds%begp
+       endp = bounds%endp
+    end if
+    
+    call this%cnveg_state_inst%Init(bounds,alloc_full_veg)
     
     skip_steps = nskip_steps
 
@@ -226,31 +248,43 @@ contains
 
        ! Read in the general CN namelist
        call this%CNReadNML( NLFilename )    ! MUST be called first as passes down control information to others
+    end if
 
-       call this%cnveg_carbonstate_inst%Init(bounds, carbon_type='c12', ratio=1._r8, NLFilename=NLFilename)
+    if(use_cn.or.use_fates_bgc)then
+       call this%cnveg_carbonstate_inst%Init(bounds, carbon_type='c12', ratio=1._r8, &
+            NLFilename=NLFilename, dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm, &
+            alloc_full_veg=alloc_full_veg)
+       
        if (use_c13) then
           call this%c13_cnveg_carbonstate_inst%Init(bounds, carbon_type='c13', ratio=c13ratio, &
-               NLFilename=NLFilename, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+               NLFilename=NLFilename, dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,        &
+               alloc_full_veg=alloc_full_veg, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
        if (use_c14) then
           call this%c14_cnveg_carbonstate_inst%Init(bounds, carbon_type='c14', ratio=c14ratio, &
-               NLFilename=NLFilename, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+               NLFilename=NLFilename, dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,        &
+               alloc_full_veg=alloc_full_veg,c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
-       call this%cnveg_carbonflux_inst%Init(bounds, carbon_type='c12')
+       
+       call this%cnveg_carbonflux_inst%Init(bounds, carbon_type='c12', &
+            dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm, alloc_full_veg=alloc_full_veg )
        if (use_c13) then
-          call this%c13_cnveg_carbonflux_inst%Init(bounds, carbon_type='c13')
+          call this%c13_cnveg_carbonflux_inst%Init(bounds, carbon_type='c13', &
+               dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,alloc_full_veg=alloc_full_veg)
        end if
        if (use_c14) then
-          call this%c14_cnveg_carbonflux_inst%Init(bounds, carbon_type='c14')
+          call this%c14_cnveg_carbonflux_inst%Init(bounds, carbon_type='c14', &
+               dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,alloc_full_veg=alloc_full_veg)
        end if
-       call this%cnveg_nitrogenstate_inst%Init(bounds,                   &
+       call this%cnveg_nitrogenstate_inst%Init(bounds,    &
             this%cnveg_carbonstate_inst%leafc_patch(begp:endp),          &
             this%cnveg_carbonstate_inst%leafc_storage_patch(begp:endp),  &
             this%cnveg_carbonstate_inst%frootc_patch(begp:endp),         &
             this%cnveg_carbonstate_inst%frootc_storage_patch(begp:endp), &
-            this%cnveg_carbonstate_inst%deadstemc_patch(begp:endp) )
-       call this%cnveg_nitrogenflux_inst%Init(bounds) 
-
+            this%cnveg_carbonstate_inst%deadstemc_patch(begp:endp), &
+            alloc_full_veg=alloc_full_veg)
+       call this%cnveg_nitrogenflux_inst%Init(bounds,alloc_full_veg=alloc_full_veg) 
+       
        call this%c_products_inst%Init(bounds, species_non_isotope_type('C'))
        if (use_c13) then
           call this%c13_products_inst%Init(bounds, species_isotope_type('C', '13'))
@@ -259,17 +293,19 @@ contains
           call this%c14_products_inst%Init(bounds, species_isotope_type('C', '14'))
        end if
        call this%n_products_inst%Init(bounds, species_non_isotope_type('N'))
-
+       
        call this%cn_balance_inst%Init(bounds)
-
+    end if
+       
+    if(use_cn)then
        ! Initialize the memory for the dgvs_inst data structure regardless of whether
        ! use_cndv is true so that it can be used in associate statements (nag compiler
        ! complains otherwise)
        call this%dgvs_inst%Init(bounds)
     end if
-
-    allocate(this%cnfire_method, &
-         source=create_cnfire_method(NLFilename))
+    
+    call create_cnfire_method(NLFilename, this%cnfire_method)
+    call this%cnfire_method%CNFireReadParams( params_ncid )
 
   end subroutine Init
 
@@ -298,9 +334,11 @@ contains
     character(len=*), parameter :: nmlname = 'cn_general'   ! MUST match what is in namelist below
     !-----------------------------------------------------------------------
     logical :: reseed_dead_plants
-    namelist /cn_general/ reseed_dead_plants
+    logical :: dribble_crophrv_xsmrpool_2atm
+    namelist /cn_general/ reseed_dead_plants, dribble_crophrv_xsmrpool_2atm
 
-    reseed_dead_plants = this%reseed_dead_plants
+    reseed_dead_plants    = this%reseed_dead_plants
+    dribble_crophrv_xsmrpool_2atm = this%dribble_crophrv_xsmrpool_2atm
 
     if (masterproc) then
        unitn = getavu()
@@ -318,9 +356,11 @@ contains
        call relavu( unitn )
     end if
 
-    call shr_mpi_bcast (reseed_dead_plants      , mpicom)
+    call shr_mpi_bcast (reseed_dead_plants     , mpicom)
+    call shr_mpi_bcast (dribble_crophrv_xsmrpool_2atm  , mpicom)
 
     this%reseed_dead_plants = reseed_dead_plants
+    this%dribble_crophrv_xsmrpool_2atm = dribble_crophrv_xsmrpool_2atm
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -425,8 +465,10 @@ contains
     ! Should be called regardless of whether use_cn is true
     !
     ! !USES:
-    use ncdio_pio, only : file_desc_t
-    use clm_varcon, only : c3_r2, c14ratio
+    use ncdio_pio,       only : file_desc_t
+    use clm_varcon,      only : c3_r2, c14ratio
+    use SoilBiogeochemDecompCascadeConType, only : use_soil_matrixcn
+    use CNSharedParamsMod, only : use_matrixcn
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
@@ -439,6 +481,7 @@ contains
     ! !LOCAL VARIABLES:
 
     integer :: begp, endp
+    real(r8) :: spinup_factor4deadwood    ! Spinup factor used for deadwood (dead-stem and dead course root)
 
     character(len=*), parameter :: subname = 'Restart'
     !-----------------------------------------------------------------------
@@ -448,9 +491,12 @@ contains
        endp = bounds%endp
        call this%cnveg_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c12', &
                reseed_dead_plants=this%reseed_dead_plants, filter_reseed_patch=reseed_patch, &
-               num_reseed_patch=num_reseed_patch )
+               num_reseed_patch=num_reseed_patch, spinup_factor4deadwood=spinup_factor4deadwood )
        if ( flag /= 'read' .and. num_reseed_patch /= 0 )then
           call endrun(msg="ERROR num_reseed should be zero and is not"//errmsg(sourcefile, __LINE__))
+       end if
+       if ( flag /= 'read' .and. spinup_factor4deadwood /= 10_r8 )then
+          call endrun(msg="ERROR spinup_factor4deadwood should be 10 and is not"//errmsg(sourcefile, __LINE__))
        end if
        if (use_c13) then
           call this%c13_cnveg_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c13', &
@@ -475,12 +521,17 @@ contains
             frootc_patch=this%cnveg_carbonstate_inst%frootc_patch(begp:endp), &
             frootc_storage_patch=this%cnveg_carbonstate_inst%frootc_storage_patch(begp:endp), &
             deadstemc_patch=this%cnveg_carbonstate_inst%deadstemc_patch(begp:endp), &
-            filter_reseed_patch=reseed_patch, num_reseed_patch=num_reseed_patch)
+            filter_reseed_patch=reseed_patch, num_reseed_patch=num_reseed_patch, &
+            spinup_factor_deadwood=spinup_factor4deadwood )
        call this%cnveg_nitrogenflux_inst%restart(bounds, ncid, flag=flag)
        call this%cnveg_state_inst%restart(bounds, ncid, flag=flag, &
             cnveg_carbonstate=this%cnveg_carbonstate_inst, &
             cnveg_nitrogenstate=this%cnveg_nitrogenstate_inst, &
             filter_reseed_patch=reseed_patch, num_reseed_patch=num_reseed_patch)
+
+    end if
+
+    if (use_cn .or. use_fates_bgc) then
 
        call this%c_products_inst%restart(bounds, ncid, flag)
        if (use_c13) then
@@ -494,9 +545,8 @@ contains
                template_multiplier = c14ratio)
        end if
        call this%n_products_inst%restart(bounds, ncid, flag)
-
     end if
-
+       
     if (use_cndv) then
        call this%dgvs_inst%Restart(bounds, ncid, flag=flag)
     end if
@@ -534,7 +584,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine InitEachTimeStep(this, bounds, num_soilc, filter_soilc)
+  subroutine InitEachTimeStep(this, bounds, num_bgc_soilc, filter_bgc_soilc)
     !
     ! !DESCRIPTION:
     ! Do initializations that need to be done at the start of every time step
@@ -548,8 +598,8 @@ contains
     ! !ARGUMENTS:
     class(cn_vegetation_type) , intent(inout) :: this
     type(bounds_type) , intent(in)    :: bounds
-    integer           , intent(in)    :: num_soilc       ! number of soil columns filter
-    integer           , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    integer           , intent(in)    :: num_bgc_soilc       ! number of soil columns filter
+    integer           , intent(in)    :: filter_bgc_soilc(:) ! filter for soil columns
     !
     ! !LOCAL VARIABLES:
 
@@ -566,6 +616,15 @@ contains
     call this%cnveg_nitrogenflux_inst%ZeroDWT(bounds)
     call this%cnveg_carbonstate_inst%ZeroDWT(bounds)
     call this%cnveg_nitrogenstate_inst%ZeroDWT(bounds)
+
+    call this%cnveg_carbonflux_inst%ZeroGRU(bounds)
+    if (use_c13) then
+       call this%c13_cnveg_carbonflux_inst%ZeroGRU(bounds)
+    end if
+    if (use_c14) then
+       call this%c14_cnveg_carbonflux_inst%ZeroGRU(bounds)
+    end if
+    call this%cnveg_nitrogenflux_inst%ZeroGRU(bounds)
 
   end subroutine InitEachTimeStep
 
@@ -594,7 +653,7 @@ contains
     character(len=*), parameter :: subname = 'InterpFileInputs'
     !-----------------------------------------------------------------------
 
-    call this%cnfire_method%CNFireInterp(bounds)
+    call this%cnfire_method%FireInterp(bounds)
 
   end subroutine InterpFileInputs
 
@@ -631,7 +690,7 @@ contains
        canopystate_inst, photosyns_inst, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
-       soilbiogeochem_nitrogenstate_inst, ch4_inst, soilbiogeochem_state_inst)
+       soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, ch4_inst, soilbiogeochem_state_inst)
     !
     ! !DESCRIPTION:
     ! Conserve C & N with updates in subgrid weights
@@ -665,6 +724,7 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(ch4_type)                          , intent(inout) :: ch4_inst
     type(soilbiogeochem_state_type)         , intent(in)    :: soilbiogeochem_state_inst
     !
@@ -699,8 +759,7 @@ contains
     ! since those column states are still important in the following dyn_cnbal_col.
     call t_startf('CNUpdateDynPatch')
     call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
-         this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, &
-         soilbiogeochem_carbonstate_inst)
+         this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst )
     if (use_c13) then
        call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
             this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst, &
@@ -712,9 +771,16 @@ contains
             c14_soilbiogeochem_carbonstate_inst)
     end if
     call NStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
-         this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &
-         soilbiogeochem_nitrogenstate_inst)
+         this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst, &
+         soilbiogeochem_nitrogenflux_inst )
     call t_stopf('CNUpdateDynPatch')
+
+    ! This call fixes issue #741 by performing precision control on decomp_cpools_vr_col
+    call t_startf('SoilBiogeochemPrecisionControl')
+    call SoilBiogeochemPrecisionControl(num_soilc_with_inactive, filter_soilc_with_inactive,  &
+         soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
+         c14_soilbiogeochem_carbonstate_inst,soilbiogeochem_nitrogenstate_inst)
+    call t_stopf('SoilBiogeochemPrecisionControl')
 
     call t_startf('dyn_cnbal_col')
     call dyn_cnbal_col(bounds, clump_index, column_state_updater, &
@@ -727,7 +793,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine InitColumnBalance(this, bounds, num_allc, filter_allc, &
-       num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
        soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonstate_inst, &
@@ -746,10 +812,10 @@ contains
     type(bounds_type)                       , intent(in)    :: bounds  
     integer                                 , intent(in)    :: num_allc          ! number of columns in allc filter
     integer                                 , intent(in)    :: filter_allc(:)    ! filter for all active columns
-    integer                                 , intent(in)    :: num_soilc         ! number of soil columns in filter
-    integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
-    integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
-    integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
+    integer                                 , intent(in)    :: num_bgc_soilc         ! number of bgc soil columns in filter
+    integer                                 , intent(in)    :: filter_bgc_soilc(:)   ! filter for bgc soil columns
+    integer                                 , intent(in)    :: num_bgc_vegp         ! number of bgc vegetation patches in filter
+    integer                                 , intent(in)    :: filter_bgc_vegp(:)   ! filter for bgc vegetation patches
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
@@ -762,8 +828,8 @@ contains
 
     call CNDriverSummarizeStates(bounds, &
          num_allc, filter_allc, &
-         num_soilc, filter_soilc, &
-         num_soilp, filter_soilp, &
+         num_bgc_soilc, filter_bgc_soilc, &
+         num_bgc_vegp, filter_bgc_vegp, &
          this%cnveg_carbonstate_inst, &
          this%c13_cnveg_carbonstate_inst, &
          this%c14_cnveg_carbonstate_inst, &
@@ -773,34 +839,113 @@ contains
          c14_soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_nitrogenstate_inst)
 
-    call this%cn_balance_inst%BeginCNBalance( &
-         bounds, num_soilc, filter_soilc, &
-         this%cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
+    call this%cn_balance_inst%BeginCNColumnBalance( &
+         bounds, num_bgc_soilc, filter_bgc_soilc, &
+         soilbiogeochem_carbonstate_inst,soilbiogeochem_nitrogenstate_inst)
 
   end subroutine InitColumnBalance
 
 
   !-----------------------------------------------------------------------
+  subroutine InitGridcellBalance(this, bounds, num_allc, filter_allc, &
+       num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
+       soilbiogeochem_carbonstate_inst, &
+       c13_soilbiogeochem_carbonstate_inst, &
+       c14_soilbiogeochem_carbonstate_inst, &
+       soilbiogeochem_nitrogenstate_inst)
+    !
+    ! !DESCRIPTION:
+    ! Set the starting point for gridcell-level balance checks.
+    !
+    ! Gridcell level:
+    ! Called before DynamicAreaConservation.
+    !
+    ! !USES:
+    use subgridAveMod, only : c2g
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type)               , intent(inout) :: this
+    type(bounds_type)                       , intent(in)    :: bounds
+    integer                                 , intent(in)    :: num_allc          ! number of columns in allc filter
+    integer                                 , intent(in)    :: filter_allc(:)    ! filter for all active columns
+    integer                                 , intent(in)    :: num_bgc_soilc         ! number of bgc soil columns in filter
+    integer                                 , intent(in)    :: filter_bgc_soilc(:)   ! filter for bgc soil columns
+    integer                                 , intent(in)    :: num_bgc_vegp         ! number of bgc vegetation patches in filter
+    integer                                 , intent(in)    :: filter_bgc_vegp(:)   ! filter for bgc vegetation patches
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InitGridcellBalance'
+    !-----------------------------------------------------------------------
+
+    
+    call CNDriverSummarizeStates(bounds, &
+         num_allc, filter_allc, &
+         num_bgc_soilc, filter_bgc_soilc, &
+         num_bgc_vegp, filter_bgc_vegp, &
+         this%cnveg_carbonstate_inst, &
+         this%c13_cnveg_carbonstate_inst, &
+         this%c14_cnveg_carbonstate_inst, &
+         this%cnveg_nitrogenstate_inst, &
+         soilbiogeochem_carbonstate_inst, &
+         c13_soilbiogeochem_carbonstate_inst, &
+         c14_soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_nitrogenstate_inst)
+
+    ! total gridcell carbon (TOTGRIDCELLC)
+    call c2g( bounds = bounds, &
+         carr = soilbiogeochem_carbonstate_inst%totc_col(bounds%begc:bounds%endc), &
+         garr = soilbiogeochem_carbonstate_inst%totc_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+    
+    ! total gridcell nitrogen (TOTGRIDCELLN)
+    call c2g( bounds = bounds, &
+         carr = soilbiogeochem_nitrogenstate_inst%totn_col(bounds%begc:bounds%endc), &
+         garr = soilbiogeochem_nitrogenstate_inst%totn_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+
+    call this%cn_balance_inst%BeginCNGridcellBalance( bounds, &
+         this%cnveg_carbonflux_inst, &
+         soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_nitrogenstate_inst, &
+         this%c_products_inst, this%n_products_inst)
+
+  end subroutine InitGridcellBalance
+
+
+  !-----------------------------------------------------------------------
   subroutine EcosystemDynamicsPreDrainage(this, bounds, &
-       num_soilc, filter_soilc, &
-       num_soilp, filter_soilp, &
+       num_bgc_soilc, filter_bgc_soilc, &
+       num_bgc_vegp, filter_bgc_vegp, &
+       num_actfirec, filter_actfirec, &
+       num_actfirep, filter_actfirep, &
        num_pcropp, filter_pcropp, &
-       doalb, &
+       num_soilnopcropp, filter_soilnopcropp, &
+       num_exposedvegp, filter_exposedvegp, &
+       num_noexposedvegp, filter_noexposedvegp, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
        soilbiogeochem_state_inst,                                               &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-       active_layer_inst, &
+       active_layer_inst, clm_fates, &
        atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                           &
-       wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
+       wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
+       soil_water_retention_curve, crop_inst, ch4_inst, &
        photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
        nutrient_competition_method, fireemis_inst)
     !
     ! !DESCRIPTION:
-    ! Do the main science for CN vegetation that needs to be done before hydrology-drainage
+    ! Do the main science for biogeochemistry that needs to be done before hydrology-drainage
     !
-    ! Should only be called if use_cn is true
+    ! Can be called for either use_cn or use_fates_bgc.
+    ! Will skip most vegetation patch calls for the latter
     !
     ! !USES:
 
@@ -808,13 +953,22 @@ contains
     ! !ARGUMENTS:
     class(cn_vegetation_type)               , intent(inout) :: this
     type(bounds_type)                       , intent(in)    :: bounds  
-    integer                                 , intent(in)    :: num_soilc         ! number of soil columns in filter
-    integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
-    integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
-    integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
+    integer                                 , intent(in)    :: num_bgc_soilc       ! number of bgc soil columns in filter
+    integer                                 , intent(in)    :: filter_bgc_soilc(:) ! filter for bgc soil columns
+    integer                                 , intent(in)    :: num_bgc_vegp        ! number of bgc veg patches in filter
+    integer                                 , intent(in)    :: filter_bgc_vegp(:)  ! filter for bgc veg patches
+    integer                                 , intent(out)   :: num_actfirec      ! number of soil columns on fire in filter
+    integer                                 , intent(out)   :: filter_actfirec(:)! filter for soil columns on fire
+    integer                                 , intent(out)   :: num_actfirep      ! number of soil patches on fire in filter
+    integer                                 , intent(out)   :: filter_actfirep(:)! filter for soil patches on fire
     integer                                 , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
     integer                                 , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
-    logical                                 , intent(in)    :: doalb             ! true = surface albedo calculation time step
+    integer                                 , intent(in)    :: num_soilnopcropp       ! number of non-prog. crop soil patches in filter
+    integer                                 , intent(in)    :: filter_soilnopcropp(:) ! filter for non-prog. crop soil patches
+    integer                                 , intent(in)    :: num_exposedvegp        ! number of points in filter_exposedvegp
+    integer                                 , intent(in)    :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
+    integer                                 , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer                                 , intent(in)    :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0 
     type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
@@ -833,6 +987,7 @@ contains
     type(canopystate_type)                  , intent(inout) :: canopystate_inst
     type(soilstate_type)                    , intent(inout) :: soilstate_inst
     type(temperature_type)                  , intent(inout) :: temperature_inst
+    class(soil_water_retention_curve_type)  , intent(in)    :: soil_water_retention_curve
     type(crop_type)                         , intent(inout) :: crop_inst
     type(ch4_type)                          , intent(in)    :: ch4_inst
     type(photosyns_type)                    , intent(in)    :: photosyns_inst
@@ -840,6 +995,7 @@ contains
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     type(fireemis_type)                     , intent(inout) :: fireemis_inst
+    type(hlm_fates_interface_type)          , intent(inout) :: clm_fates
     !
     ! !LOCAL VARIABLES:
 
@@ -849,9 +1005,14 @@ contains
     call crop_inst%CropIncrementYear(num_pcropp, filter_pcropp)
 
     call CNDriverNoLeaching(bounds,                                         &
-         num_soilc, filter_soilc,                       &
-         num_soilp, filter_soilp,                       &
-         num_pcropp, filter_pcropp, doalb,              &
+         num_bgc_soilc, filter_bgc_soilc,                       &
+         num_bgc_vegp, filter_bgc_vegp,                       &
+         num_pcropp, filter_pcropp,                     &
+         num_soilnopcropp, filter_soilnopcropp,         &
+         num_actfirec, filter_actfirec, &
+         num_actfirep, filter_actfirep, &
+         num_exposedvegp, filter_exposedvegp,           &
+         num_noexposedvegp, filter_noexposedvegp,       &
          this%cnveg_state_inst,                                                        &
          this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst,                           &
          this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst,                   &
@@ -864,26 +1025,28 @@ contains
          c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_state_inst,                                               &
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-         active_layer_inst, &
+         active_layer_inst, clm_fates, &
          atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                           &
-         wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
+         wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
+         soil_water_retention_curve, crop_inst, ch4_inst, &
          this%dgvs_inst, photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
-         nutrient_competition_method, this%cnfire_method)
+         nutrient_competition_method, this%cnfire_method, this%dribble_crophrv_xsmrpool_2atm)
 
     ! fire carbon emissions 
-    call CNFireEmisUpdate(bounds, num_soilp, filter_soilp, &
+    call CNFireEmisUpdate(bounds, num_bgc_vegp, filter_bgc_vegp, &
          this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, fireemis_inst )
 
     call CNAnnualUpdate(bounds,            &
-         num_soilc, filter_soilc, &
-         num_soilp, filter_soilp, &
+         num_bgc_soilc, filter_bgc_soilc, &
+         num_bgc_vegp, filter_bgc_vegp, &
          this%cnveg_state_inst, this%cnveg_carbonflux_inst)
 
   end subroutine EcosystemDynamicsPreDrainage
 
   !-----------------------------------------------------------------------
   subroutine EcosystemDynamicsPostDrainage(this, bounds, num_allc, filter_allc, &
-       num_soilc, filter_soilc, num_soilp, filter_soilp, doalb, crop_inst, &
+       num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, num_actfirec, filter_actfirec, num_actfirep, filter_actfirep,&
+       doalb, crop_inst, soilstate_inst, soilbiogeochem_state_inst, &
        waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, frictionvel_inst, canopystate_inst, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
@@ -893,7 +1056,7 @@ contains
     ! !DESCRIPTION:
     ! Do the main science for CN vegetation that needs to be done after hydrology-drainage
     !
-    ! Should only be called if use_cn is true
+    ! Should only be called if use_cn is true or use_fates_bgc is true
     !
     ! !USES:
     !
@@ -902,10 +1065,14 @@ contains
     type(bounds_type)                       , intent(in)    :: bounds  
     integer                                 , intent(in)    :: num_allc          ! number of columns in allc filter
     integer                                 , intent(in)    :: filter_allc(:)    ! filter for all active columns
-    integer                                 , intent(in)    :: num_soilc         ! number of soil columns in filter
-    integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
-    integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
-    integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
+    integer                                 , intent(in)    :: num_bgc_soilc         ! number of bgc soil columns in filter
+    integer                                 , intent(in)    :: filter_bgc_soilc(:)   ! filter for bgc soil columns
+    integer                                 , intent(in)    :: num_bgc_vegp         ! number of bgc veg patches in filter
+    integer                                 , intent(in)    :: filter_bgc_vegp(:)   ! filter for bgc veg patches
+    integer                                 , intent(in)    :: num_actfirec         ! number of soil columns on fire in filter
+    integer                                 , intent(in)    :: filter_actfirec(:)   ! filter for soil columns on fire
+    integer                                 , intent(in)    :: num_actfirep         ! number of soil patches on fire in filter
+    integer                                 , intent(in)    :: filter_actfirep(:)   ! filter for soil patches on fire
     logical                                 , intent(in)    :: doalb             ! true = surface albedo calculation time step
     type(crop_type)                         , intent(in)    :: crop_inst
     type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
@@ -913,6 +1080,8 @@ contains
     type(waterfluxbulk_type)                    , intent(inout) :: waterfluxbulk_inst
     type(frictionvel_type)                  , intent(in)    :: frictionvel_inst
     type(canopystate_type)                  , intent(inout) :: canopystate_inst
+    type(soilstate_type)                    , intent(inout) :: soilstate_inst
+    type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: c13_soilbiogeochem_carbonflux_inst
@@ -931,32 +1100,42 @@ contains
     ! and total soil water outflow.
     
     call CNDriverLeaching(bounds, &
-         num_soilc, filter_soilc, &
-         num_soilp, filter_soilp, &
-         waterstatebulk_inst, waterfluxbulk_inst, &
+         num_bgc_soilc, filter_bgc_soilc, &
+         num_bgc_vegp, filter_bgc_vegp, &
+         num_actfirec, filter_actfirec, &
+         num_actfirep, filter_actfirep, &
+         waterstatebulk_inst, waterfluxbulk_inst, soilstate_inst, this%cnveg_state_inst, &
+         this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_carbonflux_inst,soilbiogeochem_state_inst, &
          this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &
-         soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+         soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,&
+         this%c13_cnveg_carbonstate_inst,this%c14_cnveg_carbonstate_inst, &
+         this%c13_cnveg_carbonflux_inst,this%c14_cnveg_carbonflux_inst, &
+         c13_soilbiogeochem_carbonstate_inst,c14_soilbiogeochem_carbonstate_inst,&
+         c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonflux_inst)
 
     ! Set controls on very low values in critical state variables 
 
-    call t_startf('CNPrecisionControl')
-    call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
-         this%cnveg_carbonstate_inst, this%c13_cnveg_carbonstate_inst, &
-         this%c14_cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
-    call t_stopf('CNPrecisionControl')
-
+    if(num_bgc_vegp>0)then
+       call t_startf('CNPrecisionControl')
+       call CNPrecisionControl(bounds, num_bgc_vegp, filter_bgc_vegp, &
+            this%cnveg_carbonstate_inst, this%c13_cnveg_carbonstate_inst, &
+            this%c14_cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
+       call t_stopf('CNPrecisionControl')
+    end if
+       
     call t_startf('SoilBiogeochemPrecisionControl')
-    call SoilBiogeochemPrecisionControl(num_soilc, filter_soilc,  &
+    call SoilBiogeochemPrecisionControl(num_bgc_soilc, filter_bgc_soilc,  &
          soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
          c14_soilbiogeochem_carbonstate_inst,soilbiogeochem_nitrogenstate_inst)
     call t_stopf('SoilBiogeochemPrecisionControl')
 
     ! Call to all CN summary routines
 
-    call  CNDriverSummarizeStates(bounds, &
+    call CNDriverSummarizeStates(bounds, &
          num_allc, filter_allc, &
-         num_soilc, filter_soilc, &
-         num_soilp, filter_soilp, &
+         num_bgc_soilc, filter_bgc_soilc, &
+         num_bgc_vegp, filter_bgc_vegp, &
          this%cnveg_carbonstate_inst, &
          this%c13_cnveg_carbonstate_inst, &
          this%c14_cnveg_carbonstate_inst, &
@@ -966,9 +1145,9 @@ contains
          c14_soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_nitrogenstate_inst)
 
-    call  CNDriverSummarizeFluxes(bounds, &
-         num_soilc, filter_soilc, &
-         num_soilp, filter_soilp, &
+    call CNDriverSummarizeFluxes(bounds, &
+         num_bgc_soilc, filter_bgc_soilc, &
+         num_bgc_vegp, filter_bgc_vegp, &
          this%cnveg_carbonflux_inst, &
          this%c13_cnveg_carbonflux_inst, &
          this%c14_cnveg_carbonflux_inst, &
@@ -977,27 +1156,35 @@ contains
          soilbiogeochem_carbonflux_inst, &
          c13_soilbiogeochem_carbonflux_inst, &
          c14_soilbiogeochem_carbonflux_inst, &
+         soilbiogeochem_carbonstate_inst, &
+         c13_soilbiogeochem_carbonstate_inst, &
+         c14_soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_nitrogenstate_inst, &
          soilbiogeochem_nitrogenflux_inst)
 
     ! On the radiation time step, use C state variables to calculate
     ! vegetation structure (LAI, SAI, height)
-
-    if (doalb) then   
-       call CNVegStructUpdate(num_soilp, filter_soilp, &
-            waterdiagnosticbulk_inst, frictionvel_inst, this%dgvs_inst, this%cnveg_state_inst, &
-            crop_inst, this%cnveg_carbonstate_inst, canopystate_inst)
+    if(num_bgc_vegp>0)then
+       if (doalb) then   
+          call CNVegStructUpdate(bounds,num_bgc_vegp, filter_bgc_vegp, &
+               waterdiagnosticbulk_inst, frictionvel_inst, this%dgvs_inst, this%cnveg_state_inst, &
+               crop_inst, this%cnveg_carbonstate_inst, canopystate_inst)
+       end if
     end if
-
+    
   end subroutine EcosystemDynamicsPostDrainage
 
   !-----------------------------------------------------------------------
-  subroutine BalanceCheck(this, bounds, num_soilc, filter_soilc, &
-       soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst)
+  subroutine BalanceCheck(this, bounds, num_bgc_soilc, filter_bgc_soilc, &
+       soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst, &
+       soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst, &
+       atm2lnd_inst, clm_fates)
+    
     !
     ! !DESCRIPTION:
     ! Check the carbon and nitrogen balance
     !
-    ! Should only be called if use_cn is true
+    ! Should only be called if use_cn is true or use_fates_bgc is true
     !
     ! !USES:
     use clm_time_manager   , only : get_nstep_since_startup_or_lastDA_restart_or_pause
@@ -1005,10 +1192,14 @@ contains
     ! !ARGUMENTS:
     class(cn_vegetation_type)               , intent(inout) :: this
     type(bounds_type)                       , intent(in)    :: bounds  
-    integer                                 , intent(in)    :: num_soilc         ! number of soil columns in filter
-    integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
+    integer                                 , intent(in)    :: num_bgc_soilc         ! number of soil columns in filter
+    integer                                 , intent(in)    :: filter_bgc_soilc(:)   ! filter for soil columns
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst
+    type(hlm_fates_interface_type)          , intent(inout) :: clm_fates
     !
     ! !LOCAL VARIABLES:
     integer              :: DA_nstep                   ! time step number
@@ -1019,19 +1210,30 @@ contains
     DA_nstep = get_nstep_since_startup_or_lastDA_restart_or_pause()
     if (DA_nstep <= skip_steps )then
        if (masterproc) then
+!$OMP MASTER
           write(iulog,*) '--WARNING-- skipping CN balance check for first timesteps after startup or data assimilation'
+!$OMP END MASTER
        end if
     else
 
        call this%cn_balance_inst%CBalanceCheck( &
-            bounds, num_soilc, filter_soilc, &
+            bounds, num_bgc_soilc, filter_bgc_soilc, &
             soilbiogeochem_carbonflux_inst, &
-            this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst)
+            soilbiogeochem_carbonstate_inst, &
+            this%cnveg_carbonflux_inst, &
+            this%cnveg_carbonstate_inst, &
+            this%c_products_inst, &
+            clm_fates)
 
        call this%cn_balance_inst%NBalanceCheck( &
-            bounds, num_soilc, filter_soilc, &
+            bounds, num_bgc_soilc, filter_bgc_soilc, &
             soilbiogeochem_nitrogenflux_inst, &
-            this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst)
+            soilbiogeochem_nitrogenstate_inst, &
+            this%cnveg_nitrogenflux_inst, &
+            this%cnveg_nitrogenstate_inst, &
+            this%n_products_inst, &
+            atm2lnd_inst, &
+            clm_fates)
 
     end if
 

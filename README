@@ -1,13 +1,25 @@
 $CTSMROOT/README                                          06/08/2018
 
-Community Land Surface Model (CLM) science version 5.0.0  series -- source code, tools, 
+Community Terrestrial Systems Model (CTSM) science version 5.1  series -- source code, tools, 
 offline-build and test scripts. This gives you everything you need
-to run CLM with CESM with datm8 to provide CRU NCEP or GSWP3 forcing data in 
+to run CTSM with CESM with the CMEPS driver and CDEPS data models to provide CRU NCEP or GSWP3 forcing data in 
 place of a modeled atmosphere.
+
+CMEPS is the Community Mediator for Earth Prediction Systems. And CDEPS is the
+Community Data Models for Earth Prediction System. They are both NUOPC based models
+used to drive the CESM (Community Earth System Model) of which CTSM is a component of.
+NUOPC is the National Unified Operational Prediction Capability a standard way of building
+coupled model systems. The NUOPC layer is based on the Earth System Modeling Framework (ESMF).
 
 For lists of current bugs (issues) and current development see the CTSM GitHub page:
 
-https://github.com/ESCOMP/ctsm
+https://github.com/ESCOMP/CTSM
+
+INFORMATION ON THE CMEPS DRIVER:
+
+https://escomp.github.io/CMEPS
+
+https://earthsystemmodeling.org/nuopc/
 
 IMPORTANT NOTE ON CESM CHECKOUT VERSUS A CTSM CHECKOUT:
 
@@ -25,35 +37,32 @@ be $CTSMROOT/cime.
 
 General directory structure ($CTSMROOT):
 
-doc --------------- Documentation of CLM.
+doc --------------- Documentation of CTSM.
 bld --------------- Template, configure and build-namelist scripts for clm.
-src --------------- CLM Source code.
-test -------------- CLM Testing scripts for CLM offline tools.
-tools ------------- CLM Offline tools to prepare input datasets and process output.
-cime_config ------- Configuration files of cime for compsets and CLM settings
+src --------------- CTSM Source code.
+lilac ------------- Lightweight Infrastructure for Land-Atmosphere Coupling (for coupling to a host atmosphere model)
+test -------------- CTSM Testing scripts for CTSM offline tools.
+tools ------------- CTSM Offline tools to prepare input datasets and process output.
+cime_config ------- Configuration files of cime for compsets and CTSM settings
 manage_externals -- Script to manage the external source directories
-python ------------ Some python modules mostly for use by run_sys_tests (but could be used elsewhere)
+py_env_create ----- Script to setup the python environment for CTSM python tools using conda
+python ------------ Some python modules mostly for use by run_sys_tests (but could be used elsewhere l
 
 Directory structure only for a CTSM checkout:
 
-components -------- Other active sub-components needed for CLM to run (river routing and land-ice models)
+components -------- Other active sub-components needed for CTSM to run (river routing and land-ice models)
+libraries --------- CESM libraries: MCT (Model Coupling Toolkit) and PIO
+share ------------- CESM shared code
 
 cime/scripts --------------- cesm/cime driver scripts
 
-cime/src/drivers/mct/main ----------- CESM top level driver source code.
-cime/src/drivers/mct/shr ------------ CESM top level driver shared code.
-cime/src/components/data_comps/datm - CESM Data model version 8 source code.
-cime/src/components/stub_comps/sice - CESM stub sea-ice model source code.
-cime/src/components/stub_comps/socn - CESM stub ocean model source code.
-cime/src/components/stub_comps/sglc - CESM stub glacier model source code.
-cime/src/externals ------------------ CESM external utility codes 
-                                      (Model Coupling Toolkit (MCT)
-                                      (Earth System Model Framework)
-                                      (timing -- code timing utility)
-                                      (pio -- Parallel Input/Output)
+components/cmeps -------------------- CESM top level driver (for NUOPC driver [which is the default]) source code.
+components/cdeps -------------------- CESM top level data model shared code (for NUOPC driver).
+cime/src/externals ------------------ CESM external utility codes  (genf90)
 components/cism --------------------- CESM Community land Ice Sheet Model.
 components/mosart ------------------- Model for Scale Adaptive River Transport
 components/rtm ---------------------- CESM River Transport Model.
+components/cpl7 --------------------- CESM top level driver for MCT driver (being deprecated)
 
 Top level documentation ($CTSMROOT):
 
@@ -64,8 +73,8 @@ CODE_OF_CONDUCT.md ------- Code of Conduct for how to work with each other on th
 Copyright ---------------- CESM Copyright file
 doc/UpdateChangeLog.pl --- Script to add documentation on a tag to the
                            ChangeLog/ChangeSum files
-doc/ChangeLog ------------ Documents different CLM versions
-doc/ChangeSum ------------ Summary documentation of different CLM versions
+doc/ChangeLog ------------ Documents different CTSM versions
+doc/ChangeSum ------------ Summary documentation of different CTSM versions
 
 doc/design --------------- Software Engineering and code design document files
 
@@ -84,7 +93,7 @@ Important files in main directories (under $CTSMROOT):
 =============================================================================================
 
 Externals.cfg --------------- File for management of the main high level externals
-Externals_CLM.cfg ----------- File for management of the CLM specific externals (i.e. FATES)
+Externals_CLM.cfg ----------- File for management of the CTSM specific externals (i.e. FATES)
 
 run_sys_tests --------------- Python script to send the standard CTSM testing off (submits
                               the create_test test suite for several different compilers on the
@@ -92,7 +101,7 @@ run_sys_tests --------------- Python script to send the standard CTSM testing of
 
 parse_cime.cs.status -------- Script to parse test status files cs.status.* created by create_test
                               (can be used along with run_sys_tests)
-doc/Quickstart.GUIDE -------- Quick guide to using cpl7 scripts.
+doc/Quickstart.GUIDE -------- Quick guide to using NUOPC scripts.
 doc/IMPORTANT_NOTES --------- Some important notes about this version of 
                                                  clm, configuration modes and namelist items 
                                                  that are not validated or functional.
@@ -100,21 +109,21 @@ doc/ChangeLog --------------- Detailed list of changes for each model version.
 doc/ChangeSum --------------- Summary one-line list of changes for each 
                               model version.
 doc/README ------------------ Documentation similar to this file
-doc/UsersGuide -------------- CLM Users Guide
+doc/UsersGuide -------------- CTSM Users Guide
 doc/IMPORTANT_NOTES --------- Some important notes on caveats for some configurations/namelist items
 
 bld/README ------------------ Description of how to use the configure and
                               build-namelist scripts.
-bld/configure --------------- Script to prepare CLM to be built.
-bld/build-namelist ---------- Script to build CLM namelists.
+bld/configure --------------- Script to prepare CTSM to be built.
+bld/build-namelist ---------- Script to build CTSM namelists.
 
-cime_config/buildnml ------------- Build the CLM namelist for CIME
-cime_config/buildlib ------------- Build the CLM library
-cime_config/config_compsets.xml -- Define CLM compsets
-cime_config/config_component.xml - Define CLM XML settings
-cime_config/config_tests.xml ----- Define CLM specific tests 
-cime_config/config_pes.xml ------- Define Processor layouts for various CLM grids and compsets
-cime_config/testdefs ------------- Directory for specification of CLM testing
+cime_config/buildnml ------------- Build the CTSM namelist for CIME
+cime_config/buildlib ------------- Build the CTSM library
+cime_config/config_compsets.xml -- Define CTSM compsets
+cime_config/config_component.xml - Define CTSM XML settings
+cime_config/config_tests.xml ----- Define CTSM specific tests 
+cime_config/config_pes.xml ------- Define Processor layouts for various CTSM grids and compsets
+cime_config/testdefs ------------- Directory for specification of CTSM testing
 cime_config/testdefs/ExpectedTestFails.xml -- List of tests that are expected to fail
 cime_config/usermods_dirs -------- Directories of sets of user-modification subdirs
                                    (These are directories that add specific user modifications to
@@ -122,7 +131,7 @@ cime_config/usermods_dirs -------- Directories of sets of user-modification subd
                                     Current sub directories are for various CMIP6 configurations)
 
 test/tools/test_driver.sh -- Script for general software testing of 
-                             CLM's offline tools.
+                             CTSM's offline tools.
 
 tools/mksurfdata_map ---------- Directory to build program to create surface dataset 
                                 at any resolution.
@@ -135,6 +144,12 @@ tools/ncl_scripts  ------------ Directory of NCL and perl scripts to do various
                                 tasks. Most notably to plot perturbation error growth
                                 testing and to extract regional information from
                                 global datasets for single-point/regional simulations.
+tools/site_and_regional ------- Scripts to create input datasets for single site and regional
+                                cases, primarily by modifying existing global datasets
+tools/contrib ----------------- Miscellansous useful scripts for pre and post processing
+                                as well as case management of CTSM. These scripts are
+                                contributed by users and may not be as well tested or
+                                supported as other tools.
 
 
 =============================================================================================
@@ -143,7 +158,7 @@ Source code directory structure:
 
 src/biogeochem ---- Biogeochemisty
 src/main ---------- Main control and high level code
-src/cpl ----------- Land model high level MCT and ESMF drivers
+src/cpl ----------- Land model high level caps for NUOPC driver (and MCT and LILAC)
 src/biogeophys ---- Biogeophysics (Hydrology)
 src/dyn_subgrid --- Dynamic land unit change
 src/init_interp --- Online interpolation
@@ -155,7 +170,7 @@ src/unit_test_shr - Unit test shared modules for unit testing
 src/unit_test_stubs Unit test stubs that replicate CTSM code simpler
 
 =============================================================================================
-    QUICKSTART: using the CPL7 scripts
+    QUICKSTART: using the NUOPC driver scripts
 =============================================================================================
 
          cd $CIMEROOT/scripts

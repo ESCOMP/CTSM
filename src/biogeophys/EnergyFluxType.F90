@@ -8,6 +8,7 @@ module EnergyFluxType
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use clm_varcon     , only : spval
+  use clm_varctl     , only : use_biomass_heat_storage, iulog
   use decompMod      , only : bounds_type
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
@@ -21,6 +22,7 @@ module EnergyFluxType
   type, public :: energyflux_type
 
      ! Fluxes
+     real(r8), pointer :: eflx_sh_stem_patch      (:)   ! patch sensible heat flux from stem (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_h2osfc_to_snow_col (:)   ! col snow melt to h2osfc heat flux (W/m**2)
      real(r8), pointer :: eflx_sh_grnd_patch      (:)   ! patch sensible heat flux from ground (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_sh_veg_patch       (:)   ! patch sensible heat flux from leaves (W/m**2) [+ to atm]
@@ -61,9 +63,11 @@ module EnergyFluxType
      real(r8), pointer :: eflx_anthro_patch       (:)   ! patch total anthropogenic heat flux (W/m**2)
      real(r8), pointer :: eflx_traffic_patch      (:)   ! patch traffic sensible heat flux (W/m**2)
      real(r8), pointer :: eflx_wasteheat_patch    (:)   ! patch sensible heat flux from domestic heating/cooling sources of waste heat (W/m**2)
+     real(r8), pointer :: eflx_ventilation_patch  (:)   ! patch sensible heat flux from building ventilation (W/m**2)
      real(r8), pointer :: eflx_heat_from_ac_patch (:)   ! patch sensible heat flux put back into canyon due to removal by AC (W/m**2)
      real(r8), pointer :: eflx_traffic_lun        (:)   ! lun traffic sensible heat flux (W/m**2)
      real(r8), pointer :: eflx_wasteheat_lun      (:)   ! lun sensible heat flux from domestic heating/cooling sources of waste heat (W/m**2)
+     real(r8), pointer :: eflx_ventilation_lun    (:)   ! lun sensible heat flux from building ventilation (W/m**2)
      real(r8), pointer :: eflx_heat_from_ac_lun   (:)   ! lun sensible heat flux to be put back into canyon due to removal by AC (W/m**2)
      real(r8), pointer :: eflx_building_lun       (:)   ! lun building heat flux from change in interior building air temperature (W/m**2)
      real(r8), pointer :: eflx_urban_ac_lun       (:)   ! lun urban air conditioning flux (W/m**2)
@@ -95,11 +99,13 @@ module EnergyFluxType
      real(r8), pointer :: bsha_patch              (:)   ! patch shaded canopy transpiration wetness factor (0 to 1)
 
      ! Roots
-     real(r8), pointer :: btran2_patch            (:)   ! patch root zone soil wetness factor (0 to 1) 
      real(r8), pointer :: rresis_patch            (:,:) ! patch root resistance by layer (0-1)  (nlevgrnd)
 
      ! Latent heat
      real(r8), pointer :: htvp_col                (:)   ! latent heat of vapor of water (or sublimation) [j/kg]
+
+     ! Canopy heat
+     real(r8), pointer :: dhsdt_canopy_patch      (:)   ! patch change in heat content of canopy (leaf+stem) (W/m**2) [+ to atm]
 
      ! Balance Checks
      real(r8), pointer :: errsoi_patch            (:)   ! soil/lake energy conservation error   (W/m**2)
@@ -151,7 +157,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(t_grnd_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     call this%InitAllocate ( bounds )
-    call this%InitHistory ( bounds, is_simple_buildtemp )
+    call this%InitHistory ( bounds, is_simple_buildtemp, is_prog_buildtemp )
     call this%InitCold ( bounds, t_grnd_col, is_simple_buildtemp, is_prog_buildtemp ) 
 
   end subroutine Init
@@ -191,6 +197,7 @@ contains
     allocate( this%eflx_sh_tot_u_patch     (begp:endp))             ; this%eflx_sh_tot_u_patch     (:)   = nan
     allocate( this%eflx_sh_tot_r_patch     (begp:endp))             ; this%eflx_sh_tot_r_patch     (:)   = nan
     allocate( this%eflx_sh_grnd_patch      (begp:endp))             ; this%eflx_sh_grnd_patch      (:)   = nan
+    allocate( this%eflx_sh_stem_patch      (begp:endp))             ; this%eflx_sh_stem_patch      (:)   = nan
     allocate( this%eflx_sh_veg_patch       (begp:endp))             ; this%eflx_sh_veg_patch       (:)   = nan
     allocate( this%eflx_sh_precip_conversion_col(begc:endc))        ; this%eflx_sh_precip_conversion_col(:) = nan
     allocate( this%eflx_lh_tot_u_patch     (begp:endp))             ; this%eflx_lh_tot_u_patch     (:)   = nan
@@ -221,6 +228,7 @@ contains
     allocate( this%eflx_urban_ac_col       (begc:endc))             ; this%eflx_urban_ac_col       (:)   = nan
     allocate( this%eflx_urban_heat_col     (begc:endc))             ; this%eflx_urban_heat_col     (:)   = nan
     allocate( this%eflx_wasteheat_patch    (begp:endp))             ; this%eflx_wasteheat_patch    (:)   = nan
+    allocate( this%eflx_ventilation_patch  (begp:endp))             ; this%eflx_ventilation_patch  (:)   = nan
     allocate( this%eflx_traffic_patch      (begp:endp))             ; this%eflx_traffic_patch      (:)   = nan
     allocate( this%eflx_heat_from_ac_patch (begp:endp))             ; this%eflx_heat_from_ac_patch (:)   = nan
     allocate( this%eflx_heat_from_ac_lun   (begl:endl))             ; this%eflx_heat_from_ac_lun   (:)   = nan
@@ -229,6 +237,7 @@ contains
     allocate( this%eflx_urban_heat_lun     (begl:endl))             ; this%eflx_urban_heat_lun     (:)   = nan
     allocate( this%eflx_traffic_lun        (begl:endl))             ; this%eflx_traffic_lun        (:)   = nan
     allocate( this%eflx_wasteheat_lun      (begl:endl))             ; this%eflx_wasteheat_lun      (:)   = nan
+    allocate( this%eflx_ventilation_lun    (begl:endl))             ; this%eflx_ventilation_lun    (:)   = nan
     allocate( this%eflx_anthro_patch       (begp:endp))             ; this%eflx_anthro_patch       (:)   = nan
 
     allocate( this%dgnetdT_patch           (begp:endp))             ; this%dgnetdT_patch           (:)   = nan
@@ -246,11 +255,12 @@ contains
 
     allocate( this%htvp_col                (begc:endc))             ; this%htvp_col                (:)   = nan
 
+    allocate( this%dhsdt_canopy_patch      (begp:endp))             ; this%dhsdt_canopy_patch      (:)   = nan
+ 
     allocate(this%rresis_patch             (begp:endp,1:nlevgrnd))  ; this%rresis_patch            (:,:) = nan
     allocate(this%btran_patch              (begp:endp))             ; this%btran_patch             (:)   = nan
     allocate(this%btran_min_patch          (begp:endp))             ; this%btran_min_patch         (:)   = nan
     allocate(this%btran_min_inst_patch     (begp:endp))             ; this%btran_min_inst_patch    (:)   = nan
-    allocate(this%btran2_patch             (begp:endp))             ; this%btran2_patch            (:)   = nan
     allocate( this%bsun_patch              (begp:endp))             ; this%bsun_patch              (:)   = nan
     allocate( this%bsha_patch              (begp:endp))             ; this%bsha_patch              (:)   = nan
     allocate( this%errsoi_patch            (begp:endp))             ; this%errsoi_patch            (:)   = nan
@@ -270,7 +280,7 @@ contains
   end subroutine InitAllocate
     
   !------------------------------------------------------------------------
-  subroutine InitHistory(this, bounds, is_simple_buildtemp)
+  subroutine InitHistory(this, bounds, is_simple_buildtemp, is_prog_buildtemp)
     !
     ! !DESCRIPTION:
     ! Setup fields that can be output to history files
@@ -287,6 +297,7 @@ contains
     class(energyflux_type) :: this
     type(bounds_type), intent(in) :: bounds  
     logical          , intent(in) :: is_simple_buildtemp ! If using simple building temp method
+    logical          , intent(in) :: is_prog_buildtemp   ! If using prognostic building temp method
     !
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
@@ -433,6 +444,18 @@ contains
          avgflag='A', long_name='sensible heat from veg', &
          ptr_patch=this%eflx_sh_veg_patch, set_lake=0._r8, c2l_scale_type='urbanf')
 
+    if (use_biomass_heat_storage) then
+       this%eflx_sh_stem_patch(begp:endp) = spval
+       call hist_addfld1d (fname='FSH_STEM', units='W/m^2',  &
+            avgflag='A', long_name='sensible heat from stem', &
+            ptr_patch=this%eflx_sh_stem_patch, c2l_scale_type='urbanf',default = 'inactive')
+
+       this%dhsdt_canopy_patch(begp:endp) = spval
+       call hist_addfld1d (fname='DHSDT_CANOPY', units='W/m^2',  &
+            avgflag='A', long_name='change in canopy heat storage', &
+            ptr_patch=this%dhsdt_canopy_patch, set_lake=0._r8, c2l_scale_type='urbanf',default='active')
+    endif
+
     this%eflx_sh_grnd_patch(begp:endp) = spval
     call hist_addfld1d (fname='FSH_G', units='W/m^2',  &
          avgflag='A', long_name='sensible heat from ground', &
@@ -530,12 +553,10 @@ contains
             ptr_patch=this%cgrnds_patch, default='inactive', c2l_scale_type='urbanf')
     end if 
 
-    if (use_cn) then
-       this%eflx_gnet_patch(begp:endp) = spval
-       call hist_addfld1d (fname='EFLX_GNET', units='W/m^2', &
-            avgflag='A', long_name='net heat flux into ground', &
-            ptr_patch=this%eflx_gnet_patch, default='inactive', c2l_scale_type='urbanf')
-    end if 
+    this%eflx_gnet_patch(begp:endp) = spval
+    call hist_addfld1d (fname='EFLX_GNET', units='W/m^2', &
+         avgflag='A', long_name='net heat flux into ground', &
+         ptr_patch=this%eflx_gnet_patch, default='inactive', c2l_scale_type='urbanf')
 
     this%eflx_grnd_lake_patch(begp:endp) = spval
     call hist_addfld1d (fname='EFLX_GRND_LAKE', units='W/m^2', &
@@ -601,6 +622,13 @@ contains
          avgflag='A', long_name='sensible heat flux from heating/cooling sources of urban waste heat', &
          ptr_patch=this%eflx_wasteheat_patch, set_nourb=0._r8, c2l_scale_type='urbanf')
 
+    if ( is_prog_buildtemp )then
+       this%eflx_ventilation_patch(begp:endp) = spval
+       call hist_addfld1d (fname='VENTILATION', units='W/m^2',  &
+            avgflag='A', long_name='sensible heat flux from building ventilation', &
+            ptr_patch=this%eflx_ventilation_patch, set_nourb=0._r8, c2l_scale_type='urbanf')
+    end if
+
     this%eflx_heat_from_ac_patch(begp:endp) = spval
     call hist_addfld1d (fname='HEAT_FROM_AC', units='W/m^2',  &
          avgflag='A', long_name='sensible heat flux put into canyon due to heat removed from air conditioning', &
@@ -640,11 +668,6 @@ contains
          avgflag='A', long_name='daily minimum of transpiration beta factor', &
          ptr_patch=this%btran_min_patch, l2g_scale_type='veg')
 
-    this%btran2_patch(begp:endp) = spval
-    call hist_addfld1d (fname='BTRAN2', units='unitless',  &
-         avgflag='A', long_name='root zone soil wetness factor', &
-         ptr_patch=this%btran2_patch, l2g_scale_type='veg')
-
     if (use_cn) then
        this%rresis_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='RRESIS', units='proportion', type2d='levgrnd', &
@@ -683,7 +706,7 @@ contains
     use landunit_varcon , only : istwet, istsoil, istdlak
     use column_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
     use column_varcon   , only : icol_shadewall, icol_road_perv
-    use clm_varctl      , only : iulog, use_vancouver, use_mexicocity
+    use clm_varctl      , only : use_vancouver, use_mexicocity
     implicit none
     !
     ! !ARGUMENTS:
@@ -740,6 +763,7 @@ contains
        if (.not. lun%urbpoi(l)) then
           this%eflx_traffic_lun(l)        = spval
           this%eflx_wasteheat_lun(l)      = spval
+          this%eflx_ventilation_lun(l)    = spval
           if ( is_prog_buildtemp )then
              this%eflx_building_lun(l)   = 0._r8
              this%eflx_urban_ac_lun(l)   = 0._r8
@@ -747,6 +771,7 @@ contains
           end if
 
           this%eflx_wasteheat_patch(p)    = 0._r8
+          this%eflx_ventilation_patch(p)  = 0._r8
           this%eflx_heat_from_ac_patch(p) = 0._r8
           this%eflx_traffic_patch(p)      = 0._r8
           if ( is_simple_buildtemp) &
@@ -756,6 +781,7 @@ contains
              this%eflx_building_lun(l)   = 0._r8
              this%eflx_urban_ac_lun(l)   = 0._r8
              this%eflx_urban_heat_lun(l) = 0._r8
+             this%eflx_ventilation_lun(l)= 0._r8
           end if
        end if
     end do
@@ -850,6 +876,16 @@ contains
        else
           this%eflx_urban_heat_lun = 0.0_r8
        end if
+       call restartvar(ncid=ncid, flag=flag, varname='EFLX_VENTILATION', xtype=ncd_double, &
+           dim1name='landunit', &
+           long_name='sensible heat flux from building ventilation', units='watt/m^2', &
+           interpinic_flag='interp', readvar=readvar, data=this%eflx_ventilation_lun)
+       if (flag=='read' .and. .not. readvar) then
+          if (masterproc) write(iulog,*) "can't find EFLX_VENTILATION in initial file..."
+          if (masterproc) write(iulog,*) "Initialize EFLX_VENTILATION to zero"
+          this%eflx_ventilation_lun(bounds%begl:bounds%endl) = 0._r8
+       end if
+
     else if ( is_simple_buildtemp )then
         call restartvar(ncid=ncid, flag=flag, varname='URBAN_AC', xtype=ncd_double, &
             dim1name='column', &
@@ -860,11 +896,6 @@ contains
             long_name='urban heating flux', units='watt/m^2', &
             interpinic_flag='interp', readvar=readvar, data=this%eflx_urban_heat_col)
     end if
-
-    call restartvar(ncid=ncid, flag=flag, varname='btran2', xtype=ncd_double,  &
-         dim1name='pft', &
-         long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%btran2_patch) 
 
     call restartvar(ncid=ncid, flag=flag, varname='BTRAN_MIN', xtype=ncd_double,  &
          dim1name='pft', &
@@ -966,7 +997,6 @@ contains
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date
     use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
-    use clm_varctl       , only : iulog
     use abortutils       , only : endrun
     !
     ! !ARGUMENTS:

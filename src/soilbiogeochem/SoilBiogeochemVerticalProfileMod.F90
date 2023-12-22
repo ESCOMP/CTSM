@@ -24,7 +24,7 @@ module SoilBiogeochemVerticalProfileMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine SoilBiogeochemVerticalProfile(bounds, num_soilc,filter_soilc,num_soilp,filter_soilp, &
+  subroutine SoilBiogeochemVerticalProfile(bounds, num_bgc_soilc,filter_bgc_soilc,num_bgc_vegp,filter_bgc_vegp, &
        active_layer_inst, soilstate_inst, soilbiogeochem_state_inst)
     !
     ! !DESCRIPTION:
@@ -43,11 +43,11 @@ contains
     ! 
     ! !USES:
     use shr_log_mod             , only : errMsg => shr_log_errMsg
-    use decompMod               , only : bounds_type
+    use decompMod               , only : bounds_type, subgrid_level_column, subgrid_level_patch
     use abortutils              , only : endrun
     use clm_varcon              , only : zsoi, dzsoi, zisoi, dzsoi_decomp, zmin_bedrock
     use clm_varpar              , only : nlevdecomp, nlevgrnd, nlevdecomp_full, maxsoil_patches
-    use clm_varctl              , only : use_vertsoilc, iulog, use_bedrock
+    use clm_varctl              , only : iulog, use_bedrock
     use pftconMod               , only : noveg, pftcon
     use SoilBiogeochemStateType , only : soilbiogeochem_state_type
     use ActiveLayerMod          , only : active_layer_type
@@ -57,10 +57,10 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds  
-    integer                         , intent(in)    :: num_soilc                               ! number of soil columns in filter
-    integer                         , intent(in)    :: filter_soilc(:)                         ! filter for soil columns
-    integer                         , intent(in)    :: num_soilp                               ! number of soil patches in filter
-    integer                         , intent(in)    :: filter_soilp(:)                         ! filter for soil patches
+    integer                         , intent(in)    :: num_bgc_soilc                               ! number of soil columns in filter
+    integer                         , intent(in)    :: filter_bgc_soilc(:)                         ! filter for soil columns
+    integer                         , intent(in)    :: num_bgc_vegp                               ! number of soil patches in filter
+    integer                         , intent(in)    :: filter_bgc_vegp(:)                         ! filter for soil patches
     type(active_layer_type)         , intent(in)    :: active_layer_inst
     type(soilstate_type)            , intent(in)    :: soilstate_inst				    
     type(soilbiogeochem_state_type) , intent(inout) :: soilbiogeochem_state_inst
@@ -71,7 +71,7 @@ contains
     real(r8) :: rootfr_tot
     real(r8) :: cinput_rootfr(bounds%begp:bounds%endp, 1:nlevdecomp_full)      ! pft-native root fraction used for calculating inputs
     real(r8) :: col_cinput_rootfr(bounds%begc:bounds%endc, 1:nlevdecomp_full)  ! col-native root fraction used for calculating inputs
-    integer  :: c, j, fc, p, fp, pi
+    integer  :: c, j, fc, p, fp
     integer  :: alt_ind
     ! debugging temp variables
     real(r8) :: froot_prof_sum
@@ -102,99 +102,109 @@ contains
          stem_prof            => soilbiogeochem_state_inst%stem_prof_patch      & ! Output :  [real(r8) (:,:) ]  (1/m) profile of stems                          
          )
 
-      if (use_vertsoilc) then
-
-         ! define a single shallow surface profile for surface additions (leaves, stems, and N deposition)
-         surface_prof(:) = 0._r8
-         do j = 1, nlevdecomp
-            surface_prof(j) = exp(-surfprof_exp * zsoi(j)) / dzsoi_decomp(j)
-            if (use_bedrock) then 
-               if (zsoi(j) > zmin_bedrock) then
-                 surface_prof(j) = 0._r8
-               end if
+      ! define a single shallow surface profile for surface additions (leaves, stems, and N deposition)
+      surface_prof(:) = 0._r8
+      do j = 1, nlevdecomp
+         surface_prof(j) = exp(-surfprof_exp * zsoi(j)) / dzsoi_decomp(j)
+         if (use_bedrock) then 
+            if (zsoi(j) > zmin_bedrock) then
+              surface_prof(j) = 0._r8
             end if
+         end if
+      end do
+
+      ! initialize profiles to zero
+      leaf_prof(begp:endp, :)      = 0._r8
+      froot_prof(begp:endp, :)     = 0._r8
+      croot_prof(begp:endp, :)     = 0._r8
+      stem_prof(begp:endp, :)      = 0._r8
+      nfixation_prof(begc:endc, :) = 0._r8
+      ndep_prof(begc:endc, :)      = 0._r8
+
+      cinput_rootfr(begp:endp, :)     = 0._r8
+      col_cinput_rootfr(begc:endc, :) = 0._r8
+
+      do fp = 1,num_bgc_vegp
+         p = filter_bgc_vegp(fp)
+         c = patch%column(p)
+         if (patch%itype(p) /= noveg) then
+            do j = 1, nlevdecomp
+               cinput_rootfr(p,j) = crootfr(p,j) / dzsoi_decomp(j)
+            end do
+         else
+            cinput_rootfr(p,1) = 0.
+         endif
+      end do
+
+      do fp = 1,num_bgc_vegp
+         p = filter_bgc_vegp(fp)
+         c = patch%column(p)
+         ! integrate rootfr over active layer of soil column
+         rootfr_tot = 0._r8
+         surface_prof_tot = 0._r8
+         do j = 1, min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
+            rootfr_tot = rootfr_tot + cinput_rootfr(p,j) * dzsoi_decomp(j)
+            surface_prof_tot = surface_prof_tot + surface_prof(j)  * dzsoi_decomp(j)
          end do
-
-         ! initialize profiles to zero
-         leaf_prof(begp:endp, :)      = 0._r8
-         froot_prof(begp:endp, :)     = 0._r8
-         croot_prof(begp:endp, :)     = 0._r8
-         stem_prof(begp:endp, :)      = 0._r8
-         nfixation_prof(begc:endc, :) = 0._r8
-         ndep_prof(begc:endc, :)      = 0._r8
-
-         cinput_rootfr(begp:endp, :)     = 0._r8
-         col_cinput_rootfr(begc:endc, :) = 0._r8
-
-         do fp = 1,num_soilp
-            p = filter_soilp(fp)
-            c = patch%column(p)
-            if (patch%itype(p) /= noveg) then
-               do j = 1, nlevdecomp
-                  cinput_rootfr(p,j) = crootfr(p,j) / dzsoi_decomp(j)
-               end do
-
-            else
-               cinput_rootfr(p,1) = 0.
-            endif
-         end do
-
-         do fp = 1,num_soilp
-            p = filter_soilp(fp)
-            c = patch%column(p)
-            ! integrate rootfr over active layer of soil column
-            rootfr_tot = 0._r8
-            surface_prof_tot = 0._r8
+         if ( (altmax_lastyear_indx(c) > 0) .and. (rootfr_tot > 0._r8) .and. (surface_prof_tot > 0._r8) ) then
+            ! where there is not permafrost extending to the surface, integrate the profiles over the active layer
+            ! this is equivalnet to integrating over all soil layers outside of permafrost regions
             do j = 1, min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
-               rootfr_tot = rootfr_tot + cinput_rootfr(p,j) * dzsoi_decomp(j)
-               surface_prof_tot = surface_prof_tot + surface_prof(j)  * dzsoi_decomp(j)
-            end do
-            if ( (altmax_lastyear_indx(c) > 0) .and. (rootfr_tot > 0._r8) .and. (surface_prof_tot > 0._r8) ) then
-               ! where there is not permafrost extending to the surface, integrate the profiles over the active layer
-               ! this is equivalnet to integrating over all soil layers outside of permafrost regions
-               do j = 1, min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
-                  froot_prof(p,j) = cinput_rootfr(p,j) / rootfr_tot
-                  croot_prof(p,j) = cinput_rootfr(p,j) / rootfr_tot
+               froot_prof(p,j) = cinput_rootfr(p,j) / rootfr_tot
+               croot_prof(p,j) = cinput_rootfr(p,j) / rootfr_tot
 
-                  if (j > col%nbedrock(c) .and. cinput_rootfr(p,j) > 0._r8) then 
-                     write(iulog,*) 'cinput_rootfr > 0 in bedrock'
-                  end if
-                  ! set all surface processes to shallower profile
-                  leaf_prof(p,j) = surface_prof(j)/ surface_prof_tot
-                  stem_prof(p,j) = surface_prof(j)/ surface_prof_tot
+               if (j > col%nbedrock(c) .and. cinput_rootfr(p,j) > 0._r8) then 
+                  write(iulog,*) 'cinput_rootfr > 0 in bedrock'
+               end if
+               ! set all surface processes to shallower profile
+               leaf_prof(p,j) = surface_prof(j)/ surface_prof_tot
+               stem_prof(p,j) = surface_prof(j)/ surface_prof_tot
+            end do
+         else
+            ! if fully frozen, or no roots, put everything in the top layer
+            froot_prof(p,1) = 1./dzsoi_decomp(1)
+            croot_prof(p,1) = 1./dzsoi_decomp(1)
+            leaf_prof(p,1) = 1./dzsoi_decomp(1)
+            stem_prof(p,1) = 1./dzsoi_decomp(1)
+         endif
+      end do
+
+      !! aggregate root profile to column
+      ! call p2c (decomp, nlevdecomp_full, &
+      !      cinput_rootfr(bounds%begp:bounds%endp, :), &
+      !      col_cinput_rootfr(bounds%begc:bounds%endc, :), &
+      !      'unity')
+      do fp = 1,num_bgc_vegp
+         p = filter_bgc_vegp(fp)
+         c = patch%column(p)
+         do j = 1,nlevdecomp
+            col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * patch%wtcol(p)
+         end do
+      end do
+
+
+      ! repeat for column-native profiles: Ndep and Nfix
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
+         rootfr_tot = 0._r8
+         surface_prof_tot = 0._r8
+         if_fates: if(col%is_fates(c))then
+            ! For FATES, we just use the e-folding depth for both fixation and deposition
+            ! partially because the fixation may be free-living depending on FATES-side
+            ! fixation choices, and partially for simplicity
+            do j = 1, min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
+               surface_prof_tot = surface_prof_tot + surface_prof(j) * dzsoi_decomp(j)
+            end do
+            if ( (altmax_lastyear_indx(c) > 0) .and. (surface_prof_tot > 0._r8) ) then
+               do j = 1,  min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
+                  nfixation_prof(c,j) = surface_prof(j)/ surface_prof_tot
+                  ndep_prof(c,j) = surface_prof(j)/ surface_prof_tot
                end do
             else
-               ! if fully frozen, or no roots, put everything in the top layer
-               froot_prof(p,1) = 1./dzsoi_decomp(1)
-               croot_prof(p,1) = 1./dzsoi_decomp(1)
-               leaf_prof(p,1) = 1./dzsoi_decomp(1)
-               stem_prof(p,1) = 1./dzsoi_decomp(1)
+               nfixation_prof(c,1) = 1./dzsoi_decomp(1)
+               ndep_prof(c,1) = 1./dzsoi_decomp(1)
             endif
-
-         end do
-
-         !! aggregate root profile to column
-         ! call p2c (decomp, nlevdecomp_full, &
-         !      cinput_rootfr(bounds%begp:bounds%endp, :), &
-         !      col_cinput_rootfr(bounds%begc:bounds%endc, :), &
-         !      'unity')
-         do pi = 1,maxsoil_patches
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               if (pi <=  col%npatches(c)) then
-                  p = col%patchi(c) + pi - 1
-                  do j = 1,nlevdecomp
-                     col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * patch%wtcol(p)
-                  end do
-               end if
-            end do
-         end do
-
-         ! repeat for column-native profiles: Ndep and Nfix
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
-            rootfr_tot = 0._r8
-            surface_prof_tot = 0._r8
+         else
             ! redo column ntegration over active layer for column-native profiles
             do j = 1, min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
                rootfr_tot = rootfr_tot + col_cinput_rootfr(c,j) * dzsoi_decomp(j)
@@ -209,24 +219,12 @@ contains
                nfixation_prof(c,1) = 1./dzsoi_decomp(1)
                ndep_prof(c,1) = 1./dzsoi_decomp(1)
             endif
-         end do
-
-      else
-
-         ! for one layer decomposition model, set profiles to unity
-         leaf_prof(begp:endp, :) = 1._r8
-         froot_prof(begp:endp, :) = 1._r8
-         croot_prof(begp:endp, :) = 1._r8
-         stem_prof(begp:endp, :) = 1._r8
-         nfixation_prof(begc:endc, :) = 1._r8
-         ndep_prof(begc:endc, :) = 1._r8
-
-      end if
-
+         end if if_fates
+      end do
 
       ! check to make sure integral of all profiles = 1.
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
          ndep_prof_sum = 0.
          nfixation_prof_sum = 0.
          do j = 1, nlevdecomp
@@ -247,12 +245,13 @@ contains
                write(iulog, *) 'p, itype(p), wtcol(p): ', p, patch%itype(p), patch%wtcol(p)
                write(iulog, *) 'cinput_rootfr(p,:): ', cinput_rootfr(p,:)
             end do
-            call endrun(msg=" ERROR: _prof_sum-1>delta"//errMsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                 msg=" ERROR: _prof_sum-1>delta"//errMsg(sourcefile, __LINE__))
          endif
       end do
 
-      do fp = 1,num_soilp
-         p = filter_soilp(fp)
+      do fp = 1,num_bgc_vegp
+         p = filter_bgc_vegp(fp)
          froot_prof_sum = 0.
          croot_prof_sum = 0.
          leaf_prof_sum = 0.
@@ -266,7 +265,7 @@ contains
          if ( ( abs(froot_prof_sum - 1._r8) > delta ) .or.  ( abs(croot_prof_sum - 1._r8) > delta ) .or. &
               ( abs(stem_prof_sum - 1._r8) > delta ) .or.  ( abs(leaf_prof_sum - 1._r8) > delta ) ) then
             write(iulog, *) 'profile sums: ', froot_prof_sum, croot_prof_sum, leaf_prof_sum, stem_prof_sum
-            call endrun(msg=' ERROR: sum-1 > delta'//errMsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=' ERROR: sum-1 > delta'//errMsg(sourcefile, __LINE__))
          endif
       end do
 

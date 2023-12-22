@@ -12,7 +12,7 @@ module WaterDiagnosticType
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_LANDUNIT, BOUNDS_SUBGRID_GRIDCELL
+  use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_landunit, subgrid_level_gridcell
   use clm_varctl     , only : use_vancouver, use_mexicocity
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
@@ -104,40 +104,40 @@ contains
 
     call AllocateVar1d(var = this%snowice_col, name = 'snowice_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%snowliq_col, name = 'snowliq_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%h2ocan_patch, name = 'h2ocan_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
     call AllocateVar1d(var = this%total_plant_stored_h2o_col, name = 'total_plant_stored_h2o_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%h2osoi_liqice_10cm_col, name = 'h2osoi_liqice_10cm_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%tws_grc, name = 'tws_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+         bounds = bounds, subgrid_level = subgrid_level_gridcell)
     call AllocateVar1d(var = this%qg_snow_col, name = 'qg_snow_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qg_soil_col, name = 'qg_soil_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qg_h2osfc_col, name = 'qg_h2osfc_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qg_col, name = 'qg_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qaf_lun, name = 'qaf_lun', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_LANDUNIT)
+         bounds = bounds, subgrid_level = subgrid_level_landunit)
     call AllocateVar1d(var = this%q_ref2m_patch, name = 'q_ref2m_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
 
   end subroutine InitAllocate
 
@@ -164,13 +164,7 @@ contains
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
 
-    this%h2ocan_patch(begp:endp) = spval 
-    call hist_addfld1d ( &
-         fname=this%info%fname('H2OCAN'), &
-         units='mm',  &
-         avgflag='A', &
-         long_name=this%info%lname('intercepted water'), &
-         ptr_patch=this%h2ocan_patch)
+
 
     this%h2osoi_liqice_10cm_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -205,8 +199,15 @@ contains
          long_name=this%info%lname('2m specific humidity'), &
          ptr_patch=this%q_ref2m_patch)
 
+    this%h2ocan_patch(begp:endp) = spval 
+    call hist_addfld1d ( &
+         fname=this%info%fname('H2OCAN'), &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('intercepted water'), &
+         ptr_patch=this%h2ocan_patch)
 
-
+    
     ! Snow properties - these will be vertically averaged over the snow profile
 
     this%snowliq_col(begc:endc) = spval
@@ -294,8 +295,9 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use clm_varcon       , only : nameg
+    use clm_varcon       , only : nameg, namec
     use ncdio_pio        , only : file_desc_t, ncd_double
+    use clm_varctl       , only : use_fates_planthydro
     use restUtilMod
     !
     ! !ARGUMENTS:
@@ -329,12 +331,22 @@ contains
          units='kg/kg', &
          interpinic_flag='interp', readvar=readvar, data=this%qaf_lun)
 
+    if(use_fates_planthydro) then
+       call restartvar(ncid=ncid, flag=flag, &
+            varname=this%info%fname('TOTAL_PLANT_STORED_H2O'), &
+            xtype=ncd_double, dim1name=namec, &
+            long_name=this%info%lname('total plant stored water (for fates hydro)'), &
+            units='kg/m2', &
+            interpinic_flag='interp', readvar=readvar, data=this%total_plant_stored_h2o_col)
+    end if
+
   end subroutine Restart
 
   !-----------------------------------------------------------------------
   subroutine Summary(this, bounds, &
        num_soilp, filter_soilp, &
        num_allc, filter_allc, &
+       num_nolakec, filter_nolakec, &
        waterstate_inst, waterflux_inst)
     !
     ! !DESCRIPTION:
@@ -347,6 +359,8 @@ contains
     integer                     , intent(in)    :: filter_soilp(:) ! filter for soil patches
     integer                     , intent(in)    :: num_allc        ! number of columns in allc filter
     integer                     , intent(in)    :: filter_allc(:)  ! filter for all columns
+    integer                     , intent(in)    :: num_nolakec        ! number of columns in no-lake filter
+    integer                     , intent(in)    :: filter_nolakec(:)  ! filter for no-lake columns
     class(waterstate_type)      , intent(in)    :: waterstate_inst
     class(waterflux_type)       , intent(in)    :: waterflux_inst
     !

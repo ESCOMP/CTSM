@@ -17,11 +17,14 @@ module mkvarctl
   save
 !
   real(r8), public, parameter :: spval = 1.e36    ! special value
+  integer,  public, parameter :: ispval = -9999   ! special value
 
   logical, public    :: outnc_large_files     ! output files in 64-bit format for large files
   logical, public    :: outnc_double          ! output ALL data in files as 64-bit
   integer, public    :: outnc_dims = 2        ! only applicable to lat/lon grids
   logical, public    :: outnc_1d              ! true => output file is 1d  
+  logical, public    :: outnc_vic             ! true => output VIC fields
+  logical, public    :: outnc_3dglc           ! true => output 3D glacier fields
 
   character(len= 32), public :: mksrf_gridnm     = ' '  ! name of grid to use on output file
   character(len=256), public :: mksrf_fgrid      = ' '  ! land grid file name to use 
@@ -47,7 +50,6 @@ module mkvarctl
   character(len=256), public :: mksrf_fvocef     = ' '  ! VOC Emission Factor data file name
   character(len=256), public :: mksrf_ftopostats = ' '  ! topography statistics data file name
   character(len=256), public :: mksrf_fvic       = ' '  ! VIC parameters data file name
-  character(len=256), public :: mksrf_fch4       = ' '  ! inversion-derived CH4 parameters data file name
 
   integer           , public :: numpft         = 16   ! number of plant types
 
@@ -71,7 +73,6 @@ module mkvarctl
   character(len=256), public :: map_fharvest    = ' ' ! Mapping file for harvesting
   character(len=256), public :: map_ftopostats  = ' ' ! Mapping file for topography statistics
   character(len=256), public :: map_fvic        = ' ' ! Mapping file for VIC parameters
-  character(len=256), public :: map_fch4        = ' ' ! Mapping file for inversion-derived CH4 parameters
   character(len=80) , public :: gitdescribe     = ' ' ! Description of model version from git
 !
 ! Variables to override data read in with

@@ -8,7 +8,7 @@ module restFileMod
 #include "shr_assert.h"
   use shr_kind_mod     , only : r8 => shr_kind_r8
   use decompMod        , only : bounds_type, get_proc_clumps, get_clump_bounds
-  use decompMod        , only : BOUNDS_LEVEL_PROC
+  use decompMod        , only : bounds_level_proc
   use spmdMod          , only : masterproc, mpicom
   use abortutils       , only : endrun
   use shr_log_mod      , only : errMsg => shr_log_errMsg
@@ -17,14 +17,17 @@ module restFileMod
   use accumulMod       , only : accumulRest
   use clm_instMod      , only : clm_instRest
   use histFileMod      , only : hist_restart_ncd
-  use clm_varctl       , only : iulog, use_fates, use_hydrstress
+  use clm_varctl       , only : iulog, use_fates, use_hydrstress, compname
   use clm_varctl       , only : create_crop_landunit, irrigate
   use clm_varcon       , only : nameg, namel, namec, namep, nameCohort
   use ncdio_pio        , only : file_desc_t, ncd_pio_createfile, ncd_pio_openfile, ncd_global
-  use ncdio_pio        , only : ncd_pio_closefile, ncd_defdim, ncd_putatt, ncd_enddef, check_dim
+  use ncdio_pio        , only : ncd_pio_closefile, ncd_defdim, ncd_putatt, ncd_enddef, check_dim_size
   use ncdio_pio        , only : check_att, ncd_getatt
+  use ncdio_utils      , only : find_var_on_file
   use glcBehaviorMod   , only : glc_behavior_type
   use reweightMod      , only : reweight_wrapup
+  use IssueFixedMetadataHandler, only : write_issue_fixed_metadata, read_issue_fixed_metadata
+  use restUtilMod      , only : excess_ice_issue
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -44,6 +47,8 @@ module restFileMod
   private :: restFile_write_pfile       ! Writes restart pointer file
   private :: restFile_closeRestart      ! Close restart file and write restart pointer file
   private :: restFile_dimset
+  private :: restFile_write_issues_fixed ! Write metadata for issues fixed
+  private :: restFile_read_issues_fixed ! Read and process metadata for issues fixed
   private :: restFile_add_flag_metadata ! Add global metadata for some logical flag
   private :: restFile_add_ilun_metadata ! Add global metadata defining landunit types
   private :: restFile_add_icol_metadata ! Add global metadata defining column types
@@ -55,6 +60,9 @@ module restFileMod
   private :: restFile_check_year          ! Check consistency of year on the restart file
   !
   ! !PRIVATE TYPES:
+
+  ! Issue numbers for issue-fixed metadata
+  integer, parameter :: lake_dynbal_baseline_issue = 1140
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -108,6 +116,9 @@ contains
        call hist_restart_ncd (bounds, ncid, flag='define', rdate=rdate )
     end if
 
+    call restFile_write_issues_fixed(ncid, &
+         writing_finidat_interp_dest_file = writing_finidat_interp_dest_file)
+
     call restFile_enddef( ncid )
 
     ! Write variables
@@ -135,14 +146,14 @@ contains
     ! Write out diagnostic info
 
     if (masterproc) then
-       write(iulog,*) 'Successfully wrote out restart data at nstep = ',get_nstep()
+       write(iulog,'(a,i0)') 'Successfully wrote out restart data at nstep = ',get_nstep()
        write(iulog,'(72a1)') ("-",i=1,60)
     end if
     
   end subroutine restFile_write
 
   !-----------------------------------------------------------------------
-  subroutine restFile_read( bounds_proc, file, glc_behavior )
+  subroutine restFile_read( bounds_proc, file, glc_behavior, reset_dynbal_baselines_lake_columns )
     !
     ! !DESCRIPTION:
     ! Read a CLM restart file.
@@ -151,6 +162,13 @@ contains
     type(bounds_type) , intent(in) :: bounds_proc      ! processor-level bounds
     character(len=*)  , intent(in) :: file             ! output netcdf restart file
     type(glc_behavior_type), intent(in) :: glc_behavior
+
+    ! BACKWARDS_COMPATIBILITY(wjs, 2020-09-02) This is needed when reading old initial
+    ! conditions files created before https://github.com/ESCOMP/CTSM/issues/1140 was
+    ! resolved via https://github.com/ESCOMP/CTSM/pull/1109: The definition of total
+    ! column water content has been changed for lakes, so we need to reset baseline values
+    ! for lakes on older initial conditions files.
+    logical, intent(out) :: reset_dynbal_baselines_lake_columns
     !
     ! !LOCAL VARIABLES:
     type(file_desc_t) :: ncid    ! netcdf id
@@ -165,7 +183,7 @@ contains
     ! The provided bounds need to be proc-level bounds. This is in part because of logic
     ! below that divides this into clump-level bounds for the sake of reweight_wrapup.
     ! But it *MAY* also be necessary to have proc-level bounds for these i/o routines.
-    SHR_ASSERT(bounds_proc%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds_proc%level == bounds_level_proc, subname // ': argument must be PROC-level bounds')
 
     ! Open file
 
@@ -200,6 +218,9 @@ contains
     call restFile_set_derived(bounds_proc, glc_behavior)
 
     call hist_restart_ncd (bounds_proc, ncid, flag='read' )
+
+    call restFile_read_issues_fixed(ncid, &
+         reset_dynbal_baselines_lake_columns = reset_dynbal_baselines_lake_columns)
 
     ! Do error checking on file
     
@@ -263,8 +284,8 @@ contains
        end if
        call getfil( path, file, 0 )
 
-       ! tcraig, adding xx. and .clm2 makes this more robust
-       ctest = 'xx.'//trim(caseid)//'.clm2'
+       ! tcraig, adding xx. and .compname makes this more robust
+       ctest = 'xx.'//trim(caseid)//'.'//trim(compname)
        ftest = 'xx.'//trim(file)
        status = index(trim(ftest),trim(ctest))
        if (status /= 0 .and. .not.(brnch_retain_casename)) then
@@ -361,9 +382,6 @@ contains
     ! Close restart file and write restart pointer file if
     ! in write mode, otherwise just close restart file if in read mode
     !
-    ! !USES:
-    use clm_time_manager, only : is_last_step
-    !
     ! !ARGUMENTS:
     character(len=*) , intent(in) :: file  ! local output filename
     !
@@ -380,7 +398,7 @@ contains
     !-----------------------------------------------------------------------
 
     if (masterproc) then
-       write(iulog,*) 'Successfully wrote local restart file ',trim(file)
+       write(iulog,'(a)') 'Successfully wrote local restart file ',trim(file)
        write(iulog,'(72a1)') ("-",i=1,60)
        write(iulog,*)
     end if
@@ -414,7 +432,7 @@ contains
 
        write(nio,'(a)') fnamer
        call relavu( nio )
-       write(iulog,*)'Successfully wrote local restart pointer file'
+       write(iulog,'(a)')'Successfully wrote local restart pointer file'
     end if
 
   end subroutine restFile_write_pfile
@@ -438,8 +456,7 @@ contains
 
        if (masterproc) then	
           write(iulog,*)
-          write(iulog,*)'restFile_open: writing restart dataset at ',&
-               trim(file), ' at nstep = ',get_nstep()
+          write(iulog,'(a,i0)')'restFile_open: writing restart dataset '//trim(file)//' at nstep = ',get_nstep()
           write(iulog,*)
        end if
        call ncd_pio_createfile(ncid, trim(file))
@@ -469,7 +486,7 @@ contains
     character(len=*), intent(in) :: rdate   ! input date for restart file name 
     !-----------------------------------------------------------------------
 
-    restFile_filename = "./"//trim(caseid)//".clm2"//trim(inst_suffix)//&
+    restFile_filename = "./"//trim(caseid)//"."//trim(compname)//trim(inst_suffix)//&
          ".r."//trim(rdate)//".nc"
     if (masterproc) then
        write(iulog,*)'writing restart file ',trim(restFile_filename),' for model date = ',rdate
@@ -488,8 +505,9 @@ contains
     use clm_varctl           , only : caseid, ctitle, version, username, hostname, fsurdat
     use clm_varctl           , only : conventions, source
     use dynSubgridControlMod , only : get_flanduse_timeseries
-    use clm_varpar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevurb, nlevcan
-    use clm_varpar           , only : maxpatch_glcmec, nvegwcs
+    use clm_varpar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevmaxurbgrnd, nlevcan
+    use clm_varpar           , only : maxpatch_glc, nvegwcs
+    use clm_varpar           , only : mxsowings, mxharvests
     use decompMod            , only : get_proc_global
     !
     ! !ARGUMENTS:
@@ -521,19 +539,20 @@ contains
     call ncd_defdim(ncid , nameCohort , numCohort      ,  dimid)
 
     call ncd_defdim(ncid , 'levgrnd' , nlevgrnd       ,  dimid)
-    call ncd_defdim(ncid , 'levurb'  , nlevurb        ,  dimid)
+    call ncd_defdim(ncid , 'levmaxurbgrnd' , nlevmaxurbgrnd       ,  dimid)
     call ncd_defdim(ncid , 'levlak'  , nlevlak        ,  dimid)
     call ncd_defdim(ncid , 'levsno'  , nlevsno        ,  dimid)
     call ncd_defdim(ncid , 'levsno1' , nlevsno+1      ,  dimid)
-    call ncd_defdim(ncid , 'levtot'  , nlevsno+nlevgrnd, dimid)
+    call ncd_defdim(ncid , 'levtot'  , nlevsno+nlevmaxurbgrnd, dimid)
     call ncd_defdim(ncid , 'numrad'  , numrad         ,  dimid)
     call ncd_defdim(ncid , 'levcan'  , nlevcan        ,  dimid)
+    call ncd_defdim(ncid , 'mxsowings' , mxsowings  ,  dimid)
+    call ncd_defdim(ncid , 'mxharvests' , mxharvests  ,  dimid)
     if ( use_hydrstress ) then
       call ncd_defdim(ncid , 'vegwcs'  , nvegwcs        ,  dimid)
     end if
-    call ncd_defdim(ncid , 'string_length', 64        ,  dimid)
-    call ncd_defdim(ncid , 'glc_nec', maxpatch_glcmec, dimid)
-    call ncd_defdim(ncid , 'glc_nec1', maxpatch_glcmec+1, dimid)
+    call ncd_defdim(ncid , 'glc_nec', maxpatch_glc, dimid)
+    call ncd_defdim(ncid , 'glc_nec1', maxpatch_glc+1, dimid)
 
     ! Define global attributes
 
@@ -567,6 +586,74 @@ contains
     call restFile_add_ilun_metadata(ncid)
 
   end subroutine restFile_dimset
+
+  !-----------------------------------------------------------------------
+  subroutine restFile_write_issues_fixed(ncid, writing_finidat_interp_dest_file)
+    !
+    ! !DESCRIPTION:
+    ! Write metadata for issues fixed
+    !
+    ! !USES:
+    use clm_varctl, only : use_excess_ice
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid ! local file id
+    logical          , intent(in)    :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'restFile_write_issues_fixed'
+    !-----------------------------------------------------------------------
+
+    ! See comment associated with reset_dynbal_baselines_lake_columns in restFile_read
+    call write_issue_fixed_metadata( &
+         ncid = ncid, &
+         writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
+         issue_num = lake_dynbal_baseline_issue)
+    ! If running with execess ice then mark the restart file as having excess ice fixed
+    ! This is a permanent feature, i.e. not expected to be removed from here.
+    ! It would only be removed if we decided to make use_excess_ice = .true. the default.
+    if ( use_excess_ice ) then
+       call write_issue_fixed_metadata( &
+            ncid = ncid, &
+            writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
+            issue_num = excess_ice_issue)
+    end if
+
+  end subroutine restFile_write_issues_fixed
+
+  !-----------------------------------------------------------------------
+  subroutine restFile_read_issues_fixed(ncid, reset_dynbal_baselines_lake_columns)
+    !
+    ! !DESCRIPTION:
+    ! Read and process metadata for issues fixed
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid ! local file id
+    logical, intent(out) :: reset_dynbal_baselines_lake_columns ! see comment in restFile_read for details
+    !
+    ! !LOCAL VARIABLES:
+    integer :: attribute_value
+
+    character(len=*), parameter :: subname = 'restFile_read_issues_fixed'
+    !-----------------------------------------------------------------------
+
+    ! See comment associated with reset_dynbal_baselines_lake_columns in restFile_read
+    call read_issue_fixed_metadata( &
+         ncid = ncid, &
+         issue_num = lake_dynbal_baseline_issue, &
+         attribute_value = attribute_value)
+    if (attribute_value == 0) then
+       ! Old restart file, from before lake_dynbal_baseline_issue was resolved, so we
+       ! need to reset dynbal baselines for lake columns later in initialization.
+       reset_dynbal_baselines_lake_columns = .true.
+    else
+       ! Recent restart file, so no need to reset dynbal baselines for lake columns,
+       ! because they are already up to date.
+       reset_dynbal_baselines_lake_columns = .false.
+    end if
+
+  end subroutine restFile_read_issues_fixed
+
 
   !-----------------------------------------------------------------------
   subroutine restFile_add_flag_metadata(ncid, flag, flag_name)
@@ -683,7 +770,7 @@ contains
     !
     ! !USES:
     use decompMod,  only : get_proc_global
-    use clm_varpar, only : nlevsno, nlevlak, nlevgrnd, nlevurb
+    use clm_varpar, only : nlevsno, nlevlak, nlevgrnd, nlevmaxurbgrnd
     use clm_varctl, only : single_column, nsrest, nsrStartup
     !
     ! !ARGUMENTS:
@@ -695,6 +782,7 @@ contains
     integer :: numc      ! total number of columns across all processors
     integer :: nump      ! total number of pfts across all processors
     integer :: numCohort ! total number of cohorts across all processors
+    character(len=64) :: dimname
     character(len=:), allocatable :: msg  ! diagnostic message
     character(len=32) :: subname='restFile_dimcheck' ! subroutine name
     !-----------------------------------------------------------------------
@@ -712,18 +800,25 @@ contains
             'or a non-transient run using an initial conditions file from a transient run,' // &
             new_line('x') // &
             'or when running a resolution or configuration that differs from the initial conditions.)'
-       call check_dim(ncid, nameg, numg, msg=msg)
-       call check_dim(ncid, namel, numl, msg=msg)
-       call check_dim(ncid, namec, numc, msg=msg)
-       call check_dim(ncid, namep, nump, msg=msg)
-       if ( use_fates ) call check_dim(ncid, nameCohort  , numCohort, msg=msg)
+       call check_dim_size(ncid, nameg, numg, msg=msg)
+       call check_dim_size(ncid, namel, numl, msg=msg)
+       call check_dim_size(ncid, namec, numc, msg=msg)
+       call check_dim_size(ncid, namep, nump, msg=msg)
+       if ( use_fates ) call check_dim_size(ncid, nameCohort  , numCohort, msg=msg)
     end if
     msg = 'You can deal with this mismatch by rerunning with ' // &
-         'use_init_interp = .true. in user_nl_clm'
-    call check_dim(ncid, 'levsno'  , nlevsno, msg=msg)
-    call check_dim(ncid, 'levgrnd' , nlevgrnd, msg=msg)
-    call check_dim(ncid, 'levurb'  , nlevurb)
-    call check_dim(ncid, 'levlak'  , nlevlak) 
+         'use_init_interp = .true. in user_nl_clm and '// &
+         'remove the init_generated_files/ directory in your run directory'
+    call check_dim_size(ncid, 'levsno'  , nlevsno, msg=msg)
+    call check_dim_size(ncid, 'levgrnd' , nlevgrnd, msg=msg)
+    call check_dim_size(ncid, 'levlak'  , nlevlak)
+
+    ! BACKWARDS_COMPATIBILITY(wjs, 2020-10-27) The possibility of falling back on levgrnd
+    ! is needed for backwards compatibility with older restart files that do not have a
+    ! levmaxurbgrnd dimension. On these old restart files, we expect the levgrnd dimension
+    ! to give the implicit value of levmaxurbgrnd.
+    call find_var_on_file(ncid, 'levmaxurbgrnd:levgrnd', is_dim=.true., varname_on_file=dimname)
+    call check_dim_size(ncid, dimname, nlevmaxurbgrnd)
 
   end subroutine restFile_dimcheck
 

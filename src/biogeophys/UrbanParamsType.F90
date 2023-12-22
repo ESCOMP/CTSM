@@ -8,9 +8,9 @@ module UrbanParamsType
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use abortutils   , only : endrun
-  use decompMod    , only : bounds_type
+  use decompMod    , only : bounds_type, subgrid_level_gridcell, subgrid_level_landunit
   use clm_varctl   , only : iulog, fsurdat
-  use clm_varcon   , only : namel, grlnd, spval
+  use clm_varcon   , only : grlnd, spval
   use LandunitType , only : lun                
   !
   implicit none
@@ -122,8 +122,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varpar      , only : nlevcan, nlevcan, numrad, nlevgrnd, nlevurb
-    use clm_varpar      , only : nlevsoi, nlevgrnd
+    use clm_varpar      , only : numrad, nlevurb
     use clm_varctl      , only : use_vancouver, use_mexicocity
     use clm_varcon      , only : vkc
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
@@ -195,7 +194,6 @@ contains
 
     do l = bounds%begl,bounds%endl
 
-       ! "0" refers to urban wall/roof surface and "nlevsoi" refers to urban wall/roof bottom
        if (lun%urbpoi(l)) then
 
           g = lun%gridcell(l)
@@ -298,13 +296,13 @@ contains
           if (abs(sumvf-1._r8) > 1.e-06_r8 ) then
              write (iulog,*) 'urban road view factor error',sumvf
              write (iulog,*) 'clm model is stopping'
-             call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, msg=errmsg(sourcefile, __LINE__))
           endif
           sumvf = this%vf_sw(l) + this%vf_rw(l) + this%vf_ww(l)
           if (abs(sumvf-1._r8) > 1.e-06_r8 ) then
              write (iulog,*) 'urban wall view factor error',sumvf
              write (iulog,*) 'clm model is stopping'
-             call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, msg=errmsg(sourcefile, __LINE__))
           endif
 
           !----------------------------------------------------------------------------------
@@ -359,9 +357,8 @@ contains
        end if
     end do
 
-    ! Deallocate memory for urbinp datatype
-    
-    call UrbanInput(bounds%begg, bounds%endg, mode='finalize')
+    ! Note that we don't deallocate memory for urbinp datatype (call UrbanInput with
+    ! mode='finalize') because the arrays are needed for dynamic urban landunits.
 
   end subroutine Init
 
@@ -813,7 +810,7 @@ contains
           write(iulog,*)'tk_improad: ',urbinp%tk_improad(nindx,dindx,1:nlev)
           write(iulog,*)'cv_improad: ',urbinp%cv_improad(nindx,dindx,1:nlev)
        end if
-       call endrun(msg=errmsg(sourcefile, __LINE__))
+       call endrun(subgrid_index=nindx, subgrid_level=subgrid_level_gridcell, msg=errmsg(sourcefile, __LINE__))
     end if
 
   end subroutine CheckUrban

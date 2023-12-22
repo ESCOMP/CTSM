@@ -1,0 +1,13 @@
+#
+# This is a configuration file for python projects.
+# Sepcifically covering build system requirements.
+#
+# Here we are just using a couple options to specify the operation
+# of the python formatter "black".
+#
+[tool.black]
+
+   line-length = 100                              # 88 is the black default, have this match the pylint length
+   target-version = ['py37']
+   include = '(run_ctsm_py_tests|\.py$)'          # Files to include
+   exclude = '(\.pylintrc|\.pyc)'                 # Files to explicitly exclude pylint file and compiled python

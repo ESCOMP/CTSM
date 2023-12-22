@@ -40,7 +40,7 @@ module unittestTimeManagerMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine unittest_timemgr_setup(dtime)
+  subroutine unittest_timemgr_setup(dtime, use_gregorian_calendar)
     !
     ! !DESCRIPTION:
     ! Set up the time manager for each unit test.
@@ -49,13 +49,16 @@ contains
     !
     ! !USES:
     use ESMF, only : ESMF_Initialize, ESMF_SUCCESS
-    use clm_time_manager, only : set_timemgr_init, timemgr_init, NO_LEAP_C
+    use clm_time_manager, only : set_timemgr_init, timemgr_init, NO_LEAP_C, GREGORIAN_C
     !
     ! !ARGUMENTS:
     integer, intent(in), optional :: dtime  ! time step (seconds)
+    logical, intent(in), optional :: use_gregorian_calendar
     !
     ! !LOCAL VARIABLES:
     integer :: l_dtime  ! local version of dtime
+    logical :: l_use_gregorian_calendar  ! local version of use_gregorian_calendar
+    character(len=:), allocatable :: calendar
     integer :: rc ! return code
 
     integer, parameter :: dtime_default = 1800  ! time step (seconds)
@@ -63,7 +66,6 @@ contains
     ! Set ymd values to be year N, month 1, day 1
     integer, parameter :: start_ymd = 10101
     integer, parameter :: ref_ymd = start_ymd
-    integer, parameter :: stop_ymd = 20101
     integer, parameter :: perpetual_ymd = start_ymd
 
     ! Set current time to be at the start of year 1
@@ -81,22 +83,31 @@ contains
        l_dtime = dtime_default
     end if
 
+    if (present(use_gregorian_calendar)) then
+       l_use_gregorian_calendar = use_gregorian_calendar
+    else
+       l_use_gregorian_calendar = .false.
+    end if
+
     call ESMF_Initialize(rc=rc)
     if (rc /= ESMF_SUCCESS) then
        stop 'Error in ESMF_Initialize'
     end if
 
+    if (l_use_gregorian_calendar) then
+       calendar = GREGORIAN_C
+    else
+       calendar = NO_LEAP_C
+    end if
+
     call set_timemgr_init( &
-         calendar_in = NO_LEAP_C, &
+         calendar_in = calendar, &
          start_ymd_in = start_ymd, &
          start_tod_in = 0, &
          ref_ymd_in = ref_ymd, &
          ref_tod_in = 0, &
-         stop_ymd_in = stop_ymd, &
-         stop_tod_in = 0, &
          perpetual_run_in = .false., &
          perpetual_ymd_in = perpetual_ymd, &
-         nelapse_in = 1, &
          dtime_in = l_dtime)
 
     call timemgr_init()

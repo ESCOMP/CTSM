@@ -2,7 +2,7 @@ module test_mkgridmap
 
   ! Tests of mkgridmapMod
 
-  use pfunit_mod
+  use funit
   use mkgridmapMod
   use shr_kind_mod , only : r8 => shr_kind_r8
 
@@ -48,8 +48,6 @@ contains
     @assertEqual([11,11,12,12], this%gridmap%src_indx)
     @assertEqual([21,22,22,23], this%gridmap%dst_indx)
     @assertEqual([1._r8, 0.5_r8, 0.5_r8, 1._r8], this%gridmap%wovr)
-    @assertEqual([1,1], this%gridmap%mask_src)
-    @assertEqual([1,1,1], this%gridmap%mask_dst)
     @assertEqual([1._r8, 1._r8], this%gridmap%frac_src)
     @assertEqual([1._r8, 1._r8, 1._r8], this%gridmap%frac_dst)
 
@@ -66,8 +64,6 @@ contains
     integer, parameter :: src_indx(ns) = [11,11,12,12]
     integer, parameter :: dst_indx(ns) = [21,22,22,23]
     real(r8), parameter :: wovr(ns) = [1._r8, 0.5_r8, 0.5_r8, 1._r8]
-    integer, parameter :: mask_src(na) = [1, 0]
-    integer, parameter :: mask_dst(nb) = [0, 1, 1]
     real(r8), parameter :: frac_src(na) = [0.1_r8, 0.0_r8]
     real(r8), parameter :: frac_dst(nb) = [0.0_r8, 0.1_r8, 0.1_r8]
     real(r8), parameter :: area_src(na) = [0.11_r8, 0.12_r8]
@@ -81,8 +77,6 @@ contains
          src_indx = src_indx, &
          dst_indx = dst_indx, &
          wovr = wovr, &
-         mask_src = mask_src, &
-         mask_dst = mask_dst, &
          frac_src = frac_src, &
          frac_dst = frac_dst, &
          area_src = area_src, &
@@ -98,8 +92,6 @@ contains
     @assertEqual(src_indx, this%gridmap%src_indx)
     @assertEqual(dst_indx, this%gridmap%dst_indx)
     @assertEqual(wovr, this%gridmap%wovr)
-    @assertEqual(mask_src, this%gridmap%mask_src)
-    @assertEqual(mask_dst, this%gridmap%mask_dst)
     @assertEqual(frac_src, this%gridmap%frac_src)
     @assertEqual(frac_dst, this%gridmap%frac_dst)
     @assertEqual(yc_src, this%gridmap%yc_src)

@@ -59,6 +59,7 @@ module WaterTracerContainerType
      procedure, public :: complete_setup
      procedure, public :: get_num_vars
      procedure, public :: get_description
+     procedure, public :: get_subgrid_level
      procedure, public :: get_bounds
      procedure, public :: get_data
   end type water_tracer_container_type
@@ -224,6 +225,28 @@ contains
     description = this%tracers(var_num)%description
 
   end function get_description
+
+  !-----------------------------------------------------------------------
+  function get_subgrid_level(this, var_num) result(subgrid_level)
+    !
+    ! !DESCRIPTION:
+    ! Returns the subgrid level of the variable with the given index.
+    !
+    ! This is one of the subgrid_level_* constants defined in decompMod.
+    !
+    ! !ARGUMENTS:
+    integer :: subgrid_level  ! function result
+    class(water_tracer_container_type), intent(in) :: this
+    integer, intent(in) :: var_num
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'get_subgrid_level'
+    !-----------------------------------------------------------------------
+
+    subgrid_level = this%tracers(var_num)%subgrid_level
+
+  end function get_subgrid_level
 
   !-----------------------------------------------------------------------
   subroutine get_bounds(this, var_num, bounds, begi, endi)

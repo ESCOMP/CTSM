@@ -9,9 +9,10 @@ module CNVegCarbonStateType
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use shr_const_mod  , only : SHR_CONST_PDB
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use pftconMod	     , only : noveg, npcropmin, pftcon
+  use pftconMod	     , only : noveg, npcropmin, pftcon, nc3crop, nc3irrig
   use clm_varcon     , only : spval, c3_r2, c4_r2, c14ratio
   use clm_varctl     , only : iulog, use_cndv, use_crop
+  use CNSharedParamsMod, only : use_matrixcn
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc 
@@ -21,6 +22,7 @@ module CNVegCarbonStateType
   use CNSpeciesMod   , only : species_from_string, CN_SPECIES_C12
   use dynPatchStateUpdaterMod, only : patch_state_updater_type
   use CNVegComputeSeedMod, only : ComputeSeedAmounts
+  use CropReprPoolsMod   , only : nrepr, get_repr_hist_fname, get_repr_rest_fname, get_repr_longname
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -31,63 +33,69 @@ module CNVegCarbonStateType
 
      integer :: species  ! c12, c13, c14
 
-     real(r8), pointer :: grainc_patch             (:) ! (gC/m2) grain C (crop model)
-     real(r8), pointer :: grainc_storage_patch     (:) ! (gC/m2) grain C storage (crop model)
-     real(r8), pointer :: grainc_xfer_patch        (:) ! (gC/m2) grain C transfer (crop model)
-     real(r8), pointer :: leafc_patch              (:) ! (gC/m2) leaf C
-     real(r8), pointer :: leafc_storage_patch      (:) ! (gC/m2) leaf C storage
-     real(r8), pointer :: leafc_xfer_patch         (:) ! (gC/m2) leaf C transfer
-     real(r8), pointer :: leafc_storage_xfer_acc_patch   (:) ! (gC/m2) Accmulated leaf C transfer
-     real(r8), pointer :: storage_cdemand_patch          (:) ! (gC/m2)       C use from the C storage pool 
-     real(r8), pointer :: frootc_patch             (:) ! (gC/m2) fine root C
-     real(r8), pointer :: frootc_storage_patch     (:) ! (gC/m2) fine root C storage
-     real(r8), pointer :: frootc_xfer_patch        (:) ! (gC/m2) fine root C transfer
-     real(r8), pointer :: livestemc_patch          (:) ! (gC/m2) live stem C
-     real(r8), pointer :: livestemc_storage_patch  (:) ! (gC/m2) live stem C storage
-     real(r8), pointer :: livestemc_xfer_patch     (:) ! (gC/m2) live stem C transfer
-     real(r8), pointer :: deadstemc_patch          (:) ! (gC/m2) dead stem C
-     real(r8), pointer :: deadstemc_storage_patch  (:) ! (gC/m2) dead stem C storage
-     real(r8), pointer :: deadstemc_xfer_patch     (:) ! (gC/m2) dead stem C transfer
-     real(r8), pointer :: livecrootc_patch         (:) ! (gC/m2) live coarse root C
-     real(r8), pointer :: livecrootc_storage_patch (:) ! (gC/m2) live coarse root C storage
-     real(r8), pointer :: livecrootc_xfer_patch    (:) ! (gC/m2) live coarse root C transfer
-     real(r8), pointer :: deadcrootc_patch         (:) ! (gC/m2) dead coarse root C
-     real(r8), pointer :: deadcrootc_storage_patch (:) ! (gC/m2) dead coarse root C storage
-     real(r8), pointer :: deadcrootc_xfer_patch    (:) ! (gC/m2) dead coarse root C transfer
-     real(r8), pointer :: gresp_storage_patch      (:) ! (gC/m2) growth respiration storage
-     real(r8), pointer :: gresp_xfer_patch         (:) ! (gC/m2) growth respiration transfer
-     real(r8), pointer :: cpool_patch              (:) ! (gC/m2) temporary photosynthate C pool
-     real(r8), pointer :: xsmrpool_patch           (:) ! (gC/m2) abstract C pool to meet excess MR demand
-     real(r8), pointer :: ctrunc_patch             (:) ! (gC/m2) patch-level sink for C truncation
-     real(r8), pointer :: woodc_patch              (:) ! (gC/m2) wood C
-     real(r8), pointer :: leafcmax_patch           (:) ! (gC/m2) ann max leaf C
-     real(r8), pointer :: totc_patch               (:) ! (gC/m2) total patch-level carbon, including cpool
-     real(r8), pointer :: rootc_col                (:) ! (gC/m2) root carbon at column level (fire)
-     real(r8), pointer :: leafc_col                (:) ! (gC/m2) column-level leafc (fire)
-     real(r8), pointer :: deadstemc_col            (:) ! (gC/m2) column-level deadstemc (fire)
-     real(r8), pointer :: fuelc_col                (:) ! fuel load outside cropland
-     real(r8), pointer :: fuelc_crop_col           (:) ! fuel load for cropland
-     real(r8), pointer :: cropseedc_deficit_patch  (:) ! (gC/m2) pool for seeding new crop growth; this is a NEGATIVE term, indicating the amount of seed usage that needs to be repaid
+     real(r8), pointer :: reproductivec_patch               (:,:) ! (gC/m2) reproductive (e.g., grain) C (crop model)
+     real(r8), pointer :: reproductivec_storage_patch       (:,:) ! (gC/m2) reproductive (e.g., grain) C storage (crop model)
+     real(r8), pointer :: reproductivec_xfer_patch          (:,:) ! (gC/m2) reproductive (e.g., grain) C transfer (crop model)
+     real(r8), pointer :: leafc_patch                         (:) ! (gC/m2) leaf C
+     real(r8), pointer :: leafc_storage_patch                 (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: leafc_xfer_patch                    (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: leafc_storage_xfer_acc_patch        (:) ! (gC/m2) Accmulated leaf C transfer
+     real(r8), pointer :: storage_cdemand_patch               (:) ! (gC/m2)       C use from the C storage pool 
+     real(r8), pointer :: frootc_patch                        (:) ! (gC/m2) fine root C
+     real(r8), pointer :: frootc_storage_patch                (:) ! (gC/m2) fine root C storage
+     real(r8), pointer :: frootc_xfer_patch                   (:) ! (gC/m2) fine root C transfer
+     real(r8), pointer :: livestemc_patch                     (:) ! (gC/m2) live stem C
+     real(r8), pointer :: livestemc_storage_patch             (:) ! (gC/m2) live stem C storage
+     real(r8), pointer :: livestemc_xfer_patch                (:) ! (gC/m2) live stem C transfer
+     real(r8), pointer :: deadstemc_patch                     (:) ! (gC/m2) dead stem C
+     real(r8), pointer :: deadstemc_storage_patch             (:) ! (gC/m2) dead stem C storage
+     real(r8), pointer :: deadstemc_xfer_patch                (:) ! (gC/m2) dead stem C transfer
+     real(r8), pointer :: livecrootc_patch                    (:) ! (gC/m2) live coarse root C
+     real(r8), pointer :: livecrootc_storage_patch            (:) ! (gC/m2) live coarse root C storage
+     real(r8), pointer :: livecrootc_xfer_patch               (:) ! (gC/m2) live coarse root C transfer
+     real(r8), pointer :: deadcrootc_patch                    (:) ! (gC/m2) dead coarse root C
+     real(r8), pointer :: deadcrootc_storage_patch            (:) ! (gC/m2) dead coarse root C storage
+     real(r8), pointer :: deadcrootc_xfer_patch               (:) ! (gC/m2) dead coarse root C transfer
+     real(r8), pointer :: gresp_storage_patch                 (:) ! (gC/m2) growth respiration storage
+     real(r8), pointer :: gresp_xfer_patch                    (:) ! (gC/m2) growth respiration transfer
+     real(r8), pointer :: cpool_patch                         (:) ! (gC/m2) temporary photosynthate C pool
+     ! Matrix data
+     ! Initial pool size for matrix spinup
+     ! Assumulation variables for matrix spinup as well as calculation of diagnostic variables
+     ! Transfer pools
+     real(r8), pointer :: xsmrpool_patch                      (:) ! (gC/m2) abstract C pool to meet excess MR demand
+     real(r8), pointer :: xsmrpool_loss_patch                 (:) ! (gC/m2) abstract C pool to meet excess MR demand loss
+     real(r8), pointer :: ctrunc_patch                        (:) ! (gC/m2) patch-level sink for C truncation
+     real(r8), pointer :: woodc_patch                         (:) ! (gC/m2) wood C
+     real(r8), pointer :: leafcmax_patch                      (:) ! (gC/m2) ann max leaf C
+     real(r8), pointer :: rootc_col                           (:) ! (gC/m2) root carbon at column level (fire)
+     real(r8), pointer :: leafc_col                           (:) ! (gC/m2) column-level leafc (fire)
+     real(r8), pointer :: deadstemc_col                       (:) ! (gC/m2) column-level deadstemc (fire)
+     real(r8), pointer :: fuelc_col                           (:) ! fuel load outside cropland
+     real(r8), pointer :: fuelc_crop_col                      (:) ! fuel load for cropland
+     real(r8), pointer :: cropseedc_deficit_patch             (:) ! (gC/m2) pool for seeding new crop growth; this is a NEGATIVE term, indicating the amount of seed usage that needs to be repaid
 
      ! pools for dynamic landcover
-     real(r8), pointer :: seedc_grc                (:) ! (gC/m2) gridcell-level pool for seeding new PFTs via dynamic landcover
+     real(r8), pointer :: seedc_grc                           (:) ! (gC/m2) gridcell-level pool for seeding new PFTs via dynamic landcover
 
      ! summary (diagnostic) state variables, not involved in mass balance
-     real(r8), pointer :: dispvegc_patch           (:) ! (gC/m2) displayed veg carbon, excluding storage and cpool
-     real(r8), pointer :: storvegc_patch           (:) ! (gC/m2) stored vegetation carbon, excluding cpool
-     real(r8), pointer :: totvegc_patch            (:) ! (gC/m2) total vegetation carbon, excluding cpool
-     real(r8), pointer :: totvegc_col              (:) ! (gC/m2) total vegetation carbon, excluding cpool averaged to column (p2c)
-
-     ! Total C pools       
-     real(r8), pointer :: totc_p2c_col             (:) ! (gC/m2) totc_patch averaged to col
-     real(r8), pointer :: totc_col                 (:) ! (gC/m2) total column carbon, incl veg and cpool
-     real(r8), pointer :: totecosysc_col           (:) ! (gC/m2) total ecosystem carbon, incl veg but excl cpool 
-
+     real(r8), pointer :: dispvegc_patch                      (:) ! (gC/m2) displayed veg carbon, excluding storage and cpool
+     real(r8), pointer :: storvegc_patch                      (:) ! (gC/m2) stored vegetation carbon, excluding cpool
+     
+     logical, private  :: dribble_crophrv_xsmrpool_2atm           ! Flag to indicate if should harvest xsmrpool to the atmosphere
+                                                                  ! it originates and is defined in CNVegetationFacade.F90
+     
+     ! Total C pools
+     real(r8), pointer :: totc_patch                          (:) ! (gC/m2) total patch-level carbon, including cpool
+     real(r8), pointer :: totvegc_patch                       (:) ! (gC/m2) total vegetation carbon, excluding cpool
+     real(r8), pointer :: totvegc_col                         (:) ! (gC/m2) total vegetation carbon, excluding cpool averaged to column (p2c)      
+     real(r8), pointer :: totc_p2c_col                        (:) ! (gC/m2) totc_patch averaged to col
+     
    contains
 
      procedure , public  :: Init   
      procedure , public  :: SetValues
-     procedure , public  :: ZeroDWT
+     procedure , public  :: ZeroDwt
      procedure , public  :: Restart
      procedure , public  :: Summary => Summary_carbonstate
      procedure , public  :: DynamicPatchAdjustments   ! adjust state variables when patch areas change
@@ -98,6 +106,9 @@ module CNVegCarbonStateType
      procedure , private :: InitCold        ! Initialize arrays for a cold-start
 
   end type cnveg_carbonstate_type
+
+  real(r8), public  :: spinup_factor_deadwood = 1.0_r8        ! Spinup factor used for this simulation
+  real(r8), public  :: spinup_factor_AD       = 10.0_r8       ! Spinup factor used when in Accelerated Decomposition mode
 
   ! !PRIVATE DATA:
 
@@ -115,27 +126,33 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, carbon_type, ratio, NLFilename, &
-                  c12_cnveg_carbonstate_inst)
+                  dribble_crophrv_xsmrpool_2atm, alloc_full_veg, c12_cnveg_carbonstate_inst)
 
     class(cnveg_carbonstate_type)                       :: this
     type(bounds_type)            , intent(in)           :: bounds  
     real(r8)                     , intent(in)           :: ratio
     character(len=*)             , intent(in)           :: carbon_type                ! Carbon isotope type C12, C13 or C1
     character(len=*)             , intent(in)           :: NLFilename                 ! Namelist filename
+    logical                      , intent(in)           :: dribble_crophrv_xsmrpool_2atm
+    logical                      , intent(in)           :: alloc_full_veg               ! total number of bgc patches (non-fates)
     type(cnveg_carbonstate_type) , intent(in), optional :: c12_cnveg_carbonstate_inst ! cnveg_carbonstate for C12 (if C13 or C14)
     !-----------------------------------------------------------------------
 
     this%species = species_from_string(carbon_type)
 
-    call this%InitAllocate ( bounds)
-    call this%InitReadNML  ( NLFilename )
-    call this%InitHistory ( bounds, carbon_type)
-    if (present(c12_cnveg_carbonstate_inst)) then
-       call this%InitCold  ( bounds, ratio, carbon_type, c12_cnveg_carbonstate_inst )
-    else
-       call this%InitCold  ( bounds, ratio, carbon_type )
-    end if
+    this%dribble_crophrv_xsmrpool_2atm = dribble_crophrv_xsmrpool_2atm
 
+    call this%InitAllocate ( bounds, alloc_full_veg)
+    if(alloc_full_veg)then
+       call this%InitReadNML  ( NLFilename )
+       call this%InitHistory ( bounds, carbon_type)
+       if (present(c12_cnveg_carbonstate_inst)) then
+          call this%InitCold  ( bounds, ratio, carbon_type, c12_cnveg_carbonstate_inst )
+       else
+          call this%InitCold  ( bounds, ratio, carbon_type )
+       end if
+    end if
+    
   end subroutine Init
 
   !------------------------------------------------------------------------
@@ -199,55 +216,63 @@ contains
   end subroutine InitReadNML
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds)
+  subroutine InitAllocate(this, bounds, alloc_full_veg)
     !
     ! !ARGUMENTS:
     class (cnveg_carbonstate_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
+    logical,intent(in)            :: alloc_full_veg ! Total number of bgc patches on the proc (non_fates)
     !
     ! !LOCAL VARIABLES:
     integer           :: begp,endp
     integer           :: begc,endc
     integer           :: begg,endg
     !------------------------------------------------------------------------
+    
+    if(alloc_full_veg)then
+       begp = bounds%begp; endp = bounds%endp
+       begc = bounds%begc; endc = bounds%endc
+       begg = bounds%begg; endg = bounds%endg
+    else
+       begp = 0;endp=0
+       begc = 0;endc=0
+       begg = 0;endg=0
+    end if
 
-    begp = bounds%begp; endp = bounds%endp
-    begc = bounds%begc; endc = bounds%endc
-    begg = bounds%begg; endg = bounds%endg
-
-    allocate(this%leafc_patch              (begp:endp)) ; this%leafc_patch              (:) = nan
-    allocate(this%leafc_storage_patch      (begp:endp)) ; this%leafc_storage_patch      (:) = nan
-    allocate(this%leafc_xfer_patch         (begp:endp)) ; this%leafc_xfer_patch         (:) = nan
-    allocate(this%leafc_storage_xfer_acc_patch (begp:endp)) ; this%leafc_storage_xfer_acc_patch (:) = nan
-    allocate(this%storage_cdemand_patch        (begp:endp)) ; this%storage_cdemand_patch        (:) = nan
-    allocate(this%frootc_patch             (begp:endp)) ; this%frootc_patch             (:) = nan
-    allocate(this%frootc_storage_patch     (begp:endp)) ; this%frootc_storage_patch     (:) = nan
-    allocate(this%frootc_xfer_patch        (begp:endp)) ; this%frootc_xfer_patch        (:) = nan
-    allocate(this%livestemc_patch          (begp:endp)) ; this%livestemc_patch          (:) = nan
-    allocate(this%livestemc_storage_patch  (begp:endp)) ; this%livestemc_storage_patch  (:) = nan
-    allocate(this%livestemc_xfer_patch     (begp:endp)) ; this%livestemc_xfer_patch     (:) = nan
-    allocate(this%deadstemc_patch          (begp:endp)) ; this%deadstemc_patch          (:) = nan
-    allocate(this%deadstemc_storage_patch  (begp:endp)) ; this%deadstemc_storage_patch  (:) = nan
-    allocate(this%deadstemc_xfer_patch     (begp:endp)) ; this%deadstemc_xfer_patch     (:) = nan
-    allocate(this%livecrootc_patch         (begp:endp)) ; this%livecrootc_patch         (:) = nan
-    allocate(this%livecrootc_storage_patch (begp:endp)) ; this%livecrootc_storage_patch (:) = nan
-    allocate(this%livecrootc_xfer_patch    (begp:endp)) ; this%livecrootc_xfer_patch    (:) = nan
-    allocate(this%deadcrootc_patch         (begp:endp)) ; this%deadcrootc_patch         (:) = nan
-    allocate(this%deadcrootc_storage_patch (begp:endp)) ; this%deadcrootc_storage_patch (:) = nan
-    allocate(this%deadcrootc_xfer_patch    (begp:endp)) ; this%deadcrootc_xfer_patch    (:) = nan
-    allocate(this%gresp_storage_patch      (begp:endp)) ; this%gresp_storage_patch      (:) = nan
-    allocate(this%gresp_xfer_patch         (begp:endp)) ; this%gresp_xfer_patch         (:) = nan
-    allocate(this%cpool_patch              (begp:endp)) ; this%cpool_patch              (:) = nan
-    allocate(this%xsmrpool_patch           (begp:endp)) ; this%xsmrpool_patch           (:) = nan
-    allocate(this%ctrunc_patch             (begp:endp)) ; this%ctrunc_patch             (:) = nan
-    allocate(this%dispvegc_patch           (begp:endp)) ; this%dispvegc_patch           (:) = nan
-    allocate(this%storvegc_patch           (begp:endp)) ; this%storvegc_patch           (:) = nan
-    allocate(this%leafcmax_patch           (begp:endp)) ; this%leafcmax_patch           (:) = nan
-    allocate(this%totc_patch               (begp:endp))  ; this%totc_patch               (:) = nan
-    allocate(this%grainc_patch             (begp:endp)) ; this%grainc_patch             (:) = nan
-    allocate(this%grainc_storage_patch     (begp:endp)) ; this%grainc_storage_patch     (:) = nan
-    allocate(this%grainc_xfer_patch        (begp:endp)) ; this%grainc_xfer_patch        (:) = nan
-    allocate(this%woodc_patch              (begp:endp)) ; this%woodc_patch              (:) = nan     
+    allocate(this%leafc_patch                            (begp:endp)) ; this%leafc_patch                        (:) = nan
+    allocate(this%leafc_storage_patch                    (begp:endp)) ; this%leafc_storage_patch                (:) = nan
+    allocate(this%leafc_xfer_patch                       (begp:endp)) ; this%leafc_xfer_patch                   (:) = nan
+    allocate(this%leafc_storage_xfer_acc_patch           (begp:endp)) ; this%leafc_storage_xfer_acc_patch       (:) = nan
+    allocate(this%storage_cdemand_patch                  (begp:endp)) ; this%storage_cdemand_patch              (:) = nan
+    allocate(this%frootc_patch                           (begp:endp)) ; this%frootc_patch                       (:) = nan
+    allocate(this%frootc_storage_patch                   (begp:endp)) ; this%frootc_storage_patch               (:) = nan
+    allocate(this%frootc_xfer_patch                      (begp:endp)) ; this%frootc_xfer_patch                  (:) = nan
+    allocate(this%livestemc_patch                        (begp:endp)) ; this%livestemc_patch                    (:) = nan
+    allocate(this%livestemc_storage_patch                (begp:endp)) ; this%livestemc_storage_patch            (:) = nan
+    allocate(this%livestemc_xfer_patch                   (begp:endp)) ; this%livestemc_xfer_patch               (:) = nan
+    allocate(this%deadstemc_patch                        (begp:endp)) ; this%deadstemc_patch                    (:) = nan
+    allocate(this%deadstemc_storage_patch                (begp:endp)) ; this%deadstemc_storage_patch            (:) = nan
+    allocate(this%deadstemc_xfer_patch                   (begp:endp)) ; this%deadstemc_xfer_patch               (:) = nan
+    allocate(this%livecrootc_patch                       (begp:endp)) ; this%livecrootc_patch                   (:) = nan
+    allocate(this%livecrootc_storage_patch               (begp:endp)) ; this%livecrootc_storage_patch           (:) = nan
+    allocate(this%livecrootc_xfer_patch                  (begp:endp)) ; this%livecrootc_xfer_patch              (:) = nan
+    allocate(this%deadcrootc_patch                       (begp:endp)) ; this%deadcrootc_patch                   (:) = nan
+    allocate(this%deadcrootc_storage_patch               (begp:endp)) ; this%deadcrootc_storage_patch           (:) = nan
+    allocate(this%deadcrootc_xfer_patch                  (begp:endp)) ; this%deadcrootc_xfer_patch              (:) = nan
+    allocate(this%gresp_storage_patch                    (begp:endp)) ; this%gresp_storage_patch                (:) = nan
+    allocate(this%gresp_xfer_patch                       (begp:endp)) ; this%gresp_xfer_patch                   (:) = nan
+    allocate(this%cpool_patch                            (begp:endp)) ; this%cpool_patch                        (:) = nan
+    allocate(this%xsmrpool_patch                         (begp:endp)) ; this%xsmrpool_patch                     (:) = nan
+    allocate(this%xsmrpool_loss_patch                    (begp:endp)) ; this%xsmrpool_loss_patch                (:) = nan
+    allocate(this%ctrunc_patch                           (begp:endp)) ; this%ctrunc_patch                       (:) = nan
+    allocate(this%dispvegc_patch                         (begp:endp)) ; this%dispvegc_patch                     (:) = nan
+    allocate(this%storvegc_patch                         (begp:endp)) ; this%storvegc_patch                     (:) = nan
+    allocate(this%leafcmax_patch                         (begp:endp)) ; this%leafcmax_patch                     (:) = nan
+    allocate(this%totc_patch                             (begp:endp))  ; this%totc_patch                        (:) = nan
+    allocate(this%reproductivec_patch             (begp:endp, nrepr)) ; this%reproductivec_patch               (:,:) = nan
+    allocate(this%reproductivec_storage_patch     (begp:endp, nrepr)) ; this%reproductivec_storage_patch       (:,:) = nan
+    allocate(this%reproductivec_xfer_patch        (begp:endp, nrepr)) ; this%reproductivec_xfer_patch          (:,:) = nan
+    allocate(this%woodc_patch                            (begp:endp)) ; this%woodc_patch                        (:) = nan     
 
     allocate(this%cropseedc_deficit_patch  (begp:endp)) ; this%cropseedc_deficit_patch  (:) = nan
     allocate(this%seedc_grc                (begg:endg)) ; this%seedc_grc                (:) = nan
@@ -261,8 +286,11 @@ contains
     allocate(this%totvegc_col              (begc:endc)) ; this%totvegc_col              (:) = nan
 
     allocate(this%totc_p2c_col             (begc:endc)) ; this%totc_p2c_col             (:) = nan
-    allocate(this%totc_col                 (begc:endc)) ; this%totc_col                 (:) = nan
-    allocate(this%totecosysc_col           (begc:endc)) ; this%totecosysc_col           (:) = nan
+
+    ! Matrix solution variables
+    if(use_matrixcn)then
+        ! Initisl pool size for matrix solution
+    end if
 
   end subroutine InitAllocate
 
@@ -304,14 +332,27 @@ contains
     if (carbon_type == 'c12') then
 
        if (use_crop) then
-          this%grainc_patch(begp:endp) = spval
-          call hist_addfld1d (fname='GRAINC', units='gC/m^2', &
-               avgflag='A', long_name='grain C (does not equal yield)', &
-               ptr_patch=this%grainc_patch)
+          this%reproductivec_patch(begp:endp,:) = spval
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
+             call hist_addfld1d ( &
+                  ! e.g., GRAINC
+                  fname=get_repr_hist_fname(k)//'C', &
+                  units='gC/m^2', &
+                  avgflag='A', &
+                  long_name=get_repr_longname(k)//' C (does not equal yield)', &
+                  ptr_patch=data1dptr)
+          end do
+
           this%cropseedc_deficit_patch(begp:endp) = spval
           call hist_addfld1d (fname='CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C used for crop seed that needs to be repaid', &
                ptr_patch=this%cropseedc_deficit_patch)
+
+          this%xsmrpool_loss_patch(begp:endp) = spval
+          call hist_addfld1d (fname='XSMRPOOL_LOSS', units='gC/m^2', &
+               avgflag='A', long_name='temporary photosynthate C pool loss', &
+               ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
        
        this%woodc_patch(begp:endp) = spval
@@ -474,16 +515,9 @@ contains
             avgflag='A', long_name='fuel load', &
             ptr_col=this%fuelc_col)
 
-       this%totc_col(begc:endc) = spval
-       call hist_addfld1d (fname='TOTCOLC', units='gC/m^2', &
-            avgflag='A', long_name='total column carbon, incl veg and cpool but excl product pools', &
-            ptr_col=this%totc_col)
-
-       this%totecosysc_col(begc:endc) = spval
-       call hist_addfld1d (fname='TOTECOSYSC', units='gC/m^2', &
-            avgflag='A', long_name='total ecosystem carbon, incl veg but excl cpool and product pools', &
-            ptr_col=this%totecosysc_col)
-
+       ! Matrix solution history variables
+       if ( use_matrixcn )then
+       end if
     end if
 
     !-------------------------------
@@ -637,27 +671,33 @@ contains
             avgflag='A', long_name='C13 pool for seeding new PFTs via dynamic landcover', &
             ptr_gcell=this%seedc_grc, default='inactive')
 
-       this%totc_col(begc:endc) = spval
-       call hist_addfld1d (fname='C13_TOTCOLC', units='gC13/m^2', &
-            avgflag='A', long_name='C13 total column carbon, incl veg and cpool but excl product pools', &
-            ptr_col=this%totc_col, default='inactive')
-
-       this%totecosysc_col(begc:endc) = spval
-       call hist_addfld1d (fname='C13_TOTECOSYSC', units='gC13/m^2', &
-            avgflag='A', long_name='C13 total ecosystem carbon, incl veg but excl cpool and product pools', &
-            ptr_col=this%totecosysc_col)
-
        if (use_crop) then
-          this%grainc_patch(begp:endp) = spval
-          call hist_addfld1d (fname='C13_GRAINC', units='gC/m^2', &
-               avgflag='A', long_name='C13 grain C (does not equal yield)', &
-               ptr_patch=this%grainc_patch, default='inactive')
+          this%reproductivec_patch(begp:endp,:) = spval
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
+             call hist_addfld1d ( &
+                  ! e.g., C13_GRAINC
+                  fname='C13_'//get_repr_hist_fname(k)//'C', &
+                  units='gC/m^2', &
+                  avgflag='A', &
+                  long_name='C13 '//get_repr_longname(k)//' C (does not equal yield)', &
+                  ptr_patch=data1dptr, default='inactive')
+          end do
+
           this%cropseedc_deficit_patch(begp:endp) = spval
           call hist_addfld1d (fname='C13_CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C13 C used for crop seed that needs to be repaid', &
                ptr_patch=this%cropseedc_deficit_patch, default='inactive')
+
+          this%xsmrpool_loss_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_XSMRPOOL_LOSS', units='gC13/m^2', &
+               avgflag='A', long_name='C13 temporary photosynthate C pool loss', &
+               ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
 
+       ! Matrix solution history variables
+       if ( use_matrixcn )then
+       end if
 
     endif
 
@@ -812,27 +852,32 @@ contains
             avgflag='A', long_name='C14 pool for seeding new PFTs via dynamic landcover', &
             ptr_gcell=this%seedc_grc, default='inactive')
 
-       this%totc_col(begc:endc) = spval
-       call hist_addfld1d (fname='C14_TOTCOLC', units='gC14/m^2', &
-            avgflag='A', long_name='C14 total column carbon, incl veg and cpool but excl product pools', &
-            ptr_col=this%totc_col, default='inactive')
-
-       this%totecosysc_col(begc:endc) = spval
-       call hist_addfld1d (fname='C14_TOTECOSYSC', units='gC14/m^2', &
-            avgflag='A', long_name='C14 total ecosystem carbon, incl veg but excl cpool and product pools', &
-            ptr_col=this%totecosysc_col)
-
        if (use_crop) then
-          this%grainc_patch(begp:endp) = spval
-          call hist_addfld1d (fname='C14_GRAINC', units='gC/m^2', &
-               avgflag='A', long_name='C14 grain C (does not equal yield)', &
-               ptr_patch=this%grainc_patch, default='inactive')
+          this%reproductivec_patch(begp:endp,:) = spval
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
+             call hist_addfld1d ( &
+                  ! e.g., C14_GRAINC
+                  fname='C14_'//get_repr_hist_fname(k)//'C', units='gC/m^2', &
+                  avgflag='A', &
+                  long_name='C14 '//get_repr_longname(k)//' C (does not equal yield)', &
+                  ptr_patch=data1dptr, default='inactive')
+          end do
+
           this%cropseedc_deficit_patch(begp:endp) = spval
           call hist_addfld1d (fname='C14_CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C14 C used for crop seed that needs to be repaid', &
                ptr_patch=this%cropseedc_deficit_patch, default='inactive')
+
+          this%xsmrpool_loss_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_XSMRPOOL_LOSS', units='gC14/m^2', &
+               avgflag='A', long_name='C14 temporary photosynthate C pool loss', &
+               ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
 
+       ! Matrix solution history variables
+       if ( use_matrixcn )then
+       end if
 
     endif
 
@@ -846,7 +891,8 @@ contains
     !
     ! !USES:
     use landunit_varcon	 , only : istsoil, istcrop 
-    use clm_varctl, only : MM_Nuptake_opt    
+    use clm_time_manager , only : is_restart, get_nstep
+    use clm_varctl, only : MM_Nuptake_opt, spinup_state
     !
     ! !ARGUMENTS:
     class(cnveg_carbonstate_type)                       :: this 
@@ -869,6 +915,8 @@ contains
           call endrun(msg=' ERROR: for C13 or C14 must pass in c12_cnveg_carbonstate_inst as argument' //&
                errMsg(sourcefile, __LINE__))
        end if
+    else
+       if ( spinup_state == 2 ) spinup_factor_deadwood = spinup_factor_AD
     end if
 
     ! Set column filters
@@ -905,57 +953,87 @@ contains
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
 
           if (patch%itype(p) == noveg) then
-             this%leafc_patch(p)          = 0._r8
-             this%leafc_storage_patch(p)  = 0._r8
-             this%frootc_patch(p)         = 0._r8            
-             this%frootc_storage_patch(p) = 0._r8    
+             this%leafc_patch(p)                        = 0._r8
+             this%leafc_storage_patch(p)                = 0._r8
+             this%frootc_patch(p)                       = 0._r8            
+             this%frootc_storage_patch(p)               = 0._r8    
+
+             ! Set matrix solution bare-soil
+             if ( use_matrixcn )then
+             end if
           else
              if (pftcon%evergreen(patch%itype(p)) == 1._r8) then
-                this%leafc_patch(p)          = cnvegcstate_const%initial_vegC * ratio     
-                this%leafc_storage_patch(p)  = 0._r8
-                this%frootc_patch(p)         = cnvegcstate_const%initial_vegC * ratio           
-                this%frootc_storage_patch(p) = 0._r8    
+                this%leafc_patch(p)                        = cnvegcstate_const%initial_vegC * ratio     
+                this%leafc_storage_patch(p)                = 0._r8
+                this%frootc_patch(p)                       = cnvegcstate_const%initial_vegC * ratio           
+                this%frootc_storage_patch(p)               = 0._r8    
+                ! Set matrix solution evergreen
+                if ( use_matrixcn )then
+                end if
              else if (patch%itype(p) >= npcropmin) then ! prognostic crop types
-                this%leafc_patch(p)          = 0._r8
-                this%leafc_storage_patch(p)  = 0._r8
-                this%frootc_patch(p)         = 0._r8            
-                this%frootc_storage_patch(p) = 0._r8    
+                this%leafc_patch(p)                        = 0._r8
+                this%leafc_storage_patch(p)                = 0._r8
+                this%frootc_patch(p)                       = 0._r8            
+                this%frootc_storage_patch(p)               = 0._r8    
+                ! Set matrix solution prognostic crops
+                if ( use_matrixcn )then
+                end if
              else
-                this%leafc_patch(p)          = 0._r8
-                this%leafc_storage_patch(p)  = cnvegcstate_const%initial_vegC * ratio   
-                this%frootc_patch(p)         = 0._r8            
-                this%frootc_storage_patch(p) = cnvegcstate_const%initial_vegC * ratio   
+                this%leafc_patch(p)                        = 0._r8
+                this%leafc_storage_patch(p)                = cnvegcstate_const%initial_vegC * ratio   
+                this%frootc_patch(p)                       = 0._r8            
+                this%frootc_storage_patch(p)               = cnvegcstate_const%initial_vegC * ratio   
+                ! Set matrix solution for everything else
+                if ( use_matrixcn )then
+                end if
              end if
           end if
-          this%leafc_xfer_patch(p) = 0._r8
-          this%leafc_storage_xfer_acc_patch(p)  = 0._r8
-          this%storage_cdemand_patch(p)         = 0._r8
+          this%leafc_xfer_patch(p)                         = 0._r8
+          this%leafc_storage_xfer_acc_patch(p)             = 0._r8
+          this%storage_cdemand_patch(p)                    = 0._r8
+
+          ! Set matrix solution general
+          if ( use_matrixcn )then
+          end if
 
           if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
-             this%frootc_patch(p)            = 0._r8 
-             this%frootc_storage_patch(p)    = 0._r8 
+             this%frootc_patch(p)                          = 0._r8 
+             this%frootc_storage_patch(p)                  = 0._r8 
+             ! Set matrix solution
+             if ( use_matrixcn )then
+             end if
           end if     
-          this%frootc_xfer_patch(p)       = 0._r8 
+          this%frootc_xfer_patch(p)                        = 0._r8 
 
-          this%livestemc_patch(p)         = 0._r8 
-          this%livestemc_storage_patch(p) = 0._r8 
-          this%livestemc_xfer_patch(p)    = 0._r8 
+          this%livestemc_patch(p)                          = 0._r8 
+          this%livestemc_storage_patch(p)                  = 0._r8 
+          this%livestemc_xfer_patch(p)                     = 0._r8 
+
+          ! Set matrix solution
+          if ( use_matrixcn )then
+          end if
 
           if (pftcon%woody(patch%itype(p)) == 1._r8) then
-             this%deadstemc_patch(p) = 0.1_r8 * ratio
+             this%deadstemc_patch(p)                       = 0.1_r8 * ratio
+             ! Set matrix solution for woody
+             if ( use_matrixcn )then
+             end if
           else
-             this%deadstemc_patch(p) = 0._r8 
+             this%deadstemc_patch(p)                       = 0._r8 
+             ! Set matrix solution for non-woody
+             if ( use_matrixcn )then
+             end if
           end if
-          this%deadstemc_storage_patch(p)  = 0._r8 
-          this%deadstemc_xfer_patch(p)     = 0._r8 
+          this%deadstemc_storage_patch(p)                  = 0._r8 
+          this%deadstemc_xfer_patch(p)                     = 0._r8 
 
-          this%livecrootc_patch(p)         = 0._r8 
-          this%livecrootc_storage_patch(p) = 0._r8 
-          this%livecrootc_xfer_patch(p)    = 0._r8 
+          this%livecrootc_patch(p)                         = 0._r8 
+          this%livecrootc_storage_patch(p)                 = 0._r8 
+          this%livecrootc_xfer_patch(p)                    = 0._r8 
 
-          this%deadcrootc_patch(p)         = 0._r8 
-          this%deadcrootc_storage_patch(p) = 0._r8 
-          this%deadcrootc_xfer_patch(p)    = 0._r8 
+          this%deadcrootc_patch(p)                         = 0._r8 
+          this%deadcrootc_storage_patch(p)                 = 0._r8 
+          this%deadcrootc_xfer_patch(p)                    = 0._r8 
 
           this%gresp_storage_patch(p)      = 0._r8 
           this%gresp_xfer_patch(p)         = 0._r8 
@@ -968,11 +1046,19 @@ contains
           this%woodc_patch(p)              = 0._r8
           this%totc_patch(p)               = 0._r8 
 
+          ! Initial pool size for matrix solution
+          if ( use_matrixcn )then
+          end if
+
           if ( use_crop )then
-             this%grainc_patch(p)         = 0._r8 
-             this%grainc_storage_patch(p) = 0._r8 
-             this%grainc_xfer_patch(p)    = 0._r8 
-             this%cropseedc_deficit_patch(p)  = 0._r8
+             this%reproductivec_patch(p,:)                                  = 0._r8
+             this%reproductivec_storage_patch(p,:)                          = 0._r8
+             this%reproductivec_xfer_patch(p,:)                             = 0._r8
+             this%cropseedc_deficit_patch(p)                                = 0._r8
+             this%xsmrpool_loss_patch(p)                                    = 0._r8 
+
+             if ( use_matrixcn )then
+             end if
           end if
 
        endif
@@ -989,9 +1075,8 @@ contains
 !          this%totgrainc_col(c)  = 0._r8
 
           ! total carbon pools
-          this%totecosysc_col(c) = 0._r8
           this%totc_p2c_col(c)   = 0._r8
-          this%totc_col(c)       = 0._r8
+          
        end if
     end do
 
@@ -1011,7 +1096,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine Restart ( this,  bounds, ncid, flag, carbon_type, reseed_dead_plants, &
                        c12_cnveg_carbonstate_inst, filter_reseed_patch, &
-                       num_reseed_patch)
+                       num_reseed_patch, spinup_factor4deadwood )
     !
     ! !DESCRIPTION: 
     ! Read/write CN restart data for carbon state
@@ -1019,6 +1104,7 @@ contains
     ! !USES:
     use shr_infnan_mod   , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
     use clm_varcon       , only : c13ratio, c14ratio
+    use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt
     use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt
     use clm_time_manager , only : is_restart
     use landunit_varcon	 , only : istsoil, istcrop 
@@ -1037,20 +1123,21 @@ contains
     type (cnveg_carbonstate_type)         , intent(in), optional :: c12_cnveg_carbonstate_inst 
     integer                               , intent(out), optional :: filter_reseed_patch(:)
     integer                               , intent(out), optional :: num_reseed_patch
+    real(r8)                              , intent(out), optional :: spinup_factor4deadwood
     !
     ! !LOCAL VARIABLES:
     integer            :: i,j,k,l,c,p
     real(r8)           :: ratio
-    character(len=128) :: varname   ! temporary
+    character(len=256) :: varname   ! temporary
     logical            :: readvar
     integer            :: idata
     logical            :: exit_spinup  = .false.
     logical            :: enter_spinup = .false.
-    ! flags for comparing the model and restart decomposition cascades
-    integer            :: decomp_cascade_state, restart_file_decomp_cascade_state 
     ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
     integer            :: restart_file_spinup_state
     integer            :: total_num_reseed_patch      ! Total number of patches to reseed across all processors
+    real(r8), pointer  :: data1dptr(:)   ! temp. pointer for slicing larger arrays
+    real(r8), parameter:: totvegcthresh = 1.0_r8      ! Total vegetation carbon threshold to reseed dead vegetation
 
     !------------------------------------------------------------------------
 
@@ -1179,6 +1266,23 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_patch) 
 
+       ! Restart variables for matrix solution
+       if ( use_matrixcn )then
+       end if
+
+       if (use_crop) then
+          call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
+          if (flag == 'read' .and. (.not. readvar) ) then
+              this%xsmrpool_loss_patch(bounds%begp:bounds%endp) = 0._r8
+          end if
+
+          ! Restart variables for matrix solution with prognostic crop
+          if ( use_matrixcn )then
+          end if
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='pft_ctrunc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%ctrunc_patch) 
@@ -1211,19 +1315,19 @@ contains
           if (spinup_state <= 1 .and. restart_file_spinup_state == 2 ) then
              if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood C pools out of AD spinup mode'
              exit_spinup = .true.
-             if ( masterproc ) write(iulog, *) 'Multiplying stemc and crootc by 10 for exit spinup'
+             if ( masterproc ) write(iulog, *) 'Multiplying stemc and crootc by ', spinup_factor_AD, ' for exit spinup'
              do i = bounds%begp,bounds%endp
-                this%deadstemc_patch(i) = this%deadstemc_patch(i) * 10._r8
-                this%deadcrootc_patch(i) = this%deadcrootc_patch(i) * 10._r8
+                this%deadstemc_patch(i) = this%deadstemc_patch(i) * spinup_factor_AD
+                this%deadcrootc_patch(i) = this%deadcrootc_patch(i) * spinup_factor_AD
              end do
           else if (spinup_state == 2 .and. restart_file_spinup_state <= 1 )then
              if (spinup_state == 2 .and. restart_file_spinup_state <= 1 )then
                 if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood C pools into AD spinup mode'
                 enter_spinup = .true.
-                if ( masterproc ) write(iulog, *) 'Dividing stemc and crootc by 10 for enter spinup '
+                if ( masterproc ) write(iulog, *) 'Dividing stemc and crootc by ', spinup_factor_AD, 'for enter spinup '
                 do i = bounds%begp,bounds%endp
-                   this%deadstemc_patch(i) = this%deadstemc_patch(i) / 10._r8
-                   this%deadcrootc_patch(i) = this%deadcrootc_patch(i) / 10._r8
+                   this%deadstemc_patch(i) = this%deadstemc_patch(i) / spinup_factor_AD
+                   this%deadcrootc_patch(i) = this%deadcrootc_patch(i) / spinup_factor_AD
                 end do
              end if
           end if
@@ -1312,12 +1416,12 @@ contains
 
        if (  flag == 'read' .and. (enter_spinup .or. (reseed_dead_plants .and. .not. is_restart())) .and. .not. use_cndv) then
              if ( masterproc ) write(iulog, *) 'Reseeding dead plants for CNVegCarbonState'
-             ! If a pft is dead (indicated by totvegc = 0) then we reseed that
+             ! If a pft is dead or near-dead (indicated by totvegc <= totvegcthresh) then we reseed that
              ! pft according to the cold start protocol in the InitCold subroutine.
              ! Thus, the variable totvegc is required to be read before here
              ! so that if it is zero for a given pft, the pft can be reseeded.
              do i = bounds%begp,bounds%endp
-                if (this%totvegc_patch(i) .le. 0.0_r8) then
+                if (this%totvegc_patch(i) .le. totvegcthresh) then
                    !-----------------------------------------------
                    ! initialize patch-level carbon state variables
                    !-----------------------------------------------
@@ -1325,76 +1429,111 @@ contains
                    this%leafcmax_patch(i) = 0._r8
 
                    l = patch%landunit(i)
-                   if (lun%itype(l) == istsoil )then
+                   if (lun%itype(l) == istsoil  .or. patch%itype(i) == nc3crop .or. patch%itype(i) == nc3irrig)then
                       if ( present(num_reseed_patch) ) then
                          num_reseed_patch = num_reseed_patch + 1
                          filter_reseed_patch(num_reseed_patch) = i
                       end if
 
                       if (patch%itype(i) == noveg) then
-                         this%leafc_patch(i)          = 0._r8
-                         this%leafc_storage_patch(i)  = 0._r8
-                         this%frootc_patch(i)         = 0._r8            
-                         this%frootc_storage_patch(i) = 0._r8    
+                         this%leafc_patch(i)                           = 0._r8
+                         this%leafc_storage_patch(i)                   = 0._r8
+                         this%frootc_patch(i)                          = 0._r8            
+                         this%frootc_storage_patch(i)                  = 0._r8    
+
+                         ! Bare soil matrix solution
+                         if(use_matrixcn)then
+                         end if
                       else
                          if (pftcon%evergreen(patch%itype(i)) == 1._r8) then
-                            this%leafc_patch(i)          = cnvegcstate_const%initial_vegC * ratio     
-                            this%leafc_storage_patch(i)  = 0._r8
-                            this%frootc_patch(i)         = cnvegcstate_const%initial_vegC * ratio           
-                            this%frootc_storage_patch(i) = 0._r8    
+                            this%leafc_patch(i)                        = cnvegcstate_const%initial_vegC * ratio     
+                            this%leafc_storage_patch(i)                = 0._r8
+                            this%frootc_patch(i)                       = cnvegcstate_const%initial_vegC * ratio           
+                            this%frootc_storage_patch(i)               = 0._r8    
+                            ! Evergreen matrix solution
+                            if(use_matrixcn)then
+                            end if
                          else
-                            this%leafc_patch(i)          = 0._r8
-                            this%leafc_storage_patch(i)  = cnvegcstate_const%initial_vegC * ratio   
-                            this%frootc_patch(i)         = 0._r8            
-                            this%frootc_storage_patch(i) = cnvegcstate_const%initial_vegC * ratio   
+                            this%leafc_patch(i)                        = 0._r8
+                            this%leafc_storage_patch(i)                = cnvegcstate_const%initial_vegC * ratio   
+                            this%frootc_patch(i)                       = 0._r8            
+                            this%frootc_storage_patch(i)               = cnvegcstate_const%initial_vegC * ratio   
+
+                            ! Otherwise matrix solution
+                            if(use_matrixcn)then
+                            end if
                          end if
                       end if
-                      this%leafc_xfer_patch(i) = 0._r8
-                      this%leafc_storage_xfer_acc_patch(i)  = 0._r8
-                      this%storage_cdemand_patch(i)         = 0._r8
+                      this%leafc_xfer_patch(i)                         = 0._r8
+                      this%leafc_storage_xfer_acc_patch(i)             = 0._r8
+                      this%storage_cdemand_patch(i)                    = 0._r8
+
+                      ! General  matrix solution
+                      if(use_matrixcn)then
+                      end if
+
 
                       if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
-                         this%frootc_patch(i)            = 0._r8 
-                         this%frootc_storage_patch(i)    = 0._r8 
-                      end if     
-                      this%frootc_xfer_patch(i)       = 0._r8 
+                         this%frootc_patch(i)                          = 0._r8 
+                         this%frootc_storage_patch(i)                  = 0._r8 
 
-                      this%livestemc_patch(i)         = 0._r8 
-                      this%livestemc_storage_patch(i) = 0._r8 
-                      this%livestemc_xfer_patch(i)    = 0._r8 
+                         ! Flex CN for matrix solution
+                         if(use_matrixcn)then
+                         end if
+                      end if     
+                      this%frootc_xfer_patch(i)                        = 0._r8 
+
+                      this%livestemc_patch(i)                          = 0._r8 
+                      this%livestemc_storage_patch(i)                  = 0._r8 
+                      this%livestemc_xfer_patch(i)                     = 0._r8 
 
                       if (pftcon%woody(patch%itype(i)) == 1._r8) then
-                         this%deadstemc_patch(i) = 0.1_r8 * ratio
+                         this%deadstemc_patch(i)                       = 0.1_r8 * ratio
+                         ! Woody for matrix solution
+                         if(use_matrixcn)then
+                         end if
                       else
-                         this%deadstemc_patch(i) = 0._r8 
+                         this%deadstemc_patch(i)                       = 0._r8 
+                         ! Non-Woody for matrix solution
+                         if(use_matrixcn)then
+                         end if
                       end if
-                      this%deadstemc_storage_patch(i)  = 0._r8 
-                      this%deadstemc_xfer_patch(i)     = 0._r8 
+                      this%deadstemc_storage_patch(i)                  = 0._r8 
+                      this%deadstemc_xfer_patch(i)                     = 0._r8 
 
-                      this%livecrootc_patch(i)         = 0._r8 
-                      this%livecrootc_storage_patch(i) = 0._r8 
-                      this%livecrootc_xfer_patch(i)    = 0._r8 
+                      this%livecrootc_patch(i)                         = 0._r8 
+                      this%livecrootc_storage_patch(i)                 = 0._r8 
+                      this%livecrootc_xfer_patch(i)                    = 0._r8 
 
-                      this%deadcrootc_patch(i)         = 0._r8 
-                      this%deadcrootc_storage_patch(i) = 0._r8 
-                      this%deadcrootc_xfer_patch(i)    = 0._r8 
+                      this%deadcrootc_patch(i)                         = 0._r8 
+                      this%deadcrootc_storage_patch(i)                 = 0._r8 
+                      this%deadcrootc_xfer_patch(i)                    = 0._r8 
 
-                      this%gresp_storage_patch(i)      = 0._r8 
-                      this%gresp_xfer_patch(i)         = 0._r8 
+                      ! Live/Dead course roots for matrix solution
+                      if(use_matrixcn)then
+                      end if
 
-                      this%cpool_patch(i)              = 0._r8 
-                      this%xsmrpool_patch(i)           = 0._r8 
-                      this%ctrunc_patch(i)             = 0._r8 
-                      this%dispvegc_patch(i)           = 0._r8 
-                      this%storvegc_patch(i)           = 0._r8 
-                      this%woodc_patch(i)              = 0._r8
-                      this%totc_patch(i)               = 0._r8 
+                      this%gresp_storage_patch(i)                      = 0._r8 
+                      this%gresp_xfer_patch(i)                         = 0._r8 
+
+                      this%cpool_patch(i)                              = 0._r8 
+                      this%xsmrpool_patch(i)                           = 0._r8 
+                      this%ctrunc_patch(i)                             = 0._r8 
+                      this%dispvegc_patch(i)                           = 0._r8 
+                      this%storvegc_patch(i)                           = 0._r8 
+                      this%woodc_patch(i)                              = 0._r8
+                      this%totc_patch(i)                               = 0._r8 
 
                       if ( use_crop )then
-                         this%grainc_patch(i)         = 0._r8 
-                         this%grainc_storage_patch(i) = 0._r8 
-                         this%grainc_xfer_patch(i)    = 0._r8 
-                         this%cropseedc_deficit_patch(i)  = 0._r8
+                         this%reproductivec_patch(i,:)         = 0._r8
+                         this%reproductivec_storage_patch(i,:) = 0._r8
+                         this%reproductivec_xfer_patch(i,:)    = 0._r8
+                         this%cropseedc_deficit_patch(i)               = 0._r8
+                         this%xsmrpool_loss_patch(i)                   = 0._r8 
+
+                         ! Reproductive pools for matrix solution
+                         if(use_matrixcn)then
+                         end if
                       end if
 
                       ! calculate totvegc explicitly so that it is available for the isotope 
@@ -1424,11 +1563,13 @@ contains
                            this%cpool_patch(i)
 
                       if ( use_crop )then
-                         this%totvegc_patch(i) =         &
-                              this%totvegc_patch(i)    + &
-                              this%grainc_patch(i)         + &
-                              this%grainc_storage_patch(i) + &
-                              this%grainc_xfer_patch(i)
+                         do k = 1, nrepr
+                            this%totvegc_patch(i) =         &
+                                 this%totvegc_patch(i)    + &
+                                 this%reproductivec_patch(i,k)         + &
+                                 this%reproductivec_storage_patch(i,k) + &
+                                 this%reproductivec_xfer_patch(i,k)
+                         end do
                       end if
 
                    endif
@@ -1758,6 +1899,21 @@ contains
           end do
        end if
 
+       call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss_13', xtype=ncd_double,  &
+            dim1name='pft', &
+            long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
+       if (flag=='read' .and. .not. readvar) then
+          if ( masterproc ) write(iulog,*) 'initializing this%xsmrpool_loss with atmospheric c13 value'
+          do i = bounds%begp,bounds%endp
+             if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
+                this%xsmrpool_loss_patch(i) = c12_cnveg_carbonstate_inst%xsmrpool_loss_patch(i) * c3_r2
+             else
+                this%xsmrpool_loss_patch(i) = c12_cnveg_carbonstate_inst%xsmrpool_loss_patch(i) * c4_r2
+             endif
+          end do
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='pft_ctrunc_13', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%ctrunc_patch) 
@@ -1770,6 +1926,14 @@ contains
                 this%ctrunc_patch(i) = c12_cnveg_carbonstate_inst%ctrunc_patch(i) * c4_r2
              endif
           end do
+       end if
+
+       ! Restart variables for matrix solution and C13
+       if(use_matrixcn)then
+
+          ! Prgnostic crop C13 variables for matrix solution
+          if ( use_crop )then
+          end if
        end if
 
     end if
@@ -2048,6 +2212,18 @@ contains
           end do
        end if
 
+       call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss_14', xtype=ncd_double,  &
+            dim1name='pft', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
+       if (flag=='read' .and. .not. readvar) then
+          if ( masterproc ) write(iulog,*) 'initializing this%xsmrpool_loss_patch with atmospheric c14 value'
+          do i = bounds%begp,bounds%endp
+             if (this%xsmrpool_loss_patch(i) /= spval .and. .not. isnan(this%xsmrpool_loss_patch(i)) ) then
+                this%xsmrpool_loss_patch(i) = c12_cnveg_carbonstate_inst%xsmrpool_loss_patch(i) * c14ratio
+             endif
+          end do
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='pft_ctrunc_14', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%ctrunc_patch) 
@@ -2060,6 +2236,13 @@ contains
           end do
        end if
 
+       ! Restart variables for matrix solution and C13
+       if(use_matrixcn)then
+
+          ! Prgnostic crop C13 variables for matrix solution
+          if ( use_crop )then
+          end if
+       end if
     end if
 
     !--------------------------------
@@ -2068,17 +2251,41 @@ contains
 
     if (use_crop) then
        if (carbon_type == 'c12') then
-          call restartvar(ncid=ncid, flag=flag,  varname='grainc', xtype=ncd_double,  &
-               dim1name='pft', long_name='grain C', units='gC/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_patch)
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
+             ! e.g., reproductivec
+             varname = get_repr_rest_fname(k)//'c'
+             call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name=get_repr_longname(k)//' C', &
+                  units='gC/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+          end do
 
-          call restartvar(ncid=ncid, flag=flag,  varname='grainc_storage', xtype=ncd_double,  &
-               dim1name='pft', long_name='grain C storage', units='gC/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_storage_patch)
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_storage_patch(:,k)
+             ! e.g., reproductivec_storage
+             varname = get_repr_rest_fname(k)//'c_storage'
+             call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name=get_repr_longname(k)//' C storage', &
+                  units='gC/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+          end do
 
-          call restartvar(ncid=ncid, flag=flag,  varname='grainc_xfer', xtype=ncd_double,  &
-               dim1name='pft', long_name='grain C transfer', units='gC/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_xfer_patch)
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_xfer_patch(:,k)
+             ! e.g., reproductivec_xfer
+             varname = get_repr_rest_fname(k)//'c_xfer'
+             call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name=get_repr_longname(k)//' C transfer', &
+                  units='gC/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+          end do
 
           call restartvar(ncid=ncid, flag=flag, varname='cropseedc_deficit', xtype=ncd_double,  &
                dim1name='pft', long_name='pool for seeding new crop growth', units='gC/m2', &
@@ -2086,35 +2293,59 @@ contains
        end if
 
        if (carbon_type == 'c13') then
-          call restartvar(ncid=ncid, flag=flag, varname='grainc_13', xtype=ncd_double,  &
-               dim1name='pft', long_name='c13 grain C', units='gC13/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_patch)
-          if (flag=='read' .and. .not. readvar) then
-             call set_missing_from_template( &
-                  my_var = this%grainc_patch, &
-                  template_var = c12_cnveg_carbonstate_inst%grainc_patch, &
-                  multiplier = c3_r2)
-          end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
+             ! e.g., reprocuctive_13
+             varname = get_repr_rest_fname(k)//'c_13'
+             call restartvar(ncid=ncid, flag=flag, varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name='c13 '//get_repr_longname(k)//' C', &
+                  units='gC13/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+             if (flag=='read' .and. .not. readvar) then
+                call set_missing_from_template( &
+                     my_var = data1dptr, &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_patch(:,k), &
+                     multiplier = c3_r2)
+             end if
+          end do
 
-          call restartvar(ncid=ncid, flag=flag, varname='grainc_13_storage', xtype=ncd_double,  &
-               dim1name='pft', long_name='c13 grain C storage', units='gC13/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_storage_patch)
-          if (flag=='read' .and. .not. readvar) then
-             call set_missing_from_template( &
-                  my_var = this%grainc_storage_patch, &
-                  template_var = c12_cnveg_carbonstate_inst%grainc_storage_patch, &
-                  multiplier = c3_r2)
-          end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_storage_patch(:,k)
+             ! e.g., reproductivec_13_storage
+             varname = get_repr_rest_fname(k)//'c_13_storage'
+             call restartvar(ncid=ncid, flag=flag, varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name='c13 '//get_repr_longname(k)//' C storage', &
+                  units='gC13/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+             if (flag=='read' .and. .not. readvar) then
+                call set_missing_from_template( &
+                     my_var = data1dptr, &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_storage_patch(:,k), &
+                     multiplier = c3_r2)
+             end if
+          end do
 
-          call restartvar(ncid=ncid, flag=flag, varname='grainc_13_xfer', xtype=ncd_double,  &
-               dim1name='pft', long_name='c13 grain C transfer', units='gC13/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_xfer_patch)
-          if (flag=='read' .and. .not. readvar) then
-             call set_missing_from_template( &
-                  my_var = this%grainc_xfer_patch, &
-                  template_var = c12_cnveg_carbonstate_inst%grainc_xfer_patch, &
-                  multiplier = c3_r2)
-          end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_xfer_patch(:,k)
+             ! e.g., reproductivec_13_xfer
+             varname = get_repr_rest_fname(k)//'c_13_xfer'
+             call restartvar(ncid=ncid, flag=flag, varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name='c13 '//get_repr_longname(k)//' C transfer', &
+                  units='gC13/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+             if (flag=='read' .and. .not. readvar) then
+                call set_missing_from_template( &
+                     my_var = data1dptr, &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_xfer_patch(:,k), &
+                     multiplier = c3_r2)
+             end if
+          end do
 
           call restartvar(ncid=ncid, flag=flag, varname='cropseedc_13_deficit', xtype=ncd_double,  &
                dim1name='pft', long_name='pool for seeding new crop growth', units='gC13/m2', &
@@ -2129,35 +2360,59 @@ contains
 
        if ( carbon_type == 'c14' ) then
 
-          call restartvar(ncid=ncid, flag=flag, varname='grainc_14', xtype=ncd_double,  &
-               dim1name='pft', long_name='c14 grain C', units='gC14/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_patch)
-          if (flag=='read' .and. .not. readvar) then
-             call set_missing_from_template( &
-                  my_var = this%grainc_patch, &
-                  template_var = c12_cnveg_carbonstate_inst%grainc_patch, &
-                  multiplier = c3_r2)
-          end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_patch(:,k)
+             ! e.g., reproductivec_14
+             varname = get_repr_rest_fname(k)//'c_14'
+             call restartvar(ncid=ncid, flag=flag, varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name='c14 '//get_repr_longname(k)//' C', &
+                  units='gC14/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+             if (flag=='read' .and. .not. readvar) then
+                call set_missing_from_template( &
+                     my_var = data1dptr, &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_patch(:,k), &
+                     multiplier = c3_r2)
+             end if
+          end do
 
-          call restartvar(ncid=ncid, flag=flag, varname='grainc_14_storage', xtype=ncd_double,  &
-               dim1name='pft', long_name='c14 grain C storage', units='gC14/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_storage_patch)
-          if (flag=='read' .and. .not. readvar) then
-             call set_missing_from_template( &
-                  my_var = this%grainc_storage_patch, &
-                  template_var = c12_cnveg_carbonstate_inst%grainc_storage_patch, &
-                  multiplier = c3_r2)
-          end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_storage_patch(:,k)
+             ! e.g., reproductivec_14_storage
+             varname = get_repr_rest_fname(k)//'c_14_storage'
+             call restartvar(ncid=ncid, flag=flag, varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name='c14 '//get_repr_longname(k)//' C storage', &
+                  units='gC14/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+             if (flag=='read' .and. .not. readvar) then
+                call set_missing_from_template( &
+                     my_var = data1dptr, &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_storage_patch(:,k), &
+                     multiplier = c3_r2)
+             end if
+          end do
 
-          call restartvar(ncid=ncid, flag=flag, varname='grainc_14_xfer', xtype=ncd_double,  &
-               dim1name='pft', long_name='c14 grain C transfer', units='gC14/m2', &
-               interpinic_flag='interp', readvar=readvar, data=this%grainc_xfer_patch)
-          if (flag=='read' .and. .not. readvar) then
-             call set_missing_from_template( &
-                  my_var = this%grainc_xfer_patch, &
-                  template_var = c12_cnveg_carbonstate_inst%grainc_xfer_patch, &
-                  multiplier = c3_r2)
-          end if
+          do k = 1, nrepr
+             data1dptr => this%reproductivec_xfer_patch(:,k)
+             ! e.g., reproductivec_14_xfer
+             varname = get_repr_rest_fname(k)//'c_14_xfer'
+             call restartvar(ncid=ncid, flag=flag, varname=varname, &
+                  xtype=ncd_double,  &
+                  dim1name='pft', &
+                  long_name='c14 '//get_repr_longname(k)//' C transfer', &
+                  units='gC14/m2', &
+                  interpinic_flag='interp', readvar=readvar, data=data1dptr)
+             if (flag=='read' .and. .not. readvar) then
+                call set_missing_from_template( &
+                     my_var = data1dptr, &
+                     template_var = c12_cnveg_carbonstate_inst%reproductivec_xfer_patch(:,k), &
+                     multiplier = c3_r2)
+             end if
+          end do
 
           call restartvar(ncid=ncid, flag=flag, varname='cropseedc_14_deficit', xtype=ncd_double,  &
                dim1name='pft', long_name='pool for seeding new crop growth', units='gC14/m2', &
@@ -2218,6 +2473,9 @@ contains
        end if
     end if
 
+    ! Output spinup factor for deadwood (dead stem and dead course root)
+    if ( present(spinup_factor4deadwood) ) spinup_factor4deadwood = spinup_factor_AD
+
   end subroutine Restart
 
   !-----------------------------------------------------------------------
@@ -2273,13 +2531,35 @@ contains
        this%woodc_patch(i)              = value_patch
        this%totvegc_patch(i)            = value_patch
        this%totc_patch(i)               = value_patch
+
+       ! Set matrix solution values
+       if ( use_matrixcn )then
+       end if
+
        if ( use_crop ) then
-          this%grainc_patch(i)          = value_patch
-          this%grainc_storage_patch(i)  = value_patch
-          this%grainc_xfer_patch(i)     = value_patch
           this%cropseedc_deficit_patch(i)  = value_patch
+          this%xsmrpool_loss_patch(i)   = value_patch
+
+          ! Set matrix solution values for prognostic crop
+          if ( use_matrixcn )then
+          end if
        end if
     end do
+
+    if (use_crop) then
+       do k = 1, nrepr
+          do fi = 1,num_patch
+             i  = filter_patch(fi)
+             this%reproductivec_patch(i,k)          = value_patch
+             this%reproductivec_storage_patch(i,k)  = value_patch
+             this%reproductivec_xfer_patch(i,k)     = value_patch
+
+             ! Set matrix solution values for prognostic crop reproductive patches
+             if ( use_matrixcn )then
+             end if
+          end do
+       end do
+    end if
 
     do fi = 1,num_column
        i  = filter_column(fi)
@@ -2290,8 +2570,6 @@ contains
        this%fuelc_crop_col(i)           = value_column
        this%totvegc_col(i)              = value_column
        this%totc_p2c_col(i)             = value_column
-       this%totc_col(i)                 = value_column
-       this%totecosysc_col(i)           = value_column
     end do
 
   end subroutine SetValues
@@ -2319,10 +2597,8 @@ contains
   end subroutine ZeroDwt
 
   !-----------------------------------------------------------------------
-  subroutine Summary_carbonstate(this, bounds, num_allc, filter_allc, &
-       num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       soilbiogeochem_cwdc_col, soilbiogeochem_totlitc_col, soilbiogeochem_totsomc_col, &
-       soilbiogeochem_ctrunc_col)
+  subroutine Summary_carbonstate(this, bounds, num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp)
+
     !
     ! !USES:
     use subgridAveMod, only : p2c
@@ -2335,31 +2611,20 @@ contains
     ! !ARGUMENTS:
     class(cnveg_carbonstate_type)  :: this
     type(bounds_type) , intent(in) :: bounds          
-    integer           , intent(in) :: num_allc        ! number of columns in allc filter
-    integer           , intent(in) :: filter_allc(:)  ! filter for all active columns
-    integer           , intent(in) :: num_soilc       ! number of soil columns in filter
-    integer           , intent(in) :: filter_soilc(:) ! filter for soil columns
-    integer           , intent(in) :: num_soilp       ! number of soil patches in filter
-    integer           , intent(in) :: filter_soilp(:) ! filter for soil patches
-    real(r8)          , intent(in) :: soilbiogeochem_cwdc_col(bounds%begc:)   
-    real(r8)          , intent(in) :: soilbiogeochem_totlitc_col(bounds%begc:)
-    real(r8)          , intent(in) :: soilbiogeochem_totsomc_col(bounds%begc:)
-    real(r8)          , intent(in) :: soilbiogeochem_ctrunc_col(bounds%begc:)
+    integer           , intent(in) :: num_bgc_soilc       ! number of bgc soil columns in filter
+    integer           , intent(in) :: filter_bgc_soilc(:) ! filter for bgc soil columns
+    integer           , intent(in) :: num_bgc_vegp       ! number of soil patches in filter
+    integer           , intent(in) :: filter_bgc_vegp(:) ! filter for soil patches
+
     !
     ! !LOCAL VARIABLES:
     integer  :: c,p,j,k,l       ! indices
     integer  :: fp,fc           ! lake filter indices
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_cwdc_col)    == (/bounds%endc/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_totlitc_col) == (/bounds%endc/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_totsomc_col) == (/bounds%endc/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_ctrunc_col)  == (/bounds%endc/)), sourcefile, __LINE__)
-
     ! calculate patch -level summary of carbon state
-
-    do fp = 1,num_soilp
-       p = filter_soilp(fp)
+    do fp = 1,num_bgc_vegp
+       p = filter_bgc_vegp(fp)
 
        ! displayed vegetation carbon, excluding storage and cpool (DISPVEGC)
        this%dispvegc_patch(p) =        &
@@ -2389,14 +2654,16 @@ contains
             this%gresp_xfer_patch(p)
 
        if ( use_crop .and. patch%itype(p) >= npcropmin )then
-          this%storvegc_patch(p) =            &
-               this%storvegc_patch(p)       + &
-               this%grainc_storage_patch(p) + &
-               this%grainc_xfer_patch(p)
+          do k = 1, nrepr
+             this%storvegc_patch(p) =            &
+                  this%storvegc_patch(p)       + &
+                  this%reproductivec_storage_patch(p,k) + &
+                  this%reproductivec_xfer_patch(p,k)
 
-          this%dispvegc_patch(p) =            &
-               this%dispvegc_patch(p)       + &
-               this%grainc_patch(p)
+             this%dispvegc_patch(p) =            &
+                  this%dispvegc_patch(p)       + &
+                  this%reproductivec_patch(p,k)
+          end do
        end if
 
        ! total vegetation carbon, excluding cpool (TOTVEGC)
@@ -2411,7 +2678,8 @@ contains
             this%ctrunc_patch(p)
 
        if (use_crop) then 
-          this%totc_patch(p) = this%totc_patch(p) + this%cropseedc_deficit_patch(p)
+          this%totc_patch(p) = this%totc_patch(p) + this%cropseedc_deficit_patch(p) + &
+               this%xsmrpool_loss_patch(p)
        end if
 
        ! (WOODC) - wood C
@@ -2426,34 +2694,16 @@ contains
     ! --------------------------------------------
     ! column level summary
     ! --------------------------------------------
-
-    call p2c(bounds, num_soilc, filter_soilc, &
-         this%totvegc_patch(bounds%begp:bounds%endp), &
-         this%totvegc_col(bounds%begc:bounds%endc))
-
-    call p2c(bounds, num_soilc, filter_soilc, &
-         this%totc_patch(bounds%begp:bounds%endp), &
-         this%totc_p2c_col(bounds%begc:bounds%endc))
-
-    do fc = 1,num_allc
-       c = filter_allc(fc)
-
-       ! total ecosystem carbon, including veg but excluding cpool (TOTECOSYSC)
-       this%totecosysc_col(c) =    &
-            soilbiogeochem_cwdc_col(c)    + &
-            soilbiogeochem_totlitc_col(c) + &
-            soilbiogeochem_totsomc_col(c) + &
-            this%totvegc_col(c)
-
-       ! total column carbon, including veg and cpool (TOTCOLC)
-       this%totc_col(c) =  this%totc_p2c_col(c) + &
-            soilbiogeochem_cwdc_col(c)      + &
-            soilbiogeochem_totlitc_col(c)   + &
-            soilbiogeochem_totsomc_col(c)   + &
-            soilbiogeochem_ctrunc_col(c)
-
-    end do
-
+    if(num_bgc_vegp>0)then
+       call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
+            this%totvegc_patch(bounds%begp:bounds%endp), &
+            this%totvegc_col(bounds%begc:bounds%endc))
+       
+       call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
+            this%totc_patch(bounds%begp:bounds%endp), &
+            this%totc_p2c_col(bounds%begc:bounds%endc))
+    end if
+       
   end subroutine Summary_carbonstate
 
   !-----------------------------------------------------------------------
@@ -2493,6 +2743,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
+    integer :: k
 
     logical  :: old_weight_was_zero(bounds%begp:bounds%endp)
     logical  :: patch_grew(bounds%begp:bounds%endp)
@@ -2646,25 +2897,33 @@ contains
          flux_out_grc_area = conv_cflux(begp:endp))
 
     if (use_crop) then
-       call update_patch_state( &
-            var = this%grainc_patch(begp:endp), &
-            flux_out_grc_area = crop_product_cflux(begp:endp))
-
-       call update_patch_state( &
-            var = this%grainc_storage_patch(begp:endp), &
-            flux_out_grc_area = conv_cflux(begp:endp))
-
-       call update_patch_state( &
-            var = this%grainc_xfer_patch(begp:endp), &
-            flux_out_grc_area = conv_cflux(begp:endp))
-
-       if (use_crop) then
-          ! This is a negative pool. So any deficit that we haven't repaid gets sucked out
-          ! of the atmosphere.
+       do k = 1, nrepr
           call update_patch_state( &
-               var = this%cropseedc_deficit_patch(begp:endp), &
+               var = this%reproductivec_patch(begp:endp, k), &
+               flux_out_grc_area = crop_product_cflux(begp:endp))
+       end do
+
+       do k = 1, nrepr
+          call update_patch_state( &
+               var = this%reproductivec_storage_patch(begp:endp, k), &
                flux_out_grc_area = conv_cflux(begp:endp))
-       end if
+       end do
+
+       do k = 1, nrepr
+          call update_patch_state( &
+               var = this%reproductivec_xfer_patch(begp:endp, k), &
+               flux_out_grc_area = conv_cflux(begp:endp))
+       end do
+
+       ! This is a negative pool. So any deficit that we haven't repaid gets sucked out
+       ! of the atmosphere.
+       call update_patch_state( &
+            var = this%cropseedc_deficit_patch(begp:endp), &
+            flux_out_grc_area = conv_cflux(begp:endp))
+
+       call update_patch_state( &
+            var = this%xsmrpool_loss_patch(begp:endp), &
+            flux_out_grc_area = conv_cflux(begp:endp))
     end if
 
   contains

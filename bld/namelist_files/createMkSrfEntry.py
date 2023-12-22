@@ -1,16 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os, sys
 
 class mksrfDataEntry_prog:
 
    # Class data
-   year_start = 2016
-   year_end   = 2100
-   ssp_rcp    = "SSP5-8.5"
-   subdir     = "pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005"
-   cdate      = 171005
-   desc       = "SSP5RCP85_clm5"
+   year_start = 850
+   year_end   = 1849
+   ssp_rcp    = "hist"
+   subdir     = "pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012"
+   cdate      = 171012
+   desc       = "histclm50_LUH2"
 
    def parse_cmdline_args( self ):
       "Parse the command line arguments for create data entry list"
@@ -41,9 +41,9 @@ class mksrfDataEntry_prog:
 
    def printentry( self, year ):
       "Print a single entry"
-      print '<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="%s" sim_year="%d" crop="on"' % (self.ssp_rcp, year)
-      print '>lnd/clm2/rawdata/%s/mksrf_landuse_%s_%s.c%s.nc' % (self.subdir, self.desc, year, self.cdate)
-      print '</mksrf_fvegtyp>\n'
+      print( '<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="%s" sim_year="%d" crop="on"' % (self.ssp_rcp, year) )
+      print( '>lnd/clm2/rawdata/%s/mksrf_landuse_%s_%s.c%s.nc' % (self.subdir, self.desc, year, self.cdate) )
+      print( '</mksrf_fvegtyp>\n' )
 
 entry = mksrfDataEntry_prog()
 entry.parse_cmdline_args()

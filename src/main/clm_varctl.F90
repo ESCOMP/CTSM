@@ -35,7 +35,6 @@ module clm_varctl
   ! Type of run
   integer, public :: nsrest                = iundef                         
   logical, public :: is_cold_start         = .false.
-  logical, public :: is_interpolated_start = .false. ! True if we're starting from initial conditions that have been run through init_interp
 
   ! Startup from initial conditions
   integer, public, parameter :: nsrStartup  = 0                          
@@ -50,8 +49,29 @@ module clm_varctl
   ! by default this is not allowed
   logical, public :: brnch_retain_casename = .false.                     
 
-  !true => no valid land points -- do NOT run
-  logical, public :: noland = .false.                                    
+  ! true => run tests of ncdio_pio
+  logical, public :: for_testing_run_ncdiopio_tests = .false.
+
+  ! true => allocate memory for and use a second grain pool. This is meant only for
+  ! software testing of infrastructure to support the AgSys crop model integration. This
+  ! option can be dropped once AgSys is integrated and we have tests of it.
+  logical, public :: for_testing_use_second_grain_pool = .false.
+
+  ! true => allocate memory for two reproductive structure pools and send all reproductive
+  ! C and N to the second reproductive structure pool instead of the grain pool. This is
+  ! meant only for software testing of infrastructure to support the AgSys crop model
+  ! integration. This option can be dropped once AgSys is integrated and we have tests of
+  ! it.
+  logical, public :: for_testing_use_repr_structure_pool = .false.
+
+  ! true => do NOT use grain C/N to replenish the crop seed deficits. This is needed when
+  ! doing software testing to verify that we can get bit-for-bit identical answers when
+  ! using a reproductive structure pool as when using a grain pool (in conjunction with
+  ! for_testing_use_repr_structure_pool). We do this testing to have some tests of the
+  ! infrastructure to support the AgSys crop model integration. This option can be dropped
+  ! if/when we stop doing this software testing, e.g., because we have integrated AgSys
+  ! and have tests of it that make these software infrastructure tests obsolete.
+  logical, public :: for_testing_no_crop_seed_replenishment = .false.
 
   ! Hostname of machine running on
   character(len=256), public :: hostname = ' '                           
@@ -67,6 +87,9 @@ module clm_varctl
 
   ! dataset conventions
   character(len=256), public :: conventions = "CF-1.0"                   
+
+  ! component name for filenames (history or restart files)
+  character(len=8), public :: compname = 'clm2'
 
   !----------------------------------------------------------
   ! Unit Numbers
@@ -86,12 +109,13 @@ module clm_varctl
 
   character(len=fname_len), public :: finidat    = ' '        ! initial conditions file name
   character(len=fname_len), public :: fsurdat    = ' '        ! surface data file name
-  character(len=fname_len), public :: fatmgrid   = ' '        ! atm grid file name
-  character(len=fname_len), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
   character(len=fname_len), public :: paramfile  = ' '        ! ASCII data file with PFT physiological constants
   character(len=fname_len), public :: nrevsn     = ' '        ! restart data file name for branch run
   character(len=fname_len), public :: fsnowoptics  = ' '      ! snow optical properties file name
   character(len=fname_len), public :: fsnowaging   = ' '      ! snow aging parameters file name
+
+  character(len=fname_len), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
+                                                              ! only needed for LILAC and MCT drivers
 
   !----------------------------------------------------------
   ! Flag to read ndep rather than obtain it from coupler
@@ -119,6 +143,11 @@ module clm_varctl
 
   ! If prognostic crops are turned on
   logical, public :: use_crop = .false.
+
+  ! Whether we're using the AgSys crop model
+  ! TODO(wjs, 2022-03-30) Add namelist control of this variable (at which point we'll
+  ! need to remove the 'parameter' attribute)
+  logical, public, parameter :: use_crop_agsys = .false.
 
   ! true => separate crop landunit is not created by default
   logical, public :: create_crop_landunit = .false.     
@@ -193,11 +222,13 @@ module clm_varctl
   ! which snow cover fraction parameterization to use
   character(len=64), public :: snow_cover_fraction_method
 
-  ! true => write global average diagnostics to std out
-  logical,  public :: wrtdia       = .false.            
-
   ! atmospheric CO2 molar ratio (by volume) (umol/mol)
   real(r8), public :: co2_ppmv     = 355._r8            !
+
+  ! ozone vegitation stress method, valid values: unset, stress_lombardozzi2015, stress_falk
+  character(len=64), public    :: o3_veg_stress_method = 'unset'
+
+  real(r8), public  :: o3_ppbv = 100._r8
 
   !----------------------------------------------------------
   ! C isotopes
@@ -215,20 +246,43 @@ module clm_varctl
   logical, public :: for_testing_allow_interp_non_ciso_to_ciso = .false.
 
   !----------------------------------------------------------
+  !  Surface roughness parameterization
+  !----------------------------------------------------------
+
+  character(len=64), public :: z0param_method  ! ZengWang2007 or Meier2022
+  logical, public :: use_z0m_snowmelt = .false.         ! true => use snow z0m parameterization of Brock2006
+
+  !----------------------------------------------------------
   !  FATES switches
   !----------------------------------------------------------
 
-  logical, public :: use_fates = .false.            ! true => use fates
+  logical, public :: use_fates = .false.                                ! true => use fates
 
   ! These are INTERNAL to the FATES module
-  logical, public            :: use_fates_spitfire = .false.           ! true => use spitfire model
-  logical, public            :: use_fates_logging = .false.            ! true => turn on logging module
-  logical, public            :: use_fates_planthydro = .false.         ! true => turn on fates hydro
-  logical, public            :: use_fates_ed_st3   = .false.           ! true => static stand structure
-  logical, public            :: use_fates_ed_prescribed_phys = .false. ! true => prescribed physiology
-  logical, public            :: use_fates_inventory_init = .false.     ! true => initialize fates from inventory
-  character(len=256), public :: fates_inventory_ctrl_filename = ''     ! filename for inventory control
 
+  integer, public            :: fates_parteh_mode = -9                  ! 1 => carbon only
+                                                                        ! 2 => C+N+P (not enabled yet)
+                                                                        ! no others enabled
+  integer, public            :: fates_spitfire_mode = 0                
+                                                                        ! 0 for no fire; 1 for constant ignitions;
+                                                                        ! > 1 for external data (lightning and/or anthropogenic ignitions)
+                                                                        ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
+  logical, public            :: use_fates_tree_damage = .false.         ! true => turn on tree damage module
+  logical, public            :: use_fates_logging = .false.             ! true => turn on logging module
+  logical, public            :: use_fates_planthydro = .false.          ! true => turn on fates hydro
+  logical, public            :: use_fates_cohort_age_tracking = .false. ! true => turn on cohort age tracking
+  logical, public            :: use_fates_ed_st3   = .false.            ! true => static stand structure
+  logical, public            :: use_fates_ed_prescribed_phys = .false.  ! true => prescribed physiology
+  logical, public            :: use_fates_inventory_init = .false.      ! true => initialize fates from inventory
+  logical, public            :: use_fates_fixed_biogeog = .false.       ! true => use fixed biogeography mode
+  logical, public            :: use_fates_nocomp = .false.              ! true => use no comopetition mode
+  character(len=256), public :: fates_inventory_ctrl_filename = ''      ! filename for inventory control
+
+  ! FATES SP AND FATES BGC are MUTUTALLY EXCLUSIVE, THEY CAN'T BOTH BE ON
+  ! BUT... THEY CAN BOTH BE OFF (IF FATES IS OFF)
+  logical, public            :: use_fates_sp = .false.                  ! true => use FATES satellite phenology mode
+  logical, public            :: use_fates_bgc = .false.                 ! true => use FATES along with CLM soil biogeochemistry
+  
   !----------------------------------------------------------
   !  LUNA switches		
   !----------------------------------------------------------
@@ -242,25 +296,38 @@ module clm_varctl
   !  appropriate module.
   logical, public :: use_flexibleCN = .false.
   logical, public :: MM_Nuptake_opt = .false.
-  logical, public :: downreg_opt = .true.
-  integer, public :: plant_ndemand_opt = 0
-  logical, public :: substrate_term_opt = .true.
-  logical, public :: nscalar_opt = .true.
-  logical, public :: temp_scalar_opt = .true.
   logical, public :: CNratio_floating = .false.
   logical, public :: lnc_opt = .false.
   logical, public :: reduce_dayl_factor = .false.
   integer, public :: vcmax_opt = 0
-  integer, public :: CN_residual_opt = 0
-  integer, public :: CN_partition_opt = 0
   integer, public :: CN_evergreen_phenology_opt = 0
   integer, public :: carbon_resp_opt = 0
+
+  !----------------------------------------------------------
+  ! prescribed soil moisture streams switch 
+  !----------------------------------------------------------
+
+  logical, public :: use_soil_moisture_streams = .false. ! true => use prescribed soil moisture stream
 
   !----------------------------------------------------------
   ! lai streams switch for Sat. Phenology
   !----------------------------------------------------------
 
   logical, public :: use_lai_streams = .false. ! true => use lai streams in SatellitePhenologyMod.F90
+
+  !----------------------------------------------------------
+  ! crop calendar streams switch for CropPhenology
+  !----------------------------------------------------------
+
+  logical, public :: use_cropcal_streams = .false.
+  logical, public :: use_cropcal_rx_sdates = .false.
+  logical, public :: use_cropcal_rx_cultivar_gdds = .false.
+
+  !----------------------------------------------------------
+  ! biomass heat storage switch
+  !----------------------------------------------------------
+
+  logical, public :: use_biomass_heat_storage = .false. ! true => include biomass heat storage in canopy energy budget
 
   !----------------------------------------------------------
   ! bedrock / soil depth switch
@@ -270,6 +337,11 @@ module clm_varctl
   character(len=16), public :: soil_layerstruct_predefined = 'UNSET'
   real(r8), public :: soil_layerstruct_userdefined(99) = rundef
   integer, public :: soil_layerstruct_userdefined_nlevsoi = iundef
+
+  !----------------------------------------------------------
+  !excess ice physics switch
+  !----------------------------------------------------------
+  logical, public :: use_excess_ice = .false. ! true. => use excess ice physics
 
   !----------------------------------------------------------
   ! plant hydraulic stress switch
@@ -331,6 +403,9 @@ module clm_varctl
   ! namelist: write CH4 extra diagnostic output
   logical, public :: hist_wrtch4diag = .false.         
 
+  ! namelist: write list of all history fields to a file for use in documentation
+  logical, public :: hist_fields_list_file = .false.
+
   !----------------------------------------------------------
   ! FATES
   !----------------------------------------------------------
@@ -344,18 +419,15 @@ module clm_varctl
   ! Migration of CPP variables
   !----------------------------------------------------------
 
-  logical, public :: use_lch4            = .false.
-  logical, public :: use_nitrif_denitrif = .false.
-  logical, public :: use_vertsoilc       = .false.
+  logical, public :: use_lch4            = .true.
+  logical, public :: use_nitrif_denitrif = .true.
   logical, public :: use_extralakelayers = .false.
   logical, public :: use_vichydro        = .false.
-  logical, public :: use_century_decomp  = .false.
   logical, public :: use_cn              = .false.
   logical, public :: use_cndv            = .false.
   logical, public :: use_grainproduct    = .false.
 !  logical, public :: use_livestemproduct = .false.
   logical, public :: use_fertilizer      = .false.
-  logical, public :: use_ozone           = .false.
   logical, public :: use_snicar_frc      = .false.
   logical, public :: use_vancouver       = .false.
   logical, public :: use_mexicocity      = .false.

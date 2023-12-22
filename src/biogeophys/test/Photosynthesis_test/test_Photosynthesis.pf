@@ -1,0 +1,107 @@
+module test_Photosynthesis
+  
+  ! Tests of PhotosynthesisMod.F90
+  
+  use funit
+  use PhotosynthesisMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestSubgridMod, only : unittest_subgrid_teardown, bounds
+  use unittestSimpleSubgridSetupsMod, only : setup_ncells_single_veg_patch
+  use unittestUtils  , only : endrun_msg
+  use clm_varpar
+  use clm_varctl
+
+  implicit none
+  
+  @TestCase
+  type, extends(TestCase) :: TestPhotosynthesis
+     type(photosyns_type) :: photo
+     real(r8) :: x(nvegwcs)
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestPhotosynthesis
+
+  real(r8), parameter :: tol = 1.e-13_r8
+  
+contains
+  
+  subroutine setUp(this)
+    class(TestPhotosynthesis), intent(inout) :: this
+
+    use_luna = .false.
+    use_cn = .false.
+    use_hydrstress = .false.
+    use_c13 = .false.
+    use_c14 = .false.
+    use_fates = .false.
+    soil_layerstruct_predefined = '20SL_8.5m'
+    
+    call setup_ncells_single_veg_patch(ncells=1, pft_type=1)
+    call clm_varpar_init( actual_maxsoil_patches=17, surf_numpft=15, surf_numcft=2 )
+    call this%photo%Init( bounds )
+    call this%photo%setParamsForTesting( )
+
+    this%x(root) = -1000._r8 * nlevgrnd
+
+  end subroutine setUp
+  
+  subroutine tearDown(this)
+    class(TestPhotosynthesis), intent(inout) :: this
+
+    call this%photo%Clean( )
+    call unittest_subgrid_teardown
+
+  end subroutine tearDown
+
+  @Test
+  subroutine check_default_veg( this )
+     use PatchType, only: patch
+     class(TestPhotosynthesis), intent(inout) :: this
+     integer :: p
+     real(r8) :: fs, der
+
+     p = bounds%begp
+     fs = plc(this%x(root), p, root, veg)
+     print *, 'plc = ', fs
+     @assertEqual( fs, 0.999415208562283_r8, tolerance=tol)
+     der = d1plc(this%x(root), p, root, veg)
+     print *, 'd1plc = ', der
+     @assertEqual( der, 9.237002539040872d-008, tolerance=tol)
+  end subroutine check_default_veg
+
+  @Test
+  subroutine check_bad_veg_plc( this )
+     use PatchType, only: patch
+     class(TestPhotosynthesis), intent(inout) :: this
+     integer :: p
+     real(r8) :: fs
+     character(len=256) :: expected_msg
+
+     p = bounds%begp
+     fs = plc(this%x(root), p, root, plc_method=1)
+
+     expected_msg = endrun_msg( &
+            "ERROR:: Photosynthesis::PLC must choose plc method" )
+     @assertExceptionRaised(expected_msg)
+
+  end subroutine check_bad_veg_plc
+
+  @Test
+  subroutine check_bad_veg_d1plc( this )
+     use PatchType, only: patch
+     class(TestPhotosynthesis), intent(inout) :: this
+     integer :: p
+     real(r8) :: der
+     character(len=256) :: expected_msg
+
+     p = bounds%begp
+
+     der = d1plc(this%x(root), p, root, plc_method=1)
+
+     expected_msg = endrun_msg( &
+            "ERROR:: Photosynthesis::D1PLC must choose plc method" )
+     @assertExceptionRaised(expected_msg)
+  end subroutine check_bad_veg_d1plc
+
+end module test_Photosynthesis

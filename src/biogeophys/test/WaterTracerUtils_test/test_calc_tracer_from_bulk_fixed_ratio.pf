@@ -2,7 +2,7 @@ module test_calc_tracer_from_bulk_fixed_ratio
 
   ! Tests of WaterTracerUtils: CalcTracerFromBulkFixedRatio
 
-  use pfunit_mod
+  use funit
   use WaterTracerUtils, only : CalcTracerFromBulkFixedRatio
   use shr_kind_mod , only : r8 => shr_kind_r8
 

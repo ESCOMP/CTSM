@@ -25,7 +25,7 @@ module domainMod
      integer          :: ni,nj      ! global axis if 2d (nj=1 if unstructured)
      logical          :: isgrid2d   ! true => global grid is lat/lon
      integer          :: nbeg,nend  ! local beg/end indices
-     character(len=8) :: clmlevel   ! grid type
+     character(len=8) :: subgrid_level   ! grid type
      integer ,pointer :: mask(:)    ! land mask: 1 = land, 0 = ocean
      real(r8),pointer :: frac(:)    ! fractional land
      real(r8),pointer :: latc(:)    ! latitude of grid cell (deg)
@@ -62,7 +62,7 @@ contains
 ! !IROUTINE: domain_init
 !
 ! !INTERFACE:
-  subroutine domain_init(domain,isgrid2d,ni,nj,nbeg,nend,clmlevel)
+  subroutine domain_init(domain,isgrid2d,ni,nj,nbeg,nend,subgrid_level)
     use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
 !
 ! !DESCRIPTION:
@@ -76,7 +76,7 @@ contains
     logical, intent(in) :: isgrid2d      ! true => global grid is lat/lon
     integer, intent(in) :: ni,nj         ! grid size, 2d
     integer         , intent(in), optional  :: nbeg,nend  ! beg/end indices
-    character(len=*), intent(in), optional  :: clmlevel   ! grid type
+    character(len=*), intent(in), optional  :: subgrid_level   ! grid type
 !
 ! !REVISION HISTORY:
 !   Created by T Craig
@@ -108,8 +108,8 @@ contains
        call shr_sys_abort('domain_init ERROR: allocate mask, frac, lat, lon, area ')
     endif
 
-    if (present(clmlevel)) then
-       domain%clmlevel = clmlevel
+    if (present(subgrid_level)) then
+       domain%subgrid_level = subgrid_level
     endif
 
     domain%isgrid2d = isgrid2d
@@ -174,7 +174,7 @@ end subroutine domain_init
        endif
     endif
 
-    domain%clmlevel   = unset
+    domain%subgrid_level   = unset
     domain%ns         = huge(1)
     domain%ni         = huge(1)
     domain%nj         = huge(1)

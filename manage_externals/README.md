@@ -85,7 +85,7 @@ The root of the source tree will be referred to as `${SRC_ROOT}` below.
     description file:
 
         $ cd ${SRC_ROOT}
-        $ ./manage_externals/checkout_externals --excernals my-externals.cfg
+        $ ./manage_externals/checkout_externals --externals my-externals.cfg
 
   * Status summary of the repositories managed by checkout_externals:
 
@@ -201,6 +201,26 @@ The root of the source tree will be referred to as `${SRC_ROOT}` below.
     externals description file pointed 'useful_library/sub-xternals.cfg',
     Then the main 'externals' field in the top level repo should point to
     'sub-externals.cfg'.
+    Note that by default, `checkout_externals` will clone an external's
+    submodules. As a special case, the entry, `externals = None`, will
+    prevent this behavior. For more control over which externals are
+    checked out, create an externals file (and see the `from_submodule`
+    configuration entry below).
+
+  * from_submodule (True / False) : used to pull the repo_url, local_path,
+    and hash properties for this external from the .gitmodules file in
+    this repository. Note that the section name (the entry in square
+    brackets) must match the name in the .gitmodules file.
+    If from_submodule is True, the protocol must be git and no repo_url,
+    local_path, hash, branch, or tag entries are allowed.
+    Default: False
+
+  * sparse (string) : used to control a sparse checkout. This optional
+    entry should point to a filename (path relative to local_path) that
+    contains instructions on which repository paths to include (or
+    exclude) from the working tree.
+    See the "SPARSE CHECKOUT" section of https://git-scm.com/docs/git-read-tree
+    Default: sparse checkout is disabled
 
   * Lines begining with '#' or ';' are comments and will be ignored.
 

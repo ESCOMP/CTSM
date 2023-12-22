@@ -8,10 +8,12 @@ module clm_instMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use decompMod       , only : bounds_type
   use clm_varpar      , only : ndecomp_pools, nlevdecomp_full
-  use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates
-  use clm_varctl      , only : use_century_decomp, use_crop, snow_cover_fraction_method, paramfile
+  use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates, use_fates_bgc
+  use clm_varctl      , only : iulog
+  use clm_varctl      , only : use_crop, snow_cover_fraction_method, paramfile
+  use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, no_soil_decomp, century_decomp, decomp_method
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
-  use landunit_varcon , only : istice_mec, istsoil
+  use landunit_varcon , only : istice, istsoil
   use perf_mod        , only : t_startf, t_stopf
   use controlMod      , only : NLFilename
   use fileutils       , only : getfil
@@ -187,12 +189,13 @@ contains
     use clm_varpar                         , only : nlevsno
     use controlMod                         , only : nlfilename, fsurdat
     use domainMod                          , only : ldomain
+    use SoilBiogeochemDecompCascadeMIMICSMod, only : init_decompcascade_mimics
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
-    use SoilBiogeochemDecompCascadeCNMod   , only : init_decompcascade_cn
     use SoilBiogeochemDecompCascadeContype , only : init_decomp_cascade_constants
     use SoilBiogeochemCompetitionMod       , only : SoilBiogeochemCompetitionInit
     
     use initVerticalMod                    , only : initVertical
+    use SnowHydrologyMod                   , only : InitSnowLayers
     use accumulMod                         , only : print_accum_fields 
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
@@ -228,7 +231,6 @@ contains
 
     allocate (h2osno_col(begc:endc))
     allocate (snow_depth_col(begc:endc))
-
     ! snow water
     do c = begc,endc
        l = col%landunit(c)
@@ -241,7 +243,7 @@ contains
        ! feedback may not activate on time (or at all). So, as a compromise, we start with
        ! a small amount of snow in places that are likely to be snow-covered for much or
        ! all of the year.
-       if (lun%itype(l)==istice_mec) then
+       if (lun%itype(l)==istice) then
           h2osno_col(c) = 100._r8
        else if (lun%itype(l)==istsoil .and. abs(grc%latdeg(g)) >= 60._r8) then 
           h2osno_col(c) = 100._r8
@@ -263,9 +265,14 @@ contains
 
     call initVertical(bounds,               &
          glc_behavior, &
-         snow_depth_col(begc:endc),              &
          urbanparams_inst%thick_wall(begl:endl), &
          urbanparams_inst%thick_roof(begl:endl))
+
+    !-----------------------------------------------
+    ! Set cold-start values for snow levels, snow layers and snow interfaces 
+    !-----------------------------------------------
+
+    call InitSnowLayers(bounds, snow_depth_col(bounds%begc:bounds%endc))
 
     ! Initialize clm->drv and drv->clm data structures
 
@@ -363,22 +370,23 @@ contains
 
     call drydepvel_inst%Init(bounds)
 
-    if (use_cn .or. use_fates ) then
+    if_decomp: if (decomp_method /= no_soil_decomp) then
 
        ! Initialize soilbiogeochem_state_inst
 
        call soilbiogeochem_state_inst%Init(bounds)
 
        ! Initialize decompcascade constants
-       ! Note that init_decompcascade_bgc and init_decompcascade_cn need 
+       ! Note that init_decompcascade_bgc need 
        ! soilbiogeochem_state_inst to be initialized
 
-       call init_decomp_cascade_constants( use_century_decomp )
-       if (use_century_decomp) then
+       call init_decomp_cascade_constants( )
+       if (decomp_method == century_decomp ) then
           call init_decompcascade_bgc(bounds, soilbiogeochem_state_inst, &
                                       soilstate_inst )
-       else 
-          call init_decompcascade_cn(bounds, soilbiogeochem_state_inst)
+       else if (decomp_method == mimics_decomp ) then
+          call init_decompcascade_mimics(bounds, soilbiogeochem_state_inst, &
+                                         soilstate_inst)
        end if
 
        ! Initalize soilbiogeochem carbon types
@@ -401,10 +409,6 @@ contains
           call c14_soilbiogeochem_carbonflux_inst%Init(bounds, carbon_type='c14')
        end if
 
-    end if
-
-    if ( use_cn .or. use_fates) then 
-
        ! Initalize soilbiogeochem nitrogen types
 
        call soilbiogeochem_nitrogenstate_inst%Init(bounds, &
@@ -418,10 +422,11 @@ contains
        call SoilBiogeochemPrecisionControlInit( soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
                                                 c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst)
 
-    end if ! end of if use_cn 
+    end if if_decomp
 
     ! Note - always call Init for bgc_vegetation_inst: some pieces need to be initialized always
-    call bgc_vegetation_inst%Init(bounds, nlfilename, GetBalanceCheckSkipSteps() )
+    ! Even for a FATES simulation, we call this to initialize product pools
+    call bgc_vegetation_inst%Init(bounds, nlfilename, GetBalanceCheckSkipSteps(), params_ncid )
 
     if (use_cn .or. use_fates) then
        call crop_inst%Init(bounds)
@@ -462,6 +467,10 @@ contains
        call crop_inst%InitAccBuffer(bounds)
     end if
 
+    if (use_fates) then
+       call clm_fates%InitAccBuffer(bounds)
+    end if
+
     call print_accum_fields()
 
     call ncd_pio_closefile(params_ncid)
@@ -477,6 +486,7 @@ contains
     use ncdio_pio       , only : file_desc_t
     use UrbanParamsType , only : IsSimpleBuildTemp, IsProgBuildTemp
     use decompMod       , only : get_proc_bounds, get_proc_clumps, get_clump_bounds
+    use clm_varpar      , only : nlevsno
 
     !
     ! !DESCRIPTION:
@@ -523,7 +533,9 @@ contains
 
     call water_inst%restart(bounds, ncid, flag=flag, &
          writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
-         watsat_col = soilstate_inst%watsat_col(bounds%begc:bounds%endc,:))
+         watsat_col = soilstate_inst%watsat_col(bounds%begc:bounds%endc,:), &
+         t_soisno_col=temperature_inst%t_soisno_col(bounds%begc:bounds%endc, -nlevsno+1:), & 
+         altmax_lastyear_indx=active_layer_inst%altmax_lastyear_indx_col(bounds%begc:bounds%endc))
 
     call irrigation_inst%restart (bounds, ncid, flag=flag)
 
@@ -541,7 +553,7 @@ contains
        call ch4_inst%restart(bounds, ncid, flag=flag)
     end if
 
-    if ( use_cn ) then
+    if ( use_cn .or. use_fates_bgc) then
        ! Need to do vegetation restart before soil bgc restart to get totvegc_col for purpose
        ! of resetting soil carbon at exit spinup when no vegetation is growing.
        call bgc_vegetation_inst%restart(bounds, ncid, flag=flag)
@@ -549,10 +561,10 @@ contains
        call soilbiogeochem_nitrogenstate_inst%restart(bounds, ncid, flag=flag, &
             totvegc_col=bgc_vegetation_inst%get_totvegc_col(bounds))
 
-       call crop_inst%restart(bounds, ncid, flag=flag)
+       call crop_inst%restart(bounds, ncid, bgc_vegetation_inst%cnveg_state_inst, flag=flag)
     end if
 
-    if (use_cn .or. use_fates) then
+    if (decomp_method /= no_soil_decomp) then
 
        call soilbiogeochem_state_inst%restart(bounds, ncid, flag=flag)
        call soilbiogeochem_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c12', &
@@ -575,7 +587,12 @@ contains
 
        call clm_fates%restart(bounds, ncid, flag=flag,  &
             waterdiagnosticbulk_inst=water_inst%waterdiagnosticbulk_inst, &
-            canopystate_inst=canopystate_inst)
+            waterstatebulk_inst=water_inst%waterstatebulk_inst, &
+            canopystate_inst=canopystate_inst, &
+            soilstate_inst=soilstate_inst, &
+            active_layer_inst=active_layer_inst, &
+            soilbiogeochem_carbonflux_inst=soilbiogeochem_carbonflux_inst, & 
+            soilbiogeochem_nitrogenflux_inst=soilbiogeochem_nitrogenflux_inst)
 
     end if
 

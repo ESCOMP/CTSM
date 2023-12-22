@@ -77,6 +77,8 @@ module accumulMod
      real(r8)           :: initval  !initial value of accumulated field
      real(r8), pointer  :: val(:,:) !accumulated field
      integer            :: period   !field accumulation period (in model time steps)
+     logical            :: scale_by_thickness  ! true/false flag to scale vertically interpolated variable by soil thickness or not
+     character(len=128) :: old_name !previous name of variable (may be present in restart files)
 
      ! In most cases, we could use a 1-d nsteps variable. However, that's awkward within
      ! nested loops (with level as the outer loop); also, runaccum can theoretically have
@@ -129,7 +131,8 @@ contains
 
   !------------------------------------------------------------------------
   subroutine init_accum_field (name, units, desc, &
-       accum_type, accum_period, numlev, subgrid_type, init_value, type2d)
+       accum_type, accum_period, numlev, subgrid_type, init_value, type2d, &
+       scale_by_thickness, old_name)
     !
     ! !DESCRIPTION:
     ! Initialize accumulation fields. This subroutine sets:
@@ -148,9 +151,9 @@ contains
     ! possible that init_value doesn't matter even in this case).
     !
     ! !USES:
-    use shr_const_mod, only: SHR_CONST_CDAY
-    use clm_time_manager, only : get_step_size
-    use decompMod, only : get_proc_bounds
+    use shr_const_mod    , only: SHR_CONST_CDAY
+    use clm_time_manager , only : get_step_size
+    use decompMod        , only : get_proc_bounds, bounds_type
     !
     ! !ARGUMENTS:
     implicit none
@@ -163,6 +166,8 @@ contains
     integer , intent(in)                   :: numlev       !number of vertical levels
     real(r8), intent(in)                   :: init_value   !field initial or reset value
     character(len=*), intent(in), optional :: type2d       !level type (optional) - needed if numlev > 1
+    logical         , intent(in), optional :: scale_by_thickness  ! true/false flag to scale vertically interpolated variable by soil thickness; required if numlev > 1
+    character(len=*), intent(in), optional :: old_name     !former variable name (may be present in restart files)
     !
     ! !LOCAL VARIABLES:
     integer :: nf           ! field index
@@ -172,12 +177,26 @@ contains
     integer :: begl, endl   ! per-proc beginning and ending landunit indices
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
     integer :: begCohort, endCohort   ! per-proc beg end cohort indices
+    type(bounds_type) :: bounds
+    character(len=*), parameter :: subname = 'init_accum_field'
     !------------------------------------------------------------------------
+
+    if (numlev > 1) then
+       if (.not. present(scale_by_thickness) .or. &
+           .not. present(type2d)) then
+          write(iulog,*) 'ERROR: field ', trim(name),' in subroutine ', subname
+          call endrun('2d accumulation fields require scale_by_thickness AND type2d passed to this subroutine as arguments')
+       end if
+    end if
 
     ! Determine necessary indices
 
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp, &
-         begCohort, endCohort )
+    call get_proc_bounds(bounds)
+    begg = bounds%begg; endg = bounds%endg
+    begl = bounds%begl; endl = bounds%endl
+    begc = bounds%begc; endc = bounds%endc
+    begp = bounds%begp; endp = bounds%endp
+    begCohort = bounds%begCoHort; endCohort = bounds%endCoHort
 
     ! update field index
     ! Consistency check that number of accumulated does not exceed maximum.
@@ -212,6 +231,11 @@ contains
     accum(nf)%units   = trim(units)
     accum(nf)%desc    = trim(desc)
     accum(nf)%initval = init_value
+    if (present(old_name)) then
+        accum(nf)%old_name = old_name
+    else
+        accum(nf)%old_name = ""
+    end if
 
     ! Note accumulation period must be converted from days
     ! to number of iterations
@@ -252,7 +276,12 @@ contains
     else
        accum(nf)%type2d = ' '
     end if
-    
+    if (present(scale_by_thickness)) then
+       accum(nf)%scale_by_thickness = scale_by_thickness
+    else
+       accum(nf)%scale_by_thickness = .false.
+    end if
+
     ! Allocate and initialize accumulation field
 
     allocate(accum(nf)%val(beg1d:end1d,numlev))
@@ -689,7 +718,11 @@ contains
 
     do nf = 1,naccflds
 
-       varname = trim(accum(nf)%name) // '_VALUE'
+       if (accum(nf)%old_name /= "") then
+          varname = trim(accum(nf)%name) // '_VALUE:' // trim(accum(nf)%old_name) // '_VALUE'
+       else
+          varname = trim(accum(nf)%name) // '_VALUE'
+       end if
        if (accum(nf)%numlev == 1) then
           call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_double, &
                dim1name=accum(nf)%type1d, &
@@ -700,11 +733,16 @@ contains
           call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_double, &
                dim1name=accum(nf)%type1d, dim2name=accum(nf)%type2d, &
                long_name=accum(nf)%desc, units=accum(nf)%units, &
+               switchdim=.false., scale_by_thickness=accum(nf)%scale_by_thickness, &
                interpinic_flag='interp', &
                data=accum(nf)%val, readvar=readvar)
        end if
 
-       varname = trim(accum(nf)%name) // '_NSTEPS'
+       if (accum(nf)%old_name /= "") then
+          varname = trim(accum(nf)%name) // '_NSTEPS:' // trim(accum(nf)%old_name) // '_NSTEPS'
+       else
+          varname = trim(accum(nf)%name) // '_NSTEPS'
+       end if
        if (accum(nf)%numlev == 1) then
           call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_int, &
                dim1name=accum(nf)%type1d, &
@@ -713,20 +751,18 @@ contains
                interpinic_flag='interp', &
                data=accum(nf)%nsteps, readvar=readvar)
        else
+          ! Counterintuitive to scale NSTEPS by thickness and
+          ! counterintuitive to do vertical interpolation at all on NSTEPS.
+          ! NSTEPS will probably always be the same for all levels, so the
+          ! vertical interpolation will be trivial. Leaving this code as is.
           call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_int, &
                dim1name=accum(nf)%type1d, dim2name=accum(nf)%type2d, &
                long_name='number of accumulated steps for '//trim(accum(nf)%name), &
                units='-', &
+               switchdim=.false., scale_by_thickness=accum(nf)%scale_by_thickness, &
                interpinic_flag='interp', &
                data=accum(nf)%nsteps, readvar=readvar)
        end if
-
-       varname = trim(accum(nf)%name) // '_PERIOD'
-       call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_int, &
-            long_name='', units='time steps', &
-            imissing_value=ispval, ifill_value=huge(1), &
-            interpinic_flag='copy', &
-            data=accum(nf)%period, readvar=readvar)
 
     end do
 

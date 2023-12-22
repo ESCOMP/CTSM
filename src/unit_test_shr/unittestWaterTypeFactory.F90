@@ -23,7 +23,7 @@ module unittestWaterTypeFactory
 
 #include "shr_assert.h"
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use clm_varpar, only : nlevsoi, nlevgrnd, nlevsno
+  use clm_varpar, only : nlevsoi, nlevgrnd, nlevmaxurbgrnd, nlevsno
   use ColumnType, only : col
   use WaterType, only : water_type, water_params_type
   use unittestArrayMod, only : col_array
@@ -66,6 +66,7 @@ contains
 
     nlevsoi = my_nlevsoi
     nlevgrnd = nlevsoi + nlevgrnd_additional
+    nlevmaxurbgrnd = nlevgrnd
     nlevsno = my_nlevsno
   end subroutine setup_before_subgrid
 
@@ -160,7 +161,8 @@ contains
          h2osno_col = col_array(0._r8), &
          snow_depth_col = col_array(0._r8), &
          watsat_col = l_watsat_col, &
-         t_soisno_col = l_t_soisno_col)
+         t_soisno_col = l_t_soisno_col, &
+         NLFilename = ' ')
   end subroutine create_water_type
 
   subroutine teardown(this, water_inst)

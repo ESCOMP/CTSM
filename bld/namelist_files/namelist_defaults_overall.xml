@@ -12,14 +12,41 @@ in a namelist, but they are default values that will help
 determine default values for namelists.
 -->
 
-<!-- Default CLM start-type -->
-<clm_start_type phys="clm4_5"                   >startup</clm_start_type>
-<clm_start_type phys="clm5_0"                   >startup</clm_start_type>
-<clm_start_type phys="clm5_0" use_cndv=".true." >arb_ic</clm_start_type>
-<clm_start_type phys="clm4_5" use_cndv=".true." >arb_ic</clm_start_type>
-<clm_start_type phys="clm5_0" use_fates=".true.">arb_ic</clm_start_type>
-<clm_start_type phys="clm4_5" use_fates=".true.">arb_ic</clm_start_type>
-<clm_start_type bgc_spinup="on"                 >cold</clm_start_type>
+<!-- 
+
+    Default CLM start-type 
+
+    NOTE: For clm_start_type of "startup" these need to be carefully coordinated with
+          the settings for use_init_interp, init_interp_attributes and finidat in
+          namelist_defaults_ctsm.xml.
+
+-->
+
+<clm_start_type phys="clm5_1"  use_cndv=".true." >arb_ic</clm_start_type>
+<clm_start_type phys="clm5_0"  use_cndv=".true." >arb_ic</clm_start_type>
+<clm_start_type phys="clm4_5"  use_cndv=".true." >arb_ic</clm_start_type>
+<clm_start_type phys="clm4_5"  use_fates=".true.">arb_ic</clm_start_type>
+<clm_start_type phys="clm5_1"  use_fates=".true.">arb_ic</clm_start_type>
+<clm_start_type phys="clm5_0"  use_fates=".true.">arb_ic</clm_start_type>
+<clm_start_type phys="clm4_5"  sim_year="1850"   >startup</clm_start_type>
+<clm_start_type phys="clm5_1"  sim_year="1850"   >startup</clm_start_type>
+<clm_start_type phys="clm5_0"  sim_year="1850"   >startup</clm_start_type>
+<clm_start_type phys="clm4_5"  sim_year="2000"   >startup</clm_start_type>
+<clm_start_type phys="clm5_1"  sim_year="2000"   >startup</clm_start_type>
+<clm_start_type phys="clm5_0"  sim_year="2000"   >startup</clm_start_type>
+<clm_start_type phys="clm4_5"                    >arb_ic</clm_start_type>
+<clm_start_type phys="clm5_0"                    >arb_ic</clm_start_type>
+<clm_start_type phys="clm5_1"                    >arb_ic</clm_start_type>
+<clm_start_type phys="clm4_5"  use_fates=".true.">arb_ic</clm_start_type>
+<clm_start_type bgc_spinup="on"                  >cold</clm_start_type>
+
+<clm_start_type sim_year_range="1850-2100">arb_ic</clm_start_type>
+
+
+<!-- For transient cases, turn on demand to set flanduse_timeseries -->
+<clm_demand sim_year_range="1850-2000">flanduse_timeseries</clm_demand>
+<clm_demand sim_year_range="1850-2100">flanduse_timeseries</clm_demand>
+
 
 <!-- Default location of {csmdata} -->
 <csmdata>/fs/cgd/csm/inputdata</csmdata>
@@ -28,7 +55,6 @@ determine default values for namelists.
 <res sitespf_pt="none"               >1.9x2.5</res>
 <res sitespf_pt="1x1_brazil"         >1x1_brazil</res>
 <res sitespf_pt="5x5_amazon"         >5x5_amazon</res>
-<res sitespf_pt="1x1_camdenNJ"       >1x1_camdenNJ</res>
 <res sitespf_pt="1x1_vancouverCAN"   >1x1_vancouverCAN</res>
 <res sitespf_pt="1x1_mexicocityMEX"  >1x1_mexicocityMEX</res>
 <res sitespf_pt="1x1_asphaltjungleNJ">1x1_asphaltjungleNJ</res>
@@ -42,32 +68,31 @@ determine default values for namelists.
 <!-- Default simulation year range -->
 <sim_year_range>constant</sim_year_range>
 
-<!-- Check resolution and land/mask before continuing -->
-<chk_res mode="clm_stndln" >1</chk_res>
-<chk_res mode="ext_cesm"   >0</chk_res>
+<!-- Check resolution and land/mask in the local resolution list before continuing - normally turned off -->
+<chk_res>0</chk_res>
 
 <!-- Add note to namelist files documenting the options given to build-namelist -->
 <note mode="clm_stndln" >1</note>
 <note mode="ext_cesm"   >0</note>
 
-<!-- Default representative concentration pathway for future scenarios -->
-<rcp>-999.9</rcp>
+<!-- Default Shared Socioeconomic Pathway and representative concentration pathway for future scenarios -->
+<ssp_rcp>hist</ssp_rcp>
 
 <!-- Default land/ocean mask type -->
 <mask hgrid="0.23x0.31"           >gx1v6</mask>
 <mask hgrid="0.47x0.63"           >gx1v6</mask>
-<mask hgrid="0.9x1.25"            >gx1v6</mask>
-<mask hgrid="1.9x2.5"             >gx1v6</mask>
+<mask hgrid="0.9x1.25"            >gx1v7</mask>
+<mask hgrid="1.9x2.5"             >gx1v7</mask>
 <mask hgrid="2.5x3.33"            >gx3v7</mask>
 <mask hgrid="4x5"                 >gx3v7</mask>
-<mask hgrid="10x15"               >USGS</mask>
+<mask hgrid="10x15"               >gx3v7</mask>
 
 <mask hgrid="360x720cru"          >cruncep</mask>
-<mask hgrid="128x256"             >USGS</mask>
-<mask hgrid="64x128"              >USGS</mask>
+<mask hgrid="128x256"             >gx1v7</mask>
+<mask hgrid="64x128"              >gx1v7</mask>
 <mask hgrid="48x96"               >gx3v7</mask>
-<mask hgrid="32x64"               >USGS</mask>
-<mask hgrid="8x16"                >USGS</mask>
+<mask hgrid="32x64"               >gx3v7</mask>
+<mask hgrid="8x16"                >gx3v7</mask>
 
 <mask hgrid="94x192"              >T62</mask>
 
@@ -77,7 +102,6 @@ determine default values for namelists.
 
 <mask hgrid="0.125nldas2"         >nldas2</mask>
 <mask hgrid="5x5_amazon"          >navy</mask>
-<mask hgrid="1x1_camdenNJ"        >navy</mask>
 <mask hgrid="1x1_vancouverCAN"    >navy</mask>
 <mask hgrid="1x1_mexicocityMEX"   >navy</mask>
 <mask hgrid="1x1_asphaltjungleNJ" >navy</mask>
@@ -85,7 +109,7 @@ determine default values for namelists.
 <mask hgrid="1x1_urbanc_alpha"    >test</mask>
 <mask hgrid="1x1_numaIA"          >navy</mask>
 <mask hgrid="1x1_smallvilleIA"    >test</mask>
-<mask                             >gx1v6</mask>
+<mask                             >gx1v7</mask>
 
 <!-- Default glacier model options -->
 

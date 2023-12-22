@@ -8,7 +8,7 @@ module UrbBuildTempOleson2015Mod
   !
   ! !USES:
   use shr_kind_mod      , only : r8 => shr_kind_r8
-  use decompMod         , only : bounds_type
+  use decompMod         , only : bounds_type, subgrid_level_landunit
   use abortutils        , only : endrun
   use perf_mod          , only : t_startf, t_stopf
   use clm_varctl        , only : iulog
@@ -209,7 +209,7 @@ contains
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_varctl      , only : iulog
     use abortutils      , only : endrun
-    use clm_varpar      , only : nlevurb, nlevsno, nlevgrnd
+    use clm_varpar      , only : nlevurb, nlevsno, nlevmaxurbgrnd
     use UrbanParamsType , only : urban_hac, urban_hac_off, urban_hac_on, urban_wasteheat_on
 !
 ! !ARGUMENTS:
@@ -229,6 +229,7 @@ contains
     integer, parameter :: neq = 5          ! number of equation/unknowns
     integer  :: fc,fl,c,l                  ! indices
     real(r8) :: dtime                      ! land model time step (s)
+    real(r8) :: building_hwr(bounds%begl:bounds%endl)      ! building height to building width ratio (-)
     real(r8) :: t_roof_inner_bef(bounds%begl:bounds%endl)  ! roof inside surface temperature at previous time step (K)              
     real(r8) :: t_sunw_inner_bef(bounds%begl:bounds%endl)  ! sunwall inside surface temperature at previous time step (K)              
     real(r8) :: t_shdw_inner_bef(bounds%begl:bounds%endl)  ! shadewall inside surface temperature at previous time step (K)              
@@ -301,7 +302,7 @@ contains
 !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL_FL((ubound(tk)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk)  == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
 
     associate(&
     clandunit         => col%landunit                      , & ! Input:  [integer (:)]  column's landunit
@@ -328,7 +329,8 @@ contains
 
     eflx_building     => energyflux_inst%eflx_building_lun , & ! Output:  [real(r8) (:)]  building heat flux from change in interior building air temperature (W/m**2)
     eflx_urban_ac     => energyflux_inst%eflx_urban_ac_lun , & ! Output:  [real(r8) (:)]  urban air conditioning flux (W/m**2)
-    eflx_urban_heat   => energyflux_inst%eflx_urban_heat_lun & ! Output:  [real(r8) (:)]  urban heating flux (W/m**2)
+    eflx_urban_heat   => energyflux_inst%eflx_urban_heat_lun,& ! Output:  [real(r8) (:)]  urban heating flux (W/m**2)
+    eflx_ventilation  => energyflux_inst%eflx_ventilation_lun & ! Output: [real(r8) (:)]  sensible heat flux from building ventilation (W/m**2)
     )
 
     ! Get step size
@@ -341,6 +343,7 @@ contains
     !    See clm_varcon.F90
     ! 3. Set inner surface emissivities (Bueno et al. 2012, GMD).
     ! 4. Set concrete floor properties (Salamanca et al. 2010, TAC).
+    ! 5. Calculate building height to building width ratio
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
        if (urbpoi(l)) then
@@ -373,13 +376,15 @@ contains
          cv_floori(l) = (dz_floori(l) * cp_floori(l)) / dtime
          ! Density of dry air at standard pressure and t_building (kg m-3)
          rho_dair(l) = pstd / (rair*t_building_bef(l))
+         ! Building height to building width ratio
+         building_hwr(l) = canyon_hwr(l)*(1._r8-wtlunit_roof(l))/wtlunit_roof(l)
        end if
     end do
 
     ! Get terms from soil temperature equations to compute conduction flux
     ! Negative is toward surface - heat added
     ! Note that the conduction flux here is in W m-2 wall area but for purposes of solving the set of
-    ! simultaneous equations this must be converted to W m-2 ground area. This is done below when 
+    ! simultaneous equations this must be converted to W m-2 floor area. This is done below when 
     ! setting up the equation coefficients.
 
     do fc = 1,num_nolakec
@@ -413,14 +418,14 @@ contains
        l = filter_urbanl(fl)
        if (urbpoi(l)) then
 
-         vf_rf(l) = sqrt(1._r8 + canyon_hwr(l)**2._r8) - canyon_hwr(l)
+         vf_rf(l) = sqrt(1._r8 + building_hwr(l)**2._r8) - building_hwr(l)
          vf_fr(l) = vf_rf(l)
 
          ! This view factor implicitly converts from per unit wall area to per unit floor area
          vf_wf(l)  = 0.5_r8*(1._r8 - vf_rf(l))
 
          ! This view factor implicitly converts from per unit floor area to per unit wall area
-         vf_fw(l) = vf_wf(l) / canyon_hwr(l)
+         vf_fw(l) = vf_wf(l) / building_hwr(l)
 
          ! This view factor implicitly converts from per unit roof area to per unit wall area
          vf_rw(l)  = vf_fw(l)
@@ -443,19 +448,19 @@ contains
          if (abs(sum-1._r8) > 1.e-06_r8 ) then
             write (iulog,*) 'urban floor view factor error',sum
             write (iulog,*) 'clm model is stopping'
-            call endrun()
+            call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
          endif
          sum = vf_rw(l) + vf_fw(l) + vf_ww(l)
          if (abs(sum-1._r8) > 1.e-06_r8 ) then
             write (iulog,*) 'urban wall view factor error',sum
             write (iulog,*) 'clm model is stopping'
-            call endrun()
+            call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
          endif
          sum = vf_fr(l) + vf_wr(l) + vf_wr(l)
          if (abs(sum-1._r8) > 1.e-06_r8 ) then
             write (iulog,*) 'urban roof view factor error',sum
             write (iulog,*) 'clm model is stopping'
-            call endrun()
+            call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
          endif
 
        endif
@@ -515,8 +520,8 @@ contains
                   - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
                   - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l)
 
-         a(2,2) =   0.5_r8*hcv_sunwi(l)*canyon_hwr(l) &
-                  + 0.5_r8*tk_sunw_innerl(l)/(zi_sunw_innerl(l) - z_sunw_innerl(l))*canyon_hwr(l) &
+         a(2,2) =   0.5_r8*hcv_sunwi(l)*building_hwr(l) &
+                  + 0.5_r8*tk_sunw_innerl(l)/(zi_sunw_innerl(l) - z_sunw_innerl(l))*building_hwr(l) &
                   + 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8 &
                   - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
                   - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
@@ -529,11 +534,11 @@ contains
          a(2,4) = - 4._r8*em_sunwi(l)*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l) &
                   - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
                   - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_shdwi(l))*vf_ww(l)
-         a(2,5) = - 0.5_r8*hcv_sunwi(l)*canyon_hwr(l)
+         a(2,5) = - 0.5_r8*hcv_sunwi(l)*building_hwr(l)
 
-         result(2) =   0.5_r8*tk_sunw_innerl(l)*t_sunw_innerl(l)/(zi_sunw_innerl(l) - z_sunw_innerl(l))*canyon_hwr(l) &
+         result(2) =   0.5_r8*tk_sunw_innerl(l)*t_sunw_innerl(l)/(zi_sunw_innerl(l) - z_sunw_innerl(l))*building_hwr(l) &
                      - 0.5_r8*tk_sunw_innerl(l)*(t_sunw_inner_bef(l)-t_sunw_innerl_bef(l))/(zi_sunw_innerl(l) &
-                     - z_sunw_innerl(l))*canyon_hwr(l) &
+                     - z_sunw_innerl(l))*building_hwr(l) &
                      - 3._r8*em_sunwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l) &
                      - 3._r8*em_sunwi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_ww(l) &
                      - 3._r8*em_sunwi(l)*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l) &
@@ -547,7 +552,7 @@ contains
                      - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l) &
                      - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
                      - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
-                     - 0.5_r8*hcv_sunwi(l)*(t_sunw_inner_bef(l) - t_building_bef(l))*canyon_hwr(l)
+                     - 0.5_r8*hcv_sunwi(l)*(t_sunw_inner_bef(l) - t_building_bef(l))*building_hwr(l)
 
          ! SHADEWALL
          a(3,1) = - 4._r8*em_shdwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l) &
@@ -558,8 +563,8 @@ contains
                   - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
                   - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l)
 
-         a(3,3) =   0.5_r8*hcv_shdwi(l)*canyon_hwr(l) &
-                  + 0.5_r8*tk_shdw_innerl(l)/(zi_shdw_innerl(l) - z_shdw_innerl(l))*canyon_hwr(l) &
+         a(3,3) =   0.5_r8*hcv_shdwi(l)*building_hwr(l) &
+                  + 0.5_r8*tk_shdw_innerl(l)/(zi_shdw_innerl(l) - z_shdw_innerl(l))*building_hwr(l) &
                   + 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8 &
                   - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
                   - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
@@ -569,11 +574,11 @@ contains
                   - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
                   - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_sunwi(l))*vf_ww(l)
 
-         a(3,5) = - 0.5_r8*hcv_shdwi(l)*canyon_hwr(l)
+         a(3,5) = - 0.5_r8*hcv_shdwi(l)*building_hwr(l)
 
-         result(3) =   0.5_r8*tk_shdw_innerl(l)*t_shdw_innerl(l)/(zi_shdw_innerl(l) - z_shdw_innerl(l))*canyon_hwr(l) &
+         result(3) =   0.5_r8*tk_shdw_innerl(l)*t_shdw_innerl(l)/(zi_shdw_innerl(l) - z_shdw_innerl(l))*building_hwr(l) &
                      - 0.5_r8*tk_shdw_innerl(l)*(t_shdw_inner_bef(l)-t_shdw_innerl_bef(l))/(zi_shdw_innerl(l) &
-                     - z_shdw_innerl(l))*canyon_hwr(l) &
+                     - z_shdw_innerl(l))*building_hwr(l) &
                      - 3._r8*em_shdwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l) &
                      - 3._r8*em_shdwi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_ww(l) &
                      - 3._r8*em_shdwi(l)*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l) &
@@ -587,7 +592,7 @@ contains
                      - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l) &
                      - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
                      - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
-                     - 0.5_r8*hcv_shdwi(l)*(t_shdw_inner_bef(l) - t_building_bef(l))*canyon_hwr(l)
+                     - 0.5_r8*hcv_shdwi(l)*(t_shdw_inner_bef(l) - t_building_bef(l))*building_hwr(l)
 
          ! FLOOR
          a(4,1) = - 4._r8*em_floori(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rf(l) &
@@ -628,24 +633,24 @@ contains
 
          ! Building air temperature
          a(5,1) = - 0.5_r8*hcv_roofi(l)
-         a(5,2) = - 0.5_r8*hcv_sunwi(l)*canyon_hwr(l)
+         a(5,2) = - 0.5_r8*hcv_sunwi(l)*building_hwr(l)
 
-         a(5,3) = - 0.5_r8*hcv_shdwi(l)*canyon_hwr(l)
+         a(5,3) = - 0.5_r8*hcv_shdwi(l)*building_hwr(l)
 
          a(5,4) = - 0.5_r8*hcv_floori(l)
 
          a(5,5) =  ((ht_roof(l)*rho_dair(l)*cpair)/dtime) + &
                    ((ht_roof(l)*vent_ach)/3600._r8)*rho_dair(l)*cpair + &
                    0.5_r8*hcv_roofi(l) + &
-                   0.5_r8*hcv_sunwi(l)*canyon_hwr(l) + &
-                   0.5_r8*hcv_shdwi(l)*canyon_hwr(l) + &
+                   0.5_r8*hcv_sunwi(l)*building_hwr(l) + &
+                   0.5_r8*hcv_shdwi(l)*building_hwr(l) + &
                    0.5_r8*hcv_floori(l)
 
          result(5) = (ht_roof(l)*rho_dair(l)*cpair/dtime)*t_building_bef(l) &
                       + ((ht_roof(l)*vent_ach)/3600._r8)*rho_dair(l)*cpair*taf(l) &
                       + 0.5_r8*hcv_roofi(l)*(t_roof_inner_bef(l) - t_building_bef(l)) &
-                      + 0.5_r8*hcv_sunwi(l)*(t_sunw_inner_bef(l) - t_building_bef(l))*canyon_hwr(l) &
-                      + 0.5_r8*hcv_shdwi(l)*(t_shdw_inner_bef(l) - t_building_bef(l))*canyon_hwr(l) &
+                      + 0.5_r8*hcv_sunwi(l)*(t_sunw_inner_bef(l) - t_building_bef(l))*building_hwr(l) &
+                      + 0.5_r8*hcv_shdwi(l)*(t_shdw_inner_bef(l) - t_building_bef(l))*building_hwr(l) &
                       + 0.5_r8*hcv_floori(l)*(t_floor_bef(l) - t_building_bef(l))
 
          ! Solve equations
@@ -658,7 +663,7 @@ contains
            write(iulog,*)'dgesv info: ',info
            write (iulog,*) 'dgesv error'
            write (iulog,*) 'clm model is stopping'
-           call endrun()
+           call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
          end if
          ! Assign new temperatures
          t_roof_inner(l)  = result(1)
@@ -826,12 +831,12 @@ contains
                         + em_floori(l)*sb*t_floor_bef(l)**4._r8 &
                         + 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*(t_floor(l) - t_floor_bef(l))
 
-         qrd_building(l) = qrd_roof(l) + canyon_hwr(l)*(qrd_sunw(l) + qrd_shdw(l)) + qrd_floor(l)
+         qrd_building(l) = qrd_roof(l) + building_hwr(l)*(qrd_sunw(l) + qrd_shdw(l)) + qrd_floor(l)
 
          if (abs(qrd_building(l)) > .10_r8 ) then
            write (iulog,*) 'urban inside building net longwave radiation balance error ',qrd_building(l)
            write (iulog,*) 'clm model is stopping'
-           call endrun()
+           call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
          end if
 
          qcv_roof(l) = 0.5_r8*hcv_roofi(l)*(t_roof_inner(l) - t_building(l)) + 0.5_r8*hcv_roofi(l)*(t_roof_inner_bef(l) &
@@ -843,7 +848,7 @@ contains
          if (abs(enrgy_bal_roof(l)) > .10_r8 ) then
            write (iulog,*) 'urban inside roof energy balance error ',enrgy_bal_roof(l)
            write (iulog,*) 'clm model is stopping'
-           call endrun()
+           call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
          end if
 
          qcv_sunw(l) = 0.5_r8*hcv_sunwi(l)*(t_sunw_inner(l) - t_building(l)) + 0.5_r8*hcv_sunwi(l)*(t_sunw_inner_bef(l) &
@@ -851,11 +856,11 @@ contains
          qcd_sunw(l) = 0.5_r8*tk_sunw_innerl(l)*(t_sunw_inner(l) - t_sunw_innerl(l))/(zi_sunw_innerl(l) - z_sunw_innerl(l))  &
                        + 0.5_r8*tk_sunw_innerl(l)*(t_sunw_inner_bef(l) - t_sunw_innerl_bef(l))/(zi_sunw_innerl(l) &
                        - z_sunw_innerl(l))
-         enrgy_bal_sunw(l) = qrd_sunw(l) + qcv_sunw(l)*canyon_hwr(l) + qcd_sunw(l)*canyon_hwr(l)
+         enrgy_bal_sunw(l) = qrd_sunw(l) + qcv_sunw(l)*building_hwr(l) + qcd_sunw(l)*building_hwr(l)
          if (abs(enrgy_bal_sunw(l)) > .10_r8 ) then
            write (iulog,*) 'urban inside sunwall energy balance error ',enrgy_bal_sunw(l)
            write (iulog,*) 'clm model is stopping'
-           call endrun()
+           call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
          end if
 
          qcv_shdw(l) = 0.5_r8*hcv_shdwi(l)*(t_shdw_inner(l) - t_building(l)) + 0.5_r8*hcv_shdwi(l)*(t_shdw_inner_bef(l) &
@@ -863,11 +868,11 @@ contains
          qcd_shdw(l) = 0.5_r8*tk_shdw_innerl(l)*(t_shdw_inner(l) - t_shdw_innerl(l))/(zi_shdw_innerl(l) - z_shdw_innerl(l))  &
                        + 0.5_r8*tk_shdw_innerl(l)*(t_shdw_inner_bef(l) - t_shdw_innerl_bef(l))/(zi_shdw_innerl(l) &
                        - z_shdw_innerl(l))
-         enrgy_bal_shdw(l) = qrd_shdw(l) + qcv_shdw(l)*canyon_hwr(l) + qcd_shdw(l)*canyon_hwr(l)
+         enrgy_bal_shdw(l) = qrd_shdw(l) + qcv_shdw(l)*building_hwr(l) + qcd_shdw(l)*building_hwr(l)
          if (abs(enrgy_bal_shdw(l)) > .10_r8 ) then
            write (iulog,*) 'urban inside shadewall energy balance error ',enrgy_bal_shdw(l)
            write (iulog,*) 'clm model is stopping'
-           call endrun()
+           call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
          end if
 
          qcv_floor(l) = 0.5_r8*hcv_floori(l)*(t_floor(l) - t_building(l)) + 0.5_r8*hcv_floori(l)*(t_floor_bef(l) &
@@ -877,24 +882,32 @@ contains
          if (abs(enrgy_bal_floor(l)) > .10_r8 ) then
            write (iulog,*) 'urban inside floor energy balance error ',enrgy_bal_floor(l)
            write (iulog,*) 'clm model is stopping'
-           call endrun()
+           call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
          end if
 
          enrgy_bal_buildair(l) = (ht_roof(l)*rho_dair(l)*cpair/dtime)*(t_building(l) - t_building_bef(l)) &
                                  - ht_roof(l)*(vent_ach/3600._r8)*rho_dair(l)*cpair*(taf(l) - t_building(l)) &
                                  - 0.5_r8*hcv_roofi(l)*(t_roof_inner(l) - t_building(l)) &
                                  - 0.5_r8*hcv_roofi(l)*(t_roof_inner_bef(l) - t_building_bef(l)) &
-                                 - 0.5_r8*hcv_sunwi(l)*(t_sunw_inner(l) - t_building(l))*canyon_hwr(l) &
-                                 - 0.5_r8*hcv_sunwi(l)*(t_sunw_inner_bef(l) - t_building_bef(l))*canyon_hwr(l) &
-                                 - 0.5_r8*hcv_shdwi(l)*(t_shdw_inner(l) - t_building(l))*canyon_hwr(l) &
-                                 - 0.5_r8*hcv_shdwi(l)*(t_shdw_inner_bef(l) - t_building_bef(l))*canyon_hwr(l) &
+                                 - 0.5_r8*hcv_sunwi(l)*(t_sunw_inner(l) - t_building(l))*building_hwr(l) &
+                                 - 0.5_r8*hcv_sunwi(l)*(t_sunw_inner_bef(l) - t_building_bef(l))*building_hwr(l) &
+                                 - 0.5_r8*hcv_shdwi(l)*(t_shdw_inner(l) - t_building(l))*building_hwr(l) &
+                                 - 0.5_r8*hcv_shdwi(l)*(t_shdw_inner_bef(l) - t_building_bef(l))*building_hwr(l) &
                                  - 0.5_r8*hcv_floori(l)*(t_floor(l) - t_building(l)) &
                                  - 0.5_r8*hcv_floori(l)*(t_floor_bef(l) - t_building_bef(l))
          if (abs(enrgy_bal_buildair(l)) > .10_r8 ) then
            write (iulog,*) 'urban building air energy balance error ',enrgy_bal_buildair(l)
            write (iulog,*) 'clm model is stopping'
-           call endrun()
+           call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
          end if
+
+         ! Sensible heat flux from ventilation. It is added as a flux to the canyon floor in SoilTemperatureMod.
+         ! Note that we multiply it here by wtlunit_roof which converts it from W/m2 of building area to W/m2
+         ! of urban area. eflx_urban_ac and eflx_urban_heat are treated similarly below. This flux is balanced
+         ! by an equal and opposite flux into/out of the building and so has a net effect of zero on the energy balance
+         ! of the urban landunit.
+         eflx_ventilation(l) = wtlunit_roof(l) * ( - ht_roof(l)*(vent_ach/3600._r8) &
+                               * rho_dair(l) * cpair * (taf(l) - t_building(l)) )
        end if
     end do
 

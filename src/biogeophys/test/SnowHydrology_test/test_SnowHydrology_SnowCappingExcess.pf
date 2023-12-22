@@ -2,7 +2,7 @@ module test_SnowHydrology_SnowCappingExcess
 
   ! Tests of SnowHydrologyMod: SnowCappingExcess
 
-  use pfunit_mod
+  use funit
   use SnowHydrologyMod
   use TopoMod, only : topo_type
   use shr_kind_mod , only : r8 => shr_kind_r8
@@ -13,7 +13,7 @@ module test_SnowHydrology_SnowCappingExcess
   use unittestArrayMod, only : col_array
   use clm_varcon, only : h2osno_max
   use clm_varpar, only : nlevsno
-  use landunit_varcon, only : istsoil, istice_mec
+  use landunit_varcon, only : istsoil, istice
 
   implicit none
 
@@ -110,7 +110,7 @@ contains
 
     call SnowHydrologySetControlForTesting(set_reset_snow = .true., &
          set_reset_snow_glc = .false., set_reset_snow_glc_ela = 1000._r8)
-    call setup_landunit_ncols(ltype=istice_mec, ctypes=[1,1,1], cweights=[0.5_r8, 0.25_r8, 0.25_r8])
+    call setup_landunit_ncols(ltype=istice, ctypes=[1,1,1], cweights=[0.5_r8, 0.25_r8, 0.25_r8])
     call filter_from_range(bounds%begc, bounds%endc, num_snowc, filter_snowc)
     ! Column 2 exceeds the max, other columns don't
     h2osno = [reset_snow_h2osno - 1._r8, reset_snow_h2osno + my_excess, reset_snow_h2osno - 1._r8]
@@ -136,7 +136,7 @@ contains
 
     call SnowHydrologySetControlForTesting(set_reset_snow_glc = .true., &
          set_reset_snow_glc_ela = ela)
-    call setup_landunit_ncols(ltype=istice_mec, ctypes=[1,1,1], cweights=[0.5_r8, 0.25_r8, 0.25_r8])
+    call setup_landunit_ncols(ltype=istice, ctypes=[1,1,1], cweights=[0.5_r8, 0.25_r8, 0.25_r8])
     call filter_from_range(bounds%begc, bounds%endc, num_snowc, filter_snowc)
     ! Column 2 exceeds the max, other columns don't
     h2osno = [reset_snow_h2osno - 1._r8, reset_snow_h2osno + my_excess, reset_snow_h2osno - 1._r8]
@@ -163,7 +163,7 @@ contains
 
     call SnowHydrologySetControlForTesting(set_reset_snow_glc = .true., &
          set_reset_snow_glc_ela = ela)
-    call setup_landunit_ncols(ltype=istice_mec, ctypes=[1,1,1], cweights=[0.5_r8, 0.25_r8, 0.25_r8])
+    call setup_landunit_ncols(ltype=istice, ctypes=[1,1,1], cweights=[0.5_r8, 0.25_r8, 0.25_r8])
     call filter_from_range(bounds%begc, bounds%endc, num_snowc, filter_snowc)
     ! Column 2 exceeds the max, other columns don't
     h2osno = [reset_snow_h2osno - 1._r8, reset_snow_h2osno + my_excess, reset_snow_h2osno - 1._r8]

@@ -9,17 +9,22 @@ module dynSubgridDriverMod
   ! dynamic landunits).
   !
   ! !USES:
-  use decompMod                    , only : bounds_type, BOUNDS_LEVEL_PROC, BOUNDS_LEVEL_CLUMP
+  use decompMod                    , only : bounds_type, bounds_level_proc, bounds_level_clump
   use decompMod                    , only : get_proc_clumps, get_clump_bounds
   use dynSubgridControlMod         , only : get_flanduse_timeseries
-  use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops
+  use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops, get_do_transient_lakes, &
+                                            get_do_transient_urban
   use dynSubgridControlMod         , only : get_do_harvest
+  use dynSubgridControlMod         , only : get_do_grossunrep
   use dynPriorWeightsMod           , only : prior_weights_type
   use dynPatchStateUpdaterMod      , only : patch_state_updater_type
   use dynColumnStateUpdaterMod     , only : column_state_updater_type
   use dynpftFileMod                , only : dynpft_init, dynpft_interp
   use dyncropFileMod               , only : dyncrop_init, dyncrop_interp
   use dynHarvestMod                , only : dynHarvest_init, dynHarvest_interp
+  use dynGrossUnrepMod             , only : dynGrossUnrep_init, dynGrossUnrep_interp
+  use dynlakeFileMod               , only : dynlake_init, dynlake_interp
+  use dynurbanFileMod              , only : dynurban_init, dynurban_interp
   use dynLandunitAreaMod           , only : update_landunit_weights
   use subgridWeightsMod            , only : compute_higher_order_weights, set_subgrid_diagnostic_fields
   use reweightMod                  , only : reweight_wrapup
@@ -31,12 +36,14 @@ module dynSubgridDriverMod
   use SoilBiogeochemCarbonFluxType , only : soilBiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+  use SoilBiogeochemNitrogenFluxType, only : soilbiogeochem_nitrogenflux_type
   use ch4Mod,                        only : ch4_type
   use EnergyFluxType               , only : energyflux_type
   use PhotosynthesisMod            , only : photosyns_type
   use SoilHydrologyType            , only : soilhydrology_type  
   use SoilStateType                , only : soilstate_type
   use WaterType                    , only : water_type
+  use LakestateType                , only : lakestate_type
   use TemperatureType              , only : temperature_type
   use CropType                     , only : crop_type
   use glc2lndMod                   , only : glc2lnd_type
@@ -94,7 +101,7 @@ contains
     character(len=*), parameter :: subname = 'dynSubgrid_init'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds_proc%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds_proc%level == bounds_level_proc, subname // ': argument must be PROC-level bounds')
 
     nclumps = get_proc_clumps()
 
@@ -120,6 +127,21 @@ contains
        call dynHarvest_init(bounds_proc, harvest_filename=get_flanduse_timeseries())
     end if
 
+    ! Initialize stuff for gross unrepresented landuse data. 
+    if (get_do_grossunrep()) then
+       call dynGrossUnrep_init(bounds_proc, grossunrep_filename=get_flanduse_timeseries())
+    end if
+
+    ! Initialize stuff for prescribed transient lakes
+    if (get_do_transient_lakes()) then
+        call dynlake_init(bounds_proc, dynlake_filename=get_flanduse_timeseries())
+    end if
+    
+    ! Initialize stuff for prescribed transient urban
+    if (get_do_transient_urban()) then
+        call dynurban_init(bounds_proc, dynurban_filename=get_flanduse_timeseries())
+    end if
+
     ! ------------------------------------------------------------------------
     ! Set initial subgrid weights for aspects that are read from file. This is relevant
     ! for cold start and use_init_interp-based initialization.
@@ -133,6 +155,14 @@ contains
        call dyncrop_interp(bounds_proc, crop_inst)
     end if
 
+    if (get_do_transient_lakes()) then
+       call dynlake_interp(bounds_proc)
+    end if
+    
+    if (get_do_transient_urban()) then
+       call dynurban_interp(bounds_proc)
+    end if
+    
     ! (We don't bother calling dynHarvest_interp, because the harvest information isn't
     ! needed until the run loop. Harvest has nothing to do with subgrid weights, and in
     ! some respects doesn't even really belong in this module at all.)
@@ -153,12 +183,12 @@ contains
   !-----------------------------------------------------------------------
   subroutine dynSubgrid_driver(bounds_proc,                                            &
        urbanparams_inst, soilstate_inst, water_inst,          &
-       temperature_inst, energyflux_inst,             &
+       temperature_inst, energyflux_inst, lakestate_inst, &
        canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst,          &
        soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,       &
-       soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, ch4_inst, &
-       glc_behavior)
+       soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, &
+       soilbiogeochem_carbonflux_inst, ch4_inst, glc_behavior)
     !
     ! !DESCRIPTION:
     ! Update subgrid weights for prescribed transient PFTs, CNDV, and/or dynamic
@@ -181,6 +211,7 @@ contains
     type(urbanparams_type)               , intent(in)    :: urbanparams_inst
     type(soilstate_type)                 , intent(in)    :: soilstate_inst
     type(water_type)                     , intent(inout) :: water_inst
+    type(lakestate_type)                 , intent(in)    :: lakestate_inst
     type(temperature_type)               , intent(inout) :: temperature_inst
     type(energyflux_type)                , intent(inout) :: energyflux_inst
     type(canopystate_type)               , intent(inout) :: canopystate_inst
@@ -193,6 +224,7 @@ contains
     type(soilbiogeochem_carbonstate_type), intent(inout) :: c13_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonstate_type), intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenstate_type), intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilbiogeochem_nitrogenflux_type), intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(ch4_type)                       , intent(inout) :: ch4_inst
     type(glc_behavior_type)              , intent(in)    :: glc_behavior
@@ -205,7 +237,7 @@ contains
     character(len=*), parameter :: subname = 'dynSubgrid_driver'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds_proc%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds_proc%level == bounds_level_proc, subname // ': argument must be PROC-level bounds')
 
     nclumps = get_proc_clumps()
 
@@ -221,7 +253,7 @@ contains
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             filter(nc)%num_lakec, filter(nc)%lakec, &
             urbanparams_inst, soilstate_inst, &
-            water_inst, temperature_inst)
+            water_inst, temperature_inst, lakestate_inst)
 
        call prior_weights%set_prior_weights(bounds_clump)
        call patch_state_updater%set_old_weights(bounds_clump)
@@ -241,10 +273,21 @@ contains
        call dyncrop_interp(bounds_proc,crop_inst)
     end if
 
-    if (get_do_harvest()) then
+    if (get_do_harvest() .and. .not. use_fates) then
        call dynHarvest_interp(bounds_proc)
     end if
 
+    if (get_do_grossunrep()) then
+       call dynGrossUnrep_interp(bounds_proc)
+    end if
+
+    if (get_do_transient_lakes()) then
+       call dynlake_interp(bounds_proc)
+    end if
+
+    if (get_do_transient_urban()) then
+       call dynurban_interp(bounds_proc)
+    end if
     ! ==========================================================================
     ! Do land cover change that does not require I/O
     ! ==========================================================================
@@ -292,7 +335,7 @@ contains
             filter(nc)%num_lakec, filter(nc)%lakec, &
             urbanparams_inst, soilstate_inst, &
             water_inst, &
-            temperature_inst, energyflux_inst)
+            temperature_inst, energyflux_inst, lakestate_inst)
 
        if (use_cn) then
           call bgc_vegetation_inst%DynamicAreaConservation(bounds_clump, nc, &
@@ -302,7 +345,8 @@ contains
                canopystate_inst, photosyns_inst, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
-               soilbiogeochem_nitrogenstate_inst, ch4_inst, soilbiogeochem_state_inst)
+               soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, ch4_inst, &
+               soilbiogeochem_state_inst)
        end if
 
     end do
@@ -327,7 +371,7 @@ contains
     character(len=*), parameter :: subname = 'dynSubgrid_wrapup_weight_changes'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds_clump%level == BOUNDS_LEVEL_CLUMP, subname // ': argument must be CLUMP-level bounds')
+    SHR_ASSERT(bounds_clump%level == bounds_level_clump, subname // ': argument must be CLUMP-level bounds')
 
     call update_landunit_weights(bounds_clump)
 

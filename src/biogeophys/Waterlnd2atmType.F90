@@ -10,7 +10,7 @@ module Waterlnd2atmType
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
+  use decompMod      , only : subgrid_level_column, subgrid_level_gridcell
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d
@@ -25,14 +25,15 @@ module Waterlnd2atmType
      class(water_info_base_type), pointer :: info
 
      real(r8), pointer :: q_ref2m_grc        (:)   ! 2m surface specific humidity (kg/kg)
-     real(r8), pointer :: h2osno_grc         (:)   ! snow water (mm H2O)
+     real(r8), pointer :: h2osno_grc         (:)   ! snow water (m H2O)
      real(r8), pointer :: qflx_evap_tot_grc  (:)   ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
      real(r8), pointer :: qflx_rofliq_grc         (:)   ! rof liq forcing
      real(r8), pointer :: qflx_rofliq_qsur_grc    (:)   ! rof liq -- surface runoff component
      real(r8), pointer :: qflx_rofliq_qsub_grc    (:)   ! rof liq -- subsurface runoff component
      real(r8), pointer :: qflx_rofliq_qgwl_grc    (:)   ! rof liq -- glacier, wetland and lakes water balance residual component
      real(r8), pointer :: qflx_rofliq_drain_perched_grc    (:)   ! rof liq -- perched water table runoff component
-     real(r8), pointer :: qflx_rofice_grc    (:)   ! rof ice forcing
+     real(r8), pointer :: qflx_ice_runoff_col(:)   ! rof ice forcing, col level
+     real(r8), pointer :: qflx_rofice_grc    (:)   ! rof ice forcing, grc level
      real(r8), pointer :: qflx_liq_from_ice_col(:) ! liquid runoff from converted ice runoff
      real(r8), pointer :: qirrig_grc         (:)   ! irrigation flux
 
@@ -89,47 +90,51 @@ contains
 
     call AllocateVar1d(var = this%q_ref2m_grc, name = 'q_ref2m_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
          ival=ival)
     call AllocateVar1d(var = this%h2osno_grc, name = 'h2osno_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
          ival=ival)
     call AllocateVar1d(var = this%qflx_evap_tot_grc, name = 'qflx_evap_tot_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
          ival=ival)
     call AllocateVar1d(var = this%qflx_rofliq_grc, name = 'qflx_rofliq_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
          ival=ival)
     call AllocateVar1d(var = this%qflx_rofliq_qsur_grc, name = 'qflx_rofliq_qsur_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
          ival=ival)
     call AllocateVar1d(var = this%qflx_rofliq_qsub_grc, name = 'qflx_rofliq_qsub_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
          ival=ival)
     call AllocateVar1d(var = this%qflx_rofliq_qgwl_grc, name = 'qflx_rofliq_qgwl_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
          ival=ival)
     call AllocateVar1d(var = this%qflx_rofliq_drain_perched_grc, name = 'qflx_rofliq_drain_perched_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
+         ival=ival)
+    call AllocateVar1d(var = this%qflx_ice_runoff_col, name = 'qflx_ice_runoff_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
          ival=ival)
     call AllocateVar1d(var = this%qflx_rofice_grc, name = 'qflx_rofice_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
          ival=ival)
     call AllocateVar1d(var = this%qflx_liq_from_ice_col, name = 'qflx_liq_from_ice_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
          ival=ival)
     call AllocateVar1d(var = this%qirrig_grc, name = 'qirrig_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
          ival=ival)
 
   end subroutine InitAllocate

@@ -6,18 +6,18 @@ module glc2lndMod
   !
   ! !USES:
 #include "shr_assert.h"
-  use decompMod      , only : bounds_type
+  use decompMod      , only : bounds_type, subgrid_level_gridcell
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use clm_varpar     , only : maxpatch_glcmec
+  use clm_varpar     , only : maxpatch_glc
   use clm_varctl     , only : iulog, glc_do_dynglacier
-  use clm_varcon     , only : nameg, spval, ispval
+  use clm_varcon     , only : spval, ispval
   use abortutils     , only : endrun
   use GridcellType   , only : grc
   use LandunitType   , only : lun
   use ColumnType     , only : col
-  use landunit_varcon, only : istice_mec
+  use landunit_varcon, only : istice
   use glcBehaviorMod , only : glc_behavior_type
   !
   ! !REVISION HISTORY:
@@ -144,9 +144,9 @@ contains
 
     begg = bounds%begg; endg = bounds%endg
 
-    allocate(this%frac_grc    (begg:endg,0:maxpatch_glcmec)) ;   this%frac_grc    (:,:) = nan
-    allocate(this%topo_grc    (begg:endg,0:maxpatch_glcmec)) ;   this%topo_grc    (:,:) = nan
-    allocate(this%hflx_grc    (begg:endg,0:maxpatch_glcmec)) ;   this%hflx_grc    (:,:) = nan
+    allocate(this%frac_grc    (begg:endg,0:maxpatch_glc)) ;   this%frac_grc    (:,:) = nan
+    allocate(this%topo_grc    (begg:endg,0:maxpatch_glc)) ;   this%topo_grc    (:,:) = nan
+    allocate(this%hflx_grc    (begg:endg,0:maxpatch_glc)) ;   this%hflx_grc    (:,:) = nan
     allocate(this%icemask_grc (begg:endg))                   ;   this%icemask_grc (:)   = nan
     allocate(this%icemask_coupled_fluxes_grc (begg:endg))    ;   this%icemask_coupled_fluxes_grc (:)   = nan
     allocate(this%glc_dyn_runoff_routing_grc (begg:endg))    ;   this%glc_dyn_runoff_routing_grc (:)   = nan
@@ -266,22 +266,22 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: g
-    integer :: icemec_class
+    integer :: ice_class
 
     character(len=*), parameter :: subname = 'set_glc2lnd_fields_mct'
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL((ubound(x2l, 2) == bounds%endg), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(index_x2l_Sg_ice_covered) == (/maxpatch_glcmec/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(index_x2l_Sg_topo) == (/maxpatch_glcmec/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(index_x2l_Flgg_hflx) == (/maxpatch_glcmec/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(index_x2l_Sg_ice_covered) == (/maxpatch_glc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(index_x2l_Sg_topo) == (/maxpatch_glc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(index_x2l_Flgg_hflx) == (/maxpatch_glc/)), sourcefile, __LINE__)
 
     if (glc_present) then
        do g = bounds%begg, bounds%endg
-          do icemec_class = 0, maxpatch_glcmec
-             this%frac_grc(g,icemec_class)  = x2l(index_x2l_Sg_ice_covered(icemec_class),g)
-             this%topo_grc(g,icemec_class)  = x2l(index_x2l_Sg_topo(icemec_class),g)
-             this%hflx_grc(g,icemec_class)  = x2l(index_x2l_Flgg_hflx(icemec_class),g)
+          do ice_class = 0, maxpatch_glc
+             this%frac_grc(g,ice_class)  = x2l(index_x2l_Sg_ice_covered(ice_class),g)
+             this%topo_grc(g,ice_class)  = x2l(index_x2l_Sg_topo(ice_class),g)
+             this%hflx_grc(g,ice_class)  = x2l(index_x2l_Flgg_hflx(ice_class),g)
           end do
           this%icemask_grc(g)  = x2l(index_x2l_Sg_icemask,g)
           this%icemask_coupled_fluxes_grc(g)  = x2l(index_x2l_Sg_icemask_coupled_fluxes,g)
@@ -319,23 +319,23 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: g
-    integer :: icemec_class
+    integer :: ice_class
 
     character(len=*), parameter :: subname = 'set_glc2lnd_fields_nuopc'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT((ubound(frac_grc, 1) == bounds%endg), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((ubound(topo_grc, 1) == bounds%endg), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((ubound(hflx_grc, 1) == bounds%endg), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((ubound(icemask_grc,1) == bounds%endg), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((ubound(icemask_coupled_fluxes_grc,1) == bounds%endg), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((ubound(frac_grc, 1) == bounds%endg), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(topo_grc, 1) == bounds%endg), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(hflx_grc, 1) == bounds%endg), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(icemask_grc,1) == bounds%endg), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(icemask_coupled_fluxes_grc,1) == bounds%endg), sourcefile, __LINE__)
 
     if (glc_present) then
        do g = bounds%begg, bounds%endg
-          do icemec_class = 0, maxpatch_glcmec
-             this%frac_grc(g,icemec_class)  = frac_grc(g,icemec_class)
-             this%topo_grc(g,icemec_class)  = topo_grc(g,icemec_class)
-             this%hflx_grc(g,icemec_class)  = hflx_grc(g,icemec_class)
+          do ice_class = 0, maxpatch_glc
+             this%frac_grc(g,ice_class)  = frac_grc(g,ice_class)
+             this%topo_grc(g,ice_class)  = topo_grc(g,ice_class)
+             this%hflx_grc(g,ice_class)  = hflx_grc(g,ice_class)
           end do
           this%icemask_grc(g)  = icemask_grc(g)
           this%icemask_coupled_fluxes_grc(g)  = icemask_coupled_fluxes_grc(g)
@@ -384,8 +384,8 @@ contains
     !-----------------------------------------------------------------------
 
     if (present(topo)) then
-       SHR_ASSERT_ALL_FL((ubound(topo) == (/bounds%endg, maxpatch_glcmec/)), sourcefile, __LINE__)
-       this%topo_grc(bounds%begg:bounds%endg, 0:maxpatch_glcmec) = topo(bounds%begg:bounds%endg, 0:maxpatch_glcmec)
+       SHR_ASSERT_ALL_FL((ubound(topo) == (/bounds%endg, maxpatch_glc/)), sourcefile, __LINE__)
+       this%topo_grc(bounds%begg:bounds%endg, 0:maxpatch_glc) = topo(bounds%begg:bounds%endg, 0:maxpatch_glc)
     end if
 
     if (present(icemask)) then
@@ -450,7 +450,7 @@ contains
              write(iulog,'(a)') 'by modifying GLACIER_REGION on the surface dataset.'
              write(iulog,'(a)') '(Expand the region that corresponds to the GLC domain'
              write(iulog,'(a)') '- i.e., the region specified as "virtual" in glacier_region_behavior.)'
-             call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
           end if
 
           ! Ensure that icemask is a subset of melt_replaced_by_ice. This is needed
@@ -465,7 +465,7 @@ contains
              write(iulog,'(a)') 'by modifying GLACIER_REGION on the surface dataset.'
              write(iulog,'(a)') '(Expand the region that corresponds to the GLC domain'
              write(iulog,'(a)') '- i.e., the region specified as "replaced_by_ice" in glacier_region_melt_behavior.)'
-             call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
           end if
 
        end if
@@ -499,7 +499,7 @@ contains
        ! future can rely on it.
        if (this%icemask_coupled_fluxes_grc(g) > 0._r8 .and. this%icemask_grc(g) == 0._r8) then
           write(iulog,*) subname//' ERROR: icemask_coupled_fluxes must be a subset of icemask.'
-          call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
+          call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
        end if
 
     end do
@@ -594,7 +594,7 @@ contains
              write(iulog,'(a)') 'by modifying GLACIER_REGION on the surface dataset.'
              write(iulog,'(a)') '(Expand the region that corresponds to the GLC domain'
              write(iulog,'(a)') '- i.e., the region specified as "replaced_by_ice" in glacier_region_melt_behavior.)'
-             call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
           end if
        end if
     end do
@@ -614,7 +614,7 @@ contains
     ! If glc_do_dynglacier is false, nothing is changed
     !
     ! !USES:
-    use column_varcon     , only : col_itype_to_icemec_class
+    use column_varcon     , only : col_itype_to_ice_class
     use subgridWeightsMod , only : set_landunit_weight
     !
     ! !ARGUMENTS:
@@ -623,10 +623,10 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: g,c                              ! indices
-    real(r8):: area_ice_mec                     ! area of the ice_mec landunit
-    integer :: l_ice_mec                        ! index of the ice_mec landunit
-    integer :: icemec_class                     ! current icemec class (1..maxpatch_glcmec)
-    logical :: frac_assigned(1:maxpatch_glcmec) ! whether this%frac has been assigned for each elevation class
+    real(r8):: area_ice                         ! area of the ice landunit
+    integer :: l_ice                            ! index of the ice landunit
+    integer :: ice_class                        ! current ice class (1..maxpatch_glc)
+    logical :: frac_assigned(1:maxpatch_glc) ! whether this%frac has been assigned for each elevation class
     logical :: error                            ! if an error was found
 
     character(len=*), parameter :: subname = 'update_glc2lnd_fracs'
@@ -637,46 +637,48 @@ contains
           ! Values from GLC are only valid within the icemask, so we only update CLM's areas there
           if (this%icemask_grc(g) > 0._r8) then
 
-             ! Set total icemec landunit area
-             area_ice_mec = sum(this%frac_grc(g, 1:maxpatch_glcmec))
-             call set_landunit_weight(g, istice_mec, area_ice_mec)
+             ! Set total ice landunit area
+             area_ice = sum(this%frac_grc(g, 1:maxpatch_glc))
+             call set_landunit_weight(g, istice, area_ice)
 
              ! If new landunit area is greater than 0, then update column areas
              ! (If new landunit area is 0, col%wtlunit is arbitrary, so we might as well keep the existing values)
-             if (area_ice_mec > 0) then
-                ! Determine index of the glc_mec landunit
-                l_ice_mec = grc%landunit_indices(istice_mec, g)
-                if (l_ice_mec == ispval) then
-                   write(iulog,*) subname//' ERROR: no ice_mec landunit found within the icemask, for g = ', g
-                   call endrun()
+             if (area_ice > 0) then
+                ! Determine index of the ice landunit
+                l_ice = grc%landunit_indices(istice, g)
+                if (l_ice == ispval) then
+                   write(iulog,*) subname//' ERROR: no ice landunit found within the icemask, for g = ', g
+                   call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
+                        msg="no ice landunit found within the icemask")
                 end if
 
-                frac_assigned(1:maxpatch_glcmec) = .false.
-                do c = lun%coli(l_ice_mec), lun%colf(l_ice_mec)
-                   icemec_class = col_itype_to_icemec_class(col%itype(c))
-                   col%wtlunit(c) = this%frac_grc(g, icemec_class) / lun%wtgcell(l_ice_mec)
-                   frac_assigned(icemec_class) = .true.
+                frac_assigned(1:maxpatch_glc) = .false.
+                do c = lun%coli(l_ice), lun%colf(l_ice)
+                   ice_class = col_itype_to_ice_class(col%itype(c))
+                   col%wtlunit(c) = this%frac_grc(g, ice_class) / lun%wtgcell(l_ice)
+                   frac_assigned(ice_class) = .true.
                 end do
 
                 ! Confirm that all elevation classes that have non-zero area according to
                 ! this%frac have been assigned to a column in CLM's data structures
                 error = .false.
-                do icemec_class = 1, maxpatch_glcmec
-                   if (this%frac_grc(g, icemec_class) > 0._r8 .and. &
-                        .not. frac_assigned(icemec_class)) then
+                do ice_class = 1, maxpatch_glc
+                   if (this%frac_grc(g, ice_class) > 0._r8 .and. &
+                        .not. frac_assigned(ice_class)) then
                       error = .true.
                    end if
                 end do
                 if (error) then
-                   write(iulog,*) subname//' ERROR: at least one glc_mec column has non-zero area from the coupler,'
+                   write(iulog,*) subname//' ERROR: at least one glc column has non-zero area from the coupler,'
                    write(iulog,*) 'but there was no slot in memory for this column; g = ', g
-                   write(iulog,*) 'this%frac_grc(g, 1:maxpatch_glcmec) = ', &
-                        this%frac_grc(g, 1:maxpatch_glcmec)
-                   write(iulog,*) 'frac_assigned(1:maxpatch_glcmec) = ', &
-                        frac_assigned(1:maxpatch_glcmec)
-                   call endrun()
+                   write(iulog,*) 'this%frac_grc(g, 1:maxpatch_glc) = ', &
+                        this%frac_grc(g, 1:maxpatch_glc)
+                   write(iulog,*) 'frac_assigned(1:maxpatch_glc) = ', &
+                        frac_assigned(1:maxpatch_glc)
+                   call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
+                        msg="at least one glc column has non-zero area from cpl but has no slot in memory")
                 end if  ! error
-             end if  ! area_ice_mec > 0
+             end if  ! area_ice > 0
           end if  ! this%icemask_grc(g) > 0
        end do  ! g
     end if  ! glc_do_dynglacier
@@ -697,8 +699,8 @@ contains
     ! needs_downscaling_col are left unchanged.
     !
     ! !USES:
-    use landunit_varcon , only : istice_mec
-    use column_varcon   , only : col_itype_to_icemec_class
+    use landunit_varcon , only : istice
+    use column_varcon   , only : col_itype_to_ice_class
     !
     ! !ARGUMENTS:
     class(glc2lnd_type) , intent(in)    :: this
@@ -708,7 +710,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: c, l, g      ! indices
-    integer :: icemec_class ! current icemec class (1..maxpatch_glcmec)
+    integer :: ice_class    ! current ice class (1..maxpatch_glc)
 
     character(len=*), parameter :: subname = 'update_glc2lnd_topo'
     !-----------------------------------------------------------------------
@@ -723,11 +725,11 @@ contains
 
           ! Values from GLC are only valid within the icemask, so we only update CLM's topo values there
           if (this%icemask_grc(g) > 0._r8) then
-             if (lun%itype(l) == istice_mec) then
-                icemec_class = col_itype_to_icemec_class(col%itype(c))
+             if (lun%itype(l) == istice) then
+                ice_class = col_itype_to_ice_class(col%itype(c))
              else
                 ! If not on a glaciated column, assign topography to the bare-land value determined by GLC.
-                icemec_class = 0
+                ice_class = 0
              end if
 
              ! Note that we do downscaling over all column types. This is for consistency:
@@ -738,7 +740,7 @@ contains
              ! this currently isn't allowed because the urban code references some
              ! non-downscaled, gridcell-level atmospheric forcings
              if (.not. lun%urbpoi(l)) then
-                topo_col(c) = this%topo_grc(g, icemec_class)
+                topo_col(c) = this%topo_grc(g, ice_class)
                 needs_downscaling_col(c) = .true.
              end if
           end if

@@ -40,19 +40,20 @@ input_file="tests_pretag_cheyenne_nompi"
 c_threads=36
 
 
-export INITMODULES="/glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/sh"
+export INITMODULES="/glade/u/apps/ch/opt/lmod/8.1.7/lmod/lmod/init/sh"
 . \$INITMODULES
 
 module purge
-module load ncarenv/1.0
-module load intel/17.0.1
+module load ncarenv
+module load intel
 module load mkl
-module load ncarcompilers/0.3.5
-module load netcdf/4.4.1.1
+module load ncarcompilers
+module load netcdf
 
 module load nco
-module load python
 module load ncl
+
+module load conda
 
 
 ##omp threads
@@ -78,6 +79,7 @@ export MACH_WORKSPACE="/glade/scratch"
 export CPRNC_EXE="$CESMDATAROOT/tools/cime/tools/cprnc/cprnc.cheyenne"
 dataroot="$CESMDATAROOT"
 export TOOLSLIBS=""
+export REGRID_PROC=1
 export TOOLS_CONF_STRING="--mpilib mpi-serial"
 
 
@@ -88,7 +90,7 @@ EOF
     ;;
 
     ## DAV cluster
-     geyser* | caldera* | pronghorn*)
+     casper* | pronghorn*)
     submit_script="test_driver_dav${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -101,19 +103,19 @@ input_file="tests_posttag_dav_mpi"
 c_threads=36
 
 
-export INITMODULES="/glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/sh"
+export INITMODULES="/glade/u/apps/ch/opt/lmod/8.1.7/lmod/lmod/init/sh"
 . \$INITMODULES
 
 module purge
-module load ncarenv/1.0
-module load intel/12.1.5
+module load ncarenv
+module load intel
 module load mkl
 module load ncarcompilers
-module load netcdf/4.3.3.1
-module load mpich-slurm/3.2.1
+module load netcdf
+module load openmpi
 
 module load nco
-module load python
+module load conda
 module load ncl
 
 
@@ -210,16 +212,98 @@ export INITMODULES="/usr/share/Modules/init/sh"
 
 . \$INITMODULES
 module purge
-module load compiler/intel/18.0.3
-module load tool/nco/4.7.5
-module load tool/netcdf/4.6.1/intel
+module load compiler/intel
+module load tool/nco
+module load tool/netcdf
+module load lang/python
 
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include
 export LIB_NETCDF=\${NETCDF_PATH}/lib
 export MAKE_CMD="gmake -j 5"   ##using hyper-threading on hobart
 export MACH_WORKSPACE="/scratch/cluster"
-export CPRNC_EXE=/fs/cgd/csm/tools/cprnc_hobart/cprnc
+export CPRNC_EXE=/fs/cgd/csm/tools/cprnc/cprnc
+export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
+dataroot="/fs/cgd/csm"
+export TOOLSSLIBS=""
+echo_arg="-e"
+
+EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+    ;;
+
+    ## izumi
+    izumi* | i*.unified.ucar.edu) 
+    submit_script="test_driver_izumi_${cur_time}.sh"
+    export PATH=/cluster/torque/bin:${PATH}
+
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+cat > ./${submit_script} << EOF
+#!/bin/sh
+#
+
+# Name of the queue (CHANGE THIS if needed)
+#PBS -q long
+# Number of nodes (CHANGE THIS if needed)
+#PBS -l nodes=1:ppn=24
+# output file base name
+#PBS -N test_dr
+# Put standard error and standard out in same file
+#PBS -j oe
+# Export all Environment variables
+#PBS -V
+# End of options
+
+if [ -n "\$PBS_JOBID" ]; then    #batch job
+    export JOBID=\`echo \${PBS_JOBID} | cut -f1 -d'.'\`
+    initdir=\${PBS_O_WORKDIR}
+fi
+
+if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
+    interactive="NO"
+    input_file="tests_posttag_izumi"
+else
+    interactive="YES"
+    input_file="tests_posttag_izumi_nompi"
+fi
+
+##omp threads
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=2
+fi
+export CLM_RESTART_THREADS=1
+
+##mpi tasks
+export CLM_TASKS=24
+export CLM_RESTART_TASKS=20
+
+export P4_GLOBMEMSIZE=500000000
+
+
+export CESM_MACH="izumi"
+
+ulimit -s unlimited
+ulimit -c unlimited
+
+export CESM_COMP="intel"
+export TOOLS_MAKE_STRING="USER_FC=ifort USER_CC=icc "
+export TOOLS_CONF_STRING=" -mpilib mpi-serial"
+export CFG_STRING=""
+export INITMODULES="/usr/share/Modules/init/sh"
+
+. \$INITMODULES
+module purge
+module load compiler/intel
+module load tool/nco
+module load tool/netcdf
+module load lang/python
+
+export NETCDF_DIR=\$NETCDF_PATH
+export INC_NETCDF=\${NETCDF_PATH}/include
+export LIB_NETCDF=\${NETCDF_PATH}/lib
+export MAKE_CMD="gmake -j 5"   ##using hyper-threading on izumi
+export MACH_WORKSPACE="/scratch/cluster"
+export CPRNC_EXE=/fs/cgd/csm/tools/cprnc/cprnc.izumi
 export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fs/cgd/csm"
 export TOOLSSLIBS=""
@@ -230,7 +314,7 @@ EOF
     ;;
 
     * )
-    echo "Only setup to work on: cheyenne and hobart"
+    echo "Only setup to work on: cheyenne, hobart and izumi"
     exit
  
 
@@ -286,6 +370,13 @@ else
         echo "       <cime/scripts>. "
 	exit 3
     fi
+fi
+
+# Setup conda environement
+conda activate ctsm_pylib
+if [ \$? -ne 0 ]; then
+   echo "ERROR: Trouble activating the ctsm_pylib conda environment, be sure it's setup with \$CLM_ROOT/py_env_create, then rerun"
+   exit 4
 fi
 
 ##output files
@@ -542,7 +633,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on cheyenne and hobart: "
+    echo "usage on cheyenne, hobart, and izumi: "
     echo "./test_driver.sh -i"
     echo ""
     echo "valid arguments: "

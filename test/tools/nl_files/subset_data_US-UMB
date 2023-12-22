@@ -1,0 +1,1 @@
+point --lon 275.28626 --lat 45.5598 --site 1x1_US-UMB --dompft 7 --cap-saturation --uniform-snowpack --create-surface --outdir EXEDIR/US-UMB_user-mod_and_data --user-mods-dir EXEDIR/US-UMB_user-mod_and_data --verbose  --inputdata-dir CSMDATA

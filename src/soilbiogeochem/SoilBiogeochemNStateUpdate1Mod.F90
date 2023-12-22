@@ -7,14 +7,13 @@ module SoilBiogeochemNStateUpdate1Mod
   ! !USES:
   use shr_kind_mod                       , only: r8 => shr_kind_r8
   use clm_time_manager                   , only : get_step_size_real
-  use clm_varpar                         , only : nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions
-  use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions
   use clm_varctl                         , only : iulog, use_nitrif_denitrif, use_crop
-  use clm_varcon                         , only : nitrif_n2o_loss_frac, dzsoi_decomp
+  use clm_varcon                         , only : nitrif_n2o_loss_frac
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenfluxType     , only : soilbiogeochem_nitrogenflux_type
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use CNSharedParamsMod                  , only : use_fun
   use ColumnType                         , only : col 
   !
@@ -28,7 +27,7 @@ module SoilBiogeochemNStateUpdate1Mod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine SoilBiogeochemNStateUpdate1(num_soilc, filter_soilc,  &
+  subroutine SoilBiogeochemNStateUpdate1(num_bgc_soilc, filter_bgc_soilc,  &
        soilbiogeochem_state_inst, soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
     !
     ! !DESCRIPTION:
@@ -36,15 +35,15 @@ contains
     ! variables (except for gap-phase mortality and fire fluxes)
     !
     ! !ARGUMENTS:
-    integer                                 , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                                 , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    integer                                 , intent(in)    :: num_bgc_soilc       ! number of soil columns in filter
+    integer                                 , intent(in)    :: filter_bgc_soilc(:) ! filter for soil columns
     type(soilbiogeochem_state_type)         , intent(in)    :: soilbiogeochem_state_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c,p,j,l,k ! indices
-    integer :: fp,fc     ! lake filter indices
+    integer :: fc        ! lake filter indices
     real(r8):: dt        ! radiation time step (seconds)
 
     !-----------------------------------------------------------------------
@@ -64,8 +63,8 @@ contains
       dt = get_step_size_real()
 
       do j = 1, nlevdecomp
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             if(use_fun)then !RF in FUN logic, the fixed N goes straight into the plant, and not into the SMINN pool. 
  	               ! N deposition and fixation (put all into NH4 pool)
 	               ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) + nf%ndep_to_sminn_col(c)*dt * ndep_prof(c,j)
@@ -95,8 +94,8 @@ contains
          do j = 1, nlevdecomp
 
             ! column loop
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                if (.not. use_nitrif_denitrif) then
 
                   ! N deposition and fixation
@@ -119,43 +118,49 @@ contains
       end if
 
       ! decomposition fluxes
-      do k = 1, ndecomp_cascade_transitions
-         do j = 1, nlevdecomp
-            ! column loop
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-
-               nf%decomp_npools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
-                    nf%decomp_npools_sourcesink_col(c,j,cascade_donor_pool(k)) - &
-                    nf%decomp_cascade_ntransfer_vr_col(c,j,k) * dt
-            end do
-         end do
-      end do
-      do k = 1, ndecomp_cascade_transitions
-         if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
+      if (.not. use_soil_matrixcn) then
+         do k = 1, ndecomp_cascade_transitions
             do j = 1, nlevdecomp
                ! column loop
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
 
-                  nf%decomp_npools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
-                       nf%decomp_npools_sourcesink_col(c,j,cascade_receiver_pool(k)) + &
-                       (nf%decomp_cascade_ntransfer_vr_col(c,j,k) + &
-                        nf%decomp_cascade_sminn_flux_vr_col(c,j,k)) * dt
-               end do
-            end do
-         else  ! terminal transitions
-            do j = 1, nlevdecomp
-               ! column loop
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
                   nf%decomp_npools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
                        nf%decomp_npools_sourcesink_col(c,j,cascade_donor_pool(k)) - &
-                       nf%decomp_cascade_sminn_flux_vr_col(c,j,k) * dt
+                       nf%decomp_cascade_ntransfer_vr_col(c,j,k) * dt
                end do
             end do
-         end if
-      end do
+         end do
+
+
+         do k = 1, ndecomp_cascade_transitions
+            if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
+               do j = 1, nlevdecomp
+                  ! column loop
+                  do fc = 1,num_bgc_soilc
+                     c = filter_bgc_soilc(fc)
+
+                     nf%decomp_npools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
+                          nf%decomp_npools_sourcesink_col(c,j,cascade_receiver_pool(k)) + &
+                          (nf%decomp_cascade_ntransfer_vr_col(c,j,k) + &
+                           nf%decomp_cascade_sminn_flux_vr_col(c,j,k)) * dt
+                  end do
+               end do
+            else  ! terminal transitions
+               do j = 1, nlevdecomp
+                  ! column loop
+                  do fc = 1,num_bgc_soilc
+                     c = filter_bgc_soilc(fc)
+                     nf%decomp_npools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
+                          nf%decomp_npools_sourcesink_col(c,j,cascade_donor_pool(k)) - &
+                          nf%decomp_cascade_sminn_flux_vr_col(c,j,k) * dt
+                  end do
+               end do
+            end if
+         end do
+      else
+         ! Matrix solution equvalent to above is in CNSoilMatrixMod.F90? (TODO check on this)
+      end if  ! 
 
       if (.not. use_nitrif_denitrif) then
 
@@ -168,8 +173,8 @@ contains
             if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
                do j = 1, nlevdecomp
                   ! column loop
-                  do fc = 1,num_soilc
-                     c = filter_soilc(fc)
+                  do fc = 1,num_bgc_soilc
+                     c = filter_bgc_soilc(fc)
                      ns%sminn_vr_col(c,j)  = ns%sminn_vr_col(c,j) - &
                           (nf%sminn_to_denit_decomp_cascade_vr_col(c,j,k) + &
                           nf%decomp_cascade_sminn_flux_vr_col(c,j,k))* dt
@@ -178,8 +183,8 @@ contains
             else
                do j = 1, nlevdecomp
                   ! column loop
-                  do fc = 1,num_soilc
-                     c = filter_soilc(fc)
+                  do fc = 1,num_bgc_soilc
+                     c = filter_bgc_soilc(fc)
                      ns%sminn_vr_col(c,j)  = ns%sminn_vr_col(c,j) - &
                           nf%sminn_to_denit_decomp_cascade_vr_col(c,j,k)* dt
 
@@ -193,8 +198,8 @@ contains
 
          do j = 1, nlevdecomp
             ! column loop
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                ! "bulk denitrification"
                ns%sminn_vr_col(c,j) = ns%sminn_vr_col(c,j) - nf%sminn_to_denit_excess_vr_col(c,j) * dt
 
@@ -217,8 +222,8 @@ contains
 
          do j = 1, nlevdecomp
             ! column loop
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
 
                ! mineralization fluxes (divert a fraction of this stream to nitrification flux, add the rest to NH4 pool)
                ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) + nf%gross_nmin_vr_col(c,j)*dt

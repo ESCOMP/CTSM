@@ -53,38 +53,57 @@ else
 endif
 
 MKSURFDATA = $(BATCHJOBS) $(PWD)/mksurfdata.pl
+SUBSETDATA = $(PWD)/../site_and_regional/subset_data
+MODIFYSURF = $(PWD)/../modify_input_files/fsurdat_modifier --overwrite
 
+CDATE = $(shell date +%y%m%d)
+
+# subset_data options
+#
+SUBSETDATA_POINT = $(SUBSETDATA) point --silent --overwrite --uniform-snowpack --cap-saturation --crop --outdir .
+SUBSETDATA_POINT_ALLLU = $(SUBSETDATA_POINT) --include-nonveg
+SUBSETDATA_POINT_URBAN = $(SUBSETDATA_POINT) --include-nonveg
+
+# Subset data sites...
+SUBSETDATA_1X1_BRAZIL := --lat -7 --lon -55 --site 1x1_brazil
+SUBSETDATA_1X1_NUMAIA := --lat 40.6878 --lon 267.0228 --site 1x1_numaIA
+SUBSETDATA_1X1_SMALL  := --lat 40.6878 --lon 267.0228 --site 1x1_smallvilleIA \
+		--dompft 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 \
+		--pctpft 6.5 1.5 1.6 1.7 1.8 1.9 1.5 1.6 1.7 1.8 1.9 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5
+# NOTE: The 1850 smallvilleIA site is constructed to start with 100% natural vegetation, so we can test transition to crops
+SUBSETDATA_1X1_SMALL1850  := --lat 40.6878 --lon 267.0228 --site 1x1_smallvilleIA --dompft 13 --pctpft 100
+
+SUBSETDATA_1X1_MEXICOCITY  := --lat 19.5 --lon 260.5 --site 1x1_mexicocityMEX --out-surface surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000.nc
+SUBSETDATA_1X1_VANCOUVER   := --lat 49.5 --lon 236.5 --site 1x1_vancouverCAN --out-surface surfdata_1x1_vancouverCAN_hist_78pfts_CMIP6_simyr2000.nc
+SUBSETDATA_1X1_URBALPHA    := --lat -37.7308 --lon 0 --site 1x1_urbanc_alpha --out-surface surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000.nc
 # f19 and f09 are standard resolutions, f10 is used for testing, f45 is used for FATES
-# ne30np4 is standard resolution for SE dycore in CAM, T31 is for paleo, 360x720cru is for same resolution as forcing data
-STANDARD_RES = 360x720cru,48x96,0.9x1.25,1.9x2.5,10x15,4x5,ne30np4
+# ne30np4 is standard resolution for SE dycore in CAM, C96 is standard for fv3 dycore
+# The ne30np4 series (including pg2, pg3, pg4) are standard for SE dycore
+# The variable resolution grids for ARCTIC, ARCTICGRIS and CONUS are also standard
+STANDARD_RES_NO_CROP = 0.9x1.25,1.9x2.5,10x15
+STANDARD_RES = 0.9x1.25,1.9x2.5,10x15,4x5,ne30np4,C96,ne30pg2,ne30pg3,ne30pg4,ne120np4pg3,ne0np4ARCTICGRISne30x8,ne0np4ARCTICne30x4,ne0np4CONUSne30x8,ne3np4.pg3,ne5np4.pg3,ne16np4.pg3,mpasa480,mpasa120
+
+# For future CMIP6 scenarios: SSP-RCP's
+FUTURE_RES = 0.9x1.25,1.9x2.5,10x15
+# For historical transient cases (TRY TO KEEP THIS LIST AS SHORT AS POSSIBLE)
+TRANS_RES = 0.9x1.25,1.9x2.5,10x15,ne30np4,ne0np4ARCTICGRISne30x8,ne0np4ARCTICne30x4,ne0np4CONUSne30x8
 
 # ne120np4 is for high resolution SE dycore, ne16 is for testing SE dycore
 # T42 is for SCAM
 # f05 is needed for running full chemistry model
+# nldas is for NWP working with WRF
 STANDARD = \
 	global-present \
-	global-present-f05 \
-	global-present-ne16np4 \
-	global-present-ne120np4 \
 	global-present-nldas \
-	global-present-T42 \
-	global-historical \
-	global-historical-ne120np4 \
-	global-transient-f05 \
-	global-transient \
-	global-transient-ne120np4
+	global-present-T42 
 
 TROPICS = \
-	tropics-present \
-	tropics-historical \
-	tropics-transient \
 	crop-tropics-present \
 	crop-tropics-historical \
 	crop-tropics-transient
 
 CROP = \
 	crop-global-present \
-	crop-global-present-f05 \
 	crop-global-present-ne16np4 \
 	crop-global-present-ne120np4 \
 	crop-numa-present \
@@ -92,86 +111,58 @@ CROP = \
 	crop-smallville \
 	crop-smallville-historical \
 	crop-global-historical \
-	crop-global-historical-f05 \
-	crop-global-historical-ne120np4 \
-	crop-global-transient-f05 \
 	crop-global-transient \
-	crop-global-transient-ne120np4
-
+	crop-global-future
 all : standard tropics crop urban landuse-timeseries
+
+all-subset : \
+	1x1_brazil-tropics-present \
+	crop-tropics-historical \
+	crop-tropics-transient \
+	crop-numa-present \
+	crop-numa-historical \
+	crop-smallville \
+	crop-smallville-historical \
+	urban-present urban-alpha
 
 DEBUG:
 	@echo "HOST       := $(HOST)"
 	@echo "PROJECT    := $(PROJECT)"
 	@echo "BATCHJOBS  := $(BATCHJOBS)"
 	@echo "BACKGROUND := $(BACKGROUND)"
+
 #
 # standard
 #
 standard : $(STANDARD)
 
 global-present : FORCE
-	$(MKSURFDATA) -no-crop -glc_nec 10 -y 2000 -res $(STANDARD_RES) $(BACKGROUND)
-
-global-present-f05 : FORCE
-	$(MKSURFDATA) -no-crop -glc_nec 10 -y 1850,2000 -res 0.47x0.63 $(BACKGROUND)
+	$(MKSURFDATA) -no-crop -vic -glc_nec 10 -y 2000 -res $(STANDARD_RES_NO_CROP) $(BACKGROUND)
 
 # T42 is needed for SCAM
 global-present-T42 : FORCE
 	$(MKSURFDATA) -no-crop -glc_nec 10 -y 2000 -res 64x128 $(BACKGROUND)
 
-global-present-0.125 : FORCE
-	$(MKSURFDATA) -no-crop -hirespft -glc_nec 10 -y 2000 -res 0.125x0.125 $(BACKGROUND)
-
-global-present-ne16np4 : FORCE
-	$(MKSURFDATA) -no-crop -glc_nec 10 -y 2000 -res ne16np4 $(BACKGROUND)
-
-global-present-ne120np4 : FORCE
-	$(MKSURFDATA) -no-crop -glc_nec 10 -y 2000 -res ne120np4 $(BACKGROUND)
-
-# BUG(wjs, 2019-04-10, ESCOMP/ctsm#262) This -hirespft won't work until issue 262 is resolved
-# For now, I'm using:
-#    -no-crop -glc_nec 10 -y 2005 -res 0.125nldas2
 global-present-nldas : FORCE
 	$(MKSURFDATA) -no-crop -hirespft -glc_nec 10 -y 2005 -res 0.125nldas2 $(BACKGROUND)
-
-global-historical : FORCE
-	$(MKSURFDATA) -no-crop -glc_nec 10 -y 1850 -res $(STANDARD_RES) $(BACKGROUND)
-
-global-historical-ne120np4 : FORCE
-	$(MKSURFDATA) -no-crop -glc_nec 10 -y 1850 -res ne120np4 $(BACKGROUND)
-
-global-transient : FORCE
-	$(MKSURFDATA) -no-crop -no_surfdata -glc_nec 10 -y 1850-2000 -res $(STANDARD_RES) $(BACKGROUND)
-
-global-transient-ne120np4 : FORCE
-	$(MKSURFDATA) -no-crop -no_surfdata -glc_nec 10 -y 1850-2000 -res ne120np4 $(BACKGROUND)
-
-global-transient-f05 : FORCE
-	$(MKSURFDATA) -no-crop -no_surfdata -glc_nec 10 -y 1850-2000 -res 0.47x0.63 $(BACKGROUND)
 
 #
 # tropics
 #
 tropics : $(TROPICS)
 
-tropics-present : FORCE
-	$(MKSURFDATA) -glc_nec 10 -no-crop -y 2000 -res 5x5_amazon,1x1_brazil $(BACKGROUND)
+crop-tropics-present : brazil-tropics-present
+	$(MKSURFDATA) -glc_nec 10 -y 2000 -res 5x5_amazon $(BACKGROUND)
 
-tropics-historical : FORCE
-	$(MKSURFDATA) -glc_nec 10 -no-crop -y 1850 -res 1x1_brazil $(BACKGROUND)
+1x1_brazil-tropics-present : FORCE
+	$(SUBSETDATA_POINT_ALLLU) --create-surface $(SUBSETDATA_1X1_BRAZIL)
 
-tropics-transient : FORCE
-	$(MKSURFDATA) -glc_nec 10 -no-crop -no_surfdata -y 1850-2000 -res 1x1_brazil $(BACKGROUND)
-
-crop-tropics-present : FORCE
-	$(MKSURFDATA) -glc_nec 10 -y 2000 -res 5x5_amazon,1x1_brazil $(BACKGROUND)
 
 crop-tropics-historical : FORCE
-	$(MKSURFDATA) -glc_nec 10 -y 1850 -res 1x1_brazil $(BACKGROUND)
+	$(SUBSETDATA_POINT_ALLLU) --create-surface $(SUBSETDATA_1X1_BRAZIL) --cfg-file default_data_1850.cfg
 
 crop-tropics-transient : FORCE
-	$(MKSURFDATA) -glc_nec 10 -no_surfdata -y 1850-2000 -res 1x1_brazil $(BACKGROUND)
+	$(SUBSETDATA_POINT_ALLLU) --create-landuse $(SUBSETDATA_1X1_BRAZIL)
 
 #
 # crop
@@ -188,16 +179,13 @@ crop-global-present-f05 : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 1850,2000 -res 0.47x0.63 $(BACKGROUND)
 
 crop-numa-present : FORCE
-	$(MKSURFDATA) -glc_nec 10 -y 2000 -r 1x1_numaIA $(BACKGROUND)
+	$(SUBSETDATA_POINT_ALLLU) --create-surface $(SUBSETDATA_1X1_NUMAIA)
 
 crop-numa-historical : FORCE
-	$(MKSURFDATA) -glc_nec 10 -y 1850 -r 1x1_numaIA $(BACKGROUND)
+	$(SUBSETDATA_POINT_ALLLU) --create-surface $(SUBSETDATA_1X1_NUMAIA) --cfg-file default_data_1850.cfg
 
 crop-smallville : FORCE
-	$(MKSURFDATA) -glc_nec 10 -y 2000 -r 1x1_smallvilleIA \
-		-pft_idx 17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78 \
-		-pft_frc 6.5,1.5,1.6,1.7,1.8,1.9,1.5,1.6,1.7,1.8,1.9,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5 \
-		$(BACKGROUND)
+	$(SUBSETDATA_POINT) --create-surface $(SUBSETDATA_1X1_SMALL)
 
 crop-global-present-ne16np4 : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 2000 -res ne16np4 $(BACKGROUND)
@@ -210,10 +198,11 @@ crop-global-present-ne120np4 : FORCE
 # adds crop (to make sure that it works properly to add crop in a grid cell
 # where there used to be no crop).
 crop-smallville-historical : FORCE
-	$(MKSURFDATA) -glc_nec 10 -y 1850 -r 1x1_smallvilleIA -pft_idx 13 -pft_frc 100 $(BACKGROUND)
+	$(SUBSETDATA_POINT) --create-surface $(SUBSETDATA_1X1_SMALL1850) --cfg-file default_data_1850.cfg
 
+# Setup the historical case for SSP5-8.5 so that historical can be used to go into the future.
 crop-global-historical : FORCE
-	$(MKSURFDATA) -glc_nec 10 -y 1850 -res $(STANDARD_RES) $(BACKGROUND)
+	$(MKSURFDATA) -glc_nec 10 -y 1850 -ssp_rcp SSP5-8.5 -res $(STANDARD_RES) $(BACKGROUND)
 
 crop-global-historical-f05 : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 1850 -r 0.47x0.63 $(BACKGROUND)
@@ -222,35 +211,82 @@ crop-global-historical-ne120np4 : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 1850 -res ne120np4 $(BACKGROUND)
 
 crop-global-transient: FORCE
-	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2000 -res $(STANDARD_RES) $(BACKGROUND)
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2000 -res $(TRANS_RES) $(BACKGROUND)
 
 crop-global-transient-ne120np4 : FORCE
 	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2000 -res ne120np4 $(BACKGROUND)
 
 crop-global-transient-f05 : FORCE
 	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2000 -res 0.47x0.63 $(BACKGROUND)
+
+#
+# Crop with future scenarios
+#
+crop-global-future : crop-global-SSP1-2.6 crop-global-SSP3-7.0 crop-global-SSP5-3.4 crop-global-SSP2-4.5 \
+                     crop-global-SSP1-1.9 crop-global-SSP4-3.4 crop-global-SSP4-6.0 crop-global-SSP5-8.5
+
+crop-global-SSP1-2.6 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP1-2.6 -res $(FUTURE_RES) $(BACKGROUND)
+
+crop-global-SSP3-7.0 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP3-7.0 -res $(FUTURE_RES) $(BACKGROUND)
+
+crop-global-SSP5-3.4 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP5-3.4 -res $(FUTURE_RES) $(BACKGROUND)
+
+crop-global-SSP2-4.5 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP2-4.5 -res $(FUTURE_RES) $(BACKGROUND)
+
+crop-global-SSP1-1.9 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP1-1.9 -res $(FUTURE_RES) $(BACKGROUND)
+
+crop-global-SSP4-3.4 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP4-3.4 -res $(FUTURE_RES) $(BACKGROUND)
+
+crop-global-SSP4-6.0 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP4-6.0 -res $(FUTURE_RES) $(BACKGROUND)
+
+crop-global-SSP5-8.5 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP5-8.5 -res $(FUTURE_RES) $(BACKGROUND)
+
 #
 # urban
 #
 urban : urban-present urban-alpha
 
-urban-present : FORCE
-	$(MKSURFDATA) -y 2000 -no-crop -glc_nec 10 -r 1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX $(BACKGROUND)
+urban-present : mexicocity vancouver
+
+mexicocity : FORCE
+	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_MEXICOCITY)
+	$(MODIFYSURF) modify_1x1_mexicocityMEX.cfg -i surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000.nc -o surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000_c$(CDATE).nc
+	$(RM) surfdata_1x1_mexicocityMEX_hist_78pfts_CMIP6_simyr2000.nc
+
+vancouver : FORCE
+	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_VANCOUVER)
+	$(MODIFYSURF) modify_1x1_vancouverCAN.cfg -i surfdata_1x1_vancouverCAN_hist_78pfts_CMIP6_simyr2000.nc -o surfdata_1x1_vancouverCAN_hist_78pfts_CMIP6_simyr2000_c$(CDATE).nc
+	$(RM) surfdata_1x1_vancouverCAN_hist_78pfts_CMIP6_simyr2000.nc
 
 # NOTE(bja, 2015-01) skip abort on invalid data necessary as of 2015-01. See
 # /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
 urban-alpha : FORCE
-	$(MKSURFDATA) -y 2000 -no-crop -glc_nec 10 -r 1x1_urbanc_alpha -urban_skip_abort_on_invalid_data_check $(BACKGROUND)
-
+	$(SUBSETDATA_POINT_URBAN) --create-surface $(SUBSETDATA_1X1_URBALPHA)
+	$(MODIFYSURF) modify_1x1_urbanc_alpha.cfg -i surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000.nc -o surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000_c$(CDATE).nc
+	$(RM) surfdata_1x1_urbanc_alpha_hist_78pfts_CMIP6_simyr2000.nc
 
 #
 # landuse timeseries
 #
-landuse-timeseries : landuse-timeseries-f10 landuse-timeseries-smallville
+landuse-timeseries : landuse-timeseries-smallville
 
-landuse-timeseries-f10 : FORCE
-	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2000 -r 10x15 $(BACKGROUND)
-
+# NOTE: TODO: This needs to be chagned to use subset_data when transient configurations are resolved (see Issue #1673
 landuse-timeseries-smallville : FORCE
 	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-1855 -r 1x1_smallvilleIA \
 		-pft_idx 17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78 \

@@ -8,8 +8,9 @@ module pftconMod
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
-  use clm_varpar  , only : mxpft, numrad, ivis, inir, cft_lb, cft_ub
-  use clm_varctl  , only : iulog, use_cndv, use_vertsoilc, use_crop
+  use clm_varpar  , only : mxpft, numrad, ivis, inir, cft_lb, cft_ub, ndecomp_pools
+  use clm_varctl  , only : iulog, use_cndv, use_crop, use_grainproduct
+  use CropReprPoolsMod, only : repr_structure_min, repr_structure_max
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -26,7 +27,6 @@ module pftconMod
   integer, public :: nbrdlf_dcd_trp_tree    ! value for Broadleaf deciduous tropical tree
   integer, public :: nbrdlf_dcd_tmp_tree    ! value for Broadleaf deciduous temperate tree
   integer, public :: nbrdlf_dcd_brl_tree    ! value for Broadleaf deciduous boreal tree
-  integer, public :: ntree                  ! value for last type of tree
   integer, public :: nbrdlf_evr_shrub       ! value for Broadleaf evergreen shrub
   integer, public :: nbrdlf_dcd_tmp_shrub   ! value for Broadleaf deciduous temperate shrub
   integer, public :: nbrdlf_dcd_brl_shrub   ! value for Broadleaf deciduous boreal shrub
@@ -110,7 +110,9 @@ module pftconMod
   type, public :: pftcon_type
 
      integer , allocatable :: noveg         (:)   ! value for not vegetated
-     integer , allocatable :: tree          (:)   ! tree or not?
+     logical , allocatable :: is_tree       (:)   ! tree or not?
+     logical , allocatable :: is_shrub      (:)   ! shrub or not?
+     logical , allocatable :: is_grass      (:)   ! grass or not?
 
      real(r8), allocatable :: dleaf         (:)   ! characteristic leaf dimension (m)
      real(r8), allocatable :: c3psn         (:)   ! photosynthetic pathway: 0. = c4, 1. = c3
@@ -120,6 +122,12 @@ module pftconMod
      real(r8), allocatable :: taul          (:,:) ! leaf transmittance: 1=vis, 2=nir
      real(r8), allocatable :: taus          (:,:) ! stem transmittance: 1=vis, 2=nir
      real(r8), allocatable :: z0mr          (:)   ! ratio of momentum roughness length to canopy top height (-)
+     real(r8), allocatable :: z0v_Cr        (:)   ! roughness-element drag coefficient for Raupach92 parameterization (-)
+     real(r8), allocatable :: z0v_Cs        (:)   ! substrate-element drag coefficient for Raupach92 parameterization (-)
+     real(r8), allocatable :: z0v_c         (:)   ! c parameter for Raupach92 parameterization (-)
+     real(r8), allocatable :: z0v_cw        (:)   ! roughness sublayer depth coefficient for Raupach92 parameterization (-)
+     real(r8), allocatable :: z0v_LAIoff    (:)   ! leaf area index offset for Raupach92 parameterization (-)
+     real(r8), allocatable :: z0v_LAImax    (:)   ! onset of over-sheltering for Raupach92 parameterization (-)
      real(r8), allocatable :: displar       (:)   ! ratio of displacement height to canopy top height (-)
      real(r8), allocatable :: roota_par     (:)   ! CLM rooting distribution parameter [1/m]
      real(r8), allocatable :: rootb_par     (:)   ! CLM rooting distribution parameter [1/m]
@@ -134,6 +142,8 @@ module pftconMod
      real(r8), allocatable :: slatop        (:)   ! SLA at top of canopy [m^2/gC]
      real(r8), allocatable :: dsladlai      (:)   ! dSLA/dLAI [m^2/gC]
      real(r8), allocatable :: leafcn        (:)   ! leaf C:N [gC/gN]
+     real(r8), allocatable :: biofuel_harvfrac (:) ! fraction of stem and leaf cut for harvest, sent to biofuels [unitless]
+     real(r8), allocatable :: repr_structure_harvfrac(:,:) ! fraction of each reproductive structure component that is harvested and sent to the crop products pool [unitless] [0:mxpft, repr_structure_min:repr_structure_max]
      real(r8), allocatable :: flnr          (:)   ! fraction of leaf N in Rubisco [no units]
      real(r8), allocatable :: woody         (:)   ! woody lifeform flag (0 or 1)
      real(r8), allocatable :: lflitcn       (:)   ! leaf litter C:N (gC/gN)
@@ -145,6 +155,13 @@ module pftconMod
      real(r8), allocatable :: rootprof_beta (:,:) ! CLM rooting distribution parameter for C and N inputs [unitless]
      real(r8), allocatable :: root_radius   (:)   ! root radius (m)
      real(r8), allocatable :: root_density  (:)   ! root density (gC/m3)
+
+     real(r8), allocatable :: dbh  (:)            ! diameter at breast height (m)
+     real(r8), allocatable :: fbw  (:)            ! fraction of biomass that is water
+     real(r8), allocatable :: nstem  (:)          ! stem density (#/m2)
+     real(r8), allocatable :: taper  (:)          ! tapering ratio of height:radius_breast_height
+     real(r8), allocatable :: rstem_per_dbh  (:)  ! stem resistance per dbh (s/m/m)
+     real(r8), allocatable :: wood_density  (:)   ! wood density (kg/m3)
 
      !  crop
 
@@ -191,6 +208,8 @@ module pftconMod
      real(r8), allocatable :: flivewd       (:)   ! allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
      real(r8), allocatable :: fcur          (:)   ! allocation parameter: fraction of allocation that goes to currently displayed growth, remainder to storage
      real(r8), allocatable :: fcurdv        (:)   ! alternate fcur for use with cndv
+     real(r8), allocatable :: lf_f          (:,:) ! leaf litter fractions
+     real(r8), allocatable :: fr_f          (:,:) ! fine root litter fractions
      real(r8), allocatable :: lf_flab       (:)   ! leaf litter labile fraction
      real(r8), allocatable :: lf_fcel       (:)   ! leaf litter cellulose fraction
      real(r8), allocatable :: lf_flig       (:)   ! leaf litter lignin fraction
@@ -201,6 +220,7 @@ module pftconMod
      real(r8), allocatable :: evergreen     (:)   ! binary flag for evergreen leaf habit (0 or 1)
      real(r8), allocatable :: stress_decid  (:)   ! binary flag for stress-deciduous leaf habit (0 or 1)
      real(r8), allocatable :: season_decid  (:)   ! binary flag for seasonal-deciduous leaf habit (0 or 1)
+     real(r8), allocatable :: season_decid_temperate(:) ! binary flag for seasonal-deciduous temperate leaf habit (0 or 1)
      real(r8), allocatable :: pconv         (:)   ! proportion of deadstem to conversion flux
      real(r8), allocatable :: pprod10       (:)   ! proportion of deadstem to 10-yr product pool
      real(r8), allocatable :: pprod100      (:)   ! proportion of deadstem to 100-yr product pool
@@ -220,6 +240,8 @@ module pftconMod
      real(r8), allocatable :: fm_droot      (:)
      real(r8), allocatable :: fsr_pft       (:)
      real(r8), allocatable :: fd_pft        (:)
+     real(r8), allocatable :: rswf_min      (:)
+     real(r8), allocatable :: rswf_max      (:)
 
      ! pft parameters for crop code
      real(r8), allocatable :: manunitro     (:)   ! manure
@@ -333,8 +355,10 @@ contains
     class(pftcon_type) :: this
     !-----------------------------------------------------------------------
 
-    allocate( this%noveg         (0:mxpft)); this%noveg (:)   =huge(1)
-    allocate( this%tree          (0:mxpft)); this%tree  (:)   =huge(1)
+    allocate( this%noveg         (0:mxpft)); this%noveg    (:) = huge(1)
+    allocate( this%is_tree       (0:mxpft)); this%is_tree  (:) = .false.
+    allocate( this%is_shrub      (0:mxpft)); this%is_shrub (:) = .false.
+    allocate( this%is_grass      (0:mxpft)); this%is_grass (:) = .false.
 
     allocate( this%dleaf         (0:mxpft) )       
     allocate( this%c3psn         (0:mxpft) )       
@@ -343,11 +367,17 @@ contains
     allocate( this%rhos          (0:mxpft,numrad) ) 
     allocate( this%taul          (0:mxpft,numrad) ) 
     allocate( this%taus          (0:mxpft,numrad) ) 
-    allocate( this%z0mr          (0:mxpft) )        
-    allocate( this%displar       (0:mxpft) )     
-    allocate( this%roota_par     (0:mxpft) )   
-    allocate( this%rootb_par     (0:mxpft) )   
-    allocate( this%crop          (0:mxpft) )        
+    allocate( this%z0mr          (0:mxpft) )
+    allocate( this%z0v_Cr        (0:mxpft) )
+    allocate( this%z0v_Cs        (0:mxpft) )
+    allocate( this%z0v_c         (0:mxpft) )
+    allocate( this%z0v_cw        (0:mxpft) )
+    allocate( this%z0v_LAIoff    (0:mxpft) )
+    allocate( this%z0v_LAImax    (0:mxpft) )
+    allocate( this%displar       (0:mxpft) )
+    allocate( this%roota_par     (0:mxpft) )
+    allocate( this%rootb_par     (0:mxpft) )
+    allocate( this%crop          (0:mxpft) )
     allocate( this%mergetoclmpft (0:mxpft) )
     allocate( this%is_pft_known_to_model  (0:mxpft) )
     allocate( this%irrigated     (0:mxpft) )   
@@ -356,7 +386,9 @@ contains
     allocate( this%fnitr         (0:mxpft) )       
     allocate( this%slatop        (0:mxpft) )      
     allocate( this%dsladlai      (0:mxpft) )    
-    allocate( this%leafcn        (0:mxpft) )      
+    allocate( this%leafcn        (0:mxpft) )  
+    allocate( this%biofuel_harvfrac (0:mxpft) )
+    allocate( this%repr_structure_harvfrac (0:mxpft, repr_structure_min:repr_structure_max) )
     allocate( this%flnr          (0:mxpft) )        
     allocate( this%woody         (0:mxpft) )       
     allocate( this%lflitcn       (0:mxpft) )      
@@ -400,6 +432,10 @@ contains
     allocate( this%flivewd       (0:mxpft) )      
     allocate( this%fcur          (0:mxpft) )         
     allocate( this%fcurdv        (0:mxpft) )       
+    ! Second dimension not i_litr_max because that parameter may obtain its
+    ! value after we've been through here
+    allocate( this%lf_f          (0:mxpft, 1:ndecomp_pools) )
+    allocate( this%fr_f          (0:mxpft, 1:ndecomp_pools) )
     allocate( this%lf_flab       (0:mxpft) )      
     allocate( this%lf_fcel       (0:mxpft) )      
     allocate( this%lf_flig       (0:mxpft) )      
@@ -410,6 +446,7 @@ contains
     allocate( this%evergreen     (0:mxpft) )    
     allocate( this%stress_decid  (0:mxpft) ) 
     allocate( this%season_decid  (0:mxpft) ) 
+    allocate( this%season_decid_temperate (0:mxpft) ) 
     allocate( this%dwood         (0:mxpft) )
     allocate( this%root_density  (0:mxpft) )
     allocate( this%root_radius   (0:mxpft) )
@@ -430,6 +467,8 @@ contains
     allocate( this%fm_droot      (0:mxpft) )
     allocate( this%fsr_pft       (0:mxpft) )
     allocate( this%fd_pft        (0:mxpft) )
+    allocate( this%rswf_max      (0:mxpft) )
+    allocate( this%rswf_min      (0:mxpft) )
     allocate( this%manunitro     (0:mxpft) )
     allocate( this%fleafcn       (0:mxpft) )  
     allocate( this%ffrootcn      (0:mxpft) ) 
@@ -461,6 +500,12 @@ contains
     allocate( this%fun_cn_flex_c (0:mxpft) )
     allocate( this%FUN_fracfixers(0:mxpft) )
     
+    allocate( this%dbh           (0:mxpft) )
+    allocate( this%fbw           (0:mxpft) )
+    allocate( this%nstem         (0:mxpft) )
+    allocate( this%taper         (0:mxpft) )
+    allocate( this%rstem_per_dbh (0:mxpft) )
+    allocate( this%wood_density  (0:mxpft) )
  
   end subroutine InitAllocate
 
@@ -475,16 +520,17 @@ contains
     use fileutils   , only : getfil
     use ncdio_pio   , only : ncd_io, ncd_pio_closefile, ncd_pio_openfile, file_desc_t
     use ncdio_pio   , only : ncd_inqdid, ncd_inqdlen
-    use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_dynroot
+    use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_dynroot, use_biomass_heat_storage, z0param_method
     use spmdMod     , only : masterproc
     use CLMFatesParamInterfaceMod, only : FatesReadPFTs
+    use SoilBiogeochemDecompCascadeConType, only : mimics_decomp, decomp_method
     !
     ! !ARGUMENTS:
     class(pftcon_type) :: this
     !
     ! !LOCAL VARIABLES:
     character(len=256) :: locfn                ! local file name
-    integer            :: i,n,m                ! loop indices
+    integer            :: i,n,m,k              ! loop indices
     integer            :: ier                  ! error code
     type(file_desc_t)  :: ncid                 ! pio netCDF file id
     integer            :: dimid                ! netCDF dimension id
@@ -605,8 +651,47 @@ contains
     call ncd_io('pftname',pftname, 'read', ncid, readvar=readv, posNOTonfile=.true.) 
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
-    call ncd_io('z0mr', this%z0mr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
-    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+
+    select case (z0param_method)
+    case ('ZengWang2007')
+       call ncd_io('z0mr', this%z0mr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+       this%z0v_Cr = 0._r8
+       this%z0v_Cs = 0._r8
+       this%z0v_c = 0._r8
+       this%z0v_cw = 0._r8
+       this%z0v_LAImax = 0._r8
+       this%z0v_LAIoff = 0._r8
+
+    case ('Meier2022')
+       call ncd_io('z0v_Cr', this%z0v_Cr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       call ncd_io('z0v_Cs', this%z0v_Cs, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       call ncd_io('z0v_c', this%z0v_c, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       call ncd_io('z0v_cw', this%z0v_cw, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       call ncd_io('z0v_LAImax', this%z0v_LAImax, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       call ncd_io('z0v_LAIoff', this%z0v_LAIoff, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       this%z0mr = 0._r8
+
+    case default
+       write(iulog,*) subname//' ERROR: unknown z0param_method: ', &
+            z0param_method
+       call endrun(msg = 'unknown z0param_method', &
+            additional_msg = errMsg(sourcefile, __LINE__))
+    end select
+
 
     call ncd_io('displar', this%displar, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
@@ -657,6 +742,9 @@ contains
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('leafcn', this%leafcn, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    
+    call ncd_io('biofuel_harvfrac', this%biofuel_harvfrac, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('flnr', this%flnr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
@@ -728,6 +816,23 @@ contains
     call ncd_io('fr_flig', this%fr_flig, 'read', ncid, readvar=readv, posNOTonfile=.true.)    
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
+    ! Three hardwired fr_f* and lf_f* values: We pass them to 2d arrays for use
+    ! in do-loops. While executing the next few lines, we do not yet have access
+    ! to i_litr_min, i_litr_max.
+    this%fr_f(:,1) = this%fr_flab
+    this%lf_f(:,1) = this%lf_flab
+    if (decomp_method == mimics_decomp) then
+       this%fr_f(:,2) = this%fr_fcel + this%fr_flig
+       this%fr_f(:,3) = 0.0_r8
+       this%lf_f(:,2) = this%lf_fcel + this%lf_flig
+       this%lf_f(:,3) = 0.0_r8
+    else
+       this%fr_f(:,2) = this%fr_fcel
+       this%fr_f(:,3) = this%fr_flig
+       this%lf_f(:,2) = this%lf_fcel
+       this%lf_f(:,3) = this%lf_flig
+    end if
+
     call ncd_io('leaf_long', this%leaf_long, 'read', ncid, readvar=readv, posNOTonfile=.true.)    
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
@@ -738,6 +843,9 @@ contains
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('season_decid', this%season_decid, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('season_decid_temperate', this%season_decid_temperate, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('pftpar20', this%pftpar20, 'read', ncid, readvar=readv, posNOTonfile=.true.)
@@ -946,6 +1054,11 @@ contains
     call ncd_io('fd_pft', this%  fd_pft, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
+    call ncd_io('rswf_min', this% rswf_min, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('rswf_max', this% rswf_max, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__)) 
     call ncd_io('planting_temp', this%planttemp, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
@@ -972,13 +1085,8 @@ contains
        this%dwood(m) = dwood
        this%root_radius(m)  = root_radius
        this%root_density(m) = root_density
-
-       if (m <= ntree) then
-          this%tree(m) = 1
-       else
-          this%tree(m) = 0
-       end if
     end do
+
     !
     ! clm 5 nitrogen variables
     !
@@ -1004,6 +1112,33 @@ contains
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
     end if
    
+    call ncd_io('nstem',this%nstem, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    call ncd_io('taper',this%taper, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    !
+    ! Biomass heat storage variables
+    !
+    if (use_biomass_heat_storage ) then
+       !
+       ! These variables are used for stem biomass and only for tree and shrub
+       ! (They are effectively unused for other veg types)
+       !
+       call ncd_io('dbh',this%dbh, 'read', ncid, readvar=readv)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+       call ncd_io('fbw',this%fbw, 'read', ncid, readvar=readv)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+       call ncd_io('rstem',this%rstem_per_dbh, 'read', ncid, readvar=readv)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+       call ncd_io('wood_density',this%wood_density, 'read', ncid, readvar=readv)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    else
+       this%dbh = 0.0_r8
+       this%fbw = 0.0_r8
+       this%rstem_per_dbh = 0.0_r8
+       this%wood_density = 0.0_r8
+    end if
+
     call ncd_pio_closefile(ncid)
 
     call FatesReadPFTs()
@@ -1098,12 +1233,34 @@ contains
        if ( trim(pftname(i)) == 'irrigated_tropical_soybean'          ) nirrig_trp_soybean   = i
     end do
 
-    ntree                = nbrdlf_dcd_brl_tree  ! value for last type of tree
     npcropmin            = ntmp_corn            ! first prognostic crop
     npcropmax            = mxpft                ! last prognostic crop in list
 
     call this%set_is_pft_known_to_model()
     call this%set_num_cfts_known_to_model()
+
+    ! Set vegetation family identifier (tree/shrub/grass)
+    do m = 0,mxpft 
+       if (m == ndllf_evr_tmp_tree .or. m == ndllf_evr_brl_tree &
+            .or. m == ndllf_dcd_brl_tree .or. m == nbrdlf_evr_trp_tree &
+            .or. m == nbrdlf_evr_tmp_tree .or. m == nbrdlf_dcd_trp_tree &
+            .or. m == nbrdlf_dcd_tmp_tree .or. m == nbrdlf_dcd_brl_tree) then
+          this%is_tree(m) = .true.
+       else
+          this%is_tree(m) = .false.
+       endif
+       if(m == nbrdlf_evr_shrub .or. m == nbrdlf_dcd_tmp_shrub .or. m == nbrdlf_dcd_brl_shrub) then
+          this%is_shrub(m) = .true.
+       else
+          this%is_shrub(m) = .false.
+       endif
+       if(m == nc3_arctic_grass .or. m == nc3_nonarctic_grass .or. m == nc4_grass) then
+          this%is_grass(m) = .true.
+       else
+          this%is_grass(m) = .false.
+       endif
+
+    end do
 
     if (use_cndv) then
        this%fcur(:) = this%fcurdv(:)
@@ -1118,6 +1275,27 @@ contains
          this%mergetoclmpft(i) = nc3irrig
        end do
     end if
+
+    ! BUG(wjs, 2022-03-02, ESCOMP/CTSM#1667) Add this to the param file and read it along
+    ! with the other parameters. Until then, this block of code needs to be done after
+    ! npcropmin is set so that we have the correct value of npcropmin below.
+    do k = repr_structure_min, repr_structure_max
+       do i = 0, npcropmin-1
+          this%repr_structure_harvfrac(i,k) = 0._r8
+       end do
+       do i = npcropmin, mxpft
+          ! For now, until we read this from the param file, set it based on
+          ! use_grainproduct. This will facilitate software testing: this keeps the
+          ! operation of the structure pools similar to that of the grain pools for a
+          ! given setup.
+          if (use_grainproduct) then
+             this%repr_structure_harvfrac(i,k) = 1._r8
+          else
+             this%repr_structure_harvfrac(i,k) = 0._r8
+          end if
+       end do
+    end do
+
     !
     ! Do some error checking, but not if fates is on.
     !
@@ -1172,6 +1350,16 @@ contains
           if ( this%pprodharv10(i) > 1.0_r8 .or. this%pprodharv10(i) < 0.0_r8 )then
              call endrun(msg=' ERROR: pprodharv10 outside of range.'//errMsg(sourcefile, __LINE__))
           end if
+          if (i < npcropmin .and. this%biofuel_harvfrac(i) /= 0._r8) then
+             call endrun(msg=' ERROR: biofuel_harvfrac non-zero for a non-prognostic crop PFT.'//&
+                  errMsg(sourcefile, __LINE__))
+          end if
+          do k = repr_structure_min, repr_structure_max
+             if (i < npcropmin .and. this%repr_structure_harvfrac(i,k) /= 0._r8) then
+                call endrun(msg=' ERROR: repr_structure_harvfrac non-zero for a non-prognostic crop PFT.'//&
+                     errMsg(sourcefile, __LINE__))
+             end if
+          end do
        end do
     end if
 
@@ -1259,7 +1447,9 @@ contains
     !-----------------------------------------------------------------------
 
     deallocate( this%noveg)
-    deallocate( this%tree)
+    deallocate( this%is_tree)
+    deallocate( this%is_shrub)
+    deallocate( this%is_grass)
 
     deallocate( this%dleaf)
     deallocate( this%c3psn)
@@ -1269,6 +1459,12 @@ contains
     deallocate( this%taul)
     deallocate( this%taus)
     deallocate( this%z0mr)
+    deallocate( this%z0v_Cr)
+    deallocate( this%z0v_Cs)
+    deallocate( this%z0v_c)
+    deallocate( this%z0v_cw)
+    deallocate( this%z0v_LAImax)
+    deallocate( this%z0v_LAIoff)
     deallocate( this%displar)
     deallocate( this%roota_par)
     deallocate( this%rootb_par)
@@ -1282,6 +1478,8 @@ contains
     deallocate( this%slatop)
     deallocate( this%dsladlai)
     deallocate( this%leafcn)
+    deallocate( this%biofuel_harvfrac)
+    deallocate( this%repr_structure_harvfrac)
     deallocate( this%flnr)
     deallocate( this%woody)
     deallocate( this%lflitcn)
@@ -1325,9 +1523,11 @@ contains
     deallocate( this%flivewd)
     deallocate( this%fcur)
     deallocate( this%fcurdv)
+    deallocate( this%lf_f   )
     deallocate( this%lf_flab)
     deallocate( this%lf_fcel)
     deallocate( this%lf_flig)
+    deallocate( this%fr_f   )
     deallocate( this%fr_flab)
     deallocate( this%fr_fcel)
     deallocate( this%fr_flig)
@@ -1335,6 +1535,7 @@ contains
     deallocate( this%evergreen)
     deallocate( this%stress_decid)
     deallocate( this%season_decid)
+    deallocate( this%season_decid_temperate)
     deallocate( this%dwood)
     deallocate( this%root_density)
     deallocate( this%root_radius)
@@ -1355,6 +1556,8 @@ contains
     deallocate( this%fm_droot)
     deallocate( this%fsr_pft)
     deallocate( this%fd_pft)
+    deallocate( this%rswf_min)
+    deallocate( this%rswf_max)
     deallocate( this%manunitro)
     deallocate( this%fleafcn)
     deallocate( this%ffrootcn)
@@ -1386,6 +1589,12 @@ contains
     deallocate( this%fun_cn_flex_c)
     deallocate( this%FUN_fracfixers)
     
+    deallocate( this%dbh)
+    deallocate( this%fbw)
+    deallocate( this%nstem)
+    deallocate( this%rstem_per_dbh)
+    deallocate( this%wood_density)
+    deallocate( this%taper)
   end subroutine Clean
 
 end module pftconMod

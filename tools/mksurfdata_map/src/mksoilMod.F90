@@ -181,6 +181,8 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
   real(r8), allocatable :: sand_i(:,:)      ! input grid: percent sand
   real(r8), allocatable :: clay_i(:,:)      ! input grid: percent clay
   real(r8), allocatable :: mapunit_i(:)     ! input grid: igbp soil mapunits
+  real(r8), allocatable :: frac_dst(:)      ! output fractions
+  real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
   integer, parameter :: num=2               ! set soil mapunit number
   integer  :: wsti(num)                     ! index to 1st and 2nd largest wst
   integer, parameter :: nlsm=4              ! number of soil textures 
@@ -259,6 +261,11 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
 
      call domain_checksame( tdomain, ldomain, tgridmap )
 
+     ! Obtain frac_dst
+     allocate(frac_dst(ns_o), stat=ier)
+     if (ier/=0) call abort()
+     call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+
      ! kmap_max are the maximum number of mapunits that will consider on
      ! any output gridcell - this is set currently above and can be changed
      ! kmap(:) are the mapunit values on the input grid
@@ -268,9 +275,10 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
      novr(:) = 0
      do n = 1,tgridmap%ns
         ni = tgridmap%src_indx(n)
-        no = tgridmap%dst_indx(n)
-        wt = tgridmap%wovr(n)
-        novr(no) = novr(no) + 1
+        if (tdomain%mask(ni) > 0) then
+           no = tgridmap%dst_indx(n)
+           novr(no) = novr(no) + 1
+        end if
      end do
      maxovr = maxval(novr(:))
      kmap_max = min(maxovr,max(kmap_max_min,km_mx_ns_prod/ns_o))
@@ -294,31 +302,28 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
      do n = 1,tgridmap%ns
         ni = tgridmap%src_indx(n)
         no = tgridmap%dst_indx(n)
-        wt = tgridmap%wovr(n)
-        if (tgridmap%frac_src(ni) > 0) then
+        wt = tgridmap%wovr(n) * tdomain%mask(ni)
+        if (wt > 0._r8) then
            k = mapunit_i(ni) 
-        else
-           k = 0
-        end if
-        found = .false.
-        do l = 0,kmax(no)
-           if (k == kmap(l,no)) then
-              kwgt(l,no) = kwgt(l,no) + wt
-              kmap(l,no) = k
-              found = .true.
-              exit
+           found = .false.
+           do l = 0,kmax(no)
+              if (k == kmap(l,no)) then
+                 kwgt(l,no) = kwgt(l,no) + wt
+                 found = .true.
+                 exit
+              end if
+           end do
+           if (.not. found) then
+              kmax(no) = kmax(no) + 1
+              if (kmax(no) > kmap_max) then
+                 write(6,*)'kmax is > kmap_max= ',kmax(no), 'kmap_max = ', &
+                            kmap_max,' for no = ',no
+                 write(6,*)'reset kmap_max in mksoilMod to a greater value'
+                 call abort()
+              end if
+              kmap(kmax(no),no) = k
+              kwgt(kmax(no),no) = wt
            end if
-        end do
-        if (.not. found) then
-           kmax(no) = kmax(no) + 1
-           if (kmax(no) > kmap_max) then
-              write(6,*)'kmax is > kmap_max= ',kmax(no), 'kmap_max = ', &
-                         kmap_max,' for no = ',no
-              write(6,*)'reset kmap_max in mksoilMod to a greater value'
-              stop
-           end if
-           kmap(kmax(no),no) = k
-           kwgt(kmax(no),no) = wt
         end if
      enddo
 
@@ -386,29 +391,10 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
 
      ! Global sum of output field 
 
-     sum_fldi = 0.0_r8
-     do ni = 1,ns_i
-        sum_fldi = sum_fldi + tgridmap%area_src(ni)*tgridmap%frac_src(ni)*re**2
-     enddo
-
-     sum_fldo = 0.
-     do no = 1,ns_o
-        sum_fldo = sum_fldo + tgridmap%area_dst(no)*tgridmap%frac_dst(no)*re**2
-     end do
-
-     ! -----------------------------------------------------------------
-     ! Error check1
-     ! Compare global sum fld_o to global sum fld_i.
-     ! -----------------------------------------------------------------
-
-     if ( trim(mksrf_gridtype) == 'global') then
-        if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
-           write (6,*) 'MKSOILTEX error: input field not conserved'
-           write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-           write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-           stop
-        end if
-     end if
+     allocate(mask_r8(ns_i), stat=ier)
+     if (ier/=0) call abort()
+     mask_r8 = tdomain%mask
+     call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
      ! -----------------------------------------------------------------
      ! Error check2
@@ -444,7 +430,7 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
              ' not assigned to soil type for input grid lon,lat,layer = ',ni,l
            call abort()
 101        continue
-           gast_i(m) = gast_i(m) + tgridmap%area_src(ni)*tgridmap%frac_src(ni)*re**2
+           gast_i(m) = gast_i(m) + tgridmap%area_src(ni)*tdomain%mask(ni)*re**2
         end do
      end do
 
@@ -472,7 +458,7 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
              ' not assigned to soil type for output grid lon,lat,layer = ',no,l
            call abort()
 102        continue
-           gast_o(m) = gast_o(m) + tgridmap%area_dst(no)*tgridmap%frac_dst(no)*re**2
+           gast_o(m) = gast_o(m) + tgridmap%area_dst(no)*frac_dst(no)*re**2
         end do
      end do
 
@@ -510,6 +496,8 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
      call gridmap_clean(tgridmap)
      deallocate (kmap, kwgt, kmax, wst)
      deallocate (sand_i,clay_i,mapunit_i)
+     deallocate (frac_dst)
+     deallocate (mask_r8)
   end if
 
 
@@ -600,6 +588,8 @@ subroutine mksoilcol(ldomain, mapfname, datfname, ndiag, &
   real(r8), allocatable :: gast_i(:)        ! global area, by surface type
   real(r8), allocatable :: gast_o(:)        ! global area, by surface type
   integer , allocatable :: soil_color_i(:)  ! input grid: BATS soil color
+  real(r8), allocatable :: frac_dst(:)      ! output fractions
+  real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
   real(r8) :: sum_fldi                      ! global sum of dummy input fld
   real(r8) :: sum_fldo                      ! global sum of dummy output fld
   character(len=35), allocatable :: col(:)  ! name of each color
@@ -624,6 +614,8 @@ subroutine mksoilcol(ldomain, mapfname, datfname, ndiag, &
   call domain_read(tdomain,datfname)
   ns_i = tdomain%ns
   allocate(soil_color_i(ns_i), stat=ier)
+  if (ier/=0) call abort()
+  allocate(frac_dst(ns_o), stat=ier)
   if (ier/=0) call abort()
 
   write (6,*) 'Open soil color file: ', trim(datfname)
@@ -697,6 +689,9 @@ subroutine mksoilcol(ldomain, mapfname, datfname, ndiag, &
 
      call domain_checksame( tdomain, ldomain, tgridmap )
 
+     ! Obtain frac_dst
+     call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+
      ! Determine dominant soil color for each output cell
 
      call dominant_soil_color( &
@@ -708,29 +703,10 @@ subroutine mksoilcol(ldomain, mapfname, datfname, ndiag, &
 
      ! Global sum of output field 
 
-     sum_fldi = 0.0_r8
-     do ni = 1,ns_i
-       sum_fldi = sum_fldi + tgridmap%area_src(ni) * tgridmap%frac_src(ni)
-     enddo
-
-     sum_fldo = 0.
-     do no = 1,ns_o
-        sum_fldo = sum_fldo + tgridmap%area_dst(no) * tgridmap%frac_dst(no)
-     end do
-
-     ! -----------------------------------------------------------------
-     ! Error check1
-     ! Compare global sum fld_o to global sum fld_i.
-     ! -----------------------------------------------------------------
-
-     if ( trim(mksrf_gridtype) == 'global') then
-        if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
-           write (6,*) 'MKSOILCOL error: input field not conserved'
-           write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-           write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-           stop
-        end if
-     end if
+     allocate(mask_r8(ns_i), stat=ier)
+     if (ier/=0) call abort()
+     mask_r8 = tdomain%mask
+     call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
      ! -----------------------------------------------------------------
      ! Error check2
@@ -740,13 +716,13 @@ subroutine mksoilcol(ldomain, mapfname, datfname, ndiag, &
      gast_i(:) = 0.
      do ni = 1,ns_i
         k = soil_color_i(ni)
-        gast_i(k) = gast_i(k) + tgridmap%area_src(ni)*tgridmap%frac_src(ni)*re**2
+        gast_i(k) = gast_i(k) + tgridmap%area_src(ni)*tdomain%mask(ni)*re**2
      end do
 
      gast_o(:) = 0.
      do no = 1,ns_o
         k = soil_color_o(no)
-        gast_o(k) = gast_o(k) + tgridmap%area_dst(no)*tgridmap%frac_dst(no)*re**2
+        gast_o(k) = gast_o(k) + tgridmap%area_dst(no)*frac_dst(no)*re**2
      end do
 
      ! area comparison
@@ -777,7 +753,7 @@ subroutine mksoilcol(ldomain, mapfname, datfname, ndiag, &
   if ( soil_color == unsetcol )then
      call gridmap_clean(tgridmap)
   end if
-  deallocate (soil_color_i,gast_i,gast_o,col)
+  deallocate (soil_color_i,gast_i,gast_o,col, frac_dst, mask_r8)
 
   write (6,*) 'Successfully made soil color classes'
   write (6,*)
@@ -824,6 +800,7 @@ subroutine mkorganic(ldomain, mapfname, datfname, ndiag, organic_o)
   type(gridmap_type)    :: tgridmap
   type(domain_type)    :: tdomain         ! local domain
   real(r8), allocatable :: organic_i(:,:)  ! input grid: total column organic matter
+  real(r8), allocatable :: frac_dst(:)     ! output fractions
   real(r8) :: sum_fldi                     ! global sum of dummy input fld
   real(r8) :: sum_fldo                     ! global sum of dummy output fld
   real(r8) :: gomlev_i                     ! input  grid: global organic on lev
@@ -859,9 +836,12 @@ subroutine mkorganic(ldomain, mapfname, datfname, ndiag, organic_o)
 
   allocate(organic_i(ns_i,nlay),stat=ier)
   if (ier/=0) call abort()
+  allocate(frac_dst(ldomain%ns),stat=ier)
+  if (ier/=0) call abort()
+
   if (nlay /= nlevsoi) then
      write(6,*)'nlay, nlevsoi= ',nlay,nlevsoi,' do not match'
-     stop
+     call abort()
   end if
 
   call check_ret(nf_inq_varid (ncid, 'ORGANIC', varid), subname)
@@ -877,8 +857,11 @@ subroutine mkorganic(ldomain, mapfname, datfname, ndiag, organic_o)
 
   call domain_checksame( tdomain, ldomain, tgridmap )
 
+  ! Obtain frac_dst
+  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+
   do lev = 1,nlay
-     call gridmap_areaave(tgridmap, organic_i(:,lev), organic_o(:,lev), nodata=0._r8)
+     call gridmap_areaave_srcmask(tgridmap, organic_i(:,lev), organic_o(:,lev), nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
   end do
 
   do lev = 1,nlevsoi
@@ -890,7 +873,7 @@ subroutine mkorganic(ldomain, mapfname, datfname, ndiag, organic_o)
            write (6,*) 'MKORGANIC error: organic = ',organic_o(no,lev), &
                 ' greater than 130.000001 for column, row = ',no
            call shr_sys_flush(6)
-           stop
+           call abort()
         end if
      enddo
 
@@ -922,6 +905,7 @@ subroutine mkorganic(ldomain, mapfname, datfname, ndiag, organic_o)
   call domain_clean(tdomain)
   call gridmap_clean(tgridmap)
   deallocate (organic_i)
+  deallocate (frac_dst)
 
   write (6,*) 'Successfully made organic matter'
   call shr_sys_flush(6)
@@ -958,7 +942,7 @@ subroutine mksoilfmaxInit( )
   if ( soil_fmax /= unset )then
      if ( soil_fmax < 0.0 .or. soil_fmax > 1.0 )then
         write(6,*)'soil_fmax is out of range = ', soil_fmax
-        stop
+        call abort()
      end if
      write(6,*) 'Replace soil fmax for all points with: ', soil_fmax
   end if
@@ -1004,6 +988,8 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
   type(gridmap_type)    :: tgridmap
   type(domain_type)    :: tdomain         ! local domain
   real(r8), allocatable :: fmax_i(:)       ! input grid: percent fmax
+  real(r8), allocatable :: frac_dst(:)     ! output fractions
+  real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
   real(r8) :: sum_fldi                     ! global sum of dummy input fld
   real(r8) :: sum_fldo                     ! global sum of dummy output fld
   real(r8) :: gfmax_i                      ! input  grid: global fmax
@@ -1028,9 +1014,11 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
 
   call domain_read(tdomain,datfname)
   ns_i = tdomain%ns
+  ns_o = ldomain%ns
   allocate(fmax_i(ns_i), stat=ier)
   if (ier/=0) call abort()
-  ns_o = ldomain%ns
+  allocate(frac_dst(ns_o), stat=ier)
+  if (ier/=0) call abort()
 
   write (6,*) 'Open soil fmax file: ', trim(datfname)
   call check_ret(nf_open(datfname, 0, ncid), subname)
@@ -1048,12 +1036,15 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
 
   call domain_checksame( tdomain, ldomain, tgridmap )
 
+  ! Obtain frac_dst
+  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+
   ! Determine fmax_o on output grid
  
   ! In points with no data, use globalAvg
   ! (WJS (3-11-13): use real(.365783,r8) rather than .365783_r8 to maintain bfb results
   ! with old code)
-  call gridmap_areaave(tgridmap, fmax_i, fmax_o, nodata=real(.365783,r8))
+  call gridmap_areaave_srcmask(tgridmap, fmax_i, fmax_o, nodata=real(.365783,r8), mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check for conservation
 
@@ -1062,36 +1053,17 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
         write (6,*) 'MKFMAX error: fmax = ',fmax_o(no), &
                 ' greater than 1.000001 for column, row = ',no
         call shr_sys_flush(6)
-        stop
+        call abort()
      end if
   enddo
 
   ! Global sum of output field -- must multiply by fraction of
   ! output grid that is land as determined by input grid
 
-  sum_fldi = 0.0_r8
-  do ni = 1,ns_i
-    sum_fldi = sum_fldi + tgridmap%area_src(ni) * tgridmap%frac_src(ni)
-  enddo
-
-  sum_fldo = 0.
-  do no = 1,ns_o
-     sum_fldo = sum_fldo + tgridmap%area_dst(no) * tgridmap%frac_dst(no)
-  end do
-
-  ! -----------------------------------------------------------------
-  ! Error check1
-  ! Compare global sum fld_o to global sum fld_i.
-  ! -----------------------------------------------------------------
-
-  if ( trim(mksrf_gridtype) == 'global') then
-     if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
-        write (6,*) 'MKFMAX error: input field not conserved'
-        write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-        write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-        stop
-     end if
-  end if
+  allocate(mask_r8(ns_i), stat=ier)
+  if (ier/=0) call abort()
+  mask_r8 = tdomain%mask
+  call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
   ! -----------------------------------------------------------------
   ! Error check2
@@ -1103,7 +1075,7 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
   do ni = 1,ns_i
      garea_i = garea_i + tgridmap%area_src(ni)*re**2
      gfmax_i = gfmax_i + fmax_i(ni)*(tgridmap%area_src(ni)/100.)* &
-                                     tgridmap%frac_src(ni)*re**2
+                                     tdomain%mask(ni)*re**2
   end do
 
   gfmax_o = 0.
@@ -1111,12 +1083,10 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
   do no = 1,ns_o
      garea_o = garea_o + tgridmap%area_dst(no)*re**2
      gfmax_o = gfmax_o + fmax_o(no)*(tgridmap%area_dst(no)/100.) * &
-                                     tgridmap%frac_dst(no)*re**2
-     if ((tgridmap%mask_dst(no) > 0)) then 
-        if ((tgridmap%frac_dst(no) < 0.0) .or. (tgridmap%frac_dst(no) > 1.0001)) then
-           write(6,*) "ERROR:: frac out of range: ", tgridmap%frac_dst(no),no
-           stop 
-        end if
+                                     frac_dst(no)*re**2
+     if ((frac_dst(no) < 0.0) .or. (frac_dst(no) > 1.0001)) then
+        write(6,*) "ERROR:: frac_dst out of range: ", frac_dst(no),no
+        call abort()
      end if
   end do
 
@@ -1148,6 +1118,8 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
   call domain_clean(tdomain)
   call gridmap_clean(tgridmap)
   deallocate (fmax_i)
+  deallocate (frac_dst)
+  deallocate (mask_r8)
 
 end subroutine mkfmax
 

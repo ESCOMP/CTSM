@@ -2,9 +2,9 @@ module test_update_landunit_weights_one_gcell
 
   ! Tests of the update_landunit_weights_one_gcell routine in the dynLandunitArea module
 
-  use pfunit_mod
+  use funit
   use dynLandunitAreaMod
-  use landunit_varcon, only : istsoil, istcrop, isturb_md, istice_mec, istdlak, max_lunit
+  use landunit_varcon, only : istsoil, istcrop, isturb_md, istice, istdlak, max_lunit
   use shr_kind_mod   , only : r8 => shr_kind_r8
   
 
@@ -46,7 +46,7 @@ contains
     real(r8) :: expected(max_lunit)
 
     landunit_weights = create_landunit_weights()
-    landunit_weights(istice_mec) = landunit_weights(istice_mec) - 0.01_r8
+    landunit_weights(istice) = landunit_weights(istice) - 0.01_r8
     expected = landunit_weights
     expected(istsoil) = landunit_weights(istsoil) + 0.01_r8
 
@@ -63,7 +63,7 @@ contains
     real(r8) :: expected(max_lunit)
 
     landunit_weights = create_landunit_weights()
-    landunit_weights(istice_mec) = landunit_weights(istice_mec) + 0.01_r8
+    landunit_weights(istice) = landunit_weights(istice) + 0.01_r8
     expected = landunit_weights
     expected(istsoil) = landunit_weights(istsoil) - 0.01_r8
 
@@ -83,7 +83,7 @@ contains
 
     ! In the following, we assume that the first few elements of decrease_order are:
     ! istsoil, istcrop, isturb_md
-    landunit_weights(istice_mec) = landunit_weights(istice_mec) + &
+    landunit_weights(istice) = landunit_weights(istice) + &
          landunit_weights(istsoil) + landunit_weights(istcrop) + 0.01_r8
     expected = landunit_weights
     expected(istsoil) = 0._r8
@@ -97,18 +97,18 @@ contains
   @Test
   subroutine test_greater_than_1_all_changes()
     ! Test with the input summing to greater than 1, resulting in a change in ALL
-    ! landunits (except istice_mec, which is the one set manually here, and which can
+    ! landunits (except istice, which is the one set manually here, and which can
     ! never change)
 
     real(r8) :: landunit_weights(max_lunit)
     real(r8) :: expected(max_lunit)
 
     landunit_weights = create_landunit_weights()
-    landunit_weights(istice_mec) = 0.99_r8
+    landunit_weights(istice) = 0.99_r8
 
     ! In the following, we assume that the last element of decrease_order is istdlak
     expected(:) = 0._r8
-    expected(istice_mec) = 0.99_r8
+    expected(istice) = 0.99_r8
     expected(istdlak) = 0.01_r8
     
     call update_landunit_weights_one_gcell(landunit_weights)
@@ -117,16 +117,16 @@ contains
 
   @Test
   subroutine test_greater_than_1_all_changes_to_0()
-    ! Similar to test_greater_than_1_all_changes, but now all landunits except istice_mec
+    ! Similar to test_greater_than_1_all_changes, but now all landunits except istice
     ! are reduced to 0
 
     real(r8) :: landunit_weights(max_lunit)
     real(r8) :: expected(max_lunit)
 
     landunit_weights = create_landunit_weights()
-    landunit_weights(istice_mec) = 1.0_r8
+    landunit_weights(istice) = 1.0_r8
     expected(:) = 0._r8
-    expected(istice_mec) = 1.0_r8
+    expected(istice) = 1.0_r8
 
     call update_landunit_weights_one_gcell(landunit_weights)
     @assertEqual(expected, landunit_weights, tolerance=tol)

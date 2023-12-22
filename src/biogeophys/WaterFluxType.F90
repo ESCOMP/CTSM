@@ -10,7 +10,7 @@ module WaterFluxType
   use clm_varpar     , only : nlevsno, nlevsoi
   use clm_varcon     , only : spval
   use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
+  use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_gridcell
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
@@ -38,8 +38,8 @@ module WaterFluxType
      real(r8), pointer :: qflx_liq_grnd_col        (:)   ! col liquid (rain+irrigation) on ground after interception (mm H2O/s) [+]
      real(r8), pointer :: qflx_snow_grnd_col       (:)   ! col snow on ground after interception (mm H2O/s) [+]
      real(r8), pointer :: qflx_rain_plus_snomelt_col(:)  ! col rain plus snow melt falling on the soil (mm/s)
-     real(r8), pointer :: qflx_sub_snow_patch      (:)   ! patch sublimation rate from snow pack (mm H2O /s) [+]
-     real(r8), pointer :: qflx_sub_snow_col        (:)   ! col sublimation rate from snow pack (mm H2O /s) [+]
+     real(r8), pointer :: qflx_solidevap_from_top_layer_patch(:) ! patch rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s) [+]
+     real(r8), pointer :: qflx_solidevap_from_top_layer_col(:)   ! col rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s) [+]
      real(r8), pointer :: qflx_evap_soi_patch      (:)   ! patch soil evaporation (mm H2O/s) (+ = to atm)
      real(r8), pointer :: qflx_evap_soi_col        (:)   ! col soil evaporation (mm H2O/s) (+ = to atm)
      real(r8), pointer :: qflx_evap_veg_patch      (:)   ! patch vegetation evaporation (mm H2O/s) (+ = to atm)
@@ -48,8 +48,8 @@ module WaterFluxType
      real(r8), pointer :: qflx_evap_can_col        (:)   ! col evaporation from leaves and stems (mm H2O/s) (+ = to atm)
      real(r8), pointer :: qflx_evap_tot_patch      (:)   ! patch pft_qflx_evap_soi + pft_qflx_evap_veg + qflx_tran_veg
      real(r8), pointer :: qflx_evap_tot_col        (:)   ! col col_qflx_evap_soi + col_qflx_evap_veg + qflx_tran_veg
-     real(r8), pointer :: qflx_evap_grnd_patch     (:)   ! patch ground surface evaporation rate (mm H2O/s) [+]
-     real(r8), pointer :: qflx_evap_grnd_col       (:)   ! col ground surface evaporation rate (mm H2O/s) [+]
+     real(r8), pointer :: qflx_liqevap_from_top_layer_patch(:) ! patch rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]
+     real(r8), pointer :: qflx_liqevap_from_top_layer_col(:)   ! col rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]
 
      ! In the snow capping parametrization excess mass above h2osno_max is removed.  A breakdown of mass into liquid 
      ! and solid fluxes is done, these are represented by qflx_snwcp_liq_col and qflx_snwcp_ice_col. 
@@ -64,10 +64,10 @@ module WaterFluxType
 
      real(r8), pointer :: qflx_tran_veg_patch      (:)   ! patch vegetation transpiration (mm H2O/s) (+ = to atm)
      real(r8), pointer :: qflx_tran_veg_col        (:)   ! col vegetation transpiration (mm H2O/s) (+ = to atm)
-     real(r8), pointer :: qflx_dew_snow_patch      (:)   ! patch surface dew added to snow pack (mm H2O /s) [+]
-     real(r8), pointer :: qflx_dew_snow_col        (:)   ! col surface dew added to snow pack (mm H2O /s) [+]
-     real(r8), pointer :: qflx_dew_grnd_patch      (:)   ! patch ground surface dew formation (mm H2O /s) [+]
-     real(r8), pointer :: qflx_dew_grnd_col        (:)   ! col ground surface dew formation (mm H2O /s) [+] (+ = to atm); usually eflx_bot >= 0)
+     real(r8), pointer :: qflx_soliddew_to_top_layer_patch(:) ! patch rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]
+     real(r8), pointer :: qflx_soliddew_to_top_layer_col(:)   ! col rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+] (+ = to atm); usually eflx_bot >= 0)
+     real(r8), pointer :: qflx_liqdew_to_top_layer_patch(:)   ! patch rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]
+     real(r8), pointer :: qflx_liqdew_to_top_layer_col(:)     ! col rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]
 
      real(r8), pointer :: qflx_infl_col            (:)   ! col infiltration (mm H2O /s)
      real(r8), pointer :: qflx_surf_col            (:)   ! col total surface runoff (mm H2O /s)
@@ -156,218 +156,218 @@ contains
 
     call AllocateVar1d(var = this%qflx_through_snow_patch, name = 'qflx_through_snow_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
     call AllocateVar1d(var = this%qflx_through_liq_patch, name = 'qflx_through_liq_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
     call AllocateVar1d(var = this%qflx_intercepted_snow_patch, name = 'qflx_intercepted_snow_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
     call AllocateVar1d(var = this%qflx_intercepted_liq_patch, name = 'qflx_intercepted_liq_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
     call AllocateVar1d(var = this%qflx_snocanfall_patch, name = 'qflx_snocanfall_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
     call AllocateVar1d(var = this%qflx_liqcanfall_patch, name = 'qflx_liqcanfall_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
     call AllocateVar1d(var = this%qflx_snow_unload_patch, name = 'qflx_snow_unload_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_sub_snow_patch, name = 'qflx_sub_snow_patch', &
+         bounds = bounds, subgrid_level = subgrid_level_patch)
+    call AllocateVar1d(var = this%qflx_solidevap_from_top_layer_patch, name = 'qflx_solidevap_from_top_layer_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH, &
+         bounds = bounds, subgrid_level = subgrid_level_patch, &
          ival = 0.0_r8)
     call AllocateVar1d(var = this%qflx_tran_veg_patch, name = 'qflx_tran_veg_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_dew_grnd_patch, name = 'qflx_dew_grnd_patch', &
+         bounds = bounds, subgrid_level = subgrid_level_patch)
+    call AllocateVar1d(var = this%qflx_liqdew_to_top_layer_patch, name = 'qflx_liqdew_to_top_layer_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_dew_snow_patch, name = 'qflx_dew_snow_patch', &
+         bounds = bounds, subgrid_level = subgrid_level_patch)
+    call AllocateVar1d(var = this%qflx_soliddew_to_top_layer_patch, name = 'qflx_soliddew_to_top_layer_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
 
     call AllocateVar1d(var = this%qflx_liq_grnd_col, name = 'qflx_liq_grnd_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_snow_grnd_col, name = 'qflx_snow_grnd_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_rain_plus_snomelt_col, name = 'qflx_rain_plus_snomelt_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
-    call AllocateVar1d(var = this%qflx_sub_snow_col, name = 'qflx_sub_snow_col', &
+         bounds = bounds, subgrid_level = subgrid_level_column)
+    call AllocateVar1d(var = this%qflx_solidevap_from_top_layer_col, name = 'qflx_solidevap_from_top_layer_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
          ival = 0.0_r8)
     call AllocateVar1d(var = this%qflx_snwcp_liq_col, name = 'qflx_snwcp_liq_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_snwcp_ice_col, name = 'qflx_snwcp_ice_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_snwcp_discarded_liq_col, name = 'qflx_snwcp_discarded_liq_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_snwcp_discarded_ice_col, name = 'qflx_snwcp_discarded_ice_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_glcice_col, name = 'qflx_glcice_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_glcice_frz_col, name = 'qflx_glcice_frz_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_glcice_melt_col, name = 'qflx_glcice_melt_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_glcice_dyn_water_flux_col, name = 'qflx_glcice_dyn_water_flux_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_tran_veg_col, name = 'qflx_tran_veg_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_evap_veg_col, name = 'qflx_evap_veg_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_evap_can_col, name = 'qflx_evap_can_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_evap_soi_col, name = 'qflx_evap_soi_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_evap_tot_col, name = 'qflx_evap_tot_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
-    call AllocateVar1d(var = this%qflx_evap_grnd_col, name = 'qflx_evap_grnd_col', &
+         bounds = bounds, subgrid_level = subgrid_level_column)
+    call AllocateVar1d(var = this%qflx_liqevap_from_top_layer_col, name = 'qflx_liqevap_from_top_layer_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
-    call AllocateVar1d(var = this%qflx_dew_grnd_col, name = 'qflx_dew_grnd_col', &
+         bounds = bounds, subgrid_level = subgrid_level_column)
+    call AllocateVar1d(var = this%qflx_liqdew_to_top_layer_col, name = 'qflx_liqdew_to_top_layer_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
-    call AllocateVar1d(var = this%qflx_dew_snow_col, name = 'qflx_dew_snow_col', &
+         bounds = bounds, subgrid_level = subgrid_level_column)
+    call AllocateVar1d(var = this%qflx_soliddew_to_top_layer_col, name = 'qflx_soliddew_to_top_layer_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_evap_veg_patch, name = 'qflx_evap_veg_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
     call AllocateVar1d(var = this%qflx_evap_can_patch, name = 'qflx_evap_can_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
     call AllocateVar1d(var = this%qflx_evap_soi_patch, name = 'qflx_evap_soi_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
     call AllocateVar1d(var = this%qflx_evap_tot_patch, name = 'qflx_evap_tot_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_evap_grnd_patch, name = 'qflx_evap_grnd_patch', &
+         bounds = bounds, subgrid_level = subgrid_level_patch)
+    call AllocateVar1d(var = this%qflx_liqevap_from_top_layer_patch, name = 'qflx_liqevap_from_top_layer_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
 
     call AllocateVar1d(var = this%qflx_infl_col, name = 'qflx_infl_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_surf_col, name = 'qflx_surf_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_drain_col, name = 'qflx_drain_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_drain_perched_col, name = 'qflx_drain_perched_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_top_soil_col, name = 'qflx_top_soil_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_snomelt_col, name = 'qflx_snomelt_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_snofrz_col, name = 'qflx_snofrz_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar2d(var = this%qflx_snofrz_lyr_col, name = 'qflx_snofrz_lyr_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
          dim2beg = -nlevsno+1, dim2end = 0)
     call AllocateVar1d(var = this%qflx_snow_drain_col, name = 'qflx_snow_drain_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_ice_runoff_snwcp_col, name = 'qflx_ice_runoff_snwcp_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_ice_runoff_xs_col, name = 'qflx_ice_runoff_xs_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_qrgwl_col, name = 'qflx_qrgwl_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_floodc_col, name = 'qflx_floodc_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_sl_top_soil_col, name = 'qflx_sl_top_soil_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_runoff_col, name = 'qflx_runoff_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_runoff_r_col, name = 'qflx_runoff_r_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_runoff_u_col, name = 'qflx_runoff_u_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_rsub_sat_col, name = 'qflx_rsub_sat_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
 
     call AllocateVar1d(var = this%qflx_h2osfc_to_ice_col, name = 'qflx_h2osfc_to_ice_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_snow_h2osfc_col, name = 'qflx_snow_h2osfc_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qflx_too_small_h2osfc_to_soil_col, name = 'qflx_too_small_h2osfc_to_soil_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
 
     call AllocateVar2d(var = this%qflx_snow_percolation_col, name = 'qflx_snow_percolation_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
          dim2beg = -nlevsno+1, dim2end = 0)
 
     call AllocateVar1d(var = this%qflx_liq_dynbal_grc, name = 'qflx_liq_dynbal_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+         bounds = bounds, subgrid_level = subgrid_level_gridcell)
     call AllocateVar1d(var = this%qflx_ice_dynbal_grc, name = 'qflx_ice_dynbal_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+         bounds = bounds, subgrid_level = subgrid_level_gridcell)
 
     call AllocateVar1d(var = this%qflx_sfc_irrig_col, name = 'qflx_sfc_irrig_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
 
     call AllocateVar1d(var = this%qflx_gw_uncon_irrig_col, name = 'qflx_gw_uncon_irrig_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
 
     call AllocateVar2d(var = this%qflx_gw_uncon_irrig_lyr_col, name = 'qflx_gw_uncon_irrig_lyr_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
          dim2beg = 1, dim2end = nlevsoi)
 
     call AllocateVar1d(var = this%qflx_gw_con_irrig_col, name = 'qflx_gw_con_irrig_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
 
     call AllocateVar1d(var = this%qflx_irrig_drip_patch, name = 'qflx_irrig_drip_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
 
     call AllocateVar1d(var = this%qflx_irrig_sprinkler_patch, name = 'qflx_irrig_sprinkler_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
     
     this%qflx_liq_dynbal_dribbler = annual_flux_dribbler_gridcell( &
          bounds = bounds, &
@@ -631,13 +631,6 @@ contains
          long_name=this%info%lname('canopy transpiration'), &
          ptr_patch=this%qflx_tran_veg_patch, c2l_scale_type='urbanf')
 
-    call hist_addfld1d ( &
-         fname=this%info%fname('QSNOEVAP'), &
-         units='mm/s',  &
-         avgflag='A', &
-         long_name=this%info%lname('evaporation from snow'), &
-         ptr_patch=this%qflx_tran_veg_patch, set_lake=0._r8, c2l_scale_type='urbanf')
-
     this%qflx_snwcp_liq_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QSNOCPLIQ'), &
@@ -694,13 +687,13 @@ contains
          long_name=this%info%lname('snow on ground after interception'), &
          ptr_col=this%qflx_snow_grnd_col, default='inactive', c2l_scale_type='urbanf')
 
-    this%qflx_evap_grnd_patch(begp:endp) = spval
+    this%qflx_liqevap_from_top_layer_patch(begp:endp) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_EVAP_GRND'), &
+         fname=this%info%fname('QFLX_LIQEVAP_FROM_TOP_LAYER'), &
          units='mm H2O/s', &
          avgflag='A', &
-         long_name=this%info%lname('ground surface evaporation'), &
-         ptr_patch=this%qflx_evap_grnd_patch, default='inactive', c2l_scale_type='urbanf')
+         long_name=this%info%lname('rate of liquid water evaporated from top soil or snow layer'), &
+         ptr_patch=this%qflx_liqevap_from_top_layer_patch, c2l_scale_type='urbanf')
 
     this%qflx_evap_veg_patch(begp:endp) = spval
     call hist_addfld1d ( &
@@ -713,43 +706,43 @@ contains
     this%qflx_evap_tot_patch(begp:endp) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QFLX_EVAP_TOT'), &
-         units='mm H2O/s', &
+         units='kg m-2 s-1', &
          avgflag='A', &
          long_name=this%info%lname('qflx_evap_soi + qflx_evap_can + qflx_tran_veg'), &
          ptr_patch=this%qflx_evap_tot_patch, c2l_scale_type='urbanf')
 
-    this%qflx_dew_grnd_patch(begp:endp) = spval
+    this%qflx_liqdew_to_top_layer_patch(begp:endp) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_DEW_GRND'), &
+         fname=this%info%fname('QFLX_LIQDEW_TO_TOP_LAYER'), &
          units='mm H2O/s', &
          avgflag='A', &
-         long_name=this%info%lname('ground surface dew formation'), &
-         ptr_patch=this%qflx_dew_grnd_patch, c2l_scale_type='urbanf')
+         long_name=this%info%lname('rate of liquid water deposited on top soil or snow layer (dew)'), &
+         ptr_patch=this%qflx_liqdew_to_top_layer_patch, c2l_scale_type='urbanf')
 
-    this%qflx_sub_snow_patch(begp:endp) = spval
+    this%qflx_solidevap_from_top_layer_patch(begp:endp) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_SUB_SNOW'), &
+         fname=this%info%fname('QFLX_SOLIDEVAP_FROM_TOP_LAYER'), &
          units='mm H2O/s', &
          avgflag='A', &
-         long_name=this%info%lname('sublimation rate from snow pack (also includes bare ice sublimation from glacier columns)'), &
-         ptr_patch=this%qflx_sub_snow_patch, c2l_scale_type='urbanf')
+         long_name=this%info%lname('rate of ice evaporated from top soil or snow layer (sublimation) (also includes bare ice sublimation from glacier columns)'), &
+         ptr_patch=this%qflx_solidevap_from_top_layer_patch, c2l_scale_type='urbanf')
 
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_SUB_SNOW_ICE'), &
+         fname=this%info%fname('QFLX_SOLIDEVAP_FROM_TOP_LAYER_ICE'), &
          units='mm H2O/s', &
          avgflag='A', &
-         long_name=this%info%lname('sublimation rate from snow pack (also includes bare ice sublimation from glacier columns) '// &
+         long_name=this%info%lname('rate of ice evaporated from top soil or snow layer (sublimation) (also includes bare ice sublimation from glacier columns) '// &
          '(ice landunits only)'), &
-         ptr_patch=this%qflx_sub_snow_patch, c2l_scale_type='urbanf', l2g_scale_type='ice', &
+         ptr_patch=this%qflx_solidevap_from_top_layer_patch, c2l_scale_type='urbanf', l2g_scale_type='ice', &
          default='inactive')
 
-    this%qflx_dew_snow_patch(begp:endp) = spval
+    this%qflx_soliddew_to_top_layer_patch(begp:endp) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_DEW_SNOW'), &
+         fname=this%info%fname('QFLX_SOLIDDEW_TO_TOP_LAYER'), &
          units='mm H2O/s', &
          avgflag='A', &
-         long_name=this%info%lname('surface dew added to snow pacK'), &
-         ptr_patch=this%qflx_dew_snow_patch, c2l_scale_type='urbanf')
+         long_name=this%info%lname('rate of solid water deposited on top soil or snow layer (frost)'), &
+         ptr_patch=this%qflx_soliddew_to_top_layer_patch, c2l_scale_type='urbanf')
 
     this%qflx_rsub_sat_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -830,9 +823,9 @@ contains
     this%qflx_liqcanfall_patch(bounds%begp:bounds%endp)       = 0.0_r8
     this%qflx_snow_unload_patch(bounds%begp:bounds%endp)      = 0.0_r8
 
-    this%qflx_evap_grnd_patch(bounds%begp:bounds%endp)        = 0.0_r8
-    this%qflx_dew_grnd_patch (bounds%begp:bounds%endp)        = 0.0_r8
-    this%qflx_dew_snow_patch (bounds%begp:bounds%endp)        = 0.0_r8
+    this%qflx_liqevap_from_top_layer_patch(bounds%begp:bounds%endp) = 0.0_r8
+    this%qflx_liqdew_to_top_layer_patch(bounds%begp:bounds%endp)    = 0.0_r8
+    this%qflx_soliddew_to_top_layer_patch (bounds%begp:bounds%endp) = 0.0_r8
 
     this%qflx_sfc_irrig_col (bounds%begc:bounds%endc)         = 0.0_r8
     this%qflx_gw_uncon_irrig_col (bounds%begc:bounds%endc)    = 0.0_r8
@@ -841,9 +834,9 @@ contains
     this%qflx_irrig_drip_patch (bounds%begp:bounds%endp)      = 0.0_r8
     this%qflx_irrig_sprinkler_patch (bounds%begp:bounds%endp) = 0.0_r8
     
-    this%qflx_evap_grnd_col(bounds%begc:bounds%endc) = 0.0_r8
-    this%qflx_dew_grnd_col (bounds%begc:bounds%endc) = 0.0_r8
-    this%qflx_dew_snow_col (bounds%begc:bounds%endc) = 0.0_r8
+    this%qflx_liqevap_from_top_layer_col(bounds%begc:bounds%endc) = 0.0_r8
+    this%qflx_liqdew_to_top_layer_col(bounds%begc:bounds%endc)    = 0.0_r8
+    this%qflx_soliddew_to_top_layer_col (bounds%begc:bounds%endc) = 0.0_r8
     this%qflx_snow_drain_col(bounds%begc:bounds%endc)  = 0._r8
 
     ! This variable only gets set in the hydrology filter; need to initialize it to 0 for

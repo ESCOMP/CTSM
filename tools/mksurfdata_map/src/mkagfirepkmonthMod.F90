@@ -81,6 +81,8 @@ subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
   type(domain_type)     :: tdomain          ! local domain
   real(r8), allocatable :: gast_i(:)        ! global area, by surface type
   real(r8), allocatable :: gast_o(:)        ! global area, by surface type
+  real(r8), allocatable :: frac_dst(:)      ! output fractions
+  real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
   integer , allocatable :: agfirepkmon_i(:) ! input grid: agricultural fire peak month
   integer  :: nagfirepkmon                  ! number of peak months 
   character(len=35), allocatable :: month(:)! name of each month
@@ -104,12 +106,20 @@ subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
   call domain_read( tdomain,datfname )
 
   call gridmap_mapread( tgridmap, mapfname )
-  call gridmap_check( tgridmap, subname )
 
-  call domain_checksame( tdomain, ldomain, tgridmap )
+  ! Obtain frac_dst
+  ns_o = ldomain%ns
+  allocate(frac_dst(ns_o), stat=ier)
+  if (ier/=0) call abort()
+  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
   ns_i = tdomain%ns
-  ns_o = ldomain%ns
+  allocate(mask_r8(ns_i), stat=ier)
+  if (ier/=0) call abort()
+  mask_r8 = tdomain%mask
+  call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
+
+  call domain_checksame( tdomain, ldomain, tgridmap )
 
   ! -----------------------------------------------------------------
   ! Open input file, allocate memory for input data
@@ -130,12 +140,12 @@ subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
   ! Note that any input point that is outside the range [min_valid_value,max_valid_value]
   ! will be ignored; this ignores input points with value of unsetmon
   call get_dominant_indices(tgridmap, agfirepkmon_i, agfirepkmon_o, &
-       min_valid_value, max_valid_value, miss)
+       min_valid_value, max_valid_value, miss, mask_src=tdomain%mask)
 
   ! Check validity of output data
   if (min_bad(agfirepkmon_o, min_valid, 'agfirepkmon') .or. &
       max_bad(agfirepkmon_o, max_valid, 'agfirepkmon')) then
-     stop
+     call abort()
   end if
   
 
@@ -158,13 +168,13 @@ subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
   gast_i(:) = 0.0_r8
   do ni = 1,ns_i
      k = agfirepkmon_i(ni)
-     gast_i(k) = gast_i(k) + tgridmap%area_src(ni)*tgridmap%frac_src(ni)*re**2
+     gast_i(k) = gast_i(k) + tgridmap%area_src(ni)*tdomain%mask(ni)*re**2
   end do
 
   gast_o(:) = 0.0_r8
   do no = 1,ns_o
      k = agfirepkmon_o(no)
-     gast_o(k) = gast_o(k) + tgridmap%area_dst(no)*tgridmap%frac_dst(no)*re**2
+     gast_o(k) = gast_o(k) + tgridmap%area_dst(no)*frac_dst(no)*re**2
   end do
 
   ! area comparison
@@ -194,7 +204,7 @@ subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
   call check_ret(nf_close(ncid), subname)
   call domain_clean(tdomain)
   call gridmap_clean(tgridmap)
-  deallocate (agfirepkmon_i,gast_i,gast_o,month)
+  deallocate (agfirepkmon_i,gast_i,gast_o,month, frac_dst, mask_r8)
 
   write (6,*) 'Successfully made Agricultural fire peak month'
   write (6,*)

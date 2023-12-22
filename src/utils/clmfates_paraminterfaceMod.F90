@@ -2,7 +2,13 @@ module CLMFatesParamInterfaceMod
   ! NOTE(bja, 2017-01) this code can not go into the main clm-fates
   ! interface module because of circular dependancies with pftvarcon.
 
-  use FatesGlobals, only : fates_log
+  use shr_kind_mod,             only : r8 => shr_kind_r8, SHR_KIND_CL
+  use FatesGlobals,             only : fates_log
+  use FatesParametersInterface, only : fates_parameters_type
+  use EDParamsMod,              only : FatesRegisterParams, FatesReceiveParams
+  use SFParamsMod,              only : SpitFireRegisterParams, SpitFireReceiveParams
+  use PRTInitParamsFATESMod,    only : PRTRegisterParams, PRTReceiveParams
+  use FatesSynchronizedParamsMod, only : FatesSynchronizedParamsInst
 
   implicit none
 
@@ -24,46 +30,39 @@ contains
 
  !-----------------------------------------------------------------------
  subroutine FatesReadParameters()
-
-   use clm_varctl, only : use_fates, paramfile, fates_paramfile
-   use spmdMod, only : masterproc
-
-   use FatesParametersInterface, only : fates_parameters_type
-
-   use EDParamsMod, only : FatesRegisterParams, FatesReceiveParams
-   use SFParamsMod, only : SpitFireRegisterParams, SpitFireReceiveParams
-   use FatesSynchronizedParamsMod, only : FatesSynchronizedParamsInst
+  use clm_varctl, only : use_fates, paramfile, fates_paramfile
+  use spmdMod, only : masterproc
 
    implicit none
-
+   
    character(len=32)  :: subname = 'FatesReadParameters'
    class(fates_parameters_type), allocatable :: fates_params
    logical :: is_host_file
 
-   if (use_fates) then
-      if (masterproc) then
-         write(fates_log(), *) 'clmfates_interfaceMod.F90::'//trim(subname)//' :: CLM reading ED/FATES '//' parameters '
-      end if
+    if (masterproc) then
+      write(fates_log(), *) 'clmfates_interfaceMod.F90::'//trim(subname)//' :: CLM reading ED/FATES '//' parameters '
+    end if
 
-      allocate(fates_params)
-      call fates_params%Init()
-      call FatesRegisterParams(fates_params)
-      call SpitFireRegisterParams(fates_params)
-      call FatesSynchronizedParamsInst%RegisterParams(fates_params)
+    allocate(fates_params)
+    call fates_params%Init()   ! fates_params class, in FatesParameterInterfaceMod
+    call FatesRegisterParams(fates_params)  !EDParamsMod, only operates on fates_params class
+    call SpitFireRegisterParams(fates_params) !SpitFire Mod, only operates of fates_params class
+    call PRTRegisterParams(fates_params)     ! PRT mod, only operates on fates_params class
+    call FatesSynchronizedParamsInst%RegisterParams(fates_params) !Synchronized params class in Synchronized params mod, only operates on fates_params class
 
-      is_host_file = .false.
-      call ParametersFromNetCDF(fates_paramfile, is_host_file, fates_params)
+    is_host_file = .false.
+    call ParametersFromNetCDF(fates_paramfile, is_host_file, fates_params)
 
-      is_host_file = .true.
-      call ParametersFromNetCDF(paramfile, is_host_file, fates_params)
+    is_host_file = .true.
+    call ParametersFromNetCDF(paramfile, is_host_file, fates_params)
 
-      call FatesReceiveParams(fates_params)
-      call SpitFireReceiveParams(fates_params)
-      call FatesSynchronizedParamsInst%ReceiveParams(fates_params)
+    call FatesReceiveParams(fates_params)
+    call SpitFireReceiveParams(fates_params)
+    call PRTReceiveParams(fates_params)
+    call FatesSynchronizedParamsInst%ReceiveParams(fates_params)
 
-      call fates_params%Destroy()
-      deallocate(fates_params)
-   end if
+    call fates_params%Destroy()
+    deallocate(fates_params)
 
  end subroutine FatesReadParameters
 
@@ -172,11 +171,11 @@ contains
  !-----------------------------------------------------------------------
  subroutine ParametersFromNetCDF(filename, is_host_file, fates_params)
 
-   use shr_kind_mod, only: r8 => shr_kind_r8
-   use abortutils, only : endrun
-   use fileutils  , only : getfil
-   use ncdio_pio  , only : file_desc_t, ncd_pio_closefile, ncd_pio_openfile
-   use paramUtilMod, only : readNcdio
+   use abortutils   , only : endrun
+   use fileutils    , only : getfil
+   use ncdio_pio    , only : file_desc_t , ncd_pio_closefile , ncd_pio_openfile
+   use paramUtilMod , only : readNcdio
+   use spmdMod      , only : masterproc
 
    use FatesParametersInterface, only : fates_parameters_type
    use FatesParametersInterface, only : param_string_length, max_dimensions, max_used_dimensions
@@ -207,7 +206,7 @@ contains
    call SetParameterDimensions(ncid, is_host_file, fates_params)
    max_dim_size = fates_params%GetMaxDimensionSize()
    allocate(data(max_dim_size, max_dim_size))
-
+   
    num_params = fates_params%num_params()
    do i = 1, num_params
       call fates_params%GetMetaData(i, name, dimension_shape, dimension_sizes, dimension_names, is_host_param)
@@ -227,7 +226,9 @@ contains
             call endrun(msg='unsupported number of dimensions reading parameters.')
 
          end select
-         write(fates_log(), *) 'clmfates_interfaceMod.F90:: reading '//trim(name)
+         if (masterproc) then
+            write(fates_log(), *) 'clmfates_interfaceMod.F90:: reading '//trim(name)
+         end if
          call readNcdio(ncid, name, dimension_shape, dimension_names, subname, data(1:size_dim_1, 1:size_dim_2))
          call fates_params%SetData(i, data(1:size_dim_1, 1:size_dim_2))
       end if

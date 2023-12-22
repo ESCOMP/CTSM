@@ -37,15 +37,21 @@ class SvnRepository(Repository):
     """
     RE_URLLINE = re.compile(r'^URL:')
 
-    def __init__(self, component_name, repo):
+    def __init__(self, component_name, repo, ignore_ancestry=False):
         """
         Parse repo (a <repo> XML element).
         """
         Repository.__init__(self, component_name, repo)
+        self._ignore_ancestry = ignore_ancestry
+        if self._url.endswith('/'):
+            # there is already a '/' separator in the URL; no need to add another
+            url_sep = ''
+        else:
+            url_sep = '/'
         if self._branch:
-            self._url = os.path.join(self._url, self._branch)
+            self._url = self._url + url_sep + self._branch
         elif self._tag:
-            self._url = os.path.join(self._url, self._tag)
+            self._url = self._url + url_sep + self._tag
         else:
             msg = "DEV_ERROR in svn repository. Shouldn't be here!"
             fatal_error(msg)
@@ -55,7 +61,7 @@ class SvnRepository(Repository):
     # Public API, defined by Repository
     #
     # ----------------------------------------------------------------
-    def checkout(self, base_dir_path, repo_dir_name, verbosity):
+    def checkout(self, base_dir_path, repo_dir_name, verbosity, recursive):  # pylint: disable=unused-argument
         """Checkout or update the working copy
 
         If the repo destination directory exists, switch the sandbox to
@@ -63,13 +69,15 @@ class SvnRepository(Repository):
 
         If the repo destination directory does not exist, checkout the
         correct branch or tag.
+        NB: <recursive> is include as an argument for compatibility with
+            git functionality (repository_git.py)
 
         """
         repo_dir_path = os.path.join(base_dir_path, repo_dir_name)
         if os.path.exists(repo_dir_path):
             cwd = os.getcwd()
             os.chdir(repo_dir_path)
-            self._svn_switch(self._url, verbosity)
+            self._svn_switch(self._url, self._ignore_ancestry, verbosity)
             # svn switch can lead to a conflict state, but it gives a
             # return code of 0. So now we need to make sure that we're
             # in a clean (non-conflict) state.
@@ -137,9 +145,7 @@ in the new revision.
 
 To recover: Clean up the above directory (resolving conflicts, etc.),
 then rerun checkout_externals.
-""".format(cwd=repo_dir_path,
-                message=message,
-                status=status)
+""".format(cwd=repo_dir_path, message=message, status=status)
 
             fatal_error(errmsg)
 
@@ -219,9 +225,8 @@ then rerun checkout_externals.
                 continue
             if item == SVN_UNVERSIONED:
                 continue
-            else:
-                is_dirty = True
-                break
+            is_dirty = True
+            break
         return is_dirty
 
     # ----------------------------------------------------------------
@@ -270,11 +275,14 @@ then rerun checkout_externals.
         execute_subprocess(cmd)
 
     @staticmethod
-    def _svn_switch(url, verbosity):
+    def _svn_switch(url, ignore_ancestry, verbosity):
         """
         Switch branches for in an svn sandbox
         """
-        cmd = ['svn', 'switch', '--quiet', url]
+        cmd = ['svn', 'switch', '--quiet']
+        if ignore_ancestry:
+            cmd.append('--ignore-ancestry')
+        cmd.append(url)
         if verbosity >= VERBOSITY_VERBOSE:
             printlog('    {0}'.format(' '.join(cmd)))
         execute_subprocess(cmd)
