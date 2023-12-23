@@ -540,7 +540,7 @@ contains
   end subroutine init_cultivation
 
   !-----------------------------------------------------------------------
-  subroutine set_cultivation_levels( bounds, num_soilp, filter_soilp, gdp )
+  subroutine set_cultivation_levels( bounds, num_soilp, filter_soilp )
     !
     ! !DESCRIPTION:
     !
@@ -553,7 +553,6 @@ contains
     type(bounds_type), intent(in) :: bounds          
     integer          , intent(in) :: num_soilp          ! number of soil pfts in filter
     integer          , intent(in) :: filter_soilp(:)    ! filter for soil pfts
-    real(r8)         , intent(in) :: gdp(bounds%begc:bounds%endc)    ! Gross Domestic Product
     !
     ! !REVISION HISTORY:
     !

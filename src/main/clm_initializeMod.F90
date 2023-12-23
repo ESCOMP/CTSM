@@ -649,8 +649,7 @@ contains
        do nc = 1, nclumps
           call get_clump_bounds(nc, bounds_clump)
           call set_cultivation_levels( bounds_clump, filter(nc)%num_soilp, &
-                                       filter(nc)%soilp,                   &
-                                       cnveg_state_inst%gdp_lf_col(bounds_clump%begc:bounds_clump%endc) )
+                                       filter(nc)%soilp)
        end do
        !$OMP END PARALLEL DO
     end if
