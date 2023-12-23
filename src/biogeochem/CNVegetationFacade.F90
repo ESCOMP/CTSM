@@ -1010,7 +1010,7 @@ contains
     call CNDriverNoLeaching(bounds,                                         &
          num_bgc_soilc, filter_bgc_soilc,                       &
          num_bgc_vegp, filter_bgc_vegp,                       &
-         num_bgc_soilp, filter_bgc_soilp,
+         num_bgc_soilp, filter_bgc_soilp, &
          num_pcropp, filter_pcropp,                     &
          num_soilnopcropp, filter_soilnopcropp,         &
          num_actfirec, filter_actfirec, &

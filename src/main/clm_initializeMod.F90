@@ -33,6 +33,7 @@ module clm_initializeMod
   use SelfTestDriver        , only : self_test_driver
   use SoilMoistureStreamMod , only : PrescribedSoilMoistureInit
   use clm_instMod
+  use SoilBiogeochemDecompCascadeConType, only : century_decomp, decomp_method
   !
   implicit none
   private  ! By default everything is private
@@ -643,7 +644,7 @@ contains
     ! ------------------------------------------------------------------------
     ! Crop and cultivation
     ! ------------------------------------------------------------------------
-    if ( use_cn .and. use_century_decomp .and. use_crop )then
+    if ( use_cn .and. decomp_method == century_decomp .and. use_crop )then
        call init_cultivation( bounds_proc )
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1, nclumps

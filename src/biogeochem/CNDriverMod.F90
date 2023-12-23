@@ -155,6 +155,8 @@ contains
     type(bounds_type)                       , intent(in)    :: bounds  
     integer                                 , intent(in)    :: num_bgc_soilc        ! number of soil columns in filter
     integer                                 , intent(in)    :: filter_bgc_soilc(:)  ! filter for soil columns
+    integer                                 , intent(in)    :: num_bgc_soilp        ! number of soil patches in filter
+    integer                                 , intent(in)    :: filter_bgc_soilp(:)  ! filter for soil patches
     integer                                 , intent(in)    :: num_bgc_vegp         ! number of veg patches in filter
     integer                                 , intent(in)    :: filter_bgc_vegp(:)   ! filter for veg patches
     integer                                 , intent(out)   :: num_actfirep         ! number of soil patches on fire in filter
