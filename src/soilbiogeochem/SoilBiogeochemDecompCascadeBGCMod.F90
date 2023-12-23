@@ -1002,12 +1002,12 @@ contains
             do j = 1,5 !changed from j= 1,nlevdecomp to j=1,5 so that it model only tills to the top 26-40 cm of the soil surface, rather than whole soil - MWGraham
                do fc = 1,num_bgc_soilc
                   c = filter_bgc_soilc(fc)
-                  decomp_k(c,j,i_litr2) = decomp_k(c,j,i_litr2) * clteff_scalar(c,i_litr2)
-                  decomp_k(c,j,i_litr3) = decomp_k(c,j,i_litr3) * clteff_scalar(c,i_litr3) 
-                  decomp_k(c,j,i_soil1) = decomp_k(c,j,i_soil1) * clteff_scalar(c,i_soil1)
-                  decomp_k(c,j,i_soil2) = decomp_k(c,j,i_soil2) * clteff_scalar(c,i_soil2)
-                  decomp_k(c,j,i_soil3) = decomp_k(c,j,i_soil3) * clteff_scalar(c,i_soil3)
-                  !write(iulog,*) 'fooooo2',decomp_k(c,j,i_soil1),j    
+                  decomp_k(c,j,i_cel_lit) = decomp_k(c,j,i_cel_lit) * clteff_scalar(c,i_cel_lit)
+                  decomp_k(c,j,i_lig_lit) = decomp_k(c,j,i_lig_lit) * clteff_scalar(c,i_lig_lit)
+                  decomp_k(c,j,i_act_som) = decomp_k(c,j,i_act_som) * clteff_scalar(c,i_act_som)
+                  decomp_k(c,j,i_slo_som) = decomp_k(c,j,i_slo_som) * clteff_scalar(c,i_slo_som)
+                  decomp_k(c,j,i_pas_som) = decomp_k(c,j,i_pas_som) * clteff_scalar(c,i_pas_som)
+                  !write(iulog,*) 'fooooo2',decomp_k(c,j,i_act_som),j
                end do
             end do
       end if
@@ -1117,18 +1117,18 @@ contains
           else if (day >= 105 .and. day < 105) then ! April 15
              clteff_scalar(c,:) = 1._r8
              if (patch%itype(p) >= npcropmin) then
-                clteff_scalar(c,i_litr2) = 6.67_r8
-                clteff_scalar(c,i_litr3) = 6.67_r8
-                clteff_scalar(c,i_soil1) = 6.67_r8
-                clteff_scalar(c,i_soil2) = 6.67_r8
+                clteff_scalar(c,i_cel_lit) = 6.67_r8
+                clteff_scalar(c,i_lig_lit) = 6.67_r8
+                clteff_scalar(c,i_act_som) = 6.67_r8
+                clteff_scalar(c,i_slo_som) = 6.67_r8
              end if
           else if (day >= 135 .and. day < 165) then ! May 15
              clteff_scalar(c,:) = 1._r8
              if (patch%itype(p) >= npcropmin) then
-                clteff_scalar(c,i_litr2) = 3.41_r8
-                clteff_scalar(c,i_litr3) = 3.41_r8
-                clteff_scalar(c,i_soil1) = 3.41_r8
-                clteff_scalar(c,i_soil2) = 3.41_r8
+                clteff_scalar(c,i_cel_lit) = 3.41_r8
+                clteff_scalar(c,i_lig_lit) = 3.41_r8
+                clteff_scalar(c,i_act_som) = 3.41_r8
+                clteff_scalar(c,i_slo_som) = 3.41_r8
              end if
           else if (day >= 165 .and. day < 195) then ! June 14
              clteff_scalar(c,:) = 1._r8
@@ -1136,10 +1136,10 @@ contains
                  patch%itype(p) == nirrig_tmp_corn .or. &
                  patch%itype(p) == ntmp_soybean   .or. &
                  patch%itype(p) == nirrig_tmp_soybean      ) then
-                clteff_scalar(c,i_litr2) = 3.41_r8
-                clteff_scalar(c,i_litr3) = 3.41_r8
-                clteff_scalar(c,i_soil1) = 3.41_r8
-                clteff_scalar(c,i_soil2) = 3.41_r8
+                clteff_scalar(c,i_cel_lit) = 3.41_r8
+                clteff_scalar(c,i_lig_lit) = 3.41_r8
+                clteff_scalar(c,i_act_som) = 3.41_r8
+                clteff_scalar(c,i_slo_som) = 3.41_r8
              end if
           else if (day >= 195) then ! July 14
              clteff_scalar(c,:) = 1._r8
@@ -1155,29 +1155,29 @@ contains
           else if (day >= idop(p) .and. day < idop(p)+15) then ! based on Point Chisel Tandem Disk multipliers
              clteff_scalar(c,:) = 1._r8
              if (patch%itype(p) >= npcropmin) then
-                clteff_scalar(c,i_litr2) = 1.50_r8 !high 1.80,low 1.50
-                clteff_scalar(c,i_litr3) = 1.50_r8 !high 1.80,low 1.50
-                clteff_scalar(c,i_soil1) = 1.00_r8 !high 1.20,low 1.00
-                clteff_scalar(c,i_soil2) = 3.00_r8 !high 4.80,low 3.00
-                clteff_scalar(c,i_soil3) = 3.00_r8 !high 4.80,low 3.00
+                clteff_scalar(c,i_cel_lit) = 1.50_r8 !high 1.80,low 1.50
+                clteff_scalar(c,i_lig_lit) = 1.50_r8 !high 1.80,low 1.50
+                clteff_scalar(c,i_act_som) = 1.00_r8 !high 1.20,low 1.00
+                clteff_scalar(c,i_slo_som) = 3.00_r8 !high 4.80,low 3.00
+                clteff_scalar(c,i_pas_som) = 3.00_r8 !high 4.80,low 3.00
              end if
           else if (day >= idop(p)+15 .and. day < idop(p)+45) then ! based on Field and Row Cultivator multipliers
              clteff_scalar(c,:) = 1._r8
              if (patch%itype(p) >= npcropmin) then
-                clteff_scalar(c,i_litr2) = 1.50_r8 !high 1.50,low 1.50
-                clteff_scalar(c,i_litr3) = 1.50_r8 !high 1.50,low 1.50
-                clteff_scalar(c,i_soil1) = 1.00_r8 !high 1.00,low 1.00
-                clteff_scalar(c,i_soil2) = 1.60_r8 !high 3.50,low 1.60
-                clteff_scalar(c,i_soil3) = 1.60_r8 !high 3.50,low 1.60
+                clteff_scalar(c,i_cel_lit) = 1.50_r8 !high 1.50,low 1.50
+                clteff_scalar(c,i_lig_lit) = 1.50_r8 !high 1.50,low 1.50
+                clteff_scalar(c,i_act_som) = 1.00_r8 !high 1.00,low 1.00
+                clteff_scalar(c,i_slo_som) = 1.60_r8 !high 3.50,low 1.60
+                clteff_scalar(c,i_pas_som) = 1.60_r8 !high 3.50,low 1.60
              end if
           else if (day >= idop(p)+45 .and. day <idop(p)+75) then ! based on Rod Weed Row Planter
              clteff_scalar(c,:) = 1._r8
              if (patch%itype(p) >= npcropmin) then
-                clteff_scalar(c,i_litr2) = 1.10_r8 !high 1.10,low 1.10
-                clteff_scalar(c,i_litr3) = 1.10_r8 !high 1.10,low 1.10
-                clteff_scalar(c,i_soil1) = 1.00_r8 !high 1.00,low 1.00
-                clteff_scalar(c,i_soil2) = 1.30_r8 !high 2.50,low 1.30
-                clteff_scalar(c,i_soil3) = 1.30_r8 !high 2.50,low 1.30 
+                clteff_scalar(c,i_cel_lit) = 1.10_r8 !high 1.10,low 1.10
+                clteff_scalar(c,i_lig_lit) = 1.10_r8 !high 1.10,low 1.10
+                clteff_scalar(c,i_act_som) = 1.00_r8 !high 1.00,low 1.00
+                clteff_scalar(c,i_slo_som) = 1.30_r8 !high 2.50,low 1.30
+                clteff_scalar(c,i_pas_som) = 1.30_r8 !high 2.50,low 1.30 
              end if
          else if (day >= idop(p)+75 .and. day < idop(p)+80) then ! June 14
              clteff_scalar(c,:) = 1._r8
@@ -1185,11 +1185,11 @@ contains
                  patch%itype(p) == nirrig_tmp_corn .or. &
                  patch%itype(p) == ntmp_soybean   .or. &
                  patch%itype(p) == nirrig_tmp_soybean      ) then
-                 clteff_scalar(c,i_litr2) = 1.00_r8
-                 clteff_scalar(c,i_litr3) = 1.00_r8
-                 clteff_scalar(c,i_soil1) = 1.00_r8
-                 clteff_scalar(c,i_soil2) = 1.00_r8
-                 clteff_scalar(c,i_soil3) = 1.00_r8
+                 clteff_scalar(c,i_cel_lit) = 1.00_r8
+                 clteff_scalar(c,i_lig_lit) = 1.00_r8
+                 clteff_scalar(c,i_act_som) = 1.00_r8
+                 clteff_scalar(c,i_slo_som) = 1.00_r8
+                 clteff_scalar(c,i_pas_som) = 1.00_r8
              end if
           else if (day >= idop(p)+80) then ! July 14
              clteff_scalar(c,:) = 1._r8
