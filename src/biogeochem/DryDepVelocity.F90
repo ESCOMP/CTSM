@@ -285,7 +285,6 @@ CONTAINS
     if ( n_drydep == 0 ) return
 
     associate(                                                    &
-         forc_solai =>    atm2lnd_inst%forc_solai_grc           , & ! Input:  [real(r8) (:,:) ] direct beam radiation (visible only)
          forc_solad =>    atm2lnd_inst%forc_solad_grc           , & ! Input:  [real(r8) (:,:) ] direct beam radiation (visible only)
          forc_t     =>    atm2lnd_inst%forc_t_downscaled_col    , & ! Input:  [real(r8) (:)   ] downscaled atmospheric temperature (Kelvin)
          forc_q     =>    wateratm2lndbulk_inst%forc_q_downscaled_col    , & ! Input:  [real(r8) (:)   ] downscaled atmospheric specific humidity (kg/kg)
