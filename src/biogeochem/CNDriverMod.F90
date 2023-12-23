@@ -86,6 +86,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNDriverNoLeaching(bounds,                                                    &
        num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp,                                   &
+       num_bgc_soilp, filter_bgc_soilp,                                                    &
        num_pcropp, filter_pcropp, num_soilnopcropp, filter_soilnopcropp,                   &
        num_actfirec, filter_actfirec, num_actfirep, filter_actfirep,                       &
        num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp,       &
@@ -344,7 +345,7 @@ contains
     if (decomp_method == century_decomp) then
        call decomp_rate_constants_bgc(bounds, num_bgc_soilc, filter_bgc_soilc, &
             soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst, &
-            num_soilp, filter_soilp, canopystate_inst, cnveg_state_inst)
+            num_bgc_soilp, filter_bgc_soilp, canopystate_inst, cnveg_state_inst)
     else if (decomp_method == mimics_decomp) then
        call decomp_rates_mimics(bounds, num_bgc_soilc, filter_bgc_soilc, &
             num_bgc_vegp, filter_bgc_vegp, clm_fates, &

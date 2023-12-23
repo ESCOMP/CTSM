@@ -1017,6 +1017,7 @@ contains
           call t_startf('ecosysdyn')
           call bgc_vegetation_inst%EcosystemDynamicsPreDrainage(bounds_clump,            &
                filter(nc)%num_bgc_soilc, filter(nc)%bgc_soilc,                       &
+               filter(nc)%num_soilp, filter(nc)%soilp,                             &
                filter(nc)%num_bgc_vegp, filter(nc)%bgc_vegp,                       &
                filter(nc)%num_actfirec, filter(nc)%actfirec,                 &
                filter(nc)%num_actfirep, filter(nc)%actfirep,                 &

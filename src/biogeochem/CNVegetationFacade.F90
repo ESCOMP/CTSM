@@ -922,6 +922,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine EcosystemDynamicsPreDrainage(this, bounds, &
        num_bgc_soilc, filter_bgc_soilc, &
+       num_bgc_soilp, filter_bgc_soilp, &
        num_bgc_vegp, filter_bgc_vegp, &
        num_actfirec, filter_actfirec, &
        num_actfirep, filter_actfirep, &
@@ -955,6 +956,8 @@ contains
     type(bounds_type)                       , intent(in)    :: bounds  
     integer                                 , intent(in)    :: num_bgc_soilc       ! number of bgc soil columns in filter
     integer                                 , intent(in)    :: filter_bgc_soilc(:) ! filter for bgc soil columns
+    integer                                 , intent(in)    :: num_bgc_soilp       ! number of bgc soil patches in filter
+    integer                                 , intent(in)    :: filter_bgc_soilp(:) ! filter for bgc soil patches
     integer                                 , intent(in)    :: num_bgc_vegp        ! number of bgc veg patches in filter
     integer                                 , intent(in)    :: filter_bgc_vegp(:)  ! filter for bgc veg patches
     integer                                 , intent(out)   :: num_actfirec      ! number of soil columns on fire in filter
@@ -1007,6 +1010,7 @@ contains
     call CNDriverNoLeaching(bounds,                                         &
          num_bgc_soilc, filter_bgc_soilc,                       &
          num_bgc_vegp, filter_bgc_vegp,                       &
+         num_bgc_soilp, filter_bgc_soilp,
          num_pcropp, filter_pcropp,                     &
          num_soilnopcropp, filter_soilnopcropp,         &
          num_actfirec, filter_actfirec, &
