@@ -508,68 +508,46 @@ where :math:`{C}_{leaf}`, :math:`{C}_{stem}`, and :math:`{C}_{froot}` is the car
 Harvest
 '''''''
 
-Variables track the flow of grain C and N to food and of all other plant pools, including live stem C and N, to litter, and to biofuel feedstock. A fraction (determined by the :math:`biofuel\_harvfrac`, defined in :numref:`Table Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy production`) of leaf/livestem C and N from bioenergy crops is removed at harvest for biofuels (Equations :eq:`25.9`, :eq:`25.10`, :eq:`25.12`, and :eq:`25.13`), with the remaining portions going to the litter pools (Equations :eq:`20.14)`, :eq:`25.11`, and :eq:`25.14`). Putting live stem C and N into the litter and biofuel pools is in contrast to the approach for unmanaged PFTs which puts live stem C and N into dead stem pools first. Biofuel crop leaf and stem C and N pools are routed to the litter and biofuel pools, in contrast to that of unmanaged PFTs and non-biofuel crops, which under default settings put leaf C and N into litter pools only. All crops can have their leaf and stem pools routed, wholly or partially, to a "removed residue" pool by setting namelist parameter :math:`crop\_residue\_removal\_frac` to something greater than its default zero. Root C and N pools are routed to the litter pools in the same manner as natural vegetation.
+Variables track the flow of grain C and N to food and of all other plant pools, including live stem C and N, to litter, and to biofuel feedstock. A fraction (determined by the :math:`biofuel\_harvfrac`, defined in :numref:`Table Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy production`) of leaf/livestem C and N from bioenergy crops is removed at harvest for biofuels (Equations :eq:`25.9` and :eq:`25.12`), with the remaining portions going to the litter pools (Equations :eq:`20.14)`, :eq:`25.11`, and :eq:`25.14`). Putting live stem C and N into the litter and biofuel pools is in contrast to the approach for unmanaged PFTs which puts live stem C and N into dead stem pools first. Biofuel crop leaf and stem C and N pools are routed to the litter and biofuel pools, in contrast to that of unmanaged PFTs and non-biofuel crops, which under default settings put leaf C and N into litter pools only. All crops can have their leaf and stem pools routed, wholly or partially, to a "removed residue" pool by setting namelist parameter :math:`crop\_residue\_removal\_frac` to something greater than its default zero. Root C and N pools are routed to the litter pools in the same manner as natural vegetation.
+
+In the equations below, subscript :math:`p` refers to either the leaf or live stem biomass pool.
 
 .. math::
    :label: 25.9
 
-     CF_{leaf,biofuel} = \left({CS_{leaf} \mathord{\left/ {\vphantom {CS_{leaf}  \Delta t}} \right.} \Delta t}
+     CF_{p,biofuel} = \left({CS_{p} \mathord{\left/ {\vphantom {CS_{p}  \Delta t}} \right.} \Delta t}
      \right) * biofuel\_harvfrac
 
 .. math::
    :label: harv_leafc_to_removed_residue
 
-     CF_{leaf,removed\_residue} = \left({CS_{leaf} \mathord{\left/ {\vphantom {CS_{leaf}  \Delta t}} \right.} \Delta t}
+     CF_{p,removed\_residue} = \left({CS_{p} \mathord{\left/ {\vphantom {CS_{p}  \Delta t}} \right.} \Delta t}
      \right) * (1 - biofuel\_harvfrac) * crop\_residue\_removal\_frac
-
-.. math::
-   :label: 25.10
-
-     CF_{livestem,biofuel} = \left({CS_{livestem} \mathord{\left/ {\vphantom {CS_{leaf}  \Delta t}} \right.} \Delta t}
-     \right) * biofuel\_harvfrac
-
-.. math::
-   :label: harv_stemc_to_removed_residue
-
-     CF_{livestem,removed\_residue} = \left({CS_{livestem} \mathord{\left/ {\vphantom {CS_{leaf}  \Delta t}} \right.} \Delta t}
-     \right) * \left( 1 - biofuel\_harvfrac \right) * crop\_residue\_removal\_frac
 
 .. math::
    :label: 25.11
 
-     CF_{livestem,litter} = \left({CS_{livestem} \mathord{\left/ {\vphantom {CS_{livestem}  \Delta t}} \right.} \Delta t}
-     \right) * \left( 1-biofuel\_harvfrac  \right) * \left( 1-crop\_residue\_removal\_frac  \right) +CF_{alloc,livestem}
+     CF_{p,litter} = \left({CS_{p} \mathord{\left/ {\vphantom {CS_{p}  \Delta t}} \right.} \Delta t}
+     \right) * \left( 1-biofuel\_harvfrac  \right) * \left( 1-crop\_residue\_removal\_frac  \right) +CF_{p,alloc}
 
 with corresponding nitrogen fluxes:
 
 .. math::
    :label: 25.12
 
-     NF_{leaf,biofuel} = \left({NS_{leaf} \mathord{\left/ {\vphantom {NS_{leaf}  \Delta t}} \right.} \Delta t}
+     NF_{p,biofuel} = \left({NS_{p} \mathord{\left/ {\vphantom {NS_{p}  \Delta t}} \right.} \Delta t}
      \right) * biofuel\_harvfrac
 
 .. math::
    :label: harv_leafn_to_removed_residue
 
-     NF_{leaf,removed\_residue} = \left({NS_{leaf} \mathord{\left/ {\vphantom {NS_{leaf}  \Delta t}} \right.} \Delta t}
-     \right) * \left( 1 - biofuel\_harvfrac \right) * crop\_residue\_removal\_frac
-
-.. math::
-   :label: 25.13
-
-     NF_{livestem,biofuel} = \left({NS_{livestem} \mathord{\left/ {\vphantom {NS_{livestem}  \Delta t}} \right.} \Delta t}
-     \right) *  biofuel\_harvfrac
-
-.. math::
-   :label: harv_stemn_to_removed_residue
-
-     NF_{livestem,removed\_residue} = \left({NS_{livestem} \mathord{\left/ {\vphantom {NS_{livestem}  \Delta t}} \right.} \Delta t}
+     NF_{p,removed\_residue} = \left({NS_{p} \mathord{\left/ {\vphantom {NS_{p}  \Delta t}} \right.} \Delta t}
      \right) * \left( 1 - biofuel\_harvfrac \right) * crop\_residue\_removal\_frac
 
 .. math::
    :label: 25.14
 
-     NF_{livestem,litter} = \left({NS_{livestem} \mathord{\left/ {\vphantom {NS_{livestem}  \Delta t}} \right.} \Delta t}
+     NF_{p,litter} = \left({NS_{p} \mathord{\left/ {\vphantom {NS_{p}  \Delta t}} \right.} \Delta t}
      \right) *  \left( 1-biofuel\_harvfrac  \right) *  \left( 1-crop\_residue\_removal\_frac  \right)
 
 where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, NS is stored nitrogen, and :math:`biofuel\_harvfrac` is the harvested fraction of leaf/livestem for biofuel feedstocks.
