@@ -6,7 +6,11 @@ module clm_time_manager
    use spmdMod     , only: masterproc
    use clm_varctl  , only: iulog
    use clm_varcon  , only: isecspday
-   use ESMF
+   use ESMF        , only: ESMF_Clock, ESMF_Calendar, ESMF_MAXSTR, ESMF_Time, ESMF_TimeInterval
+   use ESMF        , only: ESMF_TimeIntervalSet, ESMF_TimeSet, ESMF_TimeGet, ESMF_ClockGet
+   use ESMF        , only: operator(==), operator(+), operator(<=), operator(>=)
+   use ESMF        , only: operator(>), operator(<), operator(-)
+   use ESMF        , only: ESMF_KIND_I8, ESMF_TimeIntervalGet
 
    implicit none
    private
@@ -245,6 +249,8 @@ contains
     !---------------------------------------------------------------------------------
     ! Purpose: Initialize the clock based on the start_date, ref_date and curr_date
     !
+    use ESMF       , only : ESMF_ClockCreate, ESMF_ClockAdvance
+
     type(ESMF_Time), intent(in) :: start_date  ! start date for run
     type(ESMF_Time), intent(in) :: ref_date    ! reference date for time coordinate
     type(ESMF_Time), intent(in) :: curr_date   ! current date (equal to start_date)
@@ -553,6 +559,8 @@ contains
 
     !---------------------------------------------------------------------------------
     ! Initialize calendar
+    use ESMF        , only : ESMF_CalKind_Flag, ESMF_CALKIND_NOLEAP
+    use ESMF        , only : ESMF_CALKIND_GREGORIAN, ESMF_CalendarCreate
     !
     ! Local variables
     !
@@ -652,6 +660,7 @@ contains
   subroutine advance_timestep()
 
     ! Increment the timestep number.
+    use ESMF       , only : ESMF_ClockAdvance
 
     character(len=*), parameter :: sub = 'clm::advance_timestep'
     integer :: rc
@@ -1782,6 +1791,7 @@ contains
   !=========================================================================================
 
   subroutine chkrc(rc, mes)
+    use ESMF        , only : ESMF_SUCCESS
     integer, intent(in)          :: rc   ! return code from time management library
     character(len=*), intent(in) :: mes  ! error message
     if ( rc == ESMF_SUCCESS ) return
@@ -1886,6 +1896,7 @@ contains
     ! does not explicitly initialize all variables).
     !
     ! !USES:
+    use ESMF      , only : ESMF_ClockDestroy
     !
     ! !ARGUMENTS:
     !
@@ -1963,6 +1974,7 @@ contains
     ! *** Should only be used in unit tests!!! ***
     !
     ! !USES:
+    use ESMF    , only : ESMF_ClockSet
     !
     ! !ARGUMENTS:
     integer, intent(in) :: yr  ! year

@@ -69,7 +69,7 @@ module clm_driver
   use lnd2atmMod             , only : lnd2atm
   use lnd2glcMod             , only : lnd2glc_type
   !
-  use seq_drydep_mod         , only : n_drydep, drydep_method, DD_XLND
+  use shr_drydep_mod         , only : n_drydep
   use DryDepVelocity         , only : depvel_compute
   !
   use DaylengthMod           , only : UpdateDaylength
@@ -228,7 +228,7 @@ contains
     if (use_cn) then
        ! For dry-deposition need to call CLMSP so that mlaidiff is obtained
        ! NOTE: This is also true of FATES below
-       if ( n_drydep > 0 .and. drydep_method == DD_XLND ) then
+       if ( n_drydep > 0 ) then
           call t_startf('interpMonthlyVeg')
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
           call t_stopf('interpMonthlyVeg')
@@ -239,7 +239,7 @@ contains
        ! For FATES-Specified phenology mode interpolate the weights for
        ! time-interpolation of monthly vegetation data (as in SP mode below)
        ! Also for FATES with dry-deposition as above need to call CLMSP so that mlaidiff is obtained
-       !if ( use_fates_sp .or. (n_drydep > 0 .and. drydep_method == DD_XLND ) ) then    ! Replace with this when we have dry-deposition working
+       !if ( use_fates_sp .or. (n_drydep > 0 ) ) then    ! Replace with this when we have dry-deposition working
        ! For now don't allow for dry-deposition because of issues in #1044 EBK Jun/17/2022
        if ( use_fates_sp ) then
           call t_startf('interpMonthlyVeg')
@@ -256,7 +256,7 @@ contains
        ! weights obtained here are used in subroutine SatellitePhenology to obtain time
        ! interpolated values.
        ! This is also done for FATES-SP mode above
-       if ( doalb .or. ( n_drydep > 0 .and. drydep_method == DD_XLND ) )then
+       if ( doalb .or. ( n_drydep > 0 ) )then
           call t_startf('interpMonthlyVeg')
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
           call t_stopf('interpMonthlyVeg')
@@ -311,7 +311,7 @@ contains
           call get_clump_bounds(nc, bounds_clump)
 
           call t_startf('cninit')
-           
+
           call bgc_vegetation_inst%InitEachTimeStep(bounds_clump, &
                filter(nc)%num_soilc, filter(nc)%soilc)
 
@@ -1036,9 +1036,17 @@ contains
 
        if (use_fates_sp.and.doalb) then
           call t_startf('SatellitePhenology')
-          call SatellitePhenology(bounds_clump, filter(nc)%num_all_soil_patches, filter(nc)%all_soil_patches, &
+
+          ! FATES satellite phenology mode needs to include all active and inactive patch-level soil
+          ! filters due to the translation between the hlm pfts and the fates pfts.
+          ! E.g. in FATES, an active PFT vector of 1, 0, 0, 0, 1, 0, 1, 0 would be mapped into
+          ! the host land model as 1, 1, 1, 0, 0, 0, 0.  As such, the 'active' filter would only
+          ! use the first three points, which would incorrectly represent the interpolated values.
+          call SatellitePhenology(bounds_clump, &
+               filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp, &
                water_inst%waterdiagnosticbulk_inst, canopystate_inst)
           call t_stopf('SatellitePhenology')
+
        end if
 
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
@@ -1099,7 +1107,7 @@ contains
           ! for leaf photosynthetic acclimation temperature. These
           ! moving averages are updated here
           call clm_fates%WrapUpdateFatesRmean(nc,temperature_inst)
-          
+
           call EDBGCDyn(bounds_clump,                                                              &
                filter(nc)%num_soilc, filter(nc)%soilc,                                             &
                filter(nc)%num_soilp, filter(nc)%soilp,                                             &
@@ -1124,11 +1132,11 @@ contains
                    soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
                    nc)
           end if
-          
+
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &
                soilbiogeochem_carbonstate_inst)
-          
+
 
           if( is_beg_curr_day() ) then
 
@@ -1150,9 +1158,9 @@ contains
              call setFilters( bounds_clump, glc_behavior )
 
           end if
-          
-    
-          
+
+
+
        end if ! use_fates branch
 
        ! ============================================================================

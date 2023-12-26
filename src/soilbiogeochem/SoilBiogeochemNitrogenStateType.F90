@@ -349,10 +349,12 @@ contains
          avgflag='A', long_name='total litter N', &
          ptr_col=this%totlitn_col)
 
-    this%totmicn_col(begc:endc) = spval
-    call hist_addfld1d (fname='TOTMICN', units='gN/m^2', &
+    if (decomp_method == mimics_decomp ) then
+       this%totmicn_col(begc:endc) = spval
+       call hist_addfld1d (fname='TOTMICN', units='gN/m^2', &
          avgflag='A', long_name='total microbial N', &
          ptr_col=this%totmicn_col)
+    end if
 
     this%totsomn_col(begc:endc) = spval
     call hist_addfld1d (fname='TOTSOMN', units='gN/m^2', &

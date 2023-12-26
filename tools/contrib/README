@@ -9,9 +9,8 @@ assume NCAR directory structures.
 The python scripts require the following settings before running on cheyenne:
 
 module load conda
-cd ../..
-./manage_python_env
-conda activate ctsm_py
+../../py_env_create
+conda activate ctsm_pylib
 
 Brief description of scripts:
 

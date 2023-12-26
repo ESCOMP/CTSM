@@ -35,7 +35,6 @@ module clm_varctl
   ! Type of run
   integer, public :: nsrest                = iundef                         
   logical, public :: is_cold_start         = .false.
-  logical, public :: is_interpolated_start = .false. ! True if we're starting from initial conditions that have been run through init_interp
 
   ! Startup from initial conditions
   integer, public, parameter :: nsrStartup  = 0                          

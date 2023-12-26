@@ -2468,6 +2468,7 @@ contains
        call ncd_defdim(lnfid, 'fates_levelcwd', num_elements_fates * ncwd, dimid)
        call ncd_defdim(lnfid, 'fates_levelage', num_elements_fates * nlevage, dimid)
        call ncd_defdim(lnfid, 'fates_levagefuel', nlevage * nfsc, dimid)
+       call ncd_defdim(lnfid, 'fates_levclscpf', nclmax*nlevsclass*numpft_fates, dimid)
     end if
 
     if ( .not. lhistrest )then
@@ -2997,6 +2998,7 @@ contains
     use FatesInterfaceTypesMod, only : fates_hdim_agmap_levagepft
     use FatesInterfaceTypesMod, only : fates_hdim_pftmap_levagepft
     use FatesInterfaceTypesMod, only : fates_hdim_levfuel
+    use FatesInterfaceTypesMod, only : fates_hdim_levdamage
     use FatesInterfaceTypesMod, only : fates_hdim_levcwdsc
     use FatesInterfaceTypesMod, only : fates_hdim_levcan
     use FatesInterfaceTypesMod, only : fates_hdim_levleaf
@@ -3175,6 +3177,7 @@ contains
              call ncd_io(varname='fates_levheight',data=fates_hdim_levheight, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levpft',data=fates_hdim_levpft, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levfuel',data=fates_hdim_levfuel, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_levcdam',data=fates_hdim_levdamage, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levcwdsc',data=fates_hdim_levcwdsc, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levcan',data=fates_hdim_levcan, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levleaf',data=fates_hdim_levleaf, ncid=nfid(t), flag='write')
@@ -5510,6 +5513,8 @@ contains
        num2d = num_elements_fates*nlevage
     case ('fates_levagefuel')
        num2d = nlevage*nfsc
+    case('fates_levclscpf')
+       num2d = nclmax * nclmax * numpft_fates
     case('cft')
        if (cft_size > 0) then
           num2d = cft_size

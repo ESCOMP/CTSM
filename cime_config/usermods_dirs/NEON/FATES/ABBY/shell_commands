@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=ABBY
+./xmlchange PTS_LON=237.67032799999998
+./xmlchange PTS_LAT=45.762378

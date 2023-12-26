@@ -9,7 +9,7 @@ module SoilBiogeochemCarbonFluxType
   use pftconMod                          , only : pftcon
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
   use ch4varcon                          , only : allowlakeprod
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, mimics_decomp, decomp_method, use_soil_matrixcn
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, century_decomp, mimics_decomp, decomp_method, use_soil_matrixcn
   use PatchType                          , only : patch
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
@@ -276,10 +276,12 @@ contains
              avgflag='A', long_name='total heterotrophic respiration', &
              ptr_col=this%hr_col)
 
-        this%michr_col(begc:endc) = spval
-        call hist_addfld1d (fname='MICC_HR', units='gC/m^2/s', &
+        if (decomp_method == mimics_decomp) then
+           this%michr_col(begc:endc) = spval
+           call hist_addfld1d (fname='MICC_HR', units='gC/m^2/s', &
              avgflag='A', long_name='microbial C heterotrophic respiration: donor-pool based, so expect zero with MIMICS', &
              ptr_col=this%michr_col, default='inactive')
+        end if
 
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='CWDC_HR', units='gC/m^2/s', &
@@ -432,10 +434,12 @@ contains
         end do
 
         if ( nlevdecomp_full > 1 ) then  
-           data2dptr => this%t_scalar_col(begc:endc,1:nlevsoi)
-           call hist_addfld_decomp (fname='T_SCALAR', units='unitless',  type2d='levsoi', &
+           if (decomp_method == century_decomp) then
+              data2dptr => this%t_scalar_col(begc:endc,1:nlevsoi)
+              call hist_addfld_decomp (fname='T_SCALAR', units='unitless',  type2d='levsoi', &
                 avgflag='A', long_name='temperature inhibition of decomposition', &
                 ptr_col=data2dptr)
+           end if
 
            data2dptr => this%w_scalar_col(begc:endc,1:nlevsoi)
            call hist_addfld_decomp (fname='W_SCALAR', units='unitless',  type2d='levsoi', &
@@ -493,10 +497,12 @@ contains
              avgflag='A', long_name='C13 total heterotrophic respiration', &
              ptr_col=this%hr_col)
 
-        this%michr_col(begc:endc) = spval
-        call hist_addfld1d (fname='C13_MICC_HR', units='gC13/m^2/s', &
+        if (decomp_method == mimics_decomp) then
+           this%michr_col(begc:endc) = spval
+           call hist_addfld1d (fname='C13_MICC_HR', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 microbial heterotrophic respiration', &
              ptr_col=this%michr_col, default='inactive')
+        end if
 
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_CWDC_HR', units='gC/m^2/s', &
@@ -572,10 +578,12 @@ contains
              avgflag='A', long_name='C14 total heterotrophic respiration', &
              ptr_col=this%hr_col)
 
-        this%michr_col(begc:endc) = spval
-        call hist_addfld1d (fname='C14_MICC_HR', units='gC13/m^2/s', &
+        if (decomp_method == mimics_decomp) then
+           this%michr_col(begc:endc) = spval
+           call hist_addfld1d (fname='C14_MICC_HR', units='gC13/m^2/s', &
              avgflag='A', long_name='C14 microbial heterotrophic respiration', &
              ptr_col=this%michr_col, default='inactive')
+        end if
 
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='C14_CWDC_HR', units='gC/m^2/s', &

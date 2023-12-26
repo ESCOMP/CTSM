@@ -83,6 +83,11 @@ def buildnml(case, caseroot, compname):
     mask = case.get_value("MASK_GRID")
     driver = case.get_value("COMP_INTERFACE").lower()
 
+    # Create init_generated_files directory if not there
+    newdir = os.path.join(rundir,"init_generated_files")
+    if not os.path.exists(newdir):
+        os.mkdir(newdir)
+
     # -----------------------------------------------------
     # Error checking
     # -----------------------------------------------------
