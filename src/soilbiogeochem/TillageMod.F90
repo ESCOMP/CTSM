@@ -146,7 +146,7 @@ contains
 
     ! Read off of netcdf file
     allocate(tempr(ntill_stages_max,ndecomp_pools_max,ntill_stages_max))
-    call ncd_io(trim(tString), tempr, 'read', ncid, readvar = readv)
+    call ncd_io(trim(tString), tempr, 'read', ncid, readvar = readv, posNOTonfile = .true.)
     if (.not. readv) then
         call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     end if
