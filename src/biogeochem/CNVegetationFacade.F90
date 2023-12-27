@@ -596,6 +596,15 @@ contains
     call this%cnveg_carbonstate_inst%ZeroDWT(bounds)
     call this%cnveg_nitrogenstate_inst%ZeroDWT(bounds)
 
+    call this%cnveg_carbonflux_inst%ZeroGRU(bounds)
+    if (use_c13) then
+       call this%c13_cnveg_carbonflux_inst%ZeroGRU(bounds)
+    end if
+    if (use_c14) then
+       call this%c14_cnveg_carbonflux_inst%ZeroGRU(bounds)
+    end if
+    call this%cnveg_nitrogenflux_inst%ZeroGRU(bounds)
+
   end subroutine InitEachTimeStep
 
   !-----------------------------------------------------------------------

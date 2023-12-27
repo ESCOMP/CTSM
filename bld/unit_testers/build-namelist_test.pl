@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1901;
+my $ntests = 1904;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1284;
 }
@@ -1136,6 +1136,21 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
+     "dogrossandsp"               =>{ options=>"--envxml_dir . --bgc sp --use_case 20thC_transient",
+                                     namelst=>"do_grossunrep=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "dogrossandfates"            =>{ options=>"--envxml_dir . --bgc fates --use_case 20thC_transient --no-megan",
+                                     namelst=>"do_grossunrep=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "dogrossandnottrans"         =>{ options=>"--envxml_dir . --bgc bgc --use_case 2000_control",
+                                     namelst=>"do_grossunrep=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
      "nocropwfert"                =>{ options=>"-envxml_dir . -bgc sp -no-crop",
                                      namelst=>"use_fertilizer=T",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1519,7 +1534,7 @@ my @tran_res = ( "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
 my $usecase  = "20thC_transient";
 my $GLC_NEC         = 10;
 foreach my $res ( @tran_res ) {
-   $options = "-res $res -use_case $usecase -envxml_dir . -namelist '&a start_ymd=18500101/'";
+   $options = "-res $res -use_case $usecase -envxml_dir . -namelist '&a start_ymd=18500101/' -bgc bgc -crop -namelist '&a do_grossunrep=T/'";
    &make_env_run();
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
    is( $@, '', "$options" );
