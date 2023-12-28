@@ -94,7 +94,7 @@ contains
   end subroutine Restart
 
   subroutine CalcOzoneUptake(this, bounds, num_exposedvegp, filter_exposedvegp, &
-       forc_pbot, forc_th, rssun, rssha, rb, ram, tlai, forc_o3)
+       forc_pbot, forc_th, rssun, rssha, rb, ram, tlai, forc_o3, sabv)
 
     class(ozone_off_type) , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
@@ -108,6 +108,8 @@ contains
     real(r8) , intent(in) :: ram( bounds%begp: )       ! aerodynamical resistance (s/m)
     real(r8) , intent(in) :: tlai( bounds%begp: )      ! one-sided leaf area index, no burying by snow
     real(r8) , intent(in) :: forc_o3( bounds%begg: )   ! atmospheric ozone (mol/mol)
+    real(r8) , intent(in) :: sabv ( bounds%begp: )     ! solar radiation absorbed by vegetation (W/m**2)
+
 
     ! Enforce expected array sizes (mainly so that a debug-mode threaded test with
     ! ozone-off can pick up problems with the call to this routine)
@@ -119,6 +121,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(ram) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(tlai) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(forc_o3) == (/bounds%endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sabv) == (/bounds%endp/)), sourcefile, __LINE__)
 
     ! Do nothing: In the ozone off case, we don't need to track ozone uptake
 

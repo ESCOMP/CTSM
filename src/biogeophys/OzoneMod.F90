@@ -68,7 +68,12 @@ module OzoneMod
      procedure, private :: InitCold
 
      ! Calculate ozone uptake for a single point, for just sunlit or shaded leaves
-     procedure, private, nopass :: CalcOzoneUptakeOnePoint
+     procedure, private, nopass :: CalcOzoneUptakeLi2024OnePoint
+     procedure, private, nopass :: CalcOzoneUptakeLFOnePoint
+
+     ! Ozone stress functions Fang Li 2024
+     procedure, private         :: CalcOzoneStressLi2024           ! Stress parameterization
+     procedure, private, nopass :: CalcOzoneStressLi2024OnePoint   ! Ozone stress calculation 
 
      ! Original ozone stress functions from Danica Lombardozzi 2015
      procedure, private         :: CalcOzoneStressLombardozzi2015           ! Stress parameterization
@@ -81,23 +86,15 @@ module OzoneMod
   end type ozone_type
 
   ! !PRIVATE TYPES:
-  integer, parameter :: stress_method_lombardozzi2015 = 1
-  integer, parameter :: stress_method_falk = 2
+  integer, parameter :: stress_method_li2024 = 1
+  integer, parameter :: stress_method_lombardozzi2015 = 2
+  integer, parameter :: stress_method_falk = 3
 
   ! TODO(wjs, 2014-09-29) The following parameters should eventually be moved to the
   ! params file. Parameters differentiated on veg type should be put on the params file
   ! with a pft dimension.
 
-  ! o3:h2o resistance ratio defined by Sitch et al. 2007
-  real(r8), parameter :: ko3 = 1.67_r8
-
-  ! LAI threshold for LAIs that asymptote and don't reach 0
-  real(r8), parameter :: lai_thresh = 0.5_r8
-
-  ! threshold below which o3flux is set to 0 (nmol m^-2 s^-1)
-  real(r8), parameter :: o3_flux_threshold = 0.8_r8
-
-  ! o3 intercepts and slopes for photosynthesis
+  ! o3 intercepts and slopes for photosynthesis in Lombardozzi2015
   real(r8), parameter :: needleleafPhotoInt   = 0.8390_r8  ! units = unitless
   real(r8), parameter :: needleleafPhotoSlope = 0._r8      ! units = per mmol m^-2
   real(r8), parameter :: broadleafPhotoInt    = 0.8752_r8  ! units = unitless
@@ -105,7 +102,7 @@ module OzoneMod
   real(r8), parameter :: nonwoodyPhotoInt     = 0.8021_r8  ! units = unitless
   real(r8), parameter :: nonwoodyPhotoSlope   = -0.0009_r8 ! units = per mmol m^-2
 
-  ! o3 intercepts and slopes for conductance
+  ! o3 intercepts and slopes for conductance in Lombardozzi2015
   real(r8), parameter :: needleleafCondInt    = 0.7823_r8  ! units = unitless
   real(r8), parameter :: needleleafCondSlope  = 0.0048_r8  ! units = per mmol m^-2
   real(r8), parameter :: broadleafCondInt     = 0.9125_r8  ! units = unitless
@@ -146,10 +143,11 @@ contains
     type(bounds_type), intent(in)    :: bounds
     character(len=*),  intent(in)    :: o3_veg_stress_method
     !-----------------------------------------------------------------------
-
-    if (o3_veg_stress_method=='stress_lombardozzi2015') then
+   if (o3_veg_stress_method=='stress_li2024')then
+     this%stress_method = stress_method_li2024
+   else if (o3_veg_stress_method=='stress_lombardozzi2015') then
        this%stress_method = stress_method_lombardozzi2015
-    else if (o3_veg_stress_method=='stress_falk') then
+   else if (o3_veg_stress_method=='stress_falk') then
        this%stress_method = stress_method_falk
        if (.not. use_luna ) call endrun(' use_luna=.true. is required when o3_veg_stress_method = stress_falk.')
     else
@@ -223,7 +221,8 @@ contains
          avgflag='A', long_name='total ozone flux into shaded leaves', &
          ptr_patch=this%o3uptakesha_patch)
 
-    if (this%stress_method==stress_method_lombardozzi2015) then
+    if (this%stress_method==stress_method_li2024 .or. &
+        this%stress_method==stress_method_lombardozzi2015) then
        ! For this and the following variables: how should we include leaf area in the
        ! patch averaging?
        !
@@ -354,7 +353,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CalcOzoneUptake(this, bounds, num_exposedvegp, filter_exposedvegp, &
-       forc_pbot, forc_th, rssun, rssha, rb, ram, tlai, forc_o3)
+       forc_pbot, forc_th, rssun, rssha, rb, ram, tlai, forc_o3, sabv)
     !
     ! !DESCRIPTION:
     ! Calculate ozone uptake.
@@ -372,6 +371,7 @@ contains
     real(r8) , intent(in) :: ram( bounds%begp: )       ! aerodynamical resistance (s/m)
     real(r8) , intent(in) :: tlai( bounds%begp: )      ! one-sided leaf area index, no burying by snow
     real(r8) , intent(in) :: forc_o3( bounds%begg: )   ! ozone partial pressure (mol/mol)
+    real(r8) , intent(in) :: sabv( bounds%begp: )      ! solar radiation absorbed by vegetation (W/m**2)
     !
     ! !LOCAL VARIABLES:
     integer  :: fp             ! filter index
@@ -391,6 +391,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(rb) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(ram) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(tlai) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sabv) == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate( &
          o3uptakesha => this%o3uptakesha_patch                , & ! Output: [real(r8) (:)] ozone dose
@@ -402,20 +403,38 @@ contains
          p = filter_exposedvegp(fp)
          c = patch%column(p)
          g = patch%gridcell(p)
-
+         
          ! Ozone uptake for shaded leaves
-         call CalcOzoneUptakeOnePoint( &
+        if (this%stress_method==stress_method_li2024)then
+          call CalcOzoneUptakeLi2024OnePoint( &
+              forc_ozone=forc_o3(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+              rs=rssha(p), rb=rb(p), ram=ram(p), &
+              tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
+              o3uptake=o3uptakesha(p), sabv=sabv(p))
+
+         ! Ozone uptake for sunlit leaves
+         call CalcOzoneUptakeLi2024OnePoint( &
+              forc_ozone=forc_o3(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+              rs=rssun(p), rb=rb(p), ram=ram(p), &
+              tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
+              o3uptake=o3uptakesun(p), sabv=sabv(p))
+        
+        elseif(this%stress_method==stress_method_lombardozzi2015.or.this%stress_method==stress_method_falk) then
+         call CalcOzoneUptakeLFOnePoint( &
               forc_ozone=forc_o3(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
               rs=rssha(p), rb=rb(p), ram=ram(p), &
               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
               o3uptake=o3uptakesha(p))
 
          ! Ozone uptake for sunlit leaves
-         call CalcOzoneUptakeOnePoint( &
+         call CalcOzoneUptakeLFOnePoint( &
               forc_ozone=forc_o3(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
               rs=rssun(p), rb=rb(p), ram=ram(p), &
               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
               o3uptake=o3uptakesun(p))
+      else
+       call endrun('unknown ozone stress method')
+      end if
 
          tlai_old(p) = tlai(p)
 
@@ -424,9 +443,120 @@ contains
     end associate
 
   end subroutine CalcOzoneUptake
+    !-----------------------------------------------------------------------
+subroutine CalcOzoneUptakeLi2024OnePoint( &
+       forc_ozone, forc_pbot, forc_th, &
+       rs, rb, ram, &
+       tlai, tlai_old, pft_type, &
+       o3uptake, sabv)
+    !
+    ! !DESCRIPTION:
+    ! Calculates ozone uptake for a single point, for just sunlit or shaded leaves
+    !
+    ! !USES:
+    use shr_const_mod        , only : SHR_CONST_RGAS
+    use clm_time_manager     , only : get_step_size
+    !
+    ! !ARGUMENTS:
+    real(r8) , intent(in)    :: forc_ozone ! ozone partial pressure (mol/mol)
+    real(r8) , intent(in)    :: forc_pbot  ! atmospheric pressure (Pa)
+    real(r8) , intent(in)    :: forc_th    ! atmospheric potential temperature (K)
+    real(r8) , intent(in)    :: rs         ! leaf stomatal resistance (s/m)
+    real(r8) , intent(in)    :: rb         ! boundary layer resistance (s/m)
+    real(r8) , intent(in)    :: ram        ! aerodynamical resistance (s/m)
+    real(r8) , intent(in)    :: tlai       ! one-sided leaf area index, no burying by snow
+    real(r8) , intent(in)    :: tlai_old   ! tlai from last time step
+    integer  , intent(in)    :: pft_type   ! vegetation type, for indexing into pftvarcon arrays
+    real(r8) , intent(inout) :: o3uptake   ! ozone entering the leaf
+    real(r8) , intent(in)    :: sabv       ! patch solar radiation absorbed by vegetation (W/m**2)
+
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: dtime          ! land model time step (sec)
+    real(r8) :: dtimeh         ! time step in hours
+    real(r8) :: o3concnmolm3   ! o3 concentration (nmol/m^3)
+    real(r8) :: o3flux         ! instantaneous o3 flux (nmol m^-2 s^-1)
+    real(r8) :: o3fluxcrit     ! instantaneous o3 flux beyond threshold (nmol m^-2 s^-1)
+    real(r8) :: o3fluxperdt    ! o3 flux per timestep (mmol m^-2)
+    real(r8) :: heal           ! o3uptake healing rate based on % of new leaves growing (mmol m^-2)
+    real(r8) :: leafturn       ! leaf turnover time / mortality rate (per hour)
+    real(r8) :: decay          ! o3uptake decay rate based on leaf lifetime (mmol m^-2)
+    real(r8) :: o3_flux_threshold   ! threshold below which o3flux is set to 0 (nmol m^-2 s^-1)
+    real(r8) :: lai_thresh     !LAI threshold for growing season
+    ! o3:h2o resistance ratio from Li et al. 2024
+    real(r8), parameter :: ko3 = 1.51_r8
+
+    character(len=*), parameter :: subname = 'CalcOzoneUptakeOnePoint'
+    !-----------------------------------------------------------------------
+
+    ! convert o3 from mol/mol to nmol m^-3
+    o3concnmolm3 = forc_ozone * 1.e9_r8 * (forc_pbot/(forc_th*SHR_CONST_RGAS*0.001_r8))
+
+    ! calculate instantaneous flux
+    o3flux = o3concnmolm3/ (ko3*rs+ rb + ram)
+    ! set lai_thresh    
+        if (pftcon%evergreen(pft_type) == 1) then
+         lai_thresh=0._r8 !so evergreens grow year-round
+       else  ! for deciduous vegetation
+        if(pft_type == 10)then !temperate shrub
+         lai_thresh=0.3_r8
+        else
+         lai_thresh=0.5_r8
+        end if
+       end if
+    ! set o3_flux_threshold
+       if(pft_type >= 1 .and. pft_type <= 3)then  !Needleleaf tree
+         o3_flux_threshold = 1.0_r8
+       end if
+       if(pft_type >= 4 .and. pft_type <= 8)then  !Broadleaf tree
+         o3_flux_threshold = 3.0_r8
+       end if
+       if(pft_type >= 9 .and. pft_type <= 11)then !Shrub
+         o3_flux_threshold = 5.0_r8
+       end if
+       if(pft_type >= 12 .and. pft_type <= 14)then !Grass
+        o3_flux_threshold = 2.0_r8
+       end if
+       if(pft_type >= 15)then !Crop
+        o3_flux_threshold = 0.5_r8
+       end if
+
+    ! apply o3 flux threshold
+    if (o3flux < o3_flux_threshold) then
+       o3fluxcrit = 0._r8
+    else
+       o3fluxcrit = o3flux - o3_flux_threshold
+    endif
+
+    dtime  = get_step_size()
+    dtimeh = dtime / 3600._r8
+
+   ! calculate o3 flux per timestep
+     if(sabv > 0._r8)then  !daytime
+       o3fluxperdt = o3fluxcrit * dtime * 0.000001_r8
+     else
+       o3fluxperdt = 0._r8
+     end if
+
+     if (tlai > lai_thresh) then
+      ! o3 uptake decay
+      if (pftcon%evergreen(pft_type) == 1) then
+       leafturn = 1._r8/(pftcon%leaf_long(pft_type)*365._r8*24._r8)
+       decay = o3uptake * leafturn * dtimeh
+      else
+       decay = o3uptake * max(0._r8,(1._r8-tlai_old/tlai))
+      end if
+
+       !cumulative uptake (mmol m^-2)
+       o3uptake = max(0._r8, o3uptake + o3fluxperdt - decay)
+     else
+       o3uptake = 0._r8
+     end if
+
+  end subroutine CalcOzoneUptakeLi2024OnePoint
 
   !-----------------------------------------------------------------------
-  subroutine CalcOzoneUptakeOnePoint( &
+subroutine CalcOzoneUptakeLFOnePoint( &
        forc_ozone, forc_pbot, forc_th, &
        rs, rb, ram, &
        tlai, tlai_old, pft_type, &
@@ -461,6 +591,15 @@ contains
     real(r8) :: heal           ! o3uptake healing rate based on % of new leaves growing (mmol m^-2)
     real(r8) :: leafturn       ! leaf turnover time / mortality rate (per hour)
     real(r8) :: decay          ! o3uptake decay rate based on leaf lifetime (mmol m^-2)
+
+    ! o3:h2o resistance ratio defined by Sitch et al. 2007
+    real(r8), parameter :: ko3 = 1.67_r8
+
+    ! LAI threshold for LAIs that asymptote and don't reach 0
+    real(r8), parameter :: lai_thresh = 0.5_r8
+
+    ! threshold below which o3flux is set to 0 (nmol m^-2 s^-1)
+    real(r8), parameter :: o3_flux_threshold = 0.8_r8
 
     character(len=*), parameter :: subname = 'CalcOzoneUptakeOnePoint'
     !-----------------------------------------------------------------------
@@ -508,7 +647,7 @@ contains
        o3uptake = 0._r8
     end if
 
-  end subroutine CalcOzoneUptakeOnePoint
+  end subroutine CalcOzoneUptakeLFOnePoint
 
   !-----------------------------------------------------------------------
   subroutine CalcOzoneStress(this, bounds, &
@@ -532,6 +671,10 @@ contains
     !-----------------------------------------------------------------------
 
     select case (this%stress_method)
+    case (stress_method_li2024)
+       call this%CalcOzoneStressLi2024(bounds, &
+            num_exposedvegp, filter_exposedvegp, &
+            num_noexposedvegp, filter_noexposedvegp)
     case (stress_method_lombardozzi2015)
        call this%CalcOzoneStressLombardozzi2015(bounds, &
             num_exposedvegp, filter_exposedvegp, &
@@ -546,6 +689,119 @@ contains
     end select
 
   end subroutine CalcOzoneStress
+
+  !----------------------------------------------------------------------
+    subroutine CalcOzoneStressLi2024(this, bounds, &
+       num_exposedvegp, filter_exposedvegp, &
+       num_noexposedvegp, filter_noexposedvegp)
+    !
+    ! !DESCRIPTION:
+    ! Calculate ozone stress.
+    !
+    ! This subroutine uses the Li2024 formulation for ozone stress
+    !
+    ! !ARGUMENTS:
+    class(ozone_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    integer , intent(in) :: num_exposedvegp         ! number of points in filter_exposedvegp
+    integer , intent(in) :: filter_exposedvegp(:)   ! patch filter for non-snow-covered veg
+    integer , intent(in) :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer , intent(in) :: filter_noexposedvegp(:) ! patch filter for veg where frac_veg_nosno is 0
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: fp             ! filter index
+    integer  :: p              ! patch index
+
+    character(len=*), parameter :: subname = 'CalcOzoneStressLi2024'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         o3uptakesha => this%o3uptakesha_patch                , & ! Input:  [real(r8) (:)] ozone dose
+         o3uptakesun => this%o3uptakesun_patch                , & ! Input:  [real(r8) (:)] ozone dose
+         o3coefvsha  => this%o3coefvsha_patch                 , & ! Output: [real(r8) (:)] ozone coef
+         o3coefvsun  => this%o3coefvsun_patch                 , & ! Output: [real(r8) (:)] ozone coef
+         o3coefgsha  => this%o3coefgsha_patch                 , & ! Output: [real(r8) (:)] ozone coef
+         o3coefgsun  => this%o3coefgsun_patch                   & ! Output: [real(r8) (:)] ozone coef
+         )
+
+      do fp = 1, num_exposedvegp
+         p = filter_exposedvegp(fp)
+
+         ! Ozone stress for shaded leaves
+         call CalcOzoneStressLi2024OnePoint( &
+              pft_type=patch%itype(p), o3uptake=o3uptakesha(p), &
+              o3coefv=o3coefvsha(p), o3coefg=o3coefgsha(p))
+
+         ! Ozone stress for sunlit leaves
+         call CalcOzoneStressLi2024OnePoint( &
+              pft_type=patch%itype(p), o3uptake=o3uptakesun(p), &
+              o3coefv=o3coefvsun(p), o3coefg=o3coefgsun(p))
+      end do
+
+      do fp = 1, num_noexposedvegp
+         p = filter_noexposedvegp(fp)
+
+         ! See notes above in InitHistory about why these need to be set to 1 over
+         ! non-exposed veg points each time step.
+         o3coefvsha(p) = 1._r8
+         o3coefgsha(p) = 1._r8
+         o3coefvsun(p) = 1._r8
+         o3coefgsun(p) = 1._r8
+      end do
+
+    end associate
+
+  end subroutine CalcOzoneStressLi2024
+  
+  !----------------------------------------------------------------------
+   subroutine CalcOzoneStressLi2024OnePoint( &
+       pft_type, o3uptake, &
+       o3coefv, o3coefg)
+    !
+    ! !DESCRIPTION:
+    ! Calculates ozone stress for a single point, for just sunlit or shaded leaves
+    !
+    ! This subroutine uses the Lombardozzi2015 formulation for ozone stress
+    !
+    ! !ARGUMENTS:
+    integer  , intent(in)    :: pft_type   ! vegetation type, for indexing into pftvarcon arrays
+    real(r8) , intent(in)    :: o3uptake   ! ozone entering the leaf
+    real(r8) , intent(out)   :: o3coefv    ! ozone coefficient for photosynthesis (0 - 1)
+    real(r8) , intent(out)   :: o3coefg    ! ozone coefficient for conductance (0 - 1)
+    !
+
+    character(len=*), parameter :: subname = 'CalcOzoneStressLi2024OnePoint'
+    !-----------------------------------------------------------------------
+
+    if (o3uptake == 0._r8) then
+       ! No o3 damage if no o3 uptake
+       o3coefv = 1._r8
+       o3coefg = 1._r8
+    else
+       ! Determine parameter values for this pft
+       if(pft_type >= 1 .and. pft_type <= 3)then  !Needleleaf tree
+        o3coefv = max(0._r8, min(1._r8, 0.991_r8 - 0.043_r8 * log(o3uptake)))
+        o3coefg = max(0._r8, min(1._r8, 1.003_r8 - 0.038_r8 * log(o3uptake)))
+      end if 
+      if(pft_type >= 4 .and. pft_type <= 8)then  !Broadleaf tree
+        o3coefv = max(0._r8, min(1._r8, 0.862_r8 -0.0044_r8 * o3uptake))
+        o3coefg = max(0._r8, min(1._r8, 0.936_r8 -0.0030_r8 * o3uptake))
+      end if
+      if(pft_type >= 9 .and. pft_type <= 11)then !Shrub
+        o3coefv = max(0._r8, min(1._r8, 1.093_r8 - 0.106_r8 * log(o3uptake)))
+        o3coefg = max(0._r8, min(1._r8, 1.053_r8 - 0.082_r8 * log(o3uptake)))
+      end if
+      if(pft_type >= 12 .and. pft_type <= 14)then !Grass
+         o3coefv = max(0._r8, min(1._r8, -0.00066_r8*o3uptake**2+0.016_r8*o3uptake+0.757_r8))
+         o3coefg = max(0._r8, min(1._r8, 0.790_r8 * exp(-0.0476_r8 * o3uptake)))
+      end if
+      if (pft_type >= 15)then !Crop
+        o3coefv = max(0._r8, min(1._r8, 0.883_r8 - 0.033_r8 * log(o3uptake)))
+        o3coefg = max(0._r8, min(1._r8, 0.953_r8 - 0.132_r8 * tanh(o3uptake)))
+      end if
+    end if
+
+  end subroutine CalcOzoneStressLi2024OnePoint
 
   !-----------------------------------------------------------------------
   subroutine CalcOzoneStressLombardozzi2015(this, bounds, &
@@ -610,7 +866,9 @@ contains
 
   end subroutine CalcOzoneStressLombardozzi2015
 
-  !-----------------------------------------------------------------------
+! ---------------------------------------------------------------------------
+
+
   subroutine CalcOzoneStressLombardozzi2015OnePoint( &
        pft_type, o3uptake, &
        o3coefv, o3coefg)
