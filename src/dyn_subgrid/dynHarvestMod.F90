@@ -434,9 +434,9 @@ contains
                m = 0._r8
             end if
 
-            ! patch-level harvest carbon fluxes
-            ! displayed pools
             if(.not. use_matrixcn)then
+               ! patch-level harvest carbon fluxes
+               ! displayed pools
                hrv_leafc_to_litter(p)               = leafc(p)               * m
                hrv_frootc_to_litter(p)              = frootc(p)              * m
                hrv_livestemc_to_litter(p)           = livestemc(p)           * m
@@ -492,6 +492,8 @@ contains
             ! NOTE: The non-matrix part of this update is in CNCStatUpdate2 CStateUpdate2h (EBK 11/25/2019)
             !   and for Nitrogen The non-matrix part of this update is in CNNStatUpdate2 NStateUpdate2h (EBK 11/25/2019)
             else
+               ! patch-level harvest carbon fluxes
+               ! displayed pools
                hrv_leafc_to_litter(p)      = matrix_update_gmc(p,ileaf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)      * &
                                              leafc(p)
                hrv_frootc_to_litter(p)     = matrix_update_gmc(p,ifroot_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)     * &
@@ -506,7 +508,7 @@ contains
                                              deadcrootc(p)
                hrv_xsmrpool_to_atm(p)      = xsmrpool(p)            * m
 
-         ! storage pools
+               ! storage pools
                hrv_leafc_storage_to_litter(p)      = matrix_update_gmc(p,ileafst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)      * &
                                                      leafc_storage(p)
                hrv_frootc_storage_to_litter(p)     = matrix_update_gmc(p,ifrootst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)     * &
@@ -521,8 +523,7 @@ contains
                                                      deadcrootc_storage(p)
                hrv_gresp_storage_to_litter(p)      = gresp_storage(p)       * m
 
-
-         ! transfer pools
+               ! transfer pools
                hrv_leafc_xfer_to_litter(p)      = matrix_update_gmc(p,ileafxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)      * &
                                                   leafc_xfer(p)
                hrv_frootc_xfer_to_litter(p)     = matrix_update_gmc(p,ifrootxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)     * &
@@ -537,6 +538,8 @@ contains
                                                   deadcrootc_xfer(p)
                hrv_gresp_xfer_to_litter(p)      = gresp_xfer(p)          * m
 
+               ! patch-level harvest mortality nitrogen fluxes
+               ! displayed pools
                hrv_leafn_to_litter(p)      = matrix_update_gmn(p,ileaf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)      * &
                                              leafn(p)
                hrv_frootn_to_litter(p)     = matrix_update_gmn(p,ifroot_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)     * &
@@ -552,7 +555,7 @@ contains
                hrv_retransn_to_litter(p)   = matrix_update_gmn(p,iretransn_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
                                              retransn(p)
 
-         ! storage pools
+               ! storage pools
                hrv_leafn_storage_to_litter(p)      = matrix_update_gmn(p,ileafst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)     *&
                                                      leafn_storage(p)
                hrv_frootn_storage_to_litter(p)     = matrix_update_gmn(p,ifrootst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)    *&
@@ -565,7 +568,7 @@ contains
                                                      livecrootn_storage(p)
                hrv_deadcrootn_storage_to_litter(p) = matrix_update_gmn(p,ideadcrootst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)*&
                                                      deadcrootn_storage(p)
-         ! transfer pools
+               ! transfer pools
                hrv_leafn_xfer_to_litter(p)      = matrix_update_gmn(p,ileafxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)      * &
                                                   leafn_xfer(p)
                hrv_frootn_xfer_to_litter(p)     = matrix_update_gmn(p,ifrootxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)     * &
@@ -578,9 +581,7 @@ contains
                                                   livecrootn_xfer(p)
                hrv_deadcrootn_xfer_to_litter(p) = matrix_update_gmn(p,ideadcrootxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
                                                   deadcrootn_xfer(p)
-
             end if
-               
          end if  ! end tree block
       end do ! end of pft loop
 

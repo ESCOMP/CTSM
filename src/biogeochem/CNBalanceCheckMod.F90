@@ -60,7 +60,6 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Init(this, bounds)
-    use CNSharedParamsMod, only : use_matrixcn
     class(cn_balance_type)         :: this
     type(bounds_type) , intent(in) :: bounds  
 

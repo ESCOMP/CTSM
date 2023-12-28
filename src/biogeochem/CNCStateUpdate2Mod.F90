@@ -370,15 +370,27 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
 
-            ! column gross unrepresented landcover change fluxes
-            do i = i_litr_min, i_litr_max
-               cs_soil%decomp_cpools_vr_col(c,j,i) = &
-                  cs_soil%decomp_cpools_vr_col(c,j,i) + cf_veg%gru_c_to_litr_c_col(c,j,i) * dt
-            end do
-            cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = &
-                 cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + cf_veg%gru_c_to_cwdc_col(c,j)  * dt
+            if (.not. use_soil_matrixcn)then
+               ! column gross unrepresented landcover change fluxes
+               do i = i_litr_min, i_litr_max
+                  cs_soil%decomp_cpools_vr_col(c,j,i) = &
+                     cs_soil%decomp_cpools_vr_col(c,j,i) + cf_veg%gru_c_to_litr_c_col(c,j,i) * dt
+               end do
+               cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = &
+                    cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + cf_veg%gru_c_to_cwdc_col(c,j) * dt
 
-            ! wood to product pools - states updated in CNProducts
+               ! wood to product pools - states updated in CNProducts
+            else
+              ! Match above for soil-matrix
+               do i = i_litr_min, i_litr_max
+                  cf_soil%matrix_Cinput%V(c,j+(i-1)*nlevdecomp) = &
+                    cf_soil%matrix_Cinput%V(c,j+(i-1)*nlevdecomp) + cf_veg%gru_c_to_litr_c_col(c,j,i) * dt
+               end do
+               ! Currently i_cwd .ne. i_litr_max + 1 if .not. fates and
+               !           i_cwd = 0 if fates, so not including in the i-loop
+               cf_soil%matrix_Cinput%V(c,j+(i_cwd-1)*nlevdecomp) =     &
+                 cf_soil%matrix_Cinput%V(c,j+(i_cwd-1)*nlevdecomp) + cf_veg%gru_c_to_cwdc_col(c,j) * dt
+            end if !soil_matrix
          end do
       end do
 
@@ -387,58 +399,66 @@ contains
          p = filter_soilp(fp)
 
          ! patch-level carbon fluxes from gross unrepresented landcover change mortality
-         ! displayed pools
-         cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p)                           &
-              - cf_veg%gru_leafc_to_litter_patch(p) * dt
-         cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p)                         &
-              - cf_veg%gru_frootc_to_litter_patch(p) * dt
-         cs_veg%livestemc_patch(p) = cs_veg%livestemc_patch(p)                   &
-              - cf_veg%gru_livestemc_to_atm_patch(p) * dt
-         cs_veg%deadstemc_patch(p) = cs_veg%deadstemc_patch(p)                   &
-              - cf_veg%gru_deadstemc_to_atm_patch(p) * dt
-         cs_veg%deadstemc_patch(p) = cs_veg%deadstemc_patch(p)                   &
-              - cf_veg%gru_wood_productc_gain_patch(p) * dt
-         cs_veg%livecrootc_patch(p) = cs_veg%livecrootc_patch(p)                 &
-              - cf_veg%gru_livecrootc_to_litter_patch(p) * dt
-         cs_veg%deadcrootc_patch(p) = cs_veg%deadcrootc_patch(p)                 &
-              - cf_veg%gru_deadcrootc_to_litter_patch(p) * dt
+         !
+         ! State update without the matrix solution
+         !
+         if(.not. use_matrixcn)then
+            ! displayed pools
+            cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p)                           &
+                 - cf_veg%gru_leafc_to_litter_patch(p) * dt
+            cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p)                         &
+                 - cf_veg%gru_frootc_to_litter_patch(p) * dt
+            cs_veg%livestemc_patch(p) = cs_veg%livestemc_patch(p)                   &
+                 - cf_veg%gru_livestemc_to_atm_patch(p) * dt
+            cs_veg%deadstemc_patch(p) = cs_veg%deadstemc_patch(p)                   &
+                 - cf_veg%gru_deadstemc_to_atm_patch(p) * dt
+            cs_veg%deadstemc_patch(p) = cs_veg%deadstemc_patch(p)                   &
+                 - cf_veg%gru_wood_productc_gain_patch(p) * dt
+            cs_veg%livecrootc_patch(p) = cs_veg%livecrootc_patch(p)                 &
+                 - cf_veg%gru_livecrootc_to_litter_patch(p) * dt
+            cs_veg%deadcrootc_patch(p) = cs_veg%deadcrootc_patch(p)                 &
+                 - cf_veg%gru_deadcrootc_to_litter_patch(p) * dt
 
-         ! xsmrpool
-         cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p)                     &
-              - cf_veg%gru_xsmrpool_to_atm_patch(p) * dt
+            ! xsmrpool
+            cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p)                     &
+                 - cf_veg%gru_xsmrpool_to_atm_patch(p) * dt
 
-         ! storage pools
-         cs_veg%leafc_storage_patch(p) = cs_veg%leafc_storage_patch(p)           &
-              - cf_veg%gru_leafc_storage_to_atm_patch(p) * dt
-         cs_veg%frootc_storage_patch(p) = cs_veg%frootc_storage_patch(p)         &
-              - cf_veg%gru_frootc_storage_to_atm_patch(p) * dt
-         cs_veg%livestemc_storage_patch(p) = cs_veg%livestemc_storage_patch(p)   &
-              - cf_veg%gru_livestemc_storage_to_atm_patch(p) * dt
-         cs_veg%deadstemc_storage_patch(p) = cs_veg%deadstemc_storage_patch(p)   &
-              - cf_veg%gru_deadstemc_storage_to_atm_patch(p) * dt
-         cs_veg%livecrootc_storage_patch(p) = cs_veg%livecrootc_storage_patch(p) &
-              - cf_veg%gru_livecrootc_storage_to_atm_patch(p) * dt
-         cs_veg%deadcrootc_storage_patch(p) = cs_veg%deadcrootc_storage_patch(p) &
-              - cf_veg%gru_deadcrootc_storage_to_atm_patch(p) * dt
-         cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p)           &
-              - cf_veg%gru_gresp_storage_to_atm_patch(p) * dt
+            ! storage pools
+            cs_veg%leafc_storage_patch(p) = cs_veg%leafc_storage_patch(p)           &
+                 - cf_veg%gru_leafc_storage_to_atm_patch(p) * dt
+            cs_veg%frootc_storage_patch(p) = cs_veg%frootc_storage_patch(p)         &
+                 - cf_veg%gru_frootc_storage_to_atm_patch(p) * dt
+            cs_veg%livestemc_storage_patch(p) = cs_veg%livestemc_storage_patch(p)   &
+                 - cf_veg%gru_livestemc_storage_to_atm_patch(p) * dt
+            cs_veg%deadstemc_storage_patch(p) = cs_veg%deadstemc_storage_patch(p)   &
+                 - cf_veg%gru_deadstemc_storage_to_atm_patch(p) * dt
+            cs_veg%livecrootc_storage_patch(p) = cs_veg%livecrootc_storage_patch(p) &
+                 - cf_veg%gru_livecrootc_storage_to_atm_patch(p) * dt
+            cs_veg%deadcrootc_storage_patch(p) = cs_veg%deadcrootc_storage_patch(p) &
+                 - cf_veg%gru_deadcrootc_storage_to_atm_patch(p) * dt
+            cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p)           &
+                 - cf_veg%gru_gresp_storage_to_atm_patch(p) * dt
 
-         ! transfer pools
-         cs_veg%leafc_xfer_patch(p) = cs_veg%leafc_xfer_patch(p)                 &
-              - cf_veg%gru_leafc_xfer_to_atm_patch(p) * dt
-         cs_veg%frootc_xfer_patch(p) = cs_veg%frootc_xfer_patch(p)               &
-              - cf_veg%gru_frootc_xfer_to_atm_patch(p) * dt
-         cs_veg%livestemc_xfer_patch(p) = cs_veg%livestemc_xfer_patch(p)         &
-              - cf_veg%gru_livestemc_xfer_to_atm_patch(p) * dt
-         cs_veg%deadstemc_xfer_patch(p) = cs_veg%deadstemc_xfer_patch(p)         &
-              - cf_veg%gru_deadstemc_xfer_to_atm_patch(p) * dt
-         cs_veg%livecrootc_xfer_patch(p) = cs_veg%livecrootc_xfer_patch(p)       &
-              - cf_veg%gru_livecrootc_xfer_to_atm_patch(p) * dt
-         cs_veg%deadcrootc_xfer_patch(p) = cs_veg%deadcrootc_xfer_patch(p)       &
-              - cf_veg%gru_deadcrootc_xfer_to_atm_patch(p) * dt
-         cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p)                 &
-              - cf_veg%gru_gresp_xfer_to_atm_patch(p) * dt
+            ! transfer pools
+            cs_veg%leafc_xfer_patch(p) = cs_veg%leafc_xfer_patch(p)                 &
+                 - cf_veg%gru_leafc_xfer_to_atm_patch(p) * dt
+            cs_veg%frootc_xfer_patch(p) = cs_veg%frootc_xfer_patch(p)               &
+                 - cf_veg%gru_frootc_xfer_to_atm_patch(p) * dt
+            cs_veg%livestemc_xfer_patch(p) = cs_veg%livestemc_xfer_patch(p)         &
+                 - cf_veg%gru_livestemc_xfer_to_atm_patch(p) * dt
+            cs_veg%deadstemc_xfer_patch(p) = cs_veg%deadstemc_xfer_patch(p)         &
+                 - cf_veg%gru_deadstemc_xfer_to_atm_patch(p) * dt
+            cs_veg%livecrootc_xfer_patch(p) = cs_veg%livecrootc_xfer_patch(p)       &
+                 - cf_veg%gru_livecrootc_xfer_to_atm_patch(p) * dt
+            cs_veg%deadcrootc_xfer_patch(p) = cs_veg%deadcrootc_xfer_patch(p)       &
+                 - cf_veg%gru_deadcrootc_xfer_to_atm_patch(p) * dt
+            cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p)                 &
+                 - cf_veg%gru_gresp_xfer_to_atm_patch(p) * dt
 
+         else
+            ! NB (slevis) The matrix equivalent of the above is in
+            ! dynGrossUnrepMod::CNGrossUnrep*
+         end if
       end do ! end of patch loop
 
     end associate
