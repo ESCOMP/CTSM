@@ -1,0 +1,39 @@
+[submodule "src/fates"]
+	path = src/fates
+	url = https://github.com/NGEET/fates
+[submodule "components/rtm"]
+	path = components/rtm
+	url = https://github.com/ESCOMP/RTM
+[submodule "components/mosart"]
+	path = components/mosart
+	url = https://github.com/ESCOMP/MOSART
+[submodule "components/mizuRoute"]
+	path = components/mizuRoute
+	url = https://github.com/nmizukami/mizuRoute
+[submodule "ccs_config"]
+	path = ccs_config
+	url = https://github.com/ESMCI/ccs_config_cesm.git
+[submodule "cime"]
+	path = cime
+	url = https://github.com/ESMCI/cime
+[submodule "components/cmeps"]
+	path = components/cmeps
+	url = https://github.com/ESCOMP/CMEPS.git
+[submodule "components/cdeps"]
+	path = components/cdeps
+	url = https://github.com/ESCOMP/CDEPS.git
+[submodule "components/cpl7"]
+	path = components/cpl7
+	url = https://github.com/ESCOMP/CESM_CPL7andDataComps
+[submodule "share"]
+	path = share
+	url = https://github.com/ESCOMP/CESM_share
+[submodule "libraries/mct"]
+	path = libraries/mct
+	url = https://github.com/MCSclimate/MCT
+[submodule "libraries/parallelio"]
+	path = libraries/parallelio
+	url = https://github.com/NCAR/ParallelIO
+[submodule "doc/doc-builder"]
+	path = doc/doc-builder
+	url = https://github.com/ESMCI/doc-builder

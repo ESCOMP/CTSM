@@ -1,0 +1,14 @@
+#!/bin/bash
+./install_CLM
+submodules('cime' 'components/rtm' 'components/mosart' \
+           'components/mizuRoute' 'ccs_config' 'components/cmeps' \
+           'components/cdeps' 'components/cpl7' 'share' 'libraries/mct' \
+           'libraries/parallelio' 'doc/doc-builder')
+
+for mod in "${submodules[@]}"                                                                                 
+do                                                                                                                                                               
+   echo "Initializing $mod"                                                                                                                                      
+   git submodule update --init $mod                                                                                                                              
+done                                                                                                                                                             
+                                                                                                                                                                 
+                        
