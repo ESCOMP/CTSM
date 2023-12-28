@@ -1,14 +1,30 @@
 #!/bin/bash
-./install_CLM
+# Script to fetch submodules for CTSM
+# if argument -internal_only is supplied then only checkout CTSM internal submodules, otherwise checkout everything needed for
+# CTSM as a top level repository
+#
+
+submodules('src/fates')
+
+for mod in "${submodules[@]}"
+do
+    echo "Initializing $mod"
+    git submodule update --init $mod
+done
+
+if [ $# -gt 0 ]
+  then
+    exit 0
+fi
+
+
 submodules('cime' 'components/rtm' 'components/mosart' \
            'components/mizuRoute' 'ccs_config' 'components/cmeps' \
            'components/cdeps' 'components/cpl7' 'share' 'libraries/mct' \
            'libraries/parallelio' 'doc/doc-builder')
 
-for mod in "${submodules[@]}"                                                                                 
-do                                                                                                                                                               
-   echo "Initializing $mod"                                                                                                                                      
-   git submodule update --init $mod                                                                                                                              
-done                                                                                                                                                             
-                                                                                                                                                                 
-                        
+for mod in "${submodules[@]}"
+do
+    echo "Initializing $mod"
+    git submodule update --init $mod
+done                        
