@@ -1,9 +1,0 @@
-#!/bin/bash
-
-submodules('src/fates')
-
-for mod in "${submodules[@]}"                                                                                                                                    
-do                                                                                                                                                               
-   echo "Initializing $mod"                                                                                                                                      
-   git submodule update --init $mod                                                                                                                              
-done          
