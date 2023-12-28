@@ -26,5 +26,11 @@ extra_submodules=('cime' 'components/rtm' 'components/mosart' \
 for mod in "${extra_submodules[@]}"
 do
     echo "Initializing $mod"
-    git submodule update --init $mod
+    git submodule update --init --recursive $mod
 done                        
+
+# cism needs special handling
+git submodule update --init components/cism
+pushd components/cism
+./install
+popd

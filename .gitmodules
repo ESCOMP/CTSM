@@ -37,3 +37,6 @@
 [submodule "doc/doc-builder"]
 	path = doc/doc-builder
 	url = https://github.com/ESMCI/doc-builder
+[submodule "components/cism"]
+	url = https://github.com/jedwards4b/cism-wrapper.git
+	path = components/cism
