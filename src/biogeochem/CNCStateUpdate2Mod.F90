@@ -335,7 +335,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CStateUpdate2g(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst)
+       cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
+       soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst)
     !
     ! !DESCRIPTION:
     ! Update all the prognostic carbon state
@@ -348,6 +349,7 @@ contains
     integer                                , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(cnveg_carbonflux_type)            , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)           , intent(inout) :: cnveg_carbonstate_inst
+    type(soilbiogeochem_carbonflux_type)   , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type)  , intent(inout) :: soilbiogeochem_carbonstate_inst
     !
     ! !LOCAL VARIABLES:
@@ -359,6 +361,7 @@ contains
     associate(                                     & 
          cf_veg => cnveg_carbonflux_inst         , &
          cs_veg => cnveg_carbonstate_inst        , &
+         cf_soil => soilbiogeochem_carbonflux_inst, &
          cs_soil => soilbiogeochem_carbonstate_inst &
          )
      

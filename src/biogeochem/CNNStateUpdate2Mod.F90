@@ -321,7 +321,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine NStateUpdate2g(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst)
+       cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
+       soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
     ! Update all the prognostic nitrogen state
@@ -337,6 +338,7 @@ contains
     type(cnveg_nitrogenflux_type)           , intent(in)    :: cnveg_nitrogenflux_inst
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c,p,j,l,i  ! indices
@@ -347,6 +349,7 @@ contains
     associate(                                 & 
          nf_veg  => cnveg_nitrogenflux_inst  , &
          ns_veg  => cnveg_nitrogenstate_inst , &
+         nf_soil => soilbiogeochem_nitrogenflux_inst, &
          ns_soil => soilbiogeochem_nitrogenstate_inst   &
          )
 

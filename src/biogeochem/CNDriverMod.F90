@@ -799,18 +799,22 @@ contains
     end if
 
     call CStateUpdate2g( num_soilc, filter_soilc,  num_soilp, filter_soilp, &
-         cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst)
+         cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
+         soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst)
     if ( use_c13 ) then
        call CStateUpdate2g(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst)
+            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, &
+            c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst)
     end if
     if ( use_c14 ) then
        call CStateUpdate2g(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)
+            c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, &
+            c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst)
     end if
 
     call NStateUpdate2g(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst)
+         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
+         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
 
     call t_stopf('CNUpdate2')
 
