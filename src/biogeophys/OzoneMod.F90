@@ -779,6 +779,7 @@ subroutine CalcOzoneUptakeLFOnePoint( &
        o3coefg = 1._r8
     else
        ! Determine parameter values for this pft
+       ! TODO lifang0209: Update functions
        if(pft_type >= 1 .and. pft_type <= 3)then  !Needleleaf tree
         o3coefv = max(0._r8, min(1._r8, 0.991_r8 - 0.043_r8 * log(o3uptake)))
         o3coefg = max(0._r8, min(1._r8, 1.003_r8 - 0.038_r8 * log(o3uptake)))
