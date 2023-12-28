@@ -1,10 +1,10 @@
 #!/bin/bash
 # Script to fetch submodules for CTSM
-# if argument -internal_only is supplied then only checkout CTSM internal submodules, otherwise checkout everything needed for
+# if argument -internal-only is supplied then only checkout CTSM internal submodules, otherwise checkout everything needed for
 # CTSM as a top level repository
 #
 
-submodules('src/fates')
+submodules=('src/fates')
 
 for mod in "${submodules[@]}"
 do
@@ -18,12 +18,12 @@ if [ $# -gt 0 ]
 fi
 
 
-submodules('cime' 'components/rtm' 'components/mosart' \
+extra_submodules=('cime' 'components/rtm' 'components/mosart' \
            'components/mizuRoute' 'ccs_config' 'components/cmeps' \
            'components/cdeps' 'components/cpl7' 'share' 'libraries/mct' \
            'libraries/parallelio' 'doc/doc-builder')
 
-for mod in "${submodules[@]}"
+for mod in "${extra_submodules[@]}"
 do
     echo "Initializing $mod"
     git submodule update --init $mod
