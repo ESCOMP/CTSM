@@ -300,6 +300,7 @@ contains
             avgflag='A', &
             long_name=this%info%lname('volume of water in stream channel (hillslope hydrology only)'), &
             ptr_lunit=this%stream_water_volume_lun, l2g_scale_type='natveg',  default='inactive')
+    endif
 
     ! Add excess ice fields to history
 
