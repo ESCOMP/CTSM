@@ -1,0 +1,3 @@
+tillage_mode = 'high'
+paramfile = '/glade/work/samrabin/paramdata/ctsm51_params.c231117.tillage.nc'
+

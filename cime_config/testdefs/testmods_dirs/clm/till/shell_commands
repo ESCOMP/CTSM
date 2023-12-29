@@ -1,0 +1,2 @@
+./xmlchange CLM_BLDNML_OPTS="-bgc bgc -crop -ignore_warnings"
+
