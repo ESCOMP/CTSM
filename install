@@ -32,5 +32,5 @@ done
 # cism needs special handling
 git submodule update --init components/cism
 pushd components/cism
-./install
+./install -internal-only
 popd
