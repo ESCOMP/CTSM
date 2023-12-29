@@ -15,7 +15,7 @@
 	url = https://github.com/ESMCI/ccs_config_cesm.git
 [submodule "cime"]
 	path = cime
-	url = https://github.com/ESMCI/cime
+	url = https://github.com/jedwards4b/cime
 [submodule "components/cmeps"]
 	path = components/cmeps
 	url = https://github.com/ESCOMP/CMEPS.git
@@ -38,5 +38,5 @@
 	path = doc/doc-builder
 	url = https://github.com/ESMCI/doc-builder
 [submodule "components/cism"]
-	url = https://github.com/jedwards4b/cism-wrapper.git
+	url = https://github.com/jedwards4b/cism
 	path = components/cism
