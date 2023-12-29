@@ -3,6 +3,34 @@
 # if argument -internal-only is supplied then only checkout CTSM internal submodules, otherwise checkout everything needed for
 # CTSM as a top level repository
 #
+set -e
+script="install"
+function usage {
+    echo -e "\nusage: $script [-i/--internal-only]\n"
+}
+# Set default arguments
+internal_only=0
+
+# Process arguments
+while [ "$1" != "" ];
+do
+    case $1 in
+
+        # Only checkout CISM internal submodules
+        -i | -internal-only | --internal-only)
+            internal_only=1
+            ;;
+
+        *)
+            echo "$script: illegal option $1"
+            usage
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+########################
 
 submodules=('src/fates')
 
@@ -12,7 +40,7 @@ do
     git submodule update --init $mod
 done
 
-if [ $# -gt 0 ]
+if [ ${internale_only} -eq 1 ]
   then
     exit 0
 fi
@@ -31,6 +59,6 @@ done
 
 # cism needs special handling
 git submodule update --init components/cism
-pushd components/cism
+pushd components/cism 1>/dev/null
 ./install -internal-only
-popd
+popd 1>/dev/null
