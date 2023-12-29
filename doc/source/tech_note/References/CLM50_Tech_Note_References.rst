@@ -463,6 +463,10 @@ Gotangco Castillo C., Levis S., and Thornton P. 2012. Evaluation of the new CNDV
 
 Graham, S.T., Famiglietti, J.S., and Maidment, D.R. 1999. Five-minute, 1/2°, and 1° data sets of continental watersheds and river networks for use in regional and global hydrologic and climate system modeling studies. Water Resour. Res. 35:583-587.
 
+.. _Grahametal2021:
+
+Graham, M. W., Thomas, R. Q., Lombardozzi, D. L., & O'Rourke, M. E. (2021). Modest capacity of no-till farming to offset emissions over 21st century. Environmental Research Letters, 16(5), 054055. doi: 10.1088/1748-9326/abe6c6
+
 .. _Gravenetal2017:
 
 Graven, H., C. E. Allison, D. M. Etheridge, S. Hammer, R. F. Keeling, I. Levin, H. A. J. Meijer, M. Rubino, P. P. Tans, C. M. Trudinger, B. H. Vaughn and J. W. C. White, 2017. Compiled records of carbon isotopes in atmospheric CO2 for historical simulations in CMIP6, Geoscientific Model Development, in review. doi: 10.5194/gmd-2017-166.

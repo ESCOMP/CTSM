@@ -40,6 +40,7 @@ Available new features since the CLM5 release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - Addition of bioenergy crops
 - Ability to customize crop calendars (sowing windows/dates, maturity requirements) using stream files
+- Cropland soil tillage
 
 .. _The crop model:
 
@@ -707,6 +708,12 @@ where :math:`baset` is the *base temperature for GDD* (7\ :sup:`th` row) in :num
 Separate reproductive pool
 ''''''''''''''''''''''''''
 One notable difference between natural vegetation and crops is the presence of reproductive carbon and nitrogen pools. Accounting for the reproductive pools helps determine whether crops are performing reasonably through yield calculations. The reproductive pool is maintained similarly to the leaf, stem, and fine root pools, but allocation of carbon and nitrogen does not begin until the grain fill stage of crop development. Equation :eq:`25.5` describes the carbon and nitrogen allocation coefficients to the reproductive pool. In CLM5BGCCROP, as allocation declines in stem, leaf, and root pools (see section :numref:`Grain fill to harvest`) during the grain fill stage of growth, increasing amounts of carbon and nitrogen are available for grain development.
+
+.. _Tillage:
+
+Tillage
+'''''''
+Tillage is represented as an enhancement of the decomposition rate coefficient; see section :numref:`decomp_mgmt_modifiers`.
 
 .. _The irrigation model:
 
