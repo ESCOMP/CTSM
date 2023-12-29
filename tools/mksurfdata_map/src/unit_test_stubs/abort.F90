@@ -18,7 +18,7 @@ subroutine abort()
     !   call assertExceptionRaised
     !
     !   then this will result in the given pFUnit test failing.
-    use pfunit_mod, only : throw
+    use funit, only : throw
     implicit none
 
     call throw("ABORTED:")

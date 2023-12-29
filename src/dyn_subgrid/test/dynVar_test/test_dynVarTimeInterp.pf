@@ -2,7 +2,7 @@ module test_dynVarTimeInterp
 
   ! Tests of dyn_var_time_interp
 
-  use pfunit_mod
+  use funit
   use shr_kind_mod, only : r8 => shr_kind_r8
   use dynVarTimeInterpMod, only : dyn_var_time_interp_type
   use test_dynVarShared
