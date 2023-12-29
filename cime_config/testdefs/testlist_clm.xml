@@ -536,7 +536,7 @@
       <option name="comment"  >Transient case with isotopes with a December start</option>
     </options>
   </test>
-  <test name="SMS_Ld3_PS" grid="f09_g17" compset="IHistClm50BgcCrop" testmods="clm/f09_dec1990Start_GU_LULCC">
+  <test name="SMS_Ld3" grid="f09_g17" compset="IHistClm50BgcCrop" testmods="clm/f09_dec1990Start_GU_LULCC">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
