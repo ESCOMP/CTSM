@@ -40,7 +40,7 @@ do
     git submodule update --init $mod
 done
 
-if [ ${internale_only} -eq 1 ]
+if [ ${internal_only} -eq 1 ]
   then
     exit 0
 fi
