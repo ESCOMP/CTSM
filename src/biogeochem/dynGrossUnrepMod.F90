@@ -364,7 +364,7 @@ contains
                gru_livecrootc_xfer_to_atm(p)        = livecrootc_xfer(p)     * m
                gru_deadcrootc_xfer_to_atm(p)        = deadcrootc_xfer(p)     * m
                gru_gresp_xfer_to_atm(p)             = gresp_xfer(p)          * m
-	    
+
                ! patch-level gross unrepresented landcover change mortality nitrogen fluxes
                ! displayed pools
                gru_leafn_to_litter(p)               = leafn(p)               * m

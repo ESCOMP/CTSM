@@ -24,11 +24,6 @@ module CNGapMortalityMod
   use PatchType                      , only : patch
   use GridcellType                   , only : grc
   use CNSharedParamsMod              , only : use_matrixcn
-  use clm_varpar                     , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
-                                              ilivestem,ilivestem_st,ilivestem_xf,&
-                                              ideadstem,ideadstem_st,ideadstem_xf,&
-                                              ilivecroot,ilivecroot_st,ilivecroot_xf,&
-                                              ideadcroot,ideadcroot_st,ideadcroot_xf,iretransn,ioutc,ioutn
   use CNVegMatrixMod                 , only : matrix_update_gmc, matrix_update_gmn
   !
   implicit none

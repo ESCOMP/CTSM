@@ -401,6 +401,16 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
 
+         ! xsmrpool
+         cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) &
+              - cf_veg%gru_xsmrpool_to_atm_patch(p) * dt
+         ! gresp storage pool
+         cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p) &
+              - cf_veg%gru_gresp_storage_to_atm_patch(p) * dt
+         ! gresp transfer pool
+         cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) &
+              - cf_veg%gru_gresp_xfer_to_atm_patch(p) * dt
+
          ! patch-level carbon fluxes from gross unrepresented landcover change mortality
          !
          ! State update without the matrix solution
@@ -422,10 +432,6 @@ contains
             cs_veg%deadcrootc_patch(p) = cs_veg%deadcrootc_patch(p)                 &
                  - cf_veg%gru_deadcrootc_to_litter_patch(p) * dt
 
-            ! xsmrpool
-            cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p)                     &
-                 - cf_veg%gru_xsmrpool_to_atm_patch(p) * dt
-
             ! storage pools
             cs_veg%leafc_storage_patch(p) = cs_veg%leafc_storage_patch(p)           &
                  - cf_veg%gru_leafc_storage_to_atm_patch(p) * dt
@@ -439,8 +445,6 @@ contains
                  - cf_veg%gru_livecrootc_storage_to_atm_patch(p) * dt
             cs_veg%deadcrootc_storage_patch(p) = cs_veg%deadcrootc_storage_patch(p) &
                  - cf_veg%gru_deadcrootc_storage_to_atm_patch(p) * dt
-            cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p)           &
-                 - cf_veg%gru_gresp_storage_to_atm_patch(p) * dt
 
             ! transfer pools
             cs_veg%leafc_xfer_patch(p) = cs_veg%leafc_xfer_patch(p)                 &
@@ -455,8 +459,6 @@ contains
                  - cf_veg%gru_livecrootc_xfer_to_atm_patch(p) * dt
             cs_veg%deadcrootc_xfer_patch(p) = cs_veg%deadcrootc_xfer_patch(p)       &
                  - cf_veg%gru_deadcrootc_xfer_to_atm_patch(p) * dt
-            cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p)                 &
-                 - cf_veg%gru_gresp_xfer_to_atm_patch(p) * dt
 
          else
             ! NB (slevis) The matrix equivalent of the above is in

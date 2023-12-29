@@ -25,11 +25,6 @@ module dynHarvestMod
   use PatchType               , only : patch                
   use CNSharedParamsMod       , only : use_matrixcn
   use clm_varctl              , only : use_fates
-  use clm_varpar              , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
-                                       ilivestem,ilivestem_st,ilivestem_xf,&
-                                       ideadstem,ideadstem_st,ideadstem_xf,&
-                                       ilivecroot,ilivecroot_st,ilivecroot_xf,&
-                                       ideadcroot,ideadcroot_st,ideadcroot_xf,ioutc,ioutn 
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
