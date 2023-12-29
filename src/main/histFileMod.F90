@@ -22,12 +22,12 @@ module histFileMod
   use LandunitType   , only : lun
   use ColumnType     , only : col
   use PatchType      , only : patch
-  use EDTypesMod     , only : nclmax
-  use EDTypesMod     , only : nlevleaf
+  use EDParamsMod    , only : nclmax
+  use EDParamsMod    , only : nlevleaf
   use FatesInterfaceTypesMod , only : nlevsclass, nlevage, nlevcoage
   use FatesInterfaceTypesMod , only : nlevheight
   use FatesInterfaceTypesMod , only : nlevdamage
-  use EDTypesMod        , only : nfsc
+  use FatesLitterMod        , only : nfsc
   use FatesLitterMod    , only : ncwd
   use PRTGenericMod     , only : num_elements_fates  => num_elements
   use FatesInterfaceTypesMod , only : numpft_fates => numpft
@@ -141,13 +141,13 @@ module histFileMod
   logical, private :: if_disphist(max_tapes)   ! restart, true => save history file
   !
   ! !PUBLIC MEMBER FUNCTIONS:  (in rough call order)
-  public :: hist_addfld1d        ! Add a 1d single-level field to the master field list
-  public :: hist_addfld2d        ! Add a 2d multi-level field to the master field list
+  public :: hist_addfld1d        ! Add a 1d single-level field to the list of all history fields
+  public :: hist_addfld2d        ! Add a 2d multi-level field to the list of all history fields
   public :: hist_addfld_decomp   ! Add a 1d/2d field based on patch or column data
   public :: hist_add_subscript   ! Add a 2d subscript dimension
 
-  public :: hist_printflds       ! Print summary of master field list
-  public :: htapes_fieldlist     ! Finalize history file field lists, intersecting masterlist with
+  public :: hist_printflds       ! Print summary of list of all history fields
+  public :: htapes_fieldlist     ! Finalize history file field lists, intersecting allhistfldlist with
                                  ! namelist params.
 
   public :: hist_htapes_build    ! Initialize history file handler (for initial or continued run)
@@ -158,10 +158,10 @@ module histFileMod
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: is_mapping_upto_subgrid   ! Is this field being mapped up to a higher subgrid level?
-  private :: masterlist_make_active    ! Declare a single field active for a single tape
-  private :: masterlist_addfld         ! Add a field to the master field list
-  private :: masterlist_change_timeavg ! Override default history tape contents for specific tape
-  private :: htape_addfld              ! Transfer field metadata from masterlist to a history tape.
+  private :: allhistfldlist_make_active    ! Declare a single field active for a single tape
+  private :: allhistfldlist_addfld         ! Add a field to the list of all history fields
+  private :: allhistfldlist_change_timeavg ! Override default history tape contents for specific tape
+  private :: htape_addfld              ! Transfer field metadata from allhistfldlist to a history tape.
   private :: htape_create              ! Define netcdf metadata of history file t
   private :: htape_add_ltype_metadata  ! Add global metadata defining landunit types
   private :: htape_add_ctype_metadata  ! Add global metadata defining column types
@@ -197,6 +197,20 @@ module histFileMod
   integer            :: num_subs = 0           ! actual number of subscripts
   character(len=32)  :: subs_name(max_subs)    ! name of subscript
   integer            :: subs_dim(max_subs)     ! dimension of subscript
+
+  ! type2d value for a field without a level dimension. This value is important for the
+  ! following reasons (as of 2023-08-21):
+  ! - type2d is used to determine the sort order of history fields both within the history
+  !   file (e.g., what you see from 'ncdump -h') and in the documentation that lists all
+  !   history fields. For these purposes, it is important that variables with
+  !   type2d_unset appear before variables with a real type2d, so type2d_unset should
+  !   appear early in alphabetical sort order. (If type2d_unset were changed to something
+  !   that appeared later in alphabetical sort order, then sort_hist_list should be
+  !   changed to have some special handling of fields with type2d_unset, forcing them to
+  !   appear first.)
+  ! - This will soon be added to the history field documentation, so should be a sensible
+  !   value for the type2d column in that output.
+  character(len=*), parameter :: type2d_unset = '-'
   !
   type field_info
      character(len=max_namlen) :: name         ! field name
@@ -241,14 +255,14 @@ module histFileMod
   ! Additional per-field metadata. See also history_entry. 
   ! These values are specified in hist_addfld* calls but then can be
   ! overridden by namelist params like hist_fincl1.
-  type, extends(entry_base) :: master_entry
+  type, extends(entry_base) :: allhistfldlist_entry
      logical :: actflag(max_tapes)  ! which history tapes to write to. 
      character(len=avgflag_strlen) :: avgflag(max_tapes)  ! type of time averaging
   contains
-     procedure :: copy => copy_master_entry
-  end type master_entry
+     procedure :: copy => copy_allhistfldlist_entry
+  end type allhistfldlist_entry
 
-  ! Actual per-field history data, accumulated from clmptr_r* vars. See also master_entry.
+  ! Actual per-field history data, accumulated from clmptr_r* vars. See also allhistfldlist_entry.
   type, extends(entry_base) :: history_entry
      character(len=avgflag_strlen) :: avgflag  ! time averaging flag ("X","A","M","I","SUM")
      real(r8), pointer :: hbuf(:,:)            ! history buffer (dimensions: dim1d x num2d)
@@ -261,7 +275,7 @@ module histFileMod
   ! at a given time frequency and precision.  The first ('primary') tape defaults to a non-empty set
   ! of active fields (see hist_addfld* methods), overridable by namelist flags,  while the other 
   ! tapes are entirely manually configured via namelist flags. The set of active fields across all
-  ! tapes is assembled in the 'masterlist' variable. Note that the first history tape is index 1 in
+  ! tapes is assembled in the 'allhistfldlist' variable. Note that the first history tape is index 1 in
   ! the code but contains 'h0' in its output filenames (see set_hist_filename method).
   type history_tape
      integer  :: nflds                         ! number of active fields on tape
@@ -273,7 +287,7 @@ module histFileMod
      logical  :: is_endhist                    ! true => current time step is end of history interval
      real(r8) :: begtime                       ! time at beginning of history averaging interval
      type (history_entry) :: hlist(max_flds)   ! array of active history tape entries.
-                                               ! The ordering matches the masterlist's.
+                                               ! The ordering matches the allhistfldlist's.
   end type history_tape
 
   type clmpoint_rs                             ! Pointer to real scalar data (1D)
@@ -294,7 +308,7 @@ module histFileMod
   ! hist_addfld* calls in the code.
   ! For the field data itself, see 'tape'.
   !
-  type (master_entry) :: masterlist(max_flds)  ! master field list
+  type (allhistfldlist_entry) :: allhistfldlist(max_flds)  ! list of all history fields
   !
   ! Whether each history tape is in use in this run. If history_tape_in_use(i) is false,
   ! then data in tape(i) is undefined and should not be referenced.
@@ -302,7 +316,7 @@ module histFileMod
   logical :: history_tape_in_use(max_tapes)  ! whether each history tape is in use in this run
   !
   ! The actual (accumulated) history data for all active fields in each in-use tape. See
-  ! 'history_tape_in_use' for in-use tapes, and 'masterlist' for active fields. See also
+  ! 'history_tape_in_use' for in-use tapes, and 'allhistfldlist' for active fields. See also
   ! clmptr_r* variables for raw history data.
   ! 
   type (history_tape) :: tape(max_tapes)       ! array of history tapes
@@ -311,7 +325,7 @@ module histFileMod
   !
   ! Counters
   !
-  integer :: nfmaster = 0                        ! number of fields in master field list
+  integer :: nallhistflds = 0                        ! number of fields in list of all history fields
   !
   ! Other variables
   !
@@ -347,10 +361,10 @@ contains
   subroutine hist_printflds()
     !
     ! !DESCRIPTION:
-    ! Print summary of master field list.
+    ! Print summary of list of all history fields.
     !
     ! !USES:
-    use clm_varctl, only: hist_master_list_file
+    use clm_varctl, only: hist_fields_list_file
     use fileutils, only: getavu, relavu
     !
     ! !ARGUMENTS:
@@ -358,43 +372,43 @@ contains
     ! !LOCAL VARIABLES:
     integer, parameter :: ncol = 5  ! number of table columns
     integer nf, i, j  ! do-loop counters
-    integer master_list_file  ! file unit number
+    integer hist_fields_file  ! file unit number
     integer width_col(ncol)  ! widths of table columns
     integer width_col_sum  ! widths of columns summed, including spaces
     character(len=3) str_width_col(ncol)  ! string version of width_col
     character(len=3) str_w_col_sum  ! string version of width_col_sum
     character(len=7) file_identifier  ! fates identifier used in file_name
-    character(len=23) file_name  ! master_list_file.rst with or without fates
+    character(len=26) file_name  ! hist_fields_file.rst with or without fates
     character(len=99) fmt_txt  ! format statement
     character(len=*),parameter :: subname = 'CLM_hist_printflds'
     !-----------------------------------------------------------------------
 
     if (masterproc) then
-       write(iulog,*) trim(subname),' : number of master fields = ',nfmaster
-       write(iulog,*)' ******* MASTER FIELD LIST *******'
-       do nf = 1,nfmaster
-          write(iulog,9000)nf, masterlist(nf)%field%name, masterlist(nf)%field%units
+       write(iulog,*) trim(subname),' : number of history fields = ',nallhistflds
+       write(iulog,*)' ******* LIST OF ALL HISTORY FIELDS *******'
+       do nf = 1,nallhistflds
+          write(iulog,9000)nf, allhistfldlist(nf)%field%name, allhistfldlist(nf)%field%units
 9000      format (i5,1x,a32,1x,a16)
        end do
        call shr_sys_flush(iulog)
     end if
 
-    ! Print master field list in separate text file when namelist
+    ! Print list of all history fields in separate text file when namelist
     ! variable requests it. Text file is formatted in the .rst
     ! (reStructuredText) format for easy introduction of the file to
     ! the CTSM's web-based documentation.
 
     ! First sort the list to be in alphabetical order
-    call sort_hist_list(1, nfmaster, masterlist)
+    call sort_hist_list(1, nallhistflds, allhistfldlist)
 
-    if (masterproc .and. hist_master_list_file) then
+    if (masterproc .and. hist_fields_list_file) then
        ! Hardwired table column widths to fit the table on a computer
        ! screen. Some strings will be truncated as a result of the
-       ! current choices (4, 35, 94, 65, 7). In sphinx (ie the web-based
+       ! current choices (35, 16, 94, 65, 7). In sphinx (ie the web-based
        ! documentation), text that has not been truncated will wrap
        ! around in the available space.
-       width_col(1) = 4  ! column that shows the variable number, nf
-       width_col(2) = 35  ! variable name column
+       width_col(1) = 35  ! variable name column
+       width_col(2) = hist_dim_name_length  ! level dimension column
        width_col(3) = 94  ! long description column
        width_col(4) = 65  ! units column
        width_col(5) = 7  ! active (T or F) column
@@ -407,97 +421,98 @@ contains
        end do
        write(str_w_col_sum,'(i0)') width_col_sum
 
-       ! Open master_list_file
-       master_list_file = getavu()  ! get next available file unit number
+       ! Open hist_fields_file
+       hist_fields_file = getavu()  ! get next available file unit number
        if (use_fates) then
           file_identifier = 'fates'
        else
           file_identifier = 'nofates'
        end if
-       file_name = 'master_list_' // trim(file_identifier) // '.rst'
-       open(unit = master_list_file, file = file_name,  &
+       file_name = 'history_fields_' // trim(file_identifier) // '.rst'
+       open(unit = hist_fields_file, file = file_name,  &
             status = 'replace', action = 'write', form = 'formatted')
 
        ! File title
        fmt_txt = '(a)'
-       write(master_list_file,fmt_txt) '============================='
-       write(master_list_file,fmt_txt) 'CTSM History Fields (' // trim(file_identifier) // ')'
-       write(master_list_file,fmt_txt) '============================='
-       write(master_list_file,*)
+       write(hist_fields_file,fmt_txt) '============================='
+       write(hist_fields_file,fmt_txt) 'CTSM History Fields (' // trim(file_identifier) // ')'
+       write(hist_fields_file,fmt_txt) '============================='
+       write(hist_fields_file,*)
 
        ! A warning message and flags from the current CTSM case
-       write(master_list_file,fmt_txt) 'CAUTION: Not all variables are relevant / present for all CTSM cases.'
-       write(master_list_file,fmt_txt) 'Key flags used in this CTSM case:'
+       write(hist_fields_file,fmt_txt) 'CAUTION: Not all variables are relevant / present for all CTSM cases.'
+       write(hist_fields_file,fmt_txt) 'Key flags used in this CTSM case:'
        fmt_txt = '(a,l)'
-       write(master_list_file,fmt_txt) 'use_cn = ', use_cn
-       write(master_list_file,fmt_txt) 'use_crop = ', use_crop
-       write(master_list_file,fmt_txt) 'use_fates = ', use_fates
-       write(master_list_file,*)
+       write(hist_fields_file,fmt_txt) 'use_cn = ', use_cn
+       write(hist_fields_file,fmt_txt) 'use_crop = ', use_crop
+       write(hist_fields_file,fmt_txt) 'use_fates = ', use_fates
+       write(hist_fields_file,*)
 
        ! Table header
        ! Concatenate strings needed in format statement
        do i = 1, ncol
           fmt_txt = '('//str_width_col(i)//'a,x)'
-          write(master_list_file,fmt_txt,advance='no') ('=', j=1,width_col(i))
+          write(hist_fields_file,fmt_txt,advance='no') ('=', j=1,width_col(i))
        end do
-       write(master_list_file,*)  ! next write statement will now appear in new line
+       write(hist_fields_file,*)  ! next write statement will now appear in new line
 
        ! Table title
        fmt_txt = '(a)'
-       write(master_list_file,fmt_txt) 'CTSM History Fields'
+       write(hist_fields_file,fmt_txt) 'CTSM History Fields'
 
        ! Sub-header
        ! Concatenate strings needed in format statement
        fmt_txt = '('//str_w_col_sum//'a)'
-       write(master_list_file,fmt_txt) ('-', i=1, width_col_sum)
+       write(hist_fields_file,fmt_txt) ('-', i=1, width_col_sum)
        ! Concatenate strings needed in format statement
        fmt_txt = '(a'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//',x,a'//str_width_col(5)//')'
-       write(master_list_file,fmt_txt) '#', 'Variable Name',  &
-                                    'Long Description', 'Units', 'Active?'
+       write(hist_fields_file,fmt_txt) 'Variable Name',  &
+                           'Level Dim.', 'Long Description', 'Units', 'Active?'
 
        ! End header, same as header
        ! Concatenate strings needed in format statement
        do i = 1, ncol
           fmt_txt = '('//str_width_col(i)//'a,x)'
-          write(master_list_file,fmt_txt,advance='no') ('=', j=1,width_col(i))
+          write(hist_fields_file,fmt_txt,advance='no') ('=', j=1,width_col(i))
        end do
-       write(master_list_file,*)  ! next write statement will now appear in new line
+       write(hist_fields_file,*)  ! next write statement will now appear in new line
 
        ! Main table
        ! Concatenate strings needed in format statement
-       fmt_txt = '(i'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//',l'//str_width_col(5)//')'
-       do nf = 1,nfmaster
-          write(master_list_file,fmt_txt) nf,  &
-             masterlist(nf)%field%name,  &
-             masterlist(nf)%field%long_name,  &
-             masterlist(nf)%field%units,  &
-             masterlist(nf)%actflag(1)
+       fmt_txt = '(a'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//',l'//str_width_col(5)//')'
+       do nf = 1,nallhistflds
+          write(hist_fields_file,fmt_txt) &
+             allhistfldlist(nf)%field%name,  &
+             allhistfldlist(nf)%field%type2d,  &
+             allhistfldlist(nf)%field%long_name,  &
+             allhistfldlist(nf)%field%units,  &
+             allhistfldlist(nf)%actflag(1)
        end do
 
        ! Table footer, same as header
        ! Concatenate strings needed in format statement
        do i = 1, ncol
           fmt_txt = '('//str_width_col(i)//'a,x)'
-          write(master_list_file,fmt_txt,advance='no') ('=', j=1,width_col(i))
+          write(hist_fields_file,fmt_txt,advance='no') ('=', j=1,width_col(i))
        end do
 
-       call shr_sys_flush(master_list_file)
-       close(unit = master_list_file)
-       call relavu(master_list_file)  ! close and release file unit number
+       call shr_sys_flush(hist_fields_file)
+       close(unit = hist_fields_file)
+       call relavu(hist_fields_file)  ! close and release file unit number
     end if
 
   end subroutine hist_printflds
 
   !-----------------------------------------------------------------------
-  subroutine masterlist_addfld (fname, numdims, type1d, type1d_out, &
+  subroutine allhistfldlist_addfld (fname, numdims, type1d, type1d_out, &
         type2d, num2d, units, avgflag, long_name, hpindex, &
         p2c_scale_type, c2l_scale_type, l2g_scale_type, &
         no_snow_behavior)
     !
     ! !DESCRIPTION:
-    ! Add a field to the master field list. Put input arguments of
+    ! Add a field to the list of all history fields. Put input arguments of
     ! field name, units, number of levels, averaging flag, and long name
-    ! into a type entry in the global master field list (masterlist).
+    ! into a type entry in the global list of all history fields (allhistfldlist).
     !
     ! The optional argument no_snow_behavior should be given when this is a multi-layer
     ! snow field, and should be absent otherwise. It should take on one of the no_snow_*
@@ -521,14 +536,14 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: n            ! loop index
-    integer :: f            ! masterlist index
+    integer :: f            ! allhistfldlist index
     integer :: numa         ! total number of atm cells across all processors
     integer :: numg         ! total number of gridcells across all processors
     integer :: numl         ! total number of landunits across all processors
     integer :: numc         ! total number of columns across all processors
     integer :: nump         ! total number of pfts across all processors
     type(bounds_type) :: bounds
-    character(len=*),parameter :: subname = 'masterlist_addfld'
+    character(len=*),parameter :: subname = 'allhistfldlist_addfld'
     !------------------------------------------------------------------------
 
     if (.not. avgflag_valid(avgflag, blank_valid=.true.)) then
@@ -556,82 +571,82 @@ contains
     end if
     ! Ensure that new field doesn't already exist
 
-    do n = 1,nfmaster
-       if (masterlist(n)%field%name == fname) then
+    do n = 1,nallhistflds
+       if (allhistfldlist(n)%field%name == fname) then
           write(iulog,*) trim(subname),' ERROR:', fname, ' already on list'
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     end do
 
-    ! Increase number of fields on master field list
+    ! Increase number of fields on list of all history fields
 
-    nfmaster = nfmaster + 1
-    f = nfmaster
+    nallhistflds = nallhistflds + 1
+    f = nallhistflds
 
-    ! Check number of fields in master list against maximum number for master list
+    ! Check number of fields in list against maximum number
 
-    if (nfmaster > max_flds) then
+    if (nallhistflds > max_flds) then
        write(iulog,*) trim(subname),' ERROR: too many fields for primary history file ', &
-            '-- max_flds,nfmaster=', max_flds, nfmaster
+            '-- max_flds,nallhistflds=', max_flds, nallhistflds
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
-    ! Add field to master list
+    ! Add field to list of all history fields
 
-    masterlist(f)%field%name           = fname
-    masterlist(f)%field%long_name      = long_name
-    masterlist(f)%field%units          = units
-    masterlist(f)%field%type1d         = type1d
-    masterlist(f)%field%type1d_out     = type1d_out
-    masterlist(f)%field%type2d         = type2d
-    masterlist(f)%field%numdims        = numdims
-    masterlist(f)%field%num2d          = num2d
-    masterlist(f)%field%hpindex        = hpindex
-    masterlist(f)%field%p2c_scale_type = p2c_scale_type
-    masterlist(f)%field%c2l_scale_type = c2l_scale_type
-    masterlist(f)%field%l2g_scale_type = l2g_scale_type
+    allhistfldlist(f)%field%name           = fname
+    allhistfldlist(f)%field%long_name      = long_name
+    allhistfldlist(f)%field%units          = units
+    allhistfldlist(f)%field%type1d         = type1d
+    allhistfldlist(f)%field%type1d_out     = type1d_out
+    allhistfldlist(f)%field%type2d         = type2d
+    allhistfldlist(f)%field%numdims        = numdims
+    allhistfldlist(f)%field%num2d          = num2d
+    allhistfldlist(f)%field%hpindex        = hpindex
+    allhistfldlist(f)%field%p2c_scale_type = p2c_scale_type
+    allhistfldlist(f)%field%c2l_scale_type = c2l_scale_type
+    allhistfldlist(f)%field%l2g_scale_type = l2g_scale_type
 
     select case (type1d)
     case (grlnd)
-       masterlist(f)%field%beg1d = bounds%begg
-       masterlist(f)%field%end1d = bounds%endg
-       masterlist(f)%field%num1d = numg
+       allhistfldlist(f)%field%beg1d = bounds%begg
+       allhistfldlist(f)%field%end1d = bounds%endg
+       allhistfldlist(f)%field%num1d = numg
     case (nameg)
-       masterlist(f)%field%beg1d = bounds%begg
-       masterlist(f)%field%end1d = bounds%endg
-       masterlist(f)%field%num1d = numg
+       allhistfldlist(f)%field%beg1d = bounds%begg
+       allhistfldlist(f)%field%end1d = bounds%endg
+       allhistfldlist(f)%field%num1d = numg
     case (namel)
-       masterlist(f)%field%beg1d = bounds%begl
-       masterlist(f)%field%end1d = bounds%endl
-       masterlist(f)%field%num1d = numl
+       allhistfldlist(f)%field%beg1d = bounds%begl
+       allhistfldlist(f)%field%end1d = bounds%endl
+       allhistfldlist(f)%field%num1d = numl
     case (namec)
-       masterlist(f)%field%beg1d = bounds%begc
-       masterlist(f)%field%end1d = bounds%endc
-       masterlist(f)%field%num1d = numc
+       allhistfldlist(f)%field%beg1d = bounds%begc
+       allhistfldlist(f)%field%end1d = bounds%endc
+       allhistfldlist(f)%field%num1d = numc
     case (namep)
-       masterlist(f)%field%beg1d = bounds%begp
-       masterlist(f)%field%end1d = bounds%endp
-       masterlist(f)%field%num1d = nump
+       allhistfldlist(f)%field%beg1d = bounds%begp
+       allhistfldlist(f)%field%end1d = bounds%endp
+       allhistfldlist(f)%field%num1d = nump
     case default
        write(iulog,*) trim(subname),' ERROR: unknown 1d output type= ',type1d
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end select
 
     if (present(no_snow_behavior)) then
-       masterlist(f)%field%no_snow_behavior = no_snow_behavior
+       allhistfldlist(f)%field%no_snow_behavior = no_snow_behavior
     else
-       masterlist(f)%field%no_snow_behavior = no_snow_unset
+       allhistfldlist(f)%field%no_snow_behavior = no_snow_unset
     end if
 
-    ! The following two fields are used only in master field list,
+    ! The following two fields are used only in list of all history fields,
     ! NOT in the runtime active field list
-    ! ALL FIELDS IN THE MASTER LIST ARE INITIALIZED WITH THE ACTIVE
+    ! ALL FIELDS IN THE FORMER ARE INITIALIZED WITH THE ACTIVE
     ! FLAG SET TO FALSE
 
-    masterlist(f)%avgflag(:) = avgflag
-    masterlist(f)%actflag(:) = .false.
+    allhistfldlist(f)%avgflag(:) = avgflag
+    allhistfldlist(f)%actflag(:) = .false.
 
-  end subroutine masterlist_addfld
+  end subroutine allhistfldlist_addfld
 
   !-----------------------------------------------------------------------
   subroutine hist_htapes_build ()
@@ -715,7 +730,7 @@ contains
   end subroutine hist_htapes_build
 
   !-----------------------------------------------------------------------
-  subroutine masterlist_make_active (name, tape_index, avgflag)
+  subroutine allhistfldlist_make_active (name, tape_index, avgflag)
     !
     ! !DESCRIPTION:
     ! Add a field to the default ``on'' list for a given history file.
@@ -728,8 +743,8 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: f            ! field index
-    logical :: found        ! flag indicates field found in masterlist
-    character(len=*),parameter :: subname = 'masterlist_make_active'
+    logical :: found        ! flag indicates field found in allhistfldlist
+    character(len=*),parameter :: subname = 'allhistfldlist_make_active'
     !-----------------------------------------------------------------------
 
     ! Check validity of input arguments
@@ -746,16 +761,16 @@ contains
        endif
     end if
 
-    ! Look through master list for input field name.
+    ! Look through list of all history fields for input field name.
     ! When found, set active flag for that tape to true.
     ! Also reset averaging flag if told to use other than default.
 
     found = .false.
-    do f = 1,nfmaster
-       if (trim(name) == trim(masterlist(f)%field%name)) then
-          masterlist(f)%actflag(tape_index) = .true.
+    do f = 1,nallhistflds
+       if (trim(name) == trim(allhistfldlist(f)%field%name)) then
+          allhistfldlist(f)%actflag(tape_index) = .true.
           if (present(avgflag)) then
-             if (avgflag/= ' ') masterlist(f)%avgflag(tape_index) = avgflag
+             if (avgflag/= ' ') allhistfldlist(f)%avgflag(tape_index) = avgflag
           end if
           found = .true.
           exit
@@ -766,14 +781,14 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
-  end subroutine masterlist_make_active
+  end subroutine allhistfldlist_make_active
 
   !-----------------------------------------------------------------------
-  subroutine masterlist_change_timeavg (t)
+  subroutine allhistfldlist_change_timeavg (t)
     !
     ! !DESCRIPTION:
     ! Override default history tape contents for a specific tape.
-    ! Copy the flag into the master field list.
+    ! Copy the flag into the list of all history fields.
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t         ! history tape index
@@ -781,7 +796,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: f                     ! field index
     character(len=avgflag_strlen) :: avgflag      ! local equiv of hist_avgflag_pertape(t)
-    character(len=*),parameter :: subname = 'masterlist_change_timeavg'
+    character(len=*),parameter :: subname = 'allhistfldlist_change_timeavg'
     !-----------------------------------------------------------------------
 
     avgflag = hist_avgflag_pertape(t)
@@ -790,11 +805,11 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
-    do f = 1,nfmaster
-       masterlist(f)%avgflag(t) = avgflag
+    do f = 1,nallhistflds
+       allhistfldlist(f)%avgflag(t) = avgflag
     end do
 
-  end subroutine masterlist_change_timeavg
+  end subroutine allhistfldlist_change_timeavg
 
   !-----------------------------------------------------------------------
   subroutine htapes_fieldlist()
@@ -806,7 +821,7 @@ contains
     ! Then sort the result alphanumerically.
     !
     ! Sets history_tape_in_use and htapes_defined. Fills fields in 'tape' array.
-    ! Optionally updates masterlist avgflag.
+    ! Optionally updates allhistfldlist avgflag.
     !
     ! !ARGUMENTS:
     !
@@ -814,7 +829,7 @@ contains
     integer :: t, f                         ! tape, field indices
     integer :: ff                           ! index into include, exclude and fprec list
     character(len=max_namlen) :: name       ! field name portion of fincl (i.e. no avgflag separator)
-    character(len=max_namlen) :: mastername ! name from masterlist field
+    character(len=max_namlen) :: allhistfldname ! name from allhistfldlist field
     character(len=avgflag_strlen) :: avgflag ! averaging flag
     character(len=1)  :: prec_acc           ! history buffer precision flag
     character(len=1)  :: prec_wrt           ! history buffer write precision flag
@@ -826,7 +841,7 @@ contains
 
     do t=1,max_tapes
        if (hist_avgflag_pertape(t) /= ' ') then
-          call masterlist_change_timeavg (t)
+          call allhistfldlist_change_timeavg (t)
        end if
     end do
 
@@ -859,11 +874,11 @@ contains
        f = 1
        do while (f < max_flds .and. fincl(f,t) /= ' ')
           name = getname (fincl(f,t))
-          do ff = 1,nfmaster
-             mastername = masterlist(ff)%field%name
-             if (name == mastername) exit
+          do ff = 1,nallhistflds
+             allhistfldname = allhistfldlist(ff)%field%name
+             if (name == allhistfldname) exit
           end do
-          if (name /= mastername) then
+          if (name /= allhistfldname) then
              write(iulog,*) trim(subname),' ERROR: ', trim(name), ' in fincl(', f, ') ',&
                   'for history tape ',t,' not found'
              call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -873,11 +888,11 @@ contains
 
        f = 1
        do while (f < max_flds .and. fexcl(f,t) /= ' ')
-          do ff = 1,nfmaster
-             mastername = masterlist(ff)%field%name
-             if (fexcl(f,t) == mastername) exit
+          do ff = 1,nallhistflds
+             allhistfldname = allhistfldlist(ff)%field%name
+             if (fexcl(f,t) == allhistfldname) exit
           end do
-          if (fexcl(f,t) /= mastername) then
+          if (fexcl(f,t) /= allhistfldname) then
              write(iulog,*) trim(subname),' ERROR: ', fexcl(f,t), ' in fexcl(', f, ') ', &
                   'for history tape ',t,' not found'
              call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -890,16 +905,16 @@ contains
     tape(:)%nflds = 0
     do t = 1,max_tapes
 
-       ! Loop through the masterlist set of field names and determine if any of those
+       ! Loop through the allhistfldlist set of field names and determine if any of those
        ! are in the FINCL or FEXCL arrays
        ! The call to list_index determines the index in the FINCL or FEXCL arrays
-       ! that the masterlist field corresponds to
+       ! that the allhistfldlist field corresponds to
        ! Add the field to the tape if specified via namelist (FINCL[1-max_tapes]),
        ! or if it is on by default and was not excluded via namelist (FEXCL[1-max_tapes]).
 
-       do f = 1,nfmaster
-          mastername = masterlist(f)%field%name
-          call list_index (fincl(1,t), mastername, ff)
+       do f = 1,nallhistflds
+          allhistfldname = allhistfldlist(f)%field%name
+          call list_index (fincl(1,t), allhistfldname, ff)
 
           if (ff > 0) then
 
@@ -913,7 +928,7 @@ contains
 
              ! find index of field in exclude list
 
-             call list_index (fexcl(1,t), mastername, ff)
+             call list_index (fexcl(1,t), allhistfldname, ff)
 
              ! if field is in exclude list, ff > 0 and htape_addfld
              ! will not be called for field
@@ -922,7 +937,7 @@ contains
              ! called below only if field is not in exclude list OR in
              ! include list
 
-             if (ff == 0 .and. masterlist(f)%actflag(t)) then
+             if (ff == 0 .and. allhistfldlist(f)%actflag(t)) then
                 call htape_addfld (t, f, ' ')
              end if
 
@@ -1002,7 +1017,7 @@ contains
        call shr_sys_flush(iulog)
     end if
 
-    ! Set flag indicating h-tape contents are now defined (needed by masterlist_addfld)
+    ! Set flag indicating h-tape contents are now defined (needed by allhistfldlist_addfld)
 
     htapes_defined = .true.
 
@@ -1010,23 +1025,23 @@ contains
   end subroutine htapes_fieldlist
 
   !-----------------------------------------------------------------------
-  subroutine copy_master_entry(this, other)
+  subroutine copy_allhistfldlist_entry(this, other)
     ! set this = other
-    class(master_entry), intent(out) :: this
+    class(allhistfldlist_entry), intent(out) :: this
     class(entry_base), intent(in) :: other
 
     select type(this)
-    type is (master_entry)
+    type is (allhistfldlist_entry)
        select type(other)
-       type is (master_entry)
+       type is (allhistfldlist_entry)
           this = other
        class default
-          call endrun('Unexpected type of "other" in copy_master_entry')
+          call endrun('Unexpected type of "other" in copy_allhistfldlist_entry')
        end select
     class default
-       call endrun('Unexpected type of "this" in copy_master_entry')
+       call endrun('Unexpected type of "this" in copy_allhistfldlist_entry')
     end select
-  end subroutine copy_master_entry
+  end subroutine copy_allhistfldlist_entry
 
   !-----------------------------------------------------------------------
   subroutine copy_history_entry(this, other)
@@ -1076,18 +1091,18 @@ contains
 
     do f = n_fields-1, 1, -1
        do ff = 1, f
-          if (hist_list(ff)%field%name > hist_list(ff+1)%field%name) then
+          ! First sort by the name of the level dimension; then, within the list of
+          ! fields with the same level dimension, sort by field name. Sorting first by
+          ! the level dimension gives a significant performance improvement especially
+          ! notable on lustre file systems such as on derecho.
+          if (hist_list(ff)%field%type2d > hist_list(ff+1)%field%type2d .or. &
+               (hist_list(ff)%field%type2d == hist_list(ff+1)%field%type2d .and. &
+               hist_list(ff)%field%name > hist_list(ff+1)%field%name)) then
 
              call tmp%copy(hist_list(ff))
              call hist_list(ff  )%copy(hist_list(ff+1))
              call hist_list(ff+1)%copy(tmp)
 
-          else if (hist_list(ff)%field%name == hist_list(ff+1)%field%name) then
-
-             write(iulog,*) trim(subname),' ERROR: Duplicate field ', &
-                hist_list(ff)%field%name, &
-                't,ff,name=',t,ff,hist_list(ff+1)%field%name
-             call endrun(msg=errMsg(sourcefile, __LINE__))
           end if
        end do
     end do
@@ -1133,11 +1148,11 @@ contains
   subroutine htape_addfld (t, f, avgflag)
     !
     ! !DESCRIPTION:
-    ! Add a field to a history tape, copying metadata from the master field list
+    ! Add a field to a history tape, copying metadata from the list of all history fields
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t                 ! history tape index
-    integer, intent(in) :: f                 ! field index from master field list
+    integer, intent(in) :: f                 ! field index from list of all history fields
     character(len=*), intent(in) :: avgflag  ! time averaging flag
     !
     ! !LOCAL VARIABLES:
@@ -1161,7 +1176,7 @@ contains
 
     if (htapes_defined) then
        write(iulog,*) trim(subname),' ERROR: attempt to add field ', &
-            masterlist(f)%field%name, ' after history files are set'
+            allhistfldlist(f)%field%name, ' after history files are set'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
@@ -1170,7 +1185,7 @@ contains
 
     ! Copy field information
 
-    tape(t)%hlist(n)%field = masterlist(f)%field
+    tape(t)%hlist(n)%field = allhistfldlist(f)%field
 
     ! Determine bounds
 
@@ -1254,8 +1269,8 @@ contains
     tape(t)%hlist(n)%field%num1d_out = num1d_out
 
     ! Fields native bounds
-    beg1d = masterlist(f)%field%beg1d
-    end1d = masterlist(f)%field%end1d
+    beg1d = allhistfldlist(f)%field%beg1d
+    end1d = allhistfldlist(f)%field%end1d
 
     ! Alloccate and initialize history buffer and related info
 
@@ -1270,7 +1285,7 @@ contains
     tape(t)%hlist(n)%hbuf(:,:) = 0._r8
     tape(t)%hlist(n)%nacs(:,:) = 0
 
-    ! Set time averaging flag based on masterlist setting or
+    ! Set time averaging flag based on allhistfldlist setting or
     ! override the default averaging flag with namelist setting
 
     if (.not. avgflag_valid(avgflag, blank_valid=.true.)) then
@@ -1279,7 +1294,7 @@ contains
     end if
 
     if (avgflag == ' ') then
-       tape(t)%hlist(n)%avgflag = masterlist(f)%avgflag(t)
+       tape(t)%hlist(n)%avgflag = allhistfldlist(f)%avgflag(t)
     else
        tape(t)%hlist(n)%avgflag = avgflag
     end if
@@ -5262,7 +5277,7 @@ contains
     ! !DESCRIPTION:
     ! Initialize a single level history field. The pointer inputs, ptr\_*,
     ! point to the appropriate-type array storing the raw history data points.
-    ! The value of type1d passed to masterlist\_add\_fld determines which of the
+    ! The value of type1d passed to allhistfldlist\_add\_fld determines which of the
     ! 1d type of the output and the beginning and ending indices the history
     ! buffer field). All fields default to being written to the first history tape
     ! unless 'default' is set to 'inactive'.
@@ -5450,10 +5465,10 @@ contains
     if (present(l2g_scale_type)) scale_type_l2g = l2g_scale_type
     if (present(type1d_out)) l_type1d_out = type1d_out
 
-    ! Add field to masterlist
+    ! Add field to allhistfldlist
 
-    call masterlist_addfld (fname=trim(fname), numdims=1, type1d=l_type1d, &
-          type1d_out=l_type1d_out, type2d='unset', num2d=1, &
+    call allhistfldlist_addfld (fname=trim(fname), numdims=1, type1d=l_type1d, &
+          type1d_out=l_type1d_out, type2d=type2d_unset, num2d=1, &
           units=units, avgflag=avgflag, long_name=long_name, hpindex=hpindex, &
           p2c_scale_type=scale_type_p2c, c2l_scale_type=scale_type_c2l, &
           l2g_scale_type=scale_type_l2g)
@@ -5465,7 +5480,7 @@ contains
     if (trim(l_default) == 'inactive') then
        return
     else
-       call masterlist_make_active (name=trim(fname), tape_index=1)
+       call allhistfldlist_make_active (name=trim(fname), tape_index=1)
     end if
 
   end subroutine hist_addfld1d
@@ -5480,7 +5495,7 @@ contains
     ! !DESCRIPTION:
     ! Initialize a single level history field. The pointer inputs, ptr\_*,
     ! point to the appropriate-type array storing the raw history data points.
-    ! The value of type1d passed to masterlist\_add\_fld determines which of the
+    ! The value of type1d passed to allhistfldlist\_add\_fld determines which of the
     ! 1d type of the output and the beginning and ending indices the history
     ! buffer field). All fields default to being written to the first history tape
     ! unless 'default' is set to 'inactive'.
@@ -5786,9 +5801,9 @@ contains
     if (present(l2g_scale_type)) scale_type_l2g = l2g_scale_type
     if (present(type1d_out)) l_type1d_out = type1d_out
 
-    ! Add field to masterlist
+    ! Add field to allhistfldlist
 
-    call masterlist_addfld (fname=trim(fname), numdims=2, type1d=l_type1d, &
+    call allhistfldlist_addfld (fname=trim(fname), numdims=2, type1d=l_type1d, &
           type1d_out=l_type1d_out, type2d=type2d, num2d=num2d, &
           units=units, avgflag=avgflag, long_name=long_name, hpindex=hpindex, &
           p2c_scale_type=scale_type_p2c, c2l_scale_type=scale_type_c2l, &
@@ -5801,7 +5816,7 @@ contains
     if (trim(l_default) == 'inactive') then
        return
     else
-       call masterlist_make_active (name=trim(fname), tape_index=1)
+       call allhistfldlist_make_active (name=trim(fname), tape_index=1)
     end if
 
   end subroutine hist_addfld2d

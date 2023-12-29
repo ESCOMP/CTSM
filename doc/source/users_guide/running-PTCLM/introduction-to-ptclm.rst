@@ -8,23 +8,21 @@
  What is PTCLMmkdata?
 =====================
 
-PTCLMmkdata (pronounced Pee-Tee Cee-L-M make data is a Python script to help you set up PoinT CLM simulations. 
+PTCLMmkdata (pronounced Pee-Tee Cee-L-M make data is a Python script to help you set up PoinT CLM simulations.
 
-It runs the CLM tools for you to get datasets set up, and copies them to a location you can use them including the changes
-needed for a case to use the dataset with namelist and XML changes.
+It runs the CLM tools for you to get datasets set up, and copies them to a location you can use them including the changes needed for a case to use the dataset with namelist and XML changes.
 
 Then you run **create_newcase** and point to the directory so that the namelist and XML changes are automatically applied.
 
-PTCLMmkdata has a simple ASCII text file for storing basic information for your sites. 
+PTCLMmkdata has a simple ASCII text file for storing basic information for your sites.
 
-We also have complete lists for AmeriFlux and Fluxnet-Canada sites, although we only have the meteorology data for one site. 
+We also have complete lists for AmeriFlux and Fluxnet-Canada sites, although we only have the meteorology data for one site.
 
-For other sites you will need to obtain the meteorology data and translate it to a format that the CESM datm model can use. 
+For other sites you will need to obtain the meteorology data and translate it to a format that the CESM datm model can use.
 
 But, even without meteorology data PTCLMmkdata is useful to setup datasets to run with standard ``CLM_QIAN`` data.
 
 The original authors of PTCLMmkdata are: Daniel M. Ricciuto, Dali Wang, Peter E. Thornton, Wilfred M. Post all at Environmental Sciences Division, Oak Ridge National Laboratory (ORNL) and R. Quinn Thomas at Cornell University. It was then modified fairly extensively by Erik Kluzek at NCAR. We want to thank all of these individuals for this contribution to the CESM effort. We also want to thank the folks at University of Michigan Biological Stations (US-UMB) who allowed us to use their Fluxnet station data and import it into our inputdata repository, especially Gil Bohrer the PI on record for this site.
-
 
 .. _details-of-ptclm:
 
@@ -107,8 +105,7 @@ The output to the above command is as follows:
 
   Main Script Version Id: $Id: PTCLM.py 47576 2013-05-29 19:11:16Z erik $ Scripts URL: $HeadURL: https://svn-ccsm-models.cgd.ucar.edu/PTCLM/trunk_tags/PTCLM1_130529/PTCLM.py $:
 
-Here we give a simple example of using PTCLMmkdata for a straightforward case of running at the US-UMB Fluxnet site on cheyenne where we already have the meteorology data on the machine. 
-Note, see `the Section called Converting AmeriFlux Data for use by PTCLMmkdata <CLM-URL>`_ for permission information to use this data.
+Here we give a simple example of using PTCLMmkdata for a straightforward case of running at the US-UMB Fluxnet site on cheyenne where we already have the meteorology data on the machine. Note, see :ref:`converting-ameriflux-for-ptclmmkdata` for permission information to use this data.
 
 Example 6-1. Example of running PTCLMmkdata for US-UMB on cheyenne
 ------------------------------------------------------------------
@@ -118,7 +115,7 @@ Example 6-1. Example of running PTCLMmkdata for US-UMB on cheyenne
    > setenv MYDATAFILES `pwd`/mydatafiles
    > setenv SITE      US-UMB
    > setenv MYCASE    testPTCLM
-   
+
    # Next build all of the clm tools you will need
    > cd $CTSMROOT/tools/PTCLM
    > buildtools
@@ -131,7 +128,6 @@ Example 6-1. Example of running PTCLMmkdata for US-UMB on cheyenne
    # Next setup, build and run as normal
    > cd $MYCASE
    > ./case.setup
-
 
 PTCLMmkdata includes a README file that gives some extra details and a simple example.
 

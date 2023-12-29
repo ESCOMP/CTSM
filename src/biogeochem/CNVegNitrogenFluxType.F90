@@ -6,6 +6,7 @@ module CNVegNitrogenFluxType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, i_litr_min, i_litr_max
   use clm_varpar                         , only : nvegnpool
+  use clm_varpar                         , only : mxharvests
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use clm_varctl                         , only : use_nitrif_denitrif, use_crop
   use CNSharedParamsMod                  , only : use_fun, use_matrixcn
@@ -14,7 +15,7 @@ module CNVegNitrogenFluxType
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use dynSubgridControlMod               , only : get_do_grossunrep
   use CropReprPoolsMod                   , only : nrepr, repr_grain_min, repr_grain_max, repr_structure_min, repr_structure_max
-  use CropReprPoolsMod                   , only : get_repr_rest_fname, get_repr_longname
+  use CropReprPoolsMod                   , only : get_repr_hist_fname, get_repr_rest_fname, get_repr_longname
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
@@ -132,11 +133,15 @@ module CNVegNitrogenFluxType
      ! litterfall fluxes
      real(r8), pointer :: livestemn_to_litter_patch                 (:)     ! patch livestem N to litter (gN/m2/s)
      real(r8), pointer :: repr_grainn_to_food_patch               (:,:)     ! patch grain N to food for prognostic crop (gN/m2/s) [patch, repr_grain_min:repr_grain_max]
+     real(r8), pointer :: repr_grainn_to_food_perharv_patch       (:,:,:)   ! grain N to food for prognostic crop accumulated by harvest (gN/m2) [patch, harvest, repr_grain_min:repr_grain_max]. Not per-second because this variable represents an accumulation over each growing season, to be instantaneously at the end of each calendar year, to provide output that's easier to work with.
+     real(r8), pointer :: repr_grainn_to_food_thisyr_patch        (:,:)     ! grain N to food for prognostic crop accumulated this calendar year (gN/m2) [patch, repr_grain_min:repr_grain_max]. Not per-second because this variable represents an accumulation over an entire calendar year, to be saved instantaneously at the end of each calendar year, to provide output that's easier to work with.
      real(r8), pointer :: repr_structuren_to_cropprod_patch       (:,:)     ! patch reproductive structure N to crop product pool for prognostic crop (gN/m2/s) [patch, repr_structure_min:repr_structure_max]
      real(r8), pointer :: repr_structuren_to_litter_patch         (:,:)     ! patch reproductive structure N to litter for prognostic crop (gN/m2/s) [patch, repr_structure_min:repr_structure_max]
      real(r8), pointer :: leafn_to_biofueln_patch                   (:)     ! patch leaf N to biofuel N (gN/m2/s)
      real(r8), pointer :: livestemn_to_biofueln_patch               (:)     ! patch livestem N to biofuel N (gN/m2/s)
      real(r8), pointer :: repr_grainn_to_seed_patch               (:,:)     ! patch grain N to seed for prognostic crop (gN/m2/s) [patch, repr_grain_min:repr_grain_max]
+     real(r8), pointer :: repr_grainn_to_seed_perharv_patch       (:,:,:)   ! grain N to seed for prognostic crop accumulated by harvest (gN/m2) [patch, harvest, repr_grain_min:repr_grain_max]. Not per-second because this variable represents an accumulation over each growing season, to be instantaneously at the end of each calendar year, to provide output that's easier to work with.
+     real(r8), pointer :: repr_grainn_to_seed_thisyr_patch        (:,:)     ! grain N to seed for prognostic crop accumulated this calendar year (gN/m2) [patch, repr_grain_min:repr_grain_max]. Not per-second because this variable represents an accumulation over an entire calendar year, to be saved instantaneously at the end of each calendar year, to provide output that's easier to work with.
      real(r8), pointer :: leafn_to_litter_patch                     (:)     ! patch leaf N litterfall (gN/m2/s)
      real(r8), pointer :: leafn_to_retransn_patch                   (:)     ! patch leaf N to retranslocated N pool (gN/m2/s)
      real(r8), pointer :: frootn_to_retransn_patch                  (:)     ! patch fine root N to retranslocated N pool (gN/m2/s)
@@ -292,18 +297,21 @@ module CNVegNitrogenFluxType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds)
+  subroutine Init(this, bounds, alloc_full_veg)
 
     class(cnveg_nitrogenflux_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
+    logical,intent(in)            :: alloc_full_veg
 
-    call this%InitAllocate (bounds)
-    if(use_matrixcn)then
-       call this%InitTransfer ()
+    call this%InitAllocate (bounds,alloc_full_veg)
+    if(alloc_full_veg)then
+       if(use_matrixcn)then
+          call this%InitTransfer ()
+       end if
+       call this%InitHistory (bounds)
+       call this%InitCold (bounds)
     end if
-    call this%InitHistory (bounds)
-    call this%InitCold (bounds)
-
+    
   end subroutine Init
 
   subroutine InitTransfer (this)
@@ -323,14 +331,15 @@ contains
   end subroutine InitTransfer
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds)
+  subroutine InitAllocate(this, bounds, alloc_full_veg)
     !
     ! !DESCRIPTION:
     ! Initialize patch nitrogen flux
     !
     ! !ARGUMENTS:
     class (cnveg_nitrogenflux_type) :: this
-    type(bounds_type) , intent(in) :: bounds  
+    type(bounds_type) , intent(in) :: bounds
+    logical,intent(in)             :: alloc_full_veg
     !
     ! !LOCAL VARIABLES:
     integer           :: begp,endp
@@ -338,10 +347,16 @@ contains
     integer           :: begg,endg
     !------------------------------------------------------------------------
 
-    begp = bounds%begp; endp = bounds%endp
-    begc = bounds%begc; endc = bounds%endc
-    begg = bounds%begg; endg = bounds%endg
-
+    if(alloc_full_veg)then
+       begp = bounds%begp; endp = bounds%endp
+       begc = bounds%begc; endc = bounds%endc
+       begg = bounds%begg; endg = bounds%endg
+    else
+       begp = 0; endp = 0
+       begc = 0; endc = 0
+       begg = 0; endg = 0
+    end if
+       
     allocate(this%m_leafn_to_litter_patch                   (begp:endp)) ; this%m_leafn_to_litter_patch                   (:) = nan
     allocate(this%m_frootn_to_litter_patch                  (begp:endp)) ; this%m_frootn_to_litter_patch                  (:) = nan
     allocate(this%m_leafn_storage_to_litter_patch           (begp:endp)) ; this%m_leafn_storage_to_litter_patch           (:) = nan
@@ -465,6 +480,8 @@ contains
     allocate(this%npool_to_reproductiven_storage_patch(begp:endp, nrepr)); this%npool_to_reproductiven_storage_patch    (:,:) = nan
     allocate(this%livestemn_to_litter_patch                 (begp:endp)) ; this%livestemn_to_litter_patch                 (:) = nan
     allocate(this%repr_grainn_to_food_patch(begp:endp, repr_grain_min:repr_grain_max)) ; this%repr_grainn_to_food_patch (:,:) = nan
+    allocate(this%repr_grainn_to_food_perharv_patch(begp:endp, 1:mxharvests, repr_grain_min:repr_grain_max)) ; this%repr_grainn_to_food_perharv_patch (:,:,:) = nan
+    allocate(this%repr_grainn_to_food_thisyr_patch(begp:endp, repr_grain_min:repr_grain_max)) ; this%repr_grainn_to_food_thisyr_patch (:,:) = nan
     allocate(this%repr_structuren_to_cropprod_patch(begp:endp, repr_structure_min:repr_structure_max))
     this%repr_structuren_to_cropprod_patch(:,:) = nan
     allocate(this%repr_structuren_to_litter_patch(begp:endp, repr_structure_min:repr_structure_max))
@@ -472,6 +489,8 @@ contains
     allocate(this%leafn_to_biofueln_patch                   (begp:endp)) ; this%leafn_to_biofueln_patch                   (:) = nan
     allocate(this%livestemn_to_biofueln_patch               (begp:endp)) ; this%livestemn_to_biofueln_patch               (:) = nan
     allocate(this%repr_grainn_to_seed_patch(begp:endp, repr_grain_min:repr_grain_max)) ; this%repr_grainn_to_seed_patch (:,:) = nan
+    allocate(this%repr_grainn_to_seed_perharv_patch(begp:endp, 1:mxharvests, repr_grain_min:repr_grain_max)) ; this%repr_grainn_to_seed_perharv_patch (:,:,:) = nan
+    allocate(this%repr_grainn_to_seed_thisyr_patch(begp:endp, repr_grain_min:repr_grain_max)) ; this%repr_grainn_to_seed_thisyr_patch (:,:) = nan
     allocate(this%reproductiven_xfer_to_reproductiven_patch(begp:endp, nrepr))
     this%reproductiven_xfer_to_reproductiven_patch(:,:) = nan
     allocate(this%reproductiven_storage_to_xfer_patch(begp:endp, nrepr)) ; this%reproductiven_storage_to_xfer_patch     (:,:) = nan
@@ -1024,6 +1043,71 @@ contains
        call hist_addfld1d (fname='NFERTILIZATION', units='gN/m^2/s', &
             avgflag='A', long_name='fertilizer added', &
             ptr_patch=this%fert_patch)
+       
+       this%repr_grainn_to_food_patch(begp:endp,:) = spval
+       this%repr_grainn_to_food_perharv_patch(begp:endp,:,:) = spval
+       this%repr_grainn_to_food_thisyr_patch(begp:endp,:) = spval
+       this%repr_grainn_to_seed_patch(begp:endp,:) = spval
+       this%repr_grainn_to_seed_perharv_patch(begp:endp,:,:) = spval
+       this%repr_grainn_to_seed_thisyr_patch(begp:endp,:) = spval
+       do k = repr_grain_min, repr_grain_max
+          data1dptr => this%repr_grainn_to_food_patch(:,k)
+          call hist_addfld1d ( &
+               ! e.g., GRAINN_TO_FOOD
+               fname=get_repr_hist_fname(k)//'N_TO_FOOD', &
+               units='gN/m^2/s', &
+               avgflag='A', &
+               long_name=get_repr_longname(k)//' N to food (not scientifically supported)', &
+               ptr_patch=data1dptr, &
+               default='inactive')
+          data1dptr => this%repr_grainn_to_seed_patch(:,k)
+          call hist_addfld1d ( &
+               ! e.g., GRAINN_TO_SEED
+               fname=get_repr_hist_fname(k)//'N_TO_SEED', &
+               units='gN/m^2/s', &
+               avgflag='A', &
+               long_name=get_repr_longname(k)//' N to seed (not scientifically supported)', &
+               ptr_patch=data1dptr, &
+               default='inactive')
+          data2dptr => this%repr_grainn_to_food_perharv_patch(:,:,k)
+          call hist_addfld2d ( &
+               ! e.g., GRAINN_TO_FOOD_PERHARV
+               fname=get_repr_hist_fname(k)//'N_TO_FOOD_PERHARV', &
+               units='gN/m^2', &
+               type2d='mxharvests', &
+               avgflag='I', &
+               long_name=get_repr_longname(k)//' N to food per harvest; should only be output annually (not scientifically supported)', &
+               ptr_patch=data2dptr, &
+               default='inactive')
+          data1dptr => this%repr_grainn_to_food_thisyr_patch(:,k)
+          call hist_addfld1d ( &
+               ! e.g., GRAINN_TO_FOOD_ANN
+               fname=get_repr_hist_fname(k)//'N_TO_FOOD_ANN', &
+               units='gN/m^2', &
+               avgflag='I', &
+               long_name=get_repr_longname(k)//' N to food harvested per calendar year; should only be output annually (not scientifically supported)', &
+               ptr_patch=data1dptr, &
+               default='inactive')
+          data2dptr => this%repr_grainn_to_seed_perharv_patch(:,:,k)
+          call hist_addfld2d ( &
+               ! e.g., GRAINN_TO_SEED_PERHARV
+               fname=get_repr_hist_fname(k)//'N_TO_SEED_PERHARV', &
+               units='gN/m^2', &
+               type2d='mxharvests', &
+               avgflag='I', &
+               long_name=get_repr_longname(k)//' N to seed per harvest; should only be output annually (not scientifically supported)', &
+               ptr_patch=data2dptr, &
+               default='inactive')
+          data1dptr => this%repr_grainn_to_seed_thisyr_patch(:,k)
+          call hist_addfld1d ( &
+               ! e.g., GRAINN_TO_SEED_ANN
+               fname=get_repr_hist_fname(k)//'N_TO_SEED_ANN', &
+               units='gN/m^2', &
+               avgflag='I', &
+               long_name=get_repr_longname(k)//' N to seed harvested per calendar year; should only be output annually (not scientifically supported)', &
+               ptr_patch=data1dptr, &
+               default='inactive')
+       end do
     end if
 
     if (use_crop .and. .not. use_fun) then
@@ -1048,7 +1132,7 @@ contains
        if ( decomp_cascade_con%is_litter(k) .or. decomp_cascade_con%is_cwd(k) ) then
           this%m_decomp_npools_to_fire_col(begc:endc,k) = spval
           data1dptr => this%m_decomp_npools_to_fire_col(:,k)
-          fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'N_TO_FIRE'
+          fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_N_TO_FIRE'
           longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' N fire loss'
           call hist_addfld1d (fname=fieldname, units='gN/m^2',  &
                avgflag='A', long_name=longname, &
@@ -1057,7 +1141,7 @@ contains
           if ( nlevdecomp_full > 1 ) then
              this%m_decomp_npools_to_fire_vr_col(begc:endc,:,k) = spval
              data2dptr => this%m_decomp_npools_to_fire_vr_col(:,:,k)
-             fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'N_TO_FIRE'//trim(vr_suffix)
+             fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_N_TO_FIRE'//trim(vr_suffix)
              longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' N fire loss'
              call hist_addfld_decomp (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
                   avgflag='A', long_name=longname, &
@@ -1423,6 +1507,7 @@ contains
     logical :: readvar      ! determine if variable is on initial file
     character(len=256) :: varname
     real(r8), pointer :: data1dptr(:)   ! temp. pointer for slicing larger arrays
+    real(r8), pointer :: data2dptr(:,:) ! temp. pointer for slicing larger arrays
     !------------------------------------------------------------------------
 
     if (use_crop) then
@@ -1448,6 +1533,60 @@ contains
                long_name=get_repr_longname(k)//' N growth from storage', &
                units='gN/m2/s', &
                interpinic_flag='interp', readvar=readvar, data=data1dptr)
+       end do
+
+       ! Read or write variable(s) with mxharvests dimension
+       ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-06-10) See note in CallRestartvarDimOK()
+       if (CallRestartvarDimOK(ncid, flag, 'mxharvests')) then
+            do k = repr_grain_min, repr_grain_max
+               data2dptr => this%repr_grainn_to_food_perharv_patch(:,:,k)
+               ! e.g., grainn_to_food_perharv
+               varname = get_repr_rest_fname(k)//'n_to_food_perharv'
+               call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+                    xtype=ncd_double,  &
+                    dim1name='pft', &
+                    dim2name='mxharvests', &
+                    switchdim=.true., &
+                    long_name=get_repr_longname(k)//' N to food per harvest; should only be output annually', &
+                    units='gN/m2', &
+                    readvar=readvar, &
+                    scale_by_thickness=.false., &
+                    interpinic_flag='interp', data=data2dptr)
+               data2dptr => this%repr_grainn_to_seed_perharv_patch(:,:,k)
+               ! e.g., grainn_to_seed_perharv
+               varname = get_repr_rest_fname(k)//'n_to_seed_perharv'
+               call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+                    xtype=ncd_double,  &
+                    dim1name='pft', &
+                    dim2name='mxharvests', &
+                    switchdim=.true., &
+                    long_name=get_repr_longname(k)//' N to seed per harvest; should only be output annually', &
+                    units='gN/m2', &
+                    readvar=readvar, &
+                    scale_by_thickness=.false., &
+                    interpinic_flag='interp', data=data2dptr)
+            end do
+       end if
+  
+       do k = repr_grain_min, repr_grain_max
+            data1dptr => this%repr_grainn_to_food_thisyr_patch(:,k)
+            ! e.g., grainn_to_food_thisyr
+            varname = get_repr_rest_fname(k)//'n_to_food_thisyr'
+            call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+                 xtype=ncd_double,  &
+                 dim1name='pft', &
+                 long_name=get_repr_longname(k)//' N to food per calendar year; should only be output annually', &
+                 units='gN/m2', &
+                 interpinic_flag='interp', readvar=readvar, data=data1dptr)
+            data1dptr => this%repr_grainn_to_seed_thisyr_patch(:,k)
+            ! e.g., grainn_to_seed_thisyr
+            varname = get_repr_rest_fname(k)//'n_to_seed_thisyr'
+            call restartvar(ncid=ncid, flag=flag,  varname=varname, &
+                 xtype=ncd_double,  &
+                 dim1name='pft', &
+                 long_name=get_repr_longname(k)//' N to seed per calendar year; should only be output annually', &
+                 units='gN/m2', &
+                 interpinic_flag='interp', readvar=readvar, data=data1dptr)
        end do
     end if
 

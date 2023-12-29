@@ -6,7 +6,7 @@ Installing Git LFS on your machine is a two-step process; step (1) needs to be
 done once per machine, and step (2) needs to be done once per user:
 1. Install the Git LFS tool: Follow the instructions on the [Git LFS
 page](https://git-lfs.github.com/) for installing Git LFS on your platform.
-  - On cheyenne, Git LFS is already available as long as you are using a git
+  - On cheyenne and casper, Git LFS is already available as long as you are using a git
     module rather than the default system-level git. So just make sure that you
     are always using git via a git module (`module load git`).
   - On a Mac using homebrew, this can be done with `brew install git-lfs`.
