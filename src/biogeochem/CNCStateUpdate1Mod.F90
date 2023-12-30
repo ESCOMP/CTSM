@@ -215,6 +215,18 @@ contains
                   ! terms have been moved to CStateUpdateDynPatch. I think this is zeroed every
                   ! time step, but to be safe, I'm explicitly setting it to zero here.
                   cf_soil%decomp_cpools_sourcesink_col(c,j,i_cwd) = 0._r8
+
+                  ! litter and SOM HR fluxes
+                  do k = 1, ndecomp_cascade_transitions
+                     cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
+                          cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) &
+                          - ( cf_soil%decomp_cascade_hr_vr_col(c,j,k) + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)) * dt
+                     if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
+                        cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
+                             cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) &
+                             + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k) * dt
+                     end if
+                  end do
                else
                   !
                   ! For the matrix solution the actual state update comes after the matrix
@@ -233,55 +245,6 @@ contains
          end if fates_if
             
       end do fc_loop
-         
-
-      ! litter and SOM HR fluxes
-      do k = 1, ndecomp_cascade_transitions
-         do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               !
-               ! State update without the matrix solution
-               !
-               if (.not. use_soil_matrixcn) then
-                  cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
-                       cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) &
-                       - ( cf_soil%decomp_cascade_hr_vr_col(c,j,k) + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)) *dt
-               end if !not use_soil_matrixcn 
-            end do
-         end do
-      end do
-      do k = 1, ndecomp_cascade_transitions
-         if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
-            do j = 1,nlevdecomp
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
-                  if (.not. use_soil_matrixcn) then
-                     cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
-                          cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) &
-                          - ( cf_soil%decomp_cascade_hr_vr_col(c,j,k) + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)) *dt
-                  end if !not use_soil_matrixcn 
-               end do
-            end do
-         end do
-         do k = 1, ndecomp_cascade_transitions
-            if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
-               do j = 1,nlevdecomp
-                  do fc = 1,num_soilc
-                     c = filter_soilc(fc)
-                     !
-                     ! State update without the matrix solution
-                     !
-                     if (.not. use_soil_matrixcn) then
-                        cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
-                             cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) &
-                             + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)*dt
-                     end if !not use_soil_matrixcn
-                  end do
-               end do
-            end do
-         end if
-      end do
 
       soilpatch_loop: do fp = 1,num_soilp
          p = filter_soilp(fp)

@@ -1097,10 +1097,10 @@ contains
 
     if ( use_matrixcn ) then
        call t_startf('CNVMatrix')
-       call CNVegMatrix(bounds,num_bgc_soilp,filter_bgc_soilp(1:num_bgc_soilp),num_actfirep,filter_actfirep,cnveg_carbonstate_inst,cnveg_nitrogenstate_inst,&
-                         cnveg_carbonflux_inst,  cnveg_nitrogenflux_inst,cnveg_state_inst,soilbiogeochem_nitrogenflux_inst,&
-                         c13_cnveg_carbonstate_inst,c14_cnveg_carbonstate_inst,c13_cnveg_carbonflux_inst,&
-                         c14_cnveg_carbonflux_inst)
+       call CNVegMatrix(bounds, num_bgc_vegp, filter_bgc_vegp(1:num_bgc_vegp), &
+          num_actfirep, filter_actfirep, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+          cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, cnveg_state_inst,soilbiogeochem_nitrogenflux_inst, &
+          c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst)
        call t_stopf('CNVMatrix')
     end if
 
