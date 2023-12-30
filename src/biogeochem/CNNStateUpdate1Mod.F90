@@ -23,7 +23,10 @@ module CNNStateUpdate1Mod
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use CropReprPoolsMod                , only : nrepr, repr_grain_min, repr_grain_max, repr_structure_min, repr_structure_max
-  use PatchType                       , only : patch                
+  use PatchType                       , only : patch
+  use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
+  use ColumnType                      , only : col
+  
   !
   implicit none
   private
@@ -96,7 +99,9 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst) 
+       cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, &
+       clm_fates, clump_index)
+    
      use CNSharedParamsMod               , only : use_fun
     !
     ! !DESCRIPTION:
@@ -111,6 +116,9 @@ contains
     type(cnveg_nitrogenflux_type)           , intent(inout) :: cnveg_nitrogenflux_inst
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
+    type(hlm_fates_interface_type)          , intent(inout) :: clm_fates
+    integer                                 , intent(in)    :: clump_index
+    
     !
     ! !LOCAL VARIABLES:
     integer :: c,p,j,l,g,k,i  ! indices
@@ -134,9 +142,23 @@ contains
 
       ! soilbiogeochemistry fluxes TODO - this should be moved elsewhere
       ! plant to litter fluxes -  phenology and dynamic landcover fluxes
-      do j = 1, nlevdecomp
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+
+      fc_loop: do fc = 1,num_soilc
+         c = filter_soilc(fc)
+         
+         fates_if: if( col%is_fates(c) ) then
+            
+            ! If this is a fates column, then we ask fates for the
+            ! litter fluxes, the following routine simply copies
+            ! prepared litter c flux boundary conditions into
+            ! cf_soil%decomp_cpools_sourcesink_col
+            
+            call clm_fates%UpdateNLitterfluxes(nf_soil,clump_index,c)
+
+         else
+
+            do j = 1, nlevdecomp
+        
             !
             ! State update without the matrix solution
             !
@@ -151,12 +173,12 @@ contains
                ! time step, but to be safe, I'm explicitly setting it to zero here.
                nf_soil%decomp_npools_sourcesink_col(c,j,i_cwd) = 0._r8
 
-            !
-            ! For the matrix solution the actual state update comes after the matrix
-            ! multiply in SoilMatrix, but the matrix needs to be setup with
-            ! the equivalent of above. Those changes can be here or in the
-            ! native subroutines dealing with that field
-            !
+               !
+               ! For the matrix solution the actual state update comes after the matrix
+               ! multiply in SoilMatrix, but the matrix needs to be setup with
+               ! the equivalent of above. Those changes can be here or in the
+               ! native subroutines dealing with that field
+               !
             else
                ! Do the above to the matrix solution
                do i = i_litr_min, i_litr_max
@@ -165,7 +187,8 @@ contains
                end do
             end if
          end do
-      end do
+      end if fates_if
+   end do fc_loop
 
       do fp = 1,num_soilp
          p = filter_soilp(fp)

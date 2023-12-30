@@ -510,7 +510,7 @@ contains
   end subroutine init_decompcascade_bgc
 
   !-----------------------------------------------------------------------
-  subroutine decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
+  subroutine decomp_rate_constants_bgc(bounds, num_bgc_soilc, filter_bgc_soilc, &
        soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     !
     ! !DESCRIPTION:
@@ -524,8 +524,8 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds          
-    integer                              , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    integer                              , intent(in)    :: num_bgc_soilc       ! number of soil columns in filter
+    integer                              , intent(in)    :: filter_bgc_soilc(:) ! filter for soil columns
     type(soilstate_type)                 , intent(in)    :: soilstate_inst
     type(temperature_type)               , intent(in)    :: temperature_inst
     type(ch4_type)                       , intent(in)    :: ch4_inst
@@ -620,8 +620,8 @@ contains
       catanf_30 = catanf(30._r8)
 
       if ( spinup_state >= 1 ) then
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             !
             if ( abs(spinup_factor(i_met_lit) - 1._r8) .gt. eps) then
                spinup_geogterm_l1(c) = spinup_factor(i_met_lit) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
@@ -663,8 +663,8 @@ contains
             !
          end do
       else
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             spinup_geogterm_l1(c) = 1._r8
             spinup_geogterm_l23(c) = 1._r8
             spinup_geogterm_cwd(c) = 1._r8
@@ -687,14 +687,14 @@ contains
          nlev_soildecomp_standard=5
          allocate(fr(bounds%begc:bounds%endc,nlev_soildecomp_standard))
          do j=1,nlev_soildecomp_standard
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                frw(c) = frw(c) + col%dz(c,j)
             end do
          end do
          do j = 1,nlev_soildecomp_standard
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                if (frw(c) /= 0._r8) then
                   fr(c,j) = col%dz(c,j) / frw(c)
                else
@@ -709,8 +709,8 @@ contains
             ! limiting conditions at 25 C. 
 
             do j = 1,nlev_soildecomp_standard
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
                   if (j==1) t_scalar(c,:) = 0._r8
                   if (t_soisno(c,j) >= SHR_CONST_TKFRZ) then
                      t_scalar(c,1)=t_scalar(c,1) + &
@@ -725,8 +725,8 @@ contains
          else
             ! original century uses an arctangent function to calculate the temperature dependence of decomposition
             do j = 1,nlev_soildecomp_standard
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
                   if (j==1) t_scalar(c,:) = 0._r8
 
                   t_scalar(c,1)=t_scalar(c,1) +max(catanf(t_soisno(c,j)-SHR_CONST_TKFRZ)/catanf_30*fr(c,j),0.01_r8)
@@ -744,8 +744,8 @@ contains
          ! and soil moisture. Soil Biol. Biochem., 15(4):447-453.
 
          do j = 1,nlev_soildecomp_standard
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                if (j==1) w_scalar(c,:) = 0._r8
                psi = min(soilpsi(c,j),maxpsi)
                ! decomp only if soilpsi is higher than minpsi
@@ -761,8 +761,8 @@ contains
                ! Check for anoxia w/o LCH4 now done in controlMod.
 
                do j = 1,nlev_soildecomp_standard
-                  do fc = 1,num_soilc
-                     c = filter_soilc(fc)
+                  do fc = 1,num_bgc_soilc
+                     c = filter_bgc_soilc(fc)
 
                      if (j==1) o_scalar(c,:) = 0._r8
 
@@ -791,8 +791,8 @@ contains
             ! the base rates at 25 C, which are calibrated from microcosm studies.
 
             do j = 1, nlevdecomp
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
                   if (t_soisno(c,j) >= SHR_CONST_TKFRZ) then
                      t_scalar(c,j)= (Q10**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))
                   else
@@ -804,8 +804,8 @@ contains
          else
 
             do j = 1, nlevdecomp
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
                   t_scalar(c,j)= max(catanf(t_soisno(c,j)-SHR_CONST_TKFRZ)/catanf_30, 0.01_r8)
                end do
             end do
@@ -821,8 +821,8 @@ contains
          ! and soil moisture. Soil Biol. Biochem., 15(4):447-453.
 
          do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                psi = min(soilpsi(c,j),maxpsi)
                ! decomp only if soilpsi is higher than minpsi
                if (psi > minpsi) then
@@ -839,8 +839,8 @@ contains
 
             if (anoxia) then
                do j = 1,nlevdecomp
-                  do fc = 1,num_soilc
-                     c = filter_soilc(fc)
+                  do fc = 1,num_bgc_soilc
+                     c = filter_bgc_soilc(fc)
 
                      o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim)
                   end do
@@ -858,8 +858,8 @@ contains
          ! scale all decomposition rates by a constant to compensate for offset between original CENTURY temp func and Q10
          normalization_factor = (catanf(normalization_tref)/catanf_30) / (q10**((normalization_tref-25._r8)/10._r8))
          do j = 1, nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                t_scalar(c,j) = t_scalar(c,j) * normalization_factor
             end do
          end do
@@ -868,16 +868,16 @@ contains
       ! add a term to reduce decomposition rate at depth
       ! for now used a fixed e-folding depth
       do j = 1, nlevdecomp
-         do fc = 1, num_soilc
-            c = filter_soilc(fc)
+         do fc = 1, num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             depth_scalar(c,j) = exp(-zsoi(j) / decomp_depth_efolding)
          end do
       end do
 
       ! calculate rate constants for all litter and som pools
       do j = 1,nlevdecomp
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             decomp_k(c,j,i_met_lit) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * &
                depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l1(c)
             decomp_k(c,j,i_cel_lit) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * &

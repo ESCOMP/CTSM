@@ -418,18 +418,21 @@ module CNVegNitrogenFluxType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds)
+  subroutine Init(this, bounds, alloc_full_veg)
 
     class(cnveg_nitrogenflux_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
+    logical,intent(in)            :: alloc_full_veg
 
-    call this%InitAllocate (bounds)
-    if(use_matrixcn)then
-       call this%InitTransfer ()
+    call this%InitAllocate (bounds,alloc_full_veg)
+    if(alloc_full_veg)then
+       if(use_matrixcn)then
+          call this%InitTransfer ()
+       end if
+       call this%InitHistory (bounds)
+       call this%InitCold (bounds)
     end if
-    call this%InitHistory (bounds)
-    call this%InitCold (bounds)
-
+    
   end subroutine Init
 
   subroutine InitTransfer (this)
@@ -766,14 +769,15 @@ contains
   end subroutine InitTransfer 
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds)
+  subroutine InitAllocate(this, bounds, alloc_full_veg)
     !
     ! !DESCRIPTION:
     ! Initialize patch nitrogen flux
     !
     ! !ARGUMENTS:
     class (cnveg_nitrogenflux_type) :: this
-    type(bounds_type) , intent(in) :: bounds  
+    type(bounds_type) , intent(in) :: bounds
+    logical,intent(in)             :: alloc_full_veg
     !
     ! !LOCAL VARIABLES:
     integer           :: begp,endp
@@ -781,10 +785,16 @@ contains
     integer           :: begg,endg
     !------------------------------------------------------------------------
 
-    begp = bounds%begp; endp = bounds%endp
-    begc = bounds%begc; endc = bounds%endc
-    begg = bounds%begg; endg = bounds%endg
-
+    if(alloc_full_veg)then
+       begp = bounds%begp; endp = bounds%endp
+       begc = bounds%begc; endc = bounds%endc
+       begg = bounds%begg; endg = bounds%endg
+    else
+       begp = 0; endp = 0
+       begc = 0; endc = 0
+       begg = 0; endg = 0
+    end if
+       
     allocate(this%m_leafn_to_litter_patch                   (begp:endp)) ; this%m_leafn_to_litter_patch                   (:) = nan
     allocate(this%m_frootn_to_litter_patch                  (begp:endp)) ; this%m_frootn_to_litter_patch                  (:) = nan
     allocate(this%m_leafn_storage_to_litter_patch           (begp:endp)) ; this%m_leafn_storage_to_litter_patch           (:) = nan

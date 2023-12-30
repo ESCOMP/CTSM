@@ -262,27 +262,33 @@ module clm_varctl
   !  FATES switches
   !----------------------------------------------------------
 
-  logical, public :: use_fates = .false.            ! true => use fates
+  logical, public :: use_fates = .false.                                ! true => use fates
 
   ! These are INTERNAL to the FATES module
-  integer, public            :: fates_parteh_mode = -9                 ! 1 => carbon only
-                                                                       ! 2 => C+N+P (not enabled yet)
-                                                                       ! no others enabled
-  integer, public            :: fates_spitfire_mode = 0                
-  ! 0 for no fire; 1 for constant ignitions; > 1 for external data (lightning and/or anthropogenic ignitions)
-  ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
-  logical, public            :: use_fates_tree_damage = .false.        ! true => turn on tree damage module
-  logical, public            :: use_fates_logging = .false.            ! true => turn on logging module
-  logical, public            :: use_fates_planthydro = .false.         ! true => turn on fates hydro
-  logical, public            :: use_fates_cohort_age_tracking = .false. ! true => turn on cohort age tracking
-  logical, public            :: use_fates_ed_st3   = .false.           ! true => static stand structure
-  logical, public            :: use_fates_ed_prescribed_phys = .false. ! true => prescribed physiology
-  logical, public            :: use_fates_inventory_init = .false.     ! true => initialize fates from inventory
-  logical, public            :: use_fates_fixed_biogeog = .false.           ! true => use fixed biogeography mode
-  logical, public            :: use_fates_nocomp = .false.           ! true => use no comopetition mode
-  logical, public            :: use_fates_sp = .false.           ! true => use FATES satellite phenology mode
-  character(len=256), public :: fates_inventory_ctrl_filename = ''     ! filename for inventory control
 
+  integer, public            :: fates_parteh_mode = -9                  ! 1 => carbon only
+                                                                        ! 2 => C+N+P (not enabled yet)
+                                                                        ! no others enabled
+  integer, public            :: fates_spitfire_mode = 0                
+                                                                        ! 0 for no fire; 1 for constant ignitions;
+                                                                        ! > 1 for external data (lightning and/or anthropogenic ignitions)
+                                                                        ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
+  logical, public            :: use_fates_tree_damage = .false.         ! true => turn on tree damage module
+  logical, public            :: use_fates_logging = .false.             ! true => turn on logging module
+  logical, public            :: use_fates_planthydro = .false.          ! true => turn on fates hydro
+  logical, public            :: use_fates_cohort_age_tracking = .false. ! true => turn on cohort age tracking
+  logical, public            :: use_fates_ed_st3   = .false.            ! true => static stand structure
+  logical, public            :: use_fates_ed_prescribed_phys = .false.  ! true => prescribed physiology
+  logical, public            :: use_fates_inventory_init = .false.      ! true => initialize fates from inventory
+  logical, public            :: use_fates_fixed_biogeog = .false.       ! true => use fixed biogeography mode
+  logical, public            :: use_fates_nocomp = .false.              ! true => use no comopetition mode
+  character(len=256), public :: fates_inventory_ctrl_filename = ''      ! filename for inventory control
+
+  ! FATES SP AND FATES BGC are MUTUTALLY EXCLUSIVE, THEY CAN'T BOTH BE ON
+  ! BUT... THEY CAN BOTH BE OFF (IF FATES IS OFF)
+  logical, public            :: use_fates_sp = .false.                  ! true => use FATES satellite phenology mode
+  logical, public            :: use_fates_bgc = .false.                 ! true => use FATES along with CLM soil biogeochemistry
+  
   !----------------------------------------------------------
   !  LUNA switches		
   !----------------------------------------------------------

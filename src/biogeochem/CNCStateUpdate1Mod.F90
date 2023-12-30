@@ -15,14 +15,16 @@ module CNCStateUpdate1Mod
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
   use CropType                           , only : crop_type
-  use CropReprPoolsMod                   , only : nrepr, repr_grain_min, repr_grain_max, repr_structure_min, repr_structure_max
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use SoilBiogeochemDecompCascadeConType , only : use_soil_matrixcn
+  use CropReprPoolsMod                   , only : nrepr, repr_grain_min, repr_grain_max
+  use CropReprPoolsMod                   , only : repr_structure_min, repr_structure_max
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use PatchType                          , only : patch
-  use clm_varctl                         , only : use_fates, use_fates_sp
   use CNSharedParamsMod                  , only : use_matrixcn
+  use CLMFatesInterfaceMod               , only : hlm_fates_interface_type
+  use ColumnType                         , only : col
+  
   !
   implicit none
   private
@@ -41,6 +43,7 @@ contains
     !
     ! !DESCRIPTION:
     ! Update carbon states based on fluxes from dyn_cnbal_patch
+    ! This routine is not called with FATES active.
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in)    :: bounds      
@@ -69,26 +72,23 @@ contains
 
     dt = get_step_size_real()
 
-    if (.not. use_fates) then
-       do j = 1,nlevdecomp
-          do fc = 1, num_soilc_with_inactive
-             c = filter_soilc_with_inactive(fc)
-             do i = i_litr_min, i_litr_max
-                cs_soil%decomp_cpools_vr_col(c,j,i) = &
-                     cs_soil%decomp_cpools_vr_col(c,j,i) + &
-                     cf_veg%dwt_frootc_to_litr_c_col(c,j,i) * dt
-             end do
-             cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + &
-                  ( cf_veg%dwt_livecrootc_to_cwdc_col(c,j) + cf_veg%dwt_deadcrootc_to_cwdc_col(c,j) ) * dt
+    do j = 1,nlevdecomp
+       do fc = 1, num_soilc_with_inactive
+          c = filter_soilc_with_inactive(fc)
+          do i = i_litr_min, i_litr_max
+             cs_soil%decomp_cpools_vr_col(c,j,i) = &
+                  cs_soil%decomp_cpools_vr_col(c,j,i) + &
+                  cf_veg%dwt_frootc_to_litr_c_col(c,j,i) * dt
           end do
+          cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + &
+               ( cf_veg%dwt_livecrootc_to_cwdc_col(c,j) + cf_veg%dwt_deadcrootc_to_cwdc_col(c,j) ) * dt
        end do
+    end do
 
-       do g = bounds%begg, bounds%endg
-          cs_veg%seedc_grc(g) = cs_veg%seedc_grc(g) - cf_veg%dwt_seedc_to_leaf_grc(g) * dt
-          cs_veg%seedc_grc(g) = cs_veg%seedc_grc(g) - cf_veg%dwt_seedc_to_deadstem_grc(g) * dt
-       end do
-
-    end if
+    do g = bounds%begg, bounds%endg
+       cs_veg%seedc_grc(g) = cs_veg%seedc_grc(g) - cf_veg%dwt_seedc_to_leaf_grc(g) * dt
+       cs_veg%seedc_grc(g) = cs_veg%seedc_grc(g) - cf_veg%dwt_seedc_to_deadstem_grc(g) * dt
+    end do
 
     end associate
 
@@ -121,8 +121,6 @@ contains
       ! set time steps
       dt = get_step_size_real()
 
-
-
       ! gross photosynthesis fluxes
       do fp = 1,num_soilp
          p = filter_soilp(fp)
@@ -138,7 +136,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine CStateUpdate1( num_soilc, filter_soilc, num_soilp, filter_soilp, &
        crop_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
-       soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm)
+       soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm, &
+       clm_fates, clump_index)
     !
     ! !DESCRIPTION:
     ! On the radiation time step, update all the prognostic carbon state
@@ -156,6 +155,8 @@ contains
     type(cnveg_carbonstate_type)         , intent(inout) :: cnveg_carbonstate_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
     logical                              , intent(in)    :: dribble_crophrv_xsmrpool_2atm
+    type(hlm_fates_interface_type)       , intent(inout) :: clm_fates
+    integer                              , intent(in)    :: clump_index
     !
     ! !LOCAL VARIABLES:
     integer  :: c,p,j,k,l,i  ! indices
@@ -186,11 +187,23 @@ contains
 
       ! Below is the input into the soil biogeochemistry model
 
-      ! plant to litter fluxes
-      if (.not. use_fates) then    
-         do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+      fc_loop: do fc = 1,num_soilc
+         c = filter_soilc(fc)
+
+         fates_if: if( col%is_fates(c) ) then
+
+            ! If this is a fates column, then we ask fates for the
+            ! litter fluxes, the following routine simply copies
+            ! prepared litter c flux boundary conditions into
+            ! cf_soil%decomp_cpools_sourcesink_col
+            
+            call clm_fates%UpdateCLitterfluxes(cf_soil,clump_index,c)
+            
+         else
+            do j = 1,nlevdecomp
+               !
+               ! State update without the matrix solution
+               !
                if (.not. use_soil_matrixcn) then
                   ! phenology and dynamic land cover fluxes
                   do i = i_litr_min, i_litr_max
@@ -203,6 +216,12 @@ contains
                   ! time step, but to be safe, I'm explicitly setting it to zero here.
                   cf_soil%decomp_cpools_sourcesink_col(c,j,i_cwd) = 0._r8
                else
+                  !
+                  ! For the matrix solution the actual state update comes after the matrix
+                  ! multiply in SoilMatrix, but the matrix needs to be setup with
+                  ! the equivalent of above. Those changes can be here or in the
+                  ! native subroutines dealing with that field
+                  !
                   ! phenology and dynamic land cover fluxes
                   do i = i_litr_min, i_litr_max
                      cf_soil%matrix_Cinput%V(c,j+(i-1)*nlevdecomp) = &
@@ -210,25 +229,30 @@ contains
                   end do
                end if
             end do
-         end do
-      else if ( .not. use_fates_sp ) then !use_fates
-         ! here add all fates litterfall and CWD breakdown to litter fluxes
+
+         end if fates_if
+            
+      end do fc_loop
+         
+
+      ! litter and SOM HR fluxes
+      do k = 1, ndecomp_cascade_transitions
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-               ! TODO(wjs, 2017-01-02) Should some portion or all of the following fluxes
-               ! be moved to the updates in CStateUpdateDynPatch?
-               do i = i_litr_min, i_litr_max
-                  cf_soil%decomp_cpools_sourcesink_col(c,j,i) = &
-                       cf_soil%FATES_c_to_litr_c_col(c,j,i) * dt
-               end do
+               !
+               ! State update without the matrix solution
+               !
+               if (.not. use_soil_matrixcn) then
+                  cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
+                       cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) &
+                       - ( cf_soil%decomp_cascade_hr_vr_col(c,j,k) + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)) *dt
+               end if !not use_soil_matrixcn 
             end do
          end do
-      endif
-         
-      if ( .not. use_fates_sp ) then !use_fates
-         ! litter and SOM HR fluxes
-         do k = 1, ndecomp_cascade_transitions
+      end do
+      do k = 1, ndecomp_cascade_transitions
+         if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
             do j = 1,nlevdecomp
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
@@ -245,6 +269,9 @@ contains
                do j = 1,nlevdecomp
                   do fc = 1,num_soilc
                      c = filter_soilc(fc)
+                     !
+                     ! State update without the matrix solution
+                     !
                      if (.not. use_soil_matrixcn) then
                         cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
                              cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) &
@@ -252,16 +279,16 @@ contains
                      end if !not use_soil_matrixcn
                   end do
                end do
-            end if
-         end do
-      end if
+            end do
+         end if
+      end do
 
-    if (.not. use_fates) then    
-ptch: do fp = 1,num_soilp
+      soilpatch_loop: do fp = 1,num_soilp
          p = filter_soilp(fp)
          c = patch%column(p)
 
          ! phenology: transfer growth fluxes
+         ! TODO slevis: improve indentation
         if(.not. use_matrixcn)then
            ! NOTE: Any changes that go here MUST be applied to the matrix
            ! version as well
@@ -600,9 +627,7 @@ ptch: do fp = 1,num_soilp
                cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) - cf_veg%xsmrpool_to_atm_patch(p) * dt
             end if
          end if
-         
-        end do ptch ! end of patch loop
-      end if   ! end of NOT fates
+      end do soilpatch_loop ! end of patch loop
     
     end associate
   

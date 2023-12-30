@@ -7,7 +7,7 @@ module SoilBiogeochemCarbonStateType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi, zsoi, c3_r2
-  use clm_varctl                         , only : iulog, spinup_state, use_fates
+  use clm_varctl                         , only : iulog, spinup_state, use_fates_bgc
   use landunit_varcon                    , only : istcrop, istsoil
   use abortutils                         , only : endrun
   use spmdMod                            , only : masterproc 
@@ -17,6 +17,7 @@ module SoilBiogeochemCarbonStateType
   use GridcellType                       , only : grc
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
   use SparseMatrixMultiplyMod            , only : sparse_matrix_type, vector_type
+  use CNVegCarbonStateType               , only : cnveg_carbonstate_type
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -32,19 +33,28 @@ module SoilBiogeochemCarbonStateType
      real(r8), pointer :: ctrunc_vr_col        (:,:)   ! (gC/m3) vertically-resolved column-level sink for C truncation
 
      ! summary (diagnostic) state variables, not involved in mass balance
-     real(r8), pointer :: ctrunc_col              (:)     ! (gC/m2) column-level sink for C truncation
-     real(r8), pointer :: totmicc_col             (:)     ! (gC/m2) total microbial carbon
-     real(r8), pointer :: totlitc_col             (:)     ! (gC/m2) total litter carbon
-     real(r8), pointer :: totlitc_1m_col          (:)     ! (gC/m2) total litter carbon to 1 meter
-     real(r8), pointer :: totsomc_col             (:)     ! (gC/m2) total soil organic matter carbon
-     real(r8), pointer :: totsomc_1m_col          (:)     ! (gC/m2) total soil organic matter carbon to 1 meter
-     real(r8), pointer :: cwdc_col                (:)     ! (gC/m2) coarse woody debris C (diagnostic)
-     real(r8), pointer :: decomp_cpools_1m_col    (:,:)   ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools to 1 meter
-     real(r8), pointer :: decomp_cpools_col       (:,:)   ! (gC/m2)  decomposing (litter, cwd, soil) c pools
-     real(r8), pointer :: dyn_cbal_adjustments_col(:)     ! (gC/m2) adjustments to each column made in this timestep via dynamic column area adjustments (note: this variable only makes sense at the column-level: it is meaningless if averaged to the gridcell-level)
-     integer           :: restart_file_spinup_state       ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
-     real(r8)          :: totvegcthresh                   ! threshold for total vegetation carbon to zero out decomposition pools
+     real(r8), pointer :: ctrunc_col              (:)   ! (gC/m2) column-level sink for C truncation
+     real(r8), pointer :: totmicc_col             (:)   ! (gC/m2) total microbial carbon
+     real(r8), pointer :: totlitc_col             (:)   ! (gC/m2) total litter carbon
+     real(r8), pointer :: totlitc_1m_col          (:)   ! (gC/m2) total litter carbon to 1 meter
+     real(r8), pointer :: totsomc_col             (:)   ! (gC/m2) total soil organic matter carbon
+     real(r8), pointer :: totsomc_1m_col          (:)   ! (gC/m2) total soil organic matter carbon to 1 meter
+     real(r8), pointer :: cwdc_col                (:)   ! (gC/m2) coarse woody debris C (diagnostic)
+     real(r8), pointer :: decomp_cpools_1m_col    (:,:) ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools to 1 meter
+     real(r8), pointer :: decomp_cpools_col       (:,:) ! (gC/m2)  decomposing (litter, cwd, soil) c pools
+     real(r8), pointer :: dyn_cbal_adjustments_col(:)   ! (gC/m2) adjustments to each column made in this timestep via dynamic column
+                                                        ! area adjustments (note: this variable only makes sense at the column-level:
+                                                        ! it is meaningless if averaged to the gridcell-level)
+     integer           :: restart_file_spinup_state     ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
+     real(r8)          :: totvegcthresh                 ! threshold for total vegetation carbon to zero out decomposition pools
 
+
+     ! Carbon totals, includes soil, cpool and vegetation
+     real(r8), pointer :: totc_col                            (:) ! (gC/m2) total column carbon, incl veg and cpool
+     real(r8), pointer :: totecosysc_col                      (:) ! (gC/m2) total ecosystem carbon, incl veg but excl cpool 
+     real(r8), pointer :: totc_grc                            (:) ! (gC/m2) total gridcell carbon
+
+     
      ! Matrix-cn
      real(r8), pointer :: matrix_cap_decomp_cpools_col    (:,:)   ! (gC/m2) C capacity in decomposing (litter, cwd, soil) N pools in dimension (col,npools)
      real(r8), pointer :: matrix_cap_decomp_cpools_vr_col (:,:,:) ! (gC/m3) vertically-resolved C capacity in decomposing (litter, cwd, soil) pools in dimension(col,nlev,npools)
@@ -108,9 +118,11 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer           :: begc,endc
+    integer           :: begg,endg
     !------------------------------------------------------------------------
 
     begc = bounds%begc; endc = bounds%endc
+    begg = bounds%begg; endg = bounds%endg
 
     allocate( this%decomp_cpools_col    (begc :endc,1:ndecomp_pools))   ; this%decomp_cpools_col    (:,:) = nan
     allocate( this%decomp_cpools_1m_col (begc :endc,1:ndecomp_pools))   ; this%decomp_cpools_1m_col (:,:) = nan
@@ -153,9 +165,8 @@ contains
     this%decomp_soilc_vr_col(:,:)= nan
 
     allocate(this%ctrunc_col     (begc :endc)) ; this%ctrunc_col     (:) = nan
-    if ( .not. use_fates ) then
-       allocate(this%cwdc_col       (begc :endc)) ; this%cwdc_col       (:) = nan
-    endif
+    allocate(this%cwdc_col       (begc :endc)) ; this%cwdc_col       (:) = nan
+
     allocate(this%totmicc_col    (begc :endc)) ; this%totmicc_col    (:) = nan
     allocate(this%totlitc_col    (begc :endc)) ; this%totlitc_col    (:) = nan
     allocate(this%totsomc_col    (begc :endc)) ; this%totsomc_col    (:) = nan
@@ -163,6 +174,10 @@ contains
     allocate(this%totsomc_1m_col (begc :endc)) ; this%totsomc_1m_col (:) = nan
     allocate(this%dyn_cbal_adjustments_col (begc:endc)) ; this%dyn_cbal_adjustments_col (:) = nan
 
+    allocate(this%totc_col                 (begc:endc)) ; this%totc_col                 (:) = nan
+    allocate(this%totecosysc_col           (begc:endc)) ; this%totecosysc_col           (:) = nan
+    allocate(this%totc_grc                 (begg:endg)) ; this%totc_grc                 (:) = nan
+    
     this%restart_file_spinup_state = huge(1)
 
   end subroutine InitAllocate
@@ -299,6 +314,16 @@ contains
             &only makes sense at the column level: should not be averaged to gridcell', &
             ptr_col=this%dyn_cbal_adjustments_col, default='inactive')
 
+       this%totc_col(begc:endc) = spval
+       call hist_addfld1d (fname='TOTCOLC', units='gC/m^2', &
+            avgflag='A', long_name='total column carbon, incl veg and cpool but excl product pools', &
+            ptr_col=this%totc_col)
+
+       this%totecosysc_col(begc:endc) = spval
+       call hist_addfld1d (fname='TOTECOSYSC', units='gC/m^2', &
+            avgflag='A', long_name='total ecosystem carbon, incl veg but excl cpool and product pools', &
+            ptr_col=this%totecosysc_col)
+       
    end if
 
     !-------------------------------
@@ -399,6 +424,17 @@ contains
             long_name='C13 adjustments in soil carbon due to dynamic column areas; &
             &only makes sense at the column level: should not be averaged to gridcell', &
             ptr_col=this%dyn_cbal_adjustments_col, default='inactive')
+
+       this%totc_col(begc:endc) = spval
+       call hist_addfld1d (fname='C13_TOTCOLC', units='gC13/m^2', &
+            avgflag='A', long_name='C13 total column carbon, incl veg and cpool but excl product pools', &
+            ptr_col=this%totc_col, default='inactive')
+
+       this%totecosysc_col(begc:endc) = spval
+       call hist_addfld1d (fname='C13_TOTECOSYSC', units='gC13/m^2', &
+            avgflag='A', long_name='C13 total ecosystem carbon, incl veg but excl cpool and product pools', &
+            ptr_col=this%totecosysc_col)
+       
     endif
 
     !-------------------------------
@@ -500,6 +536,17 @@ contains
             long_name='C14 adjustments in soil carbon due to dynamic column areas; &
             &only makes sense at the column level: should not be averaged to gridcell', &
             ptr_col=this%dyn_cbal_adjustments_col, default='inactive')
+
+       this%totc_col(begc:endc) = spval
+       call hist_addfld1d (fname='C14_TOTCOLC', units='gC14/m^2', &
+            avgflag='A', long_name='C14 total column carbon, incl veg and cpool but excl product pools', &
+            ptr_col=this%totc_col, default='inactive')
+
+       this%totecosysc_col(begc:endc) = spval
+       call hist_addfld1d (fname='C14_TOTECOSYSC', units='gC14/m^2', &
+            avgflag='A', long_name='C14 total ecosystem carbon, incl veg but excl cpool and product pools', &
+            ptr_col=this%totecosysc_col)
+
     endif
 
   end subroutine InitHistory
@@ -519,7 +566,7 @@ contains
     type(soilbiogeochem_carbonstate_type), intent(in), optional :: c12_soilbiogeochem_carbonstate_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: p,c,l,j,k
+    integer :: p,c,l,j,k,g
     integer :: fc                                        ! filter index
     integer :: num_special_col                           ! number of good values in special_col filter
     integer :: special_col(bounds%endc-bounds%begc+1)    ! special landunit filter - columns
@@ -622,23 +669,30 @@ contains
           end if
        end if
 
-       if ( .not. use_fates ) then
-          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-             if (present(c12_soilbiogeochem_carbonstate_inst)) then
-                this%cwdc_col(c)    = c12_soilbiogeochem_carbonstate_inst%cwdc_col(c) * ratio
-             else
-                this%cwdc_col(c)    = 0._r8
-             end if
-             this%ctrunc_col(c)     = 0._r8
-             this%totmicc_col(c)    = 0._r8
-             this%totlitc_col(c)    = 0._r8
-             this%totsomc_col(c)    = 0._r8
-             this%totlitc_1m_col(c) = 0._r8
-             this%totsomc_1m_col(c) = 0._r8
+
+       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+          if (present(c12_soilbiogeochem_carbonstate_inst) .and. (.not.col%is_fates(c)) ) then
+             this%cwdc_col(c)    = c12_soilbiogeochem_carbonstate_inst%cwdc_col(c) * ratio
+          else
+             this%cwdc_col(c)    = 0._r8
           end if
+          this%ctrunc_col(c)     = 0._r8
+          this%totmicc_col(c)    = 0._r8
+          this%totlitc_col(c)    = 0._r8
+          this%totsomc_col(c)    = 0._r8
+          this%totlitc_1m_col(c) = 0._r8
+          this%totsomc_1m_col(c) = 0._r8
+
+          this%totc_col(c)       = 0._r8
+          this%totecosysc_col(c) = 0._r8
        end if
+       
     end do
 
+    do g = bounds%begg, bounds%endg
+       this%totc_grc(g)  = 0._r8
+    end do
+    
     ! now loop through special filters and explicitly set the variables that
     ! have to be in place for biogeophysics
     
@@ -1274,7 +1328,7 @@ contains
 
     do fi = 1,num_column
        i = filter_column(fi)
-       if ( .not. use_fates ) then
+       if ( .not. col%is_fates(i) ) then
           this%cwdc_col(i)       = value_column
        end if
        this%ctrunc_col(i)     = value_column
@@ -1283,6 +1337,8 @@ contains
        this%totlitc_1m_col(i) = value_column
        this%totsomc_col(i)    = value_column
        this%totsomc_1m_col(i) = value_column
+       this%totc_col(i)       = value_column
+       this%totecosysc_col(i) = value_column
     end do
 
     do j = 1,nlevdecomp_full
@@ -1348,7 +1404,7 @@ contains
   end subroutine SetValues
 
   !-----------------------------------------------------------------------
-  subroutine Summary(this, bounds, num_allc, filter_allc)
+  subroutine Summary(this, bounds, num_allc, filter_allc, num_bgc_soilc, filter_bgc_soilc,cnveg_carbonstate_inst)
     !
     ! !DESCRIPTION:
     ! Perform column-level carbon summary calculations
@@ -1356,13 +1412,22 @@ contains
     ! !ARGUMENTS:
     class(soilbiogeochem_carbonstate_type)          :: this
     type(bounds_type)               , intent(in)    :: bounds          
-    integer                         , intent(in)    :: num_allc       ! number of columns in allc filter
+    integer                         , intent(in)    :: num_allc       ! number of columns in soil filter
     integer                         , intent(in)    :: filter_allc(:) ! filter for all active columns
+    integer                         , intent(in)    :: num_bgc_soilc       ! number of columns in soil filter
+    integer                         , intent(in)    :: filter_bgc_soilc(:) ! filter for all active columns
+    type(cnveg_carbonstate_type)    , intent(inout) :: cnveg_carbonstate_inst
+    
     !
     ! !LOCAL VARIABLES:
     integer  :: c,j,k,l       ! indices
     integer  :: fc            ! filter indices
     real(r8) :: maxdepth      ! depth to integrate soil variables
+    integer  :: num_local     ! Either num_bgc_soilc or num_allc, depending
+                              ! on if its a fates run, its different because
+                              ! the cnveg variables are not allocated w/ fates
+    real(r8) :: ecovegc_col
+    real(r8) :: totvegc_col
     !-----------------------------------------------------------------------
 
     ! vertically integrate each of the decomposing C pools
@@ -1533,23 +1598,53 @@ contains
        end if
     end do
 
-    ! coarse woody debris carbon
-    if (.not. use_fates ) then
-       do fc = 1,num_allc
-          c = filter_allc(fc)
-          this%cwdc_col(c) = 0._r8
-       end do
-       do l = 1, ndecomp_pools
-          if ( decomp_cascade_con%is_cwd(l) ) then
-             do fc = 1,num_allc
-                c = filter_allc(fc)
-                this%cwdc_col(c) = this%cwdc_col(c) + this%decomp_cpools_col(c,l)
-             end do
-          end if
-       end do
-       
+    do fc = 1,num_allc
+       c = filter_allc(fc)
+       ! coarse woody debris carbon
+       this%cwdc_col(c) = 0._r8
+    end do
+    
+    if (use_fates_bgc) then
+       num_local = num_bgc_soilc
+    else
+       num_local = num_allc
     end if
-
+    do fc = 1,num_local
+       if(use_fates_bgc) then
+          c = filter_bgc_soilc(fc)
+       else
+          c = filter_allc(fc)
+       end if
+       if(col%is_fates(c)) then
+          totvegc_col = 0._r8
+          ecovegc_col = 0._r8
+       else
+          do l = 1, ndecomp_pools
+             if ( decomp_cascade_con%is_cwd(l) ) then
+                this%cwdc_col(c) = this%cwdc_col(c) + this%decomp_cpools_col(c,l)
+             end if
+          end do
+          totvegc_col = cnveg_carbonstate_inst%totc_p2c_col(c)
+          ecovegc_col = cnveg_carbonstate_inst%totvegc_col(c)
+       end if
+       
+       ! total ecosystem carbon, including veg but excluding cpool (TOTECOSYSC)
+       this%totecosysc_col(c) =   &
+            this%cwdc_col(c)    + &
+            this%totmicc_col(c) + &
+            this%totlitc_col(c) + &
+            this%totsomc_col(c) + &
+            ecovegc_col
+       ! total column carbon, including veg and cpool (TOTCOLC)
+       this%totc_col(c) =         &
+            this%cwdc_col(c)    + &
+            this%totmicc_col(c) + &
+            this%totlitc_col(c) + &
+            this%totsomc_col(c) + &
+            this%ctrunc_col(c)  + &
+            totvegc_col
+    end do
+       
   end subroutine Summary
 
   !------------------------------------------------------------------------

@@ -91,11 +91,13 @@ OPTIONS
                                     This toggles off the namelist variable: use_cn
                                 bgc   = Carbon Nitrogen with methane, nitrification, vertical soil C,
                                         CENTURY or MIMICS decomposition
-                                    This toggles on the namelist variables:
+				        This toggles on the namelist variables:
                                           use_cn, use_lch4, use_nitrif_denitrif
-                                fates = FATES/Ecosystem Demography with below ground BGC
-                                    This toggles on the namelist variables:
-                                          use_fates
+				fates = FATES/Ecosystem Demography with below ground BGC
+				        CENTURY or MIMICS decomposition
+                                        This toggles on the namelist variables:
+				        use_fates. use_lch4 and use_nitrif_denitrif are optional
+				 
                               (Only for CLM4.5/CLM5.0)
      -[no-]chk_res            Also check [do NOT check] to make sure the resolution and
                               land-mask is valid.
@@ -767,26 +769,12 @@ sub setup_cmdl_fates_mode {
           }
        }
 
-      # The following variables may be set by the user and are compatible with use_fates
-      # no need to set defaults, covered in a different routine
-      my @list  = (  "use_lch4" );
-      foreach my $var ( @list ) {
-	  if ( defined($nl->get_value($var))  ) {
-	      $nl_flags->{$var} = $nl->get_value($var);
-	      $val = $nl_flags->{$var};
-	      my $group = $definition->get_group_name($var);
-	      $nl->set_variable_value($group, $var, $val);
-	      if (  ! $definition->is_valid_value( $var, $val ) ) {
-		  my @valid_values   = $definition->get_valid_values( $var );
-		  $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
-	      }
-	  }
-      }
     } else {
        # dis-allow fates specific namelist items with non-fates runs
        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
-                      "use_fates_cohort_age_tracking",
-                      "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging","fates_parteh_mode","use_fates_tree_damage" );
+                      "use_fates_cohort_age_tracking","use_fates_inventory_init","use_fates_fixed_biogeog",
+		      "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging",
+		      "fates_parteh_mode","use_fates_tree_damage" );
        # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
           if ( defined($nl->get_value($var)) ) {
@@ -3051,24 +3039,30 @@ sub setup_logic_supplemental_nitrogen {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   if ( $nl_flags->{'bgc_mode'} ne "sp" && $nl_flags->{'bgc_mode'} ne "fates" && &value_is_true($nl_flags->{'use_crop'}) ) {
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                'suplnitro', 'use_cn'=>$nl_flags->{'use_cn'}, 'use_crop'=>$nl_flags->{'use_crop'});
-  }
+      # If this is non-fates, non-sp and crop is active
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+		  'suplnitro', 'use_cn'=>$nl_flags->{'use_cn'}, 'use_crop'=>$nl_flags->{'use_crop'});
 
+  } elsif ( $nl_flags->{'bgc_mode'} eq "fates" && not &value_is_true( $nl_flags->{'use_fates_sp'})  ) {
+      # Or... if its fates but not fates-sp
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+		  'suplnitro', 'use_fates'=>$nl_flags->{'use_fates'});
+  }
+  
   #
   # Error checking for suplnitro
   #
   my $suplnitro = $nl->get_value('suplnitro');
   if ( defined($suplnitro) ) {
     if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
-      $log->fatal_error("supplemental Nitrogen (suplnitro) is set, but neither CN nor CNDV is active!");
+      $log->fatal_error("supplemental Nitrogen (suplnitro) is set, but neither CN nor CNDV nor FATES is active!");
     }
     if ( ! &value_is_true($nl_flags->{'use_crop'}) && $suplnitro =~ /PROG_CROP_ONLY/i ) {
       $log->fatal_error("supplemental Nitrogen is set to run over prognostic crops, but prognostic crop is NOT active!");
     }
 
     if ( $suplnitro =~ /ALL/i ) {
-      if ( $nl_flags->{'bgc_spinup'} eq "on" ) {
+      if ( $nl_flags->{'bgc_spinup'} eq "on" && $nl_flags->{'bgc_mode'} ne "fates" ) {
         $log->warning("There is no need to use a bgc_spinup mode when supplemental Nitrogen is on for all PFT's, as these modes spinup Nitrogen" );
       }
     }
@@ -3385,6 +3379,12 @@ sub setup_logic_luna {
                  'use_cn'=>$nl_flags->{'use_cn'} );
   }
   $nl_flags->{'use_luna'} = $nl->get_value('use_luna');
+
+  # LUNA can NOT be on with FATES
+  if ( &value_is_true( $nl_flags->{'use_luna'} ) && &value_is_true( $nl_flags->{'use_fates'} )) {
+     $log->fatal_error("Cannot turn use_luna to true when bgc=fates" );
+  }
+
   my $vcmax_opt= $nl->get_value('vcmax_opt');
   # lnc_opt only applies if luna is on or for vcmax_opt=3/4
   if ( &value_is_true( $nl_flags->{'use_luna'} ) || $vcmax_opt == 3 || $vcmax_opt == 4 ) {
@@ -3551,18 +3551,18 @@ sub setup_logic_nitrogen_deposition {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   #
-  # Nitrogen deposition for bgc=CN
+  # Nitrogen deposition for bgc=CN or fates
   #
-  if ( $nl_flags->{'bgc_mode'} =~/bgc/ ) {
+  if ( ($nl_flags->{'bgc_mode'} =~/bgc/) ) {   # or  ($nl_flags->{'bgc_mode'} =~/fates/) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_taxmode', 'phys'=>$nl_flags->{'phys'},
-                'use_cn'=>$nl_flags->{'use_cn'},
-                'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
+		'use_cn'=>$nl_flags->{'use_cn'}, 
+		'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_varlist', 'phys'=>$nl_flags->{'phys'},
-                'use_cn'=>$nl_flags->{'use_cn'},
-                'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
+		'use_cn'=>$nl_flags->{'use_cn'}, 
+		'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_ndep', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
@@ -4338,6 +4338,13 @@ sub setup_logic_fates {
         foreach my $var ( @list ) {
  	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
                       'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+        }
+        my $suplnitro = $nl->get_value('suplnitro');
+        my $parteh_mode = $nl->get_value('fates_parteh_mode');
+        if ( ($parteh_mode == 1) &&  ($suplnitro !~ /ALL/) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
+          $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to ALL, FATES is on, " . 
+                            "but and FATES-SP is not active, but fates_parteh_mode is 1, so Nitrogen is not active" . 
+                            "Change suplnitro back to ALL");
         }
         #
         # For FATES SP mode make sure no-competetiion, and fixed-biogeography are also set
