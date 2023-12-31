@@ -1061,7 +1061,7 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
-     "useinventorybutnotfile"    =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+     "useinventorybutnotfile"    =>{ options=>"--res 0.9x1.25 --bgc fates --envxml_dir . --no-megan",
                                      namelst=>"use_fates_luh=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
