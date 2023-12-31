@@ -1,4 +1,104 @@
 ===============================================================
+Tag name: ctsm5.1.dev160
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Sat 30 Dec 2023 11:23:47 PM MST
+One-line Summary: FATES landuse version 1
+
+Purpose and description of changes
+----------------------------------
+
+This tag enables FATES to utilize the state and transitions data
+from the Land Use Harmonization (https://luh.umd.edu/) data sets.
+This data has been preprocessed using tooling provided by FATES via
+a separate pull request (FATES#1032).  A new module has been added
+to the dyn_subgrid directory that largely adapts the dynHarvest
+module to import and read this minimially processed data, which is
+data is passed to fates.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+CTSM issues fixed (include CTSM Issue #):
+   #1077 -- Read in full LUH2 dataset for use by FATES
+   #2283 -- fates wood product flux not being correctly reported during CBalanceCheck endrun diagnostic output
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+   New namelist item: fluh_timeseries and use_fates_luh
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+   FATES landuse testmod, FatesColdLUH2, added
+
+IMPORTANT NOTE ON BASELINES:
+   FATES baseline tests have a change in namelists because the fluh_timeseries file is listed in the baselines
+   but was removed in a last minute change. Compare to baseline other than that change are exact though.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS (66 FATES tests differ because of new fates param file)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- PASS
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: yes, for FATES only
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: FATES
+    - what platforms/compilers: ALL
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff
+
+  The fates tag update incorporates bug fixes and hydraulic mortality fixes, as well as the
+  restructured disturbance code necessary to accomodate the new landuse transitions capability.
+  As such, small differences were observed in testmods that engaged specific disturbance modes
+  or were long enough to trigger other default disturbances (e.g. fire)
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+  fates: sci.1.69.0_api.31.0.0 -> fates-sci.1.70.0_api.32.0.0
+
+Pull Requests that document the changes (include PR ids):
+  https://github.com/ESCOMP/ctsm/pull/2076
+  https://github.com/NGEET/fates/pull/1040
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev159
 Originator(s): multiple (slevis (Sam Levis), afoster (Adrianna Foster), erik (Erik Kluzek), wwieder (Will Wieder), glemieux (Greg Lemieux), oleson (Keith Oleson), sacks (Bill Sacks), samrabin (Sam Rabin), santos (Sean Patrick Santos))
 Date: Tue 12 Dec 2023 11:10:26 AM MST
