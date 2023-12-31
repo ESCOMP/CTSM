@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev160
 Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
-Date: Mon Dec 18 18:32:23 MST 2023
+Date: Sat 30 Dec 2023 11:23:47 PM MST
 One-line Summary: FATES landuse version 1
 
 Purpose and description of changes
@@ -33,8 +33,8 @@ Does this tag change answers significantly for any of the following physics conf
 [ ] clm4_5
 
 
-Bugs fixed or introduced
-------------------------
+Bugs fixed
+----------
 CTSM issues fixed (include CTSM Issue #):
    #1077 -- Read in full LUH2 dataset for use by FATES
    #2283 -- fates wood product flux not being correctly reported during CBalanceCheck endrun diagnostic output
@@ -49,6 +49,10 @@ Notes of particular relevance for developers:
 Changes to tests or testing:
    FATES landuse testmod, FatesColdLUH2, added
 
+IMPORTANT NOTE ON BASELINES:
+   FATES baseline tests have a change in namelists because the fluh_timeseries file is listed in the baselines
+   but was removed in a last minute change. Compare to baseline other than that change are exact though.
+
 Testing summary:
 ----------------
 
@@ -56,7 +60,7 @@ Testing summary:
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho - PASS
+    derecho - PASS (66 FATES tests differ because of new fates param file)
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
