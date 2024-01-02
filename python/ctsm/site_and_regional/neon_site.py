@@ -135,14 +135,6 @@ class NeonSite:
             # update case_path to be the full path to the base case
         return case_path
 
-    def diff_month(self):  # TODO: this is not used in this file directly; is it used elsewhere?
-        """
-        Determine difference between two dates in months
-        """
-        first_date = datetime.datetime(self.end_year, self.end_month, 1)
-        second_date = datetime.datetime(self.start_year, self.start_month, 1)
-        return (first_date.year - second_date.year) * 12 + first_date.month - second_date.month
-
     def get_batch_query(self, case):
         """
         Function for querying the batch queue query command for a case, depending on the
