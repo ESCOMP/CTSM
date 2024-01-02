@@ -250,7 +250,6 @@ Makefile-formatted file gives variables that should be set in the atmosphere mod
 build. :ref:`See below for information on how to use this
 file<including-ctsm-in-the-atmosphere-model-build>`.
 
-
 Rebuilding after changing CTSM source code
 ------------------------------------------
 

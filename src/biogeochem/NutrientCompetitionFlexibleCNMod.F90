@@ -1496,12 +1496,10 @@ contains
          livestemn             => cnveg_nitrogenstate_inst%livestemn_patch          , & ! Input:  [real(r8) (:)   ]  (gN/m2) livestem N
          frootn                => cnveg_nitrogenstate_inst%frootn_patch             , & ! Input:  [real(r8) (:)   ]  (gN/m2) fine root N
          sminn_vr              => soilbiogeochem_nitrogenstate_inst%sminn_vr_col    , & ! Input:  [real(r8) (:,:) ]  (gN/m3) soil mineral N
-         btran                 => energyflux_inst%btran_patch                       , & ! Input: [real(r8) (:)    ]  transpiration wetness factor (0 to 1)
-         t_scalar              => soilbiogeochem_carbonflux_inst%t_scalar_col      ,  & ! Input:  [real(r8) (:,:) ]  soil temperature scalar for decomp
-         ileaf_to_iretransn_phn           => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph                 , &
-         ifroot_to_iretransn_phn          => cnveg_nitrogenflux_inst%ifroot_to_iretransn_ph                 , &
-         ilivestem_to_iretransn_phn       => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph                &
-
+         t_scalar              => soilbiogeochem_carbonflux_inst%t_scalar_col       , & ! Input:  [real(r8) (:,:) ]  soil temperature scalar for decomp
+         ileaf_to_iretransn_phn     => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph, &
+         ifroot_to_iretransn_phn    => cnveg_nitrogenflux_inst%ifroot_to_iretransn_ph, &
+         ilivestem_to_iretransn_phn => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph &
          )
 
       ! set time steps

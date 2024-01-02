@@ -55,6 +55,14 @@ https://github.com/ESCOMP/ctsm/wiki/CTSM-development-workflow
 
 ---- THE FOLLOWING CAN ONLY BE DONE BY INTEGRATORS ----
 
+NOTE (especially for new integrators): Be sure to follow the recommended
+git setup in
+<https://github.com/ESCOMP/CTSM/wiki/Recommended-git-setup#24additional-recommended-settings-for-integrators>.
+Especially note that you should never use something like `git merge
+escomp/master` to merge the upstream master branch into your local copy:
+instead, you should always use `git pull` with the recommended
+configuration settings (or `git merge --ff-only`) for that scenario.
+
 (7) Merge the PR to master when review is approved
 
 (8) Compare master to branch show that they are identical
@@ -65,7 +73,10 @@ This should show no diffs
 
 (9) Make an annotated tag on master
 
-(10) Push master and tag to ESCOMP/ctsm
+(10) Push tag to ESCOMP/ctsm
+
+(10a) Push to master (if needed because you changed something in master after PR was merged, or 
+if you did step 7 above using git commands that require this step)
 
 (11) Update the CTSM upcoming tags project, if necessary
      (https://github.com/ESCOMP/ctsm/projects/6)

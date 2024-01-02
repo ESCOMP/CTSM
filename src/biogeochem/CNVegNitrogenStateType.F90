@@ -2274,7 +2274,6 @@ contains
             this%totn_p2c_col(bounds%begc:bounds%endc))
     end if
 
-
   end subroutine Summary_nitrogenstate
 
   !-----------------------------------------------------------------------

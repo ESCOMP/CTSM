@@ -83,7 +83,7 @@ contains
   end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine CNGapMortality (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+  subroutine CNGapMortality (bounds, num_soilp, filter_soilp, &
        dgvs_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst,&
        cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, canopystate_inst, &  
        leaf_prof_patch, froot_prof_patch, croot_prof_patch, stem_prof_patch)  
@@ -100,8 +100,6 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)    :: bounds
-    integer                                , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                                , intent(in)    :: filter_soilc(:) ! column filter for soil points
     integer                                , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                                , intent(in)    :: filter_soilp(:) ! patch filter for soil points
     type(dgvs_type)                        , intent(inout) :: dgvs_inst
@@ -384,7 +382,7 @@ contains
       ! gather all patch-level litterfall fluxes to the column
       ! for litter C and N inputs
 
-      call CNGap_PatchToColumn(bounds, num_soilc, filter_soilc, &
+      call CNGap_PatchToColumn(bounds, num_soilp, filter_soilp, &
            cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
            leaf_prof_patch(bounds%begp:bounds%endp, 1:nlevdecomp_full), &
            froot_prof_patch(bounds%begp:bounds%endp, 1:nlevdecomp_full), & 
@@ -396,7 +394,7 @@ contains
   end subroutine CNGapMortality
 
   !-----------------------------------------------------------------------
-  subroutine CNGap_PatchToColumn (bounds, num_soilc, filter_soilc, &
+  subroutine CNGap_PatchToColumn (bounds, num_soilp, filter_soilp, &
        cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
        leaf_prof_patch, froot_prof_patch, croot_prof_patch, stem_prof_patch)
     !
@@ -409,8 +407,8 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds
-    integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                         , intent(in)    :: filter_soilc(:) ! soil column filter
+    integer                         , intent(in)    :: num_soilp       ! number of soil patches in filter
+    integer                         , intent(in)    :: filter_soilp(:) ! soil patch filter
     type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
     real(r8)                        , intent(in)    :: leaf_prof_patch(bounds%begp:,1:)
@@ -419,7 +417,7 @@ contains
     real(r8)                        , intent(in)    :: stem_prof_patch(bounds%begp:,1:)
     !
     ! !LOCAL VARIABLES:
-    integer :: fc,c,pi,p,j,i  ! indices
+    integer :: fp,c,p,j,i  ! indices
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
@@ -486,84 +484,75 @@ contains
          )
 
       do j = 1,nlevdecomp
-         do pi = 1,maxsoil_patches
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+         do fp = 1,num_soilp
+            p = filter_soilp(fp)
+            c = patch%column(p)
 
-               if (pi <=  col%npatches(c)) then
-                  p = col%patchi(c) + pi - 1
-
-                  if (patch%active(p)) then
-
-                     do i = i_litr_min, i_litr_max
-                        gap_mortality_c_to_litr_c(c,j,i) = &
-                           gap_mortality_c_to_litr_c(c,j,i) + &
-                           ! leaf gap mortality carbon fluxes
-                           m_leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
-                           ! fine root gap mortality carbon fluxes
-                           m_frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
-                     end do
-
-                     ! wood gap mortality carbon fluxes
-                     gap_mortality_c_to_cwdc(c,j)  = gap_mortality_c_to_cwdc(c,j)  + &
-                          (m_livestemc_to_litter(p) + m_deadstemc_to_litter(p))  * wtcol(p) * stem_prof(p,j)
-                     gap_mortality_c_to_cwdc(c,j) = gap_mortality_c_to_cwdc(c,j) + &
-                          (m_livecrootc_to_litter(p) + m_deadcrootc_to_litter(p)) * wtcol(p) * croot_prof(p,j)
-
-                     ! storage gap mortality carbon fluxes
-                     ! Metabolic litter is treated differently than other types
-                     ! of litter, so it gets this additional line after the
-                     ! most recent loop over all litter types
-                     gap_mortality_c_to_litr_c(c,j,i_met_lit) = &
-                        gap_mortality_c_to_litr_c(c,j,i_met_lit) + &
-                        (m_leafc_storage_to_litter(p) + m_gresp_storage_to_litter(p)) * wtcol(p) * leaf_prof(p,j) + &
-                        m_frootc_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
-                        (m_livestemc_storage_to_litter(p) + m_deadstemc_storage_to_litter(p)) * wtcol(p) * stem_prof(p,j) + &
-                        (m_livecrootc_storage_to_litter(p) + m_deadcrootc_storage_to_litter(p)) * wtcol(p) * croot_prof(p,j) + &
-
-                     ! transfer gap mortality carbon fluxes
-                        (m_leafc_xfer_to_litter(p) + m_gresp_xfer_to_litter(p)) * wtcol(p) * leaf_prof(p,j) + &
-                        m_frootc_xfer_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
-                        (m_livestemc_xfer_to_litter(p) + m_deadstemc_xfer_to_litter(p))  * wtcol(p) * stem_prof(p,j) + &
-                        (m_livecrootc_xfer_to_litter(p) + m_deadcrootc_xfer_to_litter(p)) * wtcol(p) * croot_prof(p,j)
-
-                     do i = i_litr_min, i_litr_max
-                        gap_mortality_n_to_litr_n(c,j,i) = &
-                           gap_mortality_n_to_litr_n(c,j,i) + &
-                           ! leaf gap mortality nitrogen fluxes
-                           m_leafn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
-                           ! fine root litter nitrogen fluxes
-                           m_frootn_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
-                     end do
-
-                     ! wood gap mortality nitrogen fluxes
-                     gap_mortality_n_to_cwdn(c,j) = gap_mortality_n_to_cwdn(c,j)  + &
-                          (m_livestemn_to_litter(p) + m_deadstemn_to_litter(p))  * wtcol(p) * stem_prof(p,j)
-                     gap_mortality_n_to_cwdn(c,j) = gap_mortality_n_to_cwdn(c,j) + &
-                          (m_livecrootn_to_litter(p) + m_deadcrootn_to_litter(p)) * wtcol(p) * croot_prof(p,j)
-
-                     ! Metabolic litter is treated differently than other types
-                     ! of litter, so it gets this additional line after the
-                     ! most recent loop over all litter types
-                     gap_mortality_n_to_litr_n(c,j,i_met_lit) = &
-                        gap_mortality_n_to_litr_n(c,j,i_met_lit) + &
-                        ! retranslocated N pool gap mortality fluxes
-                        m_retransn_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
-                        ! storage gap mortality nitrogen fluxes
-                        m_leafn_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
-                        m_frootn_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
-                        (m_livestemn_storage_to_litter(p) + m_deadstemn_storage_to_litter(p))  * wtcol(p) * stem_prof(p,j) + &
-                        (m_livecrootn_storage_to_litter(p) + m_deadcrootn_storage_to_litter(p)) * wtcol(p) * croot_prof(p,j) + &
-                        ! transfer gap mortality nitrogen fluxes
-                        m_leafn_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
-                        m_frootn_xfer_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
-                        (m_livestemn_xfer_to_litter(p) + m_deadstemn_xfer_to_litter(p)) * wtcol(p) * stem_prof(p,j) + &
-                        (m_livecrootn_xfer_to_litter(p) + m_deadcrootn_xfer_to_litter(p)) * wtcol(p) * croot_prof(p,j)
-
-                  end if
-               end if
-
+            do i = i_litr_min, i_litr_max
+               gap_mortality_c_to_litr_c(c,j,i) = &
+                  gap_mortality_c_to_litr_c(c,j,i) + &
+                  ! leaf gap mortality carbon fluxes
+                  m_leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
+                  ! fine root gap mortality carbon fluxes
+                  m_frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
             end do
+
+            ! wood gap mortality carbon fluxes
+            gap_mortality_c_to_cwdc(c,j)  = gap_mortality_c_to_cwdc(c,j)  + &
+                 (m_livestemc_to_litter(p) + m_deadstemc_to_litter(p))  * wtcol(p) * stem_prof(p,j)
+            gap_mortality_c_to_cwdc(c,j) = gap_mortality_c_to_cwdc(c,j) + &
+                 (m_livecrootc_to_litter(p) + m_deadcrootc_to_litter(p)) * wtcol(p) * croot_prof(p,j)
+
+            ! storage gap mortality carbon fluxes
+            ! Metabolic litter is treated differently than other types
+            ! of litter, so it gets this additional line after the
+            ! most recent loop over all litter types
+            gap_mortality_c_to_litr_c(c,j,i_met_lit) = &
+               gap_mortality_c_to_litr_c(c,j,i_met_lit) + &
+               (m_leafc_storage_to_litter(p) + m_gresp_storage_to_litter(p)) * wtcol(p) * leaf_prof(p,j) + &
+               m_frootc_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+               (m_livestemc_storage_to_litter(p) + m_deadstemc_storage_to_litter(p)) * wtcol(p) * stem_prof(p,j) + &
+               (m_livecrootc_storage_to_litter(p) + m_deadcrootc_storage_to_litter(p)) * wtcol(p) * croot_prof(p,j) + &
+
+            ! transfer gap mortality carbon fluxes
+               (m_leafc_xfer_to_litter(p) + m_gresp_xfer_to_litter(p)) * wtcol(p) * leaf_prof(p,j) + &
+               m_frootc_xfer_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+               (m_livestemc_xfer_to_litter(p) + m_deadstemc_xfer_to_litter(p))  * wtcol(p) * stem_prof(p,j) + &
+               (m_livecrootc_xfer_to_litter(p) + m_deadcrootc_xfer_to_litter(p)) * wtcol(p) * croot_prof(p,j)
+
+            do i = i_litr_min, i_litr_max
+               gap_mortality_n_to_litr_n(c,j,i) = &
+                  gap_mortality_n_to_litr_n(c,j,i) + &
+                  ! leaf gap mortality nitrogen fluxes
+                  m_leafn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
+                  ! fine root litter nitrogen fluxes
+                  m_frootn_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
+            end do
+
+            ! wood gap mortality nitrogen fluxes
+            gap_mortality_n_to_cwdn(c,j) = gap_mortality_n_to_cwdn(c,j)  + &
+                 (m_livestemn_to_litter(p) + m_deadstemn_to_litter(p))  * wtcol(p) * stem_prof(p,j)
+            gap_mortality_n_to_cwdn(c,j) = gap_mortality_n_to_cwdn(c,j) + &
+                 (m_livecrootn_to_litter(p) + m_deadcrootn_to_litter(p)) * wtcol(p) * croot_prof(p,j)
+
+            ! Metabolic litter is treated differently than other types
+            ! of litter, so it gets this additional line after the
+            ! most recent loop over all litter types
+            gap_mortality_n_to_litr_n(c,j,i_met_lit) = &
+               gap_mortality_n_to_litr_n(c,j,i_met_lit) + &
+               ! retranslocated N pool gap mortality fluxes
+               m_retransn_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+               ! storage gap mortality nitrogen fluxes
+               m_leafn_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+               m_frootn_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+               (m_livestemn_storage_to_litter(p) + m_deadstemn_storage_to_litter(p))  * wtcol(p) * stem_prof(p,j) + &
+               (m_livecrootn_storage_to_litter(p) + m_deadcrootn_storage_to_litter(p)) * wtcol(p) * croot_prof(p,j) + &
+               ! transfer gap mortality nitrogen fluxes
+               m_leafn_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+               m_frootn_xfer_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+               (m_livestemn_xfer_to_litter(p) + m_deadstemn_xfer_to_litter(p)) * wtcol(p) * stem_prof(p,j) + &
+               (m_livecrootn_xfer_to_litter(p) + m_deadcrootn_xfer_to_litter(p)) * wtcol(p) * croot_prof(p,j)
+
          end do
       end do
 

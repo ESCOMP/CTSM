@@ -42,7 +42,7 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: snowdp_col             (:)   ! col area-averaged snow height (m)
      real(r8), pointer :: snow_layer_unity_col   (:,:) ! value 1 for each snow layer, used for history diagnostics
      real(r8), pointer :: bw_col                 (:,:) ! col partial density of water in the snow pack (ice + liquid) [kg/m3] 
-
+     real(r8), pointer :: snomelt_accum_col      (:)   ! accumulated col snow melt for z0m calculation (m H2O)
      real(r8), pointer :: h2osoi_liq_tot_col     (:)   ! vertically summed col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_ice_tot_col     (:)   ! vertically summed col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: air_vol_col            (:,:) ! col air filled porosity
@@ -108,11 +108,9 @@ module WaterDiagnosticBulkType
 
   type, private :: params_type
       real(r8) :: zlnd  ! Momentum roughness length for soil, glacier, wetland (m)
+      real(r8) :: snw_rds_min  ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
   end type params_type
   type(params_type), private ::  params_inst
-
-  ! minimum allowed snow effective radius (also "fresh snow" value) [microns]
-  real(r8), public, parameter :: snw_rds_min = 54.526_r8    
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -136,6 +134,8 @@ contains
 
     ! Momentum roughness length for soil, glacier, wetland (m)
     call readNcdioScalar(ncid, 'zlnd', subname, params_inst%zlnd)
+    ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
+    call readNcdioScalar(ncid, 'snw_rds_min', subname, params_inst%snw_rds_min)
 
   end subroutine readParams
 
@@ -192,6 +192,7 @@ contains
     allocate(this%snow_depth_col         (begc:endc))                     ; this%snow_depth_col         (:)   = nan
     allocate(this%snow_5day_col          (begc:endc))                     ; this%snow_5day_col          (:)   = nan
     allocate(this%snowdp_col             (begc:endc))                     ; this%snowdp_col             (:)   = nan
+    allocate(this%snomelt_accum_col      (begc:endc))                     ; this%snomelt_accum_col     (:)   = nan
     allocate(this%snow_layer_unity_col   (begc:endc,-nlevsno+1:0))        ; this%snow_layer_unity_col   (:,:) = nan
     allocate(this%bw_col                 (begc:endc,-nlevsno+1:0))        ; this%bw_col                 (:,:) = nan   
     allocate(this%air_vol_col            (begc:endc, 1:nlevgrnd))         ; this%air_vol_col            (:,:) = nan
@@ -482,6 +483,14 @@ contains
          long_name=this%info%lname('gridcell mean snow height'), &
          ptr_col=this%snowdp_col, c2l_scale_type='urbanf')
 
+    this%snomelt_accum_col(begc:endc) = 0._r8
+    call hist_addfld1d ( &                         ! Have this as an output variable for now to check
+         fname=this%info%fname('SNOMELT_ACCUM'),  &
+         units='m',  &
+         avgflag='A', &
+         long_name=this%info%lname('accumulated snow melt for z0'), &
+         ptr_col=this%snomelt_accum_col, c2l_scale_type='urbanf')
+
     if (use_cn) then
        this%wf_col(begc:endc) = spval
        call hist_addfld1d ( &
@@ -741,11 +750,11 @@ contains
 
       do c = bounds%begc,bounds%endc
          if (snl(c) < 0) then
-            this%snw_rds_col(c,snl(c)+1:0)        = snw_rds_min
+            this%snw_rds_col(c,snl(c)+1:0)        = params_inst%snw_rds_min
             this%snw_rds_col(c,-nlevsno+1:snl(c)) = 0._r8
-            this%snw_rds_top_col(c)               = snw_rds_min
+            this%snw_rds_top_col(c)               = params_inst%snw_rds_min
          elseif (h2osno_input_col(c) > 0._r8) then
-            this%snw_rds_col(c,0)                 = snw_rds_min
+            this%snw_rds_col(c,0)                 = params_inst%snw_rds_min
             this%snw_rds_col(c,-nlevsno+1:-1)     = 0._r8
             this%snw_rds_top_col(c)               = spval
             this%sno_liq_top_col(c)               = spval
@@ -817,6 +826,18 @@ contains
          long_name=this%info%lname('snow depth'), &
          units='m', &
          interpinic_flag='interp', readvar=readvar, data=this%snow_depth_col) 
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('SNOMELT_ACCUM'), &
+         xtype=ncd_double,  &
+         dim1name='column', &
+         long_name=this%info%lname('accumulated snow melt for z0'), &
+         units='m', &
+         interpinic_flag='interp', readvar=readvar, data=this%snomelt_accum_col)
+    if (flag == 'read' .and. .not. readvar) then
+       ! initial run, not restart: initialize snomelt_accum_col to zero
+       this%snomelt_accum_col(bounds%begc:bounds%endc) = 0._r8
+    endif
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('frac_sno_eff'), &
@@ -1215,7 +1236,7 @@ contains
     integer , intent(in)   :: column     ! column index
     !-----------------------------------------------------------------------
 
-    this%snw_rds_col(column,0)  = snw_rds_min
+    this%snw_rds_col(column,0)  = params_inst%snw_rds_min
 
   end subroutine ResetBulk
 

@@ -234,7 +234,7 @@ contains
   end subroutine dynHarvest_interp_resolve_harvesttypes
 
   !-----------------------------------------------------------------------
-  subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp, &
+  subroutine CNHarvest (num_soilp, filter_soilp, &
        soilbiogeochem_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
        cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
     !
@@ -248,8 +248,6 @@ contains
     use CNVegMatrixMod  , only : matrix_update_gmc, matrix_update_gmn
     !
     ! !ARGUMENTS:
-    integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                         , intent(in)    :: filter_soilc(:) ! column filter for soil points
     integer                         , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                         , intent(in)    :: filter_soilp(:) ! patch filter for soil points
     type(soilbiogeochem_state_type) , intent(in)    :: soilbiogeochem_state_inst
@@ -583,7 +581,7 @@ contains
       ! gather all patch-level litterfall fluxes from harvest to the column
       ! for litter C and N inputs
 
-      call CNHarvestPftToColumn(num_soilc, filter_soilc, &
+      call CNHarvestPftToColumn(num_soilp, filter_soilp, &
            soilbiogeochem_state_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
     end associate 
@@ -591,7 +589,7 @@ contains
   end subroutine CNHarvest
 
  !-----------------------------------------------------------------------
- subroutine CNHarvestPftToColumn (num_soilc, filter_soilc, &
+ subroutine CNHarvestPftToColumn (num_soilp, filter_soilp, &
       soilbiogeochem_state_inst, CNVeg_carbonflux_inst, cnveg_nitrogenflux_inst)
    !
    ! !DESCRIPTION:
@@ -602,14 +600,14 @@ contains
    use clm_varpar , only : nlevdecomp, maxsoil_patches, i_litr_min, i_litr_max, i_met_lit
    !
    ! !ARGUMENTS:
-   integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
-   integer                         , intent(in)    :: filter_soilc(:) ! soil column filter
+   integer                         , intent(in)    :: num_soilp       ! number of soil patches in filter
+   integer                         , intent(in)    :: filter_soilp(:) ! patch filter for soil points
    type(soilbiogeochem_state_type) , intent(in)    :: soilbiogeochem_state_inst
    type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
    type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
    !
    ! !LOCAL VARIABLES:
-   integer :: fc,c,pi,p,j,i  ! indices
+   integer :: fp,c,p,j,i  ! indices
    !-----------------------------------------------------------------------
 
    associate(                                                                                                   & 
@@ -673,124 +671,106 @@ contains
         )
 
      do j = 1, nlevdecomp
-        do pi = 1,maxsoil_patches
-           do fc = 1,num_soilc
-              c = filter_soilc(fc)
+        do fp = 1,num_soilp
+           p = filter_soilp(fp)
+           c = patch%column(p)
 
-              if (pi <=  col%npatches(c)) then
-                 p = col%patchi(c) + pi - 1
+           do i = i_litr_min, i_litr_max
+              ! leaf harvest mortality carbon fluxes
+              harvest_c_to_litr_c(c,j,i) = &
+                 harvest_c_to_litr_c(c,j,i) + &
+                 hrv_leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
 
-                 if (patch%active(p)) then
-
-                    do i = i_litr_min, i_litr_max
-                       ! leaf harvest mortality carbon fluxes
-                       harvest_c_to_litr_c(c,j,i) = &
-                          harvest_c_to_litr_c(c,j,i) + &
-                          hrv_leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
-
-                       ! fine root harvest mortality carbon fluxes
-                       harvest_c_to_litr_c(c,j,i) = &
-                          harvest_c_to_litr_c(c,j,i) + &
-                          hrv_frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
-                    end do
-
-                    ! wood harvest mortality carbon fluxes
-                    harvest_c_to_cwdc(c,j)  = harvest_c_to_cwdc(c,j)  + &
-                         hrv_livestemc_to_litter(p)  * wtcol(p) * stem_prof(p,j) 
-                    harvest_c_to_cwdc(c,j) = harvest_c_to_cwdc(c,j) + &
-                         hrv_livecrootc_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                    harvest_c_to_cwdc(c,j) = harvest_c_to_cwdc(c,j) + &
-                         hrv_deadcrootc_to_litter(p) * wtcol(p) * croot_prof(p,j) 
-
-                    ! storage harvest mortality carbon fluxes
-                    ! Metabolic litter is treated differently than other types
-                    ! of litter, so it gets this additional line after the
-                    ! most recent loop over all litter types
-                    harvest_c_to_litr_c(c,j,i_met_lit) = &
-                       harvest_c_to_litr_c(c,j,i_met_lit) + &
-                       hrv_leafc_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
-                       hrv_frootc_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
-                       hrv_livestemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
-                       hrv_deadstemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
-                       hrv_livecrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
-                       hrv_deadcrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
-                       hrv_gresp_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
-
-                    ! transfer harvest mortality carbon fluxes
-                       hrv_leafc_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
-                       hrv_frootc_xfer_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
-                       hrv_livestemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
-                       hrv_deadstemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
-                       hrv_livecrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
-                       hrv_deadcrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
-                       hrv_gresp_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j)
-
-                    do i = i_litr_min, i_litr_max
-                       harvest_n_to_litr_n(c,j,i) = &
-                          harvest_n_to_litr_n(c,j,i) + &
-                          ! leaf harvest mortality nitrogen fluxes
-                          hrv_leafn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
-                          ! fine root litter nitrogen fluxes
-                          hrv_frootn_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
-                    end do
-
-                    ! wood harvest mortality nitrogen fluxes
-                    harvest_n_to_cwdn(c,j)  = harvest_n_to_cwdn(c,j)  + &
-                         hrv_livestemn_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                    harvest_n_to_cwdn(c,j) = harvest_n_to_cwdn(c,j) + &
-                         hrv_livecrootn_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                    harvest_n_to_cwdn(c,j) = harvest_n_to_cwdn(c,j) + &
-                         hrv_deadcrootn_to_litter(p) * wtcol(p) * croot_prof(p,j)
-
-                    ! Metabolic litter is treated differently than other types
-                    ! of litter, so it gets this additional line after the
-                    ! most recent loop over all litter types
-                    harvest_n_to_litr_n(c,j,i_met_lit) = &
-                       harvest_n_to_litr_n(c,j,i_met_lit) + &
-                       ! retranslocated N pool harvest mortality fluxes
-                       hrv_retransn_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
-                       ! storage harvest mortality nitrogen fluxes
-                       hrv_leafn_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
-                       hrv_frootn_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
-                       hrv_livestemn_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
-                       hrv_deadstemn_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
-                       hrv_livecrootn_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
-                       hrv_deadcrootn_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
-                       ! transfer harvest mortality nitrogen fluxes
-                       hrv_leafn_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
-                       hrv_frootn_xfer_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
-                       hrv_livestemn_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
-                       hrv_deadstemn_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
-                       hrv_livecrootn_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
-                       hrv_deadcrootn_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j)
-
-                 end if
-              end if
-
+              ! fine root harvest mortality carbon fluxes
+              harvest_c_to_litr_c(c,j,i) = &
+                 harvest_c_to_litr_c(c,j,i) + &
+                 hrv_frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
            end do
+
+           ! wood harvest mortality carbon fluxes
+           harvest_c_to_cwdc(c,j)  = harvest_c_to_cwdc(c,j)  + &
+                hrv_livestemc_to_litter(p)  * wtcol(p) * stem_prof(p,j) 
+           harvest_c_to_cwdc(c,j) = harvest_c_to_cwdc(c,j) + &
+                hrv_livecrootc_to_litter(p) * wtcol(p) * croot_prof(p,j)
+           harvest_c_to_cwdc(c,j) = harvest_c_to_cwdc(c,j) + &
+                hrv_deadcrootc_to_litter(p) * wtcol(p) * croot_prof(p,j) 
+
+           ! storage harvest mortality carbon fluxes
+           ! Metabolic litter is treated differently than other types
+           ! of litter, so it gets this additional line after the
+           ! most recent loop over all litter types
+           harvest_c_to_litr_c(c,j,i_met_lit) = &
+              harvest_c_to_litr_c(c,j,i_met_lit) + &
+              hrv_leafc_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+              hrv_frootc_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+              hrv_livestemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+              hrv_deadstemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+              hrv_livecrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+              hrv_deadcrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+              hrv_gresp_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+
+           ! transfer harvest mortality carbon fluxes
+              hrv_leafc_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+              hrv_frootc_xfer_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+              hrv_livestemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+              hrv_deadstemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+              hrv_livecrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+              hrv_deadcrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+              hrv_gresp_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j)
+
+           do i = i_litr_min, i_litr_max
+              harvest_n_to_litr_n(c,j,i) = &
+                 harvest_n_to_litr_n(c,j,i) + &
+                 ! leaf harvest mortality nitrogen fluxes
+                 hrv_leafn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
+                 ! fine root litter nitrogen fluxes
+                 hrv_frootn_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
+           end do
+
+           ! wood harvest mortality nitrogen fluxes
+           harvest_n_to_cwdn(c,j)  = harvest_n_to_cwdn(c,j)  + &
+                hrv_livestemn_to_litter(p)  * wtcol(p) * stem_prof(p,j)
+           harvest_n_to_cwdn(c,j) = harvest_n_to_cwdn(c,j) + &
+                hrv_livecrootn_to_litter(p) * wtcol(p) * croot_prof(p,j)
+           harvest_n_to_cwdn(c,j) = harvest_n_to_cwdn(c,j) + &
+                hrv_deadcrootn_to_litter(p) * wtcol(p) * croot_prof(p,j)
+
+           ! Metabolic litter is treated differently than other types
+           ! of litter, so it gets this additional line after the
+           ! most recent loop over all litter types
+           harvest_n_to_litr_n(c,j,i_met_lit) = &
+              harvest_n_to_litr_n(c,j,i_met_lit) + &
+              ! retranslocated N pool harvest mortality fluxes
+              hrv_retransn_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+              ! storage harvest mortality nitrogen fluxes
+              hrv_leafn_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+              hrv_frootn_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+              hrv_livestemn_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+              hrv_deadstemn_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+              hrv_livecrootn_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+              hrv_deadcrootn_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+              ! transfer harvest mortality nitrogen fluxes
+              hrv_leafn_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+              hrv_frootn_xfer_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+              hrv_livestemn_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+              hrv_deadstemn_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+              hrv_livecrootn_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+              hrv_deadcrootn_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j)
 
         end do
      end do
    
-     do pi = 1,maxsoil_patches
-        do fc = 1,num_soilc
-           c = filter_soilc(fc)
+     do fp = 1,num_soilp
+        p = filter_soilp(fp)
+        c = patch%column(p)
 
-           if (pi <=  col%npatches(c)) then
-              p = col%patchi(c) + pi - 1
+        ! wood harvest mortality carbon fluxes to product pools
+        cwood_harvestc(c)  = cwood_harvestc(c)  + &
+             pwood_harvestc(p)  * wtcol(p)
 
-              if (patch%active(p)) then
-                 ! wood harvest mortality carbon fluxes to product pools
-                 cwood_harvestc(c)  = cwood_harvestc(c)  + &
-                      pwood_harvestc(p)  * wtcol(p)
-
-                 ! wood harvest mortality nitrogen fluxes to product pools
-                 cwood_harvestn(c)  = cwood_harvestn(c)  + &
-                      pwood_harvestn(p)  * wtcol(p)
-              end if
-           end if
-
-        end do
+        ! wood harvest mortality nitrogen fluxes to product pools
+        cwood_harvestn(c)  = cwood_harvestn(c)  + &
+             pwood_harvestn(p)  * wtcol(p)
 
      end do
 

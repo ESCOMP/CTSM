@@ -311,7 +311,7 @@ contains
       i_met_lit = i_litr_min
       floating_cn_ratio_decomp_pools(i_met_lit) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_met_lit) = 'litr1'
-      decomp_cascade_con%decomp_pool_name_history(i_met_lit) = 'MET_LIT'
+      decomp_cascade_con%decomp_pool_name_history(i_met_lit) = 'LIT_MET'
       decomp_cascade_con%decomp_pool_name_long(i_met_lit) = 'metabolic litter'
       decomp_cascade_con%decomp_pool_name_short(i_met_lit) = 'L1'
       is_litter(i_met_lit) = .true.
@@ -326,7 +326,7 @@ contains
       i_cel_lit = i_met_lit + 1
       floating_cn_ratio_decomp_pools(i_cel_lit) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_cel_lit) = 'litr2'
-      decomp_cascade_con%decomp_pool_name_history(i_cel_lit) = 'CEL_LIT'
+      decomp_cascade_con%decomp_pool_name_history(i_cel_lit) = 'LIT_CEL'
       decomp_cascade_con%decomp_pool_name_long(i_cel_lit) = 'cellulosic litter'
       decomp_cascade_con%decomp_pool_name_short(i_cel_lit) = 'L2'
       is_litter(i_cel_lit) = .true.
@@ -341,7 +341,7 @@ contains
       i_lig_lit = i_cel_lit + 1
       floating_cn_ratio_decomp_pools(i_lig_lit) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_lig_lit) = 'litr3'
-      decomp_cascade_con%decomp_pool_name_history(i_lig_lit) = 'LIG_LIT'
+      decomp_cascade_con%decomp_pool_name_history(i_lig_lit) = 'LIT_LIG'
       decomp_cascade_con%decomp_pool_name_long(i_lig_lit) = 'lignin litter'
       decomp_cascade_con%decomp_pool_name_short(i_lig_lit) = 'L3'
       is_litter(i_lig_lit) = .true.
@@ -366,7 +366,7 @@ contains
       i_act_som = i_lig_lit + 1
       floating_cn_ratio_decomp_pools(i_act_som) = .false.
       decomp_cascade_con%decomp_pool_name_restart(i_act_som) = 'soil1'
-      decomp_cascade_con%decomp_pool_name_history(i_act_som) = 'ACT_SOM'
+      decomp_cascade_con%decomp_pool_name_history(i_act_som) = 'SOM_ACT'
       decomp_cascade_con%decomp_pool_name_long(i_act_som) = 'active soil organic matter'
       decomp_cascade_con%decomp_pool_name_short(i_act_som) = 'S1'
       is_litter(i_act_som) = .false.
@@ -381,7 +381,7 @@ contains
       i_slo_som = i_act_som + 1
       floating_cn_ratio_decomp_pools(i_slo_som) = .false.
       decomp_cascade_con%decomp_pool_name_restart(i_slo_som) = 'soil2'
-      decomp_cascade_con%decomp_pool_name_history(i_slo_som) = 'SLO_SOM'
+      decomp_cascade_con%decomp_pool_name_history(i_slo_som) = 'SOM_SLO'
       decomp_cascade_con%decomp_pool_name_long(i_slo_som) = 'slow soil organic matter'
       decomp_cascade_con%decomp_pool_name_short(i_slo_som) = 'S2'
       is_litter(i_slo_som) = .false.
@@ -396,7 +396,7 @@ contains
       i_pas_som = i_slo_som + 1
       floating_cn_ratio_decomp_pools(i_pas_som) = .false.
       decomp_cascade_con%decomp_pool_name_restart(i_pas_som) = 'soil3'
-      decomp_cascade_con%decomp_pool_name_history(i_pas_som) = 'PAS_SOM'
+      decomp_cascade_con%decomp_pool_name_history(i_pas_som) = 'SOM_PAS'
       decomp_cascade_con%decomp_pool_name_long(i_pas_som) = 'passive soil organic matter'
       decomp_cascade_con%decomp_pool_name_short(i_pas_som) = 'S3'
       is_litter(i_pas_som) = .false.

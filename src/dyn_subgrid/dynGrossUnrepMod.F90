@@ -147,7 +147,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine CNGrossUnrep (num_soilc, filter_soilc, num_soilp, filter_soilp, &
+  subroutine CNGrossUnrep (num_soilp, filter_soilp, &
        soilbiogeochem_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
        cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
     !
@@ -161,8 +161,6 @@ contains
     use CNVegMatrixMod  , only : matrix_update_gmc, matrix_update_gmn
     !
     ! !ARGUMENTS:
-    integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                         , intent(in)    :: filter_soilc(:) ! column filter for soil points
     integer                         , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                         , intent(in)    :: filter_soilp(:) ! patch filter for soil points
     type(soilbiogeochem_state_type) , intent(in)    :: soilbiogeochem_state_inst
@@ -494,7 +492,7 @@ contains
       ! gather all patch-level litterfall fluxes from grossunrep to the column
       ! for litter C and N inputs
 
-      call CNGrossUnrepPftToColumn(num_soilc, filter_soilc, &
+      call CNGrossUnrepPftToColumn(num_soilp, filter_soilp, &
            soilbiogeochem_state_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
     end associate 
@@ -502,7 +500,7 @@ contains
   end subroutine CNGrossUnrep
 
  !-----------------------------------------------------------------------
- subroutine CNGrossUnrepPftToColumn (num_soilc, filter_soilc, &
+ subroutine CNGrossUnrepPftToColumn (num_soilp, filter_soilp, &
       soilbiogeochem_state_inst, CNVeg_carbonflux_inst, cnveg_nitrogenflux_inst)
    !
    ! !DESCRIPTION:
@@ -513,14 +511,14 @@ contains
    use clm_varpar , only : maxsoil_patches, nlevdecomp
    !
    ! !ARGUMENTS:
-   integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
-   integer                         , intent(in)    :: filter_soilc(:) ! soil column filter
+   integer                         , intent(in)    :: num_soilp       ! number of soil patches in filter
+   integer                         , intent(in)    :: filter_soilp(:) ! soil patch filter
    type(soilbiogeochem_state_type) , intent(in)    :: soilbiogeochem_state_inst
    type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
    type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
    !
    ! !LOCAL VARIABLES:
-   integer :: fc,c,pi,p,j,i             ! indices
+   integer :: fp,c,p,j,i  ! indices
    !-----------------------------------------------------------------------
 
    associate(                                                                                                   & 
@@ -560,74 +558,56 @@ contains
         )
 
      do j = 1, nlevdecomp
-        do pi = 1,maxsoil_patches
-           do fc = 1,num_soilc
-              c = filter_soilc(fc)
+        do fp = 1,num_soilp
+           p = filter_soilp(fp)
+           c = patch%column(p)
 
-              if (pi <=  col%npatches(c)) then
-                 p = col%patchi(c) + pi - 1
-
-                 if (patch%active(p)) then
-
-                    do i = i_litr_min, i_litr_max
-                       gru_c_to_litr_c(c,j,i) = gru_c_to_litr_c(c,j,i) + &
-                            ! leaf gross unrepresented landcover change mortality carbon fluxes
-                            gru_leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
-                            ! fine root gross unrepresented landcover change mortality carbon fluxes
-                            gru_frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
-                       gru_n_to_litr_c(c,j,i) = gru_n_to_litr_c(c,j,i) + &
-                            ! leaf gross unrepresented landcover change mortality nitrogen fluxes
-                            gru_leafn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
-                            ! fine root gross unrepresented landcover change mortality nitrogen fluxes
-                            gru_frootn_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
-                    end do
-
-                    ! coarse root gross unrepresented landcover change mortality carbon fluxes
-                    gru_c_to_cwdc_c(c,j) = gru_c_to_cwdc_c(c,j) + &
-                         gru_livecrootc_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                    gru_c_to_cwdc_c(c,j) = gru_c_to_cwdc_c(c,j) + &
-                         gru_deadcrootc_to_litter(p) * wtcol(p) * croot_prof(p,j) 
-
-                    ! coarse root gross unrepresented landcover change mortality nitrogen fluxes
-                    gru_n_to_cwdn_c(c,j) = gru_n_to_cwdn_c(c,j) + &
-                         gru_livecrootn_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                    gru_n_to_cwdn_c(c,j) = gru_n_to_cwdn_c(c,j) + &
-                         gru_deadcrootn_to_litter(p) * wtcol(p) * croot_prof(p,j)
-
-                    ! retranslocated N pool gross unrepresented landcover change mortality fluxes
-                    ! process specific to i_met_lit, so we keep it outside
-                    ! the i_litr_min to i_litr_max loop above
-                    gru_n_to_litr_c(c,j,i_met_lit) =  &
-                         gru_n_to_litr_c(c,j,i_met_lit) + &
-                         gru_retransn_to_litter(p) * wtcol(p) * leaf_prof(p,j)
-
-                 end if
-              end if
-
+           do i = i_litr_min, i_litr_max
+              gru_c_to_litr_c(c,j,i) = gru_c_to_litr_c(c,j,i) + &
+                   ! leaf gross unrepresented landcover change mortality carbon fluxes
+                   gru_leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
+                   ! fine root gross unrepresented landcover change mortality carbon fluxes
+                   gru_frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
+              gru_n_to_litr_c(c,j,i) = gru_n_to_litr_c(c,j,i) + &
+                   ! leaf gross unrepresented landcover change mortality nitrogen fluxes
+                   gru_leafn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
+                   ! fine root gross unrepresented landcover change mortality nitrogen fluxes
+                   gru_frootn_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
            end do
+
+           ! coarse root gross unrepresented landcover change mortality carbon fluxes
+           gru_c_to_cwdc_c(c,j) = gru_c_to_cwdc_c(c,j) + &
+                gru_livecrootc_to_litter(p) * wtcol(p) * croot_prof(p,j)
+           gru_c_to_cwdc_c(c,j) = gru_c_to_cwdc_c(c,j) + &
+                gru_deadcrootc_to_litter(p) * wtcol(p) * croot_prof(p,j) 
+
+           ! coarse root gross unrepresented landcover change mortality nitrogen fluxes
+           gru_n_to_cwdn_c(c,j) = gru_n_to_cwdn_c(c,j) + &
+                gru_livecrootn_to_litter(p) * wtcol(p) * croot_prof(p,j)
+           gru_n_to_cwdn_c(c,j) = gru_n_to_cwdn_c(c,j) + &
+                gru_deadcrootn_to_litter(p) * wtcol(p) * croot_prof(p,j)
+
+           ! retranslocated N pool gross unrepresented landcover change mortality fluxes
+           ! process specific to i_met_lit, so we keep it outside
+           ! the i_litr_min to i_litr_max loop above
+           gru_n_to_litr_c(c,j,i_met_lit) =  &
+                gru_n_to_litr_c(c,j,i_met_lit) + &
+                gru_retransn_to_litter(p) * wtcol(p) * leaf_prof(p,j)
 
         end do
      end do
    
-     do pi = 1,maxsoil_patches
-        do fc = 1,num_soilc
-           c = filter_soilc(fc)
+     do fp = 1,num_soilp
+        p = filter_soilp(fp)
+        c = patch%column(p)
 
-           if (pi <=  col%npatches(c)) then
-              p = col%patchi(c) + pi - 1
+        ! wood gross unrepresented landcover change mortality carbon fluxes to product pools
+        gru_wood_productc_gain_c(c)  = gru_wood_productc_gain_c(c)  + &
+             gru_wood_productc_gain(p)  * wtcol(p)
 
-              if (patch%active(p)) then
-                 ! wood gross unrepresented landcover change mortality carbon fluxes to product pools
-                 gru_wood_productc_gain_c(c)  = gru_wood_productc_gain_c(c)  + &
-                      gru_wood_productc_gain(p)  * wtcol(p)
-
-                 ! wood gross unrepresented landcover change mortality nitrogen fluxes to product pools
-                 gru_wood_productn_gain_c(c)  = gru_wood_productn_gain_c(c)  + &
-                      gru_wood_productn_gain(p)  * wtcol(p)
-              end if
-           end if
-
-        end do
+        ! wood gross unrepresented landcover change mortality nitrogen fluxes to product pools
+        gru_wood_productn_gain_c(c)  = gru_wood_productn_gain_c(c)  + &
+             gru_wood_productn_gain(p)  * wtcol(p)
 
      end do
 

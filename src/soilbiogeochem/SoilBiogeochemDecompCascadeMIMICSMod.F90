@@ -251,12 +251,12 @@ contains
     call ncd_io(trim(tString), params_inst%mimics_fmet(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%mimics_fchem_r(4))
+    allocate(params_inst%mimics_fchem_r(2))
     tString='mimics_fchem_r'
     call ncd_io(trim(tString), params_inst%mimics_fchem_r(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%mimics_fchem_k(4))
+    allocate(params_inst%mimics_fchem_k(2))
     tString='mimics_fchem_k'
     call ncd_io(trim(tString), params_inst%mimics_fchem_k(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -481,7 +481,7 @@ contains
       i_met_lit = i_litr_min
       floating_cn_ratio_decomp_pools(i_met_lit) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_met_lit) = 'litr1'
-      decomp_cascade_con%decomp_pool_name_history(i_met_lit) = 'MET_LIT'
+      decomp_cascade_con%decomp_pool_name_history(i_met_lit) = 'LIT_MET'
       decomp_cascade_con%decomp_pool_name_long(i_met_lit) = 'metabolic litter'
       decomp_cascade_con%decomp_pool_name_short(i_met_lit) = 'L1'
       is_microbe(i_met_lit) = .false.
@@ -497,7 +497,7 @@ contains
       i_str_lit = i_met_lit + 1
       floating_cn_ratio_decomp_pools(i_str_lit) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_str_lit) = 'litr2'
-      decomp_cascade_con%decomp_pool_name_history(i_str_lit) = 'STR_LIT'
+      decomp_cascade_con%decomp_pool_name_history(i_str_lit) = 'LIT_STR'
       decomp_cascade_con%decomp_pool_name_long(i_str_lit) = 'structural litter'
       decomp_cascade_con%decomp_pool_name_short(i_str_lit) = 'L2'
       is_microbe(i_str_lit) = .false.
@@ -523,7 +523,7 @@ contains
       i_avl_som = i_str_lit + 1
       floating_cn_ratio_decomp_pools(i_avl_som) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_avl_som) = 'soil1'
-      decomp_cascade_con%decomp_pool_name_history(i_avl_som) = 'AVL_SOM'
+      decomp_cascade_con%decomp_pool_name_history(i_avl_som) = 'SOM_AVL'
       decomp_cascade_con%decomp_pool_name_long(i_avl_som) = 'available soil organic matter'
       decomp_cascade_con%decomp_pool_name_short(i_avl_som) = 'S1'
       is_microbe(i_avl_som) = .false.
@@ -539,7 +539,7 @@ contains
       i_chem_som = i_avl_som + 1
       floating_cn_ratio_decomp_pools(i_chem_som) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_chem_som) = 'soil2'
-      decomp_cascade_con%decomp_pool_name_history(i_chem_som) = 'CHEM_SOM'
+      decomp_cascade_con%decomp_pool_name_history(i_chem_som) = 'SOM_CHEM'
       decomp_cascade_con%decomp_pool_name_long(i_chem_som) = 'chemically protected soil organic matter'
       decomp_cascade_con%decomp_pool_name_short(i_chem_som) = 'S2'
       is_microbe(i_chem_som) = .false.
@@ -555,7 +555,7 @@ contains
       i_phys_som = i_chem_som + 1
       floating_cn_ratio_decomp_pools(i_phys_som) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_phys_som) = 'soil3'
-      decomp_cascade_con%decomp_pool_name_history(i_phys_som) = 'PHYS_SOM'
+      decomp_cascade_con%decomp_pool_name_history(i_phys_som) = 'SOM_PHYS'
       decomp_cascade_con%decomp_pool_name_long(i_phys_som) = 'physically protected soil organic matter'
       decomp_cascade_con%decomp_pool_name_short(i_phys_som) = 'S3'
       is_microbe(i_phys_som) = .false.
@@ -571,7 +571,7 @@ contains
       i_cop_mic = i_phys_som + 1
       floating_cn_ratio_decomp_pools(i_cop_mic) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_cop_mic) = 'micr1'
-      decomp_cascade_con%decomp_pool_name_history(i_cop_mic) = 'COP_MIC'
+      decomp_cascade_con%decomp_pool_name_history(i_cop_mic) = 'MIC_COP'
       decomp_cascade_con%decomp_pool_name_long(i_cop_mic) = 'copiotrophic microbes'
       decomp_cascade_con%decomp_pool_name_short(i_cop_mic) = 'M1'
       is_microbe(i_cop_mic) = .true.
@@ -587,7 +587,7 @@ contains
       i_oli_mic = i_cop_mic + 1
       floating_cn_ratio_decomp_pools(i_oli_mic) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_oli_mic) = 'micr2'
-      decomp_cascade_con%decomp_pool_name_history(i_oli_mic) = 'OLI_MIC'
+      decomp_cascade_con%decomp_pool_name_history(i_oli_mic) = 'MIC_OLI'
       decomp_cascade_con%decomp_pool_name_long(i_oli_mic) = 'oligotrophic microbes'
       decomp_cascade_con%decomp_pool_name_short(i_oli_mic) = 'M2'
       is_microbe(i_oli_mic) = .true.
@@ -828,10 +828,8 @@ contains
     real(r8):: mimics_fmet_p4
     real(r8):: mimics_fchem_r_p1
     real(r8):: mimics_fchem_r_p2
-    real(r8):: mimics_fchem_r_p3
     real(r8):: mimics_fchem_k_p1
     real(r8):: mimics_fchem_k_p2
-    real(r8):: mimics_fchem_k_p3
     real(r8):: mimics_tau_mod_min
     real(r8):: mimics_tau_mod_max
     real(r8):: mimics_tau_mod_factor
@@ -1092,10 +1090,8 @@ contains
       mimics_fmet_p4 = params_inst%mimics_fmet(4)
       mimics_fchem_r_p1 = params_inst%mimics_fchem_r(1)
       mimics_fchem_r_p2 = params_inst%mimics_fchem_r(2)
-      mimics_fchem_r_p3 = params_inst%mimics_fchem_r(3)
       mimics_fchem_k_p1 = params_inst%mimics_fchem_k(1)
       mimics_fchem_k_p2 = params_inst%mimics_fchem_k(2)
-      mimics_fchem_k_p3 = params_inst%mimics_fchem_k(3)
       mimics_tau_mod_min = params_inst%mimics_tau_mod_min
       mimics_tau_mod_max = params_inst%mimics_tau_mod_max
       mimics_tau_mod_factor = params_inst%mimics_tau_mod_factor
@@ -1186,9 +1182,9 @@ contains
          ! Used in the update of certain pathfrac terms that vary with time
          ! in the next loop
          fchem_m1 = min(1._r8, max(0._r8, mimics_fchem_r_p1 * &
-                    exp(mimics_fchem_r_p2 * fmet) * mimics_fchem_r_p3))
+                    exp(mimics_fchem_r_p2 * fmet)))
          fchem_m2 = min(1._r8, max(0._r8, mimics_fchem_k_p1 * &
-                    exp(mimics_fchem_k_p2 * fmet) * mimics_fchem_k_p3))
+                    exp(mimics_fchem_k_p2 * fmet)))
 
          do j = 1,nlevdecomp
             ! vmax ends up in units of per hour but is expected
@@ -1283,6 +1279,7 @@ contains
             ! The right hand side is OXIDAT in the testbed (line 1145)
             decomp_k(c,j,i_chem_som) = (term_1 + term_2) * w_d_o_scalars
 
+            ! Currently, mimics_densdep = 1 so as to have no effect
             decomp_k(c,j,i_cop_mic) = tau_m1 * &
                    m1_conc**(mimics_densdep - 1.0_r8) * w_d_o_scalars
             favl = min(1.0_r8, max(0.0_r8, 1.0_r8 - fphys_m1(c,j) - fchem_m1))

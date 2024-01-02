@@ -157,7 +157,6 @@ def buildnml(case, caseroot, compname):
     clmusr = ""
     if lnd_grid == "CLM_USRDAT":
         clm_usrdat_name = case.get_value("CLM_USRDAT_NAME")
-        lnd_grid = clm_usrdat_name
         clmusr = " -clm_usr_name %s " % clm_usrdat_name
         # Write warning about initial condition data
         if "NEON" in clm_usrdat_name and clm_force_coldstart == "off":

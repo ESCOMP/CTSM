@@ -63,7 +63,7 @@
     <desc>Tuning parameters and initial conditions should be optimized for what CLM model version and what meteorlogical forcing combination?
     </desc>
     <default_value>UNSET</default_value>
-    <valid_values>clm5_0_cam6.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_1_GSWP3v1</valid_values>
+    <valid_values>clm5_0_cam6.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_1_GSWP3v1,clm5_1_cam6.0</valid_values>
     <values>
       <value compset=             "CLM45" >clm4_5_CRUv7</value>
       <value compset="DATM%CRUv7.+_CLM45" >clm4_5_CRUv7</value>
@@ -76,6 +76,7 @@
       <value compset="CAM.+_CLM50"        >clm5_0_cam6.0</value>
       <value compset="DATM%CPLHIST.*_CLM50" >clm5_0_cam6.0</value>
       <value compset=            "_CLM51" >clm5_1_GSWP3v1</value>
+      <value compset="CAM.+_CLM51"        >clm5_1_cam6.0</value>
     </values>
   </entry>
 

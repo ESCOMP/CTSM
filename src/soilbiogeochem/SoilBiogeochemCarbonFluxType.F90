@@ -341,8 +341,8 @@ contains
            if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
               data1dptr => this%decomp_cascade_ctransfer_col(:,l)
               fieldname = &
-                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'C_TO_'//&
-                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))//'C'
+                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_C_TO_'//&
+                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))//'_C'
               longname =  'decomp. of '//trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))//&
                    ' C to '//trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_receiver_pool(l)))//' C'
               call hist_addfld1d (fname=fieldname, units='gC/m^2/s', &
@@ -379,9 +379,9 @@ contains
               if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
                  data2dptr => this%decomp_cascade_ctransfer_vr_col(:,:,l)
                  fieldname = &
-                      trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'C_TO_'//&
+                      trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_C_TO_'//&
                       trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))&
-                      //'C'//trim(vr_suffix)
+                      //'_C'//trim(vr_suffix)
                  longname =  'decomp. of '//&
                       trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))//&
                       ' C to '//&
@@ -449,14 +449,14 @@ contains
         do k = 1, ndecomp_pools  ! none from CWD
            if ( .not. decomp_cascade_con%is_cwd(k) ) then
               data1dptr => this%decomp_cpools_leached_col(:,k)
-              fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'C_TO_LEACHING'
+              fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_C_TO_LEACHING'
               longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' C leaching loss'
               call hist_addfld1d (fname=fieldname, units='gC/m^2/s', &
                    avgflag='A', long_name=longname, &
                    ptr_col=data1dptr, default='inactive')
 
               data2dptr => this%decomp_cpools_transport_tendency_col(:,:,k)
-              fieldname = trim(decomp_cascade_con%decomp_pool_name_history(k))//'C_TNDNCY_VERT_TRANSPORT'
+              fieldname = trim(decomp_cascade_con%decomp_pool_name_history(k))//'_C_TNDNCY_VERT_TRANSPORT'
               longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' C tendency due to vertical transport'
               call hist_addfld_decomp (fname=fieldname, units='gC/m^3/s',  type2d='levdcmp', &
                    avgflag='A', long_name=longname, &
@@ -539,9 +539,9 @@ contains
               data2dptr => this%decomp_cascade_ctransfer_vr_col(:,:,l)
               fieldname = 'C13_'//&
                    trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
-                   //'C_TO_'//&
+                   //'_C_TO_'//&
                    trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))&
-                   //'C'//trim(vr_suffix)
+                   //'_C'//trim(vr_suffix)
               longname =  'C13 decomp. of '&
                    //trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))&
                    //' C to '//&
@@ -623,9 +623,9 @@ contains
 
               fieldname = 'C14_'//&
                    trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
-                   //'C_TO_'//&
+                   //'_C_TO_'//&
                    trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))&
-                   //'C'//trim(vr_suffix)
+                   //'_C'//trim(vr_suffix)
               longname =  'C14 decomp. of '&
                    //trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))//&
                    ' C to '//trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_receiver_pool(l)))//' C'

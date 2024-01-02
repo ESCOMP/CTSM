@@ -28,6 +28,14 @@
   -->
 
 
+  <!-- cesm3_dev test suite failures -->
+  <test name="ERP_D_Ld9.ne30pg3_t232.IHistClm51BgcCrop.derecho_intel.clm-clm51cam6LndTuningMode">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2268</issue>
+    </phase>
+  </test>
+
   <!-- aux_clm test suite failures -->
   <test name="SMS_D_Ld1_Mmpi-serial_Vmct.f45_f45_mg37.I2000Clm50SpRs.izumi_gnu.clm-ptsRLA">
     <phase name="SHAREDLIB_BUILD">
@@ -55,44 +63,51 @@
     </phase>
   </test>
 
-  <test name="SMS.f45_f45_mg37.I2000Clm51FatesSpRsGs.cheyenne_nvhpc.clm-FatesColdSatPhen">
-    <phase name="RUN">
+  <test name="SMS_D.f10_f10_mg37.I2000Clm51BgcCrop.derecho_nvhpc.clm-crop">
+    <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
       <issue>#1733</issue>
     </phase>
   </test>
 
-  <test name="SMS.f10_f10_mg37.I2000Clm50BgcCrop.cheyenne_nvhpc.clm-crop">
+  <test name="FUNITCTSM_P1x1.f10_f10_mg37.I2000Clm50Sp.derecho_intel">
     <phase name="RUN">
       <status>FAIL</status>
-      <issue>#1733</issue>
+      <issue>ESMCI/ccs_config_cesm#131</issue>
     </phase>
   </test>
 
+  <test name="ERS_D_Mmpi-serial_Ld5.5x5_amazon.I2000Clm50FatesRs.derecho_intel.clm-FatesCold">
+    <phase name="MODEL_BUILD">
+      <status>FAIL</status>
+      <issue>ESMCI/ccs_config_cesm#130</issue>
+    </phase>
+  </test>
+  
+  <test name="ERS_D_Mmpi-serial_Ld5.5x5_amazon.I2000Clm51FatesRs.derecho_intel.clm-FatesCold">
+    <phase name="MODEL_BUILD">
+      <status>FAIL</status>
+      <issue>ESMCI/ccs_config_cesm#130</issue>
+    </phase>
+  </test>
+  
+  <test name="SMS_D_Ld1_Mmpi-serial.f45_f45_mg37.I2000Clm50SpRs.derecho_intel.clm-ptsRLA">
+    <phase name="MODEL_BUILD">
+      <status>FAIL</status>
+      <issue>ESMCI/ccs_config_cesm#130</issue>
+    </phase>
+  </test>
+  
+  <test name="SMS_D_Lm1_Mmpi-serial.CLM_USRDAT.I1PtClm50SpRs.derecho_intel.clm-USUMB_nuopc">
+    <phase name="MODEL_BUILD">
+      <status>FAIL</status>
+      <issue>ESMCI/ccs_config_cesm#130</issue>
+    </phase>
+  </test>
+  
   <!-- fates test suite failures -->
 
-  <test name="ERS_Lm12.1x1_brazil.I2000Clm50FatesCruRsGs.cheyenne_intel.clm-FatesFireLightningPopDens">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>#667</issue>
-    </phase>
-  </test>
-  
-    <test name="ERS_Lm13.f45_f45_mg37.I2000Clm50Fates.cheyenne_intel.clm-FatesColdNoComp">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>FATES#897</issue>
-    </phase>
-  </test>
-
-  <test name="ERS_Lm13.f10_f10_mg37.I2000Clm50Fates.cheyenne_gnu.clm-FatesCold">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>FATES#897</issue>
-    </phase>
-  </test>
-  
-    <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdHydro">
+  <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdHydro">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>FATES#701</issue>
@@ -106,22 +121,61 @@
     </phase>
   </test>
 
-  <test name="ERP_P72x2_Ld30.f45_f45_mg37.I2000Clm50FatesRs.cheyenne_intel.clm-mimicsFatesCold">
+  <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdHydro">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>FATES#701</issue>
+    </phase>
+  </test>
+
+  <test name="ERP_P72x2_Ld30.f45_f45_mg37.I2000Clm51FatesRs.cheyenne_intel.clm-mimicsFatesCold">
     <phase name="SHAREDLIB_BUILD">
       <status>PEND</status>
       <issue>#1045</issue>
     </phase>
   </test>
 
+  <test name="ERP_P256x2_Ld30.f45_f45_mg37.I2000Clm51FatesRs.derecho_intel.clm-mimicsFatesCold">
+    <phase name="SHAREDLIB_BUILD">
+      <status>PEND</status>
+      <issue>#1045</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Mmpi-serial_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesCold">
+    <phase name="MODEL_BUILD">
+      <status>FAIL</status>
+      <issue>ESMCI/ccs_config_cesm#130</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdHydro">
+    <phase name="MODEL_BUILD">
+      <status>FAIL</status>
+      <issue>ESMCI/ccs_config_cesm#130</issue>
+    </phase>
+  </test>
+
   <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdPRT2">
     <phase name="RUN">
-      <status>FAIL</status>
+      <status>PEND</status>
       <issue>FATES#983</issue>
       <comment>This job should time out on izumi, seems to be hanging on history output.</comment>
     </phase>
   </test>
 
+  <test name="PEM_D_Ld15.5x5_amazon.I2000Clm50FatesRs.cheyenne_gnu.clm-FatesColdSeedDisp">
+    <phase name="COMPARE_base_modpes">
+      <status>FAIL</status>
+      <issue>FATES#1089</issue>
+    </phase>
+  </test>
 
-
+  <test name="PEM_D_Ld15.5x5_amazon.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp">
+    <phase name="COMPARE_base_modpes">
+      <status>FAIL</status>
+      <issue>FATES#1089</issue>
+    </phase>
+  </test>
 
 </expectedFails>
