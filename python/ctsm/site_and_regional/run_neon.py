@@ -51,14 +51,10 @@ To see the available options:
 
 
 # Import libraries
-import datetime
 import glob
 import logging
 import os
-import re
-import shutil
 import sys
-import time
 import pandas as pd
 
 from arg_parse import get_parser
@@ -68,12 +64,7 @@ from NeonSite import NeonSite
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "python"))
 sys.path.insert(1, _CTSM_PYTHON)
 
-from CIME import build
-from CIME.case import Case
-from CIME.utils import safe_copy, expect, symlink_force
-
 from ctsm.path_utils import path_to_ctsm_root
-from ctsm.utils import parse_isoduration
 from ctsm.download_utils import download_file
 
 from ctsm import add_cime_to_path
@@ -114,27 +105,27 @@ def parse_neon_listing(listing_file, valid_neon_sites):
 
     available_list = []
 
-    df = pd.read_csv(listing_file)
+    listing_df = pd.read_csv(listing_file)
 
     # check for finidat files for transient run
-    finidatlist = df[df["object"].str.contains("lnd/ctsm")]
+    finidatlist = listing_df[listing_df["object"].str.contains("lnd/ctsm")]
 
     # -- filter lines with atm/cdep
-    df = df[df["object"].str.contains("atm/cdeps/")]
+    listing_df = listing_df[listing_df["object"].str.contains("atm/cdeps/")]
 
     # -- split the object str to extract site name
-    df = df["object"].str.split("/", expand=True)
+    listing_df = listing_df["object"].str.split("/", expand=True)
 
     # -- groupby site name
-    grouped_df = df.groupby(8)
-    for key, item in grouped_df:
+    grouped_df = listing_df.groupby(8)
+    for key, _ in grouped_df:
         # -- check if it is a valid neon site
         if any(key in x for x in valid_neon_sites):
             site_name = key
             tmp_df = grouped_df.get_group(key)
 
             # -- filter files only ending with YYYY-MM.nc
-            tmp_df = tmp_df[tmp_df[9].str.contains("\d\d\d\d-\d\d.nc")]
+            tmp_df = tmp_df[tmp_df[9].str.contains(r"\d\d\d\d-\d\d.nc")]
 
             # -- find all the data versions
             # versions = tmp_df[7].unique()
@@ -159,12 +150,12 @@ def parse_neon_listing(listing_file, valid_neon_sites):
             start_month = tmp_df2[1].iloc[0]
             end_month = tmp_df2[1].iloc[-1]
 
-            logger.debug("Valid neon site " + site_name + " found!")
-            logger.debug("File version {}".format(latest_version))
-            logger.debug("start_year={}".format(start_year))
-            logger.debug("end_year={}".format(end_year))
-            logger.debug("start_month={}".format(start_month))
-            logger.debug("end_month={}".format(end_month))
+            logger.debug("Valid neon site %s found!", site_name)
+            logger.debug("File version %s", latest_version)
+            logger.debug("start_year=%s", start_year)
+            logger.debug("end_year=%s", end_year)
+            logger.debug("start_month=%s", start_month)
+            logger.debug("end_month=%s", end_month)
             finidat = None
             for line in finidatlist["object"]:
                 if site_name in line:
@@ -206,7 +197,7 @@ def main(description):
     ) = get_parser(sys.argv, description, valid_neon_sites)
 
     if output_root:
-        logger.debug("output_root : " + output_root)
+        logger.debug("output_root : %s", output_root)
         if not os.path.exists(output_root):
             os.makedirs(output_root)
 
@@ -234,7 +225,7 @@ def main(description):
                     cesmroot, output_root, res, compset, overwrite, setup_only
                 )
             logger.info("-----------------------------------")
-            logger.info("Running CTSM for neon site : {}".format(neon_site.name))
+            logger.info("Running CTSM for neon site : %s", neon_site.name)
             neon_site.run_case(
                 base_case_root,
                 run_type,

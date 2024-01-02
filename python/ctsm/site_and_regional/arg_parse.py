@@ -1,4 +1,19 @@
+"""
+Argument parser to use throughout run_neon.py
+"""
+
 import argparse
+import datetime
+import logging
+import os
+import sys
+
+# Get the ctsm util tools and then the cime tools.
+_CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "python"))
+sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm.utils import parse_isoduration
+
 
 def get_parser(args, description, valid_neon_sites):
     """
@@ -190,6 +205,7 @@ def get_parser(args, description, valid_neon_sites):
         required=False,
         type=str,
         choices=["v1", "v2", "v3"],
+    )
 
     args = CIME.utils.parse_args_and_handle_standard_logging_options(args, parser)
 
@@ -243,4 +259,3 @@ def get_parser(args, description, valid_neon_sites):
         args.rerun,
         args.user_version,
     )
-

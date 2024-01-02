@@ -1,3 +1,7 @@
+"""
+This module contains the NeonSite class and class functions which are used in run_neon.py
+"""
+
 # Import libraries
 import datetime
 import glob
@@ -7,9 +11,6 @@ import re
 import shutil
 import sys
 import time
-import pandas as pd
-
-from arg_parse import get_parser
 
 # Get the ctsm util tools and then the cime tools.
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "python"))
@@ -20,12 +21,7 @@ from CIME.case import Case
 from CIME.utils import safe_copy, expect, symlink_force
 
 from ctsm.path_utils import path_to_ctsm_root
-from ctsm.utils import parse_isoduration
-from ctsm.download_utils import download_file
-
 from ctsm import add_cime_to_path
-
-from standard_script_setup import *
 
 logger = logging.getLogger(__name__)
 
@@ -33,14 +29,6 @@ logger = logging.getLogger(__name__)
 class NeonSite:
     """
     A class for encapsulating neon sites.
-
-    ...
-
-    Attributes
-    ----------
-
-    Methods
-    -------
     """
 
     def __init__(self, name, start_year, end_year, start_month, end_month, finidat):
@@ -84,8 +72,8 @@ class NeonSite:
             output_root = os.getcwd()
         case_path = os.path.join(output_root, self.name)
 
-        logger.info("base_case_name : {}".format(self.name))
-        logger.info("user_mods_dir  : {}".format(user_mods_dirs[0]))
+        logger.info("base_case_name : %s", self.name)
+        logger.info("user_mods_dir  : %s", user_mods_dirs[0])
 
         if overwrite and os.path.isdir(case_path):
             print("Removing the existing case at: {}".format(case_path))
@@ -120,12 +108,14 @@ class NeonSite:
                 if re.search("^HIST", compset, flags=re.IGNORECASE) is None:
                     expect(
                         match is None,
-                        "Existing base case is a historical type and should not be  -- rerun with the --overwrite option",
+                        """Existing base case is a historical type and should not be
+                        --rerun with the --overwrite option""",
                     )
                 else:
                     expect(
                         match is not None,
-                        "Existing base case should be a historical type and is not -- rerun with the --overwrite option",
+                        """Existing base case should be a historical type and is not
+                        --rerun with the --overwrite option""",
                     )
                 # reset the case
                 case.case_setup(reset=True)
@@ -137,21 +127,21 @@ class NeonSite:
             print("---- base case build ------")
             print("--- This may take a while and you may see WARNING messages ---")
             # always walk through the build process to make sure it's up to date.
-            t0 = time.time()
+            initial_time = time.time()
             build.case_build(case_path, case=case)
-            t1 = time.time()
-            total = t1 - t0
+            end_time = time.time()
+            total = end_time - initial_time
             print("Time required to building the base case: {} s.".format(total))
             # update case_path to be the full path to the base case
         return case_path
 
-    def diff_month(self): # TODO: this is not used in this file directly; is it used elsewhere?
+    def diff_month(self):  # TODO: this is not used in this file directly; is it used elsewhere?
         """
         Determine difference between two dates in months
         """
-        d1 = datetime.datetime(self.end_year, self.end_month, 1)
-        d2 = datetime.datetime(self.start_year, self.start_month, 1)
-        return (d1.year - d2.year) * 12 + d1.month - d2.month
+        first_date = datetime.datetime(self.end_year, self.end_month, 1)
+        second_date = datetime.datetime(self.start_year, self.start_month, 1)
+        return (first_date.year - second_date.year) * 12 + first_date.month - second_date.month
 
     def get_batch_query(self, case):
         """
@@ -239,12 +229,14 @@ class NeonSite:
                     if re.search("^HIST", compset, flags=re.IGNORECASE) is None:
                         expect(
                             match is None,
-                            "Existing base case is a historical type and should not be  -- rerun with the --overwrite option",
+                            """Existing base case is a historical type and should not be
+                            --rerun with the --overwrite option""",
                         )
                     else:
                         expect(
                             match is not None,
-                            "Existing base case should be a historical type and is not -- rerun with the --overwrite option",
+                            """Existing base case should be a historical type and is not
+                            --rerun with the --overwrite option""",
                         )
                     if os.path.isfile(os.path.join(rundir, "ESMF_Profile.summary")):
                         print("Case {} appears to be complete, not rerunning.".format(case_root))
@@ -258,13 +250,13 @@ class NeonSite:
                             print(f"Use {batch_query} to check its run status")
                     return
             else:
-                logger.warning("Case already exists in {}, not overwritting.".format(case_root))
+                logger.warning("Case already exists in %s, not overwritting", case_root)
                 return
 
         if run_type == "postad":
             adcase_root = case_root.replace(".postad", ".ad")
             if not os.path.isdir(adcase_root):
-                logger.warning("postad requested but no ad case found in {}".format(adcase_root))
+                logger.warning("postad requested but no ad case found in %s", adcase_root)
                 return
 
         if not os.path.isdir(case_root):
@@ -348,9 +340,7 @@ class NeonSite:
             root = ".postad"
         if not os.path.isdir(ref_case_root):
             logger.warning(
-                "ERROR: spinup must be completed first, could not find directory {}".format(
-                    ref_case_root
-                )
+                "ERROR: spinup must be completed first, could not find directory %s", ref_case_root
             )
             return False
 
@@ -360,13 +350,13 @@ class NeonSite:
         case.set_value("RUN_REFCASE", os.path.basename(ref_case_root))
         refdate = None
         for reffile in glob.iglob(refrundir + "/{}{}.clm2.r.*.nc".format(self.name, root)):
-            m = re.search("(\d\d\d\d-\d\d-\d\d)-\d\d\d\d\d.nc", reffile)
-            if m:
-                refdate = m.group(1)
+            m_searched = re.search(r"(\d\d\d\d-\d\d-\d\d)-\d\d\d\d\d.nc", reffile)
+            if m_searched:
+                refdate = m_searched.group(1)
             symlink_force(reffile, os.path.join(rundir, os.path.basename(reffile)))
-        logger.info("Found refdate of {}".format(refdate))
+        logger.info("Found refdate of %s", refdate)
         if not refdate:
-            logger.warning("Could not find refcase for {}".format(case_root))
+            logger.warning("Could not find refcase for %s", case_root)
             return False
 
         for rpfile in glob.iglob(refrundir + "/rpointer*"):
@@ -400,11 +390,11 @@ class NeonSite:
                 "hist_mfilt = 20",
                 "hist_nhtfrq = -8760",
                 "hist_empty_htapes = .true.",
-                "hist_fincl1 = 'TOTECOSYSC', 'TOTECOSYSN', 'TOTSOMC', 'TOTSOMN', 'TOTVEGC', 'TOTVEGN', 'TLAI', 'GPP', 'CPOOL', 'NPP', 'TWS', 'H2OSNO'",
+                """hist_fincl1 = 'TOTECOSYSC', 'TOTECOSYSN', 'TOTSOMC', 'TOTSOMN', 'TOTVEGC',
+                                 'TOTVEGN', 'TLAI', 'GPP', 'CPOOL', 'NPP', 'TWS', 'H2OSNO'""",
             ]
 
         if user_nl_lines:
-            with open(user_nl_fname, "a") as fd:
+            with open(user_nl_fname, "a") as nl_file:
                 for line in user_nl_lines:
-                    fd.write("{}\n".format(line))
-
+                    nl_file.write("{}\n".format(line))
