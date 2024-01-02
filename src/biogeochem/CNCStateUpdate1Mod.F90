@@ -216,17 +216,6 @@ contains
                   ! time step, but to be safe, I'm explicitly setting it to zero here.
                   cf_soil%decomp_cpools_sourcesink_col(c,j,i_cwd) = 0._r8
 
-                  ! litter and SOM HR fluxes
-                  do k = 1, ndecomp_cascade_transitions
-                     cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
-                          cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) &
-                          - ( cf_soil%decomp_cascade_hr_vr_col(c,j,k) + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)) * dt
-                     if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
-                        cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
-                             cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) &
-                             + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k) * dt
-                     end if
-                  end do
                else
                   !
                   ! For the matrix solution the actual state update comes after the matrix
@@ -243,6 +232,25 @@ contains
             end do
 
          end if fates_if
+
+         do j = 1,nlevdecomp
+            !
+            ! State update without the matrix solution
+            !
+            if (.not. use_soil_matrixcn) then
+               ! litter and SOM HR fluxes
+               do k = 1, ndecomp_cascade_transitions
+                  cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
+                       cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) &
+                       - ( cf_soil%decomp_cascade_hr_vr_col(c,j,k) + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)) * dt
+                  if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
+                     cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
+                          cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) &
+                          + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k) * dt
+                  end if
+               end do
+            end if
+         end do
             
       end do fc_loop
 
