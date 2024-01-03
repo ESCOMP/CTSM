@@ -3506,17 +3506,8 @@ contains
                t1 = 1.0_r8 / dt
                frootc_to_litter(p) = t1 * frootc(p) + cpool_to_frootc(p)
 
-               ! TODO slevis: This line didn't appear in dev159. Remove?
-               ! biofuel_harvfrac is only non-zero for prognostic crops.
-               leafc_to_litter(p)  = t1 * leafc(p) * (1._r8 - biofuel_harvfrac(ivt(p))) + cpool_to_leafc(p)
-
-               ! leafc_litter and frootc_to_litter for matrix
+               ! frootc_to_litter for matrix
                if (use_matrixcn) then
-                  if(leafc(p) .gt. 0)then
-                     leafc_to_litter(p) = leafc(p) * matrix_update_phc(p,ileaf_to_iout_phc,leafc_to_litter(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
-                  else
-                     leafc_to_litter(p) = 0
-                  end if
                   if(frootc(p) .gt. 0)then
                      frootc_to_litter(p) = frootc(p) * matrix_update_phc(p,ifroot_to_iout_phc,frootc_to_litter(p) / frootc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                   else
@@ -3618,6 +3609,7 @@ contains
                   ! as well as leaf C:N ratio (unaffected by biofuel harvest). It thus does not
                   ! need to be updated here.
 
+                  ! Matrix for grain, livestem to litter, leaf to litter, and biofuel
                   if(use_matrixcn)then
                      if(reproductivec(p,1) .gt. 0)then
                         grainc_to_out = reproductivec(p,1) * matrix_update_phc(p,igrain_to_iout_phc,(repr_grainc_to_seed(p,1) + repr_grainc_to_food(p,1)) / reproductivec(p,1),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
@@ -3633,13 +3625,17 @@ contains
                      end if
                      if(livestemc(p) .gt. 0)then
                         livestemc_to_litter(p) = livestemc(p) * matrix_update_phc(p,ilivestem_to_iout_phc,livestemc_to_litter(p) / livestemc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        livestemc_to_biofuelc(p) = livestemc(p) * matrix_update_gmc(p,ilivestem_to_iout_gmc,livestemc_to_biofuelc(p) / livestemc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
                      else
                         livestemc_to_litter(p) = 0
+                        livestemc_to_biofuelc(p) = 0
                      end if
                      if(livestemn(p) .gt. 0)then
                         livestemn_to_biofueln(p) = livestemn(p) * matrix_update_gmn(p,ilivestem_to_iout_gmn,livestemn_to_biofueln(p) / livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+                        livestemn_to_litter(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iout_phn, (1._r8- biofuel_harvfrac(ivt(p)))/dt, dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                      else
                         livestemn_to_biofueln(p) = 0
+                        livestemn_to_litter(p) = 0
                      end if
                      if(leafn(p) > 0)then
                         leafn_to_biofueln(p) =  leafn(p) * matrix_update_gmn(p,ileaf_to_iout_gmn,leafn_to_biofueln(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
@@ -3647,14 +3643,11 @@ contains
                         leafn_to_biofueln(p) = 0
                      end if
                      if (leafc(p) > 0)then
-                       leafc_to_biofuelc(p) =  leafc(p) * matrix_update_gmc(p,ileaf_to_iout_gmc,leafc_to_biofuelc(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
+                        leafc_to_biofuelc(p) =  leafc(p) * matrix_update_gmc(p,ileaf_to_iout_gmc,leafc_to_biofuelc(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
+                        leafc_to_litter(p) = leafc(p) * matrix_update_phc(p,ileaf_to_iout_phc,leafc_to_litter(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                      else
-                       leafc_to_biofuelc(p) = 0
-                     end if
-                     if(livestemc(p) .gt. 0)then
-                        livestemc_to_biofuelc(p) = livestemc(p) * matrix_update_gmc(p,ilivestem_to_iout_gmc,livestemc_to_biofuelc(p) / livestemc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
-                     else
-                        livestemc_to_biofuelc(p) = 0
+                        leafc_to_biofuelc(p) = 0
+                        leafc_to_litter(p) = 0
                      end if
                   else
                      ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
@@ -3675,7 +3668,7 @@ contains
                   if(frootc(p) .gt. 0)then
                      frootc_to_litter(p) = frootc(p) * matrix_update_phc(p,ifroot_to_iout_phc,frootc_to_litter(p) / frootc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                   else
-                     frootc_to_litter(p) = 0
+                     frootc_to_litter(p) = 0  ! TODO slevis here and elsewhere
                   end if
                else
                   ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
@@ -3822,17 +3815,6 @@ contains
                      frootn_to_litter(p) = frootn(p) * matrix_update_phn(p,ifroot_to_iout_phn,1._r8/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                   end if
                endif    
-            end if
-
-            ! TODO slevis: This paragraph didn't appear in dev159. Remove?
-            if (ivt(p) >= npcropmin) then
-               ! NOTE(slevis, 2014-12) results in -ve livestemn and -ve totpftn
-               !X! livestemn_to_litter(p) = livestemc_to_litter(p) / livewdcn(ivt(p))
-               ! NOTE(slevis, 2014-12) Beth Drewniak suggested this instead
-               livestemn_to_litter(p) = livestemn(p) / dt * (1._r8 - biofuel_harvfrac(ivt(p)))
-               if(use_matrixcn)then
-                  livestemn_to_litter(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iout_phn, (1._r8- biofuel_harvfrac(ivt(p)))/dt, dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
-               end if
             end if
 
             ! save the current litterfall fluxes
