@@ -47,7 +47,8 @@ thing, but support different options:
 2. via `./run_ctsm_py_tests`
 
    You can specify various arguments to this; run `./run_ctsm_py_tests
-   -h` for details
+   -h` for details. Please specify either --unit or --sys rather than
+   not including any arguments.
 
    In any configuration where you run the system tests, you need to
    first execute `module load nco`.

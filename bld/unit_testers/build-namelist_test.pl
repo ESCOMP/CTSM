@@ -42,7 +42,7 @@ sub make_env_run {
     my %settings = @_;
 
     # Set default settings
-    my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE" );
+    my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE", NEONSITE=>"" );
     # Set any settings that came in from function call
     foreach my $item ( keys(%settings) ) {
        $env_vars{$item} = $settings{$item};
@@ -139,7 +139,7 @@ if (defined($opts{'csmdata'})) {
     $inputdata_rootdir = $ENV{'CSMDATA'};
 } else {
    # use yellowstone location as default
-   $inputdata_rootdir="/glade/p/cesm/cseg/inputdata";
+   $inputdata_rootdir="/glade/campaign/cesm/cesmdata/cseg/inputdata";
    print("WARNING:  -csmdata nor CSMDATA are set, using default yellowstone location: $inputdata_rootdir\n");
 }
 
@@ -163,7 +163,8 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1992;
+my $ntests = 1999;
+
 if ( defined($opts{'compare'}) ) {
    $ntests += 1353;
 }
@@ -380,7 +381,7 @@ foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO
                    "JORN", "LAJA", "MOAB", "OAES", "OSBS", "SCBI", "SOAP", "STER", "TOOL",
                    "UNDE", "YELL"
  ) {
-   &make_env_run();
+   &make_env_run( NEONSITE=>"$site" );
    #
    # Concatonate  default usermods and specific sitetogether expanding env variables while doing that
    #
@@ -399,7 +400,7 @@ foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO
    #
    # Now run  the site
    #
-   my $options = "-res CLM_USRDAT -clm_usr_name NEON -no-megan -bgc bgc -sim_year 2018 -infile $namelistfile";
+   my $options = "--res CLM_USRDAT --clm_usr_name NEON --no-megan --bgc bgc --use_case 2018_control --infile $namelistfile";
    eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
    $cfiles->checkfilesexist( "$options", $mode );
@@ -1015,6 +1016,21 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                    },
+     "useFATESWluna"             =>{ options=>"--bgc fates --envxml_dir . --no-megan",
+                                     namelst=>"use_luna=TRUE",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "useFATESWfun"              =>{ options=>"--bgc fates --envxml_dir . --no-megan",
+                                     namelst=>"use_fun=TRUE",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "useFATESWOsuplnitro"       =>{ options=>"--bgc fates --envxml_dir . --no-megan",
+                                     namelst=>"suplnitro='NONE'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
      "FireNoneButBGCfireon"    =>{ options=>"-bgc bgc -envxml_dir . -light_res none",
                                      namelst=>"fire_method='li2021gswpfrc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1042,6 +1058,16 @@ my %failtest = (
                                    },
      "inventoryfileDNE"          =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_fates_inventory_init=.true., fates_inventory_ctrl_filename='zztop'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm4_5",
+                                   },
+     "useinventorybutnotfile"    =>{ options=>"--res 0.9x1.25 --bgc fates --envxml_dir . --no-megan",
+                                     namelst=>"use_fates_luh=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm4_5",
+                                   },
+     "inventoryfileDNE"          =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"use_fates_luh=.true., fluh_timeseries='zztop'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
@@ -1210,6 +1236,26 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
+     "fates_non_sp_laistreams"   =>{ options=>"--envxml_dir . --bgc fates",
+                                     namelst=>"use_lai_streams=.true., use_fates_sp=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                     },
+     "bgc_non_sp_laistreams"     =>{ options=>"--envxml_dir . -bgc bgc",
+                                     namelst=>"use_lai_streams=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                     },
+     "bgc_laistreams_input"     =>{ options=>"--envxml_dir . --bgc bgc",
+                                     namelst=>"stream_year_first_lai=1999",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                     },
+     "crop_laistreams_input"     =>{ options=>"--envxml_dir . --bgc sp --crop",
+                                     namelst=>"use_lai_streams=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                     },
                );
 foreach my $key ( keys(%failtest) ) {
    print( "$key\n" );

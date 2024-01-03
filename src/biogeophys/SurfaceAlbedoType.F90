@@ -7,7 +7,7 @@ module SurfaceAlbedoType
   use decompMod      , only : bounds_type
   use clm_varpar     , only : numrad, nlevcan, nlevsno
   use abortutils     , only : endrun
-  use clm_varctl     , only : use_SSRE
+  use clm_varctl     , only : use_SSRE, use_snicar_frc
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -35,6 +35,22 @@ module SurfaceAlbedoType
      real(r8), pointer :: albsoi_col           (:,:) ! col soil albedo: diffuse (col,bnd) [frc]                    
      real(r8), pointer :: albsnd_hst_col       (:,:) ! col snow albedo, direct , for history files (col,bnd) [frc] 
      real(r8), pointer :: albsni_hst_col       (:,:) ! col snow albedo, diffuse, for history files (col,bnd) [frc] 
+! add new snicar output variables for albedo for history files only
+     real(r8), pointer :: albd_hst_patch       (:,:) ! patch surface albedo (direct) for history files (numrad)                    
+     real(r8), pointer :: albi_hst_patch       (:,:) ! patch surface albedo (diffuse) for history files  (numrad)                    
+     real(r8), pointer :: albgrd_pur_hst_col   (:,:) ! col pure snow ground direct albedo for history files    (numrad)             
+     real(r8), pointer :: albgri_pur_hst_col   (:,:) ! col pure snow ground diffuse albedo for history files   (numrad)             
+     real(r8), pointer :: albgrd_bc_hst_col    (:,:) ! col ground direct  albedo without BC for history files  (numrad)             
+     real(r8), pointer :: albgri_bc_hst_col    (:,:) ! col ground diffuse albedo without BC for history files  (numrad)             
+     real(r8), pointer :: albgrd_oc_hst_col    (:,:) ! col ground direct  albedo without OC for history files  (numrad)             
+     real(r8), pointer :: albgri_oc_hst_col    (:,:) ! col ground diffuse albedo without OC for history files  (numrad)             
+     real(r8), pointer :: albgrd_dst_hst_col   (:,:) ! col ground direct  albedo without dust for history files (numrad)             
+     real(r8), pointer :: albgri_dst_hst_col   (:,:) ! col ground diffuse albedo without dust for history files (numrad)             
+     real(r8), pointer :: albgrd_hst_col       (:,:) ! col ground albedo (direct) for history files  (numrad)                        
+     real(r8), pointer :: albgri_hst_col       (:,:) ! col ground albedo (diffuse) for history files (numrad)                        
+     real(r8), pointer :: albsnd_hst2_col      (:,:) ! col snow albedo, direct , for history files (col,bnd) [frc] 
+     real(r8), pointer :: albsni_hst2_col      (:,:) ! col snow albedo, diffuse, for history files (col,bnd) [frc] 
+! end add new snicar
 
      real(r8), pointer :: ftdd_patch           (:,:) ! patch down direct flux below canopy per unit direct flx    (numrad)
      real(r8), pointer :: ftid_patch           (:,:) ! patch down diffuse flux below canopy per unit direct flx   (numrad)
@@ -157,6 +173,23 @@ contains
     allocate(this%vcmaxcintsun_patch (begp:endp))              ; this%vcmaxcintsun_patch (:)   = nan
     allocate(this%vcmaxcintsha_patch (begp:endp))              ; this%vcmaxcintsha_patch (:)   = nan
 
+! add new snicar output variables for albedo for history files only
+    allocate(this%albgrd_hst_col     (begc:endc,numrad))       ; this%albgrd_hst_col     (:,:) = spval
+    allocate(this%albgri_hst_col     (begc:endc,numrad))       ; this%albgri_hst_col     (:,:) = spval
+    allocate(this%albsnd_hst2_col    (begc:endc,numrad))       ; this%albsnd_hst2_col    (:,:) = spval
+    allocate(this%albsni_hst2_col    (begc:endc,numrad))       ; this%albsni_hst2_col    (:,:) = spval
+    allocate(this%albgrd_pur_hst_col (begc:endc,numrad))       ; this%albgrd_pur_hst_col (:,:) = spval
+    allocate(this%albgri_pur_hst_col (begc:endc,numrad))       ; this%albgri_pur_hst_col (:,:) = spval
+    allocate(this%albgrd_bc_hst_col  (begc:endc,numrad))       ; this%albgrd_bc_hst_col  (:,:) = spval
+    allocate(this%albgri_bc_hst_col  (begc:endc,numrad))       ; this%albgri_bc_hst_col  (:,:) = spval
+    allocate(this%albgrd_oc_hst_col  (begc:endc,numrad))       ; this%albgrd_oc_hst_col  (:,:) = spval
+    allocate(this%albgri_oc_hst_col  (begc:endc,numrad))       ; this%albgri_oc_hst_col  (:,:) = spval
+    allocate(this%albgrd_dst_hst_col (begc:endc,numrad))       ; this%albgrd_dst_hst_col (:,:) = spval
+    allocate(this%albgri_dst_hst_col (begc:endc,numrad))       ; this%albgri_dst_hst_col (:,:) = spval
+    allocate(this%albd_hst_patch     (begp:endp,numrad))       ; this%albd_hst_patch     (:,:) = spval
+    allocate(this%albi_hst_patch     (begp:endp,numrad))       ; this%albi_hst_patch     (:,:) = spval
+! end and new snicar
+
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
@@ -221,6 +254,82 @@ contains
          avgflag='A', long_name='surface albedo (indirect)', &
          ptr_patch=this%albi_patch, default=defaultoutput, c2l_scale_type='urbanf')
 
+! add new snicar output variables for albedo for history files only
+    use_snicar_frc_if: if (use_snicar_frc) then
+
+       this%albd_hst_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='ALBD_HIST', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='surface albedo (direct)', &
+            ptr_patch=this%albd_hst_patch, default='inactive', c2l_scale_type='urbanf')
+
+       this%albi_hst_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='ALBI_HIST', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='surface albedo (indirect)', &
+            ptr_patch=this%albi_hst_patch, default='inactive', c2l_scale_type='urbanf')
+
+       this%albgrd_hst_col(begc:endc,:) = spval
+       call hist_addfld2d (fname='ALBGRD_HIST', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='ground albedo (direct)', &
+            ptr_col=this%albgrd_hst_col, default='inactive')
+
+       this%albgri_hst_col(begc:endc,:) = spval
+       call hist_addfld2d (fname='ALBGRI_HIST', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='ground albedo (indirect)', &
+            ptr_col=this%albgri_hst_col, default='inactive')
+
+       this%albgrd_pur_hst_col(begc:endc,:) = spval
+       call hist_addfld2d (fname='ALBGRD_PUR_HIST', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='ground albedo without aerosol in snow (direct)', &
+            ptr_col=this%albgrd_pur_hst_col, default='inactive')
+
+       this%albgri_pur_hst_col(begc:endc,:) = spval
+       call hist_addfld2d (fname='ALBGRI_PUR_HIST', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='ground albedo without aerosol in snow (diffuse)', &
+            ptr_col=this%albgri_pur_hst_col, default='inactive')
+
+       this%albgrd_bc_hst_col(begc:endc,:) = spval
+       call hist_addfld2d (fname='ALBGRD_BC_HIST', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='ground albedo without BC in snow (direct)', &
+            ptr_col=this%albgrd_bc_hst_col, default='inactive')
+
+       this%albgri_bc_hst_col(begc:endc,:) = spval
+       call hist_addfld2d (fname='ALBGRI_BC_HIST', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='ground albedo without BC in snow (diffuse)', &
+            ptr_col=this%albgri_bc_hst_col, default='inactive')
+
+       this%albgrd_oc_hst_col(begc:endc,:) = spval
+       call hist_addfld2d (fname='ALBGRD_OC_HIST', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='ground albedo without OC in snow (direct)', &
+            ptr_col=this%albgrd_oc_hst_col, default='inactive')
+
+       this%albgri_oc_hst_col(begc:endc,:) = spval
+       call hist_addfld2d (fname='ALBGRI_OC_HIST', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='ground albedo without OC in snow (diffuse)', &
+            ptr_col=this%albgri_oc_hst_col, default='inactive')
+
+       this%albgrd_dst_hst_col(begc:endc,:) = spval
+       call hist_addfld2d (fname='ALBGRD_DST_HIST', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='ground albedo without dust in snow (direct)', &
+            ptr_col=this%albgrd_dst_hst_col, default='inactive')
+
+       this%albgri_dst_hst_col(begc:endc,:) = spval
+       call hist_addfld2d (fname='ALBGRI_DST_HIST', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='ground albedo without dust in snow (diffuse)', &
+            ptr_col=this%albgri_dst_hst_col, default='inactive')
+
+       this%albsnd_hst2_col(begc:endc,:) = spval
+       call hist_addfld2d (fname='ALBSND_HIST', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='snow albedo (direct)', &
+            ptr_col=this%albsnd_hst2_col, default='inactive')
+  
+       this%albsni_hst2_col(begc:endc,:) = spval
+       call hist_addfld2d (fname='ALBSNI_HIST', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='snow albedo (diffuse)', &
+            ptr_col=this%albsni_hst2_col, default='inactive')
+
+    end if use_snicar_frc_if
+! end add new snicar
+
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -270,7 +379,7 @@ contains
     this%ftdd_patch     (begp:endp, :) = 1.0_r8
     this%ftid_patch     (begp:endp, :) = 0.0_r8
     this%ftii_patch     (begp:endp, :) = 1.0_r8
- 
+
   end subroutine InitCold
    
   !---------------------------------------------------------------------
@@ -281,7 +390,7 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use clm_varctl , only : use_snicar_frc, iulog 
+    use clm_varctl , only : use_snicar_frc, iulog
     use spmdMod    , only : masterproc
     use decompMod  , only : bounds_type
     use abortutils , only : endrun
@@ -453,7 +562,7 @@ contains
        this%vcmaxcintsha_patch(begp:endp) = 1._r8
     end if
 
-    if (use_snicar_frc) then
+    use_snicar_frc_if: if (use_snicar_frc) then
 
        call restartvar(ncid=ncid, flag=flag, varname='albgrd_bc', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
@@ -543,7 +652,94 @@ contains
           this%albgri_dst_col(begc:endc,:) = this%albgri_col(begc:endc,:)
        end if
 
-    end if  ! end of if-use_snicar_frc 
+! add new snicar output variables for albedo for history files only
+
+       call restartvar(ncid=ncid, flag=flag, varname='albd_hist', xtype=ncd_double,  &
+            dim1name='pft', dim2name='numrad', switchdim=.true., &
+            long_name='surface albedo (direct) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=this%albd_hst_patch)
+
+       call restartvar(ncid=ncid, flag=flag, varname='albi_hist', xtype=ncd_double,  &
+            dim1name='pft', dim2name='numrad', switchdim=.true., &
+            long_name='surface albedo (diffuse) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=this%albi_hst_patch)
+
+       call restartvar(ncid=ncid, flag=flag, varname='albgrd_hist', xtype=ncd_double,  &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
+            long_name='ground albedo (direct) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=this%albgrd_hst_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='albgri_hist', xtype=ncd_double,  &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
+            long_name='ground albedo (indirect) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=this%albgri_hst_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='albsnd_hst2', xtype=ncd_double,  &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
+            long_name='snow albedo (direct) (0 to 1)', units='proportion', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=this%albsnd_hst2_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='albsni_hst2', xtype=ncd_double,  &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
+            long_name='snow albedo (diffuse) (0 to 1)', units='proportion', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=this%albsni_hst2_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='albgrd_bc_hist', xtype=ncd_double,  &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
+            long_name='ground albedo without BC (direct) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp',readvar=readvar, data=this%albgrd_bc_hst_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='albgri_bc_hist', xtype=ncd_double,  &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
+            long_name='ground albedo without BC (diffuse) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=this%albgri_bc_hst_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='albgrd_pur_hist', xtype=ncd_double,  &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
+            long_name='pure snow ground albedo (direct) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=this%albgrd_pur_hst_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='albgri_pur_hist', xtype=ncd_double,  &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
+            long_name='pure snow ground albedo (diffuse) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=this%albgri_pur_hst_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='albgrd_oc_hist', xtype=ncd_double,  &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
+            long_name='ground albedo without OC (direct) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=this%albgrd_oc_hst_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='albgri_oc_hist', xtype=ncd_double,  &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
+            long_name='ground albedo without OC (diffuse) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=this%albgri_oc_hst_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='albgrd_dst_hist', xtype=ncd_double,  &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
+            long_name='ground albedo without dust (direct) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=this%albgrd_dst_hst_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='albgri_dst_hist', xtype=ncd_double,  &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
+            long_name='ground albedo without dust (diffuse) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=this%albgri_dst_hst_col)
+
+    end if use_snicar_frc_if
+! end add new snicar
 
     ! patch type physical state variable - fabd
     call restartvar(ncid=ncid, flag=flag, varname='fabd', xtype=ncd_double,  &
