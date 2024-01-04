@@ -1,42 +1,56 @@
-[submodule "src/fates"]
+[submodule "fates"]
 	path = src/fates
 	url = https://github.com/NGEET/fates
-[submodule "components/rtm"]
+        esmrequired = I:T
+[submodule "rtm"]
 	path = components/rtm
 	url = https://github.com/ESCOMP/RTM
-[submodule "components/mosart"]
+        esmrequired = T:T
+[submodule "mosart"]
 	path = components/mosart
 	url = https://github.com/ESCOMP/MOSART
-[submodule "components/mizuRoute"]
+        esmrequired = T:T
+[submodule "mizuRoute"]
 	path = components/mizuRoute
 	url = https://github.com/nmizukami/mizuRoute
+        esmrequired = T:T
 [submodule "ccs_config"]
 	path = ccs_config
 	url = https://github.com/ESMCI/ccs_config_cesm.git
+        esmrequired = T:T
 [submodule "cime"]
 	path = cime
 	url = https://github.com/jedwards4b/cime
-[submodule "components/cmeps"]
+        esmrequired = T:T
+[submodule "cmeps"]
 	path = components/cmeps
 	url = https://github.com/ESCOMP/CMEPS.git
-[submodule "components/cdeps"]
+        esmrequired = T:T
+[submodule "cdeps"]
 	path = components/cdeps
 	url = https://github.com/ESCOMP/CDEPS.git
-[submodule "components/cpl7"]
+        esmrequired = T:T
+[submodule "cpl7"]
 	path = components/cpl7
 	url = https://github.com/ESCOMP/CESM_CPL7andDataComps
+        esmrequired = T:T
 [submodule "share"]
 	path = share
 	url = https://github.com/ESCOMP/CESM_share
-[submodule "libraries/mct"]
+        esmrequired = T:T
+[submodule "mct"]
 	path = libraries/mct
 	url = https://github.com/MCSclimate/MCT
-[submodule "libraries/parallelio"]
+        esmrequired = T:T
+[submodule "parallelio"]
 	path = libraries/parallelio
 	url = https://github.com/NCAR/ParallelIO
-[submodule "doc/doc-builder"]
+        esmrequired = T:T
+[submodule "doc-builder"]
 	path = doc/doc-builder
 	url = https://github.com/ESMCI/doc-builder
-[submodule "components/cism"]
+        esmrequired = T:T
+[submodule "cism"]
 	url = https://github.com/jedwards4b/cism-wrapper
 	path = components/cism
+        esmrequired = T:T
