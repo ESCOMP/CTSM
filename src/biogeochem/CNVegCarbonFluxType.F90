@@ -987,12 +987,14 @@ contains
           this%leafc_to_removedresiduec_patch(begp:endp) = spval
           call hist_addfld1d (fname='LEAFC_TO_REMOVEDRESIDUEC', units='gC/m^2/s', &
                avgflag='A', long_name='leaf C to removed residue C', &
-               ptr_patch=this%leafc_to_removedresiduec_patch)
+               ptr_patch=this%leafc_to_removedresiduec_patch, &
+               default='inactive')
 
           this%livestemc_to_removedresiduec_patch(begp:endp) = spval
           call hist_addfld1d (fname='LIVESTEMC_TO_REMOVEDRESIDUEC', units='gC/m^2/s', &
                avgflag='A', long_name='livestem C to removed residue C', &
-               ptr_patch=this%livestemc_to_removedresiduec_patch)
+               ptr_patch=this%livestemc_to_removedresiduec_patch, &
+               default='inactive')
 
           this%repr_grainc_to_seed_patch(begp:endp,:) = spval
           this%repr_grainc_to_seed_perharv_patch(begp:endp,:,:) = spval
