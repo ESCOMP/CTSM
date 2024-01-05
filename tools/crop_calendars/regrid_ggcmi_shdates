@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-For description and instructions, please see README.
+For description and instructions, please see README. Raw GGCMI sowing and harvest dates are on Derecho and Casper at /glade/campaign/cgd/tss/people/samrabin/raw_ggcmi3_v1.01_nc4/
 """
 
 import os
