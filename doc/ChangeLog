@@ -1,4 +1,73 @@
 ===============================================================
+Tag name: ctsm5.1.dev162
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Fri Jan  5 15:57:23 MST 2024
+One-line Summary: Improvements to processing of crop calendar files
+
+Purpose and description of changes
+----------------------------------
+
+In python/ctsm/crop_calendars/, process_ggcmi_shdates.py and regrid_ggcmi_shdates.py are used to convert the raw GGCMI crop calendar files into CTSM-compatible versions. This update fixes some bugs, removes dependencies on the nco utilities, enables the use of surface datasets as template files (in addition to the existing ability to use CTSM output files), and standardizes things for consistency with other CTSM Python tools.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+* Fixes #2167: run_ctsm_py_tests failures at os.getcwd() (https://github.com/ESCOMP/CTSM/issues/2167)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+These scripts can now be called using the wrapper scripts in tools/crop_calendars/.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+* Adds test_sys_regrid_ggcmi_shdates and test_unit_utils_import_coord
+* Fixes bugs that were causing failures using `python/run_ctsm_py_tests` even when `make all` was fine.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (derecho) - PASS
+
+    clm_pymods test suite on derecho - PASS
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+* #2292: Improvements to processing of crop calendar files (v2) (https://github.com/ESCOMP/CTSM/pull/2292)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev161
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Thu Jan  4 09:00:28 MST 2024

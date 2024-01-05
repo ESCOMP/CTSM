@@ -28,6 +28,7 @@ class TestSysRunNeon(unittest.TestCase):
         Make /_tempdir for use by these tests.
         Check tempdir for history files
         """
+        self._previous_dir = os.getcwd()
         self._tempdir = tempfile.mkdtemp()
         os.chdir(self._tempdir)  # cd to tempdir
 
@@ -35,6 +36,7 @@ class TestSysRunNeon(unittest.TestCase):
         """
         Remove temporary directory
         """
+        os.chdir(self._previous_dir)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_one_site(self):
