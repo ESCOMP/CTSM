@@ -1,56 +1,81 @@
 [submodule "fates"]
 	path = src/fates
 	url = https://github.com/NGEET/fates
-       fxrequired = I:T
+        fxrequired = I:T
+        fxtag = sci.1.68.2_api.31.0.0
+
 [submodule "rtm"]
 	path = components/rtm
 	url = https://github.com/ESCOMP/RTM
-       fxrequired = T:T
+        fxrequired = T:T
+        fxtag = rtm1_0_78
+
 [submodule "mosart"]
 	path = components/mosart
 	url = https://github.com/ESCOMP/MOSART
-       fxrequired = T:T
+        fxrequired = T:T
+        fxtag = mosart1_0_48
+
 [submodule "mizuRoute"]
 	path = components/mizuRoute
 	url = https://github.com/nmizukami/mizuRoute
-       fxrequired = T:T
+        fxrequired = T:T
+
 [submodule "ccs_config"]
 	path = ccs_config
 	url = https://github.com/ESMCI/ccs_config_cesm.git
-       fxrequired = T:T
+        fxrequired = T:T
+        fxtag = ccs_config_cesm0.0.84
+        
 [submodule "cime"]
 	path = cime
 	url = https://github.com/jedwards4b/cime
-       fxrequired = T:T
+        fxrequired = T:T
+        fxtag = cime6.0.198_rme01
+
 [submodule "cmeps"]
 	path = components/cmeps
 	url = https://github.com/ESCOMP/CMEPS.git
-       fxrequired = T:T
+        fxrequired = T:T
+        fxtag = cmeps0.14.49
+
 [submodule "cdeps"]
 	path = components/cdeps
-	url = https://github.com/ESCOMP/CDEPS.git
-       fxrequired = T:T
+	url = https://github.com/jedwards4b/CDEPS.git
+        fxrequired = T:T
+        fxtag = cdeps1.0.24_rme1
+
 [submodule "cpl7"]
 	path = components/cpl7
 	url = https://github.com/ESCOMP/CESM_CPL7andDataComps
-       fxrequired = T:T
+        fxrequired = T:T
+        fxtag = cpl77.0.8
+        
 [submodule "share"]
 	path = share
 	url = https://github.com/ESCOMP/CESM_share
-       fxrequired = T:T
+        fxrequired = T:T
+        fxtag = share1.0.17
+
 [submodule "mct"]
 	path = libraries/mct
 	url = https://github.com/MCSclimate/MCT
-       fxrequired = T:T
+        fxrequired = T:T
+        fxtag = MCT_2.11.0
+
 [submodule "parallelio"]
 	path = libraries/parallelio
 	url = https://github.com/NCAR/ParallelIO
-       fxrequired = T:T
+        fxtag = pio2_6_2
+        fxrequired = T:T
+        
 [submodule "doc-builder"]
 	path = doc/doc-builder
 	url = https://github.com/ESMCI/doc-builder
-       fxrequired = T:T
+        fxrequired = T:T
+
 [submodule "cism"]
 	url = https://github.com/jedwards4b/cism-wrapper
 	path = components/cism
-       fxrequired = T:T
+        fxrequired = T:T
+        fxtag = cismwrap_2_1_96_rme01
