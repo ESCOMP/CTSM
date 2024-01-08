@@ -351,6 +351,10 @@ contains
           end if
           if (h2osno_temp > 0._r8) then
              ! Assume that snow bulk density remains the same as before
+             ! NOTE (SSR, 2023-11-08): Small h2osno_temp can cause unrealistically high snow depths: see https://github.com/ESCOMP/CTSM/issues/2227. Suggested fix there is to replace this line with
+             !     snow_depth(c) = h2osno_no_layers(c) * min (snow_depth(c)/h2osno_temp, 1._r8/50._r8)
+             ! where 50 kg/m3 is suggested as a lower limit for snow density.
+             ! As this bug seemingly has never been encountered in CTSM, we are not yet implementing the fix.
              snow_depth(c) = snow_depth(c) * h2osno_no_layers(c) / h2osno_temp
           else
              ! Assume a constant snow bulk density = 250.

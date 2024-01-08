@@ -292,7 +292,6 @@ contains
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col  , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
          h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col  , & ! Input:  [real(r8) (:,:) ]  ice water (kg/m2)
          excess_ice       =>    waterstatebulk_inst%excess_ice_col  , & ! Input:  [real(r8) (:,:) ]  excess ice (kg/m2)
-
          icefrac          =>    soilhydrology_inst%icefrac_col        & ! Output: [real(r8) (:,:) ]                                                  
          )
 

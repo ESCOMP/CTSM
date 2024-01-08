@@ -12,7 +12,7 @@ import shutil
 import sys
 
 from ctsm import unit_testing
-from ctsm.site_and_regional.run_neon import main, get_parser
+from ctsm.site_and_regional.run_neon import main
 from ctsm.path_utils import path_to_ctsm_root
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
@@ -52,8 +52,6 @@ class TestSysRunNeon(unittest.TestCase):
             "--output-root",
             self._tempdir,
         ]
-        valid_neon_sites = ["ABBY", "OSBS", "BART"]
-        parser = get_parser(sys.argv, "description_for_parser", valid_neon_sites)
         main("")
 
         # assert that BART directories were created during setup

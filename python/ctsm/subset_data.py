@@ -150,6 +150,13 @@ def get_parser():
         required=False,
     )
     pt_parser.add_argument(
+        "--evenly_split_cropland",
+        help="Introduce equal areas of all crops",
+        action="store_true",
+        dest="evenly_split_cropland",
+        required=False,
+    )
+    pt_parser.add_argument(
         "--dompft",
         help="Dominant PFT(s): if we set the grid to 100%% one or multiple PFTs \
         [default: %(default)s].",

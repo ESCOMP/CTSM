@@ -733,7 +733,6 @@ contains
          long_name=this%info%lname('water in stream channel'), &
          units='m3', &
          interpinic_flag='interp', readvar=readvar, data=this%stream_water_volume_lun)
-
     ! Restart excess ice vars
     if (.not. use_excess_ice) then
        ! no need to even define the restart vars
