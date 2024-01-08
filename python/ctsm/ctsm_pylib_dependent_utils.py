@@ -1,6 +1,7 @@
 from ctsm.utils import abort
 import numpy as np
 
+
 def import_coord_1d(ds, coordName):
     """Import 1-d coordinate variable
 
@@ -46,4 +47,3 @@ def import_coord_2d(ds, coordName, varName):
     da.attrs["long_name"] = "coordinate " + da.attrs["long_name"]
     da.attrs["units"] = da.attrs["units"].replace(" ", "_")
     return da, len(da)
-
