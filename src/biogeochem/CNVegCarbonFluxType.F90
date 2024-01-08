@@ -147,6 +147,8 @@ module CNVegCarbonFluxType
      
      real(r8), pointer :: leafc_to_biofuelc_patch                   (:)     ! leaf C to biofuel C (gC/m2/s)
      real(r8), pointer :: livestemc_to_biofuelc_patch               (:)     ! livestem C to biofuel C (gC/m2/s)
+     real(r8), pointer :: leafc_to_removedresiduec_patch            (:)     ! leaf C to removed residues C (gC/m2/s)
+     real(r8), pointer :: livestemc_to_removedresiduec_patch        (:)     ! livestem C to removed residues C (gC/m2/s)
      real(r8), pointer :: repr_grainc_to_seed_patch               (:,:)     ! grain C to seed for prognostic crop(gC/m2/s) [patch, repr_grain_min:repr_grain_max]
      real(r8), pointer :: repr_grainc_to_seed_perharv_patch       (:,:,:)   ! grain C to seed for prognostic crop accumulated by harvest (gC/m2) [patch, harvest, repr_grain_min:repr_grain_max]. Not per-second because this variable represents an accumulation over each growing season, to be instantaneously at the end of each calendar year, to provide output that's easier to work with.
      real(r8), pointer :: repr_grainc_to_seed_thisyr_patch        (:,:)     ! grain C to seed for prognostic crop accumulated this calendar year (gC/m2) [patch, repr_grain_min:repr_grain_max]. Not per-second because this variable represents an accumulation over an entire calendar year, to be saved instantaneously at the end of each calendar year, to provide output that's easier to work with.
@@ -673,6 +675,8 @@ contains
     this%repr_structurec_to_litter_patch(:,:) = nan
     allocate(this%leafc_to_biofuelc_patch                   (begp:endp)) ; this%leafc_to_biofuelc_patch                   (:) = nan
     allocate(this%livestemc_to_biofuelc_patch               (begp:endp)) ; this%livestemc_to_biofuelc_patch               (:) = nan
+    allocate(this%leafc_to_removedresiduec_patch            (begp:endp)) ; this%leafc_to_removedresiduec_patch            (:) = nan
+    allocate(this%livestemc_to_removedresiduec_patch        (begp:endp)) ; this%livestemc_to_removedresiduec_patch        (:) = nan
     allocate(this%repr_grainc_to_seed_patch(begp:endp, repr_grain_min:repr_grain_max)) ; this%repr_grainc_to_seed_patch (:,:) = nan
     allocate(this%repr_grainc_to_seed_perharv_patch(begp:endp, 1:mxharvests, repr_grain_min:repr_grain_max)) ; this%repr_grainc_to_seed_perharv_patch (:,:,:) = nan
     allocate(this%repr_grainc_to_seed_thisyr_patch(begp:endp, repr_grain_min:repr_grain_max)) ; this%repr_grainc_to_seed_thisyr_patch (:,:) = nan
@@ -979,6 +983,18 @@ contains
           call hist_addfld1d (fname='LIVESTEMC_TO_BIOFUELC', units='gC/m^2/s', &
                avgflag='A', long_name='livestem C to biofuel C', &
                ptr_patch=this%livestemc_to_biofuelc_patch)
+
+          this%leafc_to_removedresiduec_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LEAFC_TO_REMOVEDRESIDUEC', units='gC/m^2/s', &
+               avgflag='A', long_name='leaf C to removed residue C', &
+               ptr_patch=this%leafc_to_removedresiduec_patch, &
+               default='inactive')
+
+          this%livestemc_to_removedresiduec_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVESTEMC_TO_REMOVEDRESIDUEC', units='gC/m^2/s', &
+               avgflag='A', long_name='livestem C to removed residue C', &
+               ptr_patch=this%livestemc_to_removedresiduec_patch, &
+               default='inactive')
 
           this%repr_grainc_to_seed_patch(begp:endp,:) = spval
           this%repr_grainc_to_seed_perharv_patch(begp:endp,:,:) = spval
@@ -4201,6 +4217,8 @@ contains
           this%livestemc_to_litter_patch(i)     = value_patch
           this%leafc_to_biofuelc_patch(i)       = value_patch
           this%livestemc_to_biofuelc_patch(i)   = value_patch
+          this%leafc_to_removedresiduec_patch(i)     = value_patch
+          this%livestemc_to_removedresiduec_patch(i) = value_patch
        end do
 
        do k = 1, nrepr

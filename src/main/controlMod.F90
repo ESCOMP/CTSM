@@ -230,6 +230,8 @@ contains
           use_fates_fixed_biogeog,                      &
           use_fates_nocomp,                             &
           use_fates_sp,                                 &
+          use_fates_luh,                                &
+          fluh_timeseries,                              &
           fates_inventory_ctrl_filename,                &
           fates_parteh_mode,                            &
           fates_seeddisp_cadence,                       &
@@ -286,7 +288,7 @@ contains
          use_lch4, use_nitrif_denitrif, use_extralakelayers, &
          use_vichydro, use_cn, use_cndv, use_crop, use_fertilizer, &
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
-         use_nguardrail
+         use_nguardrail, crop_residue_removal_frac
 
     ! SNICAR
     namelist /clm_inparm/ &
@@ -695,6 +697,7 @@ contains
     call mpi_bcast (use_crop, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fertilizer, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_grainproduct, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (crop_residue_removal_frac, 1, MPI_REAL8, 0, mpicom, ier)
     call mpi_bcast (o3_veg_stress_method, len(o3_veg_stress_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (use_snicar_frc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vancouver, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -780,9 +783,11 @@ contains
     call mpi_bcast (use_fates_fixed_biogeog, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_nocomp, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_sp, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_luh, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_bgc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (fates_inventory_ctrl_filename, len(fates_inventory_ctrl_filename), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fluh_timeseries, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (fates_seeddisp_cadence, 1, MPI_INTEGER, 0, mpicom, ier)
 
@@ -957,6 +962,7 @@ contains
     write(iulog,*) '    use_crop = ', use_crop
     write(iulog,*) '    use_fertilizer = ', use_fertilizer
     write(iulog,*) '    use_grainproduct = ', use_grainproduct
+    write(iulog,*) '    crop_residue_removal_frac = ', crop_residue_removal_frac
     write(iulog,*) '    o3_veg_stress_method = ', o3_veg_stress_method
     write(iulog,*) '    use_snicar_frc = ', use_snicar_frc
     write(iulog,*) '    snicar_use_aerosol = ',snicar_use_aerosol
@@ -1152,9 +1158,11 @@ contains
        write(iulog, *) '    use_fates_fixed_biogeog = ', use_fates_fixed_biogeog
        write(iulog, *) '    use_fates_nocomp = ', use_fates_nocomp
        write(iulog, *) '    use_fates_sp = ', use_fates_sp
+       write(iulog, *) '    use_fates_luh= ', use_fates_luh
+       write(iulog, *) '    fluh_timeseries = ', trim(fluh_timeseries)
        write(iulog, *) '    fates_seeddisp_cadence = ', fates_seeddisp_cadence
        write(iulog, *) '    fates_seeddisp_cadence: 0, 1, 2, 3 => off, daily, monthly, or yearly dispersal'
-       write(iulog, *) '    fates_inventory_ctrl_filename = ',fates_inventory_ctrl_filename
+       write(iulog, *) '    fates_inventory_ctrl_filename = ', trim(fates_inventory_ctrl_filename)
     end if
   end subroutine control_print
 

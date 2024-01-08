@@ -201,10 +201,11 @@ contains
     ! OUTSIDE any loops over clumps in the driver.
     !
     ! !USES:
-    use clm_varctl           , only : use_cn, use_fates
-    use dynInitColumnsMod    , only : initialize_new_columns
-    use dynConsBiogeophysMod , only : dyn_hwcontent_init, dyn_hwcontent_final
-    use dynEDMod             , only : dyn_ED
+    use clm_varctl              , only : use_cn, use_fates, use_fates_luh
+    use dynInitColumnsMod       , only : initialize_new_columns
+    use dynConsBiogeophysMod    , only : dyn_hwcontent_init, dyn_hwcontent_final
+    use dynEDMod                , only : dyn_ED
+    use dynFATESLandUseChangeMod, only : dynFatesLandUseInterp
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds_proc  ! processor-level bounds
@@ -288,6 +289,11 @@ contains
     if (get_do_transient_urban()) then
        call dynurban_interp(bounds_proc)
     end if
+
+    if (use_fates_luh) then
+       call dynFatesLandUseInterp(bounds_proc)
+    end if
+
     ! ==========================================================================
     ! Do land cover change that does not require I/O
     ! ==========================================================================

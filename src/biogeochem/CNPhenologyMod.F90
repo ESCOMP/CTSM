@@ -370,7 +370,7 @@ contains
 
 
     if ( phase == 1 ) then
-       call CNPhenologyClimate(num_soilp, filter_soilp, num_pcropp, filter_pcropp, &
+       call CNPhenologyClimate(num_soilp, filter_soilp, &
             temperature_inst, cnveg_state_inst, crop_inst)
    
        call CNEvergreenPhenology(num_soilp, filter_soilp, &
@@ -532,7 +532,7 @@ contains
   end subroutine CNPhenologyInit
 
   !-----------------------------------------------------------------------
-  subroutine CNPhenologyClimate (num_soilp, filter_soilp, num_pcropp, filter_pcropp, &
+  subroutine CNPhenologyClimate (num_soilp, filter_soilp, &
        temperature_inst, cnveg_state_inst, crop_inst)
     !
     ! !DESCRIPTION:
@@ -545,8 +545,6 @@ contains
     ! !ARGUMENTS:
     integer                , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    integer                , intent(in)    :: num_pcropp      ! number of prognostic crops in filter
-    integer                , intent(in)    :: filter_pcropp(:)! filter for prognostic crop patches
     type(temperature_type) , intent(inout) :: temperature_inst
     type(cnveg_state_type) , intent(inout) :: cnveg_state_inst
     type(crop_type)        , intent(inout) :: crop_inst
@@ -555,24 +553,12 @@ contains
     integer  :: p       ! indices
     integer  :: fp      ! filter patch index
     real(r8) :: dayspyr ! days per year (days)
-    integer  :: kyr     ! current year
-    integer  :: kmo     ! month of year  (1, ..., 12)
-    integer  :: kda     ! day of month   (1, ..., 31)
-    integer  :: mcsec   ! seconds of day (0, ..., seconds/day)
-    real(r8), parameter :: yravg   = 20.0_r8      ! length of years to average for gdd
-    real(r8), parameter :: yravgm1 = yravg-1.0_r8 ! minus 1 of above
     !-----------------------------------------------------------------------
 
     associate(                                                & 
          nyrs_crop_active => crop_inst%nyrs_crop_active_patch,   & ! InOut:  [integer (:)  ]  number of years this crop patch has been active
          
          t_ref2m        => temperature_inst%t_ref2m_patch ,   & ! Input:  [real(r8) (:) ]  2m air temperature (K)
-         gdd0           => temperature_inst%gdd0_patch    ,   & ! Output: [real(r8) (:) ]  growing deg. days base 0 deg C (ddays)            
-         gdd8           => temperature_inst%gdd8_patch    ,   & ! Output: [real(r8) (:) ]     "     "    "    "   8  "  "    "               
-         gdd10          => temperature_inst%gdd10_patch   ,   & ! Output: [real(r8) (:) ]     "     "    "    "  10  "  "    "               
-         gdd020         => temperature_inst%gdd020_patch  ,   & ! Output: [real(r8) (:) ]  20-yr mean of gdd0 (ddays)                        
-         gdd820         => temperature_inst%gdd820_patch  ,   & ! Output: [real(r8) (:) ]  20-yr mean of gdd8 (ddays)                        
-         gdd1020        => temperature_inst%gdd1020_patch ,   & ! Output: [real(r8) (:) ]  20-yr mean of gdd10 (ddays)                       
          
          tempavg_t2m    => cnveg_state_inst%tempavg_t2m_patch & ! Output: [real(r8) (:) ]  temp. avg 2m air temperature (K)                  
          )
@@ -584,41 +570,6 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
          tempavg_t2m(p) = tempavg_t2m(p) + t_ref2m(p) * (fracday/dayspyr)
-      end do
-
-      !
-      ! The following crop related steps are done here rather than CropPhenology
-      ! so that they will be completed each time-step rather than with doalb.
-      !
-      ! NOTE(wjs, 2022-02-03) The above comment about doalb no longer applies, because
-      ! there is no longer a doalb conditional around the CropPhenology call. Therefore,
-      ! we could move these calculations into CropPhenology if it made sense to do so.
-      !
-      ! The following lines come from ibis's climate.f + stats.f
-      ! gdd SUMMATIONS ARE RELATIVE TO THE PLANTING DATE (see subr. updateAccFlds)
-
-      if (num_pcropp > 0) then
-         ! get time-related info
-         call get_curr_date(kyr, kmo, kda, mcsec)
-      end if
-
-      do fp = 1,num_pcropp
-         p = filter_pcropp(fp)
-         if (kmo == 1 .and. kda == 1 .and. nyrs_crop_active(p) == 0) then ! YR 1:
-            gdd020(p)  = 0._r8                             ! set gdd..20 variables to 0
-            gdd820(p)  = 0._r8                             ! and crops will not be planted
-            gdd1020(p) = 0._r8
-         end if
-         if (kmo == 1 .and. kda == 1 .and. mcsec == 0) then        ! <-- END of EVERY YR:
-            if (nyrs_crop_active(p) == 1) then                     ! <-- END of YR 1
-               gdd020(p)  = gdd0(p)                                ! <-- END of YR 1
-               gdd820(p)  = gdd8(p)                                ! <-- END of YR 1
-               gdd1020(p) = gdd10(p)                               ! <-- END of YR 1
-            end if                                                 ! <-- END of YR 1
-            gdd020(p)  = (yravgm1* gdd020(p)  + gdd0(p))  / yravg  ! gdd..20 must be long term avgs
-            gdd820(p)  = (yravgm1* gdd820(p)  + gdd8(p))  / yravg  ! so ignore results for yrs 1 & 2
-            gdd1020(p) = (yravgm1* gdd1020(p) + gdd10(p)) / yravg 
-         end if
       end do
 
     end associate
@@ -3090,7 +3041,7 @@ contains
     use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
     
     use CNSharedParamsMod, only : use_fun
-    use clm_varctl       , only : CNratio_floating    
+    use clm_varctl       , only : CNratio_floating, crop_residue_removal_frac
     !
     ! !ARGUMENTS:
     integer                       , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -3118,6 +3069,7 @@ contains
     real(r8) :: repr_grainn_to_food_thispool ! amount added to / subtracted from repr_grainn_to_food for the pool in question (gN/m2/s)
     real(r8) :: leafc_remaining, livestemc_remaining
     real(r8) :: leafn_remaining, livestemn_remaining
+    real(r8) :: removedresidue_fraction
     !-----------------------------------------------------------------------
 
     associate(                                                                           & 
@@ -3164,6 +3116,8 @@ contains
          repr_structurec_to_litter   => cnveg_carbonflux_inst%repr_structurec_to_litter_patch,   & ! Output: [real(r8) (:,:) ] reproductive structure C to litter (gC/m2/s)
          leafc_to_biofuelc     =>    cnveg_carbonflux_inst%leafc_to_biofuelc_patch     , & ! Output: [real(r8) (:) ]  leaf C to biofuel C (gC/m2/s)
          livestemc_to_biofuelc =>    cnveg_carbonflux_inst%livestemc_to_biofuelc_patch , & ! Output: [real(r8) (:) ]  livestem C to biofuel C (gC/m2/s)
+         leafc_to_removedresiduec     => cnveg_carbonflux_inst%leafc_to_removedresiduec_patch     , & ! Output: [real(r8) (:) ]  leaf C to removed residue C (gC/m2/s)
+         livestemc_to_removedresiduec => cnveg_carbonflux_inst%livestemc_to_removedresiduec_patch , & ! Output: [real(r8) (:) ]  livestem C to removed residue C (gC/m2/s)
          leafn                 =>    cnveg_nitrogenstate_inst%leafn_patch              , & ! Input:  [real(r8) (:) ]  (gN/m2) leaf N      
          frootn                =>    cnveg_nitrogenstate_inst%frootn_patch             , & ! Input:  [real(r8) (:) ]  (gN/m2) fine root N                        
 
@@ -3178,6 +3132,8 @@ contains
          repr_structuren_to_litter   => cnveg_nitrogenflux_inst%repr_structuren_to_litter_patch,   & ! Output: [real(r8) (:,:) ] reproductive structure N to litter (gN/m2/s)
          leafn_to_biofueln     =>    cnveg_nitrogenflux_inst%leafn_to_biofueln_patch   , & ! Output: [real(r8) (:) ]  leaf N to biofuel N (gN/m2/s)
          livestemn_to_biofueln =>    cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch, & ! Output: [real(r8) (:) ]  livestem N to biofuel N (gN/m2/s)     
+         leafn_to_removedresiduen     => cnveg_nitrogenflux_inst%leafn_to_removedresiduen_patch    , & ! Output: [real(r8) (:) ]  leaf N to removed residue N (gN/m2/s)
+         livestemn_to_removedresiduen => cnveg_nitrogenflux_inst%livestemn_to_removedresiduen_patch, & ! Output: [real(r8) (:) ]  livestem N to removed residue N (gN/m2/s)     
          leafn_to_litter       =>    cnveg_nitrogenflux_inst%leafn_to_litter_patch     , & ! Output: [real(r8) (:) ]  leaf N litterfall (gN/m2/s)                       
          leafn_to_retransn     =>    cnveg_nitrogenflux_inst%leafn_to_retransn_patch   , & ! Input: [real(r8) (:) ]  leaf N to retranslocated N pool (gN/m2/s)         
          free_retransn_to_npool=>    cnveg_nitrogenflux_inst%free_retransn_to_npool_patch  , & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
@@ -3190,7 +3146,7 @@ contains
 
       ! The litterfall transfer rate starts at 0.0 and increases linearly
       ! over time, with displayed growth going to 0.0 on the last day of litterfall
-      
+
       do fp = 1,num_soilp
          p = filter_soilp(fp)
 
@@ -3292,6 +3248,16 @@ contains
                   livestemc_remaining = livestemc(p)*(1._r8-biofuel_harvfrac(ivt(p)))
                   livestemn_remaining = livestemn(p)*(1._r8-biofuel_harvfrac(ivt(p)))
 
+                  ! Remove residues
+                  leafc_to_removedresiduec(p) = t1 * leafc_remaining * crop_residue_removal_frac
+                  leafn_to_removedresiduen(p) = t1 * leafn_remaining * crop_residue_removal_frac
+                  livestemc_to_removedresiduec(p) = t1 * livestemc_remaining * crop_residue_removal_frac
+                  livestemn_to_removedresiduen(p) = t1 * livestemn_remaining * crop_residue_removal_frac
+                  leafc_remaining     = leafc_remaining     * (1._r8 - crop_residue_removal_frac)
+                  leafn_remaining     = leafn_remaining     * (1._r8 - crop_residue_removal_frac)
+                  livestemc_remaining = livestemc_remaining * (1._r8 - crop_residue_removal_frac)
+                  livestemn_remaining = livestemn_remaining * (1._r8 - crop_residue_removal_frac)
+                  
                   leafc_to_litter(p)  = t1 * leafc_remaining  + cpool_to_leafc(p)
                   livestemc_to_litter(p)   = t1 * livestemc_remaining  + cpool_to_livestemc(p)
                   livestemn_to_litter(p)   = t1 * livestemn_remaining
@@ -3778,10 +3744,14 @@ ptch: do fp = 1,num_soilp
           p = filter_soilp(fp)
           cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) = &
                cnveg_carbonflux_inst%leafc_to_biofuelc_patch(p) + &
-               cnveg_carbonflux_inst%livestemc_to_biofuelc_patch(p)
+               cnveg_carbonflux_inst%livestemc_to_biofuelc_patch(p) + &
+               cnveg_carbonflux_inst%leafc_to_removedresiduec_patch(p) + &
+               cnveg_carbonflux_inst%livestemc_to_removedresiduec_patch(p)
           cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) = &
                cnveg_nitrogenflux_inst%leafn_to_biofueln_patch(p) + &
-               cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch(p)
+               cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch(p) + &
+               cnveg_nitrogenflux_inst%leafn_to_removedresiduen_patch(p) + &
+               cnveg_nitrogenflux_inst%livestemn_to_removedresiduen_patch(p)
        end do
 
        if (use_grainproduct) then
