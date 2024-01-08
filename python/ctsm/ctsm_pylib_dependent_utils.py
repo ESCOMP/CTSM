@@ -1,3 +1,4 @@
+from ctsm.utils import abort
 import numpy as np
 
 def import_coord_1d(ds, coordName):
