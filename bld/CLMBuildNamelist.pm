@@ -1687,11 +1687,6 @@ sub process_namelist_inline_logic {
   #############################################
   setup_logic_rooting_profile($opts,  $nl_flags, $definition, $defaults, $nl);
 
-  #############################################
-  # namelist group: friction_velocity         #
-  #############################################
-  setup_logic_friction_vel($opts,  $nl_flags, $definition, $defaults, $nl);
-
   #############################
   # namelist group: cngeneral #
   #############################
@@ -1710,6 +1705,11 @@ sub process_namelist_inline_logic {
   # namelist group: canopyfluxes_inparm #
   #############################################
   setup_logic_canopyfluxes($opts,  $nl_flags, $definition, $defaults, $nl);
+
+  ##########################################################
+  # namelist group: friction_velocity (after canopyfluxes) #
+  ##########################################################
+  setup_logic_friction_vel($opts,  $nl_flags, $definition, $defaults, $nl);
 
   #############################################
   # namelist group: canopyhydrology_inparm #
@@ -2491,6 +2491,7 @@ sub setup_logic_dynamic_subgrid {
    setup_logic_do_transient_lakes($opts, $nl_flags, $definition, $defaults, $nl);
    setup_logic_do_transient_urban($opts, $nl_flags, $definition, $defaults, $nl);
    setup_logic_do_harvest($opts, $nl_flags, $definition, $defaults, $nl);
+   setup_logic_do_grossunrep($opts, $nl_flags, $definition, $defaults, $nl);
 
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_dynbal_baselines');
    if ( &value_is_true($nl->get_value('reset_dynbal_baselines')) &&
@@ -2836,6 +2837,63 @@ sub setup_logic_do_harvest {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_do_grossunrep {
+   #
+   # Set do_grossunrep default value, and perform error checking on do_grossunrep
+   #
+   # Assumes the following are already set in the namelist (although it's okay
+   # for them to be unset if that will be their final state):
+   # - flanduse_timeseries
+   # - use_cn
+   # - use_fates
+   #
+   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+   my $var = 'do_grossunrep';
+
+   # Start by assuming a default value of '.true.'. Then check a number of
+   # conditions under which do_grossunrep cannot be true. Under these
+   # conditions: (1) set default value to '.false.'; (2) make sure that the
+   # value is indeed false (e.g., that the user didn't try to set it to true).
+
+   my $default_val = ".false.";
+
+   # cannot_be_true will be set to a non-empty string in any case where
+   # do_grossunrep should not be true; if it turns out that do_grossunrep IS true
+   # in any of these cases, a fatal error will be generated
+   my $cannot_be_true = "";
+
+   if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
+      $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
+   }
+   elsif (&value_is_true($nl->get_value('use_fates'))) {
+      $cannot_be_true = "$var currently doesn't work with FATES";
+   }
+   elsif (!&value_is_true($nl->get_value('use_cn'))) {
+      $cannot_be_true = "$var can only be set to true when running with CN (use_cn = true)";
+   }
+
+   if ($cannot_be_true) {
+      $default_val = ".false.";
+   }
+
+   if (!$cannot_be_true) {
+      # Note that, if the variable cannot be true, we don't call add_default
+      # - so that we don't clutter up the namelist with variables that don't
+      # matter for this case
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, val=>$default_val);
+   }
+
+   # Make sure the value is false when it needs to be false - i.e., that the
+   # user hasn't tried to set a true value at an inappropriate time.
+
+   if (&value_is_true($nl->get_value($var)) && $cannot_be_true) {
+      $log->fatal_error($cannot_be_true);
+   }
+
+}
+
+#-------------------------------------------------------------------------------
 sub setup_logic_spinup {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
@@ -3683,6 +3741,10 @@ sub setup_logic_fire_emis {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   if ($opts->{'fire_emis'} ) {
+     if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
+       $log->warning("Fire emission can NOT be on when FATES is also on.\n" .
+                   "  DON'T use the '-fire_emis' option when '-bgc fates' is activated");
+    }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_emis_factors_file');
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_emis_specifier');
   } else {
@@ -3898,10 +3960,11 @@ sub setup_logic_rooting_profile {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_friction_vel {
-  #
+  # Must be after canopyfluxes so that use_biomass_heat_storage will be set
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'zetamaxstable' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'zetamaxstable',
+     'use_biomass_heat_storage'=>$nl_flags->{'use_biomass_heat_storage'}, 'phys'=>$nl_flags->{'phys'} );
 }
 
 #-------------------------------------------------------------------------------
@@ -3925,6 +3988,11 @@ sub setup_logic_canopyfluxes {
               'use_fates'=>$nl_flags->{'use_fates'}, 'phys'=>$nl_flags->{'phys'} );
   if ( &value_is_true($nl->get_value('use_biomass_heat_storage') ) && &value_is_true( $nl_flags->{'use_fates'}) ) {
      $log->fatal_error('use_biomass_heat_storage can NOT be set to true when fates is on');
+  }
+  if ( &value_is_true($nl->get_value('use_biomass_heat_storage')) ) {
+     $nl_flags->{'use_biomass_heat_storage'} = ".true.";
+  } else {
+     $nl_flags->{'use_biomass_heat_storage'} = ".false.";
   }
 }
 

@@ -42,8 +42,18 @@
   </compset>
 
   <compset>
+    <alias>I1PtClm51Fates</alias>
+    <lname>2000_DATM%1PT_CLM51%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
     <alias>IHist1PtClm51Bgc</alias>
     <lname>HIST_DATM%1PT_CLM51%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
+    <compset>
+    <alias>IHist1PtClm51Fates</alias>
+    <lname>HIST_DATM%1PT_CLM51%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>

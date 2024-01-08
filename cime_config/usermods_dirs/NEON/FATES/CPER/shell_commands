@@ -1,0 +1,6 @@
+./xmlchange NEONSITE=CPER
+./xmlchange PTS_LON=255.25545
+./xmlchange PTS_LAT=40.81297
+if  [[ $compset =~ ^HIST ]]; then
+  ./xmlchange STOP_N=50
+fi
