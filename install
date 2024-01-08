@@ -1,64 +1,14 @@
 #!/bin/bash
-# Script to fetch submodules for CTSM
-# if argument -internal-only is supplied then only checkout CTSM internal submodules, otherwise checkout everything needed for
-# CTSM as a top level repository
+#
+# Script to fetch submodules for NCAR EARTH SYSTEM MODELS
 #
 set -e
-script="install"
-function usage {
-    echo -e "\nusage: $script [-i/--internal-only]\n"
-}
-# Set default arguments
-internal_only=0
-
-# Process arguments
-while [ "$1" != "" ];
-do
-    case $1 in
-
-        # Only checkout CISM internal submodules
-        -i | -internal-only | --internal-only)
-            internal_only=1
-            ;;
-
-        *)
-            echo "$script: illegal option $1"
-            usage
-            exit 1
-            ;;
-    esac
-    shift
-done
-
 ########################
-
-submodules=('src/fates')
-
-for mod in "${submodules[@]}"
-do
-    echo "Initializing $mod"
-    git submodule update --init $mod
-done
-
-if [ ${internal_only} -eq 1 ]
-  then
-    exit 0
+dir=$(git rev-parse --show-toplevel)
+if ! test -f ${dir}/bin/git-fleximod; then
+  echo "Getting checkout tools"
+  git -C ${dir} clone https://github.com/jedwards4b/git-fleximod --depth 1 bin
 fi
-
-
-extra_submodules=('cime' 'components/rtm' 'components/mosart' \
-           'components/mizuRoute' 'ccs_config' 'components/cmeps' \
-           'components/cdeps' 'components/cpl7' 'share' 'libraries/mct' \
-           'libraries/parallelio' 'doc/doc-builder')
-
-for mod in "${extra_submodules[@]}"
-do
-    echo "Initializing $mod"
-    git submodule update --init --recursive $mod
-done                        
-
-# cism needs special handling
-git submodule update --init components/cism
-pushd components/cism 1>/dev/null
-./install -internal-only
+pushd ${dir} 1>/dev/null
+python ./bin/git-fleximod install "$@"
 popd 1>/dev/null
