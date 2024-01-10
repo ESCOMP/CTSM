@@ -1,4 +1,89 @@
 ===============================================================
+Tag name: ctsm5.1.dev163
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Wed Jan 10 13:03:34 MST 2024
+One-line Summary: Add tillage and residue removal
+
+Purpose and description of changes
+----------------------------------
+
+Adds capability for cropland soil tillage and post-harvest residue removal.
+
+Tillage: This PR brings in the tillage code written by Sam Levis and Michael Graham and used in Graham et al. (2021, ERL, doi:10.1088/1748-9326/abe6c6). Low- and high-intensity tillage here work by increasing the decomposition rate of different soil carbon pools. These "decomposition multipliers" vary based on soil pool and how long it's been since the crop was planted; they are set with new paramfile variables till_decompk_multipliers and mimics_till_decompk_multipliers. Note that tillage is off by default.
+
+Residue removal: Adds a parameter hat represents what fraction of post-harvest crop residues (stems and leaves) should be removed to the crop product pool rather than being transferred to litter.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+CTSM issues fixed (include CTSM Issue #):
+- Resolves #112 (https://github.com/ESCOMP/CTSM/issues/112)
+- Contributes to #2310 (https://github.com/ESCOMP/CTSM/issues/2310) by adding NEON tests to expected failure list)
+- run_sys_tests no longer fails on Izumi
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- Adds parameter tillage_mode with options off (default), low, and high.
+- Adds parameter use_original_tillage_phases (false by default; see Add soil tillage for crops #2040).
+- Adds parameter max_tillage_depth (cm).
+- Adds parameter crop_residue_removal_frac (default 0)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Changes SMS_Ld5.f10_f10_mg37.I1850Clm45BgcCrop.derecho_gnu.clm-crop to use tillage and residue removal; now SMS_Ld5.f10_f10_mg37.I1850Clm45BgcCrop.derecho_gnu.clm-till--clm-remove_residues
+- Changes PEM_Ld1.f10_f10_mg37.I2000Clm51BgcCrop.izumi_intel.clm-crop to use tilllage; now PEM_Ld1.f10_f10_mg37.I2000Clm51BgcCrop.izumi_intel.clm-till
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- PASS
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- #2311: Add tillage and residue removal (https://github.com/ESCOMP/CTSM/pull/2311)
+which is a combination of:
+- #2040: Add soil tillage for crops (https://github.com/ESCOMP/CTSM/pull/2040)
+- #2297: Add crop residue removal (https://github.com/ESCOMP/CTSM/pull/2297)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev162
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Fri Jan  5 15:57:23 MST 2024
