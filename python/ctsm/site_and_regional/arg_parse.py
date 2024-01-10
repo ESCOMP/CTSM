@@ -13,12 +13,11 @@ _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..
 sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm import add_cime_to_path
+from ctsm.utils import parse_isoduration
 
 from CIME import build
 from CIME.case import Case
 from CIME.utils import safe_copy, expect, parse_args_and_handle_standard_logging_options, setup_standard_logging_options, symlink_force
-
-from ctsm.utils import parse_isoduration
 
 
 def get_parser(args, description, valid_neon_sites):

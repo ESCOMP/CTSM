@@ -42,9 +42,6 @@ _CTSM_PYTHON = os.path.join(
 )
 sys.path.insert(1, _CTSM_PYTHON)
 
-from ctsm.site_and_regional.neon_site import NeonSite
-from ctsm.site_and_regional.arg_parse import get_parser
-
 from ctsm.site_and_regional.run_neon import main
 
 if __name__ == "__main__":

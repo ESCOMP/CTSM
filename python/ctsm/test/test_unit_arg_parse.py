@@ -11,6 +11,7 @@ import tempfile
 import shutil
 import os
 import sys
+import glob
 
 # -- add python/ctsm  to path (needed if we want to run the test stand-alone)
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
@@ -18,7 +19,8 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
-from ctsm.site_and_regional.arg_parse import FUNCTION_NAME
+from ctsm.site_and_regional.arg_parse import get_parser
+from ctsm.path_utils import path_to_ctsm_root
 
 # pylint: disable=invalid-name
 
@@ -44,19 +46,22 @@ class Testarg_parse(unittest.TestCase):
         """
         Test that arg_parse is working properly...
         """
-        #valid_neon_sites = ["ABBY", "BART"]
-        #previous_dir = os.getcwd()
-        #os.chdir(self._tempdir)  # cd to tempdir
-        #available_list = check_neon_listing(valid_neon_sites)
-        #self.assertEqual(
-        #    available_list[0].name, "ABBY", "available list of actual sites not as expected"
-        #)
-        #self.assertEqual(
-        #    available_list[1].name, "BART", "available list of actual sites not as expected"
-        #)
-        # change to previous dir once listing.csv file is created in tempdir and test complete
-        #os.chdir(previous_dir)
-        continue
+        sys.argv = ["--neon-sites ['ABBY']"]
+        #arguments= ["--neon-sites", "ABBY"] #, "--experiment 'test'", '--overwrite False', '--setup-only True', '--rerun False', '--run-type ad', '--experiment test']
+        description=''
+        cesmroot = path_to_ctsm_root()
+        valid_neon_sites = glob.glob(
+            os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!d]*")
+        )
+        valid_neon_sites = sorted([v.split("/")[-1] for v in valid_neon_sites])
+        parsed_arguments = get_parser(sys.argv, description, valid_neon_sites)
+
+        print(parsed_arguments)
+        self.assertEqual(
+            parsed_arguments[0], "ABBY", "arguments not processed as expected"
+        )
+        # TODO: Still need to figure out correct formatting to get argument recognized properly!
+        # TODO: Also it might be useful to add in a number of fake arguments to check that they all work...
 
 
 if __name__ == "__main__":

@@ -18,7 +18,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
-from ctsm.site_and_regional.NeonSite import FUNCTION_NAME
+from ctsm.site_and_regional.neon_site import NeonSite
 
 # pylint: disable=invalid-name
 
@@ -40,7 +40,7 @@ class TestNeonSite(unittest.TestCase):
         """
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
-    def test_function(self):
+    def test_build_base_case(self):
         """
         Test that NeonSite class is working properly...
         """
@@ -56,6 +56,18 @@ class TestNeonSite(unittest.TestCase):
         #)
         # change to previous dir once listing.csv file is created in tempdir and test complete
         #os.chdir(previous_dir)
+        continue
+    def test_get_batch_query(self):
+        """
+        """
+        continue
+    def test_run_case(self):
+        """
+        """
+        continue
+    def test_modify_user_nl(self):
+        """
+        """
         continue
 
 
