@@ -1,7 +1,224 @@
 ===============================================================
+Tag name: ctsm5.1.dev163
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Wed Jan 10 13:03:34 MST 2024
+One-line Summary: Add tillage and residue removal
+
+Purpose and description of changes
+----------------------------------
+
+Adds capability for cropland soil tillage and post-harvest residue removal.
+
+Tillage: This PR brings in the tillage code written by Sam Levis and Michael Graham and used in Graham et al. (2021, ERL, doi:10.1088/1748-9326/abe6c6). Low- and high-intensity tillage here work by increasing the decomposition rate of different soil carbon pools. These "decomposition multipliers" vary based on soil pool and how long it's been since the crop was planted; they are set with new paramfile variables till_decompk_multipliers and mimics_till_decompk_multipliers. Note that tillage is off by default.
+
+Residue removal: Adds a parameter hat represents what fraction of post-harvest crop residues (stems and leaves) should be removed to the crop product pool rather than being transferred to litter.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+CTSM issues fixed (include CTSM Issue #):
+- Resolves #112 (https://github.com/ESCOMP/CTSM/issues/112)
+- Contributes to #2310 (https://github.com/ESCOMP/CTSM/issues/2310) by adding NEON tests to expected failure list)
+- run_sys_tests no longer fails on Izumi
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- Adds parameter tillage_mode with options off (default), low, and high.
+- Adds parameter use_original_tillage_phases (false by default; see Add soil tillage for crops #2040).
+- Adds parameter max_tillage_depth (cm).
+- Adds parameter crop_residue_removal_frac (default 0)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Changes SMS_Ld5.f10_f10_mg37.I1850Clm45BgcCrop.derecho_gnu.clm-crop to use tillage and residue removal; now SMS_Ld5.f10_f10_mg37.I1850Clm45BgcCrop.derecho_gnu.clm-till--clm-remove_residues
+- Changes PEM_Ld1.f10_f10_mg37.I2000Clm51BgcCrop.izumi_intel.clm-crop to use tilllage; now PEM_Ld1.f10_f10_mg37.I2000Clm51BgcCrop.izumi_intel.clm-till
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- PASS
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- #2311: Add tillage and residue removal (https://github.com/ESCOMP/CTSM/pull/2311)
+which is a combination of:
+- #2040: Add soil tillage for crops (https://github.com/ESCOMP/CTSM/pull/2040)
+- #2297: Add crop residue removal (https://github.com/ESCOMP/CTSM/pull/2297)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev162
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Fri Jan  5 15:57:23 MST 2024
+One-line Summary: Improvements to processing of crop calendar files
+
+Purpose and description of changes
+----------------------------------
+
+In python/ctsm/crop_calendars/, process_ggcmi_shdates.py and regrid_ggcmi_shdates.py are used to convert the raw GGCMI crop calendar files into CTSM-compatible versions. This update fixes some bugs, removes dependencies on the nco utilities, enables the use of surface datasets as template files (in addition to the existing ability to use CTSM output files), and standardizes things for consistency with other CTSM Python tools.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+* Fixes #2167: run_ctsm_py_tests failures at os.getcwd() (https://github.com/ESCOMP/CTSM/issues/2167)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+These scripts can now be called using the wrapper scripts in tools/crop_calendars/.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+* Adds test_sys_regrid_ggcmi_shdates and test_unit_utils_import_coord
+* Fixes bugs that were causing failures using `python/run_ctsm_py_tests` even when `make all` was fine.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (derecho) - PASS
+
+    clm_pymods test suite on derecho - PASS
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+* #2292: Improvements to processing of crop calendar files (v2) (https://github.com/ESCOMP/CTSM/pull/2292)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev161
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Thu Jan  4 09:00:28 MST 2024
+One-line Summary: Refactor 20-year running means of crop GDD accumulation
+
+Purpose and description of changes
+----------------------------------
+
+Three variables track the 20-year running mean of GDD accumulation (base temperatures 0, 8, and 10°C) during the "growing season" (April through September in the Northern Hemisphere, October through March in the Southern Hemisphere). This PR refactors those to use accumulMod, resolving overly-strong weighting of the first few years after a crop becomes active.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+
+Bugs fixed
+----------
+CTSM issues fixed (include CTSM Issue #):
+* Fixes #75.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- DIFF
+    izumi ------- DIFF
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All crop configurations
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff/same climate
+
+GDD020, GDD820, and GDD1020 will differ, most strongly in the first few years after a crop becomes active. This will have downstream effects on lots of variables, since those are used in determining sowing date and maturity requirements.
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+* #2060: Refactor 20-year running means of crop GDD accumulation (https://github.com/ESCOMP/CTSM/pull/2060)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev160
 Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
-Date: Mon Dec 18 18:32:23 MST 2023
+Date: Sat 30 Dec 2023 11:23:47 PM MST
 One-line Summary: FATES landuse version 1
 
 Purpose and description of changes
@@ -33,8 +250,8 @@ Does this tag change answers significantly for any of the following physics conf
 [ ] clm4_5
 
 
-Bugs fixed or introduced
-------------------------
+Bugs fixed
+----------
 CTSM issues fixed (include CTSM Issue #):
    #1077 -- Read in full LUH2 dataset for use by FATES
    #2283 -- fates wood product flux not being correctly reported during CBalanceCheck endrun diagnostic output
@@ -49,6 +266,10 @@ Notes of particular relevance for developers:
 Changes to tests or testing:
    FATES landuse testmod, FatesColdLUH2, added
 
+IMPORTANT NOTE ON BASELINES:
+   FATES baseline tests have a change in namelists because the fluh_timeseries file is listed in the baselines
+   but was removed in a last minute change. Compare to baseline other than that change are exact though.
+
 Testing summary:
 ----------------
 
@@ -56,7 +277,7 @@ Testing summary:
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho - PASS
+    derecho - PASS (66 FATES tests differ because of new fates param file)
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
