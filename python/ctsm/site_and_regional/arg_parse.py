@@ -12,6 +12,12 @@ import sys
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "python"))
 sys.path.insert(1, _CTSM_PYTHON)
 
+from ctsm import add_cime_to_path
+
+from CIME import build
+from CIME.case import Case
+from CIME.utils import safe_copy, expect, parse_args_and_handle_standard_logging_options, setup_standard_logging_options, symlink_force
+
 from ctsm.utils import parse_isoduration
 
 
@@ -23,7 +29,7 @@ def get_parser(args, description, valid_neon_sites):
         description=description, formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
-    CIME.utils.setup_standard_logging_options(parser)
+    setup_standard_logging_options(parser)
 
     parser.print_usage = parser.print_help
 
@@ -207,7 +213,7 @@ def get_parser(args, description, valid_neon_sites):
         choices=["v1", "v2", "v3"],
     )
 
-    args = CIME.utils.parse_args_and_handle_standard_logging_options(args, parser)
+    args = parse_args_and_handle_standard_logging_options(args, parser)
 
     if "all" in args.neon_sites:
         neon_sites = valid_neon_sites
