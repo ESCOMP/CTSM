@@ -1634,6 +1634,11 @@ sub process_namelist_inline_logic {
   setup_logic_crop_inparm($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ###############################
+  # namelist group: tillage     #
+  ###############################
+  setup_logic_tillage($opts,  $nl_flags, $definition, $defaults, $nl);
+
+  ###############################
   # namelist group: ch4par_in   #
   ###############################
   setup_logic_methane($opts, $nl_flags, $definition, $defaults, $nl);
@@ -2235,9 +2240,25 @@ sub setup_logic_crop_inparm {
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "initial_seed_at_planting",
                  'use_crop'=>$nl->get_value('use_crop') );
+     
+     my $crop_residue_removal_frac = $nl->get_value('crop_residue_removal_frac');
+     if ( $crop_residue_removal_frac < 0.0 or $crop_residue_removal_frac > 1.0 ) {
+        $log->fatal_error("crop_residue_removal_frac must be in range [0, 1]");
+     }
   } else {
-     error_if_set( $nl, "Can NOT be set without crop on", "baset_mapping", "baset_latvary_slope", "baset_latvary_intercept" );
+     error_if_set( $nl, "Can NOT be set without crop on", "baset_mapping", "baset_latvary_slope", "baset_latvary_intercept", "crop_residue_removal_frac" );
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'crop_fsat_equals_zero' );
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_tillage {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  my $tillage_mode = remove_leading_and_trailing_quotes( $nl->get_value( "tillage_mode" ) );
+  if ( $tillage_mode ne "off" && $tillage_mode ne "" && not &value_is_true($nl->get_value('use_crop')) ) {
+      $log->fatal_error( "Tillage only works on crop columns, so use_crop must be true if tillage is enabled." );
   }
 }
 
@@ -4551,7 +4572,7 @@ sub write_output_files {
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
                cnprecision_inparm clm_glacier_behavior crop_inparm irrigation_inparm
-               surfacealbedo_inparm water_tracers_inparm);
+               surfacealbedo_inparm water_tracers_inparm tillage_inparm);
 
   #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm
   #             finidat_consistency_checks dynpft_consistency_checks);
