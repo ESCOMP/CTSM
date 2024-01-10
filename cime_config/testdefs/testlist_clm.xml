@@ -2513,6 +2513,18 @@
       <option name="comment"  >Ensure functionality of the tree damage option in FATES</option>
     </options>
   </test>
+  <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTwoStream">
+    <machines>
+      <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment"  >Ensure functionality of two-stream radiation option in FATES</option>
+    </options>
+  </test>
+
   <test name="ERS_D_Ld3_PS" grid="f09_g17" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
