@@ -98,10 +98,18 @@
       <status>FAIL</status>
       <issue>#2310</issue>
     </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
   </test>
   
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Bgc.derecho_gnu.clm-NEON-MOAB--clm-PRISM">
     <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+    <phase name="RUN">
       <status>FAIL</status>
       <issue>#2310</issue>
     </phase>
@@ -112,6 +120,10 @@
       <status>FAIL</status>
       <issue>#2310</issue>
     </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
   </test>
   
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Fates.derecho_gnu.clm-FatesPRISM--clm-NEON-FATES-YELL">
@@ -119,10 +131,18 @@
       <status>FAIL</status>
       <issue>#2310</issue>
     </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
   </test>
   
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm51SpRs.derecho_gnu.clm-default--clm-NEON-TOOL">
     <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+    <phase name="RUN">
       <status>FAIL</status>
       <issue>#2310</issue>
     </phase>
