@@ -27,6 +27,7 @@ class TestSysGenMkSurfNML(unittest.TestCase):
         """Setp temporary directory to make the files in"""
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         self._testinputs_path = testinputs_path
+        self._original_wd = os.getcwd()
         self._tempdir = tempfile.mkdtemp()
         os.chdir(self._tempdir)
         self.outfile = "surfdata.namelist"
@@ -40,6 +41,7 @@ class TestSysGenMkSurfNML(unittest.TestCase):
         """
         Remove temporary directory
         """
+        os.chdir(self._original_wd)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_simple_namelist(self):

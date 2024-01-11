@@ -25,6 +25,7 @@ class TestSysGenMkSurfJSSingle(unittest.TestCase):
 
     def setUp(self):
         """Setp temporary directory to make the files in"""
+        self._original_wd = os.getcwd()
         self._tempdir = tempfile.mkdtemp()
         os.chdir(self._tempdir)
         self.outfile = "jobscript.sh"
@@ -46,6 +47,7 @@ class TestSysGenMkSurfJSSingle(unittest.TestCase):
         """
         Remove temporary directory
         """
+        os.chdir(self._original_wd)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def createJS(self, nodes, tasks_per_node, option_list=[]):
