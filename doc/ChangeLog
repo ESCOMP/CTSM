@@ -1,4 +1,209 @@
 ===============================================================
+Tag name: ctsm5.1.dev125
+Originator(s): jpalex (John Paul Alex)
+Date: Wed May 17 08:56:41 MDT 2023
+One-line Summary: Added cache for clock step_size in clm_time_manager.F90
+
+Purpose and description of changes
+----------------------------------
+
+Added cache for clock step_size in clm_time_manager.F90 to improve
+performance.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+CTSM issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#207 (Improve performance of get_step_size)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/2004
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev124
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326) / mvertens / adamrher / MiCurry / jtrusdal / TeaganKing
+Date: Tue May  9 16:52:05 MDT 2023
+One-line Summary: Initialization memory update, new surface datasets for new grids, add option for running NEON with PRISM data
+
+Purpose and description of changes
+----------------------------------
+
+Lower memory usage at initialization:
+
+   Some work by Mariana Vertenstein to lower the memory usage at initiatlization.
+
+New Low Resolutions for SE grids:
+
+  ne3np4.pg3, ne5np4.pg3, ne16np4.pg3
+
+New MPASA Resolutions:
+
+   mpasa480 --------- Course resolution
+   mpasa120 --------- Near 1-degree
+   mpasa60, mpasa30 - High resolution
+   mpasa15 ---------- Very high resolution
+
+   This merge adds the surface data and landuse.timeseries files for the CAM-MPAS dycore. At present, these grids are:
+
+   mpasa480 - 480 km quasi-uniform, global with 2,462 horizontal grid columns
+   mpasa120 - 120 km quasi-uniform, global with 40,962 horizontal grid columns
+   mpasa60 - 60 km quasi-uniform, global with 163,842 horizontal grid columns
+   mpasa30 - 30 km quasi-uniform, global with 655,362 horizontal grid columns
+   mpasa15 - 15 km quasi-uniform, global with 2,621,442 horizontal grid columns
+
+
+Option to Run NEON with PRISM preciption data:
+
+  Some NEON sites have bad or incomplete precitation data. By setting CLM_USRDAT_NAME="NEON.PRISM"
+  the PRISM 4km CONUS ReAnayslis data is used in place of the NEON precipitation data. This
+  is helpful for several NEON sites: 
+     MLBS, MOAB, ONAQ, SJER, NIWO, TEAK, WREF, YELL
+  
+  Allow PRISM precipitation to be used as a new datm stream.
+
+  Updates to cime_config/config_component.xml include additional valid values for PRECIP data stream names. Changes in
+  cime_config/usermods_dirs/NEON/defaults/user_nl_datm_streams specify which input variables are gathered from which streams and
+  specifies file location for PRISM data.
+
+  Using PRISM precipitation instead of NEON precipitation does have a substantial impact on CTSM output (eg. latent heat flux
+  biases).
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CTSM issues fixed (include CTSM Issue #):
+  Fixes #1969 -- Move dynGrossUnrepMod.F90 from biogeochem to dyn_subgrid subdirectory
+  Fixes #1904 -- Other precipitation streams for NEON
+  Fixes #1927 -- Course SE resolutions support
+  Fixes #1313 -- MPASA resolution support
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   New resolutions do NOT have specific initial conditions for them, they use the general ones
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   NEON cases will give a warning about spinup data for non default transient cases
+   if you set a NEON case with CLM_USRDAT_NAME=NEON.PRISM, PRISM data will be used for precip
+
+   Two new options to run_neon.py "--prism" and "--experiment"
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   "v3" data option for NEONVERSION
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+    New surface and landuse.timeseries datasets for: 
+        ne3np4.pg3, ne5np4.pg3, ne16np4.pg3
+        mpasa480, mpasa120, mpasa60, mpasa30, mpasa15
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing: Add new tests for new resolutions
+
+Testing summary:   regular, tools
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS (81 new tests)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK
+    cheyenne - PASS (tests_pretag_nompi_neon)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cdeps
+   Update CDEPS to cdeps1.0.12
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #1998 -- combination of below PR's...
+
+   #1954 -- PRISM
+   #1973 -- SE
+   #1501 -- MPASA
+   #1899 -- memory scaling
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev123
 Originator(s): sacks (Bill Sacks)
 Date: Mon May  1 11:37:51 MDT 2023

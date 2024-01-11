@@ -182,7 +182,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         lev2_two[1, :, :, :] = 100.0
         lev2_ten = np.empty((10, 3, 5, 5))
         for x in range(10):
-            lev2_ten[x, :, :, :] = x + 1
+            lev2_ten[x, :, :, :] = float(x + 1)
         lev1 = np.array(
             [
                 [

@@ -3,7 +3,7 @@
 """
 CTSM namelist creator
 """
-import sys, os, shutil
+import sys, os, shutil, re
 
 _CIMEROOT = os.environ.get("CIMEROOT")
 if _CIMEROOT is None:
@@ -41,6 +41,7 @@ def buildnml(case, caseroot, compname):
     configuration = case.get_value("CLM_CONFIGURATION")
     structure = case.get_value("CLM_STRUCTURE")
     ccsm_co2_ppmv = case.get_value("CCSM_CO2_PPMV")
+    casename = case.get_value("CASE")
     clm_co2_type = case.get_value("CLM_CO2_TYPE")
     clm_namelist_opts = case.get_value("CLM_NAMELIST_OPTS")
     clm_bldnml_opts = case.get_value("CLM_BLDNML_OPTS")
@@ -73,6 +74,48 @@ def buildnml(case, caseroot, compname):
     if ( clm_bldnml_opts.find("-namelist") >= 0 ):
         expect(False, "The -namelist option is NOT allowed to be part of CLM_BLDNML_OPTS, " + \
                "use the CLM_NAMELIST_OPTS option or add namelist items to user_nl_clm instead " );
+    #
+    # Warnings for land tuning modes
+    #
+    closest_tuning = {
+        "clm4_5_1PT": "clm4_5_CRUv7",
+        "clm4_5_QIAN": "clm4_5_CRUv7",
+        "clm4_5_NLDAS2": "clm4_5_CRUv7",
+        "clm4_5_ERA5": "clm4_5_CRUv7",
+        "clm5_0_1PT": "clm5_0_GSWP3",
+        "clm5_0_QIAN": "clm5_0_GSWP3v1",
+        "clm5_0_NLDAS2": "clm5_0_GSWP3v1",
+        "clm5_0_ERA5": "clm5_0_GSWP3v1",
+        "clm5_1_1PT": "clm5_1_GSWP3v1",
+        "clm5_1_QIAN": "clm5_1_GSWP3v1",
+        "clm5_1_NLDAS2": "clm5_1_GSWP3v1",
+        "clm5_1_ERA5": "clm5_1_GSWP3v1",
+        "clm5_1_CRUv7": "clm5_1_GSWP3v1",
+    }
+    for mode, closest in closest_tuning.items():
+        if lnd_tuning_mode == mode:
+            logger.warning(
+                "IMPORTANT NOTE: LND_TUNING_MODE is "
+                + lnd_tuning_mode
+                + " which does NOT have tuned settings, so using the closest option which is "
+                + closest
+            )
+            logger.warning(
+                "              : To suppress this message explicitly set LND_TUNING_MODE="
+                + lnd_tuning_mode
+                + " for your case"
+            )
+            lnd_tuning_mode = closest
+
+    tuning_based_on = {"clm5_1_GSWP3v1": "clm5_0_GSWP3v1", "clm5_1_cam6.0": "clm5_0_cam6.0"}
+    for mode, based_on in tuning_based_on.items():
+        if lnd_tuning_mode == mode:
+            logger.warning(
+                "NOTE: LND_TUNING_MODE is "
+                + lnd_tuning_mode
+                + " which is NOT tuned, but is based on "
+                + based_on
+            )
 
     # -----------------------------------------------------
     # Set ctsmconf
@@ -133,6 +176,13 @@ def buildnml(case, caseroot, compname):
         clm_usrdat_name = case.get_value("CLM_USRDAT_NAME")
         lnd_grid = clm_usrdat_name
         clmusr = " -clm_usr_name %s "%clm_usrdat_name
+        # Write warning about initial condition data
+        if "NEON" in clm_usrdat_name and clm_force_coldstart == "off":
+            if ("_transient" in clm_nml_use_case) \
+            and (re.fullmatch(r"\w\w\w\w\.transient",  casename) is None \
+            or clm_usrdat_name is "NEON.PRISM"):
+                logger.warning( "WARNING: Do you have approriprate initial conditions for this simulation?" \
+                + " Check that the finidat file used in the lnd_in namelist is apprporiately spunup for your case" )
 
     if comp_atm != "datm":
         nomeg = "-no-megan"

@@ -79,8 +79,8 @@ test_driver_*.sh
 
 # mksurfdata output
 surfdata_*.log
-surfdata_*.namelist
-landuse.timeseries_*.namelist
+*.namelist
+mksurfdata.o*
 landuse.timeseries_*.log
 landuse_timeseries_*.txt
 ctsm.input_data_list
@@ -89,10 +89,15 @@ ctsm.input_data_list.previous
 /tools/mksurfdata_esmf/PET*
 /tools/mksurfdata_esmf/job_name.o*
 /tools/mksurfdata_esmf/mksurfdata_in
-/tools/mksurfdata_esmf/bld
-/tools/mksurfdata_esmf/src
 /tools/mksurfdata_esmf/surfdata_*.nc
 /tools/mksurfdata_esmf/landuse.timeseries_*.nc
+/tools/mksurfdata_esmf/mksurfdata_jobscript_multi
+/tools/mksurfdata_esmf/mksurfdata_jobscript_single
+/tools/mksurfdata_esmf/pio_iotype.txt
+/tools/mksurfdata_esmf/*.sh
+/tools/mksurfdata_esmf/mksrf_*.o*
+/tools/mksurfdata_esmf/tool_bld
+/tools/mksurfdata_esmf/pio_iotype.txt
 
 # mksurfdata unit tests
 unit_test_build

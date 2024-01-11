@@ -61,21 +61,64 @@
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Tuning parameters and initial conditions should be optimized for what CLM model version and what meteorlogical forcing combination?
+          Options for all combinations of CLM physics and atm forcing are given. The buildnml and namelist_defaults will narrow it down to the ones
+          that have been tuned. The buildnml will also warn you if a tuning combination is based on another set.
+          Atm forcing options:
+               CRUv7
+               GSWP3
+               CAM6.0
+               QIAN   (not tuned)
+               1PT    (not tuned)
+               NLDAS2 (not tuned)
+               ERA5   (not tuned)
+          Other atm forcing options are invalid to run CLM and will result in an error.
     </desc>
     <default_value>UNSET</default_value>
-    <valid_values>clm5_0_cam6.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_1_GSWP3v1</valid_values>
-    <values>
-      <value compset=             "CLM45" >clm4_5_CRUv7</value>
-      <value compset="DATM%CRUv7.+_CLM45" >clm4_5_CRUv7</value>
-      <value compset="DATM%GSWP3.+_CLM45" >clm4_5_GSWP3v1</value>
-      <value compset="CAM.+_CLM45"        >clm4_5_cam6.0</value>
-      <value compset="DATM%CPLHIST.*_CLM45" >clm4_5_cam6.0</value>
-      <value compset=             "CLM50" >clm5_0_CRUv7</value>
-      <value compset="DATM%CRUv7.+_CLM50" >clm5_0_CRUv7</value>
-      <value compset="DATM%GSWP3.+_CLM50" >clm5_0_GSWP3v1</value>
-      <value compset="CAM.+_CLM50"        >clm5_0_cam6.0</value>
-      <value compset="DATM%CPLHIST.*_CLM50" >clm5_0_cam6.0</value>
-      <value compset=            "_CLM51" >clm5_1_GSWP3v1</value>
+    <!-- 7 forcing options for each CLM physics option: CRUv7, GSWP3, cam6.0, QIAN, 1PT, NLDAS2, ERA5 -->
+    <valid_values>clm5_0_cam6.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm5_0_QIAN,clm5_0_1PT,clm5_0_NLDAS2,clm5_0_ERA5,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_QIAN,clm4_5_cam6.0,clm4_5_1PT,clm4_5_NLDAS2,clm4_5_ERA5,clm5_1_CRUv7,clm5_1_GSWP3v1,clm5_1_cam6.0,clm5_1_QIAN,clm5_1_1PT,clm5_1_NLDAS2,clm5_1_ERA5</valid_values>
+    <values match="last">
+      <!-- Options for atm forcing are: CRU, CRUv7, GSWP3, cam6.0 (also used for DATM%CPLHIST), QIAN, WISOQIA, 1PT, NLDAS2, and ERA5) -->
+      <!-- All the clm4_5 physics options -->
+      <value compset="SATM_CLM45"        >clm4_5_CRUv7</value>
+      <value compset="DATM%CRUv7_CLM45"  >clm4_5_CRUv7</value>
+      <value compset="DATM%CRU_CLM45"    >clm4_5_CRUv7</value>
+      <value compset="DATM%GSWP3v1_CLM45">clm4_5_GSWP3v1</value>
+      <value compset="CAM[^_]+_CLM45"    >clm4_5_cam6.0</value>
+      <value compset="DATM%CPLHIST_CLM45">clm4_5_cam6.0</value>
+      <value compset="DATM%QIA_CLM45"    >clm4_5_QIAN</value>
+      <value compset="DATM%WISOQIA_CLM45">clm4_5_QIAN</value>
+      <value compset="DATM%1PT_CLM45"    >clm4_5_1PT</value>
+      <value compset="DATM%NLDAS2_CLM45" >clm4_5_NLDAS2</value>
+      <value compset="DATM%ERA5_CLM45"   >clm4_5_ERA5</value>
+      <!-- All the clm5_0 physics options -->
+      <value compset="DATM%CRUv7_CLM50"  >clm5_0_CRUv7</value>
+      <value compset="DATM%CRU_CLM50"    >clm5_0_CRUv7</value>
+      <value compset="SATM_CLM50"        >clm5_0_GSWP3v1</value>
+      <value compset="DATM%GSWP3v1_CLM50">clm5_0_GSWP3v1</value>
+      <value compset="CAM[^_]+_CLM50"    >clm5_0_cam6.0</value>
+      <value compset="DATM%CPLHIST_CLM50">clm5_0_cam6.0</value>
+      <value compset="DATM%QIA_CLM50"    >clm5_0_QIAN</value>
+      <value compset="DATM%WISOQIA_CLM50">clm5_0_QIAN</value>
+      <value compset="DATM%1PT_CLM50"    >clm5_0_1PT</value>
+      <value compset="DATM%NLDAS2_CLM50" >clm5_0_NLDAS2</value>
+      <value compset="DATM%ERA5_CLM50"   >clm5_0_ERA5</value>
+      <!-- All the clm5_1 physics options -->
+      <value compset="DATM%CRUv7_CLM51"  >clm5_1_CRUv7</value>
+      <value compset="DATM%CRU_CLM51"    >clm5_1_CRUv7</value>
+      <value compset="SATM_CLM51"        >clm5_1_GSWP3v1</value>
+      <value compset="DATM%GSWP3v1_CLM51">clm5_1_GSWP3v1</value>
+      <value compset="CAM[^_]+_CLM51"    >clm5_1_cam6.0</value>
+      <value compset="DATM%CPLHIST_CLM51">clm5_1_cam6.0</value>
+      <value compset="DATM%QIA_CLM51"    >clm5_1_QIAN</value>
+      <value compset="DATM%WISOQIA_CLM51">clm5_1_QIAN</value>
+      <value compset="DATM%1PT_CLM51"    >clm5_1_1PT</value>
+      <value compset="DATM%NLDAS2_CLM51" >clm5_1_NLDAS2</value>
+      <value compset="DATM%ERA5_CLM51"   >clm5_1_ERA5</value>
+      <!-- Invalid ocean DATM forcing options -->
+      <value compset="DATM%NYF"          >INVALID_DATM_FORCING_FOR_RUNNING_CTSM</value>
+      <value compset="DATM%MOSARTTEST"   >INVALID_DATM_FORCING_FOR_RUNNING_CTSM</value>
+      <value compset="DATM%IAF"          >INVALID_DATM_FORCING_FOR_RUNNING_CTSM</value>
+      <value compset="DATM%JRA"          >INVALID_DATM_FORCING_FOR_RUNNING_CTSM</value>
     </values>
   </entry>
 
@@ -241,10 +284,13 @@
     <default_value>UNSET</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Dataset name for user-created datasets. This is used as the argument
-      in Buildconf/clm.buildnml to build-namelist -clm_usr_name. An example of
-      such a dataset would be 1x1pt_boulderCO_c090722. The default value is UNSET.
-      This is an advanced flag and should only be used by expert users.</desc>
+    <desc>Resolution name for user-created resolutions. This is especially used
+      for single point and regional resolutions created via subset_data from
+      the global datasets. This should be set when you use CLM_USRDAT as the grid
+      to create_newcase.  The default value is UNSET.
+      For NEON cases, this can be set to either NEON or NEON.PRISM, the latter of which would
+      use PRISM precipitation instead of the default NEON precipitation. NEON cases then also
+      use the variable NEONSITE to specify the exact site.</desc>
   </entry>
 
   <entry id="CLM_USRDAT_DIR">
@@ -295,6 +341,26 @@
       ABBY,BLAN,CPER,DEJU,GRSM,HEAL,KONA,LENO,NIWO,ONAQ,PUUM,SERC,SRER,TALL,TREE,WOOD,
       BARR,BONA,DCFS,DELA,GUAN,JERC,KONZ,MLBS,NOGP,ORNL,RMNP,SJER,STEI,TEAK,UKFS,WREF,
       BART,CLBJ,DSNY,HARV,JORN,LAJA,MOAB,OAES,OSBS,SCBI,SOAP,STER,TOOL,UNDE,YELL,
+      NEON_PRECIP.ABBY,NEON_PRECIP.BLAN,NEON_PRECIP.CPER,NEON_PRECIP.DEJU,NEON_PRECIP.GRSM,
+      NEON_PRECIP.HEAL,NEON_PRECIP.KONA,NEON_PRECIP.LENO,NEON_PRECIP.NIWO,NEON_PRECIP.ONAQ,
+      NEON_PRECIP.PUUM,NEON_PRECIP.SERC,NEON_PRECIP.SRER,NEON_PRECIP.TALL,NEON_PRECIP.TREE,
+      NEON_PRECIP.WOOD,NEON_PRECIP.BARR,NEON_PRECIP.BONA,NEON_PRECIP.DCFS,NEON_PRECIP.DELA,
+      NEON_PRECIP.GUAN,NEON_PRECIP.JERC,NEON_PRECIP.KONZ,NEON_PRECIP.MLBS,NEON_PRECIP.NOGP,
+      NEON_PRECIP.ORNL,NEON_PRECIP.RMNP,NEON_PRECIP.SJER,NEON_PRECIP.STEI,NEON_PRECIP.TEAK,
+      NEON_PRECIP.UKFS,NEON_PRECIP.WREF,NEON_PRECIP.BART,NEON_PRECIP.CLBJ,NEON_PRECIP.DSNY,
+      NEON_PRECIP.HARV,NEON_PRECIP.JORN,NEON_PRECIP.LAJA,NEON_PRECIP.MOAB,NEON_PRECIP.OAES,
+      NEON_PRECIP.OSBS,NEON_PRECIP.SCBI,NEON_PRECIP.SOAP,NEON_PRECIP.STER,NEON_PRECIP.TOOL,
+      NEON_PRECIP.UNDE,NEON_PRECIP.YELL,
+      PRISM_PRECIP.ABBY,PRISM_PRECIP.BLAN,PRISM_PRECIP.CPER,PRISM_PRECIP.GRSM,
+      PRISM_PRECIP.KONA,PRISM_PRECIP.LENO,PRISM_PRECIP.NIWO,PRISM_PRECIP.ONAQ,
+      PRISM_PRECIP.SERC,PRISM_PRECIP.SRER,PRISM_PRECIP.TALL,PRISM_PRECIP.TREE,
+      PRISM_PRECIP.WOOD,PRISM_PRECIP.DCFS,PRISM_PRECIP.DELA,PRISM_PRECIP.JERC,
+      PRISM_PRECIP.KONZ,PRISM_PRECIP.MLBS,PRISM_PRECIP.NOGP,PRISM_PRECIP.ORNL,
+      PRISM_PRECIP.RMNP,PRISM_PRECIP.SJER,PRISM_PRECIP.STEI,PRISM_PRECIP.TEAK,
+      PRISM_PRECIP.UKFS,PRISM_PRECIP.WREF,PRISM_PRECIP.BART,PRISM_PRECIP.CLBJ,
+      PRISM_PRECIP.DSNY,PRISM_PRECIP.HARV,PRISM_PRECIP.JORN,PRISM_PRECIP.MOAB,
+      PRISM_PRECIP.OAES,PRISM_PRECIP.OSBS,PRISM_PRECIP.SCBI,PRISM_PRECIP.SOAP,
+      PRISM_PRECIP.STER,PRISM_PRECIP.UNDE,PRISM_PRECIP.YELL,
     </valid_values>
     <default_value/>
     <group>run_component_ctsm</group>
@@ -304,7 +370,7 @@
 
   <entry id="NEONVERSION">
     <type>char</type>
-    <valid_values>v1,v2,latest</valid_values>
+    <valid_values>v1,v2,v3,latest</valid_values>
     <default_value>latest</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>

@@ -2343,11 +2343,17 @@ sub setup_logic_initial_conditions {
   }
   my $useinitvar = "use_init_interp";
 
+  my %settings;
+  my $use_init_interp_default = $nl->get_value($useinitvar);
+  $settings{$useinitvar} = $use_init_interp_default;
+  if ( string_is_undef_or_empty( $use_init_interp_default ) ) {
+    $use_init_interp_default = $defaults->get_value($useinitvar, \%settings);
+    $settings{$useinitvar} = ".false.";
+  }
   if (not defined $finidat ) {
     my $ic_date = $nl->get_value('start_ymd');
     my $st_year = $nl_flags->{'st_year'};
     my $nofail = 1;
-    my %settings;
     $settings{'hgrid'}   = $nl_flags->{'res'};
     $settings{'phys'}    = $physv->as_string();
     $settings{'nofail'}  = $nofail;
@@ -2384,12 +2390,6 @@ sub setup_logic_initial_conditions {
     }
     my $try = 0;
     my $done = 2;
-    my $use_init_interp_default = $nl->get_value($useinitvar);
-    $settings{$useinitvar} = $use_init_interp_default;
-    if ( string_is_undef_or_empty( $use_init_interp_default ) ) {
-      $use_init_interp_default = $defaults->get_value($useinitvar, \%settings);
-      $settings{$useinitvar} = ".false.";
-    }
     do {
        $try++;
        add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, %settings );
@@ -2436,14 +2436,24 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
              }
           }    # SIMYR:
           $settings{'sim_year'} = $closest_sim_year;
+          # Add options set here to the "$set" variable below...
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $useinitvar,
                       'use_cndv'=>$nl_flags->{'use_cndv'}, 'phys'=>$physv->as_string(), 'hgrid'=>$nl_flags->{'res'},
                       'sim_year'=>$settings{'sim_year'}, 'nofail'=>1, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                       'use_fates'=>$nl_flags->{'use_fates'} );
           $settings{$useinitvar} = $nl->get_value($useinitvar);
           if ( ! &value_is_true($nl->get_value($useinitvar) ) ) {
-             if ( $nl_flags->{'clm_start_type'} =~ /startup/  ) {
-                $log->fatal_error("clm_start_type is startup so an initial conditions ($var) file is required, but can't find one without $useinitvar being set to true");
+             if ( $nl_flags->{'clm_start_type'} =~ /startup/ ) {
+                my $err_msg = "clm_start_type is startup so an initial conditions ($var) file is required,";
+                if ( defined($use_init_interp_default) ) {
+                   $log->fatal_error($err_msg." but can't find one without $useinitvar being set to true, change it to true in your user_nl_clm file in your case");
+                } else {
+                   my $set = "Relevent settings: use_cndv = ". $nl_flags->{'use_cndv'} . " phys = " . 
+                              $physv->as_string() . " hgrid = " . $nl_flags->{'res'} . " sim_year = " . 
+                              $settings{'sim_year'} . " lnd_tuning_mode = " . $nl_flags->{'lnd_tuning_mode'} .
+                              "use_fates = " . $nl_flags->{'use_fates'};
+                   $log->fatal_error($err_msg." but the default setting of $useinitvar is false, so set both $var to a startup file and $useinitvar==TRUE, or developers should modify the namelist_defaults file".$set);
+                }
              }
           } else {
              my $stat = add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_attributes",
@@ -2452,7 +2462,7 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
                                  'hgrid'=>$nl_flags->{'res'},
                                  'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'}, 'nofail'=>1 );
              if ( $stat ) {
-                $log->fatal_error("$useinitvar is NOT synchronized with init_interp_attributes");
+                $log->fatal_error("$useinitvar is NOT synchronized with init_interp_attributes in the namelist_defaults file, this should be corrected there");
              }
              my $attributes = $nl->get_value("init_interp_attributes");
              my $attributes_string = remove_leading_and_trailing_quotes($attributes);
@@ -2460,7 +2470,7 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
                 if ( $pair =~ /^([a-z_]+)=([a-zA-Z._0-9]+)$/ ) {
                    $settings{$1} = $2;
                 } else {
-                   $log->fatal_error("Problem interpreting init_interp_attributes: $pair");
+                   $log->fatal_error("Problem interpreting init_interp_attributes from the namelist_defaults file: $pair");
                 }
              }
           }
@@ -2475,7 +2485,11 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
   }
   $finidat = $nl->get_value($var);
   if ( &value_is_true($nl->get_value($useinitvar) ) && string_is_undef_or_empty($finidat) ) {
-     $log->fatal_error("$useinitvar is set BUT $var is NOT, need to set both" );
+     if ( ! defined($use_init_interp_default) ) {
+        $log->fatal_error("You set $useinitvar but a $var file could not be found for this case, try setting $var explicitly, and/or removing the setting for $useinitvar" );
+     } else {
+        $log->fatal_error("$useinitvar is being set for you but a $var was not found, so $useinitvar, init_interp_attributes, and finidat must not be set correctly for this configuration in the namelist_default file" );
+     }
   }
 } # end initial conditions
 

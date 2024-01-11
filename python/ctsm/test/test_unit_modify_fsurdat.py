@@ -389,7 +389,8 @@ class TestModifyFsurdat(unittest.TestCase):
         lev1list = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
         settings = {"var_lev1": lev1list}
         with self.assertRaisesRegex(
-            SystemExit, "Variable var_lev1 is " + str(len(lev1list)) + ". It should be"
+            SystemExit,
+            " Variable var_lev1 is 8 is of the wrong size. It should be = 9 in input settings dictionary",
         ):
             self.modify_fsurdat.check_varlist(settings)
 
@@ -426,13 +427,17 @@ class TestModifyFsurdat(unittest.TestCase):
     def test_check_varlist_badvar(self):
         """Test the check_varlist method for a variable not on the file"""
         settings = {"badvar": 100.0}
-        with self.assertRaisesRegex(SystemExit, "Variable badvar is NOT in the file"):
+        with self.assertRaisesRegex(
+            SystemExit, "Variable badvar is NOT in the input settings dictionary"
+        ):
             self.modify_fsurdat.check_varlist(settings)
 
     def test_check_varlist_badvar_uppercase(self):
         """Test the check_varlist method for a variable not on the file with allow uppercase"""
         settings = {"badvar": 100.0}
-        with self.assertRaisesRegex(SystemExit, "Variable BADVAR is NOT in the file"):
+        with self.assertRaisesRegex(
+            SystemExit, "Variable BADVAR is NOT in the input settings dictionary"
+        ):
             self.modify_fsurdat.check_varlist(settings, allow_uppercase_vars=True)
 
     def test_set_varlist_toohighdim(self):

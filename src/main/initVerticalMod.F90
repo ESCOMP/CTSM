@@ -16,7 +16,7 @@ module initVerticalMod
   use clm_varpar        , only : toplev_equalspace, nlev_equalspace
   use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb, nlevmaxurbgrnd
   use clm_varctl        , only : fsurdat, iulog
-  use clm_varctl        , only : use_vancouver, use_mexicocity, use_extralakelayers
+  use clm_varctl        , only : use_extralakelayers
   use clm_varctl        , only : use_bedrock, rundef
   use clm_varctl        , only : soil_layerstruct_predefined, soil_layerstruct_userdefined
   use clm_varctl        , only : use_fates
@@ -308,122 +308,36 @@ contains
 
        ! "0" refers to urban wall/roof surface and "nlevsoi" refers to urban wall/roof bottom
        if (lun%urbpoi(l)) then
-          if (use_vancouver) then       
-             zurb_wall(l,1) = 0.010_r8/2._r8
-             zurb_wall(l,2) = zurb_wall(l,1) + 0.010_r8/2._r8 + 0.020_r8/2._r8
-             zurb_wall(l,3) = zurb_wall(l,2) + 0.020_r8/2._r8 + 0.070_r8/2._r8
-             zurb_wall(l,4) = zurb_wall(l,3) + 0.070_r8/2._r8 + 0.070_r8/2._r8
-             zurb_wall(l,5) = zurb_wall(l,4) + 0.070_r8/2._r8 + 0.030_r8/2._r8
+          do j = 1, nlevurb
+             zurb_wall(l,j) = (j-0.5)*(thick_wall(l)/float(nlevurb))  !node depths
+          end do
+          do j = 1, nlevurb
+             zurb_roof(l,j) = (j-0.5)*(thick_roof(l)/float(nlevurb))  !node depths
+          end do
 
-             zurb_roof(l,1) = 0.010_r8/2._r8
-             zurb_roof(l,2) = zurb_roof(l,1) + 0.010_r8/2._r8 + 0.010_r8/2._r8
-             zurb_roof(l,3) = zurb_roof(l,2) + 0.010_r8/2._r8 + 0.010_r8/2._r8
-             zurb_roof(l,4) = zurb_roof(l,3) + 0.010_r8/2._r8 + 0.010_r8/2._r8
-             zurb_roof(l,5) = zurb_roof(l,4) + 0.010_r8/2._r8 + 0.030_r8/2._r8
+          dzurb_roof(l,1) = 0.5*(zurb_roof(l,1)+zurb_roof(l,2))    !thickness b/n two interfaces
+          do j = 2,nlevurb-1
+             dzurb_roof(l,j)= 0.5*(zurb_roof(l,j+1)-zurb_roof(l,j-1)) 
+          enddo
+          dzurb_roof(l,nlevurb) = zurb_roof(l,nlevurb)-zurb_roof(l,nlevurb-1)
 
-             dzurb_wall(l,1) = 0.010_r8
-             dzurb_wall(l,2) = 0.020_r8
-             dzurb_wall(l,3) = 0.070_r8
-             dzurb_wall(l,4) = 0.070_r8
-             dzurb_wall(l,5) = 0.030_r8
-             write(iulog,*)'Total thickness of wall: ',sum(dzurb_wall(l,:))
-             write(iulog,*)'Wall layer thicknesses: ',dzurb_wall(l,:)
+          dzurb_wall(l,1) = 0.5*(zurb_wall(l,1)+zurb_wall(l,2))    !thickness b/n two interfaces
+          do j = 2,nlevurb-1
+             dzurb_wall(l,j)= 0.5*(zurb_wall(l,j+1)-zurb_wall(l,j-1)) 
+          enddo
+          dzurb_wall(l,nlevurb) = zurb_wall(l,nlevurb)-zurb_wall(l,nlevurb-1)
 
-             dzurb_roof(l,1) = 0.010_r8
-             dzurb_roof(l,2) = 0.010_r8
-             dzurb_roof(l,3) = 0.010_r8
-             dzurb_roof(l,4) = 0.010_r8
-             dzurb_roof(l,5) = 0.030_r8
-             write(iulog,*)'Total thickness of roof: ',sum(dzurb_roof(l,:))
-             write(iulog,*)'Roof layer thicknesses: ',dzurb_roof(l,:)
+          ziurb_wall(l,0) = 0.
+          do j = 1, nlevurb-1
+             ziurb_wall(l,j) = 0.5*(zurb_wall(l,j)+zurb_wall(l,j+1))          !interface depths
+          enddo
+          ziurb_wall(l,nlevurb) = zurb_wall(l,nlevurb) + 0.5*dzurb_wall(l,nlevurb)
 
-             ziurb_wall(l,0) = 0.
-             ziurb_wall(l,1) = dzurb_wall(l,1)
-             do j = 2,nlevurb
-                ziurb_wall(l,j) = sum(dzurb_wall(l,1:j))
-             end do
-             write(iulog,*)'Wall layer interface depths: ',ziurb_wall(l,:)
-
-             ziurb_roof(l,0) = 0.
-             ziurb_roof(l,1) = dzurb_roof(l,1)
-             do j = 2,nlevurb
-                ziurb_roof(l,j) = sum(dzurb_roof(l,1:j))
-             end do
-             write(iulog,*)'Roof layer interface depths: ',ziurb_roof(l,:)
-          else if (use_mexicocity) then
-             zurb_wall(l,1) = 0.015_r8/2._r8
-             zurb_wall(l,2) = zurb_wall(l,1) + 0.015_r8/2._r8 + 0.120_r8/2._r8
-             zurb_wall(l,3) = zurb_wall(l,2) + 0.120_r8/2._r8 + 0.150_r8/2._r8
-             zurb_wall(l,4) = zurb_wall(l,3) + 0.150_r8/2._r8 + 0.150_r8/2._r8
-             zurb_wall(l,5) = zurb_wall(l,4) + 0.150_r8/2._r8 + 0.015_r8/2._r8
-
-             zurb_roof(l,1) = 0.010_r8/2._r8
-             zurb_roof(l,2) = zurb_roof(l,1) + 0.010_r8/2._r8 + 0.050_r8/2._r8
-             zurb_roof(l,3) = zurb_roof(l,2) + 0.050_r8/2._r8 + 0.050_r8/2._r8
-             zurb_roof(l,4) = zurb_roof(l,3) + 0.050_r8/2._r8 + 0.050_r8/2._r8
-             zurb_roof(l,5) = zurb_roof(l,4) + 0.050_r8/2._r8 + 0.025_r8/2._r8
-
-             dzurb_wall(l,1) = 0.015_r8
-             dzurb_wall(l,2) = 0.120_r8
-             dzurb_wall(l,3) = 0.150_r8
-             dzurb_wall(l,4) = 0.150_r8
-             dzurb_wall(l,5) = 0.015_r8
-             write(iulog,*)'Total thickness of wall: ',sum(dzurb_wall(l,:))
-             write(iulog,*)'Wall layer thicknesses: ',dzurb_wall(l,:)
-
-             dzurb_roof(l,1) = 0.010_r8
-             dzurb_roof(l,2) = 0.050_r8
-             dzurb_roof(l,3) = 0.050_r8
-             dzurb_roof(l,4) = 0.050_r8
-             dzurb_roof(l,5) = 0.025_r8
-             write(iulog,*)'Total thickness of roof: ',sum(dzurb_roof(l,:))
-             write(iulog,*)'Roof layer thicknesses: ',dzurb_roof(l,:)
-
-             ziurb_wall(l,0) = 0.
-             ziurb_wall(l,1) = dzurb_wall(l,1)
-             do j = 2,nlevurb
-                ziurb_wall(l,j) = sum(dzurb_wall(l,1:j))
-             end do
-             write(iulog,*)'Wall layer interface depths: ',ziurb_wall(l,:)
-
-             ziurb_roof(l,0) = 0.
-             ziurb_roof(l,1) = dzurb_roof(l,1)
-             do j = 2,nlevurb
-                ziurb_roof(l,j) = sum(dzurb_roof(l,1:j))
-             end do
-             write(iulog,*)'Roof layer interface depths: ',ziurb_roof(l,:)
-          else
-             do j = 1, nlevurb
-                zurb_wall(l,j) = (j-0.5)*(thick_wall(l)/float(nlevurb))  !node depths
-             end do
-             do j = 1, nlevurb
-                zurb_roof(l,j) = (j-0.5)*(thick_roof(l)/float(nlevurb))  !node depths
-             end do
-
-             dzurb_roof(l,1) = 0.5*(zurb_roof(l,1)+zurb_roof(l,2))    !thickness b/n two interfaces
-             do j = 2,nlevurb-1
-                dzurb_roof(l,j)= 0.5*(zurb_roof(l,j+1)-zurb_roof(l,j-1)) 
-             enddo
-             dzurb_roof(l,nlevurb) = zurb_roof(l,nlevurb)-zurb_roof(l,nlevurb-1)
-
-             dzurb_wall(l,1) = 0.5*(zurb_wall(l,1)+zurb_wall(l,2))    !thickness b/n two interfaces
-             do j = 2,nlevurb-1
-                dzurb_wall(l,j)= 0.5*(zurb_wall(l,j+1)-zurb_wall(l,j-1)) 
-             enddo
-             dzurb_wall(l,nlevurb) = zurb_wall(l,nlevurb)-zurb_wall(l,nlevurb-1)
-
-             ziurb_wall(l,0) = 0.
-             do j = 1, nlevurb-1
-                ziurb_wall(l,j) = 0.5*(zurb_wall(l,j)+zurb_wall(l,j+1))          !interface depths
-             enddo
-             ziurb_wall(l,nlevurb) = zurb_wall(l,nlevurb) + 0.5*dzurb_wall(l,nlevurb)
-
-             ziurb_roof(l,0) = 0.
-             do j = 1, nlevurb-1
-                ziurb_roof(l,j) = 0.5*(zurb_roof(l,j)+zurb_roof(l,j+1))          !interface depths
-             enddo
-             ziurb_roof(l,nlevurb) = zurb_roof(l,nlevurb) + 0.5*dzurb_roof(l,nlevurb)
-          end if
+          ziurb_roof(l,0) = 0.
+          do j = 1, nlevurb-1
+             ziurb_roof(l,j) = 0.5*(zurb_roof(l,j)+zurb_roof(l,j+1))          !interface depths
+          enddo
+          ziurb_roof(l,nlevurb) = zurb_roof(l,nlevurb) + 0.5*dzurb_roof(l,nlevurb)
        end if
     end do
 
