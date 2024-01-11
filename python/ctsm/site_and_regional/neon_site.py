@@ -390,3 +390,4 @@ class NeonSite:
             with open(user_nl_fname, "a") as nl_file:
                 for line in user_nl_lines:
                     nl_file.write("{}\n".format(line))
+

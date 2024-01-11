@@ -34,7 +34,6 @@ conda activate ctsm_pylib
 
 import os
 import sys
-import argparse
 
 # -- add python/ctsm  to path
 _CTSM_PYTHON = os.path.join(

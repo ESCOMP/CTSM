@@ -10,6 +10,7 @@ import unittest
 import tempfile
 import shutil
 import os
+import glob
 import sys
 
 # -- add python/ctsm  to path (needed if we want to run the test stand-alone)
@@ -42,33 +43,91 @@ class TestNeonSite(unittest.TestCase):
 
     def test_build_base_case(self):
         """
-        Test that NeonSite class is working properly...
+        Test that NeonSite class' build_base_case is working properly...
         """
-        #valid_neon_sites = ["ABBY", "BART"]
-        #previous_dir = os.getcwd()
-        #os.chdir(self._tempdir)  # cd to tempdir
-        #available_list = check_neon_listing(valid_neon_sites)
-        #self.assertEqual(
-        #    available_list[0].name, "ABBY", "available list of actual sites not as expected"
-        #)
-        #self.assertEqual(
-        #    available_list[1].name, "BART", "available list of actual sites not as expected"
-        #)
-        # change to previous dir once listing.csv file is created in tempdir and test complete
-        #os.chdir(previous_dir)
-        continue
+        #neonsite = NeonSite(ADD SOME PARAMETERS)
+        #neonsite.build_base_case(ARGUMENTS) # NOT SURE WE ACTUALLY WANT TO DO THIS DUE TO TIME CONSTRAINTS?
+        #CHECK IF ACTS AS EXPECTED
+        #continue
+
     def test_get_batch_query(self):
         """
+        Test that NeonSite class' get_batch_query is working properly...
         """
-        continue
+        #neonsite = NeonSite(ADD SOME PARAMETERS)
+        #neonsite.get_batch_query(ARGUMENTS)
+        #CHECK IF ACTS AS EXPECTED
+        #continue
+        # ALSO DOESN'T SEEM THE MOST REASONABLE TO TEST
+
     def test_run_case(self):
         """
+        Test that NeonSite class' run_case is working properly...
         """
-        continue
-    def test_modify_user_nl(self):
+        #neonsite = NeonSite(ADD SOME PARAMETERS)
+        #neonsite.run_case(ARGUMENTS) # NOT SURE WE ACTUALLY WANT TO DO THIS DUE TO TIME CONSTRAINTS?
+        #CHECK IF ACTS AS EXPECTED
+        #continue
+
+    def test_modify_user_nl_transient(self):
         """
+        Test that NeonSite class' modify_user_nl is correctly adding lines to namelist for transient cases
         """
-        continue
+        # NeonSite parameters:
+        name = 'ABBY'
+        start_year = 2020
+        end_year = 2021
+        start_month = 1
+        end_month = 12
+        #finidat = None
+        finidat = 'dummy_finidat'
+
+        # modify_user_nl parameters:
+        case_root = self._tempdir
+        run_type = 'transient'
+        rundir = ''
+
+        # update namelist
+        neonsite = NeonSite(name, start_year, end_year, start_month, end_month, finidat)
+        modified_neonsite = neonsite.modify_user_nl(case_root, run_type, rundir)
+
+        # gather file contents for test
+        new_nl_file = open(glob.glob(case_root+'/*')[0], "r")
+        lines_read = new_nl_file.readlines()[0]
+        new_nl_file.close()
+        
+        # assertion
+        self.assertEqual(lines_read, "finidat = '/inputdata/lnd/ctsm/initdata/dummy_finidat'\n", 'transient case has unexpected nl')
+
+    def test_modify_user_nl_ad(self):
+        """
+        Test that NeonSite class' modify_user_nl is correctly adding lines to namelist for ad cases
+        """
+        # NeonSite parameters:
+        name = 'ABBY'
+        start_year = 2020
+        end_year = 2021
+        start_month = 1
+        end_month = 12
+        #finidat = None
+        finidat = 'dummy_finidat'
+
+        # modify_user_nl parameters:
+        case_root = self._tempdir
+        run_type = 'ad'
+        rundir = ''
+
+        # update namelist
+        neonsite = NeonSite(name, start_year, end_year, start_month, end_month, finidat)
+        modified_neonsite = neonsite.modify_user_nl(case_root, run_type, rundir)
+
+        # gather file contents for test
+        new_nl_file = open(glob.glob(case_root+'/*')[0], "r")
+        lines_read = new_nl_file.readlines()[1]
+        new_nl_file.close()
+
+        # assertion
+        self.assertEqual(lines_read, "hist_mfilt = 20\n", 'ad case has unexpected nl')
 
 
 if __name__ == "__main__":
