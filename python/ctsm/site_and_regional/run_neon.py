@@ -61,18 +61,16 @@ import pandas as pd
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "python"))
 sys.path.insert(1, _CTSM_PYTHON)
 
+# pylint: disable=wrong-import-position
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.download_utils import download_file
 from ctsm.site_and_regional.arg_parse import get_parser
 from ctsm.site_and_regional.neon_site import NeonSite
 
-from ctsm import add_cime_to_path
-
-from CIME import build
-from CIME.case import Case
-from CIME.utils import safe_copy, expect, symlink_force
-
+# pylint: disable=import-error
 from standard_script_setup import *
+# the above import is need to set CIMEROOT environment variable
+# TODO: figure out what specifically needs to be imported (not '*')
 
 logger = logging.getLogger(__name__)
 

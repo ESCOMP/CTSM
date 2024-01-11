@@ -3,7 +3,6 @@ This module contains the NeonSite class and class functions which are used in ru
 """
 
 # Import libraries
-import datetime
 import glob
 import logging
 import os
@@ -16,6 +15,7 @@ import time
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "python"))
 sys.path.insert(1, _CTSM_PYTHON)
 
+#pylint: disable=wrong-import-position, import-error, unused-import
 from ctsm import add_cime_to_path
 from ctsm.path_utils import path_to_ctsm_root
 
@@ -390,4 +390,3 @@ class NeonSite:
             with open(user_nl_fname, "a") as nl_file:
                 for line in user_nl_lines:
                     nl_file.write("{}\n".format(line))
-

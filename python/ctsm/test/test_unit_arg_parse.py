@@ -47,8 +47,9 @@ class Testarg_parse(unittest.TestCase):
         Test that arg_parse is working properly...
         """
         sys.argv = ["--neon-sites ['ABBY']"]
-        #arguments= ["--neon-sites", "ABBY"] #, "--experiment 'test'", '--overwrite False', '--setup-only True', '--rerun False', '--run-type ad', '--experiment test']
-        description=''
+        # arguments= ["--neon-sites", "ABBY"] #, "--experiment 'test'", '--overwrite False',
+        #        '--setup-only True', '--rerun False', '--run-type ad', '--experiment test']
+        description = ""
         cesmroot = path_to_ctsm_root()
         valid_neon_sites = glob.glob(
             os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!d]*")
@@ -57,11 +58,9 @@ class Testarg_parse(unittest.TestCase):
         parsed_arguments = get_parser(sys.argv, description, valid_neon_sites)
 
         print(parsed_arguments)
-        self.assertEqual(
-            parsed_arguments[0], "ABBY", "arguments not processed as expected"
-        )
+        self.assertEqual(parsed_arguments[0], "ABBY", "arguments not processed as expected")
         # TODO: Still need to figure out correct formatting to get argument recognized properly!
-        # TODO: Also it might be useful to add in a number of fake arguments to check that they all work...
+        # TODO: It might be useful to add a number of arguments to check that they all work...
 
 
 if __name__ == "__main__":

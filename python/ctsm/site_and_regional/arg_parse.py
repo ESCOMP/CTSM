@@ -3,7 +3,6 @@ Argument parser to use throughout run_neon.py
 """
 
 import argparse
-import datetime
 import logging
 import os
 import sys
@@ -12,13 +11,11 @@ import sys
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "python"))
 sys.path.insert(1, _CTSM_PYTHON)
 
+#pylint: disable=wrong-import-position, import-error, unused-import
 from ctsm import add_cime_to_path
 from ctsm.utils import parse_isoduration
-
-from CIME import build
-from CIME.case import Case
-from CIME.utils import safe_copy, expect, parse_args_and_handle_standard_logging_options, setup_standard_logging_options, symlink_force
-
+from CIME.utils import parse_args_and_handle_standard_logging_options
+from CIME.utils import setup_standard_logging_options
 
 def get_parser(args, description, valid_neon_sites):
     """
@@ -123,7 +120,7 @@ def get_parser(args, description, valid_neon_sites):
                         Type of run to do
                         [default: %(default)s]
                         """,
-        choices=["ad", "postad", "transient"], #, "sasu"],
+        choices=["ad", "postad", "transient"],  # , "sasu"],
         default="transient",
     )
 
@@ -161,33 +158,6 @@ def get_parser(args, description, valid_neon_sites):
         type=str,
         default="0Y",
     )
-
-    #parser.add_argument(
-    #    "--start-date",
-    #    help="""
-    #            Start date for running CTSM simulation in ISO format.
-    #            [default: %(default)s]
-    #            (currently non-functional)
-    #            """,
-    #    action="store",
-    #    dest="start_date",
-    #    required=False,
-    #    type=datetime.date.fromisoformat,
-    #    default=datetime.datetime.strptime("2018-01-01", "%Y-%m-%d"),
-    #)
-
-    #parser.add_argument(
-    #    "--end-date",
-    #    help="""
-    #            End date for running CTSM simulation in ISO format.
-    #            [default: %(default)s]
-    #            """,
-    #    action="store",
-    #    dest="end_date",
-    #    required=False,
-    #    type=datetime.date.fromisoformat,
-    #    default=datetime.datetime.strptime("2021-01-01", "%Y-%m-%d"),
-    #)
 
     parser.add_argument(
         "--run-from-postad",

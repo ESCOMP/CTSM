@@ -3,7 +3,7 @@
 Unit tests for NeonSite
 
 You can run this by:
-    python -m unittest test_unit_NeonSite.py
+    python -m unittest test_unit_neon_site.py
 """
 
 import unittest
@@ -45,89 +45,97 @@ class TestNeonSite(unittest.TestCase):
         """
         Test that NeonSite class' build_base_case is working properly...
         """
-        #neonsite = NeonSite(ADD SOME PARAMETERS)
-        #neonsite.build_base_case(ARGUMENTS) # NOT SURE WE ACTUALLY WANT TO DO THIS DUE TO TIME CONSTRAINTS?
-        #CHECK IF ACTS AS EXPECTED
-        #continue
+        # neonsite = NeonSite(ADD SOME PARAMETERS)
+        # neonsite.build_base_case(ARGUMENTS)
+        # NOT SURE WE ACTUALLY WANT TO DO THIS DUE TO TIME CONSTRAINTS?
+        # CHECK IF ACTS AS EXPECTED
+        # continue
 
     def test_get_batch_query(self):
         """
         Test that NeonSite class' get_batch_query is working properly...
         """
-        #neonsite = NeonSite(ADD SOME PARAMETERS)
-        #neonsite.get_batch_query(ARGUMENTS)
-        #CHECK IF ACTS AS EXPECTED
-        #continue
+        # neonsite = NeonSite(ADD SOME PARAMETERS)
+        # neonsite.get_batch_query(ARGUMENTS)
+        # CHECK IF ACTS AS EXPECTED
+        # continue
         # ALSO DOESN'T SEEM THE MOST REASONABLE TO TEST
 
     def test_run_case(self):
         """
         Test that NeonSite class' run_case is working properly...
         """
-        #neonsite = NeonSite(ADD SOME PARAMETERS)
-        #neonsite.run_case(ARGUMENTS) # NOT SURE WE ACTUALLY WANT TO DO THIS DUE TO TIME CONSTRAINTS?
-        #CHECK IF ACTS AS EXPECTED
-        #continue
+        # neonsite = NeonSite(ADD SOME PARAMETERS)
+        # neonsite.run_case(ARGUMENTS)
+        # NOT SURE WE ACTUALLY WANT TO DO THIS DUE TO TIME CONSTRAINTS?
+        # CHECK IF ACTS AS EXPECTED
+        # continue
 
     def test_modify_user_nl_transient(self):
         """
-        Test that NeonSite class' modify_user_nl is correctly adding lines to namelist for transient cases
+        Test that modify_user_nl is correctly adding lines to namelist for transient cases
         """
         # NeonSite parameters:
-        name = 'ABBY'
+        name = "ABBY"
         start_year = 2020
         end_year = 2021
         start_month = 1
         end_month = 12
-        #finidat = None
-        finidat = 'dummy_finidat'
+        # finidat = None
+        finidat = "dummy_finidat"
 
         # modify_user_nl parameters:
         case_root = self._tempdir
-        run_type = 'transient'
-        rundir = ''
+        run_type = "transient"
+        rundir = ""
 
-        # update namelist
-        neonsite = NeonSite(name, start_year, end_year, start_month, end_month, finidat)
-        modified_neonsite = neonsite.modify_user_nl(case_root, run_type, rundir)
+        # create NeonSite object and update namelist
+        NeonSite(name, start_year, end_year, start_month, end_month, finidat).modify_user_nl(
+            case_root, run_type, rundir
+        )
 
         # gather file contents for test
-        new_nl_file = open(glob.glob(case_root+'/*')[0], "r")
+        new_nl_file = open(glob.glob(case_root + "/*")[0], "r")
         lines_read = new_nl_file.readlines()[0]
         new_nl_file.close()
-        
+
         # assertion
-        self.assertEqual(lines_read, "finidat = '/inputdata/lnd/ctsm/initdata/dummy_finidat'\n", 'transient case has unexpected nl')
+        self.assertEqual(
+            lines_read,
+            "finidat = '/inputdata/lnd/ctsm/initdata/dummy_finidat'\n",
+            "transient case has unexpected nl",
+        )
 
     def test_modify_user_nl_ad(self):
         """
-        Test that NeonSite class' modify_user_nl is correctly adding lines to namelist for ad cases
+        Test that modify_user_nl is correctly adding lines to namelist for ad cases
         """
         # NeonSite parameters:
-        name = 'ABBY'
+        name = "ABBY"
         start_year = 2020
         end_year = 2021
         start_month = 1
         end_month = 12
-        #finidat = None
-        finidat = 'dummy_finidat'
+        # finidat = None
+        finidat = "dummy_finidat"
 
         # modify_user_nl parameters:
         case_root = self._tempdir
-        run_type = 'ad'
-        rundir = ''
+        run_type = "ad"
+        rundir = ""
 
-        # update namelist
-        neonsite = NeonSite(name, start_year, end_year, start_month, end_month, finidat)
-        modified_neonsite = neonsite.modify_user_nl(case_root, run_type, rundir)
+        # create NeonSite object and update namelist
+        NeonSite(name, start_year, end_year, start_month, end_month, finidat).modify_user_nl(
+            case_root, run_type, rundir
+        )
 
         # gather file contents for test
-        new_nl_file = open(glob.glob(case_root+'/*')[0], "r")
+        new_nl_file = open(glob.glob(case_root + "/*")[0], "r")
         lines_read = new_nl_file.readlines()[1]
         new_nl_file.close()
 
         # assertion
-        self.assertEqual(lines_read, "hist_mfilt = 20\n", 'ad case has unexpected nl')
+        self.assertEqual(lines_read, "hist_mfilt = 20\n", "ad case has unexpected nl")
 
 
 if __name__ == "__main__":
