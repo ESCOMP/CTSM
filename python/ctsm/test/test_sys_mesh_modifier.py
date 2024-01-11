@@ -43,9 +43,9 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         self._cfg_template_path = os.path.join(
             path_to_ctsm_root(), "tools/modify_input_files/modify_mesh_template.cfg"
         )
-        testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
+        self.testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         fsurdat_in = os.path.join(
-            testinputs_path,
+            self.testinputs_path,
             "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031.nc",
         )
         self._tempdir = tempfile.mkdtemp()
