@@ -15,7 +15,7 @@ import time
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "python"))
 sys.path.insert(1, _CTSM_PYTHON)
 
-#pylint: disable=wrong-import-position, import-error, unused-import
+# pylint: disable=wrong-import-position, import-error, unused-import, wrong-import-order
 from ctsm import add_cime_to_path
 from ctsm.path_utils import path_to_ctsm_root
 
@@ -26,6 +26,7 @@ from CIME.utils import safe_copy, expect, symlink_force
 logger = logging.getLogger(__name__)
 
 
+# pylint: disable=too-many-instance-attributes
 class NeonSite:
     """
     A class for encapsulating neon sites.
@@ -39,11 +40,6 @@ class NeonSite:
         self.end_month = int(end_month)
         self.cesmroot = path_to_ctsm_root()
         self.finidat = finidat
-
-    def __str__(self):
-        return (
-            str(self.__class__) + "\n" + "\n".join((str(item) + " = " for item in (self.__dict__)))
-        )
 
     def build_base_case(
         self, cesmroot, output_root, res, compset, overwrite=False, setup_only=False
@@ -66,7 +62,9 @@ class NeonSite:
             Flag to overwrite the case if exists
         """
         print("---- building a base case -------")
+        # pylint: disable=attribute-defined-outside-init
         self.base_case_root = output_root
+        # pylint: enable=attribute-defined-outside-init
         user_mods_dirs = [os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)]
         if not output_root:
             output_root = os.getcwd()
@@ -135,6 +133,7 @@ class NeonSite:
             # update case_path to be the full path to the base case
         return case_path
 
+    # pylint: disable=no-self-use
     def get_batch_query(self, case):
         """
         Function for querying the batch queue query command for a case, depending on the
@@ -149,6 +148,7 @@ class NeonSite:
             return "none"
         return case.get_value("batch_query")
 
+    # pylint: disable=too-many-statements
     def run_case(
         self,
         base_case_root,
@@ -218,12 +218,14 @@ class NeonSite:
                     # For existing case check that the compset name is correct
                     existingcompname = case.get_value("COMPSET")
                     match = re.search("^HIST", existingcompname, flags=re.IGNORECASE)
+                    # pylint: disable=undefined-variable
                     if re.search("^HIST", compset, flags=re.IGNORECASE) is None:
                         expect(
                             match is None,
                             """Existing base case is a historical type and should not be
                             --rerun with the --overwrite option""",
                         )
+                    # pylint: enable=undefined-variable
                     else:
                         expect(
                             match is not None,

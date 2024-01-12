@@ -67,10 +67,8 @@ from ctsm.download_utils import download_file
 from ctsm.site_and_regional.arg_parse import get_parser
 from ctsm.site_and_regional.neon_site import NeonSite
 
-# pylint: disable=import-error
+# pylint: disable=import-error, wildcard-import, wrong-import-order
 from standard_script_setup import *
-# the above import is need to set CIMEROOT environment variable
-# TODO: figure out what specifically needs to be imported (not '*')
 
 logger = logging.getLogger(__name__)
 

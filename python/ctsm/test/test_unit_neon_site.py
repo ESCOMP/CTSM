@@ -41,36 +41,6 @@ class TestNeonSite(unittest.TestCase):
         """
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
-    def test_build_base_case(self):
-        """
-        Test that NeonSite class' build_base_case is working properly...
-        """
-        # neonsite = NeonSite(ADD SOME PARAMETERS)
-        # neonsite.build_base_case(ARGUMENTS)
-        # NOT SURE WE ACTUALLY WANT TO DO THIS DUE TO TIME CONSTRAINTS?
-        # CHECK IF ACTS AS EXPECTED
-        # continue
-
-    def test_get_batch_query(self):
-        """
-        Test that NeonSite class' get_batch_query is working properly...
-        """
-        # neonsite = NeonSite(ADD SOME PARAMETERS)
-        # neonsite.get_batch_query(ARGUMENTS)
-        # CHECK IF ACTS AS EXPECTED
-        # continue
-        # ALSO DOESN'T SEEM THE MOST REASONABLE TO TEST
-
-    def test_run_case(self):
-        """
-        Test that NeonSite class' run_case is working properly...
-        """
-        # neonsite = NeonSite(ADD SOME PARAMETERS)
-        # neonsite.run_case(ARGUMENTS)
-        # NOT SURE WE ACTUALLY WANT TO DO THIS DUE TO TIME CONSTRAINTS?
-        # CHECK IF ACTS AS EXPECTED
-        # continue
-
     def test_modify_user_nl_transient(self):
         """
         Test that modify_user_nl is correctly adding lines to namelist for transient cases

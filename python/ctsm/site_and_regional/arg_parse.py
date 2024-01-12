@@ -11,11 +11,12 @@ import sys
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "python"))
 sys.path.insert(1, _CTSM_PYTHON)
 
-#pylint: disable=wrong-import-position, import-error, unused-import
+# pylint: disable=wrong-import-position, import-error, unused-import, wrong-import-order
 from ctsm import add_cime_to_path
 from ctsm.utils import parse_isoduration
 from CIME.utils import parse_args_and_handle_standard_logging_options
 from CIME.utils import setup_standard_logging_options
+
 
 def get_parser(args, description, valid_neon_sites):
     """
@@ -209,9 +210,12 @@ def get_parser(args, description, valid_neon_sites):
         run_length = args.run_length
 
     run_length = parse_isoduration(run_length)
+
     base_case_root = None
     if args.base_case_root:
         base_case_root = os.path.abspath(args.base_case_root)
+        if not os.path.exists(base_case_root):
+            raise ValueError("Base case root does not exist: {}".format(base_case_root))
 
     # Reduce output level for this script unless --debug or
     # --verbose is provided on the command line
