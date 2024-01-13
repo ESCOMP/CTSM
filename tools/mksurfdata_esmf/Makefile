@@ -46,6 +46,7 @@ SUBSETDATA_1X1_SMALL  := --lat 40.6878 --lon 267.0228 --site 1x1_smallvilleIA \
 		--pctpft 6.5 1.5 1.6 1.7 1.8 1.9 1.5 1.6 1.7 1.8 1.9 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5
 # NOTE: The 1850 smallvilleIA site is constructed to start with 100% natural vegetation, so we can test transition to crops
 SUBSETDATA_1X1_SMALL1850  := --lat 40.6878 --lon 267.0228 --site 1x1_smallvilleIA --dompft 13 --pctpft 100
+SUBSETDATA_1X1_SMALLTRANSIENT := --lat 40.6878 --lon 267.0228 --site 1x1_smallvilleIA
 
 MEXICOCITY_TMP_FNAME       := surfdata_1x1_mexicocityMEX_hist_2000_78pfts.nc
 MEXICOCITY_FNAME           := surfdata_1x1_mexicocityMEX_hist_2000_78pfts_c$(CDATE).nc
@@ -82,7 +83,7 @@ CROP = \
 	crop-global-1850-ne16np4 \
 	crop-global-1850-ne120np4 \
 	crop-global-future
-all : standard tropics crop urban landuse-timeseries all-subset
+all : standard tropics crop urban all-subset
 
 all-subset : \
 	1x1_brazil-tropics-present \
@@ -92,6 +93,7 @@ all-subset : \
 	crop-numa-historical \
 	crop-smallville \
 	crop-smallville-historical \
+	crop-smallville-transient \
 	urban-present urban-alpha
 
 DEBUG:
@@ -205,6 +207,12 @@ crop-smallville : FORCE
 crop-smallville-historical : FORCE
 	$(SUBSETDATA_POINT) --create-surface $(SUBSETDATA_1X1_SMALL1850) --cfg-file default_data_1850.cfg
 
+# Note (slevis): The next line makes the landuse.timeseries from 1850 to 2015, so also run
+# modify_smallville.sh to generate three modified landuse.timeseries files needed for testing.
+crop-smallville-transient : FORCE
+	$(SUBSETDATA_POINT) --create-landuse $(SUBSETDATA_1X1_SMALLTRANSIENT)
+../modify_input_files/modify_smallville.sh
+
 #
 # Crop with future scenarios
 #
@@ -311,17 +319,6 @@ urban-alpha : FORCE
 	$(MODIFYSURF) modify_1x1_urbanc_alpha.cfg -i $(URBALPHA_TMP2_FNAME) -o $(URBALPHA_FNAME)
 	$(RM) $(URBALPHA_TMP_FNAME) $(URBALPHA_TMP2_FNAME)
 
-#
-# landuse timeseries with subset data
-#
-landuse-timeseries : landuse-timeseries-smallville
-# NOTE: TODO: This needs to be chagned to use subset_data when transient configurations are resolved (see Issue #1673
-landuse-timeseries-smallville : FORCE
-#	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-1855 -r 1x1_smallvilleIA \
-#		-pft_idx 17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78 \
-#		-pft_frc 6.5,1.5,1.6,1.7,1.8,1.9,1.5,1.6,1.7,1.8,1.9,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5 \
-#		-dynpft single_point_dynpft_files/landuse_timeseries_smallvilleIA_hist_simyr1850-1855.txt \
-#		$(BACKGROUND)
 
 #
 # clean up the working directory by removing generated files
