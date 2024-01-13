@@ -1314,7 +1314,7 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_10x15_hist_78pfts_CMIP6_1850_c230517.n
 <fsurdat hgrid="4x5"       sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_4x5_hist_78pfts_CMIP6_1850_c230517.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" >
-/glade/work/erik/ctsm_worktrees/ctsm5.2.mksurfdata/tools/mksurfdata_esmf/surfdata_1x1_smallvilleIA_hist_78pfts_CMIP6_1850_c230726.nc
+/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_smallvilleIA_hist_78pfts_CMIP6_1850-2015_c240103.nc
 </fsurdat>
 <fsurdat hgrid="1x1_numaIA"       sim_year="1850" >
 /glade/work/erik/ctsm_worktrees/ctsm5.2.mksurfdata/tools/mksurfdata_esmf/surfdata_1x1_numaIA_hist_78pfts_CMIP6_1850_c230726.nc
@@ -1426,7 +1426,7 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <!-- Note that this transient file only goes up to year 1855.
      This is sufficient for testing purposes, but could cause problems if you try to run beyond 1855. -->
 <flanduse_timeseries hgrid="1x1_smallvilleIA" sim_year_range="1850-2000"
- use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_c160127.nc</flanduse_timeseries>
+ use_crop=".true."   >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_1x1_smallvilleIA_hist_78_CMIP6_1850-1855_dynPft_c240103.nc</flanduse_timeseries>
 
 <!-- Future scenarios - landuse time series files with crop on -->
 
