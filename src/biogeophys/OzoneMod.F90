@@ -13,6 +13,8 @@ module OzoneMod
   ! J. P. Sparks (2015), The Influence of Chronic Ozone Exposure on Global Carbon and
   ! Water Cycles, J Climate, 28(1), 292–305, doi:10.1175/JCLI-D-14-00223.1.
   !
+  ! Developed by Fang Li in 2024 to introduce the new scheme of photosynthetic and stomatal responses to O3
+
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod, only : r8 => shr_kind_r8
@@ -496,7 +498,7 @@ subroutine CalcOzoneUptakeLi2024OnePoint( &
     o3flux = o3concnmolm3/ (ko3*rs+ rb + ram)
     ! set lai_thresh    
         if (pftcon%evergreen(pft_type) == 1) then
-         lai_thresh=0._r8 !so evergreens grow year-round
+         lai_thresh=0._r8 ! evergreens grow year-round
        else  ! for deciduous vegetation
         if(pft_type == 10)then !temperate shrub
          lai_thresh=0.3_r8
@@ -506,16 +508,16 @@ subroutine CalcOzoneUptakeLi2024OnePoint( &
        end if
     ! set o3_flux_threshold
        if(pft_type >= 1 .and. pft_type <= 3)then  !Needleleaf tree
-         o3_flux_threshold = 1.0_r8
+         o3_flux_threshold = 0.8_r8
        end if
        if(pft_type >= 4 .and. pft_type <= 8)then  !Broadleaf tree
-         o3_flux_threshold = 3.0_r8
+         o3_flux_threshold = 1.0_r8
        end if
        if(pft_type >= 9 .and. pft_type <= 11)then !Shrub
-         o3_flux_threshold = 5.0_r8
+         o3_flux_threshold = 6.0_r8
        end if
        if(pft_type >= 12 .and. pft_type <= 14)then !Grass
-        o3_flux_threshold = 2.0_r8
+        o3_flux_threshold = 1.6_r8
        end if
        if(pft_type >= 15)then !Crop
         o3_flux_threshold = 0.5_r8
@@ -761,7 +763,7 @@ subroutine CalcOzoneUptakeLFOnePoint( &
     ! !DESCRIPTION:
     ! Calculates ozone stress for a single point, for just sunlit or shaded leaves
     !
-    ! This subroutine uses the Lombardozzi2015 formulation for ozone stress
+    ! This subroutine uses the Li2024 formulation for ozone stress
     !
     ! !ARGUMENTS:
     integer  , intent(in)    :: pft_type   ! vegetation type, for indexing into pftvarcon arrays
@@ -779,29 +781,27 @@ subroutine CalcOzoneUptakeLFOnePoint( &
        o3coefg = 1._r8
     else
        ! Determine parameter values for this pft
-       ! TODO lifang0209: Update functions
-       if(pft_type >= 1 .and. pft_type <= 3)then  !Needleleaf tree
-        o3coefv = max(0._r8, min(1._r8, 0.991_r8 - 0.043_r8 * log(o3uptake)))
-        o3coefg = max(0._r8, min(1._r8, 1.003_r8 - 0.038_r8 * log(o3uptake)))
-      end if 
+      if(pft_type >= 1 .and. pft_type <= 3)then  !Needleleaf tree
+        o3coefv = max(0._r8, min(1._r8, 1.005_r8 - 0.0064_r8 * o3uptake))
+        o3coefg = max(0._r8, min(1._r8, 0.965_r8 * o3uptake ** (-0.041)))
+      end if
       if(pft_type >= 4 .and. pft_type <= 8)then  !Broadleaf tree
-        o3coefv = max(0._r8, min(1._r8, 0.862_r8 -0.0044_r8 * o3uptake))
-        o3coefg = max(0._r8, min(1._r8, 0.936_r8 -0.0030_r8 * o3uptake))
+        o3coefv = max(0._r8, min(1._r8, 0.943_r8 * exp(-0.0085*o3uptake)))
+        o3coefg = max(0._r8, min(1._r8, 0.943_r8 * exp(-0.0058*o3uptake)))
       end if
       if(pft_type >= 9 .and. pft_type <= 11)then !Shrub
-        o3coefv = max(0._r8, min(1._r8, 1.093_r8 - 0.106_r8 * log(o3uptake)))
-        o3coefg = max(0._r8, min(1._r8, 1.053_r8 - 0.082_r8 * log(o3uptake)))
+        o3coefv = max(0._r8, min(1._r8, 1.000_r8-0.074_r8 * log(o3uptake)))
+        o3coefg = max(0._r8, min(1._r8, 0.991_r8-0.060_r8 * log(o3uptake)))
       end if
       if(pft_type >= 12 .and. pft_type <= 14)then !Grass
-         o3coefv = max(0._r8, min(1._r8, -0.00066_r8*o3uptake**2+0.016_r8*o3uptake+0.757_r8))
-         o3coefg = max(0._r8, min(1._r8, 0.790_r8 * exp(-0.0476_r8 * o3uptake)))
+        o3coefv = max(0._r8, min(1._r8, 0.997_r8 - 0.016_r8 * o3uptake))
+        o3coefg = max(0._r8, min(1._r8, 0.989_r8 - 0.045_r8 * log(o3uptake)))
       end if
       if (pft_type >= 15)then !Crop
-        o3coefv = max(0._r8, min(1._r8, 0.883_r8 - 0.033_r8 * log(o3uptake)))
-        o3coefg = max(0._r8, min(1._r8, 0.953_r8 - 0.132_r8 * tanh(o3uptake)))
+        o3coefv = max(0._r8, min(1._r8, 0.909_r8 - 0.028_r8 * log(o3uptake)))
+        o3coefg = max(0._r8, min(1._r8, 1.005_r8 - 0.169_r8 * tanh(o3uptake)))
       end if
-    end if
-
+    end if                                                                 
   end subroutine CalcOzoneStressLi2024OnePoint
 
   !-----------------------------------------------------------------------

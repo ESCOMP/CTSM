@@ -1346,7 +1346,7 @@ contains
     real(r8) , pointer :: rs_z        (:,:)
     real(r8) , pointer :: ci_z        (:,:)
     real(r8) , pointer :: o3coefv     (:)  ! o3 coefficient used in photo calculation
-    real(r8) , pointer :: o3coefg     (:)  ! o3 coefficient used in rs calculation
+    real(r8) , pointer :: o3coefg     (:)  ! o3 coefficient used in gs calculation
     real(r8) , pointer :: alphapsnsun (:)
     real(r8) , pointer :: alphapsnsha (:)
 
@@ -1435,7 +1435,7 @@ contains
          vcmaxcint =>    surfalb_inst%vcmaxcintsun_patch     ! Input:  [real(r8) (:)   ]  leaf to canopy scaling coefficient
          alphapsn  =>    photosyns_inst%alphapsnsun_patch    ! Input:  [real(r8) (:)   ]  13C fractionation factor for PSN ()
          o3coefv   =>    ozone_inst%o3coefvsun_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in photosynthesis calculation
-         o3coefg   =>    ozone_inst%o3coefgsun_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in rs calculation
+         o3coefg   =>    ozone_inst%o3coefgsun_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in gs calculation
          ci_z      =>    photosyns_inst%cisun_z_patch        ! Output: [real(r8) (:,:) ]  intracellular leaf CO2 (Pa)
          rs        =>    photosyns_inst%rssun_patch          ! Output: [real(r8) (:)   ]  leaf stomatal resistance (s/m)
          rs_z      =>    photosyns_inst%rssun_z_patch        ! Output: [real(r8) (:,:) ]  canopy layer: leaf stomatal resistance (s/m)
@@ -1452,7 +1452,7 @@ contains
          vcmaxcint =>    surfalb_inst%vcmaxcintsha_patch     ! Input:  [real(r8) (:)   ]  leaf to canopy scaling coefficient
          alphapsn  =>    photosyns_inst%alphapsnsha_patch    ! Input:  [real(r8) (:)   ]  13C fractionation factor for PSN ()
          o3coefv   =>    ozone_inst%o3coefvsha_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in photosynthesis calculation
-         o3coefg   =>    ozone_inst%o3coefgsha_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in rs calculation
+         o3coefg   =>    ozone_inst%o3coefgsha_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in gs calculation
          ci_z      =>    photosyns_inst%cisha_z_patch        ! Output: [real(r8) (:,:) ]  intracellular leaf CO2 (Pa)
          rs        =>    photosyns_inst%rssha_patch          ! Output: [real(r8) (:)   ]  leaf stomatal resistance (s/m)
          rs_z      =>    photosyns_inst%rssha_z_patch        ! Output: [real(r8) (:,:) ]  canopy layer: leaf stomatal resistance (s/m)
@@ -1934,9 +1934,9 @@ contains
 
                ! Convert gs_mol (umol H2O/m**2/s) to gs (m/s) and then to rs (s/m)
 
-               gs = gs_mol(p,iv) / cf
+               gs = gs_mol(p,iv) / cf * o3coefg(p)
                rs_z(p,iv) = min(1._r8/gs, rsmax0)
-               rs_z(p,iv) = rs_z(p,iv) / o3coefg(p)
+               rs_z(p,iv) = rs_z(p,iv)
 
                ! Photosynthesis. Save rate-limiting photosynthesis
 
@@ -2857,7 +2857,7 @@ contains
     real(r8) , pointer :: rs_z_sun        (:,:) ! canopy layer: leaf stomatal resistance, sunlit (s/m)
     real(r8) , pointer :: ci_z_sun        (:,:) ! intracellular leaf CO2, sunlit (Pa)
     real(r8) , pointer :: o3coefv_sun     (:)   ! o3 coefficient used in photo calculation, sunlit
-    real(r8) , pointer :: o3coefg_sun     (:)   ! o3 coefficient used in rs calculation, sunlit
+    real(r8) , pointer :: o3coefg_sun     (:)   ! o3 coefficient used in gs calculation, sunlit
     real(r8) , pointer :: lai_z_sha       (:,:) ! leaf area index for canopy layer, shaded
     real(r8) , pointer :: par_z_sha       (:,:) ! par absorbed per unit lai for canopy layer, shaded (w/m**2)
     real(r8) , pointer :: vcmaxcint_sha   (:)   ! leaf to canopy scaling coefficient, shaded
@@ -2873,7 +2873,7 @@ contains
     real(r8) , pointer :: rs_z_sha        (:,:) ! canopy layer: leaf stomatal resistance, shaded (s/m)
     real(r8) , pointer :: ci_z_sha        (:,:) ! intracellular leaf CO2, shaded (Pa)
     real(r8) , pointer :: o3coefv_sha     (:)   ! o3 coefficient used in photo calculation, shaded
-    real(r8) , pointer :: o3coefg_sha     (:)   ! o3 coefficient used in rs calculation, shaded
+    real(r8) , pointer :: o3coefg_sha     (:)   ! o3 coefficient used in gs calculation, shaded
     real(r8) :: sum_nscaler
     real(r8) :: total_lai                
     integer  :: nptreemax                
@@ -2999,7 +2999,7 @@ contains
       vcmaxcint_sun =>    surfalb_inst%vcmaxcintsun_patch     ! Input:  [real(r8) (:)   ]  leaf to canopy scaling coefficient
       alphapsn_sun  =>    photosyns_inst%alphapsnsun_patch    ! Input:  [real(r8) (:)   ]  13C fractionation factor for PSN ()
       o3coefv_sun   =>    ozone_inst%o3coefvsun_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in photosynthesis calculation
-      o3coefg_sun   =>    ozone_inst%o3coefgsun_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in rs calculation
+      o3coefg_sun   =>    ozone_inst%o3coefgsun_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in gs calculation
       ci_z_sun      =>    photosyns_inst%cisun_z_patch        ! Output: [real(r8) (:,:) ]  intracellular leaf CO2 (Pa)
       rs_sun        =>    photosyns_inst%rssun_patch          ! Output: [real(r8) (:)   ]  leaf stomatal resistance (s/m)
       rs_z_sun      =>    photosyns_inst%rssun_z_patch        ! Output: [real(r8) (:,:) ]  canopy layer: leaf stomatal resistance (s/m)
@@ -3015,7 +3015,7 @@ contains
       vcmaxcint_sha =>    surfalb_inst%vcmaxcintsha_patch     ! Input:  [real(r8) (:)   ]  leaf to canopy scaling coefficient
       alphapsn_sha  =>    photosyns_inst%alphapsnsha_patch    ! Input:  [real(r8) (:)   ]  13C fractionation factor for PSN ()
       o3coefv_sha   =>    ozone_inst%o3coefvsha_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in photosynthesis calculation
-      o3coefg_sha   =>    ozone_inst%o3coefgsha_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in rs calculation
+      o3coefg_sha   =>    ozone_inst%o3coefgsha_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in gs calculation
       ci_z_sha      =>    photosyns_inst%cisha_z_patch        ! Output: [real(r8) (:,:) ]  intracellular leaf CO2 (Pa)
       rs_sha        =>    photosyns_inst%rssha_patch          ! Output: [real(r8) (:)   ]  leaf stomatal resistance (s/m)
       rs_z_sha      =>    photosyns_inst%rssha_z_patch        ! Output: [real(r8) (:,:) ]  canopy layer: leaf stomatal resistance (s/m)
@@ -3621,12 +3621,12 @@ contains
 
                ! Convert gs_mol (umol H2O/m**2/s) to gs (m/s) and then to rs (s/m)
 
-               gs = gs_mol_sun(p,iv) / cf
+               gs = gs_mol_sun(p,iv) / cf * o3coefg_sun(p)
                rs_z_sun(p,iv) = min(1._r8/gs, rsmax0)
-               rs_z_sun(p,iv) = rs_z_sun(p,iv) / o3coefg_sun(p)
-               gs = gs_mol_sha(p,iv) / cf
+               rs_z_sun(p,iv) = rs_z_sun(p,iv) 
+               gs = gs_mol_sha(p,iv) / cf * o3coefg_sha(p)
                rs_z_sha(p,iv) = min(1._r8/gs, rsmax0)
-               rs_z_sha(p,iv) = rs_z_sha(p,iv) / o3coefg_sha(p)
+               rs_z_sha(p,iv) = rs_z_sha(p,iv)
 
                ! Photosynthesis. Save rate-limiting photosynthesis
 
