@@ -46,7 +46,15 @@ class Test_neon_arg_parse(unittest.TestCase):
         """
         Test that neon_arg_parse is properly reading arguments...
         """
-        sys.argv = ["neon_arg_parse", "--neon-sites", "ABBY", "--experiment", "test", "--run-type", "ad"]
+        sys.argv = [
+            "neon_arg_parse",
+            "--neon-sites",
+            "ABBY",
+            "--experiment",
+            "test",
+            "--run-type",
+            "ad",
+        ]
         description = ""
         cesmroot = path_to_ctsm_root()
         valid_neon_sites = glob.glob(
