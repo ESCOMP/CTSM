@@ -380,7 +380,7 @@ contains
     !USES:
     use decompMod        , only : bounds_type
     use shr_kind_mod     , only : r8 => shr_kind_r8
-    use clm_varpar       , only : nlevsoi, max_patch_per_col
+    use clm_varpar       , only : nlevsoi
     use SoilStateType    , only : soilstate_type
     use WaterFluxBulkType    , only : waterfluxbulk_type
     use PatchType        , only : patch
@@ -484,7 +484,7 @@ contains
     use decompMod                  , only : bounds_type        
     use clm_varcon                 , only : grav,hfus,tfrz
     use clm_varcon                 , only : denh2o, denice
-    use clm_varpar                 , only : nlevsoi, max_patch_per_col, nlevgrnd
+    use clm_varpar                 , only : nlevsoi, nlevgrnd
     use clm_time_manager           , only : get_step_size_real, get_nstep
     use column_varcon              , only : icol_roof, icol_road_imperv
     use clm_varctl                 , only : use_flexibleCN, use_hydrstress

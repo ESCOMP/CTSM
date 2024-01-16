@@ -1,0 +1,2 @@
+ use_excess_ice = .true.
+ use_excess_ice_streams = .true.

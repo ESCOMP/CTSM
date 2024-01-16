@@ -772,6 +772,7 @@ contains
     ! !USES:
     use clm_varctl      , only : create_crop_landunit, use_fates, n_dom_pfts
     use clm_varpar      , only : natpft_lb, natpft_ub, natpft_size, cft_size, cft_lb, cft_ub
+    use clm_varpar      , only : surfpft_lb, surfpft_ub
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
     use landunit_varcon , only : istsoil, istcrop
     use surfrdUtilsMod  , only : convert_cft_to_pft
@@ -900,7 +901,7 @@ contains
     ! - Pfts could be up to 16 before collapsing if create_crop_landunit = .F.
     ! TODO Add the same call to subroutine dynpft_interp for transient runs
     
-    call collapse_to_dominant(wt_nat_patch(begg:endg,:), natpft_lb, natpft_ub, &
+    call collapse_to_dominant(wt_nat_patch(begg:endg,:), surfpft_lb, surfpft_ub, &
          begg, endg, n_dom_pfts)
     
   end subroutine surfrd_veg_all

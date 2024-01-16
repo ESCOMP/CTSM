@@ -42,7 +42,7 @@ sub make_env_run {
     my %settings = @_;
 
     # Set default settings
-    my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE" );
+    my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE", NEONSITE=>"" );
     # Set any settings that came in from function call
     foreach my $item ( keys(%settings) ) {
        $env_vars{$item} = $settings{$item};
@@ -139,7 +139,7 @@ if (defined($opts{'csmdata'})) {
     $inputdata_rootdir = $ENV{'CSMDATA'};
 } else {
    # use yellowstone location as default
-   $inputdata_rootdir="/glade/p/cesm/cseg/inputdata";
+   $inputdata_rootdir="/glade/campaign/cesm/cesmdata/cseg/inputdata";
    print("WARNING:  -csmdata nor CSMDATA are set, using default yellowstone location: $inputdata_rootdir\n");
 }
 
@@ -163,9 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 2425;
+my $ntests = 2466;
+
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1683;
+   $ntests += 1701;
 }
 plan( tests=>$ntests );
 
@@ -323,6 +324,8 @@ foreach my $driver ( "mct", "nuopc" ) {
                          "-res 0.9x1.25 -structure fast",
                          "-res 0.9x1.25 -namelist '&a irrigate=.true./'", "-res 0.9x1.25 -verbose", "-res 0.9x1.25 -ssp_rcp SSP4-2.5", "-res 0.9x1.25 -test", "-res 0.9x1.25 -sim_year 1850",
                          "-res 0.9x1.25 -namelist '&a use_lai_streams=.true.,use_soil_moisture_streams=.true./'",
+                         "-res 0.9x1.25 -namelist '&a use_excess_ice=.true. use_excess_ice_streams=.true./'",
+                         "-res 0.9x1.25 -namelist '&a use_excess_ice=.true. use_excess_ice_streams=.false./'",
                          "-res 0.9x1.25 -use_case 1850_control",
                          "-res 1x1pt_US-UMB -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
                          "-res 1x1_brazil",
@@ -337,6 +340,10 @@ foreach my $driver ( "mct", "nuopc" ) {
       my $base_options = "-envxml_dir . -driver $driver";
       if ( $driver eq "mct" ) {
          $base_options = "$base_options -lnd_frac $DOMFILE";
+         # Skip the MCT test for excess ice streams
+         if ( $options =~ /use_excess_ice_streams=.true./ ) {
+           next;
+         }
       } else {
          $base_options = "$base_options -namelist '&a force_send_to_atm = .false./'";
       }
@@ -374,7 +381,7 @@ foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO
                    "JORN", "LAJA", "MOAB", "OAES", "OSBS", "SCBI", "SOAP", "STER", "TOOL",
                    "UNDE", "YELL"
  ) {
-   &make_env_run();
+   &make_env_run( NEONSITE=>"$site" );
    #
    # Concatonate  default usermods and specific sitetogether expanding env variables while doing that
    #
@@ -393,7 +400,7 @@ foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO
    #
    # Now run  the site
    #
-   my $options = "-res CLM_USRDAT -clm_usr_name NEON -no-megan -bgc bgc -sim_year 2018 -infile $namelistfile";
+   my $options = "--res CLM_USRDAT --clm_usr_name NEON --no-megan --bgc bgc --use_case 2018_control --infile $namelistfile";
    eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
    $cfiles->checkfilesexist( "$options", $mode );
@@ -464,6 +471,9 @@ foreach my $options (
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
                       "-res 0.9x1.25 -bgc sp -use_case 1850_noanthro_control -drydep -fire_emis",
                       "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res 360x720",
+                      "--bgc bgc --light_res none --namelist \"&a fire_method='nofire'/\"",
+                      "--bgc fates --light_res 360x720 --no-megan --namelist \"&a fates_spitfire_mode=2/\"",
+                      "--bgc fates --light_res none --no-megan --namelist \"&a fates_spitfire_mode=1/\"",
                      ) {
    my $file = $startfile;
    &make_env_run();
@@ -519,8 +529,33 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
-     "soilm_stream wo use"       =>{ options=>"-res 0.9x1.25 -envxml_dir .",
-                                     namelst=>"use_soil_moisture_streams = .false.,stream_fldfilename_soilm='missing_file'",
+     "soilm_stream off w file"      =>{ options=>"-res 0.9x1.25 -envxml_dir .",
+                                     namelst=>"use_soil_moisture_streams = .false.,stream_fldfilename_soilm='file_provided_when_off'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "exice_stream off w file"  =>{ options=>"-res 0.9x1.25 -envxml_dir .",
+                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.,stream_fldfilename_exice='file_provided_when_off'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "exice_stream off w mesh"  =>{ options=>"-res 0.9x1.25 -envxml_dir .",
+                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.,stream_meshfile_exice='file_provided_when_off'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "exice off, but stream on"  =>{ options=>"-res 0.9x1.25 -envxml_dir .",
+                                     namelst=>"use_excess_ice=.false., use_excess_ice_streams = .true.,stream_fldfilename_exice='file_provided', stream_meshfile_exice='file_provided'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "exice stream off, but setmap"=>{ options=>"-res 0.9x1.25 -envxml_dir .",
+                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.,stream_mapalgo_exice='bilinear'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "exice stream on, but mct"    =>{ options=>"--res 0.9x1.25 --envxml_dir . --driver mct --lnd_frac $DOMFILE ",
+                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
@@ -683,6 +718,11 @@ my %failtest = (
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
+                                   },
+     "NEONlightresButGlobal"     =>{ options=>"--res 4x5 --bgc bgc --envxml_dir . --light_res 106x740",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
                                    },
      "spno-fire"                 =>{ options=>"-bgc sp -envxml_dir . -use_case 2000_control",
                                      namelst=>"fire_method='nofire'",
@@ -969,6 +1009,26 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                    },
+     "FATESwspitfireOffLigtOn"    =>{ options=>"-bgc fates -envxml_dir . -no-megan -light_res 360x720",
+                                     namelst=>"fates_spitfire_mode=0",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "useFATESWluna"             =>{ options=>"--bgc fates --envxml_dir . --no-megan",
+                                     namelst=>"use_luna=TRUE",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "useFATESWfun"              =>{ options=>"--bgc fates --envxml_dir . --no-megan",
+                                     namelst=>"use_fun=TRUE",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "useFATESWOsuplnitro"       =>{ options=>"--bgc fates --envxml_dir . --no-megan",
+                                     namelst=>"suplnitro='NONE'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
      "FireNoneButBGCfireon"    =>{ options=>"-bgc bgc -envxml_dir . -light_res none",
                                      namelst=>"fire_method='li2021gswpfrc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -996,6 +1056,16 @@ my %failtest = (
                                    },
      "inventoryfileDNE"          =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_fates_inventory_init=.true., fates_inventory_ctrl_filename='zztop'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm4_5",
+                                   },
+     "useinventorybutnotfile"    =>{ options=>"--res 0.9x1.25 --bgc fates --envxml_dir . --no-megan",
+                                     namelst=>"use_fates_luh=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm4_5",
+                                   },
+     "inventoryfileDNE"          =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"use_fates_luh=.true., fluh_timeseries='zztop'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
@@ -1164,6 +1234,26 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
+     "fates_non_sp_laistreams"   =>{ options=>"--envxml_dir . --bgc fates",
+                                     namelst=>"use_lai_streams=.true., use_fates_sp=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                     },
+     "bgc_non_sp_laistreams"     =>{ options=>"--envxml_dir . -bgc bgc",
+                                     namelst=>"use_lai_streams=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                     },
+     "bgc_laistreams_input"     =>{ options=>"--envxml_dir . --bgc bgc",
+                                     namelst=>"stream_year_first_lai=1999",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                     },
+     "crop_laistreams_input"     =>{ options=>"--envxml_dir . --bgc sp --crop",
+                                     namelst=>"use_lai_streams=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                     },
                );
 foreach my $key ( keys(%failtest) ) {
    print( "$key\n" );
@@ -1222,6 +1312,11 @@ my %warntest = (
                                    },
      "FUN_wo_flexCN"             =>{ options=>"-envxml_dir . -bgc bgc",
                                      namelst=>"use_fun=.true.,use_flexiblecn=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "NotNEONbutNEONlightres"    =>{ options=>"--res CLM_USRDAT --clm_usr_name regional --envxml_dir . --bgc bgc --light_res 106x174",
+                                     namelst=>"fsurdat='build-namelist_test.pl'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                    },

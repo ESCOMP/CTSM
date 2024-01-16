@@ -91,6 +91,18 @@ class TestFSurdatModifier(unittest.TestCase):
         ):
             read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
 
+    def test_dompft_and_splitcropland_fails(self):
+        """test that setting dompft crop with evenly_split_cropland True fails gracefully"""
+        section = "modify_fsurdat_basic_options"
+        crop_pft = max(self.modify_fsurdat.file.natpft.values) + 1
+        self.config.set(section, "dom_pft", str(crop_pft))
+        self.config.set(section, "evenly_split_cropland", "True")
+        with self.assertRaisesRegex(
+            SystemExit,
+            "dom_pft must not be set to a crop PFT when evenly_split_cropland is True",
+        ):
+            read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
+
     def test_optional_only_true_and_false(self):
         """test that optional settings can only be true or false"""
         section = "modify_fsurdat_basic_options"
@@ -110,12 +122,18 @@ class TestFSurdatModifier(unittest.TestCase):
         read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
         self.config.set(section, "dom_pft", "UNSET")
         read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
-        var = "idealized"
-        self.config.set(section, var, "Thing")
-        with self.assertRaisesRegex(
-            SystemExit, "Non-boolean value found for .cfg file variable: " + var
-        ):
-            read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
+        varlist = (
+            "idealized",
+            "evenly_split_cropland",
+        )
+        for var in varlist:
+            orig_value = self.config.get(section, var)
+            self.config.set(section, var, "Thing")
+            with self.assertRaisesRegex(
+                SystemExit, "Non-boolean value found for .cfg file variable: " + var
+            ):
+                read_cfg_option_control(self.modify_fsurdat, self.config, section, self.cfg_path)
+            self.config.set(section, var, orig_value)
 
     def test_read_subgrid(self):
         """test a simple read of subgrid"""
@@ -161,6 +179,24 @@ class TestFSurdatModifier(unittest.TestCase):
         self.config.set(section, "pct_glacier", "0.")
         self.config.set(section, "pct_natveg", "0.")
         self.config.set(section, "pct_crop", "0.")
+        read_cfg_subgrid(self.config, self.cfg_path)
+
+    def test_read_subgrid_split_cropland(self):
+        """
+        test a read of subgrid that's 50/50 natural and
+        cropland, with cropland split evenly among
+        crop types
+        """
+        section = "modify_fsurdat_basic_options"
+        self.config.set(section, "idealized", "False")
+        self.config.set(section, "evenly_split_cropland", "True")
+        section = "modify_fsurdat_subgrid_fractions"
+        self.config.set(section, "pct_urban", "0.0 0.0 0.0")
+        self.config.set(section, "pct_lake", "0.")
+        self.config.set(section, "pct_wetland", "0.")
+        self.config.set(section, "pct_glacier", "0.")
+        self.config.set(section, "pct_natveg", "50.")
+        self.config.set(section, "pct_crop", "50.")
         read_cfg_subgrid(self.config, self.cfg_path)
 
     def test_read_var_list(self):
