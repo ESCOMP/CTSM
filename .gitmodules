@@ -31,7 +31,7 @@
 	path = cime
 	url = https://github.com/jedwards4b/cime
         fxrequired = T:T
-        fxtag = cime6.0.198_rme02
+        fxtag = cime6.0.198_rme04
 
 [submodule "cmeps"]
 	path = components/cmeps
