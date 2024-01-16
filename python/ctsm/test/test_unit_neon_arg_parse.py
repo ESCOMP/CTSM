@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Unit tests for arg_parse
+Unit tests for neon_arg_parse
 
 You can run this by:
-    python -m unittest test_unit_arg_parse.py
+    python -m unittest test_unit_neon_arg_parse.py
 """
 
 import unittest
@@ -19,15 +19,15 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
-from ctsm.site_and_regional.arg_parse import get_parser
+from ctsm.site_and_regional.neon_arg_parse import get_parser
 from ctsm.path_utils import path_to_ctsm_root
 
 # pylint: disable=invalid-name
 
 
-class Testarg_parse(unittest.TestCase):
+class Test_neon_arg_parse(unittest.TestCase):
     """
-    Basic class for testing arg_parse.py.
+    Basic class for testing neon_arg_parse.py.
     """
 
     def setUp(self):
@@ -44,9 +44,9 @@ class Testarg_parse(unittest.TestCase):
 
     def test_function(self):
         """
-        Test that arg_parse is working properly...
+        Test that neon_arg_parse is properly reading arguments...
         """
-        sys.argv = ["arg_parse", "--neon-sites", "ABBY", "--experiment", "test", "--run-type", "ad"]
+        sys.argv = ["neon_arg_parse", "--neon-sites", "ABBY", "--experiment", "test", "--run-type", "ad"]
         description = ""
         cesmroot = path_to_ctsm_root()
         valid_neon_sites = glob.glob(

@@ -64,7 +64,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.download_utils import download_file
-from ctsm.site_and_regional.arg_parse import get_parser
+from ctsm.site_and_regional.neon_arg_parse import get_parser
 from ctsm.site_and_regional.neon_site import NeonSite
 
 # pylint: disable=import-error, wildcard-import, wrong-import-order
