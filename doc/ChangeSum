@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev164   rgknox 01/16/2024 Compatibility and tests for FATES 2-Stream
     ctsm5.1.dev163      sam 01/10/2024 Add tillage and residue removal
     ctsm5.1.dev162 samrabin 01/05/2024 Improvements to processing of crop calendar files
     ctsm5.1.dev161 samrabin 01/04/2024 Refactor 20-year running means of crop GDD accumulation

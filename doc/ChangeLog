@@ -1,4 +1,99 @@
 ===============================================================
+Tag name: ctsm5.1.dev164
+Originator(s): rgknox (Ryan Knox)
+Date: Tue Jan 16 05:28:37 PM EST 2024
+One-line Summary: Compatibility and tests for FATES 2-Stream
+
+Purpose and description of changes
+----------------------------------
+
+This set of changes enables compatibility and testing for FATES two-stream radiation scattering. Two stream radiation is selected by setting the FATES parameter file variable fates_rad_mod = 2.  This is an alternative to Norman radiation.  The FATES default radiation model will continue to be Norman for the time being, but is expected to transition to two-stream in the near future.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+CTSM issues fixed (include CTSM Issue #): 2305
+
+Known bugs introduced in this tag (include issue #): none, but testing was modified to catch a pre-existing bug via test: SMS_D_Ld3.f09_g17.I2000Clm51FatesSpCruRsGs.derecho_gnu.clm-FatesColdSatPhen_prescribed.  This has been documented in CTSM issue #2321
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes:
+[e.g., check PFS test in the test suite and look at timings, if you
+expect possible significant timing changes]
+
+If a fates user does opt to use two-stream radiation, they should expect changes in simulation time compared with norman radiation. This difference varies and is somewhere between equal or 20% slower at a maximum. Most tests seemed to be about 10-15% slower for regions with high vegetation demographic diversity.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+New tests were added to the fates and aux_clm regression suites, with suffix clm-FatesColdTwoStream.  One of them uses fixed giogeography and no cross-pft competition.
+
+Testing summary:
+----------------
+
+  regular tests, baseline: ctsm5.1.dev163
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: baseline: fates-sci.1.70.0_api.32.0.0-ctsm5.1.dev163
+    derecho ----- OK
+    izumi -------
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+All answers are B4B with baselines mentioned above, except for one fates variable: FATES_RAD_ERROR. This variable was changed to report the maximum of VIS and NIR, instead of just VIS. A follow up set of changes will change the dimension of this variable.  This change was expected.
+
+
+Other details
+-------------
+
+This set of changes is synchronized with the new FATES tag: sci.1.71.0_api.33.0.0
+PR: https://github.com/NGEET/fates/pull/1141
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev163
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Wed Jan 10 13:03:34 MST 2024
