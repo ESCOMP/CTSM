@@ -416,7 +416,9 @@ contains
 
     call ncd_io(ncid=ncid, varname='PCT_OCEAN', flag='read', data=pctocn, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( msg=' ERROR: PCT_OCEAN NOT on surfdata file'//errMsg(sourcefile, __LINE__))
+    if (.not. readvar) call endrun( msg= &
+       ' ERROR: PCT_OCEAN NOT on surfdata file but required when running ctsm5.2 or newer; ' // &
+       ' you are advised to generate a new surfdata file using the mksurfdata_esmf tool ' // errMsg(sourcefile, __LINE__))
 
     call ncd_io(ncid=ncid, varname='PCT_WETLAND', flag='read', data=pctwet, &
          dim1name=grlnd, readvar=readvar)
