@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev164
 Originator(s): rgknox (Ryan Knox)
-Date: Tue Jan 16 05:28:37 PM EST 2024
+Date: Wed 17 Jan 2024 12:38:18 PM MST
 One-line Summary: Compatibility and tests for FATES 2-Stream
 
 Purpose and description of changes
@@ -72,7 +72,7 @@ Testing summary:
 
   fates tests: baseline: fates-sci.1.70.0_api.32.0.0-ctsm5.1.dev163
     derecho ----- OK
-    izumi -------
+    izumi ------- (being run after tag was made)
 
   any other testing (give details below):
 
