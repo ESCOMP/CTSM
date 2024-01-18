@@ -2587,6 +2587,7 @@ contains
     ! LOCAL VARAIBLES:
     integer s              ! growing season index
     integer k              ! grain pool index
+    real(r8) gdd20         ! GDD*20 value for this crop type
     real(r8) gdd_target    ! cultivar GDD target this growing season
     real(r8) this_sowing_reason ! number representing sowing reason(s)
     logical did_rx_gdds    ! did this patch use a prescribed harvest requirement?
@@ -2665,6 +2666,26 @@ contains
          endif
       endif
 
+      ! which GDD*20 variable does this crop use?
+      if (ivt(p) == ntmp_soybean .or. ivt(p) == nirrig_tmp_soybean .or. &
+            ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean) then
+         gdd20 = gdd1020(p)
+      else if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
+            ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
+            ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
+            ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
+            ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
+         gdd20 = gdd820(p)
+      else if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
+            ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat .or. &
+            ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
+            ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
+         gdd20 = gdd020(p)
+      else
+         write(iulog, *) 'ERROR: PlantCrop(): unrecognized ivt for gdd20: ',ivt(p)
+         call endrun(msg="Stopping")
+      end if
+
       ! set GDD target
       did_rx_gdds = .false.
       if (use_cropcal_rx_cultivar_gdds .and. crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p)) .ge. 0._r8) then
@@ -2674,23 +2695,22 @@ contains
          gddmaturity(p) = hybgdd(ivt(p))
       else
          if (ivt(p) == ntmp_soybean .or. ivt(p) == nirrig_tmp_soybean .or. &
-               ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean) then
-            gddmaturity(p) = min(gdd1020(p), hybgdd(ivt(p)))
+               ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean .or. &
+               ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
+               ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
+               ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
+            gddmaturity(p) = min(gdd20, hybgdd(ivt(p)))
          else if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
                ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
                ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
                ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
                ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
-            gddmaturity(p) = max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
+            gddmaturity(p) = max(950._r8, min(gdd20*0.85_r8, hybgdd(ivt(p))))
             if (do_plant_normal) then
                gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
             end if
-         else if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
-               ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
-               ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
-            gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
          else
-            write(iulog, *) 'ERROR: PlantCrop(): unrecognized ivt ',ivt(p)
+            write(iulog, *) 'ERROR: PlantCrop(): unrecognized ivt for GDD target: ',ivt(p)
             call endrun(msg="Stopping")
          end if
 
