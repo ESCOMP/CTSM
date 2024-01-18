@@ -35,7 +35,7 @@ module cropcalStreamMod
   integer, allocatable        :: g_to_ig(:)         ! Array matching gridcell index to data index
   type(shr_strdata_type)      :: sdat_cropcal_swindow_start   ! sowing window start input data stream
   type(shr_strdata_type)      :: sdat_cropcal_swindow_end     ! sowing window end input data stream
-  type(shr_strdata_type)      :: sdat_cropcal_cultivar_gdds   ! sdate input data stream
+  type(shr_strdata_type)      :: sdat_cropcal_cultivar_gdds   ! maturity requirement input data stream
   character(len=CS), allocatable :: stream_varnames_sdate(:) ! used for both start and end dates
   character(len=CS), allocatable :: stream_varnames_cultivar_gdds(:)
   integer                     :: ncft               ! Number of crop functional types (excl. generic crops)
