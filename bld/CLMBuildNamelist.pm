@@ -1571,6 +1571,7 @@ sub process_namelist_inline_logic {
   setup_logic_irrigate($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_start_type($opts, $nl_flags, $nl);
   setup_logic_decomp_performance($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_roughness_methods($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_snicar_methods($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snow($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_glacier($opts, $nl_flags, $definition, $defaults, $nl,  $envxml_ref);
@@ -2000,6 +2001,25 @@ sub setup_logic_decomp_performance {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'nsegspc', 'hgrid'=>$nl_flags->{'res'});
 }
 
+#-------------------------------------------------------------------------------
+
+sub setup_logic_roughness_methods {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'z0param_method',
+              'phys'=>$nl_flags->{'phys'} );
+
+  my $var = remove_leading_and_trailing_quotes( $nl->get_value("z0param_method") );
+  if ( $var ne "Meier2022" && $var ne "ZengWang2007" ) {
+    $log->fatal_error("$var is incorrect entry for the namelist variable z0param_method; expected Meier2022 or ZengWang2007");
+  }
+  my $phys = $physv->as_string();
+  if ( $phys eq "clm4_5" || $phys eq "clm5_0" ) {
+    if ( $var eq "Meier2022" ) {
+      $log->fatal_error("z0param_method = $var and phys = $phys, but this method has been tested only with clm5_1 and later versions; to use with earlier versions, disable this error, and add Meier2022 parameters to the corresponding params file");
+    }
+  }
+}
 #-------------------------------------------------------------------------------
 
 sub setup_logic_snicar_methods {
