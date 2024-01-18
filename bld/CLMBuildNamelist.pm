@@ -2262,6 +2262,7 @@ sub setup_logic_crop_inparm {
                  'use_crop'=>$nl->get_value('use_crop') );
      
      my $crop_residue_removal_frac = $nl->get_value('crop_residue_removal_frac');
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'crop_residue_removal_frac' );
      if ( $crop_residue_removal_frac < 0.0 or $crop_residue_removal_frac > 1.0 ) {
         $log->fatal_error("crop_residue_removal_frac must be in range [0, 1]");
      }
@@ -2275,6 +2276,8 @@ sub setup_logic_crop_inparm {
 
 sub setup_logic_tillage {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'tillage_mode' );
 
   my $tillage_mode = remove_leading_and_trailing_quotes( $nl->get_value( "tillage_mode" ) );
   if ( $tillage_mode ne "off" && $tillage_mode ne "" && not &value_is_true($nl->get_value('use_crop')) ) {
