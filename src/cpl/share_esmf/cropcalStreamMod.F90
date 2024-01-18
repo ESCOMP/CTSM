@@ -490,7 +490,6 @@ contains
              call ESMF_Finalize(endflag=ESMF_END_ABORT)
           endif
        end do
-      write(iulog,*) 'cropcal_interp(): Reading cultivar_gdds file DONE'
    end if ! use_cropcal_rx_cultivar_gdds
 
    deallocate(dataptr2d_cultivar_gdds)
