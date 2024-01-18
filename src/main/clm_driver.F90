@@ -1078,7 +1078,8 @@ contains
           ! ============================================================================
           ! Update crop calendars
           ! ============================================================================
-          call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, filter_inactive_and_active(nc)%pcropp, crop_inst)
+          call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, &
+               filter_inactive_and_active(nc)%pcropp, crop_inst)
        end if
 
        ! ============================================================================
