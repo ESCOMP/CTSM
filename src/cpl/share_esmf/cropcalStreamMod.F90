@@ -15,6 +15,7 @@ module cropcalStreamMod
   use abortutils       , only : endrun
   use clm_varctl       , only : iulog
   use clm_varctl       , only : use_cropcal_rx_swindows, use_cropcal_rx_cultivar_gdds, use_cropcal_streams
+  use clm_varctl       , only : adapt_cropcal_rx_cultivar_gdds
   use clm_varpar       , only : mxpft
   use clm_varpar       , only : mxsowings
   use perf_mod         , only : t_startf, t_stopf
@@ -36,13 +37,16 @@ module cropcalStreamMod
   type(shr_strdata_type)      :: sdat_cropcal_swindow_start   ! sowing window start input data stream
   type(shr_strdata_type)      :: sdat_cropcal_swindow_end     ! sowing window end input data stream
   type(shr_strdata_type)      :: sdat_cropcal_cultivar_gdds   ! maturity requirement input data stream
+  type(shr_strdata_type)      :: sdat_cropcal_gdd20_baseline  ! GDD20 baseline input data stream
   character(len=CS), allocatable :: stream_varnames_sdate(:) ! used for both start and end dates
   character(len=CS), allocatable :: stream_varnames_cultivar_gdds(:)
+  character(len=CS), allocatable :: stream_varnames_gdd20_baseline(:)
   integer                     :: ncft               ! Number of crop functional types (excl. generic crops)
   logical                     :: allow_invalid_swindow_inputs ! Fall back on paramfile sowing windows in cases of invalid values in stream_fldFileName_swindow_start and _end?
   character(len=CL)       :: stream_fldFileName_swindow_start ! sowing window start stream filename to read
   character(len=CL)       :: stream_fldFileName_swindow_end   ! sowing window end stream filename to read
   character(len=CL)       :: stream_fldFileName_cultivar_gdds ! cultivar growing degree-days stream filename to read
+  character(len=CL)       :: stream_fldFileName_gdd20_baseline ! GDD20 baseline stream filename to read
 
   character(len=*), parameter :: sourcefile = &
        __FILE__
@@ -90,6 +94,7 @@ contains
          stream_fldFileName_swindow_start, &
          stream_fldFileName_swindow_end,   &
          stream_fldFileName_cultivar_gdds, &
+         stream_fldFileName_gdd20_baseline, &
          stream_meshfile_cropcal
 
     ! Default values for namelist
@@ -101,14 +106,17 @@ contains
     stream_fldFileName_swindow_start = ''
     stream_fldFileName_swindow_end   = ''
     stream_fldFileName_cultivar_gdds = ''
+    stream_fldFileName_gdd20_baseline = ''
     ! Will need modification to work with mxsowings > 1
     ncft = mxpft - npcropmin + 1 ! Ignores generic crops
     allocate(stream_varnames_sdate(ncft))
     allocate(stream_varnames_cultivar_gdds(ncft))
+    allocate(stream_varnames_gdd20_baseline(ncft))
     do n = 1,ncft
        ivt = npcropmin + n - 1
        write(stream_varnames_sdate(n),'(a,i0)') "sdate1_",ivt
        write(stream_varnames_cultivar_gdds(n),'(a,i0)') "gdd1_",ivt
+       write(stream_varnames_gdd20_baseline(n),'(a,i0)') "gdd20bl_",ivt
     end do
 
     ! Read cropcal_streams namelist
@@ -132,6 +140,7 @@ contains
     call shr_mpi_bcast(stream_fldFileName_swindow_start, mpicom)
     call shr_mpi_bcast(stream_fldFileName_swindow_end  , mpicom)
     call shr_mpi_bcast(stream_fldFileName_cultivar_gdds, mpicom)
+    call shr_mpi_bcast(stream_fldFileName_gdd20_baseline, mpicom)
     call shr_mpi_bcast(stream_meshfile_cropcal    , mpicom)
 
     if (masterproc) then
@@ -144,10 +153,12 @@ contains
        write(iulog,'(a,a)' ) '  stream_fldFileName_swindow_start   = ',trim(stream_fldFileName_swindow_start)
        write(iulog,'(a,a)' ) '  stream_fldFileName_swindow_end     = ',trim(stream_fldFileName_swindow_end)
        write(iulog,'(a,a)' ) '  stream_fldFileName_cultivar_gdds   = ',trim(stream_fldFileName_cultivar_gdds)
+       write(iulog,'(a,a)' ) '  stream_fldFileName_gdd20_baseline  = ',trim(stream_fldFileName_gdd20_baseline)
        write(iulog,'(a,a)' ) '  stream_meshfile_cropcal    = ',trim(stream_meshfile_cropcal)
        do n = 1,ncft
           write(iulog,'(a,a)' ) '  stream_varnames_sdate  = ',trim(stream_varnames_sdate(n))
           write(iulog,'(a,a)' ) '  stream_varnames_cultivar_gdds  = ',trim(stream_varnames_cultivar_gdds(n))
+          write(iulog,'(a,a)' ) '  stream_varnames_gdd20_baseline  = ',trim(stream_varnames_gdd20_baseline(n))
        end do
        write(iulog,*)
     endif
@@ -155,6 +166,7 @@ contains
     ! CLMBuildNamelist checks that both start and end files are provided if either is
     use_cropcal_rx_swindows      = stream_fldFileName_swindow_start /= ''
     use_cropcal_rx_cultivar_gdds = stream_fldFileName_cultivar_gdds /= ''
+    adapt_cropcal_rx_cultivar_gdds = stream_fldFileName_gdd20_baseline /= ''
     use_cropcal_streams = use_cropcal_rx_swindows .or. use_cropcal_rx_cultivar_gdds
 
     if (use_cropcal_rx_swindows) then
@@ -242,6 +254,36 @@ contains
        end if
     end if
 
+    ! Initialize the cdeps data type sdat_cropcal_gdd20_baseline
+    ! NOTE: stream_dtlimit 1.5 didn't work for some reason
+    !TODO SSR: Do not allow time axis length > 1
+    if (adapt_cropcal_rx_cultivar_gdds) then
+       call shr_strdata_init_from_inline(sdat_cropcal_gdd20_baseline,  &
+            my_task             = iam,                                &
+            logunit             = iulog,                              &
+            compname            = 'LND',                              &
+            model_clock         = model_clock,                        &
+            model_mesh          = mesh,                               &
+            stream_meshfile     = trim(stream_meshfile_cropcal),      &
+            stream_lev_dimname  = 'null',                             &
+            stream_mapalgo      = 'bilinear',                         &
+            stream_filenames    = (/trim(stream_fldFileName_gdd20_baseline)/), &
+            stream_fldlistFile  = stream_varnames_gdd20_baseline,     &
+            stream_fldListModel = stream_varnames_gdd20_baseline,     &
+            stream_yearFirst    = 2000,                               &
+            stream_yearLast     = 2000,                               &
+            stream_yearAlign    = 2000,                               &
+            stream_offset       = cropcal_offset,                     &
+            stream_taxmode      = 'extend',                           &
+            stream_dtlimit      = 1.0e30_r8,                          &
+            stream_tintalgo     = cropcal_tintalgo,                   &
+            stream_name         = 'GDD20 baseline data',              &
+            rc                  = rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       end if
+    end if
+
   end subroutine cropcal_init
 
   !================================================================
@@ -285,6 +327,8 @@ contains
        end if
     end if
 
+    ! GDD20 baseline values do not have an associated time axis and thus will not be advanced here
+
     if ( .not. allocated(g_to_ig) )then
        allocate (g_to_ig(bounds%begg:bounds%endg) )
        ig = 0
@@ -298,7 +342,7 @@ contains
 
   !================================================================
 
-  subroutine cropcal_interp(bounds, num_pcropp, filter_pcropp, crop_inst)
+  subroutine cropcal_interp(bounds, num_pcropp, filter_pcropp, init, crop_inst)
     !
     ! Interpolate data stream information for crop calendars.
     !
@@ -314,6 +358,7 @@ contains
     type(bounds_type)      , intent(in)    :: bounds
     integer                , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
     integer                , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
+    logical                , intent(in)    :: init  ! is this being called as initialization?
     type(crop_type)        , intent(inout) :: crop_inst
     !
     ! !LOCAL VARIABLES:
@@ -327,9 +372,11 @@ contains
     real(r8), pointer :: dataptr1d_swindow_start(:)
     real(r8), pointer :: dataptr1d_swindow_end  (:)
     real(r8), pointer :: dataptr1d_cultivar_gdds(:)
+    real(r8), pointer :: dataptr1d_gdd20_baseline(:)
     real(r8), pointer :: dataptr2d_swindow_start(:,:)
     real(r8), pointer :: dataptr2d_swindow_end  (:,:)
     real(r8), pointer :: dataptr2d_cultivar_gdds(:,:)
+    real(r8), pointer :: dataptr2d_gdd20_baseline(:,:)
     !-----------------------------------------------------------------------
 
     associate( &
@@ -345,7 +392,7 @@ contains
     lsize = bounds%endg - bounds%begg + 1
 
     begp = bounds%begp
-    endp= bounds%endp
+    endp = bounds%endp
 
     dayspyr = get_curr_days_per_year()
 
@@ -493,6 +540,68 @@ contains
    end if ! use_cropcal_rx_cultivar_gdds
 
    deallocate(dataptr2d_cultivar_gdds)
+
+   allocate(dataptr2d_gdd20_baseline(lsize, ncft))
+   if (adapt_cropcal_rx_cultivar_gdds .and. init) then
+      ! Read GDD20 baselines from input files
+      ! Starting with npcropmin will skip generic crops
+      do n = 1, ncft
+         call dshr_fldbun_getFldPtr(sdat_cropcal_gdd20_baseline%pstrm(1)%fldbun_model, trim(stream_varnames_gdd20_baseline(n)), &
+              fldptr1=dataptr1d_gdd20_baseline,  rc=rc)
+         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+            call ESMF_Finalize(endflag=ESMF_END_ABORT)
+         end if
+
+         ! Note that the size of dataptr1d includes ocean points so it will be around 3x larger than lsize
+         ! So an explicit loop is required here
+         do g = 1,lsize
+  
+            !  Ensure valid values
+            if (dataptr1d_gdd20_baseline(g) < 0 .or. dataptr1d_gdd20_baseline(g) > 1000000._r8) then
+               write(iulog, *) 'ERROR: invalid read-in gdd20_baseline value: ',dataptr1d_gdd20_baseline(g)
+               call ESMF_Finalize(endflag=ESMF_END_ABORT)
+            else if (dataptr1d_gdd20_baseline(g) == 0) then
+               write(iulog, *) 'ERROR: read-in gdd20_baseline value 0 will cause inf'
+               call ESMF_Finalize(endflag=ESMF_END_ABORT)
+            end if
+           
+            dataptr2d_gdd20_baseline(g,n) = dataptr1d_gdd20_baseline(g)
+         end do
+      end do
+  
+      ! Set gdd20_baseline_patch for each gridcell/patch combination
+      do fp = 1, num_pcropp
+         p = filter_pcropp(fp)
+
+         ivt = patch%itype(p)
+         ! Will skip generic crops
+         if (ivt >= npcropmin) then
+            n = ivt - npcropmin + 1
+
+            if (n > ncft) then
+                write(iulog,'(a,i0,a,i0,a)') 'n (',n,') > ncft (',ncft,')'
+                call ESMF_Finalize(endflag=ESMF_END_ABORT)
+            end if
+
+            ! vegetated pft
+            ig = g_to_ig(patch%gridcell(p))
+
+            if (ig > lsize) then
+                write(iulog,'(a,i0,a,i0,a)') 'ig (',ig,') > lsize (',lsize,')'
+                call ESMF_Finalize(endflag=ESMF_END_ABORT)
+            end if
+
+            crop_inst%gdd20_baseline_patch(p) = dataptr2d_gdd20_baseline(ig,n)
+  
+         else
+            write(iulog,'(a,i0)') 'cropcal_interp(), rx_gdd20_baseline: Crop patch has ivt ',ivt
+            call ESMF_Finalize(endflag=ESMF_END_ABORT)
+         endif
+      end do
+  end if ! adapt_cropcal_rx_cultivar_gdds
+
+  deallocate(dataptr2d_gdd20_baseline)
+
 
    end associate
 

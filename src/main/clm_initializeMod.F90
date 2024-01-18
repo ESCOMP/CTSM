@@ -652,7 +652,7 @@ contains
       do nc = 1,nclumps
          call get_clump_bounds(nc, bounds_clump)
          call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, &
-              filter_inactive_and_active(nc)%pcropp, crop_inst)
+              filter_inactive_and_active(nc)%pcropp, .true., crop_inst)
       end do
       !$OMP END PARALLEL DO
     end if

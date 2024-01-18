@@ -1936,6 +1936,11 @@ Filename of input stream data for date (day of year) of end of sowing window. Ce
 Filename of input stream data for cultivar growing degree-day targets
 </entry>
 
+<entry id="stream_fldFileName_gdd20_baseline" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for baseline GDD20 values
+</entry>
+
 <entry id="stream_meshfile_cropcal" type="char*256" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
 Filename of input stream data for crop calendar inputs
