@@ -57,6 +57,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         metadata_file = os.path.join(self._tempdir, "metadata.nc")
         configure_path = os.path.join(path_to_cime(), "CIME/scripts/configure")
 
+        self._previous_dir = os.getcwd()
         os.chdir(self._tempdir)  # cd to tempdir
 
         # Run configure to generate .env_mach_specific.sh
@@ -111,7 +112,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         """
         Remove temporary directory
         """
-        os.getcwd()  # cd back to the original working directory
+        os.chdir(self._previous_dir)  # cd back to the original working directory
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_allInfo(self):

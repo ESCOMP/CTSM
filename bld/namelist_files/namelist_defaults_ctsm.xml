@@ -484,15 +484,15 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c231117.nc</paramfile>
-<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c231117.nc</paramfile>
-<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c231117.nc</paramfile>
+<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c240105.nc</paramfile>
+<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c240105.nc</paramfile>
+<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c240105.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
 <!-- ================================================================== -->
 
-<fates_paramfile>lnd/clm2/paramdata/fates_params_api.25.5.0_12pft_c230628.nc</fates_paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params_api.32.0.0_12pft_c231215.nc</fates_paramfile>
 
 <!-- ================================================================== -->
 <!-- Default surface roughness parameterization                         -->
@@ -552,6 +552,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_grainproduct use_crop=".true." phys="clm4_5" >.false.</use_grainproduct> <!-- 1-year grain product pool default to off for clm45 if crop is turned on -->
 <use_grainproduct use_crop=".true." phys="clm5_0" >.true.</use_grainproduct> <!-- 1-year grain product pool default to on for clm50 if crop is turned on -->
 <use_grainproduct use_crop=".true." phys="clm5_1" >.true.</use_grainproduct> <!-- 1-year grain product pool default to on for clm50 if crop is turned on -->
+
+<crop_residue_removal_frac>0.d+0</crop_residue_removal_frac>
 
 <!-- Crop model options -->
 <baset_mapping           use_crop=".true." phys="clm4_5" >constant</baset_mapping>
@@ -1571,6 +1573,15 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
  use_crop=".false."   >lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_1.9x2.5_SSP5-3.4_16pfts_Irrig_CMIP6_simyr1850-2100_c190228.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="10x15"         sim_year_range="1850-2100" ssp_rcp="SSP5-3.4"
  use_crop=".false."   >lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_10x15_SSP5-3.4_16pfts_Irrig_CMIP6_simyr1850-2100_c190228.nc</flanduse_timeseries>
+
+<!-- Land Use Harmonization unified data sets for dynamic FATES land use change -->
+
+<fluh_timeseries hgrid="4x5" sim_year_range="1850-2000" use_fates=".true."
+ >lnd/clm2/surfdata_map/fates-sci.1.68.3_api.31.0.0_tools.1.0.1/LUH2_states_transitions_management.timeseries_4x5_hist_simyr1850-2015_c231101.nc</fluh_timeseries>
+
+<!-- This one is just for testing until Issue #2304 is resolved -->
+<fluh_timeseries hgrid="4x5" sim_year_range="constant" use_fates=".true."
+ >lnd/clm2/surfdata_map/fates-sci.1.68.3_api.31.0.0_tools.1.0.1/LUH2_states_transitions_management.timeseries_4x5_hist_simyr1850-2015_c231101.nc</fluh_timeseries>
 
 <!-- Fixation and Uptake of Nitrogen Model (FUN2.0) -->
 <use_fun phys="clm5_1"  use_cn=".true." use_nitrif_denitrif=".true.">.true.</use_fun>
@@ -2755,6 +2766,7 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <use_fates_logging             use_fates=".true.">.false.</use_fates_logging>
 <use_fates_inventory_init      use_fates=".true.">.false.</use_fates_inventory_init>
 <use_fates_sp                  use_fates=".true.">.false.</use_fates_sp>
+<use_fates_luh                 use_fates=".true.">.false.</use_fates_luh>
 <fates_parteh_mode             use_fates=".true.">1</fates_parteh_mode>
 <fates_seeddisp_cadence        use_fates=".true.">0</fates_seeddisp_cadence>
 
@@ -2795,5 +2807,13 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <stream_fldfilename_exice use_excess_ice=".true.">lnd/clm2/paramdata/exice_init_0.125x0.125_c20220516.nc</stream_fldfilename_exice>
 <stream_meshfile_exice    use_excess_ice=".true.">lnd/clm2/paramdata/exice_init_0.125x0.125_ESMFmesh_cdf5_c20220802.nc</stream_meshfile_exice>
 <stream_mapalgo_exice     use_excess_ice=".true.">bilinear</stream_mapalgo_exice>
+
+<!-- =========================================  -->
+<!-- Defaults for tillage                       -->
+<!-- =========================================  -->
+
+<tillage_mode>off</tillage_mode>
+<use_original_tillage_phases>.false.</use_original_tillage_phases>
+<max_tillage_depth>0.26d00</max_tillage_depth>
 
 </namelist_defaults>

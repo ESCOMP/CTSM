@@ -12,7 +12,7 @@ import shutil
 import sys
 
 from ctsm import unit_testing
-from ctsm.site_and_regional.run_neon import main, get_parser
+from ctsm.site_and_regional.run_neon import main
 from ctsm.path_utils import path_to_ctsm_root
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
@@ -28,6 +28,7 @@ class TestSysRunNeon(unittest.TestCase):
         Make /_tempdir for use by these tests.
         Check tempdir for history files
         """
+        self._previous_dir = os.getcwd()
         self._tempdir = tempfile.mkdtemp()
         os.chdir(self._tempdir)  # cd to tempdir
 
@@ -35,6 +36,7 @@ class TestSysRunNeon(unittest.TestCase):
         """
         Remove temporary directory
         """
+        os.chdir(self._previous_dir)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_one_site(self):
@@ -52,8 +54,6 @@ class TestSysRunNeon(unittest.TestCase):
             "--output-root",
             self._tempdir,
         ]
-        valid_neon_sites = ["ABBY", "OSBS", "BART"]
-        parser = get_parser(sys.argv, "description_for_parser", valid_neon_sites)
         main("")
 
         # assert that BART directories were created during setup

@@ -777,6 +777,22 @@ Full pathname to the inventory initialization control file.
 (Only relevant if FATES is on).
 </entry>
 
+<!-- This may eventually migrate to the dynamic_subgrid group-->
+<entry id="use_fates_luh" type="logical" category="physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, enable use of land use harmonization (LUH) state and transition data from luh_timeseries file.
+(Also, only valid for use_fates = true and is incompatible with transient runs currently.)
+</entry>
+
+<!-- This could eventually be included in the "dynamic_subgrid" -->
+<entry id="fluh_timeseries" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname of unified land use harmonization (LUH) data file. This causes the land-use
+types to vary over time.
+(Required, if use_fates_luh=T)
+(Only relevant if FATES is on).
+</entry>
+
 <entry id="use_luna" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the LUNA model, to effect Photosynthesis by leaf Nitrogen
@@ -1146,6 +1162,13 @@ Toggle to turn on the prognostic fertilizer for crop model
 <entry id="use_grainproduct" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the 1-year grain product pool in the crop model 
+</entry>
+
+<entry id="crop_residue_removal_frac" type="real" category="physics"
+       group="clm_inparm" valid_values="" value="0.0d00">
+Fraction of post-harvest crop residues (leaf and stem) to move to 
+1-year product pool instead of letting them fall as litter.
+<default>Default: 0.0</default>
 </entry>
 
 <entry id="baset_mapping" type="char*20" category="physics"
@@ -2967,5 +2990,23 @@ Mapping method from excess ice input stream data to the model resolution
     none     = no interpolation
 </entry>
 
+<!-- ========================================================================================  -->
+<!-- Namelist items controlling tillage                                                        -->
+<!-- ========================================================================================  -->
+
+<entry id="tillage_mode" type="char*8" category="physics"
+       group="tillage_inparm" valid_values="off,low,high">
+Whether to till crop soil, and if so, with what intensity.
+</entry>
+
+<entry id="use_original_tillage_phases" type="logical" category="physics"
+       group="tillage_inparm" valid_values="" value=".false.">
+Toggle to use original (Graham et al. 2021) tillage logic, with bug for seasons crossing into a new calendar year
+</entry>
+
+<entry id="max_tillage_depth" type="real" category="physics"
+       group="tillage_inparm" valid_values="" value="0.26d00">
+Maximum depth to till soil (m). Default 0.26; original (Graham et al., 2021) value was unintentionally 0.32.
+</entry>
 
 </namelist_definition>

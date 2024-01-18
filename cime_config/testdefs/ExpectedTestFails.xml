@@ -52,7 +52,7 @@
   </test>
 
   <test name="SMS_D.f10_f10_mg37.I2000Clm51BgcCrop.derecho_nvhpc.clm-crop">
-    <phase name="RUN">
+    <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
       <issue>#1733</issue>
     </phase>
@@ -93,8 +93,70 @@
     </phase>
   </test>
   
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Bgc.derecho_gnu.clm-default--clm-NEON-NIWO">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+  </test>
+  
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Bgc.derecho_gnu.clm-NEON-MOAB--clm-PRISM">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+  </test>
+  
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Fates.derecho_gnu.clm-FatesFireLightningPopDens--clm-NEON-FATES-NIWO">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+  </test>
+  
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Fates.derecho_gnu.clm-FatesPRISM--clm-NEON-FATES-YELL">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+  </test>
+  
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm51SpRs.derecho_gnu.clm-default--clm-NEON-TOOL">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+  </test>
+    
   <!-- fates test suite failures -->
 
+  <test name="SMS_D_Ld3.f09_g17.I2000Clm51FatesSpCruRsGs.derecho_gnu.clm-FatesColdSatPhen_prescribed">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2321</issue>
+    </phase>
+  </test>
+      
   <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdHydro">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>

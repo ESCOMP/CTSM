@@ -1787,7 +1787,7 @@
       <option name="wallclock">00:60:00</option>
     </options>
   </test>
-  <test name="PEM_Ld1" grid="f10_f10_mg37" compset="I2000Clm51BgcCrop" testmods="clm/crop">
+  <test name="PEM_Ld1" grid="f10_f10_mg37" compset="I2000Clm51BgcCrop" testmods="clm/till">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="intel" category="prebeta"/>
@@ -2297,16 +2297,24 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f10_f10_mg37" compset="I1850Clm45BgcCrop" testmods="clm/crop">
+  <test name="SMS_Ld5" grid="f10_f10_mg37" compset="I1850Clm45BgcCrop" testmods="clm/till--clm/remove_residues">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >include a production gnu test of Clm45 and tillage</option>
+    </options>
+  </test>
+  <test name="SMS_Ld5" grid="f10_f10_mg37" compset="I1850Clm45BgcCrop" testmods="clm/crop">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >include a production gnu test of Clm45</option>
+      <option name="comment"  >include a production intel test of Clm45</option>
     </options>
   </test>
   <test name="SMS_Ld2_D_PS" grid="f09_g17" compset="I1850Clm50BgcCropCmip6" testmods="clm/basic_interp">
@@ -2513,6 +2521,26 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Ensure functionality of the tree damage option in FATES</option>
+    </options>
+  </test>
+  <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTwoStream">
+    <machines>
+      <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment"  >Ensure functionality of two-stream radiation option in FATES</option>
+    </options>
+  </test>
+  <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTwoStreamNoCompFixedBioGeo">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment"  >Ensure functionality of two-stream radiation option with nocomp-fixedbiogeo in FATES</option>
     </options>
   </test>
   <test name="ERS_D_Ld3_PS" grid="f09_g17" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
@@ -2904,6 +2932,16 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
+  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLUH2">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="izumi" compiler="nag" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+    </options>
+  </test>
   <test name="ERS_D_Ld3" grid="f19_g17" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
@@ -3097,13 +3135,13 @@
     </options>
   </test>
 
-  <test name="SMS_Ld3" grid="f09_g17" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdSatPhen_prescribed">
+  <test name="SMS_D_Ld3" grid="f09_g17" compset="I2000Clm51FatesSpCruRsGs" testmods="clm/FatesColdSatPhen_prescribed">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="cheyenne" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
       <option name="comment">Test with prescribed LAI and soil moisture with FatesSP mode</option>
     </options>
   </test>

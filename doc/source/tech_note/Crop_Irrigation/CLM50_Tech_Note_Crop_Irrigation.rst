@@ -39,7 +39,8 @@ These updates appear in detail in the sections below. Many also appear in :ref:`
 Available new features since the CLM5 release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - Addition of bioenergy crops
-- Ablity to customize crop calendars (sowing windows/dates, maturity requirements) using stream files
+- Ability to customize crop calendars (sowing windows/dates, maturity requirements) using stream files
+- Cropland soil tillage
 
 .. _The crop model:
 
@@ -508,45 +509,47 @@ where :math:`{C}_{leaf}`, :math:`{C}_{stem}`, and :math:`{C}_{froot}` is the car
 Harvest
 '''''''
 
-Variables track the flow of grain C and N to food and of all other plant pools, including live stem C and N, to litter, and to biofuel feedstock. A fraction (determined by the :math:`biofuel\_harvfrac`, defined in :numref:`Table Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy production`) of leaf/livestem C and N from bioenergy crops is removed at harvest for biofuels (Equations :eq:`25.9`, :eq:`25.10`, :eq:`25.12`, and :eq:`25.13`), with the remaining portions going to the litter pools (Equations :eq:`20.14)`, :eq:`25.11`, and :eq:`25.14`). Putting live stem C and N into the litter and biofuel pools is in contrast to the approach for unmanaged PFTs which puts live stem C and N into dead stem pools first. Biofuel crop leaf C and N pools are routed to the litter and biofuel pools, in contrast to that of unmanaged PFTs and non-biofuel crops, which put leaf C and N into litter pools only. Root C and N pools are routed to the litter pools in the same manner as natural vegetation.
+Variables track the flow of grain C and N to food and of all other plant pools, including live stem C and N, to litter, and to biofuel feedstock. A fraction (determined by the :math:`biofuel\_harvfrac`, defined in :numref:`Table Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy production`) of leaf/livestem C and N from bioenergy crops is removed at harvest for biofuels (Equations :eq:`25.9`. :eq:`harv_c_to_removed_residue`, :eq:`25.12`, and :eq:`harv_n_to_removed_residue`), with the remaining portions going to the litter pools (Equations :eq:`20.14)`, :eq:`25.11`, and :eq:`25.14`). Putting live stem C and N into the litter and biofuel pools is in contrast to the approach for unmanaged PFTs which puts live stem C and N into dead stem pools first. Biofuel crop leaf and stem C and N pools are routed to the litter and biofuel pools, in contrast to that of unmanaged PFTs and non-biofuel crops, which under default settings put leaf C and N into litter pools only. All crops can have their leaf and stem pools routed to a "removed residue" pool by setting namelist parameter :math:`crop\_residue\_removal\_frac` to something greater than its default zero. Root C and N pools are routed to the litter pools in the same manner as natural vegetation.
+
+In the equations below, subscript :math:`p` refers to either the leaf or live stem biomass pool.
 
 .. math::
    :label: 25.9
 
-     CF_{leaf,biofuel} = \left({CS_{leaf} \mathord{\left/ {\vphantom {CS_{leaf}  \Delta t}} \right.} \Delta t}
+     CF_{p,biofuel} = \left({CS_{p} \mathord{\left/ {\vphantom {CS_{p}  \Delta t}} \right.} \Delta t}
      \right) * biofuel\_harvfrac
 
 .. math::
-   :label: 25.10
+   :label: harv_c_to_removed_residue
 
-     CF_{livestem,biofuel} = \left({CS_{livestem} \mathord{\left/ {\vphantom {CS_{leaf}  \Delta t}} \right.} \Delta t}
-     \right) * biofuel\_harvfrac
+     CF_{p,removed\_residue} = \left({CS_{p} \mathord{\left/ {\vphantom {CS_{p}  \Delta t}} \right.} \Delta t}
+     \right) * (1 - biofuel\_harvfrac) * crop\_residue\_removal\_frac
 
 .. math::
    :label: 25.11
 
-     CF_{livestem,litter} = \left({CS_{livestem} \mathord{\left/ {\vphantom {CS_{livestem}  \Delta t}} \right.} \Delta t}
-     \right) * \left( 1-biofuel\_harvfrac  \right) +CF_{alloc,livestem}
+     CF_{p,litter} = \left({CS_{p} \mathord{\left/ {\vphantom {CS_{p}  \Delta t}} \right.} \Delta t}
+     \right) * \left( 1-biofuel\_harvfrac  \right) * \left( 1-crop\_residue\_removal\_frac  \right) +CF_{p,alloc}
 
 with corresponding nitrogen fluxes:
 
 .. math::
    :label: 25.12
 
-     NF_{leaf,biofuel} = \left({NS_{leaf} \mathord{\left/ {\vphantom {NS_{leaf}  \Delta t}} \right.} \Delta t}
+     NF_{p,biofuel} = \left({NS_{p} \mathord{\left/ {\vphantom {NS_{p}  \Delta t}} \right.} \Delta t}
      \right) * biofuel\_harvfrac
 
 .. math::
-   :label: 25.13
+   :label: harv_n_to_removed_residue
 
-     NF_{livestem,biofuel} = \left({NS_{livestem} \mathord{\left/ {\vphantom {NS_{livestem}  \Delta t}} \right.} \Delta t}
-     \right) *  biofuel\_harvfrac
+     NF_{p,removed\_residue} = \left({NS_{p} \mathord{\left/ {\vphantom {NS_{p}  \Delta t}} \right.} \Delta t}
+     \right) * \left( 1 - biofuel\_harvfrac \right) * crop\_residue\_removal\_frac
 
 .. math::
    :label: 25.14
 
-     NF_{livestem,litter} = \left({NS_{livestem} \mathord{\left/ {\vphantom {NS_{livestem}  \Delta t}} \right.} \Delta t}
-     \right) *  \left( 1-biofuel\_harvfrac  \right)
+     NF_{p,litter} = \left({NS_{p} \mathord{\left/ {\vphantom {NS_{p}  \Delta t}} \right.} \Delta t}
+     \right) *  \left( 1-biofuel\_harvfrac  \right) *  \left( 1-crop\_residue\_removal\_frac  \right)
 
 where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, NS is stored nitrogen, and :math:`biofuel\_harvfrac` is the harvested fraction of leaf/livestem for biofuel feedstocks.
 
@@ -606,7 +609,7 @@ where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, NS is
  | Switchgrass                      |             0.70           |
  +----------------------------------+----------------------------+
 
-Whereas food C and N was formerly transferred to the litter pool, CLM5 routes food C and N to a grain product pool where the C and N decay to the atmosphere over one year, similar in structure to the wood product pools. The biofuel C and N is also routed to the grain product pool and decays to the atmosphere over one year. Additionally, CLM5 accounts for the C and N required for crop seeding by removing the seed C and N from the grain product pool during harvest. The crop seed pool is then used to seed crops in the subsequent year.
+Whereas food C and N was formerly transferred to the litter pool, CLM5 routes food C and N to a grain product pool where the C and N decay to the atmosphere over one year, similar in structure to the wood product pools. Biofuel and removed-residue C and N is also routed to the grain product pool and decays to the atmosphere over one year. Additionally, CLM5 accounts for the C and N required for crop seeding by removing the seed C and N from the grain product pool during harvest. The crop seed pool is then used to seed crops in the subsequent year.
 
 Annual food crop yields (g dry matter m\ :sup:`-2`) can be calculated by saving the GRAINC_TO_FOOD_ANN variable once per year, then postprocessing with Equation :eq:`25.15`. This calculation assumes that grain C is 45% of the total dry weight. Additionally, harvest is not typically 100% efficient, so analysis needs to assume that harvest efficiency is less---we use 85%.
 
@@ -707,6 +710,12 @@ where :math:`baset` is the *base temperature for GDD* (7\ :sup:`th` row) in :num
 Separate reproductive pool
 ''''''''''''''''''''''''''
 One notable difference between natural vegetation and crops is the presence of reproductive carbon and nitrogen pools. Accounting for the reproductive pools helps determine whether crops are performing reasonably through yield calculations. The reproductive pool is maintained similarly to the leaf, stem, and fine root pools, but allocation of carbon and nitrogen does not begin until the grain fill stage of crop development. Equation :eq:`25.5` describes the carbon and nitrogen allocation coefficients to the reproductive pool. In CLM5BGCCROP, as allocation declines in stem, leaf, and root pools (see section :numref:`Grain fill to harvest`) during the grain fill stage of growth, increasing amounts of carbon and nitrogen are available for grain development.
+
+.. _Tillage:
+
+Tillage
+'''''''
+Tillage is represented as an enhancement of the decomposition rate coefficient; see section :numref:`decomp_mgmt_modifiers`.
 
 .. _The irrigation model:
 

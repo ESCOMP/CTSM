@@ -1,14 +1,21 @@
 import numpy as np
 import xarray as xr
-import shutil
 import os
 import datetime as dt
 import cftime
 import sys
 import argparse
+import logging
 
-import cropcal_utils as utils
-import regrid_ggcmi_shdates
+# -- add python/ctsm  to path (needed if we want to run process_ggcmi_shdates stand-alone)
+_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
+sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm import ctsm_logging
+import ctsm.crop_calendars.cropcal_utils as utils
+import ctsm.crop_calendars.regrid_ggcmi_shdates as regrid
+
+logger = logging.getLogger(__name__)
 
 
 def get_cft(y):
@@ -23,7 +30,94 @@ def get_dayssince_jan1y1(y1, y):
     return time_delta_secs / (60 * 60 * 24)
 
 
-def main(
+def main():
+    ctsm_logging.setup_logging_pre_config()
+    args = process_ggcmi_shdates_args()
+    process_ggcmi_shdates(
+        args.input_directory,
+        args.output_directory,
+        args.author,
+        args.file_specifier,
+        args.first_year,
+        args.last_year,
+        args.verbose,
+        args.ggcmi_author,
+        args.regrid_resolution,
+        args.regrid_template_file,
+        args.regrid_extension,
+        args.crop_list,
+    )
+
+
+def process_ggcmi_shdates_args():
+    parser = argparse.ArgumentParser(
+        description="Converts raw sowing and harvest date files provided by GGCMI into a format that CLM can read, optionally at a target resolution."
+    )
+
+    # Required
+    parser.add_argument(
+        "-i",
+        "--input-directory",
+        help="Directory containing the raw GGCMI sowing/harvest date files",
+        type=str,
+        required=True,
+    )
+    parser.add_argument(
+        "-o",
+        "--output-directory",
+        help="Where to save the CLM-compatible sowing and harvest date files",
+        type=str,
+        required=True,
+    )
+    parser.add_argument(
+        "-a",
+        "--author",
+        help="String to be saved in author_thisfile attribute of output files. E.g., 'Author Name (authorname@ucar.edu)'",
+        type=str,
+        required=True,
+    )
+
+    # Optional
+    parser.add_argument(
+        "--file-specifier",
+        help="String following CROP_IRR_ in input filenames. E.g., mai_ir_FILESPECIFIER.nc4. Will also be saved to output filenames.",
+        type=str,
+        default="ggcmi_crop_calendar_phase3_v1.01",
+    )
+    parser.add_argument(
+        "-y1",
+        "--first-year",
+        help="First year in output files. Must be present in template file, unless it's the same as the last year.",
+        type=int,
+        default=2000,
+    )
+    parser.add_argument(
+        "-yN",
+        "--last-year",
+        help="Last year in output files. Must be present in template file, unless it's the same as the first year.",
+        type=int,
+        default=2000,
+    )
+    parser.add_argument(
+        "--ggcmi-author",
+        help="Author of original GGCMI files",
+        type=str,
+        default="Jonas Jägermeyr (jonas.jaegermeyr@columbia.edu)",
+    )
+
+    ctsm_logging.add_logging_args(parser)
+
+    # Arguments for regridding
+    parser = regrid.define_arguments(parser)
+
+    # Get arguments
+    args = parser.parse_args(sys.argv[1:])
+    ctsm_logging.process_logging_args(args)
+
+    return args
+
+
+def process_ggcmi_shdates(
     input_directory,
     output_directory,
     author,
@@ -34,7 +128,12 @@ def main(
     ggcmi_author,
     regrid_resolution,
     regrid_template_file,
+    regrid_extension,
+    crop_list,
 ):
+
+    input_directory = os.path.realpath(input_directory)
+    output_directory = os.path.realpath(output_directory)
 
     ############################################################
     ### Regrid original GGCMI files to target CLM resolution ###
@@ -44,8 +143,13 @@ def main(
         output_directory, f"regridded_ggcmi_files-{regrid_resolution}"
     )
 
-    regrid_ggcmi_shdates.main(
-        regrid_resolution, regrid_template_file, input_directory, regridded_ggcmi_files_dir
+    regrid.regrid_ggcmi_shdates(
+        regrid_resolution,
+        regrid_template_file,
+        input_directory,
+        regridded_ggcmi_files_dir,
+        regrid_extension,
+        crop_list,
     )
 
     ###########################
@@ -170,9 +274,11 @@ def main(
 
     # Create output files
     datetime_string = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
+    nninterp_suffix = "nninterp-" + regrid_resolution
     for v in variable_dict:
         outfile = os.path.join(
-            output_directory, f"{v}s_{file_specifier}.{first_year}-{last_year}.{datetime_string}.nc"
+            output_directory,
+            f"{v}s_{file_specifier}_{nninterp_suffix}.{first_year}-{last_year}.{datetime_string}.nc",
         )
         variable_dict[v]["outfile"] = outfile
         template_ds.to_netcdf(
@@ -194,28 +300,35 @@ def main(
         thiscrop_int = this_dict["clm_num"]
         thiscrop_ggcmi = this_dict["thiscrop_ggcmi"]
 
+        # If --regrid-crop-list specified, only process crops from that list
+        if crop_list is not None and thiscrop_ggcmi is not None and thiscrop_ggcmi not in crop_list:
+            continue
+
         # If no corresponding GGCMI crop, skip opening dataset.
         # Will use previous cropcal_ds as a template.
         if thiscrop_ggcmi == None:
             if c == 1:
                 raise ValueError(f"First crop ({thiscrop_clm}) must have a GGCMI type")
-            print(
+            logger.info(
                 "Filling %s with dummy data (%d of %d)..." % (str(thiscrop_clm), c, len(crop_dict))
             )
 
         # Otherwise, import crop calendar file
         else:
-            if verbose:
-                print(
-                    "Importing %s -> %s (%d of %d)..."
-                    % (str(thiscrop_ggcmi), str(thiscrop_clm), c, len(crop_dict))
-                )
+            logger.info(
+                "Importing %s -> %s (%d of %d)..."
+                % (str(thiscrop_ggcmi), str(thiscrop_clm), c, len(crop_dict))
+            )
 
             file_ggcmi = os.path.join(
-                regridded_ggcmi_files_dir, f"{thiscrop_ggcmi}_{file_specifier}.nc4"
+                regridded_ggcmi_files_dir,
+                f"{thiscrop_ggcmi}_{file_specifier}_{nninterp_suffix}.nc4",
             )
             if not os.path.exists(file_ggcmi):
-                raise Exception("Input file not found: " + file_ggcmi)
+                logger.warning(
+                    f"Skipping {thiscrop_ggcmi} because input file not found: {file_ggcmi}"
+                )
+                continue
             cropcal_ds = xr.open_dataset(file_ggcmi)
             # Flip latitude to match destination
             cropcal_ds = cropcal_ds.reindex(lat=cropcal_ds.lat[::-1])
@@ -225,8 +338,7 @@ def main(
         for thisvar_clm in variable_dict:
             # Get GGCMI netCDF info
             varname_ggcmi = variable_dict[thisvar_clm]["name_ggcmi"]
-            if verbose:
-                print("    Processing %s..." % varname_ggcmi)
+            logger.info("    Processing %s..." % varname_ggcmi)
 
             # Get CLM netCDF info
             varname_clm = thisvar_clm + "1_" + str(thiscrop_int)
@@ -297,99 +409,9 @@ def main(
             )
 
             # Save
-            if verbose:
-                print("    Saving %s..." % varname_ggcmi)
+            logger.info("    Saving %s..." % varname_ggcmi)
             thisvar_da.to_netcdf(file_clm, mode="a", format="NETCDF3_CLASSIC")
 
         cropcal_ds.close()
 
-    print("Done!")
-
-
-if __name__ == "__main__":
-    ###############################
-    ### Process input arguments ###
-    ###############################
-    parser = argparse.ArgumentParser(
-        description="Converts raw sowing and harvest date files provided by GGCMI into a format that CLM can read, optionally at a target resolution."
-    )
-
-    # Required
-    parser.add_argument(
-        "-i",
-        "--input-directory",
-        help="Directory containing the raw GGCMI sowing/harvest date files",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "-o",
-        "--output-directory",
-        help="Where to save the CLM-compatible sowing and harvest date files",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "-a",
-        "--author",
-        help="String to be saved in author_thisfile attribute of output files. E.g., 'Author Name (authorname@ucar.edu)'",
-        type=str,
-        required=True,
-    )
-
-    # Optional
-    parser.add_argument(
-        "--file-specifier",
-        help="String following CROP_IRR_ in input filenames. E.g., mai_ir_FILESPECIFIER.nc4. Will also be saved to output filenames.",
-        type=str,
-        default="ggcmi_crop_calendar_phase3_v1.01",
-    )
-    parser.add_argument(
-        "-y1",
-        "--first-year",
-        help="First year in output files. Must be present in template file, unless it's the same as the last year.",
-        type=int,
-        default=2000,
-    )
-    parser.add_argument(
-        "-yN",
-        "--last-year",
-        help="Last year in output files. Must be present in template file, unless it's the same as the first year.",
-        type=int,
-        default=2000,
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        help="Whether to print verbose messages",
-        type=bool,
-        default=True,
-    )
-    parser.add_argument(
-        "--ggcmi-author",
-        help="Author of original GGCMI files",
-        type=str,
-        default="Jonas Jägermeyr (jonas.jaegermeyr@columbia.edu)",
-    )
-
-    # Arguments for regridding
-    parser = regrid_ggcmi_shdates.define_arguments(parser)
-
-    # Get arguments
-    args = parser.parse_args(sys.argv[1:])
-
-    ###########
-    ### Run ###
-    ###########
-    main(
-        os.path.realpath(args.input_directory),
-        os.path.realpath(args.output_directory),
-        args.author,
-        args.file_specifier,
-        args.first_year,
-        args.last_year,
-        args.verbose,
-        args.ggcmi_author,
-        args.regrid_resolution,
-        args.regrid_template_file,
-    )
+    logger.info("Done!")
