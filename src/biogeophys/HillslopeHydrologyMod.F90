@@ -1047,7 +1047,7 @@ contains
     integer, parameter    :: overbank_method = 1          ! method to treat overbank stream storage; 1 = increase dynamic slope, 2 = increase flow area cross section, 3 = remove instantaneously
     logical               :: active_stream
     character(len=*), parameter :: subname = 'HillslopeStreamOutflow'
-    
+
     !-----------------------------------------------------------------------
     associate(                                                            &
          stream_water_volume     =>    waterstatebulk_inst%stream_water_volume_lun            , & ! Input:  [real(r8) (:)   ] stream water volume (m3)
@@ -1150,7 +1150,7 @@ contains
     type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
     type(waterfluxbulk_type),  intent(inout) :: waterfluxbulk_inst
     type(waterdiagnosticbulk_type), intent(out) :: waterdiagnosticbulk_inst
-    
+
     integer  :: c, l, g, i, j
     real(r8) :: qflx_surf_vol               ! volumetric surface runoff (m3/s)
     real(r8) :: qflx_drain_perched_vol      ! volumetric perched saturated drainage (m3/s)
@@ -1174,7 +1174,7 @@ contains
        dtime = get_step_size_real()
 
        do l = bounds%begl,bounds%endl
-          
+
           ! Check for vegetated landunits having initialized stream channel properties
           active_stream = .false.
           if (lun%itype(l) == istsoil .and. &
@@ -1182,7 +1182,7 @@ contains
                lun%stream_channel_width(l) > 0._r8) then
              active_stream = .true.
           endif
-          
+
           if (lun%active(l) .and. active_stream) then
              g = lun%gridcell(l)
              ! the drainage terms are 'net' quantities, so summing over
