@@ -716,6 +716,9 @@ def _check_py_env(test_attributes):
     # pylint: disable=import-outside-toplevel disable
     # Suppress pylint unused-import warning because the import itself IS the use.
     # pylint: disable=unused-import disable
+    # Suppress pylint import-error warning because the whole point here is to check
+    # whether import is possible.
+    # pylint: disable=import-error disable
 
     # Check requirements for FSURDATMODIFYCTSM, if needed
     if any("FSURDATMODIFYCTSM" in t for t in test_attributes):
@@ -724,22 +727,23 @@ def _check_py_env(test_attributes):
         except ModuleNotFoundError as err:
             raise ModuleNotFoundError("modify_fsurdat" + err_msg) from err
 
-    # Isolate testmods, producing a list like ["clm-test1mod1", "clm-test2mod1", "clm-test2mod2", ...]
+    # Isolate testmods, producing a list like\
+    # ["clm-test1mod1", "clm-test2mod1", "clm-test2mod2", ...]
     test_attributes_split = []
-    for t in test_attributes:
-        for x in t.split("."):
-            y = x.replace("/", "-")
-            for z in y.split("--"):
-                test_attributes_split.append(z)
+    for test_attribute in test_attributes:
+        for dot_split in test_attribute.split("."):
+            slash_replaced = dot_split.replace("/", "-")
+            for ddash_split in slash_replaced.split("--"):
+                test_attributes_split.append(ddash_split)
 
     # Check that list for any testmods that use modify_fates_paramfile.py
     testmods_to_check = ["clm-FatesColdTwoStream", "clm-FatesColdTwoStreamNoCompFixedBioGeo"]
     if any(t in testmods_to_check for t in test_attributes_split):
         # This bit is needed because it's outside the top-level python/ directory.
-        _FATES_DIR = os.path.join(
+        fates_dir = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir,"src", "fates"
         )
-        sys.path.insert(1, _FATES_DIR)
+        sys.path.insert(1, fates_dir)
         try:
             import tools.modify_fates_paramfile
         except ModuleNotFoundError as err:
