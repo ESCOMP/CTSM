@@ -754,7 +754,7 @@ def _get_compilers_for_suite(suite_name, machine_name, running_ctsm_py_tests):
         )
     if not running_ctsm_py_tests:
         _check_py_env([t["testname"] for t in test_data])
-        _check_py_env([t["testmods"] for t in test_data])
+        _check_py_env([t["testmods"] for t in test_data if "testmods" in t.keys()])
     compilers = sorted({one_test["compiler"] for one_test in test_data})
     logger.info("Running with compilers: %s", compilers)
     return compilers
