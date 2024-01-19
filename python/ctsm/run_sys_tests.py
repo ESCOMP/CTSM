@@ -741,7 +741,7 @@ def _check_py_env(test_attributes):
     if any(t in testmods_to_check for t in test_attributes_split):
         # This bit is needed because it's outside the top-level python/ directory.
         fates_dir = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir,"src", "fates"
+            os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "src", "fates"
         )
         sys.path.insert(1, fates_dir)
         try:
