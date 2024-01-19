@@ -216,7 +216,7 @@ crop-smallville-historical : FORCE
 # modify_smallville.sh to generate three modified landuse.timeseries files needed for testing.
 crop-smallville-transient : FORCE
 	$(SUBSETDATA_POINT) --create-landuse $(SUBSETDATA_1X1_SMALLTRANSIENT)
-../modify_input_files/modify_smallville.sh
+	../modify_input_files/modify_smallville.sh
 
 #
 # Crop with future scenarios
