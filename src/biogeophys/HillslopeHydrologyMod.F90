@@ -1045,8 +1045,9 @@ contains
     real(r8), parameter   :: manning_exponent  = 0.667_r8 ! manning exponent
 
     integer, parameter    :: overbank_method = 1          ! method to treat overbank stream storage; 1 = increase dynamic slope, 2 = increase flow area cross section, 3 = remove instantaneously
+    logical               :: active_stream
     character(len=*), parameter :: subname = 'HillslopeStreamOutflow'
-
+    
     !-----------------------------------------------------------------------
     associate(                                                            &
          stream_water_volume     =>    waterstatebulk_inst%stream_water_volume_lun            , & ! Input:  [real(r8) (:)   ] stream water volume (m3)
@@ -1058,7 +1059,16 @@ contains
 
       do l = bounds%begl,bounds%endl
          volumetric_streamflow(l) = 0._r8
-         if(lun%itype(l) == istsoil .and. lun%active(l)) then
+
+         ! Check for vegetated landunits having initialized stream channel properties
+         active_stream = .false.
+         if (lun%itype(l) == istsoil .and. &
+              lun%stream_channel_length(l) > 0._r8 .and. &
+              lun%stream_channel_width(l) > 0._r8) then
+            active_stream = .true.
+         endif
+
+         if (lun%active(l) .and. active_stream) then
             ! Streamflow calculated from Manning equation
             if(streamflow_method == streamflow_manning) then
                cross_sectional_area = stream_water_volume(l) &
@@ -1140,12 +1150,13 @@ contains
     type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
     type(waterfluxbulk_type),  intent(inout) :: waterfluxbulk_inst
     type(waterdiagnosticbulk_type), intent(out) :: waterdiagnosticbulk_inst
-
-    integer               :: c, l, g, i, j
-    real(r8) :: qflx_surf_vol                           ! volumetric surface runoff (m3/s)
-    real(r8) :: qflx_drain_perched_vol                  ! volumetric perched saturated drainage (m3/s)
-    real(r8) :: qflx_drain_vol                          ! volumetric saturated drainage (m3/s)
-    real(r8) :: dtime                                   ! land model time step (sec)
+    
+    integer  :: c, l, g, i, j
+    real(r8) :: qflx_surf_vol               ! volumetric surface runoff (m3/s)
+    real(r8) :: qflx_drain_perched_vol      ! volumetric perched saturated drainage (m3/s)
+    real(r8) :: qflx_drain_vol              ! volumetric saturated drainage (m3/s)
+    real(r8) :: dtime                       ! land model time step (sec)
+    logical  :: active_stream
 
     character(len=*), parameter :: subname = 'HillslopeUpdateStreamWater'
 
@@ -1163,7 +1174,16 @@ contains
        dtime = get_step_size_real()
 
        do l = bounds%begl,bounds%endl
-          if(lun%itype(l) == istsoil) then
+          
+          ! Check for vegetated landunits having initialized stream channel properties
+          active_stream = .false.
+          if (lun%itype(l) == istsoil .and. &
+               lun%stream_channel_length(l) > 0._r8 .and. &
+               lun%stream_channel_width(l) > 0._r8) then
+             active_stream = .true.
+          endif
+          
+          if (lun%active(l) .and. active_stream) then
              g = lun%gridcell(l)
              ! the drainage terms are 'net' quantities, so summing over
              ! all columns in a hillslope is equivalent to the outflow
