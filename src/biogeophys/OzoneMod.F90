@@ -12,9 +12,8 @@ module OzoneMod
   ! Developed by Danica Lombardozzi: Lombardozzi, D., S. Levis, G. Bonan, P. G. Hess, and
   ! J. P. Sparks (2015), The Influence of Chronic Ozone Exposure on Global Carbon and
   ! Water Cycles, J Climate, 28(1), 292–305, doi:10.1175/JCLI-D-14-00223.1.
-  !
-  ! Developed by Fang Li in 2024 to introduce the new scheme of photosynthetic and stomatal responses to O3
-
+  ! 
+  ! Developed by Fang Li in 2024 to introduce the new scheme of O3-caused damage to vegetation
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod, only : r8 => shr_kind_r8
@@ -70,8 +69,8 @@ module OzoneMod
      procedure, private :: InitCold
 
      ! Calculate ozone uptake for a single point, for just sunlit or shaded leaves
-     procedure, private, nopass :: CalcOzoneUptakeLi2024OnePoint
-     procedure, private, nopass :: CalcOzoneUptakeLFOnePoint
+     procedure, private, nopass :: CalcOzoneUptakeLi2024OnePoint !For Li2024
+     procedure, private, nopass :: CalcOzoneUptakeLFOnePoint     !For Lombardozzi2015 and Falk
 
      ! Ozone stress functions Fang Li 2024
      procedure, private         :: CalcOzoneStressLi2024           ! Stress parameterization
@@ -446,7 +445,7 @@ contains
 
   end subroutine CalcOzoneUptake
     !-----------------------------------------------------------------------
-subroutine CalcOzoneUptakeLi2024OnePoint( &
+  subroutine CalcOzoneUptakeLi2024OnePoint( &
        forc_ozone, forc_pbot, forc_th, &
        rs, rb, ram, &
        tlai, tlai_old, pft_type, &
@@ -457,7 +456,12 @@ subroutine CalcOzoneUptakeLi2024OnePoint( &
     !
     ! !USES:
     use shr_const_mod        , only : SHR_CONST_RGAS
-    use clm_time_manager     , only : get_step_size
+    use clm_time_manager     , only : get_step_size, get_average_days_per_year
+    use clm_varcon           , only : secspday
+    use pftconMod            , only : nbrdlf_dcd_tmp_shrub, ndllf_evr_tmp_tree, &
+                                      ndllf_dcd_brl_tree, nbrdlf_evr_trp_tree, &
+                                      nbrdlf_dcd_brl_tree
+
     !
     ! !ARGUMENTS:
     real(r8) , intent(in)    :: forc_ozone ! ozone partial pressure (mol/mol)
@@ -475,20 +479,20 @@ subroutine CalcOzoneUptakeLi2024OnePoint( &
     !
     ! !LOCAL VARIABLES:
     integer  :: dtime          ! land model time step (sec)
-    real(r8) :: dtimeh         ! time step in hours
+    real(r8) :: avg_dayspyr    ! average number of days per year
     real(r8) :: o3concnmolm3   ! o3 concentration (nmol/m^3)
     real(r8) :: o3flux         ! instantaneous o3 flux (nmol m^-2 s^-1)
     real(r8) :: o3fluxcrit     ! instantaneous o3 flux beyond threshold (nmol m^-2 s^-1)
     real(r8) :: o3fluxperdt    ! o3 flux per timestep (mmol m^-2)
     real(r8) :: heal           ! o3uptake healing rate based on % of new leaves growing (mmol m^-2)
-    real(r8) :: leafturn       ! leaf turnover time / mortality rate (per hour)
+    real(r8) :: leafturn       ! leaf turnover time / mortality rate (per sec) 
     real(r8) :: decay          ! o3uptake decay rate based on leaf lifetime (mmol m^-2)
     real(r8) :: o3_flux_threshold   ! threshold below which o3flux is set to 0 (nmol m^-2 s^-1)
     real(r8) :: lai_thresh     !LAI threshold for growing season
     ! o3:h2o resistance ratio from Li et al. 2024
     real(r8), parameter :: ko3 = 1.51_r8
 
-    character(len=*), parameter :: subname = 'CalcOzoneUptakeOnePoint'
+    character(len=*), parameter :: subname = 'CalcOzoneUptakeLi2024OnePoint'
     !-----------------------------------------------------------------------
 
     ! convert o3 from mol/mol to nmol m^-3
@@ -497,31 +501,31 @@ subroutine CalcOzoneUptakeLi2024OnePoint( &
     ! calculate instantaneous flux
     o3flux = o3concnmolm3/ (ko3*rs+ rb + ram)
     ! set lai_thresh    
-        if (pftcon%evergreen(pft_type) == 1) then
-         lai_thresh=0._r8 ! evergreens grow year-round
-       else  ! for deciduous vegetation
-        if(pft_type == 10)then !temperate shrub
+     if (pftcon%evergreen(pft_type) == 1) then
+         lai_thresh=0._r8 !evergreens grow year-round
+     else  ! for deciduous vegetation
+        if(pft_type == nbrdlf_dcd_tmp_shrub)then !temperate shrub
          lai_thresh=0.3_r8
         else
          lai_thresh=0.5_r8
         end if
-       end if
+     end if
     ! set o3_flux_threshold
-       if(pft_type >= 1 .and. pft_type <= 3)then  !Needleleaf tree
-         o3_flux_threshold = 0.8_r8
-       end if
-       if(pft_type >= 4 .and. pft_type <= 8)then  !Broadleaf tree
-         o3_flux_threshold = 1.0_r8
-       end if
-       if(pft_type >= 9 .and. pft_type <= 11)then !Shrub
-         o3_flux_threshold = 6.0_r8
-       end if
-       if(pft_type >= 12 .and. pft_type <= 14)then !Grass
+    if (pft_type >= ndllf_evr_tmp_tree .and. pft_type <= ndllf_dcd_brl_tree)then  !Needleleaf tree
+        o3_flux_threshold = 0.8_r8
+    end if
+    if (pft_type >= nbrdlf_evr_trp_tree .and. pft_type <= nbrdlf_dcd_brl_tree)then  !Broadleaf tree
+        o3_flux_threshold = 1.0_r8
+    end if
+    if (pftcon%is_shrub(pft_type))then !Shrub
+        o3_flux_threshold = 6.0_r8
+    end if
+    if (pftcon%is_grass(pft_type))then !Grass
         o3_flux_threshold = 1.6_r8
-       end if
-       if(pft_type >= 15)then !Crop
+    end if
+    if(pftcon%crop(pft_type) == 1)then !Crop
         o3_flux_threshold = 0.5_r8
-       end if
+    end if
 
     ! apply o3 flux threshold
     if (o3flux < o3_flux_threshold) then
@@ -531,7 +535,7 @@ subroutine CalcOzoneUptakeLi2024OnePoint( &
     endif
 
     dtime  = get_step_size()
-    dtimeh = dtime / 3600._r8
+    avg_dayspyr = get_average_days_per_year()
 
    ! calculate o3 flux per timestep
      if(sabv > 0._r8)then  !daytime
@@ -543,8 +547,8 @@ subroutine CalcOzoneUptakeLi2024OnePoint( &
      if (tlai > lai_thresh) then
       ! o3 uptake decay
       if (pftcon%evergreen(pft_type) == 1) then
-       leafturn = 1._r8/(pftcon%leaf_long(pft_type)*365._r8*24._r8)
-       decay = o3uptake * leafturn * dtimeh
+       leafturn = 1._r8/(pftcon%leaf_long(pft_type)*avg_dayspyr*secspday)
+       decay = o3uptake * leafturn * dtime
       else
        decay = o3uptake * max(0._r8,(1._r8-tlai_old/tlai))
       end if
@@ -569,7 +573,8 @@ subroutine CalcOzoneUptakeLFOnePoint( &
     !
     ! !USES:
     use shr_const_mod        , only : SHR_CONST_RGAS
-    use clm_time_manager     , only : get_step_size
+    use clm_varcon           , only : secspday
+    use clm_time_manager     , only : get_step_size, get_average_days_per_year
     !
     ! !ARGUMENTS:
     real(r8) , intent(in)    :: forc_ozone ! ozone partial pressure (mol/mol)
@@ -585,13 +590,13 @@ subroutine CalcOzoneUptakeLFOnePoint( &
     !
     ! !LOCAL VARIABLES:
     integer  :: dtime          ! land model time step (sec)
-    real(r8) :: dtimeh         ! time step in hours
+    real(r8) :: avg_dayspyr    ! average number of days per year
     real(r8) :: o3concnmolm3   ! o3 concentration (nmol/m^3)
     real(r8) :: o3flux         ! instantaneous o3 flux (nmol m^-2 s^-1)
     real(r8) :: o3fluxcrit     ! instantaneous o3 flux beyond threshold (nmol m^-2 s^-1)
     real(r8) :: o3fluxperdt    ! o3 flux per timestep (mmol m^-2)
     real(r8) :: heal           ! o3uptake healing rate based on % of new leaves growing (mmol m^-2)
-    real(r8) :: leafturn       ! leaf turnover time / mortality rate (per hour)
+    real(r8) :: leafturn       ! leaf turnover time / mortality rate (per sec)
     real(r8) :: decay          ! o3uptake decay rate based on leaf lifetime (mmol m^-2)
 
     ! o3:h2o resistance ratio defined by Sitch et al. 2007
@@ -603,7 +608,7 @@ subroutine CalcOzoneUptakeLFOnePoint( &
     ! threshold below which o3flux is set to 0 (nmol m^-2 s^-1)
     real(r8), parameter :: o3_flux_threshold = 0.8_r8
 
-    character(len=*), parameter :: subname = 'CalcOzoneUptakeOnePoint'
+    character(len=*), parameter :: subname = 'CalcOzoneUptakeLFOnePoint'
     !-----------------------------------------------------------------------
 
     ! convert o3 from mol/mol to nmol m^-3
@@ -620,7 +625,7 @@ subroutine CalcOzoneUptakeLFOnePoint( &
     endif
 
     dtime  = get_step_size()
-    dtimeh = dtime / 3600._r8
+    avg_dayspyr = get_average_days_per_year()
 
     ! calculate o3 flux per timestep
     o3fluxperdt = o3fluxcrit * dtime * 0.000001_r8
@@ -635,13 +640,13 @@ subroutine CalcOzoneUptakeLFOnePoint( &
        endif
 
        if (pftcon%evergreen(pft_type) == 1) then
-          leafturn = 1._r8/(pftcon%leaf_long(pft_type)*365._r8*24._r8)
+          leafturn = 1._r8/(pftcon%leaf_long(pft_type)*avg_dayspyr*secspday)
        else
           leafturn = 0._r8
        endif
 
        ! o3 uptake decay based on leaf lifetime for evergreen plants
-       decay = o3uptake * leafturn * dtimeh
+       decay = o3uptake * leafturn * dtime
        !cumulative uptake (mmol m^-2)
        o3uptake = max(0._r8, o3uptake + o3fluxperdt - decay - heal)
 
@@ -764,6 +769,12 @@ subroutine CalcOzoneUptakeLFOnePoint( &
     ! Calculates ozone stress for a single point, for just sunlit or shaded leaves
     !
     ! This subroutine uses the Li2024 formulation for ozone stress
+     ! !USES:
+    use shr_const_mod        , only : SHR_CONST_RGAS
+    use clm_time_manager     , only : get_step_size, get_average_days_per_year
+    use clm_varcon           , only : secspday
+    use pftconMod            , only : ndllf_evr_tmp_tree, ndllf_dcd_brl_tree, &
+                                      nbrdlf_evr_trp_tree, nbrdlf_dcd_brl_tree
     !
     ! !ARGUMENTS:
     integer  , intent(in)    :: pft_type   ! vegetation type, for indexing into pftvarcon arrays
@@ -781,23 +792,23 @@ subroutine CalcOzoneUptakeLFOnePoint( &
        o3coefg = 1._r8
     else
        ! Determine parameter values for this pft
-      if(pft_type >= 1 .and. pft_type <= 3)then  !Needleleaf tree
+      if (pft_type >= ndllf_evr_tmp_tree .and. pft_type <= ndllf_dcd_brl_tree)then  !Needleleaf tree
         o3coefv = max(0._r8, min(1._r8, 1.005_r8 - 0.0064_r8 * o3uptake))
         o3coefg = max(0._r8, min(1._r8, 0.965_r8 * o3uptake ** (-0.041)))
       end if
-      if(pft_type >= 4 .and. pft_type <= 8)then  !Broadleaf tree
+      if (pft_type >= nbrdlf_evr_trp_tree .and. pft_type <= nbrdlf_dcd_brl_tree)then  !Broadleaf tree
         o3coefv = max(0._r8, min(1._r8, 0.943_r8 * exp(-0.0085*o3uptake)))
         o3coefg = max(0._r8, min(1._r8, 0.943_r8 * exp(-0.0058*o3uptake)))
       end if
-      if(pft_type >= 9 .and. pft_type <= 11)then !Shrub
+      if(pftcon%is_shrub(pft_type))then !Shrub
         o3coefv = max(0._r8, min(1._r8, 1.000_r8-0.074_r8 * log(o3uptake)))
         o3coefg = max(0._r8, min(1._r8, 0.991_r8-0.060_r8 * log(o3uptake)))
       end if
-      if(pft_type >= 12 .and. pft_type <= 14)then !Grass
+      if(pftcon%is_grass(pft_type))then !Grass
         o3coefv = max(0._r8, min(1._r8, 0.997_r8 - 0.016_r8 * o3uptake))
         o3coefg = max(0._r8, min(1._r8, 0.989_r8 - 0.045_r8 * log(o3uptake)))
       end if
-      if (pft_type >= 15)then !Crop
+      if (pftcon%crop(pft_type) == 1)then !Crop
         o3coefv = max(0._r8, min(1._r8, 0.909_r8 - 0.028_r8 * log(o3uptake)))
         o3coefg = max(0._r8, min(1._r8, 1.005_r8 - 0.169_r8 * tanh(o3uptake)))
       end if

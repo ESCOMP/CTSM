@@ -1933,7 +1933,12 @@ contains
                ci_z(p,iv) = max( ci_z(p,iv), 1.e-06_r8 )
 
                ! Convert gs_mol (umol H2O/m**2/s) to gs (m/s) and then to rs (s/m)
-
+               
+               ! Fang Li revised o3 impact on gs
+               ! now: multiply gs response factor (o3coefg) with gs
+               ! clm5.0: skipped the effect on gs and had rs divided by o3coefg, 
+               ! which led to a one timestep delay in the o3 impact on gs,
+               ! although the impact on an annual scale is quite small
                gs = gs_mol(p,iv) / cf * o3coefg(p)
                rs_z(p,iv) = min(1._r8/gs, rsmax0)
                rs_z(p,iv) = rs_z(p,iv)
@@ -3620,7 +3625,12 @@ contains
                ci_z_sha(p,iv) = max( ci_z_sha(p,iv), 1.e-06_r8 )
 
                ! Convert gs_mol (umol H2O/m**2/s) to gs (m/s) and then to rs (s/m)
-
+               
+               ! Fang Li revised o3 impact on gs
+               ! now: multiply gs response factor (o3coefg) with gs
+               ! clm5.0: skipped the effect on gs and had rs divided by o3coefg,
+               ! which led to a one timestep delay in the o3 impact on gs,
+               ! although the impact on an annual scale is quite small
                gs = gs_mol_sun(p,iv) / cf * o3coefg_sun(p)
                rs_z_sun(p,iv) = min(1._r8/gs, rsmax0)
                rs_z_sun(p,iv) = rs_z_sun(p,iv) 
