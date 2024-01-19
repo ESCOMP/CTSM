@@ -716,12 +716,25 @@ def _check_py_env(test_attributes):
     # pylint: disable=import-outside-toplevel disable
     # Suppress pylint unused-import warning because the import itself IS the use.
     # pylint: disable=unused-import disable
+
+    # Check requirements for FSURDATMODIFYCTSM, if needed
     if any("FSURDATMODIFYCTSM" in t for t in test_attributes):
         try:
             import ctsm.modify_input_files.modify_fsurdat
         except ModuleNotFoundError as err:
             raise ModuleNotFoundError("modify_fsurdat" + err_msg) from err
-    if any("FatesColdTwoStream" in t for t in test_attributes):
+
+    # Isolate testmods, producing a list like ["clm-test1mod1", "clm-test2mod1", "clm-test2mod2", ...]
+    test_attributes_split = []
+    for t in test_attributes:
+        for x in t.split("."):
+            y = x.replace("/", "-")
+            for z in y.split("--"):
+                test_attributes_split.append(z)
+
+    # Check that list for any testmods that use modify_fates_paramfile.py
+    testmods_to_check = ["clm-FatesColdTwoStream", "clm-FatesColdTwoStreamNoCompFixedBioGeo"]
+    if any(t in testmods_to_check for t in test_attributes_split):
         # This bit is needed because it's outside the top-level python/ directory.
         _FATES_DIR = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir,"src", "fates"
