@@ -1,4 +1,80 @@
 ===============================================================
+Tag name: ctsm5.1.dev165
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310), oleson (Keith Oleson), samrabin (Sam Rabin)
+Date: Fri 19 Jan 2024 06:40:36 PM MST
+One-line Summary: Turn Meier2022, tillage, and residue removal on for ctsm5.1, fix #2212
+
+Purpose and description of changes
+----------------------------------
+
+Answer-changing merge-tag:
+- Turn Meier2022 on for ctsm5.1. Had turned off temporarily while fixing a bug.
+- Bring in Urban answer fix #2212.
+- Turn tillage and residue removal on for ctsm5.1.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+CTSM issues fixed (include CTSM Issue #):
+Fixes #2212
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+- Making Meier2022 the default for ctsm5.1 again.
+- Making tillage low by default for ctsm5.1.
+- Making residue removal 0.5 by default for ctsm5.1.
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  [ If a tag changes answers relative to baseline comparison the
+    following should be filled in (otherwise remove this section).
+    And always remove these three lines and parts that don't apply. ]
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ALL
+    - what platforms/compilers: ALL
+    - nature of change:i
+ clm45 and clm50: larger than roundoff
+ clm51: possibly climate changing
+        Effect of Meier2022 was documented here: https://github.com/NCAR/LMWG_dev/issues/38
+        Effect of tillage and residue removal may require an Answer Changing Tag simulation
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2323
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev164
 Originator(s): rgknox (Ryan Knox)
 Date: Wed 17 Jan 2024 12:38:18 PM MST

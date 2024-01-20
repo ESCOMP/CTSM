@@ -228,4 +228,25 @@
     </phase>
   </test>
 
+  <test name="ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.derecho_intel.clm-FatesColdTwoStream">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#2325</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-FatesColdTwoStream">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#2325</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdTwoStreamNoCompFixedBioGeo">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#2325</issue>
+    </phase>
+  </test>
+
 </expectedFails>
