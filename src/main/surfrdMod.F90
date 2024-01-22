@@ -899,7 +899,7 @@ contains
     use clm_varpar, only : natpft_size, natpft_lb
     use ncdio_pio,  only : ncd_inqdid, ncd_inqdlen
     use pftconMod , only : noveg
-    use HillslopeHydrologyMod, only : pft_distribution_method, pft_from_file, pft_uniform_dominant_pft, pft_lowland_dominant_pft, pft_lowland_upland
+    use HillslopeHydrologyMod, only : pft_distribution_method, pft_standard, pft_from_file, pft_uniform_dominant_pft, pft_lowland_dominant_pft, pft_lowland_upland
     use array_utils, only: find_k_max_indices
 
     !
@@ -959,11 +959,10 @@ contains
              wt_nat_patch(g,natpft_lb) = 100._r8
           endif
        enddo
-    endif
 
     ! pft_uniform_dominant_pft uses the patch with the
     ! largest weight for all hillslope columns in the gridcell
-    if (pft_distribution_method == pft_uniform_dominant_pft) then
+    else if (pft_distribution_method == pft_uniform_dominant_pft) then
        allocate(max_indices(1))
        do g = begg, endg
           ! If hillslopes will be used in a gridcell, modify wt_nat_patch,
@@ -977,11 +976,10 @@ contains
           endif
        enddo
        deallocate(max_indices)
-    endif
 
     ! pft_lowland_dominant_pft uses the two patches with the
     ! largest weights for the hillslope columns in the gridcell
-    if (pft_distribution_method == pft_lowland_dominant_pft) then
+    else if (pft_distribution_method == pft_lowland_dominant_pft) then
        allocate(max_indices(2))
        do g = begg, endg
           ! If hillslopes will be used in a gridcell, modify wt_nat_patch, otherwise use original patch distribution
@@ -1008,6 +1006,9 @@ contains
           endif
        enddo
        deallocate(max_indices)
+
+    else if (pft_distribution_method /= pft_standard) then
+      call endrun( msg=' ERROR: unrecognized hillslope_pft_distribution_method'//errMsg(sourcefile, __LINE__))
     endif
 
   end subroutine surfrd_hillslope
