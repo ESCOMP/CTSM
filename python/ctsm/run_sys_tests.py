@@ -708,7 +708,7 @@ def _run_test_suite(
         )
 
 
-def _get_testmod_list(test_attributes, unique=True):
+def _get_testmod_list(test_attributes, unique=False):
     # Isolate testmods, producing a list like
     # ["clm-test1mod1", "clm-test2mod1", "clm-test2mod2", ...]
     # Handles test attributes passed in from run_sys_tests calls using -t, -f, or -s
@@ -718,7 +718,7 @@ def _get_testmod_list(test_attributes, unique=True):
         for dot_split in test_attribute.split("."):
             slash_replaced = dot_split.replace("/", "-")
             for ddash_split in slash_replaced.split("--"):
-                if ddash_split not in testmods or not unique:
+                if "clm-" in ddash_split and (ddash_split not in testmods or not unique):
                     testmods.append(ddash_split)
 
     return testmods
