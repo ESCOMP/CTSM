@@ -1049,9 +1049,9 @@ contains
     character(len=*), parameter :: subname = 'HillslopeStreamOutflow'
 
     !-----------------------------------------------------------------------
-    associate(                                                            &
-         stream_water_volume     =>    waterstatebulk_inst%stream_water_volume_lun            , & ! Input:  [real(r8) (:)   ] stream water volume (m3)
-         volumetric_streamflow             =>    waterfluxbulk_inst%volumetric_streamflow_lun               &  ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
+    associate( &
+         stream_water_volume     =>    waterstatebulk_inst%stream_water_volume_lun , &  ! Input:  [real(r8) (:)   ] stream water volume (m3)
+         volumetric_streamflow   =>    waterfluxbulk_inst%volumetric_streamflow_lun  &  ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
          )
 
       ! Get time step
@@ -1163,10 +1163,10 @@ contains
     !-----------------------------------------------------------------------
     associate( &
          stream_water_volume     =>    waterstatebulk_inst%stream_water_volume_lun, & ! Input/Output:  [real(r8) (:)   ] stream water volume (m3)
-         volumetric_streamflow             =>    waterfluxbulk_inst%volumetric_streamflow_lun      ,    & ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
+         volumetric_streamflow   =>    waterfluxbulk_inst%volumetric_streamflow_lun,& ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
          qflx_drain              =>    waterfluxbulk_inst%qflx_drain_col,           & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
          qflx_drain_perched      =>    waterfluxbulk_inst%qflx_drain_perched_col,   & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
-         qflx_surf               =>    waterfluxbulk_inst%qflx_surf_col        ,    & ! Input: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
+         qflx_surf               =>    waterfluxbulk_inst%qflx_surf_col,            & ! Input: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
          stream_water_depth      =>    waterdiagnosticbulk_inst%stream_water_depth_lun   & ! Output:  [real(r8) (:)   ] stream water depth (m)
          )
 
