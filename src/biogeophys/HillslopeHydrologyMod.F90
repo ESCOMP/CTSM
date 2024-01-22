@@ -692,6 +692,10 @@ contains
             soil_profile_method=soil_profile_method,&
             soil_depth_lowland_in=soil_depth_lowland,&
             soil_depth_upland_in=soil_depth_upland)
+
+    else if (soil_profile_method /= soil_profile_uniform .and. masterproc) then
+       call endrun( msg=' ERROR: unrecognized hillslope_soil_profile_method'//errMsg(sourcefile, __LINE__))
+
     endif
 
   end subroutine SetHillslopeSoilThickness
