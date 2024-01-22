@@ -27,9 +27,10 @@ module histFileMod
   use FatesInterfaceTypesMod , only : nlevsclass, nlevage, nlevcoage
   use FatesInterfaceTypesMod , only : nlevheight
   use FatesInterfaceTypesMod , only : nlevdamage
-  use FatesLitterMod        , only : nfsc
-  use FatesLitterMod    , only : ncwd
-  use PRTGenericMod     , only : num_elements_fates  => num_elements
+  use FatesConstantsMod      , only : n_landuse_cats
+  use FatesLitterMod         , only : nfsc
+  use FatesLitterMod         , only : ncwd
+  use PRTGenericMod          , only : num_elements_fates  => num_elements
   use FatesInterfaceTypesMod , only : numpft_fates => numpft
   use ncdio_pio
 
@@ -2513,6 +2514,8 @@ contains
        call ncd_defdim(lnfid, 'fates_levelage', num_elements_fates * nlevage, dimid)
        call ncd_defdim(lnfid, 'fates_levagefuel', nlevage * nfsc, dimid)
        call ncd_defdim(lnfid, 'fates_levclscpf', nclmax*nlevsclass*numpft_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levlanduse', n_landuse_cats, dimid)
+       call ncd_defdim(lnfid, 'fates_levlulu', n_landuse_cats * n_landuse_cats, dimid)
     end if
 
     if ( .not. lhistrest )then
@@ -3065,6 +3068,7 @@ contains
     use FatesInterfaceTypesMod, only : fates_hdim_scmap_levcdpf
     use FatesInterfaceTypesMod, only : fates_hdim_cdmap_levcdpf
     use FatesInterfaceTypesMod, only : fates_hdim_pftmap_levcdpf
+    use FatesInterfaceTypesMod, only : fates_hdim_levlanduse
 
 
     !
@@ -3193,6 +3197,8 @@ contains
                   long_name='FATES pft index of the combined damage-size-PFT dimension', ncid=nfid(t))
              call ncd_defvar(varname='fates_levcdam', xtype=tape(t)%ncprec, dim1name='fates_levcdam', &
                   long_name='FATES damage class lower bound', units='unitless', ncid=nfid(t))
+             call ncd_defvar(varname='fates_levlanduse',xtype=ncd_int, dim1name='fates_levlanduse', &
+                   long_name='FATES land use label', ncid=nfid(t))
 
           end if
 
@@ -3242,6 +3248,7 @@ contains
              call ncd_io(varname='fates_scmap_levcdpf',data=fates_hdim_scmap_levcdpf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_cdmap_levcdpf',data=fates_hdim_cdmap_levcdpf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_pftmap_levcdpf',data=fates_hdim_pftmap_levcdpf, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_levlanduse',data=fates_hdim_levlanduse, ncid=nfid(t), flag='write')
           end if
 
        endif
@@ -5557,6 +5564,10 @@ contains
        num2d = nlevage*nfsc
     case('fates_levclscpf')
        num2d = nclmax * nclmax * numpft_fates
+    case ('fates_levlanduse')
+       num2d = n_landuse_cats
+    case ('fates_levlulu')
+       num2d = n_landuse_cats * n_landuse_cats
     case('cft')
        if (cft_size > 0) then
           num2d = cft_size

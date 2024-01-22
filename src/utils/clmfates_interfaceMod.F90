@@ -7,11 +7,9 @@ module CLMFatesInterfaceMod
    !
    ! This is also the only location where CLM code is allowed to see FATES memory
    ! structures.
-   ! The routines here, that call FATES library routines, will not pass any types defined
-   ! by the driving land model (HLM).
-   !
-   ! either native type arrays (int,real,log, etc) or packed into fates boundary condition
-   ! structures.
+   ! The routines here, that call FATES library routines, cannot pass most types defined
+   ! by the driving land model (HLM), only native type arrays (int,real,log, etc), implementations
+   ! of fates abstract classes, and references into fates boundary condition structures.
    !
    ! Note that CLM/ALM does use Shared Memory Parallelism (SMP), where processes such as
    ! the update of state variables are forked.  However, IO is not assumed to be
@@ -61,6 +59,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : use_fates_nocomp
    use clm_varctl        , only : use_fates_sp
+   use clm_varctl        , only : use_fates_luh
    use clm_varctl        , only : fates_seeddisp_cadence
    use clm_varctl        , only : fates_inventory_ctrl_filename
    use clm_varctl        , only : use_nitrif_denitrif
@@ -113,6 +112,7 @@ module CLMFatesInterfaceMod
    use shr_log_mod       , only : errMsg => shr_log_errMsg
    use clm_varcon        , only : dzsoi_decomp
    use FuncPedotransferMod, only: get_ipedof
+   use CLMFatesParamInterfaceMod, only: fates_param_reader_ctsm_impl
 !   use SoilWaterPlantSinkMod, only : Compute_EffecRootFrac_And_VertTranSink_Default
 
    ! Used FATES Modules
@@ -129,6 +129,10 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : set_fates_ctrlparms
    use FatesInterfaceMod     , only : UpdateFatesRMeansTStep
    use FatesInterfaceMod     , only : InitTimeAveragingGlobals
+   
+   use FatesParametersInterface, only : fates_param_reader_type
+   use FatesParametersInterface, only : fates_parameters_type
+
    use FatesInterfaceMod     , only : DetermineGridCellNeighbors
 
    use FatesHistoryInterfaceMod, only : fates_hist
@@ -138,6 +142,7 @@ module CLMFatesInterfaceMod
    use PRTGenericMod         , only : num_elements
    use FatesInterfaceTypesMod, only : hlm_stepsize
    use FatesInterfaceTypesMod, only : fates_maxPatchesPerSite
+   use FatesInterfaceTypesMod, only : hlm_num_luh2_states
    use FatesInterfaceTypesMod, only : fates_dispersal_cadence_none
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
@@ -171,6 +176,12 @@ module CLMFatesInterfaceMod
    use FatesDispersalMod      , only : lneighbors, dispersal_type, IsItDispersalTime
 
    use perf_mod               , only : t_startf, t_stopf
+
+   use dynFATESLandUseChangeMod, only : num_landuse_transition_vars, num_landuse_state_vars
+   use dynFATESLandUseChangeMod, only : landuse_transitions, landuse_states
+   use dynFATESLandUseChangeMod, only : landuse_transition_varnames, landuse_state_varnames
+   use dynFATESLandUseChangeMod, only : dynFatesLandUseInterp
+
    implicit none
 
    type, public :: f2hmap_type
@@ -285,6 +296,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_sp
      integer                                        :: pass_masterproc
      logical                                        :: verbose_output
+     type(fates_param_reader_ctsm_impl)             :: var_reader
      
      call t_startf('fates_globals1')
 
@@ -328,6 +340,7 @@ module CLMFatesInterfaceMod
 
      end if
 
+
      ! The following call reads in the parameter file
      ! and then uses that to determine the number of patches
      ! FATES requires. We pass that to CLM here
@@ -336,7 +349,7 @@ module CLMFatesInterfaceMod
      ! and allocations on the FATES side, which require
      ! some allocations from CLM (like soil layering)
 
-     call SetFatesGlobalElements1(use_fates,surf_numpft,surf_numcft)
+     call SetFatesGlobalElements1(use_fates,surf_numpft,surf_numcft,var_reader)
 
      maxsoil_patches = fates_maxPatchesPerSite
      
@@ -372,6 +385,9 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_is_restart
      integer                                        :: pass_cohort_age_tracking
      integer                                        :: pass_tree_damage
+     integer                                        :: pass_use_luh
+     integer                                        :: pass_num_luh_states
+     integer                                        :: pass_num_luh_transitions
 
      call t_startf('fates_globals2')
 
@@ -513,6 +529,19 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('use_lu_harvest',ival=pass_lu_harvest)
         call set_fates_ctrlparms('num_lu_harvest_cats',ival=pass_num_lu_harvest_cats)
         call set_fates_ctrlparms('use_logging',ival=pass_logging)
+
+        if(use_fates_luh) then
+           pass_use_luh = 1
+           pass_num_luh_states = num_landuse_state_vars
+           pass_num_luh_transitions = num_landuse_transition_vars
+        else
+           pass_use_luh = 0
+           pass_num_luh_states = 0
+           pass_num_luh_transitions = 0
+        end if
+        call set_fates_ctrlparms('use_luh2',ival=pass_use_luh)
+        call set_fates_ctrlparms('num_luh2_states',ival=pass_num_luh_states)
+        call set_fates_ctrlparms('num_luh2_transitions',ival=pass_num_luh_transitions)
 
         if(use_fates_inventory_init) then
            pass_inventory_init = 1
@@ -810,7 +839,9 @@ module CLMFatesInterfaceMod
 
             ndecomp = col%nbedrock(c)
 
-            call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp, num_harvest_inst,surfpft_lb,surfpft_ub)
+            call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp, &
+                               num_harvest_inst, num_landuse_state_vars, num_landuse_transition_vars, &
+                               surfpft_lb,surfpft_ub)
             call allocate_bcout(this%fates(nc)%bc_out(s),col%nbedrock(c),ndecomp)
             call zero_bcs(this%fates(nc),s)
 
@@ -1134,9 +1165,14 @@ module CLMFatesInterfaceMod
                write(iulog,*) harvest_units
                call endrun(msg=errMsg(sourcefile, __LINE__))
            end if
-
-
          endif
+
+         if (use_fates_luh) then
+               this%fates(nc)%bc_in(s)%hlm_luh_states = landuse_states(:,g)
+               this%fates(nc)%bc_in(s)%hlm_luh_state_names = landuse_state_varnames
+               this%fates(nc)%bc_in(s)%hlm_luh_transitions = landuse_transitions(:,g)
+               this%fates(nc)%bc_in(s)%hlm_luh_transition_names = landuse_transition_varnames
+         end if
 
       end do
 
@@ -1172,7 +1208,8 @@ module CLMFatesInterfaceMod
 
             call ed_update_site(this%fates(nc)%sites(s), &
                   this%fates(nc)%bc_in(s), &
-                  this%fates(nc)%bc_out(s))
+                  this%fates(nc)%bc_out(s), &
+                  is_restarting = .false.)
       enddo
 
 
@@ -1849,9 +1886,17 @@ module CLMFatesInterfaceMod
                   this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
                        min(this%fates(nc)%bc_in(s)%nlevsoil, active_layer_inst%altmax_lastyear_indx_col(c))
 
+                  ! When restarting the model, this subroutine has several
+                  ! procedures that are incremental or don't need to be performed for 
+                  ! during the restart sequence. For the prior, we don't want the restarted
+                  ! run to call these routines more than would had been called during
+                  ! a continuous simulation period, as it would change results. So 
+                  ! we pass in the "is_restarting=.true." flag so we can bypass those procedures
+
                   call ed_update_site( this%fates(nc)%sites(s), &
                         this%fates(nc)%bc_in(s), &
-                        this%fates(nc)%bc_out(s) )
+                        this%fates(nc)%bc_out(s), &
+                        is_restarting = .true. )
 
                end do
 
@@ -1972,9 +2017,9 @@ module CLMFatesInterfaceMod
      real(r8) :: vol_ice
      real(r8) :: eff_porosity
      integer :: nlevsoil  ! Number of soil layers at each site
-     integer :: j
+     integer :: i, j
      integer :: s
-     integer :: c
+     integer :: c, g
      integer :: p   ! HLM patch index
      integer :: ft  ! plant functional type
 
@@ -2064,6 +2109,18 @@ module CLMFatesInterfaceMod
               call HydrSiteColdStart(this%fates(nc)%sites,this%fates(nc)%bc_in)
            end if
 
+           do s = 1,this%fates(nc)%nsites
+              c = this%f2hmap(nc)%fcolumn(s)
+              g = col%gridcell(c)
+
+              if (use_fates_luh) then
+                    this%fates(nc)%bc_in(s)%hlm_luh_states = landuse_states(:,g)
+                    this%fates(nc)%bc_in(s)%hlm_luh_state_names = landuse_state_varnames
+                    this%fates(nc)%bc_in(s)%hlm_luh_transitions = landuse_transitions(:,g)
+                    this%fates(nc)%bc_in(s)%hlm_luh_transition_names = landuse_transition_varnames
+              end if
+           end do
+
            ! Newly initialized patches need a starting temperature
            call init_patches(this%fates(nc)%nsites, this%fates(nc)%sites, &
                              this%fates(nc)%bc_in)
@@ -2080,7 +2137,8 @@ module CLMFatesInterfaceMod
 
               call ed_update_site(this%fates(nc)%sites(s), &
                     this%fates(nc)%bc_in(s), &
-                    this%fates(nc)%bc_out(s))
+                    this%fates(nc)%bc_out(s), &
+                    is_restarting = .false.)
 
            end do
 
@@ -2908,18 +2966,10 @@ module CLMFatesInterfaceMod
       dtime = get_step_size_real()
 
       ! Update history variables that track these variables
-      call fates_hist%update_history_hifrq1(nc, &
+      call fates_hist%update_history_hifrq(nc, &
             this%fates(nc)%nsites,  &
             this%fates(nc)%sites,   &
             this%fates(nc)%bc_in,   &
-            this%fates(nc)%bc_out,  &
-            dtime)
-
-      call fates_hist%update_history_hifrq2(nc, &
-            this%fates(nc)%nsites,  &
-            this%fates(nc)%sites,   &
-            this%fates(nc)%bc_in,   &
-            this%fates(nc)%bc_out,  &
             dtime)
       
     end associate
@@ -3155,6 +3205,7 @@ module CLMFatesInterfaceMod
    use FatesIOVariableKindMod, only : site_height_r8, site_elem_r8, site_elpft_r8
    use FatesIOVariableKindMod, only : site_elcwd_r8, site_elage_r8, site_agefuel_r8
    use FatesIOVariableKindMod, only : site_cdpf_r8, site_cdsc_r8, site_clscpf_r8
+   use FatesIOVariableKindMod, only : site_landuse_r8, site_lulu_r8
    use FatesIODimensionsMod, only : fates_bounds_type
 
 
@@ -3259,7 +3310,8 @@ module CLMFatesInterfaceMod
              site_can_r8,site_cnlf_r8, site_cnlfpft_r8, site_scag_r8, &
              site_scagpft_r8, site_agepft_r8, site_elem_r8, site_elpft_r8, &
              site_elcwd_r8, site_elage_r8, site_agefuel_r8, &
-             site_cdsc_r8, site_cdpf_r8)
+             site_cdsc_r8, site_cdpf_r8, &
+             site_landuse_r8, site_lulu_r8)
 
 
            d_index = fates_hist%dim_kinds(dk_index)%dim2_index
@@ -3522,7 +3574,8 @@ module CLMFatesInterfaceMod
    use FatesLitterMod,         only : ncwd
    use EDParamsMod,            only : nlevleaf, nclmax
    use FatesInterfaceTypesMod, only : numpft_fates => numpft
-   
+   use FatesConstantsMod, only : n_landuse_cats
+
 
    type(bounds_type), intent(in) :: hlm
    type(fates_bounds_type), intent(out) :: fates
@@ -3609,7 +3662,12 @@ module CLMFatesInterfaceMod
 
    fates%clscpf_begin = 1
    fates%clscpf_end = numpft_fates * nlevsclass * nclmax
-   
+
+   fates%landuse_begin = 1
+   fates%landuse_end   = n_landuse_cats
+
+   fates%lulu_begin = 1
+   fates%lulu_end   = n_landuse_cats * n_landuse_cats
    
    call t_stopf('fates_hlm2fatesbnds')
 
@@ -3674,5 +3732,7 @@ module CLMFatesInterfaceMod
    call t_stopf('fates_getandsettime')
 
  end subroutine GetAndSetTime
+
+ !-----------------------------------------------------------------------
 
 end module CLMFatesInterfaceMod
