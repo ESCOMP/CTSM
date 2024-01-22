@@ -647,10 +647,6 @@ contains
        if (readvar) then
           if (masterproc) then
              write(iulog,*) 'h_bedrock found on surface data set'
-           else
-             if (masterproc) then
-                call endrun( 'ERROR:: soil_profile_method = "FromFile", but h_bedrock not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-             end if
           end if
           do l = bounds%begl,bounds%endl
              g = lun%gridcell(l)
@@ -669,6 +665,8 @@ contains
              enddo
           enddo
           deallocate(fhillslope_in)
+       else if (masterproc) then
+          call endrun( 'ERROR:: soil_profile_method = "FromFile", but h_bedrock not found on surface data set.'//errmsg(sourcefile, __LINE__) )
        end if
        call ncd_pio_closefile(ncid)
 
