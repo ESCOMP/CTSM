@@ -831,7 +831,6 @@ contains
     ! !LOCAL VARIABLES:
     integer :: p,c    ! indices
     integer :: npatches_per_column
-    logical :: check_npatches = .true.
 
     !------------------------------------------------------------------------
 
@@ -851,11 +850,9 @@ contains
 
              npatches_per_column = npatches_per_column + 1
           enddo
-          if (check_npatches) then
-             if ((npatches_per_column /= 1) .and. masterproc) then
-                call endrun( 'ERROR:: number of patches per hillslope column not equal to 1'//errmsg(sourcefile, __LINE__) )
-             end if
-          endif
+          if ((npatches_per_column /= 1) .and. masterproc) then
+             call endrun( 'ERROR:: number of patches per hillslope column not equal to 1'//errmsg(sourcefile, __LINE__) )
+          end if
        endif
     enddo
 
@@ -985,7 +982,6 @@ contains
     ! !LOCAL VARIABLES:
     integer :: p,c    ! indices
     integer :: npatches_per_column
-    logical :: check_npatches = .true.
 
     !------------------------------------------------------------------------
 
@@ -1000,11 +996,9 @@ contains
              patch%mxy(p) = patch%itype(p) + (1 - natpft_lb)
              npatches_per_column = npatches_per_column + 1
           enddo
-          if (check_npatches) then
-             if ((npatches_per_column /= 1) .and. masterproc) then
-                call endrun( 'ERROR:: number of patches per hillslope column not equal to 1'//errmsg(sourcefile, __LINE__) )
-             end if
-          endif
+          if ((npatches_per_column /= 1) .and. masterproc) then
+             call endrun( 'ERROR:: number of patches per hillslope column not equal to 1'//errmsg(sourcefile, __LINE__) )
+          end if
        endif
     enddo
 
