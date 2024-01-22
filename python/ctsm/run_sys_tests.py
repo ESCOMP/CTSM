@@ -727,7 +727,7 @@ def _check_py_env(test_attributes):
         except ModuleNotFoundError as err:
             raise ModuleNotFoundError("modify_fsurdat" + err_msg) from err
 
-    # Isolate testmods, producing a list like\
+    # Isolate testmods, producing a list like
     # ["clm-test1mod1", "clm-test2mod1", "clm-test2mod2", ...]
     test_attributes_split = []
     for test_attribute in test_attributes:
