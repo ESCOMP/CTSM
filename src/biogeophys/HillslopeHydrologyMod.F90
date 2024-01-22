@@ -246,10 +246,8 @@ contains
     allocate(ncolumns_hillslope_in(bounds%begg:bounds%endg))
 
     call ncd_io(ncid=ncid, varname='nhillcolumns', flag='read', data=ncolumns_hillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: nhillcolumns not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: nhillcolumns not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
@@ -266,10 +264,8 @@ contains
     allocate(fhillslope_in(bounds%begg:bounds%endg,nhillslope))
 
     call ncd_io(ncid=ncid, varname='pct_hillslope', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: pct_hillslope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: pct_hillslope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
@@ -280,10 +276,8 @@ contains
     allocate(ihillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
 
     call ncd_io(ncid=ncid, varname='hillslope_index', flag='read', data=ihillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: hillslope_index not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: hillslope_index not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
@@ -291,10 +285,8 @@ contains
     enddo
 
     call ncd_io(ncid=ncid, varname='column_index', flag='read', data=ihillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: column_index not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: column_index not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
@@ -302,10 +294,8 @@ contains
     enddo
 
     call ncd_io(ncid=ncid, varname='downhill_column_index', flag='read', data=ihillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: downhill_column_index not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: downhill_column_index not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
@@ -315,10 +305,8 @@ contains
 
     allocate(fhillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
     call ncd_io(ncid=ncid, varname='h_slope', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: h_slope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: h_slope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
 
     do l = bounds%begl,bounds%endl
@@ -327,10 +315,8 @@ contains
     enddo
 
     call ncd_io(ncid=ncid, varname='h_aspect', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: h_aspect not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: h_aspect not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
 
     do l = bounds%begl,bounds%endl
@@ -339,20 +325,16 @@ contains
     enddo
 
     call ncd_io(ncid=ncid, varname='h_area', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: h_area not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: h_area not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
        hill_area(l,:) = fhillslope_in(g,:)
     enddo
     call ncd_io(ncid=ncid, varname='h_length', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: h_length not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: h_length not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
 
     do l = bounds%begl,bounds%endl
@@ -361,10 +343,8 @@ contains
     enddo
 
     call ncd_io(ncid=ncid, varname='h_width', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: h_width not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: h_width not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
@@ -372,10 +352,8 @@ contains
     enddo
 
     call ncd_io(ncid=ncid, varname='h_height', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: h_height not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: h_height not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
@@ -410,10 +388,8 @@ contains
              g = lun%gridcell(l)
              lun%stream_channel_depth(l) = fstream_in(g)
           enddo
-       else
-          if (masterproc) then
-             call endrun( 'ERROR:: h_stream_depth not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-          end if
+       else if (masterproc) then
+          call endrun( 'ERROR:: h_stream_depth not found on surface data set.'//errmsg(sourcefile, __LINE__) )
        endif
        call ncd_io(ncid=ncid, varname='h_stream_width', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
        if (readvar) then
@@ -424,10 +400,8 @@ contains
              g = lun%gridcell(l)
              lun%stream_channel_width(l) = fstream_in(g)
           enddo
-       else
-          if (masterproc) then
-             call endrun( 'ERROR:: h_stream_width not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-          end if
+       else if (masterproc) then
+          call endrun( 'ERROR:: h_stream_width not found on surface data set.'//errmsg(sourcefile, __LINE__) )
        end if
        call ncd_io(ncid=ncid, varname='h_stream_slope', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
        if (readvar) then
@@ -438,10 +412,8 @@ contains
              g = lun%gridcell(l)
              lun%stream_channel_slope(l) = fstream_in(g)
           enddo
-       else
-          if (masterproc) then
-             call endrun( 'ERROR:: h_stream_slope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-          end if
+       else if (masterproc) then
+          call endrun( 'ERROR:: h_stream_slope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
        end if
 
        deallocate(fstream_in)
@@ -545,12 +517,10 @@ contains
 
           ! if missing hillslope information on surface dataset,
           ! call endrun
-          if (ncolumns_hillslope(l) > 0 .and. sum(hillslope_area) == 0._r8) then
-             if (masterproc) then
-                write(iulog,*) 'Problem with input data: nhillcolumns is non-zero, but hillslope area is zero'
-                write(iulog,*) 'Check surface data for gridcell at (lon/lat): ', grc%londeg(g),grc%latdeg(g)
-                call endrun( 'ERROR:: sum of hillslope areas is zero.'//errmsg(sourcefile, __LINE__) )
-             end if
+          if (ncolumns_hillslope(l) > 0 .and. sum(hillslope_area) == 0._r8 .and. masterproc) then
+             write(iulog,*) 'Problem with input data: nhillcolumns is non-zero, but hillslope area is zero'
+             write(iulog,*) 'Check surface data for gridcell at (lon/lat): ', grc%londeg(g),grc%latdeg(g)
+             call endrun( 'ERROR:: sum of hillslope areas is zero.'//errmsg(sourcefile, __LINE__) )
           endif
 
           ! Recalculate column weights using input areas
@@ -798,10 +768,8 @@ contains
              endif
           enddo
        enddo
-    else
-       if (masterproc) then
-          call endrun( 'ERROR:: invalid soil_profile_method.'//errmsg(sourcefile, __LINE__) )
-       end if
+    else if (masterproc) then
+       call endrun( 'ERROR:: invalid soil_profile_method.'//errmsg(sourcefile, __LINE__) )
     endif
 
   end subroutine HillslopeSoilThicknessProfile
@@ -1095,10 +1063,8 @@ contains
                         volumetric_streamflow(l) = cross_sectional_area * flow_velocity &
                              + (stream_depth-lun%stream_channel_depth(l)) &
                              *lun%stream_channel_width(l)*lun%stream_channel_length(l)/dtime
-                     else
-                        if (masterproc) then
-                           call endrun( 'ERROR:: invalid overbank_method.'//errmsg(sourcefile, __LINE__) )
-                        end if
+                     else if (masterproc) then
+                        call endrun( 'ERROR:: invalid overbank_method.'//errmsg(sourcefile, __LINE__) )
                      endif
 
                   else
@@ -1110,10 +1076,8 @@ contains
 
                   volumetric_streamflow(l) = max(0._r8,min(volumetric_streamflow(l),stream_water_volume(l)/dtime))
                endif
-            else
-               if (masterproc) then
-                  call endrun( 'ERROR:: invalid streamflow_method'//errmsg(sourcefile, __LINE__) )
-               end if
+            else if (masterproc) then
+               call endrun( 'ERROR:: invalid streamflow_method'//errmsg(sourcefile, __LINE__) )
             endif
          endif ! end of istsoil
       enddo    ! end of loop over landunits
