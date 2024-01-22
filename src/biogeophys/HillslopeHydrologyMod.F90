@@ -552,6 +552,8 @@ contains
        ! upland_ivt  = 13 ! c3 non-arctic grass
        ! lowland_ivt = 7  ! broadleaf deciduous tree
        call HillslopeSetLowlandUplandPfts(bounds,lowland_ivt=7,upland_ivt=13)
+    else if (masterproc .and. .not. (pft_distribution_method == pft_standard .or. pft_distribution_method ==pft_uniform_dominant_pft)) then
+      call endrun( 'ERROR:: unrecognized hillslope_pft_distribution_method'//errmsg(sourcefile, __LINE__) )
     end if
 
     if ( allocated(hill_pftndx) ) then
