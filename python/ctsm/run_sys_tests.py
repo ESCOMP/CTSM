@@ -708,6 +708,20 @@ def _run_test_suite(
         )
 
 
+def _get_testmod_list(test_attributes):
+    # Isolate testmods, producing a list like
+    # ["clm-test1mod1", "clm-test2mod1", "clm-test2mod2", ...]
+    # Handles test attributes passed in from run_sys_tests calls using -t, -f, or -s
+
+    testmods = []
+    for test_attribute in test_attributes:
+        for dot_split in test_attribute.split("."):
+            slash_replaced = dot_split.replace("/", "-")
+            for ddash_split in slash_replaced.split("--"):
+                testmods.append(ddash_split)
+    return testmods
+
+
 def _check_py_env(test_attributes):
     err_msg = " can't be loaded. Do you need to activate the ctsm_pylib conda environment?"
     # Suppress pylint import-outside-toplevel warning because (a) we only want to import
@@ -727,18 +741,10 @@ def _check_py_env(test_attributes):
         except ModuleNotFoundError as err:
             raise ModuleNotFoundError("modify_fsurdat" + err_msg) from err
 
-    # Isolate testmods, producing a list like
-    # ["clm-test1mod1", "clm-test2mod1", "clm-test2mod2", ...]
-    test_attributes_split = []
-    for test_attribute in test_attributes:
-        for dot_split in test_attribute.split("."):
-            slash_replaced = dot_split.replace("/", "-")
-            for ddash_split in slash_replaced.split("--"):
-                test_attributes_split.append(ddash_split)
-
     # Check that list for any testmods that use modify_fates_paramfile.py
     testmods_to_check = ["clm-FatesColdTwoStream", "clm-FatesColdTwoStreamNoCompFixedBioGeo"]
-    if any(t in testmods_to_check for t in test_attributes_split):
+    testmods = _get_testmod_list(test_attributes)
+    if any(t in testmods_to_check for t in testmods):
         # This bit is needed because it's outside the top-level python/ directory.
         fates_dir = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "src", "fates"
