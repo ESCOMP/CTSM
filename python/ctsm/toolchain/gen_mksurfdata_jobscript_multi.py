@@ -152,13 +152,7 @@ def main():
     # --------------------------
     # Determine target list
     # --------------------------
-    target_list = []
-    if scenario == "crop":
-        target_list = ["crop-global-present", "crop-global-1850"]
-    elif scenario == "tropics":
-        target_list = ["crop-tropics-present"]
-    else:
-        target_list = [scenario]
+    target_list = [scenario]
 
     # --------------------------
     # Error checking

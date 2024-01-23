@@ -4,11 +4,14 @@
 # Load the nco module and run the script in the ctsm_pylib environment:
 module load nco
 
-file_to_2015="subset_data_single_point/landuse.timeseries_1x1_smallvilleIA_hist_78_CMIP6_1850-2015_c$(date +%y%m%d).nc"
-file_to_1855="subset_data_single_point/landuse.timeseries_1x1_smallvilleIA_hist_78_CMIP6_1850-1855_c$(date +%y%m%d).nc"
-file_lake="subset_data_single_point/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_1850-1855_dynLakes_c$(date +%y%m%d).nc"
-file_urban="subset_data_single_point/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_1850-1855_dynUrban_c$(date +%y%m%d).nc"
-file_pft="subset_data_single_point/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_1850-1855_dynPft_c$(date +%y%m%d).nc"
+# This script runs from the mksurfdata_esmf/Makefile.
+# When running standalone, it may need "subset_data_single_point/" in front
+# of each landuse.timeseries file name.
+ file_to_2015="landuse.timeseries_1x1_smallvilleIA_hist_78_CMIP6_1850-2015_c$(date +%y%m%d).nc"
+ file_to_1855="landuse.timeseries_1x1_smallvilleIA_hist_78_CMIP6_1850-1855_c$(date +%y%m%d).nc"
+ file_lake="landuse.timeseries_1x1_smallvilleIA_hist_78pfts_1850-1855_dynLakes_c$(date +%y%m%d).nc"
+ file_urban="landuse.timeseries_1x1_smallvilleIA_hist_78pfts_1850-1855_dynUrban_c$(date +%y%m%d).nc"
+ file_pft="landuse.timeseries_1x1_smallvilleIA_hist_78pfts_1850-1855_dynPft_c$(date +%y%m%d).nc"
 
 # Trim the file to just the years 1850-1855
 ncks -d time,0,5 $file_to_2015 $file_to_1855
