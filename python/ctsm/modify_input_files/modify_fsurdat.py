@@ -165,6 +165,18 @@ class ModifyFsurdat:
         logger.info("Successfully created fsurdat_out: %s", fsurdat_out)
         self.file.close()
 
+    def evenly_split_cropland(self):
+        """
+        Description
+        -----------
+        In rectangle selected by user (or default -90 to 90 and 0 to 360),
+        replace fsurdat file's PCT_CFT with equal values for all crop types.
+        """
+        pct_cft = np.full_like(self.file["PCT_CFT"].values, 100 / self.file.dims["cft"])
+        self.file["PCT_CFT"] = xr.DataArray(
+            data=pct_cft, attrs=self.file["PCT_CFT"].attrs, dims=self.file["PCT_CFT"].dims
+        )
+
     def set_dom_pft(self, dom_pft, lai, sai, hgt_top, hgt_bot):
         """
         Description

@@ -220,6 +220,30 @@ class TestSysFsurdatModifier(unittest.TestCase):
         np.testing.assert_array_equal(fsurdat_out_data.ALB_ROOF_DIR, lev2_two)
         np.testing.assert_array_equal(fsurdat_out_data.TK_ROOF, lev2_ten)
 
+    def test_evenly_split_cropland(self):
+        """
+        Test that evenly splitting cropland works
+        """
+        self._create_config_file_evenlysplitcrop()
+        sys.argv = [
+            "fsurdat_modifier",
+            self._cfg_file_path,
+        ]
+        parser = fsurdat_modifier_arg_process()
+        fsurdat_modifier(parser)
+        # Read the resultant output file and make sure the fields are changed as expected
+        fsurdat_in_data = xr.open_dataset(self._fsurdat_in)
+        fsurdat_out_data = xr.open_dataset(self._fsurdat_out)
+        Ncrops = fsurdat_out_data.dims["cft"]
+        pct_cft = np.full_like(fsurdat_out_data.PCT_CFT, 100 / Ncrops)
+        np.testing.assert_array_equal(fsurdat_in_data.PCT_NATVEG, fsurdat_out_data.PCT_NATVEG)
+        np.testing.assert_array_equal(fsurdat_in_data.PCT_CROP, fsurdat_out_data.PCT_CROP)
+        np.testing.assert_array_equal(fsurdat_in_data.PCT_LAKE, fsurdat_out_data.PCT_LAKE)
+        np.testing.assert_array_equal(fsurdat_in_data.PCT_WETLAND, fsurdat_out_data.PCT_WETLAND)
+        np.testing.assert_array_equal(fsurdat_in_data.PCT_GLACIER, fsurdat_out_data.PCT_GLACIER)
+        np.testing.assert_array_equal(fsurdat_in_data.PCT_URBAN, fsurdat_out_data.PCT_URBAN)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_CFT, pct_cft)
+
     def test_1x1_mexicocity(self):
         """
         Test that the mexicocity file is handled correctly
@@ -404,6 +428,23 @@ class TestSysFsurdatModifier(unittest.TestCase):
                         line = f"fsurdat_out = {self._fsurdat_out}"
                     cfg_out.write(line)
 
+    def _create_config_file_evenlysplitcrop(self):
+        """
+        Open the new and the template .cfg files
+        Loop line by line through the template .cfg file
+        When string matches, replace that line's content
+        """
+        with open(self._cfg_file_path, "w", encoding="utf-8") as cfg_out:
+            with open(self._cfg_template_path, "r", encoding="utf-8") as cfg_in:
+                for line in cfg_in:
+                    if re.match(r" *evenly_split_cropland *=", line):
+                        line = "evenly_split_cropland = True"
+                    elif re.match(r" *fsurdat_in *=", line):
+                        line = f"fsurdat_in = {self._fsurdat_in}"
+                    elif re.match(r" *fsurdat_out *=", line):
+                        line = f"fsurdat_out = {self._fsurdat_out}"
+                    cfg_out.write(line)
+
     def _create_config_file_crop(self):
         """
         Open the new and the template .cfg files
@@ -427,6 +468,8 @@ class TestSysFsurdatModifier(unittest.TestCase):
                         line = "lnd_lon_2 = 300\n"
                     elif re.match(r" *dom_pft *=", line):
                         line = "dom_pft = 15"
+                    elif re.match(r" *evenly_split_cropland *=", line):
+                        line = "evenly_split_cropland = False"
                     elif re.match(r" *lai *=", line):
                         line = "lai = 0 1 2 3 4 5 5 4 3 2 1 0\n"
                     elif re.match(r" *sai *=", line):
@@ -462,6 +505,8 @@ class TestSysFsurdatModifier(unittest.TestCase):
                         line = "lnd_lon_2 = 300\n"
                     elif re.match(r" *dom_pft *=", line):
                         line = "dom_pft = 1"
+                    elif re.match(r" *evenly_split_cropland *=", line):
+                        line = "evenly_split_cropland = False"
                     elif re.match(r" *lai *=", line):
                         line = "lai = 0 1 2 3 4 5 5 4 3 2 1 0\n"
                     elif re.match(r" *sai *=", line):

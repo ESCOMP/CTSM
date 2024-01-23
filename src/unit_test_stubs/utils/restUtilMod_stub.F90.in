@@ -21,7 +21,11 @@ module restUtilMod
 
   public :: restartvar
 
+  public :: RestartExcessIceIssue
+
   public :: set_missing_from_template
+
+  public :: CallRestartvarDimOK
 
 contains
 
@@ -148,5 +152,58 @@ contains
     my_var(:) = template_var(:) * multiplier
 
   end subroutine set_missing_from_template
+
+  !-----------------------------------------------------------------------
+  subroutine RestartExcessIceIssue(ncid, flag, excess_ice_on_restart)
+    !
+    ! !DESCRIPTION:
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid       ! netcdf id
+    character(len=*) , intent(in)    :: flag       ! 'read' or 'write'
+    logical, intent(out) :: excess_ice_on_restart  ! If excess ice is on the restart file
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: attribute_value
+
+    character(len=*), parameter :: subname = 'RestartExcessIceIssue'
+    !-----------------------------------------------------------------------
+
+    excess_ice_on_restart = .false.
+
+  end subroutine RestartExcessIceIssue
+
+
+  !-----------------------------------------------------------------------
+  logical function CallRestartvarDimOK (ncid, flag, dimname)
+    !
+    ! !DESCRIPTION:
+    ! Answer whether to call restartvar(), if necessary checking whether
+    ! a dimension exists in the restart file
+    !
+    ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-02)
+    ! Used in Restart(). Even though restartvar() can safely be called for a
+    ! non-existent variable, it gives an error for a non-existent dimension, so
+    ! check whether the dimension exists before trying to read. The need for this
+    ! function arose because we recently added the mxsowings and mxharvests
+    ! dimensions to the restart file.
+    !
+    ! !USES:
+    use ncdio_pio
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
+    character(len=*) , intent(in)    :: dimname
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
+    CallRestartvarDimOK = .false.
+
+  end function CallRestartvarDimOK
+
 
 end module restUtilMod
