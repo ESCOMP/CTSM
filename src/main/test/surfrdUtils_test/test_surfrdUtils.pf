@@ -570,6 +570,72 @@ contains
 
   end subroutine test_collapse_to_dom_pfts
 
+
+  @Test
+  subroutine test_collapse_with_dont()
+     ! Tests subroutine collapse_to_dominant when used with an optional logical array indicating which gridcells should actually be collapsed
+     !
+     use pftconMod, only: pftcon
+     use clm_instur, only: wt_nat_patch
+     use clm_varpar, only: natpft_lb, natpft_ub
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 4, natpft_size = 15
+     real(r8), allocatable :: wt_nat_patch_expected(:,:)
+     real(r8), allocatable :: wt_nat_patch_in_out(:,:)  ! used in subr. call
+     real(r8) :: expctd(9)
+     logical, allocatable :: do_not_collapse(:)
+
+     ! Set relevant pftcon values to defaults; override where necessary
+     call pftcon%InitForTesting()
+     natpft_ub = natpft_size - 1
+     allocate( wt_nat_patch(begg:endg,natpft_lb:natpft_ub) )
+     allocate( wt_nat_patch_expected(begg:endg,natpft_lb:natpft_ub) )
+     allocate( wt_nat_patch_in_out(begg:endg,natpft_lb:natpft_ub) )
+     allocate( do_not_collapse(begg:endg) )
+
+     ! INPUT VALUES
+     wt_nat_patch(begg:,:) = 0._r8  ! initialize
+     wt_nat_patch(begg:,0) = (/ 30._r8, 40._r8,  0._r8/)  ! pft0
+     wt_nat_patch(begg:,1) = (/ 15._r8, 11._r8, 15._r8/)  ! pft1
+     wt_nat_patch(begg:,2) = (/  5._r8,  5._r8,  5._r8/)  ! pft2
+     wt_nat_patch(begg:,3) = (/  0._r8,  4._r8, 35._r8/)  ! pft3
+     wt_nat_patch(begg:,4) = (/ 10._r8, 10._r8, 35._r8/)  ! pft4
+     wt_nat_patch(begg:,5) = (/ 40._r8, 30._r8, 10._r8/)  ! pft5
+     wt_nat_patch(:,:) = wt_nat_patch(:,:) / 100._r8
+     call check_sums_equal_1( wt_nat_patch, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     do_not_collapse(begg:) = .true.
+
+     ! OUTPUT VALUES EXPECTED
+     wt_nat_patch_expected = wt_nat_patch
+
+     call check_sums_equal_1( wt_nat_patch_expected, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+
+     ! Collapse pfts
+     wt_nat_patch_in_out = wt_nat_patch  ! reset argument for next call
+     call collapse_to_dominant(wt_nat_patch_in_out(begg:endg,:), &
+                               natpft_lb, natpft_ub, begg, endg, &
+                               1, &
+                               do_not_collapse(begg:endg))
+
+     ! Now check that are correct
+     call check_sums_equal_1( wt_nat_patch_in_out, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+
+     @assertEqual(wt_nat_patch_in_out(begg:,:), wt_nat_patch_expected(begg:,:), tolerance=0._r8)
+
+     deallocate( wt_nat_patch_expected )
+     deallocate( wt_nat_patch_in_out )
+     deallocate( wt_nat_patch )
+     deallocate( do_not_collapse )
+
+     call pftcon%clean()
+
+  end subroutine test_collapse_with_dont
+
+
   @Test
   subroutine test_collapse_crop_types_none()
      ! This test sets cftsize = 0, ie crops are lumped together with unmanaged
