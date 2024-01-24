@@ -1,4 +1,4 @@
-fsurdat = '$DIN_LOC_ROOT/lnd/clm2/surfdata/surfdata_10x15_78pfts_simyr2000_synthetic_cosphill_1.1.nc'
+fsurdat = '$DIN_LOC_ROOT/lnd/clm2/testdata/surfdata_10x15_78pfts_simyr2000_synthetic_cosphill_1.1.nc'
 use_hillslope = .true.
 use_hillslope_routing = .true.
 hillslope_pft_distribution_method = 'PftLowlandUpland'
