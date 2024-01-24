@@ -1,4 +1,85 @@
 ===============================================================
+Tag name: ctsm5.1.dev166
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310), tking (Teagan King), afoster (Adrianna Foster), samrabin (Sam Rabin)
+Date: Tue 23 Jan 2024 05:48:34 PM MST
+One-line Summary: BFB merge tag
+
+Purpose and description of changes
+----------------------------------
+
+ #2315 @TeaganKing Refactoring run_neon for PLUMBER2 part1
+ #2213 @samsrabin Automatically assign high priority items to project 25
+ #2330 @samsrabin Add Izumi version of the aux_clm unit testing
+ #2326 @samsrabin run_sys_tests: Check Python environment for FatesColdTwoStream tests
+KEEP? #2124 @adrifoster Create helper function for interpMontlyVeg to improve readability
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+CTSM issues fixed (include CTSM Issue #):
+ Fixes #2315
+ Fixes #2213
+ Fixes #2330
+ Fixes #2326
+KEEP? Fixes #2124
+
+Known bugs introduced in this tag (include issue #):
+ New feature coming in with #2213 where user will receive email from
+ github when pushing to their remote:
+ "Run failed: .github/workflows/assign-to-project.yml"
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ #2315 New unit tests for arg_parse and NeonSite
+ #2330 New test in aux_clm that does unit testing on izumi because unit
+       testing does not work on derecho, yet
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - OK, pylint gives long list of warnings (expected)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho -----
+    izumi -------
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2334
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev165
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310), oleson (Keith Oleson), samrabin (Sam Rabin)
 Date: Fri 19 Jan 2024 06:40:36 PM MST
