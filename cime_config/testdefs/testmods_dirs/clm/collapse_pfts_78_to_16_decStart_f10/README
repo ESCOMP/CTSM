@@ -13,10 +13,26 @@ fsurdat = '$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_10x15_hist_78
 hgrid="10x15" sim_year="1850" use_crop=".false." irrigate=".true."
 hgrid="10x15" sim_year="1850" use_crop=".true."
 
+<<<<<<< HEAD
 flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_10x15_hist_78_CMIP6_1850-2015_c230601.nc'
 hgrid="10x15" sim_year_range="1850-2000" irrigate=".true." use_vichydro=".true."
 hgrid="10x15" sim_year_range="1850-2000" irrigate=".true."
 hgrid="10x15" sim_year_range="1850-2000" use_vichydro=".false."
+||||||| 576f14d5b
+flanduse_timeseries = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/landuse.timeseries_10x15_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc'
+hgrid="10x15" sim_year_range="1850-2000" use_crop=".true."
+hgrid="10x15" rcp="8.5" sim_year_range="1850-2100" use_crop=".true."
+hgrid="10x15" rcp="6" sim_year_range="1850-2100" use_crop=".true."
+hgrid="10x15" rcp="4.5" sim_year_range="1850-2100" use_crop=".true."
+hgrid="10x15" rcp="2.6" sim_year_range="1850-2100" use_crop=".true."
+=======
+flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/landuse.timeseries_10x15_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc'
+hgrid="10x15" sim_year_range="1850-2000" use_crop=".true."
+hgrid="10x15" rcp="8.5" sim_year_range="1850-2100" use_crop=".true."
+hgrid="10x15" rcp="6" sim_year_range="1850-2100" use_crop=".true."
+hgrid="10x15" rcp="4.5" sim_year_range="1850-2100" use_crop=".true."
+hgrid="10x15" rcp="2.6" sim_year_range="1850-2100" use_crop=".true."
+>>>>>>> ctsm5.1.dev163
 
 This test includes the settings of the decStart test so as to also test the
 end-of-year transition since it's an IHist case and transient vegetation gets

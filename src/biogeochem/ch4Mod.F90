@@ -17,7 +17,7 @@ module ch4Mod
   use clm_varcon                     , only : catomw, s_con, d_con_w, d_con_g, c_h_inv, kh_theta, kh_tbase
   use landunit_varcon                , only : istsoil, istcrop, istdlak
   use clm_time_manager               , only : get_step_size_real, get_nstep
-  use clm_varctl                     , only : iulog, use_cn, use_nitrif_denitrif, use_lch4, use_cn, use_fates
+  use clm_varctl                     , only : iulog, use_cn, use_nitrif_denitrif, use_lch4, use_fates_bgc
   use abortutils                     , only : endrun
   use decompMod                      , only : bounds_type, subgrid_level_gridcell, subgrid_level_column
   use atm2lndType                    , only : atm2lnd_type
@@ -2524,7 +2524,7 @@ contains
             end if
          end do
          
-         if(use_fates) then
+         if(use_fates_bgc) then
             nc = bounds%clump_index
             do s = 1,clm_fates%fates(nc)%nsites 
                c = clm_fates%f2hmap(nc)%fcolumn(s)
@@ -2547,7 +2547,7 @@ contains
 
             if (.not. lake) then
 
-               if (use_cn .or. use_fates) then
+               if (use_cn .or. use_fates_bgc) then
                   ! Use soil heterotrophic respiration (based on Wania)
                   base_decomp = (somhr(c)+lithr(c)) / catomw
                   ! Convert from gC to molC
@@ -2570,7 +2570,7 @@ contains
                else
                   call endrun(msg=' ERROR: No source for decomp rate in CH4Prod.'//&
                        ' CH4 model currently requires CN or FATES.'//errMsg(sourcefile, __LINE__))
-               end if ! use_cn
+               end if ! use_cn or use_fates_bgc
 
                ! For sensitivity studies
                base_decomp = base_decomp * cnscalefactor

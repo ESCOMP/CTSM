@@ -62,6 +62,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         self._lat_dimname = None
         self._lon_dimname = None
 
+        self._previous_dir = os.getcwd()
         os.chdir(self._tempdir)  # cd to tempdir
 
         # Run configure to generate .env_mach_specific.sh
@@ -136,7 +137,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         """
         Remove temporary directory
         """
-        os.getcwd()  # cd back to the original working directory
+        os.chdir(self._previous_dir)  # cd back to the original working directory
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_allInfo(self):
