@@ -1139,7 +1139,11 @@ contains
     real(r8), pointer  :: data1dptr(:)   ! temp. pointer for slicing larger arrays
     real(r8), parameter:: totvegcthresh = 1.0_r8      ! Total vegetation carbon threshold to reseed dead vegetation
 
+    logical            :: missing_ciso    ! whether C isotope fields are missing from the input file, despite the run containing C isotopes
+
     !------------------------------------------------------------------------
+
+    missing_ciso = .false.
 
     if (carbon_type == 'c13' .or. carbon_type == 'c14') then
        if (.not. present(c12_cnveg_carbonstate_inst)) then
@@ -1332,86 +1336,14 @@ contains
              end if
           end if
        end if
-       !--------------------------------
-       ! C12 carbon state variables
-       !--------------------------------
 
-       if (carbon_type == 'c12') then
-          call restartvar(ncid=ncid, flag=flag, varname='totvegc', xtype=ncd_double,  &
-               dim1name='pft', long_name='', units='', &
-               interpinic_flag='interp', readvar=readvar, data=this%totvegc_patch) 
-          ! totvegc_col needed for resetting soil carbon stocks during AD spinup exit
-          call restartvar(ncid=ncid, flag=flag, varname='totvegc_col', xtype=ncd_double,  &
-               dim1name='column', long_name='', units='', &
-               interpinic_flag='interp', readvar=readvar, data=this%totvegc_col)
-       end if
-
-       !--------------------------------
-       ! C13 carbon state variables 
-       !--------------------------------
-
-       if ( carbon_type == 'c13')  then
-          call restartvar(ncid=ncid, flag=flag, varname='totvegc_13', xtype=ncd_double,  &
-               dim1name='pft', long_name='', units='', &
-               interpinic_flag='interp', readvar=readvar, data=this%totvegc_patch) 
-          if (flag=='read' .and. .not. readvar) then
-             if ( masterproc ) write(iulog,*) 'initializing cnveg_carbonstate_inst%totvegc with atmospheric c13 value'
-             do i = bounds%begp,bounds%endp
-                if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
-                   this%totvegc_patch(i) = c12_cnveg_carbonstate_inst%totvegc_patch(i) * c3_r2
-                else
-                   this%totvegc_patch(i) = c12_cnveg_carbonstate_inst%totvegc_patch(i) * c4_r2
-                endif
-             end do
-          end if
-
-          call restartvar(ncid=ncid, flag=flag, varname='totvegc_col_13', xtype=ncd_double,  &
-               dim1name='column', long_name='', units='', &
-               interpinic_flag='interp', readvar=readvar, data=this%totvegc_col)
-          if (flag=='read' .and. .not. readvar) then
-             if ( masterproc ) write(iulog,*) 'initializing cnveg_carbonstate_inst%totvegc with atmospheric c13 value'
-             do i = bounds%begc,bounds%endc
-                if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
-                   this%totvegc_col(i) = c12_cnveg_carbonstate_inst%totvegc_col(i) * c3_r2
-                else
-                   this%totvegc_col(i) = c12_cnveg_carbonstate_inst%totvegc_col(i) * c4_r2
-                endif
-             end do
-          end if
-
-       end if
-
-       !--------------------------------
-       ! C14 patch carbon state variables 
-       !--------------------------------
-
-       if ( carbon_type == 'c14')  then
-          call restartvar(ncid=ncid, flag=flag, varname='totvegc_14', xtype=ncd_double,  &
-               dim1name='pft', long_name='', units='', &
-               interpinic_flag='interp', readvar=readvar, data=this%totvegc_patch) 
-          if (flag=='read' .and. .not. readvar) then
-             if ( masterproc ) write(iulog,*) 'initializing this%totvegc_patch with atmospheric c14 value'
-             do i = bounds%begp,bounds%endp
-                if (this%totvegc_patch(i) /= spval .and. &
-                    .not. isnan(this%totvegc_patch(i)) ) then
-                   this%totvegc_patch(i) = c12_cnveg_carbonstate_inst%totvegc_patch(i) * c14ratio
-                endif
-             end do
-          endif
-
-          call restartvar(ncid=ncid, flag=flag, varname='totvegc_col_14', xtype=ncd_double,  &
-               dim1name='column', long_name='', units='', &
-               interpinic_flag='interp', readvar=readvar, data=this%totvegc_col)
-          if (flag=='read' .and. .not. readvar) then
-             if ( masterproc ) write(iulog,*) 'initializing cnveg_carbonstate_inst%totvegc with atmospheric c14 value'
-             do i = bounds%begc,bounds%endc
-                if (this%totvegc_col(i) /= spval .and. &
-                    .not. isnan(this%totvegc_col(i)) ) then
-                   this%totvegc_col(i) = c12_cnveg_carbonstate_inst%totvegc_col(i) * c14ratio
-                endif
-             end do
-          end if
-       end if
+       call restartvar(ncid=ncid, flag=flag, varname='totvegc', xtype=ncd_double,  &
+            dim1name='pft', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%totvegc_patch) 
+       ! totvegc_col needed for resetting soil carbon stocks during AD spinup exit
+       call restartvar(ncid=ncid, flag=flag, varname='totvegc_col', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%totvegc_col)
 
 
        if (  flag == 'read' .and. (enter_spinup .or. (reseed_dead_plants .and. .not. is_restart())) .and. .not. use_cndv) then
@@ -1588,6 +1520,77 @@ contains
     !--------------------------------
 
     if ( carbon_type == 'c13')  then
+
+       call restartvar(ncid=ncid, flag=flag, varname='totvegc_13', xtype=ncd_double,  &
+            dim1name='pft', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%totvegc_patch) 
+       if (flag=='read' .and. .not. readvar) then
+          ! BUG(kwo, 2023-10-19, ESCOMP/ctsm#2119) There is a bug that causes incorrect values for
+          ! C isotopes if running from a case without C isotopes (an initial file) to a case with C
+          ! isotopes (https://github.com/ESCOMP/ctsm/issues/2119). Here we check if the user
+          ! is doing this and abort if they are. This particular check is covering the case
+          ! when use_init_interp=.false.  There is a similar check (but for the purpose of working around
+          ! a different bug) in initInterp.F90. This check below should be removed if bug #2119 is ever
+          ! fully resolved (i.e., we decide we need to support going from a case without C isotopes (an 
+          ! initial file) to a case with C isotopes), and replaced by the logic shown below for .e.g, 
+          ! totvegc_col_13, where totvegc_col_13 is initialized with atmospheric c13 values.
+          ! We arbitrarily check totvegc_13 (we could pick any c13 restart field).
+          if (masterproc) then
+             write(iulog,*) 'Cannot initialize from a run without c13 to a run with c13,'
+             write(iulog,*) 'due to <https://github.com/ESCOMP/ctsm/issues/2119>.'
+             write(iulog,*) 'Either use an input initial conditions file with c13 information,'
+             write(iulog,*) 'or re-spinup from cold start.'
+          end if
+          missing_ciso = .true.
+       end if
+
+    end if
+
+    if ( carbon_type == 'c14')  then
+       call restartvar(ncid=ncid, flag=flag, varname='totvegc_14', xtype=ncd_double,  &
+            dim1name='pft', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%totvegc_patch) 
+       if (flag=='read' .and. .not. readvar) then
+          ! BUG(kwo, 2023-10-19, ESCOMP/ctsm#2119) There is a bug that causes incorrect values for
+          ! C isotopes if running from a case without C isotopes (an initial file) to a case with C
+          ! isotopes (https://github.com/ESCOMP/ctsm/issues/2119). Here we check if the user
+          ! is doing this and abort if they are. This particular check is covering the case
+          ! when use_init_interp=.false.  There is a similar check (but for the purpose of working around
+          ! a different bug) in initInterp.F90. This check below should be removed if bug #2119 is ever
+          ! fully resolved (i.e., we decide we need to support going from a case without C isotopes (an 
+          ! initial file) to a case with C isotopes), and replaced by the logic shown below for .e.g, 
+          ! totvegc_col_14, where totvegc_col_l4 is initialized with atmospheric c14 values.
+          ! We arbitrarily check totvegc_14 (we could pick any c14 restart field).
+          if (masterproc) then
+             write(iulog,*) 'Cannot interpolate from a run without c14 to a run with c14,'
+             write(iulog,*) 'due to <https://github.com/ESCOMP/ctsm/issues/2119>.'
+             write(iulog,*) 'Either use an input initial conditions file with c14 information,'
+             write(iulog,*) 'or re-spinup from cold start.'
+          end if
+          missing_ciso = .true.
+       endif
+    end if
+
+    if (missing_ciso) then
+       call endrun(msg='Cannot initialize from a run without c13/c14 to a run with c13/c14', &
+            additional_msg=errMsg(sourcefile, __LINE__))
+    end if
+
+    if ( carbon_type == 'c13')  then
+
+       call restartvar(ncid=ncid, flag=flag, varname='totvegc_col_13', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%totvegc_col)
+       if (flag=='read' .and. .not. readvar) then
+          if ( masterproc ) write(iulog,*) 'initializing cnveg_carbonstate_inst%totvegc with atmospheric c13 value'
+          do i = bounds%begc,bounds%endc
+             if (this%totvegc_col(i) /= spval .and. &
+                 .not. isnan(this%totvegc_col(i)) ) then
+                this%totvegc_col(i) = c12_cnveg_carbonstate_inst%totvegc_col(i) * c13ratio
+             endif
+          end do
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='leafc_13', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_patch)
@@ -1611,7 +1614,6 @@ contains
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%leafc_storage_patch(i) = c12_cnveg_carbonstate_inst%leafc_storage_patch(i) * c3_r2
              else
-                this%leafc_storage_patch(i) = c12_cnveg_carbonstate_inst%leafc_storage_patch(i) * c4_r2
                 this%leafc_storage_patch(i) = c12_cnveg_carbonstate_inst%leafc_storage_patch(i) * c4_r2
              endif
           end do
@@ -1943,6 +1945,20 @@ contains
     !--------------------------------
 
     if ( carbon_type == 'c14')  then
+
+       call restartvar(ncid=ncid, flag=flag, varname='totvegc_col_14', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%totvegc_col)
+       if (flag=='read' .and. .not. readvar) then
+          if ( masterproc ) write(iulog,*) 'initializing cnveg_carbonstate_inst%totvegc with atmospheric c14 value'
+          do i = bounds%begc,bounds%endc
+             if (this%totvegc_col(i) /= spval .and. &
+                 .not. isnan(this%totvegc_col(i)) ) then
+                this%totvegc_col(i) = c12_cnveg_carbonstate_inst%totvegc_col(i) * c14ratio
+             endif
+          end do
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='leafc_14', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_patch) 

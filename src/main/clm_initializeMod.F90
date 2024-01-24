@@ -133,7 +133,7 @@ contains
     use clm_varpar                    , only : natpft_size,cft_size
     use clm_varctl                    , only : fsurdat
     use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
-    use clm_varctl                    , only : use_cn, use_fates
+    use clm_varctl                    , only : use_cn, use_fates, use_fates_luh
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
     use clm_varctl                    , only : use_cropcal_streams
@@ -142,7 +142,7 @@ contains
     use decompInitMod                 , only : decompInit_clumps, decompInit_glcp
     use domainMod                     , only : domain_check, ldomain, domain_init
     use surfrdMod                     , only : surfrd_get_data
-    use controlMod                    , only : NLFilename
+    use controlMod                    , only : NLFilename, fluh_timeseries
     use initGridCellsMod              , only : initGridCells
     use ch4varcon                     , only : ch4conrd
     use UrbanParamsType               , only : UrbanInput, IsSimpleBuildTemp
@@ -175,6 +175,7 @@ contains
     use CNSharedParamsMod             , only : CNParamsSetSoilDepth
     use NutrientCompetitionFactoryMod , only : create_nutrient_competition_method
     use FATESFireFactoryMod           , only : scalar_lightning
+    use dynFATESLandUseChangeMod      , only : dynFatesLandUseInit
     !
     ! !ARGUMENTS
     integer, intent(in) :: ni, nj                ! global grid sizes
@@ -340,7 +341,7 @@ contains
     end if
 
     ! Pass model timestep info to FATES
-    call CLMFatesTimesteps()
+    if (use_fates) call CLMFatesTimesteps()
 
     ! Initialize daylength from the previous time step (needed so prev_dayl can be set correctly)
     call t_startf('init_orbd')
@@ -405,6 +406,11 @@ contains
     call init_subgrid_weights_mod(bounds_proc)
     call dynSubgrid_init(bounds_proc, glc_behavior, crop_inst)
     call t_stopf('init_dyn_subgrid')
+
+    ! Initialize fates LUH2 usage
+    if (use_fates_luh) then
+       call dynFatesLandUseInit(bounds_proc, fluh_timeseries)
+    end if
 
     ! Initialize baseline water and energy states needed for dynamic subgrid operation
     ! This will be overwritten by the restart file, but needs to be done for a cold start
@@ -691,7 +697,7 @@ contains
     elseif ( use_fates_sp ) then
        call interpMonthlyVeg(bounds_proc, canopystate_inst)
     end if
-
+    
     ! Determine gridcell averaged properties to send to atm
     if (nsrest == nsrStartup) then
        call t_startf('init_map2gc')
@@ -727,7 +733,6 @@ contains
           !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
           do nc = 1,nclumps
              call get_clump_bounds(nc, bounds_clump)
-
              ! FATES satellite phenology mode needs to include all active and inactive patch-level soil
              ! filters due to the translation between the hlm pfts and the fates pfts.
              ! E.g. in FATES, an active PFT vector of 1, 0, 0, 0, 1, 0, 1, 0 would be mapped into
@@ -740,11 +745,12 @@ contains
           end do
           !$OMP END PARALLEL DO
        end if
+       
        call clm_fates%init_coldstart(water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
             soilstate_inst, soilbiogeochem_carbonflux_inst)
     end if
-
+    
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through
     ! initialize2 because it is used to initialize other variables; now it can be deallocated
     deallocate(topo_glc_mec, fert_cft, irrig_method)

@@ -3,7 +3,6 @@
 #
 #       This should be coordinated with the main python environment file!
 #
-# To install this on cheyenne with conda loaded in modules
 # use the top level bash script:
 # ../py_env_create                                           # Do this each time you update your CTSM Version
 # conda activate ctsm_pylib                                  # Do this anytime you want to run a CTSM python script
