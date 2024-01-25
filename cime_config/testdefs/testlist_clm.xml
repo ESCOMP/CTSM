@@ -3433,6 +3433,7 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
