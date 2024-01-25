@@ -76,6 +76,7 @@ SUBSETDATA_1X1_URBALPHA    := --lat -37.7308 --lon 0 --site 1x1_urbanc_alpha --o
 # low-res is for low resolutions for testing
 # nldas is for NWP working with WRF
 STANDARD = \
+	global-potveg \
 	global-present \
 	global-present-low-res \
 	global-present-nldas

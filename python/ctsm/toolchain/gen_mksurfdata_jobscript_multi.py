@@ -12,6 +12,7 @@ from ctsm.toolchain.gen_mksurfdata_namelist import main as main_nml
 from ctsm.utils import abort
 
 valid_scenarios = [
+    "global-potveg",
     "global-present",
     "global-present-low-res",
     "global-present-ultra-hi-res",
@@ -196,6 +197,10 @@ def main():
     # Determine commands for each target list
     # --------------------------
     dataset_dict = {
+        "global-potveg": (
+            "--start-year 1850 --end-year 1850 --nocrop --potveg               --res",
+            "f09",
+        ),
         "global-present": (
             "--start-year 2000 --end-year 2000 --nocrop --vic                  --res",
             "standard_res_no_crop",
