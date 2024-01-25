@@ -777,6 +777,19 @@ Full pathname to the inventory initialization control file.
 (Only relevant if FATES is on).
 </entry>
 
+<entry id="fates_hist_dense_level" type="integer(2)" category="physics"
+       group="clm_inparm" valid_values="0,1,2" >
+  Setting for what types of FATES history to be allocate and
+  calculated at the dynamics timestep (1st integer) and the
+  model timestep (2nd integer). This must be consistent with
+  hist_fincl*, ie output variables must not be listed if the
+  output level is not enabled.
+  0 = no fates history variables are calculated or allocated
+  1 = only time x space (3d) fates history variables allowed
+  2 = multiplexed dimensioned fates history is also allowed
+  (Only relevant if FATES is on)
+</entry>
+
 <!-- This may eventually migrate to the dynamic_subgrid group-->
 <entry id="use_fates_luh" type="logical" category="physics"
        group="clm_inparm" valid_values="" >

@@ -334,6 +334,8 @@ module clm_varctl
   
   integer, dimension(2), public   :: fates_hist_dense_level = (/1,1/)
   
+  logical, public            :: use_fates_luh = .false.                 ! true => use FATES landuse data mode
+  character(len=256), public :: fluh_timeseries = ''                    ! filename for fates landuse timeseries data
   character(len=256), public :: fates_inventory_ctrl_filename = ''      ! filename for inventory control
 
   ! FATES SP AND FATES BGC are MUTUTALLY EXCLUSIVE, THEY CAN'T BOTH BE ON
