@@ -1291,7 +1291,7 @@
       <option name="comment"  >restart is right before the transition from 100% nat veg to 100% crop</option>
     </options>
   </test>
-  <test name="ERS_Ly3" grid="f10_f10_mg37" compset="IHistClm50BgcCropG" testmods="clm/cropMonthOutput">
+  <test name="ERS_Ly3" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
