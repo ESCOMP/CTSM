@@ -1,9 +1,7 @@
-SRCDIR=`./xmlquery SRCROOT --value`
-CASEDIR=`./xmlquery CASEROOT --value`
-FATESDIR=$SRCDIR/src/fates/
-FATESPARAMFILE=$SRCDIR/fates_params_seeddisp_4x5.nc
-
-ncgen -o $FATESPARAMFILE $FATESDIR/parameter_files/fates_params_default.cdl
+CASE=`./xmlquery CASE --value`
+SRCROOT=`./xmlquery SRCROOT --value`
+FATESDIR=$SRCROOT/src/fates
+FATESPARAMFILE=${SRCROOT}/src/fates/parameter_files/binaries/${CASE}-params.nc
 
 $FATESDIR/tools/modify_fates_paramfile.py --O --fin $FATESPARAMFILE --fout $FATESPARAMFILE --var fates_seed_dispersal_fraction --val 0.2 --allpfts
 $FATESDIR/tools/modify_fates_paramfile.py --O --fin $FATESPARAMFILE --fout $FATESPARAMFILE --var fates_seed_dispersal_max_dist --val 2500000 --allpfts

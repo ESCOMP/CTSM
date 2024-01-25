@@ -1,2 +1,16 @@
 ./xmlchange CLM_BLDNML_OPTS="-no-megan" --append
 ./xmlchange BFBFLAG="TRUE"
+
+CASE=`./xmlquery CASE --value`
+SRCROOT=`./xmlquery SRCROOT --value`
+
+#CIME_OUTPUT_ROOT=`./xmlquery CIME_OUTPUT_ROOT --value`
+# CASEDIR=`./xmlquery CASEROOT --value`
+# env_test.xml IS NOT AVAILABLE TESTROOT=`./xmlquery TESTROOT --value`
+# env_test.xml IS NOT AVAILABLE TESTID=`./xmlquery TESTID --value`
+# env_test.xml IS NOT AVAILABLE TESTARGV=`./xmlquery TEST_ARGV --value`
+
+FATESDIR=$SRCROOT/src/fates
+FATESPARAMFILE=${SRCROOT}/src/fates/parameter_files/binaries/${CASE}-params.nc
+
+ncgen -o $FATESPARAMFILE $FATESDIR/parameter_files/fates_params_default.cdl
