@@ -1361,8 +1361,7 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_10x15_hist_78pfts_CMIP6_1850_c230517.n
 <fsurdat hgrid="4x5"       sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_4x5_hist_78pfts_CMIP6_1850_c230517.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" >
-<!-- TODO slevis: Rename to surfdata_1x1_smallvilleIA_hist_78pfts_CMIP6_1850_c240103.nc here and in modify_smallville.sh -->
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_smallvilleIA_hist_78pfts_CMIP6_1850-2015_c240103.nc
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_smallvilleIA_hist_78pfts_CMIP6_1850_c240103.nc
 </fsurdat>
 <fsurdat hgrid="1x1_numaIA"       sim_year="1850" >
 lnd/clm2/surfdata_esmf/ctsm5.2.0/ssurfdata_1x1_numaIA_hist_78pfts_CMIP6_1850_c240110.nc
