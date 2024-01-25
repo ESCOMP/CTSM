@@ -153,6 +153,17 @@
       <issue>#2289</issue>
     </phase>
   </test>
+  <!-- Tests with CISM active fail because of incompatibilities between the CISM version and CTSM -->
+  <test name="ERP_D_Ld5.f19_g17_gl4.I1850Clm50BgcCropG.derecho_intel.clm-default">
+    <phase name="SHAREDLIB_BUILD">
+      <status>PENDING</status>
+    </phase>
+  </test>
+  <test name="ERP_D_Ld5.f19_g17_gl4.I1850Clm50BgcCropG.derecho_intel.clm-glcMEC_increase">
+    <phase name="SHAREDLIB_BUILD">
+      <status>PENDING</status>
+    </phase>
+  </test>
 
   <!-- gnu tests failing - gnu NOT ported to derecho in these externals -->
   <test name="ERS_Lm25.1x1_smallvilleIA.IHistClm50BgcCropQianRs.derecho_gnu.clm-smallville_dynlakes_monthly">
