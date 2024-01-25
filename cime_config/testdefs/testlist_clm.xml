@@ -771,7 +771,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCruGs" testmods="clm/noFUN_flexCN">
+  <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/noFUN_flexCN">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
@@ -779,7 +779,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCruGs" testmods="clm/luna">
+  <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/luna">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
@@ -1147,7 +1147,6 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="intel" category="prebeta"/>
-      <machine name="izumi" compiler="pgi" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1395,7 +1394,6 @@
   <test name="SMS" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/crop">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="pgi" category="aux_clm"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
@@ -1505,7 +1503,6 @@
   <test name="SMS_D" grid="f10_f10_mg37" compset="I2000Clm51BgcCrop" testmods="clm/crop">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="pgi" category="aux_clm"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
@@ -1514,7 +1511,6 @@
   </test>
   <test name="SMS_D_Ld1" grid="f19_g17" compset="I1850Clm45Cn" testmods="clm/default">
     <machines>
-      <machine name="izumi" compiler="pgi" category="prebeta"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
@@ -1720,7 +1716,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ld1_Mmpi-serial" grid="f45_f45_mg37" compset="I2000Clm50SpRs" testmods="clm/ptsRLA">
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="f45_f45_mg37" compset="I2000Clm50SpRs" testmods="clm/ptsRLA">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
