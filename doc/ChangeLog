@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev166
-Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310), tking (Teagan King), afoster (Adrianna Foster), samrabin (Sam Rabin)
-Date: Tue 23 Jan 2024 05:48:34 PM MST
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310), tking (Teagan King), samrabin (Sam Rabin)
+Date: Wed 24 Jan 2024 05:39:41 PM MST
 One-line Summary: BFB merge tag
 
 Purpose and description of changes
@@ -11,7 +11,6 @@ Purpose and description of changes
  #2213 @samsrabin Automatically assign high priority items to project 25
  #2330 @samsrabin Add Izumi version of the aux_clm unit testing
  #2326 @samsrabin run_sys_tests: Check Python environment for FatesColdTwoStream tests
-KEEP? #2124 @adrifoster Create helper function for interpMontlyVeg to improve readability
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -38,12 +37,16 @@ CTSM issues fixed (include CTSM Issue #):
  Fixes #2213
  Fixes #2330
  Fixes #2326
-KEEP? Fixes #2124
 
 Known bugs introduced in this tag (include issue #):
- New feature coming in with #2213 where user will receive email from
+ - New feature coming in with #2213 where user will receive email from
  github when pushing to their remote:
  "Run failed: .github/workflows/assign-to-project.yml"
+ - New feature that also affects older tags: The izumi FatesColdTwoStream
+ test submitted from ./run_sys_tests will fail at CREATE_NEWCASE unless users
+ introduce "module load lang/python/3.7.0" in their .bash_profile.
+ Longterm solution discussed in #2335. The test also works when submitted
+ manually with ./create_test.
 
 Notes of particular relevance for developers:
 ---------------------------------------------
@@ -63,18 +66,16 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
 
 Answer changes
 --------------
-
 Changes answers relative to baseline: No
 
 Other details
 -------------
-
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/2334
 
