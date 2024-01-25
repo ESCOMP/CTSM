@@ -2769,7 +2769,7 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <use_fates_luh                 use_fates=".true.">.false.</use_fates_luh>
 <fates_parteh_mode             use_fates=".true.">1</fates_parteh_mode>
 <fates_seeddisp_cadence        use_fates=".true.">0</fates_seeddisp_cadence>
-
+<fates_hist_dense_level        use_fates=".true.">1,1</fates_hist_dense_level>
 <use_fates_nocomp              use_fates=".true." use_fates_sp=".true.">.true.</use_fates_nocomp>
 <use_fates_nocomp              use_fates=".true."                      >.false.</use_fates_nocomp>
 <use_fates_fixed_biogeog       use_fates=".true." use_fates_sp=".true.">.true.</use_fates_fixed_biogeog>

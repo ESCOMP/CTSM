@@ -134,7 +134,7 @@ module CLMFatesInterfaceMod
    use FatesParametersInterface, only : fates_parameters_type
 
    use FatesInterfaceMod     , only : DetermineGridCellNeighbors
-
+   use FatesIOVariableKindMod, only : group_dyna_simple, group_dyna_complx
    use FatesHistoryInterfaceMod, only : fates_hist
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
@@ -1191,9 +1191,9 @@ module CLMFatesInterfaceMod
       ! Flush arrays to values defined by %flushval (see registry entry in
       ! subroutine define_history_vars()
       ! ---------------------------------------------------------------------------------
-      call fates_hist%flush_hvars(nc,upfreq_in=1)
+      call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_simple)
 
-      call fates_hist%flush_hvars(nc,upfreq_in=5)
+      call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_complx)
 
       ! ---------------------------------------------------------------------------------
       ! Part II: Call the FATES model now that input boundary conditions have been
@@ -1968,11 +1968,20 @@ module CLMFatesInterfaceMod
                ! ------------------------------------------------------------------------
                ! Update history IO fields that depend on ecosystem dynamics
                ! ------------------------------------------------------------------------
-               call fates_hist%flush_hvars(nc,upfreq_in=1)
-               do s = 1,this%fates(nc)%nsites
-                  call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
-                     upfreq_in=1)
-               end do
+               if(fates_hist_dense_level(2)>0) then
+                  call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_simple)
+                  do s = 1,this%fates(nc)%nsites
+                     call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
+                          upfreq_in=group_dyna_simple)
+                  end do
+                  if(fates_hist_dense_level(2)>1) then
+                     call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_complx)
+                     do s = 1,this%fates(nc)%nsites
+                        call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
+                             upfreq_in=group_dyna_complx)
+                     end do
+                  end if
+               end if
                call fates_hist%update_history_dyn( nc,                     &
                                                    this%fates(nc)%nsites,  &
                                                    this%fates(nc)%sites,   &
@@ -2152,17 +2161,24 @@ module CLMFatesInterfaceMod
            ! ------------------------------------------------------------------------
            ! Update history IO fields that depend on ecosystem dynamics
            ! ------------------------------------------------------------------------
-            call fates_hist%flush_hvars(nc,upfreq_in=1)
-            do s = 1,this%fates(nc)%nsites
-               call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
-                  upfreq_in=1)
-            end do
-            call fates_hist%update_history_dyn( nc,                     &
+           if(fates_hist_dense_level(2)>0) then
+              call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_simple)
+              do s = 1,this%fates(nc)%nsites
+                 call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
+                      upfreq_in=group_dyna_simple)
+              end do
+              if(fates_hist_dense_level(2)>1) then
+                 call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_complx)
+                 do s = 1,this%fates(nc)%nsites
+                    call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
+                         upfreq_in=group_dyna_complx)
+                 end do
+              end if
+           end if
+           call fates_hist%update_history_dyn( nc,                     &
                 this%fates(nc)%nsites,                                  &
                 this%fates(nc)%sites,                                   &
                 this%fates(nc)%bc_in) 
-
-
 
         end if
      end do
@@ -2970,6 +2986,7 @@ module CLMFatesInterfaceMod
             this%fates(nc)%nsites,  &
             this%fates(nc)%sites,   &
             this%fates(nc)%bc_in,   &
+            this%fates(nc)%bc_out,  &
             dtime)
       
     end associate
