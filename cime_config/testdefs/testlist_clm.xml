@@ -304,7 +304,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm50BgcCropG" testmods="clm/glcMEC_changeFlags">
+  <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/glcMEC_changeFlags">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1130,7 +1130,7 @@
       </machine>
     </machines>
   </test>
-  <test name="ERP_P7642_Lm7_Vnuopc" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate_monthly">
+  <test name="ERP_P64x2_Lm7_Vnuopc" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate_monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm">
         <options>
@@ -1148,7 +1148,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_P64x2_D_Ld10" grid="f10_f10_mg37" compset="IHistClm50SpG" testmods="clm/glcMEC_decrease">
+  <test name="ERP_P64x2_D_Ld10" grid="f10_f10_mg37" compset="IHistClm50Sp" testmods="clm/glcMEC_decrease">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1193,7 +1193,7 @@
       <option name="comment"  >test soil_layerstruct_userdefined set to the same dzsoi values as in the predefined case 4SL_2m and expect bfb same answers</option>
     </options>
   </test>
-  <test name="ERS_D_Ld12" grid="f10_f10_mg37" compset="I1850Clm50BgcCropG" testmods="clm/glcMEC_spunup_inc_dec_bgc">
+  <test name="ERS_D_Ld12" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/glcMEC_spunup_inc_dec_bgc">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1989,7 +1989,7 @@
       <option name="comment"  >include a relatively long crop test at relatively high resolution</option>
     </options>
   </test>
-  <test name="SMS_Lm37" grid="f10_f10_mg37" compset="I1850Clm50SpG" testmods="clm/glcMEC_long">
+  <test name="SMS_Lm37" grid="f10_f10_mg37" compset="I1850Clm50Sp" testmods="clm/glcMEC_long">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
