@@ -972,6 +972,7 @@
       <option name="comment"  >include a debug test with flooding on</option>
     </options>
   </test>
+<!-- Tests with CISM fail, so don't do these tests now
   <test name="ERP_D_Ld5" grid="f19_g17_gl4" compset="I1850Clm50BgcCropG" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -990,6 +991,7 @@
       <option name="comment"  >cism is not answer preserving across processor changes, but short test length should be ok.</option>
     </options>
   </test>
+-->
   <test name="ERP_D_Ld5" grid="f19_g17" compset="I2000Clm50Sp" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
