@@ -384,7 +384,7 @@
   <test name="ERS_Lm13" grid="f10_f10_mg37" compset="I1850Clm51Bgc" testmods="clm/monthly_matrixcn_fast_spinup">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="izumi"    compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">01:20:00</option>
@@ -412,7 +412,6 @@
   <test name="ERS_D" grid="f19_g17" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="izumi"    compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">01:20:00</option>
@@ -685,7 +684,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_Ld5" grid="f19_g17" compset="I2000Clm50SpRtmFl" testmods="clm/default">
+  <test name="ERP_Ld5" grid="f10_f10_mg37" compset="I2000Clm50SpRtmFl" testmods="clm/default">
     <machines>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
       <machine name="izumi" compiler="gnu" category="prebeta"/>
@@ -1148,7 +1147,6 @@
   <test name="ERS_D_Ld3" grid="f19_g17" compset="I1850Clm50BgcCrop" testmods="clm/clm50dynroots">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1881,7 +1879,7 @@
   <test name="SSPMATRIXCN_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/ciso_monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="izumi"    compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
@@ -1914,7 +1912,6 @@
   </test>
   <test name="SSP_Ld10" grid="f19_g17" compset="I1850Clm50Bgc" testmods="clm/rtmColdSSP">
     <machines>
-      <machine name="izumi" compiler="intel" category="prebeta"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
