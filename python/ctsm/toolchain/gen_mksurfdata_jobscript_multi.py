@@ -12,6 +12,7 @@ from ctsm.toolchain.gen_mksurfdata_namelist import main as main_nml
 from ctsm.utils import abort
 
 valid_scenarios = [
+    "global-vic",
     "global-potveg",
     "global-present",
     "global-present-low-res",
