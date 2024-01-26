@@ -99,6 +99,10 @@ Running for the generation of multiple datasets
 > ./gen_mksurfdata_jobscript_multi --help
 > ./gen_mksurfdata_jobscript_multi --number-of-nodes 2 --scenario global-present
 > qsub mksurfdata_jobscript_multi
+# If you are looking to generate all (or a large number of) the datasets or the
+# single-point (1x1) datasets, you are best off using the Makefile. For example
+> make all  # ...or
+> make all-subset
 
 ================
 NOTES

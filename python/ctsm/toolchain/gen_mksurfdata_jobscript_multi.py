@@ -165,9 +165,12 @@ def main():
             abort("Input scenario is NOT in valid_scenarios")
     # --------------------------
     # Determine resolution sets that are referenced in commands
+    # TODO slevis: When new resolutions become supported in ccs_config, the
+    # first entry will change to
+    # "standard_res_no_crop": ["0.9x1.25", "1.9x2.5", "mpasa60", "mpasa60-3conus", "mpasa60-3centralUS"],
     # --------------------------
     resolution_dict = {
-        "standard_res_no_crop": ["0.9x1.25", "1.9x2.5", "mpasa60", "mpasa60-3conus", "mpasa60-3centralUS"],
+        "standard_res_no_crop": ["0.9x1.25", "1.9x2.5", "mpasa60"],
         "f09": ["0.9x1.25"],
         "f19": ["1.9x2.5"],
         "hcru": ["360x720cru"],
@@ -415,7 +418,7 @@ def main():
                 sys.argv = [x for x in command.split(" ") if x]
                 main_nml()
                 print(f"generated namelist {namelist}")
-                output = f'time mpiexec_mpt -p "%g:" -np {n_p} {mksurfdata} < {namelist}'
+                output = f'time mpiexec_mpt {mksurfdata} < {namelist}'
                 runfile.write(f"{output} \n")
                 check = f"if [ $? != 0 ]; then echo 'Error running resolution {res}'; exit -4; fi"
                 runfile.write(f"{check} \n")
