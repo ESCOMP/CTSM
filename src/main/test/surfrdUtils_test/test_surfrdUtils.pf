@@ -572,7 +572,7 @@ contains
 
 
   @Test
-  subroutine test_collapse_with_dont()
+  subroutine test_collapse_to_dom_do_not_collapse()
      ! Tests subroutine collapse_to_dominant when used with an optional logical array indicating which gridcells should actually be collapsed
      !
      use pftconMod, only: pftcon
@@ -633,7 +633,7 @@ contains
 
      call pftcon%clean()
 
-  end subroutine test_collapse_with_dont
+  end subroutine test_collapse_to_dom_do_not_collapse
 
 
   @Test
