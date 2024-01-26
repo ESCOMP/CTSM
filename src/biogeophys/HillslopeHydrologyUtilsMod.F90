@@ -66,6 +66,7 @@ contains
              do j = 1,nlevsoi
                if ((zisoi(j-1) <  soil_depth_col) .and. (zisoi(j) >= soil_depth_col)) then
                   col%nbedrock(c) = j
+                  exit
                end if
              enddo
           end if
