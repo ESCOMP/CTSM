@@ -418,7 +418,7 @@ def main():
                 sys.argv = [x for x in command.split(" ") if x]
                 main_nml()
                 print(f"generated namelist {namelist}")
-                output = f'time mpiexec_mpt {mksurfdata} < {namelist}'
+                output = f'time mpiexec {mksurfdata} < {namelist}'
                 runfile.write(f"{output} \n")
                 check = f"if [ $? != 0 ]; then echo 'Error running resolution {res}'; exit -4; fi"
                 runfile.write(f"{check} \n")
