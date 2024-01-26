@@ -19,13 +19,15 @@ module HillslopeHydrologyUtilsMod
   private
   save
 
+  real(r8), parameter :: toosmall_distance_default  = 1e-6
+
   ! !PUBLIC MEMBER FUNCTIONS:
   public HillslopeSoilThicknessProfile_linear
 
 contains
 
   !------------------------------------------------------------------------
-  subroutine HillslopeSoilThicknessProfile_linear(bounds, soil_depth_lowland, soil_depth_upland)
+  subroutine HillslopeSoilThicknessProfile_linear(bounds, soil_depth_lowland, soil_depth_upland, toosmall_distance_in)
     !
     ! !DESCRIPTION:
     ! Modify soil thickness across hillslope by changing
@@ -40,13 +42,20 @@ contains
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     real(r8), intent(in) :: soil_depth_lowland, soil_depth_upland
+    real(r8), intent(in), optional :: toosmall_distance_in
     !
     ! !LOCAL VARIABLES
     real(r8) :: min_hill_dist, max_hill_dist
+    real(r8) :: toosmall_distance
     real(r8) :: soil_depth_col
     real(r8) :: m, b
     integer :: c, j, l
-    real(r8), parameter :: toosmall_distance  = 1e-6
+
+    if (present(toosmall_distance_in)) then
+       toosmall_distance = toosmall_distance_in
+    else
+      toosmall_distance = toosmall_distance_default
+    end if
 
     do l = bounds%begl,bounds%endl
        min_hill_dist = minval(col%hill_distance(lun%coli(l):lun%colf(l)))

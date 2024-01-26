@@ -8,7 +8,7 @@ module test_hillslopehydrologyUtils
   use LandunitType    , only : lun
   use landunit_varcon , only : istwet
   use decompMod       , only : bounds_type
-  use clm_varpar      , only : nlevgrnd
+  use clm_varpar      , only : nlevsoi, nlevgrnd
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use HillslopeHydrologyUtilsMod, only : HillslopeSoilThicknessProfile_linear
 
@@ -33,11 +33,8 @@ contains
     ! Set up variables needed for tests: various subgrid type variables, along with
     ! bounds.
     !
-    use clm_varcon, only: clm_varcon_init, zisoi
-    use clm_varpar, only: nlevsoi, nlevgrnd
     class(TestInit), intent(inout) :: this
     integer :: g, l, c
-    real(r8), allocatable :: my_zisoi(:)
 
     ! Set up subgrid structure
     ! The weights (of both landunits and columns) and column types in the following are
@@ -57,23 +54,12 @@ contains
     col%active(begc:endc) = .false.
     col%is_hillslope_column(begc:endc) = .false.
 
-    ! Set up ground/soil structure
-    nlevsoi = 5
-    allocate(my_zisoi(1:nlevsoi))
-    my_zisoi = [0.01_r8, 0.02_r8, 2._r8, 4._r8, 6._r8]
-    nlevgrnd = size(my_zisoi)
-    call clm_varcon_init( is_simple_buildtemp = .true.)
-    zisoi(0) = 0._r8
-    zisoi(1:nlevgrnd) = my_zisoi(:)
-    col%nbedrock(bounds%begc:bounds%endc) = nbedrock_dummy_value
-
     ! Set up hill_distance
     l = bounds%begl
     do c = lun%coli(l), lun%colf(l)
        col%hill_distance(c) = real(c, kind=r8)
     end do
 
-    deallocate(my_zisoi)
 
   end subroutine setUp
 
@@ -87,6 +73,42 @@ contains
 
   end subroutine tearDown
 
+  ! Set up ground/soil structure
+  subroutine ground_a(bounds)
+    use clm_varcon, only: clm_varcon_init, zisoi
+    type(bounds_type), intent(in) :: bounds
+    real(r8), allocatable :: my_zisoi(:)
+
+    nlevsoi = 5
+    allocate(my_zisoi(1:nlevsoi))
+    my_zisoi = [0.01_r8, 0.02_r8, 2._r8, 4._r8, 6._r8]
+    nlevgrnd = size(my_zisoi)
+    call clm_varcon_init( is_simple_buildtemp = .true.)
+    zisoi(0) = 0._r8
+    zisoi(1:nlevgrnd) = my_zisoi(:)
+    col%nbedrock(bounds%begc:bounds%endc) = nbedrock_dummy_value
+    
+    deallocate(my_zisoi)
+  end subroutine ground_a
+
+    ! Set up ground/soil structure
+  subroutine ground_b(bounds)
+    use clm_varcon, only: clm_varcon_init, zisoi
+    type(bounds_type), intent(in) :: bounds
+    real(r8), allocatable :: my_zisoi(:)
+
+    nlevsoi = 3
+    allocate(my_zisoi(1:nlevsoi))
+    my_zisoi = [0.01_r8, 0.02_r8, 1._r8]
+    nlevgrnd = size(my_zisoi)
+    call clm_varcon_init( is_simple_buildtemp = .true.)
+    zisoi(0) = 0._r8
+    zisoi(1:nlevgrnd) = my_zisoi(:)
+    col%nbedrock(bounds%begc:bounds%endc) = nbedrock_dummy_value
+    
+    deallocate(my_zisoi)
+  end subroutine ground_b
+
   @Test
   subroutine test_HillslopeSoilThicknessProfile_linear(this)
     class(TestInit), intent(inout) :: this
@@ -95,6 +117,7 @@ contains
 
     l = bounds%begl
 
+    call ground_a(bounds)
     col%active(bounds%begc:bounds%endc) = .true.
     col%is_hillslope_column(bounds%begc:bounds%endc) = .true.
 
@@ -114,6 +137,62 @@ contains
   end subroutine test_HillslopeSoilThicknessProfile_linear
 
   @Test
+  subroutine test_HillslopeSoilThicknessProfile_linear_tooshallow(this)
+    class(TestInit), intent(inout) :: this
+    integer, allocatable :: nbedrock_expected(:)
+    integer :: l, c
+
+    l = bounds%begl
+
+    call ground_b(bounds)
+    col%active(bounds%begc:bounds%endc) = .true.
+    col%is_hillslope_column(bounds%begc:bounds%endc) = .true.
+
+    ! Get expected values
+    ! Layer 1 soil_depth_col = 8.5
+    ! Layer 2 soil_depth_col = 2.0; still too deep for ground_b()
+    allocate(nbedrock_expected(bounds%begc:bounds%endc))
+    nbedrock_expected(lun%coli(l)) = 9999
+    nbedrock_expected(lun%coli(l) + 1) = 9999
+
+    call HillslopeSoilThicknessProfile_linear(bounds, soil_depth_lowland, soil_depth_upland)
+
+    @assertEqual(nbedrock_expected(lun%coli(l):lun%colf(l)), col%nbedrock(lun%coli(l):lun%colf(l)))
+
+    deallocate(nbedrock_expected)
+
+  end subroutine test_HillslopeSoilThicknessProfile_linear_tooshallow
+
+  @Test
+  subroutine test_HillslopeSoilThicknessProfile_linear_noslope(this)
+    class(TestInit), intent(inout) :: this
+    integer, allocatable :: nbedrock_expected(:)
+    integer :: l, c
+    real(r8) :: toosmall_distance
+
+    l = bounds%begl
+
+    call ground_a(bounds)
+    col%active(bounds%begc:bounds%endc) = .true.
+    col%is_hillslope_column(bounds%begc:bounds%endc) = .true.
+
+    ! Get expected values, setting toosmall_distance to something high enough that the (abs(max_hill_dist - min_hill_dist) > toosmall_distance) conditional will fail, causing m = 0.0
+    toosmall_distance = 100._r8
+    ! Layer 1 soil_depth_col = 2.0
+    ! Layer 2 soil_depth_col = 2.0
+    allocate(nbedrock_expected(bounds%begc:bounds%endc))
+    nbedrock_expected(lun%coli(l)) = 3
+    nbedrock_expected(lun%coli(l) + 1) = 3
+
+    call HillslopeSoilThicknessProfile_linear(bounds, soil_depth_lowland, soil_depth_upland, toosmall_distance_in=toosmall_distance)
+
+    @assertEqual(nbedrock_expected(lun%coli(l):lun%colf(l)), col%nbedrock(lun%coli(l):lun%colf(l)))
+
+    deallocate(nbedrock_expected)
+
+  end subroutine test_HillslopeSoilThicknessProfile_linear_noslope
+
+  @Test
   subroutine test_HillslopeSoilThicknessProfile_linear_inactive(this)
     class(TestInit), intent(inout) :: this
     integer, allocatable :: nbedrock_expected(:)
@@ -121,6 +200,7 @@ contains
 
     l = bounds%begl
 
+    call ground_a(bounds)
     col%active(bounds%begc:bounds%endc) = .false.
     col%is_hillslope_column(bounds%begc:bounds%endc) = .true.
 
@@ -147,6 +227,7 @@ contains
 
     l = bounds%begl
 
+    call ground_a(bounds)
     col%active(bounds%begc:bounds%endc) = .true.
     col%is_hillslope_column(bounds%begc:bounds%endc) = .false.
 
