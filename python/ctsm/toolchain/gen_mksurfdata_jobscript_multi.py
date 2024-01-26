@@ -273,7 +273,7 @@ def main():
         ),
         "crop-global-hist-ne16": (
             "--start-year 1850 --end-year 2015 --nosurfdata                    --res",
-            "ne16_res",
+            "ne16",
         ),
         "crop-global-hist-ne30": (
             "--start-year 1850 --end-year 2015 --nosurfdata                    --res",
