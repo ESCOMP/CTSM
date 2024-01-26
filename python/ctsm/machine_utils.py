@@ -34,6 +34,8 @@ def _machine_from_hostname(hostname):
     """
     if re.match(r'cheyenne\d+', hostname):
         machine = 'cheyenne'
+    elif re.match(r"derecho\d+", hostname):
+        machine = "derecho"
     else:
         machine = hostname
 
