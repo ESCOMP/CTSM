@@ -129,7 +129,7 @@ contains
      call check_sums_equal_1( wt_in_out, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
 
-     @assertEqual(wt_in_out(begg:,:), wt_expected(begg:,:), tolerance=tol)
+     @assertEqual(wt_expected(begg:,:), wt_in_out(begg:,:), tolerance=tol)
 
      deallocate( wt_expected )
      deallocate( wt_in_out )
@@ -249,7 +249,7 @@ contains
         call check_sums_equal_1( wt_in_out, begg, "test_check_sums_add_to_1", &
                                  "should not trigger an error for wt_in_out")
 
-        @assertEqual(wt_in_out(begg:,:), wt_expected(begg:,:), tolerance=tol)
+        @assertEqual(wt_expected(begg:,:), wt_in_out(begg:,:), tolerance=tol)
 
      end do
 
@@ -318,7 +318,7 @@ contains
                                isturb_MIN, isturb_MAX, begg, endg, &
                                n_dom_urban)
 
-     @assertEqual(wt_in_out(begg:,:), wt_expected(begg:,:), tolerance=tol)
+     @assertEqual(wt_expected(begg:,:), wt_in_out(begg:,:), tolerance=tol)
 
      deallocate( wt_expected )
      deallocate( wt_in_out )
@@ -444,7 +444,7 @@ contains
         call check_sums_equal_1( wt_in_out, begg, "test_check_sums_add_to_1", &
                                  "should not trigger an error")
 
-        @assertEqual(wt_in_out(begg:,:), wt_expected(begg:,:), tolerance=tol)
+        @assertEqual(wt_expected(begg:,:), wt_in_out(begg:,:), tolerance=tol)
 
      end do  ! loop of tests
 
@@ -558,7 +558,7 @@ contains
         call check_sums_equal_1( wt_nat_patch_in_out, begg, "test_check_sums_add_to_1", &
                                  "should not trigger an error")
 
-        @assertEqual(wt_nat_patch_in_out(begg:,:), wt_nat_patch_expected(begg:,:), tolerance=tol)
+        @assertEqual(wt_nat_patch_expected(begg:,:), wt_nat_patch_in_out(begg:,:), tolerance=tol)
 
      end do  ! loop of tests
 
@@ -624,7 +624,7 @@ contains
      call check_sums_equal_1( wt_nat_patch_in_out, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
 
-     @assertEqual(wt_nat_patch_in_out(begg:,:), wt_nat_patch_expected(begg:,:), tolerance=0._r8)
+     @assertEqual(wt_nat_patch_expected(begg:,:), wt_nat_patch_in_out(begg:,:), tolerance=0._r8)
 
      deallocate( wt_nat_patch_expected )
      deallocate( wt_nat_patch_in_out )
@@ -695,7 +695,7 @@ contains
      call check_sums_equal_1( wt_nat_patch_in_out, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
 
-     @assertEqual(wt_nat_patch_in_out(begg:,:), wt_nat_patch_expected(begg:,:), tolerance=0._r8)
+     @assertEqual(wt_nat_patch_expected(begg:,:), wt_nat_patch_in_out(begg:,:), tolerance=0._r8)
 
      deallocate( wt_nat_patch_expected )
      deallocate( wt_nat_patch_in_out )
@@ -735,8 +735,8 @@ contains
      call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true.)
 
      ! Now check that are correct
-     @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:))
-     @assertEqual(fert_cft(begg:,:), fert_cft_expected(begg:,:))
+     @assertEqual(wt_cft_expected(begg:,:), wt_cft(begg:,:))
+     @assertEqual(fert_cft_expected(begg:,:), fert_cft(begg:,:))
 
      call pftcon%clean()
   end subroutine test_collapse_crop_types_none
@@ -782,11 +782,11 @@ contains
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:))
+     @assertEqual(wt_cft_expected(begg:,:), wt_cft(begg:,:))
      ! INTENTIONAL? As written, subr. collapse_crop_types does NOT take
      ! -----------  the avg fert_cft of the irrigated and unirrigated when
      !              irrigate = .false.. Assuming intentional for now.
-     @assertEqual(fert_cft(begg:,:), fert_cft_expected(begg:,:))
+     @assertEqual(fert_cft_expected(begg:,:), fert_cft(begg:,:))
 
      call pftcon%clean()
   end subroutine test_collapse_crop_types_16_to_15
@@ -831,8 +831,8 @@ contains
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:))
-     @assertEqual(fert_cft(begg:,:), fert_cft_expected(begg:,:))
+     @assertEqual(wt_cft_expected(begg:,:), wt_cft(begg:,:))
+     @assertEqual(fert_cft_expected(begg:,:), fert_cft(begg:,:))
 
      call pftcon%clean()
   end subroutine test_collapse_crop_types_16_to_16
@@ -887,8 +887,8 @@ contains
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     @assertEqual(wt_cft(begg:,:2), wt_cft_expected(begg:,:2))
-     @assertEqual(fert_cft(begg:,:2), fert_cft_expected(begg:,:2))
+     @assertEqual(wt_cft_expected(begg:,:2), wt_cft(begg:,:2))
+     @assertEqual(fert_cft_expected(begg:,:2), fert_cft(begg:,:2))
 
      call pftcon%clean()
   end subroutine test_collapse_crop_types_18_to_16
@@ -943,8 +943,8 @@ contains
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     @assertEqual(wt_cft(begg:,:2), wt_cft_expected(begg:,:2))
-     @assertEqual(fert_cft(begg:,1), fert_cft_expected(begg:,1))
+     @assertEqual(wt_cft_expected(begg:,:2), wt_cft(begg:,:2))
+     @assertEqual(fert_cft_expected(begg:,1), fert_cft(begg:,1))
 
      call pftcon%clean()
   end subroutine test_collapse_crop_types_18_to_15
@@ -992,8 +992,8 @@ contains
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:))
-     @assertEqual(fert_cft(begg:,:), fert_cft_expected(begg:,:))
+     @assertEqual(wt_cft_expected(begg:,:), wt_cft(begg:,:))
+     @assertEqual(fert_cft_expected(begg:,:), fert_cft(begg:,:))
 
      call pftcon%clean()
   end subroutine test_collapse_crop_types_18_to_18
@@ -1051,8 +1051,8 @@ contains
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:))
-     @assertEqual(fert_cft(begg:,:), fert_cft_expected(begg:,:))
+     @assertEqual(wt_cft_expected(begg:,:), wt_cft(begg:,:))
+     @assertEqual(fert_cft_expected(begg:,:), fert_cft(begg:,:))
 
      call pftcon%clean()
   end subroutine test_collapse_crop_types_20_to_18
@@ -1109,7 +1109,7 @@ contains
      call check_sums_equal_1( wt_nat_patch, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
      @assertEqual(wtpft,wt_nat_patch)
-     @assertEqual(wt_lunit(begg:,istsoil),(/1.00_r8,1.00_r8/))
+     @assertEqual((/1.00_r8,1.00_r8/), wt_lunit(begg:,istsoil))
      deallocate( wt_nat_patch )
      deallocate( wtpft )
 
@@ -1160,10 +1160,10 @@ contains
                               "should not trigger an error")
      call check_sums_equal_1( wt_nat_patch, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     @assertEqual(wt_lunit(begg:,istsoil),               (/1.00_r8,1.00_r8/))
-     @assertEqual(wt_nat_patch(begg:,ndllf_evr_tmp_tree),(/0.25_r8,0.25_r8/))
-     @assertEqual(wt_nat_patch(begg:,nc3crop),           (/0.1875_r8,0.1875_r8/))
-     @assertEqual(wt_nat_patch(begg:,nc3irrig),          (/0.5625_r8,0.5625_r8/))
+     @assertEqual((/1.00_r8,1.00_r8/), wt_lunit(begg:,istsoil))
+     @assertEqual((/0.25_r8,0.25_r8/), wt_nat_patch(begg:,ndllf_evr_tmp_tree))
+     @assertEqual((/0.1875_r8,0.1875_r8/), wt_nat_patch(begg:,nc3crop))
+     @assertEqual((/0.5625_r8,0.5625_r8/), wt_nat_patch(begg:,nc3irrig))
 
      call pftcon%clean()
   end subroutine test_convert_cft_to_pft
@@ -1208,7 +1208,7 @@ contains
      array(lb+1,lb2+2) = array(lb+1,lb2+2) + eps
      call check_sums_equal_1( array, lb, "test_check_sums_add_to_1_fail", &
                               "should trigger an error", ier)
-     @assertEqual(ier,-10)
+     @assertEqual(-10, ier)
   end subroutine test_check_sums_add_to_1_fail
   @Test
   subroutine test_renormalize
@@ -1233,7 +1233,7 @@ contains
      ! Make the normalized result 100, so multiply the expected result by 100
      expected(:,:) = expected(:,:)*100.0d00
      call renormalize(array, lb, 100.0d00)
-     @assertEqual(array, expected, tolerance=tol)
+     @assertEqual(expected, array, tolerance=tol)
      ! divide by 100 and should add to one
      array = array / 100.0d00
      call check_sums_equal_1( array, lb, "test_check_sums_add_to_1", &
@@ -1241,7 +1241,7 @@ contains
      ! Call again returning error code, make sure error code is zero
      call check_sums_equal_1( array, lb, "test_check_sums_add_to_1", &
                               "should not trigger an error", ier)
-     @assertEqual(ier,0)
+     @assertEqual(0, ier)
   end subroutine test_renormalize
 
   @Test
@@ -1255,7 +1255,7 @@ contains
      array(:,:) = 0.0d00
      expected(:,:) = array
      call renormalize(array, lb, 100.0d00)
-     @assertEqual(array, expected, tolerance=tol)
+     @assertEqual(expected, array, tolerance=tol)
   end subroutine test_renormalize_zero
 
 end module test_surfrdUtils
