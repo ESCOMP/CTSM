@@ -61,7 +61,6 @@ contains
        b = soil_depth_upland
 
        do c =  lun%coli(l), lun%colf(l)
-          write(iulog, *) 'c = ',c
           if (col%is_hillslope_column(c) .and. col%active(c)) then
              soil_depth_col = m*(max_hill_dist - col%hill_distance(c)) + b
              do j = 1,nlevsoi
