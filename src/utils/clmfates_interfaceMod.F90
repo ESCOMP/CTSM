@@ -408,6 +408,7 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
         call set_fates_ctrlparms('seeddisp_cadence',ival=fates_seeddisp_cadence)
 
+
         call set_fates_ctrlparms('hist_hifrq_dense_level',ival=fates_hist_dense_level(1))
         call set_fates_ctrlparms('hist_dynam_dense_level',ival=fates_hist_dense_level(2))
         
