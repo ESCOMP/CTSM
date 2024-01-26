@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 #
 # test_driver.sh:  driver script for the offline testing of CLM of tools
 #
@@ -26,14 +26,73 @@ hostname=`hostname`
 echo $hostname
 case $hostname in
 
-    ##cheyenne
-     cheyenne* | r*i*n*)
-    submit_script="test_driver_cheyenne${cur_time}.sh"
+    ##Derecho
+     derecho* | dec*)
+    submit_script="test_driver_derecho${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
 #!/bin/sh
 #
+
+interactive="YES"
+input_file="tests_pretag_derecho_nompi"
+c_threads=128
+
+export INITMODULES="/glade/u/apps/derecho/23.06/spack/opt/spack/lmod/8.7.20/gcc/7.5.0/pdxb/lmod/lmod/init/sh"
+. \$INITMODULES
+
+module --force purge
+module load ncarenv
+module load craype
+module load intel
+module load mkl
+module load ncarcompilers
+module load netcdf
+module load nco
+module load ncl
+
+#omp threads
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+  export CLM_THREADS=\$c_threads
+fi
+
+# Stop on first failed test
+if [ -z "\$CLM_SOFF" ]; then   #CLM_SOFF NOT set
+  export CLM_SOFF=FALSE
+fi
+
+export CESM_MACH="derecho"
+export CESM_COMP="intel"
+
+export NETCDF_DIR=\$NETCDF
+export INC_NETCDF=\$NETCDF/include
+export LIB_NETCDF=\$NETCDF/lib
+export MAKE_CMD="gmake -j "
+export CFG_STRING=""
+export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort USER_CPPDEFS=-DLINUX"
+export MACH_WORKSPACE=\$SCRATCH
+export CPRNC_EXE="$CESMDATAROOT/cprnc/cprnc"
+dataroot="$CESMDATAROOT/inputdata"
+export TOOLSLIBS=""
+export REGRID_PROC=1
+export TOOLS_CONF_STRING="--mpilib mpi-serial"
+
+
+echo_arg=""
+
+EOF
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+   ;;
+
+   ##cheyenne
+    cheyenne* | r*i*n*)
+   submit_script="test_driver_cheyenne${cur_time}.sh"
+
+#vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+at > ./${submit_script} << EOF
+!/bin/sh
+
 
 interactive="YES"
 input_file="tests_pretag_cheyenne_nompi"
@@ -54,8 +113,6 @@ module load nco
 module load ncl
 
 module load conda
-$CESMDATAROOT/py_env_create
-conda activate ctsm_py
 
 
 ##omp threads
@@ -119,8 +176,6 @@ module load openmpi
 module load nco
 module load conda
 module load ncl
-$CESMDATAROOT/py_env_create
-conda activate ctsm_py
 
 
 ##omp threads
@@ -220,8 +275,6 @@ module load compiler/intel
 module load tool/nco
 module load tool/netcdf
 module load lang/python
-$CESMDATAROOT/py_env_create
-conda activate ctsm_py
 
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include
@@ -303,8 +356,6 @@ module load compiler/intel
 module load tool/nco
 module load tool/netcdf
 module load lang/python
-$CESMDATAROOT/py_env_create
-conda activate ctsm_py
 
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include
@@ -322,7 +373,7 @@ EOF
     ;;
 
     * )
-    echo "Only setup to work on: cheyenne, hobart and izumi"
+    echo "Only setup to work on: derecho, cheyenne, hobart and izumi"
     exit
  
 
@@ -378,6 +429,13 @@ else
         echo "       <cime/scripts>. "
 	exit 3
     fi
+fi
+
+# Setup conda environement
+conda activate ctsm_pylib
+if [ \$? -ne 0 ]; then
+   echo "ERROR: Trouble activating the ctsm_pylib conda environment, be sure it's setup with \$CLM_ROOT/py_env_create, then rerun"
+   exit 4
 fi
 
 ##output files
@@ -634,7 +692,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on cheyenne, hobart, and izumi: "
+    echo "usage on derecho, cheyenne, hobart, and izumi: "
     echo "./test_driver.sh -i"
     echo ""
     echo "valid arguments: "

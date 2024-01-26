@@ -225,9 +225,7 @@ contains
               avgflag='A', long_name='canopy top', &
               ptr_patch=this%htop_patch)
        endif
-
-
-    endif !fates or CN
+    endif
 
     if(use_fates_sp)then
       this%tlai_hist_patch(begp:endp) = spval

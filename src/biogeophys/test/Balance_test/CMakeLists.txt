@@ -1,4 +1,3 @@
-create_pFUnit_test(balance test_balance_exe
-  "test_Balance.pf" "")
-
-target_link_libraries(test_balance_exe clm csm_share esmf_wrf_timemgr)
+add_pfunit_ctest(balance
+  TEST_SOURCES "test_Balance.pf"
+  LINK_LIBRARIES clm csm_share esmf_wrf_timemgr)

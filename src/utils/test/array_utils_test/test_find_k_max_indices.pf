@@ -2,7 +2,7 @@ module test_find_k_max_indices
 
   ! Tests of array_utils: find_k_max_indices
 
-  use pfunit_mod
+  use funit
   use array_utils
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestUtils, only : endrun_msg

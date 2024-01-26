@@ -27,18 +27,13 @@ Does this tag change answers significantly for any of the following physics conf
 [ ] clm4_5
 
 
-Bugs fixed or introduced
-------------------------
+Bugs fixed
+----------
 [Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 CTSM issues fixed (include CTSM Issue #):
 
-Externals issues fixed (include issue #):
-
 Known bugs introduced in this tag (include issue #):
-
-Known bugs found since the previous tag (include issue #):
-
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -101,11 +96,11 @@ infrastructure should be run when appropriate, as described below.
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    cheyenne -
+    derecho -
 
   tools-tests (test/tools) (if tools have been changed):
 
-    cheyenne -
+    derecho -
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
@@ -119,15 +114,15 @@ infrastructure should be run when appropriate, as described below.
      doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
      separately run the clm_pymods test suite, and you can remove the following line.]
 
-    clm_pymods test suite on cheyenne - 
+    clm_pymods test suite on derecho - 
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ----
+    derecho -----
     izumi -------
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    cheyenne ----
+    derecho -----
     izumi -------
 
   any other testing (give details below):
@@ -150,7 +145,9 @@ Changes answers relative to baseline:
     - nature of change (roundoff; larger than roundoff/same climate; new climate):
 
    If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
+   than roundoff? Roundoff differences means one or more lines of code change results
+   only by roundoff level (because order of operation changes for example). Roundoff
+   changes to state fields usually grow to greater than roundoff as the simulation progresses.
 
    If this tag changes climate describe the run(s) done to evaluate the new
    climate (put details of the simulations in the experiment database)

@@ -1,12 +1,47 @@
+#!/bin/bash
 ./xmlchange CLM_USRDAT_NAME=NEON
-./xmlchange RUN_STARTDATE=2018-01-01
-./xmlchange CLM_NML_USE_CASE=1850-2100_SSP3-7.0_transient
+# CLM_USRDAT_NAME can be set to either NEON or NEON.PRISM
 ./xmlchange CCSM_CO2_PPMV=408.83
+# Set data forcing data to future scenario so will have data from 2018 to present-day
 ./xmlchange DATM_PRESAERO=SSP3-7.0
-./xmlchange DATM_YR_ALIGN=2018,DATM_YR_END=2020,DATM_YR_START=2018
+./xmlchange DATM_PRESNDEP=SSP3-7.0
+./xmlchange DATM_PRESO3=SSP3-7.0
+# Explicitly set the MPI library to mpi-serial so won't have the build/run complexity of a full MPI library
+./xmlchange MPILIB=mpi-serial
+# Set years to run forcing data over
+./xmlchange DATM_YR_ALIGN=2018,DATM_YR_END=2021,DATM_YR_START=2018
+#
+# Save some variables that may be used later
+#
+compset=`./xmlquery COMPSET --value`
+CLM_USRDAT_NAME=`./xmlquery CLM_USRDAT_NAME --value`
+TEST=`./xmlquery TEST --value`
+
+# For a transient case run the whole length and don't cycle
+if  [[ $compset =~ ^HIST ]]; then
+  ./xmlchange DATM_YR_END=2022
+  ./xmlchange RUN_STARTDATE=2018-01-01
+  # Number of months that can be run for the full transient case
+  if [[ $TEST != "TRUE" ]]; then
+    ./xmlchange STOP_OPTION="nmonths"
+    ./xmlchange STOP_N=51
+  fi
+  ./xmlchange CLM_NML_USE_CASE="2018-PD_transient"
+else
+  ./xmlchange CLM_NML_USE_CASE="2018_control"
+fi
+
+# If needed for SP simulations: & set history file variables
+if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then
+  if [[ $TEST != "TRUE" ]]; then
+    ./xmlchange STOP_OPTION=nyears
+  fi
+  ./xmlchange CLM_FORCE_COLDSTART=on
+
+  echo "hist_fincl2 = 'FCEV','FCTR','FGEV','FIRA','FSA','FSH','FPSN','H2OSOI','SNOW_DEPTH','TBOT','TSOI'" >> user_nl_clm 
+fi
+
 # Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
 ./xmlchange PIO_TYPENAME=netcdf
-# BD:05/06/2022 - The PIO_REARRANGER_LND value - for global runs, PIO_REARRANGER_LND = 1 is ideal
-#                 and a value of 2 results in slow I/O.  For point runs like these, a value of 1 results in a crash (PIO bug, probably),
-#                 so we explicitly set a value of 2.
-./xmlchange PIO_REARRANGER_LND=2
+
+./xmlchange NEONVERSION="v2"
