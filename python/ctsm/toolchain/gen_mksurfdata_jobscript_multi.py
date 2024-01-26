@@ -12,7 +12,6 @@ from ctsm.toolchain.gen_mksurfdata_namelist import main as main_nml
 from ctsm.utils import abort
 
 valid_scenarios = [
-    "global-vic",
     "global-potveg",
     "global-present",
     "global-present-low-res",
@@ -181,7 +180,6 @@ def main():
         "standard_res": ["360x720cru", "0.9x1.25", "1.9x2.5", "C96", "mpasa120"],
         "low_res": ["10x15", "4x5", "ne3pg3.np4", "mpasa480"],
         "nldas_res": ["0.125nldas2"],
-        "vic_res": ["0.9x1.25", "1.9x2.5", "10x15"],
         "5x5_amazon": ["5x5_amazon"],
         "ne3": ["ne3pg3.np4"],
         "ne16": ["ne16pg3.np4"],
@@ -198,10 +196,6 @@ def main():
     # Determine commands for each target list
     # --------------------------
     dataset_dict = {
-        "global-vic": (
-            "--start-year 2000 --end-year 2000 --nocrop --vic                  --res",
-            "vic_res",
-        ),
         "global-potveg": (
             "--start-year 1850 --end-year 1850 --nocrop --potveg               --res",
             "f09",
@@ -223,11 +217,11 @@ def main():
             "5x5_amazon",
         ),
         "crop-global-present": (
-            "--start-year 2000 --end-year 2000                                 --res",
+            "--start-year 2000 --end-year 2000 --vic                           --res",
             "standard_res",
         ),
         "crop-global-present-low-res": (
-            "--start-year 2000 --end-year 2000                                 --res",
+            "--start-year 2000 --end-year 2000 --vic                           --res",
             "low_res",
         ),
         "crop-global-present-ne16": (

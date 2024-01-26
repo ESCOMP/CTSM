@@ -1,7 +1,7 @@
 # -*- mode:Makefile -*-
 #
-# Before running "make" start with
-# module load nco
+# Before running "make urban-alpha" or any target that includes it,
+# execute "module load nco" first.
 #
 # To generate all surface data sets, run:
 # make all
@@ -77,7 +77,6 @@ SUBSETDATA_1X1_URBALPHA    := --lat -37.7308 --lon 0 --site 1x1_urbanc_alpha --o
 # nldas is for NWP working with WRF
 # STANDARD means no crop, so 16 pfts
 STANDARD = \
-	global-vic \
 	global-potveg \
 	global-present \
 	global-present-low-res \
@@ -131,10 +130,6 @@ DEBUG:
 # standard
 #
 standard : $(STANDARD)
-
-global-vic : FORCE
-	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
-	$(BATCHJOBS) $@.sh
 
 global-potveg : FORCE
 	$(MKSURFDATA)  --number-of-nodes 24 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
