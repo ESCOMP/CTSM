@@ -3571,16 +3571,22 @@
 
   <test name="MKSURFDATAESMF_P144x1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm">
+      <machine name="derecho" compiler="intel" category="aux_clm">
         <options>
           <option name="wallclock">00:40:00</option>
           <option name="comment">Smoke test that first runs the mksurfdata_esmf tool and then ensures that the CTSM does not fail using the just-generated fsurdat file. Global BGC CROP case.</option>
         </options>
       </machine>
-      <machine name="cheyenne" compiler="intel" category="clm_pymods">
+      <machine name="derecho" compiler="intel" category="clm_pymods">
         <options>
           <option name="wallclock">00:40:00</option>
           <option name="comment">This test invokes python code, so it should be run whenever changing python code (in addition to being run as part of aux_clm).</option>
+        </options>
+      </machine>
+      <machine name="derecho" compiler="intel" category="prealpha">
+        <options>
+          <option name="wallclock">00:40:00</option>
+          <option name="comment">Run prealpha for this test as mksurfdata_esmf is tightly coupled to externals and we want to catch issues with externals for it ASAP.</option>
         </options>
       </machine>
     </machines>
