@@ -76,7 +76,7 @@ def get_parser():
         action="store",
         dest="account",
         required=False,
-        default="P93300606",
+        default="P93300641",
     )
     parser.add_argument(
         "--bld-path",
@@ -87,18 +87,18 @@ def get_parser():
     )
     parser.add_argument(
         "--number-of-nodes",
-        help="""number of cheyenne nodes requested (required)""",
+        help="""number of derecho nodes requested (required)""",
         action="store",
         dest="number_of_nodes",
         required=True,
     )
     parser.add_argument(
         "--tasks-per-node",
-        help="""number of mpi tasks per node for cheyenne requested (default is 12)""",
+        help="""number of mpi tasks per node for derecho requested""",
         action="store",
         dest="tasks_per_node",
         required=False,
-        default="12",
+        default="128",
     )
     parser.add_argument(
         "--walltime",
@@ -114,7 +114,7 @@ def get_parser():
         action="store",
         dest="queue",
         required=False,
-        default="regular",
+        default="main",
     )
     parser.add_argument(
         "--scenario",
@@ -126,7 +126,7 @@ def get_parser():
     )
     parser.add_argument(
         "--jobscript-file",
-        help="""output jobscript file to be submitted on cheyenne
+        help="""output jobscript file to be submitted with qsub
                 [default: %(default)s]""",
         action="store",
         dest="jobscript_file",

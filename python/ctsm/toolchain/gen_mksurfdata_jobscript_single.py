@@ -38,11 +38,11 @@ def get_parser():
         action="store",
         dest="account",
         required=False,
-        default="P93300606",
+        default="P93300641",
     )
     parser.add_argument(
         "--number-of-nodes",
-        help="""number of cheyenne nodes requested (required)""",
+        help="""number of derecho nodes requested (required)""",
         action="store",
         dest="number_of_nodes",
         type=int,
@@ -57,7 +57,7 @@ def get_parser():
     )
     parser.add_argument(
         "--tasks-per-node",
-        help="""number of mpi tasks per node for cheyenne requested (required)""",
+        help="""number of mpi tasks per node for derecho requested (required)""",
         action="store",
         dest="tasks_per_node",
         type=int,
@@ -65,15 +65,15 @@ def get_parser():
     )
     parser.add_argument(
         "--machine",
-        help="""currently this recognizes cheyenne, casper, izumi (default
+        help="""currently this recognizes derecho, casper, izumi (default
                 %(default)s); this needs to be a cime machine, i.e. a machine
                 that has been ported to cime where you can build a cime model;
                 for details see the README in this directory""",
         action="store",
         dest="machine",
         required=False,
-        choices=["cheyenne", "casper", "izumi"],
-        default="cheyenne",
+        choices=["derecho", "casper", "izumi"],
+        default="derecho",
     )
     parser.add_argument(
         "--namelist-file",
@@ -84,11 +84,11 @@ def get_parser():
     )
     parser.add_argument(
         "--jobscript-file",
-        help="""output jobscript file to be submitted on cheyenne (default: %(default)s)""",
+        help="""output jobscript file to be submitted with qsub (default: %(default)s)""",
         action="store",
         dest="jobscript_file",
         required=False,
-        default="mksurfdata_jobscript_single.sh",
+        default="mksurfdata_jobscript_single",
     )
     return parser
 
@@ -124,11 +124,11 @@ def main():
         runfile.write("#PBS -j oe \n")
         runfile.write("#PBS -k eod \n")
         runfile.write("#PBS -S /bin/bash \n")
-        if machine == "cheyenne":
+        if machine == "derecho":
             attribs = {"mpilib": "default"}
             runfile.write("#PBS -l walltime=30:00 \n")
             runfile.write(f"#PBS -A {account} \n")
-            runfile.write("#PBS -q regular \n")
+            runfile.write("#PBS -q main \n")
             runfile.write(
                 f"#PBS -l select={number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node} \n"
             )
