@@ -2,7 +2,7 @@ module test_matrix
 
   ! Tests of Matrix: inverse
 
-  use pfunit_mod
+  use funit
   use MatrixMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestUtils, only : endrun_msg
@@ -20,7 +20,7 @@ module test_matrix
 
   integer, parameter :: ndims = 20
 
-  real(r8), parameter :: tol = 1.e-15_r8
+  real(r8), parameter :: tol = 1.e-14_r8
 
 contains
 

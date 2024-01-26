@@ -24,8 +24,10 @@ bli58 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_crp_1850-200
 smi64 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_5x5_amazon_hirespft_2005^tools__ds
 bli64 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_5x5_amazon_hirespft_2005^tools__ds
 
-sm0a1 TSMscript_tools.sh site_and_regional run_neon.py run_neon_OSBS
-bl0a1 TBLscript_tools.sh site_and_regional run_neon.py run_neon_OSBS
+sm0c1 TSMscript_tools.sh site_and_regional run_neon.py run_neon_OSBS
+bl0c1 TBLscript_tools.sh site_and_regional run_neon.py run_neon_OSBS
+sm0a1 TSMscript_tools.sh site_and_regional run_neon.py run_neon_YELL_PRISM
+bl0a1 TBLscript_tools.sh site_and_regional run_neon.py run_neon_YELL_PRISM
 
 smba1 TSMscript_tools.sh site_and_regional subset_data subset_data_YELL
 blba1 TBLscript_tools.sh site_and_regional subset_data subset_data_YELL
