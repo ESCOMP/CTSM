@@ -1598,6 +1598,7 @@ sub process_namelist_inline_logic {
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_z0param($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_misc($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_prigent_roughness($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
   # namelist group: atm2lnd_inparm
@@ -1704,6 +1705,11 @@ sub process_namelist_inline_logic {
   # namelist group: lai_streams  #
   ##################################
   setup_logic_lai_streams($opts,  $nl_flags, $definition, $defaults, $nl);
+
+  ##################################
+  # namelist group: dust_emis_streams  #
+  ##################################
+  #setup_logic_dustemis_streams($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ##################################
   # namelist group: cropcal_streams  #
@@ -4568,6 +4574,14 @@ sub setup_logic_misc {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_prigent_roughness {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_prigentroughness' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_prigentroughness' );
+}
+
+#-------------------------------------------------------------------------------
+
 sub write_output_files {
   my ($opts, $nl_flags, $defaults, $nl) = @_;
 
@@ -4618,6 +4632,7 @@ sub write_output_files {
   push @groups, "exice_streams";
   push @groups, "soilbgc_decomp";
   push @groups, "clm_canopy_inparm";
+  push @groups, "prigentroughness";
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
      push @groups, "scf_swenson_lawrence_2012_inparm";
   }
