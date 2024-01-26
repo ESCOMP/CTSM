@@ -14,6 +14,7 @@ module HillslopeHydrologyMod
   use clm_varctl     , only : use_hillslope_routing
   use decompMod      , only : bounds_type
   use clm_varcon     , only : rpi
+  use HillslopeHydrologyUtilsMod, only : HillslopeSoilThicknessProfile_linear
 
   ! !PUBLIC TYPES:
   implicit none
@@ -703,7 +704,6 @@ contains
     real(r8)              :: soil_depth_upland
     real(r8), parameter   :: soil_depth_lowland_default = 8.0
     real(r8), parameter   :: soil_depth_upland_default  = 8.0
-    real(r8), parameter   :: toosmall_distance  = 1e-6
 
     character(len=*), parameter :: subname = 'HillslopeSoilThicknessProfile'
 
@@ -746,30 +746,7 @@ contains
        end do
     ! Linear soil thickness profile
     else if (soil_profile_method == soil_profile_linear) then
-       do l = bounds%begl,bounds%endl
-          min_hill_dist = minval(col%hill_distance(lun%coli(l):lun%colf(l)))
-          max_hill_dist = maxval(col%hill_distance(lun%coli(l):lun%colf(l)))
-
-          if (abs(max_hill_dist - min_hill_dist) > toosmall_distance) then
-             m = (soil_depth_lowland - soil_depth_upland)/ &
-                  (max_hill_dist - min_hill_dist)
-          else
-             m = 0._r8
-          end if
-          b = soil_depth_upland
-
-          do c =  lun%coli(l), lun%colf(l)
-             if (col%is_hillslope_column(c) .and. col%active(c)) then
-                soil_depth_col = m*(max_hill_dist - col%hill_distance(c)) + b
-
-                do j = 1,nlevsoi
-                   if ((zisoi(j-1) <  soil_depth_col) .and. (zisoi(j) >= soil_depth_col)) then
-                      col%nbedrock(c) = j
-                   end if
-                enddo
-             end if
-          enddo
-       enddo
+       call HillslopeSoilThicknessProfile_linear(bounds, soil_depth_lowland, soil_depth_upland)
     else if (masterproc) then
        call endrun( 'ERROR:: invalid soil_profile_method.'//errmsg(sourcefile, __LINE__) )
     end if
