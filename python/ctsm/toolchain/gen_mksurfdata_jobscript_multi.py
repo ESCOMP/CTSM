@@ -186,7 +186,7 @@ def main():
         "5x5_amazon": ["5x5_amazon"],
         "ne3": ["ne3np4.pg3"],
         "ne16": ["ne16np4.pg3"],
-        "ne30": ["ne30np4.pg3", "ne30.np4pg2", "ne30np4"],
+        "ne30": ["ne30np4.pg3", "ne30np4.pg2", "ne30np4"],
         "ne120": [
             "ne120np4.pg3",
             "ne0np4.ARCTICGRIS.ne30x8",
@@ -418,7 +418,7 @@ def main():
                 sys.argv = [x for x in command.split(" ") if x]
                 main_nml()
                 print(f"generated namelist {namelist}")
-                output = f'time mpiexec {mksurfdata} < {namelist}'
+                output = f"time mpiexec {mksurfdata} < {namelist}"
                 runfile.write(f"{output} \n")
                 check = f"if [ $? != 0 ]; then echo 'Error running resolution {res}'; exit -4; fi"
                 runfile.write(f"{check} \n")
