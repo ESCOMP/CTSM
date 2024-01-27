@@ -377,33 +377,33 @@ contains
 
     if (use_hillslope_routing) then
        allocate(fstream_in(bounds%begg:bounds%endg))
+
        call ncd_io(ncid=ncid, varname='h_stream_depth', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
-       if (readvar) then
-          do l = bounds%begl,bounds%endl
-             g = lun%gridcell(l)
-             lun%stream_channel_depth(l) = fstream_in(g)
-          enddo
-       else if (masterproc) then
+       if (masterproc .and. .not. readvar) then
           call endrun( 'ERROR:: h_stream_depth not found on surface data set.'//errmsg(sourcefile, __LINE__) )
        end if
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          lun%stream_channel_depth(l) = fstream_in(g)
+       enddo
+
        call ncd_io(ncid=ncid, varname='h_stream_width', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
-       if (readvar) then
-          do l = bounds%begl,bounds%endl
-             g = lun%gridcell(l)
-             lun%stream_channel_width(l) = fstream_in(g)
-          enddo
-       else if (masterproc) then
+       if (masterproc .and. .not. readvar) then
           call endrun( 'ERROR:: h_stream_width not found on surface data set.'//errmsg(sourcefile, __LINE__) )
        end if
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          lun%stream_channel_width(l) = fstream_in(g)
+       enddo
+
        call ncd_io(ncid=ncid, varname='h_stream_slope', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
-       if (readvar) then
-          do l = bounds%begl,bounds%endl
-             g = lun%gridcell(l)
-             lun%stream_channel_slope(l) = fstream_in(g)
-          enddo
-       else if (masterproc) then
+       if (masterproc .and. .not. readvar) then
           call endrun( 'ERROR:: h_stream_slope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
        end if
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          lun%stream_channel_slope(l) = fstream_in(g)
+       enddo
 
        deallocate(fstream_in)
     end if
@@ -605,27 +605,26 @@ contains
 
        allocate(fhillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
        call ncd_io(ncid=ncid, varname='h_bedrock', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-       if (readvar) then
-          do l = bounds%begl,bounds%endl
-             g = lun%gridcell(l)
-             do c = lun%coli(l), lun%colf(l)
-                if (col%is_hillslope_column(c) .and. col%active(c)) then
-                   ci = c-lun%coli(l)+1
-                   do j = 1,nlevsoi
-                      if (zisoi(j-1) > zmin_bedrock) then
-                         if (zisoi(j-1) < fhillslope_in(g,ci) &
-                              .and. zisoi(j) >= fhillslope_in(g,ci)) then
-                            col%nbedrock(c) = j
-                         end if
-                      end if
-                   enddo
-                end if
-             enddo
-          enddo
-          deallocate(fhillslope_in)
-       else if (masterproc) then
+       if (masterproc .and. .not. readvar) then
           call endrun( 'ERROR:: soil_profile_method = "FromFile", but h_bedrock not found on surface data set.'//errmsg(sourcefile, __LINE__) )
        end if
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          do c = lun%coli(l), lun%colf(l)
+             if (col%is_hillslope_column(c) .and. col%active(c)) then
+                ci = c-lun%coli(l)+1
+                do j = 1,nlevsoi
+                   if (zisoi(j-1) > zmin_bedrock) then
+                      if (zisoi(j-1) < fhillslope_in(g,ci) &
+                           .and. zisoi(j) >= fhillslope_in(g,ci)) then
+                         col%nbedrock(c) = j
+                      end if
+                   end if
+                enddo
+             end if
+          enddo
+       enddo
+       deallocate(fhillslope_in)
        call ncd_pio_closefile(ncid)
 
     else if (soil_profile_method==soil_profile_set_lowland_upland &
