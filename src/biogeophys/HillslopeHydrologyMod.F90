@@ -1026,7 +1026,7 @@ contains
                         volumetric_streamflow(l) = cross_sectional_area * flow_velocity &
                              + (stream_depth-lun%stream_channel_depth(l)) &
                              *lun%stream_channel_width(l)*lun%stream_channel_length(l)/dtime
-                     else if (masterproc) then
+                     else
                         call endrun( 'ERROR:: invalid overbank_method.'//errmsg(sourcefile, __LINE__) )
                      end if
 
@@ -1039,7 +1039,7 @@ contains
 
                   volumetric_streamflow(l) = max(0._r8,min(volumetric_streamflow(l),stream_water_volume(l)/dtime))
                end if
-            else if (masterproc) then
+            else
                call endrun( 'ERROR:: invalid streamflow_method'//errmsg(sourcefile, __LINE__) )
             end if
          end if ! end of istsoil
