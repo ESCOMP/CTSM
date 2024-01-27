@@ -307,6 +307,10 @@ def main():
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
             "f10",
         ),
+        "crop-global-SSP2-4.5-f45": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
+            "f45",
+        ),
         "crop-global-SSP2-4.5-ne3": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
             "ne3",
