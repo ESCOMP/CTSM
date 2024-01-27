@@ -367,9 +367,6 @@ contains
     call ncd_io(ncid=ncid, varname='h_pftndx', flag='read', data=ihillslope_in, dim1name=grlnd, readvar=readvar)
     if (readvar) then
        allocate(hill_pftndx (bounds%begl:bounds%endl,max_columns_hillslope), stat=ierr)
-       if (masterproc) then
-          write(iulog,*) 'h_pftndx found on surface data set'
-       end if
        do l = bounds%begl,bounds%endl
           g = lun%gridcell(l)
           hill_pftndx(l,:) = ihillslope_in(g,:)
@@ -382,9 +379,6 @@ contains
        allocate(fstream_in(bounds%begg:bounds%endg))
        call ncd_io(ncid=ncid, varname='h_stream_depth', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
        if (readvar) then
-          if (masterproc) then
-             write(iulog,*) 'h_stream_depth found on surface data set'
-          end if
           do l = bounds%begl,bounds%endl
              g = lun%gridcell(l)
              lun%stream_channel_depth(l) = fstream_in(g)
@@ -394,9 +388,6 @@ contains
        end if
        call ncd_io(ncid=ncid, varname='h_stream_width', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
        if (readvar) then
-          if (masterproc) then
-             write(iulog,*) 'h_stream_width found on surface data set'
-          end if
           do l = bounds%begl,bounds%endl
              g = lun%gridcell(l)
              lun%stream_channel_width(l) = fstream_in(g)
@@ -406,9 +397,6 @@ contains
        end if
        call ncd_io(ncid=ncid, varname='h_stream_slope', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
        if (readvar) then
-          if (masterproc) then
-             write(iulog,*) 'h_stream_slope found on surface data set'
-          end if
           do l = bounds%begl,bounds%endl
              g = lun%gridcell(l)
              lun%stream_channel_slope(l) = fstream_in(g)
@@ -618,9 +606,6 @@ contains
        allocate(fhillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
        call ncd_io(ncid=ncid, varname='h_bedrock', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
        if (readvar) then
-          if (masterproc) then
-             write(iulog,*) 'h_bedrock found on surface data set'
-          end if
           do l = bounds%begl,bounds%endl
              g = lun%gridcell(l)
              do c = lun%coli(l), lun%colf(l)
