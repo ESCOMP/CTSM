@@ -499,6 +499,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- ================================================================== -->
 
 <z0param_method>ZengWang2007</z0param_method>
+<z0param_method phys="clm5_1">Meier2022</z0param_method>
 
 <use_z0m_snowmelt z0param_method="Meier2022" >.true.</use_z0m_snowmelt>
 <use_z0m_snowmelt >.false.</use_z0m_snowmelt>
@@ -554,6 +555,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_grainproduct use_crop=".true." phys="clm5_1" >.true.</use_grainproduct> <!-- 1-year grain product pool default to on for clm50 if crop is turned on -->
 
 <crop_residue_removal_frac>0.d+0</crop_residue_removal_frac>
+<crop_residue_removal_frac phys="clm5_1">0.5d00</crop_residue_removal_frac>
 
 <!-- Crop model options -->
 <baset_mapping           use_crop=".true." phys="clm4_5" >constant</baset_mapping>
@@ -2813,6 +2815,8 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <!-- =========================================  -->
 
 <tillage_mode>off</tillage_mode>
+<tillage_mode use_crop=".true." phys="clm5_1">low</tillage_mode>
+
 <use_original_tillage_phases>.false.</use_original_tillage_phases>
 <max_tillage_depth>0.26d00</max_tillage_depth>
 
