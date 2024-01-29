@@ -1072,7 +1072,7 @@ contains
     type(bounds_type), intent(in) :: bounds
     type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
     type(waterfluxbulk_type),  intent(inout) :: waterfluxbulk_inst
-    type(waterdiagnosticbulk_type), intent(out) :: waterdiagnosticbulk_inst
+    type(waterdiagnosticbulk_type), intent(inout) :: waterdiagnosticbulk_inst
 
     integer  :: c, l, g, i, j
     real(r8) :: qflx_surf_vol               ! volumetric surface runoff (m3/s)
