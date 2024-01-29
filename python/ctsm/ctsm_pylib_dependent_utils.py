@@ -1,49 +1,56 @@
-from ctsm.utils import abort
 import numpy as np
+from ctsm.utils import abort
 
 
-def import_coord_1d(ds, coordName):
+def import_coord_1d(data_set, coord_name):
     """Import 1-d coordinate variable
 
     Args:
-        ds (xarray Dataset): Dataset whose coordinate you want to import.
-        coordName (str): Name of coordinate to import
+        data_set (xarray Dataset): Dataset whose coordinate you want to import.
+        coord_name (str): Name of coordinate to import
 
     Returns:
         xarray DataArray: DataArray corresponding to the requested coordinate.
     """
-    da = ds[coordName]
-    if len(da.dims) != 1:
-        abort(f"Expected 1 dimension for {coordName}; found {len(da.dims)}: {da.dims}")
-    return da, len(da)
+    data_array = data_set[coord_name]
+    if len(data_array.dims) != 1:
+        abort(f"Expected 1 dimension for {coord_name}; "
+              + f"found {len(data_array.dims)}: {data_array.dims}")
+    return data_array, len(data_array)
 
 
-def import_coord_2d(ds, coordName, varName):
-    """Import 2-d latitude or longitude variable from a CESM history file (e.g., name LATIXY or LONGXY) and return it as a 1-d DataArray that can be used as a coordinate for writing CESM input files
+def import_coord_2d(data_set, coord_name, var_name):
+    """
+    Import 2-d latitude or longitude variable from a CESM history file (e.g., name LATIXY
+    or LONGXY and return it as a 1-d DataArray that can be used as a coordinate for writing
+    CESM input files
 
     Args:
-        ds (xarray Dataset): Dataset whose coordinate you want to import.
-        coordName (str): Name of coordinate to import
-        varName (str): Name of variable with dimension coordName
+        data_set (xarray Dataset): Dataset whose coordinate you want to import.
+        coord_name (str): Name of coordinate to import
+        var_name (str): Name of variable with dimension coord_name
 
     Returns:
         xarray DataArray: 1-d variable that can be used as a coordinate for writing CESM input files
         int: Length of that variable
     """
-    da = ds[varName]
-    thisDim = [x for x in da.dims if coordName in x]
-    if len(thisDim) != 1:
-        abort(f"Expected 1 dimension name containing {coordName}; found {len(thisDim)}: {thisDim}")
-    thisDim = thisDim[0]
-    otherDim = [x for x in da.dims if coordName not in x]
-    if len(otherDim) != 1:
+    data_array = data_set[var_name]
+    this_dim = [x for x in data_array.dims if coord_name in x]
+    if len(this_dim) != 1:
+        abort(f"Expected 1 dimension name containing {coord_name}; "
+              + f"found {len(this_dim)}: {this_dim}")
+    this_dim = this_dim[0]
+    other_dim = [x for x in data_array.dims if coord_name not in x]
+    if len(other_dim) != 1:
         abort(
-            f"Expected 1 dimension name not containing {coordName}; found {len(otherDim)}: {otherDim}"
+            f"Expected 1 dimension name not containing {coord_name}; "
+            + f"found {len(other_dim)}: {other_dim}"
         )
-    otherDim = otherDim[0]
-    da = da.astype(np.float32)
-    da = da.isel({otherDim: [0]}).squeeze().rename({thisDim: coordName}).rename(coordName)
-    da = da.assign_coords({coordName: da.values})
-    da.attrs["long_name"] = "coordinate " + da.attrs["long_name"]
-    da.attrs["units"] = da.attrs["units"].replace(" ", "_")
-    return da, len(da)
+    other_dim = other_dim[0]
+    data_array = data_array.astype(np.float32)
+    data_array = data_array.isel({other_dim: [0]}).squeeze()
+    data_array = data_array.rename({this_dim: coord_name}).rename(coord_name)
+    data_array = data_array.assign_coords({coord_name: data_array.values})
+    data_array.attrs["long_name"] = "coordinate " + data_array.attrs["long_name"]
+    data_array.attrs["units"] = data_array.attrs["units"].replace(" ", "_")
+    return data_array, len(data_array)
