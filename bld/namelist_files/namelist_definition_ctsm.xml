@@ -1788,6 +1788,18 @@ Mapping method from Nitrogen deposition input file to the model resolution
 <!-- Dust namelist and Zender soil erodibility stream                                          -->
 <!-- ========================================================================================  -->
 
+<entry id="dust_emis_method" type="char*12" category="physics"
+       group="clm_inparm" valid_values="Zender_2003" >
+Which dust emission method is going to be used. Either the Zender 2003 scheme or the Leung 2023
+scheme.
+</entry>
+
+<entry id="zender_soil_erod_source" type="char*4" category="physics"
+       group="zendersoilerod" valid_values="lnd,atm,none" >
+Option only applying for the Zender_2003 method for whether the soil erodibility file is handled
+here in CTSM, or in the ATM model. When dust_emis_method is NOT Zender_2003 it HAS to be none.
+</entry>
+
 <entry id="stream_fldfilename_zendersoilerod" type="char*256" category="datasets"
        input_pathname="abs" group="zendersoilerod" valid_values="" >
 Filename of input stream data for Zender's soil erodibility source function
