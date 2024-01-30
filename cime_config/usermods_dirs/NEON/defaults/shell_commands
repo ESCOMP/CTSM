@@ -43,3 +43,15 @@ fi
 
 # Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
 ./xmlchange PIO_TYPENAME=netcdf
+
+
+# specific for MIMICS spinup
+./xmlchange RUN_STARTDATE=0018-01-01
+./xmlchange RESUBMIT=1
+./xmlchange STOP_N=25
+./xmlchange STOP_OPTION=nyears
+./xmlchange CLM_FORCE_COLDSTART=on
+./xmlchange CONTINUE_RUN=False
+./xmlchange JOB_QUEUE=develop
+./xmlchange JOB_WALLCLOCK_TIME=1:00:00
+
