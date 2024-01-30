@@ -178,20 +178,20 @@ def main():
         "mpasa120": ["mpasa120"],
         "f10": ["10x15"],
         "f45": ["4x5"],
-        "low_res_no_crop": ["10x15", "4x5"],
+        "low_res_no_crop": ["4x5", "10x15"],
         "ultra_hi_res_no_crop": ["mpasa15", "mpasa15-3conus", "mpasa3p75"],
         "standard_res": ["360x720cru", "0.9x1.25", "1.9x2.5", "C96", "mpasa120"],
-        "low_res": ["10x15", "4x5", "ne3np4.pg3", "mpasa480"],
+        "low_res": ["4x5", "10x15", "ne3np4.pg3", "mpasa480"],
         "nldas_res": ["0.125nldas2"],
         "5x5_amazon": ["5x5_amazon"],
         "ne3": ["ne3np4.pg3"],
         "ne16": ["ne16np4.pg3"],
         "ne30": ["ne30np4.pg3", "ne30np4.pg2", "ne30np4"],
         "ne120": [
-            "ne120np4.pg3",
             "ne0np4.ARCTICGRIS.ne30x8",
             "ne0np4.ARCTIC.ne30x4",
             "ne0np4CONUS.ne30x8",
+            "ne120np4.pg3",
         ],
     }
 
@@ -390,7 +390,7 @@ def main():
         runfile.write(f"#PBS -q {queue} \n")
         runfile.write(f"#PBS -l walltime={walltime} \n")
         runfile.write(
-            f"#PBS -l select={number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node}:mem=109GB \n"
+            f"#PBS -l select={number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node}:mem=218GB \n"
         )
         runfile.write(
             f"# This is a batch script to run a set of resolutions for mksurfdata_esmf {scenario} \n"
