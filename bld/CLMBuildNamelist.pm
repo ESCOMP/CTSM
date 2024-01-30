@@ -1599,7 +1599,6 @@ sub process_namelist_inline_logic {
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_z0param($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_misc($opts, $nl_flags, $definition, $defaults, $nl);
-  setup_logic_zender_soilerod($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
   # namelist group: atm2lnd_inparm
@@ -1696,6 +1695,11 @@ sub process_namelist_inline_logic {
   # namelist group: fire_emis_nl  #
   #################################
   setup_logic_fire_emis($opts, $nl_flags, $definition, $defaults, $nl);
+
+  ######################################
+  # namelist options for dust emissions
+  ######################################
+  setup_logic_dust_emis($opts, $nl_flags, $definition, $defaults, $nl);
 
   #################################
   # namelist group: megan_emis_nl #
@@ -3936,6 +3940,55 @@ sub setup_logic_fire_emis {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_dust_emis {
+  # Logic to handle the dust emissions
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  # First get the dust emission method
+  my $var = "dust_emis_method";
+  add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
+
+  my $dust_emis_method = remove_leading_and_trailing_quotes( $nl->get_value($var) );
+
+  my @zender_files_in_lnd_opts = ( "stream_fldfilename_zendersoilerod", "stream_meshfile_zendersoilerod" );
+  if ( $dust_emis_method eq "Zender_2003" ) {
+     # get the zender_soil_erod_source
+     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                 "zender_soil_erod_source", 'dust_emis_method'=>$dust_emis_method );
+
+     my $zender_source = remove_leading_and_trailing_quotes( $nl->get_value('zender_soil_erod_source') );
+     if ( $zender_source eq "lnd" ) {
+        foreach my $option ( @zender_files_in_lnd_opts ) {
+           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $option,
+                       'dust_emis_method'=>$dust_emis_method, 'zender_soil_erod_source'=>$zender_source,
+                       'lnd_tuning_mod'=>$nl_flags->{'lnd_tuning_mode'} );
+        }
+     } else {
+        foreach my $option ( @zender_files_in_lnd_opts ) {
+           if ( defined($nl->get_value($option)) ) {
+             $log->fatal_error("zender_soil_erod_source is NOT lnd, but the file option $option is being set" .
+                               " and should NOT be unless you want it handled here in the LAND model, " .
+                               "otherwise the equivalent option is set in CAM" );
+           }
+        }
+     }
+  } else {
+     # Verify that NONE of the Zender options are being set if Zender is NOT being used
+     push @zender_files_in_lnd_opts, "zender_soil_erod_source";
+     foreach my $option ( @zender_files_in_lnd_opts ) {
+        if ( defined($nl->get_value($option)) ) {
+          $log->fatal_error("dust_emis_method is NOT set to Zender_2003, but one of it's options " .
+                            "$option is being set, need to change one or the other" );
+        }
+     }
+     if ( $dust_emis_method eq "Leung_2023" ) {
+        $log->warning("dust_emis_method is Leung_2023 and that option has NOT been brought into CTSM yet");
+     }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_megan {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
@@ -4566,17 +4619,6 @@ sub setup_logic_misc {
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_use_repr_structure_pool');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_no_crop_seed_replenishment');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hist_fields_list_file');
-}
-
-#-------------------------------------------------------------------------------
-
-sub setup_logic_zender_soilerod {
-  #
-  # Handle the Zender soil eroditability file
-  #
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_zendersoilerod' );
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_zendersoilerod' );
 }
 
 #-------------------------------------------------------------------------------
