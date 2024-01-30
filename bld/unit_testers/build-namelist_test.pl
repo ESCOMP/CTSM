@@ -1258,13 +1258,13 @@ my %failtest = (
                                      phys=>"clm5_0",
                                      },
      "soil_erod_wo_Zender"      =>{ options=>"--envxml_dir . --ignore_warnings",
-                                     namelst=>"dust_emis_msethod='Leung_2023', " . 
+                                     namelst=>"dust_emis_method='Leung_2023', " .
                                      "stream_meshfile_zendersoilerod = '/dev/null'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                      },
      "soil_erod_wo_lnd_source"  =>{ options=>"--envxml_dir .",
-                                     namelst=>"dust_emis_msethod='Zender_2003', " . 
+                                     namelst=>"dust_emis_method='Zender_2003', " .
                                      "stream_fldfilename_zendersoilerod = '/dev/null', zender_soil_erod_source='atm'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
