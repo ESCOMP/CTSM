@@ -23,12 +23,14 @@ valid_scenarios = [
     "crop-global-present-ne16",
     "crop-global-present-ne30",
     "crop-global-present-ne120",
+    "crop-global-present-mpasa480",
     "crop-global-present-nldas",
     "crop-global-1850",
     "crop-global-1850-low-res",
     "crop-global-1850-ne16",
     "crop-global-1850-ne30",
     "crop-global-1850-ne120",
+    "crop-global-1850-mpasa480",
     "crop-global-hist",
     "crop-global-hist-low-res",
     "crop-global-hist-ne16",
@@ -181,7 +183,8 @@ def main():
         "low_res_no_crop": ["4x5", "10x15"],
         "ultra_hi_res_no_crop": ["mpasa15", "mpasa15-3conus", "mpasa3p75"],
         "standard_res": ["360x720cru", "0.9x1.25", "1.9x2.5", "C96", "mpasa120"],
-        "low_res": ["4x5", "10x15", "ne3np4.pg3", "mpasa480"],
+        "low_res": ["4x5", "10x15", "ne3np4.pg3"],
+        "mpasa480": ["mpasa480"],
         "nldas_res": ["0.125nldas2"],
         "5x5_amazon": ["5x5_amazon"],
         "ne3": ["ne3np4.pg3"],
@@ -239,6 +242,10 @@ def main():
             "--start-year 2000 --end-year 2000                                 --res",
             "ne120",
         ),
+        "crop-global-present-mpasa480": (
+            "--start-year 2000 --end-year 2000                                 --res",
+            "mpasa480",
+        ),
         "crop-global-present-nldas": (
             "--start-year 2000 --end-year 2000                                 --res",  # TODO slevis: --hirespft uses old data for now, so keep out
             "nldas_res",
@@ -262,6 +269,10 @@ def main():
         "crop-global-1850-ne120": (
             "--start-year 1850 --end-year 1850                                 --res",
             "ne120",
+        ),
+        "crop-global-1850-mpasa480": (
+            "--start-year 1850 --end-year 1850                                 --res",
+            "mpasa480",
         ),
         "crop-global-hist": (
             "--start-year 1850 --end-year 2015 --nosurfdata                    --res",
