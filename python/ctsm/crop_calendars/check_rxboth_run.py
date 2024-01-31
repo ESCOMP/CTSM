@@ -75,7 +75,7 @@ def main(argv):
         annual_outfiles,
         my_vars=my_vars,
         year_1=args.first_usable_year,
-        year_N=args.last_usable_year,
+        year_n=args.last_usable_year,
     )
     cc.check_constant_vars(case["ds"], case, ignore_nan=True, verbose=True, throw_error=True)
 
