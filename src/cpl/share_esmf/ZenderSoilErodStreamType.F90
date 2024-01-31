@@ -42,6 +42,7 @@ module ZenderSoilErodStreamType
 
   ! ! PRIVATE DATA:
   type, private :: streamcontrol_type
+     character(len=CL)  :: zender_soil_erod_source             ! if calculed in lnd or atm
      character(len=CL)  :: stream_fldFileName_zendersoilerod   ! data Filename
      character(len=CL)  :: stream_meshfile_zendersoilerod      ! mesh Filename
      character(len=CL)  :: zendersoilerodmapalgo               ! map algo
@@ -60,7 +61,7 @@ contains
 
   subroutine Init(this, bounds, NLFilename)
    !
-   ! Initialize the prigent roughness stream object
+   ! Initialize the Zender soil eroditability stream object
    !
    ! Uses:
    use spmdMod          , only : iam
@@ -89,7 +90,6 @@ contains
    character(len=*), parameter    :: stream_name = 'zendersoilerod'
    !-----------------------------------------------------------------------
 
-   !if ( finundation_mtd /= finundation_mtd_h2osfc )then     ! how should I change this? comment out for now
       call this%InitAllocate( bounds )
       call control%ReadNML( bounds, NLFileName )
 
@@ -164,7 +164,6 @@ contains
 
          end do
       end if
-   !end if         !comment out for now
 
   end subroutine Init
 
@@ -176,14 +175,14 @@ contains
     ! file is being used with it
     !
     ! !USES:
+    use clm_varctl, only : dust_emis_method
     !
     ! !ARGUMENTS:
     implicit none
     class(zendersoilerodstream_type) :: this
     !
     ! !LOCAL VARIABLES:
-    !if ( trim(control%stream_fldFileName_zendersoilerod) == '' .or. dust_emission_scheme == 'Leung2023')then
-    if ( trim(control%stream_fldFileName_zendersoilerod) == '')then
+    if ( (trim(dust_emis_method) /= 'Zender_2003') .or. (control%zender_soil_erod_source == "atm") )then
        UseStreams = .false.  
     else
        UseStreams = .true.
@@ -205,14 +204,17 @@ contains
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    !integer  :: begc, endc
     integer  :: begg, endg
     !---------------------------------------------------------------------
 
-    !begc = bounds%begc; endc = bounds%endc
     begg = bounds%begg; endg = bounds%endg
 
-    allocate(this%soil_erodibility  (begg:endg))      ;  this%soil_erodibility  (:)   = nan
+    if ( this%useStreams() ) then
+       allocate(this%soil_erodibility  (begg:endg))
+    else
+       allocate(this%soil_erodibility  (0))
+    end if
+    this%soil_erodibility  (:)   = nan
 
   end subroutine InitAllocate
 
@@ -293,12 +295,14 @@ contains
    character(len=CL)  :: stream_fldFileName_zendersoilerod = ' '
    character(len=CL)  :: stream_meshfile_zendersoilerod = ' '
    character(len=CL)  :: zendersoilerodmapalgo = 'bilinear'
+   character(len=3)   :: zender_soil_erod_source = 'atm'
    character(len=*), parameter :: namelist_name = 'zendersoilerod'    ! MUST agree with group name in namelist definition to read.
    character(len=*), parameter :: subName = "('zendersoilerod::ReadNML')"
    !-----------------------------------------------------------------------
 
    namelist /zendersoilerod/ &               ! MUST agree with namelist_name above
-        zendersoilerodmapalgo,  stream_fldFileName_zendersoilerod, stream_meshfile_zendersoilerod
+        zendersoilerodmapalgo, zendersoilerodmapalgo,  stream_fldFileName_zendersoilerod, &
+        stream_meshfile_zendersoilerod
 
    ! Default values for namelist
 
@@ -321,16 +325,27 @@ contains
    call shr_mpi_bcast(stream_fldFileName_zendersoilerod , mpicom)
    call shr_mpi_bcast(stream_meshfile_zendersoilerod    , mpicom)
 
-   if (masterproc) then
+   if (masterproc .and. (zender_soil_erod_source == "lnd") ) then
       write(iulog,*) ' '
       write(iulog,*) namelist_name, ' stream settings:'
       write(iulog,*) '  stream_fldFileName_zendersoilerod = ',stream_fldFileName_zendersoilerod
       write(iulog,*) '  stream_meshfile_zendersoilerod    = ',stream_meshfile_zendersoilerod
       write(iulog,*) '  zendersoilerodmapalgo             = ',zendersoilerodmapalgo
    endif
+
+   if ( (zender_soil_erod_source /= 'atm') .and. (zender_soil_erod_source /= 'lnd')  )then
+      call endrun(msg=' ERROR zender_soil_erod_source must be either lnd or atm and is NOT'//errMsg(sourcefile, __LINE__))
+   end if
+   if ( len_trim(stream_meshfile_zendersoilerod) == 0 )then
+      call endrun(msg=' ERROR stream_meshfile_zendersoilerod must be set when Zender_2003 is being used and zender_soil_erod_source is lnd'//errMsg(sourcefile, __LINE__))
+   end if
+   if ( len_trim(stream_meshfile_zendersoilerod) == 0 )then
+      call endrun(msg=' ERROR stream_meshfile_zendersoilerod must be set when Zender_2003 is being used and zender_soil_erod_source is lnd'//errMsg(sourcefile, __LINE__))
+   end if
    this%stream_fldFileName_zendersoilerod = stream_fldFileName_zendersoilerod
    this%stream_meshfile_zendersoilerod    = stream_meshfile_zendersoilerod
    this%zendersoilerodmapalgo             = zendersoilerodmapalgo
+   this%zender_soil_erod_source           = zender_soil_erod_source
 
  end subroutine ReadNML
 

@@ -205,7 +205,7 @@ contains
          crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
          for_testing_use_second_grain_pool, for_testing_use_repr_structure_pool, &
          for_testing_no_crop_seed_replenishment, &
-         z0param_method, use_z0m_snowmelt
+         z0param_method, use_z0m_snowmelt, dust_emis_method
 
     ! vertical soil mixing variables
     namelist /clm_inparm/  &

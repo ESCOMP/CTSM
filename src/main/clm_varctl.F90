@@ -266,6 +266,11 @@ module clm_varctl
   logical, public :: do_sno_oc = .false.  ! control to include organic carbon (OC) in snow
 
   !----------------------------------------------------------
+  ! DUST emission method
+  !----------------------------------------------------------
+  character(len=25), public :: dust_emis_method = 'Zender_2003'  ! Dust emisison method to use: Zender_2003 or Leung_2023
+
+  !----------------------------------------------------------
   ! C isotopes
   !----------------------------------------------------------
 
