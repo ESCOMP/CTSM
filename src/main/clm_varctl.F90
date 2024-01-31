@@ -332,7 +332,7 @@ module clm_varctl
   ! 2 - include only output with only 1 additional dimension
   ! 3 - include all multiplexed dimensions
   
-  integer, dimension(2), public   :: fates_hist_dense_level = (/1,1/)
+  integer, dimension(2), public   :: fates_hist_dense_level = (/2,2/)
   
   logical, public            :: use_fates_luh = .false.                 ! true => use FATES landuse data mode
   character(len=256), public :: fluh_timeseries = ''                    ! filename for fates landuse timeseries data
