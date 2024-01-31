@@ -1,12 +1,18 @@
-# %% Setup
-
+"""
+Check the results of a run with prescribed sowing dates and maturity requirements
+"""
+import sys
+import argparse
+import glob
+import os
 import numpy as np
-import sys, argparse
-import cropcal_module as cc
-import glob, os
+import cropcal_module as cc  # pylint: disable=import-error
 
 
 def main(argv):
+    """
+    Main method: Check the results of a run with prescribed sowing dates and maturity requirements
+    """
     # Set arguments
     parser = argparse.ArgumentParser(description="ADD DESCRIPTION HERE")
     parser.add_argument(
@@ -40,7 +46,7 @@ def main(argv):
     args = parser.parse_args(argv)
 
     # Note that _PERHARV will be stripped off upon import
-    myVars = [
+    my_vars = [
         "GRAINC_TO_FOOD_PERHARV",
         "GRAINC_TO_FOOD_ANN",
         "SDATES",
@@ -67,7 +73,7 @@ def main(argv):
 
     case["ds"] = cc.import_output(
         annual_outfiles,
-        my_vars=myVars,
+        my_vars=my_vars,
         year_1=args.first_usable_year,
         year_N=args.last_usable_year,
     )
@@ -84,20 +90,27 @@ def main(argv):
 
         # Equalize lons/lats
         lonlat_tol = 1e-4
-        for v in ["rx_sdates_ds", "rx_gdds_ds"]:
-            if v in case:
-                for l in ["lon", "lat"]:
-                    max_diff_orig = np.max(np.abs(case[v][l].values - case["ds"][l].values))
+        for ds_name in ["rx_sdates_ds", "rx_gdds_ds"]:
+            if ds_name in case:
+                for coord_name in ["lon", "lat"]:
+                    max_diff_orig = np.max(
+                        np.abs(case[ds_name][coord_name].values - case["ds"][coord_name].values)
+                    )
                     if max_diff_orig > lonlat_tol:
                         raise RuntimeError(
-                            f"{v} {l} values differ too much ({max_diff_orig} > {lonlat_tol})"
+                            f"{ds_name} {coord_name} values differ too much ({max_diff_orig} > "
+                            + f"{lonlat_tol})"
                         )
-                    elif max_diff_orig > 0:
-                        case[v] = case[v].assign_coords({l: case["ds"][l].values})
-                        max_diff = np.max(np.abs(case[v][l].values - case["ds"][l].values))
-                        print(f"{v} {l} max_diff {max_diff_orig} → {max_diff}")
+                    if max_diff_orig > 0:
+                        case[ds_name] = case[ds_name].assign_coords(
+                            {coord_name: case["ds"][coord_name].values}
+                        )
+                        max_diff = np.max(
+                            np.abs(case[ds_name][coord_name].values - case["ds"][coord_name].values)
+                        )
+                        print(f"{ds_name} {coord_name} max_diff {max_diff_orig} → {max_diff}")
                     else:
-                        print(f"{v} {l} max_diff {max_diff_orig}")
+                        print(f"{ds_name} {coord_name} max_diff {max_diff_orig}")
 
         # Check
         if case["rx_sdates_file"]:
