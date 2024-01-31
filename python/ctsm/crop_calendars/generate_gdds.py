@@ -261,8 +261,8 @@ def main(
             dummy_gridded.values = dummy_gridded.values * 0 + addend
             return dummy_gridded
 
-        for var_index in gdd_maps_ds:
-            this_crop_gridded = gdd_maps_ds[var_index].copy()
+        for var in gdd_maps_ds:
+            this_crop_gridded = gdd_maps_ds[var].copy()
             break
         dummy_gridded = make_dummy(this_crop_gridded, -1)
 
