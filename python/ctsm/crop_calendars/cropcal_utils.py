@@ -15,40 +15,6 @@ import cftime
 import numpy as np
 import xarray as xr
 
-# from xr_ds_ex import xr_ds_ex
-
-
-# generate annual means, weighted by days / month
-def weighted_annual_mean(array, time_in="time", time_out="time"):
-    if isinstance(array[time_in].values[0], cftime.datetime):
-        month_length = array[time_in].dt.days_in_month
-
-        # After https://docs.xarray.dev/en/v0.5.1/examples/monthly-means.html
-        group = f"{time_in}.year"
-        weights = month_length.groupby(group) / month_length.groupby(group).sum()
-        np.testing.assert_allclose(weights.groupby(group).sum().values, 1)
-        array = (array * weights).groupby(group).sum(dim=time_in, skipna=True)
-        if time_out != "year":
-            array = array.rename({"year": time_out})
-
-    else:
-        mon_day = xr.DataArray(
-            np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]), dims=["month"]
-        )
-        mon_wgt = mon_day / mon_day.sum()
-        array = (
-            array.rolling({time_in: 12}, center=False)  # rolling
-            .construct("month")  # construct the array
-            .isel(
-                {time_in: slice(11, None, 12)}
-            )  # slice so that the first element is [1..12], second is [13..24]
-            .dot(mon_wgt, dims=["month"])
-        )
-        if time_in != time_out:
-            array = array.rename({time_in: time_out})
-
-    return array
-
 
 # List of PFTs used in CLM
 def define_pftlist():
