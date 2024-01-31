@@ -60,16 +60,16 @@ def main(argv):
     # These should be constant in a Prescribed Calendars (rxboth) run, as long as the inputs were
     # static.
     case = {
-        "constantVars": ["SDATES", "GDDHARV"],
+        "const_vars": ["SDATES", "GDDHARV"],
         "rx_sdates_file": args.rx_sdates_file,
         "rx_gdds_file": args.rx_gdds_file,
     }
 
     case["ds"] = cc.import_output(
         annual_outfiles,
-        myVars=myVars,
-        y1=args.first_usable_year,
-        yN=args.last_usable_year,
+        my_vars=myVars,
+        year_1=args.first_usable_year,
+        year_N=args.last_usable_year,
     )
     cc.check_constant_vars(case["ds"], case, ignore_nan=True, verbose=True, throw_error=True)
 
