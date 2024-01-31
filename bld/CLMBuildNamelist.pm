@@ -3950,7 +3950,8 @@ sub setup_logic_dust_emis {
 
   my $dust_emis_method = remove_leading_and_trailing_quotes( $nl->get_value($var) );
 
-  my @zender_files_in_lnd_opts = ( "stream_fldfilename_zendersoilerod", "stream_meshfile_zendersoilerod" );
+  my @zender_files_in_lnd_opts = ( "stream_fldfilename_zendersoilerod", "stream_meshfile_zendersoilerod", 
+                                   "zendersoilerodmapalgo" );
   if ( $dust_emis_method eq "Zender_2003" ) {
      # get the zender_soil_erod_source
      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
