@@ -533,6 +533,7 @@ contains
     integer  :: begg, endg
     integer  :: begc, endc
     integer  :: begp, endp
+    real(r8), pointer :: data1dptr(:) ! temp. pointer for slicing larger arrays
     !---------------------------------------------------------------------
 
     begg = bounds%begg; endg= bounds%endg
@@ -547,6 +548,16 @@ contains
     call hist_addfld1d (fname='Wind', units='m/s',  &
          avgflag='A', long_name='atmospheric wind velocity magnitude', &
          ptr_gcell=this%forc_wind_grc, default = 'inactive')
+
+    this%forc_u_grc(begg:endg) = spval
+    call hist_addfld1d (fname='UWIND', units='m/s',  &
+         avgflag='A', long_name='atmospheric U wind velocity magnitude', &
+         ptr_lnd=this%forc_u_grc, default = 'inactive')
+
+    this%forc_v_grc(begg:endg) = spval
+    call hist_addfld1d (fname='VWIND', units='m/s',  &
+         avgflag='A', long_name='atmospheric V wind velocity magnitude', &
+         ptr_lnd=this%forc_v_grc, default = 'inactive')
 
     this%forc_hgt_grc(begg:endg) = spval
     call hist_addfld1d (fname='ZBOT', units='m',  &
@@ -611,6 +622,11 @@ contains
          avgflag='A', long_name='atmospheric pressure at surface (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_pbot_downscaled_col, default='inactive')
 
+    this%forc_pbot_not_downscaled_grc(begg:endg) = spval
+    call hist_addfld1d (fname='PBOT_NOT_DOWNSCALED', units='Pa',  &
+         avgflag='A', long_name='atmospheric pressure at surface (pre-downscaling)', &
+         ptr_gcell=this%forc_pbot_not_downscaled_grc, default = 'inactive')
+
     this%forc_lwrad_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='FLDS', units='W/m^2',  &
          avgflag='A', long_name='atmospheric longwave radiation (downscaled for glacier and hillslope columns)', &
@@ -618,6 +634,11 @@ contains
     call hist_addfld1d (fname='LWdown', units='W/m^2',  &
          avgflag='A', long_name='atmospheric longwave radiation (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_lwrad_downscaled_col, default='inactive')
+
+    this%forc_lwrad_not_downscaled_grc(begg:endg) = spval
+    call hist_addfld1d (fname='FLDS_NOT_DOWNSCALED', units='W/m^2',  &
+         avgflag='A', long_name='atmospheric longwave radiation (pre-downscaling)', &
+         ptr_gcell=this%forc_lwrad_not_downscaled_grc, default = 'inactive')
 
     call hist_addfld1d (fname='FLDS_ICE', units='W/m^2',  &
          avgflag='A', &
@@ -629,6 +650,87 @@ contains
     call hist_addfld1d (fname='THBOT', units='K',  &
          avgflag='A', long_name='atmospheric air potential temperature (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_th_downscaled_col)
+
+    this%forc_th_not_downscaled_grc(begg:endg) = spval
+    call hist_addfld1d (fname='Thair_from_atm', units='K',  &
+         avgflag='A', long_name='atmospheric air potential temperature (pre-downscaling)', &
+         ptr_gcell=this%forc_th_not_downscaled_grc, default = 'inactive')
+
+    this%forc_rho_not_downscaled_grc(begg:endg) = spval
+    call hist_addfld1d (fname='Rho_from_atm', units='kg/m^3',  &
+         avgflag='A', long_name='atmospheric density (pre-downscaling)', &
+         ptr_gcell=this%forc_rho_not_downscaled_grc, default = 'inactive')
+
+    this%forc_aer_grc(begg:endg,:) = spval
+    data1dptr => this%forc_aer_grc(begg:endg,1)
+    call hist_addfld1d (fname='BCPHIDRY', units='kg/m^2/s', &
+         avgflag='A', long_name='black carbon deposition (phidry) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,2)
+    call hist_addfld1d (fname='BCPHODRY', units='kg/m^2/s', &
+         avgflag='A', long_name='black carbon deposition (phodry) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,3)
+    call hist_addfld1d (fname='BCPHIWET', units='kg/m^2/s', &
+         avgflag='A', long_name='black carbon deposition (phiwet) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,4)
+    call hist_addfld1d (fname='OCPHIDRY', units='kg/m^2/s', &
+         avgflag='A', long_name='organic carbon deposition (phidry) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,5)
+    call hist_addfld1d (fname='OCPHODRY', units='kg/m^2/s', &
+         avgflag='A', long_name='black carbon deposition (phodry) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,6)
+    call hist_addfld1d (fname='OCPHIWET', units='kg/m^2/s', &
+         avgflag='A', long_name='organic carbon deposition (phiwet) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,7)
+    call hist_addfld1d (fname='DSTWET1', units='kg/m^2/s', &
+         avgflag='A', long_name='dust deposition (wet1) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,8)
+    call hist_addfld1d (fname='DSTDRY1', units='kg/m^2/s', &
+         avgflag='A', long_name='dust deposition (dry1) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,9)
+    call hist_addfld1d (fname='DSTWET2', units='kg/m^2/s', &
+         avgflag='A', long_name='dust deposition (wet2) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,10)
+    call hist_addfld1d (fname='DSTDRY2', units='kg/m^2/s', &
+         avgflag='A', long_name='dust deposition (dry2) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,11)
+    call hist_addfld1d (fname='DSTWET3', units='kg/m^2/s', &
+         avgflag='A', long_name='dust deposition (wet3) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,12)
+    call hist_addfld1d (fname='DSTDRY3', units='kg/m^2/s', &
+         avgflag='A', long_name='dust deposition (dry3) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,13)
+    call hist_addfld1d (fname='DSTWET4', units='kg/m^2/s', &
+         avgflag='A', long_name='dust deposition (wet4) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,14)
+    call hist_addfld1d (fname='DSTDRY4', units='kg/m^2/s', &
+         avgflag='A', long_name='dust deposition (dry4) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
 
     ! Time averaged quantities
     this%fsi24_patch(begp:endp) = spval
