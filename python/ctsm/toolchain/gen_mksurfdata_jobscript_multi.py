@@ -35,7 +35,6 @@ valid_scenarios = [
     "crop-global-hist-low-res",
     "crop-global-hist-ne16",
     "crop-global-hist-ne30",
-    "crop-global-hist-ne120",
     "crop-global-SSP1-1.9-f09",
     "crop-global-SSP1-2.6-f09",
     "crop-global-SSP2-4.5-f09",
@@ -289,10 +288,6 @@ def main():
         "crop-global-hist-ne30": (
             "--start-year 1850 --end-year 2015 --nosurfdata                    --res",
             "ne30",
-        ),
-        "crop-global-hist-ne120": (
-            "--start-year 1850 --end-year 2015 --nosurfdata                    --res",
-            "ne120",
         ),
         "crop-global-SSP1-1.9-f09": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-1.9 --res",
