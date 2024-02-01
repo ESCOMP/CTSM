@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Assign to High Priority project
     steps:
-    - name: Assign issues and pull requests with `priority: high` label to project 25
+    - name: Assign issues and pull requests with priority-high label to project 25
       uses: srggrs/assign-one-project-github-action@1.3.1
       if: |
         contains(github.event.issue.labels.*.name, 'priority: high') ||
