@@ -167,7 +167,7 @@ def parse_neon_listing(listing_file, valid_neon_sites):
     return available_list
 
 
-def setup(description):
+def setup(description, argv=None):
     """
     Determine valid neon sites. Make an output directory if it does not exist.
     """
@@ -177,6 +177,9 @@ def setup(description):
         os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!d]*")
     )
     valid_neon_sites = sorted([v.split("/")[-1] for v in valid_neon_sites])
+    
+    if argv is None:
+        argv = sys.argv
 
     (
         site_list,
@@ -192,7 +195,7 @@ def setup(description):
         no_batch,
         rerun,
         user_version,
-    ) = get_parser(sys.argv, description, valid_neon_sites)
+    ) = get_parser(argv, description, valid_neon_sites)
 
     if output_root:
         logger.debug("output_root : %s", output_root)
