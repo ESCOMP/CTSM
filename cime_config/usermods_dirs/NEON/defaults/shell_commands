@@ -48,11 +48,13 @@ fi
 # specific for MIMICS spinup
 ./xmlchange DATM_YR_END=2021
 ./xmlchange RUN_STARTDATE=0018-01-01
-./xmlchange RESUBMIT=20
-./xmlchange STOP_N=50
+./xmlchange RESUBMIT=5
+./xmlchange STOP_N=500
+./xmlchange REST_N=100
 ./xmlchange STOP_OPTION=nyears
 ./xmlchange CLM_FORCE_COLDSTART=on
 ./xmlchange CONTINUE_RUN=False
-./xmlchange JOB_QUEUE=develop
-./xmlchange JOB_WALLCLOCK_TIME=1:00:00
+# Slow to run in develop queue, and this didn't wrok as intended.
+#./xmlchange JOB_QUEUE=develop
+#./xmlchange JOB_WALLCLOCK_TIME=1:00:00
 
