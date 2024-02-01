@@ -81,9 +81,6 @@ module SnowSnicarMod
   real(r8), parameter :: tim_cns_dst_rmv = 2.2E-8_r8     ! time constant for removal of dust in snow on sea-ice
                                                          ! [s-1] (50% mass removal/year)
 
-  ! scaling of the snow aging rate (tuning option):
-  logical :: flg_snoage_scl    = .false.                 ! flag for scaling the snow aging rate by some arbitrary factor
-
   ! snow and aerosol Mie parameters:
   ! (arrays declared here, but are set in iniTimeConst)
   ! (idx_Mie_snw_mx is number of snow radii with defined parameters (i.e. from 30um to 1500um))
@@ -1656,13 +1653,10 @@ contains
             dr = dr + dr_wet
 
             !
-            !**********  3. SNOWAGE SCALING (TURNED OFF BY DEFAULT)  *************
+            !**********  3. SNOWAGE SCALING  *************
             !
             ! Multiply rate of change of effective radius by some constant, xdrdt
-            if (flg_snoage_scl) then
-               dr = dr*params_inst%xdrdt
-            endif
-
+            dr = dr*params_inst%xdrdt
 
             !
             !**********  4. INCREMENT EFFECTIVE RADIUS, ACCOUNTING FOR:  ***********
