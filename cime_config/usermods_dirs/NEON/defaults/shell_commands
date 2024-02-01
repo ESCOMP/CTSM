@@ -46,9 +46,10 @@ fi
 
 
 # specific for MIMICS spinup
+./xmlchange DATM_YR_END=2021
 ./xmlchange RUN_STARTDATE=0018-01-01
-./xmlchange RESUBMIT=1
-./xmlchange STOP_N=25
+./xmlchange RESUBMIT=20
+./xmlchange STOP_N=50
 ./xmlchange STOP_OPTION=nyears
 ./xmlchange CLM_FORCE_COLDSTART=on
 ./xmlchange CONTINUE_RUN=False
