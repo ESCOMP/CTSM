@@ -167,10 +167,9 @@ def parse_neon_listing(listing_file, valid_neon_sites):
     return available_list
 
 
-def main(description):
+def setup(description):
     """
     Determine valid neon sites. Make an output directory if it does not exist.
-    Loop through requested sites and run CTSM at that site.
     """
     cesmroot = path_to_ctsm_root()
     # Get the list of supported neon sites from usermods
@@ -212,6 +211,52 @@ def main(description):
         compset = "IHist1PtClm51Bgc"
     else:
         compset = "I1PtClm51Bgc"
+    return (
+        cesmroot,
+        site_list,
+        output_root,
+        run_type,
+        experiment,
+        prism,
+        overwrite,
+        run_length,
+        base_case_root,
+        run_from_postad,
+        setup_only,
+        no_batch,
+        rerun,
+        user_version,
+        available_list,
+        res,
+        compset,
+    )
+
+
+def main(description):
+    """
+    After setting up, loop through requested sites and run CTSM there.
+    """
+
+    # Set up
+    (
+        cesmroot,
+        site_list,
+        output_root,
+        run_type,
+        experiment,
+        prism,
+        overwrite,
+        run_length,
+        base_case_root,
+        run_from_postad,
+        setup_only,
+        no_batch,
+        rerun,
+        user_version,
+        available_list,
+        res,
+        compset,
+    ) = setup(description)
 
     # --  Looping over neon sites
 
