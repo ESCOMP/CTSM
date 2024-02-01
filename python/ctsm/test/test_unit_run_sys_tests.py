@@ -16,7 +16,7 @@ from six_additions import mock, assertNotRegex
 
 from ctsm import add_cime_to_path  # pylint: disable=unused-import
 from ctsm import unit_testing
-from ctsm.run_sys_tests import run_sys_tests
+from ctsm.run_sys_tests import run_sys_tests, _get_testmod_list
 from ctsm.machine_defaults import MACHINE_DEFAULTS
 from ctsm.machine import create_machine
 from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_FAKE
@@ -268,6 +268,57 @@ class TestRunSysTests(unittest.TestCase):
         run_sys_tests(machine=machine, cime_path=self._cime_path(), testlist=["foo"], dry_run=True)
         self.assertEqual(os.listdir(self._scratch), [])
         self.assertEqual(machine.job_launcher.get_commands(), [])
+
+    def test_getTestmodList_suite(self):
+        """Ensure that _get_testmod_list() works correctly with suite-style input"""
+        input = [
+            "clm/default",
+            "clm/default",
+            "clm/crop",
+            "clm/cropMonthlyOutput",
+        ]
+        target = [
+            "clm-default",
+            "clm-default",
+            "clm-crop",
+            "clm-cropMonthlyOutput",
+        ]
+        output = _get_testmod_list(input, unique=False)
+        self.assertEqual(output, target)
+
+    def test_getTestmodList_suite_unique(self):
+        """Ensure that _get_testmod_list() works correctly with unique=True"""
+        input = [
+            "clm/default",
+            "clm/default",
+            "clm/crop",
+            "clm/cropMonthlyOutput",
+        ]
+        target = [
+            "clm-default",
+            "clm-crop",
+            "clm-cropMonthlyOutput",
+        ]
+
+        output = _get_testmod_list(input, unique=True)
+        self.assertEqual(output, target)
+
+    def test_getTestmodList_testname(self):
+        """Ensure that _get_testmod_list() works correctly with full test name(s) specified"""
+        input = [
+            "ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-crop",
+            "ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-default",
+        ]
+        target = ["clm-crop", "clm-default"]
+        output = _get_testmod_list(input)
+        self.assertEqual(output, target)
+
+    def test_getTestmodList_twomods(self):
+        """Ensure that _get_testmod_list() works correctly with full test name(s) specified and two mods in one test"""
+        input = ["ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-default--clm-crop"]
+        target = ["clm-default", "clm-crop"]
+        output = _get_testmod_list(input)
+        self.assertEqual(output, target)
 
 
 if __name__ == "__main__":

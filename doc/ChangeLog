@@ -1,4 +1,342 @@
 ===============================================================
+Tag name: ctsm5.1.dev166
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310), tking (Teagan King), samrabin (Sam Rabin)
+Date: Wed 24 Jan 2024 05:39:41 PM MST
+One-line Summary: BFB merge tag
+
+Purpose and description of changes
+----------------------------------
+
+ #2315 @TeaganKing Refactoring run_neon for PLUMBER2 part1
+ #2213 @samsrabin Automatically assign high priority items to project 25
+ #2330 @samsrabin Add Izumi version of the aux_clm unit testing
+ #2326 @samsrabin run_sys_tests: Check Python environment for FatesColdTwoStream tests
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+CTSM issues fixed (include CTSM Issue #):
+ Fixes #2315
+ Fixes #2213
+ Fixes #2330
+ Fixes #2326
+
+Known bugs introduced in this tag (include issue #):
+ - New feature coming in with #2213 where user will receive email from
+ github when pushing to their remote:
+ "Run failed: .github/workflows/assign-to-project.yml"
+ - New feature that also affects older tags: The izumi FatesColdTwoStream
+ test submitted from ./run_sys_tests will fail at CREATE_NEWCASE unless users
+ introduce "module load lang/python/3.7.0" in their .bash_profile.
+ Longterm solution discussed in #2335. The test also works when submitted
+ manually with ./create_test.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ #2315 New unit tests for arg_parse and NeonSite
+ #2330 New test in aux_clm that does unit testing on izumi because unit
+       testing does not work on derecho, yet
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - OK, pylint gives long list of warnings (expected)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2334
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev165
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310), oleson (Keith Oleson), samrabin (Sam Rabin)
+Date: Fri 19 Jan 2024 06:40:36 PM MST
+One-line Summary: Turn Meier2022, tillage, and residue removal on for ctsm5.1, fix #2212
+
+Purpose and description of changes
+----------------------------------
+
+Answer-changing merge-tag:
+- Turn Meier2022 on for ctsm5.1. Had turned off temporarily while fixing a bug.
+- Bring in Urban answer fix #2212.
+- Turn tillage and residue removal on for ctsm5.1.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+CTSM issues fixed (include CTSM Issue #):
+Fixes #2212
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+- Making Meier2022 the default for ctsm5.1 again.
+- Making tillage low by default for ctsm5.1.
+- Making residue removal 0.5 by default for ctsm5.1.
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  [ If a tag changes answers relative to baseline comparison the
+    following should be filled in (otherwise remove this section).
+    And always remove these three lines and parts that don't apply. ]
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ALL
+    - what platforms/compilers: ALL
+    - nature of change:i
+ clm45 and clm50: larger than roundoff
+ clm51: possibly climate changing
+        Effect of Meier2022 was documented here: https://github.com/NCAR/LMWG_dev/issues/38
+        Effect of tillage and residue removal may require an Answer Changing Tag simulation
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2323
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev164
+Originator(s): rgknox (Ryan Knox)
+Date: Wed 17 Jan 2024 12:38:18 PM MST
+One-line Summary: Compatibility and tests for FATES 2-Stream
+
+Purpose and description of changes
+----------------------------------
+
+This set of changes enables compatibility and testing for FATES two-stream radiation scattering. Two stream radiation is selected by setting the FATES parameter file variable fates_rad_mod = 2.  This is an alternative to Norman radiation.  The FATES default radiation model will continue to be Norman for the time being, but is expected to transition to two-stream in the near future.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+CTSM issues fixed (include CTSM Issue #): 2305
+
+Known bugs introduced in this tag (include issue #): none, but testing was modified to catch a pre-existing bug via test: SMS_D_Ld3.f09_g17.I2000Clm51FatesSpCruRsGs.derecho_gnu.clm-FatesColdSatPhen_prescribed.  This has been documented in CTSM issue #2321
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes:
+[e.g., check PFS test in the test suite and look at timings, if you
+expect possible significant timing changes]
+
+If a fates user does opt to use two-stream radiation, they should expect changes in simulation time compared with norman radiation. This difference varies and is somewhere between equal or 20% slower at a maximum. Most tests seemed to be about 10-15% slower for regions with high vegetation demographic diversity.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+New tests were added to the fates and aux_clm regression suites, with suffix clm-FatesColdTwoStream.  One of them uses fixed giogeography and no cross-pft competition.
+
+Testing summary:
+----------------
+
+  regular tests, baseline: ctsm5.1.dev163
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: baseline: fates-sci.1.70.0_api.32.0.0-ctsm5.1.dev163
+    derecho ----- OK
+    izumi ------- (being run after tag was made)
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+All answers are B4B with baselines mentioned above, except for one fates variable: FATES_RAD_ERROR. This variable was changed to report the maximum of VIS and NIR, instead of just VIS. A follow up set of changes will change the dimension of this variable.  This change was expected.
+
+
+Other details
+-------------
+
+This set of changes is synchronized with the new FATES tag: sci.1.71.0_api.33.0.0
+PR: https://github.com/NGEET/fates/pull/1141
+
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev163
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Wed Jan 10 13:03:34 MST 2024
+One-line Summary: Add tillage and residue removal
+
+Purpose and description of changes
+----------------------------------
+
+Adds capability for cropland soil tillage and post-harvest residue removal.
+
+Tillage: This PR brings in the tillage code written by Sam Levis and Michael Graham and used in Graham et al. (2021, ERL, doi:10.1088/1748-9326/abe6c6). Low- and high-intensity tillage here work by increasing the decomposition rate of different soil carbon pools. These "decomposition multipliers" vary based on soil pool and how long it's been since the crop was planted; they are set with new paramfile variables till_decompk_multipliers and mimics_till_decompk_multipliers. Note that tillage is off by default.
+
+Residue removal: Adds a parameter hat represents what fraction of post-harvest crop residues (stems and leaves) should be removed to the crop product pool rather than being transferred to litter.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+CTSM issues fixed (include CTSM Issue #):
+- Resolves #112 (https://github.com/ESCOMP/CTSM/issues/112)
+- Contributes to #2310 (https://github.com/ESCOMP/CTSM/issues/2310) by adding NEON tests to expected failure list)
+- run_sys_tests no longer fails on Izumi
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- Adds parameter tillage_mode with options off (default), low, and high.
+- Adds parameter use_original_tillage_phases (false by default; see Add soil tillage for crops #2040).
+- Adds parameter max_tillage_depth (cm).
+- Adds parameter crop_residue_removal_frac (default 0)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Changes SMS_Ld5.f10_f10_mg37.I1850Clm45BgcCrop.derecho_gnu.clm-crop to use tillage and residue removal; now SMS_Ld5.f10_f10_mg37.I1850Clm45BgcCrop.derecho_gnu.clm-till--clm-remove_residues
+- Changes PEM_Ld1.f10_f10_mg37.I2000Clm51BgcCrop.izumi_intel.clm-crop to use tilllage; now PEM_Ld1.f10_f10_mg37.I2000Clm51BgcCrop.izumi_intel.clm-till
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- PASS
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- #2311: Add tillage and residue removal (https://github.com/ESCOMP/CTSM/pull/2311)
+which is a combination of:
+- #2040: Add soil tillage for crops (https://github.com/ESCOMP/CTSM/pull/2040)
+- #2297: Add crop residue removal (https://github.com/ESCOMP/CTSM/pull/2297)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev162
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Fri Jan  5 15:57:23 MST 2024

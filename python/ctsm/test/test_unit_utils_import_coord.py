@@ -19,7 +19,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm import unit_testing
 from ctsm.path_utils import path_to_ctsm_root
-from ctsm.utils import import_coord_1d, import_coord_2d
+from ctsm.ctsm_pylib_dependent_utils import import_coord_1d, import_coord_2d
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
