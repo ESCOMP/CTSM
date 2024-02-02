@@ -164,7 +164,7 @@ def get_parser():
             """,
         action="store",
         dest="input_path",
-        default="/glade/p/cesm/cseg/inputdata/",
+        default="/glade/campaign/cesm/cesmdata/inputdata/",
     )
     parser.add_argument(
         "--vic",

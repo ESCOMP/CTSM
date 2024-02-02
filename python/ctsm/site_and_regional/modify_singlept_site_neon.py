@@ -89,7 +89,7 @@ def get_parser():
         dest="surf_dir",
         type=str,
         required=False,
-        default="/glade/scratch/" + myname + "/single_point/",
+        default="/glade/derecho/scratch/" + myname + "/single_point/",
     )
     parser.add_argument(
         "--out_dir",
@@ -101,7 +101,7 @@ def get_parser():
         dest="out_dir",
         type=str,
         required=False,
-        default="/glade/scratch/" + myname + "/single_point_neon_updated/",
+        default="/glade/derecho/scratch/" + myname + "/single_point_neon_updated/",
     )
     parser.add_argument(
         "--inputdata-dir",
@@ -113,7 +113,7 @@ def get_parser():
         dest="inputdatadir",
         type=str,
         required=False,
-        default="/glade/p/cesmdata/cseg/inputdata",
+        default="/glade/campaign/cesm/cesmdata/cseg/inputdata",
     )
     parser.add_argument(
         "-d",
