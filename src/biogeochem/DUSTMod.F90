@@ -138,7 +138,7 @@ contains
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
-    begc = bounds%begc; endc = bounds%endp
+    begc = bounds%begc; endc = bounds%endc
 
     this%flx_mss_vrt_dst_tot_patch(begp:endp) = spval
     call hist_addfld1d (fname='DSTFLXT', units='kg/m2/s',  &
@@ -202,6 +202,8 @@ contains
        if ( this%zendersoilerodstream%UseStreams() )then
           call this%zendersoilerodstream%CalcDustSource( bounds, &
                                    this%mbl_bsn_fct_col(bounds%begc:bounds%endc) )
+       else
+          this%mbl_bsn_fct_col(:) = 1.0_r8
        end if
     else
        write(iulog,*) 'dust_emis_method not recognized = ', trim(dust_emis_method)
@@ -708,10 +710,6 @@ contains
     real(r8), parameter :: dns_slt = 2650.0_r8         ! [kg m-3] Density of optimal saltation particles
     !------------------------------------------------------------------------
 
-    associate(& 
-         mbl_bsn_fct  =>  this%mbl_bsn_fct_col   & ! Output:  [real(r8) (:)] basin factor                                       
-         )
-
       ! allocate module variable
       allocate (ovr_src_snk_mss(dst_src_nbr,ndst))  
       allocate (dmt_vwr(ndst))
@@ -946,8 +944,6 @@ contains
       do m = 1, ndst
          stk_crc(m) = vlc_grv(m) / vlc_stk(m)
       end do
-
-    end associate 
 
   end subroutine InitDustVars
 
