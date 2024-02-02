@@ -108,11 +108,9 @@ module WaterDiagnosticBulkType
 
   type, private :: params_type
       real(r8) :: zlnd  ! Momentum roughness length for soil, glacier, wetland (m)
+      real(r8) :: snw_rds_min  ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
   end type params_type
   type(params_type), private ::  params_inst
-
-  ! minimum allowed snow effective radius (also "fresh snow" value) [microns]
-  real(r8), public, parameter :: snw_rds_min = 54.526_r8    
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -136,6 +134,8 @@ contains
 
     ! Momentum roughness length for soil, glacier, wetland (m)
     call readNcdioScalar(ncid, 'zlnd', subname, params_inst%zlnd)
+    ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
+    call readNcdioScalar(ncid, 'snw_rds_min', subname, params_inst%snw_rds_min)
 
   end subroutine readParams
 
@@ -750,11 +750,11 @@ contains
 
       do c = bounds%begc,bounds%endc
          if (snl(c) < 0) then
-            this%snw_rds_col(c,snl(c)+1:0)        = snw_rds_min
+            this%snw_rds_col(c,snl(c)+1:0)        = params_inst%snw_rds_min
             this%snw_rds_col(c,-nlevsno+1:snl(c)) = 0._r8
-            this%snw_rds_top_col(c)               = snw_rds_min
+            this%snw_rds_top_col(c)               = params_inst%snw_rds_min
          elseif (h2osno_input_col(c) > 0._r8) then
-            this%snw_rds_col(c,0)                 = snw_rds_min
+            this%snw_rds_col(c,0)                 = params_inst%snw_rds_min
             this%snw_rds_col(c,-nlevsno+1:-1)     = 0._r8
             this%snw_rds_top_col(c)               = spval
             this%sno_liq_top_col(c)               = spval
@@ -1236,7 +1236,7 @@ contains
     integer , intent(in)   :: column     ! column index
     !-----------------------------------------------------------------------
 
-    this%snw_rds_col(column,0)  = snw_rds_min
+    this%snw_rds_col(column,0)  = params_inst%snw_rds_min
 
   end subroutine ResetBulk
 

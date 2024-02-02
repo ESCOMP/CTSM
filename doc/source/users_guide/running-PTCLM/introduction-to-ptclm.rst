@@ -105,7 +105,7 @@ The output to the above command is as follows:
 
   Main Script Version Id: $Id: PTCLM.py 47576 2013-05-29 19:11:16Z erik $ Scripts URL: $HeadURL: https://svn-ccsm-models.cgd.ucar.edu/PTCLM/trunk_tags/PTCLM1_130529/PTCLM.py $:
 
-Here we give a simple example of using PTCLMmkdata for a straightforward case of running at the US-UMB Fluxnet site on cheyenne where we already have the meteorology data on the machine. Note, see `the Section called Converting AmeriFlux Data for use by PTCLMmkdata <CLM-URL>`_ for permission information to use this data.
+Here we give a simple example of using PTCLMmkdata for a straightforward case of running at the US-UMB Fluxnet site on cheyenne where we already have the meteorology data on the machine. Note, see :ref:`converting-ameriflux-for-ptclmmkdata` for permission information to use this data.
 
 Example 6-1. Example of running PTCLMmkdata for US-UMB on cheyenne
 ------------------------------------------------------------------

@@ -209,6 +209,35 @@ The combined decomposition rate scalar (:math:`{r}_{total}`,unitless) is:
 
    r_{total} =r_{tsoil} r_{water} r_{oxygen} r_{depth} .
 
+.. _decomp_mgmt_modifiers:
+
+Management modifiers on decomposition rate
+--------------------------------------------------
+
+Tillage of cropland soil is represented as an additional rate scalar that depends on tillage intensity (default off), soil pool, and time since planting :ref:`(Graham et al., 2021) <Grahametal2021>`. The tillage enhancement is strongest in the first 14 days after planting (idpp < 15), weaker in the next 30 days (15 ≤ idpp < 45), weaker still in the next 30 days (45 ≤ idpp < 75), and nonexistent after that (idpp ≥ 75).
+
+.. list-table:: Tillage decomposition rate scalars. Values in each cell represent enhancement in different periods of days past planting: [0, 14], [15, 44], [45, 74].
+   :header-rows: 1
+
+   * - \
+     - low
+     - high
+   * - Litter 2 (cel_lit)
+     - 1.5, 1.5, 1.1
+     - 1.8, 1.5, 1.1
+   * - Litter 3 (lig_lit)
+     - 1.5, 1.5, 1.1
+     - 1.8, 1.5, 1.1
+   * - SOM 1 (act_som)
+     - 1.0, 1.0, 1.0
+     - 1.2, 1.0, 1.0
+   * - SOM 2 (slo_som)
+     - 3.0, 1.6, 1.3
+     - 4.8, 3.5, 2.5
+   * - SOM 3 (pas_som)
+     - 3.0, 1.6, 1.3
+     - 4.8, 3.5, 2.5
+
 N-limitation of Decomposition Fluxes
 -----------------------------------------
 
@@ -336,7 +365,7 @@ where If :math:`{NF}_{total\_demand,j}`\ :math:`\Delta`\ *t* :math:`<` :math:`{N
 
 where :math:`{f}_{immob\_demand,j}` is the fraction of potential immobilization demand that can be met given current supply of mineral nitrogen in this layer. We also set the actual nitrification flux to be the same as the potential flux (:math:`NF_{nit}` = :math:`NF_{nit\_ demand}`).
 
-If :math:`{NF}_{total\_demand,j}`\ :math:`\Delta`\ *t :math:`\mathrm{\ge}` :math:`{NS}_{sminn,j}`, then there is not enough mineral nitrogen to meet the combined demands for plant growth and heterotrophic immobilization, immobilization is reduced proportional to the discrepancy, by :math:`f_{immob\_ demand,j}`, where
+If :math:`{NF}_{total\_demand,j} \Delta t \mathrm{\ge} {NS}_{sminn,j}`, then there is not enough mineral nitrogen to meet the combined demands for plant growth and heterotrophic immobilization, immobilization is reduced proportional to the discrepancy, by :math:`f_{immob\_ demand,j}`, where
 
 .. math::
    :label: 21.30)

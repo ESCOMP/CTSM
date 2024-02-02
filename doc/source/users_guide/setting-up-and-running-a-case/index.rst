@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. _customizing_section:
-
 .. include:: ../substitutions.rst
+
+.. _customizing_section:
 
 #####################################
 Setting Up and Running a Case

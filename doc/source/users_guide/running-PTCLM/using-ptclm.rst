@@ -1,6 +1,6 @@
-.. _using-ptclm.rst:
-
 .. include:: ../substitutions.rst
+
+.. _using-ptclm.rst:
 
 **************************
 Using PTCLMmkdata
@@ -78,7 +78,7 @@ Configure options include:
   This option is for running PTCLMmkdata with a different root directory to CESM than the version PTCLMmkdata exists in. Normally you do NOT need to use this option.
 
 ``--sitegroupname``
-  In the PTCLMmkdata directory there is a subdirectory "PTCLM_sitedata" that contains files with the site, PFT and soil data information for groups of sites. These site groups are all separate ASCII files with the same prefix followed by a "_*data.txt" name. See `the Section called PTCLMmkdata Group Site Lists <CLM-URL>`_ for more information on these files. By default we have provided three different valid group names:
+  In the PTCLMmkdata directory there is a subdirectory "PTCLM_sitedata" that contains files with the site, PFT and soil data information for groups of sites. These site groups are all separate ASCII files with the same prefix followed by a "_*data.txt" name. See :ref:`adding-ptclm-site-data` for more information on these files. By default we have provided three different valid group names:
 
 EXAMPLE
 -------
@@ -86,7 +86,7 @@ AmeriFlux
 
 Fluxnet-Canada
 
-The EXAMPLE is the group used by default and ONLY includes the US-UMB site as that is the only site we have data provided for. The other two site groups include the site information for all of both the AmeriFlux and Fluxnet-Canada sites. You can use the "sitegroupname" option to use one of the other lists, or you can create your own lists using the EXAMPLE file as an example. Your list of sites could be real world locations or could be theoretical "virtual" sites given to exercise CLM on differing biomes for example. Note, see `the Section called Converting AmeriFlux Data for use by PTCLMmkdata <CLM-URL>`_ with permission information to use the US-UMB data.
+The EXAMPLE is the group used by default and ONLY includes the US-UMB site as that is the only site we have data provided for. The other two site groups include the site information for all of both the AmeriFlux and Fluxnet-Canada sites. You can use the "sitegroupname" option to use one of the other lists, or you can create your own lists using the EXAMPLE file as an example. Your list of sites could be real world locations or could be theoretical "virtual" sites given to exercise CLM on differing biomes for example. Note, see :ref:`converting-ameriflux-for-ptclmmkdata` with permission information to use the US-UMB data.
 
 ``--donot_use_tower_yrs``
   This option is used with the "useQIAN" option to set the years to cycle over for the Qian data. In this case Qian atmospheric forcing will be used, but the simulation will run over the same years that tower site is available for this site.

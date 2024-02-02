@@ -8,6 +8,8 @@ I.  General directory structure:
     $CTSMROOT/tools
 	mksurfdata_esmf -- Create surface datasets.
 
+        crop_calendars --- Regrid and process GGCMI sowing and harvest date files for use in CTSM.
+
         mkmapgrids ------- Create regular lat/lon SCRIP grid files
         mkprocdata_map --- Convert output unstructured grids into a 2D format that
                            can be plotted easily
