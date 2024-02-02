@@ -302,7 +302,7 @@ contains
 
    namelist /zendersoilerod/ &               ! MUST agree with namelist_name above
         zendersoilerodmapalgo, zendersoilerodmapalgo,  stream_fldFileName_zendersoilerod, &
-        stream_meshfile_zendersoilerod
+        stream_meshfile_zendersoilerod, zender_soil_erod_source
 
    ! Default values for namelist
 
@@ -333,14 +333,16 @@ contains
       write(iulog,*) '  zendersoilerodmapalgo             = ',zendersoilerodmapalgo
    endif
 
-   if ( (zender_soil_erod_source /= 'atm') .and. (zender_soil_erod_source /= 'lnd')  )then
+   if ( (trim(zender_soil_erod_source) /= 'atm') .and. (trim(zender_soil_erod_source) /= 'lnd')  )then
       call endrun(msg=' ERROR zender_soil_erod_source must be either lnd or atm and is NOT'//errMsg(sourcefile, __LINE__))
    end if
-   if ( len_trim(stream_meshfile_zendersoilerod) == 0 )then
-      call endrun(msg=' ERROR stream_meshfile_zendersoilerod must be set when Zender_2003 is being used and zender_soil_erod_source is lnd'//errMsg(sourcefile, __LINE__))
-   end if
-   if ( len_trim(stream_meshfile_zendersoilerod) == 0 )then
-      call endrun(msg=' ERROR stream_meshfile_zendersoilerod must be set when Zender_2003 is being used and zender_soil_erod_source is lnd'//errMsg(sourcefile, __LINE__))
+   if ( trim(zender_soil_erod_source) == 'lnd' )then
+      if ( len_trim(stream_meshfile_zendersoilerod) == 0 )then
+         call endrun(msg=' ERROR stream_meshfile_zendersoilerod must be set when Zender_2003 is being used and zender_soil_erod_source is lnd'//errMsg(sourcefile, __LINE__))
+      end if
+      if ( len_trim(stream_meshfile_zendersoilerod) == 0 )then
+         call endrun(msg=' ERROR stream_meshfile_zendersoilerod must be set when Zender_2003 is being used and zender_soil_erod_source is lnd'//errMsg(sourcefile, __LINE__))
+      end if
    end if
    this%stream_fldFileName_zendersoilerod = stream_fldFileName_zendersoilerod
    this%stream_meshfile_zendersoilerod    = stream_meshfile_zendersoilerod

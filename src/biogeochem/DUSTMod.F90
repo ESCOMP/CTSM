@@ -87,9 +87,9 @@ contains
     type(bounds_type), intent(in) :: bounds  
     character(len=*),  intent(in) :: NLFilename
 
+    call this%zendersoilerodstream%Init( bounds, NLFilename )
     call this%InitAllocate (bounds)
     call this%InitHistory  (bounds)
-    call this%zendersoilerodstream%Init( bounds, NLFilename )
     call this%InitCold     (bounds)
     call this%InitDustVars (bounds)
 
@@ -165,12 +165,14 @@ contains
          avgflag='A', long_name='turbulent deposition velocity 4', &
          ptr_patch=this%vlc_trb_4_patch, default='inactive')
 
-    ! if Zender
-    this%mbl_bsn_fct_col(begc:endc) = spval
-    call hist_addfld1d (fname='LND_MBL', units='fraction',  &
-         avgflag='A', long_name='Soil erodibility factor', &
-         ptr_col=this%mbl_bsn_fct_col, default='inactive')
-    ! end if
+    if (dust_emis_method == 'Zender_2003') then
+       if ( this%zendersoilerodstream%UseStreams() )then
+          this%mbl_bsn_fct_col(begc:endc) = spval
+          call hist_addfld1d (fname='LND_MBL', units='fraction',  &
+               avgflag='A', long_name='Soil erodibility factor', &
+               ptr_col=this%mbl_bsn_fct_col, default='inactive')
+       end if
+    end if
 
   end subroutine InitHistory
 
