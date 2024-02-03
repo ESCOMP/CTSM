@@ -1215,41 +1215,46 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- for present day simulations - year 2000 -->
 
-<!-- FATES datasets with 16 PFTS, have both a use_vichydro version and a non vichydro version, pointing to the same file -->
-<fsurdat hgrid="0.9x1.25"  sim_year="2000" use_crop=".false." use_vichydro=".true.">
+<!-- fsurdat files with 16 PFTS for use with FATES -->
+<fsurdat hgrid="0.9x1.25"  sim_year="2000" use_crop=".false.">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_0.9x1.25_hist_2000_16pfts_c240130.nc</fsurdat>
-<fsurdat hgrid="0.9x1.25"  sim_year="2000" use_crop=".false." use_vichydro=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_0.9x1.25_hist_2000_16pfts_c240130.nc</fsurdat>
-<fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".false." use_vichydro=".true.">
+<fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".false.">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1.9x2.5_hist_2000_16pfts_c240130.nc</fsurdat>
-<fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".false." use_vichydro=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1.9x2.5_hist_2000_16pfts_c240130.nc</fsurdat>
-<fsurdat hgrid="10x15"     sim_year="2000" use_crop=".false." use_vichydro=".true.">
+<fsurdat hgrid="10x15"     sim_year="2000" use_crop=".false.">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_10x15_hist_2000_16pfts_c240130.nc</fsurdat>
-<fsurdat hgrid="10x15"     sim_year="2000" use_crop=".false." use_vichydro=".false">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_10x15_hist_2000_16pfts_c240130.nc</fsurdat>
-<!-- These ones don't have vic hydro on them -->
 <fsurdat hgrid="4x5"       sim_year="2000" use_crop=".false." >
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_4x5_hist_2000_16pfts_c240130.nc</fsurdat>
-<fsurdat hgrid="1x1_brazil"    sim_year="2000" use_crop=".false."
->lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_brazil_hist_2000_16pfts_cXXXXXX.nc
-</fsurdat>
-<fsurdat hgrid="5x5_amazon"    sim_year="2000" use_crop=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_5x5_amazon_hist_2000_78pfts_c240130.nc</fsurdat>
+<fsurdat hgrid="mpasa60"   sim_year="2000" use_crop=".false.">
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa60_hist_2000_16pfts_c240130.nc</fsurdat>
+<fsurdat hgrid="mpasa15"   sim_year="2000" use_crop=".false.">
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa15_hist_2000_16pfts_c240130.nc</fsurdat>
+<fsurdat hgrid="mpasa15-3conus" sim_year="2000" use_crop=".false.">
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa15-3conus_hist_2000_16pfts_c240130.nc</fsurdat>
+<fsurdat hgrid="mpasa3p75" sim_year="2000" use_crop=".false.">
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa3p75_hist_2000_16pfts_c240130.nc</fsurdat>
 
-<!-- Crop surface datasets that counter the FATES 16 pft versions above -->
+<!-- fsurdat files with 78 PFTS -->
+<!-- The same files can be used with use_vichydro='.true.' or '.false' -->
+<fsurdat hgrid="0.9x1.25"     sim_year="2000" use_crop=".true." use_vichydro=".true.">
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_0.9x1.25_hist_2000_78pfts_c240130.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"     sim_year="2000" use_crop=".true." use_vichydro=".false.">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_0.9x1.25_hist_2000_78pfts_c240130.nc</fsurdat>
+<fsurdat hgrid="1.9x2.5"      sim_year="2000" use_crop=".true." use_vichydro=".true.">
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1.9x2.5_hist_2000_78pfts_c240130.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"      sim_year="2000" use_crop=".true." use_vichydro=".false.">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1.9x2.5_hist_2000_78pfts_c240130.nc</fsurdat>
+<fsurdat hgrid="10x15"        sim_year="2000" use_crop=".true." use_vichydro=".true.">
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_10x15_hist_2000_78pfts_c240130.nc</fsurdat>
 <fsurdat hgrid="10x15"        sim_year="2000" use_crop=".true." use_vichydro=".false.">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_10x15_hist_2000_78pfts_c240130.nc</fsurdat>
+<fsurdat hgrid="4x5"          sim_year="2000" use_crop=".true." use_vichydro=".true.">
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_4x5_hist_2000_78pfts_c240130.nc</fsurdat>
 <fsurdat hgrid="4x5"          sim_year="2000" use_crop=".true." use_vichydro=".false.">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_4x5_hist_2000_78pfts_c240130.nc</fsurdat>
-<fsurdat hgrid="1x1_brazil"    sim_year="2000" use_crop=".true."
->lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_brazil_hist_2000_78pfts_cXXXXXX.nc
-</fsurdat>
-<fsurdat hgrid="5x5_amazon"    sim_year="2000" use_crop=".true.">
+
+<fsurdat hgrid="1x1_brazil"    sim_year="2000">
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_brazil_hist_2000_78pfts_c240201.nc</fsurdat>
+<fsurdat hgrid="5x5_amazon"    sim_year="2000">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_5x5_amazon_hist_2000_78pfts_c240130.nc</fsurdat>
 
 <!-- Crop versions of the surface datasets that can be used for both crop on and off -->
@@ -1262,8 +1267,7 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne30np4.pg3_hist_2000_78pfts_c240131.n
 <fsurdat hgrid="ne16np4.pg3" sim_year="2000" >
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne16np4.pg3_hist_2000_78pfts_c240130.nc</fsurdat>
 
-<!-- EBK: TODO I think we should just support the crop version here rather than 16 pfts-->
-<fsurdat hgrid="0.125nldas2" sim_year="2000" use_crop=".false." >
+<fsurdat hgrid="0.125nldas2" sim_year="2000">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_0.125nldas2_hist_2000_78pfts_c240130.nc</fsurdat>
 
 <fsurdat hgrid="360x720cru"  sim_year="2000">
@@ -1272,24 +1276,13 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_360x720cru_hist_2000_78pfts_c240130.nc
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_C96_hist_2000_78pfts_c240130.nc</fsurdat>
 
 <fsurdat hgrid="1x1_numaIA"   sim_year="2000" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_numaIA_hist_2000_78pfts_cXXXXXX.nc
-</fsurdat>
-<fsurdat hgrid="1x1_smallvilleIA" sim_year="2000" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_smallvilleIA_hist_2000_78pfts_cXXXXXX.nc
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_numaIA_hist_2000_78pfts_c240201.nc
 </fsurdat>
 
 <fsurdat hgrid="mpasa480"  sim_year="2000">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa480_hist_2000_78pfts_c240130.nc</fsurdat>
 <fsurdat hgrid="mpasa120"  sim_year="2000">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa120_hist_2000_78pfts_c240130.nc</fsurdat>
-<fsurdat hgrid="mpasa60"   sim_year="2000" use_crop=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa60_hist_2000_16pfts_c240130.nc</fsurdat>
-<fsurdat hgrid="mpasa15"   sim_year="2000" use_crop=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa15_hist_2000_16pfts_c240130.nc</fsurdat>
-<fsurdat hgrid="mpasa15-3conus"   sim_year="2000" use_crop=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa15-3conus_hist_2000_16pfts_c240130.nc</fsurdat>
-<fsurdat hgrid="mpasa3p75" sim_year="2000" use_crop=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa3p75_hist_2000_16pfts_c240130.nc</fsurdat>
 
 <fsurdat hgrid="ne3np4.pg3"              sim_year="2000">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne3np4.pg3_hist_2000_78pfts_c240130.nc</fsurdat>
@@ -1341,10 +1334,7 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne3np4.pg3_hist_1850_78pfts_c240130.nc
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_C96_hist_1850_78pfts_c240130.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" >
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_smallvilleIA_hist_1850_78pfts_c240131.nc</fsurdat>
-<fsurdat hgrid="1x1_numaIA"       sim_year="1850" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_numaIA_hist_1850_78pfts_c240131.nc</fsurdat>
-
-<fsurdat hgrid="1x1_brazil"               sim_year="1850">
+<fsurdat hgrid="1x1_brazil"       sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_brazil_hist_1850_78pfts_c240131.nc</fsurdat>
 
 <fsurdat hgrid="ne3np4.pg3"               sim_year="1850">
@@ -1361,7 +1351,7 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne0np4.ARCTIC.ne30x4_hist_1850_78pfts_
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne0np4CONUS.ne30x8_hist_1850_78pfts_c240130.nc</fsurdat>
 
 <!-- Potential vegetation land use dataset, crop is off, and zeroed, all areas are natural vegetation without human disturbance -->
-<fsurdat hgrid="0.9x1.25"     sim_year="PtVg" use_crop=".false."
+<fsurdat hgrid="0.9x1.25" sim_year="PtVg" use_crop=".false."
 >lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_0.9x1.25_hist_PtVeg_nourb_16pfts_c240130.nc</fsurdat>
 
 <!-- for NEON sites present day simulations - year 2000 -->

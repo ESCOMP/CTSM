@@ -31,7 +31,9 @@ class TestSubsetData(unittest.TestCase):
 
     def setUp(self):
         sys.argv = ["subset_data", "point", "--create-surface"]
-        DEFAULTS_FILE = os.path.join(os.getcwd(), "../tools/site_and_regional/default_data_2000.cfg")
+        DEFAULTS_FILE = os.path.join(
+            os.getcwd(), "../tools/site_and_regional/default_data_2000.cfg"
+        )
         self.parser = get_parser()
         self.args = self.parser.parse_args()
         self.cesmroot = path_to_ctsm_root()
