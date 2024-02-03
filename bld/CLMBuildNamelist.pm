@@ -3962,7 +3962,7 @@ sub setup_logic_dust_emis {
         foreach my $option ( @zender_files_in_lnd_opts ) {
            add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $option,
                        'dust_emis_method'=>$dust_emis_method, 'zender_soil_erod_source'=>$zender_source,
-                       'lnd_tuning_mod'=>$nl_flags->{'lnd_tuning_mode'} );
+                       'hgrid'=>$nl_flags->{'res'}, 'lnd_tuning_mod'=>$nl_flags->{'lnd_tuning_mode'} );
         }
      } else {
         foreach my $option ( @zender_files_in_lnd_opts ) {
