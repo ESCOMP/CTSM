@@ -1,0 +1,3 @@
+! Turn on using the soil eroditability file in CTSM
+dust_emis_method = 'Zender_2023'
+clm45cam4LndTuningModZDustSoilErod = 'lnd'
