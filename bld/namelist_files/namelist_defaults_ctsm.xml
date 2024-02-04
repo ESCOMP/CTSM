@@ -1865,8 +1865,7 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 
 <run_zero_weight_urban>.false.</run_zero_weight_urban>
 
-<convert_ocean_to_land>.false.</convert_ocean_to_land>
-<convert_ocean_to_land phys="clm5_1">.true.</convert_ocean_to_land>
+<convert_ocean_to_land>.true.</convert_ocean_to_land>
 
 <collapse_urban structure="standard" >.false.</collapse_urban>
 <collapse_urban structure="fast"     >.true.</collapse_urban>
