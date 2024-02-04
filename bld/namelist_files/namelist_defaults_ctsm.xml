@@ -1297,11 +1297,11 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne0np4CONUS.ne30x8_hist_2000_78pfts_c2
 
 <!-- 100% Urban single-point datasets (only for sim-year=2000) -->
 <fsurdat hgrid="1x1_vancouverCAN"    sim_year="2000" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_vancouverCAN_hist_2000_78pfts_c240130.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_vancouverCAN_hist_2000_78pfts_c240201.nc</fsurdat>
 <fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_mexicocityMEX_hist_2000_78pfts_c240130.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_mexicocityMEX_hist_2000_78pfts_c240201.nc</fsurdat>
 <fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_urbanc_alpha_hist_2000_78pfts_c240130.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_urbanc_alpha_hist_2000_78pfts_c240201.nc</fsurdat>
 
 <!-- for pre-industrial simulations - year 1850 -->
 
@@ -1333,9 +1333,9 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne3np4.pg3_hist_1850_78pfts_c240130.nc
 <fsurdat hgrid="C96"  sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_C96_hist_1850_78pfts_c240130.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_smallvilleIA_hist_1850_78pfts_c240131.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_smallvilleIA_hist_1850_78pfts_c240201.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"       sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_brazil_hist_1850_78pfts_c240131.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_brazil_hist_1850_78pfts_c240201.nc</fsurdat>
 
 <fsurdat hgrid="ne3np4.pg3"               sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne3np4.pg3_hist_1850_78pfts_c240130.nc</fsurdat>
