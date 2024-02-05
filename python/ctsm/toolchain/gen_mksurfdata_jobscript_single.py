@@ -126,7 +126,7 @@ def main():
         runfile.write("#PBS -S /bin/bash \n")
         if machine == "derecho":
             attribs = {"mpilib": "default"}
-            runfile.write("#PBS -l walltime=30:00 \n")
+            runfile.write("#PBS -l walltime=59:00 \n")
             runfile.write(f"#PBS -A {account} \n")
             runfile.write("#PBS -q main \n")
             runfile.write(
