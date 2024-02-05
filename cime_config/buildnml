@@ -85,7 +85,7 @@ def buildnml(case, caseroot, compname):
         "clm4_5_QIAN": "clm4_5_CRUv7",
         "clm4_5_NLDAS2": "clm4_5_CRUv7",
         "clm4_5_ERA5": "clm4_5_CRUv7",
-        "clm5_0_1PT": "clm5_0_GSWP3",
+        "clm5_0_1PT": "clm5_0_GSWP3v1",
         "clm5_0_QIAN": "clm5_0_GSWP3v1",
         "clm5_0_NLDAS2": "clm5_0_GSWP3v1",
         "clm5_0_ERA5": "clm5_0_GSWP3v1",
