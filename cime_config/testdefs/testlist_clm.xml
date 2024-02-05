@@ -14,7 +14,7 @@
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm51Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
-      <machine name="derecho" compiler="nvhpc" category="ctsm_sci"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -189,7 +189,7 @@
       <option name="comment">Higher resolution mpasa grid for CAM with latest CLM version. Include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa15-3-conus_mpasa15-3-conus" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="mpasa15-3conus_mpasa15-3conus" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -549,6 +549,7 @@
   <test name="ERP_D_Ld5" grid="ne30_g17" compset="I1850Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -599,15 +600,6 @@
       <option name="comment">Medium resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, test IHist</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30_g17" compset="IHistClm51Sp" testmods="clm/clm51cam6LndTuningMode">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:60:00</option>
-      <option name="comment">Workhorse SE grid for running with CAM with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
-    </options>
-  </test>
   <test name="SMS" grid="ne30_g17" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
@@ -653,7 +645,7 @@
       <option name="comment">Workhorse SE grid for running with CAM and with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS_ln9" grid="ne120pg3_t13" compset="I1850Clm51BgcCrop" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="ne120pg3_t13" compset="I1850Clm51BgcCrop" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -662,7 +654,7 @@
       <option name="comment">High resolution SE grid for running with CAM and with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS_ln9" grid="ne120pg3_t13" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="ne120pg3_t13" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1547,7 +1539,7 @@
       <option name="comment"  >Test transient PFTs (via HIST) in conjunction with changing glacier area. This test also covers the reset_dynbal_baselines option. CISM is not answer preserving across processor changes, but short test length should be OK.</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="C96_C96_mg17" compset="IHistClm51BgcCrop" testmods="clm/clm50cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="C96_C96_mg17" compset="IHistClm51BgcCrop" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
