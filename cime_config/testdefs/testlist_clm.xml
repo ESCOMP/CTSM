@@ -13,8 +13,8 @@
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm51Bgc" testmods="clm/default">
     <machines>
-      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="nvhpc" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -471,8 +471,8 @@
   </test>
   <test name="ERS_Ld3" grid="f10_f10_mg37" compset="I2000Clm51Bgc" testmods="clm/ciso_cwd_hr">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -590,10 +590,9 @@
       <option name="comment">Low resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <!-- These need to be turned off until they are allowed in ccs_config
   <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I1850Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
-      <machine name="dercho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -602,7 +601,7 @@
   </test>
   <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I2000Clm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
-      <machine name="dercho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -611,23 +610,13 @@
   </test>
   <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="IHistClm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
-      <machine name="dercho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
-      <option name="comment">Medium resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, test both 1850 and 2000</option>
+      <option name="comment">Medium resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, test IHist</option>
     </options>
   </test>
-  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="IHistClm51Sp" testmods="clm/clm51cam6LndTuningMode">
-    <machines>
-      <machine name="dercho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:60:00</option>
-      <option name="comment">Medium resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, test both 1850 and 2000</option>
-    </options>
-  </test>
-  -->
   <test name="SMS" grid="ne30_g17" compset="IHistClm51Sp" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
