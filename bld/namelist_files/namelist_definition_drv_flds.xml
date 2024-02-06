@@ -123,4 +123,17 @@
     List of fluxes needed by the CARMA model, from CLM to CAM.
   </entry>
 
+  <!-- ========================================================================================  -->
+  <!-- Liquid tracers sent to river model                                                        -->
+  <!-- ========================================================================================  -->
+
+  <entry id="lnd2rof_tracers"
+	 type="char*256"
+	 category="lnd2rof_tracers  "
+	 group="lnd2rof_tracers_inparm"
+	 valid_values="" >
+    Liquid lnd2rof tracers (other than water)
+    Default: ""
+  </entry>
+
 </namelist_definition>

@@ -9,6 +9,7 @@ module lnd_import_export
   use NUOPC_Model             , only : NUOPC_ModelGet
   use shr_kind_mod            , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx, cs=>shr_kind_cs
   use shr_sys_mod             , only : shr_sys_abort
+  use shr_string_mod          , only : shr_string_listGetNum, shr_string_listGetName
   use clm_varctl              , only : iulog
   use clm_time_manager        , only : get_nstep
   use decompmod               , only : bounds_type, get_proc_bounds
@@ -20,6 +21,7 @@ module lnd_import_export
   use spmdMod                 , only : masterproc
   use shr_drydep_mod          , only : shr_drydep_readnl, n_drydep
   use shr_megan_mod           , only : shr_megan_readnl, shr_megan_mechcomps_n
+  use shr_lnd2rof_tracers_mod , only : shr_lnd2rof_tracers_readnl
   use nuopc_shr_methods       , only : chkerr
   use lnd_import_export_utils , only : check_for_errors, check_for_nans
 
@@ -68,6 +70,10 @@ module lnd_import_export
   logical                :: force_send_to_atm   ! Force sending export data to atmosphere even if ATM is not prognostic
   integer                :: glc_nec          ! number of glc elevation classes
   integer, parameter     :: debug = 0        ! internal debug level
+
+  ! from lnd->rof
+  character(len=CS)      :: lnd2rof_tracers  ! colon delimited string of liquid tracers other than water
+  integer                :: nflds_lnd2rof_tracers
 
   ! import fields
   character(*), parameter :: Sa_z                = 'Sa_z'
@@ -138,6 +144,7 @@ module lnd_import_export
   character(*), parameter :: Flrl_rofgwl    = 'Flrl_rofgwl'
   character(*), parameter :: Flrl_rofi      = 'Flrl_rofi'
   character(*), parameter :: Flrl_irrig     = 'Flrl_irrig'
+  character(*), parameter :: Flrl_rofno3    = 'Flrl_rofno3'
   character(*), parameter :: Sl_tsrf_elev   = 'Sl_tsrf_elev'
   character(*), parameter :: Sl_topo_elev   = 'Sl_topo_elev'
   character(*), parameter :: Flgl_qice_elev = 'Flgl_qice_elev'
@@ -179,7 +186,6 @@ contains
     integer           :: n, num
     logical           :: send_co2_to_atm = .false.
     logical           :: recv_co2_fr_atm = .false.
-
     character(len=*), parameter :: subname='(lnd_import_export:advertise_fields)'
     !-------------------------------------------------------------------------------
 
@@ -249,6 +255,9 @@ contains
     ! TODO: is the following correct - the CARMA field exchange is very confusing in mct
     call shr_carma_readnl('drv_flds_in', carma_fields)
 
+    ! lnd2rof liquid tracers (other than water)
+    call shr_lnd2rof_tracers_readnl('drv_flds_in', lnd2rof_tracers)
+
     ! export to atm
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, trim(flds_scalar_name))
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_lfrin')
@@ -294,7 +303,9 @@ contains
 
     ! export to rof
     if (rof_prognostic) then
-       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsur)
+       nflds_lnd2rof_tracers = shr_string_listGetNum(trim(lnd2rof_tracers))
+       ! Note addition of 1 for liquid water
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsur, ungridded_lbound=1, ungridded_ubound=nflds_lnd2rof_tracers+1)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofgwl)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsub)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofi  )
@@ -728,12 +739,11 @@ contains
 
     ! local variables
     type(ESMF_State)  :: exportState
-    real(r8), pointer :: fldPtr1d(:)
-    real(r8), pointer :: fldPtr2d(:,:)
-    character(len=CS) :: fldname
+    real(r8), pointer :: rofl(:,:)
     integer           :: begg, endg
-    integer           :: i, g, num
+    integer           :: i, g, n
     real(r8)          :: data1d(bounds%begg:bounds%endg)
+    character(len=CS) :: fldname
     character(len=*), parameter :: subname='(lnd_import_export:export_fields)'
     !---------------------------------------------------------------------------
 
@@ -865,9 +875,21 @@ contains
     ! end do
 
     if (fldchk(exportState, Flrl_rofsur)) then
-       call state_setexport_1d(exportState, Flrl_rofsur, waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(begg:), &
+       ! Plus 1 here is to account for liquid water which is always sent
+       allocate(rofl(begg:endg, nflds_lnd2rof_tracers+1))
+       rofl(:,1) = waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(begg:)
+       if (nflds_lnd2rof_tracers > 0) then
+          do n = 1,nflds_lnd2rof_tracers
+             call shr_string_listGetName(trim(lnd2rof_tracers), n, fldname)
+             if (trim(fldname) == 'H2O') then ! for testing
+                rofl(:,n+1) = waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(begg:) ! for test
+             end if
+          end do
+       end if
+       call state_setexport_2d(exportState, Flrl_rofsur, rofl, &
             init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       deallocate(rofl)
     end if
     if (fldchk(exportState, Flrl_rofgwl)) then ! qgwl sent individually to mediator
        call state_setexport_1d(exportState, Flrl_rofgwl, waterlnd2atmbulk_inst%qflx_rofliq_qgwl_grc(begg:), &
@@ -893,6 +915,12 @@ contains
                       waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(g)
        end do
        call state_setexport_1d(exportState, Flrl_rofsub, data1d(begg:),  init_spval=.true., rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
+    if (fldchk(exportState, Flrl_rofno3)) then
+       ! TODO: Change units from g/m2/s to m3/s
+       call state_setexport_1d(exportState, Flrl_rofno3, lnd2atm_inst%smin_no3_runoff_grc(begg:), &
+            init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
 
@@ -1308,7 +1336,7 @@ contains
     integer, target    :: tmp(1)
     type(ESMF_VM)      :: vm
     character(*), parameter :: nml_name = "ctsm_nuopc_cap" ! MUST match with namelist name below
-    
+
 
     namelist  /ctsm_nuopc_cap/ force_send_to_atm
 
@@ -1333,7 +1361,7 @@ contains
 
     ! Broadcast namelist to all processors
     call ESMF_VMBroadcast(vm, tmp, 1, 0, rc=rc)
-   
+
     force_send_to_atm = (tmp(1) == 1)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
