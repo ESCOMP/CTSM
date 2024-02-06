@@ -1668,7 +1668,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_Lm20_Mmpi-serial" grid="1x1_smallvilleIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/cropMonthlyNoinitial">
+  <test name="ERS_Lm20_Mmpi-serial" grid="1x1_smallvilleIA" compset="I1850Clm50BgcCropQianRs" testmods="clm/cropMonthlyNoinitial">
     <machines>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -1677,7 +1677,7 @@
       <option name="comment"  >tests mid-year restart, with the restart file being written in the middle of the first year after cold start initialization</option>
     </options>
   </test>
-  <test name="ERS_Ly5_Mmpi-serial" grid="1x1_smallvilleIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/ciso_monthly">
+  <test name="ERS_Ly5_Mmpi-serial" grid="1x1_smallvilleIA" compset="I1850Clm50BgcCropQianRs" testmods="clm/ciso_monthly">
     <machines>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
