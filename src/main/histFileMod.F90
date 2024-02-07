@@ -3139,31 +3139,31 @@ contains
                long_name='coordinate levels for soil decomposition variables', units='m', ncid=nfid(t))
 
           if (use_hillslope .and. .not.tape(t)%dov2xy)then
-             call ncd_defvar(varname='hslp_distance', xtype=ncd_double, &
+             call ncd_defvar(varname='hillslope_distance', xtype=ncd_double, &
                   dim1name=namec, long_name='hillslope column distance', &
                   units='m', ncid=nfid(t))             
-             call ncd_defvar(varname='hslp_width', xtype=ncd_double, &
+             call ncd_defvar(varname='hillslope_width', xtype=ncd_double, &
                   dim1name=namec, long_name='hillslope column width', &
                   units='m', ncid=nfid(t))             
-             call ncd_defvar(varname='hslp_area', xtype=ncd_double, &
+             call ncd_defvar(varname='hillslope_area', xtype=ncd_double, &
                   dim1name=namec, long_name='hillslope column area', &
                   units='m', ncid=nfid(t))             
-             call ncd_defvar(varname='hslp_elev', xtype=ncd_double, &
+             call ncd_defvar(varname='hillslope_elev', xtype=ncd_double, &
                   dim1name=namec, long_name='hillslope column elevation', &
                   units='m', ncid=nfid(t))             
-             call ncd_defvar(varname='hslp_slope', xtype=ncd_double, &
+             call ncd_defvar(varname='hillslope_slope', xtype=ncd_double, &
                   dim1name=namec, long_name='hillslope column slope', &
                   units='m', ncid=nfid(t))             
-             call ncd_defvar(varname='hslp_aspect', xtype=ncd_double, &
+             call ncd_defvar(varname='hillslope_aspect', xtype=ncd_double, &
                   dim1name=namec, long_name='hillslope column aspect', &
                   units='m', ncid=nfid(t))             
-             call ncd_defvar(varname='hslp_index', xtype=ncd_int, &
+             call ncd_defvar(varname='hillslope_index', xtype=ncd_int, &
                   dim1name=namec, long_name='hillslope index', &
                   ncid=nfid(t))             
-             call ncd_defvar(varname='hslp_cold', xtype=ncd_int, &
+             call ncd_defvar(varname='hillslope_cold', xtype=ncd_int, &
                   dim1name=namec, long_name='hillslope downhill column index', &
                   ncid=nfid(t))             
-             call ncd_defvar(varname='hslp_colu', xtype=ncd_int, &
+             call ncd_defvar(varname='hillslope_colu', xtype=ncd_int, &
                   dim1name=namec, long_name='hillslope uphill column index', &
                   ncid=nfid(t))             
           end if
@@ -3258,13 +3258,13 @@ contains
           end if
 
           if (use_hillslope .and. .not.tape(t)%dov2xy) then
-             call ncd_io(varname='hslp_distance' , data=col%hill_distance, dim1name=namec, ncid=nfid(t), flag='write')
-             call ncd_io(varname='hslp_width' , data=col%hill_width, dim1name=namec, ncid=nfid(t), flag='write')
-             call ncd_io(varname='hslp_area' , data=col%hill_area, dim1name=namec, ncid=nfid(t), flag='write')
-             call ncd_io(varname='hslp_elev' , data=col%hill_elev, dim1name=namec, ncid=nfid(t), flag='write')
-             call ncd_io(varname='hslp_slope' , data=col%hill_slope, dim1name=namec, ncid=nfid(t), flag='write')
-             call ncd_io(varname='hslp_aspect' , data=col%hill_aspect, dim1name=namec, ncid=nfid(t), flag='write')
-             call ncd_io(varname='hslp_index' , data=col%hillslope_ndx, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hillslope_distance' , data=col%hill_distance, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hillslope_width' , data=col%hill_width, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hillslope_area' , data=col%hill_area, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hillslope_elev' , data=col%hill_elev, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hillslope_slope' , data=col%hill_slope, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hillslope_aspect' , data=col%hill_aspect, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hillslope_index' , data=col%hillslope_ndx, dim1name=namec, ncid=nfid(t), flag='write')
 
              ! write global indices rather than local indices
              allocate(icarr(bounds%begc:bounds%endc),stat=ier)
@@ -3280,7 +3280,7 @@ contains
                 endif
              enddo
              
-             call ncd_io(varname='hslp_cold' , data=icarr, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hillslope_cold' , data=icarr, dim1name=namec, ncid=nfid(t), flag='write')
 
              do c = bounds%begc,bounds%endc
                 if (col%colu(c) /= ispval) then 
@@ -3290,7 +3290,7 @@ contains
                 endif
              enddo
 
-             call ncd_io(varname='hslp_colu' , data=icarr, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hillslope_colu' , data=icarr, dim1name=namec, ncid=nfid(t), flag='write')
              deallocate(icarr)
           endif
 
