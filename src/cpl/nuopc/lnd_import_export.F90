@@ -305,7 +305,11 @@ contains
     if (rof_prognostic) then
        nflds_lnd2rof_tracers = shr_string_listGetNum(trim(lnd2rof_tracers))
        ! Note addition of 1 for liquid water
-       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsur, ungridded_lbound=1, ungridded_ubound=nflds_lnd2rof_tracers+1)
+       if (nflds_lnd2rof_tracers > 0) then
+          call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsur, ungridded_lbound=1, ungridded_ubound=nflds_lnd2rof_tracers+1)
+       else
+          call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsur)
+       end if
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofgwl)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsub)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofi  )
@@ -739,7 +743,7 @@ contains
 
     ! local variables
     type(ESMF_State)  :: exportState
-    real(r8), pointer :: rofl(:,:)
+    real(r8), pointer :: rofl2d(:,:)
     integer           :: begg, endg
     integer           :: i, g, n
     real(r8)          :: data1d(bounds%begg:bounds%endg)
@@ -875,21 +879,25 @@ contains
     ! end do
 
     if (fldchk(exportState, Flrl_rofsur)) then
-       ! Plus 1 here is to account for liquid water which is always sent
-       allocate(rofl(begg:endg, nflds_lnd2rof_tracers+1))
-       rofl(:,1) = waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(begg:)
+       ! nflds_lnd2rof_tracers are just the extra number of liquid tracers other than water -
+       ! so add 1 here is to account for liquid water which is always sent
        if (nflds_lnd2rof_tracers > 0) then
+          allocate(rofl2d(begg:endg, nflds_lnd2rof_tracers+1))
+          rofl2d(:,1) = waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(begg:)
           do n = 1,nflds_lnd2rof_tracers
              call shr_string_listGetName(trim(lnd2rof_tracers), n, fldname)
              if (trim(fldname) == 'H2O') then ! for testing
-                rofl(:,n+1) = waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(begg:) ! for test
+                rofl2d(:,n+1) = waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(begg:) ! for test
              end if
           end do
+          call state_setexport_2d(exportState, Flrl_rofsur, rofl2d, init_spval=.true., rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          deallocate(rofl2d)
+       else
+          call state_setexport_1d(exportState, Flrl_rofsur, waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(begg:), &
+               init_spval=.true., rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
-       call state_setexport_2d(exportState, Flrl_rofsur, rofl, &
-            init_spval=.true., rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       deallocate(rofl)
     end if
     if (fldchk(exportState, Flrl_rofgwl)) then ! qgwl sent individually to mediator
        call state_setexport_1d(exportState, Flrl_rofgwl, waterlnd2atmbulk_inst%qflx_rofliq_qgwl_grc(begg:), &
@@ -917,12 +925,12 @@ contains
        call state_setexport_1d(exportState, Flrl_rofsub, data1d(begg:),  init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
-    if (fldchk(exportState, Flrl_rofno3)) then
-       ! TODO: Change units from g/m2/s to m3/s
-       call state_setexport_1d(exportState, Flrl_rofno3, lnd2atm_inst%smin_no3_runoff_grc(begg:), &
-            init_spval=.true., rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end if
+    ! if (fldchk(exportState, Flrl_rofno3)) then
+    !    ! TODO: Change units from g/m2/s to m3/s
+    !    call state_setexport_1d(exportState, Flrl_rofno3, lnd2atm_inst%smin_no3_runoff_grc(begg:), &
+    !         init_spval=.true., rc=rc)
+    !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! end if
 
     ! -----------------------
     ! output to glc
