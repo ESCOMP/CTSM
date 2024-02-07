@@ -18,9 +18,9 @@ scipy
 netcdf4
 requests
 packaging
-numpy=1.18.5
+numpy
 xarray=0.17.0
 xesmf
-numba=0.55.2  # Avoid 0.56 until numpy>=1.20.  This is the minimum for xesmf
+numba  # Avoid 0.56 until numpy>=1.20.  This is the minimum for xesmf
 pylint=2.8.3
 black=22.3.0  # NOTE: The version here needs to be coordinated with the black github action under ../.github/workflows

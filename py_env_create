@@ -23,7 +23,7 @@ if [ $error != 0 ]; then
    exit -1
 fi
 rm condahelp.txt
-ctsm_python=ctsm_pylib
+ctsm_python=ctsm_pylib3
 
 
 condadir="$dir/python"
