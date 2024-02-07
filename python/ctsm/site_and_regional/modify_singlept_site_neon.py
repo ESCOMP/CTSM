@@ -61,6 +61,7 @@ valid = glob.glob(
 )
 valid_neon_sites = [x[-4:] for x in valid]  # last 4 letters in each string
 
+
 def get_parser():
     """
     Get parser object for this script.
@@ -279,7 +280,9 @@ def find_soil_structure(args, surf_file):
     # print (f_1.attrs["Soil_texture_raw_data_file_name"])
 
     clm_input_dir = os.path.join(args.inputdatadir, "lnd/clm2/rawdata/")
-    surf_soildepth_file = os.path.join(clm_input_dir, f_1.attrs["soil_texture_lookup_raw_data_file_name"])
+    surf_soildepth_file = os.path.join(
+        clm_input_dir, f_1.attrs["soil_texture_lookup_raw_data_file_name"]
+    )
 
     if os.path.exists(surf_soildepth_file):
         print(
