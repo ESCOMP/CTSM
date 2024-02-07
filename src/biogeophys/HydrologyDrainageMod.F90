@@ -22,7 +22,7 @@ module HydrologyDrainageMod
   use GlacierSurfaceMassBalanceMod, only : glacier_smb_type
   use TotalWaterAndHeatMod, only : ComputeWaterMassNonLake
   use LandunitType      , only : lun                
-  use ColumnType        , only : col   
+  use ColumnType        , only : col                
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -35,7 +35,6 @@ module HydrologyDrainageMod
 contains
 
   !-----------------------------------------------------------------------
-
   subroutine HydrologyDrainage(bounds,               &
        num_nolakec, filter_nolakec,                  &
        num_hydrologyc, filter_hydrologyc,            &
@@ -54,13 +53,11 @@ contains
     use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, icol_shadewall
     use clm_varcon       , only : denh2o, denice
     use clm_varctl       , only : use_vichydro, use_hillslope, use_hillslope_routing
-
     use clm_varpar       , only : nlevgrnd, nlevurb
     use clm_time_manager , only : get_step_size_real, get_nstep
     use SoilHydrologyMod , only : CLMVICMap, Drainage, PerchedLateralFlow, SubsurfaceLateralFlow
     use SoilWaterMovementMod , only : use_aquifer_layer
     use HillslopeHydrologyMod, only : streamflow_manning, HillslopeStreamOutflow, HillslopeUpdateStreamWater
-    
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds               
@@ -71,7 +68,7 @@ contains
     integer                  , intent(in)    :: num_urbanc           ! number of column urban points in column filter
     integer                  , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
     integer                  , intent(in)    :: num_do_smb_c         ! number of bareland columns in which SMB is calculated, in column filter    
-    integer                  , intent(in)    :: filter_do_smb_c(:)   ! column filter for bare land SMB columns      
+    integer                  , intent(in)    :: filter_do_smb_c(:)   ! column filter for bare land SMB columns
 
     type(glc2lnd_type)       , intent(in)    :: glc2lnd_inst
     type(temperature_type)   , intent(in)    :: temperature_inst
@@ -87,7 +84,6 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: g,l,c,j,fc                 ! indices
     real(r8) :: dtime                      ! land model time step (sec)
-
     !-----------------------------------------------------------------------
 
     associate(                                                            & ! Input: layer thickness depth (m)  
@@ -151,11 +147,11 @@ contains
                  waterstatebulk_inst, waterfluxbulk_inst, &
                  wateratm2lndbulk_inst)
 
-         if(use_hillslope_routing) then 
+         if (use_hillslope_routing) then
             call HillslopeStreamOutflow(bounds,&
                  waterstatebulk_inst, waterfluxbulk_inst, &
                  streamflow_method=streamflow_manning)
-            
+
             call HillslopeUpdateStreamWater(bounds, &
                  waterstatebulk_inst, waterfluxbulk_inst, &
                  waterdiagnosticbulk_inst)
@@ -190,7 +186,6 @@ contains
 
       ! Determine wetland and land ice hydrology (must be placed here
       ! since need snow updated from CombineSnowLayers)
-
 
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)

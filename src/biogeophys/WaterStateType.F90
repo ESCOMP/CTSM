@@ -184,8 +184,7 @@ contains
     ! !USES:
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     use clm_varctl     , only : use_soil_moisture_streams
-    use GridcellType   , only : grc  
-
+    use GridcellType   , only : grc
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(in) :: this
@@ -300,7 +299,7 @@ contains
             avgflag='A', &
             long_name=this%info%lname('volume of water in stream channel (hillslope hydrology only)'), &
             ptr_lunit=this%stream_water_volume_lun, l2g_scale_type='natveg',  default='inactive')
-    endif
+    end if
 
     ! Add excess ice fields to history
 

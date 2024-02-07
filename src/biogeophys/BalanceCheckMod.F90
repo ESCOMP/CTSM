@@ -36,7 +36,6 @@ module BalanceCheckMod
   use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon      , only : icol_road_perv, icol_road_imperv
   use clm_varctl         , only : use_hillslope_routing
-
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -217,7 +216,7 @@ contains
     !
     ! !USES:
     use subgridAveMod, only: c2g
-    use LandunitType , only : lun                
+    use LandunitType , only : lun
     !
     ! !ARGUMENTS:
     type(bounds_type)          , intent(in)    :: bounds
@@ -561,7 +560,7 @@ contains
           qflx_qrgwl_grc          =>    waterlnd2atm_inst%qflx_rofliq_qgwl_grc  , & ! Input:  [real(r8) (:)   ]  grid cell-level qflx_surf at glaciers, wetlands, lakes
           qflx_drain_col          =>    waterflux_inst%qflx_drain_col           , & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
           qflx_drain_grc          =>    waterlnd2atm_inst%qflx_rofliq_qsub_grc  , & ! Input:  [real(r8) (:)   ]  grid cell-level drainage (mm H20 /s)
-          qflx_streamflow_grc     =>    waterlnd2atm_inst%qflx_rofliq_stream_grc, & ! Input: [real(r8) (:)   ] streamflow [mm H2O/s]             
+          qflx_streamflow_grc     =>    waterlnd2atm_inst%qflx_rofliq_stream_grc, & ! Input: [real(r8) (:)   ] streamflow [mm H2O/s]
           qflx_ice_runoff_col     =>    waterlnd2atm_inst%qflx_ice_runoff_col   , & ! Input:  [real(r8) (:)   ] column level solid runoff from snow capping and from excess ice in soil (mm H2O /s)
           qflx_ice_runoff_grc     =>    waterlnd2atm_inst%qflx_rofice_grc       , & ! Input:  [real(r8) (:)   ] grid cell-level solid runoff from snow capping and from excess ice in soil (mm H2O /s)
           qflx_sl_top_soil        =>    waterflux_inst%qflx_sl_top_soil_col     , & ! Input:  [real(r8) (:)   ]  liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
@@ -651,6 +650,7 @@ contains
                   - qflx_ice_runoff_col(c)   &
                   - qflx_snwcp_discarded_liq_col(c) &
                   - qflx_snwcp_discarded_ice_col(c)) * dtime
+
           else
 
              errh2o_col(c) = 0.0_r8
@@ -670,7 +670,7 @@ contains
              ' local indexc= ',indexc,&
              ' global indexc= ',global_index, &
              ' errh2o= ',errh2o_col(indexc)
-           if ((errh2o_max_val > error_thresh) .and. (DAnstep > skip_steps)) then
+         if ((errh2o_max_val > error_thresh) .and. (DAnstep > skip_steps)) then
               
               write(iulog,*)'CTSM is stopping because errh2o > ', error_thresh, ' mm'
               write(iulog,*)'nstep                     = ',nstep
@@ -754,6 +754,7 @@ contains
        ! BUG(rgk, 2021-04-13, ESCOMP/CTSM#1314) Temporarily bypassing gridcell-level check with use_fates_planthydro until issue 1314 is resolved
        
        if (errh2o_max_val > h2o_warning_thresh .and. .not.use_fates_planthydro) then
+
           indexg = maxloc( abs(errh2o_grc(bounds%begg:bounds%endg)), 1 ) + bounds%begg - 1
           write(iulog,*)'WARNING:  grid cell-level water balance error ',&
              ' nstep= ',nstep, &
@@ -828,7 +829,6 @@ contains
                  if (col%itype(c) == icol_road_perv .or. lun%itype(l) == istsoil .or. &
                       lun%itype(l) == istcrop .or. lun%itype(l) == istwet .or. &
                       lun%itype(l) == istice) then
-
                    snow_sources(c) = (qflx_snow_grnd_col(c) - qflx_snow_h2osfc(c) ) &
                           + frac_sno_eff(c) * (qflx_liq_grnd_col(c) &
                           + qflx_soliddew_to_top_layer(c) + qflx_liqdew_to_top_layer(c) ) &
@@ -973,6 +973,7 @@ contains
                write(iulog,*)'CTSM is stopping'
                call endrun(subgrid_index=indexp, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
            end if
+
        end if
        
        ! Longwave radiation energy balance check

@@ -66,7 +66,6 @@ contains
     use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_par_init
     use CropReprPoolsMod     , only: crop_repr_pools_init
     use HillslopeHydrologyMod, only: hillslope_properties_init
-    
     !
     ! !ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
@@ -117,7 +116,7 @@ contains
     call dynSubgridControl_init(NLFilename)
     call crop_repr_pools_init()
     call hillslope_properties_init(NLFilename)
-    
+
     call t_stopf('clm_init1')
 
   end subroutine initialize1
@@ -136,7 +135,7 @@ contains
     use clm_varpar                    , only : natpft_size,cft_size
     use clm_varctl                    , only : fsurdat
     use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
-    use clm_varctl                    , only : use_cn, use_fates
+    use clm_varctl                    , only : use_cn, use_fates, use_fates_luh
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varctl                    , only : use_hillslope
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
@@ -146,7 +145,7 @@ contains
     use decompInitMod                 , only : decompInit_clumps, decompInit_glcp
     use domainMod                     , only : domain_check, ldomain, domain_init
     use surfrdMod                     , only : surfrd_get_data
-    use controlMod                    , only : NLFilename
+    use controlMod                    , only : NLFilename, fluh_timeseries
     use initGridCellsMod              , only : initGridCells
     use ch4varcon                     , only : ch4conrd
     use UrbanParamsType               , only : UrbanInput, IsSimpleBuildTemp
@@ -179,8 +178,8 @@ contains
     use CNSharedParamsMod             , only : CNParamsSetSoilDepth
     use NutrientCompetitionFactoryMod , only : create_nutrient_competition_method
     use FATESFireFactoryMod           , only : scalar_lightning
+    use dynFATESLandUseChangeMod      , only : dynFatesLandUseInit
     use HillslopeHydrologyMod         , only : InitHillslope
-    
     !
     ! !ARGUMENTS
     integer, intent(in) :: ni, nj         ! global grid sizes
@@ -241,7 +240,7 @@ contains
     allocate (wt_glc_mec   (begg:endg, maxpatch_glc     ))
     allocate (topo_glc_mec (begg:endg, maxpatch_glc     ))
     allocate (haslake      (begg:endg                      ))
-    if(use_hillslope) then 
+    if (use_hillslope) then
        allocate (ncolumns_hillslope  (begg:endg            ))
     endif
     allocate (pct_urban_max(begg:endg, numurbl             ))
@@ -301,7 +300,7 @@ contains
     ! Set global seg maps for gridcells, landlunits, columns and patches
     call decompInit_glcp(ni, nj, glc_behavior)
 
-    if(use_hillslope) then
+    if (use_hillslope) then
        ! Initialize hillslope properties
        call InitHillslope(bounds_proc, fsurdat)
     endif
@@ -331,7 +330,7 @@ contains
     ! end of the run for error checking, pct_urban_max is kept through the end of the run
     ! for reweighting in subgridWeights.
     deallocate (wt_lunit, wt_cft, wt_glc_mec, haslake)
-    if(use_hillslope)  deallocate (ncolumns_hillslope)
+    if (use_hillslope)  deallocate (ncolumns_hillslope)
 
     ! Determine processor bounds and clumps for this processor
     call get_proc_bounds(bounds_proc)
@@ -420,6 +419,11 @@ contains
     call init_subgrid_weights_mod(bounds_proc)
     call dynSubgrid_init(bounds_proc, glc_behavior, crop_inst)
     call t_stopf('init_dyn_subgrid')
+
+    ! Initialize fates LUH2 usage
+    if (use_fates_luh) then
+       call dynFatesLandUseInit(bounds_proc, fluh_timeseries)
+    end if
 
     ! Initialize baseline water and energy states needed for dynamic subgrid operation
     ! This will be overwritten by the restart file, but needs to be done for a cold start

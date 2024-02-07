@@ -535,8 +535,8 @@ contains
      associate(                                                     &
           snl             =>    col%snl                           , & ! Input:  [integer  (:)   ] negative number of snow layers [nbr]
 
-          forc_solad_col  =>    atm2lnd_inst%forc_solad_downscaled_col     , & ! Input:  [real(r8) (:,:) ] direct beam radiation, column (W/m**2)        
-          forc_solai      =>    atm2lnd_inst%forc_solai_grc       , & ! Input:  [real(r8) (:,:) ] diffuse radiation (W/m**2)            
+          forc_solad_col  =>    atm2lnd_inst%forc_solad_downscaled_col     , & ! Input:  [real(r8) (:,:) ] direct beam radiation, column (W/m**2)
+          forc_solai      =>    atm2lnd_inst%forc_solai_grc       , & ! Input:  [real(r8) (:,:) ] diffuse radiation (W/m**2)
 
           snow_depth      =>    waterdiagnosticbulk_inst%snow_depth_col    , & ! Input:  [real(r8) (:)   ] snow height (m)
           frac_sno        =>    waterdiagnosticbulk_inst%frac_sno_col      , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
@@ -984,7 +984,7 @@ contains
           ! Solar incident
 
           fsds_vis_d(p) = forc_solad_col(c,1)
-          fsds_nir_d(p) = forc_solad_col(c,2)    
+          fsds_nir_d(p) = forc_solad_col(c,2)
           fsds_vis_i(p) = forc_solai(g,1)
           fsds_nir_i(p) = forc_solai(g,2)
 

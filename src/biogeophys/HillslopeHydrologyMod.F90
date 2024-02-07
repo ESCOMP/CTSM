@@ -2,7 +2,7 @@ module HillslopeHydrologyMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Read geomorphological parameters for hillslope columns 
+  ! Read geomorphological parameters for hillslope columns
   !
   ! !USES:
 #include "shr_assert.h"
@@ -14,11 +14,12 @@ module HillslopeHydrologyMod
   use clm_varctl     , only : use_hillslope_routing
   use decompMod      , only : bounds_type
   use clm_varcon     , only : rpi
+  use HillslopeHydrologyUtilsMod, only : HillslopeSoilThicknessProfile_linear
 
   ! !PUBLIC TYPES:
   implicit none
 
-  private   
+  private
   save
 
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -31,10 +32,10 @@ module HillslopeHydrologyMod
   public HillslopePftFromFile
   public HillslopeStreamOutflow
   public HillslopeUpdateStreamWater
-  
+
   integer, public :: pft_distribution_method ! Method for distributing pfts across hillslope columns
   integer, public :: soil_profile_method     ! Method for varying soil thickness across hillslope columns
-  
+
   ! Streamflow methods
   integer, public, parameter :: streamflow_manning = 0
   ! Pft distribution methods
@@ -44,12 +45,12 @@ module HillslopeHydrologyMod
   integer, public, parameter :: pft_lowland_dominant_pft = 3
   integer, public, parameter :: pft_lowland_upland = 4
 
-  ! PRIVATE 
+  ! PRIVATE
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
-  integer, private, parameter :: soil_profile_uniform               = 0 
+  integer, private, parameter :: soil_profile_uniform               = 0
   integer, private, parameter :: soil_profile_from_file             = 1
-  integer, private, parameter :: soil_profile_set_lowland_upland    = 2 
+  integer, private, parameter :: soil_profile_set_lowland_upland    = 2
   integer, private, parameter :: soil_profile_linear                = 3
 
   !-----------------------------------------------------------------------
@@ -87,7 +88,7 @@ contains
     namelist /hillslope_properties_inparm/  &
          hillslope_pft_distribution_method, &
          hillslope_soil_profile_method
-    
+
     ! Read hillslope hydrology namelist
     if (masterproc) then
        nu_nml = getavu()
@@ -130,7 +131,7 @@ contains
           call endrun(msg="ERROR bad value for hillslope_soil_profile_method in "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
        end if
 
-    endif
+    end if
 
     call shr_mpi_bcast(pft_distribution_method, mpicom)
     call shr_mpi_bcast(soil_profile_method, mpicom)
@@ -142,7 +143,7 @@ contains
        write(iulog,*) '  hillslope_pft_distribution_method = ',hillslope_pft_distribution_method
        write(iulog,*) '  hillslope_soil_profile_method     = ',hillslope_soil_profile_method
 
-    endif
+    end if
 
   end subroutine hillslope_properties_init
 
@@ -157,7 +158,7 @@ contains
     ! !USES:
     use clm_varctl              , only : use_hillslope
     use SoilWaterMovementMod    , only : use_aquifer_layer
-    if(use_hillslope .and. use_aquifer_layer()) then
+    if (use_hillslope .and. use_aquifer_layer()) then
        write(iulog,*) ' ERROR: use_hillslope and use_aquifer_layer may not be used simultaneously'
        call endrun(msg=' ERROR: use_hillslope and use_aquifer_layer cannot both be set to true' // &
             errMsg(sourcefile, __LINE__))
@@ -173,17 +174,16 @@ contains
     ! Initialize hillslope geomorphology from input dataset
     !
     ! !USES:
-    use LandunitType    , only : lun                
-    use GridcellType    , only : grc                
-    use ColumnType      , only : col                
+    use LandunitType    , only : lun
+    use GridcellType    , only : grc
+    use ColumnType      , only : col
     use clm_varctl      , only : nhillslope, max_columns_hillslope
     use spmdMod         , only : masterproc
     use fileutils       , only : getfil
-    use clm_varcon      , only : spval, ispval, grlnd 
+    use clm_varcon      , only : spval, ispval, grlnd
     use landunit_varcon , only : istsoil
     use subgridWeightsMod , only : compute_higher_order_weights
     use ncdio_pio
-    
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -208,15 +208,15 @@ contains
     real(r8), pointer     :: fstream_in(:)      ! read in - 1D - float
 
     type(file_desc_t)     :: ncid                 ! netcdf id
-    logical               :: readvar              ! check whether variable on file    
+    logical               :: readvar              ! check whether variable on file
     character(len=256)    :: locfn                ! local filename
     integer               :: ierr                 ! error code
     integer               :: c, l, g, i, j, ci, nh       ! indices
 
-    real(r8)              :: ncol_per_hillslope(nhillslope) ! number of columns per hillslope        
+    real(r8)              :: ncol_per_hillslope(nhillslope) ! number of columns per hillslope
     real(r8)              :: hillslope_area(nhillslope)     ! area of hillslope
     real(r8)              :: nhill_per_landunit(nhillslope) ! total number of each representative hillslope per landunit
-    
+
     character(len=*), parameter :: subname = 'InitHillslope'
 
     !-----------------------------------------------------------------------
@@ -224,11 +224,11 @@ contains
     ! consistency check
     call check_aquifer_layer()
 
-    ! Open surface dataset to read in data below 
+    ! Open surface dataset to read in data below
 
     call getfil (fsurdat, locfn, 0)
     call ncd_pio_openfile (ncid, locfn, 0)
-    
+
     allocate( &
          ncolumns_hillslope(bounds%begl:bounds%endl),  &
          pct_hillslope(bounds%begl:bounds%endl,nhillslope),  &
@@ -245,138 +245,116 @@ contains
          stat=ierr)
 
     allocate(ncolumns_hillslope_in(bounds%begg:bounds%endg))
-    
+
     call ncd_io(ncid=ncid, varname='nhillcolumns', flag='read', data=ncolumns_hillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: nhillcolumns not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: nhillcolumns not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
        ncolumns_hillslope(l) = ncolumns_hillslope_in(g)
        ! vegetated landunits having nonzero hillslope columns and nonzero weight
-       if(lun%wtgcell(l) > 0._r8 .and. lun%itype(l) == istsoil .and. ncolumns_hillslope_in(g) > 0) then
+       if (lun%wtgcell(l) > 0._r8 .and. lun%itype(l) == istsoil .and. ncolumns_hillslope_in(g) > 0) then
           do c = lun%coli(l), lun%colf(l)
              col%is_hillslope_column(c) = .true.
           enddo
-       endif
+       end if
     enddo
     deallocate(ncolumns_hillslope_in)
 
     allocate(fhillslope_in(bounds%begg:bounds%endg,nhillslope))
-    
+
     call ncd_io(ncid=ncid, varname='pct_hillslope', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: pct_hillslope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: pct_hillslope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
        pct_hillslope(l,:) = fhillslope_in(g,:)
     enddo
     deallocate(fhillslope_in)
-    
+
     allocate(ihillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
-    
+
     call ncd_io(ncid=ncid, varname='hillslope_index', flag='read', data=ihillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: hillslope_index not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: hillslope_index not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
        hill_ndx(l,:) = ihillslope_in(g,:)
     enddo
-    
+
     call ncd_io(ncid=ncid, varname='column_index', flag='read', data=ihillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: column_index not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: column_index not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
        col_ndx(l,:) = ihillslope_in(g,:)
     enddo
-    
+
     call ncd_io(ncid=ncid, varname='downhill_column_index', flag='read', data=ihillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: downhill_column_index not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: downhill_column_index not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
        col_dndx(l,:) = ihillslope_in(g,:)
     enddo
     deallocate(ihillslope_in)
-    
+
     allocate(fhillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
     call ncd_io(ncid=ncid, varname='h_slope', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: h_slope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: h_slope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
-    
+
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
        hill_slope(l,:) = fhillslope_in(g,:)
     enddo
-    
+
     call ncd_io(ncid=ncid, varname='h_aspect', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: h_aspect not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: h_aspect not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
-    
+
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
        hill_aspect(l,:) = fhillslope_in(g,:)
     enddo
-    
+
     call ncd_io(ncid=ncid, varname='h_area', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: h_area not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: h_area not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
        hill_area(l,:) = fhillslope_in(g,:)
     enddo
     call ncd_io(ncid=ncid, varname='h_length', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: h_length not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: h_length not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
-    
+
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
        hill_length(l,:) = fhillslope_in(g,:)
     enddo
-    
+
     call ncd_io(ncid=ncid, varname='h_width', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: h_width not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: h_width not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
        hill_width(l,:) = fhillslope_in(g,:)
     enddo
-    
+
     call ncd_io(ncid=ncid, varname='h_height', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          call endrun( 'ERROR:: h_height not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-       end if
+    if (masterproc .and. .not. readvar) then
+       call endrun( 'ERROR:: h_height not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
@@ -384,14 +362,11 @@ contains
     enddo
 
     deallocate(fhillslope_in)
-    
+
     allocate(ihillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
     call ncd_io(ncid=ncid, varname='h_pftndx', flag='read', data=ihillslope_in, dim1name=grlnd, readvar=readvar)
     if (readvar) then
        allocate(hill_pftndx (bounds%begl:bounds%endl,max_columns_hillslope), stat=ierr)
-       if (masterproc) then
-          write(iulog,*) 'h_pftndx found on surface data set'
-       end if
        do l = bounds%begl,bounds%endl
           g = lun%gridcell(l)
           hill_pftndx(l,:) = ihillslope_in(g,:)
@@ -400,59 +375,44 @@ contains
 
     deallocate(ihillslope_in)
 
-    if (use_hillslope_routing) then 
+    if (use_hillslope_routing) then
        allocate(fstream_in(bounds%begg:bounds%endg))
+
        call ncd_io(ncid=ncid, varname='h_stream_depth', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
-       if (readvar) then
-          if (masterproc) then
-             write(iulog,*) 'h_stream_depth found on surface data set'
-          end if
-          do l = bounds%begl,bounds%endl
-             g = lun%gridcell(l)
-             lun%stream_channel_depth(l) = fstream_in(g)
-          enddo
-       else
-          if (masterproc) then
-             call endrun( 'ERROR:: h_stream_depth not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-          end if
-       endif
+       if (masterproc .and. .not. readvar) then
+          call endrun( 'ERROR:: h_stream_depth not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+       end if
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          lun%stream_channel_depth(l) = fstream_in(g)
+       enddo
+
        call ncd_io(ncid=ncid, varname='h_stream_width', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
-       if (readvar) then
-          if (masterproc) then
-             write(iulog,*) 'h_stream_width found on surface data set'
-          end if
-          do l = bounds%begl,bounds%endl
-             g = lun%gridcell(l)
-             lun%stream_channel_width(l) = fstream_in(g)
-          enddo
-       else
-          if (masterproc) then
-             call endrun( 'ERROR:: h_stream_width not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-          end if
+       if (masterproc .and. .not. readvar) then
+          call endrun( 'ERROR:: h_stream_width not found on surface data set.'//errmsg(sourcefile, __LINE__) )
        end if
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          lun%stream_channel_width(l) = fstream_in(g)
+       enddo
+
        call ncd_io(ncid=ncid, varname='h_stream_slope', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
-       if (readvar) then
-          if (masterproc) then
-             write(iulog,*) 'h_stream_slope found on surface data set'
-          end if
-          do l = bounds%begl,bounds%endl
-             g = lun%gridcell(l)
-             lun%stream_channel_slope(l) = fstream_in(g)
-          enddo
-       else
-          if (masterproc) then
-             call endrun( 'ERROR:: h_stream_slope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-          end if
+       if (masterproc .and. .not. readvar) then
+          call endrun( 'ERROR:: h_stream_slope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
        end if
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          lun%stream_channel_slope(l) = fstream_in(g)
+       enddo
 
        deallocate(fstream_in)
-    endif
-       
+    end if
+
     !  Set hillslope hydrology column level variables
     !  This needs to match how columns set up in subgridMod
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
-       if(lun%itype(l) == istsoil) then
+       if (lun%itype(l) == istsoil) then
 
           ! map external column index to internal column index
           do c = lun%coli(l), lun%colf(l)
@@ -465,25 +425,25 @@ contains
              else
                 ! relative separation should be the same
                 col%cold(c) = c + (col_dndx(l,ci) - col_ndx(l,ci))
-             endif
+             end if
           enddo
-          
+
           do c = lun%coli(l), lun%colf(l)
              ci = c-lun%coli(l)+1
-             
+
              col%hillslope_ndx(c) = hill_ndx(l,ci)
 
              ! Find uphill neighbors (this may not actually be useful...)
              col%colu(c) = ispval
              do i = lun%coli(l), lun%colf(l)
-                if(c == col%cold(i)) then
+                if (c == col%cold(i)) then
                    col%colu(c) = i
-                endif
+                end if
              enddo
-             
+
              ! distance of lower edge of column from hillslope bottom
              col%hill_distance(c) = hill_length(l,ci)
-             ! width of lower edge of column 
+             ! width of lower edge of column
              col%hill_width(c) = hill_width(l,ci)
              ! mean elevation of column relative to gridcell mean elevation
              col%hill_elev(c) = hill_height(l,ci)
@@ -496,8 +456,8 @@ contains
              ! pft index of column
              if ( allocated(hill_pftndx) ) then
                 col_pftndx(c) = hill_pftndx(l,ci)
-             endif
-             
+             end if
+
           enddo
 
           ! Calculate total hillslope area on landunit and
@@ -509,11 +469,11 @@ contains
              if (nh > 0) then
                 ncol_per_hillslope(nh) = ncol_per_hillslope(nh) + 1
                 hillslope_area(nh) = hillslope_area(nh) + col%hill_area(c)
-             endif
+             end if
           enddo
 
-          if (use_hillslope_routing) then 
-                       
+          if (use_hillslope_routing) then
+
              ! Total area occupied by each hillslope (m2) is
              ! grc%area(g)*1.e6*lun%wtgcell(l)*pct_hillslope(l,nh)*0.01
              ! Number of representative hillslopes per landunit
@@ -522,38 +482,36 @@ contains
 
              lun%stream_channel_number(l) = 0._r8
              do nh = 1, nhillslope
-                if(hillslope_area(nh) > 0._r8) then
+                if (hillslope_area(nh) > 0._r8) then
                    nhill_per_landunit(nh) = grc%area(g)*1.e6_r8*lun%wtgcell(l) &
                         *pct_hillslope(l,nh)*0.01/hillslope_area(nh)
 
                    lun%stream_channel_number(l) = lun%stream_channel_number(l) &
                         + 0.5_r8 * nhill_per_landunit(nh)
-                endif
+                end if
              enddo
-             
+
              ! Calculate steam channel length
              ! Total length of stream banks is individual widths
-             ! times number of hillslopes per landunit 
+             ! times number of hillslopes per landunit
              ! include factor of 0.5 because a channel is shared by ~2 hillslopes
              lun%stream_channel_length(l) = 0._r8
              do c = lun%coli(l), lun%colf(l)
-                if(col%cold(c) == ispval) then
+                if (col%cold(c) == ispval) then
                    lun%stream_channel_length(l) = lun%stream_channel_length(l) &
                         + col%hill_width(c) * 0.5_r8 * nhill_per_landunit(col%hillslope_ndx(c))
-                endif
+                end if
              enddo
-          endif
-                       
+          end if
+
           ! if missing hillslope information on surface dataset,
           ! call endrun
-          if (ncolumns_hillslope(l) > 0 .and. sum(hillslope_area) == 0._r8) then
-             if (masterproc) then
-                write(iulog,*) 'Problem with input data: nhillcolumns is non-zero, but hillslope area is zero'
-                write(iulog,*) 'Check surface data for gridcell at (lon/lat): ', grc%londeg(g),grc%latdeg(g)
-                call endrun( 'ERROR:: sum of hillslope areas is zero.'//errmsg(sourcefile, __LINE__) )
-             end if
-          endif
-          
+          if (ncolumns_hillslope(l) > 0 .and. sum(hillslope_area) == 0._r8 .and. masterproc) then
+             write(iulog,*) 'Problem with input data: nhillcolumns is non-zero, but hillslope area is zero'
+             write(iulog,*) 'Check surface data for gridcell at (lon/lat): ', grc%londeg(g),grc%latdeg(g)
+             call endrun( 'ERROR:: sum of hillslope areas is zero.'//errmsg(sourcefile, __LINE__) )
+          end if
+
           ! Recalculate column weights using input areas
           ! The higher order weights will be updated in a subsequent reweight_wrapup call
           do c = lun%coli(l), lun%colf(l)
@@ -561,11 +519,11 @@ contains
              if (col%is_hillslope_column(c)) then
                 col%wtlunit(c) = (col%hill_area(c)/hillslope_area(nh)) &
                      * (pct_hillslope(l,nh)*0.01_r8)
-             endif
+             end if
           enddo
-       endif
+       end if
     enddo ! end of landunit loop
-    
+
     deallocate(ncolumns_hillslope,pct_hillslope,hill_ndx,col_ndx,col_dndx, &
          hill_slope,hill_area,hill_length, &
          hill_width,hill_height,hill_aspect)
@@ -579,22 +537,24 @@ contains
        ! Specify different pfts for uplands / lowlands
        call HillslopeDominantLowlandPft(bounds)
     else if (pft_distribution_method == pft_lowland_upland) then
-       ! example usage: 
+       ! example usage:
        ! upland_ivt  = 13 ! c3 non-arctic grass
        ! lowland_ivt = 7  ! broadleaf deciduous tree
        call HillslopeSetLowlandUplandPfts(bounds,lowland_ivt=7,upland_ivt=13)
-    endif
-    
+    else if (masterproc .and. .not. (pft_distribution_method == pft_standard .or. pft_distribution_method ==pft_uniform_dominant_pft)) then
+      call endrun( 'ERROR:: unrecognized hillslope_pft_distribution_method'//errmsg(sourcefile, __LINE__) )
+    end if
+
     if ( allocated(hill_pftndx) ) then
        deallocate(hill_pftndx)
        deallocate(col_pftndx)
-    endif
-    
+    end if
+
     ! Update higher order weights and check that weights sum to 1
     call compute_higher_order_weights(bounds)
-    
+
     call ncd_pio_closefile(ncid)
-    
+
   end subroutine InitHillslope
 
   !-----------------------------------------------------------------------
@@ -615,7 +575,6 @@ contains
     use fileutils       , only : getfil
     use clm_varcon      , only : spval, ispval, grlnd
     use ncdio_pio
-
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -638,7 +597,7 @@ contains
 
     !-----------------------------------------------------------------------
 
-    if(soil_profile_method==soil_profile_from_file) then
+    if (soil_profile_method==soil_profile_from_file) then
 
        ! Open surface dataset to read in data below
        call getfil (fsurdat, locfn, 0)
@@ -646,55 +605,53 @@ contains
 
        allocate(fhillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
        call ncd_io(ncid=ncid, varname='h_bedrock', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
-       if (readvar) then
-          if (masterproc) then
-             write(iulog,*) 'h_bedrock found on surface data set'
-           else
-             if (masterproc) then
-                call endrun( 'ERROR:: soil_profile_method = "FromFile", but h_bedrock not found on surface data set.'//errmsg(sourcefile, __LINE__) )
-             end if
-          end if
-          do l = bounds%begl,bounds%endl
-             g = lun%gridcell(l)
-             do c = lun%coli(l), lun%colf(l)
-                if (col%is_hillslope_column(c) .and. col%active(c)) then
-                   ci = c-lun%coli(l)+1
-                   do j = 1,nlevsoi
-                      if(zisoi(j-1) > zmin_bedrock) then
-                         if (zisoi(j-1) < fhillslope_in(g,ci) &
-                              .and. zisoi(j) >= fhillslope_in(g,ci)) then
-                            col%nbedrock(c) = j
-                         end if
-                      endif
-                   enddo
-                endif
-             enddo
-          enddo
-          deallocate(fhillslope_in)
+       if (masterproc .and. .not. readvar) then
+          call endrun( 'ERROR:: soil_profile_method = "FromFile", but h_bedrock not found on surface data set.'//errmsg(sourcefile, __LINE__) )
        end if
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          do c = lun%coli(l), lun%colf(l)
+             if (col%is_hillslope_column(c) .and. col%active(c)) then
+                ci = c-lun%coli(l)+1
+                do j = 1,nlevsoi
+                   if (zisoi(j-1) > zmin_bedrock) then
+                      if (zisoi(j-1) < fhillslope_in(g,ci) &
+                           .and. zisoi(j) >= fhillslope_in(g,ci)) then
+                         col%nbedrock(c) = j
+                      end if
+                   end if
+                enddo
+             end if
+          enddo
+       enddo
+       deallocate(fhillslope_in)
        call ncd_pio_closefile(ncid)
 
     else if (soil_profile_method==soil_profile_set_lowland_upland &
          .or. soil_profile_method==soil_profile_linear) then
 
-       if(present(soil_depth_lowland_in)) then
+       if (present(soil_depth_lowland_in)) then
           soil_depth_lowland = soil_depth_lowland_in
        else
           soil_depth_lowland = soil_depth_lowland_default
-       endif
+       end if
 
-       if(present(soil_depth_upland_in)) then
+       if (present(soil_depth_upland_in)) then
           soil_depth_upland = soil_depth_upland_in
        else
           soil_depth_upland = soil_depth_upland_default
-       endif
+       end if
 
        ! Modify hillslope soil thickness profile
        call HillslopeSoilThicknessProfile(bounds,&
             soil_profile_method=soil_profile_method,&
             soil_depth_lowland_in=soil_depth_lowland,&
             soil_depth_upland_in=soil_depth_upland)
-    endif
+
+    else if (soil_profile_method /= soil_profile_uniform .and. masterproc) then
+       call endrun( msg=' ERROR: unrecognized hillslope_soil_profile_method'//errMsg(sourcefile, __LINE__))
+
+    end if
 
   end subroutine SetHillslopeSoilThickness
 
@@ -707,16 +664,15 @@ contains
     ! col%nbedrock
     !
     ! !USES:
-    use LandunitType    , only : lun                
-    use GridcellType    , only : grc                
-    use ColumnType      , only : col                
+    use LandunitType    , only : lun
+    use GridcellType    , only : grc
+    use ColumnType      , only : col
     use clm_varcon      , only : zmin_bedrock, zisoi
     use clm_varpar      , only : nlevsoi
     use spmdMod         , only : masterproc
     use fileutils       , only : getfil
-    use clm_varcon      , only : spval, ispval, grlnd 
+    use clm_varcon      , only : spval, ispval, grlnd
     use ncdio_pio
-
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -732,95 +688,68 @@ contains
     real(r8)              :: soil_depth_upland
     real(r8), parameter   :: soil_depth_lowland_default = 8.0
     real(r8), parameter   :: soil_depth_upland_default  = 8.0
-    real(r8), parameter   :: toosmall_distance  = 1e-6
 
     character(len=*), parameter :: subname = 'HillslopeSoilThicknessProfile'
 
     !-----------------------------------------------------------------------
 
-    if(present(soil_depth_lowland_in)) then
+    if (present(soil_depth_lowland_in)) then
        soil_depth_lowland = soil_depth_lowland_in
     else
        soil_depth_lowland = soil_depth_lowland_default
-    endif
-    
-    if(present(soil_depth_upland_in)) then
+    end if
+
+    if (present(soil_depth_upland_in)) then
        soil_depth_upland = soil_depth_upland_in
     else
        soil_depth_upland = soil_depth_upland_default
-    endif
+    end if
 
     ! Specify lowland/upland soil thicknesses separately
-    if(soil_profile_method == soil_profile_set_lowland_upland) then
+    if (soil_profile_method == soil_profile_set_lowland_upland) then
        do c = bounds%begc,bounds%endc
           if (col%is_hillslope_column(c) .and. col%active(c)) then
-             if(col%cold(c) /= ispval) then 
+             if (col%cold(c) /= ispval) then
                 do j = 1,nlevsoi
-                   if(zisoi(j-1) > zmin_bedrock) then
+                   if (zisoi(j-1) > zmin_bedrock) then
                       if (zisoi(j-1) < soil_depth_upland .and. zisoi(j) >= soil_depth_upland) then
                          col%nbedrock(c) = j
                       end if
                    end if
                 enddo
-             else 
-                do j = 1,nlevsoi 
-                   if(zisoi(j-1) > zmin_bedrock) then
+             else
+                do j = 1,nlevsoi
+                   if (zisoi(j-1) > zmin_bedrock) then
                       if (zisoi(j-1) < soil_depth_lowland .and. zisoi(j) >= soil_depth_lowland) then
                          col%nbedrock(c) = j
                       end if
                    end if
                 enddo
-             endif
-          endif
+             end if
+          end if
        end do
     ! Linear soil thickness profile
-    else if(soil_profile_method == soil_profile_linear) then
-       do l = bounds%begl,bounds%endl
-          min_hill_dist = minval(col%hill_distance(lun%coli(l):lun%colf(l)))
-          max_hill_dist = maxval(col%hill_distance(lun%coli(l):lun%colf(l)))
+    else if (soil_profile_method == soil_profile_linear) then
+       call HillslopeSoilThicknessProfile_linear(bounds, soil_depth_lowland, soil_depth_upland)
+    else if (masterproc) then
+       call endrun( 'ERROR:: invalid soil_profile_method.'//errmsg(sourcefile, __LINE__) )
+    end if
 
-          if(abs(max_hill_dist - min_hill_dist) > toosmall_distance) then
-             m = (soil_depth_lowland - soil_depth_upland)/ &
-                  (max_hill_dist - min_hill_dist)
-          else
-             m = 0._r8
-          endif
-          b = soil_depth_upland
-          
-          do c =  lun%coli(l), lun%colf(l)
-             if (col%is_hillslope_column(c) .and. col%active(c)) then
-                soil_depth_col = m*(max_hill_dist - col%hill_distance(c)) + b
-
-                do j = 1,nlevsoi
-                   if ((zisoi(j-1) <  soil_depth_col) .and. (zisoi(j) >= soil_depth_col)) then
-                      col%nbedrock(c) = j
-                   end if
-                enddo
-             endif
-          enddo
-       enddo
-    else
-       if (masterproc) then
-          call endrun( 'ERROR:: invalid soil_profile_method.'//errmsg(sourcefile, __LINE__) )
-       end if
-    endif
-       
   end subroutine HillslopeSoilThicknessProfile
 
   !------------------------------------------------------------------------
   subroutine HillslopeSetLowlandUplandPfts(bounds,lowland_ivt,upland_ivt)
     !
-    ! !DESCRIPTION: 
+    ! !DESCRIPTION:
     ! Reassign patch type of each column based on whether a column
     ! is identified as a lowland or an upland.
     ! Assumes each column has a single pft.
-    ! In preparation for this reassignment of patch type, only the 
+    ! In preparation for this reassignment of patch type, only the
     ! first patch was given a non-zero weight in surfrd_hillslope
-
     !
     ! !USES
-    use LandunitType    , only : lun                
-    use ColumnType      , only : col                
+    use LandunitType    , only : lun
+    use ColumnType      , only : col
     use clm_varcon      , only : ispval
     use clm_varpar      , only : natpft_lb
     use PatchType       , only : patch
@@ -833,7 +762,6 @@ contains
     ! !LOCAL VARIABLES:
     integer :: p,c    ! indices
     integer :: npatches_per_column
-    logical :: check_npatches = .true.
 
     !------------------------------------------------------------------------
 
@@ -841,24 +769,22 @@ contains
        if (col%is_hillslope_column(c)) then
           npatches_per_column = 0
           do p = col%patchi(c), col%patchf(c)
-             if(col%cold(c) == ispval) then
+             if (col%cold(c) == ispval) then
                 ! lowland
                 patch%itype(p) = lowland_ivt
              else
                 ! upland
                 patch%itype(p) = upland_ivt
-             endif
+             end if
              ! update mxy as is done in initSubgridMod.add_patch
              patch%mxy(p) = patch%itype(p) + (1 - natpft_lb)
-             
+
              npatches_per_column = npatches_per_column + 1
           enddo
-          if (check_npatches) then
-             if ((npatches_per_column /= 1) .and. masterproc) then
-                call endrun( 'ERROR:: number of patches per hillslope column not equal to 1'//errmsg(sourcefile, __LINE__) )
-             end if
-          endif
-       endif
+          if ((npatches_per_column /= 1) .and. masterproc) then
+             call endrun( 'ERROR:: number of patches per hillslope column not equal to 1'//errmsg(sourcefile, __LINE__) )
+          end if
+       end if
     enddo
 
   end subroutine HillslopeSetLowlandUplandPfts
@@ -866,18 +792,17 @@ contains
   !------------------------------------------------------------------------
   subroutine HillslopeDominantLowlandPft(bounds)
     !
-    ! !DESCRIPTION: 
+    ! !DESCRIPTION:
     ! Reassign patch weights of each column based on each gridcell's
     ! two most dominant pfts on the input dataset.
     ! HillslopeTwoLargestPftIndices is called in surfrd_hillslope to
     ! prepare the patch weights for this routine.
     ! Assumes each column has a single pft.
     ! Use largest weight for lowland, 2nd largest weight for uplands
-
     !
     ! !USES
-    use LandunitType    , only : lun                
-    use ColumnType      , only : col                
+    use LandunitType    , only : lun
+    use ColumnType      , only : col
     use decompMod       , only : get_clump_bounds, get_proc_clumps
     use clm_varcon      , only : ispval
     use PatchType       , only : patch
@@ -901,7 +826,7 @@ contains
        if (col%is_hillslope_column(c)) then
 
           ! if only one pft exists, find dominant pft index and set 2nd index to the same value
-          
+
           if (size(patch%wtcol(col%patchi(c):col%patchf(c))) == 1) then
              call find_k_max_indices(patch%wtcol(col%patchi(c):col%patchf(c)),1,1,max_index)
              max_indices(1) = max_index(1) + (col%patchi(c) - 1)
@@ -909,7 +834,7 @@ contains
           else
              call find_k_max_indices(patch%wtcol(col%patchi(c):col%patchf(c)),1,2,max_indices)
              max_indices = max_indices + (col%patchi(c) - 1)
-          endif
+          end if
 
           sum_wtcol = sum(patch%wtcol(col%patchi(c):col%patchf(c)))
           sum_wtlun = sum(patch%wtlunit(col%patchi(c):col%patchf(c)))
@@ -918,7 +843,7 @@ contains
           patch%wtcol(col%patchi(c):col%patchf(c)) = 0._r8
           patch%wtlunit(col%patchi(c):col%patchf(c)) = 0._r8
           patch%wtgcell(col%patchi(c):col%patchf(c)) = 0._r8
-          
+
           ! Put the highest stature vegetation on the lowland column
           ! non-tree and tree       ; place tree on lowland
           ! grass and shrub         ; place shrub on lowland
@@ -931,26 +856,26 @@ contains
           else
              plow = max_indices(1)
              phigh = max_indices(2)
-          endif
+          end if
 
           ! Special cases (subjective)
 
           ! if NET/BDT assign BDT to lowland
           if ((patch%itype(max_indices(1)) == ndllf_evr_tmp_tree) .and. pftcon%is_tree(patch%itype(max_indices(2)))) then
-             plow = max_indices(2)        
+             plow = max_indices(2)
              phigh = max_indices(1)
-          endif
+          end if
           ! if C3/C4 assign C4 to lowland
           if ((patch%itype(max_indices(1)) == nc4_grass) .and. (patch%itype(max_indices(2)) == nc3_nonarctic_grass)) then
-             plow = max_indices(1)        
+             plow = max_indices(1)
              phigh = max_indices(2)
-          endif
+          end if
           if ((patch%itype(max_indices(1)) == nc3_nonarctic_grass) .and. (patch%itype(max_indices(2)) == nc4_grass)) then
-             plow = max_indices(2)        
+             plow = max_indices(2)
              phigh = max_indices(1)
-          endif
+          end if
 
-          if(col%cold(c) == ispval) then
+          if (col%cold(c) == ispval) then
              ! lowland column
              patch%wtcol(plow)   = sum_wtcol
              patch%wtlunit(plow) = sum_wtlun
@@ -960,27 +885,26 @@ contains
              patch%wtcol(phigh)   = sum_wtcol
              patch%wtlunit(phigh) = sum_wtlun
              patch%wtgcell(phigh) = sum_wtgrc
-          endif
-       endif
+          end if
+       end if
     enddo    ! end loop c
     deallocate(max_indices)
-    
+
   end subroutine HillslopeDominantLowlandPft
 
   !------------------------------------------------------------------------
   subroutine HillslopePftFromFile(bounds,col_pftndx)
     !
-    ! !DESCRIPTION: 
+    ! !DESCRIPTION:
     ! Reassign patch type using indices from surface data file
     ! Assumes one patch per hillslope column
     ! In preparation for this reassignment of patch type, only the
     ! first patch was given a non-zero weight in surfrd_hillslope.
     !
     ! !USES
-    use ColumnType      , only : col                
+    use ColumnType      , only : col
     use PatchType       , only : patch
     use clm_varpar      , only : natpft_lb
-
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -989,8 +913,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: p,c    ! indices
     integer :: npatches_per_column
-    logical :: check_npatches = .true.
-    
+
     !------------------------------------------------------------------------
 
     do c = bounds%begc, bounds%endc
@@ -1004,12 +927,10 @@ contains
              patch%mxy(p) = patch%itype(p) + (1 - natpft_lb)
              npatches_per_column = npatches_per_column + 1
           enddo
-          if (check_npatches) then
-             if ((npatches_per_column /= 1) .and. masterproc) then
-                call endrun( 'ERROR:: number of patches per hillslope column not equal to 1'//errmsg(sourcefile, __LINE__) )
-             end if
-          endif
-       endif
+          if ((npatches_per_column /= 1) .and. masterproc) then
+             call endrun( 'ERROR:: number of patches per hillslope column not equal to 1'//errmsg(sourcefile, __LINE__) )
+          end if
+       end if
     enddo
 
   end subroutine HillslopePftFromFile
@@ -1022,17 +943,16 @@ contains
     ! Calculate discharge from stream channel
     !
     ! !USES:
-    use LandunitType    , only : lun                
-    use GridcellType    , only : grc                
-    use ColumnType      , only : col                
+    use LandunitType    , only : lun
+    use GridcellType    , only : grc
+    use ColumnType      , only : col
     use WaterFluxBulkType   , only : waterfluxbulk_type
     use WaterStateBulkType  , only : waterstatebulk_type
     use spmdMod         , only : masterproc
-    use clm_varcon      , only : spval, ispval, grlnd 
+    use clm_varcon      , only : spval, ispval, grlnd
     use landunit_varcon , only : istsoil
     use ncdio_pio
     use clm_time_manager , only : get_step_size_real
-     
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -1054,11 +974,11 @@ contains
     integer, parameter    :: overbank_method = 1          ! method to treat overbank stream storage; 1 = increase dynamic slope, 2 = increase flow area cross section, 3 = remove instantaneously
     logical               :: active_stream
     character(len=*), parameter :: subname = 'HillslopeStreamOutflow'
-    
+
     !-----------------------------------------------------------------------
-    associate(                                                            & 
-         stream_water_volume     =>    waterstatebulk_inst%stream_water_volume_lun            , & ! Input:  [real(r8) (:)   ] stream water volume (m3)
-         volumetric_streamflow             =>    waterfluxbulk_inst%volumetric_streamflow_lun               &  ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
+    associate( &
+         stream_water_volume     =>    waterstatebulk_inst%stream_water_volume_lun , &  ! Input:  [real(r8) (:)   ] stream water volume (m3)
+         volumetric_streamflow   =>    waterfluxbulk_inst%volumetric_streamflow_lun  &  ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
          )
 
       ! Get time step
@@ -1073,11 +993,11 @@ contains
               lun%stream_channel_length(l) > 0._r8 .and. &
               lun%stream_channel_width(l) > 0._r8) then
             active_stream = .true.
-         endif
+         end if
 
          if (lun%active(l) .and. active_stream) then
             ! Streamflow calculated from Manning equation
-            if(streamflow_method == streamflow_manning) then
+            if (streamflow_method == streamflow_manning) then
                cross_sectional_area = stream_water_volume(l) &
                     /lun%stream_channel_length(l)
                stream_depth =  cross_sectional_area &
@@ -1085,7 +1005,7 @@ contains
                hydraulic_radius = cross_sectional_area &
                     /(lun%stream_channel_width(l) + 2*stream_depth)
 
-               if(hydraulic_radius <= 0._r8) then
+               if (hydraulic_radius <= 0._r8) then
                   volumetric_streamflow(l) = 0._r8
                else
                   flow_velocity = (hydraulic_radius)**manning_exponent &
@@ -1107,32 +1027,28 @@ contains
                              + (stream_depth-lun%stream_channel_depth(l)) &
                              *lun%stream_channel_width(l)*lun%stream_channel_length(l)/dtime
                      else
-                        if (masterproc) then
-                           call endrun( 'ERROR:: invalid overbank_method.'//errmsg(sourcefile, __LINE__) )
-                        end if
-                     endif
-                    
+                        call endrun( 'ERROR:: invalid overbank_method.'//errmsg(sourcefile, __LINE__) )
+                     end if
+
                   else
                      volumetric_streamflow(l) = cross_sectional_area * flow_velocity
-                  endif
+                  end if
 
                   ! scale streamflow by number of channel reaches
                   volumetric_streamflow(l) = volumetric_streamflow(l) * lun%stream_channel_number(l)
 
                   volumetric_streamflow(l) = max(0._r8,min(volumetric_streamflow(l),stream_water_volume(l)/dtime))
-               endif
-            else
-               if (masterproc) then
-                  call endrun( 'ERROR:: invalid streamflow_method'//errmsg(sourcefile, __LINE__) )
                end if
-            endif
-         endif ! end of istsoil
+            else
+               call endrun( 'ERROR:: invalid streamflow_method'//errmsg(sourcefile, __LINE__) )
+            end if
+         end if ! end of istsoil
       enddo    ! end of loop over landunits
 
   end associate
 
   end subroutine HillslopeStreamOutflow
-  
+
   !-----------------------------------------------------------------------
   subroutine HillslopeUpdateStreamWater(bounds, waterstatebulk_inst, &
        waterfluxbulk_inst,waterdiagnosticbulk_inst)
@@ -1141,24 +1057,23 @@ contains
     ! Calculate discharge from stream channel
     !
     ! !USES:
-    use LandunitType    , only : lun                
-    use GridcellType    , only : grc                
-    use ColumnType      , only : col                
+    use LandunitType    , only : lun
+    use GridcellType    , only : grc
+    use ColumnType      , only : col
     use WaterFluxBulkType   , only : waterfluxbulk_type
     use WaterStateBulkType  , only : waterstatebulk_type
     use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
     use spmdMod         , only : masterproc
-    use clm_varcon      , only : spval, ispval, grlnd 
+    use clm_varcon      , only : spval, ispval, grlnd
     use landunit_varcon , only : istsoil
     use clm_time_manager, only : get_step_size_real
-
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
     type(waterfluxbulk_type),  intent(inout) :: waterfluxbulk_inst
-    type(waterdiagnosticbulk_type), intent(out) :: waterdiagnosticbulk_inst
-    
+    type(waterdiagnosticbulk_type), intent(inout) :: waterdiagnosticbulk_inst
+
     integer  :: c, l, g, i, j
     real(r8) :: qflx_surf_vol               ! volumetric surface runoff (m3/s)
     real(r8) :: qflx_drain_perched_vol      ! volumetric perched saturated drainage (m3/s)
@@ -1169,12 +1084,12 @@ contains
     character(len=*), parameter :: subname = 'HillslopeUpdateStreamWater'
 
     !-----------------------------------------------------------------------
-    associate( & 
+    associate( &
          stream_water_volume     =>    waterstatebulk_inst%stream_water_volume_lun, & ! Input/Output:  [real(r8) (:)   ] stream water volume (m3)
-         volumetric_streamflow             =>    waterfluxbulk_inst%volumetric_streamflow_lun      ,    & ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
+         volumetric_streamflow   =>    waterfluxbulk_inst%volumetric_streamflow_lun,& ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
          qflx_drain              =>    waterfluxbulk_inst%qflx_drain_col,           & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
          qflx_drain_perched      =>    waterfluxbulk_inst%qflx_drain_perched_col,   & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
-         qflx_surf               =>    waterfluxbulk_inst%qflx_surf_col        ,    & ! Input: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
+         qflx_surf               =>    waterfluxbulk_inst%qflx_surf_col,            & ! Input: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
          stream_water_depth      =>    waterdiagnosticbulk_inst%stream_water_depth_lun   & ! Output:  [real(r8) (:)   ] stream water depth (m)
          )
 
@@ -1182,20 +1097,20 @@ contains
        dtime = get_step_size_real()
 
        do l = bounds%begl,bounds%endl
-          
+
           ! Check for vegetated landunits having initialized stream channel properties
           active_stream = .false.
           if (lun%itype(l) == istsoil .and. &
                lun%stream_channel_length(l) > 0._r8 .and. &
                lun%stream_channel_width(l) > 0._r8) then
              active_stream = .true.
-          endif
-          
+          end if
+
           if (lun%active(l) .and. active_stream) then
              g = lun%gridcell(l)
              ! the drainage terms are 'net' quantities, so summing over
              ! all columns in a hillslope is equivalent to the outflow
-             ! from the lowland column 
+             ! from the lowland column
              do c = lun%coli(l), lun%colf(l)
                 if (col%is_hillslope_column(c) .and. col%active(c)) then
                    qflx_surf_vol = qflx_surf(c)*1.e-3_r8 &
@@ -1208,26 +1123,26 @@ contains
                    stream_water_volume(l) = stream_water_volume(l) &
                         + (qflx_drain_perched_vol &
                          + qflx_drain_vol + qflx_surf_vol) * dtime
-                endif
+                end if
              enddo
              stream_water_volume(l) = stream_water_volume(l) &
                   - volumetric_streamflow(l) * dtime
-             
+
              ! account for negative drainage (via searchforwater in soilhydrology)
-             if(stream_water_volume(l) < 0._r8) then
+             if (stream_water_volume(l) < 0._r8) then
                 volumetric_streamflow(l) = volumetric_streamflow(l) + stream_water_volume(l)/dtime
                 stream_water_volume(l) = 0._r8
-             endif
+             end if
 
              stream_water_depth(l) = stream_water_volume(l) &
                   /lun%stream_channel_length(l) &
                   /lun%stream_channel_width(l)
 
-          endif
+          end if
        enddo
-      
+
     end associate
 
   end subroutine HillslopeUpdateStreamWater
-  
+
 end module HillslopeHydrologyMod

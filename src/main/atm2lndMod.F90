@@ -267,7 +267,7 @@ contains
       end do
 
       ! adjust hillslope precpitation before repartitioning rain/snow
-      if(use_hillslope .and. downscale_hillslope_meteorology) then
+      if (use_hillslope .and. downscale_hillslope_meteorology) then
          call downscale_hillslope_solar(bounds, atm2lnd_inst, surfalb_inst)
          call downscale_hillslope_precipitation(bounds, topo_inst, atm2lnd_inst, wateratm2lndbulk_inst)
       endif
@@ -749,7 +749,7 @@ contains
     use clm_varpar    , only : numrad
 
     ! !ARGUMENTS:
-    type(bounds_type)  , intent(in)    :: bounds  
+    type(bounds_type)  , intent(in)    :: bounds
     type(surfalb_type) , intent(in)    :: surfalb_inst
     type(atm2lnd_type) , intent(inout) :: atm2lnd_inst
     !
@@ -764,19 +764,19 @@ contains
 
     character(len=*), parameter :: subname = 'downscale_hillslope_solar'
     !-----------------------------------------------------------------------
-    
+
     associate(&
          ! Gridcell-level fields:
          forc_solai_grc  =>    atm2lnd_inst%forc_solai_grc , & ! Input:  [real(r8) (:)]  gridcell indirect incoming solar radiation
          forc_solad_grc  =>    atm2lnd_inst%forc_solad_not_downscaled_grc , & ! Input:  [real(r8) (:)]  gridcell direct incoming solar radiation
-         coszen_grc      =>    surfalb_inst%coszen_grc     , & ! Input:  [real(r8) (:)]  cosine of solar zenith angle            
-         
+         coszen_grc      =>    surfalb_inst%coszen_grc     , & ! Input:  [real(r8) (:)]  cosine of solar zenith angle
+
          ! Column-level fields:
-         coszen_col                 =>    surfalb_inst%coszen_col                , & ! Input:   [real(r8) (:)]  cosine of solar zenith angle            
+         coszen_col                 =>    surfalb_inst%coszen_col                , & ! Input:   [real(r8) (:)]  cosine of solar zenith angle
          forc_solar_col  =>    atm2lnd_inst%forc_solar_downscaled_col , & ! Output:  [real(r8) (:)]  column total incoming solar radiation
          forc_solad_col  =>    atm2lnd_inst%forc_solad_downscaled_col   & ! Output:  [real(r8) (:)]  column direct incoming solar radiation
          )
-      
+
       ! Initialize column forcing
       sum_solar(bounds%begg:bounds%endg,1:numrad) = 0._r8
       sum_wtgcell(bounds%begg:bounds%endg) = 0._r8
@@ -790,19 +790,19 @@ contains
                   illum_frac(g) = illum_frac(g) + col%wtgcell(c)
                endif
             endif
-            
+
             sum_solar(g,1:numrad) = sum_solar(g,1:numrad) + col%wtgcell(c)*forc_solad_col(c,1:numrad)
             sum_wtgcell(g) = sum_wtgcell(g) + col%wtgcell(c)
          end if
       end do
-      
+
       ! Calculate illuminated fraction of gridcell
       do g = bounds%begg,bounds%endg
          if (sum_wtgcell(g) > 0._r8) then
             illum_frac(g) = illum_frac(g)/sum_wtgcell(g)
          endif
       enddo
-      
+
       ! Normalize column level solar
       do c = bounds%begc,bounds%endc
          if (col%is_hillslope_column(c) .and. col%active(c)) then
@@ -818,7 +818,7 @@ contains
             enddo
             forc_solar_col(c) = sum(forc_solad_col(c,1:numrad))+sum(forc_solai_grc(g,1:numrad))
          end if
-         
+
       end do
 
       ! check conservation
@@ -867,7 +867,7 @@ contains
     use clm_varcon      , only : rair, cpair, grav
     !
     ! !ARGUMENTS:
-    type(bounds_type)  , intent(in)    :: bounds  
+    type(bounds_type)  , intent(in)    :: bounds
     class(topo_type)   , intent(in)    :: topo_inst
     type(atm2lnd_type) , intent(in) :: atm2lnd_inst
     type(wateratm2lndbulk_type) , intent(inout) :: wateratm2lndbulk_inst
@@ -890,15 +890,15 @@ contains
          ! Gridcell-level metadata:
          forc_topo_g  => atm2lnd_inst%forc_topo_grc                         , & ! Input:  [real(r8) (:)]  atmospheric surface height (m)
          forc_rain_g  => wateratm2lndbulk_inst%forc_rain_not_downscaled_grc , & ! Input:  [real(r8) (:)]  rain rate [mm/s]
-         forc_snow_g  => wateratm2lndbulk_inst%forc_snow_not_downscaled_grc , & ! Input:  [real(r8) (:)]  snow rate [mm/s]         
+         forc_snow_g  => wateratm2lndbulk_inst%forc_snow_not_downscaled_grc , & ! Input:  [real(r8) (:)]  snow rate [mm/s]
          ! Column-level metadata:
          topo_c       => topo_inst%topo_col                                 , & ! Input:  [real(r8) (:)] column surface height (m)
-         
+
          ! Column-level downscaled fields:
          forc_rain_c  => wateratm2lndbulk_inst%forc_rain_downscaled_col     , & ! Output: [real(r8) (:)]  rain rate [mm/s]
          forc_snow_c  => wateratm2lndbulk_inst%forc_snow_downscaled_col       & ! Output: [real(r8) (:)]  snow rate [mm/s]
          )
-      
+
       ! Redistribute precipitation based on departure
       ! of column elevation from mean elevation
 
@@ -938,16 +938,16 @@ contains
          endif
       enddo
 
-      ! Normalize column precipitation to conserve gridcell average 
+      ! Normalize column precipitation to conserve gridcell average
       do c = bounds%begc,bounds%endc
          g = col%gridcell(c)
          if (col%is_hillslope_column(c) .and. col%active(c)) then
-            if (norm_rain(g) > 0._r8) then 
+            if (norm_rain(g) > 0._r8) then
                forc_rain_c(c) = forc_rain_c(c) * forc_rain_g(g) / norm_rain(g)
             else
                forc_rain_c(c) = forc_rain_g(g)
             endif
-            if (norm_snow(g) > 0._r8) then 
+            if (norm_snow(g) > 0._r8) then
                forc_snow_c(c) = forc_snow_c(c) * forc_snow_g(g) / norm_snow(g)
             else
                forc_snow_c(c) = forc_snow_g(g)
@@ -978,7 +978,7 @@ contains
             endif
          enddo
       endif
-            
+
     end associate
 
   end subroutine downscale_hillslope_precipitation
