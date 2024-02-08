@@ -1,4 +1,56 @@
 ===============================================================
+Tag name: ctsm5.1.dev167
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Thu Feb  8 11:24:15 MST 2024
+One-line Summary: Delete _FillValue and history from parameter files
+
+Purpose and description of changes
+----------------------------------
+
+Updates parameter files to c240207. These are the same as c240105 except:
+- Attribute _FillValue has been removed from all variables
+- Global attributes history, history_of_appended_files, and latest_git_log have been removed
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+CTSM issues fixed (include CTSM Issue #):
+- Fixes #2347
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- #2350: Delete _FillValue and history from parameter files (https://github.com/ESCOMP/CTSM/pull/2350)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev166
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310), tking (Teagan King), samrabin (Sam Rabin)
 Date: Wed 24 Jan 2024 05:39:41 PM MST
