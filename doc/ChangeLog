@@ -1,13 +1,13 @@
 ===============================================================
 Tag name: ctsm5.1.dev167
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
-Date: Thu Feb  8 11:24:15 MST 2024
+Date: Thu 08 Feb 2024 01:56:05 PM MST
 One-line Summary: Delete _FillValue and history from parameter files
 
 Purpose and description of changes
 ----------------------------------
 
-Updates parameter files to c240207. These are the same as c240105 except:
+Updates parameter files to c240207b. These are the same as c240105 except:
 - Attribute _FillValue has been removed from all variables
 - Global attributes history, history_of_appended_files, and latest_git_log have been removed
 
