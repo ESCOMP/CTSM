@@ -8,6 +8,20 @@ import os
 import numpy as np
 import cropcal_module as cc  # pylint: disable=import-error
 
+# Import the CTSM Python utilities.
+# sys.path.insert() is necessary for RXCROPMATURITY to work. The fact that it's calling this script
+# in the RUN phase seems to require the python/ directory to be manually added to path.
+_CTSM_PYTHON = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, os.pardir, "python"
+)
+sys.path.insert(1, _CTSM_PYTHON)
+from ctsm.crop_calendars.check_rx_obeyed import (  # pylint: disable=wrong-import-position
+    check_rx_obeyed,
+)
+from ctsm.crop_calendars.check_constant_vars import (  # pylint: disable=wrong-import-position
+    check_constant_vars,
+)
+
 
 def main(argv):
     """
@@ -77,7 +91,7 @@ def main(argv):
         year_1=args.first_usable_year,
         year_n=args.last_usable_year,
     )
-    cc.check_constant_vars(case["ds"], case, ignore_nan=True, verbose=True, throw_error=True)
+    check_constant_vars(case["ds"], case, ignore_nan=True, verbose=True, throw_error=True)
 
     # Import GGCMI sowing and harvest dates, and check sims
     casename = "Prescribed Calendars"
@@ -114,7 +128,7 @@ def main(argv):
 
         # Check
         if case["rx_sdates_file"]:
-            cc.check_rx_obeyed(
+            check_rx_obeyed(
                 case["ds"].vegtype_str.values,
                 case["rx_sdates_ds"].isel(time=0),
                 case["ds"],
@@ -122,7 +136,7 @@ def main(argv):
                 "SDATES",
             )
         if case["rx_gdds_file"]:
-            cc.check_rx_obeyed(
+            check_rx_obeyed(
                 case["ds"].vegtype_str.values,
                 case["rx_gdds_ds"].isel(time=0),
                 case["ds"],
