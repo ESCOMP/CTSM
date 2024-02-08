@@ -1,3 +1,7 @@
+"""
+Utilities that are dependent on non-standard modules (i.e., require ctsm_pylib).
+"""
+
 import numpy as np
 from ctsm.utils import abort
 
@@ -14,8 +18,10 @@ def import_coord_1d(data_set, coord_name):
     """
     data_array = data_set[coord_name]
     if len(data_array.dims) != 1:
-        abort(f"Expected 1 dimension for {coord_name}; "
-              + f"found {len(data_array.dims)}: {data_array.dims}")
+        abort(
+            f"Expected 1 dimension for {coord_name}; "
+            + f"found {len(data_array.dims)}: {data_array.dims}"
+        )
     return data_array, len(data_array)
 
 
@@ -37,8 +43,10 @@ def import_coord_2d(data_set, coord_name, var_name):
     data_array = data_set[var_name]
     this_dim = [x for x in data_array.dims if coord_name in x]
     if len(this_dim) != 1:
-        abort(f"Expected 1 dimension name containing {coord_name}; "
-              + f"found {len(this_dim)}: {this_dim}")
+        abort(
+            f"Expected 1 dimension name containing {coord_name}; "
+            + f"found {len(this_dim)}: {this_dim}"
+        )
     this_dim = this_dim[0]
     other_dim = [x for x in data_array.dims if coord_name not in x]
     if len(other_dim) != 1:
