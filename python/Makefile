@@ -27,7 +27,7 @@ PYLINT_SRC = \
 #       ../cime_config/buildlib \
 #       ../cime_config/buildnml
 
-all: test lint black
+all: test black lint
 	@echo
 	@echo
 	@echo "Successfully ran all standard tests"
