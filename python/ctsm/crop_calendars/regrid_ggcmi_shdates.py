@@ -11,9 +11,12 @@ import logging
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 sys.path.insert(1, _CTSM_PYTHON)
 
-from ctsm.utils import abort
-from ctsm.ctsm_pylib_dependent_utils import import_coord_1d, import_coord_2d
-from ctsm import ctsm_logging
+from ctsm.utils import abort  # pylint: disable=wrong-import-position
+from ctsm.ctsm_pylib_dependent_utils import (  # pylint: disable=wrong-import-position
+    import_coord_1d,
+    import_coord_2d,
+)
+from ctsm import ctsm_logging  # pylint: disable=wrong-import-position
 
 logger = logging.getLogger(__name__)
 
