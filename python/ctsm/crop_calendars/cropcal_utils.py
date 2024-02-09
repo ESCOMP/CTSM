@@ -11,8 +11,10 @@ import numpy as np
 import xarray as xr
 
 
-# List of PFTs used in CLM
 def define_pftlist():
+    """
+    Return list of PFTs used in CLM
+    """
     pftlist = [
         "not_vegetated",
         "needleleaf_evergreen_temperate_tree",
@@ -97,8 +99,10 @@ def define_pftlist():
     return pftlist
 
 
-# Get CLM ivt number corresponding to a given name
 def ivt_str2int(ivt_str):
+    """
+    Get CLM ivt number corresponding to a given name
+    """
     pftlist = define_pftlist()
     if isinstance(ivt_str, str):
         ivt_int = pftlist.index(ivt_str)
@@ -114,8 +118,10 @@ def ivt_str2int(ivt_str):
     return ivt_int
 
 
-# Get CLM ivt name corresponding to a given number
 def ivt_int2str(ivt_int):
+    """
+    Get CLM ivt name corresponding to a given number
+    """
     pftlist = define_pftlist()
     if np.issubdtype(type(ivt_int), np.integer) or int(ivt_int) == ivt_int:
         ivt_str = pftlist[int(ivt_int)]
@@ -133,19 +139,19 @@ def ivt_int2str(ivt_int):
     return ivt_str
 
 
-# Does this vegetation type's name match (for a given comparison method) any member of a filtering list?
-"""
-Methods:
+def is_this_vegtype(this_vegtype, this_filter, this_method):
+    """
+    Does this vegetation type's name match (for a given comparison method) any member of a filtering
+    list?
+
+    Methods:
     ok_contains:    True if any member of this_filter is found in this_vegtype.
     notok_contains: True of no member of this_filter is found in this_vegtype.
-    ok_exact:       True if this_vegtype matches any member of this_filter 
+    ok_exact:       True if this_vegtype matches any member of this_filter
                     exactly.
-    notok_exact:    True if this_vegtype does not match any member of 
+    notok_exact:    True if this_vegtype does not match any member of
                     this_filter exactly.
-"""
-
-
-def is_this_vegtype(this_vegtype, this_filter, this_method):
+    """
     # Make sure data type of this_vegtype is acceptable
     if isinstance(this_vegtype, float) and int(this_vegtype) == this_vegtype:
         this_vegtype = int(this_vegtype)
@@ -191,33 +197,35 @@ def is_this_vegtype(this_vegtype, this_filter, this_method):
     raise ValueError(f"Unknown comparison method: '{this_method}'")
 
 
-# Get boolean list of whether each vegetation type in list is a managed crop
-"""
-    this_vegtypelist: The list of vegetation types whose members you want to 
-                      test.
-    this_filter:      The list of strings against which you want to compare 
-                      each member of this_vegtypelist.
-    this_method:      How you want to do the comparison. See is_this_vegtype().
-"""
-
-
 def is_each_vegtype(this_vegtypelist, this_filter, this_method):
+    """
+    Get boolean list of whether each vegetation type in list is a managed crop
+
+    this_vegtypelist: The list of vegetation types whose members you want to test.
+    this_filter:      The list of strings against which you want to compare each member of
+                      this_vegtypelist.
+    this_method:      How you want to do the comparison. See is_this_vegtype().
+    """
     if isinstance(this_vegtypelist, xr.DataArray):
         this_vegtypelist = this_vegtypelist.values
 
     return [is_this_vegtype(x, this_filter, this_method) for x in this_vegtypelist]
 
 
-# List (strings) of managed crops in CLM.
 def define_mgdcrop_list():
+    """
+    List (strings) of managed crops in CLM.
+    """
     notcrop_list = ["tree", "grass", "shrub", "unmanaged", "not_vegetated"]
     defined_pftlist = define_pftlist()
     is_crop = is_each_vegtype(defined_pftlist, notcrop_list, "notok_contains")
     return [defined_pftlist[i] for i, x in enumerate(is_crop) if x]
 
 
-# Convert list of vegtype strings to integer index equivalents.
 def vegtype_str2int(vegtype_str, vegtype_mainlist=None):
+    """
+    Convert list of vegtype strings to integer index equivalents.
+    """
     convert_to_ndarray = not isinstance(vegtype_str, np.ndarray)
     if convert_to_ndarray:
         vegtype_str = np.array(vegtype_str)
@@ -248,9 +256,19 @@ def vegtype_str2int(vegtype_str, vegtype_mainlist=None):
     return indices
 
 
-# Flexibly subset time(s) and/or vegetation type(s) from an xarray Dataset or DataArray. Keyword arguments like dimension=selection. Selections can be individual values or slice()s. Optimize memory usage by beginning keyword argument list with the selections that will result in the largest reduction of object size. Use dimension "vegtype" to extract patches of designated vegetation type (can be string or integer).
-# Can also do dimension=function---e.g., time=np.mean will take the mean over the time dimension.
 def xr_flexsel(xr_object, patches1d_itype_veg=None, warn_about_seltype_interp=True, **kwargs):
+    """
+    Flexibly subset time(s) and/or vegetation type(s) from an xarray Dataset or DataArray.
+
+    - Keyword arguments like dimension=selection.
+    - Selections can be individual values or slice()s.
+    - Optimize memory usage by beginning keyword argument list with the selections that will result
+      in the largest reduction of object size.
+    - Use dimension "vegtype" to extract patches of designated vegetation type (can be string or
+      integer).
+    - Can also do dimension=function---e.g., time=np.mean will take the mean over the time
+      dimension.
+    """
     # Setup
     havewarned = False
     delimiter = "__"
@@ -438,8 +456,10 @@ def xr_flexsel(xr_object, patches1d_itype_veg=None, warn_about_seltype_interp=Tr
     return xr_object
 
 
-# Get PFT of each patch, in both integer and string forms.
 def get_patch_ivts(this_ds, this_pftlist):
+    """
+    Get PFT of each patch, in both integer and string forms.
+    """
     # First, get all the integer values; should be time*pft or pft*time. We will eventually just take the first timestep.
     vegtype_int = this_ds.patches1d_itype_veg
     vegtype_int.values = vegtype_int.values.astype(int)
@@ -451,8 +471,10 @@ def get_patch_ivts(this_ds, this_pftlist):
     return {"int": vegtype_int, "str": vegtype_str, "all_str": this_pftlist}
 
 
-# Convert a list of strings with vegetation type names into a DataArray. Used to add vegetation type info in import_ds().
 def get_vegtype_str_da(vegtype_str):
+    """
+    Convert a list of strings with vegetation type names into a DataArray. Used to add vegetation type info in import_ds().
+    """
     nvt = len(vegtype_str)
     vegtype_str_da = xr.DataArray(
         vegtype_str, coords={"ivt": np.arange(0, nvt)}, dims=["ivt"], name="vegtype_str"
@@ -460,9 +482,16 @@ def get_vegtype_str_da(vegtype_str):
     return vegtype_str_da
 
 
-# Function to drop unwanted variables in preprocessing of open_mfdataset(), making sure to NOT drop any unspecified variables that will be useful in gridding. Also adds vegetation type info in the form of a DataArray of strings.
-# Also renames "pft" dimension (and all like-named variables, e.g., pft1d_itype_veg_str) to be named like "patch". This can later be reversed, for compatibility with other code, using patch2pft().
 def mfdataset_preproc(ds_in, vars_to_import, vegtypes_to_import, time_slice):
+    """
+    Function to drop unwanted variables in preprocessing of open_mfdataset().
+
+    - Makes sure to NOT drop any unspecified variables that will be useful in gridding.
+    - Also adds vegetation type info in the form of a DataArray of strings.
+    - Also renames "pft" dimension (and all like-named variables, e.g., pft1d_itype_veg_str) to be
+      named like "patch". This can later be reversed, for compatibility with other code, using
+      patch2pft().
+    """
     # Rename "pft" dimension and variables to "patch", if needed
     if "pft" in ds_in.dims:
         pattern = re.compile("pft.*1d")
@@ -564,7 +593,6 @@ def mfdataset_preproc(ds_in, vars_to_import, vegtypes_to_import, time_slice):
     return ds_in
 
 
-# Import a dataset that can be spread over multiple files, only including specified variables and/or vegetation types and/or timesteps, concatenating by time. DOES actually read the dataset into memory, but only AFTER dropping unwanted variables and/or vegetation types.
 def import_ds(
     filelist,
     my_vars=None,
@@ -575,6 +603,13 @@ def import_ds(
     rename_lsmlatlon=False,
     chunks=None,
 ):
+    """
+    Import a dataset that can be spread over multiple files, only including specified variables
+    and/or vegetation types and/or timesteps, concatenating by time.
+
+    - DOES actually read the dataset into memory, but only AFTER dropping unwanted variables and/or
+      vegetation types.
+    """
     # Convert my_vegtypes here, if needed, to avoid repeating the process each time you read a file in xr.open_mfdataset().
     if my_vegtypes is not None:
         if not isinstance(my_vegtypes, list):
@@ -675,8 +710,10 @@ def import_ds(
     return this_ds
 
 
-# Return a DataArray, with defined coordinates, for a given variable in a dataset.
 def get_thisvar_da(var, this_ds):
+    """
+    Return a DataArray, with defined coordinates, for a given variable in a dataset.
+    """
     # Make DataArray for this variable
     thisvar_da = np.array(this_ds.variables[var])
     these_dims = this_ds.variables[var].dims
@@ -692,10 +729,16 @@ def get_thisvar_da(var, this_ds):
     return thisvar_da
 
 
-# Make a geographically gridded DataArray (with dimensions time, vegetation type [as string], lat, lon) of one variable within a Dataset. Optional keyword arguments will be passed to xr_flexsel() to select single steps or slices along the specified ax(ie)s.
-#
-# fill_value: Default None means grid will be filled with NaN, unless the variable in question already has a _FillValue, in which case that will be used.
 def grid_one_variable(this_ds, var, fill_value=None, **kwargs):
+    """
+    Make a geographically gridded DataArray (with dimensions time, vegetation type [as string], lat,
+    lon) of one variable within a Dataset.
+
+    - Optional keyword arguments will be passed to xr_flexsel() to select single steps or slices
+      along the specified ax(ie)s.
+    - fill_value: Default None means grid will be filled with NaN, unless the variable in question
+      already has a _FillValue, in which case that will be used.
+    """
     # Get this Dataset's values for selection(s), if provided
     this_ds = xr_flexsel(this_ds, **kwargs)
 
@@ -794,8 +837,12 @@ def grid_one_variable(this_ds, var, fill_value=None, **kwargs):
     return thisvar_gridded
 
 
-# ctsm_pylib can't handle time slicing like Dataset.sel(time=slice("1998-01-01", "2005-12-31")) for some reason. This function tries to fall back to slicing by integers. It should work with both Datasets and DataArrays.
 def safer_timeslice(ds_in, time_slice, time_var="time"):
+    """
+    ctsm_pylib can't handle time slicing like Dataset.sel(time=slice("1998-01-01", "2005-12-31"))
+    for some reason. This function tries to fall back to slicing by integers. It should work with
+    both Datasets and DataArrays.
+    """
     try:
         ds_in = ds_in.sel({time_var: time_slice})
     except:  # pylint: disable=bare-except
@@ -826,8 +873,15 @@ def safer_timeslice(ds_in, time_slice, time_var="time"):
     return ds_in
 
 
-# Convert a longitude axis that's -180 to 180 around the international date line to one that's 0 to 360 around the prime meridian. If you pass in a Dataset or DataArray, the "lon" coordinates will be changed. Otherwise, it assumes you're passing in numeric data.
 def lon_idl2pm(lons_in, fail_silently=False):
+    """
+    Convert a longitude axis that's -180 to 180 around the international date line to one that's 0
+    to 360 around the prime meridian.
+
+    - If you pass in a Dataset or DataArray, the "lon" coordinates will be changed. Otherwise, it
+      assumes you're passing in numeric data.
+    """
+
     def check_ok(tmp, fail_silently):
         msg = ""
 
@@ -871,14 +925,19 @@ def lon_idl2pm(lons_in, fail_silently=False):
     return lons_out
 
 
-# Helper function to check that a list is strictly increasing
 def is_strictly_increasing(this_list):
-    # https://stackoverflow.com/a/4983359/2965321
+    """
+    Helper function to check that a list is strictly increasing
+
+    https://stackoverflow.com/a/4983359/2965321
+    """
     return all(x < y for x, y in zip(this_list, this_list[1:]))
 
 
-# Ensure that longitude axis coordinates are monotonically increasing
 def make_lon_increasing(xr_obj):
+    """
+    Ensure that longitude axis coordinates are monotonically increasing
+    """
     if not "lon" in xr_obj.dims:
         return xr_obj
 

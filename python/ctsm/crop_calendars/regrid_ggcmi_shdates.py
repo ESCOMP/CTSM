@@ -1,3 +1,6 @@
+"""
+Regrid GGCMI sowing and harvest date files
+"""
 from subprocess import run
 import os
 import glob
@@ -40,6 +43,9 @@ def main():
 
 
 def run_and_check(cmd):
+    """
+    Run a given shell command and check its result
+    """
     result = run(
         cmd,
         shell=True,
@@ -50,8 +56,12 @@ def run_and_check(cmd):
         abort(f"Trouble running `{result.args}` in shell:\n{result.stdout}\n{result.stderr}")
 
 
-# Functionized because these are shared by process_ggcmi_shdates
 def define_arguments(parser):
+    """
+    Set up arguments shared between regrid_ggcmi_shdates and process_ggcmi_shdates
+
+    Functionized because these are shared by process_ggcmi_shdates
+    """
     # Required
     parser.add_argument(
         "-rr",
@@ -92,6 +102,9 @@ def regrid_ggcmi_shdates(
     regrid_extension,
     crop_list,
 ):
+    """
+    Regrid GGCMI sowing and harvest date files
+    """
     logger.info(f"Regridding GGCMI crop calendars to {regrid_resolution}:")
 
     # Ensure we can call necessary shell script(s)
