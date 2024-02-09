@@ -20,6 +20,7 @@ _CTSM_PYTHON = os.path.join(
 sys.path.insert(1, _CTSM_PYTHON)
 import ctsm.crop_calendars.cropcal_utils as utils  # pylint: disable=wrong-import-position
 import ctsm.crop_calendars.cropcal_module as cc  # pylint: disable=wrong-import-position
+from ctsm.crop_calendars.xr_flexsel import xr_flexsel  # pylint: disable=wrong-import-position
 
 CAN_PLOT = True
 try:
@@ -573,10 +574,10 @@ def import_and_process_1yr(
             continue
 
         vegtype_int = utils.vegtype_str2int(vegtype_str)[0]
-        this_crop_full_patchlist = list(utils.xr_flexsel(h2_ds, vegtype=vegtype_str).patch.values)
+        this_crop_full_patchlist = list(xr_flexsel(h2_ds, vegtype=vegtype_str).patch.values)
 
         # Get time series for each patch of this type
-        this_crop_ds = utils.xr_flexsel(h2_incl_ds, vegtype=vegtype_str)
+        this_crop_ds = xr_flexsel(h2_incl_ds, vegtype=vegtype_str)
         this_crop_gddaccum_da = this_crop_ds[clm_gdd_var]
         if save_figs:
             this_crop_gddharv_da = this_crop_ds["GDDHARV"]
