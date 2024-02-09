@@ -2749,9 +2749,9 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <!-- =========================================  -->
 
 <stream_fldfilename_prigentroughness
->/glade/u/home/dleung/CESM2/ctsm_dustemis_dev/cdf5_Z0a_Prigent-Globe-025x025-01242023.nc</stream_fldfilename_prigentroughness>
+>lnd/clm2/dustemisdata/Prigent_2005_roughness_0.25x0.25_cdf5_c240127.nc</stream_fldfilename_prigentroughness>
 <stream_meshfile_prigentroughness
->/glade/u/home/dleung/CESM2/ctsm_dustemis_dev/lnd_mesh.nc</stream_meshfile_prigentroughness>
+>lnd/clm2/dustemisdata/dust_2x2_ESMFmesh_cdf5_c230730.nc</stream_meshfile_prigentroughness>
 
 <!-- =========================================  -->
 <!-- Defaults for different BGC/decomp modes    -->
