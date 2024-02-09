@@ -180,7 +180,7 @@ def main():
         "f10": ["10x15"],
         "f45": ["4x5"],
         "low_res_no_crop": ["4x5", "10x15"],
-        "ultra_hi_res_no_crop": ["mpasa15", "mpasa15-3conus", "mpasa3p75"],
+        "ultra_hi_res_no_crop": ["mpasa15", "mpasa15-3", "mpasa3p75"],
         "standard_res": ["360x720cru", "0.9x1.25", "1.9x2.5", "C96", "mpasa120"],
         "low_res": ["4x5", "10x15", "ne3np4.pg3"],
         "mpasa480": ["mpasa480"],

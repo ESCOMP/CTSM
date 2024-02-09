@@ -1215,8 +1215,8 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_4x5_hist_2000_16pfts_c240130.nc</fsurd
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa60_hist_2000_16pfts_c240130.nc</fsurdat>
 <fsurdat hgrid="mpasa15"   sim_year="2000" use_crop=".false.">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa15_hist_2000_16pfts_c240130.nc</fsurdat>
-<fsurdat hgrid="mpasa15-3conus" sim_year="2000" use_crop=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa15-3conus_hist_2000_16pfts_c240130.nc</fsurdat>
+<fsurdat hgrid="mpasa15-3" sim_year="2000" use_crop=".false.">
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa15-3_hist_2000_16pfts_c240130.nc</fsurdat>
 <fsurdat hgrid="mpasa3p75" sim_year="2000" use_crop=".false.">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa3p75_hist_2000_16pfts_c240130.nc</fsurdat>
 
