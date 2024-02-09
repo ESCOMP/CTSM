@@ -595,9 +595,6 @@ contains
          wnd_frc_thr_slt = tmp2 / sqrt(forc_rho(c)) * frc_thr_wet_fct !* frc_thr_rgh_fct   ! fluid threshold
          wnd_frc_thr_slt_it = B_it * tmp2 / sqrt(forc_rho(c)) ! define impact threshold
 
-         !wnd_frc_thr_dry(p) = tmp1 / sqrt(forc_rho(c))    ! output dry fluid threshold; tmp1 uses I&W 1982
-         !wnd_frc_thr_slt = tmp1 / sqrt(forc_rho(c)) * frc_thr_wet_fct !* frc_thr_rgh_fct   ! fluid threshold
-         !wnd_frc_thr_slt_it = B_it * tmp1 / sqrt(forc_rho(c)) ! define impact threshold
          ! the above formula is true for Iversen and White (1982) and Shao and Lu (2000) scheme
          wnd_frc_thr(p) = wnd_frc_thr_slt          ! output fluid threshold
 
