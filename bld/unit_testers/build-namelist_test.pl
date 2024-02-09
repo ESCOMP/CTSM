@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1999;
+my $ntests = 2000;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 1353;
@@ -530,6 +530,11 @@ my %failtest = (
                                      namelst=>"use_crop=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
+                                   },
+     "LeungDust_WO_Prigent"      =>{ options=>" -envxml_dir . -bgc sp",
+                                     namelst=>"use_prigent_roughness=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
                                    },
      "soilm_stream off w file"      =>{ options=>"-res 0.9x1.25 -envxml_dir .",
                                      namelst=>"use_soil_moisture_streams = .false.,stream_fldfilename_soilm='file_provided_when_off'",

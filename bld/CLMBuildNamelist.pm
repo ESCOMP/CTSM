@@ -4575,9 +4575,19 @@ sub setup_logic_misc {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_prigent_roughness {
+  #
+  # The Prigent roughness stream data set read in if needed
+  #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_prigentroughness' );
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_prigentroughness' );
+  my $var = "use_prigent_roughness";
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
+  my $use_prigent = $nl->get_value($var);
+  if ( &value_is_true($use_prigent) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_prigentroughness' );
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_prigentroughness' );
+  } else {
+    $log->fatal_error("variable \"$var\" MUST be true when Leung_2023 dust emission method is being used" );
+  }
 }
 
 #-------------------------------------------------------------------------------

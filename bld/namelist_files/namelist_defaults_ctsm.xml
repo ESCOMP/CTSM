@@ -2748,6 +2748,7 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <!-- Defaults for Prigent's roughness data      -->
 <!-- =========================================  -->
 
+<use_prigent_roughness>.true.</use_prigent_roughness>
 <stream_fldfilename_prigentroughness
 >lnd/clm2/dustemisdata/Prigent_2005_roughness_0.25x0.25_cdf5_c240127.nc</stream_fldfilename_prigentroughness>
 <stream_meshfile_prigentroughness

@@ -1788,6 +1788,11 @@ Mapping method from Nitrogen deposition input file to the model resolution
 <!-- Prigent roughness stream -->
 <!-- ========================================================================================  -->
 
+<entry id="use_prigent_roughness" type="logical" category="clm_physics"
+        group="prigentroughness" valid_values="" >
+If TRUE use the Prigent roughness dataset
+</entry>
+
 <entry id="stream_fldfilename_prigentroughness" type="char*256" category="datasets"
        input_pathname="abs" group="prigentroughness" valid_values="" >
 Filename of input stream data for aeolian roughness length (from Prigent's roughness dataset)
