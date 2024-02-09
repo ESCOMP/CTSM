@@ -14,7 +14,7 @@ _CTSM_PYTHON = os.path.join(
 )
 sys.path.insert(1, _CTSM_PYTHON)
 import ctsm.crop_calendars.cropcal_utils as utils  # pylint: disable=wrong-import-position
-from ctsm.crop_calendars.cropcal_module import (  # pylint: disable=wrong-import-position
+from ctsm.crop_calendars.cropcal_constants import (  # pylint: disable=wrong-import-position
     DEFAULT_GDD_MIN,
 )
 

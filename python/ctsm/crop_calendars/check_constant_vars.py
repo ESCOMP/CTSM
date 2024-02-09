@@ -67,6 +67,7 @@ def loop_through_bad_patches(
     vary_lats,
     vary_crops,
     vary_crops_int,
+    any_bad,
 ):
     """
     Loop through and check any patches that were "bad" according to check_constant_vars().
@@ -99,7 +100,7 @@ def loop_through_bad_patches(
             else:
                 raise RuntimeError(f"lon {this_lon} lat {this_lat} {this_crop} not in rx dataset?")
 
-                # Print info (or save to print later)
+        # Print info (or save to print later)
         any_bad = True
         if verbose:
             this_str = (
@@ -181,10 +182,14 @@ def check_one_constant_var_loop_through_timesteps(
     these_patches,
     t1_yr,
     t1_vals,
+    any_bad,
+    any_bad_before_checking_rx,
+    bad_patches,
 ):
     """
     In check_one_constant_var(), loop through timesteps
     """
+    found_in_rx = None
     for timestep in np.arange(time_1 + 1, this_ds.dims[time_coord]):
         t_yr = this_ds[time_coord].values[timestep]
         t_vals = np.squeeze(this_da.isel({time_coord: timestep, "patch": these_patches}).values)
@@ -250,13 +255,14 @@ def check_one_constant_var_loop_through_timesteps(
                 vary_lats,
                 vary_crops,
                 vary_crops_int,
+                any_bad,
             )
 
     return any_bad_before_checking_rx, bad_patches, found_in_rx, any_bad
 
 
 def check_one_constant_var(
-    this_ds, case, ignore_nan, verbose, emojus, var, any_bad_before_checking_rx
+    this_ds, case, ignore_nan, verbose, emojus, var, any_bad, any_bad_before_checking_rx
 ):
     """
     Ensure that a variable that should be constant actually is
@@ -306,12 +312,17 @@ def check_one_constant_var(
             these_patches,
             t1_yr,
             t1_vals,
+            any_bad,
+            any_bad_before_checking_rx,
+            bad_patches,
         )
 
     if verbose and any_bad:
         print(f"{emojus} CLM output {var} unexpectedly vary over time:")
         str_list.sort()
-        if rx_ds and np.any(~found_in_rx):
+        if found_in_rx is None:
+            raise RuntimeError("Somehow any_bad True but found_in_rx None")
+        if rx_ds and np.any(~found_in_rx):  # pylint: disable=invalid-unary-operand-type
             str_list = [
                 "*: Not found in prescribed input file (maybe minor lon/lat mismatch)"
             ] + str_list
@@ -376,7 +387,7 @@ def check_constant_vars(
 
     for var in const_vars:
         any_bad, any_bad_before_checking_rx, bad_patches = check_one_constant_var(
-            this_ds, case, ignore_nan, verbose, emojus, var, any_bad_before_checking_rx
+            this_ds, case, ignore_nan, verbose, emojus, var, any_bad, any_bad_before_checking_rx
         )
 
     if any_bad and throw_error:
