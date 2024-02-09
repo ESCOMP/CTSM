@@ -16,7 +16,7 @@ module DUSTMod
   use shr_log_mod          , only : errMsg => shr_log_errMsg
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
   use clm_varpar           , only : dst_src_nbr, ndst, sz_nbr, &
-                                    natpft_lb, natpft_ub, natpft_size  
+                                    natpft_lb, natpft_ub, natpft_size
   use clm_varcon           , only : grav, spval
   use landunit_varcon      , only : istcrop, istsoil
   use clm_varctl           , only : iulog
@@ -31,7 +31,7 @@ module DUSTMod
   use LandunitType         , only : lun
   use ColumnType           , only : col
   use PatchType            , only : patch
-  use pftconMod            , only : noveg    
+  use pftconMod            , only : noveg
   use PrigentRoughnessStreamType    , only : prigentroughnessstream_type
   !  
   ! !PUBLIC TYPES
@@ -105,7 +105,7 @@ contains
   subroutine Init(this, bounds, NLFilename)
 
     class(dust_type) :: this
-    type(bounds_type), intent(in) :: bounds 
+    type(bounds_type), intent(in) :: bounds
     character(len=*),  intent(in) :: NLFilename
 
     call this%InitAllocate (bounds)
@@ -296,8 +296,8 @@ contains
     !
     !
     ! !ARGUMENTS:
-    class(dust_type), intent(inout) :: this  ! Danny M. Leung used class instead of type
-    type(bounds_type), intent(in) :: bounds 
+    class(dust_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: c,l
@@ -340,7 +340,7 @@ contains
     ! !USES
     use shr_const_mod, only : SHR_CONST_RHOFW
     use subgridaveMod, only : p2g
-    use pftconMod            , only : noveg     
+    use pftconMod    , only : noveg
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                      
@@ -366,7 +366,6 @@ contains
     real(r8) :: flx_mss_vrt_dst_ttl(bounds%begp:bounds%endp)
     real(r8) :: frc_thr_wet_fct
     real(r8) :: frc_thr_rgh_fct
-    !real(r8) :: wnd_frc_thr_slt    ! Danny M. Leung commented and put below
     real(r8) :: wnd_rfr_thr_slt
     real(r8) :: wnd_frc_slt
     real(r8) :: lnd_frc_mbl(bounds%begp:bounds%endp)
@@ -377,8 +376,10 @@ contains
     real(r8) :: sumwt(bounds%begl:bounds%endl) ! sum of weights
     logical  :: found                          ! temporary for error check
     integer  :: index
-    
-    real(r8) :: tmp2   ! calculates the dry fluid threshold using Shao and Lu (2000) scheme; replace the tmp1 (Iversen and White, 1982) that was passed from Dustini to DustEmission; tmp2 will be calculated here
+
+    real(r8) :: tmp2                ! calculates the dry fluid threshold using Shao and Lu (2000) scheme;
+                                    ! replace the tmp1 (Iversen and White, 1982) that was passed from Dustini to DustEmission;
+                                    ! tmp2 will be calculated here
     real(r8) :: wnd_frc_thr_slt_std ! [m/s] The soil threshold friction speed at standard air density (1.2250 kg/m3)
     real(r8) :: frag_expt           ! fragmentation exponent
     real(r8) :: wnd_frc_thr_slt_it  ! [m/s] created for impact threshold friction velocity
@@ -430,7 +431,7 @@ contains
          mbl_bsn_fct         => dust_inst%mbl_bsn_fct_col            , & ! Input:  [real(r8) (:)   ]  basin factor                                      
          flx_mss_vrt_dst     => dust_inst%flx_mss_vrt_dst_patch      , & ! Output: [real(r8) (:,:) ]  surface dust emission (kg/m**2/s)               
          flx_mss_vrt_dst_tot => dust_inst%flx_mss_vrt_dst_tot_patch  , & ! Output: [real(r8) (:)   ]  total dust flux back to atmosphere (pft)
-         
+
          dst_emiss_coeff     => dust_inst%dst_emiss_coeff_patch      , & ! Output dust emission coefficient
          wnd_frc_thr         => dust_inst%wnd_frc_thr_patch          , & ! output impact threshold
          wnd_frc_thr_dry     => dust_inst%wnd_frc_thr_dry_patch      , & ! output dry threshold
@@ -594,7 +595,7 @@ contains
          wnd_frc_thr_slt = tmp2 / sqrt(forc_rho(c)) * frc_thr_wet_fct !* frc_thr_rgh_fct   ! fluid threshold
          wnd_frc_thr_slt_it = B_it * tmp2 / sqrt(forc_rho(c)) ! define impact threshold
 
-         !wnd_frc_thr_dry(p) = tmp1 / sqrt(forc_rho(c))    ! output dry fluid threshold; tmp1 uses I&W 1982         
+         !wnd_frc_thr_dry(p) = tmp1 / sqrt(forc_rho(c))    ! output dry fluid threshold; tmp1 uses I&W 1982
          !wnd_frc_thr_slt = tmp1 / sqrt(forc_rho(c)) * frc_thr_wet_fct !* frc_thr_rgh_fct   ! fluid threshold
          !wnd_frc_thr_slt_it = B_it * tmp1 / sqrt(forc_rho(c)) ! define impact threshold
          ! the above formula is true for Iversen and White (1982) and Shao and Lu (2000) scheme
@@ -612,7 +613,7 @@ contains
          end if
 
          !################ drag partition effect, and soil friction velocity ###########################
-         ! subsection on computing vegetation drag partition and hybrid drag partition factors 
+         ! subsection on computing vegetation drag partition and hybrid drag partition factors
          ! in Leung et al. (2022), drag partition effect is applied on the wind instead of the threshold
          !##############################################################################################
          ! the following comes from subr. frc_thr_rgh_fct_get
@@ -626,24 +627,18 @@ contains
                lai(p)  = 1_r8   ! setting LAI ~ 0.1 to be a min value (since the value goes to infinity when LAI=0)
             end if              ! and 1 to be a max value as computing K involves 1 / LAI
 
-            ! calculate Okin's shear stress ratio (which is drag partition factor) using Pierre's equation   
+            ! calculate Okin's shear stress ratio (which is drag partition factor) using Pierre's equation
             K_length = 2_r8 * (1_r8/lai(p) - 1_r8)   ! Here LAI has to be non-zero to avoid blowup
             ssr(p) = (K_length+f_0*c_e)/(K_length+c_e)
-
-            ! dmleung added calculation of LUH2 bare vs veg fraction within a grid
-            !bare_frc = wt_lunit(g,istsoil) * wt_nat_patch(g,noveg) 
-            !veg_frc = wt_lunit(g,istsoil) * sum(wt_nat_patch(g,(noveg+1):natpft_ub)) + wt_lunit(g,istcrop)
-
-            !frc_thr_rgh_fct = (bare_frc*(roughfct(p))**3_r8 + veg_frc*(ssr(p))**3_r8 )**(0.3333_r8)   ! land cover weighted mean using LUH2 land cover
 
             ! calculation of drag partition effect using LUH2 bare and veg fractions within a grid
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                if (patch%itype(p) == noveg) then
                   frc_thr_rgh_fct = dpfct_rock(p)
-               else 
+               else
                   frc_thr_rgh_fct = ssr(p)
                end if
-            else 
+            else
                frc_thr_rgh_fct = 1.0_r8
             end if
 
@@ -658,30 +653,16 @@ contains
 
          !########## end of drag partition effect #######################################################
 
-         !############ comment out Owen's offect this block; dust emission does not need to consider it  ###########
-         ! the following if-block comes from subr. wnd_frc_slt_get 
-         ! purpose: compute the saltating friction velocity
-         ! theory: saltation roughens the boundary layer, AKA "Owen's effect"
-
-         !if (u10(p) >= wnd_rfr_thr_slt) then
-         !   wnd_rfr_dlt = u10(p) - wnd_rfr_thr_slt
-         !   wnd_frc_slt_dlt = 0.003_r8 * wnd_rfr_dlt * wnd_rfr_dlt
-         !   wnd_frc_slt = wnd_frc_slt + wnd_frc_slt_dlt   ! careful that RHS is now wnd_frc_slt instead of fv(p)
-         ! ! because wnd_frc_slt takes drag partition effect into account, but fv(p) doesn't. 
-         !end if
-         !########## end of Owen effect ################################################################
-
          ! save soil friction velocity and roughness effect before the if-statement
          wnd_frc_soil(p) = wnd_frc_slt  ! save soil friction velocity for CLM output, which has drag partition and Owen effect
          ! save land mobile fraction
          lnd_frc_mble(p) = lnd_frc_mbl(p)  ! save land mobile fraction first, before the if-statement
-         ! only perform the following calculations if lnd_frc_mbl is non-zero 
+         ! only perform the following calculations if lnd_frc_mbl is non-zero
 
          if (lnd_frc_mbl(p) > 0.0_r8) then  ! if bare land fraction is larger than 0 then calculate the dust emission equation
 
             ! reset these variables which will be updated in the following if-block
 
-            !wnd_frc_slt = fv(p)  ! we don't need this line because its calculation is moved upward
             flx_mss_hrz_slt_ttl = 0.0_r8
             flx_mss_vrt_dst_ttl(p) = 0.0_r8
 
@@ -690,31 +671,10 @@ contains
 
             wnd_rfr_thr_slt = u10(p) * wnd_frc_thr_slt / fv(p)     ! keep and use if we want the default Z03 scheme
 
-            
             ! the following comes from subr. flx_mss_hrz_slt_ttl_Whi79_get
             ! purpose: compute vertically integrated streamwise mass flux of particles
 
-            !if (wnd_frc_slt > wnd_frc_thr_slt) then! if using Zender's scheme, use fluid threshold for dust emission equation below
             if (wnd_frc_slt > wnd_frc_thr_slt_it) then! if using Leung's scheme, use impact threshold for dust emission equation
-
-               !################### for Zender et al. (2003) scheme -dmleung ###########################
-               !################ uncomment the below block if want to use Z03 scheme ###################
-               !wnd_frc_rat = wnd_frc_thr_slt / wnd_frc_slt
-               !flx_mss_hrz_slt_ttl = cst_slt * forc_rho(c) * (wnd_frc_slt**3.0_r8) * &
-               !     (1.0_r8 - wnd_frc_rat) * (1.0_r8 + wnd_frc_rat) * (1.0_r8 + wnd_frc_rat) / grav  ! Zender dust emission equation for emission flux
-
-               ! the following loop originates from subr. dst_mbl
-               ! purpose: apply land sfc and veg limitations and global tuning factor
-               ! slevis: multiply flx_mss_hrz_slt_ttl by liqfrac to incude the effect 
-               ! of frozen soil
-
-               !flx_mss_hrz_slt_ttl = flx_mss_hrz_slt_ttl * lnd_frc_mbl(p) * mbl_bsn_fct(c) * &
-               !     flx_mss_fdg_fct * liqfrac
-
-               !
-               !dst_slt_flx_rat_ttl = 100.0_r8 * exp( log(10.0_r8) * (13.4_r8 * mss_frc_cly_vld(c) - 6.0_r8) )
-               !flx_mss_vrt_dst_ttl(p) = flx_mss_hrz_slt_ttl * dst_slt_flx_rat_ttl
-               !########################################################################################
 
                !################### for Leung et al. (2022) ################################################
                !################ uncomment the below block if want to use Leung's scheme ###################
@@ -733,14 +693,6 @@ contains
             ! mean lowpass-filtered wind speed at 0.1 m saltation height (assuming aerodynamic roughness length = 1e-4 m globally for ease; also assuming neutral condition)
             u_mean_slt(p) = (wnd_frc_slt/k) * log(0.1_r8 / 1e-4_r8)  ! translating from ustar (velocity scale) to actual wind
 
-            ! sd of lowpass-filtered wind speed
-            !if (obul(p)==0) then
-            !   zetaobu = 0
-            !else 
-               !zetaobu = zii(p) / obul(p)   ! For now zii is a constant of 1000 m in CLM -dml, 24 Aug 2021
-            !   zetaobu = 1000_r8 / obul(p)   ! For now zii is a constant of 1000 m in CLM -dml, 24 Aug 2021
-            !end if
-            !stblty(p) = zetaobu    ! zetaobu get outputted as the Obukhov stability parameter
             stblty(p) = 0   ! -dmleung 2 Dec 2021: use stability = 0 for now, assuming no buoyancy contribution. Might uncomment the above lines in future revisions.
             if ((12_r8 - 0.5_r8 * stblty(p)) .GE. 0.001_r8) then ! should have used 0 theoretically; used 0.001 here to avoid undefined values
                u_sd_slt(p) = wnd_frc_slt * (12_r8 - 0.5_r8 * stblty(p))**0.333_r8
@@ -775,7 +727,7 @@ contains
 
             ! multiply dust emission flux by intermittency factor
             if (intrmtncy_fct(p) /= intrmtncy_fct(p)) then  ! if intrmtncy_fct(p) is not NaN then multiply by intermittency factor; this statement is needed because dust emission flx_mss_vrt_dst_ttl(p) has to be non NaN (at least zero) to be outputted
-               flx_mss_vrt_dst_ttl(p) = flx_mss_vrt_dst_ttl(p) 
+               flx_mss_vrt_dst_ttl(p) = flx_mss_vrt_dst_ttl(p)
             else
                flx_mss_vrt_dst_ttl(p) = flx_mss_vrt_dst_ttl(p) * intrmtncy_fct(p)  ! multiply dust flux by intermittency
             end if
