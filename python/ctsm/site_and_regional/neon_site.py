@@ -3,11 +3,13 @@ This module contains the NeonSite class and class functions which are used in ru
 """
 
 # Import libraries
+import glob
 import logging
 import os
 import re
 import shutil
 import sys
+import time
 
 # Get the ctsm util tools and then the cime tools.
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "python"))
@@ -36,6 +38,23 @@ class NeonSite(TowerSite):
 
     def __init__(self, name, start_year, end_year, start_month, end_month, finidat):
         super().__init__(name, start_year, end_year, start_month, end_month, finidat)
+        # self.name = name
+        # self.start_year = int(start_year)
+        # self.end_year = int(end_year)
+        # self.start_month = int(start_month)
+        # self.end_month = int(end_month)
+        # self.cesmroot = path_to_ctsm_root()
+        # self.finidat = finidat
+
+    def build_base_case(
+        self, cesmroot, output_root, res, compset, overwrite=False, setup_only=False
+    ):
+        case_path = super().build_base_case(cesmroot, output_root, res, compset)
+
+        return case_path
+
+    def get_batch_query(self, case):
+        return super().get_batch_query(case)
 
     # pylint: disable=too-many-statements
     def run_case(
@@ -208,6 +227,10 @@ class NeonSite(TowerSite):
                 batch_query = self.get_batch_query(case)
                 if batch_query != "none":
                     print(f"Use {batch_query} to check its run status")
+
+    def set_ref_case(self, case):
+        super().set_ref_case(case)
+        return True  ### Check if super returns false, if this will still return True?
 
     def modify_user_nl(self, case_root, run_type, rundir):
         """

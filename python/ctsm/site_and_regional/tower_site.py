@@ -29,22 +29,20 @@ from CIME.utils import safe_copy, expect, symlink_force
 logger = logging.getLogger(__name__)
 
 
+#pylint: disable=too-many-instance-attributes
 class TowerSite:
     """
     Parent class to NeonSite and Plumber2Site classes.
     ...
     Attributes
     ----------
-
     Methods
     -------
-
     """
 
     def __init__(self, name, start_year, end_year, start_month, end_month, finidat):
         """
         Initializes TowerSite with the given arguments.
-
         Parameters
         ----------
         """
@@ -77,7 +75,6 @@ class TowerSite:
         Function for building a base_case to clone.
         To spend less time on building ctsm for the neon cases,
         all the other cases are cloned from this case
-
         Args:
         self:
             The NeonSite object
@@ -168,7 +165,6 @@ class TowerSite:
         """
         Function for querying the batch queue query command for a case, depending on the
         user's batch system.
-
         Args:
         case:
             case object
