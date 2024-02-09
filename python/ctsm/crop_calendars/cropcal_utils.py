@@ -7,13 +7,6 @@ import re
 import warnings
 import importlib
 
-with warnings.catch_warnings():
-    warnings.filterwarnings(action="ignore", category=DeprecationWarning)
-    if importlib.find_loader("cf_units") is not None:
-        import cf_units as cf
-    if importlib.find_loader("cartopy") is not None:
-        from cartopy.util import add_cyclic_point
-import cftime
 import numpy as np
 import xarray as xr
 
