@@ -2234,9 +2234,7 @@
   </test>
   <test name="ERS_D_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm51SpRs" testmods="clm/CLM1PTStartDate">
     <machines>
-      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
-      <machine name="cheyenne" compiler="gnu" category="prebeta"/>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
@@ -2630,8 +2628,7 @@
   <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm51FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
-      <machine name="cheyenne" compiler="gnu" category="prebeta"/>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
     <options>
