@@ -189,14 +189,13 @@ def is_this_vegtype(this_vegtype, this_filter, this_method):
     # Perform the comparison
     if this_method == "ok_contains":
         return any(n in this_vegtype for n in this_filter)
-    elif this_method == "notok_contains":
+    if this_method == "notok_contains":
         return not any(n in this_vegtype for n in this_filter)
-    elif this_method == "ok_exact":
+    if this_method == "ok_exact":
         return any(n == this_vegtype for n in this_filter)
-    elif this_method == "notok_exact":
+    if this_method == "notok_exact":
         return not any(n == this_vegtype for n in this_filter)
-    else:
-        raise ValueError(f"Unknown comparison method: '{this_method}'")
+    raise ValueError(f"Unknown comparison method: '{this_method}'")
 
 
 # Get boolean list of whether each vegetation type in list is a managed crop
@@ -241,10 +240,9 @@ def vegtype_str2int(vegtype_str, vegtype_mainlist=None):
             raise TypeError(
                 f"Not sure how to handle vegtype_mainlist as list of {type(vegtype_mainlist[0])}"
             )
-        else:
-            raise TypeError(
-                f"Not sure how to handle vegtype_mainlist as type {type(vegtype_mainlist[0])}"
-            )
+        raise TypeError(
+            f"Not sure how to handle vegtype_mainlist as type {type(vegtype_mainlist[0])}"
+        )
 
     if vegtype_str.shape == ():
         indices = np.array([-1])
@@ -847,10 +845,9 @@ def lon_idl2pm(lons_in, fail_silently=False):
 
         if msg == "":
             return True
-        elif fail_silently:
+        if fail_silently:
             return False
-        else:
-            raise ValueError(msg)
+        raise ValueError(msg)
 
     def do_it(tmp):
         tmp = tmp + 360
