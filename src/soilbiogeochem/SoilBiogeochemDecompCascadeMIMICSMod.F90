@@ -439,12 +439,13 @@ contains
       kslope_l1_m2 = params_inst%mimics_kslope(4)
       kslope_l2_m2 = params_inst%mimics_kslope(5)
       kslope_s1_m2 = params_inst%mimics_kslope(6)
-      vint_l1_m1 = params_inst%mimics_vint(1)
-      vint_l2_m1 = params_inst%mimics_vint(2)
-      vint_s1_m1 = params_inst%mimics_vint(3)
-      vint_l1_m2 = params_inst%mimics_vint(4)
-      vint_l2_m2 = params_inst%mimics_vint(5)
-      vint_s1_m2 = params_inst%mimics_vint(6)
+      ! WRW increased values by 30% here
+      vint_l1_m1 = params_inst%mimics_vint(1) * 1.3_r8
+      vint_l2_m1 = params_inst%mimics_vint(2) * 1.3_r8
+      vint_s1_m1 = params_inst%mimics_vint(3) * 1.3_r8
+      vint_l1_m2 = params_inst%mimics_vint(4) * 1.3_r8
+      vint_l2_m2 = params_inst%mimics_vint(5) * 1.3_r8
+      vint_s1_m2 = params_inst%mimics_vint(6) * 1.3_r8
       kint_l1_m1 = params_inst%mimics_kint(1)
       kint_l2_m1 = params_inst%mimics_kint(2)
       kint_s1_m1 = params_inst%mimics_kint(3)
@@ -1175,10 +1176,13 @@ contains
          ! tau ends up in units of per hour but is expected
          ! in units of per second, so convert here; alternatively
          ! place the conversion once in w_d_o_scalars
-         tau_m1 = mimics_tau_r_p1 * exp(mimics_tau_r_p2 * fmet) * tau_mod / &
-                  secsphr
-         tau_m2 = mimics_tau_k_p1 * exp(mimics_tau_k_p2 * fmet) * tau_mod / &
-                  secsphr
+         ! WRW remove NPP influence on turnover and increase base turnover 50%
+         !tau_m1 = mimics_tau_r_p1 * exp(mimics_tau_r_p2 * fmet) * tau_mod / &
+         !         secsphr
+         !tau_m2 = mimics_tau_k_p1 * exp(mimics_tau_k_p2 * fmet) * tau_mod / &
+         !         secsphr
+         tau_m1 = 1.5_r8 * mimics_tau_r_p1 * exp(mimics_tau_r_p2 * fmet) / secsphr
+         tau_m2 = 1.5_r8 * mimics_tau_k_p1 * exp(mimics_tau_k_p2 * fmet) / secsphr
 
          ! These two get used in SoilBiogeochemPotentialMod.F90
          ! cn(c,i_cop_mic), cn(c,i_oli_mic) are CN_r, CN_k in the testbed code
@@ -1288,14 +1292,20 @@ contains
             decomp_k(c,j,i_chem_som) = (term_1 + term_2) * w_d_o_scalars
 
             ! Currently, mimics_densdep = 1 so as to have no effect
-            decomp_k(c,j,i_cop_mic) = tau_m1 * &
-                   m1_conc**(mimics_densdep - 1.0_r8) * w_d_o_scalars
+            ! WRW, turns on beta function & removes w_d_o scalars
+            !decomp_k(c,j,i_cop_mic) = tau_m1 * &
+            !       m1_conc**(mimics_densdep - 1.0_r8) * w_d_o_scalars
+            decomp_k(c,j,i_cop_mic) = tau_m1 * m1_conc**(2.0_r8)
+ 
             favl = min(1.0_r8, max(0.0_r8, 1.0_r8 - fphys_m1(c,j) - fchem_m1))
             pathfrac_decomp_cascade(c,j,i_m1s1) = favl
             pathfrac_decomp_cascade(c,j,i_m1s2) = fchem_m1
 
-            decomp_k(c,j,i_oli_mic) = tau_m2 * &
-                   m2_conc**(mimics_densdep - 1.0_r8) * w_d_o_scalars
+            ! WRW  turns on beta function & removes w_d_o scalars
+            !decomp_k(c,j,i_oli_mic) = tau_m2 * &
+            !       m2_conc**(mimics_densdep - 1.0_r8) * w_d_o_scalars
+            decomp_k(c,j,i_oli_mic) = tau_m2 * m2_conc**(2.0_r8)
+
             favl = min(1.0_r8, max(0.0_r8, 1.0_r8 - fphys_m2(c,j) - fchem_m2))
             pathfrac_decomp_cascade(c,j,i_m2s1) = favl
             pathfrac_decomp_cascade(c,j,i_m2s2) = fchem_m2
