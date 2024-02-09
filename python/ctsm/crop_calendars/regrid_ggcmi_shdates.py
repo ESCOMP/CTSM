@@ -178,17 +178,17 @@ def regrid_ggcmi_shdates(
             run_and_check(
                 f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{file}' '{file_3}'"
             )
-        except:
+        except:  # pylint: disable=bare-except
             try:
                 run_and_check(
                     f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{file}' '{file_3}'"
                 )
-            except:
+            except:  # pylint: disable=bare-except
                 try:
                     run_and_check(
                         f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{file}' '{file_3}'"
                     )
-                except:
+                except:  # pylint: disable=bare-except
                     run_and_check(
                         f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{file}' '{file_3}'"
                     )

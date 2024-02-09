@@ -774,7 +774,7 @@ def grid_one_variable(this_ds, var, fill_value=None, **kwargs):
             fill_indices.append(Ellipsis)
     try:
         thisvar_gridded[tuple(fill_indices[: len(fill_indices)])] = thisvar_da.values
-    except:
+    except:  # pylint: disable=bare-except
         thisvar_gridded[tuple(fill_indices[: len(fill_indices)])] = thisvar_da.values.transpose()
     if not np.any(np.bitwise_not(np.isnan(thisvar_gridded))):
         if np.all(np.isnan(thisvar_da.values)):
@@ -805,7 +805,7 @@ def grid_one_variable(this_ds, var, fill_value=None, **kwargs):
 def safer_timeslice(ds_in, time_slice, time_var="time"):
     try:
         ds_in = ds_in.sel({time_var: time_slice})
-    except:
+    except:  # pylint: disable=bare-except
         # If the issue might have been slicing using strings, try to fall back to integer slicing
         if (
             isinstance(time_slice.start, str)
