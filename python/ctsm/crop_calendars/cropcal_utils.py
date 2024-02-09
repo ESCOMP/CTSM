@@ -233,7 +233,7 @@ def vegtype_str2int(vegtype_str, vegtype_mainlist=None):
         vegtype_mainlist = vegtype_mainlist.vegtype_str.values
     elif isinstance(vegtype_mainlist, xr.DataArray):
         vegtype_mainlist = vegtype_mainlist.values
-    elif vegtype_mainlist == None:
+    elif vegtype_mainlist is None:
         vegtype_mainlist = define_pftlist()
     if not isinstance(vegtype_mainlist, list) and isinstance(vegtype_mainlist[0], str):
         if isinstance(vegtype_mainlist, list):
@@ -320,11 +320,11 @@ def xr_flexsel(xr_object, patches1d_itype_veg=None, warn_about_seltype_interp=Tr
                     slice_members = []
                     if selection == slice(0):
                         raise ValueError("slice(0) will be empty")
-                    if selection.start != None:
+                    if selection.start is not None:
                         slice_members = slice_members + [selection.start]
-                    if selection.stop != None:
+                    if selection.stop is not None:
                         slice_members = slice_members + [selection.stop]
-                    if selection.step != None:
+                    if selection.step is not None:
                         slice_members = slice_members + [selection.step]
                     if slice_members == []:
                         raise TypeError("slice is all None?")
@@ -346,7 +346,7 @@ def xr_flexsel(xr_object, patches1d_itype_veg=None, warn_about_seltype_interp=Tr
                                 else:
                                     this_type = type(member)
                                 break
-                        if this_type == None:
+                        if this_type is None:
                             this_type = int
                             selection = selection.astype(int)
                 else:
@@ -401,7 +401,7 @@ def xr_flexsel(xr_object, patches1d_itype_veg=None, warn_about_seltype_interp=Tr
                         " name?"
                     )
                 pattern = re.compile(f"1d_{this_xy}")
-                matches = [x for x in list(xr_object.keys()) if pattern.search(x) != None]
+                matches = [x for x in list(xr_object.keys()) if pattern.search(x) is not None]
                 for var in matches:
                     if len(xr_object[var].dims) != 1:
                         raise RuntimeError(
@@ -473,14 +473,14 @@ def mfdataset_preproc(ds_in, vars_to_import, vegtypes_to_import, time_slice):
     # Rename "pft" dimension and variables to "patch", if needed
     if "pft" in ds_in.dims:
         pattern = re.compile("pft.*1d")
-        matches = [x for x in list(ds_in.keys()) if pattern.search(x) != None]
+        matches = [x for x in list(ds_in.keys()) if pattern.search(x) is not None]
         pft2patch_dict = {"pft": "patch"}
         for match in matches:
             pft2patch_dict[match] = match.replace("pft", "patch").replace("patchs", "patches")
         ds_in = ds_in.rename(pft2patch_dict)
 
     derived_vars = []
-    if vars_to_import != None:
+    if vars_to_import is not None:
         # Split vars_to_import into variables that are vs. aren't already in ds
         derived_vars = [v for v in vars_to_import if v not in ds_in]
         present_vars = [v for v in vars_to_import if v in ds_in]
@@ -496,7 +496,7 @@ def mfdataset_preproc(ds_in, vars_to_import, vegtypes_to_import, time_slice):
         oned_vars = []
         for dim in dim_list:
             pattern = re.compile(f"{dim}.*1d")
-            matches = [x for x in list(ds_in.keys()) if pattern.search(x) != None]
+            matches = [x for x in list(ds_in.keys()) if pattern.search(x) is not None]
             oned_vars = list(set(oned_vars + matches))
 
         # Add dimensions and _1d variables to vars_to_import
@@ -537,7 +537,7 @@ def mfdataset_preproc(ds_in, vars_to_import, vegtypes_to_import, time_slice):
         ds_in = xr.merge([ds_in, vegtype_da, patches1d_itype_veg_str])
 
     # Restrict to veg. types of interest, if any
-    if vegtypes_to_import != None:
+    if vegtypes_to_import is not None:
         ds_in = xr_flexsel(ds_in, vegtype=vegtypes_to_import)
 
     # Restrict to time slice, if any
@@ -590,7 +590,7 @@ def import_ds(
             my_vegtypes = vegtype_str2int(my_vegtypes)
 
     # Same for these variables.
-    if my_vars != None:
+    if my_vars is not None:
         if not isinstance(my_vars, list):
             my_vars = [my_vars]
     if my_vars_missing_ok:
