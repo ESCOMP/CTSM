@@ -62,8 +62,8 @@ class TestUtilsImportCoord(unittest.TestCase):
         Tests importing a 1-d lat/lon variable
         """
         ds = xr.open_dataset(self._1d_lonlat_file)
-        lat, Nlat = import_coord_1d(ds, "lat")
-        np.testing.assert_equal(Nlat, 360)
+        lat, n_lat = import_coord_1d(ds, "lat")
+        np.testing.assert_equal(n_lat, 360)
         np.testing.assert_array_equal(lat.values[:4], [89.75, 89.25, 88.75, 88.25])
         np.testing.assert_array_equal(lat.values[-4:], [-88.25, -88.75, -89.25, -89.75])
 

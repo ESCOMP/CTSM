@@ -250,8 +250,8 @@ def vegtype_str2int(vegtype_str, vegtype_mainlist=None):
         indices = np.array([-1])
     else:
         indices = np.full(len(vegtype_str), -1)
-    for v in np.unique(vegtype_str):
-        indices[np.where(vegtype_str == v)] = vegtype_mainlist.index(v)
+    for vegtype_str_2 in np.unique(vegtype_str):
+        indices[np.where(vegtype_str == vegtype_str_2)] = vegtype_mainlist.index(vegtype_str_2)
     if convert_to_ndarray:
         indices = [int(x) for x in indices]
     return indices
@@ -331,8 +331,8 @@ def xr_flexsel(xr_object, patches1d_itype_veg=None, warn_about_seltype_interp=Tr
                     if slice_members == []:
                         raise TypeError("slice is all None?")
                     this_type = int
-                    for x in slice_members:
-                        if x < 0 or not isinstance(x, int):
+                    for member in slice_members:
+                        if member < 0 or not isinstance(member, int):
                             this_type = "values"
                             break
                 elif isinstance(selection, np.ndarray):
@@ -341,12 +341,12 @@ def xr_flexsel(xr_object, patches1d_itype_veg=None, warn_about_seltype_interp=Tr
                     else:
                         is_inefficient = True
                         this_type = None
-                        for x in selection:
-                            if x < 0 or x % 1 > 0:
-                                if isinstance(x, int):
+                        for member in selection:
+                            if member < 0 or member % 1 > 0:
+                                if isinstance(member, int):
                                     this_type = "values"
                                 else:
-                                    this_type = type(x)
+                                    this_type = type(member)
                                 break
                         if this_type == None:
                             this_type = int
@@ -385,47 +385,47 @@ def xr_flexsel(xr_object, patches1d_itype_veg=None, warn_about_seltype_interp=Tr
             # Trim along relevant 1d axes
             if isinstance(xr_object, xr.Dataset) and key in ["lat", "lon"]:
                 if selection_type == "indices":
-                    inclCoords = xr_object[key].values[selection]
+                    incl_coords = xr_object[key].values[selection]
                 elif selection_type == "values":
                     if isinstance(selection, slice):
-                        inclCoords = xr_object.sel({key: selection}, drop=False)[key].values
+                        incl_coords = xr_object.sel({key: selection}, drop=False)[key].values
                     else:
-                        inclCoords = selection
+                        incl_coords = selection
                 else:
                     raise TypeError(f"selection_type {selection_type} not recognized")
                 if key == "lat":
-                    thisXY = "jxy"
+                    this_xy = "jxy"
                 elif key == "lon":
-                    thisXY = "ixy"
+                    this_xy = "ixy"
                 else:
                     raise KeyError(
                         f"Key '{key}' not recognized: What 1d_ suffix should I use for variable"
                         " name?"
                     )
-                pattern = re.compile(f"1d_{thisXY}")
+                pattern = re.compile(f"1d_{this_xy}")
                 matches = [x for x in list(xr_object.keys()) if pattern.search(x) != None]
-                for thisVar in matches:
-                    if len(xr_object[thisVar].dims) != 1:
+                for var in matches:
+                    if len(xr_object[var].dims) != 1:
                         raise RuntimeError(
-                            f"Expected {thisVar} to have 1 dimension, but it has"
-                            f" {len(xr_object[thisVar].dims)}: {xr_object[thisVar].dims}"
+                            f"Expected {var} to have 1 dimension, but it has"
+                            f" {len(xr_object[var].dims)}: {xr_object[var].dims}"
                         )
-                    thisVar_dim = xr_object[thisVar].dims[0]
-                    # print(f"Variable {thisVar} has dimension {thisVar_dim}")
-                    thisVar_coords = xr_object[key].values[
-                        xr_object[thisVar].values.astype(int) - 1
-                    ]
-                    # print(f"{thisVar_dim} size before: {xr_object.sizes[thisVar_dim]}")
+                    dim = xr_object[var].dims[0]
+                    # print(f"Variable {var} has dimension {dim}")
+                    coords = xr_object[key].values[xr_object[var].values.astype(int) - 1]
+                    # print(f"{dim} size before: {xr_object.sizes[dim]}")
                     ok_ind = []
-                    new_1d_thisXY = []
-                    for i, x in enumerate(thisVar_coords):
-                        if x in inclCoords:
+                    new_1d_this_xy = []
+                    for i, member in enumerate(coords):
+                        if member in incl_coords:
                             ok_ind = ok_ind + [i]
-                            new_1d_thisXY = new_1d_thisXY + [(inclCoords == x).nonzero()[0] + 1]
-                    xr_object = xr_object.isel({thisVar_dim: ok_ind})
-                    new_1d_thisXY = np.array(new_1d_thisXY).squeeze()
-                    xr_object[thisVar].values = new_1d_thisXY
-                    # print(f"{thisVar_dim} size after: {xr_object.sizes[thisVar_dim]}")
+                            new_1d_this_xy = new_1d_this_xy + [
+                                (incl_coords == member).nonzero()[0] + 1
+                            ]
+                    xr_object = xr_object.isel({dim: ok_ind})
+                    new_1d_this_xy = np.array(new_1d_this_xy).squeeze()
+                    xr_object[var].values = new_1d_this_xy
+                    # print(f"{dim} size after: {xr_object.sizes[dim]}")
 
             # Perform selection
             if selection_type == "indices":
@@ -463,72 +463,71 @@ def get_patch_ivts(this_ds, this_pftlist):
 # Convert a list of strings with vegetation type names into a DataArray. Used to add vegetation type info in import_ds().
 def get_vegtype_str_da(vegtype_str):
     nvt = len(vegtype_str)
-    thisName = "vegtype_str"
     vegtype_str_da = xr.DataArray(
-        vegtype_str, coords={"ivt": np.arange(0, nvt)}, dims=["ivt"], name=thisName
+        vegtype_str, coords={"ivt": np.arange(0, nvt)}, dims=["ivt"], name="vegtype_str"
     )
     return vegtype_str_da
 
 
 # Function to drop unwanted variables in preprocessing of open_mfdataset(), making sure to NOT drop any unspecified variables that will be useful in gridding. Also adds vegetation type info in the form of a DataArray of strings.
 # Also renames "pft" dimension (and all like-named variables, e.g., pft1d_itype_veg_str) to be named like "patch". This can later be reversed, for compatibility with other code, using patch2pft().
-def mfdataset_preproc(ds, vars_to_import, vegtypes_to_import, timeSlice):
+def mfdataset_preproc(ds_in, vars_to_import, vegtypes_to_import, time_slice):
     # Rename "pft" dimension and variables to "patch", if needed
-    if "pft" in ds.dims:
+    if "pft" in ds_in.dims:
         pattern = re.compile("pft.*1d")
-        matches = [x for x in list(ds.keys()) if pattern.search(x) != None]
+        matches = [x for x in list(ds_in.keys()) if pattern.search(x) != None]
         pft2patch_dict = {"pft": "patch"}
-        for m in matches:
-            pft2patch_dict[m] = m.replace("pft", "patch").replace("patchs", "patches")
-        ds = ds.rename(pft2patch_dict)
+        for match in matches:
+            pft2patch_dict[match] = match.replace("pft", "patch").replace("patchs", "patches")
+        ds_in = ds_in.rename(pft2patch_dict)
 
     derived_vars = []
     if vars_to_import != None:
         # Split vars_to_import into variables that are vs. aren't already in ds
-        derived_vars = [v for v in vars_to_import if v not in ds]
-        present_vars = [v for v in vars_to_import if v in ds]
+        derived_vars = [v for v in vars_to_import if v not in ds_in]
+        present_vars = [v for v in vars_to_import if v in ds_in]
         vars_to_import = present_vars
 
         # Get list of dimensions present in variables in vars_to_import.
-        dimList = []
-        for thisVar in vars_to_import:
+        dim_list = []
+        for var in vars_to_import:
             # list(set(x)) returns a list of the unique items in x
-            dimList = list(set(dimList + list(ds.variables[thisVar].dims)))
+            dim_list = list(set(dim_list + list(ds_in.variables[var].dims)))
 
         # Get any _1d variables that are associated with those dimensions. These will be useful in gridding. Also, if any dimension is "pft", set up to rename it and all like-named variables to "patch"
-        onedVars = []
-        for thisDim in dimList:
-            pattern = re.compile(f"{thisDim}.*1d")
-            matches = [x for x in list(ds.keys()) if pattern.search(x) != None]
-            onedVars = list(set(onedVars + matches))
+        oned_vars = []
+        for dim in dim_list:
+            pattern = re.compile(f"{dim}.*1d")
+            matches = [x for x in list(ds_in.keys()) if pattern.search(x) != None]
+            oned_vars = list(set(oned_vars + matches))
 
         # Add dimensions and _1d variables to vars_to_import
-        vars_to_import = list(set(vars_to_import + list(ds.dims) + onedVars))
+        vars_to_import = list(set(vars_to_import + list(ds_in.dims) + oned_vars))
 
         # Add any _bounds variables
         bounds_vars = []
-        for v in vars_to_import:
-            bounds_var = v + "_bounds"
-            if bounds_var in ds:
+        for var in vars_to_import:
+            bounds_var = var + "_bounds"
+            if bounds_var in ds_in:
                 bounds_vars = bounds_vars + [bounds_var]
         vars_to_import = vars_to_import + bounds_vars
 
         # Get list of variables to drop
-        varlist = list(ds.variables)
+        varlist = list(ds_in.variables)
         vars_to_drop = list(np.setdiff1d(varlist, vars_to_import))
 
         # Drop them
-        ds = ds.drop_vars(vars_to_drop)
+        ds_in = ds_in.drop_vars(vars_to_drop)
 
     # Add vegetation type info
-    if "patches1d_itype_veg" in list(ds):
+    if "patches1d_itype_veg" in list(ds_in):
         this_pftlist = define_pftlist()
         get_patch_ivts(
-            ds, this_pftlist
+            ds_in, this_pftlist
         )  # Includes check of whether vegtype changes over time anywhere
         vegtype_da = get_vegtype_str_da(this_pftlist)
         patches1d_itype_veg_str = vegtype_da.values[
-            ds.isel(time=0).patches1d_itype_veg.values.astype(int)
+            ds_in.isel(time=0).patches1d_itype_veg.values.astype(int)
         ]
         npatch = len(patches1d_itype_veg_str)
         patches1d_itype_veg_str = xr.DataArray(
@@ -537,77 +536,82 @@ def mfdataset_preproc(ds, vars_to_import, vegtypes_to_import, timeSlice):
             dims=["patch"],
             name="patches1d_itype_veg_str",
         )
-        ds = xr.merge([ds, vegtype_da, patches1d_itype_veg_str])
+        ds_in = xr.merge([ds_in, vegtype_da, patches1d_itype_veg_str])
 
     # Restrict to veg. types of interest, if any
     if vegtypes_to_import != None:
-        ds = xr_flexsel(ds, vegtype=vegtypes_to_import)
+        ds_in = xr_flexsel(ds_in, vegtype=vegtypes_to_import)
 
     # Restrict to time slice, if any
-    if timeSlice:
-        ds = safer_timeslice(ds, timeSlice)
+    if time_slice:
+        ds_in = safer_timeslice(ds_in, time_slice)
 
     # Finish import
-    ds = xr.decode_cf(ds, decode_times=True)
+    ds_in = xr.decode_cf(ds_in, decode_times=True)
 
     # Compute derived variables
-    for v in derived_vars:
-        if v == "HYEARS" and "HDATES" in ds and ds.HDATES.dims == ("time", "mxharvests", "patch"):
-            yearList = np.array([np.float32(x.year - 1) for x in ds.time.values])
-            hyears = ds["HDATES"].copy()
+    for var in derived_vars:
+        if (
+            var == "HYEARS"
+            and "HDATES" in ds_in
+            and ds_in.HDATES.dims == ("time", "mxharvests", "patch")
+        ):
+            year_list = np.array([np.float32(x.year - 1) for x in ds_in.time.values])
+            hyears = ds_in["HDATES"].copy()
             hyears.values = np.tile(
-                np.expand_dims(yearList, (1, 2)), (1, ds.dims["mxharvests"], ds.dims["patch"])
+                np.expand_dims(year_list, (1, 2)),
+                (1, ds_in.dims["mxharvests"], ds_in.dims["patch"]),
             )
             with np.errstate(invalid="ignore"):
-                is_le_zero = ~np.isnan(ds.HDATES.values) & (ds.HDATES.values <= 0)
-            hyears.values[is_le_zero] = ds.HDATES.values[is_le_zero]
-            hyears.values[np.isnan(ds.HDATES.values)] = np.nan
+                is_le_zero = ~np.isnan(ds_in.HDATES.values) & (ds_in.HDATES.values <= 0)
+            hyears.values[is_le_zero] = ds_in.HDATES.values[is_le_zero]
+            hyears.values[np.isnan(ds_in.HDATES.values)] = np.nan
             hyears.attrs["long_name"] = "DERIVED: actual crop harvest years"
             hyears.attrs["units"] = "year"
-            ds["HYEARS"] = hyears
+            ds_in["HYEARS"] = hyears
 
-    return ds
+    return ds_in
 
 
 # Import a dataset that can be spread over multiple files, only including specified variables and/or vegetation types and/or timesteps, concatenating by time. DOES actually read the dataset into memory, but only AFTER dropping unwanted variables and/or vegetation types.
 def import_ds(
     filelist,
-    myVars=None,
-    myVegtypes=None,
-    timeSlice=None,
-    myVars_missing_ok=[],
+    my_vars=None,
+    my_vegtypes=None,
+    time_slice=None,
+    my_vars_missing_ok=[],
     only_active_patches=False,
     rename_lsmlatlon=False,
     chunks=None,
 ):
-    # Convert myVegtypes here, if needed, to avoid repeating the process each time you read a file in xr.open_mfdataset().
-    if myVegtypes is not None:
-        if not isinstance(myVegtypes, list):
-            myVegtypes = [myVegtypes]
-        if isinstance(myVegtypes[0], str):
-            myVegtypes = vegtype_str2int(myVegtypes)
+    # Convert my_vegtypes here, if needed, to avoid repeating the process each time you read a file in xr.open_mfdataset().
+    if my_vegtypes is not None:
+        if not isinstance(my_vegtypes, list):
+            my_vegtypes = [my_vegtypes]
+        if isinstance(my_vegtypes[0], str):
+            my_vegtypes = vegtype_str2int(my_vegtypes)
 
     # Same for these variables.
-    if myVars != None:
-        if not isinstance(myVars, list):
-            myVars = [myVars]
-    if myVars_missing_ok:
-        if not isinstance(myVars_missing_ok, list):
-            myVars_missing_ok = [myVars_missing_ok]
+    if my_vars != None:
+        if not isinstance(my_vars, list):
+            my_vars = [my_vars]
+    if my_vars_missing_ok:
+        if not isinstance(my_vars_missing_ok, list):
+            my_vars_missing_ok = [my_vars_missing_ok]
 
     # Make sure lists are actually lists
     if not isinstance(filelist, list):
         filelist = [filelist]
-    if not isinstance(myVars_missing_ok, list):
-        myVars_missing_ok = [myVars_missing_ok]
+    if not isinstance(my_vars_missing_ok, list):
+        my_vars_missing_ok = [my_vars_missing_ok]
 
     # Remove files from list if they don't contain requested timesteps.
-    # timeSlice should be in the format slice(start,end[,step]). start or end can be None to be unbounded on one side. Note that the standard slice() documentation suggests that only elements through end-1 will be selected, but that seems not to be the case in the xarray implementation.
-    if timeSlice:
+    # time_slice should be in the format slice(start,end[,step]). start or end can be None to be unbounded on one side. Note that the standard slice() documentation suggests that only elements through end-1 will be selected, but that seems not to be the case in the xarray implementation.
+    if time_slice:
         new_filelist = []
         for file in sorted(filelist):
             filetime = xr.open_dataset(file).time
-            filetime_sel = safer_timeslice(filetime, timeSlice)
+            filetime_sel = safer_timeslice(filetime, time_slice)
             include_this_file = filetime_sel.size
             if include_this_file:
                 new_filelist.append(file)
@@ -616,11 +620,11 @@ def import_ds(
             elif new_filelist:
                 break
         if not new_filelist:
-            raise RuntimeError(f"No files found in timeSlice {timeSlice}")
+            raise RuntimeError(f"No files found in time_slice {time_slice}")
         filelist = new_filelist
 
-    # The xarray open_mfdataset() "preprocess" argument requires a function that takes exactly one variable (an xarray.Dataset object). Wrapping mfdataset_preproc() in this lambda function allows this. Could also just allow mfdataset_preproc() to access myVars and myVegtypes directly, but that's bad practice as it could lead to scoping issues.
-    mfdataset_preproc_closure = lambda ds: mfdataset_preproc(ds, myVars, myVegtypes, timeSlice)
+    # The xarray open_mfdataset() "preprocess" argument requires a function that takes exactly one variable (an xarray.Dataset object). Wrapping mfdataset_preproc() in this lambda function allows this. Could also just allow mfdataset_preproc() to access my_vars and my_vegtypes directly, but that's bad practice as it could lead to scoping issues.
+    mfdataset_preproc_closure = lambda ds: mfdataset_preproc(ds, my_vars, my_vegtypes, time_slice)
 
     # Import
     if isinstance(filelist, list) and len(filelist) == 1:
@@ -646,7 +650,7 @@ def import_ds(
         )
     elif isinstance(filelist, str):
         this_ds = xr.open_dataset(filelist, chunks=chunks)
-        this_ds = mfdataset_preproc(this_ds, myVars, myVegtypes, timeSlice)
+        this_ds = mfdataset_preproc(this_ds, my_vars, my_vegtypes, time_slice)
         this_ds = this_ds.compute()
 
     # Include only active patches (or whatever)
@@ -656,10 +660,10 @@ def import_ds(
         this_ds_active = this_ds.isel(patch=p_active)
 
     # Warn and/or error about variables that couldn't be imported or derived
-    if myVars:
-        missing_vars = [v for v in myVars if v not in this_ds]
-        ok_missing_vars = [v for v in missing_vars if v in myVars_missing_ok]
-        bad_missing_vars = [v for v in missing_vars if v not in myVars_missing_ok]
+    if my_vars:
+        missing_vars = [v for v in my_vars if v not in this_ds]
+        ok_missing_vars = [v for v in missing_vars if v in my_vars_missing_ok]
+        bad_missing_vars = [v for v in missing_vars if v not in my_vars_missing_ok]
         if ok_missing_vars:
             print(
                 "Could not import some variables; either not present or not deriveable:"
@@ -681,37 +685,37 @@ def import_ds(
 
 
 # Return a DataArray, with defined coordinates, for a given variable in a dataset.
-def get_thisVar_da(thisVar, this_ds):
+def get_thisvar_da(var, this_ds):
     # Make DataArray for this variable
-    thisvar_da = np.array(this_ds.variables[thisVar])
-    theseDims = this_ds.variables[thisVar].dims
-    thisvar_da = xr.DataArray(thisvar_da, dims=theseDims)
+    thisvar_da = np.array(this_ds.variables[var])
+    these_dims = this_ds.variables[var].dims
+    thisvar_da = xr.DataArray(thisvar_da, dims=these_dims)
 
     # Define coordinates of this variable's DataArray
-    dimsDict = dict()
-    for thisDim in theseDims:
-        dimsDict[thisDim] = this_ds[thisDim]
-    thisvar_da = thisvar_da.assign_coords(dimsDict)
-    thisvar_da.attrs = this_ds[thisVar].attrs
+    dims_dict = dict()
+    for dim in these_dims:
+        dims_dict[dim] = this_ds[dim]
+    thisvar_da = thisvar_da.assign_coords(dims_dict)
+    thisvar_da.attrs = this_ds[var].attrs
 
     return thisvar_da
 
 
 # Make a geographically gridded DataArray (with dimensions time, vegetation type [as string], lat, lon) of one variable within a Dataset. Optional keyword arguments will be passed to xr_flexsel() to select single steps or slices along the specified ax(ie)s.
 #
-# fillValue: Default None means grid will be filled with NaN, unless the variable in question already has a fillValue, in which case that will be used.
-def grid_one_variable(this_ds, thisVar, fillValue=None, **kwargs):
+# fill_value: Default None means grid will be filled with NaN, unless the variable in question already has a _FillValue, in which case that will be used.
+def grid_one_variable(this_ds, var, fill_value=None, **kwargs):
     # Get this Dataset's values for selection(s), if provided
     this_ds = xr_flexsel(this_ds, **kwargs)
 
     # Get DataArrays needed for gridding
-    thisvar_da = get_thisVar_da(thisVar, this_ds)
+    thisvar_da = get_thisvar_da(var, this_ds)
     vt_da = None
     if "patch" in thisvar_da.dims:
         spatial_unit = "patch"
         xy_1d_prefix = "patches"
         if "patches1d_itype_veg" in this_ds:
-            vt_da = get_thisVar_da("patches1d_itype_veg", this_ds)
+            vt_da = get_thisvar_da("patches1d_itype_veg", this_ds)
     elif "gridcell" in thisvar_da.dims:
         spatial_unit = "gridcell"
         xy_1d_prefix = "grid"
@@ -719,11 +723,11 @@ def grid_one_variable(this_ds, thisVar, fillValue=None, **kwargs):
         raise RuntimeError(
             f"What variables to use for _ixy and _jxy of variable with dims {thisvar_da.dims}?"
         )
-    ixy_da = get_thisVar_da(xy_1d_prefix + "1d_ixy", this_ds)
-    jxy_da = get_thisVar_da(xy_1d_prefix + "1d_jxy", this_ds)
+    ixy_da = get_thisvar_da(xy_1d_prefix + "1d_ixy", this_ds)
+    jxy_da = get_thisvar_da(xy_1d_prefix + "1d_jxy", this_ds)
 
-    if not fillValue and "_FillValue" in thisvar_da.attrs:
-        fillValue = thisvar_da.attrs["_FillValue"]
+    if not fill_value and "_FillValue" in thisvar_da.attrs:
+        fill_value = thisvar_da.attrs["_FillValue"]
 
     # Renumber vt_da to work as indices on new ivt dimension, if needed.
     ### Ensures that the unique set of vt_da values begins with 1 and
@@ -743,18 +747,18 @@ def grid_one_variable(this_ds, thisVar, fillValue=None, **kwargs):
     new_dims = new_dims + ["lat", "lon"]
 
     # Set up empty array
-    n_list = []
+    dim_size_list = []
     for dim in new_dims:
         if dim == "ivt_str":
-            n = this_ds.sizes["ivt"]
+            dim_size = this_ds.sizes["ivt"]
         elif dim in thisvar_da.coords:
-            n = thisvar_da.sizes[dim]
+            dim_size = thisvar_da.sizes[dim]
         else:
-            n = this_ds.sizes[dim]
-        n_list = n_list + [n]
-    thisvar_gridded = np.empty(n_list)
-    if fillValue:
-        thisvar_gridded[:] = fillValue
+            dim_size = this_ds.sizes[dim]
+        dim_size_list = dim_size_list + [dim_size]
+    thisvar_gridded = np.empty(dim_size_list)
+    if fill_value:
+        thisvar_gridded[:] = fill_value
     else:
         thisvar_gridded[:] = np.NaN
 
@@ -790,45 +794,45 @@ def grid_one_variable(this_ds, thisVar, fillValue=None, **kwargs):
         else:
             values = this_ds[dim].values
         thisvar_gridded = thisvar_gridded.assign_coords({dim: values})
-    thisvar_gridded.name = thisVar
+    thisvar_gridded.name = var
 
     # Add FillValue attribute
-    if fillValue:
-        thisvar_gridded.attrs["_FillValue"] = fillValue
+    if fill_value:
+        thisvar_gridded.attrs["_FillValue"] = fill_value
 
     return thisvar_gridded
 
 
 # ctsm_pylib can't handle time slicing like Dataset.sel(time=slice("1998-01-01", "2005-12-31")) for some reason. This function tries to fall back to slicing by integers. It should work with both Datasets and DataArrays.
-def safer_timeslice(ds, timeSlice, timeVar="time"):
+def safer_timeslice(ds_in, time_slice, time_var="time"):
     try:
-        ds = ds.sel({timeVar: timeSlice})
+        ds_in = ds_in.sel({time_var: time_slice})
     except:
         # If the issue might have been slicing using strings, try to fall back to integer slicing
         if (
-            isinstance(timeSlice.start, str)
-            and isinstance(timeSlice.stop, str)
-            and len(timeSlice.start.split("-")) == 3
-            and timeSlice.start.split("-")[1:] == ["01", "01"]
-            and len(timeSlice.stop.split("-")) == 3
+            isinstance(time_slice.start, str)
+            and isinstance(time_slice.stop, str)
+            and len(time_slice.start.split("-")) == 3
+            and time_slice.start.split("-")[1:] == ["01", "01"]
+            and len(time_slice.stop.split("-")) == 3
             and (
-                timeSlice.stop.split("-")[1:] == ["12", "31"]
-                or timeSlice.stop.split("-")[1:] == ["01", "01"]
+                time_slice.stop.split("-")[1:] == ["12", "31"]
+                or time_slice.stop.split("-")[1:] == ["01", "01"]
             )
         ):
-            fileyears = np.array([x.year for x in ds.time.values])
+            fileyears = np.array([x.year for x in ds_in.time.values])
             if len(np.unique(fileyears)) != len(fileyears):
                 print("Could not fall back to integer slicing of years: Time axis not annual")
                 raise
-            yStart = int(timeSlice.start.split("-")[0])
-            yStop = int(timeSlice.stop.split("-")[0])
-            where_in_timeSlice = np.where((fileyears >= yStart) & (fileyears <= yStop))[0]
-            ds = ds.isel({timeVar: where_in_timeSlice})
+            y_start = int(time_slice.start.split("-")[0])
+            y_stop = int(time_slice.stop.split("-")[0])
+            where_in_timeslice = np.where((fileyears >= y_start) & (fileyears <= y_stop))[0]
+            ds_in = ds_in.isel({time_var: where_in_timeslice})
         else:
-            print(f"Could not fall back to integer slicing for timeSlice {timeSlice}")
+            print(f"Could not fall back to integer slicing for time_slice {time_slice}")
             raise
 
-    return ds
+    return ds_in
 
 
 # Convert a longitude axis that's -180 to 180 around the international date line to one that's 0 to 360 around the prime meridian. If you pass in a Dataset or DataArray, the "lon" coordinates will be changed. Otherwise, it assumes you're passing in numeric data.
@@ -878,9 +882,9 @@ def lon_idl2pm(lons_in, fail_silently=False):
 
 
 # Helper function to check that a list is strictly increasing
-def is_strictly_increasing(L):
+def is_strictly_increasing(this_list):
     # https://stackoverflow.com/a/4983359/2965321
-    return all(x < y for x, y in zip(L, L[1:]))
+    return all(x < y for x, y in zip(this_list, this_list[1:]))
 
 
 # Ensure that longitude axis coordinates are monotonically increasing

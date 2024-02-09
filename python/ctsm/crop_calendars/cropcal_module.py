@@ -266,7 +266,7 @@ def import_rx_dates(var_prefix, date_infile, dates_ds, set_neg1_to_nan=True):
             this_var = f"{var_prefix}{j+1}_{i}"
             date_varlist = date_varlist + [this_var]
 
-    this_ds = utils.import_ds(date_infile, myVars=date_varlist)
+    this_ds = utils.import_ds(date_infile, my_vars=date_varlist)
 
     did_warn = False
     for var in this_ds:
@@ -355,7 +355,7 @@ def import_output(
     Import CLM output
     """
     # Import
-    this_ds = utils.import_ds(filename, myVars=my_vars, myVegtypes=my_vegtypes)
+    this_ds = utils.import_ds(filename, my_vars=my_vars, my_vegtypes=my_vegtypes)
 
     # Trim to years of interest (do not include extra year needed for finishing last growing season)
     if year_1 and year_n:

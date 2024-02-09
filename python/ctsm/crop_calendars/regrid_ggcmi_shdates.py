@@ -117,9 +117,9 @@ def regrid_ggcmi_shdates(
 
     # Import and format latitude
     if "lat" in template_ds_in:
-        lat, Nlat = import_coord_1d(template_ds_in, "lat")
+        lat, n_lat = import_coord_1d(template_ds_in, "lat")
     elif "LATIXY" in template_ds_in:
-        lat, Nlat = import_coord_2d(template_ds_in, "lat", "LATIXY")
+        lat, n_lat = import_coord_2d(template_ds_in, "lat", "LATIXY")
         lat.attrs["axis"] = "Y"
     else:
         abort("No latitude variable found in regrid template file")
@@ -130,14 +130,14 @@ def regrid_ggcmi_shdates(
 
     # Import and format longitude
     if "lon" in template_ds_in:
-        lon, Nlon = import_coord_1d(template_ds_in, "lon")
+        lon, n_lon = import_coord_1d(template_ds_in, "lon")
     elif "LONGXY" in template_ds_in:
-        lon, Nlon = import_coord_2d(template_ds_in, "lon", "LONGXY")
+        lon, n_lon = import_coord_2d(template_ds_in, "lon", "LONGXY")
         lon.attrs["axis"] = "Y"
     else:
         abort("No longitude variable found in regrid template file")
     template_da_out = xr.DataArray(
-        data=np.full((Nlat, Nlon), 0.0),
+        data=np.full((n_lat, n_lon), 0.0),
         dims={"lat": lat, "lon": lon},
         name="area",
     )
@@ -159,36 +159,38 @@ def regrid_ggcmi_shdates(
     if len(input_files) == 0:
         abort(f"No files found matching {os.path.join(os.getcwd(), pattern)}")
     input_files.sort()
-    for f in input_files:
-        this_crop = f[0:6]
+    for file in input_files:
+        this_crop = file[0:6]
         if crop_list is not None and this_crop not in crop_list:
             continue
 
         logger.info("    " + this_crop)
-        f2 = os.path.join(regrid_output_directory, f)
-        f3 = f2.replace(regrid_extension, f"_nninterp-{regrid_resolution}{regrid_extension}")
+        file_2 = os.path.join(regrid_output_directory, file)
+        file_3 = file_2.replace(
+            regrid_extension, f"_nninterp-{regrid_resolution}{regrid_extension}"
+        )
 
-        if os.path.exists(f3):
-            os.remove(f3)
+        if os.path.exists(file_3):
+            os.remove(file_3)
 
         # Sometimes cdo fails for no apparent reason. In testing this never happened more than 3x in a row.
         try:
             run_and_check(
-                f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'"
+                f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{file}' '{file_3}'"
             )
         except:
             try:
                 run_and_check(
-                    f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'"
+                    f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{file}' '{file_3}'"
                 )
             except:
                 try:
                     run_and_check(
-                        f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'"
+                        f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{file}' '{file_3}'"
                     )
                 except:
                     run_and_check(
-                        f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'"
+                        f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{file}' '{file_3}'"
                     )
 
     # Delete template file, which is no longer needed

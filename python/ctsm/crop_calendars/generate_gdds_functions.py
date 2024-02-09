@@ -156,7 +156,7 @@ def import_rx_dates(s_or_h, date_infile, incl_patches1d_itype_veg, mxsowings, lo
             this_var = f"{s_or_h}date{n_sowing+1}_{i}"
             date_var_list = date_var_list + [this_var]
 
-    this_ds = utils.import_ds(date_infile, myVars=date_var_list)
+    this_ds = utils.import_ds(date_infile, my_vars=date_var_list)
 
     for var in this_ds:
         this_ds = this_ds.rename({var: var.replace(f"{s_or_h}date", "gs")})
@@ -272,9 +272,9 @@ def import_and_process_1yr(
     print(h1_filelist)
     dates_ds = utils.import_ds(
         h1_filelist,
-        myVars=["SDATES", "HDATES"],
-        myVegtypes=crops_to_read,
-        timeSlice=slice(f"{this_year}-01-01", f"{this_year}-12-31"),
+        my_vars=["SDATES", "HDATES"],
+        my_vegtypes=crops_to_read,
+        time_slice=slice(f"{this_year}-01-01", f"{this_year}-12-31"),
         chunks=chunks,
     )
 
@@ -541,8 +541,8 @@ def import_and_process_1yr(
             error(logger, f"No files found matching pattern '*h2.{this_year-1}-01-01*.nc(.base)'")
     h2_ds = utils.import_ds(
         h2_files,
-        myVars=my_vars,
-        myVegtypes=crops_to_read,
+        my_vars=my_vars,
+        my_vegtypes=crops_to_read,
         chunks=chunks,
     )
 
