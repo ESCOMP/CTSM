@@ -744,10 +744,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false.
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_1_cam6.0"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false.
-</init_interp_attributes>
-
 <!-- 1850 for CTSM5.1 -->
 <!-- These two needs to specify use_cn=F/T since there is a version for both, other files just use the BGC version -->
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_1_GSWP3v1" use_cn=".false."
@@ -854,7 +850,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- clm5_1 physics -->
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_1_cam6.0"
-                       hgrid="ne30np4.pg3"
 >hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
 </init_interp_attributes>
 
@@ -1008,14 +1003,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.I1850Clm50BgcCrop-ciso.1366-01-01.0.9x1.25_gx1v7_simyr1850_c200428.nc
 </finidat>
 <!-- From the clm5_0_cam6.0 setting above...-->
-<finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false."
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
-         lnd_tuning_mode="clm5_1_cam6.0"
->lnd/clm2/initdata_map/clmi.B1850Clm50BgcCrop.0161-01-01.0.9x1.25_gx1v7_simyr1850_c200729.nc
-</finidat>
-
-
 <!-- Use f09 clm5_0 cam6 spinup file for clm5_1 cam6-->
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false."
