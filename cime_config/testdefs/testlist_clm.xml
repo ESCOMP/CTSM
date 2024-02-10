@@ -108,7 +108,7 @@
       <option name="comment">CESM3 development test at the standard coupled resolution for 2000</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="hcru_hcru_mt13" compset="I2000Clm51Sp" testmods="clm/default">
+  <test name="SMS_P128x72_Ld5" grid="hcru_hcru_mt13" compset="I2000Clm51Sp" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -2500,15 +2500,6 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Transient production future scenario SSP3-7.0 case with isotopes with a december 2050 start</option>
-    </options>
-  </test>
-  <test name="SMS_Ld5" grid="f09_g17" compset="ISSP460Clm50BgcCrop" testmods="clm/ciso_dec2050Start">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Transient production with anomaly forcing future scenario SSP1-2.6 case</option>
     </options>
   </test>
   <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP126Clm50BgcCrop" testmods="clm/datm_ssp126_anom_forc">
