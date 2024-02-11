@@ -6,7 +6,6 @@ import argparse
 import glob
 import os
 import numpy as np
-import cropcal_module as cc  # pylint: disable=import-error
 
 # Import the CTSM Python utilities.
 # sys.path.insert() is necessary for RXCROPMATURITY to work. The fact that it's calling this script
@@ -15,6 +14,7 @@ _CTSM_PYTHON = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, os.pardir, "python"
 )
 sys.path.insert(1, _CTSM_PYTHON)
+import ctsm.crop_calendars.cropcal_module as cc  # pylint: disable=wrong-import-position
 from ctsm.crop_calendars.check_rx_obeyed import (  # pylint: disable=wrong-import-position
     check_rx_obeyed,
 )
