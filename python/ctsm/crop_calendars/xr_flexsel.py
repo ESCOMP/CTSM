@@ -254,7 +254,7 @@ def handle_callable(xr_object, key, selection):
     if selection == np.mean:  # pylint: disable=comparison-with-callable
         try:
             xr_object = xr_object.mean(dim=key)
-        except:
+        except:  # pylint: disable=raise-missing-from
             raise ValueError(
                 f"Failed to take mean of dimension {key}. Try doing so outside of xr_flexsel()."
             )
