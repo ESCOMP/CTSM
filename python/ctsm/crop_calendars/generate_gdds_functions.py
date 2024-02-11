@@ -21,6 +21,9 @@ sys.path.insert(1, _CTSM_PYTHON)
 import ctsm.crop_calendars.cropcal_utils as utils  # pylint: disable=wrong-import-position
 import ctsm.crop_calendars.cropcal_module as cc  # pylint: disable=wrong-import-position
 from ctsm.crop_calendars.xr_flexsel import xr_flexsel  # pylint: disable=wrong-import-position
+from ctsm.crop_calendars.grid_one_variable import (  # pylint: disable=wrong-import-position
+    grid_one_variable,
+)
 
 CAN_PLOT = True
 try:
@@ -75,7 +78,7 @@ def check_sdates(dates_ds, sdates_rx, logger, verbose=False):
     """
     log(logger, "   Checking that input and output sdates match...")
 
-    sdates_grid = utils.grid_one_variable(dates_ds, "SDATES")
+    sdates_grid = grid_one_variable(dates_ds, "SDATES")
 
     all_ok = True
     any_found = False
@@ -212,7 +215,7 @@ def yp_list_to_ds(yp_list, daily_ds, incl_vegtypes_str, dates_rx, longname_prefi
 
         # Grid this crop
         this_ds["tmp"] = this_da
-        da_gridded = utils.grid_one_variable(this_ds, "tmp", vegtype=this_crop_str)
+        da_gridded = grid_one_variable(this_ds, "tmp", vegtype=this_crop_str)
         da_gridded = da_gridded.squeeze(drop=True)
 
         # Add singleton time dimension and save to output Dataset
