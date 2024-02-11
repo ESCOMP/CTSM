@@ -2,20 +2,8 @@
 For variables that should stay constant, make sure they are
 """
 
-import sys
-import os
 import numpy as np
-
-# Import the CTSM Python utilities.
-# sys.path.insert() is necessary for RXCROPMATURITY to work. The fact that it's calling this script
-# in the RUN phase seems to require the python/ directory to be manually added to path.
-_CTSM_PYTHON = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, os.pardir, "python"
-)
-sys.path.insert(1, _CTSM_PYTHON)
-from ctsm.crop_calendars.cropcal_module import (  # pylint: disable=wrong-import-position
-    import_rx_dates,
-)
+from ctsm.crop_calendars.cropcal_module import import_rx_dates
 
 
 def check_one_constant_var_setup(this_ds, case, var):

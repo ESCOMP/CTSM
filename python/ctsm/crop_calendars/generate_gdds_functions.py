@@ -4,29 +4,17 @@ Functions to support generate_gdds.py
 # pylint: disable=too-many-lines,too-many-statements
 import warnings
 import os
-import sys
 import glob
 import datetime as dt
 from importlib import util as importlib_util
 import numpy as np
 import xarray as xr
 
-# Import the CTSM Python utilities.
-# sys.path.insert() is necessary for RXCROPMATURITY to work. The fact that it's calling this script
-# in the RUN phase seems to require the python/ directory to be manually added to path.
-_CTSM_PYTHON = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, os.pardir, "python"
-)
-sys.path.insert(1, _CTSM_PYTHON)
-import ctsm.crop_calendars.cropcal_utils as utils  # pylint: disable=wrong-import-position
-import ctsm.crop_calendars.cropcal_module as cc  # pylint: disable=wrong-import-position
-from ctsm.crop_calendars.xr_flexsel import xr_flexsel  # pylint: disable=wrong-import-position
-from ctsm.crop_calendars.grid_one_variable import (  # pylint: disable=wrong-import-position
-    grid_one_variable,
-)
-from ctsm.crop_calendars.import_ds import (  # pylint: disable=wrong-import-position
-    import_ds,
-)
+import ctsm.crop_calendars.cropcal_utils as utils
+import ctsm.crop_calendars.cropcal_module as cc
+from ctsm.crop_calendars.xr_flexsel import xr_flexsel
+from ctsm.crop_calendars.grid_one_variable import grid_one_variable
+from ctsm.crop_calendars.import_ds import import_ds
 
 CAN_PLOT = True
 try:

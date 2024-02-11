@@ -2,32 +2,16 @@
 Helper functions for various crop calendar stuff
 """
 
-import sys
 import os
 import glob
 import numpy as np
 import xarray as xr
 
-# Import the CTSM Python utilities.
-# sys.path.insert() is necessary for RXCROPMATURITY to work. The fact that it's calling this script
-# in the RUN phase seems to require the python/ directory to be manually added to path.
-_CTSM_PYTHON = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, os.pardir, "python"
-)
-sys.path.insert(1, _CTSM_PYTHON)
-import ctsm.crop_calendars.cropcal_utils as utils  # pylint: disable=wrong-import-position
-from ctsm.crop_calendars.convert_axis_time2gs import (  # pylint: disable=wrong-import-position
-    convert_axis_time2gs,
-)
-from ctsm.crop_calendars.check_rx_obeyed import (  # pylint: disable=wrong-import-position
-    check_rx_obeyed,
-)
-from ctsm.crop_calendars.cropcal_constants import (  # pylint: disable=wrong-import-position
-    DEFAULT_GDD_MIN,
-)
-from ctsm.crop_calendars.import_ds import (  # pylint: disable=wrong-import-position
-    import_ds,
-)
+import ctsm.crop_calendars.cropcal_utils as utils
+from ctsm.crop_calendars.convert_axis_time2gs import convert_axis_time2gs
+from ctsm.crop_calendars.check_rx_obeyed import check_rx_obeyed
+from ctsm.crop_calendars.cropcal_constants import DEFAULT_GDD_MIN
+from ctsm.crop_calendars.import_ds import import_ds
 
 
 def check_and_trim_years(year_1, year_n, ds_in):
