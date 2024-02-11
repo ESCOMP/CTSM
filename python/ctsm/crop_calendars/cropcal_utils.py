@@ -5,7 +5,7 @@ copied from klindsay, https://github.com/klindsay28/CESM2_coup_carb_cycle_JAMES/
 
 import re
 import warnings
-import importlib
+from importlib.util import find_spec
 
 import numpy as np
 import xarray as xr
@@ -399,8 +399,7 @@ def import_ds(
     my_vars=None,
     my_vegtypes=None,
     time_slice=None,
-    my_vars_missing_ok=[],
-    only_active_patches=False,
+    my_vars_missing_ok=None,
     rename_lsmlatlon=False,
     chunks=None,
 ):
@@ -411,7 +410,10 @@ def import_ds(
     - DOES actually read the dataset into memory, but only AFTER dropping unwanted variables and/or
       vegetation types.
     """
-    # Convert my_vegtypes here, if needed, to avoid repeating the process each time you read a file in xr.open_mfdataset().
+    if my_vars_missing_ok is None:
+        my_vars_missing_ok = []
+    # Convert my_vegtypes here, if needed, to avoid repeating the process each time you read a file
+    # in xr.open_mfdataset().
     if my_vegtypes is not None:
         if not isinstance(my_vegtypes, list):
             my_vegtypes = [my_vegtypes]
@@ -433,7 +435,10 @@ def import_ds(
         my_vars_missing_ok = [my_vars_missing_ok]
 
     # Remove files from list if they don't contain requested timesteps.
-    # time_slice should be in the format slice(start,end[,step]). start or end can be None to be unbounded on one side. Note that the standard slice() documentation suggests that only elements through end-1 will be selected, but that seems not to be the case in the xarray implementation.
+    # time_slice should be in the format slice(start,end[,step]). start or end can be None to be
+    # unbounded on one side. Note that the standard slice() documentation suggests that only
+    # elements through end-1 will be selected, but that seems not to be the case in the xarray
+    # implementation.
     if time_slice:
         new_filelist = []
         for file in sorted(filelist):
@@ -443,14 +448,18 @@ def import_ds(
             if include_this_file:
                 new_filelist.append(file)
 
-            # If you found some matching files, but then you find one that doesn't, stop going through the list.
+            # If you found some matching files, but then you find one that doesn't, stop going
+            # through the list.
             elif new_filelist:
                 break
         if not new_filelist:
             raise RuntimeError(f"No files found in time_slice {time_slice}")
         filelist = new_filelist
 
-    # The xarray open_mfdataset() "preprocess" argument requires a function that takes exactly one variable (an xarray.Dataset object). Wrapping mfdataset_preproc() in this lambda function allows this. Could also just allow mfdataset_preproc() to access my_vars and my_vegtypes directly, but that's bad practice as it could lead to scoping issues.
+    # The xarray open_mfdataset() "preprocess" argument requires a function that takes exactly one
+    # variable (an xarray.Dataset object). Wrapping mfdataset_preproc() in this lambda function
+    # allows this. Could also just allow mfdataset_preproc() to access my_vars and my_vegtypes
+    # directly, but that's bad practice as it could lead to scoping issues.
     mfdataset_preproc_closure = lambda ds: mfdataset_preproc(ds, my_vars, my_vegtypes, time_slice)
 
     # Import
@@ -459,7 +468,7 @@ def import_ds(
     if isinstance(filelist, list):
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore", category=DeprecationWarning)
-            if importlib.find_loader("dask") is None:
+            if find_spec("dask") is None:
                 raise ModuleNotFoundError(
                     "You have asked xarray to import a list of files as a single Dataset using"
                     " open_mfdataset(), but this requires dask, which is not available.\nFile"
@@ -479,12 +488,6 @@ def import_ds(
         this_ds = xr.open_dataset(filelist, chunks=chunks)
         this_ds = mfdataset_preproc(this_ds, my_vars, my_vegtypes, time_slice)
         this_ds = this_ds.compute()
-
-    # Include only active patches (or whatever)
-    if only_active_patches:
-        is_active = this_ds.patches1d_active.values
-        p_active = np.where(is_active)[0]
-        this_ds_active = this_ds.isel(patch=p_active)
 
     # Warn and/or error about variables that couldn't be imported or derived
     if my_vars:
