@@ -101,7 +101,7 @@ def ivt_str2int(ivt_str):
     pftlist = define_pftlist()
     if isinstance(ivt_str, str):
         ivt_int = pftlist.index(ivt_str)
-    elif isinstance(ivt_str, list) or isinstance(ivt_str, np.ndarray):
+    elif isinstance(ivt_str, (list, np.ndarray)):
         ivt_int = [ivt_str2int(x) for x in ivt_str]
         if isinstance(ivt_str, np.ndarray):
             ivt_int = np.array(ivt_int)
@@ -120,7 +120,7 @@ def ivt_int2str(ivt_int):
     pftlist = define_pftlist()
     if np.issubdtype(type(ivt_int), np.integer) or int(ivt_int) == ivt_int:
         ivt_str = pftlist[int(ivt_int)]
-    elif isinstance(ivt_int, list) or isinstance(ivt_int, np.ndarray):
+    elif isinstance(ivt_int, (list, np.ndarray)):
         ivt_str = [ivt_int2str(x) for x in ivt_int]
         if isinstance(ivt_int, np.ndarray):
             ivt_str = np.array(ivt_str)
@@ -150,7 +150,7 @@ def is_this_vegtype(this_vegtype, this_filter, this_method):
     # Make sure data type of this_vegtype is acceptable
     if isinstance(this_vegtype, float) and int(this_vegtype) == this_vegtype:
         this_vegtype = int(this_vegtype)
-    data_type_ok = lambda x: isinstance(x, str) or isinstance(x, int) or isinstance(x, np.int64)
+    data_type_ok = lambda x: isinstance(x, (int, np.int64, str))
     ok_input = True
     if not data_type_ok(this_vegtype):
         if isinstance(this_vegtype, xr.core.dataarray.DataArray):
@@ -255,7 +255,8 @@ def get_patch_ivts(this_ds, this_pftlist):
     """
     Get PFT of each patch, in both integer and string forms.
     """
-    # First, get all the integer values; should be time*pft or pft*time. We will eventually just take the first timestep.
+    # First, get all the integer values; should be time*pft or pft*time. We will eventually just
+    # take the first timestep.
     vegtype_int = this_ds.patches1d_itype_veg
     vegtype_int.values = vegtype_int.values.astype(int)
 
