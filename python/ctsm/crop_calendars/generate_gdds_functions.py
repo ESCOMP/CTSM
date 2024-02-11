@@ -24,6 +24,9 @@ from ctsm.crop_calendars.xr_flexsel import xr_flexsel  # pylint: disable=wrong-i
 from ctsm.crop_calendars.grid_one_variable import (  # pylint: disable=wrong-import-position
     grid_one_variable,
 )
+from ctsm.crop_calendars.import_ds import (  # pylint: disable=wrong-import-position
+    import_ds,
+)
 
 CAN_PLOT = True
 try:
@@ -160,7 +163,7 @@ def import_rx_dates(s_or_h, date_infile, incl_patches1d_itype_veg, mxsowings, lo
             this_var = f"{s_or_h}date{n_sowing+1}_{i}"
             date_var_list = date_var_list + [this_var]
 
-    this_ds = utils.import_ds(date_infile, my_vars=date_var_list)
+    this_ds = import_ds(date_infile, my_vars=date_var_list)
 
     for var in this_ds:
         this_ds = this_ds.rename({var: var.replace(f"{s_or_h}date", "gs")})
@@ -274,7 +277,7 @@ def import_and_process_1yr(
         crops_to_read = utils.define_mgdcrop_list()
 
     print(h1_filelist)
-    dates_ds = utils.import_ds(
+    dates_ds = import_ds(
         h1_filelist,
         my_vars=["SDATES", "HDATES"],
         my_vegtypes=crops_to_read,
@@ -543,7 +546,7 @@ def import_and_process_1yr(
         h2_files = glob.glob(pattern)
         if not h2_files:
             error(logger, f"No files found matching pattern '*h2.{this_year-1}-01-01*.nc(.base)'")
-    h2_ds = utils.import_ds(
+    h2_ds = import_ds(
         h2_files,
         my_vars=my_vars,
         my_vegtypes=crops_to_read,

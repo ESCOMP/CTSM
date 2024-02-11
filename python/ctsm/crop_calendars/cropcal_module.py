@@ -25,6 +25,9 @@ from ctsm.crop_calendars.check_rx_obeyed import (  # pylint: disable=wrong-impor
 from ctsm.crop_calendars.cropcal_constants import (  # pylint: disable=wrong-import-position
     DEFAULT_GDD_MIN,
 )
+from ctsm.crop_calendars.import_ds import (  # pylint: disable=wrong-import-position
+    import_ds,
+)
 
 
 def check_and_trim_years(year_1, year_n, ds_in):
@@ -266,7 +269,7 @@ def import_rx_dates(var_prefix, date_infile, dates_ds, set_neg1_to_nan=True):
             this_var = f"{var_prefix}{j+1}_{i}"
             date_varlist = date_varlist + [this_var]
 
-    this_ds = utils.import_ds(date_infile, my_vars=date_varlist)
+    this_ds = import_ds(date_infile, my_vars=date_varlist)
 
     did_warn = False
     for var in this_ds:
@@ -355,7 +358,7 @@ def import_output(
     Import CLM output
     """
     # Import
-    this_ds = utils.import_ds(filename, my_vars=my_vars, my_vegtypes=my_vegtypes)
+    this_ds = import_ds(filename, my_vars=my_vars, my_vegtypes=my_vegtypes)
 
     # Trim to years of interest (do not include extra year needed for finishing last growing season)
     if year_1 and year_n:
