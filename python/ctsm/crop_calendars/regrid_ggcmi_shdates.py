@@ -6,9 +6,9 @@ import os
 import glob
 import argparse
 import sys
+import logging
 import xarray as xr
 import numpy as np
-import logging
 
 # -- add python/ctsm  to path (needed if we want to run regrid_ggcmi_shdates stand-alone)
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
@@ -51,6 +51,7 @@ def run_and_check(cmd):
         shell=True,
         capture_output=True,
         text=True,
+        check=False,
     )
     if result.returncode != 0:
         abort(f"Trouble running `{result.args}` in shell:\n{result.stdout}\n{result.stderr}")
@@ -73,7 +74,11 @@ def define_arguments(parser):
     parser.add_argument(
         "-rt",
         "--regrid-template-file",
-        help="Template netCDF file to be used in regridding of inputs. This can be a CLM output file (i.e., something with 1-d lat and lon variables) or a CLM surface dataset (i.e., something with 2-d LATIXY and LONGXY variables).",
+        help=(
+            "Template netCDF file to be used in regridding of inputs. This can be a CLM output "
+            + "file (i.e., something with 1-d lat and lon variables) or a CLM surface dataset "
+            + "(i.e., something with 2-d LATIXY and LONGXY variables)."
+        ),
         type=str,
         required=True,
     )
@@ -88,7 +93,10 @@ def define_arguments(parser):
     parser.add_argument(
         "-c",
         "--crop-list",
-        help="List of GGCMI crops to process; e.g., '--crop-list mai_rf,mai_ir'. If not provided, will process all GGCMI crops.",
+        help=(
+            "List of GGCMI crops to process; e.g., '--crop-list mai_rf,mai_ir'. If not provided, "
+            + "will process all GGCMI crops."
+        ),
         default=None,
     )
     return parser
@@ -105,7 +113,7 @@ def regrid_ggcmi_shdates(
     """
     Regrid GGCMI sowing and harvest date files
     """
-    logger.info(f"Regridding GGCMI crop calendars to {regrid_resolution}:")
+    logger.info("Regridding GGCMI crop calendars to %s:", regrid_resolution)
 
     # Ensure we can call necessary shell script(s)
     for cmd in ["module load cdo; cdo"]:
@@ -129,6 +137,65 @@ def regrid_ggcmi_shdates(
         regrid_extension = "." + regrid_extension
 
     # Import and format latitude
+    lat, lon, template_da_out = get_template_da_out(template_ds_in)
+
+    # Save template Dataset for use by cdo
+    template_ds_out = xr.Dataset(
+        data_vars={
+            "planting_day": template_da_out,
+            "maturity_day": template_da_out,
+            "growing_season_length": template_da_out,
+        },
+        coords={"lat": lat, "lon": lon},
+    )
+    template_ds_out.to_netcdf(templatefile, mode="w")
+
+    # Loop through original crop calendar files, interpolating using cdo with nearest-neighbor
+    pattern = "*" + regrid_extension
+    input_files = glob.glob(pattern)
+    if len(input_files) == 0:
+        abort(f"No files found matching {os.path.join(os.getcwd(), pattern)}")
+    input_files.sort()
+    for file in input_files:
+        this_crop = file[0:6]
+        if crop_list is not None and this_crop not in crop_list:
+            continue
+
+        logger.info("    %s", this_crop)
+        file_2 = os.path.join(regrid_output_directory, file)
+        file_3 = file_2.replace(
+            regrid_extension, f"_nninterp-{regrid_resolution}{regrid_extension}"
+        )
+
+        if os.path.exists(file_3):
+            os.remove(file_3)
+
+        # Sometimes cdo fails for no apparent reason. In testing this never happened more than 3x
+        # in a row.
+        cdo_cmd = (
+            f"module load cdo; cdo -L -remapnn,'{templatefile}' "
+            + f"-setmisstonn '{file}' '{file_3}'"
+        )
+        try:
+            run_and_check(cdo_cmd)
+        except:  # pylint: disable=bare-except
+            try:
+                run_and_check(cdo_cmd)
+            except:  # pylint: disable=bare-except
+                try:
+                    run_and_check(cdo_cmd)
+                except:  # pylint: disable=bare-except
+                    run_and_check(cdo_cmd)
+
+    # Delete template file, which is no longer needed
+    os.remove(templatefile)
+    os.chdir(previous_dir)
+
+
+def get_template_da_out(template_ds_in):
+    """
+    Get template output DataArray from input Dataset
+    """
     if "lat" in template_ds_in:
         lat, n_lat = import_coord_1d(template_ds_in, "lat")
     elif "LATIXY" in template_ds_in:
@@ -155,60 +222,7 @@ def regrid_ggcmi_shdates(
         name="area",
     )
 
-    # Save template Dataset for use by cdo
-    template_ds_out = xr.Dataset(
-        data_vars={
-            "planting_day": template_da_out,
-            "maturity_day": template_da_out,
-            "growing_season_length": template_da_out,
-        },
-        coords={"lat": lat, "lon": lon},
-    )
-    template_ds_out.to_netcdf(templatefile, mode="w")
-
-    # Loop through original crop calendar files, interpolating using cdo with nearest-neighbor
-    pattern = "*" + regrid_extension
-    input_files = glob.glob(pattern)
-    if len(input_files) == 0:
-        abort(f"No files found matching {os.path.join(os.getcwd(), pattern)}")
-    input_files.sort()
-    for file in input_files:
-        this_crop = file[0:6]
-        if crop_list is not None and this_crop not in crop_list:
-            continue
-
-        logger.info("    " + this_crop)
-        file_2 = os.path.join(regrid_output_directory, file)
-        file_3 = file_2.replace(
-            regrid_extension, f"_nninterp-{regrid_resolution}{regrid_extension}"
-        )
-
-        if os.path.exists(file_3):
-            os.remove(file_3)
-
-        # Sometimes cdo fails for no apparent reason. In testing this never happened more than 3x in a row.
-        try:
-            run_and_check(
-                f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{file}' '{file_3}'"
-            )
-        except:  # pylint: disable=bare-except
-            try:
-                run_and_check(
-                    f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{file}' '{file_3}'"
-                )
-            except:  # pylint: disable=bare-except
-                try:
-                    run_and_check(
-                        f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{file}' '{file_3}'"
-                    )
-                except:  # pylint: disable=bare-except
-                    run_and_check(
-                        f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{file}' '{file_3}'"
-                    )
-
-    # Delete template file, which is no longer needed
-    os.remove(templatefile)
-    os.chdir(previous_dir)
+    return lat, lon, template_da_out
 
 
 def regrid_ggcmi_shdates_arg_process():
@@ -222,7 +236,7 @@ def regrid_ggcmi_shdates_arg_process():
     ctsm_logging.setup_logging_pre_config()
 
     parser = argparse.ArgumentParser(
-        description="Regrids raw sowing and harvest date files provided by GGCMI to a target CLM resolution."
+        description=("Regrid raw sowing/harvest date files from GGCMI to a target CLM resolution."),
     )
 
     # Define arguments
