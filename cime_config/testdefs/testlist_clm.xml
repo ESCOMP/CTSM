@@ -180,7 +180,7 @@
       <option name="comment">Higher resolution mpasa grid for CAM with latest CLM version. Include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa15_mpasa15" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS_P36x128_Ln9" grid="mpasa15_mpasa15" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -189,7 +189,7 @@
       <option name="comment">Higher resolution mpasa grid for CAM with latest CLM version. Include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa15-3-conus_mpasa15-3-conus" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
+  <test name="SMS_P36x128_Ln9" grid="mpasa15-3-conus_mpasa15-3-conus" compset="I2000Clm51SpRs" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
