@@ -744,7 +744,11 @@ def _check_py_env(test_attributes):
             raise ModuleNotFoundError("modify_fsurdat" + err_msg) from err
 
     # Check that list for any testmods that use modify_fates_paramfile.py
-    testmods_to_check = ["clm-FatesColdTwoStream", "clm-FatesColdTwoStreamNoCompFixedBioGeo"]
+    testmods_to_check = [
+        "clm-FatesColdSeedDisp",
+        "clm-FatesColdTwoStream",
+        "clm-FatesColdTwoStreamNoCompFixedBioGeo",
+    ]
     testmods = _get_testmod_list(test_attributes)
     if any(t in testmods_to_check for t in testmods):
         # This bit is needed because it's outside the top-level python/ directory.
