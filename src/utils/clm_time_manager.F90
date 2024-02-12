@@ -238,6 +238,11 @@ contains
        tm_perp_date = TimeSetymd( perpetual_ymd, 0, "tm_perp_date" )
     end if
 
+!KO
+    ! Advance time step to start at nstep=1 (instead of nstep=0)
+    call advance_timestep()
+!KO
+
     ! Print configuration summary to log file (stdout).
 
     if (masterproc) call timemgr_print()
@@ -1745,7 +1750,10 @@ contains
     call ESMF_ClockGet( tm_clock, advanceCount=step_no, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
     nstep = step_no
-    is_first_step = (nstep == 0)
+!KO    is_first_step = (nstep == 0)
+!KO
+    is_first_step = (nstep == 1)
+!KO
 
   end function is_first_step
   !=========================================================================================

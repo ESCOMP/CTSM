@@ -99,7 +99,11 @@ contains
           patch%wtcol(p)   = dgvs_inst%fpcgrid_patch(p) + &
                     wt1 * (dgvs_inst%fpcgridold_patch(p) - dgvs_inst%fpcgrid_patch(p))
 
-          if (mon==1 .and. day==1 .and. sec==dtime .and. nstep>0) then
+!KO       ! I don't think this is necessary since there no longer an nstep=0
+!KO          if (mon==1 .and. day==1 .and. sec==dtime .and. nstep>0) then
+!KO
+          if (mon==1 .and. day==1 .and. sec==dtime) then
+!KO
              dgvs_inst%fpcgridold_patch(p) = dgvs_inst%fpcgrid_patch(p)
           end if
        end if

@@ -207,6 +207,7 @@ contains
     ! are passed to CLM in initialization, then this code block can be removed.
     ! ========================================================================
 
+!KO I think leaving this in here is still necessary even though is_first_step is now based on nstep=1
     need_glacier_initialization = is_first_step()
     
     if (need_glacier_initialization) then
@@ -1368,7 +1369,8 @@ contains
     ! FIX(SPM, 082814) - in the fates branch RF and I commented out the if(.not.
     ! use_fates) then statement ... double check if this is required and why
 
-    if (nstep > 0) then
+!   I don't think this is necessary since there no longer an nstep=0
+!KO    if (nstep > 0) then
        call t_startf('accum')
 
        call atm2lnd_inst%UpdateAccVars(bounds_proc)
@@ -1401,7 +1403,7 @@ contains
        end if
 
        call t_stopf('accum')
-    end if
+!KO    end if
 
     ! ============================================================================
     ! Update history buffer
