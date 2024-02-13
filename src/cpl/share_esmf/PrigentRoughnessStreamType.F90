@@ -6,7 +6,7 @@ module PrigentRoughnessStreamType
   ! Contains methods for reading in the Prigent et al. (1997) roughness length streams file
   ! Created by Danny M. Leung 22 Nov 2022
   ! !USES
-  use ESMF                         
+  use ESMF
   use dshr_strdata_mod , only : shr_strdata_type
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_cl
   use shr_log_mod      , only : errMsg => shr_log_errMsg
@@ -20,13 +20,14 @@ module PrigentRoughnessStreamType
   private
 
   type, public :: prigentroughnessstream_type
-     real(r8), pointer, private :: prigent_rghn  (:)         ! Prigent et al. (1997) roughness length (m)
+     real(r8), pointer, public :: prigent_rghn  (:)         ! Prigent et al. (1997) roughness length (m)
   contains
 
       ! !PUBLIC MEMBER FUNCTIONS:
       procedure, public :: Init            ! Initialize and read data in
       procedure, public :: CalcDragPartition ! Calculate drag partitioning based on input streams
-      procedure, public :: UseStreams      ! If streams will be used -- dmleung set default as yes
+      procedure, public :: UseStreams      ! If Prigent rougness streams will be used
+      procedure, public :: IsStreamInit    ! If the streams have been initialized and read in, so data can be used
 
       ! !PRIVATE MEMBER FUNCTIONS:
       procedure, private :: InitAllocate   ! Allocate data
@@ -39,12 +40,14 @@ module PrigentRoughnessStreamType
      character(len=CL)  :: stream_meshfile_prigentroughness      ! mesh Filename
      character(len=CL)  :: prigentroughnessmapalgo               ! map algo
   contains
-     procedure, private :: ReadNML     ! Read in namelist                 ! If will be used
+     procedure, private :: ReadNML      ! Read in control namelist
   end type streamcontrol_type
 
-  type(streamcontrol_type), private :: control        ! Stream control data
+  type(streamcontrol_type), private :: control             ! Stream control data
+  logical                 , private :: NMLRead = .false.   ! If namelist has been read
+  logical                 , private :: InitDone = .false.  ! If initialization of streams has been done
 
-  character(len=*), parameter, private :: sourcefile = &  
+  character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 !==============================================================================
@@ -80,6 +83,7 @@ contains
    integer                        :: rc                 ! error code
    real(r8), pointer              :: dataptr1d(:)       ! temporary pointer
    character(len=*), parameter    :: stream_name = 'prigent_roughness'
+   character(len=*), parameter    :: subname     = 'PrigentRoughnessStream::Init'
    !-----------------------------------------------------------------------
 
       call control%ReadNML( bounds, NLFileName )
@@ -138,7 +142,7 @@ contains
          end if
 
          ! Get pointer for stream data that is time and spatially interpolate to model time and grid
-         do n = 1,size(stream_varnames) 
+         do n = 1,size(stream_varnames)
             call dshr_fldbun_getFldPtr(sdat_rghn%pstrm(1)%fldbun_model, stream_varnames(n), fldptr1=dataptr1d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
                call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -154,6 +158,7 @@ contains
 
          end do
          deallocate(stream_varnames)
+         InitDone = .true.
       end if
 
   end subroutine Init
@@ -170,13 +175,41 @@ contains
     implicit none
     class(prigentroughnessstream_type) :: this
     !
-    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'PrigentRoughnessStream::UseStreams'
+    !
+    if ( .not. NMLRead )then
+       call endrun(msg=subname//' ERROR Namelist has NOT been read first, call Init before this')
+    end if
     if ( trim(control%stream_fldFileName_prigentroughness) == '' )then
        UseStreams = .false.  ! Prigent streams are off without a filename given
     else
        UseStreams = .true.
     end if
   end function UseStreams
+
+  !==============================================================================
+  logical function IsStreamInit(this)
+    !
+    ! !DESCRIPTION:
+    ! Return true if the streams have been initialized
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    implicit none
+    class(prigentroughnessstream_type) :: this
+    !
+    character(len=*), parameter :: subname = 'PrigentRoughnessStream::IsStreamInit'
+    !
+    if ( .not. NMLRead )then
+       call endrun(msg=subname//' ERROR Namelist has NOT been read first, call Init before this')
+    end if
+    if ( InitDone )then
+       IsStreamInit = .true.
+    else
+       IsStreamInit = .false.
+    end if
+  end function IsStreamInit
 
   !==============================================================================
   subroutine InitAllocate(this, bounds)
@@ -212,13 +245,13 @@ contains
     !
     ! !DESCRIPTION:
     ! Commented below by Danny M. Leung 31 Dec 2022
-    ! Calculate the drag partition effect of friction velocity due to surface roughness following 
-    ! Leung et al. (2022).  This module is used in the dust emission module DUSTMod.F90 for 
-    ! calculating drag partitioning. The drag partition equation comes from Marticorena and 
-    ! Bergametti (1995) with constants modified by Darmenova et al. (2009). Here it is assumed 
+    ! Calculate the drag partition effect of friction velocity due to surface roughness following
+    ! Leung et al. (2022).  This module is used in the dust emission module DUSTMod.F90 for
+    ! calculating drag partitioning. The drag partition equation comes from Marticorena and
+    ! Bergametti (1995) with constants modified by Darmenova et al. (2009). Here it is assumed
     ! that this equation is used only over arid/desertic regions, such that Catherine Prigent's
     ! roughness measurements represents mostly rocks. For more vegetated areas, the vegetation
-    ! roughness and drag partitioning are calculated in the DustEmission subroutine. This 
+    ! roughness and drag partitioning are calculated in the DustEmission subroutine. This
     ! subroutine is used in the InitCold subroutine of DUSTMod.F90.
     !
     ! !USES:
@@ -228,29 +261,42 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    class(prigentroughnessstream_type)             :: this
-    type(bounds_type)              , intent(in)    :: bounds
-    real(r8)                       , intent(inout) :: dpfct_rock(bounds%begp:)      ! [fraction] rock drag partition factor (roughness effect)
+    class(prigentroughnessstream_type) :: this
+    type(bounds_type)  , intent(in)    :: bounds
+    real(r8)           , intent(inout) :: dpfct_rock(bounds%begp:) ! [fraction] rock drag partition factor (roughness effect)
     !
     ! !LOCAL VARIABLES:
     integer  :: g, p, fp, l    ! Indices
     real(r8) :: z0s         ! smooth roughness length (m)
-    
+
     ! constants
-    real(r8), parameter :: D_p = 130e-6_r8           ! [m] Medium soil particle diameter, assuming a global constant of ~130 um following Leung et al. (2022)
-    real(r8), parameter :: X = 10_r8                 ! [m] distance downwind of the roughness element (rock). Assume estimating roughness effect at a distance of 10 m following Leung et al. (2022)
+    real(r8), parameter :: D_p = 130e-6_r8           ! [m] Medium soil particle diameter, assuming a global constant
+                                                     ! of ~130 um following Leung et al. (2022)
+    real(r8), parameter :: X = 10_r8                 ! [m] distance downwind of the roughness element (rock). Assume
+                                                     ! estimating roughness effect at a distance of 10 m following Leung et al. (2022)
+    character(len=*), parameter :: subname = 'PrigentRoughnessStream::CalcDragPartition'
     !---------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(dpfct_rock)        == (/bounds%endp/)), sourcefile, __LINE__)
 
+    ! Make sure we've been initialized
+    if ( .not. this%IsStreamInit() )then
+       call endrun(msg=subname//' ERROR Streams have not been initialized, make sure Init is called first' &
+                              //', and streams are on')
+    end if
 
-    ! dmleung: this loop calculates the drag partition effect (or roughness effect) of rocks. We save the drag partition factor as a patch level quantity.
-    z0s = 2_r8 * D_p / 30_r8 ! equation from Frank M. White (2006). Here we assume soil medium size is a global constant, and so is smooth roughness length.
+    ! dmleung: this loop calculates the drag partition effect (or roughness effect) of rocks.
+    !          We save the drag partition factor as a patch level quantity.
+    ! TODO: EBK 02/13/2024: Several magic numbers here that should become parameters so the meaning is preserved
+    z0s = 2_r8 * D_p / 30_r8 ! equation from Frank M. White (2006).
+                             ! Here we assume soil medium size is a global constant, and so is smooth roughness length.
     do p = bounds%begp,bounds%endp
        g = patch%gridcell(p)
        l = patch%landunit(p)
        if (lun%itype(l) /= istdlak) then
-          dpfct_rock(p) = 1._r8 - ( log(this%prigent_rghn(g)*0.01_r8/z0s) / log(0.7_r8*(X/z0s)**0.8_r8) ) ! Calculating rock drag partition factor using Marticorena and Bergametti (1995). 0.01 is used to convert Z0a from centimeter to meter.
+          ! Calculating rock drag partition factor using Marticorena and Bergametti (1995).
+          ! 0.01 is used to convert Z0a from centimeter to meter.
+          dpfct_rock(p) = 1._r8 - ( log(this%prigent_rghn(g)*0.01_r8/z0s) / log(0.7_r8*(X/z0s)**0.8_r8) )
        end if
     end do
 
@@ -312,17 +358,21 @@ contains
    ! Error checking
    if ( use_prigent_roughness == .false. )then
       if ( len_trim(stream_fldFileName_prigentroughness) /= 0 )then
-         call endrun(msg=' ERROR stream_fldFileName_prigentroughness is set, but use_prigent_roughness is FALSE'//errMsg(sourcefile, __LINE__))
+         call endrun(msg=' ERROR stream_fldFileName_prigentroughness is set, but use_prigent_roughness is FALSE' &
+                     //errMsg(sourcefile, __LINE__))
       end if
       if ( len_trim(stream_meshfile_prigentroughness) /= 0 )then
-         call endrun(msg=' ERROR stream_meshfile_prigentroughness is set, but use_prigent_roughness is FALSE'//errMsg(sourcefile, __LINE__))
+         call endrun(msg=' ERROR stream_meshfile_prigentroughness is set, but use_prigent_roughness is FALSE' &
+                     //errMsg(sourcefile, __LINE__))
       end if
    else
       if ( len_trim(stream_fldFileName_prigentroughness) == 0 )then
-         call endrun(msg=' ERROR stream_fldFileName_prigentroughness is NOT set, but use_prigent_roughness is TRUE'//errMsg(sourcefile, __LINE__))
+         call endrun(msg=' ERROR stream_fldFileName_prigentroughness is NOT set, but use_prigent_roughness is TRUE' &
+                     //errMsg(sourcefile, __LINE__))
       end if
       if ( len_trim(stream_meshfile_prigentroughness) == 0 )then
-         call endrun(msg=' ERROR stream_meshfile_prigentroughness is NOT set, but use_prigent_roughness is TRUE'//errMsg(sourcefile, __LINE__))
+         call endrun(msg=' ERROR stream_meshfile_prigentroughness is NOT set, but use_prigent_roughness is TRUE' &
+                    //errMsg(sourcefile, __LINE__))
       end if
    end if
 
@@ -339,6 +389,9 @@ contains
    this%stream_fldFileName_prigentroughness = stream_fldFileName_prigentroughness
    this%stream_meshfile_prigentroughness    = stream_meshfile_prigentroughness
    this%prigentroughnessmapalgo             = prigentroughnessmapalgo
+
+   ! Mark namelist read as having been done
+   NMLRead = .true.
 
  end subroutine ReadNML
 
