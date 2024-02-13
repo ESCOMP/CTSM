@@ -28,6 +28,14 @@
   -->
 
 
+  <!-- ctsm_sci test suite failures -->
+  <test name="SMS_Ld12_Mmpi-serial.1x1_urbanc_alpha.I1PtClm51SpRs.derecho_intel.clm-output_sp_highfreq">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>Not opened yet but first posted here: https://github.com/ESCOMP/CTSM/pull/2318#discussion_r1484696000</issue>
+    </phase>
+  </test>
+
   <!-- cesm3_dev test suite failures -->
   <test name="ERP_D_Ld9.ne30pg3_t232.IHistClm51BgcCrop.derecho_intel.clm-clm51cam6LndTuningMode">
     <phase name="RUN">
