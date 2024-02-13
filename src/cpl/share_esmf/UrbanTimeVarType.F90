@@ -12,7 +12,7 @@ module UrbanTimeVarType
   use abortutils      , only : endrun
   use decompMod       , only : bounds_type, subgrid_level_landunit
   use clm_varctl      , only : iulog
-  use landunit_varcon , only : isturb_MIN, isturb_MAX ! X. Li: min and max types urban; equals 7 and 9, resp.
+  use landunit_varcon , only : isturb_MIN, isturb_MAX
   use clm_varcon      , only : spval
   use LandunitType    , only : lun
   use GridcellType    , only : grc
@@ -24,8 +24,7 @@ module UrbanTimeVarType
   type, public :: urbantv_type
      !
      real(r8), public, pointer :: t_building_max(:)    ! lun maximum internal building air temperature (K)
-     ! X. Li [dev]
-     real(r8), public, pointer :: p_ac(:)              ! lun air-conditioning ownership rate (unitless, between 0 and 1)
+     real(r8), public, pointer :: p_ac(:)              ! lun air-conditioning adoption rate (unitless, between 0 and 1)
      type(shr_strdata_type)    :: sdat_urbantv         ! urban time varying input data stream
    contains
      ! !PUBLIC MEMBER FUNCTIONS:
@@ -60,7 +59,7 @@ contains
     character(len=*)  , intent(in) :: NLFilename   ! Namelist filename
     !
     ! !LOCAL VARIABLES:
-    integer		:: begl, endl                       ! X. Li: beginning and ending landunit index, from src/main/decompMod
+    integer		:: begl, endl
     !---------------------------------------------------------------------
 
     begl = bounds%begl; endl = bounds%endl
@@ -68,20 +67,18 @@ contains
     ! Allocate urbantv data structure
 
     allocate(this%t_building_max(begl:endl)); this%t_building_max(:) = nan
-    ! X. Li [dev]
     allocate(this%p_ac(begl:endl)); this%p_ac(:) = nan
 
     call this%urbantv_init(bounds, NLFilename)
     call this%urbantv_interp(bounds)
 
-    ! Add history fields     ! X. Li: this adds an output field. the subroutine is in scr/main/histFileMod.F90
+    ! Add history fields
     call hist_addfld1d (fname='TBUILD_MAX', units='K',      &
           avgflag='A', long_name='prescribed maximum interior building temperature',   &
           ptr_lunit=this%t_building_max, default='inactive', set_nourb=spval, &
           l2g_scale_type='unity')
-    ! X. Li [dev] 
     call hist_addfld1d (fname='P_AC', units='unitless',      &
-          avgflag='A', long_name='prescribed air-conditioning ownership rate (decimal)',   &
+          avgflag='A', long_name='prescribed air-conditioning ownership rate (unitless, between 0 and 1)',   &
           ptr_lunit=this%p_ac, default='inactive', set_nourb=spval, &
           l2g_scale_type='unity')
 
@@ -97,7 +94,7 @@ contains
     use clm_nlUtilsMod   , only : find_nlgroup_name
     use spmdMod          , only : masterproc, mpicom, iam
     use shr_mpi_mod      , only : shr_mpi_bcast
-    use landunit_varcon  , only : isturb_tbd, isturb_hd, isturb_md ! X. Li: equals 7, 8 and 9
+    use landunit_varcon  , only : isturb_tbd, isturb_hd, isturb_md
     use dshr_strdata_mod , only : shr_strdata_init_from_inline
     use lnd_comp_shr     , only : mesh, model_clock
     !
@@ -105,23 +102,23 @@ contains
     implicit none
     class(urbantv_type)           :: this
     type(bounds_type), intent(in) :: bounds
-    character(len=*),  intent(in) :: NLFilename   ! Namelist filename ???is this the netCDF file name?
+    character(len=*),  intent(in) :: NLFilename   ! Namelist filename
     !
     ! !LOCAL VARIABLES:
     integer            :: n
     integer            :: stream_year_first_urbantv         ! first year in urban tv stream to use
     integer            :: stream_year_last_urbantv          ! last year in urban tv stream to use
     integer            :: model_year_align_urbantv          ! align stream_year_first_urbantv with this model year
-    integer            :: nu_nml                            ! unit for namelist file ???
+    integer            :: nu_nml                            ! unit for namelist file
     integer            :: nml_error                         ! namelist i/o error flag
-    character(len=CL)  :: stream_fldFileName_urbantv        ! urban tv streams filename ???
-    character(len=CL)  :: stream_meshfile_urbantv           ! urban tv streams filename ???
-    character(len=CL)  :: urbantvmapalgo = 'nn'             ! mapping alogrithm for urban ac ???
+    character(len=CL)  :: stream_fldFileName_urbantv        ! urban tv streams filename
+    character(len=CL)  :: stream_meshfile_urbantv           ! urban tv streams filename
+    character(len=CL)  :: urbantvmapalgo = 'nn'             ! mapping alogrithm for urban ac
     character(len=CL)  :: urbantv_tintalgo = 'linear'       ! time interpolation alogrithm
     integer            :: rc                                ! error code
     ! X. Li [orig]: this is taken out because field strings are now hard coded in
     ! character(*), parameter :: urbantvString = "tbuildmax_" ! base string for field string
-    character(*), parameter :: subName = "('urbantv_init')" ! ???
+    character(*), parameter :: subName = "('urbantv_init')"
     !-----------------------------------------------------------------------
 
     namelist /urbantv_streams/       &
@@ -215,7 +212,6 @@ contains
          stream_tintalgo     = urbantv_tintalgo,                     &
          stream_name         = 'Urban time varying data',            &
          rc                  = rc)
-
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
     end if
@@ -257,11 +253,10 @@ contains
     ! Advance sdat stream
     call get_curr_date(year, mon, day, sec)
     mcdate = year*10000 + mon*100 + day
-
     call shr_strdata_advance(this%sdat_urbantv, ymd=mcdate, tod=sec, logunit=iulog, istr='hdmdyn', rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
-    end if 
+    end if
 
     ! Create 2d array for all stream variable data
     lsize = bounds%endg - bounds%begg + 1
@@ -306,9 +301,8 @@ contains
              end if
           end do
        else
-          this%t_building_max(l) = spval ! X. Li: special value for real data, set to 1.e36 in src/main/clm_varcon
-          ! X. Li [dev]
-          this%p_ac(l) = 0._r8 ! X. Li: set to 0 for non-urban landunit
+          this%t_building_max(l) = spval
+          this%p_ac(l) = 0._r8 ! set to 0 for non-urban landunit
        end if
     end do
     deallocate(dataptr2d)
@@ -322,11 +316,8 @@ contains
              ig = ig+1
              if (g == lun%gridcell(l)) exit
           end do
-          ! X. Li [orig]
-          ! if ( .not. urban_valid(g) .or. (this%t_building_max(l) <= 0._r8)) then
-          ! X. Li [dev]
           if ( .not. urban_valid(g) .or. (this%t_building_max(l) <= 0._r8) &
-             .or. (this%p_ac(l) < 0._r8) .or. (this%p_ac(l) > 1._r8)) then
+             .or. (this%p_ac(l) < 0._r8) .or. (this%p_ac(l) > 1._r8)) then   ! check if AC adoption rate is outside of range 0 to 1
              found = .true.
              gindx = g
              lindx = l
@@ -339,7 +330,6 @@ contains
        write(iulog,*)'landunit type:   ',lun%itype(lindx)
        write(iulog,*)'urban_valid:     ',urban_valid(gindx)
        write(iulog,*)'t_building_max:  ',this%t_building_max(lindx)
-       ! X. Li [dev]
        write(iulog,*)'p_ac:            ',this%p_ac(lindx)
        call endrun(subgrid_index=lindx, subgrid_level=subgrid_level_landunit, &
             msg=errmsg(sourcefile, __LINE__))

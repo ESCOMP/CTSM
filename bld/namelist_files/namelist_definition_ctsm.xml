@@ -947,9 +947,6 @@ Turn urban air conditioning/heating ON or OFF and add wasteheat:
     ON_WASTEHEAT = Air conditioning/heating is ON and waste-heat sent to urban canyon
 </entry>
 
-<!--                          -->
-<!-- X. Li [dev.04]           -->
-<!--                          -->
 <entry id="urban_explicit_ac" type="logical" category="clm_physics"
        group="clmu_inparm" valid_values="" >
 If TRUE, use explicit, time-varying AC adoption rate for air-conditioning flux and interior building temperature calculations.

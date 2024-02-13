@@ -101,7 +101,6 @@ module UrbanParamsType
   character(len= *), parameter, public :: urban_hac_on =  'ON'                 
   character(len= *), parameter, public :: urban_wasteheat_on = 'ON_WASTEHEAT'  
   character(len= 16), public           :: urban_hac = urban_hac_off
-  ! X. Li [dev.04]
   logical, public                      :: urban_explicit_ac = .true.  ! whether to use explicit, time-varying AC adoption rate
   logical, public                      :: urban_traffic = .false.     ! urban traffic fluxes
 
@@ -849,9 +848,6 @@ contains
     integer :: unitn                ! unit for namelist file
     character(len=32) :: subname = 'UrbanReadNML'  ! subroutine name
 
-    ! X. Li [orig]:
-    ! namelist / clmu_inparm / urban_hac, urban_traffic, building_temp_method
-    ! X. Li [dev.04]:
     namelist / clmu_inparm / urban_hac, urban_explicit_ac, urban_traffic, building_temp_method
     !EOP
     !-----------------------------------------------------------------------
@@ -880,7 +876,6 @@ contains
 
     ! Broadcast namelist variables read in
     call shr_mpi_bcast(urban_hac,             mpicom)
-    ! X. Li [dev.04]:
     call shr_mpi_bcast(urban_explicit_ac,     mpicom)
     call shr_mpi_bcast(urban_traffic,         mpicom)
     call shr_mpi_bcast(building_temp_method,  mpicom)
@@ -893,7 +888,6 @@ contains
     !
     if ( masterproc )then
        write(iulog,*) '   urban air conditioning/heating and wasteheat   = ', urban_hac
-       ! X. Li [dev.04]:
        write(iulog,*) '   urban explicit air-conditioning adoption rate   = ', urban_explicit_ac
        write(iulog,*) '   urban traffic flux   = ', urban_traffic
     end if
