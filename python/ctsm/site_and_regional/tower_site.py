@@ -399,7 +399,7 @@ class TowerSite:
             if not rundir:
                 rundir = case.get_value("RUNDIR")
 
-            self.modify_user_nl(case_root, run_type, rundir)  # TODO: add site_lines argument?
+            self.modify_user_nl(case_root, run_type, rundir)
 
             case.create_namelists()
             # explicitly run check_input_data
