@@ -1,5 +1,5 @@
 module PrigentRoughnessStreamType
-#include "shr_assert.h"
+
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -25,7 +25,6 @@ module PrigentRoughnessStreamType
 
       ! !PUBLIC MEMBER FUNCTIONS:
       procedure, public :: Init            ! Initialize and read data in
-      procedure, public :: CalcDragPartition ! Calculate drag partitioning based on input streams
       procedure, public :: UseStreams      ! If Prigent rougness streams will be used
       procedure, public :: IsStreamInit    ! If the streams have been initialized and read in, so data can be used
 
@@ -101,15 +100,15 @@ contains
          end if
 
          ! Initialize the cdeps data type sdat_rghn
-         call shr_strdata_init_from_inline(sdat_rghn,                                  &
+         call shr_strdata_init_from_inline(sdat_rghn,                                   &
               my_task             = iam,                                                &
               logunit             = iulog,                                              &
               compname            = 'LND',                                              &
               model_clock         = model_clock,                                        &
               model_mesh          = mesh,                                               &
-              stream_meshfile     = control%stream_meshfile_prigentroughness,              &
+              stream_meshfile     = control%stream_meshfile_prigentroughness,           &
               stream_lev_dimname  = 'null',                                             &
-              stream_mapalgo      = control%prigentroughnessmapalgo,                       &
+              stream_mapalgo      = control%prigentroughnessmapalgo,                    &
               stream_filenames    = (/trim(control%stream_fldFileName_prigentroughness)/), &
               stream_fldlistFile  = stream_varnames,                                    &
               stream_fldListModel = stream_varnames,                                    &
@@ -120,7 +119,7 @@ contains
               stream_taxmode      = 'extend',                                           &
               stream_dtlimit      = 1.0e30_r8,                                          &
               stream_tintalgo     = 'linear',                                           &
-              stream_name         = 'Prigent roughness',                                 &
+              stream_name         = 'Prigent roughness',                                &
               rc                  = rc)
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
             call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -239,68 +238,6 @@ contains
     this%prigent_rghn(:) = nan
 
   end subroutine InitAllocate
-
-  !==============================================================================
-  subroutine CalcDragPartition(this, bounds, dpfct_rock)
-    !
-    ! !DESCRIPTION:
-    ! Commented below by Danny M. Leung 31 Dec 2022
-    ! Calculate the drag partition effect of friction velocity due to surface roughness following
-    ! Leung et al. (2022).  This module is used in the dust emission module DUSTMod.F90 for
-    ! calculating drag partitioning. The drag partition equation comes from Marticorena and
-    ! Bergametti (1995) with constants modified by Darmenova et al. (2009). Here it is assumed
-    ! that this equation is used only over arid/desertic regions, such that Catherine Prigent's
-    ! roughness measurements represents mostly rocks. For more vegetated areas, the vegetation
-    ! roughness and drag partitioning are calculated in the DustEmission subroutine. This
-    ! subroutine is used in the InitCold subroutine of DUSTMod.F90.
-    !
-    ! !USES:
-    use PatchType               , only : patch
-    use landunit_varcon         , only : istdlak
-    use LandunitType            , only : lun
-    !
-    ! !ARGUMENTS:
-    implicit none
-    class(prigentroughnessstream_type) :: this
-    type(bounds_type)  , intent(in)    :: bounds
-    real(r8)           , intent(inout) :: dpfct_rock(bounds%begp:) ! [fraction] rock drag partition factor (roughness effect)
-    !
-    ! !LOCAL VARIABLES:
-    integer  :: g, p, fp, l    ! Indices
-    real(r8) :: z0s         ! smooth roughness length (m)
-
-    ! constants
-    real(r8), parameter :: D_p = 130e-6_r8           ! [m] Medium soil particle diameter, assuming a global constant
-                                                     ! of ~130 um following Leung et al. (2022)
-    real(r8), parameter :: X = 10_r8                 ! [m] distance downwind of the roughness element (rock). Assume
-                                                     ! estimating roughness effect at a distance of 10 m following Leung et al. (2022)
-    character(len=*), parameter :: subname = 'PrigentRoughnessStream::CalcDragPartition'
-    !---------------------------------------------------------------------
-
-    SHR_ASSERT_ALL_FL((ubound(dpfct_rock)        == (/bounds%endp/)), sourcefile, __LINE__)
-
-    ! Make sure we've been initialized
-    if ( .not. this%IsStreamInit() )then
-       call endrun(msg=subname//' ERROR Streams have not been initialized, make sure Init is called first' &
-                              //', and streams are on')
-    end if
-
-    ! dmleung: this loop calculates the drag partition effect (or roughness effect) of rocks.
-    !          We save the drag partition factor as a patch level quantity.
-    ! TODO: EBK 02/13/2024: Several magic numbers here that should become parameters so the meaning is preserved
-    z0s = 2_r8 * D_p / 30_r8 ! equation from Frank M. White (2006).
-                             ! Here we assume soil medium size is a global constant, and so is smooth roughness length.
-    do p = bounds%begp,bounds%endp
-       g = patch%gridcell(p)
-       l = patch%landunit(p)
-       if (lun%itype(l) /= istdlak) then
-          ! Calculating rock drag partition factor using Marticorena and Bergametti (1995).
-          ! 0.01 is used to convert Z0a from centimeter to meter.
-          dpfct_rock(p) = 1._r8 - ( log(this%prigent_rghn(g)*0.01_r8/z0s) / log(0.7_r8*(X/z0s)**0.8_r8) )
-       end if
-    end do
-
-  end subroutine CalcDragPartition
 
   !==============================================================================
   subroutine ReadNML(this, bounds, NLFilename)
