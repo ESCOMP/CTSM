@@ -3308,8 +3308,8 @@
 
   <test name="FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1" grid="5x5_amazon" compset="I2000Clm50SpRs">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="cheyenne" compiler="intel" category="clm_pymods"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="clm_pymods"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
