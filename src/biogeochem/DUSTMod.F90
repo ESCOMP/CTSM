@@ -63,6 +63,7 @@ module DUSTMod
      real(r8), pointer, private :: vlc_trb_3_patch           (:)   ! turbulent deposition velocity 3(m/s)
      real(r8), pointer, private :: vlc_trb_4_patch           (:)   ! turbulent deposition velocity 4(m/s)
      real(r8), pointer, private :: mbl_bsn_fct_col           (:)   ! basin factor
+
      real(r8), pointer, private :: dst_emiss_coeff_patch     (:)   ! dust emission coefficient (unitless)
      real(r8), pointer, private :: wnd_frc_thr_patch         (:)   ! wet fluid threshold (m/s)
      real(r8), pointer, private :: wnd_frc_thr_dry_patch     (:)   ! dry fluid threshold (m/s)

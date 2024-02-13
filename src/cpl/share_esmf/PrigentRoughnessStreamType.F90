@@ -39,7 +39,7 @@ module PrigentRoughnessStreamType
      character(len=CL)  :: stream_meshfile_prigentroughness      ! mesh Filename
      character(len=CL)  :: prigentroughnessmapalgo               ! map algo
   contains
-     procedure, private :: ReadNML     ! Read in namelist
+     procedure, private :: ReadNML     ! Read in namelist                 ! If will be used
   end type streamcontrol_type
 
   type(streamcontrol_type), private :: control        ! Stream control data
@@ -269,6 +269,7 @@ contains
    ! local variables
    integer            :: nu_nml    ! unit for namelist file
    integer            :: nml_error ! namelist i/o error flag
+   logical            :: use_prigent_roughness = .true.
    character(len=CL)  :: stream_fldFileName_prigentroughness = ' '
    character(len=CL)  :: stream_meshfile_prigentroughness = ' '
    character(len=CL)  :: prigentroughnessmapalgo = 'bilinear'
@@ -277,7 +278,8 @@ contains
    !-----------------------------------------------------------------------
 
    namelist /prigentroughness/ &               ! MUST agree with namelist_name above
-        prigentroughnessmapalgo,  stream_fldFileName_prigentroughness, stream_meshfile_prigentroughness
+        prigentroughnessmapalgo,  stream_fldFileName_prigentroughness, stream_meshfile_prigentroughness, &
+        use_prigent_roughness
 
    ! Default values for namelist
 
@@ -296,16 +298,37 @@ contains
       close(nu_nml)
    endif
 
+   call shr_mpi_bcast(use_prigent_roughness               , mpicom)
    call shr_mpi_bcast(prigentroughnessmapalgo             , mpicom)
    call shr_mpi_bcast(stream_fldFileName_prigentroughness , mpicom)
    call shr_mpi_bcast(stream_meshfile_prigentroughness    , mpicom)
 
+   ! Error checking
+   if ( use_prigent_roughness == .false. )then
+      if ( len_trim(stream_fldFileName_prigentroughness) /= 0 )then
+         call endrun(msg=' ERROR stream_fldFileName_prigentroughness is set, but use_prigent_roughness is FALSE'//errMsg(sourcefile, __LINE__))
+      end if
+      if ( len_trim(stream_meshfile_prigentroughness) /= 0 )then
+         call endrun(msg=' ERROR stream_meshfile_prigentroughness is set, but use_prigent_roughness is FALSE'//errMsg(sourcefile, __LINE__))
+      end if
+   else
+      if ( len_trim(stream_fldFileName_prigentroughness) == 0 )then
+         call endrun(msg=' ERROR stream_fldFileName_prigentroughness is NOT set, but use_prigent_roughness is TRUE'//errMsg(sourcefile, __LINE__))
+      end if
+      if ( len_trim(stream_meshfile_prigentroughness) == 0 )then
+         call endrun(msg=' ERROR stream_meshfile_prigentroughness is NOT set, but use_prigent_roughness is TRUE'//errMsg(sourcefile, __LINE__))
+      end if
+   end if
+
    if (masterproc) then
       write(iulog,*) ' '
       write(iulog,*) namelist_name, ' stream settings:'
-      write(iulog,*) '  stream_fldFileName_prigentroughness = ',stream_fldFileName_prigentroughness
-      write(iulog,*) '  stream_meshfile_prigentroughness    = ',stream_meshfile_prigentroughness
-      write(iulog,*) '  prigentroughnessmapalgo             = ',prigentroughnessmapalgo
+      write(iulog,*) '  use_prigent_roughness               = ',use_prigent_roughness
+      if ( use_prigent_roughness )then
+         write(iulog,*) '  stream_fldFileName_prigentroughness = ',trim(stream_fldFileName_prigentroughness)
+         write(iulog,*) '  stream_meshfile_prigentroughness    = ',trim(stream_meshfile_prigentroughness)
+         write(iulog,*) '  prigentroughnessmapalgo             = ',trim(prigentroughnessmapalgo)
+      end if
    endif
    this%stream_fldFileName_prigentroughness = stream_fldFileName_prigentroughness
    this%stream_meshfile_prigentroughness    = stream_meshfile_prigentroughness
