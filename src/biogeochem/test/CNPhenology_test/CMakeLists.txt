@@ -1,5 +1,6 @@
 set (pfunit_sources
-  test_CNPhenology.pf)
+  test_CNPhenology.pf
+  test_CNPhenology_gregorian.pf)
 
 add_pfunit_ctest(CNPhenology
   TEST_SOURCES "${pfunit_sources}"

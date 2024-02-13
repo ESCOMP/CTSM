@@ -1,0 +1,212 @@
+module test_CNPhenology_gregorian
+
+  ! Tests of CNPhenologyMod specific to the Gregorian calendar
+
+  use funit
+  use unittestSubgridMod
+  use CNPhenologyMod
+  use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
+  use unittestTimeManagerMod, only : unittest_timemgr_set_curr_date
+  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch, setup_n_veg_patches
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use pftconMod
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestCNPhenology
+     integer  :: dtime
+     real(r8) :: fracday
+     real(r8) :: onset_gdd
+     real(r8) :: onset_gddflag
+     real(r8) :: soilt
+     real(r8) :: soila10
+     real(r8) :: t_a5min
+     real(r8) :: dayl
+     real(r8) :: snow_5day
+     real(r8) :: ws_flag
+     real(r8) :: crit_onset_gdd
+     real(r8) :: season_decid_temperate
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestCNPhenology
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  subroutine setUp(this)
+    use clm_varctl, only : use_crop
+    use clm_varcon, only: clm_varcon_init, zisoi, secspday
+    use clm_varpar, only: nlevlak, nlevgrnd, nlevdecomp_full
+    class(TestCNPhenology), intent(inout) :: this
+    real(r8), parameter :: my_zisoi(5) = [0.01_r8, 0.02_r8, 2._r8, 4._r8, 6._r8]
+
+    use_crop = .false.
+    this%dtime = 1800
+    this%fracday = real(this%dtime,r8) / secspday
+    ! Setup time manager
+    call unittest_timemgr_setup(dtime=this%dtime, use_gregorian_calendar=.true.)
+
+    this%onset_gdd = 0._r8      ! Will be reset...
+    this%onset_gddflag = 0._r8  ! Will be reset...
+    ! Temperatures
+    this%soilt = 273._r8        ! Below freezing
+    this%soila10 = 273._r8      ! Below freezing
+    this%t_a5min = 273._r8      ! Below freezing
+
+    this%dayl = 19500._r8       ! Below half of critical dayl 
+    this%snow_5day = 1._r8      ! Above threshold
+    this%ws_flag = 1._r8        ! After winter solstice
+    this%crit_onset_gdd = 1._r8
+    this%season_decid_temperate = 0._r8  ! Non temperate plant
+
+    call setup_single_veg_patch(pft_type=1)
+
+    nlevgrnd = size(my_zisoi)
+    nlevlak = 10
+    nlevdecomp_full = nlevgrnd
+    call clm_varcon_init( is_simple_buildtemp = .true.)
+    zisoi(0) = 0._r8
+    zisoi(1:nlevgrnd) = my_zisoi(:)
+
+    call CNPhenologySetParams()
+    call CNPhenologyInit( bounds )
+    call pftcon%InitForTesting()
+    pftcon%season_decid_temperate =  this%season_decid_temperate
+
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    use clm_varcon, only: clm_varcon_clean
+    class(TestCNPhenology), intent(inout) :: this
+
+    call unittest_timemgr_teardown()
+    call clm_varcon_clean()
+    call unittest_subgrid_teardown()
+    call pftcon%Clean()
+
+  end subroutine tearDown
+
+  @Test
+  subroutine test_DaysPastPlanting_mar25_feb9(this)
+    class(TestCNPhenology), intent(inout) :: this
+    integer :: idop, idpp
+
+    ! Feb. 9 in a non-leap year preceded by a non-leap year
+    call unittest_timemgr_set_curr_date(3, 2, 9, this%dtime)
+
+    idop = 84  ! Mar. 25
+    idpp = DaysPastPlanting(idop)
+
+    @assertEqual(321, idpp)
+
+  end subroutine test_DaysPastPlanting_mar25_feb9
+
+  @Test
+  subroutine test_DaysPastPlanting_mar25_feb9_leap(this)
+    class(TestCNPhenology), intent(inout) :: this
+    integer :: idop, idpp
+
+    ! Feb. 9 in a leap year
+    call unittest_timemgr_set_curr_date(4, 2, 9, this%dtime)
+
+    idop = 84  ! Mar. 25
+    idpp = DaysPastPlanting(idop)
+
+    @assertEqual(321, idpp)
+
+  end subroutine test_DaysPastPlanting_mar25_feb9_leap
+
+  @Test
+  subroutine test_DaysPastPlanting_mar25_feb9_lastYrLeap(this)
+    class(TestCNPhenology), intent(inout) :: this
+    integer :: idop, idpp
+
+    ! Feb. 9 in a non-leap year preceded by a leap year
+    call unittest_timemgr_set_curr_date(5, 2, 9, this%dtime)
+
+    idop = 84  ! Mar. 25
+    idpp = DaysPastPlanting(idop)
+
+    @assertEqual(322, idpp)
+
+  end subroutine test_DaysPastPlanting_mar25_feb9_lastYrLeap
+
+  @Test
+  subroutine test_DaysPastPlanting_feb9_mar25(this)
+    class(TestCNPhenology), intent(inout) :: this
+    integer :: idop, idpp
+
+    ! Mar. 25 in a non-leap year, day 84
+    call unittest_timemgr_set_curr_date(1, 3, 25, this%dtime)
+
+    idop = 40  ! Feb. 9
+    idpp = DaysPastPlanting(idop)
+
+    @assertEqual(44, idpp)
+
+  end subroutine test_DaysPastPlanting_feb9_mar25
+
+  @Test
+  subroutine test_DaysPastPlanting_feb9_mar25_leap(this)
+    class(TestCNPhenology), intent(inout) :: this
+    integer :: idop, idpp
+
+    ! Mar. 25 in a leap year, day 85
+    call unittest_timemgr_set_curr_date(4, 3, 25, this%dtime)
+
+    idop = 40  ! Feb. 9
+    idpp = DaysPastPlanting(idop)
+
+    @assertEqual(45, idpp)
+
+  end subroutine test_DaysPastPlanting_feb9_mar25_leap
+
+  @Test
+  subroutine test_DaysPastPlanting_feb9_jan2_leap(this)
+    class(TestCNPhenology), intent(inout) :: this
+    integer :: idop, idpp
+
+    ! Jan. 2 in a leap year
+    call unittest_timemgr_set_curr_date(4, 1, 2, this%dtime)
+
+    idop = 40  ! Feb. 9
+    idpp = DaysPastPlanting(idop)
+
+    @assertEqual(327, idpp)
+
+  end subroutine test_DaysPastPlanting_feb9_jan2_leap
+
+  @Test
+  subroutine test_DaysPastPlanting_feb9_EODdec31_leap(this)
+    class(TestCNPhenology), intent(inout) :: this
+    integer :: idop, idpp
+
+    ! Last timestep of Dec. 31 in a leap year
+    call unittest_timemgr_set_curr_date(5, 1, 1, 0)
+
+    idop = 40  ! Feb. 9
+    idpp = DaysPastPlanting(idop)
+
+    @assertEqual(326, idpp)
+
+  end subroutine test_DaysPastPlanting_feb9_EODdec31_leap
+
+  @Test
+  subroutine test_DaysPastPlanting_feb9_jan2_lastYrLeap(this)
+    class(TestCNPhenology), intent(inout) :: this
+    integer :: idop, idpp
+
+    ! Jan. 2 in the year AFTER a leap year
+    call unittest_timemgr_set_curr_date(5, 1, 2, this%dtime)
+
+    idop = 40  ! Feb. 9
+    idpp = DaysPastPlanting(idop)
+
+    @assertEqual(328, idpp)
+
+  end subroutine test_DaysPastPlanting_feb9_jan2_lastYrLeap
+
+end module test_CNPhenology_gregorian
