@@ -3,13 +3,9 @@ This module contains the NeonSite class and class functions which are used in ru
 """
 
 # Import libraries
-import glob
 import logging
 import os
-import re
-import shutil
 import sys
-import time
 
 # Get the ctsm util tools and then the cime tools.
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "python"))
@@ -36,21 +32,28 @@ class NeonSite(TowerSite):
     A class for encapsulating neon sites.
     """
 
-    def __init__(self, name, start_year, end_year, start_month, end_month, finidat):
-        super().__init__(name, start_year, end_year, start_month, end_month, finidat)
-
     def build_base_case(
-        self, cesmroot, output_root, res, compset, overwrite=False, setup_only=False
+        self,
+        cesmroot,
+        output_root,
+        res,
+        compset,
+        user_mods_dirs=None,
+        overwrite=False,
+        setup_only=False,
     ):
-        user_mods_dirs = [
-            os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)
-        ]
+        if user_mods_dirs is None:
+            user_mods_dirs = [
+                os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)
+            ]
+            print("in neonsite adding usermodsdirs")
+        print("usermodsdirs: {}".format(user_mods_dirs))
         case_path = super().build_base_case(cesmroot, output_root, res, compset, user_mods_dirs)
 
         return case_path
 
-    def get_batch_query(self, case):
-        return super().get_batch_query(case)
+    # def get_batch_query(self, case):
+    #    return super().get_batch_query(case)
 
     # pylint: disable=too-many-statements
     def run_case(
@@ -60,6 +63,8 @@ class NeonSite(TowerSite):
         prism,
         run_length,
         user_version,
+        tower_type=None,
+        user_mods_dirs=None,
         overwrite=False,
         setup_only=False,
         no_batch=False,
@@ -97,17 +102,18 @@ class NeonSite(TowerSite):
         ]
         tower_type = "NEON"
         super().run_case(
-            base_case_root, run_type, prism, run_length, tower_type, user_mods_dirs, user_version
+            base_case_root, run_type, prism, run_length, user_version, tower_type, user_mods_dirs
         )
 
     def set_ref_case(self, case):
         super().set_ref_case(case)
         return True  ### Check if super returns false, if this will still return True?
 
-    def modify_user_nl(self, case_root, run_type, rundir):
+    def modify_user_nl(self, case_root, run_type, rundir, site_lines=None):
         # TODO: include neon-specific user namelist lines, using this as just an example currently
-        site_lines = [
-            """hist_fincl1 = 'TOTECOSYSC', 'TOTECOSYSN', 'TOTSOMC', 'TOTSOMN', 'TOTVEGC',
+        if site_lines is None:
+            site_lines = [
+                """hist_fincl1 = 'TOTECOSYSC', 'TOTECOSYSN', 'TOTSOMC', 'TOTSOMN', 'TOTVEGC',
                                  'TOTVEGN', 'TLAI', 'GPP', 'CPOOL', 'NPP', 'TWS', 'H2OSNO',"""
-        ]
+            ]
         super().modify_user_nl(case_root, run_type, rundir, site_lines)

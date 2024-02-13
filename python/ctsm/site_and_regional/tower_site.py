@@ -171,7 +171,7 @@ class TowerSite:
             return "none"
         return case.get_value("batch_query")
 
-    def modify_user_nl(self, case_root, run_type, rundir, site_lines):
+    def modify_user_nl(self, case_root, run_type, rundir, site_lines=None):
         """
         Modify user namelist. If transient, include finidat in user_nl;
         Otherwise, adjust user_nl to include different mfilt, nhtfrq, and variables in hist_fincl1.
@@ -249,9 +249,9 @@ class TowerSite:
         run_type,
         prism,
         run_length,
+        user_version,
         tower_type,
         user_mods_dirs,
-        user_version,
         overwrite=False,
         setup_only=False,
         no_batch=False,
@@ -399,7 +399,7 @@ class TowerSite:
             if not rundir:
                 rundir = case.get_value("RUNDIR")
 
-            self.modify_user_nl(case_root, run_type, rundir)
+            self.modify_user_nl(case_root, run_type, rundir)  # TODO: add site_lines argument?
 
             case.create_namelists()
             # explicitly run check_input_data
