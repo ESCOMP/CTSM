@@ -79,17 +79,18 @@ contains
    character(len=16), allocatable :: stream_varnames(:) ! array of stream field names
    integer                        :: rc                 ! error code
    real(r8), pointer              :: dataptr1d(:)       ! temporary pointer
-   character(len=*), parameter    :: stream_name = 'prigentroughness'
+   character(len=*), parameter    :: stream_name = 'prigent_roughness'
    !-----------------------------------------------------------------------
 
-   !if ( finundation_mtd /= finundation_mtd_h2osfc )then
-      call this%InitAllocate( bounds )
       call control%ReadNML( bounds, NLFileName )
+
+      call this%InitAllocate( bounds )
 
       if ( this%useStreams() )then
 
-            allocate(stream_varnames(1))
-            stream_varnames = (/"Z0a"/)  ! varname in cdf5_Z0a_Prigent-Globe-025x025-09262022.nc, in centimeter
+
+         allocate(stream_varnames(1))
+         stream_varnames = (/"Z0a"/)  ! varname in cdf5_Z0a_Prigent-Globe-025x025-09262022.nc, in centimeter
 
          if (masterproc) then
             write(iulog,*) '  stream_varnames                  = ',stream_varnames
@@ -152,8 +153,8 @@ contains
             end if
 
          end do
+         deallocate(stream_varnames)
       end if
-   !end if         !commented out
 
   end subroutine Init
 
@@ -161,7 +162,7 @@ contains
   logical function UseStreams(this)
     !
     ! !DESCRIPTION:
-    ! Return true if
+    ! Return true if the Prigent Roughness stream is being used
     !
     ! !USES:
     !
@@ -171,7 +172,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     if ( trim(control%stream_fldFileName_prigentroughness) == '' )then
-       UseStreams = .false.  ! this won't happen and UseStreams will always be true
+       UseStreams = .false.  ! Prigent streams are off without a filename given
     else
        UseStreams = .true.
     end if
@@ -197,7 +198,12 @@ contains
 
     begg = bounds%begg; endg = bounds%endg
 
-    allocate(this%prigent_rghn     (begg:endg))            ;  this%prigent_rghn     (:)   = nan
+    if ( this%useStreams() )then
+       allocate(this%prigent_rghn(begg:endg))
+    else
+       allocate(this%prigent_rghn(0))
+    end if
+    this%prigent_rghn(:) = nan
 
   end subroutine InitAllocate
 
