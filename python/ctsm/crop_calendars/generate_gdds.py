@@ -1,32 +1,29 @@
-paramfile_dir = "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/paramdata"
-
-# Import other shared functions
-import os
-import inspect
-import sys
-
-# Import the CTSM Python utilities.
-# sys.path.insert() is necessary for RXCROPMATURITY to work. The fact that it's calling this script in the RUN phase seems to require the python/ directory to be manually added to path.
-_CTSM_PYTHON = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, os.pardir, "python"
-)
-sys.path.insert(1, _CTSM_PYTHON)
-import ctsm.crop_calendars.cropcal_module as cc
-import ctsm.crop_calendars.generate_gdds_functions as gddfn
-
-# Import everything else
+"""
+Generate maturity requirements (GDD) from outputs of a GDD-generating run
+"""
 import os
 import sys
-import numpy as np
-import xarray as xr
 import pickle
 import datetime as dt
 import argparse
 import logging
+import numpy as np
+import xarray as xr
 
-# Info re: PFT parameter set
-my_clm_ver = 51
-my_clm_subver = "c211112"
+# Import the CTSM Python utilities.
+# sys.path.insert() is necessary for RXCROPMATURITY to work. The fact that it's calling this script
+# in the RUN phase seems to require the python/ directory to be manually added to path.
+_CTSM_PYTHON = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, os.pardir, "python"
+)
+sys.path.insert(1, _CTSM_PYTHON)
+import ctsm.crop_calendars.cropcal_module as cc  # pylint: disable=wrong-import-position
+import ctsm.crop_calendars.generate_gdds_functions as gddfn  # pylint: disable=wrong-import-position
+
+# Global constants
+PARAMFILE_DIR = "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/paramdata"
+MY_CLM_VER = 51
+MY_CLM_SUBVER = "c211112"
 
 
 def main(
@@ -47,6 +44,7 @@ def main(
     skip_crops=None,
     logger=None,
 ):
+    # pylint: disable=missing-function-docstring,too-many-statements
     # Directories to save output files and figures
     if not output_dir:
         if only_make_figs:
@@ -73,11 +71,14 @@ def main(
     # Disable plotting if any plotting module is unavailable
     if save_figs:
         try:
+            # pylint: disable=import-outside-toplevel,unused-import,import-error
             import cartopy
             import matplotlib
-        except:
+        except ModuleNotFoundError as exc:
             if only_make_figs:
-                raise RuntimeError("only_make_figs True but not all plotting modules are available")
+                raise RuntimeError(
+                    "only_make_figs True but not all plotting modules are available"
+                ) from exc
             gddfn.log(logger, "Not all plotting modules are available; disabling save_figs")
             save_figs = False
 
@@ -95,19 +96,21 @@ def main(
     ##########################
 
     if not only_make_figs:
-        # Keep 1 extra year to avoid incomplete final growing season for crops harvested after Dec. 31.
-        y1_import_str = f"{first_season+1}-01-01"
-        yN_import_str = f"{last_season+2}-01-01"
+        # Keep 1 extra year to avoid incomplete final growing season for crops
+        # harvested after Dec. 31.
+        yr_1_import_str = f"{first_season+1}-01-01"
+        yr_n_import_str = f"{last_season+2}-01-01"
 
         gddfn.log(
             logger,
-            f"Importing netCDF time steps {y1_import_str} through {yN_import_str} (years are +1 because of CTSM output naming)",
+            f"Importing netCDF time steps {yr_1_import_str} through {yr_n_import_str} "
+            + "(years are +1 because of CTSM output naming)",
         )
 
         pickle_file = os.path.join(output_dir, f"{first_season}-{last_season}.pickle")
         h2_ds_file = os.path.join(output_dir, f"{first_season}-{last_season}.h2_ds.nc")
         if os.path.exists(pickle_file):
-            with open(pickle_file, "rb") as f:
+            with open(pickle_file, "rb") as file:
                 (
                     first_season,
                     last_season,
@@ -115,14 +118,14 @@ def main(
                     gddaccum_yp_list,
                     gddharv_yp_list,
                     skip_patches_for_isel_nan_lastyear,
-                    lastYear_active_patch_indices_list,
+                    lastyear_active_patch_indices_list,
                     incorrectly_daily,
                     save_figs,
                     incl_vegtypes_str,
                     incl_patches1d_itype_veg,
                     mxsowings,
                     skip_crops,
-                ) = pickle.load(f)
+                ) = pickle.load(file)
             print(f"Will resume import at {pickle_year+1}")
             h2_ds = None
         else:
@@ -132,17 +135,17 @@ def main(
             gddaccum_yp_list = []
             gddharv_yp_list = []
             incl_vegtypes_str = None
-            lastYear_active_patch_indices_list = None
+            lastyear_active_patch_indices_list = None
         sdates_rx = sdates_file
         hdates_rx = hdates_file
 
         if not unlimited_season_length:
-            mxmats = cc.import_max_gs_length(paramfile_dir, my_clm_ver, my_clm_subver)
+            mxmats = cc.import_max_gs_length(PARAMFILE_DIR, MY_CLM_VER, MY_CLM_SUBVER)
         else:
             mxmats = None
 
-        for y, thisYear in enumerate(np.arange(first_season + 1, last_season + 3)):
-            if thisYear <= pickle_year:
+        for yr_index, this_yr in enumerate(np.arange(first_season + 1, last_season + 3)):
+            if this_yr <= pickle_year:
                 continue
 
             (
@@ -152,7 +155,7 @@ def main(
                 gddaccum_yp_list,
                 gddharv_yp_list,
                 skip_patches_for_isel_nan_lastyear,
-                lastYear_active_patch_indices_list,
+                lastyear_active_patch_indices_list,
                 incorrectly_daily,
                 incl_vegtypes_str,
                 incl_patches1d_itype_veg,
@@ -160,14 +163,14 @@ def main(
             ) = gddfn.import_and_process_1yr(
                 first_season,
                 last_season,
-                y,
-                thisYear,
+                yr_index,
+                this_yr,
                 sdates_rx,
                 hdates_rx,
                 gddaccum_yp_list,
                 gddharv_yp_list,
                 skip_patches_for_isel_nan_lastyear,
-                lastYear_active_patch_indices_list,
+                lastyear_active_patch_indices_list,
                 incorrectly_daily,
                 input_dir,
                 incl_vegtypes_str,
@@ -179,16 +182,16 @@ def main(
             )
 
             gddfn.log(logger, f"   Saving pickle file ({pickle_file})...")
-            with open(pickle_file, "wb") as f:
+            with open(pickle_file, "wb") as file:
                 pickle.dump(
                     [
                         first_season,
                         last_season,
-                        thisYear,
+                        this_yr,
                         gddaccum_yp_list,
                         gddharv_yp_list,
                         skip_patches_for_isel_nan_lastyear,
-                        lastYear_active_patch_indices_list,
+                        lastyear_active_patch_indices_list,
                         incorrectly_daily,
                         save_figs,
                         incl_vegtypes_str,
@@ -196,7 +199,7 @@ def main(
                         mxsowings,
                         skip_crops,
                     ],
-                    f,
+                    file,
                     protocol=-1,
                 )
 
@@ -248,35 +251,35 @@ def main(
         ]
         dummy_vars = []
         dummy_longnames = []
-        for v, thisVar in enumerate(all_vars):
-            if thisVar not in gdd_maps_ds:
-                dummy_vars.append(thisVar)
-                dummy_longnames.append(all_longnames[v])
+        for var_index, this_var in enumerate(all_vars):
+            if this_var not in gdd_maps_ds:
+                dummy_vars.append(this_var)
+                dummy_longnames.append(all_longnames[var_index])
 
-        def make_dummy(thisCrop_gridded, addend):
-            dummy_gridded = thisCrop_gridded
+        def make_dummy(this_crop_gridded, addend):
+            dummy_gridded = this_crop_gridded
             dummy_gridded.values = dummy_gridded.values * 0 + addend
             return dummy_gridded
 
-        for v in gdd_maps_ds:
-            thisCrop_gridded = gdd_maps_ds[v].copy()
+        for var in gdd_maps_ds:
+            this_crop_gridded = gdd_maps_ds[var].copy()
             break
-        dummy_gridded = make_dummy(thisCrop_gridded, -1)
+        dummy_gridded = make_dummy(this_crop_gridded, -1)
 
-        for v, thisVar in enumerate(dummy_vars):
-            if thisVar in gdd_maps_ds:
+        for var_index, this_var in enumerate(dummy_vars):
+            if this_var in gdd_maps_ds:
                 gddfn.error(
-                    logger, f"{thisVar} is already in gdd_maps_ds. Why overwrite it with dummy?"
+                    logger, f"{this_var} is already in gdd_maps_ds. Why overwrite it with dummy?"
                 )
-            dummy_gridded.name = thisVar
-            dummy_gridded.attrs["long_name"] = dummy_longnames[v]
-            gdd_maps_ds[thisVar] = dummy_gridded
+            dummy_gridded.name = this_var
+            dummy_gridded.attrs["long_name"] = dummy_longnames[var_index]
+            gdd_maps_ds[this_var] = dummy_gridded
 
         # Add lon/lat attributes
-        def add_lonlat_attrs(ds):
-            ds.lon.attrs = {"long_name": "coordinate_longitude", "units": "degrees_east"}
-            ds.lat.attrs = {"long_name": "coordinate_latitude", "units": "degrees_north"}
-            return ds
+        def add_lonlat_attrs(this_ds):
+            this_ds.lon.attrs = {"long_name": "coordinate_longitude", "units": "degrees_east"}
+            this_ds.lat.attrs = {"long_name": "coordinate_latitude", "units": "degrees_north"}
+            return this_ds
 
         gdd_maps_ds = add_lonlat_attrs(gdd_maps_ds)
         gddharv_maps_ds = add_lonlat_attrs(gddharv_maps_ds)
@@ -297,14 +300,17 @@ def main(
         def save_gdds(sdates_file, hdates_file, outfile, gdd_maps_ds, sdates_rx):
             # Set up output file from template (i.e., prescribed sowing dates).
             template_ds = xr.open_dataset(sdates_file, decode_times=True)
-            for v in template_ds:
-                if "sdate" in v:
-                    template_ds = template_ds.drop(v)
+            for var in template_ds:
+                if "sdate" in var:
+                    template_ds = template_ds.drop(var)
             template_ds.to_netcdf(path=outfile, format="NETCDF3_CLASSIC")
             template_ds.close()
 
             # Add global attributes
-            comment = f"Derived from CLM run plus crop calendar input files {os.path.basename(sdates_file) and {os.path.basename(hdates_file)}}."
+            comment = (
+                "Derived from CLM run plus crop calendar input files "
+                + f"{os.path.basename(sdates_file) and {os.path.basename(hdates_file)}}."
+            )
             gdd_maps_ds.attrs = {
                 "author": "Sam Rabin (sam.rabin@gmail.com)",
                 "comment": comment,
@@ -384,7 +390,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "-i",
         "--input-dir",
-        help="Directory where run outputs can be found (and where outputs will go). If --only-make-figs, this is the directory with the preprocessed files (e.g., *.pickle file).",
+        help=(
+            "Directory where run outputs can be found (and where outputs will go). If "
+            + "--only-make-figs, this is the directory with the preprocessed files (e.g., *.pickle "
+            + "file)."
+        ),
         required=True,
     )
     parser.add_argument(
@@ -464,7 +474,6 @@ if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
     for k, v in sorted(vars(args).items()):
         print(f"{k}: {v}")
-    save_figs = not args.dont_save_figs
 
     # Call main()
     main(
@@ -474,7 +483,7 @@ if __name__ == "__main__":
         sdates_file=args.sdates_file,
         hdates_file=args.hdates_file,
         output_dir=args.output_dir,
-        save_figs=save_figs,
+        save_figs=not args.dont_save_figs,
         only_make_figs=args.only_make_figs,
         run1_name=args.run1_name,
         run2_name=args.run2_name,
@@ -484,9 +493,3 @@ if __name__ == "__main__":
         unlimited_season_length=args.unlimited_season_length,
         skip_crops=args.skip_crops,
     )
-
-# main(input_dir="/Users/Shared/CESM_runs/tests_10x15_20230329_gddgen/202303301820",
-#      sdates_file="/Users/Shared/CESM_work/crop_dates_mostrice/sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f10_f10_mg37.2000-2000.20230330_165301.nc",
-#      hdates_file="/Users/Shared/CESM_work/crop_dates_mostrice/hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f10_f10_mg37.2000-2000.20230330_165301.nc",
-#      first_season=1997, last_season=2003,
-#      save_figs=False)
