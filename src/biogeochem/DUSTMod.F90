@@ -84,7 +84,7 @@ module DUSTMod
      real(r8), pointer, private :: lai_patch                 (:)   ! [m2 leaf /m2 land] LAI+SAI for calculating Okin's drag partition, averaged to landunit level
      real(r8), pointer, private :: frc_thr_rghn_fct_patch    (:)   ! [dimless] hybrid drag partition (or called roughness) factor
      real(r8), pointer, private :: wnd_frc_thr_std_patch     (:)   ! standardized fluid threshold friction velocity (m/s)
-     type(prigentroughnessstream_type), private :: prigentroughnessstream      ! Prigent roughness stream data
+     type(prigentroughnessstream_type), private :: prigent_roughness_stream      ! Prigent roughness stream data
      real(r8), pointer, private :: dpfct_rock_patch          (:)   ! [fraction] rock drag partition factor, time-constant
    contains
 
@@ -92,7 +92,8 @@ module DUSTMod
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
      procedure , private :: InitCold     
-     procedure , private :: InitDustVars ! Initialize variables used in subroutine Dust
+     procedure , private :: InitDustVars      ! Initialize variables used in subroutine Dust
+     procedure , private :: CalcDragPartition ! Calculate drag partitioning based on Prigent roughness stream
 
   end type dust_type
   !------------------------------------------------------------------------
@@ -111,7 +112,7 @@ contains
 
     call this%InitAllocate (bounds)
     call this%InitHistory  (bounds)
-    call this%prigentroughnessstream%Init( bounds, NLFilename )
+    call this%prigent_roughness_stream%Init( bounds, NLFilename )
     call this%InitCold     (bounds)
     call this%InitDustVars (bounds)
 
@@ -315,9 +316,8 @@ contains
     end do
 
       ! Caulculate Drag Partition factor
-      if ( this%prigentroughnessstream%useStreams() )then !if usestreams == true, and it should be always true
-         call this%prigentroughnessstream%CalcDragPartition( bounds, &
-                                this%dpfct_rock_patch(bounds%begp:bounds%endp) )
+      if ( this%prigent_roughness_stream%useStreams() )then !if usestreams == true, and it should be always true
+         call this%CalcDragPartition( bounds, this%prigent_roughness_stream )
       else
 
          call endrun( "ERROR:: Drag partitioning MUST now use a streams file of aeolian roughness length to calculate, it can no longer read from the fsurdat file" )
@@ -1218,5 +1218,68 @@ contains
     end associate 
 
   end subroutine InitDustVars
+
+  !==============================================================================
+  subroutine CalcDragPartition(this, bounds, prigent_roughness_stream )
+    !
+    ! !DESCRIPTION:
+    ! Commented below by Danny M. Leung 31 Dec 2022
+    ! Calculate the drag partition effect of friction velocity due to surface roughness following
+    ! Leung et al. (2022).  This module is used in the dust emission module DUSTMod.F90 for
+    ! calculating drag partitioning. The drag partition equation comes from Marticorena and
+    ! Bergametti (1995) with constants modified by Darmenova et al. (2009). Here it is assumed
+    ! that this equation is used only over arid/desertic regions, such that Catherine Prigent's
+    ! roughness measurements represents mostly rocks. For more vegetated areas, the vegetation
+    ! roughness and drag partitioning are calculated in the DustEmission subroutine. This
+    ! subroutine is used in the InitCold subroutine of DUSTMod.F90.
+    !
+    ! !USES:
+    use PatchType               , only : patch
+    use landunit_varcon         , only : istdlak
+    use LandunitType            , only : lun
+    !
+    ! !ARGUMENTS:
+    implicit none
+    class(dust_type) , intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    type(prigentroughnessstream_type), intent(in) :: prigent_roughness_stream
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: g, p, fp, l    ! Indices
+    real(r8) :: z0s         ! smooth roughness length (m)
+
+    ! constants
+    real(r8), parameter :: D_p = 130e-6_r8           ! [m] Medium soil particle diameter, assuming a global constant
+                                                     ! of ~130 um following Leung et al. (2022)
+    real(r8), parameter :: X = 10_r8                 ! [m] distance downwind of the roughness element (rock). Assume
+                                                     ! estimating roughness effect at a distance of 10 m following Leung et al. (2022)
+    character(len=*), parameter :: subname = 'PrigentRoughnessStream::CalcDragPartition'
+    !---------------------------------------------------------------------
+
+    ! Make sure we've been initialized
+    if ( .not. prigent_roughness_stream%IsStreamInit() )then
+       call endrun(msg=subname//' ERROR Streams have not been initialized, make sure Init is called first' &
+                              //', and streams are on')
+    end if
+
+    ! dmleung: this loop calculates the drag partition effect (or roughness effect) of rocks.
+    !          We save the drag partition factor as a patch level quantity.
+    ! TODO: EBK 02/13/2024: Several magic numbers here that should become parameters so the meaning is preserved
+    z0s = 2_r8 * D_p / 30_r8 ! equation from Frank M. White (2006).
+                             ! Here we assume soil medium size is a global constant, and so is smooth roughness length.
+    do p = bounds%begp,bounds%endp
+       g = patch%gridcell(p)
+       l = patch%landunit(p)
+       if (lun%itype(l) /= istdlak) then
+          ! Calculating rock drag partition factor using Marticorena and Bergametti (1995).
+          ! 0.01 is used to convert Z0a from centimeter to meter.
+          this%dpfct_rock_patch(p) = 1._r8 - ( log(prigent_roughness_stream%prigent_rghn(g)*0.01_r8/z0s) &
+                             / log(0.7_r8*(X/z0s)**0.8_r8) )
+       end if
+    end do
+
+  end subroutine CalcDragPartition
+
+  !==============================================================================
 
 end module DUSTMod
