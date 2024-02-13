@@ -1707,11 +1707,6 @@ sub process_namelist_inline_logic {
   setup_logic_lai_streams($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ##################################
-  # namelist group: dust_emis_streams  #
-  ##################################
-  #setup_logic_dustemis_streams($opts,  $nl_flags, $definition, $defaults, $nl);
-
-  ##################################
   # namelist group: cropcal_streams  #
   ##################################
   setup_logic_cropcal_streams($opts,  $nl_flags, $definition, $defaults, $nl);
