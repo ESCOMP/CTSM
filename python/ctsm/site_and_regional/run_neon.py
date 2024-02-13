@@ -175,8 +175,8 @@ def main(description):
     cesmroot = path_to_ctsm_root()
     # Get the list of supported neon sites from usermods
     valid_neon_sites = glob.glob(
-        os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!d]*")
-    )  # TODO: This is currently including FATES and a secondary list of all sites...
+        os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!Fd]*")
+    )
     valid_neon_sites = sorted([v.split("/")[-1] for v in valid_neon_sites])
 
     (
