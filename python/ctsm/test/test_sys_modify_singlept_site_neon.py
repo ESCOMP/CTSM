@@ -12,7 +12,7 @@ import sys
 
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm import unit_testing
-from ctsm.site_and_regional.modify_singlept_site_neon import main, get_parser
+from ctsm.site_and_regional.modify_singlept_site_neon import main
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -58,7 +58,6 @@ class TestSysModifySingleptSiteNeon(unittest.TestCase):
         # TODO: the above requires a full path instead of site name
         #       because of how run_neon is configured.
         # This needs to be fixed in run_neon.
-        parser = get_parser()
         with self.assertRaises(SystemExit):
             print(
                 """This should currently fail due to directory structure in run_neon

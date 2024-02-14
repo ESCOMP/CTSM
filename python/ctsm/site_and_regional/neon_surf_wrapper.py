@@ -86,8 +86,8 @@ def execute(command):
     try:
         subprocess.check_call(command, stdout=open(os.devnull, "w"), stderr=subprocess.STDOUT)
 
-    except subprocess.CalledProcessError as e:
-        print(e)
+    except subprocess.CalledProcessError as err:
+        print(err)
 
 
 def main():
@@ -101,7 +101,7 @@ def main():
 
     neon_sites = pd.read_csv("neon_sites_dompft.csv")
 
-    for i, row in tqdm.tqdm(neon_sites.iterrows()):
+    for _, row in tqdm.tqdm(neon_sites.iterrows()):
         lat = row["Lat"]
         lon = row["Lon"]
         site = row["Site"]

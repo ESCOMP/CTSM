@@ -41,6 +41,7 @@ _CTSM_PYTHON = os.path.join(
 )
 sys.path.insert(1, _CTSM_PYTHON)
 
+# pylint: disable=import-error, wrong-import-position
 from ctsm.site_and_regional.run_neon import main
 
 if __name__ == "__main__":
