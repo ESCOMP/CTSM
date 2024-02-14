@@ -2726,6 +2726,7 @@ contains
   function DaysPastPlanting(idop)
     ! !USES:
     use clm_time_manager, only : get_prev_calday, get_curr_days_per_year
+    use clm_varcon      , only : secspday
     !
     ! !ARGUMENTS:
     integer,           intent(in) :: idop ! patch day of planting
@@ -2742,7 +2743,7 @@ contains
     else
        ! get_curr_days_per_year() or get_prev_days_per_year() would only differ in the last timestep
        ! of the year, but in that case this line is not reached.
-       DaysPastPlanting = jday - idop + get_curr_days_per_year()
+       DaysPastPlanting = jday - idop + get_curr_days_per_year(offset = -365*int(secspday))
     end if
 
   end function DaysPastPlanting
