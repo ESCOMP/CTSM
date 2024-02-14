@@ -2210,7 +2210,7 @@ contains
             end if
 
             ! days past planting may determine harvest
-            idpp = DaysPastPlanting(idop(p), jday)
+            idpp = DaysPastPlanting(idop(p))
 
             ! onset_counter initialized to zero when .not. croplive
             ! offset_counter relevant only at time step of harvest
@@ -2723,26 +2723,19 @@ contains
   end subroutine PlantCrop
 
   !-----------------------------------------------------------------------
-  function DaysPastPlanting(idop, jday_in)
+  function DaysPastPlanting(idop)
     ! !USES:
     use clm_time_manager, only : get_prev_calday, get_curr_days_per_year
     !
     ! !ARGUMENTS:
     integer,           intent(in) :: idop ! patch day of planting
-    integer, optional, intent(in) :: jday_in ! julian day of the year
     !
     ! !LOCAL VARIABLES
     integer :: DaysPastPlanting
     integer :: jday
 
-    ! Must use separate jday_in and jday because we can't redefine an intent(in)
-    ! variable, even if it wasn't provided in the function call.
-    if (present(jday_in)) then
-       jday = jday_in
-    else
-       ! Use prev instead of curr to avoid jday=1 in last timestep of year
-       jday = get_prev_calday()
-    end if
+    ! Use prev instead of curr to avoid jday=1 in last timestep of year
+    jday = get_prev_calday()
 
     if (jday >= idop) then
        DaysPastPlanting = jday - idop
