@@ -717,7 +717,8 @@ def _get_testmod_list(test_attributes, unique=False):
     for test_attribute in test_attributes:
         for dot_split in test_attribute.split("."):
             slash_replaced = dot_split.replace("/", "-")
-            for ddash_split in slash_replaced.split("--"):
+            newline_replaced = slash_replaced.replace("\n", "")
+            for ddash_split in newline_replaced.split("--"):
                 if "clm-" in ddash_split and (ddash_split not in testmods or not unique):
                     testmods.append(ddash_split)
 
