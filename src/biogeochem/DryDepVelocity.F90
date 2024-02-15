@@ -192,7 +192,7 @@ CONTAINS
     use shr_const_mod  , only : tmelt => shr_const_tkfrz
     use seq_drydep_mod , only : seq_drydep_setHCoeff, mapping, drat, foxd
     use seq_drydep_mod , only : rcls, h2_a, h2_b, h2_c, ri, rac, rclo, rlu, rgss, rgso
-    use landunit_varcon, only : istsoil, istice, istdlak, istwet
+    use landunit_varcon, only : istsoil, istice_mec, istdlak, istwet
     use clm_varctl     , only : iulog
     use pftconMod      , only : noveg, ndllf_evr_tmp_tree, ndllf_evr_brl_tree
     use pftconMod      , only : ndllf_dcd_brl_tree, nbrdlf_evr_trp_tree
@@ -380,7 +380,7 @@ CONTAINS
             index_season = -1
 
             if ( lun%itype(l) /= istsoil )then
-               if ( lun%itype(l) == istice ) then
+               if ( lun%itype(l) == istice_mec ) then
                   wesveg       = 8
                   index_season = 4
                elseif ( lun%itype(l) == istdlak ) then
@@ -400,7 +400,7 @@ CONTAINS
             endif
 
             if (index_season<0) then 
-               if (elai(pi) < (minlai+0.05_r8*(maxlai-minlai))) then  
+               if (elai(pi) < (minlai+0.05*(maxlai-minlai))) then  
                   index_season = 3 
                endif
             endif

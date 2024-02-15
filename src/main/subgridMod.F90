@@ -459,7 +459,7 @@ contains
     character(len=*), parameter :: subname = 'subgrid_get_info_glacier_mec'
     !-----------------------------------------------------------------------
 
-    call glc_behavior%get_num_glc_subgrid(gi, atm_topo, npatches, ncols, nlunits)
+    call glc_behavior%get_num_glc_mec_subgrid(gi, atm_topo, npatches, ncols, nlunits)
 
   end subroutine subgrid_get_info_glacier_mec
 

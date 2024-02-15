@@ -18,13 +18,10 @@ contains
   ! ========================================================================
 
   function create_multilevel_interp_no_levclasses(coordinates_source, coordinates_dest, &
-       dzsoi_source, dzsoi_dest, &
        index_dest, npts_dest) &
        result(interpolator)
     ! Arguments:
     type(interp_multilevel_interp_type) :: interpolator  ! function result
-    real(r8), intent(in) :: dzsoi_source(:)  ! dzsoi in source data for index_dest
-    real(r8), intent(in) :: dzsoi_dest(:)    ! dzsoi in dest data for index_dest
     real(r8), intent(in) :: coordinates_source(:)  ! coordinates in source data for index_dest
     real(r8), intent(in) :: coordinates_dest(:)    ! coordinates in dest data for index_dest
 
@@ -32,8 +29,6 @@ contains
     integer, intent(in) :: npts_dest     ! total number of points wanted in dest
 
     ! Local variables:
-    real(r8), allocatable :: dzsoi_source_all(:,:)
-    real(r8), allocatable :: dzsoi_dest_all(:,:)
     real(r8), allocatable :: coordinates_source_all(:,:)
     real(r8), allocatable :: coordinates_dest_all(:,:)
 
@@ -48,32 +43,19 @@ contains
          index_dest = index_dest, &
          npts_dest = npts_dest)
 
-    call create_coordinate_arrays( &
-         coordinates_source = dzsoi_source, &
-         coordinates_dest = dzsoi_dest, &
-         coordinates_source_all = dzsoi_source_all, &
-         coordinates_dest_all = dzsoi_dest_all, &
-         index_dest = index_dest, &
-         npts_dest = npts_dest)
-
     interpolator = interp_multilevel_interp_type( &
          coordinates_source = coordinates_source_all, &
          coordinates_dest   = coordinates_dest_all, &
-         dzsoi_source       = dzsoi_source_all, &
-         dzsoi_dest         = dzsoi_dest_all, &
          coord_varname      = coord_varname)
 
   end function create_multilevel_interp_no_levclasses
 
   function create_multilevel_interp_with_levclasses(coordinates_source, coordinates_dest, &
-       dzsoi_source, dzsoi_dest, &
        level_classes_source, level_classes_dest, &
        index_dest, npts_dest) &
        result(interpolator)
     ! Arguments:
     type(interp_multilevel_interp_type) :: interpolator  ! function result
-    real(r8), intent(in) :: dzsoi_source(:)  ! dzsoi in source data for index_dest
-    real(r8), intent(in) :: dzsoi_dest(:)    ! dzsoi in dest data for index_dest
     real(r8), intent(in) :: coordinates_source(:)   ! coordinates in source data for index_dest
     real(r8), intent(in) :: coordinates_dest(:)     ! coordinates in dest data for index_dest
     integer , intent(in) :: level_classes_source(:) ! class indices in source data for index_dest
@@ -83,8 +65,6 @@ contains
     integer, intent(in) :: npts_dest     ! total number of points wanted in dest
 
     ! Local variables:
-    real(r8), allocatable :: dzsoi_source_all(:,:)
-    real(r8), allocatable :: dzsoi_dest_all(:,:)
     real(r8), allocatable :: coordinates_source_all(:,:)
     real(r8), allocatable :: coordinates_dest_all(:,:)
     integer , allocatable :: level_classes_source_all(:,:)
@@ -101,14 +81,6 @@ contains
          index_dest = index_dest, &
          npts_dest = npts_dest)
 
-    call create_coordinate_arrays( &
-         coordinates_source = dzsoi_source, &
-         coordinates_dest = dzsoi_dest, &
-         coordinates_source_all = dzsoi_source_all, &
-         coordinates_dest_all = dzsoi_dest_all, &
-         index_dest = index_dest, &
-         npts_dest = npts_dest)
-
     call create_class_arrays( &
          level_classes_source = level_classes_source, &
          level_classes_dest = level_classes_dest, &
@@ -122,8 +94,6 @@ contains
          coordinates_dest   = coordinates_dest_all, &
          level_classes_source = level_classes_source_all, &
          level_classes_dest   = level_classes_dest_all, &
-         dzsoi_source       = dzsoi_source_all, &
-         dzsoi_dest         = dzsoi_dest_all, &
          coord_varname      = coord_varname)
 
   end function create_multilevel_interp_with_levclasses

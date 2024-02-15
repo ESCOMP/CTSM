@@ -126,14 +126,14 @@ contains
   end subroutine wrap_set_mindist
 
   !-----------------------------------------------------------------------
-  subroutine setup_and_run_glc(ptype_o, ctype_o, topoglc_o, &
+  subroutine setup_and_run_glcmec(ptype_o, ctype_o, topoglc_o, &
        ptype_i, ctype_i, topoglc_i, &
        collapse_to_atm_topo, glc_elevclasses_same, &
        mindist_index_p, mindist_index_c, &
        ltype_diff_i)
     !
     ! !DESCRIPTION:
-    ! Does all the work needed to setup and run wrap_set_mindist for a single glc
+    ! Does all the work needed to setup and run wrap_set_mindist for a single glcmec
     ! output point.
     !
     ! Gives both the mindist patch and column for that output point.
@@ -155,15 +155,15 @@ contains
     integer, intent(out) :: mindist_index_p
     integer, intent(out) :: mindist_index_c
 
-    ! If present, this gives the difference in ltype from ltype_glc for each input
+    ! If present, this gives the difference in ltype from ltype_glcmec for each input
     ! point. So, for example, if this is an array [-1, 0, 1] then the input ltypes will
-    ! be [ltype_glc-1, ltype_glc, ltype_glc+1]. If absent, all input points have
-    ! type ltype_glc.
+    ! be [ltype_glcmec-1, ltype_glcmec, ltype_glcmec+1]. If absent, all input points have
+    ! type ltype_glcmec.
     integer, intent(in), optional :: ltype_diff_i(:)
 
     !
     ! !LOCAL VARIABLES:
-    integer, parameter :: ltype_glc = subgrid_special_indices%ilun_landice
+    integer, parameter :: ltype_glcmec = subgrid_special_indices%ilun_landice_multiple_elevation_classes
     real(r8), parameter :: my_lat = 31._r8
     real(r8), parameter :: my_lon = 41._r8
     integer :: num_i
@@ -175,7 +175,7 @@ contains
     integer :: mindist_index_p_arr(1)
     integer :: mindist_index_c_arr(1)
 
-    character(len=*), parameter :: subname = 'setup_and_run_glc'
+    character(len=*), parameter :: subname = 'setup_and_run_glcmec'
     !-----------------------------------------------------------------------
 
     ! Note that we assume the same number of patches as columns (i.e., one patch per
@@ -187,7 +187,7 @@ contains
        @assertEqual(num_i, size(ltype_diff_i))
     end if
 
-    call setup_landunit_ncols(ltype=ltype_glc, &
+    call setup_landunit_ncols(ltype=ltype_glcmec, &
          ctypes=[ctype_o], &
          cweights=[1._r8], &
          ptype=ptype_o)
@@ -198,7 +198,7 @@ contains
          beg = bounds%begc, &
          name = 'column', &
          ctype = [ctype_o], &
-         ltype = [ltype_glc], &
+         ltype = [ltype_glcmec], &
          lat = [my_lat], &
          lon = [my_lon], &
          topoglc = [topoglc_o])
@@ -209,7 +209,7 @@ contains
          name = 'pft', &
          ptype = [ptype_o], &
          ctype = [ctype_o], &
-         ltype = [ltype_glc], &
+         ltype = [ltype_glcmec], &
          lat = [my_lat], &
          lon = [my_lon], &
          topoglc = [topoglc_o])
@@ -218,9 +218,9 @@ contains
     allocate(lat_i(num_i))
     allocate(lon_i(num_i))
     if (present(ltype_diff_i)) then
-       ltype_i(:) = ltype_glc + ltype_diff_i(:)
+       ltype_i(:) = ltype_glcmec + ltype_diff_i(:)
     else
-       ltype_i(:) = ltype_glc
+       ltype_i(:) = ltype_glcmec
     end if
     lat_i(:) = my_lat
     lon_i(:) = my_lon
@@ -255,7 +255,7 @@ contains
     mindist_index_c = mindist_index_c_arr(1)
     mindist_index_p = mindist_index_p_arr(1)
 
-  end subroutine setup_and_run_glc
+  end subroutine setup_and_run_glcmec
 
 
   ! ========================================================================
@@ -309,7 +309,7 @@ contains
   end subroutine multipleTypes_findsSameType
 
   @Test
-  subroutine glc_elevclassesSame_findsSameColType(this)
+  subroutine glcmec_elevclassesSame_findsSameColType(this)
     ! When glc elevation classes are the same between input and output: Choose
     ! column/patch from the same column type, even if it isn't the one with the closest
     ! topographic height.
@@ -326,7 +326,7 @@ contains
     ! - all input ptypes are the same as output ptype
     ! - all input ctypes are different, with one of them matching the output ctype
     ! - the matching input ctype has the most different topographic height
-    call setup_and_run_glc( &
+    call setup_and_run_glcmec( &
          ptype_o = my_ptype, &
          ctype_o = my_ctype, &
          topoglc_o = my_topo, &
@@ -340,10 +340,10 @@ contains
 
     @assertEqual(3, mindist_index_c)
     @assertEqual(3, mindist_index_p)
-  end subroutine glc_elevclassesSame_findsSameColType
+  end subroutine glcmec_elevclassesSame_findsSameColType
 
   @Test
-  subroutine glc_elevclassesSame_findsSamePatchType(this)
+  subroutine glcmec_elevclassesSame_findsSamePatchType(this)
     ! When glc elevation classes are the same between input and output: Choose patch from
     ! the same patch type, even if it isn't the one with the closest topographic height.
     !
@@ -360,7 +360,7 @@ contains
     ! - all input ctypes are the same as output ctype (this probably shouldn't happen in
     !   practice, but is useful for testing the code logic)
     ! - the matching input ptype has the most different topographic height
-    call setup_and_run_glc( &
+    call setup_and_run_glcmec( &
          ptype_o = my_ptype, &
          ctype_o = my_ctype, &
          topoglc_o = my_topo, &
@@ -378,12 +378,12 @@ contains
     ! the same type to arise in practice, so we haven't defined the behavior of this
     ! case.)
     @assertEqual(3, mindist_index_p)
-  end subroutine glc_elevclassesSame_findsSamePatchType
+  end subroutine glcmec_elevclassesSame_findsSamePatchType
 
   @Test
-  subroutine glc_elevclassesDiffer_findsClosestHeight(this)
+  subroutine glcmec_elevclassesDiffer_findsClosestHeight(this)
     ! When glc elevation classes differ between input and output: Ignore column and pft
-    ! types; if there are multiple glacier points that are equidistant in space, pick the
+    ! types; if there are multiple glc_mec points that are equidistant in space, pick the
     ! one with the closest height
     !
     ! This tests both column-level and patch-level
@@ -397,7 +397,7 @@ contains
     ! Note that we use different ptype and ctype values for the target point: these should
     ! be ignored in this case. However, ltype should *not* be ignored (and thus we should
     ! *not* pick the third point).
-    call setup_and_run_glc( &
+    call setup_and_run_glcmec( &
          ptype_o = my_ptype, &
          ctype_o = my_ctype, &
          topoglc_o = my_topo, &
@@ -412,12 +412,12 @@ contains
 
     @assertEqual(2, mindist_index_c)
     @assertEqual(2, mindist_index_p)
-  end subroutine glc_elevclassesDiffer_findsClosestHeight
+  end subroutine glcmec_elevclassesDiffer_findsClosestHeight
 
   @Test
-  subroutine glc_collapseToAtmTopo_findsClosestHeight(this)
-    ! For an output glc point with the collapse_to_atm_topo behavior: Ignore column and
-    ! pft types; if there are multiple glacier points that are equidistant in space, pick
+  subroutine glcmec_collapseToAtmTopo_findsClosestHeight(this)
+    ! For an output glcmec point with the collapse_to_atm_topo behavior: Ignore column and
+    ! pft types; if there are multiple glc_mec points that are equidistant in space, pick
     ! the one with the closest height
     !
     ! This tests both column-level and patch-level
@@ -431,7 +431,7 @@ contains
     ! Note that we use different ptype and ctype values for the target point: these should
     ! be ignored in this case. However, ltype should *not* be ignored (and thus we should
     ! *not* pick the third point).
-    call setup_and_run_glc( &
+    call setup_and_run_glcmec( &
          ptype_o = my_ptype, &
          ctype_o = my_ctype, &
          topoglc_o = my_topo, &
@@ -446,18 +446,18 @@ contains
 
     @assertEqual(2, mindist_index_c)
     @assertEqual(2, mindist_index_p)
-  end subroutine glc_collapseToAtmTopo_findsClosestHeight
+  end subroutine glcmec_collapseToAtmTopo_findsClosestHeight
 
   @Test
-  subroutine glc_elevclassesDiffer_findsClosestLatlon(this)
-    ! For glacier, if we have some points closer in topographic height, but others closer
+  subroutine glcmec_elevclassesDiffer_findsClosestLatlon(this)
+    ! For glc_mec, if we have some points closer in topographic height, but others closer
     ! in x-y space, pick the closer point in x-y space
 
     class(TestSetMindist), intent(inout) :: this
     type(subgrid_type) :: subgridi, subgrido
     type(glc_behavior_type) :: glc_behavior
     integer, parameter :: my_ctype = 15
-    integer, parameter :: my_ltype = subgrid_special_indices%ilun_landice
+    integer, parameter :: my_ltype = subgrid_special_indices%ilun_landice_multiple_elevation_classes
     real(r8), parameter :: my_lat = 31._r8
     real(r8), parameter :: my_lon = 41._r8
     real(r8), parameter :: my_topo = 1000._r8
@@ -495,7 +495,7 @@ contains
          glc_behavior = glc_behavior, glc_elevclasses_same = .false.)
 
     @assertEqual(2, mindist_index(1))
-  end subroutine glc_elevclassesDiffer_findsClosestLatlon
+  end subroutine glcmec_elevclassesDiffer_findsClosestLatlon
 
   @Test
   subroutine noncropToCrop_patchVariable_usesCorrectPft(this)

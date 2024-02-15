@@ -467,7 +467,7 @@ contains
     
     this%soila10_patch(begp:endp) = spval
     call hist_addfld1d (fname='SOIL10', units='K',  &
-         avgflag='A', long_name='10-day running mean of 12cm layer soil', &
+         avgflag='A', long_name='10-day running mean of 3rd layer soil', &
          ptr_patch=this%soila10_patch, default='inactive')
     
     this%t_a5min_patch(begp:endp) = spval
@@ -648,7 +648,7 @@ contains
     use shr_kind_mod   , only : r8 => shr_kind_r8
     use shr_const_mod  , only : SHR_CONST_TKFRZ
     use clm_varcon     , only : denice, denh2o, sb
-    use landunit_varcon, only : istwet, istsoil, istdlak, istice
+    use landunit_varcon, only : istwet, istsoil, istdlak, istice_mec
     use column_varcon  , only : icol_road_imperv, icol_roof, icol_sunwall
     use column_varcon  , only : icol_shadewall, icol_road_perv
     use clm_varctl     , only : iulog, use_vancouver, use_mexicocity
@@ -697,7 +697,7 @@ contains
          ! Below snow temperatures - nonlake points (lake points are set below)
          if (.not. lun%lakpoi(l)) then
 
-            if (lun%itype(l)==istice) then
+            if (lun%itype(l)==istice_mec) then
                this%t_soisno_col(c,1:nlevgrnd) = 250._r8
 
             else if (lun%itype(l) == istwet) then
@@ -709,11 +709,11 @@ contains
                      ! Set road top layer to initial air temperature and interpolate other
                      ! layers down to 20C in bottom layer
                      do j = 1, nlevgrnd
-                        this%t_soisno_col(c,j) = 297.56_r8 - (j-1) * ((297.56_r8-293.16_r8)/(nlevgrnd-1))
+                        this%t_soisno_col(c,j) = 297.56 - (j-1) * ((297.56-293.16)/(nlevgrnd-1))
                      end do
                      ! Set wall and roof layers to initial air temperature
                   else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall .or. col%itype(c) == icol_roof) then
-                     this%t_soisno_col(c,1:nlevurb) = 297.56_r8
+                     this%t_soisno_col(c,1:nlevurb) = 297.56
                   else
                      this%t_soisno_col(c,1:nlevgrnd) = 283._r8
                   end if
@@ -722,11 +722,11 @@ contains
                      ! Set road top layer to initial air temperature and interpolate other
                      ! layers down to 22C in bottom layer
                      do j = 1, nlevgrnd
-                        this%t_soisno_col(c,j) = 289.46_r8 - (j-1) * ((289.46_r8-295.16_r8)/(nlevgrnd-1))
+                        this%t_soisno_col(c,j) = 289.46 - (j-1) * ((289.46-295.16)/(nlevgrnd-1))
                      end do
                   else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall .or. col%itype(c) == icol_roof) then
                      ! Set wall and roof layers to initial air temperature
-                     this%t_soisno_col(c,1:nlevurb) = 289.46_r8
+                     this%t_soisno_col(c,1:nlevurb) = 289.46
                   else
                      this%t_soisno_col(c,1:nlevgrnd) = 283._r8
                   end if
@@ -807,27 +807,27 @@ contains
          this%t_stem_patch(p)   = this%t_veg_patch(p)
 
          if (use_vancouver) then
-            this%t_ref2m_patch(p) = 297.56_r8
+            this%t_ref2m_patch(p) = 297.56
          else if (use_mexicocity) then
-            this%t_ref2m_patch(p) = 289.46_r8
+            this%t_ref2m_patch(p) = 289.46
          else
             this%t_ref2m_patch(p) = 283._r8
          end if
 
          if (lun%urbpoi(l)) then
             if (use_vancouver) then
-               this%t_ref2m_u_patch(p) = 297.56_r8
+               this%t_ref2m_u_patch(p) = 297.56
             else if (use_mexicocity) then
-               this%t_ref2m_u_patch(p) = 289.46_r8
+               this%t_ref2m_u_patch(p) = 289.46
             else
                this%t_ref2m_u_patch(p) = 283._r8
             end if
          else
             if (.not. lun%ifspecial(l)) then
                if (use_vancouver) then
-                  this%t_ref2m_r_patch(p) = 297.56_r8
+                  this%t_ref2m_r_patch(p) = 297.56
                else if (use_mexicocity) then
-                  this%t_ref2m_r_patch(p) = 289.46_r8
+                  this%t_ref2m_r_patch(p) = 289.46
                else
                   this%t_ref2m_r_patch(p) = 283._r8
                end if
@@ -898,7 +898,6 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='T_SOISNO', xtype=ncd_double,   &
          dim1name='column', dim2name='levtot', switchdim=.true., &
          long_name='soil-snow temperature', units='K', &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%t_soisno_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='T_VEG', xtype=ncd_double,  &
@@ -922,7 +921,6 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='T_LAKE', xtype=ncd_double,  &
          dim1name='column', dim2name='levlak', switchdim=.true., &
          long_name='lake temperature', units='K', &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%t_lake_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='T_GRND', xtype=ncd_double,  &
@@ -1331,7 +1329,6 @@ contains
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date
     use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
-    use CNSharedParamsMod, only : upper_soil_layer
     !
     ! !ARGUMENTS:
     class(temperature_type)                :: this
@@ -1463,12 +1460,9 @@ contains
     call update_accum_field  ('T10', this%t_ref2m_patch, nstep)
     call extract_accum_field ('T10', this%t_a10_patch, nstep)
     
-    ! Accumulate and extract SOIL10, for a sepcific soil layer
-    !(acumulates SOIL10 as 10-day running mean)
-
     do p = begp,endp    
        c = patch%column(p)  
-       rbufslp(p) = this%t_soisno_col(c,upper_soil_layer)
+       rbufslp(p) = this%t_soisno_col(c,3)      
     end do
     call update_accum_field  ('SOIL10', rbufslp, nstep)
     call extract_accum_field ('SOIL10', this%soila10_patch, nstep)

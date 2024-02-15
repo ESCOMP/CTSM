@@ -21,7 +21,7 @@ module SnowCoverFractionSwensonLawrence2012Mod
   use clm_varcon     , only : rpi
   use ColumnType     , only : column_type
   use glcBehaviorMod , only : glc_behavior_type
-  use landunit_varcon, only : istice
+  use landunit_varcon, only : istice_mec
   use paramUtilMod   , only : readNcdioScalar
   use SnowCoverFractionBaseMod, only : snow_cover_fraction_base_type
 
@@ -454,8 +454,8 @@ contains
     do c = bounds%begc, bounds%endc
        g = col%gridcell(c)
 
-       if (col%lun_itype(c) == istice .and. glc_behavior%allow_multiple_columns_grc(g)) then
-          ! ice columns already account for subgrid topographic variability through
+       if (col%lun_itype(c) == istice_mec .and. glc_behavior%allow_multiple_columns_grc(g)) then
+          ! ice_mec columns already account for subgrid topographic variability through
           ! their use of multiple elevation classes; thus, to avoid double-accounting for
           ! topographic variability in these columns, we ignore topo_std and use a fixed
           ! value of n_melt.

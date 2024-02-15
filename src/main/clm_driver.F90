@@ -473,7 +473,7 @@ contains
             energyflux_inst)
 
        call topo_inst%UpdateTopo(bounds_clump, &
-            filter(nc)%num_icec, filter(nc)%icec, &
+            filter(nc)%num_icemecc, filter(nc)%icemecc, &
             glc2lnd_inst, glc_behavior, &
             atm_topo = atm2lnd_inst%forc_topo_grc(bounds_clump%begg:bounds_clump%endg))
 
@@ -1170,7 +1170,6 @@ contains
                water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst,                 &
                soilbiogeochem_carbonflux_inst,                          &
                soilbiogeochem_nitrogenflux_inst, ch4_inst, lnd2atm_inst, &
-               clm_fates, &
                agnpp = agnpp_patch(bounds_clump%begp:bounds_clump%endp), &
                bgnpp = bgnpp_patch(bounds_clump%begp:bounds_clump%endp), &
                annsum_npp = annsum_npp_patch(bounds_clump%begp:bounds_clump%endp), &

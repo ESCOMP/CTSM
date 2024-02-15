@@ -87,8 +87,8 @@ module filterMod
      integer, pointer :: nolakeurbanp(:) ! non-lake, non-urban filter (pfts)
      integer :: num_nolakeurbanp         ! number of pfts in non-lake, non-urban filter
 
-     integer, pointer :: icec(:)         ! glacier filter (cols)
-     integer :: num_icec                 ! number of columns in glacier filter
+     integer, pointer :: icemecc(:)      ! glacier mec filter (cols)
+     integer :: num_icemecc              ! number of columns in glacier mec filter
      
      integer, pointer :: do_smb_c(:)     ! glacier+bareland SMB calculations-on filter (cols)
      integer :: num_do_smb_c             ! number of columns in glacier+bareland SMB mec filter         
@@ -233,7 +233,7 @@ contains
        allocate(this_filter(nc)%pcropp(bounds%endp-bounds%begp+1))
        allocate(this_filter(nc)%soilnopcropp(bounds%endp-bounds%begp+1))
 
-       allocate(this_filter(nc)%icec(bounds%endc-bounds%begc+1))
+       allocate(this_filter(nc)%icemecc(bounds%endc-bounds%begc+1))      
        allocate(this_filter(nc)%do_smb_c(bounds%endc-bounds%begc+1))       
        
        allocate(this_filter(nc)%actfirec(bounds%endc-bounds%begc+1))      
@@ -301,7 +301,7 @@ contains
     ! !USES:
     use decompMod       , only : BOUNDS_LEVEL_CLUMP
     use pftconMod       , only : npcropmin
-    use landunit_varcon , only : istsoil, istcrop, istice
+    use landunit_varcon , only : istsoil, istcrop, istice_mec
     !
     ! !ARGUMENTS:
     type(bounds_type)       , intent(in)    :: bounds  
@@ -499,13 +499,13 @@ contains
     do c = bounds%begc,bounds%endc
        if (col%active(c) .or. include_inactive) then
           l = col%landunit(c)
-          if (lun%itype(l) == istice) then
+          if (lun%itype(l) == istice_mec) then
              f = f + 1
-             this_filter(nc)%icec(f) = c
+             this_filter(nc)%icemecc(f) = c
           end if
        end if
     end do
-    this_filter(nc)%num_icec = f
+    this_filter(nc)%num_icemecc = f
 
     f = 0
     do c = bounds%begc,bounds%endc
@@ -517,11 +517,11 @@ contains
           ! Elsewhere (where ice melt remains in place), we cannot compute a sensible
           ! negative SMB.
           !
-          ! In addition to istice columns, we also compute SMB for any soil column in
+          ! In addition to istice_mec columns, we also compute SMB for any soil column in
           ! this region, in order to provide SMB forcing for the bare ground elevation
           ! class (elevation class 0).
           if ( glc_behavior%melt_replaced_by_ice_grc(g) .and. &
-               (lun%itype(l) == istice .or. lun%itype(l) == istsoil)) then
+               (lun%itype(l) == istice_mec .or. lun%itype(l) == istsoil)) then
              f = f + 1
              this_filter(nc)%do_smb_c(f) = c
           end if

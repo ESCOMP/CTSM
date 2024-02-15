@@ -6,7 +6,7 @@ module test_clm_glclnd
   use unittestSubgridMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use lnd2glcMod
-  use landunit_varcon, only : istsoil, istice
+  use landunit_varcon, only : istsoil, istice_mec
   
   implicit none
   save
@@ -29,7 +29,7 @@ contains
     call unittest_add_landunit(my_gi=gi, ltype=istsoil, wtgcell=0.0_r8)
     call unittest_add_column(my_li=li, ctype=1, wtlunit=1.0_r8)
     c_soil = ci
-    call unittest_add_landunit(my_gi=gi, ltype=istice, wtgcell=1.0_r8)
+    call unittest_add_landunit(my_gi=gi, ltype=istice_mec, wtgcell=1.0_r8)
     call unittest_subgrid_setup_end()
 
     @assertEqual(1.0_r8, bareland_normalization(c_soil))
@@ -47,7 +47,7 @@ contains
     call unittest_add_landunit(my_gi=gi, ltype=istsoil, wtgcell=0.3_r8)
     call unittest_add_column(my_li=li, ctype=1, wtlunit=1.0_r8)
     c_soil = ci
-    call unittest_add_landunit(my_gi=gi, ltype=istice, wtgcell=0.6_r8)
+    call unittest_add_landunit(my_gi=gi, ltype=istice_mec, wtgcell=0.6_r8)
     call unittest_subgrid_setup_end()
 
     @assertEqual(0.75_r8, bareland_normalization(c_soil), tolerance=tol)
@@ -65,7 +65,7 @@ contains
     call unittest_add_landunit(my_gi=gi, ltype=istsoil, wtgcell=0.4_r8)
     call unittest_add_column(my_li=li, ctype=1, wtlunit=1.0_r8)
     c_soil = ci
-    call unittest_add_landunit(my_gi=gi, ltype=istice, wtgcell=0.6_r8)
+    call unittest_add_landunit(my_gi=gi, ltype=istice_mec, wtgcell=0.6_r8)
     call unittest_subgrid_setup_end()
 
     @assertEqual(1.0_r8, bareland_normalization(c_soil))

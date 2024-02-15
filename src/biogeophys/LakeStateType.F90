@@ -278,7 +278,6 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='LAKE_ICEFRAC', xtype=ncd_double,  &
          dim1name='column', dim2name='levlak', switchdim=.true., &
          long_name='lake layer ice fraction', units='kg/kg', &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%lake_icefrac_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='SAVEDTKE1', xtype=ncd_double,  &

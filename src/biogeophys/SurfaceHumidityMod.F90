@@ -14,7 +14,7 @@ module SurfaceHumidityMod
   use clm_varcon              , only : denh2o, denice, roverg, tfrz, spval 
   use column_varcon           , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon           , only : icol_road_imperv, icol_road_perv
-  use landunit_varcon         , only : istice, istwet, istsoil, istcrop
+  use landunit_varcon         , only : istice_mec, istwet, istsoil, istcrop
   use clm_varpar              , only : nlevgrnd
   use atm2lndType             , only : atm2lnd_type
   use SoilStateType           , only : soilstate_type
@@ -126,7 +126,7 @@ contains
          ! Saturated vapor pressure, specific humidity and their derivatives
          ! at ground surface
          qred = 1._r8
-         if (lun%itype(l)/=istwet .AND. lun%itype(l)/=istice) then
+         if (lun%itype(l)/=istwet .AND. lun%itype(l)/=istice_mec) then
 
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                wx   = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)

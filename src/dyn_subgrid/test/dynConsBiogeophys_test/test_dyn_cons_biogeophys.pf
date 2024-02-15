@@ -9,9 +9,9 @@ module test_dyn_cons_biogeophys
   use unittestArrayMod, only : col_array
   use unittestFilterBuilderMod, only : filter_from_range, filter_empty
   use unittestWaterTypeFactory, only : unittest_water_type_factory_type
-  use clm_varpar, only : nlevgrnd, nlevsno, maxpatch_glc
-  use column_varcon, only : ice_class_to_col_itype
-  use landunit_varcon, only : istsoil, istice, istdlak
+  use clm_varpar, only : nlevgrnd, nlevsno, maxpatch_glcmec
+  use column_varcon, only : icemec_class_to_col_itype
+  use landunit_varcon, only : istsoil, istice_mec, istdlak
   use ColumnType, only : col
   use LandunitType, only : lun
   use PatchType, only : patch
@@ -49,7 +49,7 @@ contains
   subroutine setUp(this)
     class(TestDCB), intent(inout) :: this
 
-    maxpatch_glc = 10
+    maxpatch_glcmec = 10
     call this%water_type_factory%init()
     call this%water_type_factory%setup_before_subgrid( &
          my_nlevsoi = my_nlevsoi, &
@@ -101,8 +101,8 @@ contains
     real(r8), parameter :: wt_veg_col1 = 0.25_r8
     real(r8), parameter :: wt_veg_col2 = 0.75_r8
     integer :: veg_col1, veg_col2, glc_col
-    integer :: num_icec, num_natveg_and_icec, num_lakec
-    integer, allocatable :: filter_icec(:), filter_natveg_and_icec(:), filter_lakec(:)
+    integer :: num_icemecc, num_natveg_and_icemecc, num_lakec
+    integer, allocatable :: filter_icemecc(:), filter_natveg_and_icemecc(:), filter_lakec(:)
     integer :: c
     real(r8), allocatable :: expected_vals_liq_col(:)
     real(r8), allocatable :: expected_vals_ice_col(:)
@@ -113,7 +113,7 @@ contains
     ! ------------------------------------------------------------------------
     ! Create subgrid structure.
     !
-    ! There is one ice column (the target column for this test) and two vegetated
+    ! There is one ice_mec column (the target column for this test) and two vegetated
     ! columns (to test averaging from column to landunit). The weights of all of those
     ! columns on the grid cell are 0, and they are all inactive (in order to ensure that
     ! the code operates on inactive as well as active points). In addition, there is one
@@ -134,9 +134,9 @@ contains
     veg_col2 = ci
 
     ! Add glacier landunit
-    call unittest_add_landunit(my_gi=gi, ltype=istice, wtgcell=0._r8)
+    call unittest_add_landunit(my_gi=gi, ltype=istice_mec, wtgcell=0._r8)
     call unittest_add_column(my_li=li, &
-         ctype = ice_class_to_col_itype(1), &
+         ctype = icemec_class_to_col_itype(1), &
          wtlunit=1._r8)
     call unittest_add_patch(my_ci=ci, ptype=0, wtcol=1._r8)
     glc_col = ci
@@ -159,9 +159,9 @@ contains
 
     ! Create filters
     call filter_from_range(start=glc_col, end=glc_col, &
-         numf=num_icec, filter=filter_icec)
+         numf=num_icemecc, filter=filter_icemecc)
     call filter_from_range(start=veg_col1, end=glc_col, &
-         numf=num_natveg_and_icec, filter=filter_natveg_and_icec)
+         numf=num_natveg_and_icemecc, filter=filter_natveg_and_icemecc)
     ! For now, this test does NOT cover lake columns. So just use an empty lake filter.
     ! This also allows us to avoid initializing variables in this%lakestate_inst.
     call filter_empty(num_lakec, filter_lakec)
@@ -207,7 +207,7 @@ contains
     ! Call the routine we're testing
     ! ------------------------------------------------------------------------
 
-    call dyn_hwcontent_set_baselines(bounds, num_icec, filter_icec, &
+    call dyn_hwcontent_set_baselines(bounds, num_icemecc, filter_icemecc, &
          num_lakec, filter_lakec, &
          this%urbanparams_inst, this%soilstate_inst, this%lakestate_inst, &
          this%water_inst, this%temperature_inst, &
@@ -228,13 +228,13 @@ contains
     ignored_cvliq_col = col_array(0._r8)
 
     call AccumulateSoilLiqIceMassNonLake(bounds, &
-         num_natveg_and_icec, filter_natveg_and_icec, &
+         num_natveg_and_icemecc, filter_natveg_and_icemecc, &
          this%water_inst%waterstatebulk_inst, &
          liquid_mass = expected_vals_liq_col, &
          ice_mass = expected_vals_ice_col)
 
     call AccumulateSoilHeatNonLake(bounds, &
-         num_natveg_and_icec, filter_natveg_and_icec, &
+         num_natveg_and_icemecc, filter_natveg_and_icemecc, &
          this%urbanparams_inst, this%soilstate_inst, this%temperature_inst, &
          this%water_inst%waterstatebulk_inst, &
          heat = expected_vals_heat_col, &

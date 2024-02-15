@@ -601,7 +601,7 @@ contains
 
              ! Activity factor for CO2 (only for isoprene)
              if (trim(meg_cmp%name) == 'isoprene') then 
-                co2_ppmv = 1.e6_r8*forc_pco2(g)/forc_pbot(c)
+                co2_ppmv = 1.e6*forc_pco2(g)/forc_pbot(c)
                 gamma_c = get_gamma_C(cisun_z(p,1),cisha_z(p,1),forc_pbot(c),fsun(p), co2_ppmv)
              else
                 gamma_c = 1._r8

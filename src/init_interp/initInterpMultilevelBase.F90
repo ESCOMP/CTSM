@@ -53,7 +53,7 @@ module initInterpMultilevelBase
      end subroutine check_npts_interface
 
      subroutine interp_multilevel_interface(this, &
-          data_dest, data_source, index_dest, scale_by_thickness)
+          data_dest, data_source, index_dest)
        ! !DESCRIPTION:
        ! Interpolates a multi-level field from source to dest, for a single point.
        !
@@ -73,7 +73,6 @@ module initInterpMultilevelBase
        real(r8) , intent(inout) :: data_dest(:)
        real(r8) , intent(in)    :: data_source(:)
        integer  , intent(in)    :: index_dest
-       logical  , intent(in)    :: scale_by_thickness
      end subroutine interp_multilevel_interface
 
      pure function get_description_interface(this) result(description)
