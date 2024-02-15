@@ -288,20 +288,7 @@
     <desc>User mods to apply to specific compset matches. </desc>
   </entry>
 
-  <entry id="NEONSITE">                                                                                    
-    <type>char</type>
-    <valid_values>                                                                                      
-      ABBY,BLAN,CPER,DEJU,GRSM,HEAL,KONA,LENO,NIWO,ONAQ,PUUM,SERC,SRER,TALL,TREE,WOOD,
-      BARR,BONA,DCFS,DELA,GUAN,JERC,KONZ,MLBS,NOGP,ORNL,RMNP,SJER,STEI,TEAK,UKFS,WREF,
-      BART,CLBJ,DSNY,HARV,JORN,LAJA,MOAB,OAES,OSBS,SCBI,SOAP,STER,TOOL,UNDE,YELL
-    </valid_values>                                                                                        
-    <default_value/>                                                                                       
-    <group>run_component_ctsm</group>                                                                      
-    <file>env_run.xml</file>                                                                               
-    <desc>Name of site for NEON tower data</desc>                                                          
-  </entry>                                                                                                 
-                   
-<help>
+  <help>
     =========================================
     CLM naming conventions
     =========================================
