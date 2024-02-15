@@ -1,7 +1,6 @@
-CASE=`./xmlquery CASE --value`
 SRCROOT=`./xmlquery SRCROOT --value`
-FATESDIR=$SRCROOT/src/fates
-FATESPARAMFILE=${SRCROOT}/src/fates/parameter_files/binaries/${CASE}-params.nc
+. "${SRCROOT}"/cime_config/testdefs/testmods_dirs/clm/_scripts/get_fates_shell_commands_vars.sh
+CASE=`./xmlquery CASE --value`
 
 $FATESDIR/tools/modify_fates_paramfile.py --O --fin $FATESPARAMFILE --fout $FATESPARAMFILE --var fates_seed_dispersal_fraction --val 0.2 --allpfts
 $FATESDIR/tools/modify_fates_paramfile.py --O --fin $FATESPARAMFILE --fout $FATESPARAMFILE --var fates_seed_dispersal_max_dist --val 2500000 --allpfts
