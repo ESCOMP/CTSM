@@ -732,7 +732,7 @@ contains
                   end if
                else
                   if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                     this%t_soisno_col(c,1:nlevgrnd) = 274._r8
+                     this%t_soisno_col(c,1:nlevgrnd) = 272._r8
                   else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
                        .or. col%itype(c) == icol_roof) then
                      ! Set sunwall, shadewall, roof to fairly high temperature to avoid initialization
@@ -741,7 +741,7 @@ contains
                   end if
                end if
             else
-               this%t_soisno_col(c,1:nlevgrnd) = 272._r8
+               this%t_soisno_col(c,1:nlevgrnd) = 274._r8
                if (use_excess_ice .and. (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop)) then
                   this%t_soisno_col(c,1:nlevgrnd) = SHR_CONST_TKFRZ - 5.0_r8 !needs to be below freezing to properly initiate excess ice
                end if
