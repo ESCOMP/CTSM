@@ -41,7 +41,7 @@ EXAMPLES:
 
      To document a new tag
 
-     $ProgName ctsm5.2.dev099 "Description of this tag"
+     $ProgName ctsm1.0.dev012 "Description of this tag"
 EOF
 }
 
@@ -177,10 +177,10 @@ while( $_ = <CS> ) {
   # Find header line
   if ( $_ =~ /=====================/ ) {
      print FH $_;
-     my $format = "%18.18s %8.8s %10.10s %s\n";
+     my $format = "%16.16s %8.8s %10.10s %s\n";
      if ( $update ) {
        $_ = <CS>;
-       if ( /^(.{18}) (.{8}) (.{10}) (.+)$/ ) {
+       if ( /^(.{16}) (.{8}) (.{10}) (.+)$/ ) {
           $tag  = $1;
           $user = $2;
           $sum  = $4;
