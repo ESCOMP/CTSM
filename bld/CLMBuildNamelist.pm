@@ -1571,6 +1571,7 @@ sub process_namelist_inline_logic {
   setup_logic_irrigate($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_start_type($opts, $nl_flags, $nl);
   setup_logic_decomp_performance($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_roughness_methods($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_snicar_methods($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snow($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_glacier($opts, $nl_flags, $definition, $defaults, $nl,  $envxml_ref);
@@ -1636,7 +1637,7 @@ sub process_namelist_inline_logic {
   ###############################
   # namelist group: tillage     #
   ###############################
-  setup_logic_tillage($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_tillage($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 
   ###############################
   # namelist group: ch4par_in   #
@@ -2005,6 +2006,25 @@ sub setup_logic_decomp_performance {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_roughness_methods {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'z0param_method',
+              'phys'=>$nl_flags->{'phys'} );
+
+  my $var = remove_leading_and_trailing_quotes( $nl->get_value("z0param_method") );
+  if ( $var ne "Meier2022" && $var ne "ZengWang2007" ) {
+    $log->fatal_error("$var is incorrect entry for the namelist variable z0param_method; expected Meier2022 or ZengWang2007");
+  }
+  my $phys = $physv->as_string();
+  if ( $phys eq "clm4_5" || $phys eq "clm5_0" ) {
+    if ( $var eq "Meier2022" ) {
+      $log->fatal_error("z0param_method = $var and phys = $phys, but this method has been tested only with clm5_1 and later versions; to use with earlier versions, disable this error, and add Meier2022 parameters to the corresponding params file");
+    }
+  }
+}
+#-------------------------------------------------------------------------------
+
 sub setup_logic_snicar_methods {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
@@ -2246,6 +2266,7 @@ sub setup_logic_crop_inparm {
                  'use_crop'=>$nl->get_value('use_crop') );
      
      my $crop_residue_removal_frac = $nl->get_value('crop_residue_removal_frac');
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'crop_residue_removal_frac' );
      if ( $crop_residue_removal_frac < 0.0 or $crop_residue_removal_frac > 1.0 ) {
         $log->fatal_error("crop_residue_removal_frac must be in range [0, 1]");
      }
@@ -2258,10 +2279,13 @@ sub setup_logic_crop_inparm {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_tillage {
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'tillage_mode',
+              'use_crop'=>$nl_flags->{'use_crop'}, 'phys'=>$physv->as_string() );
 
   my $tillage_mode = remove_leading_and_trailing_quotes( $nl->get_value( "tillage_mode" ) );
-  if ( $tillage_mode ne "off" && $tillage_mode ne "" && not &value_is_true($nl->get_value('use_crop')) ) {
+  if ( $tillage_mode ne "off" && $tillage_mode ne "" && not &value_is_true($nl_flags->{'use_crop'}) ) {
       $log->fatal_error( "Tillage only works on crop columns, so use_crop must be true if tillage is enabled." );
   }
 }

@@ -165,6 +165,13 @@
     
   <!-- fates test suite failures -->
 
+  <test name="SMS_D_Ld3.f09_g17.I2000Clm51FatesSpCruRsGs.derecho_gnu.clm-FatesColdSatPhen_prescribed">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2321</issue>
+    </phase>
+  </test>
+      
   <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdHydro">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
@@ -226,6 +233,27 @@
     <phase name="COMPARE_base_modpes">
       <status>FAIL</status>
       <issue>FATES#1089</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.derecho_intel.clm-FatesColdTwoStream">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#2325</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-FatesColdTwoStream">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#2325</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdTwoStreamNoCompFixedBioGeo">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#2325</issue>
     </phase>
   </test>
 
