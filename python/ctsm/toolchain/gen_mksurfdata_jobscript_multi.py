@@ -12,41 +12,45 @@ from ctsm.toolchain.gen_mksurfdata_namelist import main as main_nml
 from ctsm.utils import abort
 
 valid_scenarios = [
+    "global-potveg",
     "global-present",
     "global-present-low-res",
     "global-present-ultra-hi-res",
-    "global-present-nldas",
-    "global-hist-4x5",
     "crop-tropics-present",
     "crop",
     "crop-global-present",
     "crop-global-present-low-res",
-    "crop-global-present-ne16np4",
-    "crop-global-present-ne120np4",
-    "crop-global-present-0.125",
+    "crop-global-present-ne16",
+    "crop-global-present-ne30",
+    "crop-global-present-ne120",
+    "crop-global-present-mpasa480",
+    "crop-global-present-nldas",
     "crop-global-1850",
     "crop-global-1850-low-res",
-    "crop-global-1850-ne16np4",
-    "crop-global-1850-ne120np4",
+    "crop-global-1850-ne16",
+    "crop-global-1850-ne30",
+    "crop-global-1850-ne120",
+    "crop-global-1850-mpasa480",
     "crop-global-hist",
-    "crop-global-future",
+    "crop-global-hist-low-res",
+    "crop-global-hist-ne16",
+    "crop-global-hist-ne30",
+    "crop-global-SSP1-1.9-f09",
     "crop-global-SSP1-2.6-f09",
-    "crop-global-SSP3-7.0-f09",
-    "crop-global-SSP5-3.4-f09",
     "crop-global-SSP2-4.5-f09",
     "crop-global-SSP2-4.5-f19",
     "crop-global-SSP2-4.5-f10",
     "crop-global-SSP2-4.5-f45",
     "crop-global-SSP2-4.5-ne3",
-    "crop-global-SSP2-4.5-ne30",
     "crop-global-SSP2-4.5-ne16",
+    "crop-global-SSP2-4.5-ne30",
     "crop-global-SSP2-4.5-hcru",
     "crop-global-SSP2-4.5-C96",
     "crop-global-SSP2-4.5-mpasa120",
-    "crop-global-SSP2-4.5-hi-res",
-    "crop-global-SSP1-1.9-f09",
+    "crop-global-SSP3-7.0-f09",
     "crop-global-SSP4-3.4-f09",
     "crop-global-SSP4-6.0-f09",
+    "crop-global-SSP5-3.4-f09",
     "crop-global-SSP5-8.5-f09",
 ]
 
@@ -73,7 +77,7 @@ def get_parser():
         action="store",
         dest="account",
         required=False,
-        default="P93300606",
+        default="P93300641",
     )
     parser.add_argument(
         "--bld-path",
@@ -84,18 +88,18 @@ def get_parser():
     )
     parser.add_argument(
         "--number-of-nodes",
-        help="""number of cheyenne nodes requested (required)""",
+        help="""number of derecho nodes requested (required)""",
         action="store",
         dest="number_of_nodes",
         required=True,
     )
     parser.add_argument(
         "--tasks-per-node",
-        help="""number of mpi tasks per node for cheyenne requested (default is 12)""",
+        help="""number of mpi tasks per node for derecho requested""",
         action="store",
         dest="tasks_per_node",
         required=False,
-        default="12",
+        default="128",
     )
     parser.add_argument(
         "--walltime",
@@ -111,7 +115,7 @@ def get_parser():
         action="store",
         dest="queue",
         required=False,
-        default="regular",
+        default="main",
     )
     parser.add_argument(
         "--scenario",
@@ -123,7 +127,7 @@ def get_parser():
     )
     parser.add_argument(
         "--jobscript-file",
-        help="""output jobscript file to be submitted on cheyenne
+        help="""output jobscript file to be submitted with qsub
                 [default: %(default)s]""",
         action="store",
         dest="jobscript_file",
@@ -152,13 +156,7 @@ def main():
     # --------------------------
     # Determine target list
     # --------------------------
-    target_list = []
-    if scenario == "crop":
-        target_list = ["crop-global-present", "crop-global-1850"]
-    elif scenario == "tropics":
-        target_list = ["crop-tropics-present"]
-    else:
-        target_list = [scenario]
+    target_list = [scenario]
 
     # --------------------------
     # Error checking
@@ -168,6 +166,9 @@ def main():
             abort("Input scenario is NOT in valid_scenarios")
     # --------------------------
     # Determine resolution sets that are referenced in commands
+    # TODO slevis: When new resolutions become supported in ccs_config, the
+    # first entry will change to
+    # "standard_res_no_crop": ["0.9x1.25", "1.9x2.5", "mpasa60", "mpasa60-3conus", "mpasa60-3centralUS"],
     # --------------------------
     resolution_dict = {
         "standard_res_no_crop": ["0.9x1.25", "1.9x2.5", "mpasa60"],
@@ -178,23 +179,21 @@ def main():
         "mpasa120": ["mpasa120"],
         "f10": ["10x15"],
         "f45": ["4x5"],
+        "low_res_no_crop": ["4x5", "10x15"],
+        "ultra_hi_res_no_crop": ["mpasa15", "mpasa15-3", "mpasa3p75"],
+        "standard_res": ["360x720cru", "0.9x1.25", "1.9x2.5", "C96", "mpasa120"],
+        "low_res": ["4x5", "10x15", "ne3np4.pg3"],
+        "mpasa480": ["mpasa480"],
+        "nldas_res": ["0.125nldas2"],
+        "5x5_amazon": ["5x5_amazon"],
         "ne3": ["ne3np4.pg3"],
         "ne16": ["ne16np4.pg3"],
-        "ne30": ["ne30np4.pg3"],
-        "low_res_no_crop": ["10x15"],
-        "ultra_hi_res_no_crop": ["mpasa15", "mpasa15-3conus", "mpasa3p75"],
-        "low_res_all": ["10x15", "ne3np4.pg3"],
-        "hi_res_all": ["ne120np4.pg3"],
-        "standard_res": ["360x720cru", "0.9x1.25", "1.9x2.5", "C96", "ne30np4.pg3", "mpasa120"],
-        "low_res": ["10x15", "4x5", "ne3np4.pg3", "mpasa480"],
-        "nldas_res": ["0.125nldas2"],
-        "5x5_amazon_res": ["5x5_amazon"],
-        "ne16np4_res": ["ne16np4.pg3"],
-        "ne120np4_res": [
-            "ne120np4.pg3",
+        "ne30": ["ne30np4.pg3", "ne30np4.pg2", "ne30np4"],
+        "ne120": [
             "ne0np4.ARCTICGRIS.ne30x8",
             "ne0np4.ARCTIC.ne30x4",
             "ne0np4CONUS.ne30x8",
+            "ne120np4.pg3",
         ],
     }
 
@@ -202,44 +201,52 @@ def main():
     # Determine commands for each target list
     # --------------------------
     dataset_dict = {
+        "global-potveg": (
+            "--start-year 1850 --end-year 1850 --nocrop --potveg               --res",
+            "f09",
+        ),
         "global-present": (
-            "--start-year 2000 --end-year 2000 --nocrop --vic                  --res",
+            "--start-year 2000 --end-year 2000 --nocrop                        --res",
             "standard_res_no_crop",
         ),
         "global-present-low-res": (
-            "--start-year 2000 --end-year 2000 --nocrop --vic                  --res",
+            "--start-year 2000 --end-year 2000 --nocrop                        --res",
             "low_res_no_crop",
         ),
         "global-present-ultra-hi-res": (
             "--start-year 2000 --end-year 2000 --nocrop                        --res",
             "ultra_hi_res_no_crop",
         ),
-        "global-present-nldas": (
-            "--start-year 2000 --end-year 2000 --nocrop --vic                  --res",
-            "nldas_res",
-        ),
         "crop-tropics-present": (
             "--start-year 2000 --end-year 2000                                 --res",
-            "5x5_amazon_res",
+            "5x5_amazon",
         ),
         "crop-global-present": (
-            "--start-year 2000 --end-year 2000                                 --res",
+            "--start-year 2000 --end-year 2000 --vic                           --res",
             "standard_res",
         ),
         "crop-global-present-low-res": (
-            "--start-year 2000 --end-year 2000                                 --res",
+            "--start-year 2000 --end-year 2000 --vic                           --res",
             "low_res",
         ),
-        "crop-global-present-ne16np4": (
+        "crop-global-present-ne16": (
             "--start-year 2000 --end-year 2000                                 --res",
-            "ne16np4_res",
+            "ne16",
         ),
-        "crop-global-present-ne120np4": (
+        "crop-global-present-ne30": (
             "--start-year 2000 --end-year 2000                                 --res",
-            "ne120np4_res",
+            "ne30",
         ),
-        "crop-global-present-0.125": (
-            "--start-year 2000 --end-year 2000 --hirespft                      --res",
+        "crop-global-present-ne120": (
+            "--start-year 2000 --end-year 2000                                 --res",
+            "ne120",
+        ),
+        "crop-global-present-mpasa480": (
+            "--start-year 2000 --end-year 2000                                 --res",
+            "mpasa480",
+        ),
+        "crop-global-present-nldas": (
+            "--start-year 2000 --end-year 2000                                 --res",  # TODO slevis: --hirespft uses old data for now, so keep out
             "nldas_res",
         ),
         "crop-global-1850": (
@@ -250,17 +257,37 @@ def main():
             "--start-year 1850 --end-year 1850                                 --res",
             "low_res",
         ),
-        "crop-global-1850-ne16np4": (
+        "crop-global-1850-ne16": (
             "--start-year 1850 --end-year 1850                                 --res",
-            "ne16np4_res",
+            "ne16",
         ),
-        "crop-global-1850-ne120np4": (
+        "crop-global-1850-ne30": (
             "--start-year 1850 --end-year 1850                                 --res",
-            "ne120np4_res",
+            "ne30",
+        ),
+        "crop-global-1850-ne120": (
+            "--start-year 1850 --end-year 1850                                 --res",
+            "ne120",
+        ),
+        "crop-global-1850-mpasa480": (
+            "--start-year 1850 --end-year 1850                                 --res",
+            "mpasa480",
         ),
         "crop-global-hist": (
             "--start-year 1850 --end-year 2015 --nosurfdata                    --res",
             "standard_res",
+        ),
+        "crop-global-hist-low-res": (
+            "--start-year 1850 --end-year 2015 --nosurfdata                    --res",
+            "low_res",
+        ),
+        "crop-global-hist-ne16": (
+            "--start-year 1850 --end-year 2015 --nosurfdata                    --res",
+            "ne16",
+        ),
+        "crop-global-hist-ne30": (
+            "--start-year 1850 --end-year 2015 --nosurfdata                    --res",
+            "ne30",
         ),
         "crop-global-SSP1-1.9-f09": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-1.9 --res",
@@ -286,6 +313,10 @@ def main():
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
             "f10",
         ),
+        "crop-global-SSP2-4.5-f45": (
+            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
+            "f45",
+        ),
         "crop-global-SSP2-4.5-ne3": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
             "ne3",
@@ -305,10 +336,6 @@ def main():
         "crop-global-SSP2-4.5-mpasa120": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
             "mpasa120",
-        ),
-        "crop-global-SSP2-4.5-hi-res": (
-            "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
-            "hi_res_all",
         ),
         "crop-global-SSP3-7.0-f09": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP3-7.0 --res",
@@ -369,7 +396,7 @@ def main():
         runfile.write(f"#PBS -q {queue} \n")
         runfile.write(f"#PBS -l walltime={walltime} \n")
         runfile.write(
-            f"#PBS -l select={number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node}:mem=109GB \n"
+            f"#PBS -l select={number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node}:mem=218GB \n"
         )
         runfile.write(
             f"# This is a batch script to run a set of resolutions for mksurfdata_esmf {scenario} \n"
@@ -401,7 +428,7 @@ def main():
                 sys.argv = [x for x in command.split(" ") if x]
                 main_nml()
                 print(f"generated namelist {namelist}")
-                output = f'time mpiexec_mpt -p "%g:" -np {n_p} {mksurfdata} < {namelist}'
+                output = f"time mpiexec {mksurfdata} < {namelist}"
                 runfile.write(f"{output} \n")
                 check = f"if [ $? != 0 ]; then echo 'Error running resolution {res}'; exit -4; fi"
                 runfile.write(f"{check} \n")

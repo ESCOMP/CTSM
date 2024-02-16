@@ -8,6 +8,7 @@ as a mesh file is available for the grid.
 The subset_data tool allows users to make fsurdat files from existing fsurdat
 files when a mesh file is unavailable. Generally, users should consider the
 subset_data tool for generating regional and single-point fsurdat files.
+
 ===================
 Build Requirements:
 ===================
@@ -58,7 +59,7 @@ Building the executable (working in tools/mksurfdata_esmf)
 
 # Before starting, be sure that you have run
 > ./manage_externals/checkout_externals
-# because without it I have come across strange behavior, such as transient
+# because without it we have come across strange behavior, such as transient
 # file generation (1850-2015) that aborts in the 1870s for no apparent reason.
 > ./gen_mksurfdata_build.sh      # For machines with a cime build
 # Note: The pio_iotype value gets set and written to a simple .txt file
@@ -86,7 +87,7 @@ Running for a single submission:
 # ./gen_mksurfdata_namelist finds all files.
 
 # to generate your target jobscript (again --help for instructions):
-> ./gen_mksurfdata_jobscript_single --number-of-nodes 24 --tasks-per-node 12 --namelist-file target.namelist
+> ./gen_mksurfdata_jobscript_single --number-of-nodes 2 --tasks-per-node 128 --namelist-file target.namelist
 > qsub mksurfdata_jobscript_single
 # Read note about regional grids below.
 
@@ -95,11 +96,13 @@ Running for the generation of multiple datasets
 =======================
 # Work in the ctsm_pylib environment, as explained in earlier section.
 # gen_mksurfdata_jobscript_multi runs ./gen_mksurfdata_namelist for you
-# The regional grid 5x5_amazon may fail with 24 nodes.
-# Task geometry that worked: #PBS -l select=4:ncpus=36:mpiprocs=4
 > ./gen_mksurfdata_jobscript_multi --help
-> ./gen_mksurfdata_jobscript_multi --number-of-nodes 24 --scenario all
+> ./gen_mksurfdata_jobscript_multi --number-of-nodes 2 --scenario global-present
 > qsub mksurfdata_jobscript_multi
+# If you are looking to generate all (or a large number of) the datasets or the
+# single-point (1x1) datasets, you are best off using the Makefile. For example
+> make all  # ...or
+> make all-subset
 
 ================
 NOTES
@@ -108,14 +111,11 @@ NOTES
 ------------------------------------
 slevis HAS LISTED ISSUES ENCOUNTERED
 ------------------------------------
-REMEMBER TO compare against existing fsurdat files in
-/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/release-clm5.0.18
 0) New 30-sec raw data for soil texture fails. Try requesting more mem.
 1) Soil color & texture and ag fire peak month outputs too high in .log
    TODO? Change frac_o from always 1.
 2) Pct lake has chged in the .log bc the old diagnostic omitted mask_i frac_o
 3) Slope, stddev have chged in the .log bc the old diag. used frac_o
-4) 1x1_brazil min number-of-nodes tested: 4; 10x15 min tested: 3
 
 --------------------------------------
 ALL raw dataset .nc FILES MUST BE cdf5

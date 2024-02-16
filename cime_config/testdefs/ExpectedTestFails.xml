@@ -28,6 +28,21 @@
   -->
 
 
+  <!-- ctsm_sci test suite failures -->
+  <test name="SMS_P14080x1_Ln9.mpasa3p75_mpasa3p75_mt13.I2000Clm51SpRs.derecho_intel.clm-clm51cam6LndTuningMode">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2370</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_Ld12_Mmpi-serial.1x1_urbanc_alpha.I1PtClm51SpRs.derecho_intel.clm-output_sp_highfreq">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>Not opened yet but first posted here: https://github.com/ESCOMP/CTSM/pull/2318#discussion_r1484696000</issue>
+    </phase>
+  </test>
+
   <!-- cesm3_dev test suite failures -->
   <test name="ERP_D_Ld9.ne30pg3_t232.IHistClm51BgcCrop.derecho_intel.clm-clm51cam6LndTuningMode">
     <phase name="RUN">
@@ -171,17 +186,10 @@
     </phase>
   </test>
 
-  <test name="ERP_P72x2_Ld30.f45_f45_mg37.I2000Clm51FatesRs.cheyenne_intel.clm-mimicsFatesCold">
-    <phase name="SHAREDLIB_BUILD">
-      <status>PEND</status>
-      <issue>#1045</issue>
-    </phase>
-  </test>
-
   <test name="ERP_P256x2_Ld30.f45_f45_mg37.I2000Clm51FatesRs.derecho_intel.clm-mimicsFatesCold">
     <phase name="SHAREDLIB_BUILD">
-      <status>PEND</status>
-      <issue>#1045</issue>
+      <status>RUN</status>
+      <issue>#2261</issue>
     </phase>
   </test>
 

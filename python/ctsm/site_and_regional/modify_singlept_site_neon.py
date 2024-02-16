@@ -56,9 +56,10 @@ myname = getuser()
 
 
 # -- valid neon sites
-valid_neon_sites = glob.glob(
+valid = glob.glob(
     os.path.join(path_to_ctsm_root(), "cime_config", "usermods_dirs", "NEON", "[!d]*")
 )
+valid_neon_sites = [x[-4:] for x in valid]  # last 4 letters in each string
 
 
 def get_parser():
@@ -89,7 +90,7 @@ def get_parser():
         dest="surf_dir",
         type=str,
         required=False,
-        default="/glade/scratch/" + myname + "/single_point/",
+        default="/glade/derecho/scratch/" + myname + "/single_point/",
     )
     parser.add_argument(
         "--out_dir",
@@ -101,7 +102,7 @@ def get_parser():
         dest="out_dir",
         type=str,
         required=False,
-        default="/glade/scratch/" + myname + "/single_point_neon_updated/",
+        default="/glade/derecho/scratch/" + myname + "/single_point_neon_updated/",
     )
     parser.add_argument(
         "--inputdata-dir",
@@ -113,7 +114,7 @@ def get_parser():
         dest="inputdatadir",
         type=str,
         required=False,
-        default="/glade/p/cesmdata/cseg/inputdata",
+        default="/glade/campaign/cesm/cesmdata/cseg/inputdata",
     )
     parser.add_argument(
         "-d",
@@ -220,9 +221,9 @@ def find_surffile(surf_dir, site_name, pft_16):
     """
 
     if pft_16:
-        sf_name = "surfdata_1x1_NEON_" + site_name + "*hist_16pfts_Irrig_CMIP6_simyr2000_*.nc"
+        sf_name = "surfdata_1x1_NEON_" + site_name + "*hist_2000_16pfts*.nc"
     else:
-        sf_name = "surfdata_1x1_NEON_" + site_name + "*hist_78pfts_CMIP6_simyr2000_*.nc"
+        sf_name = "surfdata_1x1_NEON_" + site_name + "*hist_2000_78pfts*.nc"
 
     print(os.path.join(surf_dir, sf_name))
     surf_file = sorted(glob.glob(os.path.join(surf_dir, sf_name)))
@@ -279,7 +280,9 @@ def find_soil_structure(args, surf_file):
     # print (f_1.attrs["Soil_texture_raw_data_file_name"])
 
     clm_input_dir = os.path.join(args.inputdatadir, "lnd/clm2/rawdata/")
-    surf_soildepth_file = os.path.join(clm_input_dir, f_1.attrs["Soil_texture_raw_data_file_name"])
+    surf_soildepth_file = os.path.join(
+        clm_input_dir, f_1.attrs["soil_texture_lookup_raw_data_file_name"]
+    )
 
     if os.path.exists(surf_soildepth_file):
         print(

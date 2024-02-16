@@ -46,7 +46,7 @@ class TestUtilsImportCoord(unittest.TestCase):
         )
         self._2d_lonlat_file = os.path.join(
             self._testinputs_path,
-            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_modified.nc",
+            "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031_modified.nc",
         )
 
     def tearDown(self):

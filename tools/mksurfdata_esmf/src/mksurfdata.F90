@@ -1374,7 +1374,7 @@ program mksurfdata
          if (abs(suma - 100._r8) > tol_loose) then
             write(ndiag,*) subname, ' ERROR: landunits do not sum to 100%'
             write(ndiag,*) 'n, suma, pctlak, pctwet, pctgla, pcturb, pctnatveg, pctcrop, pctocn = '
-            write(ndiag6,*) n, suma, pctlak(n), pctwet(n), pctgla(n), pcturb(n), &
+            write(ndiag,*) n, suma, pctlak(n), pctwet(n), pctgla(n), pcturb(n), &
                  pctnatpft(n)%get_pct_l2g(), pctcft(n)%get_pct_l2g(), pctocn(n)
             flush(ndiag)
             call shr_sys_abort()

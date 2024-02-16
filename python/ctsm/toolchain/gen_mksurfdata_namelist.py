@@ -164,7 +164,7 @@ def get_parser():
             """,
         action="store",
         dest="input_path",
-        default="/glade/p/cesm/cseg/inputdata/",
+        default="/glade/campaign/cesm/cesmdata/inputdata/",
     )
     parser.add_argument(
         "--vic",
@@ -598,7 +598,10 @@ def main():
 
     time_stamp = datetime.today().strftime("%y%m%d")
     if ssp_rcp == "none":
-        ssp_rcp_name = "hist"
+        if pft_years == "PtVg":
+            ssp_rcp_name = "PtVeg_nourb"
+        else:
+            ssp_rcp_name = "hist"
     else:
         ssp_rcp_name = ssp_rcp
     if int(end_year) == int(start_year):
@@ -606,7 +609,7 @@ def main():
     else:
         fdyndat = (
             f"landuse.timeseries_{res}_{ssp_rcp_name}"
-            f"_{start_year}-{end_year}_{num_pft}_c{time_stamp}.nc"
+            f"_{start_year}-{end_year}_{num_pft}pfts_c{time_stamp}.nc"
         )
 
     prefix = f"surfdata_{res}_{ssp_rcp_name}_{start_year}_{num_pft}pfts_c{time_stamp}."
@@ -632,7 +635,7 @@ def main():
         gitdescribe = subprocess.check_output("git describe", shell=True).strip()
     gitdescribe = gitdescribe.decode("utf-8")
 
-    # The below two overrides are only used for testing an validation
+    # The below two overrides are only used for testing and validation
     # it takes a long time to generate the mapping files
     # from 1km to the following two resolutions since the output mesh has so few points
     if res == "10x15":

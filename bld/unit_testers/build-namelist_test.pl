@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 2815;
+my $ntests = 2587;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1965;
+   $ntests += 1737;
 }
 plan( tests=>$ntests );
 
@@ -433,7 +433,7 @@ foreach my $phys ( "clm4_5", "clm5_0" ) {
                       "-res ne0np4CONUS.ne30x8 -bgc sp -use_case 2000_control  -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam6.0",
                       "-res 1.9x2.5 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20030101/' -lnd_tuning_mode ${phys}_cam6.0",
                       "-res 1.9x2.5 -bgc sp -use_case 2010_control -namelist '&a start_ymd=20100101/' -lnd_tuning_mode ${phys}_cam6.0",
-                      "-res 1x1_brazil -bgc fates -no-megan -use_case 2000_control -lnd_tuning_mode ${phys}_CRUv7",
+                      "-res 1x1_brazil -no-megan -use_case 2000_control -lnd_tuning_mode ${phys}_CRUv7",
                       "-res C96 -bgc sp -use_case 2010_control -namelist '&a start_ymd=20100101/' -lnd_tuning_mode ${phys}_cam6.0",
                       "-res ne0np4.ARCTIC.ne30x4 -bgc sp -use_case 2000_control -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam6.0",
                      ) {
@@ -1350,8 +1350,8 @@ print "Test ALL resolutions that have surface datasets with SP for 1850 and 2000
 print "========================================================================\n";
 
 # Check for ALL resolutions with CLM50SP
-my @resolutions = ( "1x1_brazil", "1x1_mexicocityMEX", "1x1_vancouverCAN", "1x1_urbanc_alpha", "5x5_amazon", "360x720cru", "0.125nldas2", "10x15", "4x5", "0.9x1.25", "1.9x2.5", "ne3np4.pg3", "ne16np4.pg3", "ne30np4", "ne30np4.pg2", "ne30np4.pg3", "ne120np4.pg3", "ne0np4CONUS.ne30x8", "ne0np4.ARCTIC.ne30x4", "ne0np4.ARCTICGRIS.ne30x8", "C96", "mpasa480", "mpasa120", "mpasa60", "mpasa15", "mpasa15-conus", "mpasa3p75" );
-my @only2000_resolutions = ( "1x1_brazil", "1x1_mexicocityMEX", "1x1_vancouverCAN", "1x1_urbanc_alpha", "5x5_amazon", "0.125nldas2", "mpasa60", "mpasa15", "mpasa15-conus", "mpasa3p75" );
+my @resolutions = ( "360x720cru", "10x15", "4x5", "0.9x1.25", "1.9x2.5", "ne3np4.pg3", "ne16np4.pg3", "ne30np4", "ne30np4.pg2", "ne30np4.pg3", "ne120np4.pg3", "ne0np4CONUS.ne30x8", "ne0np4.ARCTIC.ne30x4", "ne0np4.ARCTICGRIS.ne30x8", "C96", "mpasa480", "mpasa120" );
+my @only2000_resolutions = ( "1x1_numaIA", "1x1_brazil", "1x1_mexicocityMEX", "1x1_vancouverCAN", "1x1_urbanc_alpha", "5x5_amazon", "0.125nldas2", "mpasa60", "mpasa15", "mpasa15-3", "mpasa3p75" );
 my @regional;
 foreach my $res ( @resolutions ) {
    chomp($res);
@@ -1449,7 +1449,24 @@ print "Test crop resolutions \n";
 print "==================================================\n";
 
 # Check for crop resolutions
-my @crop_res = ( "1x1_numaIA", "1x1_smallvilleIA", "4x5", "10x15", "0.9x1.25", "1.9x2.5", "ne3np4.pg3", "ne30np4", "ne30np4.pg3", "C96", "mpasa120" );
+my $crop1850_res = "1x1_smallvilleIA";
+$options = "-bgc bgc -crop -res $crop1850_res -use_case 1850_control -envxml_dir .";
+&make_env_run();
+eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
+is( $@, '', "$options" );
+$cfiles->checkfilesexist( "$options", $mode );
+$cfiles->shownmldiff( "default", "standard" );
+if ( defined($opts{'compare'}) ) {
+   $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+   $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
+   $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+}
+if ( defined($opts{'generate'}) ) {
+   $cfiles->copyfiles( "$options", $mode );
+}
+&cleanup();
+
+my @crop_res = ( "1x1_numaIA", "4x5", "10x15", "0.9x1.25", "1.9x2.5", "ne3np4.pg3", "ne30np4", "ne30np4.pg3", "C96", "mpasa120" );
 foreach my $res ( @crop_res ) {
    $options = "-bgc bgc -crop -res $res -envxml_dir .";
    &make_env_run();
@@ -1673,7 +1690,7 @@ foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
   &cleanup();
   # Run FATES mode for several resolutions and configurations
   my $clmoptions = "-bgc fates -envxml_dir . -no-megan";
-  my @clmres = ( "1x1_brazil", "5x5_amazon", "4x5", "1.9x2.5" );
+  my @clmres = ( "4x5", "1.9x2.5" );
   foreach my $res ( @clmres ) {
      $options = "-res $res -clm_start_type cold";
      my @edoptions = ( "-use_case 2000_control",

@@ -38,11 +38,11 @@ class MKSURFDATAESMF(SystemTestsCommon):
         self._jobscript = os.path.join(self._get_caseroot(), "mksurfdata_jobscript_single")
         self._fsurdat_namelist = os.path.join(
             self._get_caseroot(),
-            f"surfdata_{self._res}_hist_78pfts_CMIP6_{self._model_yr}_c{time_stamp}.namelist",
+            f"surfdata_{self._res}_hist_{self._model_yr}_78pfts_c{time_stamp}.namelist",
         )
         self._fsurdat_nc = os.path.join(
             self._get_caseroot(),
-            f"surfdata_{self._res}_hist_78pfts_CMIP6_{self._model_yr}_c{time_stamp}.nc",
+            f"surfdata_{self._res}_hist_{self._model_yr}_78pfts_c{time_stamp}.nc",
         )
         self._TestStatus_log_path = os.path.join(self._get_caseroot(), "TestStatus.log")
 
@@ -64,7 +64,7 @@ class MKSURFDATAESMF(SystemTestsCommon):
             nml_script_path = os.path.join(self._tool_path, "gen_mksurfdata_namelist")
             gen_jobscript_path = os.path.join(self._tool_path, "gen_mksurfdata_jobscript_single")
             gen_mksurfdata_namelist = f"{nml_script_path} --res {self._res} --start-year {self._model_yr} --end-year {self._model_yr}"
-            gen_mksurfdata_jobscript = f"{gen_jobscript_path} --number-of-nodes 12 --tasks-per-node 12 --namelist-file {self._fsurdat_namelist}"
+            gen_mksurfdata_jobscript = f"{gen_jobscript_path} --number-of-nodes 1 --tasks-per-node 64 --namelist-file {self._fsurdat_namelist}"
 
             # Rm tool_bld and build executable that will generate fsurdat
             try:

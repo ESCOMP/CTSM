@@ -46,102 +46,102 @@
       <command name="load">nvhpc/22.2</command>
     </modules>
     <modules DEBUG="TRUE" compiler="intel" mpilib="mpt">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/19.1.1/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/19.1.1/</command>
       <command name="load">esmf-8.4.1b02-ncdfio-mpt-g</command>
     </modules>
     <modules DEBUG="FALSE" compiler="intel" mpilib="mpt">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/19.1.1/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/19.1.1/</command>
       <command name="load">esmf-8.4.1b02-ncdfio-mpt-O</command>
     </modules>
     <modules DEBUG="TRUE" compiler="intel" mpilib="openmpi">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/19.1.1/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/19.1.1/</command>
       <command name="load">esmf-8.4.1b02-ncdfio-openmpi-g</command>
     </modules>
     <modules DEBUG="FALSE" compiler="intel" mpilib="openmpi">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/19.1.1/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/19.1.1/</command>
       <command name="load">esmf-8.4.1b02-ncdfio-openmpi-O</command>
     </modules>
     <modules mpilib="mpi-serial">
       <command name="load">mpi-serial/2.3.0</command>
     </modules>
     <modules DEBUG="TRUE" compiler="intel" mpilib="mpi-serial">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/19.1.1/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/19.1.1/</command>
       <command name="load">esmf-8.4.1b02-ncdfio-mpiuni-g</command>
     </modules>
     <modules DEBUG="FALSE" compiler="intel" mpilib="mpi-serial">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/19.1.1/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/19.1.1/</command>
       <command name="load">esmf-8.4.1b02-ncdfio-mpiuni-O</command>
     </modules>
     <modules DEBUG="TRUE" compiler="gnu" mpilib="mpt">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/gnu/10.1.0/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/gnu/10.1.0/</command>
       <command name="load">esmf-8.4.1b02-ncdfio-mpt-g</command>
     </modules>
     <modules DEBUG="FALSE" compiler="gnu" mpilib="mpt">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/gnu/10.1.0/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/gnu/10.1.0/</command>
       <command name="load">esmf-8.4.1b02-ncdfio-mpt-O</command>
     </modules>
     <modules DEBUG="TRUE" compiler="gnu" mpilib="openmpi">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/gnu/10.1.0/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/gnu/10.1.0/</command>
       <command name="load">esmf-8.4.1b02-ncdfio-openmpi-g</command>
     </modules>
     <modules DEBUG="FALSE" compiler="gnu" mpilib="openmpi">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/gnu/10.1.0/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/gnu/10.1.0/</command>
       <command name="load">esmf-8.4.1b02-ncdfio-openmpi-O</command>
     </modules>
     <modules DEBUG="TRUE" compiler="gnu" mpilib="mpi-serial">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/gnu/10.1.0/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/gnu/10.1.0/</command>
       <command name="load">esmf-8.4.1b02-ncdfio-mpiuni-g</command>
     </modules>
     <modules DEBUG="FALSE" compiler="gnu" mpilib="mpi-serial">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/gnu/10.1.0/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/gnu/10.1.0/</command>
       <command name="load">esmf-8.4.1b02-ncdfio-mpiuni-O</command>
     </modules>
     <modules DEBUG="TRUE" compiler="pgi" mpilib="mpt">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/pgi/20.4/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/pgi/20.4/</command>
       <command name="load">esmf-8.2.0b23-ncdfio-mpt-g</command>
     </modules>
     <modules DEBUG="FALSE" compiler="pgi" mpilib="mpt">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/pgi/20.4/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/pgi/20.4/</command>
       <command name="load">esmf-8.2.0b23-ncdfio-mpt-O</command>
     </modules>
     <modules DEBUG="FALSE" compiler="nvhpc" mpilib="mpt">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/nvhpc/22.2</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/nvhpc/22.2</command>
       <command name="load">esmf-8.4.1b02-ncdfio-mpt-O</command>
     </modules>
     <modules DEBUG="TRUE" compiler="nvhpc" mpilib="mpt">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/nvhpc/22.2</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/nvhpc/22.2</command>
       <command name="load">esmf-8.4.1b02-ncdfio-mpt-g</command>
     </modules>
     <modules DEBUG="FALSE" compiler="nvhpc" mpilib="openmpi">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/nvhpc/22.2</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/nvhpc/22.2</command>
       <command name="load">esmf-8.4.1b02-ncdfio-openmpi-O</command>
     </modules>
     <modules DEBUG="TRUE" compiler="nvhpc" mpilib="openmpi">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/nvhpc/22.2</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/nvhpc/22.2</command>
       <command name="load">esmf-8.4.1b02-ncdfio-openmpi-g</command>
     </modules>
     <modules DEBUG="TRUE" compiler="pgi" mpilib="openmpi">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/pgi/20.4/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/pgi/20.4/</command>
       <command name="load">esmf-8.2.0b23-ncdfio-openmpi-g</command>
     </modules>
     <modules DEBUG="FALSE" compiler="pgi" mpilib="openmpi">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/pgi/20.4/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/pgi/20.4/</command>
       <command name="load">esmf-8.2.0b23-ncdfio-openmpi-O</command>
     </modules>
     <modules DEBUG="TRUE" compiler="pgi" mpilib="mpi-serial">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/pgi/20.4/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/pgi/20.4/</command>
       <command name="load">esmf-8.2.0b23-ncdfio-mpiuni-g</command>
     </modules>
     <modules DEBUG="FALSE" compiler="pgi" mpilib="mpi-serial">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/pgi/20.4/</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/pgi/20.4/</command>
       <command name="load">esmf-8.2.0b23-ncdfio-mpiuni-O</command>
     </modules>
     <modules DEBUG="TRUE" compiler="nvhpc" mpilib="mpi-serial">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/nvhpc/22.2</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/nvhpc/22.2</command>
       <command name="load">esmf-8.4.1.b01-ncdfio-mpiuni-O</command>
     </modules>
     <modules DEBUG="FALSE" compiler="nvhpc" mpilib="mpi-serial">
-      <command name="use">/glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/nvhpc/22.2</command>
+      <command name="use">/glade/campaign/cesm/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/nvhpc/22.2</command>
       <command name="load">esmf-8.4.1b02-ncdfio-mpiuni-O</command>
     </modules>
     <modules compiler="gnu" mpilib="mpt">
@@ -207,7 +207,7 @@
   </module_system>
   <environment_variables>
     <env name="OMP_STACKSIZE">1024M</env>
-    <env name="TMPDIR">/glade/scratch/$USER</env>
+    <env name="TMPDIR">/glade/derecho/scratch/$USER</env>
     <env name="MPI_TYPE_DEPTH">16</env>
     <env name="MPI_USE_ARRAY"/>
   </environment_variables>
@@ -224,7 +224,7 @@
     <env name="MPI_USE_ARRAY">false</env>
   </environment_variables>
   <environment_variables queue="share">
-    <env name="TMPDIR">/glade/scratch/$USER</env>
+    <env name="TMPDIR">/glade/derecho/scratch/$USER</env>
   </environment_variables>
   <resource_limits>
     <resource name="RLIMIT_STACK">-1</resource>

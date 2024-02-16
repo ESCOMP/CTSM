@@ -32,22 +32,18 @@ blddir=$cwd/tool_bld  # may overwrite this default with command-line option (bel
 # May overwrite this default with command-line option --machine
 hostname=`hostname --short`
 case $hostname in
-  ##cheyenne
-  cheyenne* | r* )
-      export MACH="cheyenne"
+  derecho* | r* )
+      export MACH="derecho"
       pio_iotype=1
       ;;
-  ##casper
   casper* )
       export MACH="casper"
       pio_iotype=1
       ;;
-  ##izumi
   izumi*)
       export MACH="izumi"
       pio_iotype=2
       ;;
-  ##Hobart
   hobart*)
       export MACH="hobart"
       pio_iotype=2
