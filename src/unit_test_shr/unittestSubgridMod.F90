@@ -12,7 +12,7 @@ module unittestSubgridMod
   !     this module (i.e., using unittest_add_landunit, etc. - NOT directly via add_landunit, etc.)
   ! (3) call unittest_subgrid_setup_end
   !
-  !   Example: To add a single grid cell, with two landunits (nat. veg. and ice), with a
+  !   Example: To add a single grid cell, with two landunits (nat. veg. and icemec), with a
   !   single column on the nat veg landunit, the following can be done:
   !
   !     call unittest_subgrid_setup_start()
@@ -20,14 +20,14 @@ module unittestSubgridMod
   !     call unittest_add_landunit(my_gi=gi, ltype=istsoil, wtgcell=0.4_r8)
   !     call unittest_add_column(my_li=li, ctype=1, wtlunit=1.0_r8)
   !     c_soil = ci
-  !     call unittest_add_landunit(my_gi=gi, ltype=istice, wtgcell=0.6_r8)
+  !     call unittest_add_landunit(my_gi=gi, ltype=istice_mec, wtgcell=0.6_r8)
   !     call unittest_subgrid_setup_end()
   ! 
   !   A few things to note about this example:
   !   (1) Note the use of gi, li and ci to get the index of the most recently-added grid
   !       cell / landunit / column
   !   (2) Note that not all subgrid information has been filled in: no patches were added
-  !       to the soil landunit, and no columns or patches were added to the ice
+  !       to the soil landunit, and no columns or patches were added to the icemec
   !       landunit. This is because this extra level of detail wasn't needed for this
   !       particular unit test. This omission is perfectly acceptable.
   ! 

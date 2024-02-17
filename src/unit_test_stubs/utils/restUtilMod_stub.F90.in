@@ -15,8 +15,7 @@ module restUtilMod
      !DIMS 0,1,2
      !TYPE text,int,double
      module procedure restartvar_{DIMS}d_{TYPE}
-     !TYPE int,double
-     module procedure restartvar_2d_{TYPE}_bounds
+     module procedure restartvar_2d_double_bounds
   end interface restartvar
 
   public :: restartvar
@@ -63,7 +62,7 @@ contains
   !DIMS 1,2
   !TYPE text,int,double
   subroutine restartvar_{DIMS}d_{TYPE}(&
-       ncid, flag, varname, xtype, dim1name, &
+       ncid, flag, varname, xtype, dim1name, dim2name, &
        long_name, units, interpinic_flag, data, readvar, &
        comment, flag_meanings, missing_value, fill_value, &
        imissing_value, ifill_value, flag_values, nvalid_range )
@@ -79,6 +78,7 @@ contains
     {VTYPE}           , pointer              :: data{DIMSTR}
     logical           , intent(inout)        :: readvar          ! was var read?
     character(len=*)  , intent(in), optional :: dim1name         ! dimension name
+    character(len=*)  , intent(in), optional :: dim2name         ! dimension name
     character(len=*)  , intent(in), optional :: units            ! long name for variable
     character(len=*)  , intent(in), optional :: comment          ! attribute
     character(len=*)  , intent(in), optional :: flag_meanings(:) ! attribute
@@ -93,10 +93,9 @@ contains
 
   !-----------------------------------------------------------------------
 
-  !TYPE int,double
-  subroutine restartvar_2d_{TYPE}_bounds(ncid, flag, varname, xtype, &
+  subroutine restartvar_2d_double_bounds(ncid, flag, varname, xtype, &
        dim1name, dim2name, switchdim, lowerb2, upperb2, &
-       long_name, units, scale_by_thickness, interpinic_flag, data, readvar, &
+       long_name, units, interpinic_flag, data, readvar, &
        comment, flag_meanings, missing_value, fill_value, &
        imissing_value, ifill_value, flag_values, nvalid_range )
 
@@ -110,9 +109,8 @@ contains
     character(len=*) , intent(in)           :: dim2name         ! dimension name
     logical          , intent(in)           :: switchdim
     character(len=*) , intent(in)           :: long_name        ! long name for variable
-    logical          , intent(in)           :: scale_by_thickness  ! to scale by thickness in vertical interpolation or not
     character(len=*) , intent(in)           :: interpinic_flag  ! interpolate variable using interpinic
-    {VTYPE}          , pointer              :: data(:,:)        ! raw data
+    real(r8)         , pointer              :: data(:,:)        ! raw data
     logical          , intent(out)          :: readvar          ! was var read?
     integer          , intent(in), optional :: lowerb2
     integer          , intent(in), optional :: upperb2 
@@ -128,7 +126,7 @@ contains
 
     readvar = .false.
 
-  end subroutine restartvar_2d_{TYPE}_bounds
+  end subroutine restartvar_2d_double_bounds
 
   !-----------------------------------------------------------------------
   subroutine set_missing_from_template(my_var, template_var, multiplier)

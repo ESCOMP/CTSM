@@ -561,7 +561,7 @@ contains
         g = col%gridcell(c)
         hdmlf=this%forc_hdm(g)
         nfire(c) = 0._r8
-        if( cropf_col(c)  <  1.0_r8 )then
+        if( cropf_col(c)  <  1.0 )then
            if (trotr1_col(c)+trotr2_col(c)>0.6_r8) then
               farea_burned(c)=min(1.0_r8,baf_crop(c)+baf_peatf(c))
            else
@@ -1459,7 +1459,7 @@ contains
               if( trotr1_col(c)+trotr2_col(c) > 0.6_r8 .and. dtrotr_col(c) > 0._r8 .and. &
                    lfc(c) > 0._r8 .and. fbac1(c) == 0._r8) then
                  lfc2(c) = max(0._r8, min(lfc(c), (farea_burned(c)-baf_crop(c) - &
-                      baf_peatf(c))/2.0_r8*dt))/(dtrotr_col(c)*dayspyr*secspday/dt)/dt
+                      baf_peatf(c))/2.0*dt))/(dtrotr_col(c)*dayspyr*secspday/dt)/dt
                  lfc(c)  = lfc(c) - max(0._r8, min(lfc(c), (farea_burned(c)-baf_crop(c) - &
                       baf_peatf(c))*dt/2.0_r8))
               end if

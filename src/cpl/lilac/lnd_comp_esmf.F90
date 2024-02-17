@@ -32,7 +32,7 @@ module lnd_comp_esmf
   use clm_varctl        , only : nsrStartup, nsrContinue
   use clm_varctl        , only : inst_index, inst_suffix, inst_name
   use clm_time_manager  , only : set_timemgr_init, advance_timestep
-  use clm_time_manager  , only : update_rad_dtime
+  use clm_time_manager  , only : set_nextsw_cday, update_rad_dtime
   use clm_time_manager  , only : get_nstep, get_step_size
   use clm_time_manager  , only : get_curr_date, get_curr_calday
   use clm_initializeMod , only : initialize1, initialize2
@@ -110,6 +110,7 @@ contains
     logical                    :: exists                     ! true if file exists
     character(len=CL)          :: caseid                     ! case identifier name
     character(len=CL)          :: starttype                  ! start-type (startup, continue, branch, hybrid)
+    real(r8)                   :: nextsw_cday                ! calday next radiation computation
     integer                    :: nsrest                     ! clm restart type
     integer                    :: lbnum                      ! input to memory diagnostic
     integer                    :: shrlogunit                 ! old values for log unit and log level
@@ -445,6 +446,31 @@ contains
     call ESMF_LogWrite(subname//"set attribute lnd_ny to "//trim(cvalue), ESMF_LOGMSG_INFO)
 
     call ESMF_LogWrite(subname//"Created land export state", ESMF_LOGMSG_INFO)
+
+    !--------------------------------
+    ! Get calendar day of next sw (shortwave) calculation (nextsw_cday)
+    !--------------------------------
+
+    if (nsrest == nsrStartup) then
+       call ESMF_ClockGet( clock, currTime=currTime, rc=rc )
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       call ESMF_TimeGet( currTime, dayOfYear_r8=nextsw_cday, rc=rc )
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       ! TODO: get this from the import state nextsw_cday attribute
+       !
+       ! See also https://github.com/ESCOMP/CTSM/issues/860
+    end if
+
+    ! Set nextsw_cday
+    call set_nextsw_cday(nextsw_cday_in=nextsw_cday)
+
+    write(cvalue,*) nextsw_cday
+    call ESMF_LogWrite(subname//"Calendar Day of nextsw calculation is "//trim(cvalue), ESMF_LOGMSG_INFO)
+    if (masterproc) then
+       write(iulog,*) 'TimeGet ... nextsw_cday is : ', nextsw_cday
+    end if
 
     !--------------------------------
     ! diagnostics

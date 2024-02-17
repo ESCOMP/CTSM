@@ -72,10 +72,10 @@ contains
    real(r8), intent(out):: xksat  !mm/s, saturated hydraulic conductivity
    
    !Cosby et al. Table 4
-   watsat = 0.505_r8-0.00142_r8*sand-0.00037_r8*clay
-   bsw = 3.10_r8+0.157_r8*clay-0.003_r8*sand
-   sucsat  = 10._r8 * ( 10._r8**(1.54_r8-0.0095_r8*sand+0.0063_r8*(100._r8-sand-clay)))
-   xksat         = 0.0070556_r8 *(10._r8**(-0.60_r8+0.0126_r8*sand-0.0064_r8*clay) )     !mm/s now use table 4.
+   watsat = 0.505_r8-0.00142_r8*sand-0.00037*clay
+   bsw = 3.10+0.157*clay-0.003*sand            
+   sucsat  = 10._r8 * ( 10._r8**(1.54_r8-0.0095_r8*sand+0.0063*(100._r8-sand-clay)))            
+   xksat         = 0.0070556 *(10.**(-0.60+0.0126*sand-0.0064*clay) )     !mm/s now use table 4.
       
    end subroutine pedotransf_cosby1984_table4
    
@@ -96,9 +96,9 @@ contains
    
    !Cosby et al. Table 5     
    watsat = 0.489_r8 - 0.00126_r8*sand
-   bsw    = 2.91_r8 + 0.159_r8*clay
+   bsw    = 2.91 + 0.159*clay
    sucsat = 10._r8 * ( 10._r8**(1.88_r8-0.0131_r8*sand) )            
-   xksat         = 0.0070556_r8 *( 10._r8**(-0.884_r8+0.0153_r8*sand) ) ! mm/s, from table 5 
+   xksat         = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s, from table 5 
       
    end subroutine pedotransf_cosby1984_table5
    
@@ -118,10 +118,10 @@ contains
    real(r8), intent(out):: xksat  !mm/s, saturated hydraulic conductivity
    
    !Noilhan and Lacarrere, 1995
-   watsat = -0.00108_r8*sand+0.494305_r8
-   bsw = 0.137_r8*clay + 3.501_r8
-   sucsat = 10._r8**(-0.0088_r8*sand+2.85_r8)
-   xksat = 10._r8**(-0.0582_r8*clay-0.00091_r8*sand+0.000529_r8*clay**2._r8-0.0001203_r8*sand**2._r8-1.38_r8)
+   watsat = -0.00108*sand+0.494305
+   bsw = 0.137*clay + 3.501
+   sucsat = 10._r8**(-0.0088*sand+2.85)
+   xksat = 10._r8**(-0.0582*clay-0.00091*sand+0.000529*clay**2._r8-0.0001203*sand**2._r8-1.38)
    end subroutine pedotransf_noilhan_lacarrere1995
 !------------------------------------------------------------------------------------------
    function get_ipedof(soil_order)result(ipedof)

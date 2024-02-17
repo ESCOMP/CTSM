@@ -395,95 +395,79 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='sabs_roof_dir', xtype=ncd_double,  dim1name='landunit',            & 
          dim2name='numrad', switchdim=.true.,                                                                         &
          long_name='direct solar absorbed by roof per unit ground area per unit incident flux', units='',             &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%sabs_roof_dir_lun)
 
     call restartvar(ncid=ncid, flag=flag, varname='sabs_roof_dif', xtype=ncd_double,  dim1name='landunit',            & 
          dim2name='numrad', switchdim=.true.,                                                                         &
          long_name='diffuse solar absorbed by roof per unit ground area per unit incident flux', units='',            &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%sabs_roof_dif_lun)
 
     call restartvar(ncid=ncid, flag=flag, varname='sabs_sunwall_dir', xtype=ncd_double,  dim1name='landunit',         & 
          dim2name='numrad', switchdim=.true.,                                                                         &
          long_name='direct solar absorbed by sunwall per unit wall area per unit incident flux', units='',            &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%sabs_sunwall_dir_lun)
 
     call restartvar(ncid=ncid, flag=flag, varname='sabs_sunwall_dif', xtype=ncd_double,  dim1name='landunit',         & 
          dim2name='numrad', switchdim=.true.,                                                                         &
          long_name='diffuse solar absorbed by sunwall per unit wall area per unit incident flux', units='',           &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%sabs_sunwall_dif_lun)
 
     call restartvar(ncid=ncid, flag=flag, varname='sabs_shadewall_dir', xtype=ncd_double,  dim1name='landunit',       & 
          dim2name='numrad', switchdim=.true.,                                                                         &
          long_name='direct solar absorbed by shadewall per unit wall area per unit incident flux', units='',          &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%sabs_shadewall_dir_lun)
 
     call restartvar(ncid=ncid, flag=flag, varname='sabs_shadewall_dif', xtype=ncd_double,  dim1name='landunit',       & 
          dim2name='numrad', switchdim=.true.,                                                                         &
          long_name='diffuse solar absorbed by shadewall per unit wall area per unit incident flux', units='',         &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%sabs_shadewall_dif_lun)
 
     call restartvar(ncid=ncid, flag=flag, varname='sabs_improad_dir', xtype=ncd_double,  dim1name='landunit',         & 
          dim2name='numrad', switchdim=.true.,                                                                         &
          long_name='direct solar absorbed by impervious road per unit ground area per unit incident flux', units='',  &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%sabs_improad_dir_lun)
 
     call restartvar(ncid=ncid, flag=flag, varname='sabs_improad_dif', xtype=ncd_double,  dim1name='landunit',         & 
          dim2name='numrad', switchdim=.true.,                                                                         &
          long_name='diffuse solar absorbed by impervious road per unit ground area per unit incident flux', units='', &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%sabs_improad_dif_lun)
 
     call restartvar(ncid=ncid, flag=flag, varname='sabs_perroad_dir', xtype=ncd_double,  dim1name='landunit',         & 
          dim2name='numrad', switchdim=.true.,                                                                         &
          long_name='direct solar absorbed by pervious road per unit ground area per unit incident flux', units='',    &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%sabs_perroad_dir_lun)
 
     call restartvar(ncid=ncid, flag=flag, varname='sabs_perroad_dif', xtype=ncd_double,  dim1name='landunit',         & 
          dim2name='numrad', switchdim=.true.,                                                                         &
          long_name='diffuse solar absorbed by pervious road per unit ground area per unit incident flux', units='',   &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%sabs_perroad_dif_lun)
 
    if(use_luna)then
       call restartvar(ncid=ncid, flag=flag, varname='par240d', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='10-day running mean of daytime absorbed PAR for leaves in canopy layer', units='W/m**2 leaf', &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%par240d_z_patch )
       call restartvar(ncid=ncid, flag=flag, varname='par24d', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='Accumulative daytime absorbed PAR for leaves in canopy layer for 24 hours', units='J/m**2 leaf', &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%par24d_z_patch )
 
       call restartvar(ncid=ncid, flag=flag, varname='par240x', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='10-day running mean of maximum absorbed PAR for leaves in canopy layers', units='W/m**2 leaf', &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%par240x_z_patch )
       call restartvar(ncid=ncid, flag=flag, varname='par24x', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='Maximum absorbed PAR for leaves in canopy layer in 24 hours', units='J/m**2 leaf', &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%par24x_z_patch )
 
       call restartvar(ncid=ncid, flag=flag, varname='parsun', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='Instaneous absorbed PAR for sunlit leaves in canopy layer', units='W/m**2 leaf', &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%parsun_z_patch )
       call restartvar(ncid=ncid, flag=flag, varname='parsha', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='Instaneous absorbed PAR for shaded leaves in canopy layer', units='W/m**2 leaf', &
-         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%parsha_z_patch )
 
    endif

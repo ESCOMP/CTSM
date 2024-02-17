@@ -53,10 +53,10 @@ contains
     !-----------------------------------------------------------------------
 
     ! BACKWARDS_COMPATIBILITY(wjs, 2018-03-19) Old restart files generated from
-    ! configurations with istice rather than istice don't have a 'glc_nec' dimension.
+    ! configurations with istice rather than istice_mec don't have a 'glc_nec' dimension.
     ! Users may still be using files generated like that. The value of this function
     ! should be irrelevant in that case. We can remove this code once we can rely on all
-    ! users' finidat files having been generated from configurations with istice.
+    ! users' finidat files having been generated from configurations with istice_mec.
     call ncd_inqdid(ncidi, 'glc_nec', dimid_dummy, dimexist=dimexist)
     if (.not. dimexist) then
        glc_elevclasses_are_same = .false.

@@ -160,7 +160,7 @@ contains
     ! Keep landunits above the user-defined thresholds and remove the rest
     !
     ! !USES:
-    use landunit_varcon, only: max_lunit, istsoil, istcrop, istice, &
+    use landunit_varcon, only: max_lunit, istsoil, istcrop, istice_mec, &
                                istdlak, istwet, isturb_tbd, isturb_hd, &
                                isturb_md
     !
@@ -196,7 +196,7 @@ contains
        ! Copy the user-defined percent thresholds into array of fractions
        toosmall(istsoil) = toosmall_soil / 100._r8
        toosmall(istcrop) = toosmall_crop / 100._r8
-       toosmall(istice) = toosmall_glacier / 100._r8
+       toosmall(istice_mec) = toosmall_glacier / 100._r8
        toosmall(istdlak) = toosmall_lake / 100._r8
        toosmall(istwet) = toosmall_wetland / 100._r8
        toosmall(isturb_tbd) = toosmall_urban / 100._r8

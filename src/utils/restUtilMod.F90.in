@@ -24,9 +24,6 @@ module restUtilMod
   !-----------------------------------------------------------------------
 
   interface restartvar
-     ! DIMS 2 refers to variables with degenerate second dimension, i.e. with
-     ! size(second dimension) = 1. For variables with non-degenerate second
-     ! dimension, call restartvar_2d_{TYPE}_bounds.
      !DIMS 0,1,2
      !TYPE text,int,double
      module procedure restartvar_{DIMS}d_{TYPE}
@@ -49,28 +46,6 @@ module restUtilMod
 
   integer,parameter, public :: iflag_noswitchdim = 0
   integer,parameter, public :: iflag_switchdim   = 1
-
-  ! iflag_no_scale_by_thickness => init_interp WILL NOT scale these variables
-  !   by layer thickness. This is the default option. Currently these variables
-  !   get interpolated linearly without weighting by layer thickness.
-  ! iflag_scale_by_thickness => init_interp WILL scale these variables by layer
-  !   thickness to interpolate correctly from the vertical profile present in
-  !   the initial/restart file to the profile used by the model. For an example
-  !   of setting this option to .true., see H2OSOI_LIQ in subr. Restart in
-  !   WaterStateType.F90.
-  !   Variables of so called extensive properties require this scaling for
-  !   correct interpolation because extensive properties depend on the sample
-  !   size. H2OSOI_LIQ with units of kg/m2 contains fewer kg of water in thinner
-  !   soil layers than in thicker soil layers. Scaling the quantity by layer
-  !   thickness contributes the correct amount of water by adding rather than
-  !   averaging amounts during interpolation. Not scaling by thickness results
-  !   in underestimated soil water when interpolating from a finer to a coarser
-  !   soil profile and overestimated soil water in the opposite case.
-  !   We require this flag for initial/restart variables with dim2name values:
-  !   levmaxurbgrnd, levgrnd, levtot, levsno, levsno1, levlak, levcan, vegwcs,
-  !   numrad
-  integer,parameter, public :: iflag_no_scale_by_thickness = 0
-  integer,parameter, public :: iflag_scale_by_thickness = 1
 
   public :: restartvar
 
@@ -136,6 +111,7 @@ contains
     ! Local variables
     character(len=len(varname)) :: primary_varname ! first name in the varname list
     character(len=len(varname)) :: my_varname      ! actual varname to read/write
+    integer          :: ivalue
     type(var_desc_t) :: vardesc  ! local vardesc
     integer          :: status   ! return error code 
     integer          :: varid
@@ -225,7 +201,7 @@ contains
   !DIMS 1,2
   !TYPE text,int,double
   subroutine restartvar_{DIMS}d_{TYPE}(&
-       ncid, flag, varname, xtype, dim1name, &
+       ncid, flag, varname, xtype, dim1name, dim2name, &
        long_name, units, interpinic_flag, data, readvar, &
        comment, flag_meanings, missing_value, fill_value, &
        imissing_value, ifill_value, flag_values, nvalid_range, is_spatial )
@@ -237,12 +213,6 @@ contains
     ! files, in case variables have been renamed. For example, if variable 'foo' was
     ! recently renamed to 'bar', then varname should be 'bar:foo'. For flag = 'write',
     ! the first name in the list is used.
-    !
-    ! NB. dim2name (previously optional argument here) has been removed.
-    ! Call this version of restartvar_ ONLY for 1d variables and varables with
-    ! degenerate second dimension, i.e. with size(second dimension) = 1.
-    ! For variables with non-degenerate second dimension, call
-    ! restartvar_2d_{TYPE}_bounds.
 
     !----------------------------------------------------
     ! Arguments
@@ -255,6 +225,7 @@ contains
     {VTYPE}           , pointer              :: data{DIMSTR}
     logical           , intent(inout)        :: readvar          ! was var read?
     character(len=*)  , intent(in), optional :: dim1name         ! dimension name
+    character(len=*)  , intent(in), optional :: dim2name         ! dimension name
     character(len=*)  , intent(in), optional :: units            ! long name for variable
     character(len=*)  , intent(in), optional :: comment          ! attribute
     character(len=*)  , intent(in), optional :: flag_meanings(:) ! attribute
@@ -276,13 +247,6 @@ contains
     integer          :: varid
     integer          :: lxtype   ! local external type (in case logical variable)
     !----------------------------------------------------
-
-    ! Assert that 2d variables coming through this subroutine have degenerate
-    ! second dimension, i.e. size(second dimension) = 1
-    ivalue = size(shape(data))
-    if (ivalue == 2) then
-       SHR_ASSERT_FL((size(data, ivalue) == 1), sourcefile, __LINE__)
-    end if
 
     if (present(is_spatial)) then
        l_is_spatial = is_spatial
@@ -312,9 +276,13 @@ contains
        if (.not. present(dim1name)) then
           call ncd_defvar(ncid=ncid, varname=trim(my_varname), xtype=lxtype, &
                long_name=trim(long_name), units=units)
-       else
+       else if (.not. present(dim2name)) then 
           call ncd_defvar(ncid=ncid, varname=trim(my_varname), xtype=lxtype, &
                dim1name=trim(dim1name), &
+               long_name=trim(long_name), units=units)
+       else if (present(dim2name)) then
+          call ncd_defvar(ncid=ncid, varname=trim(my_varname), xtype=lxtype, &
+               dim1name=trim(dim1name), dim2name=trim(dim2name), &
                long_name=trim(long_name), units=units)
        end if
 
@@ -388,7 +356,7 @@ contains
   !TYPE int,double
   subroutine restartvar_2d_{TYPE}_bounds(ncid, flag, varname, xtype, &
        dim1name, dim2name, switchdim, lowerb2, upperb2, &
-       long_name, units, scale_by_thickness, interpinic_flag, data, readvar, &
+       long_name, units, interpinic_flag, data, readvar, &
        comment, flag_meanings, missing_value, fill_value, &
        imissing_value, ifill_value, flag_values, nvalid_range )
 
@@ -411,7 +379,6 @@ contains
     logical          , intent(in)           :: switchdim
     character(len=*) , intent(in)           :: long_name        ! long name for variable
     character(len=*) , intent(in)           :: interpinic_flag  ! interpolate variable using interpinic ('interp', 'copy', 'skip' or 'area': see iflag meanings defined at the top of this module)
-    logical          , intent(in)           :: scale_by_thickness  ! to scale by thickness in vertical interpolation or not
     {VTYPE}          , pointer              :: data(:,:)        ! raw data
     logical          , intent(out)          :: readvar          ! was var read?
     integer          , intent(in), optional :: lowerb2
@@ -429,6 +396,7 @@ contains
     ! Local variables
     character(len=len(varname)) :: primary_varname ! first name in the varname list
     character(len=len(varname)) :: my_varname      ! actual varname to read/write
+    integer          :: ivalue
     type(var_desc_t) :: vardesc  ! local vardesc
     integer          :: status   ! return error code 
     integer          :: varid    ! returned var id
@@ -474,27 +442,15 @@ contains
        call ncd_putatt(ncid, varid, 'varnames_on_old_files', trim(varname))
 
        if (switchdim) then
-          status = PIO_put_att(ncid, vardesc%varid, 'switchdim_flag', iflag_switchdim)
+          status = PIO_put_att(ncid, vardesc%varid, 'switchdim_flag', 1)
        else
-          status = PIO_put_att(ncid, vardesc%varid, 'switchdim_flag', iflag_noswitchdim)
+          status = PIO_put_att(ncid, vardesc%varid, 'switchdim_flag', 0)
        end if
        status = PIO_put_att(ncid, vardesc%varid, 'switchdim_flag_values', (/0,1/))
        status = PIO_put_att(ncid, vardesc%varid, 'switchdim_flag_is_0', &
             "1st and 2nd dims are same as model representation")
        status = PIO_put_att(ncid, vardesc%varid, 'switchdim_flag_is_1', &
             "1st and 2nd dims are switched from model representation")
-
-       ! scale_by_thickness explanation near the top of this module
-       if (scale_by_thickness) then
-          status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag', iflag_scale_by_thickness)
-       else
-          status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag', iflag_no_scale_by_thickness)
-       end if
-       status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag_values', (/0,1/))
-       status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag_is_0', &
-            "scale_by_thickness is .false.")
-       status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag_is_1', &
-            "scale_by_thickness is .true.")
 
        if (present(comment)) then
           call ncd_putatt(ncid, varid, 'comment', trim(comment))

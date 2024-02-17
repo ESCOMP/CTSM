@@ -126,7 +126,7 @@ module subgridWeightsMod
      real(r8), pointer :: pct_landunit(:,:)  ! % of each landunit on the grid cell [begg:endg, 1:max_lunit]
      real(r8), pointer :: pct_nat_pft(:,:)   ! % of each pft, as % of landunit [begg:endg, natpft_lb:natpft_ub]
      real(r8), pointer :: pct_cft(:,:)       ! % of each crop functional type, as % of landunit [begg:endg, cft_lb:cft_ub]
-     real(r8), pointer :: pct_glc_mec(:,:)   ! % of each glacier elevation class, as % of landunit [begg:endg, 1:maxpatch_glc]
+     real(r8), pointer :: pct_glc_mec(:,:)   ! % of each glacier elevation class, as % of landunit [begg:endg, 1:maxpatch_glcmec]
   end type subgrid_weights_diagnostics_type
      
   type(subgrid_weights_diagnostics_type) :: subgrid_weights_diagnostics
@@ -155,7 +155,7 @@ contains
     !
     ! !USES:
     use landunit_varcon, only : max_lunit
-    use clm_varpar     , only : maxpatch_glc, natpft_size, cft_size
+    use clm_varpar     , only : maxpatch_glcmec, natpft_size, cft_size
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     use decompMod      , only : BOUNDS_LEVEL_PROC
     use histFileMod    , only : hist_addfld2d
@@ -183,7 +183,7 @@ contains
     subgrid_weights_diagnostics%pct_nat_pft(:,:) = nan
     allocate(subgrid_weights_diagnostics%pct_cft(bounds%begg:bounds%endg, 1:cft_size))
     subgrid_weights_diagnostics%pct_cft(:,:) = nan
-    allocate(subgrid_weights_diagnostics%pct_glc_mec(bounds%begg:bounds%endg, 1:maxpatch_glc))
+    allocate(subgrid_weights_diagnostics%pct_glc_mec(bounds%begg:bounds%endg, 1:maxpatch_glcmec))
     subgrid_weights_diagnostics%pct_glc_mec(:,:) = nan
 
     ! ------------------------------------------------------------------------
@@ -207,7 +207,7 @@ contains
     end if
 
     call hist_addfld2d (fname='PCT_GLC_MEC', units='%', type2d='glc_nec', &
-         avgflag='A', long_name='% of each GLC elevation class on the glacier landunit', &
+         avgflag='A', long_name='% of each GLC elevation class on the glc_mec landunit', &
          ptr_lnd=subgrid_weights_diagnostics%pct_glc_mec)
 
   end subroutine init_subgrid_weights_mod
@@ -301,7 +301,7 @@ contains
     ! Determine whether the given landunit is active
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istice, isturb_MIN, isturb_MAX, istdlak
+    use landunit_varcon, only : istsoil, istice_mec, isturb_MIN, isturb_MAX, istdlak
     !
     ! !ARGUMENTS:
     implicit none
@@ -330,7 +330,7 @@ contains
        ! Conditions under which is_active_p is set to true because we want extra virtual landunits:
        ! ------------------------------------------------------------------------
 
-       if (lun%itype(l) == istice .and. &
+       if (lun%itype(l) == istice_mec .and. &
             glc_behavior%has_virtual_columns_grc(g)) then
           is_active_l = .true.
        end if
@@ -381,7 +381,7 @@ contains
     ! Determine whether the given column is active
     !
     ! !USES:
-    use landunit_varcon, only : istice, isturb_MIN, isturb_MAX
+    use landunit_varcon, only : istice_mec, isturb_MIN, isturb_MAX
     !
     ! !ARGUMENTS:
     implicit none
@@ -412,7 +412,7 @@ contains
        ! Conditions under which is_active_c is set to true because we want extra virtual columns:
        ! ------------------------------------------------------------------------
 
-       if (lun%itype(l) == istice .and. &
+       if (lun%itype(l) == istice_mec .and. &
             glc_behavior%has_virtual_columns_grc(g)) then
           is_active_c = .true.
        end if
@@ -797,22 +797,25 @@ contains
   subroutine set_pct_glc_mec_diagnostics(bounds)
     !
     ! !DESCRIPTION:
-    ! Set pct_glc_mec diagnostic field: % of each glc_mec column on the glc landunit
+    ! Set pct_glc_mec diagnostic field: % of each glc_mec column on the glc_mec landunit
+    !
+    ! Note: it's safe to call this even if we're not running with glc_mec, but in that
+    ! case it won't do anything.
     !
     ! Note that pct_glc_mec will be 0 for all elevation classes in a grid cell that does
-    ! not have a glc landunit. However, it will still sum to 100% for a grid cell
-    ! that has a 0-weight (i.e., virtual) glc landunit.
+    ! not have a glc_mec landunit. However, it will still sum to 100% for a grid cell
+    ! that has a 0-weight (i.e., virtual) glc_mec landunit.
     !
     ! !USES:
-    use landunit_varcon, only : istice
-    use column_varcon, only : col_itype_to_ice_class
+    use landunit_varcon, only : istice_mec
+    use column_varcon, only : col_itype_to_icemec_class
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: c,l,g          ! indices
-    integer :: ice_class      ! ice class (1..maxpatch_glc)
+    integer :: icemec_class   ! icemec class (1..maxpatch_glcmec)
     
     character(len=*), parameter :: subname = 'set_pct_glc_mec_diagnostics'
     !-----------------------------------------------------------------------
@@ -822,9 +825,9 @@ contains
     do c = bounds%begc, bounds%endc
        g = col%gridcell(c)
        l = col%landunit(c)
-       if (lun%itype(l) == istice) then
-          ice_class = col_itype_to_ice_class(col%itype(c))
-          subgrid_weights_diagnostics%pct_glc_mec(g, ice_class) = col%wtlunit(c) * 100._r8
+       if (lun%itype(l) == istice_mec) then
+          icemec_class = col_itype_to_icemec_class(col%itype(c))
+          subgrid_weights_diagnostics%pct_glc_mec(g, icemec_class) = col%wtlunit(c) * 100._r8
        end if
     end do
 

@@ -269,7 +269,7 @@ contains
                   beta ** (col%zi(c,lev)*m_to_cm) )
           end do
        else
-          rootfr(p,:) = 0._r8
+          rootfr(p,:) = 0.
        endif
        
     enddo

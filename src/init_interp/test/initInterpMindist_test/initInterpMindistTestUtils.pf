@@ -21,7 +21,7 @@ module initInterpMindistTestUtils
        icol_vegetated_or_bare_soil = 10, &
        ilun_vegetated_or_bare_soil = 3, &
        ilun_crop = 4, &
-       ilun_landice = 5)
+       ilun_landice_multiple_elevation_classes = 5)
 
   ! value we can use for a special landunit; note that this just needs to differ from
   ! ilun_vegetated_or_bare_soil and from ilun_crop

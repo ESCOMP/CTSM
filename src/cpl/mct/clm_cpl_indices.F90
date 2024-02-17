@@ -19,7 +19,7 @@ module clm_cpl_indices
   ! !PUBLIC DATA MEMBERS:
   !
   integer , public :: glc_nec     ! number of elevation classes for glacier_mec landunits 
-                                  ! (from coupler) - must equal maxpatch_glc from namelist
+                                  ! (from coupler) - must equal maxpatch_glcmec from namelist
 
   ! lnd -> drv (required)
 

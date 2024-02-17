@@ -82,7 +82,7 @@ contains
     real(r8)::  bm_delta
 
     ! parameters
-    real(r8), parameter :: ramp_agddtw = 300.0_r8
+    real(r8), parameter :: ramp_agddtw = 300.0
 
     ! minimum individual density for persistence of PATCH (indiv/m2)
     real(r8), parameter :: nind_min = 1.0e-10_r8
@@ -425,8 +425,8 @@ contains
                greffic(p) = bm_delta / (lm_ind * slatop(ivt(p)))
             end if
          else
-            greffic(p) = 0._r8
-            heatstress(p) = 0._r8
+            greffic(p) = 0.
+            heatstress(p) = 0.
          end if
 
       end do

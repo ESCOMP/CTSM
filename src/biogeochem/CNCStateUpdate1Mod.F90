@@ -168,7 +168,7 @@ contains
     real(r8) :: dt        ! radiation time step (seconds)
     real(r8) :: check_cpool
     real(r8) :: cpool_delta
-    real(r8), parameter :: kprod05 = 1.44e-7_r8  ! decay constant for 0.5-year product pool (1/s) (lose ~90% over a half year)
+    real(r8), parameter :: kprod05 = 1.44e-7  ! decay constant for 0.5-year product pool (1/s) (lose ~90% over a half year)
     !-----------------------------------------------------------------------
 
     associate(                                                               & 

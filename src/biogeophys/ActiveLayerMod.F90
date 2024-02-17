@@ -116,10 +116,10 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             g = col%gridcell(c)
-            if ( grc%lat(g) > 0._r8 ) then 
+            if ( grc%lat(g) > 0. ) then 
                altmax_lastyear(c) = altmax(c)
                altmax_lastyear_indx(c) = altmax_indx(c)
-               altmax(c) = 0._r8
+               altmax(c) = 0.
                altmax_indx(c) = 0
             endif
          end do
@@ -128,10 +128,10 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             g = col%gridcell(c)
-            if ( grc%lat(g) <= 0._r8 ) then 
+            if ( grc%lat(g) <= 0. ) then 
                altmax_lastyear(c) = altmax(c)
                altmax_lastyear_indx(c) = altmax_indx(c)
-               altmax(c) = 0._r8
+               altmax(c) = 0.
                altmax_indx(c) = 0
             endif
          end do

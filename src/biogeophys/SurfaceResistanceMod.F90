@@ -250,7 +250,7 @@ contains
      use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
      use decompMod       , only : bounds_type
      use clm_varcon      , only : denh2o, denice
-     use landunit_varcon , only : istice, istwet, istsoil, istcrop
+     use landunit_varcon , only : istice_mec, istwet, istsoil, istcrop
      use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
      use column_varcon   , only : icol_road_imperv, icol_road_perv
      use ColumnType      , only : col
@@ -284,7 +284,7 @@ contains
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           l = col%landunit(c)   
-          if (lun%itype(l)/=istwet .AND. lun%itype(l)/=istice) then
+          if (lun%itype(l)/=istwet .AND. lun%itype(l)/=istice_mec) then
              if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                 wx   = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/col%dz(c,1)
                 fac  = min(1._r8, wx/watsat(c,1))
@@ -347,7 +347,7 @@ contains
      use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
      use decompMod       , only : bounds_type
      use clm_varcon      , only : denh2o, denice
-     use landunit_varcon , only : istice, istwet, istsoil, istcrop
+     use landunit_varcon , only : istice_mec, istwet, istsoil, istcrop
      use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
      use column_varcon   , only : icol_road_imperv, icol_road_perv
      use ColumnType      , only : col
@@ -386,7 +386,7 @@ contains
    do fc = 1,num_nolakec
       c = filter_nolakec(fc)
       l = col%landunit(c)  
-      if (lun%itype(l)/=istwet .AND. lun%itype(l)/=istice) then
+      if (lun%itype(l)/=istwet .AND. lun%itype(l)/=istice_mec) then
          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
             vwc_liq = max(h2osoi_liq(c,1),1.0e-6_r8)/(dz(c,1)*denh2o)
 ! eff_porosity not calculated til SoilHydrology

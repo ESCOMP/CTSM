@@ -132,7 +132,7 @@ contains
                      spinup_term = spinup_term  * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
                   endif
                else
-                  spinup_term = 1._r8
+                  spinup_term = 1.
                endif
                if(.not. use_soil_matrixcn)then
                   decomp_cpools_vr(c,j,l) = decomp_cpools_vr(c,j,l) * (1._r8 - decay_const * spinup_term * dt)

@@ -22,12 +22,13 @@ module initVerticalMod
   use clm_varctl        , only : use_fates
   use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, ispval, grlnd 
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall, is_hydrologically_active
-  use landunit_varcon   , only : istdlak, istice
+  use landunit_varcon   , only : istdlak, istice_mec
   use fileutils         , only : getfil
   use LandunitType      , only : lun                
   use GridcellType      , only : grc                
   use ColumnType        , only : col                
   use glcBehaviorMod    , only : glc_behavior_type
+  use SnowHydrologyMod  , only : InitSnowLayers             
   use abortUtils        , only : endrun    
   use ncdio_pio
   !
@@ -81,12 +82,13 @@ contains
   end subroutine readParams
 
   !------------------------------------------------------------------------
-  subroutine initVertical(bounds, glc_behavior, thick_wall, thick_roof)
+  subroutine initVertical(bounds, glc_behavior, snow_depth, thick_wall, thick_roof)
     use clm_varcon, only : zmin_bedrock
     !
     ! !ARGUMENTS:
     type(bounds_type)   , intent(in)    :: bounds
     type(glc_behavior_type), intent(in) :: glc_behavior
+    real(r8)            , intent(in)    :: snow_depth(bounds%begc:)
     real(r8)            , intent(in)    :: thick_wall(bounds%begl:)
     real(r8)            , intent(in)    :: thick_roof(bounds%begl:)
     !
@@ -142,6 +144,7 @@ contains
     begc = bounds%begc; endc= bounds%endc
     begl = bounds%begl; endl= bounds%endl
 
+    SHR_ASSERT_ALL_FL((ubound(snow_depth)  == (/endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(thick_wall)  == (/endl/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(thick_roof)  == (/endl/)), sourcefile, __LINE__)
 
@@ -675,6 +678,12 @@ contains
     end do
 
     !-----------------------------------------------
+    ! Set cold-start values for snow levels, snow layers and snow interfaces 
+    !-----------------------------------------------
+
+    call InitSnowLayers(bounds, snow_depth(bounds%begc:bounds%endc))
+
+    !-----------------------------------------------
     ! Read in topographic index and slope
     !-----------------------------------------------
 
@@ -775,7 +784,7 @@ contains
     ! from the upper layers.
     !
     ! !USES:
-    use landunit_varcon, only : istice, isturb_MIN, isturb_MAX
+    use landunit_varcon, only : istice_mec, isturb_MIN, isturb_MAX
     use column_varcon  , only : icol_road_perv
     !
     ! !ARGUMENTS:
@@ -799,7 +808,7 @@ contains
     ! == istdlak - that way, hasBedrock(lake) would be more likely to get updated
     ! correctly if the lake logic changes.
 
-    if (lun_itype == istice) then
+    if (lun_itype == istice_mec) then
        hasBedrock = .false.
     else if (lun_itype >= isturb_MIN .and. lun_itype <= isturb_MAX) then
        if (col_itype == icol_road_perv) then

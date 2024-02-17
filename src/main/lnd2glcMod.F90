@@ -19,11 +19,11 @@ module lnd2glcMod
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use decompMod       , only : get_proc_bounds, bounds_type
   use domainMod       , only : ldomain
-  use clm_varpar      , only : maxpatch_glc
+  use clm_varpar      , only : maxpatch_glcmec
   use clm_varctl      , only : iulog
   use clm_varcon      , only : spval, tfrz, namec
-  use column_varcon   , only : col_itype_to_ice_class
-  use landunit_varcon , only : istice, istsoil
+  use column_varcon   , only : col_itype_to_icemec_class
+  use landunit_varcon , only : istice_mec, istsoil
   use abortutils      , only : endrun
   use TemperatureType , only : temperature_type
   use WaterFluxBulkType   , only : waterfluxbulk_type
@@ -97,9 +97,9 @@ contains
 
     begg = bounds%begg; endg = bounds%endg
 
-    allocate(this%tsrf_grc(begg:endg,0:maxpatch_glc)) ; this%tsrf_grc(:,:)=0.0_r8
-    allocate(this%topo_grc(begg:endg,0:maxpatch_glc)) ; this%topo_grc(:,:)=0.0_r8
-    allocate(this%qice_grc(begg:endg,0:maxpatch_glc)) ; this%qice_grc(:,:)=0.0_r8
+    allocate(this%tsrf_grc(begg:endg,0:maxpatch_glcmec)) ; this%tsrf_grc(:,:)=0.0_r8
+    allocate(this%topo_grc(begg:endg,0:maxpatch_glcmec)) ; this%topo_grc(:,:)=0.0_r8
+    allocate(this%qice_grc(begg:endg,0:maxpatch_glcmec)) ; this%qice_grc(:,:)=0.0_r8
 
   end subroutine InitAllocate
 
@@ -120,23 +120,23 @@ contains
 
     begg = bounds%begg; endg = bounds%endg
 
-    this%qice_grc(begg:endg,0:maxpatch_glc) = spval
+    this%qice_grc(begg:endg,0:maxpatch_glcmec) = spval
     ! For this and the following fields, set up a pointer to the field simply for the
     ! sake of changing the indexing, so that levels start with an index of 1, as is
     ! assumed by histFileMod - so levels go 1:(nec+1) rather than 0:nec
-    data2dptr => this%qice_grc(:,0:maxpatch_glc)
+    data2dptr => this%qice_grc(:,0:maxpatch_glcmec)
     call hist_addfld2d (fname='QICE_FORC', units='mm/s', type2d='elevclas', &
          avgflag='A', long_name='qice forcing sent to GLC', &
          ptr_lnd=data2dptr, default='inactive')
 
-    this%tsrf_grc(begg:endg,0:maxpatch_glc) = spval
-    data2dptr => this%tsrf_grc(:,0:maxpatch_glc)
+    this%tsrf_grc(begg:endg,0:maxpatch_glcmec) = spval
+    data2dptr => this%tsrf_grc(:,0:maxpatch_glcmec)
     call hist_addfld2d (fname='TSRF_FORC', units='K', type2d='elevclas', &
          avgflag='A', long_name='surface temperature sent to GLC', &
          ptr_lnd=data2dptr, default='inactive')
 
-    this%topo_grc(begg:endg,0:maxpatch_glc) = spval
-    data2dptr => this%topo_grc(:,0:maxpatch_glc)
+    this%topo_grc(begg:endg,0:maxpatch_glcmec) = spval
+    data2dptr => this%topo_grc(:,0:maxpatch_glcmec)
     call hist_addfld2d (fname='TOPO_FORC', units='m', type2d='elevclas', &
          avgflag='A', long_name='topograephic height sent to GLC', &
          ptr_lnd=data2dptr, default='inactive')
@@ -163,7 +163,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: c, l, g, n, fc                   ! indices
-    logical, allocatable :: fields_assigned(:,:) ! tracks whether fields have already been assigned for each index [begg:endg, 0:maxpatch_glc]
+    logical, allocatable :: fields_assigned(:,:) ! tracks whether fields have already been assigned for each index [begg:endg, 0:maxpatch_glcmec]
     real(r8) :: flux_normalization               ! factor by which fluxes should be normalized
 
     character(len=*), parameter :: subname = 'update_lnd2glc'
@@ -177,7 +177,7 @@ contains
   
     ! Fill the lnd->glc data on the clm grid
 
-    allocate(fields_assigned(bounds%begg:bounds%endg, 0:maxpatch_glc))
+    allocate(fields_assigned(bounds%begg:bounds%endg, 0:maxpatch_glcmec))
     fields_assigned(:,:) = .false.
 
     do fc = 1, num_do_smb_c
@@ -186,8 +186,8 @@ contains
       g = col%gridcell(c) 
 
       ! Set vertical index and a flux normalization, based on whether the column in question is glacier or vegetated.  
-      if (lun%itype(l) == istice) then
-         n = col_itype_to_ice_class(col%itype(c))
+      if (lun%itype(l) == istice_mec) then
+         n = col_itype_to_icemec_class(col%itype(c))
          flux_normalization = 1.0_r8
       else if (lun%itype(l) == istsoil) then
          n = 0  !0-level index (bareland information)
@@ -287,7 +287,7 @@ contains
 
     g = col%gridcell(c)
 
-    area_glacier = get_landunit_weight(g, istice)
+    area_glacier = get_landunit_weight(g, istice_mec)
 
     if (abs(area_glacier - 1.0_r8) < tol) then
        ! If the whole grid cell is glacier, then the normalization factor is arbitrary;

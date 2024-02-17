@@ -122,8 +122,7 @@ contains
   end subroutine check_npts
 
   !-----------------------------------------------------------------------
-  subroutine interp_multilevel(this, data_dest, data_source, index_dest, &
-                               scale_by_thickness)
+  subroutine interp_multilevel(this, data_dest, data_source, index_dest)
     !
     ! !DESCRIPTION:
     ! Interpolates a multi-level field from source to dest, for a single point.
@@ -158,7 +157,6 @@ contains
     real(r8) , intent(inout) :: data_dest(:)
     real(r8) , intent(in)    :: data_source(:)
     integer  , intent(in)    :: index_dest
-    logical  , intent(in)    :: scale_by_thickness
     !
     ! !LOCAL VARIABLES:
     integer :: num_source         ! total number of source layers

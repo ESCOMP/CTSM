@@ -770,7 +770,9 @@ contains
          
          woody                               =>    pftcon%woody                                                , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
          season_decid                        =>    pftcon%season_decid                                         , & ! Input:  binary flag for seasonal-deciduous leaf habit (0 or 1)
+!KO
          season_decid_temperate              =>    pftcon%season_decid_temperate                               , & ! Input:  binary flag for seasonal-deciduous temperate leaf habit (0 or 1)
+!KO
          
          t_soisno                            =>    temperature_inst%t_soisno_col                               , & ! Input:  [real(r8)  (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
          soila10                             =>    temperature_inst%soila10_patch                              , & ! Input:  [real(r8) (:)   ] 
@@ -1014,6 +1016,15 @@ contains
                if (onset_gddflag(p) == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then
                   onset_gdd(p) = onset_gdd(p) + (soilt-SHR_CONST_TKFRZ)*fracday
                end if
+!KO               !separate into Arctic boreal and lower latitudes
+!KO               if (onset_gdd(p) > crit_onset_gdd .and. abs(grc%latdeg(g))<45.0_r8) then
+!KO                  onset_thresh=1.0_r8
+!KO               else if (onset_gddflag(p) == 1.0_r8 .and. soila10(p) > SHR_CONST_TKFRZ .and. &
+!KO                       t_a5min(p) > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. &
+!KO                       dayl(g)>(crit_dayl/2.0_r8) .and. snow_5day(c)<0.1_r8) then
+!KO                  onset_thresh=1.0_r8
+!KO               end if              
+!KO
                if ( onset_thresh_depends_on_veg ) then
                   ! separate into non-arctic seasonally deciduous pfts (temperate broadleaf deciduous
                   ! tree) and arctic/boreal seasonally deciduous pfts (boreal needleleaf deciduous tree,
@@ -1030,6 +1041,7 @@ contains
                  ! set onset_flag if critical growing degree-day sum is exceeded
                  if (onset_gdd(p) > crit_onset_gdd) onset_thresh = 1.0_r8
                end if
+!KO
                ! If onset is being triggered
                if (onset_thresh == 1.0_r8) then
                   onset_flag(p) = 1.0_r8

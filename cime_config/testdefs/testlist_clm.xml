@@ -240,14 +240,6 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_Ld3" grid="f10_f10_mg37" compset="I2000Clm51Bgc" testmods="clm/ciso_cwd_hr">
-    <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
   <test name="ERP_Ld9" grid="f45_g37" compset="I2000Clm51Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -1171,14 +1163,6 @@
   <test name="ERS_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="ERS_D_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRs" testmods="clm/CLM1PTStartDate">
-    <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2243,17 +2227,6 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Short ERP debug FATES test for single site grid with serial mpi.</option>
-    </options>
-  </test>
-  <test name="ERS_Ld9" grid="f10_f10_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefCH4">
-    <machines>
-      <machine name="derecho" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
-      <machine name="derecho" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:10:00</option>
-      <option name="comment">30 day exact restart test activating FATES and CH4 f10 grid.</option>
     </options>
   </test>
   <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesHydro">

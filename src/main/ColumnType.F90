@@ -9,7 +9,7 @@ module ColumnType
   !   1  => (istsoil)          soil (vegetated or bare soil)
   !   2  => (istcrop)          crop (only for crop configuration)
   !   3  => (UNUSED)           (formerly non-multiple elevation class land ice; currently unused)
-  !   4  => (istice)           land ice
+  !   4  => (istice_mec)       land ice (multiple elevation classes)   
   !   5  => (istdlak)          deep lake
   !   6  => (istwet)           wetland
   !   71 => (icol_roof)        urban roof
@@ -44,14 +44,10 @@ module ColumnType
 
      ! topological mapping functionality
      integer , pointer :: itype                (:)   ! column type (after init, should only be modified via update_itype routine)
-     integer , pointer :: lun_itype            (:)   ! landunit type (col%lun_itype(ci) is the
-                                                     ! same as lun%itype(col%landunit(ci)), but is often a more convenient way to access this type
+     integer , pointer :: lun_itype            (:)   ! landunit type (col%lun_itype(ci) is the same as lun%itype(col%landunit(ci)), but is often a more convenient way to access this type
      logical , pointer :: active               (:)   ! true=>do computations on this column
      logical , pointer :: type_is_dynamic      (:)   ! true=>itype can change throughout the run
-     
-     logical , pointer :: is_fates             (:)   ! .true. -> this is a fates column
-                                                     ! .false. -> this is NOT a fates column
-     
+
      ! topography
      ! TODO(wjs, 2016-04-05) Probably move these things into topoMod
      real(r8), pointer :: micro_sigma          (:)   ! microtopography pdf sigma (m)
@@ -119,8 +115,6 @@ contains
     allocate(this%active      (begc:endc))                     ; this%active      (:)   = .false.
     allocate(this%type_is_dynamic(begc:endc))                  ; this%type_is_dynamic(:) = .false.
 
-    allocate(this%is_fates(begc:endc))                         ; this%is_fates(:) = .false.
-    
     ! The following is set in initVerticalMod
     allocate(this%snl         (begc:endc))                     ; this%snl         (:)   = ispval  !* cannot be averaged up
     allocate(this%dz          (begc:endc,-nlevsno+1:nlevmaxurbgrnd)) ; this%dz          (:,:) = nan
@@ -159,7 +153,6 @@ contains
     deallocate(this%itype      )
     deallocate(this%lun_itype  )
     deallocate(this%active     )
-    deallocate(this%is_fates   )
     deallocate(this%type_is_dynamic)
     deallocate(this%snl        )
     deallocate(this%dz         )

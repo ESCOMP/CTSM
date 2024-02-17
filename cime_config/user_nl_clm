@@ -14,7 +14,7 @@
 !                        (includes $inst_string for multi-ensemble cases)
 !                        or with CLM_FORCE_COLDSTART to do a cold start
 !                        or set it with an explicit filename here.
-! Set maxpatch_glc       with GLC_NEC                            option
+! Set maxpatch_glcmec    with GLC_NEC                            option
 ! Set glc_do_dynglacier  with GLC_TWO_WAY_COUPLING               env variable
 !----------------------------------------------------------------------------------
 

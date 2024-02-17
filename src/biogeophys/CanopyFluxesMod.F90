@@ -718,7 +718,7 @@ bioms:   do f = 1, fn
             ! leaf and stem surface area
             sa_leaf(p) = elai(p)
             ! double in spirit of full surface area for sensible heat
-            sa_leaf(p) = 2._r8*sa_leaf(p)
+            sa_leaf(p) = 2.*sa_leaf(p)
 
             ! Surface area for stem
             sa_stem(p) = nstem(patch%itype(p))*(htop(p)*shr_const_pi*dbh(p))
@@ -731,8 +731,8 @@ bioms:   do f = 1, fn
             ! (set surface area for stem, and fraction absorbed by stem to zero)
             if(.not.(is_tree(patch%itype(p)) .or. is_shrub(patch%itype(p))) &
                  .or. dbh(p) < min_stem_diameter) then
-               frac_rad_abs_by_stem(p) = 0.0_r8
-               sa_stem(p) = 0.0_r8
+               frac_rad_abs_by_stem(p) = 0.0
+               sa_stem(p) = 0.0
 !KO
                sa_leaf(p) = sa_leaf(p) + esai(p)
 !KO
@@ -743,12 +743,12 @@ bioms:   do f = 1, fn
                ! 2gbiomass/gC * (1/SLA) * 1e-3 = kg dry mass/m2(leaf)
                leaf_biomass(p) = (1.e-3_r8*c_to_b/slatop(patch%itype(p))) &
                     * max(0.01_r8, 0.5_r8*sa_leaf(p)) &
-                    / (1._r8-fbw(patch%itype(p)))
+                    / (1.-fbw(patch%itype(p)))
                ! cross-sectional area of stems
-               carea_stem = shr_const_pi * (dbh(p)*0.5_r8)**2
+               carea_stem = shr_const_pi * (dbh(p)*0.5)**2
                stem_biomass(p) = carea_stem * htop(p) * k_cyl_vol &
                     * nstem(patch%itype(p)) * wood_density(patch%itype(p)) &
-                    /(1._r8-fbw(patch%itype(p)))
+                    /(1.-fbw(patch%itype(p)))
             endif
 
             ! internal longwave fluxes between leaf and stem
@@ -761,10 +761,10 @@ bioms:   do f = 1, fn
             ! lma_dry has units of kg dry mass/m2 here
             ! (Appendix B of Bonan et al., GMD, 2018) 
 
-            cp_leaf(p)  = leaf_biomass(p) * (c_dry_biomass*(1._r8-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*c_water)
+            cp_leaf(p)  = leaf_biomass(p) * (c_dry_biomass*(1.-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*c_water)
 
             ! cp-stem will have units J/k/ground_area
-            cp_stem(p) = stem_biomass(p) * (c_dry_biomass*(1._r8-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*c_water)
+            cp_stem(p) = stem_biomass(p) * (c_dry_biomass*(1.-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*c_water)
             ! adjust for departure from cylindrical stem model
             cp_stem(p) = k_cyl_vol * cp_stem(p)
 
@@ -1404,7 +1404,7 @@ bioms:   do f = 1, fn
                dt_stem(p) = (frac_rad_abs_by_stem(p)*(sabv(p) + air(p) + bir(p)*ts_ini(p)**4 &
                     + cir(p)*lw_grnd) - eflx_sh_stem(p) &
                     + lw_leaf(p)- lw_stem(p))/(cp_stem(p)/dtime &
-                    - frac_rad_abs_by_stem(p)*bir(p)*4._r8*ts_ini(p)**3)
+                    - frac_rad_abs_by_stem(p)*bir(p)*4.*ts_ini(p)**3)
             else
                dt_stem(p) = 0._r8
             endif
