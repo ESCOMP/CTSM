@@ -1,4 +1,85 @@
 ===============================================================
+Tag name: ctsm5.1.dev168
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri 16 Feb 2024 01:27:41 PM MST
+One-line Summary: Remove a source of negative snocan in CanopyFluxesMod
+
+Purpose and description of changes
+----------------------------------
+
+In ctsm5.2 testing, this test
+LWISO_Ld10.f10_f10_mg37.I2000Clm50BgcCrop.derecho_gnu.clm-coldStart
+complained of a tiny negative ice1_grc tracer not matching the bulk
+value. My troubleshooting led me to more than tiny negative snocan
+originating in a line of code that this PR now changes to prevent
+negative values.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+CTSM issues fixed (include CTSM Issue #):
+Fixes #2366
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ It was suggested at the ctsm software meeting yesterday that, in addition to
+ including "max(0._r8," in this line of code, that I reorder the code
+ by bringing "liqcan(p) =" before "snocan(p) =". I have decided against this
+ because the existing order repeats in a following paragraph of code right
+ after this one. It's likely that the group's suggestion would have worked, but
+ I did not want to delay this PR for a longer evaluation because CTSM5.2 is
+ waiting for this merge, in order to proceed with next steps.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change: roundoff
+ A short test, e.g.
+ SMS_Ln9.ne30pg2_ne30pg2_mg17.I1850Clm50Sp.derecho_intel.clm-clm50cam6LndTuningMode
+ has these maximum differences:
+RMS H2OCAN 4.7359E-19            NORMALIZED  4.0163E-18
+RMS SNOCAN 4.4873E-19            NORMALIZED  9.1036E-18
+ while the differences grow in longer tests.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2371
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev167
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Thu 08 Feb 2024 01:56:05 PM MST
