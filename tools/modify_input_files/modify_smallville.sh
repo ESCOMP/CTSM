@@ -7,14 +7,14 @@ module load nco
 # This script runs from the mksurfdata_esmf/Makefile.
 # When running standalone, it may need "subset_data_single_point/" in front
 # of each landuse.timeseries file name.
- file_to_2015="landuse.timeseries_1x1_smallvilleIA_hist_1850-2015_78pfts_c$(date +%y%m%d).nc"
- file_to_1855="landuse.timeseries_1x1_smallvilleIA_hist_1850-1855_78pfts_c$(date +%y%m%d).nc"
- file_lake="landuse.timeseries_1x1_smallvilleIA_hist_1850-1855_78pfts_dynLakes_c$(date +%y%m%d).nc"
- file_urban="landuse.timeseries_1x1_smallvilleIA_hist_1850-1855_78pfts_dynUrban_c$(date +%y%m%d).nc"
- file_pft="landuse.timeseries_1x1_smallvilleIA_hist_1850-1855_78pfts_dynPft_c$(date +%y%m%d).nc"
+ file_to_2100="landuse.timeseries_1x1_smallvilleIA_SSP2-4.5_1850-2100_78pfts_c$(date +%y%m%d).nc"
+ file_to_1855="landuse.timeseries_1x1_smallvilleIA_SSP2-4.5_1850-1855_78pfts_c$(date +%y%m%d).nc"
+ file_lake="landuse.timeseries_1x1_smallvilleIA_SSP2-4.5_1850-1855_78pfts_dynLakes_c$(date +%y%m%d).nc"
+ file_urban="landuse.timeseries_1x1_smallvilleIA_SSP2-4.5_1850-1855_78pfts_dynUrban_c$(date +%y%m%d).nc"
+ file_pft="landuse.timeseries_1x1_smallvilleIA_SSP2-4.5_1850-1855_78pfts_dynPft_c$(date +%y%m%d).nc"
 
 # Trim the file to just the years 1850-1855
-ncks -d time,0,5 $file_to_2015 $file_to_1855
+ncks -d time,0,5 $file_to_2100 $file_to_1855
 
 # Replace all values in the LAKE and CROP variables
 ncap2 -s "PCT_LAKE=array(0.,0.,PCT_CROP); PCT_LAKE={0.,50.,25.,25.,25.,25.} ; PCT_LAKE_MAX=array(50.,50.,PCT_CROP_MAX); PCT_CROP=array(0.,0.,PCT_LAKE); PCT_CROP={0.,25.,12.,12.,12.,12.}; PCT_CROP_MAX=array(25.,25.,PCT_LAKE_MAX)" $file_to_1855 $file_lake
