@@ -530,7 +530,7 @@ contains
             write(iulog,*)'Error dstmbl: pft= ',p,' lnd_frc_mbl(p)= ',lnd_frc_mbl(p)
             call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errMsg(sourcefile, __LINE__))
          end if
-      end do
+      end doflx_mss_hrz_slt_ttl = 0.0_r8
 
       ! dmleung add output for bare_frc and veg_frc here if wanted !!!!----------------------
 
@@ -581,7 +581,9 @@ contains
          ! calculate soil moisture effect for dust emission threshold
          ! following Fecan, Marticorena et al. (1999)
          ! also see Zender et al. (2003) for DEAD emission scheme and Kok et al. (2014b) for K14 emission scheme in CESM
-         bd = (1._r8-watsat(c,1))*dns_slt      ![kg m-3] Bulk density of dry surface soil (dmleung changed from 2700 to dns_slt, soil particle density, on 16 Feb 2024. Note that dns_slt=2650 kg m-3 so the value is changed by a tiny bit from 2700 to 2650. dns_slt has been here for many years so dns_slt should be used here instead of explicitly tpying the value out. dmleung 16 Feb 2024)
+         bd = (1._r8-watsat(c,1))*dns_slt      ![kg m-3] Bulk density of dry surface soil (dmleung changed from 2700 to dns_slt, soil particle density, on 16 Feb 2024. Note that dns_slt=2650 kg m-3 so the value is changed by a tiny bit from 2700 to 2650. dns_slt has been here for many years so dns_slt should be used here instead of explicitly typing the value out. dmleung 16 Feb 2024)
+
+         ! use emission threshold to calculate standardized threshold and dust emission coefficient
 
          ! Here convert h2osoi_vol (H2OSOI) at the topmost CTSM soil layer from volumetric (m3 water / m3 soil) to gravimetric soil moisture (kg water / kg soil)
          gwc_sfc = h2osoi_vol(c,1)*SHR_CONST_RHOFW/bd    ![kg kg-1] Gravimetric H2O cont
@@ -612,18 +614,22 @@ contains
          ! the above formula is true for Iversen and White (1982) and Shao and Lu (2000) scheme
          wnd_frc_thr(p) = wnd_frc_thr_slt          ! output fluid threshold
 
-         ! use emission threshold to calculate standardized threshold and dust emission coefficient
+         !##############################################################################################
+         ! dmleung: here, calculate quantities relevant to the fluid threshold
+         ! standardized fluid threshold
          wnd_frc_thr_slt_std = wnd_frc_thr_slt * sqrt(forc_rho(c) / forc_rho_std) ! standardized soil threshold friction speed (defined using fluid threshold)
          wnd_frc_thr_std(p) = wnd_frc_thr_slt_std          ! output standardized fluid threshold
+         ! dust emission coefficient or soil erodibility coefficient (this is analogous to the soil erodibility map or prefenertial source filter in Zender; see zendersoilerodstream)
          dst_emiss_coeff(p) = Cd0 * exp(-Ce * (wnd_frc_thr_slt_std - wnd_frc_thr_slt_std_min) / wnd_frc_thr_slt_std_min) ! save dust emission coefficient here for all grids
 
-         ! framentation exponent
+         ! framentation exponent (dependent on fluid threshold)
          frag_expt = (Ca * (wnd_frc_thr_slt_std - wnd_frc_thr_slt_std_min) / wnd_frc_thr_slt_std_min)  ! fragmentation exponent, defined in Kok et al. (2014a)
          if (frag_expt > frag_expt_thr) then   ! set fragmentation exponent to be 3 or 5 at maximum, to avoid local AOD blowup
             frag_expt = frag_expt_thr
          end if
 
-         !################ drag partition effect, and soil friction velocity ###########################
+         !##############################################################################################
+         !################ drag partition effect, and soil-surface friction velocity ###################
          ! subsection on computing vegetation drag partition and hybrid drag partition factors
          ! in Leung et al. (2023), drag partition effect is applied on the wind instead of the threshold
          !##############################################################################################
@@ -644,12 +650,12 @@ contains
 
             ! calculation of the hybrid/total drag partition effect considering both rock and vegetation drag partitioning using LUH2 bare and veg fractions within a grid
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-               if (patch%itype(p) == noveg) then
+               if (patch%itype(p) == noveg) then ! if bare, uses rock drag partition factor
                   frc_thr_rgh_fct = dpfct_rock(p)
-               else
-                  frc_thr_rgh_fct = ssr(p)
+               else   ! if vegetation, uses vegetation drag partition factor
+                  frc_thr_rgh_fct = ssr(p)  
                end if
-            else
+            else   
                frc_thr_rgh_fct = 1.0_r8
             end if
 
@@ -657,7 +663,7 @@ contains
 
             frc_thr_rghn_fct(p) = frc_thr_rgh_fct   ! save and output hybrid drag partition factor
 
-         else
+         else    ! for lnd_frc_mbl=0, do not change friction velocity and assume drag partition factor = 0
             wnd_frc_slt = fv(p)                     ! The value here is not important since once lnd_frc_mbl(p) <= 0.0_r8 there will be no emission.
             frc_thr_rghn_fct(p) = 0.0_r8            ! When LAI > 1, the drag partition effect is zero. dmleung 16 Feb 2024.
          end if
@@ -666,6 +672,8 @@ contains
 
          ! save soil friction velocity and roughness effect before the if-statement
          wnd_frc_soil(p) = wnd_frc_slt  ! save soil friction velocity for CLM output, which has drag partition and Owen effect
+         ! 20 Feb 2024: dmleung notes that Leung does not consider the Owen's effect. This is Jasper Kok's decision. The Owen's effect should be in Zender's DEAD emission scheme.
+
          ! save land mobile fraction
          lnd_frc_mble(p) = lnd_frc_mbl(p)  ! save land mobile fraction first, before the if-statement
          ! only perform the following calculations if lnd_frc_mbl is non-zero
@@ -673,19 +681,18 @@ contains
          if (lnd_frc_mbl(p) > 0.0_r8) then  ! if bare land fraction is larger than 0 then calculate the dust emission equation
 
             ! reset these variables which will be updated in the following if-block
-
             flx_mss_hrz_slt_ttl = 0.0_r8
             flx_mss_vrt_dst_ttl(p) = 0.0_r8
 
             ! the following line comes from subr. dst_mbl
             ! purpose: threshold saltation wind speed
 
-            wnd_rfr_thr_slt = u10(p) * wnd_frc_thr_slt / fv(p)     ! keep and use if we want the default Z03 scheme
+            wnd_rfr_thr_slt = u10(p) * wnd_frc_thr_slt / fv(p)     ! use if we want the default Z03 scheme; for Leung 2023 this is not needed
 
             ! the following comes from subr. flx_mss_hrz_slt_ttl_Whi79_get
             ! purpose: compute vertically integrated streamwise mass flux of particles
 
-            if (wnd_frc_slt > wnd_frc_thr_slt_it) then! if using Leung's scheme, use impact threshold for dust emission equation
+            if (wnd_frc_slt > wnd_frc_thr_slt_it) then! if using Leung's scheme, use impact threshold for dust emission equation; if Zender, uses fluid threshold (wnd_frc_thr_slt) for dust emission equation
 
                !################### for Leung et al. (2023) ################################################
                !################ uncomment the below block if want to use Leung's scheme ###################
@@ -699,7 +706,10 @@ contains
 
             !############## Danny M. Leung added the intermittency calculation #################################
             ! subsection for intermittency factor calculation (only used by Leung's scheme, not Zender's scheme)
+            ! Leung et al. (2023) uses the Comola et al. (2019) intermittency scheme for the calculation of intermittent dust emissions.
+            ! This part takes care of the sub-timestep, high-frequency (< 1 minute period) turblent wind fluctuations occuring at the planetary boundary layer (PBL) near surface. Subtimestep wind gusts and episodes are important for generating emissions in marginal dust source regions, such as semiarid areas and high-latitude polar deserts.
             ! 2 Dec 2021: assume no buoyancy contribution to the wind fluctuation (u_sd_slt), so no obul(p) is needed. It is shown to be important for the wind fluctuations contribute little to the intermittency factor. We might add this back in the future revisions.
+            ! 20 Feb 2024: dmleung notes that dmleung may revise Comola's scheme in the future to improve Comola's formulation of the statistical parameterization.
 
             ! mean lowpass-filtered wind speed at hgt_sal = 0.1 m saltation height (assuming aerodynamic roughness length z0a_glob = 1e-4 m globally for ease; also assuming neutral condition)
             u_mean_slt(p) = (wnd_frc_slt/k) * log(hgt_sal / z0a_glob)  ! translating from ustar (velocity scale) to actual wind
