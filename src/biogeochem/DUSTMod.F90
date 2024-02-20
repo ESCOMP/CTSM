@@ -731,7 +731,7 @@ contains
             ! probability that lowpass-filtered wind speed does not exceed u_ft
             prb_crs_fld_thr(p) = 0.5_r8 * (1.0_r8 + erf((u_fld_thr(p) - u_mean_slt(p)) / ( sqrt(2.0_r8) * u_sd_slt(p))))
             ! probability that lowpass-filtered wind speed does not exceed u_it
-            prb_crs_impct_thr(p) = 0.5_r8 * (1.0_r8 + erf((u_impct_thr(p) - u_mean_slt(p)) / ( sqrt(2.0_r8 * u_sd_slt(p))))
+            prb_crs_impct_thr(p) = 0.5_r8 * (1.0_r8 + erf((u_impct_thr(p) - u_mean_slt(p)) / ( sqrt(2.0_r8) * u_sd_slt(p))))
 
             ! intermittency factor (eta; ranging from 0 to 1)
             intrmtncy_fct(p) = 1.0_r8 - prb_crs_fld_thr(p) + thr_crs_rate(p) * (prb_crs_fld_thr(p) - prb_crs_impct_thr(p))
