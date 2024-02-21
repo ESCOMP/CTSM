@@ -530,7 +530,7 @@ contains
             write(iulog,*)'Error dstmbl: pft= ',p,' lnd_frc_mbl(p)= ',lnd_frc_mbl(p)
             call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errMsg(sourcefile, __LINE__))
          end if
-      end doflx_mss_hrz_slt_ttl = 0.0_r8
+      end do
 
       ! dmleung add output for bare_frc and veg_frc here if wanted !!!!----------------------
 
