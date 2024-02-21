@@ -47,6 +47,7 @@ module CanopyFluxesMod
   use EDTypesMod            , only : ed_site_type
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
   use LunaMod               , only : Update_Photosynthesis_Capacity, Acc24_Climate_LUNA,Acc240_Climate_LUNA,Clear24_Climate_LUNA
+  use NumericsMod           , only : truncate_small_values
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -422,6 +423,7 @@ contains
     real(r8) :: uuc(bounds%begp:bounds%endp)             ! undercanopy windspeed
     real(r8) :: carea_stem                               ! cross-sectional area of stem
     real(r8) :: dlrad_leaf                               ! Downward longwave radition from leaf
+    real(r8) :: snocan_baseline(bounds%begp:bounds%endp)  ! baseline of snocan for use in truncate_small_values
 
     ! Indices for raw and rah
     integer, parameter :: above_canopy = 1         ! Above canopy
@@ -925,12 +927,9 @@ bioms:   do f = 1, fn
           z0qv(p)   = z0mv(p)
 
           ! Update the forcing heights
-          ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
-          if (z0param_method == 'Meier2022') then
-             forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mv(p) + displa(p)
-             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hv(p) + displa(p)
-             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qv(p) + displa(p)
-          end if
+          forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mv(p) + displa(p)
+          forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hv(p) + displa(p)
+          forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qv(p) + displa(p)
 
       end do
 
@@ -1599,11 +1598,15 @@ bioms:   do f = 1, fn
          cgrndl(p) = cgrndl(p) + forc_rho(c)*wtgq(p)*wtalq(p)*dqgdT(c)
          cgrnd(p)  = cgrnds(p) + cgrndl(p)*htvp(c)
 
+         ! save before updating
+         snocan_baseline(p) = snocan(p)
+
          ! Update dew accumulation (kg/m2)
          if (t_veg(p) > tfrz ) then ! above freezing, update accumulation in liqcan
             if ((qflx_evap_veg(p)-qflx_tran_veg(p))*dtime > liqcan(p)) then ! all liq evap
                ! In this case, all liqcan will evap. Take remainder from snocan
-               snocan(p)=snocan(p)+liqcan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime	 
+               snocan(p) = max(0._r8, &
+                  snocan(p) + liqcan(p) + (qflx_tran_veg(p) - qflx_evap_veg(p)) * dtime)
             end if
             liqcan(p) = max(0._r8,liqcan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime)
 
@@ -1616,6 +1619,12 @@ bioms:   do f = 1, fn
          end if
 
       end do
+
+      ! Remove snocan that got reduced by more than a factor of rel_epsilon
+      ! snocan < rel_epsilon * snocan_baseline will be set to zero
+      ! See NumericsMod for rel_epsilon value
+      call truncate_small_values(fn, filterp, begp, endp, &
+         snocan_baseline(begp:endp), snocan(begp:endp))
       
       if ( use_fates ) then
          

@@ -251,12 +251,12 @@ contains
     call ncd_io(trim(tString), params_inst%mimics_fmet(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%mimics_fchem_r(4))
+    allocate(params_inst%mimics_fchem_r(2))
     tString='mimics_fchem_r'
     call ncd_io(trim(tString), params_inst%mimics_fchem_r(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%mimics_fchem_k(4))
+    allocate(params_inst%mimics_fchem_k(2))
     tString='mimics_fchem_k'
     call ncd_io(trim(tString), params_inst%mimics_fchem_k(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -755,7 +755,8 @@ contains
   subroutine decomp_rates_mimics(bounds, num_bgc_soilc, filter_bgc_soilc, &
        num_soilp, filter_soilp, clm_fates, &
        soilstate_inst, temperature_inst, cnveg_carbonflux_inst, &
-       ch4_inst, soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
+       ch4_inst, soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
+       idop)
     !
     ! !DESCRIPTION:
     ! Calculate rates and decomposition pathways for the MIMICS
@@ -768,6 +769,8 @@ contains
     use subgridAveMod    , only : p2c
     use PatchType        , only : patch
     use pftconMod        , only : pftname
+    use TillageMod       , only : get_do_tillage
+    use TillageMod       , only : get_apply_tillage_multipliers
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds          
@@ -782,6 +785,7 @@ contains
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type), intent(in)    :: soilbiogeochem_carbonstate_inst
     type(hlm_fates_interface_type)       , intent(inout) :: clm_fates
+    integer, optional                    , intent(in)    :: idop(:) ! patch day of planting
     !
     ! !LOCAL VARIABLES:
     real(r8), parameter :: eps = 1.e-6_r8
@@ -828,10 +832,8 @@ contains
     real(r8):: mimics_fmet_p4
     real(r8):: mimics_fchem_r_p1
     real(r8):: mimics_fchem_r_p2
-    real(r8):: mimics_fchem_r_p3
     real(r8):: mimics_fchem_k_p1
     real(r8):: mimics_fchem_k_p2
-    real(r8):: mimics_fchem_k_p3
     real(r8):: mimics_tau_mod_min
     real(r8):: mimics_tau_mod_max
     real(r8):: mimics_tau_mod_factor
@@ -882,6 +884,10 @@ contains
          decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col , & ! Output: [real(r8) (:,:,:) ]  rate for decomposition (1./sec)
          spinup_factor  => decomp_cascade_con%spinup_factor              & ! Input:  [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
          )
+
+      if (get_do_tillage() .and. .not. present(idop)) then
+         call endrun("Do not enable tillage without providing idop to decomp_rate_constants_mimics().")
+      end if
 
       mino2lim = CNParamsShareInst%mino2lim
 
@@ -1092,10 +1098,8 @@ contains
       mimics_fmet_p4 = params_inst%mimics_fmet(4)
       mimics_fchem_r_p1 = params_inst%mimics_fchem_r(1)
       mimics_fchem_r_p2 = params_inst%mimics_fchem_r(2)
-      mimics_fchem_r_p3 = params_inst%mimics_fchem_r(3)
       mimics_fchem_k_p1 = params_inst%mimics_fchem_k(1)
       mimics_fchem_k_p2 = params_inst%mimics_fchem_k(2)
-      mimics_fchem_k_p3 = params_inst%mimics_fchem_k(3)
       mimics_tau_mod_min = params_inst%mimics_tau_mod_min
       mimics_tau_mod_max = params_inst%mimics_tau_mod_max
       mimics_tau_mod_factor = params_inst%mimics_tau_mod_factor
@@ -1186,9 +1190,9 @@ contains
          ! Used in the update of certain pathfrac terms that vary with time
          ! in the next loop
          fchem_m1 = min(1._r8, max(0._r8, mimics_fchem_r_p1 * &
-                    exp(mimics_fchem_r_p2 * fmet) * mimics_fchem_r_p3))
+                    exp(mimics_fchem_r_p2 * fmet)))
          fchem_m2 = min(1._r8, max(0._r8, mimics_fchem_k_p1 * &
-                    exp(mimics_fchem_k_p2 * fmet) * mimics_fchem_k_p3))
+                    exp(mimics_fchem_k_p2 * fmet)))
 
          do j = 1,nlevdecomp
             ! vmax ends up in units of per hour but is expected
@@ -1283,6 +1287,7 @@ contains
             ! The right hand side is OXIDAT in the testbed (line 1145)
             decomp_k(c,j,i_chem_som) = (term_1 + term_2) * w_d_o_scalars
 
+            ! Currently, mimics_densdep = 1 so as to have no effect
             decomp_k(c,j,i_cop_mic) = tau_m1 * &
                    m1_conc**(mimics_densdep - 1.0_r8) * w_d_o_scalars
             favl = min(1.0_r8, max(0.0_r8, 1.0_r8 - fphys_m1(c,j) - fchem_m1))
@@ -1300,6 +1305,11 @@ contains
             ! TODO This shows how BGC applies the spinup coefficients
             if (.not. use_fates) then
                decomp_k(c,j,i_cwd) = k_frag * w_d_o_scalars  ! * spinup_geogterm_cwd(c)
+            end if
+
+            ! Tillage
+            if (get_do_tillage()) then
+               call get_apply_tillage_multipliers(idop, c, j, decomp_k(c,j,:))
             end if
          end do
       end do

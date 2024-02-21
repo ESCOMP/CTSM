@@ -27,8 +27,8 @@ Does this tag change answers significantly for any of the following physics conf
 [ ] clm4_5
 
 
-Bugs fixed or introduced
-------------------------
+Bugs fixed
+----------
 [Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 CTSM issues fixed (include CTSM Issue #):
@@ -96,11 +96,11 @@ infrastructure should be run when appropriate, as described below.
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    cheyenne -
+    derecho -
 
   tools-tests (test/tools) (if tools have been changed):
 
-    cheyenne -
+    derecho -
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
@@ -114,15 +114,15 @@ infrastructure should be run when appropriate, as described below.
      doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
      separately run the clm_pymods test suite, and you can remove the following line.]
 
-    clm_pymods test suite on cheyenne - 
+    clm_pymods test suite on derecho - 
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ----
+    derecho -----
     izumi -------
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    cheyenne ----
+    derecho -----
     izumi -------
 
   any other testing (give details below):

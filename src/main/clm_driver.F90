@@ -111,10 +111,12 @@ contains
     ! the calling tree is given in the description of this module.
     !
     ! !USES:
-    use clm_time_manager     , only : get_curr_date
-    use clm_varctl           , only : use_lai_streams, fates_spitfire_mode
-    use laiStreamMod         , only : lai_advance
-    use FATESFireFactoryMod  , only : scalar_lightning
+    use clm_time_manager      , only : get_curr_date
+    use clm_varctl            , only : use_lai_streams, fates_spitfire_mode
+    use clm_varctl            , only : fates_seeddisp_cadence
+    use laiStreamMod          , only : lai_advance
+    use FATESFireFactoryMod   , only : scalar_lightning
+    use FatesInterfaceTypesMod, only : fates_dispersal_cadence_none
     !
     ! !ARGUMENTS:
     implicit none
@@ -1266,6 +1268,14 @@ contains
 
     end do
     !$OMP END PARALLEL DO
+
+
+    ! Pass fates seed dispersal information to neighboring gridcells across
+    ! all MPI tasks.  Note that WrapGlobalSeedDispersal calls an MPI collective routine
+    ! and as such WrapGlobalSeedDispersal should be called outside of OMP threaded loop regions
+    if (use_fates) then
+       if (fates_seeddisp_cadence /= fates_dispersal_cadence_none) call clm_fates%WrapGlobalSeedDispersal()
+    end if
 
     ! ============================================================================
     ! Determine gridcell averaged properties to send to atm
