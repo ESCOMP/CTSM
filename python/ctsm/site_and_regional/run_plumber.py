@@ -161,7 +161,9 @@ def parse_plumber_listing(listing_file, valid_plumber_sites):
                 if site_name in line:
                     finidat = line.split(",")[0].split("/")[-1]
 
-            plumber_site = PlumberSite(site_name, start_year, end_year, start_month, end_month, finidat)
+            plumber_site = PlumberSite(
+                site_name, start_year, end_year, start_month, end_month, finidat
+            )
             logger.debug(plumber_site)
             available_list.append(plumber_site)
 
