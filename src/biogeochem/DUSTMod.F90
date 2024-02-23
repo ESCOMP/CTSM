@@ -1290,7 +1290,8 @@ contains
     ! dmleung: this loop calculates the drag partition effect (or roughness effect) of rocks.
     !          We save the drag partition factor as a patch level quantity.
     ! TODO: EBK 02/13/2024: Several magic numbers here that should become parameters so the meaning is preserved
-    z0s = 2_r8/30_r8 * D_p   ! equation for smooth roughness length for soil grain. See Danny M. Leung et al. (2023) and Martin Klose et al. (2021) for instance. 1/15 is a coefficient that relates roughness to soil particle diameter D_p.
+    !z0s = 2_r8/30_r8 * D_p   ! equation for smooth roughness length for soil grain. See Danny M. Leung et al. (2023) and Martina Klose et al. (2021) for instance. 1/15 is a coefficient that relates roughness to soil particle diameter D_p.
+    z0s = 2_r8 * D_p / 30_r8 ! equation for smooth roughness length for soil grain. See Danny M. Leung et al. (2023) and Martina Klose et al. (2021) for instance. 1/15 is a coefficient that relates roughness to soil particle diameter D_p.
                              ! Here we assume soil medium size is a global constant, and so is smooth roughness length.
     do p = bounds%begp,bounds%endp
        g = patch%gridcell(p)
