@@ -174,6 +174,8 @@ def main(description):
     """
     cesmroot = path_to_ctsm_root()
     # Get the list of supported neon sites from usermods
+    # The [!Fd]* portion means that we won't retrieve cases that start with:
+    # F (FATES) or d (default). We should be aware of adding cases that start with these.
     valid_neon_sites = glob.glob(
         os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!Fd]*")
     )

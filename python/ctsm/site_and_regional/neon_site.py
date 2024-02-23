@@ -52,9 +52,6 @@ class NeonSite(TowerSite):
 
         return case_path
 
-    # def get_batch_query(self, case):
-    #    return super().get_batch_query(case)
-
     # pylint: disable=too-many-statements
     def run_case(
         self,
@@ -104,10 +101,6 @@ class NeonSite(TowerSite):
         super().run_case(
             base_case_root, run_type, prism, run_length, user_version, tower_type, user_mods_dirs
         )
-
-    def set_ref_case(self, case):
-        super().set_ref_case(case)
-        return True  ### Check if super returns false, if this will still return True?
 
     def modify_user_nl(self, case_root, run_type, rundir, site_lines=None):
         # TODO: include neon-specific user namelist lines, using this as just an example currently
