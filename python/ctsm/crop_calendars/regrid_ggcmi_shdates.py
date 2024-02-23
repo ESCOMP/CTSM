@@ -1,19 +1,25 @@
+"""
+Regrid GGCMI sowing and harvest date files
+"""
 from subprocess import run
 import os
 import glob
 import argparse
 import sys
+import logging
 import xarray as xr
 import numpy as np
-import logging
 
 # -- add python/ctsm  to path (needed if we want to run regrid_ggcmi_shdates stand-alone)
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 sys.path.insert(1, _CTSM_PYTHON)
 
-from ctsm.utils import abort
-from ctsm.ctsm_pylib_dependent_utils import import_coord_1d, import_coord_2d
-from ctsm import ctsm_logging
+from ctsm.utils import abort  # pylint: disable=wrong-import-position
+from ctsm.ctsm_pylib_dependent_utils import (  # pylint: disable=wrong-import-position
+    import_coord_1d,
+    import_coord_2d,
+)
+from ctsm import ctsm_logging  # pylint: disable=wrong-import-position
 
 logger = logging.getLogger(__name__)
 
@@ -37,18 +43,26 @@ def main():
 
 
 def run_and_check(cmd):
+    """
+    Run a given shell command and check its result
+    """
     result = run(
         cmd,
         shell=True,
         capture_output=True,
         text=True,
+        check=False,
     )
     if result.returncode != 0:
         abort(f"Trouble running `{result.args}` in shell:\n{result.stdout}\n{result.stderr}")
 
 
-# Functionized because these are shared by process_ggcmi_shdates
 def define_arguments(parser):
+    """
+    Set up arguments shared between regrid_ggcmi_shdates and process_ggcmi_shdates
+
+    Functionized because these are shared by process_ggcmi_shdates
+    """
     # Required
     parser.add_argument(
         "-rr",
@@ -60,7 +74,11 @@ def define_arguments(parser):
     parser.add_argument(
         "-rt",
         "--regrid-template-file",
-        help="Template netCDF file to be used in regridding of inputs. This can be a CLM output file (i.e., something with 1-d lat and lon variables) or a CLM surface dataset (i.e., something with 2-d LATIXY and LONGXY variables).",
+        help=(
+            "Template netCDF file to be used in regridding of inputs. This can be a CLM output "
+            + "file (i.e., something with 1-d lat and lon variables) or a CLM surface dataset "
+            + "(i.e., something with 2-d LATIXY and LONGXY variables)."
+        ),
         type=str,
         required=True,
     )
@@ -75,7 +93,10 @@ def define_arguments(parser):
     parser.add_argument(
         "-c",
         "--crop-list",
-        help="List of GGCMI crops to process; e.g., '--crop-list mai_rf,mai_ir'. If not provided, will process all GGCMI crops.",
+        help=(
+            "List of GGCMI crops to process; e.g., '--crop-list mai_rf,mai_ir'. If not provided, "
+            + "will process all GGCMI crops."
+        ),
         default=None,
     )
     return parser
@@ -89,7 +110,10 @@ def regrid_ggcmi_shdates(
     regrid_extension,
     crop_list,
 ):
-    logger.info(f"Regridding GGCMI crop calendars to {regrid_resolution}:")
+    """
+    Regrid GGCMI sowing and harvest date files
+    """
+    logger.info("Regridding GGCMI crop calendars to %s:", regrid_resolution)
 
     # Ensure we can call necessary shell script(s)
     for cmd in ["module load cdo; cdo"]:
@@ -113,31 +137,7 @@ def regrid_ggcmi_shdates(
         regrid_extension = "." + regrid_extension
 
     # Import and format latitude
-    if "lat" in template_ds_in:
-        lat, Nlat = import_coord_1d(template_ds_in, "lat")
-    elif "LATIXY" in template_ds_in:
-        lat, Nlat = import_coord_2d(template_ds_in, "lat", "LATIXY")
-        lat.attrs["axis"] = "Y"
-    else:
-        abort("No latitude variable found in regrid template file")
-
-    # Flip latitude, if needed
-    if lat.values[0] < lat.values[1]:
-        lat = lat.reindex(lat=list(reversed(lat["lat"])))
-
-    # Import and format longitude
-    if "lon" in template_ds_in:
-        lon, Nlon = import_coord_1d(template_ds_in, "lon")
-    elif "LONGXY" in template_ds_in:
-        lon, Nlon = import_coord_2d(template_ds_in, "lon", "LONGXY")
-        lon.attrs["axis"] = "Y"
-    else:
-        abort("No longitude variable found in regrid template file")
-    template_da_out = xr.DataArray(
-        data=np.full((Nlat, Nlon), 0.0),
-        dims={"lat": lat, "lon": lon},
-        name="area",
-    )
+    lat, lon, template_da_out = get_template_da_out(template_ds_in)
 
     # Save template Dataset for use by cdo
     template_ds_out = xr.Dataset(
@@ -156,41 +156,73 @@ def regrid_ggcmi_shdates(
     if len(input_files) == 0:
         abort(f"No files found matching {os.path.join(os.getcwd(), pattern)}")
     input_files.sort()
-    for f in input_files:
-        this_crop = f[0:6]
+    for file in input_files:
+        this_crop = file[0:6]
         if crop_list is not None and this_crop not in crop_list:
             continue
 
-        logger.info("    " + this_crop)
-        f2 = os.path.join(regrid_output_directory, f)
-        f3 = f2.replace(regrid_extension, f"_nninterp-{regrid_resolution}{regrid_extension}")
+        logger.info("    %s", this_crop)
+        file_2 = os.path.join(regrid_output_directory, file)
+        file_3 = file_2.replace(
+            regrid_extension, f"_nninterp-{regrid_resolution}{regrid_extension}"
+        )
 
-        if os.path.exists(f3):
-            os.remove(f3)
+        if os.path.exists(file_3):
+            os.remove(file_3)
 
-        # Sometimes cdo fails for no apparent reason. In testing this never happened more than 3x in a row.
+        # Sometimes cdo fails for no apparent reason. In testing this never happened more than 3x
+        # in a row.
+        cdo_cmd = (
+            f"module load cdo; cdo -L -remapnn,'{templatefile}' "
+            + f"-setmisstonn '{file}' '{file_3}'"
+        )
         try:
-            run_and_check(
-                f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'"
-            )
-        except:
+            run_and_check(cdo_cmd)
+        except:  # pylint: disable=bare-except
             try:
-                run_and_check(
-                    f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'"
-                )
-            except:
+                run_and_check(cdo_cmd)
+            except:  # pylint: disable=bare-except
                 try:
-                    run_and_check(
-                        f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'"
-                    )
-                except:
-                    run_and_check(
-                        f"module load cdo; cdo -L -remapnn,'{templatefile}' -setmisstonn '{f}' '{f3}'"
-                    )
+                    run_and_check(cdo_cmd)
+                except:  # pylint: disable=bare-except
+                    run_and_check(cdo_cmd)
 
     # Delete template file, which is no longer needed
     os.remove(templatefile)
     os.chdir(previous_dir)
+
+
+def get_template_da_out(template_ds_in):
+    """
+    Get template output DataArray from input Dataset
+    """
+    if "lat" in template_ds_in:
+        lat, n_lat = import_coord_1d(template_ds_in, "lat")
+    elif "LATIXY" in template_ds_in:
+        lat, n_lat = import_coord_2d(template_ds_in, "lat", "LATIXY")
+        lat.attrs["axis"] = "Y"
+    else:
+        abort("No latitude variable found in regrid template file")
+
+    # Flip latitude, if needed
+    if lat.values[0] < lat.values[1]:
+        lat = lat.reindex(lat=list(reversed(lat["lat"])))
+
+    # Import and format longitude
+    if "lon" in template_ds_in:
+        lon, n_lon = import_coord_1d(template_ds_in, "lon")
+    elif "LONGXY" in template_ds_in:
+        lon, n_lon = import_coord_2d(template_ds_in, "lon", "LONGXY")
+        lon.attrs["axis"] = "Y"
+    else:
+        abort("No longitude variable found in regrid template file")
+    template_da_out = xr.DataArray(
+        data=np.full((n_lat, n_lon), 0.0),
+        dims={"lat": lat, "lon": lon},
+        name="area",
+    )
+
+    return lat, lon, template_da_out
 
 
 def regrid_ggcmi_shdates_arg_process():
@@ -204,7 +236,7 @@ def regrid_ggcmi_shdates_arg_process():
     ctsm_logging.setup_logging_pre_config()
 
     parser = argparse.ArgumentParser(
-        description="Regrids raw sowing and harvest date files provided by GGCMI to a target CLM resolution."
+        description=("Regrid raw sowing/harvest date files from GGCMI to a target CLM resolution."),
     )
 
     # Define arguments
