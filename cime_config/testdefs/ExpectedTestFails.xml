@@ -194,8 +194,8 @@
   </test>
 
   <test name="ERP_P256x2_Ld30.f45_f45_mg37.I2000Clm51FatesRs.derecho_intel.clm-mimicsFatesCold">
-    <phase name="SHAREDLIB_BUILD">
-      <status>RUN</status>
+    <phase name="RUN">
+      <status>FAIL</status>
       <issue>#2261</issue>
     </phase>
   </test>
