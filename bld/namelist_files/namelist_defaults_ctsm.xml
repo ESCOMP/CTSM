@@ -965,7 +965,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          lnd_tuning_mode="clm5_0_GSWP3v1"
->lnd/clm2/initdata_map/clmi.I1850Clm50BgcCrop-ciso.1366-01-01.0.9x1.25_gx1v7_simyr1850_c200428.nc
+>lnd/clm2/initdata_map/clmi.I1850Clm50BgcCrop-ciso.1366-01-01.0.9x1.25_gx1v7_simyr1850_c240223.nc
 </finidat>
 
 
@@ -1002,7 +1002,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          lnd_tuning_mode="clm5_1_GSWP3v1"
->lnd/clm2/initdata_map/clmi.I1850Clm50BgcCrop-ciso.1366-01-01.0.9x1.25_gx1v7_simyr1850_c200428.nc
+>lnd/clm2/initdata_map/clmi.I1850Clm50BgcCrop-ciso.1366-01-01.0.9x1.25_gx1v7_simyr1850_c240223.nc
 </finidat>
 <!-- From the clm5_0_cam6.0 setting above...-->
 <!-- Use f09 clm5_0 cam6 spinup file for clm5_1 cam6-->
@@ -1023,7 +1023,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm4_5_GSWP3v1"
->lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c190312.nc
+>lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
 </finidat>
 
 <!-- This is the same file as above but, for a different tuning mode -->
@@ -1031,7 +1031,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm4_5_CRUv7"
->lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c190312.nc
+>lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
 </finidat>
 
 <!-- This is the same file as above but, for a different tuning mode -->
@@ -1039,13 +1039,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_0_GSWP3v1"
->lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c190312.nc
+>lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
 </finidat>
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_1_GSWP3v1"
->lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c190312.nc
+>lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
 </finidat>
 
 
@@ -1054,7 +1054,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_0_CRUv7"
->lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c190312.nc
+>lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
 </finidat>
 
 <!-- Present day no crop spinup f09/f19 grid with irrigation on -->
