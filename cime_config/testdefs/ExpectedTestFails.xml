@@ -29,9 +29,9 @@
 
 
   <!-- ctsm_sci test suite failures -->
-  <test name="SMS_P14080x1_Ln9.mpasa3p75_mpasa3p75_mt13.I2000Clm51SpRs.derecho_intel.clm-clm51cam6LndTuningMode">
+  <test name="SMS_Ln9.mpasa3p75_mpasa3p75_mt13.I2000Clm51SpRs.derecho_intel.clm-clm51cam6LndTuningMode">
     <phase name="RUN">
-      <status>FAIL</status>
+      <status>PEND</status>
       <issue>#2370</issue>
     </phase>
   </test>
