@@ -973,7 +973,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          lnd_tuning_mode="clm5_0_CRUv7"
->lnd/clm2/initdata_map/clmi.I1850Clm50BgcCropCru-ciso.1526-01-01.0.9x1.25_gx1v7_simyr1850_c200728.nc
+>lnd/clm2/initdata_map/clmi.I1850Clm50BgcCropCru-ciso.1526-01-01.0.9x1.25_gx1v7_simyr1850_c240223.nc
 </finidat>
 
 
