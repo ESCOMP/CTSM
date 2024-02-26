@@ -18,6 +18,7 @@ Running Special Cases
    running-the-prognostic-crop-model.rst
    running-with-irrigation.rst
    running-with-custom-crop-calendars.rst
+   running-with-tillage.rst
    Spinning-up-the-Satellite-Phenology-Model-CLMSP-spinup.rst
    Spinning-up-the-biogeochemistry-BGC-spinup.rst
    Running-with-excess-ground-ice.rst
