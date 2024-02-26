@@ -293,7 +293,7 @@ contains
    call shr_mpi_bcast(stream_meshfile_prigentroughness    , mpicom)
 
    ! Error checking
-   if ( use_prigent_roughness == .false. )then
+   if ( .not. use_prigent_roughness )then
       if ( len_trim(stream_fldFileName_prigentroughness) /= 0 )then
          call endrun(msg=' ERROR stream_fldFileName_prigentroughness is set, but use_prigent_roughness is FALSE' &
                      //errMsg(sourcefile, __LINE__))
