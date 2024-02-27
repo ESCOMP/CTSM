@@ -345,13 +345,13 @@ contains
    if ( trim(zender_soil_erod_source) == 'lnd' )then
       do i = 1, size(tmp_file_array)
          if ( len_trim(tmp_file_array(i)) == 0 )then
-            call endrun(msg=' ERROR '//trim(tmp_file_array(i)//' must be set when Zender_2003 is being used and zender_soil_erod_source is lnd'//errMsg(sourcefile, __LINE__))
+            call endrun(msg=' ERROR '//trim(tmp_file_array(i))//' must be set when Zender_2003 is being used and zender_soil_erod_source is lnd'//errMsg(sourcefile, __LINE__))
          end if
       end do
    else
       do i = 1, size(tmp_file_array)
          if ( len_trim(tmp_file_array(i)) > 0 )then
-            call endrun(msg=' ERROR '//trim(tmp_file_array(i)//' is set and MUST iNOT be when Zender_2003 is NOT being used or zender_soil_erod_source is atm'//errMsg(sourcefile, __LINE__))
+            call endrun(msg=' ERROR '//trim(tmp_file_array(i))//' is set and MUST iNOT be when Zender_2003 is NOT being used or zender_soil_erod_source is atm'//errMsg(sourcefile, __LINE__))
          end if
       end do
    end if
