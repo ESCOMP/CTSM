@@ -275,10 +275,10 @@ contains
          avgflag='A', long_name='Okin-Pierre vegetation shear stress ratio (drag partition factor)', &
          ptr_patch=this%ssr_patch, set_lake=0._r8, set_urb=0._r8)
     this%lai_patch(begp:endp) = spval
-    call hist_addfld1d (fname='LAI', units='m/s',  &
-         avgflag='A', long_name='leaf area index for Okin-Pierre scheme', &
-         ptr_patch=this%lai_patch, set_lake=0._r8, set_urb=0._r8)
-    this%frc_thr_rghn_fct_patch(begp:endp) = spval
+    !call hist_addfld1d (fname='LAI', units='m/s',  &
+    !     avgflag='A', long_name='leaf area index for Okin-Pierre scheme', &
+    !     ptr_patch=this%lai_patch, set_lake=0._r8, set_urb=0._r8)
+    !this%frc_thr_rghn_fct_patch(begp:endp) = spval
     call hist_addfld1d (fname='FRC_THR_RGHN_FCT', units='dimensionless',  &
          avgflag='A', long_name='hybrid drag partition (or roughness) factor', &
          ptr_patch=this%frc_thr_rghn_fct_patch, set_lake=0._r8, set_urb=0._r8)
@@ -411,8 +411,9 @@ contains
     real(r8), parameter :: gamma_Shao = 1.65e-4_r8     ! [kg s-2] interparticle cohesion: fitting parameter in Shao and Lu (2000) (S&L00). dmleung 16 Feb 2024
     real(r8), parameter :: A_Shao = 0.0123_r8          ! [dimless] coefficient for aerodynamic force: fitting parameter in Shao and Lu (2000). dmleung 16 Feb 2024 
     real(r8), parameter :: frag_expt_thr = 5.0_r8      ! [dimless] threshold for fragmentation exponent defined in Leung et al. (2023), somewhere within 3 to 5. It is used to prevent a local AOD blowup (over Patagonia, Argentina), but one can test larger values and relax the threshold if wanted. dmleung 16 Feb 2024
-    real(r8), parameter :: z0a_glob = 1e-4             ! [m] assumed globally constant aeolian roughness length value in Leung et al. (2023), for the log law of the wall for Comola et al. (2019) intermittency scheme. dmleung 20 Feb 2024
-    real(r8), parameter :: hgt_sal = 0.1               ! [m] saltation height used by Comola et al. (2019) intermittency scheme for the log law of the wall. dmleung 20 Feb 2024
+    real(r8), parameter :: z0a_glob = 1e-4_r8          ! [m] assumed globally constant aeolian roughness length value in Leung et al. (2023), for the log law of the wall for Comola et al. (2019) intermittency scheme. dmleung 20 Feb 2024
+    real(r8), parameter :: hgt_sal = 0.1_r8            ! [m] saltation height used by Comola et al. (2019) intermittency scheme for the log law of the wall. dmleung 20 Feb 2024
+    real(r8), parameter :: lai0_Okin = 0.1_r8          ! [m2/m2] minimum LAI needed for Okin-Pierre's vegetation drag partition equation. lai=0 in the equation will lead to infinity, so a small value is added into this lai dmleung defined.
     real(r8) :: numer                                  ! Numerator term for threshold crossing rate
     real(r8) :: denom                                  ! Denominator term for threshold crossing rate
     !------------------------------------------------------------------------
@@ -456,7 +457,7 @@ contains
          prb_crs_fld_thr     => dust_inst%prb_crs_fld_thr_patch      , & ! output probability of instantaneous wind crossing fluid threshold in Comola 2019 intermittency parameterization
          prb_crs_impct_thr   => dust_inst%prb_crs_impct_thr_patch    , & ! output probability of instantaneous wind crossing impact threshold in Comola 2019 intermittency parameterization
          ssr                 => dust_inst%ssr_patch                  , & ! output vegetation drag partition factor in Okin 2008 vegetation roughness effect (called shear stress ratio, SSR in Okin 2008)
-         lai                 => dust_inst%lai_patch                  , & ! leaf area index for calculating vegetation drag partitioning. lai=0 in the ssr equation will lead to infinity, so for now a small value is added into this lai dmleung defined. (no need to output) 16 Feb 2024
+         lai                 => dust_inst%lai_patch                  , & ! leaf area index for calculating Okin-Pierre vegetation drag partitioning. lai=0 in the ssr equation will lead to infinity, so a small value is added into this lai dmleung defined. (no need to output) 16 Feb 2024
          frc_thr_rghn_fct    => dust_inst%frc_thr_rghn_fct_patch     , & ! output hybrid/total drag partition factor considering both rock and vegetation drag partition factors.
          wnd_frc_thr_std     => dust_inst%wnd_frc_thr_std_patch      , & ! standardized dust emission threshold friction velocity defined in Jasper Kok et al. (2014).
          dpfct_rock          => dust_inst%dpfct_rock_patch            & ! output rock drag partition factor defined in Marticorena and Bergametti 1995. A fraction between 0 and 1.
@@ -639,14 +640,15 @@ contains
 
          if (lnd_frc_mbl(p) > 0.0_r8  .AND. tlai_lu(l)<=1_r8) then
             ! vegetation drag partition equation following Gregory Okin (2008) + Caroline Pierre et al. (2014)
-            lai(p) = tlai_lu(l)+0.01_r8       ! LAI+SAI averaged to landunit level; the equation is undefined at lai=0 so we add in a small number.
+            !lai(p) = tlai_lu(l)+0.1_r8       ! LAI+SAI averaged to landunit level; the equation is undefined at lai=0, and LAI in CTSM has some zeros over deserts, so we add in a small number.
+            lai(p) = ttlai(p) + lai0_Okin     ! ttlai = tlai+tsai. Okin-Pierre's equation is undefined at lai=0, and LAI in CTSM has some zeros over deserts, so we add in a small number. On 26 Feb 2024, dmleung changed from tlai_lu(l) to ttlai(p)
             if (lai(p) > 1_r8) then
-               lai(p)  = 1_r8   ! setting LAI ~ 0.1 to be a min value (since the value goes to infinity when LAI=0)
-            end if              ! and 1 to be a max value as computing K involves 1 / LAI
+               lai(p)  = 1_r8   ! setting LAI = 1 to be a max value (since K_length goes to negative when LAI>1)
+            end if              ! 
 
             ! calculate Okin's shear stress ratio (which is drag partition factor) using Pierre's equation
-            K_length = 2_r8 * (1_r8/lai(p) - 1_r8)   ! Here LAI has to be non-zero to avoid blowup
-            ssr(p) = (K_length+f_0*c_e)/(K_length+c_e)
+            K_length = 2_r8 * (1_r8/lai(p) - 1_r8)   ! Here LAI has to be non-zero to avoid blowup, and < 1 to avoid -ve K_length. See this equation in Leung et al. (2023)
+            ssr(p) = (K_length+f_0*c_e)/(K_length+c_e) ! see this equation in Caroline Pierre et al. (2014) or Leung et al. (2023).
 
             ! calculation of the hybrid/total drag partition effect considering both rock and vegetation drag partitioning using LUH2 bare and veg fractions within a grid
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
