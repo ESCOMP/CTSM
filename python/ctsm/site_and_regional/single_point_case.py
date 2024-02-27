@@ -18,8 +18,9 @@ from ctsm.utils import add_tag_to_filename
 
 logger = logging.getLogger(__name__)
 
-NAT_PFT = 15
-MAX_PFT = 78
+NAT_PFT = 15  # natural pfts
+NUM_PFT = 17  # for runs with generic crops
+MAX_PFT = 78  # for runs with explicit crops
 
 # -- constants to represent months of year
 FIRST_MONTH = 1
@@ -52,8 +53,14 @@ class SinglePointCase(BaseCase):
         flag for creating user mods directories and files
     dom_pft : int
         dominant pft type for this single point (None if not specified)
+    evenly_split_cropland : bool
+        flag for splitting cropland evenly among all crop types
     pct_pft : list
         weight or percentage of each pft.
+    cth : list
+        canopy top height (m)
+    cbh : list
+        canopy bottom height (m)
     num_pft : list
         total number of pfts for surface dataset (if crop 78 pft, else 16 pft)
     uni_snow : bool
@@ -105,8 +112,11 @@ class SinglePointCase(BaseCase):
         create_datm,
         create_user_mods,
         dom_pft,
+        evenly_split_cropland,
         pct_pft,
         num_pft,
+        cth,
+        cbh,
         include_nonveg,
         uni_snow,
         cap_saturation,
@@ -125,8 +135,11 @@ class SinglePointCase(BaseCase):
         self.plon = plon
         self.site_name = site_name
         self.dom_pft = dom_pft
+        self.evenly_split_cropland = evenly_split_cropland
         self.pct_pft = pct_pft
         self.num_pft = num_pft
+        self.cth = cth
+        self.cbh = cbh
         self.include_nonveg = include_nonveg
         self.uni_snow = uni_snow
         self.cap_saturation = cap_saturation
@@ -162,7 +175,7 @@ class SinglePointCase(BaseCase):
             - 0 - NAT_PFT-1 range
             or
             - NAT_PFT - MAX_PFT range
-            - give an error : mixed land units not possible.
+            - give a warning: mixed land units should be checked
 
         -------------
         Raises:
@@ -170,7 +183,7 @@ class SinglePointCase(BaseCase):
                 If any dom_pft is bigger than MAX_PFT.
             Error (ArgumentTypeError):
                 If any dom_pft is less than 1.
-            Error (ArgumentTypeError):
+            Warning:
                 If mixed land units are chosen.
                 dom_pft values are both in range of (0 - NAT_PFT-1) and (NAT_PFT - MAX_PFT).
 
@@ -192,23 +205,22 @@ class SinglePointCase(BaseCase):
                 raise argparse.ArgumentTypeError(err_msg)
 
             # -- check dom_pft vs num_pft
-            if self.num_pft - 1 < max_dom_pft < MAX_PFT:
-                err_msg = "Please use --crop flag when --dompft is above 15."
+            if max_dom_pft > self.num_pft:
+                err_msg = "Please use --crop flag when --dompft is above 16."
                 raise argparse.ArgumentTypeError(err_msg)
+
+            # -- check dom_pft vs MAX_pft
+            if self.num_pft - 1 < max_dom_pft < NUM_PFT:
+                logger.info(
+                    "WARNING, you trying to run with generic crops (16 PFT surface dataset)"
+                )
+                # raise argparse.ArgumentTypeError(err_msg)
 
             # -- check if all dom_pft are in the same range:
             if min_dom_pft < NAT_PFT <= max_dom_pft:
-                err_msg = """
-                \n
-                Subsetting using mixed land units is not possible.
-                Please make sure all --dompft values are in only
-                one of these ranges:
-                - 0-{}  natural pfts
-                - {}-{} crop pfts (cfts)
-                """.format(
-                    NAT_PFT - 1, NAT_PFT, MAX_PFT
+                logger.info(
+                    "WARNING, you are subsetting using mixed land units that have both natural pfts and crop cfts. Check that your surface dataset looks correct."
                 )
-                raise argparse.ArgumentTypeError(err_msg)
 
     def check_nonveg(self):
         """
@@ -402,8 +414,11 @@ class SinglePointCase(BaseCase):
             # f_mod["PCT_CROP"][:, :] = 0
 
             # -- loop over all dom_pft and pct_pft
-            zip_pfts = zip(self.dom_pft, self.pct_pft)
-            for dom_pft, pct_pft in zip_pfts:
+            zip_pfts = zip(self.dom_pft, self.pct_pft, self.cth, self.cbh)
+            for dom_pft, pct_pft, cth, cbh in zip_pfts:
+                if cth is not None:
+                    f_mod["MONTHLY_HEIGHT_TOP"][:, :, :, dom_pft] = cth
+                    f_mod["MONTHLY_HEIGHT_BOT"][:, :, :, dom_pft] = cbh
                 if dom_pft < NAT_PFT:
                     f_mod["PCT_NAT_PFT"][:, :, dom_pft] = pct_pft
                 else:
@@ -436,6 +451,9 @@ class SinglePointCase(BaseCase):
                 tot_pct = f_mod["PCT_CROP"] + f_mod["PCT_NATVEG"]
                 f_mod["PCT_CROP"] = f_mod["PCT_CROP"] / tot_pct * 100
                 f_mod["PCT_NATVEG"] = f_mod["PCT_NATVEG"] / tot_pct * 100
+
+        if self.evenly_split_cropland:
+            f_mod["PCT_CFT"][:, :, :] = 100.0 / f_mod["PCT_CFT"].shape[2]
 
         else:
             logger.info(

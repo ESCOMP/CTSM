@@ -1,0 +1,40 @@
+#!/bin/bash
+./xmlchange CLM_USRDAT_NAME=PLUMBER2
+./xlmchange DATM_MODE=1PT
+# Set data forcing data to future scenario so will have data from 2018 to present-day
+./xmlchange DATM_PRESAERO=SSP3-7.0
+./xlmchange DATM_CO2_TSERIES=SSP3-7.0
+./xmlchange DATM_PRESNDEP=SSP3-7.0
+
+# Explicitly set the MPI library to mpi-serial so won't have the build/run complexity of a full MPI library
+./xmlchange MPILIB=mpi-serial
+# Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
+./xmlchange PIO_TYPENAME=netcdf
+
+#
+compset=`./xmlquery COMPSET --value`
+CLM_USRDAT_NAME=`./xmlquery CLM_USRDAT_NAME --value`
+TEST=`./xmlquery TEST --value`
+
+# For a transient case run the whole length and don't cycle
+if  [[ $compset =~ ^HIST ]]; then
+  # Number of months that can be run for the full transient case
+  if [[ $TEST != "TRUE" ]]; then
+    ./xmlchange STOP_OPTION="nyears"
+  fi
+  # TODO, makde this accurate for plumber2
+  ./xmlchange CLM_NML_USE_CASE="2018-PD_transient"
+else
+  ./xmlchange CLM_NML_USE_CASE="2000_control"
+fi
+
+# If needed for SP simulations: & set history file variables
+if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then
+  if [[ $TEST != "TRUE" ]]; then
+    ./xmlchange STOP_OPTION=nyears
+  fi
+  ./xmlchange CLM_FORCE_COLDSTART=on
+  echo "use_lai_streams = .true." >> user_nl_clm
+  echo "lai_mapalgo = 'nn'" >> user_nl_clm
+  echo "hist_fincl2 = 'FSA','FIRA','EFLX_LH_TOT','FSH','FGR12','FGR','TSKIN','FSR','FSDS','SNOFSRVD','SNOFSRND','SNOFSRVI','SNOFSRNI','FSNO','TSOI','SNO_T','RAIN','SNOW','QVEGT','QVEGE','QSOIL','QRUNOFF','QOVER','QH2OSFC','QDRAI','QDRAI_PERCH','SNO_EXISTENCE','QSNOMELT','H2OCAN','H2OSNO','SNOCAN','SOILICE','SOILLIQ','SOILWATER_10CM','TWS','SNOWLIQ','SNOWDP','RH2M','TSA','FLDS','Q2M','PBOT','TLAI','WIND','FIRE','FCTR','FCEV','FGEV','FSM','COSZEN','H2OSOI','BTRANMN','TV','RSSUN','RSSHA','FSH_G','RHAF','RH_LEAF','RH','T10','TG','SABG','SABV','FPSN','TBOT','TAUX','TAUY','QSNOEVAP','QFLX_SUB_SNOW','QFLX_SNOW_DRAIN','H2OSFC','FPSN'" >> user_nl_clm 
+fi
