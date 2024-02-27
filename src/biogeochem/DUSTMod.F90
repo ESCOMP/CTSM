@@ -67,6 +67,7 @@ module DUSTMod
      real(r8), pointer, private :: dst_emiss_coeff_patch     (:)   ! dust emission coefficient (unitless)
      real(r8), pointer, private :: wnd_frc_thr_patch         (:)   ! wet fluid threshold (m/s)
      real(r8), pointer, private :: wnd_frc_thr_dry_patch     (:)   ! dry fluid threshold (m/s)
+     real(r8), pointer, private :: wnd_frc_thr_it_patch     (:)   ! impact threshold (m/s)
      real(r8), pointer, private :: lnd_frc_mble_patch        (:)   ! land mobile fraction
      real(r8), pointer, private :: liq_frac_patch            (:)   ! liquid fraction of total water
      real(r8), pointer, private :: wnd_frc_soil_patch        (:)   ! soil wind friction velocity (m/s)
@@ -81,7 +82,7 @@ module DUSTMod
      real(r8), pointer, private :: prb_crs_fld_thr_patch     (:)   ! probability of wind speed crossing fluid threshold
      real(r8), pointer, private :: prb_crs_impct_thr_patch   (:)   ! probability of wind speed crossing impact threshold
      real(r8), pointer, private :: ssr_patch                 (:)   ! [dimless] integrated shear stress ratiio, defined by Okin (2008) and then integrated by Caroline Pierre et al. (2014)
-     real(r8), pointer, private :: lai_patch                 (:)   ! [m2 leaf /m2 land] LAI+SAI for calculating Okin's drag partition, averaged to landunit level
+     real(r8), pointer, private :: vai_Okin_patch             (:)   ! [m2 leaf /m2 land] LAI+SAI for calculating Okin drag partition
      real(r8), pointer, private :: frc_thr_rghn_fct_patch    (:)   ! [dimless] hybrid drag partition (or called roughness) factor
      real(r8), pointer, private :: wnd_frc_thr_std_patch     (:)   ! standardized fluid threshold friction velocity (m/s)
      type(prigentroughnessstream_type), private :: prigent_roughness_stream      ! Prigent roughness stream data
@@ -144,6 +145,7 @@ contains
     allocate(this%dst_emiss_coeff_patch     (begp:endp))        ; this%dst_emiss_coeff_patch     (:)   = nan
     allocate(this%wnd_frc_thr_patch         (begp:endp))        ; this%wnd_frc_thr_patch         (:)   = nan
     allocate(this%wnd_frc_thr_dry_patch     (begp:endp))        ; this%wnd_frc_thr_dry_patch     (:)   = nan
+    allocate(this%wnd_frc_thr_it_patch      (begp:endp))        ; this%wnd_frc_thr_it_patch      (:)   = nan
     allocate(this%lnd_frc_mble_patch        (begp:endp))        ; this%lnd_frc_mble_patch        (:)   = nan
     allocate(this%wnd_frc_soil_patch        (begp:endp))        ; this%wnd_frc_soil_patch        (:)   = nan
     allocate(this%gwc_patch                 (begp:endp))        ; this%gwc_patch                 (:)   = nan
@@ -158,7 +160,7 @@ contains
     allocate(this%prb_crs_fld_thr_patch     (begp:endp))        ; this%prb_crs_fld_thr_patch     (:)   = nan
     allocate(this%prb_crs_impct_thr_patch   (begp:endp))        ; this%prb_crs_impct_thr_patch   (:)   = nan
     allocate(this%ssr_patch                 (begp:endp))        ; this%ssr_patch                 (:)   = nan
-    allocate(this%lai_patch                 (begp:endp))        ; this%lai_patch                 (:)   = nan
+    allocate(this%vai_Okin_patch            (begp:endp))        ; this%vai_Okin_patch            (:)   = nan
     allocate(this%frc_thr_rghn_fct_patch    (begp:endp))        ; this%frc_thr_rghn_fct_patch    (:)   = nan
     allocate(this%wnd_frc_thr_std_patch     (begp:endp))        ; this%wnd_frc_thr_std_patch     (:)   = nan
     allocate(this%dpfct_rock_patch          (begp:endp))        ; this%dpfct_rock_patch          (:)   = nan
@@ -207,8 +209,8 @@ contains
          ptr_patch=this%vlc_trb_4_patch, default='inactive')
 
     this%dst_emiss_coeff_patch(begp:endp) = spval
-    call hist_addfld1d (fname='C_d', units='dimensionless',  &
-         avgflag='A', long_name='dust emission coefficient', &
+    call hist_addfld1d (fname='DUST_EMIS_COEFF', units='dimensionless',  &
+         avgflag='A', long_name='soil erodibility or dust emission coefficient for Kok emission scheme', &
          ptr_patch=this%dst_emiss_coeff_patch, set_lake=0._r8, set_urb=0._r8)
     this%wnd_frc_thr_patch(begp:endp) = spval
     call hist_addfld1d (fname='WND_FRC_FT', units='m/s',  &
@@ -218,6 +220,10 @@ contains
     call hist_addfld1d (fname='WND_FRC_FT_DRY', units='m/s',  &
          avgflag='A', long_name='dry fluid threshold friction velocity', &
          ptr_patch=this%wnd_frc_thr_dry_patch, set_lake=0._r8, set_urb=0._r8)
+    this%wnd_frc_thr_it_patch(begp:endp) = spval
+    call hist_addfld1d (fname='WND_FRC_IT', units='m/s',  &
+         avgflag='A', long_name='impact threshold friction velocity', &
+         ptr_patch=this%wnd_frc_thr_it_patch, set_lake=0._r8, set_urb=0._r8)
     this%wnd_frc_soil_patch(begp:endp) = spval
     call hist_addfld1d (fname='WND_FRC_SOIL', units='m/s',  &
          avgflag='A', long_name='soil surface wind friction velocity', &
@@ -274,11 +280,11 @@ contains
     call hist_addfld1d (fname='SSR', units='m/s',  &
          avgflag='A', long_name='Okin-Pierre vegetation shear stress ratio (drag partition factor)', &
          ptr_patch=this%ssr_patch, set_lake=0._r8, set_urb=0._r8)
-    this%lai_patch(begp:endp) = spval
-    !call hist_addfld1d (fname='LAI', units='m/s',  &
-    !     avgflag='A', long_name='leaf area index for Okin-Pierre scheme', &
-    !     ptr_patch=this%lai_patch, set_lake=0._r8, set_urb=0._r8)
-    !this%frc_thr_rghn_fct_patch(begp:endp) = spval
+    this%vai_Okin_patch(begp:endp) = spval
+    call hist_addfld1d (fname='VAI_OKIN', units='m/s',  &
+         avgflag='A', long_name='vegetation area index used in the Okin-Pierre plant drag partition scheme', &
+         ptr_patch=this%vai_Okin_patch, set_lake=0._r8, set_urb=0._r8)
+    this%frc_thr_rghn_fct_patch(begp:endp) = spval
     call hist_addfld1d (fname='FRC_THR_RGHN_FCT', units='dimensionless',  &
          avgflag='A', long_name='hybrid drag partition (or roughness) factor', &
          ptr_patch=this%frc_thr_rghn_fct_patch, set_lake=0._r8, set_urb=0._r8)
@@ -315,7 +321,7 @@ contains
        end if
     end do
 
-      ! Caulculate Drag Partition factor
+      ! Caulculate Drag Partition factor (Marticorena and Bergametti 1995 formulation)
       if ( this%prigent_roughness_stream%useStreams() )then !if usestreams == true, and it should be always true
          call this%CalcDragPartition( bounds, this%prigent_roughness_stream )
       else
@@ -413,7 +419,7 @@ contains
     real(r8), parameter :: frag_expt_thr = 5.0_r8      ! [dimless] threshold for fragmentation exponent defined in Leung et al. (2023), somewhere within 3 to 5. It is used to prevent a local AOD blowup (over Patagonia, Argentina), but one can test larger values and relax the threshold if wanted. dmleung 16 Feb 2024
     real(r8), parameter :: z0a_glob = 1e-4_r8          ! [m] assumed globally constant aeolian roughness length value in Leung et al. (2023), for the log law of the wall for Comola et al. (2019) intermittency scheme. dmleung 20 Feb 2024
     real(r8), parameter :: hgt_sal = 0.1_r8            ! [m] saltation height used by Comola et al. (2019) intermittency scheme for the log law of the wall. dmleung 20 Feb 2024
-    real(r8), parameter :: lai0_Okin = 0.1_r8          ! [m2/m2] minimum LAI needed for Okin-Pierre's vegetation drag partition equation. lai=0 in the equation will lead to infinity, so a small value is added into this lai dmleung defined.
+    real(r8), parameter :: vai0_Okin = 0.1_r8          ! [m2/m2] minimum VAI needed for Okin-Pierre's vegetation drag partition equation. lai=0 in the equation will lead to infinity, so a small value is added into this lai dmleung defined.
     real(r8) :: numer                                  ! Numerator term for threshold crossing rate
     real(r8) :: denom                                  ! Denominator term for threshold crossing rate
     !------------------------------------------------------------------------
@@ -441,8 +447,9 @@ contains
          flx_mss_vrt_dst_tot => dust_inst%flx_mss_vrt_dst_tot_patch  , & ! Output: [real(r8) (:)   ]  total dust flux back to atmosphere (pft)
          ! below variables are defined in Kok et al. (2014) or (mostly) Leung et al. (2023) dust emission scheme. dmleung 16 Feb 2024
          dst_emiss_coeff     => dust_inst%dst_emiss_coeff_patch      , & ! Output dust emission coefficient
-         wnd_frc_thr         => dust_inst%wnd_frc_thr_patch          , & ! output impact threshold
-         wnd_frc_thr_dry     => dust_inst%wnd_frc_thr_dry_patch      , & ! output dry threshold
+         wnd_frc_thr         => dust_inst%wnd_frc_thr_patch          , & ! output fluid threshold
+         wnd_frc_thr_dry     => dust_inst%wnd_frc_thr_dry_patch      , & ! output dry fluid threshold
+         wnd_frc_thr_it      => dust_inst%wnd_frc_thr_it_patch       , & ! output impact threshold
          lnd_frc_mble        => dust_inst%lnd_frc_mble_patch         , & ! output bare land fraction
          wnd_frc_soil        => dust_inst%wnd_frc_soil_patch         , & ! soil friction velocity u_*s = (u_*)(f_eff)
          gwc                 => dust_inst%gwc_patch                  , & ! output gravimetric water content
@@ -457,7 +464,7 @@ contains
          prb_crs_fld_thr     => dust_inst%prb_crs_fld_thr_patch      , & ! output probability of instantaneous wind crossing fluid threshold in Comola 2019 intermittency parameterization
          prb_crs_impct_thr   => dust_inst%prb_crs_impct_thr_patch    , & ! output probability of instantaneous wind crossing impact threshold in Comola 2019 intermittency parameterization
          ssr                 => dust_inst%ssr_patch                  , & ! output vegetation drag partition factor in Okin 2008 vegetation roughness effect (called shear stress ratio, SSR in Okin 2008)
-         lai                 => dust_inst%lai_patch                  , & ! leaf area index for calculating Okin-Pierre vegetation drag partitioning. lai=0 in the ssr equation will lead to infinity, so a small value is added into this lai dmleung defined. (no need to output) 16 Feb 2024
+         vai_Okin            => dust_inst%vai_Okin_patch             , & ! vegetation area index for calculating Okin-Pierre vegetation drag partitioning. vai=0 in the ssr equation will lead to infinity, so a small value is added into this vai dmleung defined. (no need to output) 16 Feb 2024
          frc_thr_rghn_fct    => dust_inst%frc_thr_rghn_fct_patch     , & ! output hybrid/total drag partition factor considering both rock and vegetation drag partition factors.
          wnd_frc_thr_std     => dust_inst%wnd_frc_thr_std_patch      , & ! standardized dust emission threshold friction velocity defined in Jasper Kok et al. (2014).
          dpfct_rock          => dust_inst%dpfct_rock_patch            & ! output rock drag partition factor defined in Marticorena and Bergametti 1995. A fraction between 0 and 1.
@@ -557,7 +564,7 @@ contains
          prb_crs_impct_thr(p) = 0.0_r8
          intrmtncy_fct(p) = 0.0_r8
          ssr(p) = 0.0_r8
-         lai(p) = 0.0_r8
+         vai_Okin(p) = 0.0_r8
          frc_thr_rghn_fct(p) = 0.0_r8
          wnd_frc_thr_std(p) = 0.0_r8
       end do
@@ -614,6 +621,7 @@ contains
 
          ! the above formula is true for Iversen and White (1982) and Shao and Lu (2000) scheme
          wnd_frc_thr(p) = wnd_frc_thr_slt          ! output fluid threshold
+         wnd_frc_thr_it(p) = wnd_frc_thr_slt_it    ! output impact threshold
 
          !##############################################################################################
          ! dmleung: here, calculate quantities relevant to the fluid threshold
@@ -638,17 +646,22 @@ contains
          ! purpose: compute factor by which surface roughness increases threshold
          !          friction velocity (currently a constant)
 
-         if (lnd_frc_mbl(p) > 0.0_r8  .AND. tlai_lu(l)<=1_r8) then
+         !if (lnd_frc_mbl(p) > 0.0_r8  .AND. tlai_lu(l)<=1_r8) then
+         if (lnd_frc_mbl(p) > 0.0_r8  .AND. ttlai(p)<=1_r8) then
             ! vegetation drag partition equation following Gregory Okin (2008) + Caroline Pierre et al. (2014)
             !lai(p) = tlai_lu(l)+0.1_r8       ! LAI+SAI averaged to landunit level; the equation is undefined at lai=0, and LAI in CTSM has some zeros over deserts, so we add in a small number.
-            lai(p) = ttlai(p) + lai0_Okin     ! ttlai = tlai+tsai. Okin-Pierre's equation is undefined at lai=0, and LAI in CTSM has some zeros over deserts, so we add in a small number. On 26 Feb 2024, dmleung changed from tlai_lu(l) to ttlai(p)
-            if (lai(p) > 1_r8) then
-               lai(p)  = 1_r8   ! setting LAI = 1 to be a max value (since K_length goes to negative when LAI>1)
-            end if              ! 
+            !lai(p) = ttlai(p) + lai0_Okin     ! ttlai = tlai+tsai. Okin-Pierre's equation is undefined at lai=0, and LAI in CTSM has some zeros over deserts, so we add in a small number. On 26 Feb 2024, dmleung changed from tlai_lu(l) to ttlai(p)
+            !if (lai(p) > 1_r8) then
+            !   lai(p)  = 1_r8   ! setting LAI = 1 to be a max value (since K_length goes to negative when LAI>1)
+            !end if              ! 
 
-            ! calculate Okin's shear stress ratio (which is drag partition factor) using Pierre's equation
-            K_length = 2_r8 * (1_r8/lai(p) - 1_r8)   ! Here LAI has to be non-zero to avoid blowup, and < 1 to avoid -ve K_length. See this equation in Leung et al. (2023)
-            ssr(p) = (K_length+f_0*c_e)/(K_length+c_e) ! see this equation in Caroline Pierre et al. (2014) or Leung et al. (2023).
+            if (ttlai(p) + vai0_Okin <= 1_r8) then
+               vai_Okin(p) = ttlai(p) + vai0_Okin     ! ttlai = vai = tlai+tsai. Okin-Pierre's equation is undefined at vai=0, and VAI in CTSM has some zeros over deserts, so we add in a small number. On 26 Feb 2024, dmleung changed from tlai_lu(l) to ttlai(p)
+            end if                                    ! In the Okin-Pierre formulation, VAI has to be 0 < VAI <= 1.
+
+            ! calculate Okin's shear stress ratio (SSR, which is vegetation drag partition factor) using Pierre's equation
+            K_length = 2_r8 * (1_r8/vai_Okin(p) - 1_r8)   ! Here LAI has to be non-zero to avoid blowup, and < 1 to avoid -ve K_length. See this equation in Leung et al. (2023). This line is Okin's formulation
+            ssr(p) = (K_length+f_0*c_e)/(K_length+c_e) ! see this equation in Caroline Pierre et al. (2014) or Leung et al. (2023). This line is Pierre's formulation.
 
             ! calculation of the hybrid/total drag partition effect considering both rock and vegetation drag partitioning using LUH2 bare and veg fractions within a grid
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
@@ -1250,7 +1263,7 @@ contains
     ! !DESCRIPTION:
     ! Commented below by Danny M. Leung 31 Dec 2022
     ! Calculate the drag partition effect of friction velocity due to surface roughness following
-    ! Leung et al. (2022).  This module is used in the dust emission module DUSTMod.F90 for
+    ! Leung et al. (2023).  This module is used in the dust emission module DUSTMod.F90 for
     ! calculating drag partitioning. The drag partition equation comes from Marticorena and
     ! Bergametti (1995) with constants modified by Darmenova et al. (2009). Here it is assumed
     ! that this equation is used only over arid/desertic regions, such that Catherine Prigent's
@@ -1299,7 +1312,7 @@ contains
        g = patch%gridcell(p)
        l = patch%landunit(p)
        if (lun%itype(l) /= istdlak) then
-          ! Calculating rock drag partition factor using Marticorena and Bergametti (1995).
+          ! Calculating rock drag partition factor using the Marticorena and Bergametti (1995) formulation.
           ! 0.01 is used to convert Prigent's roughness length dataset from centimeter to meter.
           this%dpfct_rock_patch(p) = 1._r8 - ( log(prigent_roughness_stream%prigent_rghn(g)*0.01_r8/z0s) &
                              / log(b1 * (X/z0s)**b2 ) )
