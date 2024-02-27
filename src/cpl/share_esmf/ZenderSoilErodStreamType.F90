@@ -182,10 +182,10 @@ contains
     class(zendersoilerodstream_type) :: this
     !
     ! !LOCAL VARIABLES:
-    if ( (trim(dust_emis_method) /= 'Zender_2003') .or. (control%zender_soil_erod_source == "atm") )then
-       UseStreams = .false.  
-    else
+    if ( (trim(dust_emis_method) == 'Zender_2003') .and. (control%zender_soil_erod_source == "lnd") )then
        UseStreams = .true.
+    else
+       UseStreams = .false.
     end if
   end function UseStreams
 
