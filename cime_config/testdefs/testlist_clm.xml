@@ -55,15 +55,26 @@
   <test name="SMS_Ln9" grid="f10_f10_mg37" compset="I1850Clm45Bgc" testmods="clm/clm45cam4LndTuningModeZDustSoilErod">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Simple test use soil eroditability in CTSM for CAM4 tuning</option>
     </options>
   </test>
+  <test name="SMS_Ln9" grid="f09_f09_mg17" compset="I1850Clm45Bgc" testmods="clm/clm45cam4LndTuningModeZDustSoilErod">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Simple test use soil eroditability in CTSM for CAM4 tuning, at 1-degree</option>
+    </options>
+  </test>
   <test name="SMS_Ln9" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/clm50cam5LndTuningModeZDustSoilErod">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
