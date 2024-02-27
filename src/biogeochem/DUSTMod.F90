@@ -30,7 +30,7 @@ module DUSTMod
   use LandunitType         , only : lun
   use ColumnType           , only : col
   use PatchType            , only : patch
-  use ZenderSoilErodStreamType,  only : zendersoilerodstream_type
+  use ZenderSoilErodStreamType,  only : soil_erod_stream_type
   use clm_varctl           , only : dust_emis_method
   !  
   ! !PUBLIC TYPES
@@ -61,7 +61,7 @@ module DUSTMod
      real(r8), pointer, private :: vlc_trb_2_patch           (:)   ! turbulent deposition velocity 2(m/s)
      real(r8), pointer, private :: vlc_trb_3_patch           (:)   ! turbulent deposition velocity 3(m/s)
      real(r8), pointer, private :: vlc_trb_4_patch           (:)   ! turbulent deposition velocity 4(m/s)
-     type(zendersoilerodstream_type), private :: zendersoilerodstream ! Zender soil erodibility stream data
+     type(soil_erod_stream_type), private :: soil_erod_stream ! Zender soil erodibility stream data
      real(r8), pointer, private :: mbl_bsn_fct_col           (:)   ! [dimensionless] basin factor, or soil erodibility, time-constant
 
    contains
@@ -87,7 +87,7 @@ contains
     type(bounds_type), intent(in) :: bounds  
     character(len=*),  intent(in) :: NLFilename
 
-    call this%zendersoilerodstream%Init( bounds, NLFilename )
+    call this%soil_erod_stream%Init( bounds, NLFilename )
     call this%InitAllocate (bounds)
     call this%InitHistory  (bounds)
     call this%InitCold     (bounds)
@@ -166,7 +166,7 @@ contains
          ptr_patch=this%vlc_trb_4_patch, default='inactive')
 
     if (dust_emis_method == 'Zender_2003') then
-       if ( this%zendersoilerodstream%UseStreams() )then
+       if ( this%soil_erod_stream%UseStreams() )then
           this%mbl_bsn_fct_col(begc:endc) = spval
           call hist_addfld1d (fname='LND_MBL', units='fraction',  &
                avgflag='A', long_name='Soil erodibility factor', &
@@ -199,8 +199,8 @@ contains
        !end do
        call endrun( msg="Leung_2023 dust_emis_method is currently not available"//errMsg(sourcefile, __LINE__))
     else if (dust_emis_method == 'Zender_2003') then
-       if ( this%zendersoilerodstream%UseStreams() )then
-          call this%zendersoilerodstream%CalcDustSource( bounds, &
+       if ( this%soil_erod_stream%UseStreams() )then
+          call this%soil_erod_stream%CalcDustSource( bounds, &
                                    this%mbl_bsn_fct_col(bounds%begc:bounds%endc) )
        else
           this%mbl_bsn_fct_col(:) = 1.0_r8

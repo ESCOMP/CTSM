@@ -26,7 +26,7 @@ module ZenderSoilErodStreamType
   implicit none
   private
 
-  type, public :: zendersoilerodstream_type
+  type, public :: soil_erod_stream_type
      real(r8), pointer, private :: soil_erodibility  (:)         ! Zender et al. (2003b) dust source function (or soil erodibility)
   contains
 
@@ -38,14 +38,14 @@ module ZenderSoilErodStreamType
       ! !PRIVATE MEMBER FUNCTIONS:
       procedure, private :: InitAllocate   ! Allocate data
 
-  end type zendersoilerodstream_type
+  end type soil_erod_stream_type
 
   ! ! PRIVATE DATA:
   type, private :: streamcontrol_type
      character(len=CL)  :: zender_soil_erod_source             ! if calculed in lnd or atm
      character(len=CL)  :: stream_fldFileName_zendersoilerod   ! data Filename
      character(len=CL)  :: stream_meshfile_zendersoilerod      ! mesh Filename
-     character(len=CL)  :: zendersoilerodmapalgo               ! map algo
+     character(len=CL)  :: zendersoilerod_mapalgo               ! map algo
   contains
      procedure, private :: ReadNML     ! Read in namelist
   end type streamcontrol_type
@@ -72,7 +72,7 @@ contains
    !
    ! arguments
    implicit none
-   class(zendersoilerodstream_type) :: this
+   class(soil_erod_stream_type) :: this
    type(bounds_type), intent(in)   :: bounds
    character(len=*),  intent(in)   :: NLFilename   ! Namelist filename
    !
@@ -112,7 +112,7 @@ contains
               model_mesh          = mesh,                                               &
               stream_meshfile     = control%stream_meshfile_zendersoilerod,              &
               stream_lev_dimname  = 'null',                                             &
-              stream_mapalgo      = control%zendersoilerodmapalgo,                       &
+              stream_mapalgo      = control%zendersoilerod_mapalgo,                       &
               stream_filenames    = (/trim(control%stream_fldFileName_zendersoilerod)/), &
               stream_fldlistFile  = stream_varnames,                                    &
               stream_fldListModel = stream_varnames,                                    &
@@ -179,7 +179,7 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    class(zendersoilerodstream_type) :: this
+    class(soil_erod_stream_type) :: this
     !
     ! !LOCAL VARIABLES:
     if ( (trim(dust_emis_method) == 'Zender_2003') .and. (control%zender_soil_erod_source == "lnd") )then
@@ -200,7 +200,7 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    class(zendersoilerodstream_type) :: this
+    class(soil_erod_stream_type) :: this
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
@@ -233,7 +233,7 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    class(zendersoilerodstream_type)             :: this
+    class(soil_erod_stream_type)             :: this
     type(bounds_type)              , intent(in)    :: bounds
     real(r8)                       , intent(inout) :: soil_erod(bounds%begc:)      ! [fraction] rock drag partition factor (roughness effect)
     !
@@ -294,14 +294,14 @@ contains
    integer            :: nml_error ! namelist i/o error flag
    character(len=CL)  :: stream_fldFileName_zendersoilerod = ' '
    character(len=CL)  :: stream_meshfile_zendersoilerod = ' '
-   character(len=CL)  :: zendersoilerodmapalgo = 'bilinear'
+   character(len=CL)  :: zendersoilerod_mapalgo = 'bilinear'
    character(len=3)   :: zender_soil_erod_source = 'atm'
    character(len=*), parameter :: namelist_name = 'zendersoilerod'    ! MUST agree with group name in namelist definition to read.
    character(len=*), parameter :: subName = "('zendersoilerod::ReadNML')"
    !-----------------------------------------------------------------------
 
    namelist /zendersoilerod/ &               ! MUST agree with namelist_name above
-        zendersoilerodmapalgo, zendersoilerodmapalgo,  stream_fldFileName_zendersoilerod, &
+        zendersoilerod_mapalgo, zendersoilerod_mapalgo,  stream_fldFileName_zendersoilerod, &
         stream_meshfile_zendersoilerod, zender_soil_erod_source
 
    ! Default values for namelist
@@ -321,7 +321,7 @@ contains
       close(nu_nml)
    endif
 
-   call shr_mpi_bcast(zendersoilerodmapalgo             , mpicom)
+   call shr_mpi_bcast(zendersoilerod_mapalgo             , mpicom)
    call shr_mpi_bcast(stream_fldFileName_zendersoilerod , mpicom)
    call shr_mpi_bcast(stream_meshfile_zendersoilerod    , mpicom)
 
@@ -330,7 +330,7 @@ contains
       write(iulog,*) namelist_name, ' stream settings:'
       write(iulog,*) '  stream_fldFileName_zendersoilerod = ',stream_fldFileName_zendersoilerod
       write(iulog,*) '  stream_meshfile_zendersoilerod    = ',stream_meshfile_zendersoilerod
-      write(iulog,*) '  zendersoilerodmapalgo             = ',zendersoilerodmapalgo
+      write(iulog,*) '  zendersoilerod_mapalgo             = ',zendersoilerod_mapalgo
    endif
 
    if ( (trim(zender_soil_erod_source) /= 'atm') .and. (trim(zender_soil_erod_source) /= 'lnd')  )then
@@ -346,7 +346,7 @@ contains
    end if
    this%stream_fldFileName_zendersoilerod = stream_fldFileName_zendersoilerod
    this%stream_meshfile_zendersoilerod    = stream_meshfile_zendersoilerod
-   this%zendersoilerodmapalgo             = zendersoilerodmapalgo
+   this%zendersoilerod_mapalgo             = zendersoilerod_mapalgo
    this%zender_soil_erod_source           = zender_soil_erod_source
 
  end subroutine ReadNML
