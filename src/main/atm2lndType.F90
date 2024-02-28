@@ -80,9 +80,10 @@ module atm2lndType
      real(r8), pointer :: forc_vp_grc                   (:)   => null() ! atmospheric vapor pressure (Pa)
      real(r8), pointer :: forc_pco2_grc                 (:)   => null() ! CO2 partial pressure (Pa)
      real(r8), pointer :: forc_pco2_240_patch           (:)   => null() ! 10-day mean CO2 partial pressure (Pa)
-     real(r8), pointer :: forc_solad_grc                (:,:) => null() ! direct beam radiation (numrad) (vis=forc_sols , nir=forc_soll )
+     real(r8), pointer :: forc_solad_not_downscaled_grc (:,:) => null() ! direct beam radiation (numrad) (vis=forc_sols , nir=forc_soll )
      real(r8), pointer :: forc_solai_grc                (:,:) => null() ! diffuse radiation (numrad) (vis=forc_solsd, nir=forc_solld)
-     real(r8), pointer :: forc_solar_grc                (:)   => null() ! incident solar radiation
+     real(r8), pointer :: forc_solar_not_downscaled_grc (:)   => null() ! incident solar radiation
+     real(r8), pointer :: forc_solar_downscaled_col     (:)   => null() ! incident solar radiation
      real(r8), pointer :: forc_ndep_grc                 (:)   => null() ! nitrogen deposition rate (gN/m2/s)
      real(r8), pointer :: forc_pc13o2_grc               (:)   => null() ! C13O2 partial pressure (Pa)
      real(r8), pointer :: forc_po2_grc                  (:)   => null() ! O2 partial pressure (Pa)
@@ -104,7 +105,7 @@ module atm2lndType
      real(r8), pointer :: forc_pbot_downscaled_col      (:)   => null() ! downscaled atm pressure (Pa)
      real(r8), pointer :: forc_rho_downscaled_col       (:)   => null() ! downscaled atm density (kg/m**3)
      real(r8), pointer :: forc_lwrad_downscaled_col     (:)   => null() ! downscaled atm downwrd IR longwave radiation (W/m**2)
-
+     real(r8), pointer :: forc_solad_downscaled_col     (:,:) => null() ! direct beam radiation (numrad) (vis=forc_sols , nir=forc_soll )
 
      ! time averaged quantities
      real(r8) , pointer :: fsd24_patch                  (:)   => null() ! patch 24hr average of direct beam radiation
@@ -475,9 +476,9 @@ contains
     allocate(this%forc_hgt_q_grc                (begg:endg))        ; this%forc_hgt_q_grc                (:)   = ival
     allocate(this%forc_vp_grc                   (begg:endg))        ; this%forc_vp_grc                   (:)   = ival
     allocate(this%forc_pco2_grc                 (begg:endg))        ; this%forc_pco2_grc                 (:)   = ival
-    allocate(this%forc_solad_grc                (begg:endg,numrad)) ; this%forc_solad_grc                (:,:) = ival
+    allocate(this%forc_solad_not_downscaled_grc (begg:endg,numrad)) ; this%forc_solad_not_downscaled_grc (:,:) = ival
     allocate(this%forc_solai_grc                (begg:endg,numrad)) ; this%forc_solai_grc                (:,:) = ival
-    allocate(this%forc_solar_grc                (begg:endg))        ; this%forc_solar_grc                (:)   = ival
+    allocate(this%forc_solar_not_downscaled_grc (begg:endg))        ; this%forc_solar_not_downscaled_grc (:)   = ival
     allocate(this%forc_ndep_grc                 (begg:endg))        ; this%forc_ndep_grc                 (:)   = ival
     allocate(this%forc_pc13o2_grc               (begg:endg))        ; this%forc_pc13o2_grc               (:)   = ival
     allocate(this%forc_po2_grc                  (begg:endg))        ; this%forc_po2_grc                  (:)   = ival
@@ -503,6 +504,8 @@ contains
     allocate(this%forc_th_downscaled_col        (begc:endc))        ; this%forc_th_downscaled_col        (:)   = ival
     allocate(this%forc_rho_downscaled_col       (begc:endc))        ; this%forc_rho_downscaled_col       (:)   = ival
     allocate(this%forc_lwrad_downscaled_col     (begc:endc))        ; this%forc_lwrad_downscaled_col     (:)   = ival
+    allocate(this%forc_solad_downscaled_col     (begc:endc,numrad)) ; this%forc_solad_downscaled_col     (:,:) = ival
+    allocate(this%forc_solar_downscaled_col     (begc:endc))        ; this%forc_solar_downscaled_col     (:)   = ival
 
     allocate(this%fsd24_patch                   (begp:endp))        ; this%fsd24_patch                   (:)   = nan
     allocate(this%fsd240_patch                  (begp:endp))        ; this%fsd240_patch                  (:)   = nan
@@ -555,24 +558,25 @@ contains
          avgflag='A', long_name='atmospheric surface height', &
          ptr_lnd=this%forc_topo_grc)
 
+    this%forc_solar_not_downscaled_grc(begg:endg) = spval
+    call hist_addfld1d (fname='FSDS_from_atm', units='W/m^2',  &
+         avgflag='A', long_name='atmospheric incident solar radiation received from atmosphere (pre-downscaling)', &
+         ptr_lnd=this%forc_solar_not_downscaled_grc)
+
+    this%forc_o3_grc(begg:endg) = spval
     call hist_addfld1d (fname='ATM_O3', units='mol/mol', &
          avgflag='A', long_name='atmospheric ozone partial pressure', &
          ptr_lnd=this%forc_o3_grc, default = 'inactive')
-
-    this%forc_solar_grc(begg:endg) = spval
-    call hist_addfld1d (fname='FSDS', units='W/m^2',  &
-         avgflag='A', long_name='atmospheric incident solar radiation', &
-         ptr_lnd=this%forc_solar_grc)
 
     this%forc_pco2_grc(begg:endg) = spval
     call hist_addfld1d (fname='PCO2', units='Pa',  &
          avgflag='A', long_name='atmospheric partial pressure of CO2', &
          ptr_lnd=this%forc_pco2_grc)
 
-    this%forc_solar_grc(begg:endg) = spval
+    this%forc_solar_not_downscaled_grc(begg:endg) = spval
     call hist_addfld1d (fname='SWdown', units='W/m^2',  &
          avgflag='A', long_name='atmospheric incident solar radiation', &
-         ptr_gcell=this%forc_solar_grc, default='inactive')
+         ptr_gcell=this%forc_solar_not_downscaled_grc, default='inactive')
 
     if (use_lch4) then
        this%forc_pch4_grc(begg:endg) = spval
@@ -586,41 +590,45 @@ contains
          avgflag='A', long_name='atmospheric air temperature received from atmosphere (pre-downscaling)', &
          ptr_gcell=this%forc_t_not_downscaled_grc, default='inactive')
 
+    this%forc_solar_downscaled_col(begc:endc) = spval
+    call hist_addfld1d (fname='FSDS', units='W/m^2',  &
+         avgflag='A', long_name='atmospheric incident solar radiation (downscaled for glacier and hillslope columns)', &
+         ptr_col=this%forc_solar_downscaled_col)
+
     this%forc_t_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='TBOT', units='K',  &
-         avgflag='A', long_name='atmospheric air temperature (downscaled to columns in glacier regions)', &
+         avgflag='A', long_name='atmospheric air temperature (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_t_downscaled_col)
     call hist_addfld1d (fname='Tair', units='K', &
-         avgflag='A', long_name='atmospheric air temperature (downscaled to columns in glacier regions)', &
+         avgflag='A', long_name='atmospheric air temperature (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_t_downscaled_col, default='inactive')
 
     this%forc_pbot_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='PBOT', units='Pa',  &
-         avgflag='A', long_name='atmospheric pressure at surface (downscaled to columns in glacier regions)', &
+         avgflag='A', long_name='atmospheric pressure at surface (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_pbot_downscaled_col)
     call hist_addfld1d (fname='PSurf', units='Pa',  &
-         avgflag='A', long_name='atmospheric pressure at surface (downscaled to columns in glacier regions)', &
+         avgflag='A', long_name='atmospheric pressure at surface (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_pbot_downscaled_col, default='inactive')
 
     this%forc_lwrad_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='FLDS', units='W/m^2',  &
-         avgflag='A', long_name='atmospheric longwave radiation (downscaled to columns in glacier regions)', &
+         avgflag='A', long_name='atmospheric longwave radiation (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_lwrad_downscaled_col)
     call hist_addfld1d (fname='LWdown', units='W/m^2',  &
-         avgflag='A', long_name='atmospheric longwave radiation (downscaled to columns in glacier regions)', &
+         avgflag='A', long_name='atmospheric longwave radiation (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_lwrad_downscaled_col, default='inactive')
 
     call hist_addfld1d (fname='FLDS_ICE', units='W/m^2',  &
          avgflag='A', &
-         long_name='atmospheric longwave radiation (downscaled to columns in glacier regions) (ice landunits only)', &
+         long_name='atmospheric longwave radiation (downscaled for glacier and hillslope columns) (ice landunits only)', &
          ptr_col=this%forc_lwrad_downscaled_col, l2g_scale_type='ice', &
          default='inactive')
 
     this%forc_th_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='THBOT', units='K',  &
-         avgflag='A', long_name='atmospheric air potential temperature (downscaled to columns in glacier regions)', &
+         avgflag='A', long_name='atmospheric air potential temperature (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_th_downscaled_col)
-
 
     ! Time averaged quantities
     this%fsi24_patch(begp:endp) = spval
@@ -858,7 +866,7 @@ contains
     ! Accumulate and extract forc_solad24 & forc_solad240
     do p = begp,endp
        g = patch%gridcell(p)
-       rbufslp(p) = this%forc_solad_grc(g,1)
+       rbufslp(p) = this%forc_solad_not_downscaled_grc(g,1)
     end do
     call update_accum_field  ('FSD240', rbufslp               , nstep)
     call extract_accum_field ('FSD240', this%fsd240_patch     , nstep)
@@ -997,9 +1005,9 @@ contains
     deallocate(this%forc_hgt_q_grc)
     deallocate(this%forc_vp_grc)
     deallocate(this%forc_pco2_grc)
-    deallocate(this%forc_solad_grc)
+    deallocate(this%forc_solad_not_downscaled_grc)
     deallocate(this%forc_solai_grc)
-    deallocate(this%forc_solar_grc)
+    deallocate(this%forc_solar_not_downscaled_grc)
     deallocate(this%forc_ndep_grc)
     deallocate(this%forc_pc13o2_grc)
     deallocate(this%forc_po2_grc)
@@ -1020,6 +1028,8 @@ contains
     deallocate(this%forc_th_downscaled_col)
     deallocate(this%forc_rho_downscaled_col)
     deallocate(this%forc_lwrad_downscaled_col)
+    deallocate(this%forc_solad_downscaled_col)
+    deallocate(this%forc_solar_downscaled_col)
 
     deallocate(this%fsd24_patch)
     deallocate(this%fsd240_patch)
