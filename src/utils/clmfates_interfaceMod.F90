@@ -64,7 +64,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : fates_inventory_ctrl_filename
    use clm_varctl        , only : use_nitrif_denitrif
    use clm_varctl        , only : use_lch4
-   use clm_varctl        , only : fates_hist_dense_level
+   use clm_varctl        , only : fates_history_dimlevel
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval
    use clm_varcon        , only : denice
@@ -409,8 +409,8 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('seeddisp_cadence',ival=fates_seeddisp_cadence)
 
 
-        call set_fates_ctrlparms('hist_hifrq_dense_level',ival=fates_hist_dense_level(1))
-        call set_fates_ctrlparms('hist_dynam_dense_level',ival=fates_hist_dense_level(2))
+        call set_fates_ctrlparms('hist_hifrq_dimlevel',ival=fates_history_dimlevel(1))
+        call set_fates_ctrlparms('hist_dynam_dimlevel',ival=fates_history_dimlevel(2))
         
         ! CTSM-FATES is not fully coupled (yet)
         ! So lets tell fates to use the RD competition mechanism
@@ -643,10 +643,10 @@ module CLMFatesInterfaceMod
                  write(iulog,*) 'not found in the list of fates_hist%hvars.'
                  write(iulog,*) 'Most likely, this is because this history variable'
                  write(iulog,*) 'was specified in the user namelist, but the user'
-                 write(iulog,*) 'specified a FATES history output density level'
+                 write(iulog,*) 'specified a FATES history output dimension level'
                  write(iulog,*) 'that does not contain that variable in its valid set.'
-                 write(iulog,*) 'You may have to increase the namelist setting: fates_hist_dense_level'
-                 write(iulog,*) 'current fates_hist_dens_level: ',fates_hist_dense_level
+                 write(iulog,*) 'You may have to increase the namelist setting: fates_history_dimlevel'
+                 write(iulog,*) 'current fates_history_dimlevel: ',fates_history_dimlevel(:)
                  call endrun(msg=errMsg(sourcefile, __LINE__))
               end if
            end if
@@ -1969,13 +1969,13 @@ module CLMFatesInterfaceMod
                ! ------------------------------------------------------------------------
                ! Update history IO fields that depend on ecosystem dynamics
                ! ------------------------------------------------------------------------
-               if(fates_hist_dense_level(2)>0) then
+               if(fates_history_dimlevel(2)>0) then
                   call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_simple)
                   do s = 1,this%fates(nc)%nsites
                      call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
                           upfreq_in=group_dyna_simple)
                   end do
-                  if(fates_hist_dense_level(2)>1) then
+                  if(fates_history_dimlevel(2)>1) then
                      call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_complx)
                      do s = 1,this%fates(nc)%nsites
                         call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
@@ -2162,13 +2162,13 @@ module CLMFatesInterfaceMod
            ! ------------------------------------------------------------------------
            ! Update history IO fields that depend on ecosystem dynamics
            ! ------------------------------------------------------------------------
-           if(fates_hist_dense_level(2)>0) then
+           if(fates_history_dimlevel(2)>0) then
               call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_simple)
               do s = 1,this%fates(nc)%nsites
                  call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
                       upfreq_in=group_dyna_simple)
               end do
-              if(fates_hist_dense_level(2)>1) then
+              if(fates_history_dimlevel(2)>1) then
                  call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_complx)
                  do s = 1,this%fates(nc)%nsites
                     call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &

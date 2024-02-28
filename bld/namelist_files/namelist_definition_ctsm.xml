@@ -777,7 +777,7 @@ Full pathname to the inventory initialization control file.
 (Only relevant if FATES is on).
 </entry>
 
-<entry id="fates_hist_dense_level" type="integer(2)" category="physics"
+<entry id="fates_history_dimlevel" type="integer(2)" category="physics"
        group="clm_inparm" valid_values="0,1,2" >
   Setting for what types of FATES history to be allocate and
   calculated at the dynamics timestep (1st integer) and the
