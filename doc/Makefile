@@ -17,6 +17,7 @@ help:
 # have configured this repository (via an .lfsconfig file at the top level) to NOT
 # automatically fetch any of the large files when cloning / fetching.
 fetch-images:
+	git lfs install
 	git lfs pull --exclude="" --include=""
 
 .PHONY: help fetch-images Makefile
