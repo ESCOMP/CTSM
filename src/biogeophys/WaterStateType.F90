@@ -12,10 +12,10 @@ module WaterStateType
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
-  use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_gridcell
+  use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_landunit, subgrid_level_gridcell
   use clm_varctl     , only : use_bedrock, use_excess_ice, iulog
   use spmdMod        , only : masterproc
-  use clm_varctl     , only : use_fates
+  use clm_varctl     , only : use_fates, use_hillslope
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevmaxurbgrnd, nlevsno   
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
@@ -57,6 +57,9 @@ module WaterStateType
      real(r8), pointer :: exice_bulk_init        (:)    ! inital value for excess ice (new) (unitless)
 
      type(excessicestream_type), private :: exicestream ! stream type for excess ice initialization NUOPC only
+
+     ! Hillslope stream variables
+     real(r8), pointer :: stream_water_volume_lun(:)   ! landunit volume of water in the streams (m3)
 
    contains
 
@@ -158,6 +161,9 @@ contains
     call AllocateVar1d(var = this%dynbal_baseline_ice_col, name = 'dynbal_baseline_ice_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column)
+    call AllocateVar1d(var = this%stream_water_volume_lun, name = 'stream_water_volume_lun', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_landunit)
     !excess ice vars
     call AllocateVar2d(var = this%excess_ice_col, name = 'excess_ice_col', &
          container = tracer_vars, &
@@ -178,6 +184,7 @@ contains
     ! !USES:
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     use clm_varctl     , only : use_soil_moisture_streams
+    use GridcellType   , only : grc
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(in) :: this
@@ -187,12 +194,14 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
     integer           :: begc, endc
+    integer           :: begl, endl
     integer           :: begg, endg
     real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
+    begl = bounds%begl; endl= bounds%endl
     begg = bounds%begg; endg= bounds%endg
 
     data2dptr => this%h2osoi_liq_col(:,-nlevsno+1:0)
@@ -284,6 +293,14 @@ contains
             ptr_col=this%wa_col, l2g_scale_type='veg')
     end if
 
+    if (use_hillslope) then
+       this%stream_water_volume_lun(begl:endl) = spval
+       call hist_addfld1d (fname=this%info%fname('STREAM_WATER_VOLUME'),  units='m3',  &
+            avgflag='A', &
+            long_name=this%info%lname('volume of water in stream channel (hillslope hydrology only)'), &
+            ptr_lunit=this%stream_water_volume_lun, l2g_scale_type='natveg',  default='inactive')
+    end if
+
     ! Add excess ice fields to history
 
     if (use_excess_ice) then
@@ -345,7 +362,7 @@ contains
       this%h2osfc_col(bounds%begc:bounds%endc) = 0._r8
       this%snocan_patch(bounds%begp:bounds%endp) = 0._r8
       this%liqcan_patch(bounds%begp:bounds%endp) = 0._r8
-
+      this%stream_water_volume_lun(bounds%begl:bounds%endl) = 0._r8
 
       !--------------------------------------------
       ! Set soil water
@@ -709,6 +726,13 @@ contains
          units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_ice_col)
 
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('STREAM_WATER_VOLUME'), &
+         xtype=ncd_double,  &
+         dim1name='landunit', &
+         long_name=this%info%lname('water in stream channel'), &
+         units='m3', &
+         interpinic_flag='interp', readvar=readvar, data=this%stream_water_volume_lun)
     ! Restart excess ice vars
     if (.not. use_excess_ice) then
        ! no need to even define the restart vars

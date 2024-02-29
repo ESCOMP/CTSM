@@ -800,6 +800,41 @@ LUNA operates on C3 and non-crop vegetation (see vcmax_opt for how other veg is 
 LUNA: Leaf Utilization of Nitrogen for Assimilation
 </entry>
 
+<entry id="use_hillslope" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on the hillslope model
+</entry>
+
+<entry id="downscale_hillslope_meteorology" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on meteorological downscaling in hillslope model
+</entry>
+
+<entry id="use_hillslope_routing" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on surface water routing in the hillslope hydrology model
+</entry>
+
+<entry id="hillslope_head_gradient_method" type="char*256" category="physics"
+        group="hillslope_hydrology_inparm" valid_values="Kinematic,Darcy">
+Method for calculating hillslope saturated head gradient
+</entry>
+
+<entry id="hillslope_transmissivity_method" type="char*256" category="physics"
+        group="hillslope_hydrology_inparm" valid_values="LayerSum,Uniform">
+Method for calculating transmissivity of hillslope columns
+</entry>
+
+<entry id="hillslope_pft_distribution_method" type="char*256" category="physics"
+        group="hillslope_properties_inparm" valid_values="Standard,FromFile,DominantPftUniform,DominantPftLowland,PftLowlandUpland">
+Method for distributing pfts across hillslope columns
+</entry>
+
+<entry id="hillslope_soil_profile_method" type="char*256" category="physics"
+        group="hillslope_properties_inparm" valid_values="Uniform,FromFile,SetLowlandUpland,Linear">
+Method for distributing soil thickness across hillslope columns
+</entry>
+
 <entry id="use_hydrstress" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the plant hydraulic stress model
@@ -2496,12 +2531,6 @@ Set to alblak values (0.6, 0.4) to keep albedo constant for ice-covered lakes wi
 <entry id="h2osfcflag" type="integer" category="clm_physics"
        group="clm_soilhydrology_inparm" valid_values="0,1" >
 If surface water is active or not
-(deprecated -- will be removed)
-</entry>
-
-<entry id="origflag" type="integer" category="clm_physics"
-       group="clm_soilhydrology_inparm" valid_values="0,1" >
-Use original CLM4 soil hydraulic properties
 (deprecated -- will be removed)
 </entry>
 

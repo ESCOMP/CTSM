@@ -2123,7 +2123,7 @@ module CLMFatesInterfaceMod
 
      call t_startf('fates_wrapsunfrac')
 
-      associate( forc_solad => atm2lnd_inst%forc_solad_grc, &
+      associate( forc_solad => atm2lnd_inst%forc_solad_not_downscaled_grc, &
                  forc_solai => atm2lnd_inst%forc_solai_grc, &
                  fsun       => canopystate_inst%fsun_patch, &
                  laisun     => canopystate_inst%laisun_patch, &
