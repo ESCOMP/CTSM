@@ -154,11 +154,11 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'c2l_fb_atm', 'Faxa_swvdr', bounds, &
-         output=atm2lnd_inst%forc_solad_grc(:,1), rc=rc)
+         output=atm2lnd_inst%forc_solad_not_downscaled_grc(:,1), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'c2l_fb_atm', 'Faxa_swndr', bounds, &
-         output=atm2lnd_inst%forc_solad_grc(:,2), rc=rc)
+         output=atm2lnd_inst%forc_solad_not_downscaled_grc(:,2), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'c2l_fb_atm', 'Faxa_swvdf', bounds, &
