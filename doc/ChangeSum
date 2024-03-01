@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev171   slevis 03/01/2024 Set initial t_soisno=272 for soils and 274K for urban road
     ctsm5.1.dev167 samrabin 02/08/2024 Delete _FillValue and history from parameter files
     ctsm5.1.dev166 multiple 01/24/2024 BFB merge tag
     ctsm5.1.dev165   slevis 01/19/2024 Turn Meier2022, tillage, residue removal on for ctsm5.1, fix #2212
