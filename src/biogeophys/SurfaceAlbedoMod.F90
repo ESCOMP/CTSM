@@ -261,6 +261,8 @@ contains
     use abortutils         , only : endrun
     use clm_varctl         , only : use_subgrid_fluxes, use_snicar_frc, use_fates
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
+    use landunit_varcon     , only : istsoil
+    use clm_varctl          , only : downscale_hillslope_meteorology
 
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)            :: bounds             ! bounds
@@ -305,7 +307,6 @@ contains
     real(r8) :: ws              (bounds%begp:bounds%endp)                                 ! fraction of LAI+SAI that is SAI
     real(r8) :: blai(bounds%begp:bounds%endp)                                             ! lai buried by snow: tlai - elai
     real(r8) :: bsai(bounds%begp:bounds%endp)                                             ! sai buried by snow: tsai - esai
-    real(r8) :: coszen_gcell    (bounds%begg:bounds%endg)                                 ! cosine solar zenith angle for next time step (grc)
     real(r8) :: coszen_patch    (bounds%begp:bounds%endp)                                 ! cosine solar zenith angle for next time step (patch)
     real(r8) :: rho(bounds%begp:bounds%endp,numrad)                                       ! leaf/stem refl weighted by fraction LAI and SAI
     real(r8) :: tau(bounds%begp:bounds%endp,numrad)                                       ! leaf/stem tran weighted by fraction LAI and SAI
@@ -334,6 +335,7 @@ contains
     real(r8) :: mss_cnc_aer_in_fdb     (bounds%begc:bounds%endc,-nlevsno+1:0,sno_nbr_aer) ! mass concentration of all aerosol species for feedback calculation (col,lyr,aer) [kg kg-1]
     real(r8), parameter :: mpe = 1.e-06_r8                                                ! prevents overflow for division by zero
     integer , parameter :: nband =numrad                                                  ! number of solar radiation waveband classes
+    real(r8) :: zenith_angle
     !-----------------------------------------------------------------------
 
    associate(&
@@ -369,6 +371,8 @@ contains
           vcmaxcintsha  =>    surfalb_inst%vcmaxcintsha_patch     , & ! Output:  [real(r8) (:)   ]  leaf to canopy scaling coefficient, shaded leaf vcmax
           ncan          =>    surfalb_inst%ncan_patch             , & ! Output:  [integer  (:)   ]  number of canopy layers                  
           nrad          =>    surfalb_inst%nrad_patch             , & ! Output:  [integer  (:)   ]  number of canopy layers, above snow for radiative transfer
+          azsun_grc     =>    surfalb_inst%azsun_grc              , & ! Output:  [real(r8) (:)   ]  cosine of solar zenith angle            
+          coszen_grc    =>    surfalb_inst%coszen_grc             , & ! Output:  [real(r8) (:)   ]  cosine of solar zenith angle            
           coszen_col    =>    surfalb_inst%coszen_col             , & ! Output:  [real(r8) (:)   ]  cosine of solar zenith angle            
           albgrd        =>    surfalb_inst%albgrd_col             , & ! Output:  [real(r8) (:,:) ]  ground albedo (direct)                
           albgri        =>    surfalb_inst%albgri_col             , & ! Output:  [real(r8) (:,:) ]  ground albedo (diffuse)               
@@ -426,16 +430,29 @@ contains
     ! Cosine solar zenith angle for next time step
 
     do g = bounds%begg,bounds%endg
-       coszen_gcell(g) = shr_orb_cosz (nextsw_cday, grc%lat(g), grc%lon(g), declinp1)
+       coszen_grc(g) = shr_orb_cosz (nextsw_cday, grc%lat(g), grc%lon(g), declinp1)
     end do
+    
     do c = bounds%begc,bounds%endc
        g = col%gridcell(c)
-       coszen_col(c) = coszen_gcell(g)
+       if (col%is_hillslope_column(c) .and. downscale_hillslope_meteorology) then
+          ! calculate local incidence angle based on column slope and aspect
+          zenith_angle = acos(coszen_grc(g))
+          
+          azsun_grc(g) = shr_orb_azimuth(nextsw_cday, grc%lat(g), grc%lon(g), declinp1, zenith_angle)
+          ! hill_slope is [m/m], convert to radians
+          coszen_col(c) = shr_orb_cosinc(zenith_angle,azsun_grc(g),atan(col%hill_slope(c)),col%hill_aspect(c))
+
+          if(coszen_grc(g) > 0._r8 .and. coszen_col(c) < 0._r8) coszen_col(c) = 0._r8
+
+       else
+          coszen_col(c) = coszen_grc(g)
+       endif
     end do
     do fp = 1,num_nourbanp
        p = filter_nourbanp(fp)
-       g = patch%gridcell(p)
-       coszen_patch(p) = coszen_gcell(g)
+       c = patch%column(p)
+       coszen_patch(p) = coszen_col(c)
     end do
 
     ! Initialize output because solar radiation only done if coszen > 0
