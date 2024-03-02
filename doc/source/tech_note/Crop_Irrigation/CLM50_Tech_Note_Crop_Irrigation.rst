@@ -515,7 +515,7 @@ Live leaf and stem biomass at harvest is transferred to biofuel, removed residue
 
 For the biofuel crops Miscanthus and switchgrass, 70% of live leaf and stem biomass at harvest is transferred to the crop product pool as described for "food" harvest above. This value can be changed for these crops—or set to something other than the default zero for any other crop—with the parameter :math:`biofuel\_harvfrac`.
 
-50% of any remaining live leaf and stem biomass at harvest (after biofuel removal, if any) is removed to the crop product pool to represent off-field uses such as use for animal feed and bedding. This value can be changed with the parameter :math:`crop\_residue\_removal\_frac` (0–1).
+50% of any remaining live leaf and stem biomass at harvest (after biofuel removal, if any) is removed to the crop product pool to represent off-field uses such as use for animal feed and bedding. This value can be changed with the parameter :math:`crop\_residue\_removal\_frac` (0–1). The default 50% is derived from :ref:`Smerald et al. 2023 <Smeraldetal2023>`, who found a global average of 50% of residues left on the field. This includes residues burned in the field, meaning that our implementation implictly assumes the CLM crop burning representation will handle those residues appropriately. 
 
 The following equations illustrate how this works. Subscript :math:`p` refers to either the leaf or live stem biomass pool.
 
