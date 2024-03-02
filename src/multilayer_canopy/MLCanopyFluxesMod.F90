@@ -134,7 +134,7 @@ module MLCanopyFluxesMod
     forc_v         => atm2lnd_inst%forc_v_grc                       , &  ! INPUT: Atmospheric wind speed in north direction (m/s)
     forc_pco2      => atm2lnd_inst%forc_pco2_grc                    , &  ! INPUT: Atmospheric CO2 partial pressure (Pa)
     forc_po2       => atm2lnd_inst%forc_po2_grc                     , &  ! INPUT: Atmospheric O2 partial pressure (Pa)
-    forc_solad     => atm2lnd_inst%forc_solad_grc                   , &  ! INPUT: Atmospheric direct beam radiation (W/m2)
+    forc_solad     => atm2lnd_inst%forc_solad_not_downscaled_grc    , &  ! INPUT: Atmospheric direct beam radiation (W/m2)
     forc_solai     => atm2lnd_inst%forc_solai_grc                   , &  ! INPUT: Atmospheric diffuse radiation (W/m2)
     forc_t         => atm2lnd_inst%forc_t_downscaled_col            , &  ! INPUT: Atmospheric temperature (K)
     forc_q         => wateratm2lndbulk_inst%forc_q_downscaled_col   , &  ! INPUT: Atmospheric specific humidity (kg/kg)
