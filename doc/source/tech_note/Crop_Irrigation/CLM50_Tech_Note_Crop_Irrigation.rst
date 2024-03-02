@@ -41,6 +41,7 @@ Available new features since the CLM5 release
 - Addition of bioenergy crops
 - Ability to customize crop calendars (sowing windows/dates, maturity requirements) using stream files
 - Cropland soil tillage
+- Crop residue removal
 
 .. _The crop model:
 
