@@ -339,7 +339,7 @@ module histFileMod
   type(file_desc_t), target :: nfid(max_tapes)       ! file ids
   type(file_desc_t), target :: ncid_hist(max_tapes)  ! file ids for history restart files
   integer :: time_dimid                      ! time dimension id
-  integer :: hist_interval_dimid             ! time bounds dimension id
+  integer :: nbnd_dimid                      ! time bounds dimension id
   integer :: strlen_dimid                    ! string dimension id
   !
   ! Time Constant variable names and filename
@@ -2519,7 +2519,7 @@ contains
     end if
 
     if ( .not. lhistrest )then
-       call ncd_defdim(lnfid, 'hist_interval', 2, hist_interval_dimid)
+       call ncd_defdim(lnfid, 'nbnd', 2, nbnd_dimid)
        call ncd_defdim(lnfid, 'time', ncd_unlimited, time_dimid)
        if (masterproc)then
           write(iulog,*) trim(subname), &
@@ -3286,6 +3286,7 @@ contains
        dim1id(1) = time_dimid
        call ncd_defvar(nfid(t) , 'mcdate', ncd_int, 1, dim1id , varid, &
           long_name = 'current date (YYYYMMDD)')
+       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
        !
        ! add global attribute time_period_freq
        !
@@ -3314,16 +3315,21 @@ contains
 
        call ncd_defvar(nfid(t) , 'mcsec' , ncd_int, 1, dim1id , varid, &
           long_name = 'current seconds of current date', units='s')
+       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
        call ncd_defvar(nfid(t) , 'mdcur' , ncd_int, 1, dim1id , varid, &
           long_name = 'current day (from base day)')
+       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
        call ncd_defvar(nfid(t) , 'mscur' , ncd_int, 1, dim1id , varid, &
           long_name = 'current seconds of current day')
+       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
        call ncd_defvar(nfid(t) , 'nstep' , ncd_int, 1, dim1id , varid, &
           long_name = 'time step')
 
-       dim2id(1) = hist_interval_dimid;  dim2id(2) = time_dimid
+       dim2id(1) = nbnd_dimid;  dim2id(2) = time_dimid
        call ncd_defvar(nfid(t), 'time_bounds', ncd_double, 2, dim2id, varid, &
-          long_name = 'history time interval endpoints')
+          long_name = 'time interval endpoints', &
+          units = str)
+       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
 
        dim2id(1) = strlen_dimid;  dim2id(2) = time_dimid
        call ncd_defvar(nfid(t), 'date_written', ncd_char, 2, dim2id, varid)
