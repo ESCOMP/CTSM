@@ -772,7 +772,7 @@ contains
     ! Determine weight arrays for non-dynamic landuse mode
     !
     ! !USES:
-    use clm_varctl      , only : create_crop_landunit, use_fates, n_dom_pfts
+    use clm_varctl      , only : create_crop_landunit, use_fates, n_dom_pfts, use_hillslope
     use clm_varpar      , only : natpft_lb, natpft_ub, natpft_size, cft_size, cft_lb, cft_ub
     use clm_varpar      , only : surfpft_lb, surfpft_ub
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
@@ -866,7 +866,12 @@ contains
                ' must also have a separate crop landunit, and vice versa)'//&
                errMsg(sourcefile, __LINE__))
     end if
-    
+
+    ! Obtain hillslope hydrology information and modify pft weights
+    if (use_hillslope) then
+       call surfrd_hillslope(begg, endg, ncid, ns)
+    endif
+
     ! Convert from percent to fraction
     wt_lunit(begg:endg,istsoil) = wt_lunit(begg:endg,istsoil) / 100._r8
     wt_lunit(begg:endg,istcrop) = wt_lunit(begg:endg,istcrop) / 100._r8
@@ -934,6 +939,115 @@ contains
   end subroutine surfrd_veg_dgvm
 
   !-----------------------------------------------------------------------
+  subroutine surfrd_hillslope(begg, endg, ncid, ns)
+    !
+    ! !DESCRIPTION:
+    ! Determine number of hillslopes and columns for hillslope hydrology mode
+    !
+    ! !USES:
+    use clm_instur, only : ncolumns_hillslope, wt_nat_patch
+    use clm_varctl, only : nhillslope,max_columns_hillslope
+    use clm_varpar, only : natpft_size, natpft_lb, natpft_ub
+    use ncdio_pio,  only : ncd_inqdid, ncd_inqdlen
+    use pftconMod , only : noveg
+    use HillslopeHydrologyMod, only : pft_distribution_method, pft_standard, pft_from_file, pft_uniform_dominant_pft, pft_lowland_dominant_pft, pft_lowland_upland
+    use array_utils, only: find_k_max_indices
+    use surfrdUtilsMod, only: collapse_to_dominant
+
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: begg, endg
+    type(file_desc_t),intent(inout) :: ncid   ! netcdf id
+    integer          ,intent(in)    :: ns     ! domain size
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: g, nh, m, n                       ! index
+    integer  :: dimid,varid                    ! netCDF id's
+    integer  :: ier                            ! error status
+    integer, allocatable  :: max_indices(:)    ! largest weight pft indices
+    logical  :: readvar                        ! is variable on dataset
+    integer,pointer :: arrayl(:)               ! local array (needed because ncd_io expects a pointer)
+    character(len=32) :: subname = 'surfrd_hillslope'  ! subroutine name
+    logical, allocatable :: do_not_collapse(:)
+    integer :: n_dominant
+    !-----------------------------------------------------------------------
+
+    ! number of hillslopes per landunit
+    call ncd_inqdid(ncid,'nhillslope',dimid,readvar)
+    if (.not. readvar) then
+       call endrun( msg=' ERROR: nhillslope not on surface data file'//errMsg(sourcefile, __LINE__))
+    else
+       call ncd_inqdlen(ncid,dimid,nh)
+       nhillslope = nh
+    endif
+    ! maximum number of columns per landunit
+    call ncd_inqdid(ncid,'nmaxhillcol',dimid,readvar)
+    if (.not. readvar) then
+       call endrun( msg=' ERROR: nmaxhillcol not on surface data file'//errMsg(sourcefile, __LINE__))
+    else
+       call ncd_inqdlen(ncid,dimid,nh)
+       max_columns_hillslope = nh
+    endif
+    ! actual number of columns per landunit
+    allocate(arrayl(begg:endg))
+    call ncd_io(ncid=ncid, varname='nhillcolumns', flag='read', data=arrayl, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) then
+       call endrun( msg=' ERROR: nhillcolumns not on surface data file'//errMsg(sourcefile, __LINE__))
+    else
+       ncolumns_hillslope(begg:endg) = arrayl(begg:endg)
+    endif
+    deallocate(arrayl)
+
+    ! pft_from_file and pft_lowland_upland assume that 1 pft
+    ! will exist on each hillslope column.  In prepration, set one
+    ! pft weight to 100 and the rest to 0.  The vegetation type
+    ! (patch%itype) will be reassigned when initHillslope is called later.
+    if(pft_distribution_method == pft_from_file .or. &
+         pft_distribution_method == pft_lowland_upland) then
+       do g = begg, endg
+          ! If hillslopes will be used in a gridcell, modify wt_nat_patch, otherwise use original patch distribution
+          if(ncolumns_hillslope(g) > 0) then
+             ! First patch gets 100% weight; all other natural patches are zeroed out
+             wt_nat_patch(g,:)         = 0._r8
+             wt_nat_patch(g,natpft_lb) = 100._r8
+          endif
+       enddo
+
+    else if (pft_distribution_method == pft_uniform_dominant_pft &
+        .or. pft_distribution_method == pft_lowland_dominant_pft) then
+
+       ! If hillslopes will be used in a gridcell, modify wt_nat_patch,
+       ! otherwise use original patch distribution
+       allocate(do_not_collapse(begg:endg))
+       do_not_collapse(begg:endg) = .false.
+       do g = begg, endg
+          if (ncolumns_hillslope(g) == 0) then
+             do_not_collapse(g) = .true.
+          end if
+       end do
+
+       if (pft_distribution_method == pft_uniform_dominant_pft) then
+         ! pft_uniform_dominant_pft uses the patch with the
+         ! largest weight for all hillslope columns in the gridcell
+         n_dominant = 1
+       else if (pft_distribution_method == pft_lowland_dominant_pft) then
+         ! pft_lowland_dominant_pft uses the two patches with the
+         ! largest weights for the hillslope columns in the gridcell
+         n_dominant = 2
+       else
+          call endrun( msg=' ERROR: unrecognized hillslope_pft_distribution_method'//errMsg(sourcefile, __LINE__))
+       end if
+
+       call collapse_to_dominant(wt_nat_patch(begg:endg,:), natpft_lb, natpft_ub, begg, endg, n_dominant, do_not_collapse)
+       deallocate(do_not_collapse)
+
+    else if (pft_distribution_method /= pft_standard) then
+      call endrun( msg=' ERROR: unrecognized hillslope_pft_distribution_method'//errMsg(sourcefile, __LINE__))
+    endif
+
+  end subroutine surfrd_hillslope
+
   subroutine surfrd_lakemask(begg, endg)
     !
     ! !DESCRIPTION:

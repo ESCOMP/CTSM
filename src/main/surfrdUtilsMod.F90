@@ -270,7 +270,7 @@ contains
   end subroutine collapse_individual_lunits
 
   !-----------------------------------------------------------------------
-  subroutine collapse_to_dominant(weight, lower_bound, upper_bound, begg, endg, n_dominant)
+  subroutine collapse_to_dominant(weight, lower_bound, upper_bound, begg, endg, n_dominant, do_not_collapse)
     !
     ! DESCRIPTION
     ! Collapse to the top N dominant pfts or landunits (n_dominant)
@@ -286,6 +286,7 @@ contains
     integer, intent(in) :: lower_bound  ! lower bound of pft or landunit indices
     integer, intent(in) :: upper_bound  ! upper bound of pft or landunit indices
     integer, intent(in) :: n_dominant  ! # dominant pfts or landunits
+    logical, intent(in), optional :: do_not_collapse(begg:endg)
     ! This array modified in-place
     ! Weights of pfts or landunits per grid cell
     ! Dimensioned [g, lower_bound:upper_bound]
@@ -312,6 +313,14 @@ contains
     if (n_dominant > 0 .and. n_dominant < upper_bound) then
        allocate(max_indices(n_dominant))
        do g = begg, endg
+
+          ! original sum of all the weights
+          wt_sum(g) = sum(weight(g,:))
+
+          if (present(do_not_collapse) .and. do_not_collapse(g)) then
+             cycle
+          end if
+
           max_indices = 0  ! initialize
           call find_k_max_indices(weight(g,:), lower_bound, n_dominant, &
                                   max_indices)
@@ -321,7 +330,6 @@ contains
           ! Typically the original sum of weights = 1, but if
           ! collapse_urban = .true., it equals the sum of the urban landunits.
           ! Also set the remaining weights to 0.
-          wt_sum(g) = sum(weight(g,:))  ! original sum of all the weights
           wt_dom_sum = 0._r8  ! initialize the dominant pft or landunit sum
           do n = 1, n_dominant
              m = max_indices(n)

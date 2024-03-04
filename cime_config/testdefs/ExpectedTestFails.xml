@@ -162,6 +162,13 @@
       <issue>#2310</issue>
     </phase>
   </test>
+
+  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_intel.clm-FatesColdHydro">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2373</issue>
+    </phase>
+  </test>
     
   <!-- fates test suite failures -->
 

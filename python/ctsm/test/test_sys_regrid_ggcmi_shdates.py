@@ -5,7 +5,6 @@
 """
 
 import os
-import re
 
 import unittest
 import tempfile
@@ -18,8 +17,7 @@ import numpy as np
 # -- add python/ctsm  to path (needed if we want to run test stand-alone)
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 sys.path.insert(1, _CTSM_PYTHON)
-
-
+# pylint: disable=wrong-import-position
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm import unit_testing
 from ctsm.crop_calendars.regrid_ggcmi_shdates import regrid_ggcmi_shdates
@@ -78,6 +76,9 @@ class TestRegridGgcmiShdates(unittest.TestCase):
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_regrid_ggcmi_shdates(self):
+        """
+        Tests regrid_ggcmi_shdates
+        """
 
         # Call script
         sys.argv = self._function_call_list
