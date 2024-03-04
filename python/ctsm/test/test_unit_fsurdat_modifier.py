@@ -44,13 +44,9 @@ class TestFSurdatModifier(unittest.TestCase):
         self._testinputs_path = testinputs_path
         self._fsurdat_in = os.path.join(
             testinputs_path,
-            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc",
+            "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031.nc",
         )
         self._tempdir = tempfile.mkdtemp()
-        self._fsurdat_in = os.path.join(
-            testinputs_path,
-            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc",
-        )
         self._fsurdat_out = os.path.join(self._tempdir, "fsurdat_out.nc")
         sys.argv = [
             "fsurdat_modifier",
@@ -151,6 +147,7 @@ class TestFSurdatModifier(unittest.TestCase):
         self.config.set(section, "pct_urban", "0. 0. 0.")
         self.config.set(section, "pct_lake", "0.")
         self.config.set(section, "pct_wetland", "0.")
+        self.config.set(section, "pct_ocean", "0.")
         self.config.set(section, "pct_glacier", "100.")
         self.config.set(section, "pct_natveg", "0.")
         self.config.set(section, "pct_crop", "0.")
@@ -164,6 +161,7 @@ class TestFSurdatModifier(unittest.TestCase):
         self.config.set(section, "pct_urban", "0. 0. 0.")
         self.config.set(section, "pct_lake", "25.")
         self.config.set(section, "pct_wetland", "35.")
+        self.config.set(section, "pct_ocean", "0.")
         self.config.set(section, "pct_glacier", "40.")
         self.config.set(section, "pct_natveg", "0.")
         self.config.set(section, "pct_crop", "0.")
@@ -177,6 +175,7 @@ class TestFSurdatModifier(unittest.TestCase):
         self.config.set(section, "pct_urban", "100.0 0.0 0.0")
         self.config.set(section, "pct_lake", "0.")
         self.config.set(section, "pct_wetland", "0.")
+        self.config.set(section, "pct_ocean", "0.")
         self.config.set(section, "pct_glacier", "0.")
         self.config.set(section, "pct_natveg", "0.")
         self.config.set(section, "pct_crop", "0.")
@@ -254,6 +253,7 @@ class TestFSurdatModifier(unittest.TestCase):
         self.config.set(section, "pct_urban", "0. 0. 0.")
         self.config.set(section, "pct_lake", "0.")
         self.config.set(section, "pct_wetland", "0.")
+        self.config.set(section, "pct_ocean", "0.")
         self.config.set(section, "pct_glacier", "0.")
         self.config.set(section, "pct_natveg", "0.")
         self.config.set(section, "pct_crop", "0.")

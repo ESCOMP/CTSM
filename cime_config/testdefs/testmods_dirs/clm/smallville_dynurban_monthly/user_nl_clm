@@ -1,13 +1,15 @@
 do_transient_urban = .true.
 
-! The flanduse_timeseries file was created with the following NCL script (a copy of this script is in cime_config/testdefs/testmods_dirs/clm/smallville_dynurban_monthly):
-! /glade/campaign/cgd/tss/people/oleson/modify_surfdata/modify_smallville_with_dynurban.ncl
-! The file used as a template is: 
-! /glade/campaign/cgd/tss/people/oleson/modify_surfdata/lnd/clm2/surfdata_map/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_c160127.nc
+! The fsurdat and flanduse_timeseries files were created with the following script:
+! tools/modify_input_files/modify_smallville.sh
+
 ! Key points are that urban area starts as 0, increases after the first year, then decreases after the second year.
 ! Medium density urban is set to zero to test the memory-saving behavior of PCT_URBAN_MAX.
 ! PCT_CROP is also changed so that PCT_URBAN + PCT_CROP <= 100. (Here, PCT_CROP increases and decreases at the same time as PCT_URBAN in order to exercise the simultaneous increase or decrease of two landunits, but that isn't a critical part of this test.)
 ! Note that the use of this file means that this testmod can only be used with the 1x1_smallvilleIA grid.
-! Feb 23, 2022: Use updated file with HASURBAN replaced by PCT_URBAN_MAX
-!flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_dynUrban_c220223.nc'
-flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_dynUrban_c220223.nc'
+flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_1x1_smallvilleIA_SSP2-4.5_1850-1855_78pfts_dynUrban_c240221.nc'
+
+! NOTE slevis (2024/2/23) Adding option for tests to pass. In the long term
+! ensure that subset_data generates fsurdat and landuse files consistent with
+! each other.
+check_dynpft_consistency = .false.

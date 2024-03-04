@@ -101,16 +101,12 @@ class ModifyMeshMask:
                     "landmask not 0 or 1 at row, col, value = "
                     + f"{row} {col} {landmask[row, col]}"
                 )
-                assert isclose(landmask[row, col], 0, abs_tol=1e-9) or isclose(
-                    landmask[row, col], 1, abs_tol=1e-9
-                ), errmsg
+                assert landmask[row, col] == 0 or landmask[row, col] == 1, errmsg
                 errmsg = (
                     "mod_lnd_props not 0 or 1 at row, col, value = "
                     + f"{row} {col} {mod_lnd_props[row, col]}"
                 )
-                assert isclose(mod_lnd_props[row, col], 0, abs_tol=1e-9) or isclose(
-                    mod_lnd_props[row, col], 1, abs_tol=1e-9
-                ), errmsg
+                assert mod_lnd_props[row, col] == 0 or mod_lnd_props[row, col] == 1, errmsg
                 if int(mod_lnd_props[row, col]) == 1:
                     errmsg = (
                         "landmask should = mod_lnd_props where the "

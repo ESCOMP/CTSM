@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+"""
+This is a just top-level skeleton script that calls
+gen_mksurfdata_jobscript_multi.py.
+The original code (gen_mksurfdata_jobscript_multi.py) is located under the
+python/ctsm/toolchain folder.
+
+For full instructions on how to run the code and different options,
+please check the python/ctsm/toolchain/gen_mksurfdata_jobscript_multi.py file.
+
+To run this script the following packages are required:
+    - netCDF4
+----------------------------------------------------------------
+To see all available options for gen_mksurfdata_jobscript_multi
+    ./gen_mksurfdata_jobscript_multi --help
+----------------------------------------------------------------
+Instructions for running using the conda python environments:
+../../py_env_create
+conda activate ctsm_py
+"""
+
+import os
+import sys
+
+# -- add python/ctsm  to path
+_CTSM_PYTHON = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python"
+)
+sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm.toolchain.gen_mksurfdata_jobscript_multi import main
+
+if __name__ == "__main__":
+    main()

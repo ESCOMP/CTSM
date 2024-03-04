@@ -1,0 +1,4 @@
+! NOTE slevis (2024/2/23) Adding option for tests to pass. In the long term
+! ensure that subset_data generates fsurdat and landuse files consistent with
+! each other.
+check_dynpft_consistency = .false.

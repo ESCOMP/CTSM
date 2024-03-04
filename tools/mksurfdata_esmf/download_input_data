@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+"""Download input data for running mksurfdata_esmf"""
+
+import os
+import sys
+
+_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            os.pardir,
+                            os.pardir,
+                            'python')
+sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm import add_cime_to_path
+
+from ctsm.mksurfdata_download_input_data import main
+
+if __name__ == "__main__":
+    main()

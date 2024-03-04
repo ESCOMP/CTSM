@@ -5,7 +5,7 @@
   do_rtm = .true.
   do_rtmflood = .false.
   finidat_rtm = " "
-  frivinp_rtm = "/glade/p/cesmdata/cseg/inputdata/rof/mosart/MOSART_routing_Global_0.5x0.5_c170601.nc"
+  frivinp_rtm = "/glade/campaign/cesm/cesmdata/cseg/inputdata/rof/mosart/MOSART_routing_Global_0.5x0.5_c170601.nc"
   ice_runoff = .true.
   qgwl_runoff_option = "threshold"
   rtmhist_fexcl1 = ""

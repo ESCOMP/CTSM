@@ -76,7 +76,7 @@ from ctsm.ctsm_logging import (
     process_logging_args,
 )
 
-DEFAULTS_CONFIG = "tools/site_and_regional/default_data.cfg"
+DEFAULTS_CONFIG = "tools/site_and_regional/default_data_2000.cfg"
 
 logger = logging.getLogger(__name__)
 

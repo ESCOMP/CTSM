@@ -231,6 +231,7 @@ if create_surfdata:
    f2['PCT_WETLAND'] = 0.
    f2['PCT_URBAN']   = 0.
    f2['PCT_GLACIER'] = 0.
+   f2['PCT_OCEAN'] = 0.
 
    #--  Overwrite global data with raw data  ----------------------------
    f2['LONGXY'] = plon
