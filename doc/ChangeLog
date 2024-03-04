@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev171
 Originator(s): olyson (Keith Oleson,UCAR/TSS)
-Date: Fri 01 Mar 2024 03:27:14 PM MST
+Date: Mon 04 Mar 2024 10:33:55 AM MST
 One-line Summary: Set initial t_soisno=272 for soils and 274K for urban road
 
 Purpose and description of changes
@@ -46,8 +46,8 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
 Answer changes
 --------------
@@ -57,7 +57,10 @@ Changes answers relative to baseline: YES
   Summarize any changes to answers, i.e.,
     - what code configurations: all
     - what platforms/compilers: all
-    - nature of change: roundoff
+    - nature of change: larger than roundoff but not climate-changing
+
+ The original diagnostics for this change are here:
+ https://webext.cgd.ucar.edu/I2000/ctsm51c6_PPEn08ctsm51d023_2deg_GSWP3V1_Sparse400_cs_ts_tsoisno272_2000AD/lnd/ctsm51c6_PPEn08ctsm51d023_2deg_GSWP3V1_Sparse400_cs_ts_tsoisno272_2000AD.381_400-ctsm51c6_PPEn08ctsm51d023_2deg_GSWP3V1_Sparse400_cs_ts_2000AD.381_400/setsIndex.html
 
 Other details
 -------------
