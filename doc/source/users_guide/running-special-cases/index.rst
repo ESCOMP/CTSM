@@ -14,11 +14,11 @@ Running Special Cases
 .. toctree::
    :maxdepth: 2
 
-   what-is-a-special-case.rst
-   running-the-prognostic-crop-model.rst
-   running-with-irrigation.rst
-   running-with-custom-crop-calendars.rst
-   running-with-tillage.rst
+   What-is-a-special-case.rst
+   Running-the-prognostic-crop-model.rst
+   Running-with-irrigation.rst
+   Running-with-custom-crop-calendars.rst
+   Running-with-tillage.rst
    Spinning-up-the-Satellite-Phenology-Model-CLMSP-spinup.rst
    Spinning-up-the-biogeochemistry-BGC-spinup.rst
    Running-with-excess-ground-ice.rst
