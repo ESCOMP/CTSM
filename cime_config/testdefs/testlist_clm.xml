@@ -1986,8 +1986,6 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
-      <machine name="derecho" compiler="gnu" category="aux_clm"/>
-      <machine name="derecho" compiler="gnu" category="prealpha"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="prealpha"/>
@@ -2106,7 +2104,6 @@
   </test>
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/default--clm/NEON/NIWO">
     <machines>
-      <machine name="derecho"  compiler="intel" category="aux_clm"/>
       <machine name="derecho"  compiler="gnu" category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
     </machines>
@@ -2120,7 +2117,6 @@
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
       <machine name="derecho"  compiler="intel" category="aux_clm"/>
-      <machine name="derecho"  compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2131,7 +2127,6 @@
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/NEON/MOAB--clm/PRISM">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
-      <machine name="derecho"  compiler="intel" category="aux_clm"/>
       <machine name="derecho"  compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
@@ -2168,8 +2163,6 @@
     <machines>
       <machine name="derecho"  compiler="intel" category="aux_clm"/>
       <machine name="derecho"  compiler="intel" category="fates"/>
-      <machine name="derecho"  compiler="gnu" category="aux_clm"/>
-      <machine name="derecho"  compiler="gnu" category="fates"/>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="fates"/>
     </machines>
@@ -2183,8 +2176,6 @@
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="fates"/>
-      <machine name="derecho"  compiler="intel" category="aux_clm"/>
-      <machine name="derecho"  compiler="intel" category="fates"/>
       <machine name="derecho"  compiler="gnu" category="aux_clm"/>
       <machine name="derecho"  compiler="gnu" category="fates"/>
     </machines>
@@ -2197,10 +2188,7 @@
   <test name="SMS_D_Lm1_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm50SpRs" testmods="clm/USUMB_nuopc">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <!-- Have one mpi-serial DEBUG intel test that is expected to fail-->
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <!-- Also have the gnu test that should pass -->
-      <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2592,8 +2580,6 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
-      <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="prebeta"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
@@ -2614,7 +2600,6 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2949,7 +2934,6 @@
   <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -2977,7 +2961,6 @@
       <machine name="izumi" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates"/>
-      <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
     <options>
