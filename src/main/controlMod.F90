@@ -45,7 +45,7 @@ module controlMod
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: surfprof_exp
   use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif
-  use SoilHydrologyMod                 , only: soilHydReadNML
+  use SoilHydrologyMod                 , only: soilHydReadNML, hillslope_hydrology_ReadNML
   use CNFireFactoryMod                 , only: CNFireReadNML
   use CanopyFluxesMod                  , only: CanopyFluxesReadNML
   use shr_drydep_mod                   , only: n_drydep
@@ -257,6 +257,11 @@ contains
 
     namelist /clm_inparm/ use_biomass_heat_storage
 
+    namelist /clm_inparm/ use_hillslope
+
+    namelist /clm_inparm/ downscale_hillslope_meteorology
+
+    namelist /clm_inparm/ use_hillslope_routing
 
     namelist /clm_inparm/ use_hydrstress
 
@@ -574,8 +579,10 @@ contains
     end if
 
     call soilHydReadNML(   NLFilename )
-
-    if( use_cn ) then
+    if ( use_hillslope ) then
+       call hillslope_hydrology_ReadNML(   NLFilename )
+    endif
+    if ( use_cn ) then
        call CNFireReadNML(             NLFilename )
        call CNPrecisionControlReadNML( NLFilename )
        call CNNDynamicsReadNML       ( NLFilename )
@@ -816,6 +823,11 @@ contains
 
     call mpi_bcast (use_biomass_heat_storage, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+    call mpi_bcast (use_hillslope, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    call mpi_bcast (downscale_hillslope_meteorology, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    call mpi_bcast (use_hillslope_routing, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -1066,6 +1078,7 @@ contains
     write(iulog,'(a,d20.10)') '   Max snow depth (mm) =', h2osno_max
 
     write(iulog,'(a,i8)') '   glc number of elevation classes =', maxpatch_glc
+
     if (glc_do_dynglacier) then
        write(iulog,*) '   glc CLM glacier areas and topography WILL evolve dynamically'
     else
@@ -1098,6 +1111,9 @@ contains
     end if
 
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
+    write(iulog,*) '   hillslope hydrology    = ', use_hillslope
+    write(iulog,*) '   downscale hillslope meteorology    = ', downscale_hillslope_meteorology
+    write(iulog,*) '   hillslope routing      = ', use_hillslope_routing
     write(iulog,*) '   pre-defined soil layer structure = ', soil_layerstruct_predefined
     write(iulog,*) '   user-defined soil layer structure = ', soil_layerstruct_userdefined
     write(iulog,*) '   user-defined number of soil layers = ', soil_layerstruct_userdefined_nlevsoi
