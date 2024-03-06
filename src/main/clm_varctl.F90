@@ -152,6 +152,12 @@ module clm_varctl
   ! true => separate crop landunit is not created by default
   logical, public :: create_crop_landunit = .false.     
   
+  ! number of hillslopes per landunit
+  integer, public :: nhillslope = 0
+
+  ! maximum number of hillslope columns per landunit
+  integer, public :: max_columns_hillslope = 1
+
   ! do not irrigate by default
   logical, public :: irrigate = .false.            
 
@@ -392,7 +398,15 @@ module clm_varctl
   integer, public :: soil_layerstruct_userdefined_nlevsoi = iundef
 
   !----------------------------------------------------------
-  !excess ice physics switch
+  ! hillslope hydrology switch
+  !----------------------------------------------------------
+
+  logical, public :: use_hillslope = .false. ! true => use multi-column hillslope hydrology
+  logical, public :: downscale_hillslope_meteorology = .false. ! true => downscale meteorological forcing in hillslope model
+  logical, public :: use_hillslope_routing = .false. ! true => use surface water routing in hillslope hydrology
+
+  !----------------------------------------------------------
+  ! excess ice physics switch
   !----------------------------------------------------------
   logical, public :: use_excess_ice = .false. ! true. => use excess ice physics
 
