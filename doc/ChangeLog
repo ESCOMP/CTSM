@@ -15,7 +15,7 @@ New parameter file and namelist values for clm5_1:
 
 - snow_thermal_cond_method = Sturm1997 (default for clm5_1)
 - snicar_snobc_intmix = .true. (default for clm5_1)
-- ctsm51_params.c240201.nc is the new CTSM parameter file (changes: froot_leaf(11:12)=1.2, FUN_fracfixers(11:12)=1, xdrdt=5, scvng_fct_mlt_sf=0.5, snw_rds_refrz=1500, fresh_snw_rds_max=400)
+- ctsm51_params.c240208.nc is the new CTSM parameter file (changes: froot_leaf(11:12)=1.2, FUN_fracfixers(11:12)=1, xdrdt=5, scvng_fct_mlt_sf=0.5, snw_rds_refrz=1500, fresh_snw_rds_max=400)
 - New history fields for coupler history verification (default off)
 - Add snow5d_thresh_for_onset to parameter file, set to 0.2 for clm51 and 0.1 (unchanged) for clm50 and clm45.
 
@@ -65,8 +65,9 @@ Testing summary:
     izumi -------
 
   any other testing (give details below):
- Keith Oleson replicated simulation in LMWG_dev issue #51 as bfb when snow5d_thresh_for_onset on ctsm51_ciso_cwd_hr_params.c240208.nc
- was set to original value of 0.1.
+ Keith Oleson replicated simulation in LMWG_dev issue #51 as bfb when
+ snow5d_thresh_for_onset on ctsm51_ciso_cwd_hr_params.c240208.nc was set
+ to original value of 0.1.
 
 Answer changes
 --------------
@@ -76,10 +77,14 @@ Changes answers relative to baseline: YES
   Summarize any changes to answers, i.e.,
     - what code configurations: clm51
     - what platforms/compilers: all
-    - nature of change: new climate
+    - nature of change: new climate at high latitudes
 
  See LMWG_dev discussion #3 and simulations discussed therein,
  including (though possibly not limited to) LMWG_dev issues #51, 52, 54, 57.
+
+ slevis will add this tag with the label "SIGNIFICANT" to the
+ Answer-changing-tags wiki:
+ https://github.com/ESCOMP/CTSM/wiki/Answer-changing-tags
 
 Other details
 -------------
