@@ -26,7 +26,7 @@ class TestPathUtils(unittest.TestCase):
         self._testdir = tempfile.mkdtemp()
 
     def tearDown(self):
-        os.chdir(self._previous_dir )
+        os.chdir(self._previous_dir)
         shutil.rmtree(self._testdir, ignore_errors=True)
 
     def _ctsm_path_in_cesm(self):
