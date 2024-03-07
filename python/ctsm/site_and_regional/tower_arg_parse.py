@@ -1,5 +1,5 @@
 """
-Argument parser to use throughout run_neon.py
+Argument parser to use throughout run_tower.py
 """
 
 import argparse
@@ -18,7 +18,7 @@ from CIME.utils import parse_args_and_handle_standard_logging_options
 from CIME.utils import setup_standard_logging_options
 
 
-def get_parser(args, description, valid_neon_sites):
+def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
     """
     Get parser object for this script.
     """
@@ -38,6 +38,17 @@ def get_parser(args, description, valid_neon_sites):
         choices=valid_neon_sites + ["all"],
         dest="neon_sites",
         default=["OSBS"],
+        nargs="+",
+    )
+
+    parser.add_argument(
+        "--plumber-sites",
+        help="plumber site code (eg, AR-SLu)",
+        action="store",
+        required=False,
+        choices=valid_plumber_sites + ["all"],
+        dest="plumber_sites",
+        default=["AR-SLu"],
         nargs="+",
     )
 

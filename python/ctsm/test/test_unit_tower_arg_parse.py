@@ -19,7 +19,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
-from ctsm.site_and_regional.neon_arg_parse import get_parser
+from python.ctsm.site_and_regional.tower_arg_parse import get_parser
 from ctsm.path_utils import path_to_ctsm_root
 
 # pylint: disable=invalid-name
@@ -63,12 +63,19 @@ class Test_neon_arg_parse(unittest.TestCase):
             os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!d]*")
         )
         valid_neon_sites = sorted([v.split("/")[-1] for v in valid_neon_sites])
-        parsed_arguments = get_parser(sys.argv, description, valid_neon_sites)
+
+        valid_plumber_sites = glob.glob(
+        os.path.join(cesmroot, "cime_config", "usermods_dirs", "PLUMBER", "[!Fd]*")
+        )
+        valid_plumber_sites = sorted([v.split("/")[-1] for v in valid_plumber_sites])
+
+        parsed_arguments = get_parser(sys.argv, description, valid_neon_sites, valid_plumber_sites)
 
         self.assertEqual(parsed_arguments[0][0], "ABBY", "arguments not processed as expected")
         self.assertEqual(parsed_arguments[3], "test", "arguments not processed as expected")
         self.assertEqual(parsed_arguments[4], False, "arguments not processed as expected")
         self.assertEqual(parsed_arguments[2], "ad", "arguments not processed as expected")
+        #TODO: self.assertEqual(parsed_arguments[x], "SOME PLUMBER-VAL", "arguments not processed as expected")
 
 
 if __name__ == "__main__":
