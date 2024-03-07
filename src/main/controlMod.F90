@@ -235,7 +235,8 @@ contains
           fates_inventory_ctrl_filename,                &
           fates_parteh_mode,                            &
           fates_seeddisp_cadence,                       &
-          use_fates_tree_damage, fates_history_dimlevel
+          use_fates_tree_damage,                        &
+          fates_history_dimlevel
 
     ! Ozone vegetation stress method
     namelist / clm_inparm / o3_veg_stress_method
