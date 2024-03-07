@@ -485,7 +485,7 @@ contains
          !h2osoi_vol   => waterstate_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (m3/m3)                   
          !h2osoi_ice   => waterstate_inst%h2osoi_ice_col        , & ! Input:  [real(r8) (:,:) ]  ice soil content (kg/m3)                        
          
-         forc_solad    => atm2lnd_inst%forc_solad_grc           , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (visible only)            
+         forc_solad    => atm2lnd_inst%forc_solad_downscaled_col, & ! Input:  [real(r8) (:,:) ]  direct beam radiation (visible only)            
          forc_solai    => atm2lnd_inst%forc_solai_grc           , & ! Input:  [real(r8) (:,:) ]  diffuse radiation     (visible only)            
          forc_pbot     => atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ]  downscaled atmospheric pressure (Pa)                          
          forc_pco2     => atm2lnd_inst%forc_pco2_grc            , & ! Input:  [real(r8) (:)   ]  partial pressure co2 (Pa)                                             
@@ -557,7 +557,7 @@ contains
           ! Calculate PAR: multiply w/m2 by 4.6 to get umol/m2/s for par (added 8/14/02)
           !------------------------
           ! SUN:
-          par_sun    = (forc_solad(g,1)  + fsun(p)    * forc_solai(g,1))  * 4.6_r8
+          par_sun    = (forc_solad(c,1)  + fsun(p)    * forc_solai(g,1))  * 4.6_r8
           par24_sun  = (forc_solad24(p)  + fsun24(p)  * forc_solai24(p))  * 4.6_r8
           par240_sun = (forc_solad240(p) + fsun240(p) * forc_solai240(p)) * 4.6_r8
 

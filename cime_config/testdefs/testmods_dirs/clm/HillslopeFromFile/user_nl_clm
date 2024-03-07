@@ -1,0 +1,2 @@
+hillslope_pft_distribution_method = 'FromFile'
+hillslope_soil_profile_method = 'FromFile'
