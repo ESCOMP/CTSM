@@ -257,7 +257,6 @@ contains
     real(r8) :: hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg)
     real(r8) :: gru_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg)
     real(r8) :: dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg)
-    real(r8) :: fates_woodproduct_flux  ! Total carbon wood products flux from FATES to CLM [gC/m2/s]
 
     !-----------------------------------------------------------------------
 
@@ -308,11 +307,7 @@ contains
 
             s = clm_fates%f2hmap(ic)%hsites(c)
             
-            
-            fates_woodproduct_flux = clm_fates%fates(ic)%bc_out(s)%hrv_deadstemc_to_prod10c + &
-                                     clm_fates%fates(ic)%bc_out(s)%hrv_deadstemc_to_prod100c
-            
-            col_cinputs = fates_litter_flux(c) + fates_woodproduct_flux
+            col_cinputs = fates_litter_flux(c)
             
             ! calculate total column-level outputs
             ! fates has already exported burn losses and fluxes to the atm
@@ -371,7 +366,6 @@ contains
          write(iulog,*)'--- Inputs ---'
          if( col%is_fates(c) ) then
             write(iulog,*)'fates litter_flux        = ',fates_litter_flux(c)*dt
-            write(iulog,*)'fates wood product flux  = ',fates_woodproduct_flux*dt
          else
             write(iulog,*)'gpp                      = ',gpp(c)*dt
          end if
