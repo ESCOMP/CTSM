@@ -38,6 +38,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         - modify_fsurdat.cfg
         - fsurdat_out.nc
         """
+        self._previous_dir = os.getcwd()
         self._cfg_template_path = os.path.join(
             path_to_ctsm_root(), "tools/modify_input_files/modify_fsurdat_template.cfg"
         )
@@ -55,6 +56,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         """
         Remove temporary directory
         """
+        os.chdir(self._previous_dir )
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_no_files_given_fail(self):

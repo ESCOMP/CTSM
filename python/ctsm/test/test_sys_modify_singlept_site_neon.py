@@ -27,6 +27,7 @@ class TestSysModifySingleptSiteNeon(unittest.TestCase):
         Make /_tempdir for use by these tests.
         Check tempdir for history files
         """
+        self._previous_dir = os.getcwd()
         self._tempdir = tempfile.mkdtemp()
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         self._cfg_file_path = os.path.join(
@@ -37,6 +38,7 @@ class TestSysModifySingleptSiteNeon(unittest.TestCase):
         """
         Remove temporary directory
         """
+        os.chdir(self._previous_dir )
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_modify_site(self):

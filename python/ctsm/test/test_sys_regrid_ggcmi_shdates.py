@@ -38,6 +38,7 @@ class TestRegridGgcmiShdates(unittest.TestCase):
         self._testinputs_cc_path = testinputs_cc_path
 
         # Make /_tempdir for use by these tests.
+        self._previous_dir = os.getcwd()
         self._tempdir = tempfile.mkdtemp()
 
         # Obtain path for the directory being created in /_tempdir
@@ -73,6 +74,7 @@ class TestRegridGgcmiShdates(unittest.TestCase):
         """
         Remove temporary directory
         """
+        os.chdir(self._previous_dir )
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_regrid_ggcmi_shdates(self):
