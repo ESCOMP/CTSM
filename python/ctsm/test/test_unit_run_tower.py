@@ -18,7 +18,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
-from ctsm.site_and_regional.run_neon import check_neon_listing
+from python.ctsm.site_and_regional.run_tower import check_neon_listing
 
 # pylint: disable=invalid-name
 

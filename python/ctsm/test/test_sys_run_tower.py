@@ -12,7 +12,7 @@ import shutil
 import sys
 
 from ctsm import unit_testing
-from ctsm.site_and_regional.run_neon import main
+from python.ctsm.site_and_regional.run_tower import main
 from ctsm.path_utils import path_to_ctsm_root
 
 # Allow test names that pylint doesn't like; otherwise hard to make them

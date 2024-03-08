@@ -111,6 +111,7 @@ unit_test_build
 /tools/site_and_regional/????.ad/
 /tools/site_and_regional/????.postad/
 /tools/site_and_regional/????.transient/
+/tools/site_and_regional/archive/
 
 # build output
 *.o

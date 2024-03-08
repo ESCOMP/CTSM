@@ -5,18 +5,18 @@
 |---------------------  Instructions  -----------------------------|
 |------------------------------------------------------------------|
 This is a wrapper script for running CTSM simulation for one or more
-neon sites.
+tower (neon or plumber) sites.
 
-This script is only for neon site and we will develop a more general
+This script is only for tower sites and we will develop a more general
 code later.
 
 This script first creates and builds a generic base case.
-Next, it will clone the base_case for different neon sites and run
+Next, it will clone the base_case for different tower sites and run
 types to reduce the need to build ctsm everytime.
 
 This script will do the following:
     1) Create a generic base case for cloning.
-    2) Make the case for the specific neon site(s).
+    2) Make the case for the specific neon or plumber site(s).
     3) Make changes to the case, for:
         a. AD spinup
 	b. post-AD spinup
@@ -33,7 +33,7 @@ conda activate ctsm_py
 
 -------------------------------------------------------------------
 To see the available options:
-    ./run_neon.py --help
+    ./run_tower.py --help
 -------------------------------------------------------------------
 """
 # TODO (NS)
@@ -64,8 +64,9 @@ sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.download_utils import download_file
-from ctsm.site_and_regional.neon_arg_parse import get_parser
+from python.ctsm.site_and_regional.tower_arg_parse import get_parser
 from ctsm.site_and_regional.neon_site import NeonSite
+from ctsm.site_and_regional.plumber_site import PlumberSite
 
 # pylint: disable=import-error, wildcard-import, wrong-import-order
 from standard_script_setup import *
@@ -167,17 +168,66 @@ def parse_neon_listing(listing_file, valid_neon_sites):
     return available_list
 
 
+def parse_plumber_listing(valid_plumber_sites):
+    """
+    A function to find plumber sites with the dates
+    where data is available.
+
+    Returns:
+        available_list :
+            list of plumber_site objects that is found
+    """
+
+    available_list = []
+
+    for site_name in valid_plumber_sites:
+
+        # -- figure out start_year and end_year from shell commands
+        # TODO: do we even need this though if the shell commands accomplish the same thing?
+        # start_year = tmp_df2[0].iloc[0]
+        # end_year = tmp_df2[0].iloc[-1]
+
+        # -- figure out start_month and end_month
+        # start_month = tmp_df2[1].iloc[0]
+        # end_month = tmp_df2[1].iloc[-1]
+
+        logger.debug("Valid plumber site %s found!", site_name)
+        # logger.debug("File version %s", latest_version)
+        # logger.debug("start_year=%s", start_year)
+        # logger.debug("end_year=%s", end_year)
+        # logger.debug("start_month=%s", start_month)
+        # logger.debug("end_month=%s", end_month)
+        # finidat = None
+        # for line in finidatlist["object"]:
+        #     if site_name in line:
+        #         finidat = line.split(",")[0].split("/")[-1]
+
+        # plumber_site = Plumber2Site(site_name, start_year, end_year, start_month, end_month, finidat)
+        # available_list.append(plumber_site)
+
+    return available_list
+
+
 def main(description):
     """
-    Determine valid neon sites. Make an output directory if it does not exist.
+    Determine valid tower sites. Make an output directory if it does not exist.
     Loop through requested sites and run CTSM at that site.
     """
     cesmroot = path_to_ctsm_root()
     # Get the list of supported neon sites from usermods
     valid_neon_sites = glob.glob(
-        os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!d]*")
+        os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!Fd]*")
     )
     valid_neon_sites = sorted([v.split("/")[-1] for v in valid_neon_sites])
+
+    # Get the list of supported plumber sites from usermods
+    valid_plumber_sites = glob.glob(
+        os.path.join(cesmroot, "cime_config", "usermods_dirs", "PLUMBER", "[!Fd]*")
+    )
+    valid_plumber_sites = sorted([v.split("/")[-1] for v in valid_plumber_sites])
+
+    # TODO: change to use neon or plumber valid sites based on tower_type?
+    # if left as is, could run both neon and plumber from one command
 
     (
         site_list,
@@ -193,7 +243,10 @@ def main(description):
         no_batch,
         rerun,
         user_version,
-    ) = get_parser(sys.argv, description, valid_neon_sites)
+    ) = get_parser(sys.argv, description, valid_neon_sites, valid_plumber_sites)
+
+    # TODO: add in a tower_type argument (that has default NEON?) and
+    # include if statements to differentiate PLUMBER vs NEON
 
     if output_root:
         logger.debug("output_root : %s", output_root)
@@ -204,7 +257,7 @@ def main(description):
     available_list = check_neon_listing(valid_neon_sites)
 
     # =================================
-    # -- all neon sites can be cloned from one generic case
+    # -- all tower sites can be cloned from one generic case
     # -- so no need to define a base_case for every site.
 
     res = "CLM_USRDAT"
@@ -214,14 +267,14 @@ def main(description):
         compset = "I1PtClm51Bgc"
 
     # --  Looping over neon sites
-
     for neon_site in available_list:
         if neon_site.name in site_list:
             if run_from_postad:
                 neon_site.finidat = None
             if not base_case_root:
+                user_mods_dirs = None
                 base_case_root = neon_site.build_base_case(
-                    cesmroot, output_root, res, compset, overwrite, setup_only
+                    cesmroot, output_root, res, compset, user_mods_dirs, overwrite, setup_only
                 )
             logger.info("-----------------------------------")
             logger.info("Running CTSM for neon site : %s", neon_site.name)
@@ -237,3 +290,29 @@ def main(description):
                 rerun,
                 experiment,
             )
+
+    # --  Looping over plumber sites
+    # TODO: define available_plumber_list!
+    # for plumber_site in available_plumber_list:
+    #     if plumber_site.name in site_list:
+    #         if run_from_postad:
+    #             plumber_site.finidat = None
+    #         if not base_case_root:
+    #             user_mods_dirs = None
+    #             base_case_root = plumber_site.build_base_case(
+    #                 cesmroot, output_root, res, compset, user_mods_dirs, overwrite, setup_only
+    #             )
+    #         logger.info("-----------------------------------")
+    #         logger.info("Running CTSM for plumber site : %s", plumber_site.name)
+    #         plumber_site.run_case(
+    #             base_case_root,
+    #             run_type,
+    #             prism,
+    #             run_length,
+    #             user_version,
+    #             overwrite,
+    #             setup_only,
+    #             no_batch,
+    #             rerun,
+    #             experiment,
+    #         )
