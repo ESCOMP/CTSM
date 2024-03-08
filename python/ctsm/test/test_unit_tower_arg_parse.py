@@ -65,7 +65,7 @@ class Test_neon_arg_parse(unittest.TestCase):
         valid_neon_sites = sorted([v.split("/")[-1] for v in valid_neon_sites])
 
         valid_plumber_sites = glob.glob(
-        os.path.join(cesmroot, "cime_config", "usermods_dirs", "PLUMBER", "[!Fd]*")
+            os.path.join(cesmroot, "cime_config", "usermods_dirs", "PLUMBER", "[!Fd]*")
         )
         valid_plumber_sites = sorted([v.split("/")[-1] for v in valid_plumber_sites])
 
@@ -75,7 +75,7 @@ class Test_neon_arg_parse(unittest.TestCase):
         self.assertEqual(parsed_arguments[3], "test", "arguments not processed as expected")
         self.assertEqual(parsed_arguments[4], False, "arguments not processed as expected")
         self.assertEqual(parsed_arguments[2], "ad", "arguments not processed as expected")
-        #TODO: self.assertEqual(parsed_arguments[x], "SOME PLUMBER-VAL", "arguments not processed as expected")
+        # TODO: self.assertEqual(parsed_arguments[x], "SOME PLUMBER-VAL", "arguments not processed as expected")
 
 
 if __name__ == "__main__":

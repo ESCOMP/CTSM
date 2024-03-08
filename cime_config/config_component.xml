@@ -438,16 +438,9 @@
     <default_value/>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-<<<<<<< HEAD
     <desc>Name of site for PLUMBER tower data</desc>
   </entry>
 
-=======
-    <desc>Name of site for NEON tower data</desc>
-  </entry>
-
-
->>>>>>> 48c762d73 (include plumber2site values in config_component.xml)
 <help>
     =========================================
     CLM naming conventions

@@ -81,8 +81,6 @@ def check_neon_listing(valid_neon_sites):
     listing_file = "listing.csv"
     url = "https://storage.neonscience.org/neon-ncar/listing.csv"
 
-    # TODO: will there be a parallel plumber listing?
-
     download_file(url, listing_file)
     available_list = parse_neon_listing(listing_file, valid_neon_sites)
     return available_list
@@ -164,12 +162,49 @@ def parse_neon_listing(listing_file, valid_neon_sites):
                     finidat = line.split(",")[0].split("/")[-1]
 
             neon_site = NeonSite(site_name, start_year, end_year, start_month, end_month, finidat)
-            # TODO: Create parallel PlumberSite available_list
             logger.debug(neon_site)
             available_list.append(neon_site)
 
     return available_list
 
+def parse_plumber_listing(valid_plumber_sites):
+    """
+    A function to find plumber sites with the dates
+    where data is available.
+
+    Returns:
+        available_list :
+            list of plumber_site objects that is found
+    """
+
+    available_list = []
+
+    for site_name in valid_plumber_sites:
+
+        # -- figure out start_year and end_year from shell commands
+        # TODO: do we even need this though if the shell commands accomplish the same thing?
+        # start_year = tmp_df2[0].iloc[0]
+        # end_year = tmp_df2[0].iloc[-1]
+
+        # -- figure out start_month and end_month
+        # start_month = tmp_df2[1].iloc[0]
+        # end_month = tmp_df2[1].iloc[-1]
+
+        logger.debug("Valid plumber site %s found!", site_name)
+        # logger.debug("File version %s", latest_version)
+        # logger.debug("start_year=%s", start_year)
+        # logger.debug("end_year=%s", end_year)
+        # logger.debug("start_month=%s", start_month)
+        # logger.debug("end_month=%s", end_month)
+        # finidat = None
+        # for line in finidatlist["object"]:
+        #     if site_name in line:
+        #         finidat = line.split(",")[0].split("/")[-1]
+
+        # plumber_site = Plumber2Site(site_name, start_year, end_year, start_month, end_month, finidat)
+        #available_list.append(plumber_site)
+
+    return available_list
 
 def main(description):
     """
@@ -191,7 +226,8 @@ def main(description):
     )
     valid_plumber_sites = sorted([v.split("/")[-1] for v in valid_plumber_sites])
 
-    # TODO: or change to be one or other based on tower_type
+    # TODO: change to use neon or plumber valid sites based on tower_type?
+    # if left as is, could run both neon and plumber from one command
 
     (
         site_list,
@@ -208,7 +244,6 @@ def main(description):
         rerun,
         user_version,
     ) = get_parser(sys.argv, description, valid_neon_sites, valid_plumber_sites)
-    # TODO: make sure get_parser can handle valid_tower_sites
 
     # TODO: add in a tower_type argument (that has default NEON?) and
     # include if statements to differentiate PLUMBER vs NEON
