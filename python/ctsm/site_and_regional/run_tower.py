@@ -167,6 +167,7 @@ def parse_neon_listing(listing_file, valid_neon_sites):
 
     return available_list
 
+
 def parse_plumber_listing(valid_plumber_sites):
     """
     A function to find plumber sites with the dates
@@ -202,9 +203,10 @@ def parse_plumber_listing(valid_plumber_sites):
         #         finidat = line.split(",")[0].split("/")[-1]
 
         # plumber_site = Plumber2Site(site_name, start_year, end_year, start_month, end_month, finidat)
-        #available_list.append(plumber_site)
+        # available_list.append(plumber_site)
 
     return available_list
+
 
 def main(description):
     """
