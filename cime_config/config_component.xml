@@ -74,7 +74,7 @@
     </desc>
     <default_value>UNSET</default_value>
     <!-- 7 forcing options for each CLM physics option: CRUv7, GSWP3, cam6.0, QIAN, 1PT, NLDAS2, ERA5 -->
-    <valid_values>clm5_0_cam6.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm5_0_QIAN,clm5_0_1PT,clm5_0_NLDAS2,clm5_0_ERA5,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_QIAN,clm4_5_cam6.0,clm4_5_1PT,clm4_5_NLDAS2,clm4_5_ERA5,clm5_1_CRUv7,clm5_1_GSWP3v1,clm5_1_cam6.0,clm5_1_QIAN,clm5_1_1PT,clm5_1_NLDAS2,clm5_1_ERA5</valid_values>
+    <valid_values>clm5_0_cam6.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm5_0_QIAN,clm5_0_1PT,clm5_0_NLDAS2,clm5_0_ERA5,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_QIAN,clm4_5_cam6.0,clm4_5_1PT,clm4_5_NLDAS2,clm4_5_ERA5,clm5_1_CRUv7,clm5_1_GSWP3v1,clm5_1_cam6.0,clm5_1_QIAN,clm5_1_1PT,clm5_1_NLDAS2,clm5_1_ERA5,clm6_0_CRUv7,clm6_0_GSWP3v1,clm6_0_cam6.0,clm6_0_QIAN,clm6_0_1PT,clm6_0_NLDAS2,clm6_0_ERA5</valid_values>
     <values match="last">
       <!-- Options for atm forcing are: CRU, CRUv7, GSWP3, cam6.0 (also used for DATM%CPLHIST), QIAN, WISOQIA, 1PT, NLDAS2, and ERA5) -->
       <!-- All the clm4_5 physics options -->
@@ -113,6 +113,18 @@
       <value compset="DATM%1PT_CLM51"    >clm5_1_1PT</value>
       <value compset="DATM%NLDAS2_CLM51" >clm5_1_NLDAS2</value>
       <value compset="DATM%ERA5_CLM51"   >clm5_1_ERA5</value>
+      <!-- All the clm6_0 physics options -->
+      <value compset="DATM%CRUv7_CLM51"  >clm6_0_CRUv7</value>
+      <value compset="DATM%CRU_CLM51"    >clm6_0_CRUv7</value>
+      <value compset="SATM_CLM51"        >clm6_0_GSWP3v1</value>
+      <value compset="DATM%GSWP3v1_CLM51">clm6_0_GSWP3v1</value>
+      <value compset="CAM[^_]+_CLM51"    >clm6_0_cam6.0</value>
+      <value compset="DATM%CPLHIST_CLM51">clm6_0_cam6.0</value>
+      <value compset="DATM%QIA_CLM51"    >clm6_0_QIAN</value>
+      <value compset="DATM%WISOQIA_CLM51">clm6_0_QIAN</value>
+      <value compset="DATM%1PT_CLM51"    >clm6_0_1PT</value>
+      <value compset="DATM%NLDAS2_CLM51" >clm6_0_NLDAS2</value>
+      <value compset="DATM%ERA5_CLM51"   >clm6_0_ERA5</value>
       <!-- Invalid ocean DATM forcing options -->
       <value compset="DATM%NYF"          >INVALID_DATM_FORCING_FOR_RUNNING_CTSM</value>
       <value compset="DATM%MOSARTTEST"   >INVALID_DATM_FORCING_FOR_RUNNING_CTSM</value>
@@ -123,7 +135,7 @@
 
   <entry id="CLM_PHYSICS_VERSION" >
     <type>char</type>
-    <valid_values>clm4_5,clm5_0,clm5_1</valid_values>
+    <valid_values>clm4_5,clm5_0,clm5_1,clm6_0</valid_values>
     <!-- By setting the default_value to UNSET (or some other non-empty
          string that doesn't appear in the list of valid_values), the
          scripts will ensure that one of the below values is picked up
@@ -133,6 +145,7 @@
       <value compset="_CLM45" >clm4_5</value>
       <value compset="_CLM50" >clm5_0</value>
       <value compset="_CLM51" >clm5_1</value>
+      <value compset="_CLM60" >clm6_0</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
