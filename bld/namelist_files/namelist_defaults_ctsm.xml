@@ -692,6 +692,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <cnegcrit phys="clm5_0"  use_cn=".true.">-6.d+1</cnegcrit>
 <cnegcrit phys="clm4_5"  use_cn=".true.">-6.d+2</cnegcrit>
 
+<nnegcrit phys="clm6_0"  use_cn=".true.">-6.d+0</nnegcrit>
 <nnegcrit phys="clm5_1"  use_cn=".true.">-6.d+0</nnegcrit>
 <nnegcrit phys="clm5_0"  use_cn=".true.">-6.d+0</nnegcrit>
 <nnegcrit phys="clm4_5"  use_cn=".true.">-6.d+1</nnegcrit>
