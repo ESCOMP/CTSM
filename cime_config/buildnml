@@ -115,7 +115,12 @@ def buildnml(case, caseroot, compname):
             )
             lnd_tuning_mode = closest
 
-    tuning_based_on = {"clm6_0_GSWP3v1": "clm5_0_GSWP3v1", "clm5_1_GSWP3v1": "clm5_0_GSWP3v1", "clm6_0_cam6.0": "clm5_0_cam6.0", "clm5_1_cam6.0": "clm5_0_cam6.0"}
+    tuning_based_on = {
+        "clm6_0_GSWP3v1": "clm5_0_GSWP3v1",
+        "clm5_1_GSWP3v1": "clm5_0_GSWP3v1",
+        "clm6_0_cam6.0": "clm5_0_cam6.0",
+        "clm5_1_cam6.0": "clm5_0_cam6.0",
+    }
     for mode, based_on in tuning_based_on.items():
         if lnd_tuning_mode == mode:
             logger.warning(
@@ -397,3 +402,4 @@ def _main_func():
 
 
 if __name__ == "__main__":
+    _main_func()
