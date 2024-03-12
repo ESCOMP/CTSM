@@ -60,6 +60,7 @@ module CNPhenologyMod
   public :: CNPhenologyInit      ! Initialization
   public :: CNPhenology          ! Update
   public :: CropPhase            ! Get the current phase of each crop patch
+  public :: DaysPastPlanting     ! Get how many days it's been since crop was planted
 
   ! !PUBLIC for unit testing
   public :: CNPhenologySetNML         ! Set the namelist setttings explicitly for unit tests
@@ -2422,12 +2423,7 @@ contains
             end if
 
             ! days past planting may determine harvest
-
-            if (jday >= idop(p)) then
-               idpp = jday - idop(p)
-            else
-               idpp = int(dayspyr) + jday - idop(p)
-            end if
+            idpp = DaysPastPlanting(idop(p), jday)
 
             ! onset_counter initialized to zero when .not. croplive
             ! offset_counter relevant only at time step of harvest
@@ -2940,6 +2936,38 @@ contains
   end subroutine PlantCrop
 
   !-----------------------------------------------------------------------
+  function DaysPastPlanting(idop, jday_in)
+    ! !USES:
+    use clm_time_manager, only : get_prev_calday, get_curr_days_per_year
+    !
+    ! !ARGUMENTS:
+    integer,           intent(in) :: idop ! patch day of planting
+    integer, optional, intent(in) :: jday_in ! julian day of the year
+    !
+    ! !LOCAL VARIABLES
+    integer :: DaysPastPlanting
+    integer :: jday
+
+    ! Must use separate jday_in and jday because we can't redefine an intent(in)
+    ! variable, even if it wasn't provided in the function call.
+    if (present(jday_in)) then
+       jday = jday_in
+    else
+       ! Use prev instead of curr to avoid jday=1 in last timestep of year
+       jday = get_prev_calday()
+    end if
+
+    if (jday >= idop) then
+       DaysPastPlanting = jday - idop
+    else
+      ! As long as crops have at most a 365-day growing season, using get_curr_days_per_year()
+      ! should give the same result of this function as using get_prev_days_per_year().
+       DaysPastPlanting = jday - idop + get_curr_days_per_year()
+    end if
+
+  end function DaysPastPlanting
+
+  !-----------------------------------------------------------------------
   subroutine vernalization(p, &
        canopystate_inst, temperature_inst, waterdiagnosticbulk_inst, cnveg_state_inst, crop_inst, &
        force_harvest)
@@ -3303,7 +3331,7 @@ contains
     use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
     
     use CNSharedParamsMod, only : use_fun
-    use clm_varctl       , only : CNratio_floating    
+    use clm_varctl       , only : CNratio_floating, crop_residue_removal_frac
     !
     ! !ARGUMENTS:
     integer                       , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -3331,6 +3359,7 @@ contains
     real(r8) :: repr_grainn_to_food_thispool ! amount added to / subtracted from repr_grainn_to_food for the pool in question (gN/m2/s)
     real(r8) :: leafc_remaining, livestemc_remaining
     real(r8) :: leafn_remaining, livestemn_remaining
+    real(r8) :: removedresidue_fraction
     !-----------------------------------------------------------------------
 
     associate(                                                                           & 
@@ -3377,6 +3406,8 @@ contains
          repr_structurec_to_litter   => cnveg_carbonflux_inst%repr_structurec_to_litter_patch,   & ! Output: [real(r8) (:,:) ] reproductive structure C to litter (gC/m2/s)
          leafc_to_biofuelc     =>    cnveg_carbonflux_inst%leafc_to_biofuelc_patch     , & ! Output: [real(r8) (:) ]  leaf C to biofuel C (gC/m2/s)
          livestemc_to_biofuelc =>    cnveg_carbonflux_inst%livestemc_to_biofuelc_patch , & ! Output: [real(r8) (:) ]  livestem C to biofuel C (gC/m2/s)
+         leafc_to_removedresiduec     => cnveg_carbonflux_inst%leafc_to_removedresiduec_patch     , & ! Output: [real(r8) (:) ]  leaf C to removed residue C (gC/m2/s)
+         livestemc_to_removedresiduec => cnveg_carbonflux_inst%livestemc_to_removedresiduec_patch , & ! Output: [real(r8) (:) ]  livestem C to removed residue C (gC/m2/s)
          leafn                 =>    cnveg_nitrogenstate_inst%leafn_patch              , & ! Input:  [real(r8) (:) ]  (gN/m2) leaf N      
          frootn                =>    cnveg_nitrogenstate_inst%frootn_patch             , & ! Input:  [real(r8) (:) ]  (gN/m2) fine root N                        
 
@@ -3391,6 +3422,8 @@ contains
          repr_structuren_to_litter   => cnveg_nitrogenflux_inst%repr_structuren_to_litter_patch,   & ! Output: [real(r8) (:,:) ] reproductive structure N to litter (gN/m2/s)
          leafn_to_biofueln     =>    cnveg_nitrogenflux_inst%leafn_to_biofueln_patch   , & ! Output: [real(r8) (:) ]  leaf N to biofuel N (gN/m2/s)
          livestemn_to_biofueln =>    cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch, & ! Output: [real(r8) (:) ]  livestem N to biofuel N (gN/m2/s)     
+         leafn_to_removedresiduen     => cnveg_nitrogenflux_inst%leafn_to_removedresiduen_patch    , & ! Output: [real(r8) (:) ]  leaf N to removed residue N (gN/m2/s)
+         livestemn_to_removedresiduen => cnveg_nitrogenflux_inst%livestemn_to_removedresiduen_patch, & ! Output: [real(r8) (:) ]  livestem N to removed residue N (gN/m2/s)     
          leafn_to_litter       =>    cnveg_nitrogenflux_inst%leafn_to_litter_patch     , & ! Output: [real(r8) (:) ]  leaf N litterfall (gN/m2/s)                       
          leafn_to_retransn     =>    cnveg_nitrogenflux_inst%leafn_to_retransn_patch   , & ! Input: [real(r8) (:) ]  leaf N to retranslocated N pool (gN/m2/s)         
          free_retransn_to_npool=>    cnveg_nitrogenflux_inst%free_retransn_to_npool_patch  , & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
@@ -3446,7 +3479,7 @@ contains
 
       ! The litterfall transfer rate starts at 0.0 and increases linearly
       ! over time, with displayed growth going to 0.0 on the last day of litterfall
-      
+
       do fp = 1,num_soilp
          p = filter_soilp(fp)
 
@@ -3552,6 +3585,16 @@ contains
                   livestemc_remaining = livestemc(p)*(1._r8-biofuel_harvfrac(ivt(p)))
                   livestemn_remaining = livestemn(p)*(1._r8-biofuel_harvfrac(ivt(p)))
 
+                  ! Remove residues
+                  leafc_to_removedresiduec(p) = t1 * leafc_remaining * crop_residue_removal_frac
+                  leafn_to_removedresiduen(p) = t1 * leafn_remaining * crop_residue_removal_frac
+                  livestemc_to_removedresiduec(p) = t1 * livestemc_remaining * crop_residue_removal_frac
+                  livestemn_to_removedresiduen(p) = t1 * livestemn_remaining * crop_residue_removal_frac
+                  leafc_remaining     = leafc_remaining     * (1._r8 - crop_residue_removal_frac)
+                  leafn_remaining     = leafn_remaining     * (1._r8 - crop_residue_removal_frac)
+                  livestemc_remaining = livestemc_remaining * (1._r8 - crop_residue_removal_frac)
+                  livestemn_remaining = livestemn_remaining * (1._r8 - crop_residue_removal_frac)
+                  
                   leafc_to_litter(p)  = t1 * leafc_remaining  + cpool_to_leafc(p)
                   livestemc_to_litter(p)   = t1 * livestemc_remaining  + cpool_to_livestemc(p)
                   livestemn_to_litter(p)   = t1 * livestemn_remaining
@@ -4237,10 +4280,14 @@ ptch: do fp = 1,num_soilp
           p = filter_soilp(fp)
           cnveg_carbonflux_inst%crop_harvestc_to_cropprodc_patch(p) = &
                cnveg_carbonflux_inst%leafc_to_biofuelc_patch(p) + &
-               cnveg_carbonflux_inst%livestemc_to_biofuelc_patch(p)
+               cnveg_carbonflux_inst%livestemc_to_biofuelc_patch(p) + &
+               cnveg_carbonflux_inst%leafc_to_removedresiduec_patch(p) + &
+               cnveg_carbonflux_inst%livestemc_to_removedresiduec_patch(p)
           cnveg_nitrogenflux_inst%crop_harvestn_to_cropprodn_patch(p) = &
                cnveg_nitrogenflux_inst%leafn_to_biofueln_patch(p) + &
-               cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch(p)
+               cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch(p) + &
+               cnveg_nitrogenflux_inst%leafn_to_removedresiduen_patch(p) + &
+               cnveg_nitrogenflux_inst%livestemn_to_removedresiduen_patch(p)
        end do
 
        if (use_grainproduct) then

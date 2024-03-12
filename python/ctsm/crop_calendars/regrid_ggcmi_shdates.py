@@ -11,7 +11,8 @@ import logging
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 sys.path.insert(1, _CTSM_PYTHON)
 
-from ctsm.utils import abort, import_coord_1d, import_coord_2d
+from ctsm.utils import abort
+from ctsm.ctsm_pylib_dependent_utils import import_coord_1d, import_coord_2d
 from ctsm import ctsm_logging
 
 logger = logging.getLogger(__name__)

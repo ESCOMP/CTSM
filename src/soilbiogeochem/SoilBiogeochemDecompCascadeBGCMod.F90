@@ -229,8 +229,6 @@ contains
     !  initialize rate constants and decomposition pathways following the decomposition cascade of the BGC model.
     !  written by C. Koven 
     !
-    ! !USES:
-    !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds  
     type(soilbiogeochem_state_type) , intent(inout) :: soilbiogeochem_state_inst
@@ -511,7 +509,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine decomp_rate_constants_bgc(bounds, num_bgc_soilc, filter_bgc_soilc, &
-       soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
+       soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst, &
+       idop)
     !
     ! !DESCRIPTION:
     !  calculate rate constants and decomposition pathways for the CENTURY decomposition cascade model
@@ -521,6 +520,9 @@ contains
     use clm_time_manager , only : get_average_days_per_year, get_step_size
     use shr_const_mod    , only : SHR_CONST_PI
     use clm_varcon       , only : secspday
+    use TillageMod       , only : get_do_tillage
+    use TillageMod       , only : get_apply_tillage_multipliers
+    use landunit_varcon  , only : istcrop
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds          
@@ -530,6 +532,7 @@ contains
     type(temperature_type)               , intent(in)    :: temperature_inst
     type(ch4_type)                       , intent(in)    :: ch4_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
+    integer, optional                    , intent(in)    :: idop(:) ! patch day of planting
     !
     ! !LOCAL VARIABLES:
     real(r8), parameter :: eps = 1.e-6_r8
@@ -595,6 +598,10 @@ contains
          call endrun(msg='ERROR: cannot have both use_century_tfunc and normalize_q10_to_century_tfunc set as true'//&
               errMsg(sourcefile, __LINE__))
       endif
+
+      if (get_do_tillage() .and. .not. present(idop)) then
+         call endrun("Do not enable tillage without providing idop to decomp_rate_constants_bgc().")
+      end if
 
       days_per_year = get_average_days_per_year()
       dt = real( get_step_size(), r8 )
@@ -896,6 +903,13 @@ contains
                decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_cwd(c)
             end if
+
+            ! Tillage
+            if (get_do_tillage()) then
+               call get_apply_tillage_multipliers(idop, c, j, decomp_k(c,j,:))
+            end if
+
+            ! Above into soil matrix
             if(use_soil_matrixcn)then
                Ksoil%DM(c,j+nlevdecomp*(i_met_lit-1)) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l1(c) * dt
@@ -918,6 +932,7 @@ contains
             end if !use_soil_matrixcn
          end do
       end do
+
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = 1.0_r8
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1) = 1.0_r8
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = 1.0_r8

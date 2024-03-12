@@ -302,8 +302,10 @@ contains
            end if
            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
               cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - cf_veg%livestemc_to_litter_patch(p)*dt
-              cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - cf_veg%livestemc_to_biofuelc_patch(p)*dt
-              cs_veg%leafc_patch(p)      = cs_veg%leafc_patch(p)      - cf_veg%leafc_to_biofuelc_patch(p)*dt
+              cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - &
+                   (cf_veg%livestemc_to_biofuelc_patch(p) + cf_veg%livestemc_to_removedresiduec_patch(p))*dt
+              cs_veg%leafc_patch(p)      = cs_veg%leafc_patch(p)      - &
+                   (cf_veg%leafc_to_biofuelc_patch(p) + cf_veg%leafc_to_removedresiduec_patch(p))*dt
               cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
                    - cf_veg%crop_seedc_to_leaf_patch(p) * dt
               do k = repr_grain_min, repr_grain_max
