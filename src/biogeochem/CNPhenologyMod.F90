@@ -3605,43 +3605,51 @@ contains
 
                   ! Matrix for grain, livestem to litter, leaf to litter, and biofuel
                   if(use_matrixcn)then
-                     if(reproductivec(p,1) .gt. 0)then
+                     if(reproductivec(p,1) > 0._r8)then
                         grainc_to_out = reproductivec(p,1) * matrix_update_phc(p,igrain_to_iout_phc,(repr_grainc_to_seed(p,1) + repr_grainc_to_food(p,1)) / reproductivec(p,1),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                      else
-                        repr_grainc_to_seed(p,1) = 0
-                        repr_grainc_to_food(p,1) = 0
+                        repr_grainc_to_seed(p,1) = 0._r8
+                        repr_grainc_to_food(p,1) = 0._r8
                      end if
-                     if(reproductiven(p,1) .gt. 0)then
+                     if(reproductiven(p,1) > 0._r8)then
                         grainn_to_out = reproductiven(p,1) * matrix_update_phn(p,igrain_to_iout_phn,(repr_grainn_to_seed(p,1) + repr_grainn_to_food(p,1)) / reproductiven(p,1),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                      else
-                        repr_grainn_to_seed(p,1) = 0
-                        repr_grainn_to_food(p,1) = 0
+                        repr_grainn_to_seed(p,1) = 0._r8
+                        repr_grainn_to_food(p,1) = 0._r8
                      end if
-                     if(livestemc(p) .gt. 0)then
+                     if(livestemc(p) > 0._r8)then
                         livestemc_to_litter(p) = livestemc(p) * matrix_update_phc(p,ilivestem_to_iout_phc,livestemc_to_litter(p) / livestemc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        livestemc_to_removedresiduec(p) = livestemc(p) * matrix_update_gmc(p,ilivestem_to_iout_gmc,livestemc_to_removedresiduec(p) / livestemc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
                         livestemc_to_biofuelc(p) = livestemc(p) * matrix_update_gmc(p,ilivestem_to_iout_gmc,livestemc_to_biofuelc(p) / livestemc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
                      else
-                        livestemc_to_litter(p) = 0
-                        livestemc_to_biofuelc(p) = 0
+                        livestemc_to_litter(p) = 0._r8
+                        livestemc_to_removedresiduec(p) = 0._r8
+                        livestemc_to_biofuelc(p) = 0._r8
                      end if
-                     if(livestemn(p) .gt. 0)then
+                     if(livestemn(p) > 0._r8)then
                         livestemn_to_biofueln(p) = livestemn(p) * matrix_update_gmn(p,ilivestem_to_iout_gmn,livestemn_to_biofueln(p) / livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+                        livestemn_to_removedresiduen(p) = livestemn(p) * matrix_update_gmn(p,ilivestem_to_iout_gmn,livestemn_to_removedresiduen(p) / livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
                         livestemn_to_litter(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iout_phn, (1._r8- biofuel_harvfrac(ivt(p)))/dt, dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                      else
-                        livestemn_to_biofueln(p) = 0
-                        livestemn_to_litter(p) = 0
+                        livestemn_to_biofueln(p) = 0._r8
+                        livestemn_to_removedresiduen(p) = 0._r8
+                        livestemn_to_litter(p) = 0._r8
                      end if
-                     if(leafn(p) > 0)then
+                     if(leafn(p) > 0._r8)then
                         leafn_to_biofueln(p) =  leafn(p) * matrix_update_gmn(p,ileaf_to_iout_gmn,leafn_to_biofueln(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+                        leafn_to_removedresiduen(p) = leafn(p) * matrix_update_gmn(p,ileaf_to_iout_gmn,leafn_to_removedresiduen(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
                      else
-                        leafn_to_biofueln(p) = 0
+                        leafn_to_biofueln(p) = 0._r8
+                        leafn_to_removedresiduen(p) = 0._r8
                      end if
-                     if (leafc(p) > 0)then
+                     if (leafc(p) > 0._r8)then
                         leafc_to_biofuelc(p) =  leafc(p) * matrix_update_gmc(p,ileaf_to_iout_gmc,leafc_to_biofuelc(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
+                        leafc_to_removedresiduec(p) = leafc(p) * matrix_update_gmc(p,ileaf_to_iout_gmc,leafc_to_removedresiduec(p) / leafc(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
                         leafc_to_litter(p) = leafc(p) * matrix_update_phc(p,ileaf_to_iout_phc,leafc_to_litter(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                      else
-                        leafc_to_biofuelc(p) = 0
-                        leafc_to_litter(p) = 0
+                        leafc_to_biofuelc(p) = 0._r8
+                        leafc_to_removedresiduec(p) = 0._r8
+                        leafc_to_litter(p) = 0._r8
                      end if
                   else
                      ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
