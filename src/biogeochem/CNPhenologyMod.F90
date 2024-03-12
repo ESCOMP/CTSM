@@ -3645,7 +3645,7 @@ contains
                      end if
                      if (leafc(p) > 0._r8)then
                         leafc_to_biofuelc(p) =  leafc(p) * matrix_update_gmc(p,ileaf_to_iout_gmc,leafc_to_biofuelc(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
-                        leafc_to_removedresiduec(p) = leafc(p) * matrix_update_gmc(p,ileaf_to_iout_gmc,leafc_to_removedresiduec(p) / leafc(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+                        leafc_to_removedresiduec(p) = leafc(p) * matrix_update_gmc(p,ileaf_to_iout_gmc,leafc_to_removedresiduec(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
                         leafc_to_litter(p) = leafc(p) * matrix_update_phc(p,ileaf_to_iout_phc,leafc_to_litter(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                      else
                         leafc_to_biofuelc(p) = 0._r8
