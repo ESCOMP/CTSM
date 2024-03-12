@@ -3603,7 +3603,8 @@ contains
                   ! as well as leaf C:N ratio (unaffected by biofuel harvest). It thus does not
                   ! need to be updated here.
 
-                  ! Matrix for grain, livestem to litter, leaf to litter, and biofuel
+                  ! Matrix for grain
+                  ! Matrix for livestem/leaf to litter, biofuel, and removed residue
                   if(use_matrixcn)then
                      if(reproductivec(p,1) > 0._r8)then
                         grainc_to_out = reproductivec(p,1) * matrix_update_phc(p,igrain_to_iout_phc,(repr_grainc_to_seed(p,1) + repr_grainc_to_food(p,1)) / reproductivec(p,1),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
