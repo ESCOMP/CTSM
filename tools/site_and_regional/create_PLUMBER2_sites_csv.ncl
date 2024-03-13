@@ -36,8 +36,6 @@ begin
   pftperc = new((/nsim,2/),"double")   ; pft %
   pftcth  = new((/nsim,2/),"double")   ; pft canopy top height
   pftcbh  = new((/nsim,2/),"double")   ; pft canopy bottom height
-; pftcth  = new((/nsim,npfts_ch/),"double")   ; pft canopy top height
-; pftcbh  = new((/nsim,npfts_ch/),"double")   ; pft canopy bottom height
   pctwet  = new(nsim,"double")
 
   do sel = 0,nsim - 1
@@ -51,12 +49,9 @@ begin
   startyear(sel) = systemfunc(command)
   command = "echo " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*.nc" + " | cut -c81-84"
   endyear(sel) = systemfunc(command)
-  print(fls)
   datmfile = addfile(fls,"r")
   time = datmfile->time
-  printVarSummary(time)
   atm_ncpl(sel) = tostring(sprinti("%0.2i ",tointeger(86400./(time(1)-time(0)))))
-  print(atm_ncpl(sel))
   if (isint64(time)) then
     tmp = toint(time)
     copy_VarCoords(time,tmp)
@@ -66,17 +61,11 @@ begin
     copy_VarCoords(time,tmp)
     copy_VarAtts(time,tmp)
   end if
-  printVarSummary(tmp)
   utc_date = cd_calendar(tmp(0),0)
-  print(utc_date)
   localstartyear(sel) = tostring(tointeger(utc_date(0,0)))
-  print(localstartyear(sel))
   startmonth(sel) = tostring(sprinti("%0.2i ",tointeger(utc_date(0,1))))
-  print(startmonth(sel))
   startday(sel) = tostring(sprinti("%0.2i ",tointeger(utc_date(0,2))))
-  print(startday(sel))
   starttod(sel) = tostring(tointeger(utc_date(0,3)/24 * 86400))
-  print(starttod(sel))
   nsteps(sel) = dimsizes(tmp)
 
   latitude(sel) = datmfile->LATIXY(0,0)
@@ -90,7 +79,6 @@ begin
   delete(tmp)
   delete(utc_date)
 
-; run_startdate(sel) = localstartyear(sel)+"-"+startmonth(sel)+"-"+startday(sel)
   run_startdate(sel) = tostring(sprinti("%0.4i",tointeger(localstartyear(sel))))+"-"+tostring(sprinti("%0.2i",tointeger(startmonth(sel))))+"-"+tostring(sprinti("%0.2i",tointeger(startday(sel))))
 
   f_in_dir  = "/glade/work/oleson/PLUMBER2/input_files/"+sim(sel)+"/"
@@ -103,7 +91,6 @@ begin
     pct_nat_pft = surfdatafile->PCT_NAT_PFT(:,0,0)
     indx = ind(pct_nat_pft(:) .gt. 0)
     npfts = dimsizes(indx)
-    print(npfts)
     if (npfts .gt. 2) then
       print((/"Number of pfts is > 2"/))
       pfttype(sel,:) = -999
@@ -170,16 +157,10 @@ begin
     end if
   end if
 
-; do ch = 0,npfts_ch-1
-;   pftcth(sel,ch)  = monthly_height_top(ch)
-;   pftcbh(sel,ch)  = monthly_height_bot(ch)
-; end do
-
   end do
 
   print((/"Done with Loop"/))
 
-; fname = "/glade/work/oleson/PLUMBER2/NEON_PLUMBER/PLUMBER2_sites.csv"
   fname = "/glade/work/oleson/ctsm_PLUMBERcsv/tools/site_and_regional/PLUMBER2_sites.csv"
   header = (/"#pftX-cth and pftX-cbh are the site=specific canopy top and bottom heights", \
              "#start_year and end_year will be used to define DATM_YR_ALIGH, DATM_YR_START and DATM_YR_END, and STOP_N in units of nyears.", \
@@ -188,7 +169,6 @@ begin
              ",Site,Lat,Lon,pft1,pft1-%,pft1-cth,pft1-cbh,pft2,pft2-%,pft2-cth,pft2-cbh,start_year,end_year,RUN_STARTDATE,START_TOD,ATM_NCPL"/)
   hlist = [/header/]
   alist = [/site_num, sim, latitude, longitude, pfttype(:,0), pftperc(:,0), pftcth(:,0), pftcbh(:,0), pfttype(:,1), pftperc(:,1), pftcth(:,1), pftcbh(:,1),startyear, endyear, run_startdate, starttod, atm_ncpl/]
-  print(alist)
   print((/"Done defining hlist and alist"/))
   write_table(fname, "w", hlist, "%s")
   print((/"Done with header"/))
