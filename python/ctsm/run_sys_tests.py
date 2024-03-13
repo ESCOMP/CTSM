@@ -213,6 +213,13 @@ def run_sys_tests(
         rerun_existing_failures=rerun_existing_failures,
         extra_create_test_args=extra_create_test_args,
     )
+
+    running_ctsm_py_tests = (
+        testfile == "/path/to/testfile"
+        or testlist in [["test1", "test2"], ["foo"]]
+        or suite_name == "my_suite"
+    )
+
     if suite_name:
         if not dry_run:
             _make_cs_status_for_suite(testroot, testid_base)
@@ -225,16 +232,24 @@ def run_sys_tests(
             testroot=testroot,
             create_test_args=create_test_args,
             dry_run=dry_run,
+            running_ctsm_py_tests=running_ctsm_py_tests,
         )
     else:
         if not dry_run:
             _make_cs_status_non_suite(testroot, testid_base)
+        running_ctsm_py_tests = testfile == "/path/to/testfile"
         if testfile:
             test_args = ["--testfile", os.path.abspath(testfile)]
+            if not running_ctsm_py_tests:
+                with open(test_args[1], "r") as testfile_abspath:
+                    testname_list = testfile_abspath.readlines()
         elif testlist:
             test_args = testlist
+            testname_list = testlist
         else:
             raise RuntimeError("None of suite_name, testfile or testlist were provided")
+        if not running_ctsm_py_tests:
+            _check_py_env(testname_list)
         _run_create_test(
             cime_path=cime_path,
             test_args=test_args,
@@ -668,9 +683,10 @@ def _run_test_suite(
     testroot,
     create_test_args,
     dry_run,
+    running_ctsm_py_tests,
 ):
     if not suite_compilers:
-        suite_compilers = _get_compilers_for_suite(suite_name, machine.name)
+        suite_compilers = _get_compilers_for_suite(suite_name, machine.name, running_ctsm_py_tests)
     for compiler in suite_compilers:
         test_args = [
             "--xml-category",
@@ -692,12 +708,65 @@ def _run_test_suite(
         )
 
 
-def _get_compilers_for_suite(suite_name, machine_name):
+def _get_testmod_list(test_attributes, unique=False):
+    # Isolate testmods, producing a list like
+    # ["clm-test1mod1", "clm-test2mod1", "clm-test2mod2", ...]
+    # Handles test attributes passed in from run_sys_tests calls using -t, -f, or -s
+
+    testmods = []
+    for test_attribute in test_attributes:
+        for dot_split in test_attribute.split("."):
+            slash_replaced = dot_split.replace("/", "-")
+            for ddash_split in slash_replaced.split("--"):
+                if "clm-" in ddash_split and (ddash_split not in testmods or not unique):
+                    testmods.append(ddash_split)
+
+    return testmods
+
+
+def _check_py_env(test_attributes):
+    err_msg = " can't be loaded. Do you need to activate the ctsm_pylib conda environment?"
+    # Suppress pylint import-outside-toplevel warning because (a) we only want to import
+    # this when certain tests are requested, and (b) the import needs to be in a try-except
+    # block to produce a nice error message.
+    # pylint: disable=import-outside-toplevel disable
+    # Suppress pylint unused-import warning because the import itself IS the use.
+    # pylint: disable=unused-import disable
+    # Suppress pylint import-error warning because the whole point here is to check
+    # whether import is possible.
+    # pylint: disable=import-error disable
+
+    # Check requirements for FSURDATMODIFYCTSM, if needed
+    if any("FSURDATMODIFYCTSM" in t for t in test_attributes):
+        try:
+            import ctsm.modify_input_files.modify_fsurdat
+        except ModuleNotFoundError as err:
+            raise ModuleNotFoundError("modify_fsurdat" + err_msg) from err
+
+    # Check that list for any testmods that use modify_fates_paramfile.py
+    testmods_to_check = ["clm-FatesColdTwoStream", "clm-FatesColdTwoStreamNoCompFixedBioGeo"]
+    testmods = _get_testmod_list(test_attributes)
+    if any(t in testmods_to_check for t in testmods):
+        # This bit is needed because it's outside the top-level python/ directory.
+        fates_dir = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "src", "fates"
+        )
+        sys.path.insert(1, fates_dir)
+        try:
+            import tools.modify_fates_paramfile
+        except ModuleNotFoundError as err:
+            raise ModuleNotFoundError("modify_fates_paramfile" + err_msg) from err
+
+
+def _get_compilers_for_suite(suite_name, machine_name, running_ctsm_py_tests):
     test_data = get_tests_from_xml(xml_machine=machine_name, xml_category=suite_name)
     if not test_data:
         raise RuntimeError(
             "No tests found for suite {} on machine {}".format(suite_name, machine_name)
         )
+    if not running_ctsm_py_tests:
+        _check_py_env([t["testname"] for t in test_data])
+        _check_py_env([t["testmods"] for t in test_data if "testmods" in t.keys()])
     compilers = sorted({one_test["compiler"] for one_test in test_data})
     logger.info("Running with compilers: %s", compilers)
     return compilers

@@ -56,7 +56,7 @@ class TestSubsetData(unittest.TestCase):
         )
         self.assertEqual(
             files["main_dir"],
-            "/glade/p/cesmdata/inputdata",
+            "/glade/campaign/cesm/cesmdata/cseg/inputdata",
             "main_dir directory not whats expected",
         )
 

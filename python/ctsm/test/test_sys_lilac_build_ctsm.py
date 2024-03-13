@@ -26,6 +26,7 @@ class TestSysBuildCtsm(unittest.TestCase):
     """System tests for lilac_build_ctsm"""
 
     def setUp(self):
+        self._previous_dir = os.getcwd()
         self._tempdir = tempfile.mkdtemp()
         self.assertTrue(os.path.isdir(self._tempdir))
 
@@ -42,6 +43,7 @@ class TestSysBuildCtsm(unittest.TestCase):
             self._ncarhost = None
 
     def tearDown(self):
+        os.chdir(self._previous_dir)
         shutil.rmtree(self._tempdir, ignore_errors=True)
         if self._ncarhost is not None:
             os.environ["NCAR_HOST"] = self._ncarhost

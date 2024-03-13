@@ -21,7 +21,6 @@ all the conda commands and do this for you.
 Conda requirements files:
 
 conda_env_ctsm_py.txt --------- Standard conda environment to use for most machines
-conda_env_ctsm_py_cgd.txt ----- Standard conda environment for CGD machines
 conda_env_ctsm_py_latest.txt -- Test environment with latest versions that work
 
 ## Unit and system tests
@@ -47,7 +46,8 @@ thing, but support different options:
 2. via `./run_ctsm_py_tests`
 
    You can specify various arguments to this; run `./run_ctsm_py_tests
-   -h` for details
+   -h` for details. Please specify either --unit or --sys rather than
+   not including any arguments.
 
    In any configuration where you run the system tests, you need to
    first execute `module load nco`.
