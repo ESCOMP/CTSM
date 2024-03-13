@@ -64,6 +64,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : fates_inventory_ctrl_filename
    use clm_varctl        , only : use_nitrif_denitrif
    use clm_varctl        , only : use_lch4
+   use clm_varctl        , only : fates_history_dimlevel
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval
    use clm_varcon        , only : denice
@@ -133,7 +134,7 @@ module CLMFatesInterfaceMod
    use FatesParametersInterface, only : fates_parameters_type
 
    use FatesInterfaceMod     , only : DetermineGridCellNeighbors
-
+   use FatesIOVariableKindMod, only : group_dyna_simple, group_dyna_complx
    use FatesHistoryInterfaceMod, only : fates_hist
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
@@ -274,6 +275,7 @@ module CLMFatesInterfaceMod
 
    public  :: CLMFatesGlobals1
    public  :: CLMFatesGlobals2
+   public  :: CrossRefHistoryFields
 
  contains
 
@@ -406,6 +408,10 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
         call set_fates_ctrlparms('seeddisp_cadence',ival=fates_seeddisp_cadence)
 
+
+        call set_fates_ctrlparms('hist_hifrq_dimlevel',ival=fates_history_dimlevel(1))
+        call set_fates_ctrlparms('hist_dynam_dimlevel',ival=fates_history_dimlevel(2))
+        
         ! CTSM-FATES is not fully coupled (yet)
         ! So lets tell fates to use the RD competition mechanism
         ! which has fewer boundary conditions (simpler)
@@ -571,6 +577,90 @@ module CLMFatesInterfaceMod
      return
    end subroutine CLMFatesGlobals2
 
+   ! ===================================================================================
+
+   subroutine CrossRefHistoryFields
+
+     ! This routine only needs to be called on the masterproc.
+     ! Here we cross reference the CLM history master
+     ! list and make sure that all fields that start
+     ! with fates have been allocated. If it has
+     ! not, then we give a more constructive error
+     ! message than what is possible in PIO. The user
+     ! most likely needs to increase the history density
+     ! level
+
+     use histFileMod, only: getname
+     use histFileMod, only: hist_fincl1,hist_fincl2,hist_fincl3,hist_fincl4
+     use histFileMod, only: hist_fincl5,hist_fincl6,hist_fincl7,hist_fincl8
+     use histFileMod, only: hist_fincl9,hist_fincl10
+     use histFileMod, only: max_tapes, max_flds, max_namlen
+
+     integer :: t     ! iterator index for history tapes
+     integer :: f     ! iterator index for registered history field names
+     integer :: nh    ! iterator index for fates registered history
+     logical :: is_fates_field ! Does this start with FATES_ ?
+     logical :: found ! if true, than the history field is either
+                      ! not part of the fates set, or was found in
+                      ! the fates set
+     character(len=64) :: fincl_name
+     ! This is a copy of the public in histFileMod, copied
+     ! here because it isn't filled at the time of this call
+     character(len=max_namlen+2) :: fincl(max_flds,max_tapes)
+     
+     fincl(:,1)  = hist_fincl1(:)
+     fincl(:,2)  = hist_fincl2(:)
+     fincl(:,3)  = hist_fincl3(:)
+     fincl(:,4)  = hist_fincl4(:)
+     fincl(:,5)  = hist_fincl5(:)
+     fincl(:,6)  = hist_fincl6(:)
+     fincl(:,7)  = hist_fincl7(:)
+     fincl(:,8)  = hist_fincl8(:)
+     fincl(:,9)  = hist_fincl9(:)
+     fincl(:,10) = hist_fincl10(:)
+     
+     do t = 1,max_tapes
+
+        f = 1
+        search_fields: do while (f < max_flds .and. fincl(f,t) /= ' ')
+           
+           fincl_name = getname(fincl(f,t))
+           is_fates_field = fincl_name(1:6)=='FATES_'
+           
+           if(is_fates_field) then
+              found = .false.
+              do_fates_hist: do nh = 1,fates_hist%num_history_vars()
+                 if(trim(fates_hist%hvars(nh)%vname) == &
+                      trim(fincl_name)) then
+                    found=.true.
+                    exit do_fates_hist
+                 end if
+              end do do_fates_hist
+              
+              if(.not.found)then
+                 write(iulog,*) 'the history field: ',trim(fincl_name)
+                 write(iulog,*) 'was requested in the namelist, but was'
+                 write(iulog,*) 'not found in the list of fates_hist%hvars.'
+                 write(iulog,*) 'Most likely, this is because this history variable'
+                 write(iulog,*) 'was specified in the user namelist, but the user'
+                 write(iulog,*) 'specified a FATES history output dimension level'
+                 write(iulog,*) 'that does not contain that variable in its valid set.'
+                 write(iulog,*) 'You may have to increase the namelist setting: fates_history_dimlevel'
+                 write(iulog,*) 'current fates_history_dimlevel: ',fates_history_dimlevel(:)
+                 !uncomment if you want to list all fates history variables in registry
+                 !do_fates_hist2: do nh = 1,fates_hist%num_history_vars()
+                 !   write(iulog,*) trim(fates_hist%hvars(nh)%vname)
+                 !end do do_fates_hist2
+                 call endrun(msg=errMsg(sourcefile, __LINE__))
+              end if
+           end if
+           f = f + 1
+        end do search_fields
+        
+     end do
+   end subroutine CrossRefHistoryFields
+
+   
    ! ===================================================================================
   
    subroutine CLMFatesTimesteps()
@@ -1106,9 +1196,9 @@ module CLMFatesInterfaceMod
       ! Flush arrays to values defined by %flushval (see registry entry in
       ! subroutine define_history_vars()
       ! ---------------------------------------------------------------------------------
-      call fates_hist%flush_hvars(nc,upfreq_in=1)
+      call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_simple)
 
-      call fates_hist%flush_hvars(nc,upfreq_in=5)
+      call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_complx)
 
       ! ---------------------------------------------------------------------------------
       ! Part II: Call the FATES model now that input boundary conditions have been
@@ -1883,11 +1973,20 @@ module CLMFatesInterfaceMod
                ! ------------------------------------------------------------------------
                ! Update history IO fields that depend on ecosystem dynamics
                ! ------------------------------------------------------------------------
-               call fates_hist%flush_hvars(nc,upfreq_in=1)
-               do s = 1,this%fates(nc)%nsites
-                  call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
-                     upfreq_in=1)
-               end do
+               if(fates_history_dimlevel(2)>0) then
+                  call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_simple)
+                  do s = 1,this%fates(nc)%nsites
+                     call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
+                          upfreq_in=group_dyna_simple)
+                  end do
+                  if(fates_history_dimlevel(2)>1) then
+                     call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_complx)
+                     do s = 1,this%fates(nc)%nsites
+                        call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
+                             upfreq_in=group_dyna_complx)
+                     end do
+                  end if
+               end if
                call fates_hist%update_history_dyn( nc,                     &
                                                    this%fates(nc)%nsites,  &
                                                    this%fates(nc)%sites,   &
@@ -2067,17 +2166,24 @@ module CLMFatesInterfaceMod
            ! ------------------------------------------------------------------------
            ! Update history IO fields that depend on ecosystem dynamics
            ! ------------------------------------------------------------------------
-            call fates_hist%flush_hvars(nc,upfreq_in=1)
-            do s = 1,this%fates(nc)%nsites
-               call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
-                  upfreq_in=1)
-            end do
-            call fates_hist%update_history_dyn( nc,                     &
+           if(fates_history_dimlevel(2)>0) then
+              call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_simple)
+              do s = 1,this%fates(nc)%nsites
+                 call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
+                      upfreq_in=group_dyna_simple)
+              end do
+              if(fates_history_dimlevel(2)>1) then
+                 call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_complx)
+                 do s = 1,this%fates(nc)%nsites
+                    call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
+                         upfreq_in=group_dyna_complx)
+                 end do
+              end if
+           end if
+           call fates_hist%update_history_dyn( nc,                     &
                 this%fates(nc)%nsites,                                  &
                 this%fates(nc)%sites,                                   &
                 this%fates(nc)%bc_in) 
-
-
 
         end if
      end do
@@ -2885,6 +2991,7 @@ module CLMFatesInterfaceMod
             this%fates(nc)%nsites,  &
             this%fates(nc)%sites,   &
             this%fates(nc)%bc_in,   &
+            this%fates(nc)%bc_out,  &
             dtime)
       
     end associate
@@ -3198,6 +3305,8 @@ module CLMFatesInterfaceMod
    call fates_hist%initialize_history_vars()
    nvar = fates_hist%num_history_vars()
 
+   call CrossRefHistoryFields()
+   
    do ivar = 1, nvar
 
       associate( vname    => fates_hist%hvars(ivar)%vname, &

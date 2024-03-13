@@ -1,6 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-    ctsm5.1.dev173   olyson 03/07/2024 Improve vegetation health at high latitudes
+    ctsm5.1.dev174   olyson 03/14/2024 Improve vegetation health at high latitudes
+    ctsm5.1.dev173   rgknox 03/13/2024 New FATES namelist variable: fates_history_dimlevel
+    ctsm5.1.dev172     erik 03/12/2024 Merge b4b-dev
     ctsm5.1.dev171   olyson 03/01/2024 Set initial t_soisno=272 for soils and 274K for urban road
     ctsm5.1.dev170 samrabin 02/28/2024 Add hillslope hydrology
     ctsm5.1.dev169 samrabin 02/22/2024 Merge b4b-dev
