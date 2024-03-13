@@ -312,7 +312,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >20.0d00</rh_low>
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_1_cam6.0"
 >20.0d00</rh_low>
-<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_1_cam6.0"
+<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm6_0_cam6.0"
 >20.0d00</rh_low>
 <rh_hgh                   fire_method="li2016crufrc" >80.0d00</rh_hgh>
 <bt_min                   fire_method="li2016crufrc" >0.85d00</bt_min>
