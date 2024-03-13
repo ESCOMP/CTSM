@@ -68,7 +68,7 @@ def get_parser():
 
     parser.add_argument(
         "--lat",
-        help="Name of latitude varibale on netcdf input file.",
+        help="Name of latitude variable on netcdf input file.",
         action="store",
         dest="lat_name",
         type=str,
@@ -76,7 +76,7 @@ def get_parser():
     )
     parser.add_argument(
         "--lon",
-        help="Name of latitude varibale on netcdf input file.",
+        help="Name of latitude variable on netcdf input file.",
         action="store",
         dest="lon_name",
         type=str,
@@ -84,7 +84,7 @@ def get_parser():
     )
     parser.add_argument(
         "--mask",
-        help="Name of mask varibale on netcdf input file."
+        help="Name of mask variable on netcdf input file."
         + " If none given, create a fake mask with values of 1.",
         action="store",
         dest="mask_name",
