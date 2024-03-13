@@ -1,9 +1,0 @@
-# NOTE: This version is just for cgd.ucar.edu systems, where conda limits python to version 3.7.0
-#       See issue https://github.com/ESCOMP/CTSM/issues/1792
-#
-# To install this with conda loaded in modules
-# use the top level bash script:
-# ../py_env_create                                           # Do this each time you update your CTSM Version
-# conda activate ctsm_pylib                                  # Do this anytime you want to run a CTSM python script
-#
-python=3.7.0     # The python version MUST match the python version available on CGD systems through modules exactly
