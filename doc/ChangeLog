@@ -57,6 +57,117 @@ Answer changes for FATES tests were detected. All diffs were small enough to be 
 
 ===============================================================
 ===============================================================
+Tag name: ctsm5.1.dev172
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue 12 Mar 2024 11:59:48 PM MDT
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+Update of externals to what's expected in cesm2_3_beta17. Some documentation updates including a rebuild
+of the documentation and updating how images are handled with git lfs. Improvements to the documentation for
+residue removal and tillage for prognostic crops.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+CTSM issues fixed (include CTSM Issue #):
+   Fixes #2351 Update to cesm2_3_beta17 externals
+   Fixes #2380 ctsm_pylib on izumi can use python3.7.9
+   Fixes #2331 py_env_create fails on izumi
+   Fixes #1910 modify_singlept_neon on izumi
+   Fixes #1658 malformed file on izumi
+   Fixes #2412 Check current directory isn't being removed in run_neon
+
+Notes of particular relevance for users
+---------------------------------------
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+    ccs_config config_machines.xml files were updated from v2 to v3
+
+    The timing and memory usage information was moved from drv.log to med.log for nuopc runs.
+    This allows the creating of the baselines cpl-mem.log and cpl-tput.log files.
+
+   SMP_PRESENT removed and BUILD_THREADED added.
+
+Changes to tests or testing:
+   Bring back DEBUG testing with intel for mpi-serial cases.
+
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+    clm_pymods test suite on derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no bit-for-bit
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+   manage externals
+   cismwrap_2_1_97
+   = rtm1_0_79
+   mosart1_0_49
+   ccs_config_cesm0.0.92
+   cime6.0.217_httpsbranch03
+   cmeps0.14.50
+   cdeps1.0.28
+   share1.0.18
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #2396 Explain residue removal
+   #2385 Update externals
+   #2394 Fix tillage instructions and images
+   #2389 Minor docs updates
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev171
 Originator(s): olyson (Keith Oleson,UCAR/TSS)
 Date: Mon 04 Mar 2024 10:33:55 AM MST
