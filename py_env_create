@@ -30,16 +30,11 @@ ctsm_python=ctsm_pylib
 condadir="$dir/python"
 
 domain=`domainname`
-platform="linux-64"
 if [[ $domain =~ cgd.* ]]; then
-   condaplatformfile="conda_env_requirements_ctsm_pylib_cgd.txt"
+   condafile="conda_env_ctsm_py_cgd.txt"
 else
-   condaplatformfile="conda_env_requirements_ctsm_pylib_notcgd.txt"
+   condafile="conda_env_ctsm_py.txt"
 fi
-condafile="conda_env_requirements_ctsm_pylib.txt"
-specfile="conda_env_requirements_ctsm_pylib_specific.txt"
-latestfile="conda_env_requirements_ctsm_pylib_latest.txt"
-daskfile="conda_env_requirements_ctsm_pylib_dask.txt"
 #----------------------------------------------------------------------
 # Usage subroutine
 usage() {
@@ -57,28 +52,12 @@ usage() {
   echo "     Conda environment requirements text file to use (text format) in addition to the others"
   echo "     Assumed to be under the directory: $condadir"
   echo "     Default is: $condafile"
-  echo "[--read-spec] "
-  echo "     Also read the requirements file with specific versions"
-  echo "     This will likely be faster"
-  echo "     Will use: $condadir/$specfile"
-  echo "[--read-latest] "
-  echo "     Read the experimental conda environment file with the latest working versions"
-  echo "     Can NOT use with either the --file, or --read-spec options"
-  echo "     Will use: $condadir/$latestfile"
-  echo "[--dask] "
-  echo "     Include dask and plotting packages in the output environemnt"
-  echo "     This is experimental and will not be supported"
-  echo "     So if it fails with this option try building without it"
   echo "[--option <option>]  "
   echo "     Option(s) to pass to 'conda install' step"
   echo "***********************************************************************"
 }
 
 verbose="No"
-readspec="No"
-custom="No"
-includedask="No"
-latest="No"
 option=""
 while [ $# -gt 0 ]; do
    case $1 in
@@ -91,18 +70,7 @@ while [ $# -gt 0 ]; do
            ;;
        -f|--file )
            condafile=$2
-           custom="Yes"
            shift
-           ;;
-       --read-spec )
-           readspec="Yes"
-           ;;
-       --read-latest )
-           latest="Yes"
-           ;;
-       --dask )
-           includedask="Yes"
-           ctsm_python=ctsm_pylib_wdask
            ;;
        --option )
            option=$2
@@ -120,31 +88,14 @@ done
 #
 # Error checking options and setup
 #
-if [ "$latest" == "Yes" ]; then
-   condafilepath="$condadir/$latestfile"
-else
-   condafilepath="$condadir/$condafile"
-fi
-if [ ! -f $condafilepath ]; then
-   echo "$condafilepath does NOT exist"
+if [ ! -f $condadir/$condafile ]; then
+   echo "$condadir/$condafile does NOT exist"
    echo "Use the --file option with a valid filename"
-   exit -1
-fi
-if [ "$includedask" == "Yes" ] && [ "$latest" == "Yes" ]; then
-   echo "The --dask and --read-latest options can NOT both be turned on"
-   exit -1
-fi
-if [ "$readspec" == "Yes" ] && [ "$latest" == "Yes" ]; then
-   echo "The --readspec and --read-latest options can NOT both be turned on"
-   exit -1
-fi
-if [ "$custom" == "Yes" ] && [ "$latest" == "Yes" ]; then
-   echo "The --file and --read-latest options can NOT both be turned on"
    exit -1
 fi
 
 echo "Use conda to install the python environment needed to run the CTSM python tools in the conda environment: $ctsm_python"
-echo "Using the file: $condafilepath"
+echo "Using the file: $condadir/$condafile"
 
 #
 # Check if the environment already exists, if it does continue, if not create it
@@ -166,11 +117,6 @@ fi
 # Install the environemnt
 #
 echo "Install $ctsm_python this can take a long time (12 to 20 minutes is expected), be patient...."
-if [ "$readspec" != "Yes" ]; then
-    echo "    If this seems to be hanging (taking hours) or it aborts with an error -- retry using the --read-spec option"
-else
-    echo "    If this aborts with an error -- retry without using the --read-spec option"
-fi
 echo "    ...."
 echo "    ...."
 echo "    ...."
@@ -180,21 +126,12 @@ if [ "$verbose" == "Yes" ]; then
   verbosity="--verbose"
   loglevel="INFO"
 fi
-if [ "$latest" == "Yes" ]; then
-   filelist=""
-else
-   filelist="--file $condadir/$condaplatformfile"
-fi
-filelist="$filelist --file $condafilepath"
-if [ "$readspec" == "Yes" ]; then
-   filelist="$filelist --file $condadir/$specfile"
-fi
-cmd="conda install --yes $verbosity --channel conda-forge --name $ctsm_python $filelist $option"
+cmd="conda install --yes $verbosity --channel conda-forge --name $ctsm_python $condadir/$condafile $option"
 echo "$cmd"
 $cmd
 if [ $? != 0 ]; then
    echo "Trouble installing the $ctsm_python python environment"
-   echo "There must be a problem in the $condafilepath conda specification environment file"
+   echo "There must be a problem in the $condadir/$condafile conda specification environment file"
    echo "Change the file and try again"
    if [[ $domain =~ cgd.* ]]; then
        pythonpath=`which python`
@@ -206,23 +143,6 @@ if [ $? != 0 ]; then
        echo
    fi
    exit -2
-fi
-if [ "$includedask" == "Yes" ]; then
-   echo "Adding dask to the environment, because you used the --dask option."
-   echo "This should take a few minutes, if it hangs (takes hours) or aborts, build without dask by not using the --dask option"
-   echo "This option is NOT supported so if it fails you are on your own..."
-   cmd="conda install --yes $verbosity --channel conda-forge --name $ctsm_python --file $condadir/$daskfile $option"
-   echo "$cmd"
-   $cmd
-   if [ $? != 0 ]; then
-      echo "Trouble installing the $ctsm_python python environment for dask"
-      echo "Build the environment without dask by NOT using the --dask option"
-      echo "..."
-      echo "This option is NOT guaranteed to work and NOT supported, so you will have to figure this out on your own"
-      echo "There must be a problem in the $condadir/$daskfile conda specification environment file"
-      echo "Change the file and try again"
-      exit -2
-   fi
 fi
 #
 # Report on success
