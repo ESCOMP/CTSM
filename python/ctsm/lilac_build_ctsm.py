@@ -155,11 +155,11 @@ def build_ctsm(
 
     # Some error checking
     if inputdata_path is not None:
-       if not os.path.isdir(inputdata_path):
-           abort( "Input inputdata_path directory does NOT exist = "+inputdata_path )
+        if not os.path.isdir(inputdata_path):
+            abort("Input inputdata_path directory does NOT exist = " + inputdata_path)
 
     if not os.path.isdir(build_dir):
-        abort( "Input build_dir directory does NOT exist = "+build_dir )
+        abort("Input build_dir directory does NOT exist = " + build_dir)
 
     if machine is None:
         assert os_type is not None, "with machine absent, os_type must be given"

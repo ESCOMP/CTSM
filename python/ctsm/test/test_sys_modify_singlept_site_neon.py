@@ -38,7 +38,7 @@ class TestSysModifySingleptSiteNeon(unittest.TestCase):
         """
         Remove temporary directory
         """
-        os.chdir(self._previous_dir )
+        os.chdir(self._previous_dir)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_modify_site(self):
