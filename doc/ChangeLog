@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev173
 Originator(s): rgknox (Ryan Knox,LAWRENCE BERKELEY NATIONAL LABORATORY)
-Date: Wed 13 Mar 2024 10:42:26 AM MDT
+Date: Wed 13 Mar 2024 04:46:37 PM MDT
 One-line Summary: New FATES namelist variable, fates_history_dimlevel
 
 Purpose and description of changes
@@ -35,6 +35,14 @@ None of note.
 
 Testing summary:
 ----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (64 fates tests differ)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
