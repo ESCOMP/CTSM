@@ -10,7 +10,7 @@ module WaterFluxType
   use clm_varpar     , only : nlevsno, nlevsoi
   use clm_varcon     , only : spval
   use decompMod      , only : bounds_type
-  use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_gridcell
+  use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_landunit, subgrid_level_gridcell
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
@@ -26,7 +26,7 @@ module WaterFluxType
 
      class(water_info_base_type), pointer :: info
 
-     ! water fluxes are in units or mm/s
+     ! water fluxes are in units of mm/s
 
      real(r8), pointer :: qflx_through_snow_patch  (:)   ! patch canopy throughfall of snow (mm H2O/s)
      real(r8), pointer :: qflx_through_liq_patch  (:)    ! patch canopy throughfal of liquid (rain+irrigation) (mm H2O/s)
@@ -72,6 +72,10 @@ module WaterFluxType
      real(r8), pointer :: qflx_infl_col            (:)   ! col infiltration (mm H2O /s)
      real(r8), pointer :: qflx_surf_col            (:)   ! col total surface runoff (mm H2O /s)
      real(r8), pointer :: qflx_drain_col           (:)   ! col sub-surface runoff (mm H2O /s)
+     real(r8), pointer :: qflx_latflow_in_col      (:)   ! col hillslope lateral flow input (mm/s)
+     real(r8), pointer :: qflx_latflow_out_col     (:)   ! col hillslope lateral flow output (mm/s)
+     real(r8), pointer :: volumetric_discharge_col (:)   ! col hillslope discharge (m3/s)
+     real(r8), pointer :: volumetric_streamflow_lun(:)   ! lun stream discharge (m3/s)
      real(r8), pointer :: qflx_drain_perched_col   (:)   ! col sub-surface runoff from perched wt (mm H2O /s)                                                                                                      
      real(r8), pointer :: qflx_top_soil_col        (:)   ! col net water input into soil from top (mm/s)
      real(r8), pointer :: qflx_floodc_col          (:)   ! col flood water flux at column level
@@ -278,6 +282,18 @@ contains
     call AllocateVar1d(var = this%qflx_drain_perched_col, name = 'qflx_drain_perched_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column)
+    call AllocateVar1d(var = this%qflx_latflow_in_col, name = 'qflx_latflow_in_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_column)
+    call AllocateVar1d(var = this%qflx_latflow_out_col, name = 'qflx_latflow_out_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_column)
+    call AllocateVar1d(var = this%volumetric_discharge_col, name = 'volumetric_discharge_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_column)
+    call AllocateVar1d(var = this%volumetric_streamflow_lun, name = 'volumetric_streamflow_lun', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_landunit)
     call AllocateVar1d(var = this%qflx_top_soil_col, name = 'qflx_top_soil_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column)
@@ -386,6 +402,8 @@ contains
     !
     ! !USES:
     use histFileMod , only : hist_addfld1d, hist_addfld2d, no_snow_normal
+    use clm_varctl  , only : use_hillslope, use_hillslope_routing
+
     !
     ! !ARGUMENTS:
     class(waterflux_type), intent(in) :: this
@@ -394,12 +412,14 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
     integer           :: begc, endc
+    integer           :: begl, endl
     integer           :: begg, endg
     real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
+    begl = bounds%begl; endl= bounds%endl
     begg = bounds%begg; endg= bounds%endg
 
     this%qflx_through_liq_patch(begp:endp) = spval
@@ -482,6 +502,37 @@ contains
          avgflag='A', &
          long_name=this%info%lname('sub-surface drainage'), &
          ptr_col=this%qflx_drain_col, c2l_scale_type='urbanf')
+
+    if (use_hillslope) then
+       this%qflx_latflow_out_col(begc:endc) = spval
+       call hist_addfld1d ( &
+            fname=this%info%fname('QLATFLOWOUT'),  &
+            units='mm/s',  &
+            avgflag='A', &
+            long_name=this%info%lname('hillcol lateral outflow'), &
+            l2g_scale_type='natveg', c2l_scale_type='urbanf', &
+            ptr_col=this%qflx_latflow_out_col)
+
+       this%volumetric_discharge_col(begc:endc) = spval
+       call hist_addfld1d ( &
+            fname=this%info%fname('VOLUMETRIC_DISCHARGE'),  &
+            units='m3/s',  &
+            avgflag='A', &
+            long_name=this%info%lname('hillslope discharge from column'), &
+            l2g_scale_type='natveg', c2l_scale_type='urbanf', &
+            ptr_col=this%volumetric_discharge_col,default='inactive')
+
+       if (use_hillslope_routing) then
+          this%volumetric_streamflow_lun(begl:endl) = spval
+          call hist_addfld1d ( &
+               fname=this%info%fname('VOLUMETRIC_STREAMFLOW'),  &
+               units='m3/s',  &
+               avgflag='A', &
+               long_name=this%info%lname('volumetric streamflow from hillslope'), &
+               l2g_scale_type='natveg', &
+               ptr_lunit=this%volumetric_streamflow_lun)
+       endif
+    endif
 
     this%qflx_drain_perched_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -810,6 +861,8 @@ contains
     !
     ! !USES:
     use landunit_varcon, only : istsoil, istcrop
+    use clm_varctl     , only : use_hillslope_routing
+
     !
     ! !ARGUMENTS:
     class(waterflux_type), intent(in) :: this
@@ -861,9 +914,19 @@ contains
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           this%qflx_drain_col(c) = 0._r8
           this%qflx_surf_col(c)  = 0._r8
+          this%qflx_latflow_in_col(c)  = 0._r8
+          this%qflx_latflow_out_col(c) = 0._r8
+          this%volumetric_discharge_col(c) = 0._r8
        end if
     end do
-
+    if (use_hillslope_routing) then
+       do l = bounds%begl, bounds%endl
+          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+             this%volumetric_streamflow_lun(l) = 0._r8
+          end if
+       end do
+    endif
+          
   end subroutine InitCold
 
   !------------------------------------------------------------------------
