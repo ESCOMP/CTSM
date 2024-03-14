@@ -168,7 +168,13 @@ def main():
     # Determine resolution sets that are referenced in commands
     # TODO slevis: When new resolutions become supported in ccs_config, the
     # first entry will change to
-    # "standard_res_no_crop": ["0.9x1.25", "1.9x2.5", "mpasa60", "mpasa60-3conus", "mpasa60-3centralUS"],
+    # "standard_res_no_crop": [
+        # "0.9x1.25",
+        # "1.9x2.5",
+        # "mpasa60",
+        # "mpasa60-3conus",
+        # "mpasa60-3centralUS",
+        # ],
     # --------------------------
     resolution_dict = {
         "standard_res_no_crop": ["0.9x1.25", "1.9x2.5", "mpasa60"],
@@ -246,7 +252,8 @@ def main():
             "mpasa480",
         ),
         "crop-global-present-nldas": (
-            "--start-year 2000 --end-year 2000                                 --res",  # TODO slevis: --hirespft uses old data for now, so keep out
+            # TODO slevis: --hirespft uses old data for now, so keep out
+            "--start-year 2000 --end-year 2000                                 --res",
             "nldas_res",
         ),
         "crop-global-1850": (
@@ -370,7 +377,8 @@ def main():
     if not os.path.exists(args.bld_path):
         print(
             args.bld_path
-            + " directory does NOT exist -- build mksurdata_esmf before running this script -- using ./gen_mksurfdata_build.sh"
+            + " directory does NOT exist -- build mksurdata_esmf before running this script --"
+            + " using ./gen_mksurfdata_build.sh"
         )
         sys.exit(1)
 
@@ -396,13 +404,15 @@ def main():
         runfile.write(f"#PBS -q {queue} \n")
         runfile.write(f"#PBS -l walltime={walltime} \n")
         runfile.write(
-            f"#PBS -l select={number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node}:mem=218GB \n"
+            "#PBS -l select="
+            + f"{number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node}:mem=218GB \n"
         )
         runfile.write(
-            f"# This is a batch script to run a set of resolutions for mksurfdata_esmf {scenario} \n"
+            f"# This is a batch script to run a set of resolutions for mksurfdata_esmf {scenario}\n"
         )
         runfile.write(
-            "# NOTE: THIS SCRIPT IS AUTOMATICALLY GENERATED SO IN GENERAL YOU SHOULD NOT EDIT it!!\n\n"
+            "# NOTE: THIS SCRIPT IS AUTOMATICALLY GENERATED "
+            + "SO IN GENERAL YOU SHOULD NOT EDIT it!!\n\n"
         )
         runfile.write("\n")
 

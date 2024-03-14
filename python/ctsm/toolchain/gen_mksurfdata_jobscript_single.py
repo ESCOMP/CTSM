@@ -130,7 +130,8 @@ def main():
             runfile.write(f"#PBS -A {account} \n")
             runfile.write("#PBS -q main \n")
             runfile.write(
-                f"#PBS -l select={number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node} \n"
+                "#PBS -l select="
+                + f"{number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node} \n"
             )
         elif machine == "casper":
             attribs = {"mpilib": "default"}
