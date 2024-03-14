@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev174
 Originator(s): olyson (Keith Oleson,UCAR/TSS)
-Date: Wed 13 Mar 2024 05:28:05 PM MDT
+Date: Thu 14 Mar 2024 04:56:37 PM MDT
 One-line Summary: Improve vegetation health at high latitudes
 
 Purpose and description of changes
@@ -43,6 +43,8 @@ CTSM issues fixed (include CTSM Issue #):
 Fixes #2298
 Fixes LMWG_dev discussion #3
 
+New bug discovered or introduced:
+Relevant post appears in #2348 on 2024/3/14
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -61,8 +63,8 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
   any other testing (give details below):
  Keith Oleson replicated simulation in LMWG_dev issue #51 as bfb when
