@@ -416,8 +416,6 @@ def main():
         )
         runfile.write("\n")
 
-        n_p = int(tasks_per_node) * int(number_of_nodes)
-
         # Run env_mach_specific.sh to control the machine dependent
         # environment including the paths to compilers and libraries
         # external to cime such as netcdf
