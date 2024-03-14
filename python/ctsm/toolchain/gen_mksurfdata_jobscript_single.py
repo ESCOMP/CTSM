@@ -11,8 +11,10 @@ from ctsm import add_cime_to_path  # pylint: disable=unused-import
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.utils import abort
 from ctsm.path_utils import path_to_ctsm_root
-from CIME.XML.env_mach_specific import EnvMachSpecific  # pylint: disable=import-error
-from CIME.BuildTools.configure import FakeCase  # pylint: disable=import-error
+from CIME.XML.env_mach_specific \
+    import EnvMachSpecific  # pylint: disable=import-error,wrong-import-order
+from CIME.BuildTools.configure \
+    import FakeCase  # pylint: disable=import-error,wrong-import-order
 
 logger = logging.getLogger(__name__)
 
