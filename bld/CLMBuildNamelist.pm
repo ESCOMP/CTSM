@@ -2038,7 +2038,7 @@ sub setup_logic_snicar_methods {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'do_sno_oc' );
 
   # Error checking in loop
-  my %supportedSettings = ( 'snicar_solarspec' => "'mid_latitude_winter'", 'snicar_dust_optics' => "'sahara'", 'snicar_numrad_snw' => '5', 'snicar_snobc_intmix' => '.false.', 'snicar_snodst_intmix' => '.false.', 'snicar_use_aerosol' => '.true.', 'do_sno_oc' => '.false.' );
+  my %supportedSettings = ( 'snicar_solarspec' => "'mid_latitude_winter'", 'snicar_dust_optics' => "'sahara'", 'snicar_numrad_snw' => '5', 'snicar_snodst_intmix' => '.false.', 'snicar_use_aerosol' => '.true.', 'do_sno_oc' => '.false.' );
   keys %supportedSettings;
   while ( my ($key, $val) = each %supportedSettings ) {
     my $var = $nl->get_value($key);
@@ -2056,13 +2056,13 @@ sub setup_logic_snicar_methods {
     $log->warning("$key1=$val1a and $val1b are supported; $var1 is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!");
   }
 
-  # snicar_snobc_intmix and snicar_snodst_intmix cannot both be true
+  # snicar_snobc_intmix and snicar_snodst_intmix cannot both be true, however, they can both be false
   my $key1 = 'snicar_snobc_intmix';
   my $key2 = 'snicar_snodst_intmix';
   my $var1 = $nl->get_value($key1);
   my $var2 = $nl->get_value($key2);
-  my $val1 = $supportedSettings{$key1};  # supported value for this option
-  if (($var1 eq $var2) && ($var1 ne $val1)) {
+  my $val2 = $supportedSettings{$key2};  # supported value for this option
+  if (($var1 eq $var2) && ($var2 ne $val2)) {
     $log->warning("$key1 = $var1 and $key2 = $var2 do not work together!");
   }
 }
