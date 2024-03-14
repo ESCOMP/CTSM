@@ -47,10 +47,12 @@ class TestSysGenMkSurfJSMulti(unittest.TestCase):
         os.chdir(self._original_wd)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
-    def createJS(self, nodes, tasks_per_node, scenario, option_list=[]):
+    def createJS(self, nodes, tasks_per_node, scenario, option_list=None):
         """
         Create a JobScript by sending a list of options in
         """
+        if option_list is None:
+            option_list = []
         if len(option_list) > 1:
             sys.argv.extend(option_list)
         sys.argv.extend(
