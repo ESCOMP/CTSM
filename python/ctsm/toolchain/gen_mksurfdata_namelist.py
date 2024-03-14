@@ -297,6 +297,7 @@ def main():
 
     if force_model_mesh_file is not None:
         # open mesh_file to read element_count and, if available, orig_grid_dims
+        # pylint: disable=no-name-in-module,no-member
         mesh_file = netCDF4.Dataset(force_model_mesh_file, "r")
         element_count = mesh_file.dimensions["elementCount"].size
         if "origGridDims" in mesh_file.variables:
