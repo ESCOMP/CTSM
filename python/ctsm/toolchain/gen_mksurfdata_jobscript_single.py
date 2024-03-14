@@ -4,7 +4,6 @@ mksurfdata executable to generate a single fsurdat file. For detailed
 instructions, see README.
 """
 import os
-import sys
 import argparse
 import logging
 
