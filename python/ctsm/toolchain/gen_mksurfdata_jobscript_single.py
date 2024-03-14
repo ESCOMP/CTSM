@@ -94,6 +94,75 @@ def get_parser():
     return parser
 
 
+def write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, runfile):
+    """
+    Write run script (part 1)
+    """
+    runfile.write("#!/bin/bash \n")
+    runfile.write("# Edit the batch directives for your batch system \n")
+    runfile.write(f"# Below are default batch directives for {machine} \n")
+    runfile.write("#PBS -N mksurfdata \n")
+    runfile.write("#PBS -j oe \n")
+    runfile.write("#PBS -k eod \n")
+    runfile.write("#PBS -S /bin/bash \n")
+    if machine == "derecho":
+        attribs = {"mpilib": "default"}
+        runfile.write("#PBS -l walltime=59:00 \n")
+        runfile.write(f"#PBS -A {account} \n")
+        runfile.write("#PBS -q main \n")
+        runfile.write(
+            "#PBS -l select="
+            + f"{number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node} \n"
+        )
+    elif machine == "casper":
+        attribs = {"mpilib": "default"}
+        runfile.write("#PBS -l walltime=1:00:00 \n")
+        runfile.write(f"#PBS -A {account} \n")
+        runfile.write("#PBS -q casper \n")
+        runfile.write(
+            f"#PBS -l select={number_of_nodes}:ncpus={tasks_per_node}:"
+            f"mpiprocs={tasks_per_node}:mem=80GB \n"
+        )
+    elif machine == "izumi":
+        attribs = {"mpilib": "mvapich2"}
+        runfile.write("#PBS -l walltime=2:00:00 \n")
+        runfile.write("#PBS -q medium \n")
+        runfile.write(f"#PBS -l nodes={number_of_nodes}:ppn={tasks_per_node},mem=555GB -r n \n")
+        tool_path = os.path.dirname(os.path.abspath(__file__))
+        runfile.write("\n")
+        runfile.write(f"cd {tool_path} \n")
+
+    runfile.write("\n")
+    return attribs
+
+
+def write_runscript_part2(namelist_file, runfile, executable, mksurfdata_path, env_mach_path):
+    """
+    Write run script (part 2)
+    """
+    runfile.write(
+        "# Run env_mach_specific.sh to control the machine "
+        "dependent environment including the paths to "
+        "compilers and libraries external to cime such as netcdf"
+    )
+    runfile.write(f"\n. {env_mach_path}\n")
+    check = 'if [ $? != 0 ]; then echo "Error running env_mach_specific"; exit -4; fi'
+    runfile.write(f"{check} \n")
+    runfile.write(
+        "# Edit the mpirun command to use the MPI executable "
+        "on your system and the arguments it requires \n"
+    )
+    output = f"{executable} {mksurfdata_path} < {namelist_file}"
+    runfile.write(f"{output} \n")
+    logger.info("run command is %s", output)
+
+    check = (
+        f'if [ $? != 0 ]; then echo "Error running for namelist  {namelist_file}"; exit -4; fi'
+    )
+    runfile.write(f"{check} \n")
+    runfile.write("echo Successfully ran resolution\n")
+
+
 def main():
     """
     See docstring at the top.
@@ -118,110 +187,57 @@ def main():
     # Write run script (part 1)
     # --------------------------
     with open(jobscript_file, "w", encoding="utf-8") as runfile:
-        runfile.write("#!/bin/bash \n")
-        runfile.write("# Edit the batch directives for your batch system \n")
-        runfile.write(f"# Below are default batch directives for {machine} \n")
-        runfile.write("#PBS -N mksurfdata \n")
-        runfile.write("#PBS -j oe \n")
-        runfile.write("#PBS -k eod \n")
-        runfile.write("#PBS -S /bin/bash \n")
-        if machine == "derecho":
-            attribs = {"mpilib": "default"}
-            runfile.write("#PBS -l walltime=59:00 \n")
-            runfile.write(f"#PBS -A {account} \n")
-            runfile.write("#PBS -q main \n")
-            runfile.write(
-                "#PBS -l select="
-                + f"{number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node} \n"
-            )
-        elif machine == "casper":
-            attribs = {"mpilib": "default"}
-            runfile.write("#PBS -l walltime=1:00:00 \n")
-            runfile.write(f"#PBS -A {account} \n")
-            runfile.write("#PBS -q casper \n")
-            runfile.write(
-                f"#PBS -l select={number_of_nodes}:ncpus={tasks_per_node}:"
-                f"mpiprocs={tasks_per_node}:mem=80GB \n"
-            )
-        elif machine == "izumi":
-            attribs = {"mpilib": "mvapich2"}
-            runfile.write("#PBS -l walltime=2:00:00 \n")
-            runfile.write("#PBS -q medium \n")
-            runfile.write(f"#PBS -l nodes={number_of_nodes}:ppn={tasks_per_node},mem=555GB -r n \n")
-            tool_path = os.path.dirname(os.path.abspath(__file__))
-            runfile.write("\n")
-            runfile.write(f"cd {tool_path} \n")
+        attribs = write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, runfile)
 
-        runfile.write("\n")
+    # --------------------------
+    # Obtain mpirun command from env_mach_specific.xml
+    # --------------------------
+    bld_path = args.bld_path
+    if not os.path.exists(bld_path):
+        abort("Input Build path (" + bld_path + ") does NOT exist, aborting")
+    # Get the ems_file object with standalone_configure=True
+    # and the fake_case object with mpilib=attribs['mpilib']
+    # so as to use the get_mpirun function pointing to fake_case
+    ems_file = EnvMachSpecific(bld_path, standalone_configure=True)
+    fake_case = FakeCase(
+        compiler=None, mpilib=attribs["mpilib"], debug=False, comp_interface=None
+    )
+    total_tasks = int(tasks_per_node) * int(number_of_nodes)
+    cmd = ems_file.get_mpirun(
+        fake_case,
+        attribs,
+        job="name",
+        exe_only=True,
+        overrides={
+            "total_tasks": total_tasks,
+        },
+    )
+    # cmd is a tuple:
+    # cmd[0] contains the mpirun command (eg mpirun, mpiexe, etc) as string
+    # cmd[1] contains a list of strings that we append as options to cmd[0]
+    # The replace function removes unnecessary characters that appear in
+    # some such options
+    executable = f'{cmd[0]} {" ".join(cmd[1])}'.replace("ENV{", "").replace("}", "")
 
-        # --------------------------
-        # Obtain mpirun command from env_mach_specific.xml
-        # --------------------------
-        bld_path = args.bld_path
-        if not os.path.exists(bld_path):
-            abort("Input Build path (" + bld_path + ") does NOT exist, aborting")
-        # Get the ems_file object with standalone_configure=True
-        # and the fake_case object with mpilib=attribs['mpilib']
-        # so as to use the get_mpirun function pointing to fake_case
-        ems_file = EnvMachSpecific(bld_path, standalone_configure=True)
-        fake_case = FakeCase(
-            compiler=None, mpilib=attribs["mpilib"], debug=False, comp_interface=None
+    mksurfdata_path = os.path.join(bld_path, "mksurfdata")
+    if not os.path.exists(mksurfdata_path):
+        abort(
+            "mksurfdata_esmf executable ("
+            + mksurfdata_path
+            + ") does NOT exist in the bld-path, aborting"
         )
-        total_tasks = int(tasks_per_node) * int(number_of_nodes)
-        cmd = ems_file.get_mpirun(
-            fake_case,
-            attribs,
-            job="name",
-            exe_only=True,
-            overrides={
-                "total_tasks": total_tasks,
-            },
+    env_mach_path = os.path.join(bld_path, ".env_mach_specific.sh")
+    if not os.path.exists(env_mach_path):
+        abort(
+            "Environment machine specific file ("
+            + env_mach_path
+            + ") does NOT exist in the bld-path, aborting"
         )
-        # cmd is a tuple:
-        # cmd[0] contains the mpirun command (eg mpirun, mpiexe, etc) as string
-        # cmd[1] contains a list of strings that we append as options to cmd[0]
-        # The replace function removes unnecessary characters that appear in
-        # some such options
-        executable = f'{cmd[0]} {" ".join(cmd[1])}'.replace("ENV{", "").replace("}", "")
 
-        mksurfdata_path = os.path.join(bld_path, "mksurfdata")
-        if not os.path.exists(mksurfdata_path):
-            abort(
-                "mksurfdata_esmf executable ("
-                + mksurfdata_path
-                + ") does NOT exist in the bld-path, aborting"
-            )
-        env_mach_path = os.path.join(bld_path, ".env_mach_specific.sh")
-        if not os.path.exists(env_mach_path):
-            abort(
-                "Environment machine specific file ("
-                + env_mach_path
-                + ") does NOT exist in the bld-path, aborting"
-            )
-
-        # --------------------------
-        # Write run script (part 2)
-        # --------------------------
-        runfile.write(
-            "# Run env_mach_specific.sh to control the machine "
-            "dependent environment including the paths to "
-            "compilers and libraries external to cime such as netcdf"
-        )
-        runfile.write(f"\n. {env_mach_path}\n")
-        check = 'if [ $? != 0 ]; then echo "Error running env_mach_specific"; exit -4; fi'
-        runfile.write(f"{check} \n")
-        runfile.write(
-            "# Edit the mpirun command to use the MPI executable "
-            "on your system and the arguments it requires \n"
-        )
-        output = f"{executable} {mksurfdata_path} < {namelist_file}"
-        runfile.write(f"{output} \n")
-        logger.info("run command is %s", output)
-
-        check = (
-            f'if [ $? != 0 ]; then echo "Error running for namelist  {namelist_file}"; exit -4; fi'
-        )
-        runfile.write(f"{check} \n")
-        runfile.write("echo Successfully ran resolution\n")
+    # --------------------------
+    # Write run script (part 2)
+    # --------------------------
+    with open(jobscript_file, "a", encoding="utf-8") as runfile:
+        write_runscript_part2(namelist_file, runfile, executable, mksurfdata_path, env_mach_path)
 
     print(f"echo Successfully created jobscript {jobscript_file}\n")
