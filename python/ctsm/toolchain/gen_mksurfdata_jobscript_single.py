@@ -11,10 +11,10 @@ from ctsm import add_cime_to_path  # pylint: disable=unused-import
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.utils import abort
 from ctsm.path_utils import path_to_ctsm_root
-from CIME.XML.env_mach_specific \
-    import EnvMachSpecific  # pylint: disable=import-error,wrong-import-order
-from CIME.BuildTools.configure \
-    import FakeCase  # pylint: disable=import-error,wrong-import-order
+from CIME.XML.env_mach_specific import (
+    EnvMachSpecific,
+)  # pylint: disable=import-error,wrong-import-order
+from CIME.BuildTools.configure import FakeCase  # pylint: disable=import-error,wrong-import-order
 
 logger = logging.getLogger(__name__)
 
@@ -156,9 +156,7 @@ def write_runscript_part2(namelist_file, runfile, executable, mksurfdata_path, e
     runfile.write(f"{output} \n")
     logger.info("run command is %s", output)
 
-    check = (
-        f'if [ $? != 0 ]; then echo "Error running for namelist  {namelist_file}"; exit -4; fi'
-    )
+    check = f'if [ $? != 0 ]; then echo "Error running for namelist  {namelist_file}"; exit -4; fi'
     runfile.write(f"{check} \n")
     runfile.write("echo Successfully ran resolution\n")
 
@@ -199,9 +197,7 @@ def main():
     # and the fake_case object with mpilib=attribs['mpilib']
     # so as to use the get_mpirun function pointing to fake_case
     ems_file = EnvMachSpecific(bld_path, standalone_configure=True)
-    fake_case = FakeCase(
-        compiler=None, mpilib=attribs["mpilib"], debug=False, comp_interface=None
-    )
+    fake_case = FakeCase(compiler=None, mpilib=attribs["mpilib"], debug=False, comp_interface=None)
     total_tasks = int(tasks_per_node) * int(number_of_nodes)
     cmd = ems_file.get_mpirun(
         fake_case,

@@ -125,9 +125,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         try:
             subprocess.check_call(ncap2_cmd, shell=True)
         except subprocess.CalledProcessError as e:
-            sys.exit(
-                f"{e} ERROR using ncap2 to generate {self._landmask_file} from {fsurdat_in}"
-            )
+            sys.exit(f"{e} ERROR using ncap2 to generate {self._landmask_file} from {fsurdat_in}")
 
     def tearDown(self):
         """
