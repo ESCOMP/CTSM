@@ -890,6 +890,8 @@ def open_mesh_file(force_model_mesh_file, force_model_mesh_nx, force_model_mesh_
     open mesh_file to read element_count and, if available, orig_grid_dims
     """
     # pylint: disable=no-name-in-module,no-member
+    # The above "pylint: disable" is because pylint complains that netCDF4
+    # has no member Dataset, even though it does.
     mesh_file = netCDF4.Dataset(force_model_mesh_file, "r")
     element_count = mesh_file.dimensions["elementCount"].size
     if "origGridDims" in mesh_file.variables:
