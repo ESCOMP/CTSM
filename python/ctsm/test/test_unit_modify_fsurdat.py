@@ -390,7 +390,8 @@ class TestModifyFsurdat(unittest.TestCase):
         settings = {"var_lev1": lev1list}
         with self.assertRaisesRegex(
             SystemExit,
-            " Variable var_lev1 is 8 is of the wrong size. It should be = 9 in input settings dictionary",
+            " Variable var_lev1 is 8 is of the wrong size."
+            + " It should be = 9 in input settings dictionary",
         ):
             self.modify_fsurdat.check_varlist(settings)
 

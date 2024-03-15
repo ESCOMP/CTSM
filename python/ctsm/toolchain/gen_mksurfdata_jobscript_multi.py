@@ -137,6 +137,74 @@ def get_parser():
     return parser
 
 
+def write_runscript(
+    scenario,
+    jobscript_file,
+    number_of_nodes,
+    tasks_per_node,
+    account,
+    walltime,
+    queue,
+    target_list,
+    resolution_dict,
+    dataset_dict,
+    env_specific_script,
+    mksurfdata,
+    runfile,
+):
+    """
+    Write run script
+    """
+    runfile.write("#!/bin/bash \n")
+    runfile.write(f"#PBS -A {account} \n")
+    runfile.write(f"#PBS -N mksrf_{scenario} \n")
+    runfile.write("#PBS -j oe \n")
+    runfile.write("#PBS -k eod \n")
+    runfile.write("#PBS -S /bin/bash \n")
+    runfile.write(f"#PBS -q {queue} \n")
+    runfile.write(f"#PBS -l walltime={walltime} \n")
+    runfile.write(
+        "#PBS -l select="
+        + f"{number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node}:mem=218GB \n"
+    )
+    runfile.write(
+        f"# This is a batch script to run a set of resolutions for mksurfdata_esmf {scenario}\n"
+    )
+    runfile.write(
+        "# NOTE: THIS SCRIPT IS AUTOMATICALLY GENERATED "
+        + "SO IN GENERAL YOU SHOULD NOT EDIT it!!\n\n"
+    )
+    runfile.write("\n")
+
+    # Run env_mach_specific.sh to control the machine dependent
+    # environment including the paths to compilers and libraries
+    # external to cime such as netcdf
+    runfile.write(". " + env_specific_script + "\n")
+    check = "if [ $? != 0 ]; then echo 'Error running env_specific_script'; exit -4; fi"
+    runfile.write(f"{check} \n")
+    for target in target_list:
+        res_set = dataset_dict[target][1]
+        if res_set not in resolution_dict:
+            abort(f"Resolution is not in the resolution_dict: {res_set}")
+        for res in resolution_dict[res_set]:
+            namelist = f"{scenario}_{res}.namelist"
+            command = os.path.join(os.getcwd(), "gen_mksurfdata_namelist")
+            command = command + " " + dataset_dict[target][0] + " " + res
+            command = command + " --silent"
+            command = command + f" --namelist {namelist}"
+            print(f"command is {command}")
+            sys.argv = [x for x in command.split(" ") if x]
+            main_nml()
+            print(f"generated namelist {namelist}")
+            output = f"time mpiexec {mksurfdata} < {namelist}"
+            runfile.write(f"{output} \n")
+            check = f"if [ $? != 0 ]; then echo 'Error running resolution {res}'; exit -4; fi"
+            runfile.write(f"{check} \n")
+            runfile.write(f"echo Successfully ran resolution {res}\n")
+
+    runfile.write(f"echo Successfully ran {jobscript_file}\n")
+
+
 def main():
     """
     See docstring at the top.
@@ -168,7 +236,13 @@ def main():
     # Determine resolution sets that are referenced in commands
     # TODO slevis: When new resolutions become supported in ccs_config, the
     # first entry will change to
-    # "standard_res_no_crop": ["0.9x1.25", "1.9x2.5", "mpasa60", "mpasa60-3conus", "mpasa60-3centralUS"],
+    # "standard_res_no_crop": [
+    # "0.9x1.25",
+    # "1.9x2.5",
+    # "mpasa60",
+    # "mpasa60-3conus",
+    # "mpasa60-3centralUS",
+    # ],
     # --------------------------
     resolution_dict = {
         "standard_res_no_crop": ["0.9x1.25", "1.9x2.5", "mpasa60"],
@@ -246,7 +320,8 @@ def main():
             "mpasa480",
         ),
         "crop-global-present-nldas": (
-            "--start-year 2000 --end-year 2000                                 --res",  # TODO slevis: --hirespft uses old data for now, so keep out
+            # TODO slevis: --hirespft uses old data for now, so keep out
+            "--start-year 2000 --end-year 2000                                 --res",
             "nldas_res",
         ),
         "crop-global-1850": (
@@ -370,7 +445,8 @@ def main():
     if not os.path.exists(args.bld_path):
         print(
             args.bld_path
-            + " directory does NOT exist -- build mksurdata_esmf before running this script -- using ./gen_mksurfdata_build.sh"
+            + " directory does NOT exist -- build mksurdata_esmf before running this script --"
+            + " using ./gen_mksurfdata_build.sh"
         )
         sys.exit(1)
 
@@ -387,53 +463,20 @@ def main():
     # --------------------------
     with open(jobscript_file, "w", encoding="utf-8") as runfile:
 
-        runfile.write("#!/bin/bash \n")
-        runfile.write(f"#PBS -A {account} \n")
-        runfile.write(f"#PBS -N mksrf_{scenario} \n")
-        runfile.write("#PBS -j oe \n")
-        runfile.write("#PBS -k eod \n")
-        runfile.write("#PBS -S /bin/bash \n")
-        runfile.write(f"#PBS -q {queue} \n")
-        runfile.write(f"#PBS -l walltime={walltime} \n")
-        runfile.write(
-            f"#PBS -l select={number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node}:mem=218GB \n"
+        write_runscript(
+            scenario,
+            jobscript_file,
+            number_of_nodes,
+            tasks_per_node,
+            account,
+            walltime,
+            queue,
+            target_list,
+            resolution_dict,
+            dataset_dict,
+            env_specific_script,
+            mksurfdata,
+            runfile,
         )
-        runfile.write(
-            f"# This is a batch script to run a set of resolutions for mksurfdata_esmf {scenario} \n"
-        )
-        runfile.write(
-            "# NOTE: THIS SCRIPT IS AUTOMATICALLY GENERATED SO IN GENERAL YOU SHOULD NOT EDIT it!!\n\n"
-        )
-        runfile.write("\n")
-
-        n_p = int(tasks_per_node) * int(number_of_nodes)
-
-        # Run env_mach_specific.sh to control the machine dependent
-        # environment including the paths to compilers and libraries
-        # external to cime such as netcdf
-        runfile.write(". " + env_specific_script + "\n")
-        check = "if [ $? != 0 ]; then echo 'Error running env_specific_script'; exit -4; fi"
-        runfile.write(f"{check} \n")
-        for target in target_list:
-            res_set = dataset_dict[target][1]
-            if res_set not in resolution_dict:
-                abort(f"Resolution is not in the resolution_dict: {res_set}")
-            for res in resolution_dict[res_set]:
-                namelist = f"{scenario}_{res}.namelist"
-                command = os.path.join(os.getcwd(), "gen_mksurfdata_namelist")
-                command = command + " " + dataset_dict[target][0] + " " + res
-                command = command + " --silent"
-                command = command + f" --namelist {namelist}"
-                print(f"command is {command}")
-                sys.argv = [x for x in command.split(" ") if x]
-                main_nml()
-                print(f"generated namelist {namelist}")
-                output = f"time mpiexec {mksurfdata} < {namelist}"
-                runfile.write(f"{output} \n")
-                check = f"if [ $? != 0 ]; then echo 'Error running resolution {res}'; exit -4; fi"
-                runfile.write(f"{check} \n")
-                runfile.write(f"echo Successfully ran resolution {res}\n")
-
-        runfile.write(f"echo Successfully ran {jobscript_file}\n")
 
     print(f"echo Successfully created jobscript {jobscript_file}\n")
