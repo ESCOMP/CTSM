@@ -439,12 +439,12 @@ contains
       kslope_l1_m2 = params_inst%mimics_kslope(4)
       kslope_l2_m2 = params_inst%mimics_kslope(5)
       kslope_s1_m2 = params_inst%mimics_kslope(6)
-      vint_l1_m1 = params_inst%mimics_vint(1)
-      vint_l2_m1 = params_inst%mimics_vint(2)
-      vint_s1_m1 = params_inst%mimics_vint(3)
-      vint_l1_m2 = params_inst%mimics_vint(4)
-      vint_l2_m2 = params_inst%mimics_vint(5)
-      vint_s1_m2 = params_inst%mimics_vint(6)
+      vint_l1_m1 = params_inst%mimics_vint(1) 
+      vint_l2_m1 = params_inst%mimics_vint(2) 
+      vint_s1_m1 = params_inst%mimics_vint(3) 
+      vint_l1_m2 = params_inst%mimics_vint(4) 
+      vint_l2_m2 = params_inst%mimics_vint(5) 
+      vint_s1_m2 = params_inst%mimics_vint(6) 
       kint_l1_m1 = params_inst%mimics_kint(1)
       kint_l2_m1 = params_inst%mimics_kint(2)
       kint_s1_m1 = params_inst%mimics_kint(3)
@@ -1288,14 +1288,14 @@ contains
             decomp_k(c,j,i_chem_som) = (term_1 + term_2) * w_d_o_scalars
 
             ! Currently, mimics_densdep = 1 so as to have no effect
-            decomp_k(c,j,i_cop_mic) = tau_m1 * &
-                   m1_conc**(mimics_densdep - 1.0_r8) * w_d_o_scalars
+            decomp_k(c,j,i_cop_mic) = tau_m1 * m1_conc**(mimics_densdep) 
+ 
             favl = min(1.0_r8, max(0.0_r8, 1.0_r8 - fphys_m1(c,j) - fchem_m1))
             pathfrac_decomp_cascade(c,j,i_m1s1) = favl
             pathfrac_decomp_cascade(c,j,i_m1s2) = fchem_m1
 
-            decomp_k(c,j,i_oli_mic) = tau_m2 * &
-                   m2_conc**(mimics_densdep - 1.0_r8) * w_d_o_scalars
+            decomp_k(c,j,i_oli_mic) = tau_m2 * m2_conc**(mimics_densdep)
+
             favl = min(1.0_r8, max(0.0_r8, 1.0_r8 - fphys_m2(c,j) - fchem_m2))
             pathfrac_decomp_cascade(c,j,i_m2s1) = favl
             pathfrac_decomp_cascade(c,j,i_m2s2) = fchem_m2
