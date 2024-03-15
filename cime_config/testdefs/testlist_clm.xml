@@ -2013,12 +2013,8 @@
   <test name="SMS_D_Ld1_Mmpi-serial" grid="f45_f45_mg37" compset="I2000Clm50SpRs" testmods="clm/ptsRLA">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <!-- Until Derecho works with intel/Debug use gnu
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
-      -->
-      <machine name="derecho" compiler="gnu" category="aux_clm"/>
-      <machine name="derecho" compiler="gnu" category="prealpha"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="prealpha"/>
@@ -2137,9 +2133,6 @@
   </test>
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/default--clm/NEON/NIWO">
     <machines>
-      <!-- Until Derecho works with intel/Debug use gnu
-      <machine name="derecho"  compiler="intel" category="aux_clm"/>
-      -->
       <machine name="derecho"  compiler="gnu" category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
     </machines>
@@ -2152,10 +2145,7 @@
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51SpRs" testmods="clm/default--clm/NEON/TOOL">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
-      <!-- Until Derecho works with intel/Debug use gnu
       <machine name="derecho"  compiler="intel" category="aux_clm"/>
-       -->
-      <machine name="derecho"  compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2166,9 +2156,6 @@
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/NEON/MOAB--clm/PRISM">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
-      <!-- Until Derecho works with intel/Debug use gnu
-      <machine name="derecho"  compiler="intel" category="aux_clm"/>
-      -->
       <machine name="derecho"  compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
@@ -2203,12 +2190,8 @@
 
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Fates" testmods="clm/FatesFireLightningPopDens--clm/NEON/FATES/NIWO">
     <machines>
-      <!-- Until Derecho works with intel/Debug use gnu
       <machine name="derecho"  compiler="intel" category="aux_clm"/>
       <machine name="derecho"  compiler="intel" category="fates"/>
-      -->
-      <machine name="derecho"  compiler="gnu" category="aux_clm"/>
-      <machine name="derecho"  compiler="gnu" category="fates"/>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="fates"/>
     </machines>
@@ -2222,10 +2205,6 @@
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="fates"/>
-      <!-- Until Derecho works with intel/Debug use gnu
-      <machine name="derecho"  compiler="intel" category="aux_clm"/>
-      <machine name="derecho"  compiler="intel" category="fates"/>
-       -->
       <machine name="derecho"  compiler="gnu" category="aux_clm"/>
       <machine name="derecho"  compiler="gnu" category="fates"/>
     </machines>
@@ -2238,10 +2217,7 @@
   <test name="SMS_D_Lm1_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm50SpRs" testmods="clm/USUMB_nuopc">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <!-- Have one mpi-serial DEBUG intel test that is expected to fail-->
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <!-- Also have the gnu test that should pass -->
-      <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2633,10 +2609,6 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
-      <!-- Until Derecho works with intel/Debug use gnu
-      <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="prebeta"/>
-       -->
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
@@ -2656,10 +2628,7 @@
   <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm51FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <!-- Until Derecho works with intel/Debug use gnu
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      -->
-      <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2994,9 +2963,6 @@
   <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <!-- Until Derecho works with intel/Debug use gnu
-      <machine name="derecho" compiler="intel" category="fates"/>
-      -->
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -3023,10 +2989,7 @@
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <!-- Until Derecho works with intel/Debug use gnu
       <machine name="derecho" compiler="intel" category="fates"/>
-      -->
-      <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
     <options>
@@ -3480,4 +3443,45 @@
       <option name="comment">This test is designed to test the ability to prescribe crop sowing dates and maturity requirements. It first performs a GDD-generating run, then calls Python code to generate the maturity requirement file. This is then used in a sowing+maturity forced run, which finally is tested to ensure correct behavior.</option>
     </options>
   </test>
+
+  <test name="ERP_D_P64x2_Ld10" grid="f10_f10_mg37" compset="I2000Clm51Bgc" testmods="clm/Hillslope">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="hillslope"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Ld3" grid="f10_f10_mg37" compset="I1850Clm51Bgc" testmods="clm/HillslopeFromFile">
+    <machines>
+      <machine name="derecho" compiler="intel" category="hillslope"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I1850Clm51Bgc" testmods="clm/HillslopeC">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="hillslope"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Ld3" grid="f10_f10_mg37" compset="I2000Clm51Bgc" testmods="clm/HillslopeD">
+    <machines>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="hillslope"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+
 </testlist>

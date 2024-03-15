@@ -45,7 +45,7 @@ module controlMod
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: surfprof_exp
   use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif
-  use SoilHydrologyMod                 , only: soilHydReadNML
+  use SoilHydrologyMod                 , only: soilHydReadNML, hillslope_hydrology_ReadNML
   use CNFireFactoryMod                 , only: CNFireReadNML
   use CanopyFluxesMod                  , only: CanopyFluxesReadNML
   use shr_drydep_mod                   , only: n_drydep
@@ -241,7 +241,8 @@ contains
           fates_inventory_ctrl_filename,                &
           fates_parteh_mode,                            &
           fates_seeddisp_cadence,                       &
-          use_fates_tree_damage
+          use_fates_tree_damage,                        &
+          fates_history_dimlevel
 
     ! Ozone vegetation stress method
     namelist / clm_inparm / o3_veg_stress_method
@@ -263,6 +264,11 @@ contains
 
     namelist /clm_inparm/ use_biomass_heat_storage
 
+    namelist /clm_inparm/ use_hillslope
+
+    namelist /clm_inparm/ downscale_hillslope_meteorology
+
+    namelist /clm_inparm/ use_hillslope_routing
 
     namelist /clm_inparm/ use_hydrstress
 
@@ -496,7 +502,7 @@ contains
              call endrun(msg=' ERROR: C13 and C14 dynamics are not compatible with FATES.'//&
                   errMsg(sourcefile, __LINE__))
           end if
-          
+
        else
           
           ! These do default to false anyway, but this emphasizes they
@@ -580,8 +586,10 @@ contains
     end if
 
     call soilHydReadNML(   NLFilename )
-
-    if( use_cn ) then
+    if ( use_hillslope ) then
+       call hillslope_hydrology_ReadNML(   NLFilename )
+    endif
+    if ( use_cn ) then
        call CNFireReadNML(             NLFilename )
        call CNPrecisionControlReadNML( NLFilename )
        call CNNDynamicsReadNML       ( NLFilename )
@@ -635,7 +643,7 @@ contains
          snicar_solarspec /= 'mid_latitude_winter' .or.  &
          snicar_dust_optics /= 'sahara' .or.  &
          snicar_numrad_snw /= 5 .or.  &
-         snicar_snobc_intmix .or. snicar_snodst_intmix .or.  &
+         snicar_snodst_intmix .or.  &
          .not. snicar_use_aerosol .or.  &
          do_sno_oc) then
        call endrun(msg=' ERROR: You have selected an option that is EXPERIMENTAL, UNSUPPORTED, and UNTESTED. For guidance see namelist_defaults_ctsm.xml'//&
@@ -796,6 +804,7 @@ contains
     call mpi_bcast (fluh_timeseries, len(fluh_timeseries) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (fates_seeddisp_cadence, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (fates_history_dimlevel, 2, MPI_INTEGER, 0, mpicom, ier)
 
     ! flexibleCN nitrogen model
     call mpi_bcast (use_flexibleCN, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -822,6 +831,11 @@ contains
 
     call mpi_bcast (use_biomass_heat_storage, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+    call mpi_bcast (use_hillslope, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    call mpi_bcast (downscale_hillslope_meteorology, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    call mpi_bcast (use_hillslope_routing, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -1072,6 +1086,7 @@ contains
     write(iulog,'(a,d20.10)') '   Max snow depth (mm) =', h2osno_max
 
     write(iulog,'(a,i8)') '   glc number of elevation classes =', maxpatch_glc
+
     if (glc_do_dynglacier) then
        write(iulog,*) '   glc CLM glacier areas and topography WILL evolve dynamically'
     else
@@ -1104,6 +1119,9 @@ contains
     end if
 
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
+    write(iulog,*) '   hillslope hydrology    = ', use_hillslope
+    write(iulog,*) '   downscale hillslope meteorology    = ', downscale_hillslope_meteorology
+    write(iulog,*) '   hillslope routing      = ', use_hillslope_routing
     write(iulog,*) '   pre-defined soil layer structure = ', soil_layerstruct_predefined
     write(iulog,*) '   user-defined soil layer structure = ', soil_layerstruct_userdefined
     write(iulog,*) '   user-defined number of soil layers = ', soil_layerstruct_userdefined_nlevsoi
