@@ -784,7 +784,8 @@ sub setup_cmdl_fates_mode {
        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                       "use_fates_cohort_age_tracking","use_fates_inventory_init","use_fates_fixed_biogeog",
                       "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging",
-                      "fates_parteh_mode","use_fates_tree_damage","fates_seeddisp_cadence","use_fates_luh","fluh_timeseries" );
+                      "fates_parteh_mode","use_fates_tree_damage","fates_history_dimlevel","fates_seeddisp_cadence",
+		      "use_fates_luh","fluh_timeseries" );
        # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
           if ( defined($nl->get_value($var)) ) {
@@ -2040,7 +2041,7 @@ sub setup_logic_snicar_methods {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'do_sno_oc' );
 
   # Error checking in loop
-  my %supportedSettings = ( 'snicar_solarspec' => "'mid_latitude_winter'", 'snicar_dust_optics' => "'sahara'", 'snicar_numrad_snw' => '5', 'snicar_snobc_intmix' => '.false.', 'snicar_snodst_intmix' => '.false.', 'snicar_use_aerosol' => '.true.', 'do_sno_oc' => '.false.' );
+  my %supportedSettings = ( 'snicar_solarspec' => "'mid_latitude_winter'", 'snicar_dust_optics' => "'sahara'", 'snicar_numrad_snw' => '5', 'snicar_snodst_intmix' => '.false.', 'snicar_use_aerosol' => '.true.', 'do_sno_oc' => '.false.' );
   keys %supportedSettings;
   while ( my ($key, $val) = each %supportedSettings ) {
     my $var = $nl->get_value($key);
@@ -2058,13 +2059,13 @@ sub setup_logic_snicar_methods {
     $log->warning("$key1=$val1a and $val1b are supported; $var1 is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!");
   }
 
-  # snicar_snobc_intmix and snicar_snodst_intmix cannot both be true
+  # snicar_snobc_intmix and snicar_snodst_intmix cannot both be true, however, they can both be false
   my $key1 = 'snicar_snobc_intmix';
   my $key2 = 'snicar_snodst_intmix';
   my $var1 = $nl->get_value($key1);
   my $var2 = $nl->get_value($key2);
-  my $val1 = $supportedSettings{$key1};  # supported value for this option
-  if (($var1 eq $var2) && ($var1 ne $val1)) {
+  my $val2 = $supportedSettings{$key2};  # supported value for this option
+  if (($var1 eq $var2) && ($var2 ne $val2)) {
     $log->warning("$key1 = $var1 and $key2 = $var2 do not work together!");
   }
 }
@@ -4460,7 +4461,8 @@ sub setup_logic_fates {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
         my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                        "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp","fates_seeddisp_cadence",
-                       "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage","use_fates_luh" );
+                       "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage",
+		       "use_fates_luh","fates_history_dimlevel" );
         foreach my $var ( @list ) {
  	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
                       'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
