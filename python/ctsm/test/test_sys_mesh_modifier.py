@@ -69,7 +69,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
             sys.exit(f"{e} ERROR using {configure_cmd}")
 
     def createScripGridAndMask(self, fsurdat_in):
-        """Create the SCRIP gird and mask file"""
+        """Create the SCRIP grid and mask file"""
         # Generate scrip file from fsurdat_in using nco
         # In the ctsm_py environment this requires running 'module load nco'
         # interactively
