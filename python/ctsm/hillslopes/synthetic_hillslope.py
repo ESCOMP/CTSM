@@ -5,16 +5,6 @@ import sys
 import numpy as np
 import netCDF4 as netcdf4
 
-def check_file_permissions(ifile,addWrite=False):
-    command=['ls','-l',ifile]
-    wflag=subprocess.run(command,capture_output=True).stdout.decode().split()[0][2]
-    if addWrite and wflag != 'w':
-        command=['chmod','+w',ifile]
-        x=subprocess.run(command,capture_output=True)
-        command=['ls','-l',ifile]
-        p=subprocess.run(command,capture_output=True).stdout.decode().split()[0]
-        print('new permissions ',p)
-
 '''
  specify a synthetic hillslope profile
 '''
@@ -258,8 +248,6 @@ def main(argv):
     # write to file  --------------------------------------------
     command=['cp',args.input_file,args.output_file]
     x=subprocess.call(command,stderr=subprocess.PIPE)
-    # check permissions
-    check_file_permissions(args.output_file,addWrite=True)
 
     w =  netcdf4.Dataset(args.output_file, 'a')
     w.createDimension('nhillslope',args.num_hillslopes)
