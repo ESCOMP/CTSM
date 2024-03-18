@@ -111,11 +111,6 @@ def main(argv):
     print('zero natveg pts ',np.sum(np.where(np.logical_and(lmask==1,pct_natveg==0),1,0)))
     lmask = np.where(np.logical_and(lmask==1,pct_natveg>0),1,0).astype(int)
 
-    command='date "+%y%m%d"'
-    x2=subprocess.Popen(command,stdout=subprocess.PIPE,shell='True')
-    x=x2.communicate()
-    timetag = x[0].strip().decode()
-
     if args.hcase == 'slope_aspect':
         max_columns_per_hillslope = args.nmaxhillcol//args.num_hillslopes
         
