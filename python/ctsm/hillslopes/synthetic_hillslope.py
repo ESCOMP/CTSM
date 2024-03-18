@@ -116,54 +116,54 @@ def write_to_file(
 ):
     shutil.copyfile(args.input_file, args.output_file)
 
-    w = netcdf4.Dataset(args.output_file, "a")
-    w.createDimension("nhillslope", args.num_hillslopes)
-    w.createDimension("nmaxhillcol", max_columns_per_landunit)
+    outfile = netcdf4.Dataset(args.output_file, "a")
+    outfile.createDimension("nhillslope", args.num_hillslopes)
+    outfile.createDimension("nmaxhillcol", max_columns_per_landunit)
 
-    create_variables(w)
+    create_variables(outfile)
 
-    w.variables["nhillcolumns"][:, :] = max_columns_per_landunit * lmask
-    w.variables["pct_hillslope"][
+    outfile.variables["nhillcolumns"][:, :] = max_columns_per_landunit * lmask
+    outfile.variables["pct_hillslope"][
         :,
     ] = pct_landunit
-    w.variables["hillslope_index"][
+    outfile.variables["hillslope_index"][
         :,
     ] = hill_ndx
-    w.variables["column_index"][
+    outfile.variables["column_index"][
         :,
     ] = col_ndx
-    w.variables["downhill_column_index"][
+    outfile.variables["downhill_column_index"][
         :,
     ] = col_dndx
-    w.variables["hillslope_distance"][
+    outfile.variables["hillslope_distance"][
         :,
     ] = distance
-    w.variables["hillslope_width"][
+    outfile.variables["hillslope_width"][
         :,
     ] = width
-    w.variables["hillslope_elevation"][
+    outfile.variables["hillslope_elevation"][
         :,
     ] = elevation
-    w.variables["hillslope_slope"][
+    outfile.variables["hillslope_slope"][
         :,
     ] = slope
-    w.variables["hillslope_aspect"][
+    outfile.variables["hillslope_aspect"][
         :,
     ] = aspect
-    w.variables["hillslope_area"][
+    outfile.variables["hillslope_area"][
         :,
     ] = area
-    w.variables["hillslope_bedrock_depth"][
+    outfile.variables["hillslope_bedrock_depth"][
         :,
     ] = 2
-    w.variables["hillslope_pftndx"][
+    outfile.variables["hillslope_pftndx"][
         :,
     ] = 13
 
     # add stream variables
-    wdepth = w.createVariable("hillslope_stream_depth", np.float64, ("lsmlat", "lsmlon"))
-    wwidth = w.createVariable("hillslope_stream_width", np.float64, ("lsmlat", "lsmlon"))
-    wslope = w.createVariable("hillslope_stream_slope", np.float64, ("lsmlat", "lsmlon"))
+    wdepth = outfile.createVariable("hillslope_stream_depth", np.float64, ("lsmlat", "lsmlon"))
+    wwidth = outfile.createVariable("hillslope_stream_width", np.float64, ("lsmlat", "lsmlon"))
+    wslope = outfile.createVariable("hillslope_stream_slope", np.float64, ("lsmlat", "lsmlon"))
 
     wdepth.long_name = "stream channel bankfull depth"
     wdepth.units = "m"
@@ -189,23 +189,23 @@ def write_to_file(
     ] = 1e-2
 
     # Save settings as global attributes
-    w.synth_hillslopes_delx = args.delx
-    w.synth_hillslopes_hcase = args.hcase
-    w.synth_hillslopes_hillslope_distance = args.hillslope_distance
-    w.synth_hillslopes_nmaxhillcol = args.nmaxhillcol
-    w.synth_hillslopes_num_hillslopes = args.num_hillslopes
-    w.synth_hillslopes_phill = args.phill
-    w.synth_hillslopes_thresh = args.thresh
-    w.synth_hillslopes_width_reach = args.width_reach
+    outfile.synth_hillslopes_delx = args.delx
+    outfile.synth_hillslopes_hcase = args.hcase
+    outfile.synth_hillslopes_hillslope_distance = args.hillslope_distance
+    outfile.synth_hillslopes_nmaxhillcol = args.nmaxhillcol
+    outfile.synth_hillslopes_num_hillslopes = args.num_hillslopes
+    outfile.synth_hillslopes_phill = args.phill
+    outfile.synth_hillslopes_thresh = args.thresh
+    outfile.synth_hillslopes_width_reach = args.width_reach
 
     print("created ", args.output_file)
 
     # --  Close output file
-    w.close
+    outfile.close
 
 
-def create_variables(w):
-    ohand = w.createVariable(
+def create_variables(outfile):
+    ohand = outfile.createVariable(
         "hillslope_elevation",
         np.float64,
         (
@@ -217,7 +217,7 @@ def create_variables(w):
     ohand.units = "m"
     ohand.long_name = "hillslope elevation"
 
-    odtnd = w.createVariable(
+    odtnd = outfile.createVariable(
         "hillslope_distance",
         np.float64,
         (
@@ -229,7 +229,7 @@ def create_variables(w):
     odtnd.units = "m"
     odtnd.long_name = "hillslope distance"
 
-    owidth = w.createVariable(
+    owidth = outfile.createVariable(
         "hillslope_width",
         np.float64,
         (
@@ -241,7 +241,7 @@ def create_variables(w):
     owidth.units = "m"
     owidth.long_name = "hillslope width"
 
-    oarea = w.createVariable(
+    oarea = outfile.createVariable(
         "hillslope_area",
         np.float64,
         (
@@ -253,7 +253,7 @@ def create_variables(w):
     oarea.units = "m2"
     oarea.long_name = "hillslope area"
 
-    oslop = w.createVariable(
+    oslop = outfile.createVariable(
         "hillslope_slope",
         np.float64,
         (
@@ -265,7 +265,7 @@ def create_variables(w):
     oslop.units = "m/m"
     oslop.long_name = "hillslope slope"
 
-    oasp = w.createVariable(
+    oasp = outfile.createVariable(
         "hillslope_aspect",
         np.float64,
         (
@@ -277,7 +277,7 @@ def create_variables(w):
     oasp.units = "radians"
     oasp.long_name = "hillslope aspect (clockwise from North)"
 
-    onhill = w.createVariable(
+    onhill = outfile.createVariable(
         "nhillcolumns",
         np.int32,
         (
@@ -288,7 +288,7 @@ def create_variables(w):
     onhill.units = "unitless"
     onhill.long_name = "number of columns per landunit"
 
-    opcthill = w.createVariable(
+    opcthill = outfile.createVariable(
         "pct_hillslope",
         np.float64,
         (
@@ -300,7 +300,7 @@ def create_variables(w):
     opcthill.units = "per cent"
     opcthill.long_name = "percent hillslope of landunit"
 
-    ohillndx = w.createVariable(
+    ohillndx = outfile.createVariable(
         "hillslope_index",
         np.int32,
         (
@@ -312,7 +312,7 @@ def create_variables(w):
     ohillndx.units = "unitless"
     ohillndx.long_name = "hillslope_index"
 
-    ocolndx = w.createVariable(
+    ocolndx = outfile.createVariable(
         "column_index",
         np.int32,
         (
@@ -324,7 +324,7 @@ def create_variables(w):
     ocolndx.units = "unitless"
     ocolndx.long_name = "column index"
 
-    odcolndx = w.createVariable(
+    odcolndx = outfile.createVariable(
         "downhill_column_index",
         np.int32,
         (
@@ -336,7 +336,7 @@ def create_variables(w):
     odcolndx.units = "unitless"
     odcolndx.long_name = "downhill column index"
 
-    obed = w.createVariable(
+    obed = outfile.createVariable(
         "hillslope_bedrock_depth",
         np.float64,
         (
@@ -348,7 +348,7 @@ def create_variables(w):
     obed.units = "meters"
     obed.long_name = "hillslope bedrock depth"
 
-    opft = w.createVariable(
+    opft = outfile.createVariable(
         "hillslope_pftndx",
         np.int32,
         (
@@ -365,13 +365,13 @@ def main(argv):
 
     args = parse_arguments(argv)
 
-    f = netcdf4.Dataset(args.input_file, "r")
-    im = len(f.dimensions["lsmlon"])
-    jm = len(f.dimensions["lsmlat"])
-    std_elev = np.asarray(f.variables["STD_ELEV"][:, :])
-    lmask = np.asarray(f.variables["PFTDATA_MASK"][:, :])
-    pct_natveg = np.asarray(f.variables["PCT_NATVEG"][:, :])
-    f.close()
+    infile = netcdf4.Dataset(args.input_file, "r")
+    im = len(infile.dimensions["lsmlon"])
+    jm = len(infile.dimensions["lsmlat"])
+    std_elev = np.asarray(infile.variables["STD_ELEV"][:, :])
+    lmask = np.asarray(infile.variables["PFTDATA_MASK"][:, :])
+    pct_natveg = np.asarray(infile.variables["PCT_NATVEG"][:, :])
+    infile.close()
 
     # are any points in land mask but have zero % natveg?
     print("zero natveg pts ", np.sum(np.where(np.logical_and(lmask == 1, pct_natveg == 0), 1, 0)))
