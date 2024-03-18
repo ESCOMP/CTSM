@@ -1,13 +1,13 @@
+"""
+ specify a synthetic hillslope profile
+"""
+
 import argparse
 import os
 import shutil
 import sys
 import numpy as np
 import netCDF4 as netcdf4
-
-"""
- specify a synthetic hillslope profile
-"""
 
 
 def parse_arguments(argv):
@@ -114,6 +114,9 @@ def write_to_file(
     col_dndx,
     hill_ndx,
 ):
+    """
+    Write to file
+    """
     shutil.copyfile(args.input_file, args.output_file)
 
     outfile = netcdf4.Dataset(args.output_file, "a")
@@ -205,6 +208,9 @@ def write_to_file(
 
 
 def create_variables(outfile):
+    """
+    Create variables in output file
+    """
     ohand = outfile.createVariable(
         "hillslope_elevation",
         np.float64,
@@ -362,6 +368,9 @@ def create_variables(outfile):
 
 
 def main(argv):
+    """
+    See module description
+    """
 
     args = parse_arguments(argv)
 
