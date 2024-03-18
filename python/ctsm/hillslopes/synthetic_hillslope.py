@@ -1,7 +1,4 @@
 #! /usr/bin/env python
-from __future__ import print_function
-import sys
-import string
 import subprocess
 import numpy as np
 import netCDF4 as netcdf4
@@ -131,11 +128,8 @@ if hcase == 'slope_aspect':
 
                 # specify hill height from slope and length
                 hhgt = beta * hillslope_distance
-                #hhgt = np.max([hhgt,0.1])
                 hhgt = np.max([hhgt,4.0])
 
-                # create height bins
-                #hbins = hhgt * np.arange(max_columns_per_landunit+1)/float(max_columns_per_landunit)
                 # create specified fractional bins
                 thresh = 2.0
                 hbins = np.zeros(max_columns_per_hillslope+1)
@@ -144,7 +138,6 @@ if hcase == 'slope_aspect':
                 hbins[2:max_columns_per_hillslope+1] = hbins[1] \
                 + (hhgt - thresh) * bin_fractions
 
-                #hbins=np.flipud(hbins)
                 # create length bins from height bins
                 lbins=np.zeros(max_columns_per_hillslope+1)
                 for n in range(max_columns_per_hillslope+1):
