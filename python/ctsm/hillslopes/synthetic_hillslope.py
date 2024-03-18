@@ -511,14 +511,14 @@ def main(argv):
                             slope[ncol, j, i] = (hbins[n + 1] - hbins[n]) / (
                                 lbins[n + 1] - lbins[n]
                             )
-                            if naspect == 0:  # north
-                                aspect[ncol, j, i] = 0.0
-                            if naspect == 1:  # east
-                                aspect[ncol, j, i] = 0.5 * np.pi
-                            if naspect == 2:  # south
-                                aspect[ncol, j, i] = np.pi
-                            if naspect == 3:  # west
-                                aspect[ncol, j, i] = 1.5 * np.pi
+                            if 0 <= naspect <= 3:
+                                # 0 = north
+                                # 1 = east
+                                # 2 = south
+                                # 3 = west
+                                aspect[ncol, j, i] = naspect * np.pi/2
+                            else:
+                                raise RuntimeError(f"Unhandled naspect: {naspect}")
 
     # write to file  --------------------------------------------
     write_to_file(
