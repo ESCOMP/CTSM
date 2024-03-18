@@ -312,6 +312,16 @@ def main(argv):
     awidth, bwidth = 1e-3, 0.6
     wwidth[:,] = awidth*(uharea**bwidth)
     wslope[:,] = 1e-2
+
+    # Save settings as global attributes
+    w.synth_hillslopes_delx = delx
+    w.synth_hillslopes_hcase = hcase
+    w.synth_hillslopes_hillslope_distance = hillslope_distance
+    w.synth_hillslopes_nmaxhillcol = nmaxhillcol
+    w.synth_hillslopes_num_hillslopes = num_hillslopes
+    w.synth_hillslopes_phill = phill
+    w.synth_hillslopes_thresh = thresh
+    w.synth_hillslopes_width_reach = width_reach
             
     print('created ',args.output_file)
 
