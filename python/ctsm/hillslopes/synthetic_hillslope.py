@@ -449,76 +449,71 @@ def main(argv):
         cndx = 0
         for i in range(im):
             for j in range(jm):
-                if lmask[j, i] == 1:
+                if lmask[j, i] != 1:
+                    continue
 
-                    # slope tangent (y/x)
-                    beta = np.min((std_elev[j, i], 200.0)) / args.hillslope_distance
+                # slope tangent (y/x)
+                beta = np.min((std_elev[j, i], 200.0)) / args.hillslope_distance
 
-                    # specify hill height from slope and length
-                    hhgt = beta * args.hillslope_distance
-                    hhgt = np.max([hhgt, 4.0])
+                # specify hill height from slope and length
+                hhgt = beta * args.hillslope_distance
+                hhgt = np.max([hhgt, 4.0])
 
-                    # create specified fractional bins
-                    hbins = np.zeros(max_columns_per_hillslope + 1)
-                    hbins[1] = args.thresh
-                    # array needs to be length max_columns_per_hillslope-1
-                    hbins[2 : max_columns_per_hillslope + 1] = (
-                        hbins[1] + (hhgt - args.thresh) * bin_fractions
-                    )
+                # create specified fractional bins
+                hbins = np.zeros(max_columns_per_hillslope + 1)
+                hbins[1] = args.thresh
+                # array needs to be length max_columns_per_hillslope-1
+                hbins[2 : max_columns_per_hillslope + 1] = (
+                    hbins[1] + (hhgt - args.thresh) * bin_fractions
+                )
 
-                    # create length bins from height bins
-                    lbins = np.zeros(max_columns_per_hillslope + 1)
-                    for n in range(max_columns_per_hillslope + 1):
-                        if hhgt > 0.0:
-                            lbins[n] = icosp_height(
-                                hbins[n], args.hillslope_distance, hhgt, args.phill
-                            )
+                # create length bins from height bins
+                lbins = np.zeros(max_columns_per_hillslope + 1)
+                for n in range(max_columns_per_hillslope + 1):
+                    if hhgt > 0.0:
+                        lbins[n] = icosp_height(hbins[n], args.hillslope_distance, hhgt, args.phill)
 
-                    # loop over aspect bins
-                    for naspect in range(args.num_hillslopes):
-                        pct_landunit[naspect, j, i] = 100 / float(args.num_hillslopes)
-                        # index from ridge to channel (i.e. downhill)
-                        for n in range(max_columns_per_hillslope):
-                            ncol = n + naspect * max_columns_per_hillslope
+                # loop over aspect bins
+                for naspect in range(args.num_hillslopes):
+                    pct_landunit[naspect, j, i] = 100 / float(args.num_hillslopes)
+                    # index from ridge to channel (i.e. downhill)
+                    for n in range(max_columns_per_hillslope):
+                        ncol = n + naspect * max_columns_per_hillslope
 
-                            cndx += 1  # start at 1 not zero (oceans are 0)
-                            col_ndx[ncol, j, i] = cndx
-                            hill_ndx[ncol, j, i] = naspect + 1
+                        cndx += 1  # start at 1 not zero (oceans are 0)
+                        col_ndx[ncol, j, i] = cndx
+                        hill_ndx[ncol, j, i] = naspect + 1
 
-                            uedge = lbins[n + 1]
-                            ledge = lbins[n]
-                            #      lowland column
-                            if n == 0:
-                                col_dndx[ncol, j, i] = -999
-                            else:  # upland columns
-                                col_dndx[ncol, j, i] = col_ndx[ncol, j, i] - 1
+                        uedge = lbins[n + 1]
+                        ledge = lbins[n]
+                        #      lowland column
+                        if n == 0:
+                            col_dndx[ncol, j, i] = -999
+                        else:  # upland columns
+                            col_dndx[ncol, j, i] = col_ndx[ncol, j, i] - 1
 
-                            distance[ncol, j, i] = 0.5 * (uedge + ledge)
-                            area[ncol, j, i] = args.width_reach * (uedge - ledge)
-                            width[ncol, j, i] = args.width_reach
-                            # numerically integrate to calculate mean elevation
-                            nx = int(uedge - ledge)
-                            mean_elev = 0.0
-                            for k in range(nx):
-                                x1 = uedge - (k + 0.5) * args.delx
-                                mean_elev += cosp_height(
-                                    x1, args.hillslope_distance, hhgt, args.phill
-                                )
-                            mean_elev = mean_elev / float(nx)
+                        distance[ncol, j, i] = 0.5 * (uedge + ledge)
+                        area[ncol, j, i] = args.width_reach * (uedge - ledge)
+                        width[ncol, j, i] = args.width_reach
+                        # numerically integrate to calculate mean elevation
+                        nx = int(uedge - ledge)
+                        mean_elev = 0.0
+                        for k in range(nx):
+                            x1 = uedge - (k + 0.5) * args.delx
+                            mean_elev += cosp_height(x1, args.hillslope_distance, hhgt, args.phill)
+                        mean_elev = mean_elev / float(nx)
 
-                            elevation[ncol, j, i] = mean_elev
+                        elevation[ncol, j, i] = mean_elev
 
-                            slope[ncol, j, i] = (hbins[n + 1] - hbins[n]) / (
-                                lbins[n + 1] - lbins[n]
-                            )
-                            if 0 <= naspect <= 3:
-                                # 0 = north
-                                # 1 = east
-                                # 2 = south
-                                # 3 = west
-                                aspect[ncol, j, i] = naspect * np.pi/2
-                            else:
-                                raise RuntimeError(f"Unhandled naspect: {naspect}")
+                        slope[ncol, j, i] = (hbins[n + 1] - hbins[n]) / (lbins[n + 1] - lbins[n])
+                        if 0 <= naspect <= 3:
+                            # 0 = north
+                            # 1 = east
+                            # 2 = south
+                            # 3 = west
+                            aspect[ncol, j, i] = naspect * np.pi / 2
+                        else:
+                            raise RuntimeError(f"Unhandled naspect: {naspect}")
 
     # write to file  --------------------------------------------
     write_to_file(
