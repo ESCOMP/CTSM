@@ -46,6 +46,7 @@ class TestFSurdatModifier(unittest.TestCase):
             testinputs_path,
             "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc",
         )
+        self._previous_dir = os.getcwd()
         self._tempdir = tempfile.mkdtemp()
         self._fsurdat_in = os.path.join(
             testinputs_path,
@@ -80,6 +81,7 @@ class TestFSurdatModifier(unittest.TestCase):
         """
         Remove temporary directory
         """
+        os.chdir(self._previous_dir)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_subgrid_and_idealized_fails(self):

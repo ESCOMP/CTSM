@@ -1264,6 +1264,10 @@ Sitch, S et al. (2003). Evaluation of ecosystem dynamics, plant geography and te
 
 Sivak, M. 2013. Air conditioning versus heating: climate control is more energy demanding in Minneapolis than in Miami. Environ. Res. Lett., 8, doi:10.1088/1748-9326/8/1/014050.
 
+.. _Smeraldetal2023:
+
+Smerald, A., Rahimi, J., & Scheer, C., 2023. A global dataset for the production and usage of cereal residues in the period 1997–2021. Scientific Data, 10(1), 685. doi: 10.1038/s41597-023-02587-0
+
 .. _smith2001:
 
 Smith, B., I.C. Prentice, and M.T. Sykes, 2001. Representation of vegetation dynamics in the modelling of terrestrial ecosystems: comparing two contrasting approaches within European climate space. Global Ecology and Biogeography 10.6, pp. 621-637.

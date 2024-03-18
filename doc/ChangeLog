@@ -1,4 +1,462 @@
 ===============================================================
+Tag name: ctsm5.1.dev172
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue 12 Mar 2024 11:59:48 PM MDT
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+Update of externals to what's expected in cesm2_3_beta17. Some documentation updates including a rebuild
+of the documentation and updating how images are handled with git lfs. Improvements to the documentation for
+residue removal and tillage for prognostic crops.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+CTSM issues fixed (include CTSM Issue #):
+   Fixes #2351 Update to cesm2_3_beta17 externals
+   Fixes #2380 ctsm_pylib on izumi can use python3.7.9
+   Fixes #2331 py_env_create fails on izumi
+   Fixes #1910 modify_singlept_neon on izumi
+   Fixes #1658 malformed file on izumi
+   Fixes #2412 Check current directory isn't being removed in run_neon
+
+Notes of particular relevance for users
+---------------------------------------
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+    ccs_config config_machines.xml files were updated from v2 to v3
+
+    The timing and memory usage information was moved from drv.log to med.log for nuopc runs.
+    This allows the creating of the baselines cpl-mem.log and cpl-tput.log files.
+
+   SMP_PRESENT removed and BUILD_THREADED added.
+
+Changes to tests or testing:
+   Bring back DEBUG testing with intel for mpi-serial cases.
+
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+    clm_pymods test suite on derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no bit-for-bit
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+   manage externals
+   cismwrap_2_1_97
+   = rtm1_0_79
+   mosart1_0_49
+   ccs_config_cesm0.0.92
+   cime6.0.217_httpsbranch03
+   cmeps0.14.50
+   cdeps1.0.28
+   share1.0.18
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #2396 Explain residue removal
+   #2385 Update externals
+   #2394 Fix tillage instructions and images
+   #2389 Minor docs updates
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev171
+Originator(s): olyson (Keith Oleson,UCAR/TSS)
+Date: Mon 04 Mar 2024 10:33:55 AM MST
+One-line Summary: Set initial t_soisno=272 for soils and 274K for urban road
+
+Purpose and description of changes
+----------------------------------
+
+ Issue #2338 and PR #2355 explain:
+ Soil temperature initialization not implemented correctly in
+ ctsm5.1.dev058 and thus subsequent tags.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+CTSM issues fixed (include CTSM Issue #):
+ Fixes #2338
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_intel.clm-FatesColdHydro
+ added to expected failures, issue #2373, to be revisited when #2384 is
+ resolved.
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff but not climate-changing
+
+ The original diagnostics for this change are here:
+ https://webext.cgd.ucar.edu/I2000/ctsm51c6_PPEn08ctsm51d023_2deg_GSWP3V1_Sparse400_cs_ts_tsoisno272_2000AD/lnd/ctsm51c6_PPEn08ctsm51d023_2deg_GSWP3V1_Sparse400_cs_ts_tsoisno272_2000AD.381_400-ctsm51c6_PPEn08ctsm51d023_2deg_GSWP3V1_Sparse400_cs_ts_2000AD.381_400/setsIndex.html
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2355
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev170
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Wed Feb 28 11:01:43 MST 2024
+One-line Summary: Add hillslope hydrology
+
+Purpose and description of changes
+----------------------------------
+
+Changes include multiple soil columns per vegetated landunit, additional meteorological downscaling, new subsurface lateral flow equations, and a hillslope routing parameterization.
+
+Described in:
+Swenson, S. C., Clark, M., Fan, Y., Lawrence, D. M., & Perket, J. (2019). Representing intra-hillslope lateral subsurface flow in the community land model. Journal of Advances in Modeling Earth Systems, 11, 4044–4065. https://doi.org/10.1029/2019MS001833
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+* oldhyd test changes answers due to removal of origflag parameter
+* Adds several hillslope-specific tests
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- DIFF
+    izumi ------- DIFF
+
+
+Answer changes
+--------------
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change: roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? Roundoff differences means one or more lines of code change results
+   only by roundoff level (because order of operation changes for example). Roundoff
+   changes to state fields usually grow to greater than roundoff as the simulation progresses.
+    * FSDS answers change due to rounding differences, since the history field now uses a column-level variable instead of a gridcell-level one. Note that this is JUST the history field that's affected, which is why there are no diffs in any other variable. (Confirmed using branch at https://github.com/samsrabin/CTSM/tree/hillslope-revert-fsds-diffs.)
+    * The origflag parameter (used to reproduce CLM4 behavior) was removed, so anything using that will break. This includes the oldhyd test.
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+* ESCOMP/CTSM#1715: Hillslope hydrology (https://github.com/ESCOMP/CTSM/pull/1715)
+* ESCOMP/CTSM#2390: Hillslope merge (https://github.com/ESCOMP/CTSM/pull/2390)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev169
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Thu 22 Feb 2024 09:42:57 AM MST
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+Brings in 3 PRs from b4b-dev to master:
+- Do not crash "make all" even if pylint isn't clean (ESCOMP/CTSM#2353; Sam Rabin)
+- Resolve pylint issues (ESCOMP/CTSM#2354; Sam Rabin)
+- Move FSURDATMODIFYCTSM test to Derecho (ESCOMP/CTSM#2364; Sam Rabin)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+CTSM issues fixed:
+- Fixes ESCOMP/CTSM#2255: make lint is not clean in ctsm5.1.dev152
+- Fixes ESCOMP/CTSM#2316: "make all" doesn't run black if lint fails
+- FIXES ESCOMP/CTSM#2362: FSURDATMODIFYCTSM test should be moved to Derecho or Izumi
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- FSURDATMODIFYCTSM test changed from derecho_intel (didn't work in debug mode) to derecho_gnu. I.e., from
+    FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon.I2000Clm50SpRs.derecho_intel
+  to
+    FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon.I2000Clm50SpRs.derecho_gnu
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+  - "make all" in python/ is clean. 
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2353: Do not crash "make all" even if pylint isn't clean (https://github.com/ESCOMP/CTSM/pull/2353)
+- ESCOMP/CTSM#2354: Resolve pylint issues (https://github.com/ESCOMP/CTSM/pull/2354)
+- ESCOMP/CTSM#2364: Move FSURDATMODIFYCTSM test to Derecho (https://github.com/ESCOMP/CTSM/pull/2364)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev168
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri 16 Feb 2024 01:27:41 PM MST
+One-line Summary: Remove a source of negative snocan in CanopyFluxesMod
+
+Purpose and description of changes
+----------------------------------
+
+In ctsm5.2 testing, this test
+LWISO_Ld10.f10_f10_mg37.I2000Clm50BgcCrop.derecho_gnu.clm-coldStart
+complained of a tiny negative ice1_grc tracer not matching the bulk
+value. My troubleshooting led me to more than tiny negative snocan
+originating in a line of code that this PR now changes to prevent
+negative values.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+CTSM issues fixed (include CTSM Issue #):
+Fixes #2366
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ It was suggested at the ctsm software meeting yesterday that, in addition to
+ including "max(0._r8," in this line of code, that I reorder the code
+ by bringing "liqcan(p) =" before "snocan(p) =". I have decided against this
+ because the existing order repeats in a following paragraph of code right
+ after this one. It's likely that the group's suggestion would have worked, but
+ I did not want to delay this PR for a longer evaluation because CTSM5.2 is
+ waiting for this merge, in order to proceed with next steps.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change: roundoff
+ A short test, e.g.
+ SMS_Ln9.ne30pg2_ne30pg2_mg17.I1850Clm50Sp.derecho_intel.clm-clm50cam6LndTuningMode
+ has these maximum differences:
+RMS H2OCAN 4.7359E-19            NORMALIZED  4.0163E-18
+RMS SNOCAN 4.4873E-19            NORMALIZED  9.1036E-18
+ while the differences grow in longer tests.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2371
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev167
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Thu 08 Feb 2024 01:56:05 PM MST
+One-line Summary: Delete _FillValue and history from parameter files
+
+Purpose and description of changes
+----------------------------------
+
+Updates parameter files to c240207b. These are the same as c240105 except:
+- Attribute _FillValue has been removed from all variables
+- Global attributes history, history_of_appended_files, and latest_git_log have been removed
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+CTSM issues fixed (include CTSM Issue #):
+- Fixes #2347
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- #2350: Delete _FillValue and history from parameter files (https://github.com/ESCOMP/CTSM/pull/2350)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev166
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310), tking (Teagan King), samrabin (Sam Rabin)
 Date: Wed 24 Jan 2024 05:39:41 PM MST
