@@ -1,6 +1,6 @@
-import subprocess
 import argparse
 import os
+import shutil
 import sys
 import numpy as np
 import netCDF4 as netcdf4
@@ -241,8 +241,7 @@ def main(argv):
 
 
     # write to file  --------------------------------------------
-    command=['cp',args.input_file,args.output_file]
-    x=subprocess.call(command,stderr=subprocess.PIPE)
+    shutil.copyfile(args.input_file, args.output_file)
 
     w =  netcdf4.Dataset(args.output_file, 'a')
     w.createDimension('nhillslope',args.num_hillslopes)
