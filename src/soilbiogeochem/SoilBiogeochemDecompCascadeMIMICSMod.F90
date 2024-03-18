@@ -10,7 +10,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools_max
-  use clm_varpar                         , only : i_met_lit, i_cop_mic, i_oli_mic, i_cwd
+  use clm_varpar                         , only : i_phys_som, i_chem_som, i_str_lit, i_met_lit, i_cop_mic, i_oli_mic, i_cwd
   use clm_varpar                         , only : i_litr_min, i_litr_max, i_cwdl2
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_fates
   use clm_varcon                         , only : zsoi
@@ -48,10 +48,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   real(r8), private, allocatable :: fphys_m1(:,:)
   real(r8), private, allocatable :: fphys_m2(:,:)
   real(r8), private, allocatable :: p_scalar(:,:)
-  integer, private :: i_phys_som  ! index of physically protected Soil Organic Matter (SOM)
-  integer, private :: i_chem_som  ! index of chemically protected SOM
   integer, private :: i_avl_som  ! index of available (aka active) SOM
-  integer, private :: i_str_lit  ! index of structural litter pool
   integer, private :: i_l1m1  ! indices of transitions, eg l1m1: litter 1 -> first microbial pool
   integer, private :: i_l1m2
   integer, private :: i_l2m1
@@ -439,12 +436,12 @@ contains
       kslope_l1_m2 = params_inst%mimics_kslope(4)
       kslope_l2_m2 = params_inst%mimics_kslope(5)
       kslope_s1_m2 = params_inst%mimics_kslope(6)
-      vint_l1_m1 = params_inst%mimics_vint(1) 
-      vint_l2_m1 = params_inst%mimics_vint(2) 
-      vint_s1_m1 = params_inst%mimics_vint(3) 
-      vint_l1_m2 = params_inst%mimics_vint(4) 
-      vint_l2_m2 = params_inst%mimics_vint(5) 
-      vint_s1_m2 = params_inst%mimics_vint(6) 
+      vint_l1_m1 = params_inst%mimics_vint(1)
+      vint_l2_m1 = params_inst%mimics_vint(2)
+      vint_s1_m1 = params_inst%mimics_vint(3)
+      vint_l1_m2 = params_inst%mimics_vint(4)
+      vint_l2_m2 = params_inst%mimics_vint(5)
+      vint_s1_m2 = params_inst%mimics_vint(6)
       kint_l1_m1 = params_inst%mimics_kint(1)
       kint_l2_m1 = params_inst%mimics_kint(2)
       kint_s1_m1 = params_inst%mimics_kint(3)
