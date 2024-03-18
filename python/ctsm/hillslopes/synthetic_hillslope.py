@@ -367,6 +367,39 @@ def create_variables(outfile):
     opft.long_name = "hillslope pft indices"
 
 
+"""
+---------------------------------------------------
+#cosine - power law hillslope
+create bins of equal height
+this form ensures a near-zero slope at the hill top
+---------------------------------------------------
+"""
+
+
+def cosp_height(x, hlen, hhgt, phill):
+    """
+    Get elevation
+    """
+    fx = 0.5 * (1.0 + np.cos(np.pi * (1.0 + (x / hlen))))
+    h = hhgt * np.power(fx, phill)
+    return h
+
+
+def icosp_height(h, hlen, hhgt, phill):
+    """
+    Fill lbins
+    """
+    if hhgt <= 0.0:
+        x = 0.0
+    else:
+        fh = np.arccos(2.0 * np.power((h / hhgt), (1.0 / phill)) - 1)
+        # np.arccos returns [0,pi]
+        # want [pi,2pi] based on cosp_height definition
+        fh = 2.0 * np.pi - fh
+        x = hlen * ((1.0 / np.pi) * fh - 1.0)
+    return x
+
+
 def main(argv):
     """
     See module description
@@ -421,30 +454,6 @@ def main(argv):
         col_dndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
         # index of hillslope type
         hill_ndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
-
-        """  
-        ---------------------------------------------------
-        #cosine - power law hillslope
-        create bins of equal height
-        this form ensures a near-zero slope at the hill top
-        ---------------------------------------------------
-        """
-
-        def cosp_height(x, hlen, hhgt, phill):
-            fx = 0.5 * (1.0 + np.cos(np.pi * (1.0 + (x / hlen))))
-            h = hhgt * np.power(fx, phill)
-            return h
-
-        def icosp_height(h, hlen, hhgt, phill):
-            if hhgt <= 0.0:
-                x = 0.0
-            else:
-                fh = np.arccos(2.0 * np.power((h / hhgt), (1.0 / phill)) - 1)
-                # np.arccos returns [0,pi]
-                # want [pi,2pi] based on cosp_height definition
-                fh = 2.0 * np.pi - fh
-                x = hlen * ((1.0 / np.pi) * fh - 1.0)
-            return x
 
         cndx = 0
         for i in range(im):
