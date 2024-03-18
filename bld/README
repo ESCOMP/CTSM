@@ -25,7 +25,6 @@ unit_testers --- Directory of scripts to test scipts in this directory
 
 ---------- XML Files describing namelists in namelist_files
 namelist_files/namelist_defaults_ctsm.xml --------- List of default values for the ctsm namelist
-namelist_files/namelist_defaults_ctsm_tools.xml --- List of default values for the ctsm tools
 namelist_files/namelist_defaults_overall.xml ------ List of default values for overall settings
 namelist_files/namelist_defaults_usr_files.xml ---- List of default values for the user-files
 namelist_files/namelist_definition_ctsm.xml -------- Definition of all namelist items for ctsm
