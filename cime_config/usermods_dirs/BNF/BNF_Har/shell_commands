@@ -1,0 +1,10 @@
+
+# Change below line if you move the subset data directory
+
+./xmlchange CLM_USRDAT_DIR=/glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Har
+
+./xmlchange PTS_LON=287.75
+
+./xmlchange PTS_LAT=42.75
+
+./xmlchange CLM_USRDAT_NAME='BNF_Har'

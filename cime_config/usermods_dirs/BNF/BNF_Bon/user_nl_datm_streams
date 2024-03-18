@@ -1,0 +1,71 @@
+!------------------------------------------------------------------------
+! This file is used to modify datm.streams.xml generated in $RUNDIR
+! Entries should have the form
+!  <streamname>:<stream_variable><= new stream_value>
+! The following are accepted values for an assume streamname of foo
+!  foo:meshfile = character string
+!  foo:datafiles = comma separated string of full pathnames (e.g. file1,file2,file3...)
+!  foo:datavars = comma separated string of field pairs  (e.g. foo foobar,foo2 foobar2...)
+!  foo:taxmode = one of [cycle, extend, limit]
+!  foo:tintalgo = one of [lower,upper,nearest,linear,coszen]
+!  foo:readmode = single (only suported mode right now)
+!  foo:mapalgo = one of [bilinear,redist,nn,consf,consd,none]
+!  foo:dtlimit = real (1.5 is default)
+!  foo:year_first = integer
+!  foo:year_last = integer
+!  foo:year_align = integer
+!  foo:vectors = one of [none,u:v]
+!  foo:lev_dimname: = one of [null,name of level dimenion name]
+!  foo:offset = integer
+! As an example:
+!   foo:year_first = 1950
+! would change the stream year_first stream_entry to 1950 for the foo stream block
+! NOTE: multi-line inputs are enabled by adding a \ at the end of the line
+! As an emaple:
+! foo:datafiles=foo1,foo2, \
+!     foo3
+! Will yield the following new entry for datafiles in stream foo
+!   <datafiles>
+!      <file>foo1</file>
+!      <file>foo2</file>
+!      <file>foo3</file>
+!   </datafiles>
+!-----------------------------------------------------------------------
+!CLM_USRDAT.BNF_Bon:offset = -48600
+!CLM_USRDAT.BNF_Bon:dtlimit = 30
+!CLM_USRDAT.BNF_Bon:year_first = 1850
+!CLM_USRDAT.BNF_Bon:year_align = 1850
+!CLM_USRDAT.BNF_Bon:year_last = 1869
+
+CLM_USRDAT.BNF_Bon:datavars = \
+  PRECTmms Faxa_precn, \
+  FSDS     Faxa_swdn, \ 
+  ZBOT     Sa_z, \ 
+  TBOT     Sa_tbot, \
+  WIND     Sa_wind, \ 
+  QATM     Sa_shum, \
+  PSRF     Sa_pbot, \
+  FLDS     Faxa_lwdn 
+
+CLM_USRDAT.BNF_Bon:datafiles = \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1850.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1851.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1852.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1853.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1854.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1855.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1856.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1857.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1858.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1859.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1860.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1861.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1862.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1863.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1864.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1865.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1866.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1867.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1868.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1869.nc, \
+  /glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN/BNF_Bon/CLM1PT_data/1870.nc

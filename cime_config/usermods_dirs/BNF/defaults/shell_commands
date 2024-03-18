@@ -1,0 +1,18 @@
+
+# Change below line if you move the subset data directory
+./xmlchange MPILIB=mpi-serial
+./xmlchange DIN_LOC_ROOT_CLMFORC='/glade/campaign/cgd/tss/people/wwieder/inputdata/BNFMIP_forcing_from_OCN'
+./xmlchange STOP_OPTION=nyears
+./xmlchange CONTINUE_RUN=FALSE
+
+# Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
+./xmlchange PIO_TYPENAME=netcdf
+./xmlchange DATM_YR_ALIGN=1851,DATM_YR_END=1870,DATM_YR_START=1851
+./xmlchange PIO_REARRANGER_LND=1
+# Set up a simulation from cold start
+./xmlchange CLM_FORCE_COLDSTART=on
+./xmlchange CLM_ACCELERATED_SPINUP=on
+./xmlchange STOP_N=100
+./xmlchange REST_N=100
+./xmlchange RUN_STARTDATE=0001-01-01
+./xmlchange RESUBMIT=1
