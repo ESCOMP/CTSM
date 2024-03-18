@@ -24,6 +24,8 @@ def parse_arguments(argv):
     Parse arguments to script
     """
     parser = argparse.ArgumentParser(description="Specify a synthetic hillslope profile")
+
+    # Input and output file settings
     parser.add_argument(
         "-i", "--input-file",
         help="Input surface dataset",
@@ -40,6 +42,58 @@ def parse_arguments(argv):
         dest="overwrite",
         action="store_true",
     )
+
+    # Synthetic hillslope settings
+    parser.add_argument(
+        "--delx",
+        help="increments to use in numerical integration of mean elevation (m)",
+        type=float,
+        default=1.0,
+    )
+    parser.add_argument(
+        "--hcase",
+        help="hcase",
+        type=str,
+        default="slope_aspect",
+        choices=["slope_aspect"],
+    )
+    parser.add_argument(
+        "--hillslope-distance",
+        help="distance from channel to ridge (m)",
+        type=float,
+        default=500.0,
+    )
+    parser.add_argument(
+        "--nmaxhillcol",
+        help="max. number of hillslope columns",
+        type=int,
+        default=16,
+    )
+    parser.add_argument(
+        "--num-hillslopes",
+        help="number of hillslopes",
+        type=int,
+        default=4,
+    )
+    parser.add_argument(
+        "--phill",
+        help="shape parameter (power law exponent)",
+        type=float,
+        default=1.0,
+    )
+    parser.add_argument(
+        "--thresh",
+        help="threshold for freating specified fractional bins",
+        type=float,
+        default=2.0,
+    )
+    parser.add_argument(
+        "--width-reach",
+        help="uniform width of reach (m)",
+        type=float,
+        default=500.0,
+    )
+
     args = parser.parse_args(argv)
     
     if args.output_file is None:
@@ -67,30 +121,28 @@ def main(argv):
     print('zero natveg pts ',np.sum(np.where(np.logical_and(lmask==1,pct_natveg==0),1,0)))
     lmask = np.where(np.logical_and(lmask==1,pct_natveg>0),1,0).astype(int)
 
-    num_hillslopes = int(4)
-    nmaxhillcol = int(16)
-
     command='date "+%y%m%d"'
     x2=subprocess.Popen(command,stdout=subprocess.PIPE,shell='True')
     x=x2.communicate()
     timetag = x[0].strip().decode()
 
-    hcase = 'slope_aspect'
-    if hcase == 'slope_aspect':    
-        max_columns_per_hillslope = nmaxhillcol//num_hillslopes
+    if args.hcase == 'slope_aspect':
+        max_columns_per_hillslope = args.nmaxhillcol//args.num_hillslopes
         
         if max_columns_per_hillslope == 4:
             bin_fractions = np.array((0.25, 0.75, 1.0))
-        if max_columns_per_hillslope == 5:
+        elif max_columns_per_hillslope == 5:
             bin_fractions = np.array((0.25, 0.50, 0.75, 1.0))
-        if max_columns_per_hillslope == 6:
+        elif max_columns_per_hillslope == 6:
             bin_fractions = np.array((0.20, 0.40, 0.60, 0.80, 1.0))
+        else:
+            raise RuntimeError(f"Unhandled max_columns_per_hillslope: {max_columns_per_hillslope}")
 
-        max_columns_per_landunit = num_hillslopes * max_columns_per_hillslope
+        max_columns_per_landunit = args.num_hillslopes * max_columns_per_hillslope
 
         #--  define geometry of hillslopes
         # percentage of landunit occupied by each hillslope (must sum to 100)
-        pct_landunit = np.zeros((num_hillslopes,jm,im))
+        pct_landunit = np.zeros((args.num_hillslopes,jm,im))
         # distance of column midpoint from stream channel
         distance  = np.zeros((max_columns_per_landunit,jm,im),dtype=float)
         # area of column
@@ -118,13 +170,6 @@ def main(argv):
         this form ensures a near-zero slope at the hill top
         ---------------------------------------------------
         '''  
-        # uniform width
-        width_reach = 500.0 # meters
-        # distance from channel to ridge
-        hillslope_distance = 500.0 # meters
-        # shape parameter (power law exponent)
-        phill = 0.7
-        phill = 1.0
 
         def cosp_height(x,hlen,hhgt,phill):
             fx=0.5*(1.0+np.cos(np.pi*(1.0+(x/hlen))))
@@ -142,38 +187,34 @@ def main(argv):
                 x=hlen*((1./np.pi)*fh - 1.0)
             return x
 
-        # increments to use in numerical integration of mean elevation
-        delx = 1.0 #[m]
-
         cndx = 0
         for i in range(im):
             for j in range(jm):
                 if lmask[j,i] == 1:
 
                     # slope tangent (y/x)
-                    beta = np.min((std_elev[j,i],200.0))/hillslope_distance
+                    beta = np.min((std_elev[j,i],200.0))/args.hillslope_distance
 
                     # specify hill height from slope and length
-                    hhgt = beta * hillslope_distance
+                    hhgt = beta * args.hillslope_distance
                     hhgt = np.max([hhgt,4.0])
 
                     # create specified fractional bins
-                    thresh = 2.0
                     hbins = np.zeros(max_columns_per_hillslope+1)
-                    hbins[1] = thresh
+                    hbins[1] = args.thresh
                     # array needs to be length max_columns_per_hillslope-1
                     hbins[2:max_columns_per_hillslope+1] = hbins[1] \
-                    + (hhgt - thresh) * bin_fractions
+                    + (hhgt - args.thresh) * bin_fractions
 
                     # create length bins from height bins
                     lbins=np.zeros(max_columns_per_hillslope+1)
                     for n in range(max_columns_per_hillslope+1):
                         if hhgt > 0.:
-                            lbins[n] = icosp_height(hbins[n],hillslope_distance,hhgt,phill)
+                            lbins[n] = icosp_height(hbins[n],args.hillslope_distance,hhgt,args.phill)
 
                     # loop over aspect bins
-                    for naspect in range(num_hillslopes):
-                        pct_landunit[naspect,j,i]  = 100/float(num_hillslopes)
+                    for naspect in range(args.num_hillslopes):
+                        pct_landunit[naspect,j,i]  = 100/float(args.num_hillslopes)
                         # index from ridge to channel (i.e. downhill)
                         for n in range(max_columns_per_hillslope):
                             ncol = n + naspect*max_columns_per_hillslope
@@ -191,14 +232,14 @@ def main(argv):
                                 col_dndx[ncol,j,i] = col_ndx[ncol,j,i]-1
 
                             distance[ncol,j,i]  = 0.5*(uedge + ledge)
-                            area[ncol,j,i]      = width_reach*(uedge - ledge)
-                            width[ncol,j,i]     = width_reach
+                            area[ncol,j,i]      = args.width_reach*(uedge - ledge)
+                            width[ncol,j,i]     = args.width_reach
                             # numerically integrate to calculate mean elevation
                             nx = int(uedge - ledge)
                             mean_elev = 0.
                             for k in range(nx):
-                                x1 = uedge - (k+0.5)*delx
-                                mean_elev += cosp_height(x1,hillslope_distance,hhgt,phill)
+                                x1 = uedge - (k+0.5)*args.delx
+                                mean_elev += cosp_height(x1,args.hillslope_distance,hhgt,args.phill)
                             mean_elev = mean_elev/float(nx)
 
                             elevation[ncol,j,i] = mean_elev
@@ -221,7 +262,7 @@ def main(argv):
     check_file_permissions(args.output_file,addWrite=True)
 
     w =  netcdf4.Dataset(args.output_file, 'a')
-    w.createDimension('nhillslope',num_hillslopes)
+    w.createDimension('nhillslope',args.num_hillslopes)
     w.createDimension('nmaxhillcol',max_columns_per_landunit)
 
     ohand = w.createVariable('hillslope_elevation',np.float64,('nmaxhillcol','lsmlat','lsmlon',))
@@ -314,14 +355,14 @@ def main(argv):
     wslope[:,] = 1e-2
 
     # Save settings as global attributes
-    w.synth_hillslopes_delx = delx
-    w.synth_hillslopes_hcase = hcase
-    w.synth_hillslopes_hillslope_distance = hillslope_distance
-    w.synth_hillslopes_nmaxhillcol = nmaxhillcol
-    w.synth_hillslopes_num_hillslopes = num_hillslopes
-    w.synth_hillslopes_phill = phill
-    w.synth_hillslopes_thresh = thresh
-    w.synth_hillslopes_width_reach = width_reach
+    w.synth_hillslopes_delx = args.delx
+    w.synth_hillslopes_hcase = args.hcase
+    w.synth_hillslopes_hillslope_distance = args.hillslope_distance
+    w.synth_hillslopes_nmaxhillcol = args.nmaxhillcol
+    w.synth_hillslopes_num_hillslopes = args.num_hillslopes
+    w.synth_hillslopes_phill = args.phill
+    w.synth_hillslopes_thresh = args.thresh
+    w.synth_hillslopes_width_reach = args.width_reach
             
     print('created ',args.output_file)
 
