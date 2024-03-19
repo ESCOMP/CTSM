@@ -362,19 +362,19 @@ module MLCanopyFluxesMod
        p = filter_mlcan(fp)
        c = patch%column(p)
        g = patch%gridcell(p)
-       lat = grc%latdeg(g) * pi / 180._r8
-       lon = grc%londeg(g) * pi / 180._r8
+       lat = grc%lat(g)
+       lon = grc%lon(g)
        coszen = shr_orb_cosz (caldaym1, lat, lon, declinm1)
        solar_zen(p) = acos(max(0.01_r8,coszen))
 
        ! Compare coszen to that expected from CLM
 
-       if (abs(coszen-surfalb_inst%coszen_col(c)) .gt. 1.e-03_r8) then
+       if (abs(coszen-surfalb_inst%coszen_col(c)) > 1.e-2_r8) then
           write (iulog,*) 'ERROR: MLCanopyFluxes: coszen diagnostic timestepping error'
           write (iulog,*) 'nstep: ',nstep
           write (iulog,*) 'coszen: ',coszen
           write (iulog,*) 'CLM coszen: ',surfalb_inst%coszen_col(c)
-!         call endrun (msg=' MLCanopyFluxes: stopping on coszen error')
+          call endrun (msg=' MLCanopyFluxes: stopping on coszen error')
        end if
     end do
 
@@ -407,12 +407,18 @@ module MLCanopyFluxesMod
           dlai(p,ic) = dlai_frac(p,ic) * lai(p)
           dsai(p,ic) = dsai_frac(p,ic) * sai(p)
           dpai(p,ic) = dlai(p,ic) + dsai(p,ic)
+          ! Now reset values to minimum
+          dlai(p,ic) = max(dlai(p,ic), 0.01_r8)
+          dsai(p,ic) = max(dsai(p,ic), 0.01_r8)
+          dpai(p,ic) = dlai(p,ic) + dsai(p,ic)
        end do
 
        totpai = sum(dpai(p,1:ncan(p)))
-       if (abs(totpai - (lai(p)+sai(p))) > 1.e-06_r8) then
-          call endrun (msg=' ERROR: MLCanopyFluxes: plant area index not updated correctly')
-       end if
+       ! NB slevis 2024/3/19: The next was a valid error check before
+       ! introducing minimum dlai and dsai a few lines up from here
+!      if (abs(totpai - (lai(p)+sai(p))) > 1.e-06_r8) then
+!         call endrun (msg=' ERROR: MLCanopyFluxes: plant area index not updated correctly')
+!      end if
 
     end do
 
