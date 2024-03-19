@@ -21,6 +21,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position, import-error, unused-import, wrong-import-order
 from ctsm import add_cime_to_path
 from ctsm.path_utils import path_to_ctsm_root
+from ctsm.utils import abort
 
 from CIME import build
 from CIME.case import Case
