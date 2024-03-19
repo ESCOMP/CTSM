@@ -7,8 +7,9 @@ import os
 import shutil
 import sys
 import numpy as np
-import netCDF4 as netcdf4
-
+from netCDF4 import Dataset  # pylint: disable=no-name-in-module
+# The above "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
+# though it does.
 
 def parse_arguments(argv):
     """
@@ -119,7 +120,7 @@ def write_to_file(
     """
     shutil.copyfile(args.input_file, args.output_file)
 
-    outfile = netcdf4.Dataset(args.output_file, "a")
+    outfile = Dataset(args.output_file, "a")
     outfile.createDimension("nhillslope", args.num_hillslopes)
     outfile.createDimension("nmaxhillcol", max_columns_per_landunit)
 
@@ -439,7 +440,7 @@ def main(argv):
 
     args = parse_arguments(argv)
 
-    infile = netcdf4.Dataset(args.input_file, "r")
+    infile = Dataset(args.input_file, "r")
     im = len(infile.dimensions["lsmlon"])
     jm = len(infile.dimensions["lsmlat"])
     std_elev = np.asarray(infile.variables["STD_ELEV"][:, :])
