@@ -435,30 +435,30 @@ def create_bins(args, max_columns_per_hillslope, bin_fractions, hhgt):
     return hbins, lbins
 
 
-def define_hillslope_geom_arrays(args, im, jm, max_columns_per_landunit):
+def define_hillslope_geom_arrays(args, n_lon, n_lat, max_columns_per_landunit):
     """
     Define arrays governing hillslope geometry
     """
     # percentage of landunit occupied by each hillslope (must sum to 100)
-    pct_landunit = np.zeros((args.num_hillslopes, jm, im))
+    pct_landunit = np.zeros((args.num_hillslopes, n_lat, n_lon))
     # distance of column midpoint from stream channel
-    distance = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    distance = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=float)
     # area of column
-    area = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    area = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=float)
     # width of interface with downstream column (or channel)
-    width = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    width = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=float)
     # elevation of column midpoint
-    elevation = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    elevation = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=float)
     # mean slope of column
-    slope = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    slope = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=float)
     # azimuth angle of column
-    aspect = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    aspect = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=float)
     # column identifier index
-    col_ndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
+    col_ndx = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=np.int32)
     # index of downhill column
-    col_dndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
+    col_dndx = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=np.int32)
     # index of hillslope type
-    hill_ndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
+    hill_ndx = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=np.int32)
     return (
         pct_landunit,
         distance,
@@ -481,8 +481,8 @@ def main(argv):
     args = parse_arguments(argv)
 
     infile = Dataset(args.input_file, "r")
-    im = len(infile.dimensions["lsmlon"])
-    jm = len(infile.dimensions["lsmlat"])
+    n_lon = len(infile.dimensions["lsmlon"])
+    n_lat = len(infile.dimensions["lsmlat"])
     std_elev = np.asarray(infile.variables["STD_ELEV"][:, :])
     lmask = np.asarray(infile.variables["PFTDATA_MASK"][:, :])
     pct_natveg = np.asarray(infile.variables["PCT_NATVEG"][:, :])
@@ -517,11 +517,11 @@ def main(argv):
         col_ndx,
         col_dndx,
         hill_ndx,
-    ) = define_hillslope_geom_arrays(args, im, jm, max_columns_per_landunit)
+    ) = define_hillslope_geom_arrays(args, n_lon, n_lat, max_columns_per_landunit)
 
     cndx = 0
-    for i in range(im):
-        for j in range(jm):
+    for i in range(n_lon):
+        for j in range(n_lat):
             if lmask[j, i] != 1:
                 continue
 
