@@ -105,6 +105,7 @@ module CNPhenologyMod
      real(r8) :: soilpsi_off           ! critical soil water potential for leaf offset
      real(r8) :: lwtop                 ! live wood turnover proportion (annual fraction)
      real(r8) :: phenology_soil_depth  ! soil depth used for measuring states for phenology triggers
+     real(r8) :: snow5d_thresh_for_onset ! 5-day snow depth threshold for leaf onset
   end type params_type
 
   type(params_type) :: params_inst
@@ -286,6 +287,7 @@ contains
     params_inst%soilpsi_off           = -0.8          ! MPa
     params_inst%lwtop                 = 0.7_r8        ! Fraction
     params_inst%phenology_soil_depth  = 0.08_r8       ! m
+    params_inst%snow5d_thresh_for_onset = 0.2_r8      ! m
   end subroutine CNPhenologySetParams
   
   !-----------------------------------------------------------------------
@@ -319,6 +321,7 @@ contains
     call readNcdioScalar(ncid, 'soilpsi_off', subname, params_inst%soilpsi_off)
     call readNcdioScalar(ncid, 'lwtop_ann', subname, params_inst%lwtop)
     call readNcdioScalar(ncid, 'phenology_soil_depth', subname, params_inst%phenology_soil_depth)
+    call readNcdioScalar(ncid, 'snow5d_thresh_for_onset', subname, params_inst%snow5d_thresh_for_onset)
     
 
   end subroutine readParams
@@ -1271,7 +1274,6 @@ contains
     logical :: do_onset                       ! Flag if onset should happen (return value)
     !
     ! !LOCAL VARIABLES:
-    real(r8), parameter :: snow5d_thresh_for_onset      = 0.1_r8          ! 5-day snow depth threshold for leaf onset
     real(r8), parameter :: min_critical_daylength_onset = 39300._r8/2._r8 ! Minimum daylength for onset to happen
                                                                           ! NOTE above: The 39300/2(19650) value is what we've
                                                                           ! tested with, we are concerned that changing 
@@ -1327,7 +1329,8 @@ contains
         else if (season_decid_temperate == 0 .and.  onset_gddflag == 1.0_r8 .and. &
                 soila10 > SHR_CONST_TKFRZ .and. &
                 t_a5min > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. &
-                dayl>min_critical_daylength_onset .and.  snow_5day<snow5d_thresh_for_onset) then
+                dayl>min_critical_daylength_onset .and. &
+                snow_5day<params_inst%snow5d_thresh_for_onset) then
            do_onset = .true.
         end if
     else

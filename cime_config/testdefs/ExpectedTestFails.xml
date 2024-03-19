@@ -29,12 +29,6 @@
 
 
   <!-- cesm3_dev test suite failures -->
-  <test name="ERP_D_Ld9.ne30pg3_t232.IHistClm51BgcCrop.derecho_intel.clm-clm51cam6LndTuningMode">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2268</issue>
-    </phase>
-  </test>
 
   <!-- aux_clm test suite failures -->
   <test name="SMS_D_Ld1_Mmpi-serial_Vmct.f45_f45_mg37.I2000Clm50SpRs.izumi_gnu.clm-ptsRLA">
@@ -70,41 +64,6 @@
     </phase>
   </test>
 
-  <test name="FUNITCTSM_P1x1.f10_f10_mg37.I2000Clm50Sp.derecho_intel">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>ESMCI/ccs_config_cesm#131</issue>
-    </phase>
-  </test>
-
-  <test name="ERS_D_Mmpi-serial_Ld5.5x5_amazon.I2000Clm50FatesRs.derecho_intel.clm-FatesCold">
-    <phase name="MODEL_BUILD">
-      <status>FAIL</status>
-      <issue>ESMCI/ccs_config_cesm#130</issue>
-    </phase>
-  </test>
-  
-  <test name="ERS_D_Mmpi-serial_Ld5.5x5_amazon.I2000Clm51FatesRs.derecho_intel.clm-FatesCold">
-    <phase name="MODEL_BUILD">
-      <status>FAIL</status>
-      <issue>ESMCI/ccs_config_cesm#130</issue>
-    </phase>
-  </test>
-  
-  <test name="SMS_D_Ld1_Mmpi-serial.f45_f45_mg37.I2000Clm50SpRs.derecho_intel.clm-ptsRLA">
-    <phase name="MODEL_BUILD">
-      <status>FAIL</status>
-      <issue>ESMCI/ccs_config_cesm#130</issue>
-    </phase>
-  </test>
-  
-  <test name="SMS_D_Lm1_Mmpi-serial.CLM_USRDAT.I1PtClm50SpRs.derecho_intel.clm-USUMB_nuopc">
-    <phase name="MODEL_BUILD">
-      <status>FAIL</status>
-      <issue>ESMCI/ccs_config_cesm#130</issue>
-    </phase>
-  </test>
-  
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm51Bgc.derecho_gnu.clm-default--clm-NEON-NIWO">
     <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
@@ -159,9 +118,23 @@
       <issue>#2310</issue>
     </phase>
   </test>
+
+  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_intel.clm-FatesColdHydro">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2373</issue>
+    </phase>
+  </test>
     
   <!-- fates test suite failures -->
 
+  <test name="SMS_D_Ld3.f09_g17.I2000Clm51FatesSpCruRsGs.derecho_gnu.clm-FatesColdSatPhen_prescribed">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2321</issue>
+    </phase>
+  </test>
+      
   <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdHydro">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
@@ -197,20 +170,6 @@
     </phase>
   </test>
 
-  <test name="ERS_D_Mmpi-serial_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesCold">
-    <phase name="MODEL_BUILD">
-      <status>FAIL</status>
-      <issue>ESMCI/ccs_config_cesm#130</issue>
-    </phase>
-  </test>
-
-  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdHydro">
-    <phase name="MODEL_BUILD">
-      <status>FAIL</status>
-      <issue>ESMCI/ccs_config_cesm#130</issue>
-    </phase>
-  </test>
-
   <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdPRT2">
     <phase name="RUN">
       <status>PEND</status>
@@ -230,6 +189,27 @@
     <phase name="COMPARE_base_modpes">
       <status>FAIL</status>
       <issue>FATES#1089</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.derecho_intel.clm-FatesColdTwoStream">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#2325</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-FatesColdTwoStream">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#2325</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdTwoStreamNoCompFixedBioGeo">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#2325</issue>
     </phase>
   </test>
 

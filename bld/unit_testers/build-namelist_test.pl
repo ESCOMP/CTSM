@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 2053;
+my $ntests = 1593;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1383;
+   $ntests += 951;
 }
 plan( tests=>$ntests );
 
@@ -190,8 +190,7 @@ my $mode = "-phys $phys";
 &make_config_cache($phys);
 
 my $DOMFILE = "$inputdata_rootdir/atm/datm7/domain.lnd.T31_gx3v7.090928.nc";
-my $real_par_file = "user_nl_ctsm_real_parameters";
-my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -configuration clm -structure standard -glc_nec 10 -no-note -output_reals $real_par_file";
+my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -configuration clm -structure standard -glc_nec 10 -no-note";
 if ( $opts{'test'} ) {
    $bldnml .= " -test";
 }
@@ -201,7 +200,7 @@ if ( -f $tempfile ) {
   system( "/bin/rm $tempfile" );
 }
 
-my @files = ( "lnd_in", $tempfile, $real_par_file );
+my @files = ( "lnd_in", $tempfile );
 my $cwd = `pwd`;
 chomp( $cwd );
 my $cfiles = NMLTest::CompFiles->new( $cwd, @files );
@@ -269,13 +268,11 @@ my $options = "-co2_ppmv 250 ";
       $cfiles->copyfiles( "most_options", $mode );
    # Compare to default
       $cfiles->doNOTdodiffonfile( "lnd_in",    "default", $mode );
-      $cfiles->doNOTdodiffonfile( "$real_par_file", "default", $mode );
       $cfiles->doNOTdodiffonfile( "$tempfile", "default", $mode );
       $cfiles->comparefiles( "default", $mode );
    # Compare to baseline
    if ( defined($opts{'compare'}) ) {
       $cfiles->dodiffonfile(      "lnd_in",    "most_options", $mode );
-      $cfiles->dodiffonfile( "$real_par_file", "most_options", $mode );
       $cfiles->doNOTdodiffonfile( "$tempfile", "most_options", $mode );
       $cfiles->comparefiles( "most_options", $mode, $opts{'compare'} );
    }
@@ -363,7 +360,6 @@ foreach my $driver ( "mct", "nuopc" ) {
       }
       if ( defined($opts{'compare'}) ) {
          $cfiles->doNOTdodiffonfile( "$tempfile", "$base_options $options", $mode );
-         $cfiles->dodiffonfile( "$real_par_file", "$base_options $options", $mode );
          $cfiles->comparefiles( "$base_options $options", $mode, $opts{'compare'} );
       }
       if ( defined($opts{'generate'}) ) {
@@ -413,7 +409,6 @@ foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
       $cfiles->dodiffonfile(      "lnd_in",    "$options", $mode );
-      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
       $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
    if ( defined($opts{'generate'}) ) {
@@ -450,7 +445,6 @@ foreach my $phys ( "clm4_5", "clm5_0" ) {
       if ( defined($opts{'compare'}) ) {
          $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
          $cfiles->dodiffonfile(      "lnd_in",    "$options", $mode );
-         $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
          $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
       }
       if ( defined($opts{'generate'}) ) {
@@ -491,7 +485,6 @@ foreach my $options (
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
       $cfiles->dodiffonfile(      "lnd_in",    "$options", $mode );
-      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
       $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
    if ( defined($opts{'generate'}) ) {
@@ -813,21 +806,6 @@ my %failtest = (
                                    },
      "-vic with l_bnd=zeroflux"  =>{ options=>"-vichydro -envxml_dir .",
                                      namelst=>"lower_boundary_condition=2",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm4_5",
-                                   },
-     "-vic with origflag=1"      =>{ options=>"-vichydro -envxml_dir .",
-                                     namelst=>"origflag=1",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm4_5",
-                                   },
-     "l_bnd=flux with origflag=0"=>{ options=>"-envxml_dir .",
-                                     namelst=>"origflag=0, lower_boundary_condition=1",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm4_5",
-                                   },
-     "l_bnd=zflux with origflag=0"=>{ options=>"-envxml_dir .",
-                                     namelst=>"origflag=0, lower_boundary_condition=2",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
@@ -1478,7 +1456,6 @@ foreach my $res ( @resolutions ) {
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
       $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
 
@@ -1563,7 +1540,6 @@ foreach my $res ( @crop_res ) {
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
       $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
    if ( defined($opts{'generate'}) ) {
@@ -1637,7 +1613,6 @@ foreach my $res ( @tran_res ) {
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
       $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
    if ( defined($opts{'generate'}) ) {
@@ -1664,7 +1639,6 @@ foreach my $usecase ( "1850_control", "1850-2100_SSP5-8.5_transient", "1850-2100
       $cfiles->shownmldiff( "default", "standard" );
       if ( defined($opts{'compare'}) ) {
          $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-         $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
          $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
       }
       if ( defined($opts{'generate'}) ) {
@@ -1847,7 +1821,6 @@ sub cleanup {
   my $type = shift;
 
   print "Cleanup files created\n";
-  system( "/bin/rm env_run.xml $real_par_file" );
   if ( defined($type) ) {
      if ( $type eq "config" ) {
         system( "/bin/rm config_cache.xml" );

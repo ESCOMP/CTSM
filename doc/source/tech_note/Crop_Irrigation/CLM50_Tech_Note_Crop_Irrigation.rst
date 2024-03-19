@@ -41,6 +41,7 @@ Available new features since the CLM5 release
 - Addition of bioenergy crops
 - Ability to customize crop calendars (sowing windows/dates, maturity requirements) using stream files
 - Cropland soil tillage
+- Crop residue removal
 
 .. _The crop model:
 
@@ -509,9 +510,15 @@ where :math:`{C}_{leaf}`, :math:`{C}_{stem}`, and :math:`{C}_{froot}` is the car
 Harvest
 '''''''
 
-Variables track the flow of grain C and N to food and of all other plant pools, including live stem C and N, to litter, and to biofuel feedstock. A fraction (determined by the :math:`biofuel\_harvfrac`, defined in :numref:`Table Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy production`) of leaf/livestem C and N from bioenergy crops is removed at harvest for biofuels (Equations :eq:`25.9`. :eq:`harv_c_to_removed_residue`, :eq:`25.12`, and :eq:`harv_n_to_removed_residue`), with the remaining portions going to the litter pools (Equations :eq:`20.14)`, :eq:`25.11`, and :eq:`25.14`). Putting live stem C and N into the litter and biofuel pools is in contrast to the approach for unmanaged PFTs which puts live stem C and N into dead stem pools first. Biofuel crop leaf and stem C and N pools are routed to the litter and biofuel pools, in contrast to that of unmanaged PFTs and non-biofuel crops, which under default settings put leaf C and N into litter pools only. All crops can have their leaf and stem pools routed to a "removed residue" pool by setting namelist parameter :math:`crop\_residue\_removal\_frac` to something greater than its default zero. Root C and N pools are routed to the litter pools in the same manner as natural vegetation.
+Whereas live crop C and N in grain was formerly transferred to the litter pool upon harvest, CLM5 splits this between "food" and "seed" pools. In the former—more generally a "crop product" pool—C and N decay to the atmosphere over one year, similar to how the wood product pools work. The latter is used in the subsequent year to account for the C and N required for crop seeding.
 
-In the equations below, subscript :math:`p` refers to either the leaf or live stem biomass pool.
+Live leaf and stem biomass at harvest is transferred to biofuel, removed residue, and/or litter pools.
+
+For the biofuel crops Miscanthus and switchgrass, 70% of live leaf and stem biomass at harvest is transferred to the crop product pool as described for "food" harvest above. This value can be changed for these crops—or set to something other than the default zero for any other crop—with the parameter :math:`biofuel\_harvfrac` (0-1).
+
+50% of any remaining live leaf and stem biomass at harvest (after biofuel removal, if any) is removed to the crop product pool to represent off-field uses such as use for animal feed and bedding. This value can be changed with the parameter :math:`crop\_residue\_removal\_frac` (0–1). The default 50% is derived from :ref:`Smerald et al. 2023 <Smeraldetal2023>`, who found a global average of 50% of residues left on the field. This includes residues burned in the field, meaning that our implementation implictly assumes the CLM crop burning representation will handle those residues appropriately. 
+
+The following equations illustrate how this works. Subscript :math:`p` refers to either the leaf or live stem biomass pool.
 
 .. math::
    :label: 25.9
@@ -552,64 +559,6 @@ with corresponding nitrogen fluxes:
      \right) *  \left( 1-biofuel\_harvfrac  \right) *  \left( 1-crop\_residue\_removal\_frac  \right)
 
 where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, NS is stored nitrogen, and :math:`biofuel\_harvfrac` is the harvested fraction of leaf/livestem for biofuel feedstocks.
-
-.. _Table Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy production:
-
-.. table:: Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy production.
-
- +----------------------------------+----------------------------+
- | PFT                              |  :math:`biofuel\_harvfrac` |
- +==================================+============================+
- | NET Temperate                    |             0.00           |
- +----------------------------------+----------------------------+
- | NET Boreal                       |             0.00           |
- +----------------------------------+----------------------------+
- | NDT Boreal                       |             0.00           |
- +----------------------------------+----------------------------+
- | BET Tropical                     |             0.00           |
- +----------------------------------+----------------------------+
- | BET temperate                    |             0.00           |
- +----------------------------------+----------------------------+
- | BDT tropical                     |             0.00           |
- +----------------------------------+----------------------------+
- | BDT temperate                    |             0.00           |
- +----------------------------------+----------------------------+
- | BDT boreal                       |             0.00           |
- +----------------------------------+----------------------------+
- | BES temperate                    |             0.00           |
- +----------------------------------+----------------------------+
- | BDS temperate                    |             0.00           |
- +----------------------------------+----------------------------+
- | BDS boreal                       |             0.00           |
- +----------------------------------+----------------------------+
- | C\ :sub:`3` arctic grass         |             0.00           |
- +----------------------------------+----------------------------+
- | C\ :sub:`3` grass                |             0.00           |
- +----------------------------------+----------------------------+
- | C\ :sub:`4` grass                |             0.00           |
- +----------------------------------+----------------------------+
- | Temperate Corn                   |             0.00           |
- +----------------------------------+----------------------------+
- | Spring Wheat                     |             0.00           |
- +----------------------------------+----------------------------+
- | Temperate Soybean                |             0.00           |
- +----------------------------------+----------------------------+
- | Cotton                           |             0.00           |
- +----------------------------------+----------------------------+
- | Rice                             |             0.00           |
- +----------------------------------+----------------------------+
- | Sugarcane                        |             0.00           |
- +----------------------------------+----------------------------+
- | Tropical Corn                    |             0.00           |
- +----------------------------------+----------------------------+
- | Tropical Soybean                 |             0.00           |
- +----------------------------------+----------------------------+
- | Miscanthus                       |             0.70           |
- +----------------------------------+----------------------------+
- | Switchgrass                      |             0.70           |
- +----------------------------------+----------------------------+
-
-Whereas food C and N was formerly transferred to the litter pool, CLM5 routes food C and N to a grain product pool where the C and N decay to the atmosphere over one year, similar in structure to the wood product pools. Biofuel and removed-residue C and N is also routed to the grain product pool and decays to the atmosphere over one year. Additionally, CLM5 accounts for the C and N required for crop seeding by removing the seed C and N from the grain product pool during harvest. The crop seed pool is then used to seed crops in the subsequent year.
 
 Annual food crop yields (g dry matter m\ :sup:`-2`) can be calculated by saving the GRAINC_TO_FOOD_ANN variable once per year, then postprocessing with Equation :eq:`25.15`. This calculation assumes that grain C is 45% of the total dry weight. Additionally, harvest is not typically 100% efficient, so analysis needs to assume that harvest efficiency is less---we use 85%.
 

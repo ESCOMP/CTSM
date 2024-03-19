@@ -788,7 +788,8 @@ sub setup_cmdl_fates_mode {
        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                       "use_fates_cohort_age_tracking","use_fates_inventory_init","use_fates_fixed_biogeog",
                       "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging",
-                      "fates_parteh_mode","use_fates_tree_damage","fates_seeddisp_cadence","use_fates_luh","fluh_timeseries" );
+                      "fates_parteh_mode","use_fates_tree_damage","fates_history_dimlevel","fates_seeddisp_cadence",
+		      "use_fates_luh","fluh_timeseries" );
        # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
           if ( defined($nl->get_value($var)) ) {
@@ -1631,11 +1632,13 @@ sub process_namelist_inline_logic {
   setup_logic_irrigate($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_start_type($opts, $nl_flags, $nl);
   setup_logic_decomp_performance($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_roughness_methods($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_snicar_methods($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snow($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_glacier($opts, $nl_flags, $definition, $defaults, $nl,  $envxml_ref);
   setup_logic_dynamic_plant_nitrogen_alloc($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_luna($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_hillslope($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_o3_veg_stress_method($opts, $nl_flags, $definition, $defaults, $nl,$physv);
   setup_logic_hydrstress($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_dynamic_roots($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
@@ -1697,7 +1700,7 @@ sub process_namelist_inline_logic {
   ###############################
   # namelist group: tillage     #
   ###############################
-  setup_logic_tillage($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_tillage($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 
   ###############################
   # namelist group: ch4par_in   #
@@ -2063,6 +2066,25 @@ sub setup_logic_decomp_performance {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_roughness_methods {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'z0param_method',
+              'phys'=>$nl_flags->{'phys'} );
+
+  my $var = remove_leading_and_trailing_quotes( $nl->get_value("z0param_method") );
+  if ( $var ne "Meier2022" && $var ne "ZengWang2007" ) {
+    $log->fatal_error("$var is incorrect entry for the namelist variable z0param_method; expected Meier2022 or ZengWang2007");
+  }
+  my $phys = $physv->as_string();
+  if ( $phys eq "clm4_5" || $phys eq "clm5_0" ) {
+    if ( $var eq "Meier2022" ) {
+      $log->fatal_error("z0param_method = $var and phys = $phys, but this method has been tested only with clm5_1 and later versions; to use with earlier versions, disable this error, and add Meier2022 parameters to the corresponding params file");
+    }
+  }
+}
+#-------------------------------------------------------------------------------
+
 sub setup_logic_snicar_methods {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
@@ -2077,7 +2099,7 @@ sub setup_logic_snicar_methods {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'do_sno_oc' );
 
   # Error checking in loop
-  my %supportedSettings = ( 'snicar_solarspec' => "'mid_latitude_winter'", 'snicar_dust_optics' => "'sahara'", 'snicar_numrad_snw' => '5', 'snicar_snobc_intmix' => '.false.', 'snicar_snodst_intmix' => '.false.', 'snicar_use_aerosol' => '.true.', 'do_sno_oc' => '.false.' );
+  my %supportedSettings = ( 'snicar_solarspec' => "'mid_latitude_winter'", 'snicar_dust_optics' => "'sahara'", 'snicar_numrad_snw' => '5', 'snicar_snodst_intmix' => '.false.', 'snicar_use_aerosol' => '.true.', 'do_sno_oc' => '.false.' );
   keys %supportedSettings;
   while ( my ($key, $val) = each %supportedSettings ) {
     my $var = $nl->get_value($key);
@@ -2095,13 +2117,13 @@ sub setup_logic_snicar_methods {
     $log->warning("$key1=$val1a and $val1b are supported; $var1 is EXPERIMENTAL, UNSUPPORTED, and UNTESTED!");
   }
 
-  # snicar_snobc_intmix and snicar_snodst_intmix cannot both be true
+  # snicar_snobc_intmix and snicar_snodst_intmix cannot both be true, however, they can both be false
   my $key1 = 'snicar_snobc_intmix';
   my $key2 = 'snicar_snodst_intmix';
   my $var1 = $nl->get_value($key1);
   my $var2 = $nl->get_value($key2);
-  my $val1 = $supportedSettings{$key1};  # supported value for this option
-  if (($var1 eq $var2) && ($var1 ne $val1)) {
+  my $val2 = $supportedSettings{$key2};  # supported value for this option
+  if (($var1 eq $var2) && ($var2 ne $val2)) {
     $log->warning("$key1 = $var1 and $key2 = $var2 do not work together!");
   }
 }
@@ -2303,6 +2325,7 @@ sub setup_logic_crop_inparm {
                  'use_crop'=>$nl->get_value('use_crop') );
      
      my $crop_residue_removal_frac = $nl->get_value('crop_residue_removal_frac');
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'crop_residue_removal_frac' );
      if ( $crop_residue_removal_frac < 0.0 or $crop_residue_removal_frac > 1.0 ) {
         $log->fatal_error("crop_residue_removal_frac must be in range [0, 1]");
      }
@@ -2315,10 +2338,13 @@ sub setup_logic_crop_inparm {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_tillage {
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'tillage_mode',
+              'use_crop'=>$nl_flags->{'use_crop'}, 'phys'=>$physv->as_string() );
 
   my $tillage_mode = remove_leading_and_trailing_quotes( $nl->get_value( "tillage_mode" ) );
-  if ( $tillage_mode ne "off" && $tillage_mode ne "" && not &value_is_true($nl->get_value('use_crop')) ) {
+  if ( $tillage_mode ne "off" && $tillage_mode ne "" && not &value_is_true($nl_flags->{'use_crop'}) ) {
       $log->fatal_error( "Tillage only works on crop columns, so use_crop must be true if tillage is enabled." );
   }
 }
@@ -2743,6 +2769,8 @@ sub setup_logic_do_transient_pfts {
       $cannot_be_true = "$var cannot be combined with use_cndv";
    } elsif (&value_is_true($nl->get_value('use_fates'))) {
       $cannot_be_true = "$var cannot be combined with use_fates";
+   } elsif (&value_is_true($nl->get_value('use_hillslope'))) {
+      $cannot_be_true = "$var cannot be combined with use_hillslope";
    }
 
    if ($cannot_be_true) {
@@ -2818,6 +2846,8 @@ sub setup_logic_do_transient_crops {
       # do_transient_crops. However, this hasn't been tested, so to be safe,
       # we are not allowing this combination for now.
       $cannot_be_true = "$var has not been tested with FATES, so for now these two options cannot be combined";
+   } elsif (&value_is_true($nl->get_value('use_hillslope'))) {
+      $cannot_be_true = "$var cannot be combined with use_hillslope";
    }
 
    if ($cannot_be_true) {
@@ -2913,6 +2943,8 @@ sub setup_logic_do_transient_lakes {
    if (&value_is_true($nl->get_value($var))) {
       if (&value_is_true($nl->get_value('collapse_urban'))) {
          $log->fatal_error("$var cannot be combined with collapse_urban");
+      } elsif (&value_is_true($nl->get_value('use_hillslope'))) {
+         $log->fatal_error("$var cannot be combined with use_hillslope");
       }
       if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
          $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soil > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
@@ -2976,6 +3008,8 @@ sub setup_logic_do_transient_urban {
    if (&value_is_true($nl->get_value($var))) {
       if (&value_is_true($nl->get_value('collapse_urban'))) {
          $log->fatal_error("$var cannot be combined with collapse_urban");
+      } elsif (&value_is_true($nl->get_value('use_hillslope'))) {
+         $log->fatal_error("$var cannot be combined with use_hillslope");
       }
       if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
          $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soil > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
@@ -3305,12 +3339,8 @@ sub setup_logic_hydrology_switches {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_subgrid_fluxes');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_cover_fraction_method');
   my $subgrid    = $nl->get_value('use_subgrid_fluxes' );
-  my $origflag   = $nl->get_value('origflag'    );
   my $h2osfcflag = $nl->get_value('h2osfcflag'  );
   my $scf_method = $nl->get_value('snow_cover_fraction_method');
-  if ( $origflag == 1 && &value_is_true($subgrid) ) {
-    $log->fatal_error("if origflag is ON, use_subgrid_fluxes can NOT also be on!");
-  }
   if ( $h2osfcflag == 1 && ! &value_is_true($subgrid) ) {
     $log->fatal_error("if h2osfcflag is ON, use_subgrid_fluxes can NOT be off!");
   }
@@ -3333,9 +3363,6 @@ sub setup_logic_hydrology_switches {
   }
   if ( defined($use_vic) && defined($lower) && (&value_is_true($use_vic)) && $lower != 3 && $lower != 4) {
      $log->fatal_error( "If use_vichydro is on -- lower_boundary_condition can only be table or aquifer" );
-  }
-  if ( defined($origflag) && defined($use_vic) && (&value_is_true($use_vic)) && $origflag == 1 ) {
-     $log->fatal_error( "If use_vichydro is on -- origflag can NOT be equal to 1" );
   }
   if ( defined($h2osfcflag) && defined($lower) && $h2osfcflag == 0 && $lower != 4 ) {
      $log->fatal_error( "If h2osfcflag is 0 lower_boundary_condition can only be aquifer" );
@@ -3513,6 +3540,28 @@ sub setup_logic_luna {
      if ( defined($val) ) {
         $log->fatal_error("Cannot set $var when use_luna is NOT on" );
      }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_hillslope {
+  #
+  # Hillslope model
+  #
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_hillslope' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'downscale_hillslope_meteorology' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_head_gradient_method' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_transmissivity_method' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_pft_distribution_method' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_soil_profile_method' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_hillslope_routing', 'use_hillslope'=>$nl_flags->{'use_hillslope'} );
+  my $use_hillslope = $nl->get_value('use_hillslope');
+  my $use_hillslope_routing = $nl->get_value('use_hillslope_routing');
+  if ( (! &value_is_true($use_hillslope)) && &value_is_true($use_hillslope_routing) ) {
+      $log->fatal_error("Cannot turn on use_hillslope_routing when use_hillslope is off\n" );
   }
 }
 
@@ -4246,7 +4295,6 @@ sub setup_logic_soil_resis {
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_resis_method' );
 }
-#-------------------------------------------------------------------------------
 
 sub setup_logic_canopyfluxes {
   #
@@ -4452,7 +4500,8 @@ sub setup_logic_fates {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
         my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                        "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp","fates_seeddisp_cadence",
-                       "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage","use_fates_luh" );
+                       "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage",
+		       "use_fates_luh","fates_history_dimlevel" );
         foreach my $var ( @list ) {
  	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
                       'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
@@ -4715,6 +4764,7 @@ sub write_output_files {
 
   # CLM component
   my @groups;
+
   @groups = qw(clm_inparm ndepdyn_nml popd_streams urbantv_streams light_streams
                soil_moisture_streams lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
                cropcal_streams
@@ -4724,7 +4774,7 @@ sub write_output_files {
                soilhydrology_inparm luna friction_velocity mineral_nitrogen_dynamics
                soilwater_movement_inparm rooting_profile_inparm
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
-               clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
+               clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm hillslope_hydrology_inparm hillslope_properties_inparm
                cnprecision_inparm clm_glacier_behavior crop_inparm irrigation_inparm
                surfacealbedo_inparm water_tracers_inparm tillage_inparm);
 
