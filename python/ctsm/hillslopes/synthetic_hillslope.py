@@ -374,7 +374,7 @@ def create_variables(outfile):
 create bins of equal height
 this form ensures a near-zero slope at the hill top
 ---------------------------------------------------
-"""
+"""  # pylint: disable=pointless-string-statement
 
 
 def cosp_height(x, hlen, hhgt, phill):
