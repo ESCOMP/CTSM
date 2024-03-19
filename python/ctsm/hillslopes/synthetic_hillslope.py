@@ -8,8 +8,10 @@ import shutil
 import sys
 import numpy as np
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
+
 # The above "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
 # though it does.
+
 
 def parse_arguments(argv):
     """
@@ -433,6 +435,44 @@ def create_bins(args, max_columns_per_hillslope, bin_fractions, hhgt):
     return hbins, lbins
 
 
+def define_hillslope_geom_arrays(args, im, jm, max_columns_per_landunit):
+    """
+    Define arrays governing hillslope geometry
+    """
+    # percentage of landunit occupied by each hillslope (must sum to 100)
+    pct_landunit = np.zeros((args.num_hillslopes, jm, im))
+    # distance of column midpoint from stream channel
+    distance = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    # area of column
+    area = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    # width of interface with downstream column (or channel)
+    width = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    # elevation of column midpoint
+    elevation = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    # mean slope of column
+    slope = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    # azimuth angle of column
+    aspect = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    # column identifier index
+    col_ndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
+    # index of downhill column
+    col_dndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
+    # index of hillslope type
+    hill_ndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
+    return (
+        pct_landunit,
+        distance,
+        area,
+        width,
+        elevation,
+        slope,
+        aspect,
+        col_ndx,
+        col_dndx,
+        hill_ndx,
+    )
+
+
 def main(argv):
     """
     See module description
@@ -466,26 +506,18 @@ def main(argv):
     max_columns_per_landunit = args.num_hillslopes * max_columns_per_hillslope
 
     # --  define geometry of hillslopes
-    # percentage of landunit occupied by each hillslope (must sum to 100)
-    pct_landunit = np.zeros((args.num_hillslopes, jm, im))
-    # distance of column midpoint from stream channel
-    distance = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
-    # area of column
-    area = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
-    # width of interface with downstream column (or channel)
-    width = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
-    # elevation of column midpoint
-    elevation = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
-    # mean slope of column
-    slope = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
-    # azimuth angle of column
-    aspect = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
-    # column identifier index
-    col_ndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
-    # index of downhill column
-    col_dndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
-    # index of hillslope type
-    hill_ndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
+    (
+        pct_landunit,
+        distance,
+        area,
+        width,
+        elevation,
+        slope,
+        aspect,
+        col_ndx,
+        col_dndx,
+        hill_ndx,
+    ) = define_hillslope_geom_arrays(args, im, jm, max_columns_per_landunit)
 
     cndx = 0
     for i in range(im):
