@@ -144,8 +144,8 @@ def buildnml(case, caseroot, compname):
                 or clm_usrdat_name is "NEON.PRISM"
             ):
                 logger.warning(
-                    "WARNING: Do you have approriprate initial conditions for this simulation?"
-                    + " Check that the finidat file used in the lnd_in namelist is apprporiately spunup for your case"
+                    "WARNING: Do you have appropriate initial conditions for this simulation?"
+                    + " Check that the finidat file used in the lnd_in namelist is appropriately spunup for your case"
                 )
 
     if comp_atm != "datm":

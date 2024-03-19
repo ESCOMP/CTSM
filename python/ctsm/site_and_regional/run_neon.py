@@ -174,8 +174,10 @@ def main(description):
     """
     cesmroot = path_to_ctsm_root()
     # Get the list of supported neon sites from usermods
+    # The [!Fd]* portion means that we won't retrieve cases that start with:
+    # F (FATES) or d (default). We should be aware of adding cases that start with these.
     valid_neon_sites = glob.glob(
-        os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!d]*")
+        os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!Fd]*")
     )
     valid_neon_sites = sorted([v.split("/")[-1] for v in valid_neon_sites])
 
@@ -220,8 +222,9 @@ def main(description):
             if run_from_postad:
                 neon_site.finidat = None
             if not base_case_root:
+                user_mods_dirs = None
                 base_case_root = neon_site.build_base_case(
-                    cesmroot, output_root, res, compset, overwrite, setup_only
+                    cesmroot, output_root, res, compset, user_mods_dirs, overwrite, setup_only
                 )
             logger.info("-----------------------------------")
             logger.info("Running CTSM for neon site : %s", neon_site.name)
