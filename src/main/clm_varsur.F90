@@ -45,13 +45,17 @@ module clm_instur
 
   ! subgrid glacier_mec sfc elevation
   real(r8), pointer :: topo_glc_mec(:,:) 
-  
+
   ! whether we have lake to initialise in each grid cell
   logical , pointer :: haslake(:)
+
+  ! subgrid hillslope hydrology constituents
+  integer, pointer :: ncolumns_hillslope(:)
   
   ! whether we have urban to initialize in each grid cell
   ! (second dimension goes 1:numurbl)
   real(r8), pointer :: pct_urban_max(:,:)
+
   !-----------------------------------------------------------------------
 
 end module clm_instur

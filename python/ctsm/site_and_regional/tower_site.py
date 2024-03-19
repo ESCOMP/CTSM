@@ -100,6 +100,9 @@ class TowerSite:
 
         if overwrite and os.path.isdir(case_path):
             print("Removing the existing case at: {}".format(case_path))
+            if os.getcwd() == case_path:
+                abort("Trying to remove the directory tree that we are in")
+
             shutil.rmtree(case_path)
 
         with Case(case_path, read_only=False) as case:
@@ -305,6 +308,9 @@ class TowerSite:
         if os.path.isdir(case_root):
             if overwrite:
                 print("---- removing the existing case -------")
+                if os.getcwd() == case_root:
+                    abort("Trying to remove the directory tree that we are in")
+
                 shutil.rmtree(case_root)
             elif rerun:
                 with Case(case_root, read_only=False) as case:

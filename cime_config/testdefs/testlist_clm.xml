@@ -3414,4 +3414,45 @@
       <option name="comment">This test is designed to test the ability to prescribe crop sowing dates and maturity requirements. It first performs a GDD-generating run, then calls Python code to generate the maturity requirement file. This is then used in a sowing+maturity forced run, which finally is tested to ensure correct behavior.</option>
     </options>
   </test>
+
+  <test name="ERP_D_P64x2_Ld10" grid="f10_f10_mg37" compset="I2000Clm51Bgc" testmods="clm/Hillslope">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="hillslope"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Ld3" grid="f10_f10_mg37" compset="I1850Clm51Bgc" testmods="clm/HillslopeFromFile">
+    <machines>
+      <machine name="derecho" compiler="intel" category="hillslope"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I1850Clm51Bgc" testmods="clm/HillslopeC">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="hillslope"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Ld3" grid="f10_f10_mg37" compset="I2000Clm51Bgc" testmods="clm/HillslopeD">
+    <machines>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="hillslope"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+
 </testlist>
