@@ -205,7 +205,7 @@ def write_to_file(
     print("created ", args.output_file)
 
     # --  Close output file
-    outfile.close
+    outfile.close()
 
 
 def create_variables(outfile):
