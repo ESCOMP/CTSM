@@ -400,6 +400,38 @@ def icosp_height(h, hlen, hhgt, phill):
     return x
 
 
+def calc_mean_elevation(args, hhgt, uedge, ledge):
+    """
+    numerically integrate to calculate mean elevation
+    """
+    nx = int(uedge - ledge)
+    mean_elev = 0.0
+    for k in range(nx):
+        x1 = uedge - (k + 0.5) * args.delx
+        mean_elev += cosp_height(x1, args.hillslope_distance, hhgt, args.phill)
+    mean_elev = mean_elev / float(nx)
+    return mean_elev
+
+
+def create_bins(args, max_columns_per_hillslope, bin_fractions, hhgt):
+    """
+    create specified fractional bins
+    """
+
+    # create height bins
+    hbins = np.zeros(max_columns_per_hillslope + 1)
+    hbins[1] = args.thresh
+    # array needs to be length max_columns_per_hillslope-1
+    hbins[2 : max_columns_per_hillslope + 1] = hbins[1] + (hhgt - args.thresh) * bin_fractions
+
+    # create length bins from height bins
+    lbins = np.zeros(max_columns_per_hillslope + 1)
+    for n in range(max_columns_per_hillslope + 1):
+        if hhgt > 0.0:
+            lbins[n] = icosp_height(hbins[n], args.hillslope_distance, hhgt, args.phill)
+    return hbins, lbins
+
+
 def main(argv):
     """
     See module description
@@ -468,18 +500,7 @@ def main(argv):
             hhgt = np.max([hhgt, 4.0])
 
             # create specified fractional bins
-            hbins = np.zeros(max_columns_per_hillslope + 1)
-            hbins[1] = args.thresh
-            # array needs to be length max_columns_per_hillslope-1
-            hbins[2 : max_columns_per_hillslope + 1] = (
-                hbins[1] + (hhgt - args.thresh) * bin_fractions
-            )
-
-            # create length bins from height bins
-            lbins = np.zeros(max_columns_per_hillslope + 1)
-            for n in range(max_columns_per_hillslope + 1):
-                if hhgt > 0.0:
-                    lbins[n] = icosp_height(hbins[n], args.hillslope_distance, hhgt, args.phill)
+            hbins, lbins = create_bins(args, max_columns_per_hillslope, bin_fractions, hhgt)
 
             # loop over aspect bins
             for naspect in range(args.num_hillslopes):
@@ -503,15 +524,9 @@ def main(argv):
                     distance[ncol, j, i] = 0.5 * (uedge + ledge)
                     area[ncol, j, i] = args.width_reach * (uedge - ledge)
                     width[ncol, j, i] = args.width_reach
-                    # numerically integrate to calculate mean elevation
-                    nx = int(uedge - ledge)
-                    mean_elev = 0.0
-                    for k in range(nx):
-                        x1 = uedge - (k + 0.5) * args.delx
-                        mean_elev += cosp_height(x1, args.hillslope_distance, hhgt, args.phill)
-                    mean_elev = mean_elev / float(nx)
 
-                    elevation[ncol, j, i] = mean_elev
+                    # numerically integrate to calculate mean elevation
+                    elevation[ncol, j, i] = calc_mean_elevation(args, hhgt, uedge, ledge)
 
                     slope[ncol, j, i] = (hbins[n + 1] - hbins[n]) / (lbins[n + 1] - lbins[n])
                     if 0 <= naspect <= 3:
