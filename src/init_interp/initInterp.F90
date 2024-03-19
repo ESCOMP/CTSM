@@ -820,13 +820,13 @@ contains
        write(iulog,*)'calling set_subgrid_info for ',trim(dimname), ' for input'
     end if
     call set_subgrid_info(beg=begi, end=endi, dimname=dimname, use_glob=.true., &
-         ncid=ncidi, active=activei, subgrid=subgridi)
+         ncid=ncidi, active=activei, subgrid=subgridi, allow_scm=.false.)
 
     if (masterproc) then
        write(iulog,*)'calling set_subgrid_info for ',trim(dimname), ' for output'
     end if
     call set_subgrid_info(beg=bego, end=endo, dimname=dimname, use_glob=.false., &
-         ncid=ncido, active=activeo, subgrid=subgrido)
+         ncid=ncido, active=activeo, subgrid=subgrido, allow_scm=.true.)
 
     select case (interp_method)
     case (interp_method_general)
@@ -859,7 +859,7 @@ contains
 
  !=======================================================================
 
-  subroutine set_subgrid_info(beg, end, dimname, use_glob, ncid, active, subgrid)
+  subroutine set_subgrid_info(beg, end, dimname, use_glob, ncid, active, subgrid, allow_scm)
 
     ! --------------------------------------------------------------------
     ! arguments
@@ -869,6 +869,7 @@ contains
     logical            , intent(in)    :: use_glob  ! if .true., use the 'glob' form of ncd_io
     logical            , intent(out)   :: active(beg:end)
     type(subgrid_type) , intent(inout) :: subgrid
+    logical            , intent(in)    :: allow_scm  ! if .true., allow single column model subset of data
     !
     ! local variables
     integer              :: n
@@ -896,32 +897,32 @@ contains
     end if
 
     if (dimname == 'pft') then
-       call read_var_double(ncid=ncid, varname='pfts1d_lon'    , data=subgrid%lon  , dim1name='pft', use_glob=use_glob)
-       call read_var_double(ncid=ncid, varname='pfts1d_lat'    , data=subgrid%lat  , dim1name='pft', use_glob=use_glob)
-       call read_var_int(ncid=ncid, varname='pfts1d_itypveg', data=subgrid%ptype, dim1name='pft', use_glob=use_glob)
-       call read_var_int(ncid=ncid, varname='pfts1d_itypcol', data=subgrid%ctype, dim1name='pft', use_glob=use_glob)
-       call read_var_int(ncid=ncid, varname='pfts1d_ityplun', data=subgrid%ltype, dim1name='pft', use_glob=use_glob)
-       call read_var_int(ncid=ncid, varname='pfts1d_active' , data=itemp        , dim1name='pft', use_glob=use_glob)
+       call read_var_double(ncid=ncid, varname='pfts1d_lon'    , data=subgrid%lon  , dim1name='pft', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_double(ncid=ncid, varname='pfts1d_lat'    , data=subgrid%lat  , dim1name='pft', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_int(ncid=ncid, varname='pfts1d_itypveg', data=subgrid%ptype, dim1name='pft', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_int(ncid=ncid, varname='pfts1d_itypcol', data=subgrid%ctype, dim1name='pft', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_int(ncid=ncid, varname='pfts1d_ityplun', data=subgrid%ltype, dim1name='pft', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_int(ncid=ncid, varname='pfts1d_active' , data=itemp        , dim1name='pft', use_glob=use_glob, allow_scm=allow_scm)
        if (associated(subgrid%topoglc)) then
-          call read_var_double(ncid=ncid, varname='pfts1d_topoglc', data=subgrid%topoglc, dim1name='pft', use_glob=use_glob)
+          call read_var_double(ncid=ncid, varname='pfts1d_topoglc', data=subgrid%topoglc, dim1name='pft', use_glob=use_glob, allow_scm=allow_scm)
        end if
     else if (dimname == 'column') then
-       call read_var_double(ncid=ncid, varname='cols1d_lon'    , data=subgrid%lon  , dim1name='column', use_glob=use_glob)
-       call read_var_double(ncid=ncid, varname='cols1d_lat'    , data=subgrid%lat  , dim1name='column', use_glob=use_glob)
-       call read_var_int(ncid=ncid, varname='cols1d_ityp'   , data=subgrid%ctype, dim1name='column', use_glob=use_glob)
-       call read_var_int(ncid=ncid, varname='cols1d_ityplun', data=subgrid%ltype, dim1name='column', use_glob=use_glob)
-       call read_var_int(ncid=ncid, varname='cols1d_active' , data=itemp        , dim1name='column', use_glob=use_glob)
+       call read_var_double(ncid=ncid, varname='cols1d_lon'    , data=subgrid%lon  , dim1name='column', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_double(ncid=ncid, varname='cols1d_lat'    , data=subgrid%lat  , dim1name='column', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_int(ncid=ncid, varname='cols1d_ityp'   , data=subgrid%ctype, dim1name='column', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_int(ncid=ncid, varname='cols1d_ityplun', data=subgrid%ltype, dim1name='column', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_int(ncid=ncid, varname='cols1d_active' , data=itemp        , dim1name='column', use_glob=use_glob, allow_scm=allow_scm)
        if (associated(subgrid%topoglc)) then
-          call read_var_double(ncid=ncid, varname='cols1d_topoglc', data=subgrid%topoglc, dim1name='column', use_glob=use_glob)
+          call read_var_double(ncid=ncid, varname='cols1d_topoglc', data=subgrid%topoglc, dim1name='column', use_glob=use_glob, allow_scm=allow_scm)
        end if
     else if (dimname == 'landunit') then
-       call read_var_double(ncid=ncid, varname='land1d_lon'    , data=subgrid%lon  , dim1name='landunit', use_glob=use_glob)
-       call read_var_double(ncid=ncid, varname='land1d_lat'    , data=subgrid%lat  , dim1name='landunit', use_glob=use_glob)
-       call read_var_int(ncid=ncid, varname='land1d_ityplun', data=subgrid%ltype, dim1name='landunit', use_glob=use_glob)
-       call read_var_int(ncid=ncid, varname='land1d_active' , data=itemp        , dim1name='landunit', use_glob=use_glob)
+       call read_var_double(ncid=ncid, varname='land1d_lon'    , data=subgrid%lon  , dim1name='landunit', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_double(ncid=ncid, varname='land1d_lat'    , data=subgrid%lat  , dim1name='landunit', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_int(ncid=ncid, varname='land1d_ityplun', data=subgrid%ltype, dim1name='landunit', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_int(ncid=ncid, varname='land1d_active' , data=itemp        , dim1name='landunit', use_glob=use_glob, allow_scm=allow_scm)
     else if (dimname == 'gridcell') then
-       call read_var_double(ncid=ncid, varname='grid1d_lon'    , data=subgrid%lon  , dim1name='gridcell', use_glob=use_glob)
-       call read_var_double(ncid=ncid, varname='grid1d_lat'    , data=subgrid%lat  , dim1name='gridcell', use_glob=use_glob)
+       call read_var_double(ncid=ncid, varname='grid1d_lon'    , data=subgrid%lon  , dim1name='gridcell', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_double(ncid=ncid, varname='grid1d_lat'    , data=subgrid%lat  , dim1name='gridcell', use_glob=use_glob, allow_scm=allow_scm)
 
        ! All gridcells in the restart file are active
        itemp(beg:end) = 1
@@ -942,7 +943,7 @@ contains
 
   contains
 
-    subroutine read_var_double(ncid, varname, data, dim1name, use_glob)
+    subroutine read_var_double(ncid, varname, data, dim1name, use_glob, allow_scm)
       ! Wraps the ncd_io call, providing logic related to whether we're using the 'glob'
       ! form of ncd_io
       type(file_desc_t)  , intent(inout) :: ncid
@@ -950,15 +951,25 @@ contains
       real(r8), pointer  , intent(inout) :: data(:)
       character(len=*)   , intent(in)    :: dim1name
       logical            , intent(in)    :: use_glob  ! if .true., use the 'glob' form of ncd_io
+      logical            , intent(in)    :: allow_scm ! if .true., use the 'glob' form of ncd_io
+
+      ! local
+      character(16)                      :: readflag
+
+      if (allow_scm) then
+         readflag='read'
+      else
+         readflag='read_noscm'
+      endif
 
       if (use_glob) then
-         call ncd_io(ncid=ncid, varname=varname, flag='read', data=data)
+         call ncd_io(ncid=ncid, varname=varname, flag=trim(readflag), data=data)
       else
-         call ncd_io(ncid=ncid, varname=varname, flag='read', data=data, dim1name=dim1name)
+         call ncd_io(ncid=ncid, varname=varname, flag=trim(readflag), data=data, dim1name=dim1name)
       end if
     end subroutine read_var_double
 
-    subroutine read_var_int(ncid, varname, data, dim1name, use_glob)
+    subroutine read_var_int(ncid, varname, data, dim1name, use_glob, allow_scm)
       ! Wraps the ncd_io call, providing logic related to whether we're using the 'glob'
       ! form of ncd_io
       type(file_desc_t)  , intent(inout) :: ncid
@@ -966,11 +977,21 @@ contains
       integer, pointer   , intent(inout) :: data(:)
       character(len=*)   , intent(in)    :: dim1name
       logical            , intent(in)    :: use_glob  ! if .true., use the 'glob' form of ncd_io
+      logical            , intent(in)    :: allow_scm ! if .true., allow scm data slice
+
+      ! local
+      character(16)                      :: readflag
+
+      if (allow_scm) then
+         readflag='read'
+      else
+         readflag='read_noscm'
+      endif
 
       if (use_glob) then
-         call ncd_io(ncid=ncid, varname=varname, flag='read', data=data)
+         call ncd_io(ncid=ncid, varname=varname, flag=trim(readflag), data=data)
       else
-         call ncd_io(ncid=ncid, varname=varname, flag='read', data=data, dim1name=dim1name)
+         call ncd_io(ncid=ncid, varname=varname, flag=trim(readflag), data=data, dim1name=dim1name)
       end if
     end subroutine read_var_int
 
@@ -1038,7 +1059,7 @@ contains
     end if
 
     allocate (rbufsli(begi:endi), rbufslo(bego:endo))
-    call ncd_io(ncid=ncidi, varname=trim(varname_i), flag='read', data=rbufsli)
+    call ncd_io(ncid=ncidi, varname=trim(varname_i), flag='read_noscm', data=rbufsli)
     call ncd_io(ncid=ncido, varname=trim(varname), flag='read', data=rbufslo, &
          dim1name=dimname)
 
@@ -1080,7 +1101,7 @@ contains
 
     allocate (ibufsli(begi:endi), ibufslo(bego:endo))
 
-    call ncd_io(ncid=ncidi, varname=trim(varname_i), flag='read', &
+    call ncd_io(ncid=ncidi, varname=trim(varname_i), flag='read_noscm', &
          data=ibufsli)
     call ncd_io(ncid=ncido, varname=trim(varname), flag='read', &
          data=ibufslo, dim1name=dimname)
