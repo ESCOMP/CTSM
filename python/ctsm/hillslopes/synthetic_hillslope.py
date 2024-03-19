@@ -419,110 +419,109 @@ def main(argv):
     print("zero natveg pts ", np.sum(np.where(np.logical_and(lmask == 1, pct_natveg == 0), 1, 0)))
     lmask = np.where(np.logical_and(lmask == 1, pct_natveg > 0), 1, 0).astype(int)
 
-    if args.hcase == "slope_aspect":
-        max_columns_per_hillslope = args.nmaxhillcol // args.num_hillslopes
+    max_columns_per_hillslope = args.nmaxhillcol // args.num_hillslopes
 
-        if max_columns_per_hillslope == 4:
-            bin_fractions = np.array((0.25, 0.75, 1.0))
-        elif max_columns_per_hillslope == 5:
-            bin_fractions = np.array((0.25, 0.50, 0.75, 1.0))
-        elif max_columns_per_hillslope == 6:
-            bin_fractions = np.array((0.20, 0.40, 0.60, 0.80, 1.0))
-        else:
-            raise RuntimeError(f"Unhandled max_columns_per_hillslope: {max_columns_per_hillslope}")
+    if max_columns_per_hillslope == 4:
+        bin_fractions = np.array((0.25, 0.75, 1.0))
+    elif max_columns_per_hillslope == 5:
+        bin_fractions = np.array((0.25, 0.50, 0.75, 1.0))
+    elif max_columns_per_hillslope == 6:
+        bin_fractions = np.array((0.20, 0.40, 0.60, 0.80, 1.0))
+    else:
+        raise RuntimeError(f"Unhandled max_columns_per_hillslope: {max_columns_per_hillslope}")
 
-        max_columns_per_landunit = args.num_hillslopes * max_columns_per_hillslope
+    max_columns_per_landunit = args.num_hillslopes * max_columns_per_hillslope
 
-        # --  define geometry of hillslopes
-        # percentage of landunit occupied by each hillslope (must sum to 100)
-        pct_landunit = np.zeros((args.num_hillslopes, jm, im))
-        # distance of column midpoint from stream channel
-        distance = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
-        # area of column
-        area = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
-        # width of interface with downstream column (or channel)
-        width = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
-        # elevation of column midpoint
-        elevation = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
-        # mean slope of column
-        slope = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
-        # azimuth angle of column
-        aspect = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
-        # column identifier index
-        col_ndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
-        # index of downhill column
-        col_dndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
-        # index of hillslope type
-        hill_ndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
+    # --  define geometry of hillslopes
+    # percentage of landunit occupied by each hillslope (must sum to 100)
+    pct_landunit = np.zeros((args.num_hillslopes, jm, im))
+    # distance of column midpoint from stream channel
+    distance = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    # area of column
+    area = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    # width of interface with downstream column (or channel)
+    width = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    # elevation of column midpoint
+    elevation = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    # mean slope of column
+    slope = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    # azimuth angle of column
+    aspect = np.zeros((max_columns_per_landunit, jm, im), dtype=float)
+    # column identifier index
+    col_ndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
+    # index of downhill column
+    col_dndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
+    # index of hillslope type
+    hill_ndx = np.zeros((max_columns_per_landunit, jm, im), dtype=np.int32)
 
-        cndx = 0
-        for i in range(im):
-            for j in range(jm):
-                if lmask[j, i] != 1:
-                    continue
+    cndx = 0
+    for i in range(im):
+        for j in range(jm):
+            if lmask[j, i] != 1:
+                continue
 
-                # slope tangent (y/x)
-                beta = np.min((std_elev[j, i], 200.0)) / args.hillslope_distance
+            # slope tangent (y/x)
+            beta = np.min((std_elev[j, i], 200.0)) / args.hillslope_distance
 
-                # specify hill height from slope and length
-                hhgt = beta * args.hillslope_distance
-                hhgt = np.max([hhgt, 4.0])
+            # specify hill height from slope and length
+            hhgt = beta * args.hillslope_distance
+            hhgt = np.max([hhgt, 4.0])
 
-                # create specified fractional bins
-                hbins = np.zeros(max_columns_per_hillslope + 1)
-                hbins[1] = args.thresh
-                # array needs to be length max_columns_per_hillslope-1
-                hbins[2 : max_columns_per_hillslope + 1] = (
-                    hbins[1] + (hhgt - args.thresh) * bin_fractions
-                )
+            # create specified fractional bins
+            hbins = np.zeros(max_columns_per_hillslope + 1)
+            hbins[1] = args.thresh
+            # array needs to be length max_columns_per_hillslope-1
+            hbins[2 : max_columns_per_hillslope + 1] = (
+                hbins[1] + (hhgt - args.thresh) * bin_fractions
+            )
 
-                # create length bins from height bins
-                lbins = np.zeros(max_columns_per_hillslope + 1)
-                for n in range(max_columns_per_hillslope + 1):
-                    if hhgt > 0.0:
-                        lbins[n] = icosp_height(hbins[n], args.hillslope_distance, hhgt, args.phill)
+            # create length bins from height bins
+            lbins = np.zeros(max_columns_per_hillslope + 1)
+            for n in range(max_columns_per_hillslope + 1):
+                if hhgt > 0.0:
+                    lbins[n] = icosp_height(hbins[n], args.hillslope_distance, hhgt, args.phill)
 
-                # loop over aspect bins
-                for naspect in range(args.num_hillslopes):
-                    pct_landunit[naspect, j, i] = 100 / float(args.num_hillslopes)
-                    # index from ridge to channel (i.e. downhill)
-                    for n in range(max_columns_per_hillslope):
-                        ncol = n + naspect * max_columns_per_hillslope
+            # loop over aspect bins
+            for naspect in range(args.num_hillslopes):
+                pct_landunit[naspect, j, i] = 100 / float(args.num_hillslopes)
+                # index from ridge to channel (i.e. downhill)
+                for n in range(max_columns_per_hillslope):
+                    ncol = n + naspect * max_columns_per_hillslope
 
-                        cndx += 1  # start at 1 not zero (oceans are 0)
-                        col_ndx[ncol, j, i] = cndx
-                        hill_ndx[ncol, j, i] = naspect + 1
+                    cndx += 1  # start at 1 not zero (oceans are 0)
+                    col_ndx[ncol, j, i] = cndx
+                    hill_ndx[ncol, j, i] = naspect + 1
 
-                        uedge = lbins[n + 1]
-                        ledge = lbins[n]
-                        #      lowland column
-                        if n == 0:
-                            col_dndx[ncol, j, i] = -999
-                        else:  # upland columns
-                            col_dndx[ncol, j, i] = col_ndx[ncol, j, i] - 1
+                    uedge = lbins[n + 1]
+                    ledge = lbins[n]
+                    #      lowland column
+                    if n == 0:
+                        col_dndx[ncol, j, i] = -999
+                    else:  # upland columns
+                        col_dndx[ncol, j, i] = col_ndx[ncol, j, i] - 1
 
-                        distance[ncol, j, i] = 0.5 * (uedge + ledge)
-                        area[ncol, j, i] = args.width_reach * (uedge - ledge)
-                        width[ncol, j, i] = args.width_reach
-                        # numerically integrate to calculate mean elevation
-                        nx = int(uedge - ledge)
-                        mean_elev = 0.0
-                        for k in range(nx):
-                            x1 = uedge - (k + 0.5) * args.delx
-                            mean_elev += cosp_height(x1, args.hillslope_distance, hhgt, args.phill)
-                        mean_elev = mean_elev / float(nx)
+                    distance[ncol, j, i] = 0.5 * (uedge + ledge)
+                    area[ncol, j, i] = args.width_reach * (uedge - ledge)
+                    width[ncol, j, i] = args.width_reach
+                    # numerically integrate to calculate mean elevation
+                    nx = int(uedge - ledge)
+                    mean_elev = 0.0
+                    for k in range(nx):
+                        x1 = uedge - (k + 0.5) * args.delx
+                        mean_elev += cosp_height(x1, args.hillslope_distance, hhgt, args.phill)
+                    mean_elev = mean_elev / float(nx)
 
-                        elevation[ncol, j, i] = mean_elev
+                    elevation[ncol, j, i] = mean_elev
 
-                        slope[ncol, j, i] = (hbins[n + 1] - hbins[n]) / (lbins[n + 1] - lbins[n])
-                        if 0 <= naspect <= 3:
-                            # 0 = north
-                            # 1 = east
-                            # 2 = south
-                            # 3 = west
-                            aspect[ncol, j, i] = naspect * np.pi / 2
-                        else:
-                            raise RuntimeError(f"Unhandled naspect: {naspect}")
+                    slope[ncol, j, i] = (hbins[n + 1] - hbins[n]) / (lbins[n + 1] - lbins[n])
+                    if 0 <= naspect <= 3:
+                        # 0 = north
+                        # 1 = east
+                        # 2 = south
+                        # 3 = west
+                        aspect[ncol, j, i] = naspect * np.pi / 2
+                    else:
+                        raise RuntimeError(f"Unhandled naspect: {naspect}")
 
     # write to file  --------------------------------------------
     write_to_file(
