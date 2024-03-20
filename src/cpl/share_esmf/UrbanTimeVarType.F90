@@ -36,7 +36,11 @@ module UrbanTimeVarType
   ! X. Li [orig]
   ! character(15), private :: stream_varnames(isturb_MIN:isturb_MAX)
   ! X. Li [dev]: 
-  character(15), private :: stream_varnames(1:6)       ! 1-3 for t_building_max, 4-6 for p_ac
+  ! character(15), private :: stream_varnames(1:6)       ! 1-3 for t_building_max, 4-6 for p_ac
+  ! X. Li [03.19]
+  integer      , private :: stream_varname_MIN       ! minimum index for stream_varnames
+  integer      , private :: stream_varname_MAX       ! maximum index for stream_varnames
+  character(15), private :: stream_varnames(:)       ! urban time varying variable names
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -67,7 +71,9 @@ contains
     ! Allocate urbantv data structure
 
     allocate(this%t_building_max(begl:endl)); this%t_building_max(:) = nan
-    allocate(this%p_ac(begl:endl)); this%p_ac(:) = nan
+    ! X. Li [03.19]
+    ! allocate(this%p_ac(begl:endl)); this%p_ac(:) = nan
+    allocate(this%p_ac(begl:endl)); this%p_ac(:) = 0._r8
 
     call this%urbantv_init(bounds, NLFilename)
     call this%urbantv_interp(bounds)
@@ -77,8 +83,8 @@ contains
           avgflag='A', long_name='prescribed maximum interior building temperature',   &
           ptr_lunit=this%t_building_max, default='inactive', set_nourb=spval, &
           l2g_scale_type='unity')
-    call hist_addfld1d (fname='P_AC', units='unitless',      &
-          avgflag='A', long_name='prescribed air-conditioning ownership rate (unitless, between 0 and 1)',   &
+    call hist_addfld1d (fname='P_AC', units='a fraction between 0 and 1',      &
+          avgflag='A', long_name='prescribed air-conditioning ownership rate',   &
           ptr_lunit=this%p_ac, default='inactive', set_nourb=spval, &
           l2g_scale_type='unity')
 
@@ -97,6 +103,8 @@ contains
     use landunit_varcon  , only : isturb_tbd, isturb_hd, isturb_md
     use dshr_strdata_mod , only : shr_strdata_init_from_inline
     use lnd_comp_shr     , only : mesh, model_clock
+    ! X. Li [03.19]
+    use UrbanParamsType  , only : urban_explicit_ac
     !
     ! !ARGUMENTS:
     implicit none
@@ -136,6 +144,15 @@ contains
     model_year_align_urbantv   = 1       ! align stream_year_first_urbantv with this model year
     stream_fldFileName_urbantv = ' '
     stream_meshfile_urbantv    = ' '
+    ! X. Li [03.19]
+    stream_varname_MIN = 1
+    ! Get value for the maximum index for stream_varnames: if using explicit AC adoption scheme, 
+    ! then set maximum index to 6 for reading in tbuildmax and p_ac for three urban density classes;
+    ! otherwise, set to 3 to only read in tbuildmax for three urban density classes. 
+    if (urban_explicit_ac) then
+       stream_varname_MAX = 6
+    else
+       stream_varname_MAX = 3
     ! X. Li [orig]
     ! stream_varnames(isturb_tbd) = urbantvString//"TBD"
     ! stream_varnames(isturb_hd)  = urbantvString//"HD"
@@ -144,9 +161,11 @@ contains
     stream_varnames(1) = "tbuildmax_TBD"
     stream_varnames(2) = "tbuildmax_HD"
     stream_varnames(3) = "tbuildmax_MD"
-    stream_varnames(4) = "p_ac_TBD"
-    stream_varnames(5) = "p_ac_HD"
-    stream_varnames(6) = "p_ac_MD"
+    ! X. Li [03.19]
+    if (urban_explicit_ac) then
+       stream_varnames(4) = "p_ac_TBD"
+       stream_varnames(5) = "p_ac_HD"
+       stream_varnames(6) = "p_ac_MD"
 
     ! Read urbantv_streams namelist
     if (masterproc) then
@@ -180,7 +199,9 @@ contains
        ! X. Li [orig]
        ! do n = isturb_tbd,isturb_md
        ! X. Li [dev]
-       do n = 1,6
+       ! do n = 1,6
+       ! X. Li [03.19]
+       do n = stream_varname_MIN,stream_varname_MAX
           write(iulog,'(a,a)' ) '  stream_varname         = ',trim(stream_varnames(n))
        end do
        write(iulog,*) ' '
@@ -201,8 +222,11 @@ contains
          ! stream_fldlistFile  = stream_varnames(isturb_tbd:isturb_md),&
          ! stream_fldListModel = stream_varnames(isturb_tbd:isturb_md),&
          ! X. Li [dev]
-         stream_fldlistFile  = stream_varnames(1:6),                 &
-         stream_fldListModel = stream_varnames(1:6),                 &
+         ! stream_fldlistFile  = stream_varnames(1:6),                 &
+         ! stream_fldListModel = stream_varnames(1:6),                 &
+         ! X. Li [03.19]
+         stream_fldlistFile  = stream_varnames(stream_varname_MIN:stream_varname_MAX), &
+         stream_fldListModel = stream_varnames(stream_varname_MIN:stream_varname_MAX), &
          stream_yearFirst    = stream_year_first_urbantv,            &
          stream_yearLast     = stream_year_last_urbantv,             &
          stream_yearAlign    = model_year_align_urbantv,             &
@@ -266,6 +290,9 @@ contains
     ! X. Li [dev]
     allocate(dataptr2d(lsize, 1:6))
     do n = 1,6
+    ! X. Li [03.19]
+    allocate(dataptr2d(lsize, stream_varname_MIN:stream_varname_MAX))
+    do n = stream_varname_MIN,stream_varname_MAX
        call dshr_fldbun_getFldPtr(this%sdat_urbantv%pstrm(1)%fldbun_model, trim(stream_varnames(n)), &
             fldptr1=dataptr1d, rc=rc)
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
@@ -278,7 +305,7 @@ contains
        end do
     end do
 
-    ! Determine this%tbuilding_max for all landunits
+    ! Determine this%tbuilding_max (and this%p_ac, if applicable) for all landunits
     do l = bounds%begl,bounds%endl
        if (lun%urbpoi(l)) then
           ig = 0
@@ -289,7 +316,9 @@ contains
           ! X. Li [orig]
           ! do n = isturb_MIN,isturb_MAX
           ! X. Li [dev]
-          do n = 1,6
+          ! do n = 1,6
+          ! X. Li [03.19]
+          do n = stream_varname_MIN,stream_varname_MAX
              ! X. Li [orig]
              ! if (stream_varnames(lun%itype(l)) == stream_varnames(n)) then
              ! X. Li [dev.02]
@@ -302,7 +331,9 @@ contains
           end do
        else
           this%t_building_max(l) = spval
-          this%p_ac(l) = 0._r8 ! set to 0 for non-urban landunit
+          ! this%p_ac(l) = 0._r8 ! set to 0 for non-urban landunit
+          ! X. Li [03.19]
+          this%p_ac(l) = nan ! set to nan for non-urban landunit
        end if
     end do
     deallocate(dataptr2d)

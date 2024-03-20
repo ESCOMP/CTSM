@@ -1744,6 +1744,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_first_urbantv sim_year="constant" sim_year_range="1850-2000" >1850</stream_year_first_urbantv>
 <stream_year_last_urbantv  sim_year="constant" sim_year_range="1850-2000" >2106</stream_year_last_urbantv>
 
+<!-- X Li. [03.19] 
 <stream_fldfilename_urbantv phys="clm5_1"  hgrid="0.9x1.25"
 >lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
 <stream_meshfile_urbantv    phys="clm5_1"  hgrid="0.9x1.25"
@@ -1751,6 +1752,20 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 
 <stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25"
 >lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
+<stream_meshfile_urbantv    phys="clm5_0"  hgrid="0.9x1.25"
+>lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1_ESMFmesh_cdf5_100621.nc</stream_meshfile_urbantv>
+-->
+<stream_fldfilename_urbantv phys="clm5_1"  hgrid="0.9x1.25" urban_explicit_ac=".false."
+>lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
+<stream_fldfilename_urbantv phys="clm5_1"  hgrid="0.9x1.25" urban_explicit_ac=".true."
+>/glade/work/xinchang/02_Explicit_AC_Adoption/02_data_present_day/CTSM52_urbantv_0.9x1.25_simyr1849-2106_c20230621.nc</stream_fldfilename_urbantv>
+<stream_meshfile_urbantv    phys="clm5_1"  hgrid="0.9x1.25"
+>lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1_ESMFmesh_cdf5_100621.nc</stream_meshfile_urbantv>
+
+<stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" urban_explicit_ac=".false."
+>lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
+<stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" urban_explicit_ac=".true."
+>/glade/work/xinchang/02_Explicit_AC_Adoption/02_data_present_day/CTSM52_urbantv_0.9x1.25_simyr1849-2106_c20230621.nc</stream_fldfilename_urbantv>
 <stream_meshfile_urbantv    phys="clm5_0"  hgrid="0.9x1.25"
 >lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1_ESMFmesh_cdf5_100621.nc</stream_meshfile_urbantv>
 

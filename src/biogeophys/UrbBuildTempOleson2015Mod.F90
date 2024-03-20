@@ -325,7 +325,7 @@ contains
     t_floor           => temperature_inst%t_floor_lun      , & ! InOut:  [real(r8) (:)]  floor temperature (K)
     t_building        => temperature_inst%t_building_lun   , & ! InOut:  [real(r8) (:)]  internal building air temperature (K)
 
-    p_ac              => urbantv_inst%p_ac                 , & ! Input:  [real(r8) (:)]  air-conditioning penetration rate (-)
+    p_ac              => urbantv_inst%p_ac                 , & ! Input:  [real(r8) (:)]  air-conditioning penetration rate (a fraction between 0 and 1)
     t_building_max    => urbantv_inst%t_building_max       , & ! Input:  [real(r8) (:)]  maximum internal building air temperature (K)
     t_building_min    => urbanparams_inst%t_building_min   , & ! Input:  [real(r8) (:)]  minimum internal building air temperature (K)
 
