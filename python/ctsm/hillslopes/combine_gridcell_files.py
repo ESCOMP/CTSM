@@ -33,8 +33,7 @@ def main(argv):
 
     totalChunks = 36
     if cndx < 1 or cndx > totalChunks:
-        print("cndx must be 1-{:d}".format(totalChunks))
-        stop
+        raise RuntimeError("cndx must be 1-{:d}".format(totalChunks))
 
     printFlush = True
 
@@ -69,8 +68,7 @@ def main(argv):
             if verbose:
                 print(outfile, " exists; overwriting", flush=printFlush)
         else:
-            print(outfile, " exists; stopping", flush=printFlush)
-            stop
+            raise FileExistsError(outfile, " exists; stopping", flush=printFlush)
 
     # Locate gridcell files
     gfile = cfile.replace(".nc", "*.nc")
@@ -83,8 +81,7 @@ def main(argv):
     )
 
     if len(gfiles) == 0:
-        print("No files found")
-        stop
+        raise FileNotFoundError("No files found")
 
     # Read hillslope data dimensions
     f = netcdf4.Dataset(gfiles[0], "r")

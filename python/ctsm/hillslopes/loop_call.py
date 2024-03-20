@@ -22,8 +22,7 @@ args = parser.parse_args()
 snum = args.snum
 if snum not in [1]:
     print("only 1 script currently supported")
-    print("snum must be 1")
-    stop
+    raise RuntimeError("snum must be 1")
 
 # Combine individual gridcell files into chunks
 if snum == 1:
