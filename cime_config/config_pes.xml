@@ -748,13 +748,13 @@
 	<comment>none</comment>
 	<ntasks>
 	  <ntasks_atm>-1</ntasks_atm>
-	  <ntasks_lnd>-5</ntasks_lnd>
-	  <ntasks_rof>-5</ntasks_rof>
-	  <ntasks_ice>-5</ntasks_ice>
-	  <ntasks_ocn>-5</ntasks_ocn>
-	  <ntasks_glc>-5</ntasks_glc>
-	  <ntasks_wav>-5</ntasks_wav>
-	  <ntasks_cpl>-5</ntasks_cpl>
+	  <ntasks_lnd>-12</ntasks_lnd>
+	  <ntasks_rof>-12</ntasks_rof>
+	  <ntasks_ice>-12</ntasks_ice>
+	  <ntasks_ocn>-12</ntasks_ocn>
+	  <ntasks_glc>-12</ntasks_glc>
+	  <ntasks_wav>-12</ntasks_wav>
+	  <ntasks_cpl>-12</ntasks_cpl>
 	</ntasks>
 	<nthrds>
 	  <nthrds_atm>1</nthrds_atm>
