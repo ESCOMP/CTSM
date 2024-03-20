@@ -1,21 +1,10 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# Import modules
-
-import sys
-import string
+"""
+Combine gridcell files into single file
+"""
 import subprocess
-import copy
 import argparse
 import netCDF4 as netcdf4
 import numpy as np
-
-# ---------------------------------------------------------- #
-#
-#  Combine gridcell files into single file
-#
-# ---------------------------------------------------------- #
 
 parser = argparse.ArgumentParser(description="Combine gridcell files")
 parser.add_argument("cndx", help="chunk", nargs="?", type=int, default=0)
