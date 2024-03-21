@@ -323,6 +323,9 @@ def write_to_file(
 
 
 def create_variables(addStreamChannelVariables, w):
+    """
+    Create variables
+    """
     olon = w.createVariable("longitude", float, ("lsmlon",))
     olon.units = "degrees"
     olon.long_name = "longitude"
