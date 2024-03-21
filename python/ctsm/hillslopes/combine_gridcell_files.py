@@ -5,10 +5,12 @@ import sys
 import os
 import subprocess
 import argparse
-import netCDF4 as netcdf4
 import numpy as np
+from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 from ctsm.hillslopes.hillslope_utils import create_variables as shared_create_variables
 
+# The above "pylint: disable" is because pylint complains that netCDF4 has no
+# member Dataset, even though it does.
 
 def parse_arguments(argv):
     """
@@ -87,7 +89,7 @@ def main():
     )
 
     # Read output file coordinates
-    f = netcdf4.Dataset(args.input_file, "r")
+    f = Dataset(args.input_file, "r")
     sjm = len(f.dimensions["lsmlat"])
     sim = len(f.dimensions["lsmlon"])
     f.close()
@@ -117,7 +119,7 @@ def main():
         raise FileNotFoundError("No files found")
 
     # Read hillslope data dimensions
-    f = netcdf4.Dataset(gfiles[0], "r")
+    f = Dataset(gfiles[0], "r")
     nhillslope = len(f.dimensions["nhillslope"])
     nmaxhillcol = len(f.dimensions["nmaxhillcol"])
 
@@ -168,7 +170,7 @@ def write_to_file(
     """
     Write to file
     """
-    w = netcdf4.Dataset(outfile, "w")
+    w = Dataset(outfile, "w")
     w.creation_date = timetag
 
     w.createDimension("lsmlon", sim)
@@ -204,7 +206,7 @@ def write_to_file(
         y1, x1 = gfile.index("j_"), gfile.index("i_")
         j, i = int(gfile[y1 + 2 : y1 + 5]), int(gfile[x1 + 2 : x1 + 5])
 
-        f = netcdf4.Dataset(gfile, "r")
+        f = Dataset(gfile, "r")
         lon = f.variables["longitude"][
             :,
         ]
