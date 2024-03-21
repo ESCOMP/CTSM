@@ -219,68 +219,56 @@ def write_to_file(
         chunk_mask = f.variables["chunk_mask"][
             :,
         ]
-        # h_elev = f.variables['hillslope_elevation'][:,]
-        # h_dist = f.variables['hillslope_distance'][:,]
-        # h_width = f.variables['hillslope_width'][:,]
-        # h_area = f.variables['hillslope_area'][:,]
-        # h_slope = f.variables['hillslope_slope'][:,]
-        # h_aspect = f.variables['hillslope_aspect'][:,]
-        # if addBedrock:
-        #     h_bedrock = f.variables['hillslope_bedrock_depth'][:,]
-        # if addStreamChannelVariables:
-        #     h_stream_depth = f.variables['hillslope_stream_depth'][:,]
-        #     h_stream_width = f.variables['hillslope_stream_width'][:,]
-        #     h_stream_slope = f.variables['hillslope_stream_slope'][:,]
 
-        h_elev = np.asarray(
-            f.variables["h_height"][
+        hillslope_elev = np.asarray(
+            f.variables["hillslope_elevation"][
                 :,
             ]
         )
-        h_dist = np.asarray(
-            f.variables["h_length"][
+        hillslope_dist = np.asarray(
+            f.variables["hillslope_distance"][
                 :,
             ]
         )
-        h_width = np.asarray(
-            f.variables["h_width"][
+        hillslope_width = np.asarray(
+            f.variables["hillslope_width"][
                 :,
             ]
         )
-        h_area = np.asarray(
-            f.variables["h_area"][
+        hillslope_area = np.asarray(
+            f.variables["hillslope_area"][
                 :,
             ]
         )
-        h_slope = np.asarray(
-            f.variables["h_slope"][
+        hillslope_slope = np.asarray(
+            f.variables["hillslope_slope"][
                 :,
             ]
         )
-        h_aspect = np.asarray(
-            f.variables["h_aspect"][
+        hillslope_aspect = np.asarray(
+            f.variables["hillslope_aspect"][
                 :,
             ]
         )
         if addBedrock:
-            h_bedrock = np.asarray(
-                f.variables["h_bedrock"][
+            hillslope_bedrock = np.asarray(
+                f.variables["hillslope_bedrock_depth"][
                     :,
                 ]
             )
         if addStreamChannelVariables:
-            h_stream_depth = np.asarray(
-                f.variables["h_stream_depth"][
+            hillslope_stream_depth = np.asarray(
+                f.variables["hillslope_stream_depth"][
                     :,
                 ]
             )
-            h_stream_width = np.asarray(
-                f.variables["h_stream_width"][
+            hillslope_stream_width = np.asarray(
+                f.variables["hillslope_stream_width"][
                     :,
                 ]
             )
-            h_stream_slope = np.asarray(
-                f.variables["h_stream_slope"][
+            hillslope_stream_slope = np.asarray(
+                f.variables["hillslope_stream_slope"][
                     :,
                 ]
             )
@@ -307,12 +295,12 @@ def write_to_file(
         olon2d[j, i] = lon2d
         olat2d[j, i] = lat2d
 
-        ohand[:, j, i] = h_elev
-        odtnd[:, j, i] = h_dist
-        oarea[:, j, i] = h_area
-        owidth[:, j, i] = h_width
-        oslop[:, j, i] = h_slope
-        oasp[:, j, i] = h_aspect
+        ohand[:, j, i] = hillslope_elev
+        odtnd[:, j, i] = hillslope_dist
+        oarea[:, j, i] = hillslope_area
+        owidth[:, j, i] = hillslope_width
+        oslop[:, j, i] = hillslope_slope
+        oasp[:, j, i] = hillslope_aspect
         opcthill[:, j, i] = pct_hillslope
         onhill[j, i] = np.int32(nhillcolumns)
         ohillndx[:, j, i] = hillslope_index.astype(np.int32)
@@ -320,12 +308,12 @@ def write_to_file(
         odcolndx[:, j, i] = downhill_column_index.astype(np.int32)
         ocmask[j, i] = np.int32(chunk_mask)
         if addBedrock:
-            obed[:, j, i] = h_bedrock
+            obed[:, j, i] = hillslope_bedrock
 
         if addStreamChannelVariables:
-            osdepth[j, i] = h_stream_depth
-            oswidth[j, i] = h_stream_width
-            osslope[j, i] = h_stream_slope
+            osdepth[j, i] = hillslope_stream_depth
+            oswidth[j, i] = hillslope_stream_width
+            osslope[j, i] = hillslope_stream_slope
 
     w.close()
     print(outfile + " created")
