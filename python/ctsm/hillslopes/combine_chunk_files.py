@@ -45,6 +45,8 @@ def parse_arguments(argv):
         default=default_n_chunks,
     )
 
+    parser.add_argument("-v", "--verbose", help="print info", action="store_true", default=False)
+
     args = parser.parse_args(argv)
 
     # Check arguments
@@ -125,7 +127,8 @@ def main():
             f.close()
 
         if file_exists > 0:
-            print(cfile, " not found")
+            if args.verbose:
+                print(cfile, " not found")
         else:
             f = netcdf4.Dataset(cfile, "r")
             nhillslope = len(f.dimensions["nhillslope"])
