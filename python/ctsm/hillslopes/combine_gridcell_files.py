@@ -3,8 +3,9 @@ Combine gridcell files into single file
 """
 import sys
 import os
-import subprocess
 import argparse
+import glob
+import datetime
 import numpy as np
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 from ctsm.hillslopes.hillslope_utils import create_variables as shared_create_variables
@@ -95,10 +96,7 @@ def main():
     f.close()
 
     # Check for output file existence
-    command = ["ls", outfile]
-    file_exists = subprocess.run(command, capture_output=True).returncode
-    # if file_exists !=0, file not found
-    if file_exists == 0:
+    if os.path.exists(outfile):
         if args.overwrite:
             if verbose:
                 print(outfile, " exists; overwriting", flush=printFlush)
@@ -107,13 +105,8 @@ def main():
 
     # Locate gridcell files
     gfile = cfile.replace(".nc", "*.nc")
-
-    command = "ls " + gfile
-    gfiles = (
-        subprocess.run(command, capture_output=True, shell="True")
-        .stdout.decode("utf-8")
-        .split("\n")[:-1]
-    )
+    gfiles = glob.glob(gfile)
+    gfiles.sort()
 
     if len(gfiles) == 0:
         raise FileNotFoundError("No files found")
@@ -134,15 +127,6 @@ def main():
         addStreamChannelVariables = False
     f.close()
 
-    # initialize outfile
-    command = 'date "+%y%m%d"'
-    timetag = (
-        subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
-        .communicate()[0]
-        .strip()
-        .decode()
-    )
-
     write_to_file(
         outfile,
         sjm,
@@ -152,7 +136,6 @@ def main():
         nmaxhillcol,
         addBedrock,
         addStreamChannelVariables,
-        timetag,
     )
 
 
@@ -165,13 +148,12 @@ def write_to_file(
     nmaxhillcol,
     addBedrock,
     addStreamChannelVariables,
-    timetag,
 ):
     """
     Write to file
     """
     w = Dataset(outfile, "w")
-    w.creation_date = timetag
+    w.creation_date = datetime.date.today().strftime("%y%m%d")
 
     w.createDimension("lsmlon", sim)
     w.createDimension("lsmlat", sjm)
