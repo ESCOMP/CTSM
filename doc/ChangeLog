@@ -1,13 +1,18 @@
 ===============================================================
 Tag name: ctsm5.1.dev175
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Thu 21 Mar 2024 02:52:15 PM MDT
+Date: Thu 21 Mar 2024 05:49:04 PM MDT
 One-line Summary: merge-b4bdev-20240321
 
 Purpose and description of changes
 ----------------------------------
 
- slevis to complete
+Merge master 20240313 #2421 (Update of externals to what's expected in cesm2_3_beta17)
+Fix for cray compiler format issue #2391
+Remove LILAC references to mct #2374
+Refactoring of neon_site into tower_site and neon_site #2363
+Fix misplaced stopf in CNDriverMod.F90 #2358
+Update some PE layouts on Derecho #2429
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -28,41 +33,8 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed
 ----------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
-
 CTSM issues fixed (include CTSM Issue #):
- slevis to complete
-
-Known bugs introduced in this tag (include issue #):
-
-Notes of particular relevance for users
----------------------------------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
-
-Caveats for users (e.g., need to interpolate initial conditions):
- slevis to complete
-
-Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
-
-Changes made to namelist defaults (e.g., changed parameter values):
-
-Changes to the datasets (e.g., parameter, surface or initial files):
-
-Substantial timing or memory changes:
-[e.g., check PFS test in the test suite and look at timings, if you
-expect possible significant timing changes]
-
-
-Notes of particular relevance for developers:
----------------------------------------------
-NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
-
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
- slevis to complete
-
-Changes to tests or testing:
-
+ Listed in Purpose and Description above
 
 Testing summary:
 ----------------
@@ -71,8 +43,8 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
 Answer changes
 --------------
@@ -81,10 +53,10 @@ Changes answers relative to baseline: NO
 Other details
 -------------
 List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
- slevis to complete
+ See #2421 for update of externals to what's expected in cesm2_3_beta17
 
 Pull Requests that document the changes (include PR ids):
- https://github.com/ESCOMP/ctsm/pull/????
+ https://github.com/ESCOMP/ctsm/pull/2431
 
 ===============================================================
 ===============================================================
