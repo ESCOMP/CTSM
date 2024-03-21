@@ -70,11 +70,11 @@ def main():
     cndx = args.cndx
     verbose = args.verbose
 
-    totalChunks = 36
-    if cndx < 1 or cndx > totalChunks:
-        raise RuntimeError("cndx must be 1-{:d}".format(totalChunks))
+    n_chunks = 36
+    if cndx < 1 or cndx > n_chunks:
+        raise RuntimeError("cndx must be 1-{:d}".format(n_chunks))
 
-    printFlush = True
+    print_flush = True
 
     # Gridcell file directory
     cfile = os.path.join(
@@ -85,23 +85,23 @@ def main():
     )
 
     # Output file
-    outfile = os.path.join(
+    outfile_path = os.path.join(
         args.output_dir, cfile.split("/")[-1].replace("chunk_", "combined_chunk_")
     )
 
     # Read output file coordinates
-    f = Dataset(args.input_file, "r")
-    sjm = len(f.dimensions["lsmlat"])
-    sim = len(f.dimensions["lsmlon"])
-    f.close()
+    fsurdat = Dataset(args.input_file, "r")
+    n_lat = len(fsurdat.dimensions["lsmlat"])
+    n_lon = len(fsurdat.dimensions["lsmlon"])
+    fsurdat.close()
 
     # Check for output file existence
-    if os.path.exists(outfile):
+    if os.path.exists(outfile_path):
         if args.overwrite:
             if verbose:
-                print(outfile, " exists; overwriting", flush=printFlush)
+                print(outfile_path, " exists; overwriting", flush=print_flush)
         else:
-            raise FileExistsError(outfile, " exists; stopping", flush=printFlush)
+            raise FileExistsError(outfile_path, " exists; stopping", flush=print_flush)
 
     # Locate gridcell files
     gfile = cfile.replace(".nc", "*.nc")
@@ -112,47 +112,47 @@ def main():
         raise FileNotFoundError("No files found")
 
     # Read hillslope data dimensions
-    f = Dataset(gfiles[0], "r")
-    nhillslope = len(f.dimensions["nhillslope"])
-    nmaxhillcol = len(f.dimensions["nmaxhillcol"])
+    first_gridcell_file = Dataset(gfiles[0], "r")
+    nhillslope = len(first_gridcell_file.dimensions["nhillslope"])
+    nmaxhillcol = len(first_gridcell_file.dimensions["nmaxhillcol"])
 
-    addBedrock = "hillslope_bedrock_depth" in f.variables.keys()
-    addStreamChannelVariables = "hillslope_stream_depth" in f.variables.keys()
+    add_bedrock = "hillslope_bedrock_depth" in first_gridcell_file.variables.keys()
+    add_stream_channel_vars = "hillslope_stream_depth" in first_gridcell_file.variables.keys()
 
-    f.close()
+    first_gridcell_file.close()
 
     write_to_file(
-        outfile,
-        sjm,
-        sim,
+        outfile_path,
+        n_lat,
+        n_lon,
         gfiles,
         nhillslope,
         nmaxhillcol,
-        addBedrock,
-        addStreamChannelVariables,
+        add_bedrock,
+        add_stream_channel_vars,
     )
 
 
 def write_to_file(
-    outfile,
-    sjm,
-    sim,
+    outfile_path,
+    n_lat,
+    n_lon,
     gfiles,
     nhillslope,
     nmaxhillcol,
-    addBedrock,
-    addStreamChannelVariables,
+    add_bedrock,
+    add_stream_channel_vars,
 ):
     """
     Write to file
     """
-    w = Dataset(outfile, "w")
-    w.creation_date = datetime.date.today().strftime("%y%m%d")
+    outfile = Dataset(outfile_path, "w")
+    outfile.creation_date = datetime.date.today().strftime("%y%m%d")
 
-    w.createDimension("lsmlon", sim)
-    w.createDimension("lsmlat", sjm)
-    w.createDimension("nhillslope", nhillslope)
-    w.createDimension("nmaxhillcol", nmaxhillcol)
+    outfile.createDimension("lsmlon", n_lon)
+    outfile.createDimension("lsmlat", n_lat)
+    outfile.createDimension("nhillslope", nhillslope)
+    outfile.createDimension("nmaxhillcol", nmaxhillcol)
 
     (
         olon,
@@ -175,99 +175,99 @@ def write_to_file(
         osdepth,
         oswidth,
         osslope,
-    ) = create_variables(addStreamChannelVariables, w)
+    ) = create_variables(add_stream_channel_vars, outfile)
 
     # loop over gridcell files
     for gfile in gfiles:
-        y1, x1 = gfile.index("j_"), gfile.index("i_")
+        y1, x1 = gfile.index("j_"), gfile.index("i_")  # pylint: disable=invalid-name
         j, i = int(gfile[y1 + 2 : y1 + 5]), int(gfile[x1 + 2 : x1 + 5])
 
-        f = Dataset(gfile, "r")
-        lon = f.variables["longitude"][
+        gfile_ds = Dataset(gfile, "r")
+        lon = gfile_ds.variables["longitude"][
             :,
         ]
-        lat = f.variables["latitude"][
+        lat = gfile_ds.variables["latitude"][
             :,
         ]
-        lon2d = f.variables["LONGXY"][
+        lon2d = gfile_ds.variables["LONGXY"][
             :,
         ]
-        lat2d = f.variables["LATIXY"][
+        lat2d = gfile_ds.variables["LATIXY"][
             :,
         ]
-        chunk_mask = f.variables["chunk_mask"][
+        chunk_mask = gfile_ds.variables["chunk_mask"][
             :,
         ]
 
         hillslope_elev = np.asarray(
-            f.variables["hillslope_elevation"][
+            gfile_ds.variables["hillslope_elevation"][
                 :,
             ]
         )
         hillslope_dist = np.asarray(
-            f.variables["hillslope_distance"][
+            gfile_ds.variables["hillslope_distance"][
                 :,
             ]
         )
         hillslope_width = np.asarray(
-            f.variables["hillslope_width"][
+            gfile_ds.variables["hillslope_width"][
                 :,
             ]
         )
         hillslope_area = np.asarray(
-            f.variables["hillslope_area"][
+            gfile_ds.variables["hillslope_area"][
                 :,
             ]
         )
         hillslope_slope = np.asarray(
-            f.variables["hillslope_slope"][
+            gfile_ds.variables["hillslope_slope"][
                 :,
             ]
         )
         hillslope_aspect = np.asarray(
-            f.variables["hillslope_aspect"][
+            gfile_ds.variables["hillslope_aspect"][
                 :,
             ]
         )
-        if addBedrock:
+        if add_bedrock:
             hillslope_bedrock = np.asarray(
-                f.variables["hillslope_bedrock_depth"][
+                gfile_ds.variables["hillslope_bedrock_depth"][
                     :,
                 ]
             )
-        if addStreamChannelVariables:
+        if add_stream_channel_vars:
             hillslope_stream_depth = np.asarray(
-                f.variables["hillslope_stream_depth"][
+                gfile_ds.variables["hillslope_stream_depth"][
                     :,
                 ]
             )
             hillslope_stream_width = np.asarray(
-                f.variables["hillslope_stream_width"][
+                gfile_ds.variables["hillslope_stream_width"][
                     :,
                 ]
             )
             hillslope_stream_slope = np.asarray(
-                f.variables["hillslope_stream_slope"][
+                gfile_ds.variables["hillslope_stream_slope"][
                     :,
                 ]
             )
 
-        nhillcolumns = f.variables["nhillcolumns"][
+        nhillcolumns = gfile_ds.variables["nhillcolumns"][
             :,
         ].astype(int)
-        pct_hillslope = f.variables["pct_hillslope"][
+        pct_hillslope = gfile_ds.variables["pct_hillslope"][
             :,
         ]
-        hillslope_index = f.variables["hillslope_index"][
+        hillslope_index = gfile_ds.variables["hillslope_index"][
             :,
         ].astype(int)
-        column_index = f.variables["column_index"][
+        column_index = gfile_ds.variables["column_index"][
             :,
         ].astype(int)
-        downhill_column_index = f.variables["downhill_column_index"][
+        downhill_column_index = gfile_ds.variables["downhill_column_index"][
             :,
         ].astype(int)
-        f.close()
+        gfile_ds.close()
 
         olon[i] = lon
         olat[j] = lat
@@ -286,31 +286,31 @@ def write_to_file(
         ocolndx[:, j, i] = column_index.astype(np.int32)
         odcolndx[:, j, i] = downhill_column_index.astype(np.int32)
         ocmask[j, i] = np.int32(chunk_mask)
-        if addBedrock:
+        if add_bedrock:
             obed[:, j, i] = hillslope_bedrock
 
-        if addStreamChannelVariables:
+        if add_stream_channel_vars:
             osdepth[j, i] = hillslope_stream_depth
             oswidth[j, i] = hillslope_stream_width
             osslope[j, i] = hillslope_stream_slope
 
-    w.close()
-    print(outfile + " created")
+    outfile.close()
+    print(outfile_path + " created")
 
 
-def create_variables(addStreamChannelVariables, w):
+def create_variables(add_stream_channel_vars, outfile):
     """
     Create variables
     """
-    olon = w.createVariable("longitude", float, ("lsmlon",))
+    olon = outfile.createVariable("longitude", float, ("lsmlon",))
     olon.units = "degrees"
     olon.long_name = "longitude"
 
-    olat = w.createVariable("latitude", float, ("lsmlat",))
+    olat = outfile.createVariable("latitude", float, ("lsmlat",))
     olat.units = "degrees"
     olat.long_name = "latitude"
 
-    olon2d = w.createVariable(
+    olon2d = outfile.createVariable(
         "LONGXY",
         float,
         (
@@ -321,7 +321,7 @@ def create_variables(addStreamChannelVariables, w):
     olon2d.units = "degrees"
     olon2d.long_name = "longitude - 2d"
 
-    olat2d = w.createVariable(
+    olat2d = outfile.createVariable(
         "LATIXY",
         float,
         (
@@ -345,9 +345,9 @@ def create_variables(addStreamChannelVariables, w):
         ocolndx,
         odcolndx,
         obed,
-    ) = shared_create_variables(w)
+    ) = shared_create_variables(outfile)
 
-    ocmask = w.createVariable(
+    ocmask = outfile.createVariable(
         "chunk_mask",
         np.int32,
         (
@@ -358,11 +358,11 @@ def create_variables(addStreamChannelVariables, w):
     ocmask.units = "unitless"
     ocmask.long_name = "chunk mask"
 
-    if addStreamChannelVariables:
-        wdims = w["LONGXY"].dimensions
-        osdepth = w.createVariable("hillslope_stream_depth", float, wdims)
-        oswidth = w.createVariable("hillslope_stream_width", float, wdims)
-        osslope = w.createVariable("hillslope_stream_slope", float, wdims)
+    if add_stream_channel_vars:
+        wdims = outfile["LONGXY"].dimensions
+        osdepth = outfile.createVariable("hillslope_stream_depth", float, wdims)
+        oswidth = outfile.createVariable("hillslope_stream_width", float, wdims)
+        osslope = outfile.createVariable("hillslope_stream_slope", float, wdims)
 
         osdepth.long_name = "stream channel bankfull depth"
         osdepth.units = "m"
@@ -427,7 +427,7 @@ def create_variables(addStreamChannelVariables, w):
         :,
     ] = 0
 
-    if addStreamChannelVariables:
+    if add_stream_channel_vars:
         osdepth[
             :,
         ] = 0
