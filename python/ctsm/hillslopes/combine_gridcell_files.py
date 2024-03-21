@@ -2,6 +2,7 @@
 Combine gridcell files into single file
 """
 import sys
+import os
 import subprocess
 import argparse
 import netCDF4 as netcdf4
@@ -14,11 +15,45 @@ def parse_arguments(argv):
     """
     parser = argparse.ArgumentParser(description="Combine gridcell files into single file")
 
+    parser.add_argument(
+        "-i",
+        "--input-file",
+        help="Input surface dataset with grid information",
+        required=True,
+    )
+    parser.add_argument(
+        "-d",
+        "--input-dir",
+        help="Directory containing chunk files",
+        required=True,
+    )
+    parser.add_argument(
+        "-o",
+        "--output-dir",
+        help="Directory where output file should be saved (default: current dir)",
+        default=os.getcwd(),
+    )
+    dem_source_default = "MERIT"
+    parser.add_argument(
+        "--dem-source",
+        help=f"DEM to use (default: {dem_source_default})",
+        type=str,
+        default=dem_source_default,
+    )
     parser.add_argument("cndx", help="chunk", nargs="?", type=int, default=0)
-    parser.add_argument("-o", "--overwrite", help="overwrite", action="store_true", default=False)
+    parser.add_argument("--overwrite", help="overwrite", action="store_true", default=False)
     parser.add_argument("-v", "--verbose", help="print info", action="store_true", default=False)
 
     args = parser.parse_args(argv)
+
+    # Check arguments
+    if not os.path.exists(args.input_file):
+        raise FileNotFoundError(f"Input file not found: {args.input_file}")
+    if not os.path.exists(args.input_dir):
+        raise FileNotFoundError(f"Input directory not found: {args.input_dir}")
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
+
     return args
 
 
@@ -37,24 +72,21 @@ def main(argv):
 
     printFlush = True
 
-    # Specify data files to combine
-
-    # Input file with grid information
-    gridfile = "/fs/cgd/csm/inputdata/lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts_CMIP6_simyr2000_c170824.nc"
-
     # Gridcell file directory
-    dem_source = "MERIT"
-    cdir = "./{}_gridcell_files/".format(dem_source)
-    cfile = cdir + "chunk_{:02d}_HAND_4_col_hillslope_geo_params_section_quad_{}.nc".format(
-        cndx, dem_source
+    cfile = os.path.join(
+        args.input_dir,
+        "chunk_{:02d}_HAND_4_col_hillslope_geo_params_section_quad_{}.nc".format(
+            cndx, args.dem_source
+        ),
     )
 
     # Output file
-    odir = "./"
-    outfile = odir + cfile.split("/")[-1].replace("chunk_", "combined_chunk_")
+    outfile = os.path.join(
+        args.output_dir, cfile.split("/")[-1].replace("chunk_", "combined_chunk_")
+    )
 
     # Read output file coordinates
-    f = netcdf4.Dataset(gridfile, "r")
+    f = netcdf4.Dataset(args.input_file, "r")
     sjm = len(f.dimensions["lsmlat"])
     sim = len(f.dimensions["lsmlon"])
     f.close()
