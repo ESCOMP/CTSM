@@ -108,6 +108,33 @@ def main(argv):
         .decode()
     )
 
+    write_to_file(
+        outfile,
+        sjm,
+        sim,
+        gfiles,
+        nhillslope,
+        nmaxhillcol,
+        addBedrock,
+        addStreamChannelVariables,
+        timetag,
+    )
+
+
+def write_to_file(
+    outfile,
+    sjm,
+    sim,
+    gfiles,
+    nhillslope,
+    nmaxhillcol,
+    addBedrock,
+    addStreamChannelVariables,
+    timetag,
+):
+    """
+    Write to file
+    """
     w = netcdf4.Dataset(outfile, "w")
     w.creation_date = timetag
 
@@ -116,6 +143,163 @@ def main(argv):
     w.createDimension("nhillslope", nhillslope)
     w.createDimension("nmaxhillcol", nmaxhillcol)
 
+    (
+        olon,
+        olat,
+        olon2d,
+        olat2d,
+        ohand,
+        odtnd,
+        owidth,
+        oarea,
+        oslop,
+        oasp,
+        obed,
+        onhill,
+        opcthill,
+        ohillndx,
+        ocolndx,
+        odcolndx,
+        ocmask,
+        osdepth,
+        oswidth,
+        osslope,
+    ) = create_variables(addStreamChannelVariables, w)
+
+    # loop over gridcell files
+    for gfile in gfiles:
+        y1, x1 = gfile.index("j_"), gfile.index("i_")
+        j, i = int(gfile[y1 + 2 : y1 + 5]), int(gfile[x1 + 2 : x1 + 5])
+
+        f = netcdf4.Dataset(gfile, "r")
+        lon = f.variables["longitude"][
+            :,
+        ]
+        lat = f.variables["latitude"][
+            :,
+        ]
+        lon2d = f.variables["LONGXY"][
+            :,
+        ]
+        lat2d = f.variables["LATIXY"][
+            :,
+        ]
+        chunk_mask = f.variables["chunk_mask"][
+            :,
+        ]
+        # h_elev = f.variables['hillslope_elevation'][:,]
+        # h_dist = f.variables['hillslope_distance'][:,]
+        # h_width = f.variables['hillslope_width'][:,]
+        # h_area = f.variables['hillslope_area'][:,]
+        # h_slope = f.variables['hillslope_slope'][:,]
+        # h_aspect = f.variables['hillslope_aspect'][:,]
+        # if addBedrock:
+        #     h_bedrock = f.variables['hillslope_bedrock_depth'][:,]
+        # if addStreamChannelVariables:
+        #     h_stream_depth = f.variables['hillslope_stream_depth'][:,]
+        #     h_stream_width = f.variables['hillslope_stream_width'][:,]
+        #     h_stream_slope = f.variables['hillslope_stream_slope'][:,]
+
+        h_elev = np.asarray(
+            f.variables["h_height"][
+                :,
+            ]
+        )
+        h_dist = np.asarray(
+            f.variables["h_length"][
+                :,
+            ]
+        )
+        h_width = np.asarray(
+            f.variables["h_width"][
+                :,
+            ]
+        )
+        h_area = np.asarray(
+            f.variables["h_area"][
+                :,
+            ]
+        )
+        h_slope = np.asarray(
+            f.variables["h_slope"][
+                :,
+            ]
+        )
+        h_aspect = np.asarray(
+            f.variables["h_aspect"][
+                :,
+            ]
+        )
+        if addBedrock:
+            h_bedrock = np.asarray(
+                f.variables["h_bedrock"][
+                    :,
+                ]
+            )
+        if addStreamChannelVariables:
+            h_stream_depth = np.asarray(
+                f.variables["h_stream_depth"][
+                    :,
+                ]
+            )
+            h_stream_width = np.asarray(
+                f.variables["h_stream_width"][
+                    :,
+                ]
+            )
+            h_stream_slope = np.asarray(
+                f.variables["h_stream_slope"][
+                    :,
+                ]
+            )
+
+        nhillcolumns = f.variables["nhillcolumns"][
+            :,
+        ].astype(int)
+        pct_hillslope = f.variables["pct_hillslope"][
+            :,
+        ]
+        hillslope_index = f.variables["hillslope_index"][
+            :,
+        ].astype(int)
+        column_index = f.variables["column_index"][
+            :,
+        ].astype(int)
+        downhill_column_index = f.variables["downhill_column_index"][
+            :,
+        ].astype(int)
+        f.close()
+
+        olon[i] = lon
+        olat[j] = lat
+        olon2d[j, i] = lon2d
+        olat2d[j, i] = lat2d
+
+        ohand[:, j, i] = h_elev
+        odtnd[:, j, i] = h_dist
+        oarea[:, j, i] = h_area
+        owidth[:, j, i] = h_width
+        oslop[:, j, i] = h_slope
+        oasp[:, j, i] = h_aspect
+        opcthill[:, j, i] = pct_hillslope
+        onhill[j, i] = np.int32(nhillcolumns)
+        ohillndx[:, j, i] = hillslope_index.astype(np.int32)
+        ocolndx[:, j, i] = column_index.astype(np.int32)
+        odcolndx[:, j, i] = downhill_column_index.astype(np.int32)
+        ocmask[j, i] = np.int32(chunk_mask)
+        if addBedrock:
+            obed[:, j, i] = h_bedrock
+
+        if addStreamChannelVariables:
+            osdepth[j, i] = h_stream_depth
+            oswidth[j, i] = h_stream_width
+            osslope[j, i] = h_stream_slope
+
+    w.close()
+    print(outfile + " created")
+
+
+def create_variables(addStreamChannelVariables, w):
     olon = w.createVariable("longitude", float, ("lsmlon",))
     olon.units = "degrees"
     olon.long_name = "longitude"
@@ -380,138 +564,28 @@ def main(argv):
             :,
         ] = 0
 
-    # loop over gridcell files
-    for gfile in gfiles:
-
-        y1, x1 = gfile.index("j_"), gfile.index("i_")
-        j, i = int(gfile[y1 + 2 : y1 + 5]), int(gfile[x1 + 2 : x1 + 5])
-
-        f = netcdf4.Dataset(gfile, "r")
-        lon = f.variables["longitude"][
-            :,
-        ]
-        lat = f.variables["latitude"][
-            :,
-        ]
-        lon2d = f.variables["LONGXY"][
-            :,
-        ]
-        lat2d = f.variables["LATIXY"][
-            :,
-        ]
-        chunk_mask = f.variables["chunk_mask"][
-            :,
-        ]
-        # h_elev = f.variables['hillslope_elevation'][:,]
-        # h_dist = f.variables['hillslope_distance'][:,]
-        # h_width = f.variables['hillslope_width'][:,]
-        # h_area = f.variables['hillslope_area'][:,]
-        # h_slope = f.variables['hillslope_slope'][:,]
-        # h_aspect = f.variables['hillslope_aspect'][:,]
-        # if addBedrock:
-        #     h_bedrock = f.variables['hillslope_bedrock_depth'][:,]
-        # if addStreamChannelVariables:
-        #     h_stream_depth = f.variables['hillslope_stream_depth'][:,]
-        #     h_stream_width = f.variables['hillslope_stream_width'][:,]
-        #     h_stream_slope = f.variables['hillslope_stream_slope'][:,]
-
-        h_elev = np.asarray(
-            f.variables["h_height"][
-                :,
-            ]
-        )
-        h_dist = np.asarray(
-            f.variables["h_length"][
-                :,
-            ]
-        )
-        h_width = np.asarray(
-            f.variables["h_width"][
-                :,
-            ]
-        )
-        h_area = np.asarray(
-            f.variables["h_area"][
-                :,
-            ]
-        )
-        h_slope = np.asarray(
-            f.variables["h_slope"][
-                :,
-            ]
-        )
-        h_aspect = np.asarray(
-            f.variables["h_aspect"][
-                :,
-            ]
-        )
-        if addBedrock:
-            h_bedrock = np.asarray(
-                f.variables["h_bedrock"][
-                    :,
-                ]
-            )
-        if addStreamChannelVariables:
-            h_stream_depth = np.asarray(
-                f.variables["h_stream_depth"][
-                    :,
-                ]
-            )
-            h_stream_width = np.asarray(
-                f.variables["h_stream_width"][
-                    :,
-                ]
-            )
-            h_stream_slope = np.asarray(
-                f.variables["h_stream_slope"][
-                    :,
-                ]
-            )
-
-        nhillcolumns = f.variables["nhillcolumns"][
-            :,
-        ].astype(int)
-        pct_hillslope = f.variables["pct_hillslope"][
-            :,
-        ]
-        hillslope_index = f.variables["hillslope_index"][
-            :,
-        ].astype(int)
-        column_index = f.variables["column_index"][
-            :,
-        ].astype(int)
-        downhill_column_index = f.variables["downhill_column_index"][
-            :,
-        ].astype(int)
-        f.close()
-
-        olon[i] = lon
-        olat[j] = lat
-        olon2d[j, i] = lon2d
-        olat2d[j, i] = lat2d
-
-        ohand[:, j, i] = h_elev
-        odtnd[:, j, i] = h_dist
-        oarea[:, j, i] = h_area
-        owidth[:, j, i] = h_width
-        oslop[:, j, i] = h_slope
-        oasp[:, j, i] = h_aspect
-        opcthill[:, j, i] = pct_hillslope
-        onhill[j, i] = np.int32(nhillcolumns)
-        ohillndx[:, j, i] = hillslope_index.astype(np.int32)
-        ocolndx[:, j, i] = column_index.astype(np.int32)
-        odcolndx[:, j, i] = downhill_column_index.astype(np.int32)
-        ocmask[j, i] = np.int32(chunk_mask)
-        if addBedrock:
-            obed[:, j, i] = h_bedrock
-
-        if addStreamChannelVariables:
-            osdepth[j, i] = h_stream_depth
-            oswidth[j, i] = h_stream_width
-            osslope[j, i] = h_stream_slope
-
-    w.close()
-    print(outfile + " created")
+    return (
+        olon,
+        olat,
+        olon2d,
+        olat2d,
+        ohand,
+        odtnd,
+        owidth,
+        oarea,
+        oslop,
+        oasp,
+        obed,
+        onhill,
+        opcthill,
+        ohillndx,
+        ocolndx,
+        odcolndx,
+        ocmask,
+        osdepth,
+        oswidth,
+        osslope,
+    )
 
 
 if __name__ == "__main__":
