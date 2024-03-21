@@ -11,6 +11,7 @@ from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
 # The above "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
 # though it does.
+from ctsm.hillslopes.hillslope_utils import create_variables as shared_create_variables
 
 
 def parse_arguments(argv):
@@ -162,9 +163,6 @@ def write_to_file(
     outfile.variables["hillslope_bedrock_depth"][
         :,
     ] = 2
-    outfile.variables["hillslope_pftndx"][
-        :,
-    ] = 13
 
     # add stream variables
     wdepth = outfile.createVariable("hillslope_stream_depth", np.float64, ("lsmlat", "lsmlon"))
@@ -214,148 +212,8 @@ def create_variables(outfile):
     """
     Create variables in output file
     """
-    ohand = outfile.createVariable(
-        "hillslope_elevation",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    ohand.units = "m"
-    ohand.long_name = "hillslope elevation"
 
-    odtnd = outfile.createVariable(
-        "hillslope_distance",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    odtnd.units = "m"
-    odtnd.long_name = "hillslope distance"
-
-    owidth = outfile.createVariable(
-        "hillslope_width",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    owidth.units = "m"
-    owidth.long_name = "hillslope width"
-
-    oarea = outfile.createVariable(
-        "hillslope_area",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    oarea.units = "m2"
-    oarea.long_name = "hillslope area"
-
-    oslop = outfile.createVariable(
-        "hillslope_slope",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    oslop.units = "m/m"
-    oslop.long_name = "hillslope slope"
-
-    oasp = outfile.createVariable(
-        "hillslope_aspect",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    oasp.units = "radians"
-    oasp.long_name = "hillslope aspect (clockwise from North)"
-
-    onhill = outfile.createVariable(
-        "nhillcolumns",
-        np.int32,
-        (
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    onhill.units = "unitless"
-    onhill.long_name = "number of columns per landunit"
-
-    opcthill = outfile.createVariable(
-        "pct_hillslope",
-        np.float64,
-        (
-            "nhillslope",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    opcthill.units = "per cent"
-    opcthill.long_name = "percent hillslope of landunit"
-
-    ohillndx = outfile.createVariable(
-        "hillslope_index",
-        np.int32,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    ohillndx.units = "unitless"
-    ohillndx.long_name = "hillslope_index"
-
-    ocolndx = outfile.createVariable(
-        "column_index",
-        np.int32,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    ocolndx.units = "unitless"
-    ocolndx.long_name = "column index"
-
-    odcolndx = outfile.createVariable(
-        "downhill_column_index",
-        np.int32,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    odcolndx.units = "unitless"
-    odcolndx.long_name = "downhill column index"
-
-    obed = outfile.createVariable(
-        "hillslope_bedrock_depth",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    obed.units = "meters"
-    obed.long_name = "hillslope bedrock depth"
+    shared_create_variables(outfile)
 
     opft = outfile.createVariable(
         "hillslope_pftndx",
@@ -368,6 +226,10 @@ def create_variables(outfile):
     )
     opft.units = "unitless"
     opft.long_name = "hillslope pft indices"
+
+    outfile.variables["hillslope_pftndx"][
+        :,
+    ] = 13
 
 
 """
@@ -473,12 +335,12 @@ def define_hillslope_geom_arrays(args, n_lon, n_lat, max_columns_per_landunit):
     )
 
 
-def main(argv):
+def main():
     """
     See module description
     """
 
-    args = parse_arguments(argv)
+    args = parse_arguments(sys.argv[1:])
 
     infile = Dataset(args.input_file, "r")
     n_lon = len(infile.dimensions["lsmlon"])
@@ -587,7 +449,3 @@ def main(argv):
         col_dndx,
         hill_ndx,
     )
-
-
-if __name__ == "__main__":
-    main(sys.argv[1:])

@@ -7,6 +7,7 @@ import subprocess
 import argparse
 import netCDF4 as netcdf4
 import numpy as np
+from ctsm.hillslopes.hillslope_utils import create_variables as shared_create_variables
 
 
 def parse_arguments(argv):
@@ -57,12 +58,12 @@ def parse_arguments(argv):
     return args
 
 
-def main(argv):
+def main():
     """
     See module description
     """
 
-    args = parse_arguments(argv)
+    args = parse_arguments(sys.argv[1:])
     cndx = args.cndx
     verbose = args.verbose
 
@@ -350,148 +351,20 @@ def create_variables(addStreamChannelVariables, w):
     olat2d.units = "degrees"
     olat2d.long_name = "latitude - 2d"
 
-    ohand = w.createVariable(
-        "hillslope_elevation",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    ohand.units = "m"
-    ohand.long_name = "hillslope elevation above channel"
-
-    odtnd = w.createVariable(
-        "hillslope_distance",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    odtnd.units = "m"
-    odtnd.long_name = "hillslope distance from channel"
-
-    owidth = w.createVariable(
-        "hillslope_width",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    owidth.units = "m"
-    owidth.long_name = "hillslope width"
-
-    oarea = w.createVariable(
-        "hillslope_area",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    oarea.units = "m2"
-    oarea.long_name = "hillslope area"
-
-    oslop = w.createVariable(
-        "hillslope_slope",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    oslop.units = "m/m"
-    oslop.long_name = "hillslope slope"
-
-    oasp = w.createVariable(
-        "hillslope_aspect",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    oasp.units = "radians"
-    oasp.long_name = "hillslope aspect (clockwise from North)"
-
-    obed = w.createVariable(
-        "hillslope_bedrock_depth",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    obed.units = "meters"
-    obed.long_name = "hillslope bedrock depth"
-
-    onhill = w.createVariable(
-        "nhillcolumns",
-        np.int32,
-        (
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    onhill.units = "unitless"
-    onhill.long_name = "number of columns per landunit"
-
-    opcthill = w.createVariable(
-        "pct_hillslope",
-        np.float64,
-        (
-            "nhillslope",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    opcthill.units = "per cent"
-    opcthill.long_name = "percent hillslope of landunit"
-
-    ohillndx = w.createVariable(
-        "hillslope_index",
-        np.int32,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    ohillndx.units = "unitless"
-    ohillndx.long_name = "hillslope_index"
-
-    ocolndx = w.createVariable(
-        "column_index",
-        np.int32,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    ocolndx.units = "unitless"
-    ocolndx.long_name = "column index"
-
-    odcolndx = w.createVariable(
-        "downhill_column_index",
-        np.int32,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    odcolndx.units = "unitless"
-    odcolndx.long_name = "downhill column index"
+    (
+        ohand,
+        odtnd,
+        owidth,
+        oarea,
+        oslop,
+        oasp,
+        onhill,
+        opcthill,
+        ohillndx,
+        ocolndx,
+        odcolndx,
+        obed,
+    ) = shared_create_variables(w)
 
     ocmask = w.createVariable(
         "chunk_mask",
@@ -606,7 +479,3 @@ def create_variables(addStreamChannelVariables, w):
         oswidth,
         osslope,
     )
-
-
-if __name__ == "__main__":
-    main(sys.argv[1:])
