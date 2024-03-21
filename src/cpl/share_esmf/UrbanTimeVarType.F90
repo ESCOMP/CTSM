@@ -38,9 +38,9 @@ module UrbanTimeVarType
   ! X. Li [dev]: 
   ! character(15), private :: stream_varnames(1:6)       ! 1-3 for t_building_max, 4-6 for p_ac
   ! X. Li [03.19]
-  integer      , private :: stream_varname_MIN       ! minimum index for stream_varnames
-  integer      , private :: stream_varname_MAX       ! maximum index for stream_varnames
-  character(15), private :: stream_varnames(:)       ! urban time varying variable names
+  integer      , private              :: stream_varname_MIN       ! minimum index for stream_varnames
+  integer      , private              :: stream_varname_MAX       ! maximum index for stream_varnames
+  character(15), private, allocatable :: stream_varnames(:)       ! urban time varying variable names
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -153,6 +153,7 @@ contains
        stream_varname_MAX = 6
     else
        stream_varname_MAX = 3
+    end if
     ! X. Li [orig]
     ! stream_varnames(isturb_tbd) = urbantvString//"TBD"
     ! stream_varnames(isturb_hd)  = urbantvString//"HD"
@@ -166,6 +167,7 @@ contains
        stream_varnames(4) = "p_ac_TBD"
        stream_varnames(5) = "p_ac_HD"
        stream_varnames(6) = "p_ac_MD"
+    end if
 
     ! Read urbantv_streams namelist
     if (masterproc) then
@@ -253,6 +255,7 @@ contains
     use clm_instur       , only : urban_valid
     use dshr_methods_mod , only : dshr_fldbun_getfldptr
     use dshr_strdata_mod , only : shr_strdata_advance
+    use shr_infnan_mod   , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
     class(urbantv_type)           :: this
@@ -288,8 +291,8 @@ contains
     ! allocate(dataptr2d(lsize, isturb_MIN:isturb_MAX))
     ! do n = isturb_MIN,isturb_MAX
     ! X. Li [dev]
-    allocate(dataptr2d(lsize, 1:6))
-    do n = 1,6
+    ! allocate(dataptr2d(lsize, 1:6))
+    ! do n = 1,6
     ! X. Li [03.19]
     allocate(dataptr2d(lsize, stream_varname_MIN:stream_varname_MAX))
     do n = stream_varname_MIN,stream_varname_MAX
