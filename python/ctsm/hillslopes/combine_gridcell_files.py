@@ -13,6 +13,7 @@ from ctsm.hillslopes.hillslope_utils import create_variables as shared_create_va
 # The above "pylint: disable" is because pylint complains that netCDF4 has no
 # member Dataset, even though it does.
 
+
 def parse_arguments(argv):
     """
     Parse arguments to script
@@ -44,7 +45,24 @@ def parse_arguments(argv):
         type=str,
         default=dem_source_default,
     )
-    parser.add_argument("cndx", help="chunk", nargs="?", type=int, default=0)
+    default_n_chunks = 36
+    parser.add_argument(
+        "--n-chunks",
+        help=f"Number of chunks (default: {default_n_chunks})",
+        nargs=1,
+        type=int,
+        default=default_n_chunks,
+    )
+    parser.add_argument(
+        "--cndx",
+        help=(
+            "Chunk(s) to process. If excluded will process all chunks (see --n-chunks). To "
+            + "include, specify either a single chunk or a comma-separated list of chunks."
+        ),
+        nargs=1,
+        type=str,
+        default=None,
+    )
     parser.add_argument("--overwrite", help="overwrite", action="store_true", default=False)
     parser.add_argument("-v", "--verbose", help="print info", action="store_true", default=False)
 
@@ -67,70 +85,75 @@ def main():
     """
 
     args = parse_arguments(sys.argv[1:])
-    cndx = args.cndx
     verbose = args.verbose
 
-    n_chunks = 36
-    if cndx < 1 or cndx > n_chunks:
-        raise RuntimeError("cndx must be 1-{:d}".format(n_chunks))
+    if args.cndx is None:
+        chunks_to_process = 1 + np.arange(args.n_chunks)
+    else:
+        chunks_to_process = [int(cndx) for cndx in args.cndx[0].split(",")]
+        for cndx in chunks_to_process:
+            if cndx < 1 or cndx > args.n_chunks:
+                raise RuntimeError("All cndx must be 1-{:d}".format(args.n_chunks))
 
-    print_flush = True
+    for cndx in chunks_to_process:
 
-    # Gridcell file directory
-    cfile = os.path.join(
-        args.input_dir,
-        "chunk_{:02d}_HAND_4_col_hillslope_geo_params_section_quad_{}.nc".format(
-            cndx, args.dem_source
-        ),
-    )
+        # Gridcell file directory
+        cfile = os.path.join(
+            args.input_dir,
+            "chunk_{:02d}_HAND_4_col_hillslope_geo_params_section_quad_{}.nc".format(
+                cndx, args.dem_source
+            ),
+        )
 
-    # Output file
-    outfile_path = os.path.join(
-        args.output_dir, os.path.split(cfile)[-1].replace("chunk_", "combined_chunk_")
-    )
+        # Output file
+        outfile_path = os.path.join(
+            args.output_dir, os.path.split(cfile)[-1].replace("chunk_", "combined_chunk_")
+        )
 
-    # Read output file coordinates
-    fsurdat = Dataset(args.input_file, "r")
-    n_lat = len(fsurdat.dimensions["lsmlat"])
-    n_lon = len(fsurdat.dimensions["lsmlon"])
-    fsurdat.close()
+        # Read output file coordinates
+        fsurdat = Dataset(args.input_file, "r")
+        n_lat = len(fsurdat.dimensions["lsmlat"])
+        n_lon = len(fsurdat.dimensions["lsmlon"])
+        fsurdat.close()
 
-    # Check for output file existence
-    if os.path.exists(outfile_path):
-        if args.overwrite:
-            if verbose:
-                print(outfile_path, " exists; overwriting", flush=print_flush)
-        else:
-            raise FileExistsError(outfile_path, " exists; stopping", flush=print_flush)
+        # Check for output file existence
+        if os.path.exists(outfile_path):
+            if args.overwrite:
+                if verbose:
+                    print(outfile_path, " exists; overwriting")
+            else:
+                print(outfile_path, " exists; skipping")
+                continue
 
-    # Locate gridcell files
-    gfile = cfile.replace(".nc", "*.nc")
-    gfiles = glob.glob(gfile)
-    gfiles.sort()
+        # Locate gridcell files
+        gfile = cfile.replace(".nc", "*.nc")
+        gfiles = glob.glob(gfile)
+        gfiles.sort()
+        if len(gfiles) == 0:
+            print(f"Chunk {cndx}: Skipping; no files found matching {gfile}")
+            continue
+        print(f"Chunk {cndx}: Combining {len(gfiles)} files...")
 
-    if len(gfiles) == 0:
-        raise FileNotFoundError("No files found")
+        # Read hillslope data dimensions
+        first_gridcell_file = Dataset(gfiles[0], "r")
+        nhillslope = len(first_gridcell_file.dimensions["nhillslope"])
+        nmaxhillcol = len(first_gridcell_file.dimensions["nmaxhillcol"])
 
-    # Read hillslope data dimensions
-    first_gridcell_file = Dataset(gfiles[0], "r")
-    nhillslope = len(first_gridcell_file.dimensions["nhillslope"])
-    nmaxhillcol = len(first_gridcell_file.dimensions["nmaxhillcol"])
+        add_bedrock = "hillslope_bedrock_depth" in first_gridcell_file.variables.keys()
+        add_stream_channel_vars = "hillslope_stream_depth" in first_gridcell_file.variables.keys()
 
-    add_bedrock = "hillslope_bedrock_depth" in first_gridcell_file.variables.keys()
-    add_stream_channel_vars = "hillslope_stream_depth" in first_gridcell_file.variables.keys()
+        first_gridcell_file.close()
 
-    first_gridcell_file.close()
-
-    write_to_file(
-        outfile_path,
-        n_lat,
-        n_lon,
-        gfiles,
-        nhillslope,
-        nmaxhillcol,
-        add_bedrock,
-        add_stream_channel_vars,
-    )
+        write_to_file(
+            outfile_path,
+            n_lat,
+            n_lon,
+            gfiles,
+            nhillslope,
+            nmaxhillcol,
+            add_bedrock,
+            add_stream_channel_vars,
+        )
 
 
 def write_to_file(
