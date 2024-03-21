@@ -1,26 +1,7 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# Import modules
-
-import sys
-import string
 import subprocess
-import copy
 import argparse
 import netCDF4 as netcdf4
 import numpy as np
-
-
-def check_file_permissions(ifile, addWrite=False):
-    command = ["ls", "-l", ifile]
-    wflag = subprocess.run(command, capture_output=True).stdout.decode().split()[0][2]
-    if addWrite and wflag != "w":
-        command = ["chmod", "+w", ifile]
-        x = subprocess.run(command, capture_output=True)
-        command = ["ls", "-l", ifile]
-        p = subprocess.run(command, capture_output=True).stdout.decode().split()[0]
-        print("new permissions ", p)
 
 
 # ---------------------------------------------------------- #
@@ -215,8 +196,6 @@ timetag = (
 # copy original file
 command = ["cp", sfcfile, outfile]
 x = subprocess.call(command, stderr=subprocess.PIPE)
-# check permissions
-check_file_permissions(outfile, addWrite=True)
 
 print("appending file")
 w = netcdf4.Dataset(outfile, "a")
