@@ -34,6 +34,7 @@ def parse_arguments(argv):
         help="Output file",
         required=True,
     )
+    parser.add_argument("--overwrite", help="overwrite", action="store_true", default=False)
 
     default_n_chunks = 36
     parser.add_argument(
@@ -51,8 +52,8 @@ def parse_arguments(argv):
         raise FileNotFoundError(f"Input file not found: {args.input_file}")
     if not os.path.exists(args.input_dir):
         raise FileNotFoundError(f"Input directory not found: {args.input_dir}")
-    if not os.path.exists(args.output_dir):
-        os.makedirs(args.output_dir)
+    if os.path.exists(args.output_file) and not args.overwrite:
+        raise FileExistsError(f"Output file already exists: {args.output_dir}")
 
     return args
 
