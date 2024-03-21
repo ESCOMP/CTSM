@@ -36,6 +36,14 @@ def parse_arguments(argv):
     )
     parser.add_argument("--overwrite", help="overwrite", action="store_true", default=False)
 
+    dem_source_default = "MERIT"
+    parser.add_argument(
+        "--dem-source",
+        help=f"DEM to use (default: {dem_source_default})",
+        type=str,
+        default=dem_source_default,
+    )
+
     default_n_chunks = 36
     parser.add_argument(
         "--n-chunks",
@@ -68,7 +76,7 @@ def main():
 
     # Choose data files to combine and append
     cfile0 = os.path.join(
-        args.input_dir, "combined_chunk_ChunkIndex_HAND_4_col_hillslope_geo_params_section_quad.nc"
+        args.input_dir, f"combined_chunk_ChunkIndex_HAND_4_col_hillslope_geo_params_section_quad_{args.dem_source}.nc"
     )
 
     f = netcdf4.Dataset(args.input_file, "r")
@@ -128,7 +136,7 @@ def main():
 
         if file_exists > 0:
             if args.verbose:
-                print(cfile, " not found")
+                print(f"Skipping; chunk file not found: {cfile}")
             continue
         
         f = netcdf4.Dataset(cfile, "r")
