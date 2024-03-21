@@ -116,15 +116,9 @@ def main():
     nhillslope = len(f.dimensions["nhillslope"])
     nmaxhillcol = len(f.dimensions["nmaxhillcol"])
 
-    if "hillslope_bedrock_depth" in f.variables.keys():
-        addBedrock = True
-    else:
-        addBedrock = False
+    addBedrock = "hillslope_bedrock_depth" in f.variables.keys()
+    addStreamChannelVariables = "hillslope_stream_depth" in f.variables.keys()
 
-    if "hillslope_stream_depth" in f.variables.keys():
-        addStreamChannelVariables = True
-    else:
-        addStreamChannelVariables = False
     f.close()
 
     write_to_file(
