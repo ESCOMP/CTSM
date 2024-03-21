@@ -86,7 +86,7 @@ def main():
 
     # Output file
     outfile_path = os.path.join(
-        args.output_dir, cfile.split("/")[-1].replace("chunk_", "combined_chunk_")
+        args.output_dir, os.path.split(cfile)[-1].replace("chunk_", "combined_chunk_")
     )
 
     # Read output file coordinates
