@@ -346,7 +346,8 @@ def main():
     n_lon = len(infile.dimensions["lsmlon"])
     n_lat = len(infile.dimensions["lsmlat"])
     std_elev = np.asarray(infile.variables["STD_ELEV"][:, :])
-    lmask = np.asarray(infile.variables["PFTDATA_MASK"][:, :])
+    lfrac = np.asarray(infile.variables["LANDFRAC_PFT"][:, :])
+    lmask = lfrac > 0
     pct_natveg = np.asarray(infile.variables["PCT_NATVEG"][:, :])
     infile.close()
 
