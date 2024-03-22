@@ -63,7 +63,7 @@ def parse_arguments(argv):
     if not os.path.exists(args.input_dir):
         raise FileNotFoundError(f"Input directory not found: {args.input_dir}")
     if os.path.exists(args.output_file) and not args.overwrite:
-        raise FileExistsError(f"Output file already exists: {args.output_dir}")
+        raise FileExistsError(f"Output file already exists: {args.output_file}")
 
     return args
 
