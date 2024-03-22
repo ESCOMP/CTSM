@@ -45,7 +45,8 @@ module ZenderSoilErodStreamType
      character(len=CL)  :: zender_soil_erod_source             ! if calculed in lnd or atm
      character(len=CL)  :: stream_fldFileName_zendersoilerod   ! data Filename
      character(len=CL)  :: stream_meshfile_zendersoilerod      ! mesh Filename
-     character(len=CL)  :: zendersoilerod_mapalgo               ! map algo
+     character(len=CL)  :: zendersoilerod_mapalgo              ! map algo
+     logical            :: namelist_set = .false.              ! if namelist was set yet
   contains
      procedure, private :: ReadNML     ! Read in namelist
   end type streamcontrol_type
@@ -182,6 +183,9 @@ contains
     class(soil_erod_stream_type) :: this
     !
     ! !LOCAL VARIABLES:
+    if ( .not. control%namelist_set )then
+       call endrun(msg=' ERROR namelist NOT set before being used'//errMsg(sourcefile, __LINE__))
+    end if
     if ( (trim(dust_emis_method) == 'Zender_2003') .and. (control%zender_soil_erod_source == "lnd") )then
        UseStreams = .true.
     else
@@ -359,6 +363,8 @@ contains
    this%stream_meshfile_zendersoilerod    = stream_meshfile_zendersoilerod
    this%zendersoilerod_mapalgo            = zendersoilerod_mapalgo
    this%zender_soil_erod_source           = zender_soil_erod_source
+
+   this%namelist_set = .true.
 
  end subroutine ReadNML
 
