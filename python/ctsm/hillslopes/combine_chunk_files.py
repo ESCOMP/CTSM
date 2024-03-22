@@ -1,10 +1,11 @@
 """
 Combine chunk files into single surface data file
 """
-import subprocess
 import argparse
 import sys
 import os
+import shutil
+import datetime
 import netCDF4 as netcdf4
 import numpy as np
 
@@ -92,9 +93,9 @@ def main():
         cstr = "{:02d}".format(ndx)
         cfile = cfile0.replace("ChunkIndex", cstr)
         command = ["ls", cfile]
-        file_exists = subprocess.run(command, capture_output=True).returncode
+        file_exists = os.path.exists(cfile)
 
-        if initializeArrays and file_exists == 0:
+        if initializeArrays and file_exists:
             f = netcdf4.Dataset(cfile, "r")
 
             ncolumns_per_gridcell = len(f.dimensions["nmaxhillcol"])
@@ -134,7 +135,7 @@ def main():
             initializeArrays = False
             f.close()
 
-        if file_exists > 0:
+        if not file_exists:
             if args.verbose:
                 print(f"Skipping; chunk file not found: {cfile}")
             continue
@@ -244,21 +245,12 @@ def main():
 
     # -- Write data to file ------------------
 
-    command = 'date "+%y%m%d"'
-    timetag = (
-        subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
-        .communicate()[0]
-        .strip()
-        .decode()
-    )
-
     # copy original file
-    command = ["cp", args.input_file, args.output_file]
-    x = subprocess.call(command, stderr=subprocess.PIPE)
+    shutil.copyfile(args.input_file, args.output_file)
 
     print("appending file")
     w = netcdf4.Dataset(args.output_file, "a")
-    w.creation_date = timetag
+    w.creation_date = datetime.date.today().strftime("%y%m%d")
 
     w.createDimension("nhillslope", nhillslope)
     w.createDimension("nmaxhillcol", ncolumns_per_gridcell)
