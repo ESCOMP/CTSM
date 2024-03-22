@@ -45,7 +45,7 @@ module surfrdMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine surfrd_get_data (begg, endg, ldomain, lfsurdat, actual_numcft)
+  subroutine surfrd_get_data (begg, endg, ldomain, lfsurdat, lhillslope_file, actual_numcft)
     !
     ! !DESCRIPTION:
     ! Read the surface dataset and create subgrid weights.
@@ -72,7 +72,8 @@ contains
     use clm_varctl  , only : create_crop_landunit, collapse_urban, &
                              toosmall_soil, toosmall_crop, toosmall_glacier, &
                              toosmall_lake, toosmall_wetland, toosmall_urban, &
-                             n_dom_landunits
+                             n_dom_landunits, &
+                             use_hillslope
     use fileutils           , only : getfil
     use domainMod           , only : domain_type, domain_init, domain_clean
     use clm_instur          , only : wt_lunit, topo_glc_mec, pct_urban_max
@@ -86,6 +87,7 @@ contains
     integer,          intent(in) :: begg, endg, actual_numcft
     type(domain_type),intent(in) :: ldomain     ! land domain
     character(len=*), intent(in) :: lfsurdat    ! surface dataset filename
+    character(len=*), intent(in) :: lhillslope_file ! hillslope dataset filename
     !
     ! !LOCAL VARIABLES:
     type(domain_type) :: surfdata_domain      ! local domain associated with surface dataset
@@ -96,7 +98,8 @@ contains
     character(len=16) :: lon_var, lat_var     ! names of lat/lon on dataset
     logical           :: readvar              ! true => variable is on dataset
     real(r8)          :: rmaxlon,rmaxlat      ! local min/max vars
-    type(file_desc_t) :: ncid                 ! netcdf id
+    type(file_desc_t) :: ncid                 ! netcdf id for lfsurdat
+    type(file_desc_t) :: ncid_hillslope       ! netcdf id for lhillslope_file
     logical           :: istype_domain        ! true => input file is of type domain
     logical           :: isgrid2d             ! true => intut grid is 2d
 
@@ -109,6 +112,10 @@ contains
           write(iulog,*)'lfsurdat must be specified'
           call endrun(msg=errMsg(sourcefile, __LINE__))
        endif
+       if (use_hillslope .and. lhillslope_file == ' ') then
+          write(iulog,*)'lhillslope_file must be specified'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       endif
     endif
 
     wt_lunit(:,:) = 0._r8
@@ -118,6 +125,10 @@ contains
 
     call getfil( lfsurdat, locfn, 0 )
     call ncd_pio_openfile (ncid, trim(locfn), 0)
+    if (use_hillslope) then
+       call getfil( lhillslope_file, locfn, 0 )
+       call ncd_pio_openfile (ncid_hillslope, trim(locfn), 0)
+    end if
 
     ! Read in patch mask - this variable is only on the surface dataset - but not
     ! on the domain dataset
@@ -189,7 +200,7 @@ contains
 
     ! Obtain vegetated landunit info
 
-    call surfrd_veg_all(begg, endg, ncid, ldomain%ns, actual_numcft)
+    call surfrd_veg_all(begg, endg, ncid, ncid_hillslope, ldomain%ns, actual_numcft)
 
     if (use_cndv) then
        call surfrd_veg_dgvm(begg, endg)
@@ -715,7 +726,7 @@ contains
   end subroutine surfrd_pftformat
 
 !-----------------------------------------------------------------------
-  subroutine surfrd_veg_all(begg, endg, ncid, ns, actual_numcft)
+  subroutine surfrd_veg_all(begg, endg, ncid, ncid_hillslope, ns, actual_numcft)
     !
     ! !DESCRIPTION:
     ! Determine weight arrays for non-dynamic landuse mode
@@ -732,7 +743,8 @@ contains
     ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: begg, endg, actual_numcft
-    type(file_desc_t),intent(inout) :: ncid   ! netcdf id
+    type(file_desc_t),intent(inout) :: ncid   ! netcdf id for fsurdat
+    type(file_desc_t),intent(inout) :: ncid_hillslope ! netcdf id for hillslope_file
     integer          ,intent(in)    :: ns     ! domain size
     !
     ! !LOCAL VARIABLES:
@@ -818,7 +830,7 @@ contains
 
     ! Obtain hillslope hydrology information and modify pft weights
     if (use_hillslope) then
-       call surfrd_hillslope(begg, endg, ncid, ns)
+       call surfrd_hillslope(begg, endg, ncid_hillslope, ns)
     endif
 
     ! Convert from percent to fraction
