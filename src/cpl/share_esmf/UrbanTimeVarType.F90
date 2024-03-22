@@ -38,9 +38,9 @@ module UrbanTimeVarType
   ! X. Li [dev]: 
   ! character(15), private :: stream_varnames(1:6)       ! 1-3 for t_building_max, 4-6 for p_ac
   ! X. Li [03.19]
-  integer      , private              :: stream_varname_MIN       ! minimum index for stream_varnames
-  integer      , private              :: stream_varname_MAX       ! maximum index for stream_varnames
-  character(15), private, pointer     :: stream_varnames(:)       ! urban time varying variable names
+  integer      , private, parameter   :: stream_varname_MIN       ! minimum index for stream_varnames
+  integer      , private, parameter   :: stream_varname_MAX       ! maximum index for stream_varnames
+  character(15), private, pointer     :: stream_varnames(stream_varname_MIN:stream_varname_MAX)       ! urban time varying variable names
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
