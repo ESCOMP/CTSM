@@ -38,9 +38,9 @@ module UrbanTimeVarType
   ! X. Li [dev]: 
   ! character(15), private :: stream_varnames(1:6)       ! 1-3 for t_building_max, 4-6 for p_ac
   ! X. Li [03.19]
-  integer      , private, parameter   :: stream_varname_MIN       ! minimum index for stream_varnames
-  integer      , private, parameter   :: stream_varname_MAX       ! maximum index for stream_varnames
-  character(15), private, pointer     :: stream_varnames(stream_varname_MIN:stream_varname_MAX)       ! urban time varying variable names
+  integer      , private              :: stream_varname_MIN       ! minimum index for stream_varnames
+  integer      , private              :: stream_varname_MAX       ! maximum index for stream_varnames
+  character(15), private, pointer     :: stream_varnames(:)       ! urban time varying variable names
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -56,6 +56,8 @@ contains
     ! !USES:
     use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
     use histFileMod     , only : hist_addfld1d
+    ! X. Li [03.22]
+    use UrbanParamsType , only : urban_explicit_ac
     !
     ! !ARGUMENTS:
     class(urbantv_type) :: this
@@ -68,12 +70,25 @@ contains
 
     begl = bounds%begl; endl = bounds%endl
 
+    ! X. Li [03.22]
+    ! Determine the minimum and maximum indices for stream_varnames
+    stream_varname_MIN = 1
+    ! Get value for the maximum index for stream_varnames: if using explicit AC adoption scheme, 
+    ! then set maximum index to 6 for reading in tbuildmax and p_ac for three urban density classes;
+    ! otherwise, set to 3 to only read in tbuildmax for three urban density classes. 
+    if (urban_explicit_ac) then
+       stream_varname_MAX = 6
+    else
+       stream_varname_MAX = 3
+    end if
+
     ! Allocate urbantv data structure
 
     allocate(this%t_building_max(begl:endl)); this%t_building_max(:) = nan
     ! X. Li [03.19]
     ! allocate(this%p_ac(begl:endl)); this%p_ac(:) = nan
     allocate(this%p_ac(begl:endl)); this%p_ac(:) = 0._r8
+    allocate(this%stream_varnames(stream_varname_MIN:stream_varname_MAX))
 
     call this%urbantv_init(bounds, NLFilename)
     call this%urbantv_interp(bounds)
@@ -145,15 +160,15 @@ contains
     stream_fldFileName_urbantv = ' '
     stream_meshfile_urbantv    = ' '
     ! X. Li [03.19]
-    stream_varname_MIN = 1
-    ! Get value for the maximum index for stream_varnames: if using explicit AC adoption scheme, 
-    ! then set maximum index to 6 for reading in tbuildmax and p_ac for three urban density classes;
-    ! otherwise, set to 3 to only read in tbuildmax for three urban density classes. 
-    if (urban_explicit_ac) then
-       stream_varname_MAX = 6
-    else
-       stream_varname_MAX = 3
-    end if
+    ! stream_varname_MIN = 1
+    ! ! Get value for the maximum index for stream_varnames: if using explicit AC adoption scheme, 
+    ! ! then set maximum index to 6 for reading in tbuildmax and p_ac for three urban density classes;
+    ! ! otherwise, set to 3 to only read in tbuildmax for three urban density classes. 
+    ! if (urban_explicit_ac) then
+    !    stream_varname_MAX = 6
+    ! else
+    !    stream_varname_MAX = 3
+    ! end if
     ! X. Li [orig]
     ! stream_varnames(isturb_tbd) = urbantvString//"TBD"
     ! stream_varnames(isturb_hd)  = urbantvString//"HD"
