@@ -169,6 +169,7 @@ def write_to_file(
     """
     Write to file
     """
+    # pylint: disable=too-many-statements
     outfile = Dataset(outfile_path, "w")
     outfile.creation_date = datetime.date.today().strftime("%y%m%d")
 
