@@ -335,7 +335,7 @@ contains
     enddo
     call ncd_io(ncid=ncid, varname='hillslope_distance', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
     if (masterproc .and. .not. readvar) then
-       call endrun( 'ERROR:: hillslope_length not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+       call endrun( 'ERROR:: hillslope_distance not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
 
     do l = bounds%begl,bounds%endl
@@ -354,7 +354,7 @@ contains
 
     call ncd_io(ncid=ncid, varname='hillslope_elevation', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
     if (masterproc .and. .not. readvar) then
-       call endrun( 'ERROR:: hillslope_height not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+       call endrun( 'ERROR:: hillslope_elevation not found on surface data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
