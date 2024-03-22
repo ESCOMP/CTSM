@@ -406,10 +406,9 @@ module MLCanopyFluxesMod
        do ic = 1, ncan(p)
           dlai(p,ic) = dlai_frac(p,ic) * lai(p)
           dsai(p,ic) = dsai_frac(p,ic) * sai(p)
-          dpai(p,ic) = dlai(p,ic) + dsai(p,ic)
           ! Now reset values to minimum
-          dlai(p,ic) = max(dlai(p,ic), 0.01_r8)
-          dsai(p,ic) = max(dsai(p,ic), 0.01_r8)
+          if (dlai(p,ic) > 0._r8) dlai(p,ic) = max(dlai(p,ic), 0.01_r8)
+          if (dsai(p,ic) > 0._r8) dsai(p,ic) = max(dsai(p,ic), 0.01_r8)
           dpai(p,ic) = dlai(p,ic) + dsai(p,ic)
        end do
 

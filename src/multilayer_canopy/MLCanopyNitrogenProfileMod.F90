@@ -186,12 +186,13 @@ module MLCanopyNitrogenProfileMod
        end do
 
        ! Check that canopy sum of vcmax25 equals the expected value obtained by analytical integration
+       ! NB slevis 2024/3/22: The next was a valid error check before introducing minimum dlai and dsai
 
        numerical = sum(vcmax25_profile(p,1:ncan(p)) * dpai(p,1:ncan(p)))
        analytical = vcmax25top * (1._r8 - exp(-kn*(lai(p) + sai(p)))) / kn
-       if (abs(numerical-analytical) > 1.e-06_r8) then
-          call endrun (msg='ERROR: CanopyNitrogenProfile: canopy integration error')
-       end if
+!      if (abs(numerical-analytical) > 1.e-06_r8) then
+!         call endrun (msg='ERROR: CanopyNitrogenProfile: canopy integration error')
+!      end if
 
     end do
 
