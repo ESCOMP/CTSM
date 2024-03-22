@@ -61,6 +61,7 @@ module clm_instMod
   use SolarAbsorbedType               , only : solarabs_type
   use SurfaceRadiationMod             , only : surfrad_type
   use SurfaceAlbedoType               , only : surfalb_type
+  use MLCanopyFluxesType              , only : mlcanopy_type !!! CLMml !!!
   use TemperatureType                 , only : temperature_type
   use WaterType                       , only : water_type
   use UrbanParamsType                 , only : urbanparams_type
@@ -116,6 +117,7 @@ module clm_instMod
   type(solarabs_type), public             :: solarabs_inst
   type(surfalb_type), public              :: surfalb_inst
   type(surfrad_type), public              :: surfrad_inst
+  type(mlcanopy_type), public             :: mlcanopy_inst !!! CLMml !!!
   type(temperature_type), public          :: temperature_inst
   type(urbanparams_type), public          :: urbanparams_inst
   type(urbantv_type), public              :: urbantv_inst
@@ -352,6 +354,8 @@ contains
 
     call dust_inst%Init(bounds)
 
+    call mlcanopy_inst%Init(bounds) !!! CLMml !!!
+
     allocate(scf_method, source = CreateAndInitSnowCoverFraction( &
          snow_cover_fraction_method = snow_cover_fraction_method, &
          bounds = bounds, &
@@ -557,6 +561,8 @@ contains
     call surfalb_inst%restart (bounds, ncid, flag=flag, &
          tlai_patch=canopystate_inst%tlai_patch(bounds%begp:bounds%endp), &
          tsai_patch=canopystate_inst%tsai_patch(bounds%begp:bounds%endp))
+
+    call mlcanopy_inst%restart (bounds, ncid, flag=flag) !!! CLMml !!!
 
     call topo_inst%restart (bounds, ncid, flag=flag)
 

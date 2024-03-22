@@ -41,6 +41,7 @@ module clm_driver
   use SoilFluxesMod          , only : SoilFluxes ! (formerly Biogeophysics2Mod)
   use UrbanFluxesMod         , only : UrbanFluxes
   use LakeFluxesMod          , only : LakeFluxes
+  use MLCanopyFluxesMod      , only : MLCanopyFluxes  !!! CLMml !!!
   !
   use HydrologyNoDrainageMod , only : CalcAndWithdrawIrrigationFluxes, HandleNewSnow, HydrologyNoDrainage ! (formerly Hydrology2Mod)
   use HydrologyDrainageMod   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
@@ -872,6 +873,15 @@ contains
             water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
             energyflux_inst, water_inst%waterfluxbulk_inst)
        call t_stopf('bgp2')
+
+       ! ============================================================================
+       ! CLMml: Multilayer canopy and soil fluxes
+       ! ============================================================================
+
+       call MLCanopyFluxes (bounds_clump, filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
+       atm2lnd_inst, canopystate_inst, soilstate_inst, temperature_inst, water_inst%waterstatebulk_inst, &
+       water_inst%waterfluxbulk_inst, energyflux_inst, frictionvel_inst, surfalb_inst, solarabs_inst, &
+       mlcanopy_inst, water_inst%wateratm2lndbulk_inst, water_inst%waterdiagnosticbulk_inst)
 
        ! ============================================================================
        ! Perform averaging from patch level to column level

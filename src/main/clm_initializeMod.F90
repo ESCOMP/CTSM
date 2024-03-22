@@ -178,6 +178,7 @@ contains
     use CNSharedParamsMod             , only : CNParamsSetSoilDepth
     use NutrientCompetitionFactoryMod , only : create_nutrient_competition_method
     use FATESFireFactoryMod           , only : scalar_lightning
+    use MLCanopyTurbulenceMod         , only : LookupPsihatINI   !!! CLMml !!!
     use dynFATESLandUseChangeMod      , only : dynFatesLandUseInit
     use HillslopeHydrologyMod         , only : InitHillslope
     !
@@ -249,6 +250,11 @@ contains
     ! Read list of Patches and their corresponding parameter values
     ! Independent of model resolution, Needs to stay before surfrd_get_data
     call pftcon%Init()
+
+    ! Initialize the look-up tables needed to calculate the CLMml
+    ! roughness sublayer psihat functions
+
+    call LookupPsihatINI   !!! CLMml !!!
 
     ! Read surface dataset and set up subgrid weight arrays
     call surfrd_get_data(begg, endg, ldomain, fsurdat, actual_numcft)

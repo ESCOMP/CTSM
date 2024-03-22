@@ -2324,6 +2324,7 @@ contains
     ! Define netcdf metadata of history file t.
     !
     ! !USES:
+    use MLclm_varpar    , only : nlevmlcan
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, nlevmaxurbgrnd, numrad, nlevcan, nvegwcs,nlevsoi
     use clm_varpar      , only : natpft_size, cft_size, maxpatch_glc, nlevdecomp_full, mxsowings, mxharvests
     use landunit_varcon , only : max_lunit
@@ -2466,6 +2467,7 @@ contains
     call ncd_defdim(lnfid, 'levsno' , nlevsno , dimid)
     call ncd_defdim(lnfid, 'ltype', max_lunit, dimid)
     call ncd_defdim(lnfid, 'nlevcan',nlevcan, dimid)
+    call ncd_defdim(lnfid, 'nlevmlcan', nlevmlcan, dimid)
     call ncd_defdim(lnfid, 'nvegwcs',nvegwcs, dimid)
     if (use_hillslope) then
        call ncd_defdim(lnfid, 'nhillslope',nhillslope, dimid)
@@ -5508,6 +5510,7 @@ contains
     ! unless 'default' is set to 'inactive'.
     !
     ! !USES:
+    use MLclm_varpar    , only : nlevmlcan
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, numrad, nlevdecomp_full, nlevcan, nvegwcs,nlevsoi
     use clm_varpar      , only : natpft_size, cft_size, maxpatch_glc, mxsowings, mxharvests
     use landunit_varcon , only : max_lunit
@@ -5669,6 +5672,8 @@ contains
        num2d = nlevsno
     case ('nlevcan')
         num2d = nlevcan
+    case ('nlevmlcan')
+        num2d = nlevmlcan
     case ('nvegwcs')
         num2d = nvegwcs
     case default
