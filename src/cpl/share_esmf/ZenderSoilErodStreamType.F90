@@ -90,8 +90,8 @@ contains
    character(len=*), parameter    :: stream_name = 'zendersoilerod'
    !-----------------------------------------------------------------------
 
-      call this%InitAllocate( bounds )
       call control%ReadNML( bounds, NLFileName )
+      call this%InitAllocate( bounds )
 
       if ( this%useStreams() )then     ! is this a namelist input and is it set in namelist default
 
