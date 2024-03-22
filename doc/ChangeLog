@@ -1,4 +1,227 @@
 ===============================================================
+Tag name: ctsm5.1.dev175
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Thu 21 Mar 2024 05:49:04 PM MDT
+One-line Summary: merge-b4bdev-20240321
+
+Purpose and description of changes
+----------------------------------
+
+Merge master 20240313 #2421 (Update of externals to what's expected in cesm2_3_beta17)
+Fix for cray compiler format issue #2391
+Remove LILAC references to mct #2374
+Refactoring of neon_site into tower_site and neon_site #2363
+Fix misplaced stopf in CNDriverMod.F90 #2358
+Update some PE layouts on Derecho #2429
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+CTSM issues fixed (include CTSM Issue #):
+ Listed in Purpose and Description above
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+ See #2421 for update of externals to what's expected in cesm2_3_beta17
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2431
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev174
+Originator(s): olyson (Keith Oleson,UCAR/TSS)
+Date: Thu 14 Mar 2024 04:56:37 PM MDT
+One-line Summary: Improve vegetation health at high latitudes
+
+Purpose and description of changes
+----------------------------------
+
+The corresponding changes:
+
+Remove snicar_snobc_intmix from EXPERIMENTAL endrun (allow it to be true)
+Remove flg_snoage_scl in SNICAR such that xdrdt can have an effect (fixes #2298 )
+New parameter file and namelist values for clm5_1:
+
+- snow_thermal_cond_method = Sturm1997 (default for clm5_1)
+- snicar_snobc_intmix = .true. (default for clm5_1)
+- ctsm51_params.c240208.nc is the new CTSM parameter file (changes: froot_leaf(11:12)=1.2, FUN_fracfixers(11:12)=1, xdrdt=5, scvng_fct_mlt_sf=0.5, snw_rds_refrz=1500, fresh_snw_rds_max=400)
+- New history fields for coupler history verification (default off)
+- Add snow5d_thresh_for_onset to parameter file, set to 0.2 for clm51 and 0.1 (unchanged) for clm50 and clm45.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+CTSM issues fixed (include CTSM Issue #):
+Fixes #2298
+Fixes LMWG_dev discussion #3
+
+New bug discovered or introduced:
+Relevant post appears in #2348 on 2024/3/14
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New namelist defaults including new parameter files:
+ ctsm51_params.c240208.nc
+ clm50_params.c240208.nc
+ clm45_params.c240208.nc
+ ctsm51_ciso_cwd_hr_params.c240208.nc
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+ Keith Oleson replicated simulation in LMWG_dev issue #51 as bfb when
+ snow5d_thresh_for_onset on ctsm51_ciso_cwd_hr_params.c240208.nc was set
+ to original value of 0.1.
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm51
+    - what platforms/compilers: all
+    - nature of change: new climate at high latitudes
+
+ See LMWG_dev discussion #3 and simulations discussed therein,
+ including (though possibly not limited to) LMWG_dev issues #51, 52, 54, 57.
+
+ slevis will add this tag with the label "SIGNIFICANT" to the
+ Answer-changing-tags wiki:
+ https://github.com/ESCOMP/CTSM/wiki/Answer-changing-tags
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2348
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev173
+Originator(s): rgknox (Ryan Knox,LAWRENCE BERKELEY NATIONAL LABORATORY)
+Date: Wed 13 Mar 2024 04:46:37 PM MDT
+One-line Summary: New FATES namelist variable, fates_history_dimlevel
+
+Purpose and description of changes
+----------------------------------
+This set of changes introduces a new namelist setting that allows more control over fates history diagnostics. This setting, fates_history_dimlevel accepts two integers, comma-delimited, from 0-2. The first specifies the history output dimension level for high-frequency output (ie model timestep) and the second is for output at the dynamics timestep. A value of 0 indicates no history variables should be processed. A value of 1 indicates that only site-level mean values should be processed. A value of 2 indicates that all variables, including those that use an extra dimension should be processed. This is different from adding and excluding history variable names from the namelist, in that these settings not only omit variables from the output file, but they prevent their allocations and calculations all together. Processing history diagnostics in FATES takes a non-trivial amount of time.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+These changes have no non-trivial impacts on any scientific configurations, this is a refactor.
+
+Bugs fixed
+----------
+
+No bugs fixed, feature addition only.
+
+Notes of particular relevance for users
+---------------------------------------
+
+Users should be aware of the new namelist setting fates_history_dimlevel. Omitting this setting will default to a level of "2" which enables all output and should maintain existing model behavior.
+
+Substantial timing or memory changes:  The FATES model is somewhere on the order of 10% faster for level 0 and 1, versus 2, for large gridded runs with non satellite phenology, on derecho.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+None of note.
+
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (64 fates tests differ)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: (used ctsm5.1.dev172)
+
+
+Answer changes
+--------------
+
+Answer changes for FATES tests were detected. All diffs were small enough to be consistent with order of operations changes, with the exception of some variables that were updated to have ignore values used for non-vegetated patches instead of zero.
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev172
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Tue 12 Mar 2024 11:59:48 PM MDT
