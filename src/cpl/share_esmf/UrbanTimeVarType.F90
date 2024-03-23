@@ -88,7 +88,7 @@ contains
     ! X. Li [03.19]
     ! allocate(this%p_ac(begl:endl)); this%p_ac(:) = nan
     allocate(this%p_ac(begl:endl)); this%p_ac(:) = 0._r8
-    allocate(this%stream_varnames(stream_varname_MIN:stream_varname_MAX))
+    allocate(stream_varnames(stream_varname_MIN:stream_varname_MAX))
 
     call this%urbantv_init(bounds, NLFilename)
     call this%urbantv_interp(bounds)
