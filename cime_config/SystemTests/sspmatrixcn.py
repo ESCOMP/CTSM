@@ -207,7 +207,9 @@ class SSPMATRIXCN(SystemTestsCommon):
                      linkfile = os.path.join(rundir, os.path.basename(item))
                      if os.path.exists(linkfile):
                          os.remove( linkfile )
-                     os.symlink(item, linkfile )
+                     self._case.flush()
+                     if os.path.exists(rundir):
+                         os.symlink(item, linkfile )
    
                  for item in glob.glob("{}/*rpointer*".format(rest_path)):
                      shutil.copy(item, rundir)
@@ -215,7 +217,8 @@ class SSPMATRIXCN(SystemTestsCommon):
            #
            # Run the case (Archiving on)
            #
-           self._case.flush()
+           if not os.path.exists(rundir):
+               self._case.flush()
            self.run_indv(suffix="step{}".format(self.steps[n]), st_archive=True)
 
            #
