@@ -228,7 +228,7 @@ def main(description):
                 )
             logger.info("-----------------------------------")
             logger.info("Running CTSM for neon site : %s", neon_site.name)
-            
+
             neon_site.run_case(
                 base_case_root,
                 run_type,

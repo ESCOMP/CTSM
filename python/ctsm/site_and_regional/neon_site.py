@@ -99,7 +99,18 @@ class NeonSite(TowerSite):
         tower_type = "NEON"
 
         super().run_case(
-            base_case_root, run_type, prism, run_length, user_version, tower_type, user_mods_dirs, overwrite, setup_only, no_batch, rerun, experiment
+            base_case_root,
+            run_type,
+            prism,
+            run_length,
+            user_version,
+            tower_type,
+            user_mods_dirs,
+            overwrite,
+            setup_only,
+            no_batch,
+            rerun,
+            experiment,
         )
 
     def modify_user_nl(self, case_root, run_type, rundir, site_lines=None):
