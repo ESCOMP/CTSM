@@ -228,15 +228,16 @@ def main(description):
                 )
             logger.info("-----------------------------------")
             logger.info("Running CTSM for neon site : %s", neon_site.name)
+            
             neon_site.run_case(
                 base_case_root,
                 run_type,
                 prism,
                 run_length,
                 user_version,
-                overwrite,
-                setup_only,
-                no_batch,
-                rerun,
-                experiment,
+                overwrite=overwrite,
+                setup_only=setup_only,
+                no_batch=no_batch,
+                rerun=rerun,
+                experiment=experiment,
             )

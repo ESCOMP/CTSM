@@ -47,8 +47,6 @@ class NeonSite(TowerSite):
             user_mods_dirs = [
                 os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)
             ]
-            print("in neonsite adding usermodsdirs")
-        print("usermodsdirs: {}".format(user_mods_dirs))
         case_path = super().build_base_case(cesmroot, output_root, res, compset, user_mods_dirs)
 
         return case_path
@@ -99,8 +97,9 @@ class NeonSite(TowerSite):
             os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)
         ]
         tower_type = "NEON"
+
         super().run_case(
-            base_case_root, run_type, prism, run_length, user_version, tower_type, user_mods_dirs
+            base_case_root, run_type, prism, run_length, user_version, tower_type, user_mods_dirs, overwrite, setup_only, no_batch, rerun, experiment
         )
 
     def modify_user_nl(self, case_root, run_type, rundir, site_lines=None):
