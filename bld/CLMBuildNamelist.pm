@@ -1266,7 +1266,7 @@ sub setup_cmdl_simulation_year {
 sub setup_cmdl_run_type {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
   # Set the clm_start_type and the st_year, start year
-  # This MUST be done after lnd_tuning_mode is set 
+  # This MUST be done after lnd_tuning_mode is set
 
   my $val;
   my $var = "clm_start_type";
@@ -3975,7 +3975,7 @@ sub setup_logic_dust_emis {
 
   my $dust_emis_method = remove_leading_and_trailing_quotes( $nl->get_value($var) );
 
-  my @zender_files_in_lnd_opts = ( "stream_fldfilename_zendersoilerod", "stream_meshfile_zendersoilerod", 
+  my @zender_files_in_lnd_opts = ( "stream_fldfilename_zendersoilerod", "stream_meshfile_zendersoilerod",
                                    "zendersoilerod_mapalgo" );
   if ( $dust_emis_method eq "Zender_2003" ) {
      # get the zender_soil_erod_source
