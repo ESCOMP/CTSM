@@ -13,7 +13,7 @@ module ZenderSoilErodStreamType
   ! with the other files.
   !
   ! !USES
-  use ESMF             , only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU, ESMF_Finalize, ESMF_END_ABORT 
+  use ESMF             , only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU, ESMF_Finalize, ESMF_END_ABORT
   use dshr_strdata_mod , only : shr_strdata_type
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_cl
   use shr_log_mod      , only : errMsg => shr_log_errMsg
@@ -53,7 +53,7 @@ module ZenderSoilErodStreamType
 
   type(streamcontrol_type), private :: control        ! Stream control data
 
-  character(len=*), parameter, private :: sourcefile = &  
+  character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 !==============================================================================
@@ -148,7 +148,7 @@ contains
          end if
 
          ! Get pointer for stream data that is time and spatially interpolate to model time and grid
-         do n = 1,size(stream_varnames) 
+         do n = 1,size(stream_varnames)
             call dshr_fldbun_getFldPtr(sdat_erod%pstrm(1)%fldbun_model, stream_varnames(n), fldptr1=dataptr1d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
                write(iulog,*) 'Error on get field pointer -- see PET*.ESMF_LogFile(s)'
@@ -248,7 +248,7 @@ contains
     !integer  :: g, c, fc    ! Indices
     integer  :: g, p, fp, l, c    ! Indices
     !real(r8) :: z0s         ! smooth roughness length (m)
-    
+
     ! constants
     real(r8),parameter :: soil_erod_threshold = 0.1_r8   ! CAM soil erodibility threshold; below threshold -> soil_erod = 0_r8     11 Mar 2023
     !---------------------------------------------------------------------
@@ -268,10 +268,10 @@ contains
 
           if (this%soil_erodibility(g) .lt. soil_erod_threshold ) then
              soil_erod(c) = 0._r8
-          else 
+          else
              soil_erod(c) = this%soil_erodibility(g)
           end if
- 
+
        end if
     end do
 
