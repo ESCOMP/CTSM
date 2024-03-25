@@ -157,13 +157,16 @@ contains
             if (trim(stream_varnames(n)) == 'mbl_bsn_fct_geo') then
                ig = 0
                do g = bounds%begg,bounds%endg
-                  ig = ig+1                   ! not sure why +1 is needed but it's okay
+                  ig = ig+1
                   this%soil_erodibility(g) = dataptr1d(ig)
                end do
 
             end if
 
          end do
+         ! TODO: EBK 03/25/2024: When shr_strdata adds a clean method we should invoke it here to save memory
+         ! This is talked about in https://github.com/ESCOMP/CDEPS/issues/261
+
       end if
 
   end subroutine Init
