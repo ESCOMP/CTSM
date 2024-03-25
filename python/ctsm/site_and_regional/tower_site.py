@@ -253,7 +253,6 @@ class TowerSite:
         base_case_root,
         run_type,
         prism,
-        run_length,
         user_version,
         tower_type,
         user_mods_dirs,
@@ -274,8 +273,6 @@ class TowerSite:
             transient, post_ad, or ad case, default transient
         prism: bool, opt
             if True, use PRISM precipitation, default False
-        run_length: str, opt
-            length of run, default '4Y'
         user_version: str, opt
             default 'latest'
         overwrite: bool, opt
@@ -383,7 +380,6 @@ class TowerSite:
                 case.set_value("RUN_REFDATE", "0018-01-01")
                 case.set_value("RUN_STARTDATE", "0018-01-01")
                 case.set_value("RESUBMIT", 1)
-                case.set_value("STOP_N", run_length)
 
             else:
                 case.set_value("CLM_FORCE_COLDSTART", "off")
@@ -393,7 +389,6 @@ class TowerSite:
             if run_type == "postad":
                 case.case_setup()
                 self.set_ref_case(case)
-                case.set_value("STOP_N", run_length)
 
             # For transient cases STOP will be set in the user_mod_directory
             if run_type == "transient":

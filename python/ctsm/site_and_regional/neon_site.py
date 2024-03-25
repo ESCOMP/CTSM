@@ -57,7 +57,6 @@ class NeonSite(TowerSite):
         base_case_root,
         run_type,
         prism,
-        run_length,
         user_version,
         tower_type=None,
         user_mods_dirs=None,
@@ -78,8 +77,6 @@ class NeonSite(TowerSite):
             transient, post_ad, or ad case, default transient
         prism: bool, opt
             if True, use PRISM precipitation, default False
-        run_length: str, opt
-            length of run, default '4Y'
         user_version: str, opt
             default 'latest'
         overwrite: bool, opt
@@ -102,7 +99,6 @@ class NeonSite(TowerSite):
             base_case_root,
             run_type,
             prism,
-            run_length,
             user_version,
             tower_type,
             user_mods_dirs,

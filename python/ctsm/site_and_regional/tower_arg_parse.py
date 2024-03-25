@@ -207,21 +207,6 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
     if "CIME_OUTPUT_ROOT" in args.output_root:
         args.output_root = None
 
-    if args.run_length == "0Y":
-        if args.run_type == "ad":
-            run_length = "100Y"
-        elif args.run_type == "postad":
-            run_length = "100Y"
-        else:
-            # The transient run length is set by cdeps atm buildnml to
-            # the last date of the available tower data
-            # this value is not used
-            run_length = "4Y"
-    else:
-        run_length = args.run_length
-
-    run_length = parse_isoduration(run_length)
-
     base_case_root = None
     if args.base_case_root:
         base_case_root = os.path.abspath(args.base_case_root)
@@ -241,7 +226,6 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
         args.experiment,
         args.prism,
         args.overwrite,
-        run_length,
         base_case_root,
         args.run_from_postad,
         args.setup_only,
