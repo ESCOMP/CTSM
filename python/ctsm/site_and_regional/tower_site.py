@@ -257,11 +257,11 @@ class TowerSite:
         user_version,
         tower_type,
         user_mods_dirs,
-        overwrite=False,
-        setup_only=False,
-        no_batch=False,
-        rerun=False,
-        experiment=False,
+        overwrite,
+        setup_only,
+        no_batch,
+        rerun,
+        experiment,
     ):
         """
         Run case.
