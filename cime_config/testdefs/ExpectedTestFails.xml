@@ -38,13 +38,6 @@
     </phase>
   </test>
 
-  <test name="SMS_D.f10_f10_mg37.I2000Clm51BgcCrop.cheyenne_nvhpc.clm-crop">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#1733</issue>
-    </phase>
-  </test>
-
   <test name="SMS_D.f10_f10_mg37.I2000Clm51BgcCrop.derecho_nvhpc.clm-crop">
     <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
@@ -130,24 +123,10 @@
     </phase>
   </test>
 
-  <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.cheyenne_intel.clm-FatesColdHydro">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>FATES#701</issue>
-    </phase>
-  </test>
-
   <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdHydro">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>FATES#701</issue>
-    </phase>
-  </test>
-
-  <test name="ERP_P72x2_Ld30.f45_f45_mg37.I2000Clm51FatesRs.cheyenne_intel.clm-mimicsFatesCold">
-    <phase name="SHAREDLIB_BUILD">
-      <status>PEND</status>
-      <issue>#1045</issue>
     </phase>
   </test>
 
@@ -163,13 +142,6 @@
       <status>PEND</status>
       <issue>FATES#983</issue>
       <comment>This job should time out on izumi, seems to be hanging on history output.</comment>
-    </phase>
-  </test>
-
-  <test name="PEM_D_Ld15.5x5_amazon.I2000Clm50FatesRs.cheyenne_gnu.clm-FatesColdSeedDisp">
-    <phase name="COMPARE_base_modpes">
-      <status>FAIL</status>
-      <issue>FATES#1089</issue>
     </phase>
   </test>
 
