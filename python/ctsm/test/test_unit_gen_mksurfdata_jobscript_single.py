@@ -35,6 +35,7 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         os.chdir(self._tempdir)
         self._account = "ACCOUNT_NUMBER"
         self._jobscript_file = "output_jobscript"
+        self._output_compare = os.path.join( self._testinputs_path, "output_jobscript" )
         self._bld_path = os.path.join(self._tempdir, "tools_bld")
         os.makedirs(self._bld_path)
         self._nlfile = os.path.join(self._tempdir, "namelist_file")
@@ -68,6 +69,18 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         os.chdir(self._previous_dir)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
+    def assertFileContentsEqual(self, expected, filepath, msg=None):
+        """Asserts that the contents of the file given by 'filepath' are equal to
+        the string given by 'expected'. 'msg' gives an optional message to be
+        printed if the assertion fails.
+        
+        Copied from test_unit_job_launcher_no_batch should go to utils! """
+
+        with open(filepath, "r") as myfile:
+            contents = myfile.read()
+
+        self.assertEqual(expected, contents, msg=msg)
+
     def test_simple_derecho_args(self):
         """test simple derecho arguments"""
         machine = "derecho"
@@ -78,6 +91,20 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         with open(self._jobscript_file, "w", encoding="utf-8") as runfile:
             attribs = write_runscript_part1(nodes, tasks, machine, self._account, runfile)
 
+        self.assertFileContentsEqual( self._jobscript_file, self._outputcompare)
+
+    def test_bad_machine(self):
+        """test bad machine name"""
+        machine = "zztop"
+        nodes = 1
+        tasks = 64
+        self.add_args(machine, nodes, tasks)
+        with self.assertRaisesRegex(
+            SystemExit,
+            "unrecognized machine",
+        ):
+            print( self._sys_argv )
+            args = get_parser()
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()

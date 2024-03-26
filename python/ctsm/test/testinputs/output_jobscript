@@ -1,0 +1,12 @@
+#!/bin/bash 
+# Edit the batch directives for your batch system 
+# Below are default batch directives for derecho 
+#PBS -N mksurfdata 
+#PBS -j oe 
+#PBS -k eod 
+#PBS -S /bin/bash 
+#PBS -l walltime=59:00 
+#PBS -A ACCOUNT_NUMBER 
+#PBS -q main 
+#PBS -l select=1:ncpus=64:mpiprocs=64 
+
