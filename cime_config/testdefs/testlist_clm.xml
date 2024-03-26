@@ -73,8 +73,8 @@
   </test>
   <test name="SMS_Ln9" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/clm50cam5LndTuningModeZDustSoilErod">
     <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -85,6 +85,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="cesm3_dev"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
