@@ -93,6 +93,14 @@ def get_parser():
     )
     return parser
 
+def check_parser_args( args ):
+    """ Checking for the argument parser values"""
+    if args.number_of_nodes < 1:
+        abort("Input argument --number_of_nodes is zero or negative and needs to be positive")
+    if args.tasks_per_node < 1:
+        abort("Input argument --tasks_per_node is zero or negative and needs to be positive")
+    if not os.path.exists(args.bld_path):
+        abort("Input Build path (" + args.bld_path + ") does NOT exist, aborting")
 
 def write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, runfile):
     """
@@ -170,14 +178,11 @@ def main():
     # --------------------------
     args = get_parser().parse_args()
     process_logging_args(args)
+    check_parser_args( args )
     namelist_file = args.namelist_file
     jobscript_file = args.jobscript_file
     number_of_nodes = args.number_of_nodes
-    if number_of_nodes < 1:
-        abort("Input argument --number_of_nodes is zero or negative and needs to be positive")
     tasks_per_node = args.tasks_per_node
-    if tasks_per_node < 1:
-        abort("Input argument --tasks_per_node is zero or negative and needs to be positive")
     machine = args.machine
     account = args.account
 
@@ -191,8 +196,6 @@ def main():
     # Obtain mpirun command from env_mach_specific.xml
     # --------------------------
     bld_path = args.bld_path
-    if not os.path.exists(bld_path):
-        abort("Input Build path (" + bld_path + ") does NOT exist, aborting")
     # Get the ems_file object with standalone_configure=True
     # and the fake_case object with mpilib=attribs['mpilib']
     # so as to use the get_mpirun function pointing to fake_case
