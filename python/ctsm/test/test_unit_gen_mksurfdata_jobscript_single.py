@@ -6,7 +6,6 @@ Unit tests for gen_mksurfdata_jobscript_single.py subroutines:
 
 import unittest
 import os
-import argparse
 import sys
 import shutil
 
@@ -18,13 +17,27 @@ from ctsm.toolchain.gen_mksurfdata_jobscript_single import get_parser
 from ctsm.toolchain.gen_mksurfdata_jobscript_single import check_parser_args
 from ctsm.toolchain.gen_mksurfdata_jobscript_single import write_runscript_part1
 
+
+def add_args(machine, nodes, tasks):
+    """add arguments to sys.argv"""
+    args_to_add = [
+        "--machine",
+        machine,
+        "--number-of-nodes",
+        str(nodes),
+        "--tasks-per-node",
+        str(tasks),
+    ]
+    for item in args_to_add:
+        sys.argv.append(item)
+
+
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
 # pylint: disable=invalid-name
 
 # pylint: disable=protected-access
-
-
+# pylint: disable=too-many-instance-attributes
 class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
     """Tests the gen_mksurfdata_jobscript_single subroutines"""
 
@@ -37,17 +50,17 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         os.chdir(self._tempdir)
         self._account = "ACCOUNT_NUMBER"
         self._jobscript_file = "output_jobscript"
-        self._output_compare = """#!/bin/bash 
-# Edit the batch directives for your batch system 
-# Below are default batch directives for derecho 
-#PBS -N mksurfdata 
-#PBS -j oe 
-#PBS -k eod 
-#PBS -S /bin/bash 
-#PBS -l walltime=59:00 
-#PBS -A ACCOUNT_NUMBER 
-#PBS -q main 
-#PBS -l select=1:ncpus=64:mpiprocs=64 
+        self._output_compare = """#!/bin/bash
+# Edit the batch directives for your batch system
+# Below are default batch directives for derecho
+#PBS -N mksurfdata
+#PBS -j oe
+#PBS -k eod
+#PBS -S /bin/bash
+#PBS -l walltime=59:00
+#PBS -A ACCOUNT_NUMBER
+#PBS -q main
+#PBS -l select=1:ncpus=64:mpiprocs=64
 
 """
         self._bld_path = os.path.join(self._tempdir, "tools_bld")
@@ -70,25 +83,12 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         os.chdir(self._previous_dir)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
-    def add_args(self, machine, nodes, tasks):
-        """ " add arguments"""
-        args_to_add = ["--machine", machine, "--number-of-nodes", str(nodes), "--tasks-per-node", str(tasks)] 
-        for item in args_to_add:
-           sys.argv.append( item )
-
-    def tearDown(self):
-        """
-        Remove temporary directory
-        """
-        os.chdir(self._previous_dir)
-        shutil.rmtree(self._tempdir, ignore_errors=True)
-
     def assertFileContentsEqual(self, expected, filepath, msg=None):
         """Asserts that the contents of the file given by 'filepath' are equal to
         the string given by 'expected'. 'msg' gives an optional message to be
         printed if the assertion fails.
-        
-        Copied from test_unit_job_launcher_no_batch should go to utils! """
+
+        Copied from test_unit_job_launcher_no_batch should go to utils!"""
 
         with open(filepath, "r") as myfile:
             contents = myfile.read()
@@ -100,22 +100,62 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         machine = "derecho"
         nodes = 1
         tasks = 64
-        self.add_args(machine, nodes, tasks)
+        add_args(machine, nodes, tasks)
         args = get_parser().parse_args()
+        check_parser_args(args)
         with open(self._jobscript_file, "w", encoding="utf-8") as runfile:
             attribs = write_runscript_part1(nodes, tasks, machine, self._account, runfile)
-            self.assertEqual( {"mpilib": "default"}, attribs, msg="attribs not as expected" )
+            self.assertEqual({"mpilib": "default"}, attribs, msg="attribs not as expected")
 
-        self.assertFileContentsEqual( self._output_compare, self._jobscript_file )
+        self.assertFileContentsEqual(self._output_compare, self._jobscript_file)
+
+    def test_zero_nodes(self):
+        """test for fail on zero nodes"""
+        machine = "derecho"
+        nodes = 0
+        tasks = 64
+        add_args(machine, nodes, tasks)
+        args = get_parser().parse_args()
+        with self.assertRaisesRegex(
+            SystemExit,
+            "Input argument --number_of_nodes is zero or negative and needs to be positive",
+        ):
+            check_parser_args(args)
+
+    def test_zero_tasks(self):
+        """test for fail on zero tasks"""
+        machine = "derecho"
+        nodes = 5
+        tasks = 0
+        add_args(machine, nodes, tasks)
+        args = get_parser().parse_args()
+        with self.assertRaisesRegex(
+            SystemExit,
+            "Input argument --tasks_per_node is zero or negative and needs to be positive",
+        ):
+            check_parser_args(args)
+
+    def test_bld_build_path(self):
+        """test for bad build path"""
+        machine = "derecho"
+        nodes = 10
+        tasks = 64
+        add_args(machine, nodes, tasks)
+        # Remove the build path directory
+        shutil.rmtree(self._bld_path, ignore_errors=True)
+        args = get_parser().parse_args()
+        with self.assertRaisesRegex(SystemExit, "Input Build path .+ does NOT exist, aborting"):
+            check_parser_args(args)
 
     def test_bad_machine(self):
         """test bad machine name"""
         machine = "zztop"
         nodes = 1
         tasks = 64
-        self.add_args(machine, nodes, tasks)
-        with self.assertRaises( SystemExit ):
-            args = get_parser().parse_args()
+        add_args(machine, nodes, tasks)
+        with self.assertRaises(SystemExit):
+            get_parser().parse_args()
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()

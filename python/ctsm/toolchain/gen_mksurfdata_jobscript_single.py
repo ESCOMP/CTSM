@@ -93,8 +93,9 @@ def get_parser():
     )
     return parser
 
-def check_parser_args( args ):
-    """ Checking for the argument parser values"""
+
+def check_parser_args(args):
+    """Checking for the argument parser values"""
     if args.number_of_nodes < 1:
         abort("Input argument --number_of_nodes is zero or negative and needs to be positive")
     if args.tasks_per_node < 1:
@@ -102,43 +103,44 @@ def check_parser_args( args ):
     if not os.path.exists(args.bld_path):
         abort("Input Build path (" + args.bld_path + ") does NOT exist, aborting")
 
+
 def write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, runfile):
     """
     Write run script (part 1)
     """
-    runfile.write("#!/bin/bash \n")
-    runfile.write("# Edit the batch directives for your batch system \n")
-    runfile.write(f"# Below are default batch directives for {machine} \n")
-    runfile.write("#PBS -N mksurfdata \n")
-    runfile.write("#PBS -j oe \n")
-    runfile.write("#PBS -k eod \n")
-    runfile.write("#PBS -S /bin/bash \n")
+    runfile.write("#!/bin/bash\n")
+    runfile.write("# Edit the batch directives for your batch system\n")
+    runfile.write(f"# Below are default batch directives for {machine}\n")
+    runfile.write("#PBS -N mksurfdata\n")
+    runfile.write("#PBS -j oe\n")
+    runfile.write("#PBS -k eod\n")
+    runfile.write("#PBS -S /bin/bash\n")
     if machine == "derecho":
         attribs = {"mpilib": "default"}
-        runfile.write("#PBS -l walltime=59:00 \n")
-        runfile.write(f"#PBS -A {account} \n")
-        runfile.write("#PBS -q main \n")
+        runfile.write("#PBS -l walltime=59:00\n")
+        runfile.write(f"#PBS -A {account}\n")
+        runfile.write("#PBS -q main\n")
         runfile.write(
             "#PBS -l select="
-            + f"{number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node} \n"
+            + f"{number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node}\n"
         )
     elif machine == "casper":
         attribs = {"mpilib": "default"}
-        runfile.write("#PBS -l walltime=1:00:00 \n")
-        runfile.write(f"#PBS -A {account} \n")
-        runfile.write("#PBS -q casper \n")
+        runfile.write("#PBS -l walltime=1:00:00\n")
+        runfile.write(f"#PBS -A {account}\n")
+        runfile.write("#PBS -q casper\n")
         runfile.write(
             f"#PBS -l select={number_of_nodes}:ncpus={tasks_per_node}:"
-            f"mpiprocs={tasks_per_node}:mem=80GB \n"
+            f"mpiprocs={tasks_per_node}:mem=80GB\n"
         )
     elif machine == "izumi":
         attribs = {"mpilib": "mvapich2"}
-        runfile.write("#PBS -l walltime=2:00:00 \n")
-        runfile.write("#PBS -q medium \n")
-        runfile.write(f"#PBS -l nodes={number_of_nodes}:ppn={tasks_per_node},mem=555GB -r n \n")
+        runfile.write("#PBS -l walltime=2:00:00\n")
+        runfile.write("#PBS -q medium\n")
+        runfile.write(f"#PBS -l nodes={number_of_nodes}:ppn={tasks_per_node},mem=555GB -r n\n")
         tool_path = os.path.dirname(os.path.abspath(__file__))
         runfile.write("\n")
-        runfile.write(f"cd {tool_path} \n")
+        runfile.write(f"cd {tool_path}\n")
 
     runfile.write("\n")
     return attribs
@@ -178,7 +180,7 @@ def main():
     # --------------------------
     args = get_parser().parse_args()
     process_logging_args(args)
-    check_parser_args( args )
+    check_parser_args(args)
     namelist_file = args.namelist_file
     jobscript_file = args.jobscript_file
     number_of_nodes = args.number_of_nodes
