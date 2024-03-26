@@ -737,7 +737,7 @@ def _check_py_env(test_attributes):
     # pylint: disable=import-error disable
 
     # Check requirements for FSURDATMODIFYCTSM, if needed
-    if any("FSURDATMODIFYCTSM" in t for t in test_attributes):
+    if any("FSURDATMODIFYCTSM" in t or "RUNNEON" in t for t in test_attributes):
         try:
             import ctsm.modify_input_files.modify_fsurdat
         except ModuleNotFoundError as err:
