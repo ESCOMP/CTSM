@@ -41,7 +41,7 @@ class TestSysRunNeon(unittest.TestCase):
 
     def test_one_site(self):
         """
-        This test specifies a site to run
+        This test specifies a site to run a default case with experiment label 'TEST'
         Run the tool, check that file structure is set up correctly
         """
 
@@ -52,12 +52,34 @@ class TestSysRunNeon(unittest.TestCase):
             "BART",
             "--setup-only",
             "--output-root",
+            "--experiment TEST",
             self._tempdir,
         ]
         main("")
 
         # assert that BART directories were created during setup
         self.assertTrue("BART" in glob.glob(self._tempdir + "/BART*")[0])
+
+    def test_ad_site(self):
+        """
+        This test specifies a site to run an 'ad' case for
+        Run the tool, check that file structure is set up correctly
+        """
+
+        # run the run_neon tool
+        sys.argv = [
+            os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_neon"),
+            "--neon-sites",
+            "ABBY",
+            "--setup-only",
+            "--output-root",
+            "--run-type ad",
+            self._tempdir,
+        ]
+        main("")
+
+        # assert that ABBY directories were created during setup
+        self.assertTrue("ABBY" in glob.glob(self._tempdir + "/ABBY*")[0])
 
         # TODO: Would also be useful to test the following items:
         # It might be good to ensure the log files are working as expected?
