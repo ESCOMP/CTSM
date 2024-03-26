@@ -32,6 +32,11 @@ def add_args(machine, nodes, tasks):
         sys.argv.append(item)
 
 
+def create_empty_file(filename):
+    """create an empty file"""
+    os.system("touch " + filename)
+
+
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
 # pylint: disable=invalid-name
@@ -65,7 +70,16 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
 """
         self._bld_path = os.path.join(self._tempdir, "tools_bld")
         os.makedirs(self._bld_path)
+        self.assertTrue(os.path.isdir(self._bld_path))
         self._nlfile = os.path.join(self._tempdir, "namelist_file")
+        create_empty_file(self._nlfile)
+        self.assertTrue(os.path.exists(self._nlfile))
+        self._mksurf_exe = os.path.join(self._bld_path, "mksurfdata")
+        create_empty_file(self._mksurf_exe)
+        self.assertTrue(os.path.exists(self._mksurf_exe))
+        self._env_mach = os.path.join(self._bld_path, ".env_mach_specific.sh")
+        create_empty_file(self._env_mach)
+        self.assertTrue(os.path.exists(self._env_mach))
         sys.argv = [
             "gen_mksurfdata_jobscript_single",
             "--bld-path",
@@ -145,6 +159,28 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         shutil.rmtree(self._bld_path, ignore_errors=True)
         args = get_parser().parse_args()
         with self.assertRaisesRegex(SystemExit, "Input Build path .+ does NOT exist, aborting"):
+            check_parser_args(args)
+
+    def test_mksurfdata_exist(self):
+        """test fails if mksurfdata does not exist"""
+        machine = "derecho"
+        nodes = 10
+        tasks = 64
+        add_args(machine, nodes, tasks)
+        args = get_parser().parse_args()
+        os.remove(self._mksurf_exe)
+        with self.assertRaisesRegex(SystemExit, "mksurfdata_esmf executable "):
+            check_parser_args(args)
+
+    def test_env_mach_specific_exist(self):
+        """test fails if the .env_mach_specific.sh file does not exist"""
+        machine = "derecho"
+        nodes = 10
+        tasks = 64
+        add_args(machine, nodes, tasks)
+        args = get_parser().parse_args()
+        os.remove(self._env_mach)
+        with self.assertRaisesRegex(SystemExit, "Environment machine specific file"):
             check_parser_args(args)
 
     def test_bad_machine(self):

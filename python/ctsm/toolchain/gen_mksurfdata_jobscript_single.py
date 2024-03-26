@@ -103,6 +103,21 @@ def check_parser_args(args):
     if not os.path.exists(args.bld_path):
         abort("Input Build path (" + args.bld_path + ") does NOT exist, aborting")
 
+    mksurfdata_path = os.path.join(args.bld_path, "mksurfdata")
+    if not os.path.exists(mksurfdata_path):
+        abort(
+            "mksurfdata_esmf executable ("
+            + mksurfdata_path
+            + ") does NOT exist in the bld-path, aborting"
+        )
+    env_mach_path = os.path.join(args.bld_path, ".env_mach_specific.sh")
+    if not os.path.exists(env_mach_path):
+        abort(
+            "Environment machine specific file ("
+            + env_mach_path
+            + ") does NOT exist in the bld-path, aborting"
+        )
+
 
 def write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, runfile):
     """
