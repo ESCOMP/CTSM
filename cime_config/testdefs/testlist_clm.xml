@@ -2835,19 +2835,7 @@
 
     </machines>
   </test>
-  <test name="ERP_P36x2_D_Ld5" grid="f10_f10_mg37" compset="I2000Ctsm50NwpBgcCropGswp" testmods="clm/default">
-    <machines>
-
-      <machine name="cheyenne" compiler="intel" category="aux_clm">
-        <options>
-          <option name="wallclock">00:30:00</option>
-          <option name="comment">A debug ERP test of the NWP configuration with active BGC and CROP.</option>
-        </options>
-      </machine>
-
-    </machines>
-  </test>
-  <test name="ERP_P64x2_D_Ld5" grid="f10_f10_mg37" compset="I2000Ctsm50NwpBgcCropGswp" testmods="clm/default">
+  <test name="ERP_P24x2_D_Ld5" grid="f10_f10_mg37" compset="I2000Ctsm50NwpBgcCropGswp" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
