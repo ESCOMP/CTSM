@@ -137,8 +137,7 @@ def write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, run
         runfile.write("#PBS -q main\n")
         ncpus = 128
         runfile.write(
-            "#PBS -l select="
-            + f"{number_of_nodes}:ncpus={ncpus}:mpiprocs={tasks_per_node}\n"
+            "#PBS -l select=" + f"{number_of_nodes}:ncpus={ncpus}:mpiprocs={tasks_per_node}\n"
         )
     elif machine == "casper":
         attribs = {"mpilib": "default"}
@@ -164,11 +163,12 @@ def write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, run
 
     # Make sure tasks_per_node doesn't exceed the number of cpus per node
     if tasks_per_node > ncpus:
-       abort( "Number of tasks per node exceeds the number of processors per node on this machine" )
+        abort("Number of tasks per node exceeds the number of processors per node on this machine")
     return attribs
 
-def get_mpirun( args, attribs ):
-    """ Get the mpirun command for this machine """
+
+def get_mpirun(args, attribs):
+    """Get the mpirun command for this machine"""
     bld_path = args.bld_path
     # Get the ems_file object with standalone_configure=True
     # and the fake_case object with mpilib=attribs['mpilib']
@@ -222,6 +222,7 @@ def write_runscript_part2(namelist_file, runfile, executable, mksurfdata_path, e
     runfile.write(f"{check} \n")
     runfile.write("echo Successfully ran resolution\n")
 
+
 def main():
     """
     See docstring at the top.
@@ -248,7 +249,7 @@ def main():
     # --------------------------
     # Obtain mpirun command from env_mach_specific.xml
     # --------------------------
-    (executable, mksurfdata_path, env_mach_path) = get_mpirun( args, attribs )
+    (executable, mksurfdata_path, env_mach_path) = get_mpirun(args, attribs)
 
     # --------------------------
     # Write run script (part 2)

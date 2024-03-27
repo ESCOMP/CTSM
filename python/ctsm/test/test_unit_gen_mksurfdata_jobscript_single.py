@@ -134,7 +134,7 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         with open(self._jobscript_file, "w", encoding="utf-8") as runfile:
             with self.assertRaisesRegex(
                 SystemExit,
-                "Number of tasks per node exceeds the number of processors per node on this machine"
+                "Number of tasks per node exceeds the number of processors per node on this machine",
             ):
                 write_runscript_part1(nodes, tasks, machine, self._account, runfile)
 
