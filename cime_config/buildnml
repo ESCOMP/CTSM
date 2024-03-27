@@ -51,24 +51,24 @@ def buildnml(case, caseroot, compname):
     clm_accelerated_spinup = case.get_value("CLM_ACCELERATED_SPINUP")
     comp_interface = case.get_value("COMP_INTERFACE")
     lilac_mode = case.get_value("LILAC_MODE")
-    if ( comp_interface == "nuopc" ):
-       yr_start = case.get_value("DATM_YR_START")
-       yr_end   = case.get_value("DATM_YR_END")
+    if comp_interface == "nuopc":
+        yr_start = case.get_value("DATM_YR_START")
+        yr_end = case.get_value("DATM_YR_END")
     else:
-       yr_start = case.get_value("DATM_CLMNCEP_YR_START")
-       yr_end   = case.get_value("DATM_CLMNCEP_YR_END")
+        yr_start = case.get_value("DATM_CLMNCEP_YR_START")
+        yr_end = case.get_value("DATM_CLMNCEP_YR_END")
 
-    if ( yr_start != None and yr_start < 0 ):
-       yr_start = case.get_value("DATM_CPLHIST_YR_START")
-       yr_end   = case.get_value("DATM_CPLHIST_YR_END")
+    if yr_start != None and yr_start < 0:
+        yr_start = case.get_value("DATM_CPLHIST_YR_START")
+        yr_end = case.get_value("DATM_CPLHIST_YR_END")
 
     # For LILAC
-    if ( yr_start == None or lilac_mode == "on" ):
-       yr_start = "0"
-       yr_end   = "0"
+    if yr_start == None or lilac_mode == "on":
+        yr_start = "0"
+        yr_end = "0"
 
     yr_start = int(yr_start)
-    yr_end   = int(yr_end)
+    yr_end = int(yr_end)
 
     comp_atm = case.get_value("COMP_ATM")
     lnd_grid = case.get_value("LND_GRID")
@@ -117,7 +117,9 @@ def buildnml(case, caseroot, compname):
     clm_phys = case.get_value("CLM_PHYSICS_VERSION")
 
     config_cache_text = _config_cache_template.format(clm_phys=clm_phys)
-    config_cache_path = os.path.join(caseroot, "Buildconf", compname + "conf", "config_cache.xml")
+    config_cache_path = os.path.join(
+        caseroot, "Buildconf", compname + "conf", "config_cache.xml"
+    )
     with open(config_cache_path, "w") as config_cache_file:
         config_cache_file.write(config_cache_text)
 
@@ -206,22 +208,28 @@ def buildnml(case, caseroot, compname):
     else:
         ignore = "-ignore_ic_date"
 
-    tuning = "-lnd_tuning_mode %s "%lnd_tuning_mode
-    
+    tuning = "-lnd_tuning_mode %s " % lnd_tuning_mode
+
     #
     # Spinup settings and specifics for SASU spinup
     #
-    spinup = "-clm_accelerated_spinup %s "%clm_accelerated_spinup
-    if ( clm_accelerated_spinup == "sasu" ):
-       if ( (yr_start != None) and (yr_end != None) ):
-         nyr = yr_end - yr_start + 1
-         if ( (yr_end <= 0) or (yr_start <= 0) ): 
-            logger.error( "ERROR: Year start and end are both negative and should not be" )
-         clm_namelist_opts = "nyr_forcing={} {}".format(nyr, clm_namelist_opts)
-       else:
-         logger.warning( "WARNING: It does not make sense to do a SASU spinup with a prognostic atmosphere model" )
-         logger.warning( "         as it expects regular atmosphere forcing that is cycled over" )
-    
+    spinup = "-clm_accelerated_spinup %s " % clm_accelerated_spinup
+    if clm_accelerated_spinup == "sasu":
+        if (yr_start != None) and (yr_end != None):
+            nyr = yr_end - yr_start + 1
+            if (yr_end <= 0) or (yr_start <= 0):
+                logger.error(
+                    "ERROR: Year start and end are both negative and should not be"
+                )
+            clm_namelist_opts = "nyr_forcing={} {}".format(nyr, clm_namelist_opts)
+        else:
+            logger.warning(
+                "WARNING: It does not make sense to do a SASU spinup with a prognostic atmosphere model"
+            )
+            logger.warning(
+                "         as it expects regular atmosphere forcing that is cycled over"
+            )
+
     infile = os.path.join(ctsmconf, "namelist")
 
     inputdata_file = os.path.join(caseroot, "Buildconf", "ctsm.input_data_list")
@@ -234,7 +242,9 @@ def buildnml(case, caseroot, compname):
         lndfrac_file = os.path.join(lnd_domain_path, lnd_domain_file)
         lndfrac_setting = "-lnd_frac " + lndfrac_file
 
-    config_cache_file = os.path.join(caseroot, "Buildconf", compname + "conf", "config_cache.xml")
+    config_cache_file = os.path.join(
+        caseroot, "Buildconf", compname + "conf", "config_cache.xml"
+    )
 
     # -----------------------------------------------------
     # Clear out old data
@@ -297,7 +307,9 @@ def buildnml(case, caseroot, compname):
                         break
 
             if not os.path.exists(os.path.join(rundir, clm_startfile)):
-                logger.warning("WARNING: Could NOT find a start file to use using" + clm_startfile)
+                logger.warning(
+                    "WARNING: Could NOT find a start file to use using" + clm_startfile
+                )
             clm_icfile = "%s = '%s'" % (startfile_type, clm_startfile)
         else:
             clm_icfile = ""
@@ -308,7 +320,9 @@ def buildnml(case, caseroot, compname):
         user_nl_file = os.path.join(caseroot, "user_nl_clm" + inst_string)
         namelist_infile = os.path.join(ctsmconf, "namelist")
 
-        create_namelist_infile(case, user_nl_file, namelist_infile, "\n".join(infile_lines))
+        create_namelist_infile(
+            case, user_nl_file, namelist_infile, "\n".join(infile_lines)
+        )
 
         cmd = os.path.join(lnd_root, "bld", "build-namelist")
 
