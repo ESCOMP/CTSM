@@ -23,6 +23,7 @@ module CNVegMatrixMod
   use clm_time_manager               , only : get_step_size,is_end_curr_year,is_first_step_of_this_run_segment,&
                                               is_beg_curr_year,update_DA_nstep
   use decompMod                      , only : bounds_type 
+  use clm_varcon                     , only : spval
   use clm_varpar                     , only : nlevdecomp, nvegcpool, nvegnpool
   use clm_varpar                     , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
                                               ilivestem,ilivestem_st,ilivestem_xf,&
@@ -2711,27 +2712,27 @@ td: associate(                          &
                   matrix_ntransfer_acc(iretransn,iretransn)         = -matrix_nturnover_retransn_acc(p)               
 
                   do i=1,nvegcpool
-                    if(matrix_ctransfer_acc(i,i) .eq. 0)then
-                       matrix_ctransfer_acc(i,i) = 1.e+36
+                    if(matrix_ctransfer_acc(i,i) == 0)then
+                       matrix_ctransfer_acc(i,i) = spval
                     end if
                   end do
                   if(use_c13)then
                      do i=1,nvegcpool
-                       if(matrix_c13transfer_acc(i,i) .eq. 0)then
-                          matrix_c13transfer_acc(i,i) = 1.e+36
+                       if(matrix_c13transfer_acc(i,i) == 0)then
+                          matrix_c13transfer_acc(i,i) = spval
                        end if
                      end do
                   end if
                   if(use_c14)then
                      do i=1,nvegcpool
-                       if(matrix_c14transfer_acc(i,i) .eq. 0)then
-                          matrix_c14transfer_acc(i,i) = 1.e+36
+                       if(matrix_c14transfer_acc(i,i) == 0)then
+                          matrix_c14transfer_acc(i,i) = spval
                        end if
                      end do
                   end if
                   do i=1,nvegnpool
-                    if(matrix_ntransfer_acc(i,i) .eq. 0)then
-                       matrix_ntransfer_acc(i,i) = 1.e+36
+                    if(matrix_ntransfer_acc(i,i) == 0)then
+                       matrix_ntransfer_acc(i,i) = spval
                     end if
                   end do
 
