@@ -160,6 +160,36 @@ def write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, run
     runfile.write("\n")
     return attribs
 
+def get_mpirun( args, attribs ):
+    """ Get the mpirun command for this machine """
+    bld_path = args.bld_path
+    # Get the ems_file object with standalone_configure=True
+    # and the fake_case object with mpilib=attribs['mpilib']
+    # so as to use the get_mpirun function pointing to fake_case
+    ems_file = EnvMachSpecific(bld_path, standalone_configure=True)
+    fake_case = FakeCase(compiler=None, mpilib=attribs["mpilib"], debug=False, comp_interface=None)
+    total_tasks = int(args.tasks_per_node) * int(args.number_of_nodes)
+    cmd = ems_file.get_mpirun(
+        fake_case,
+        attribs,
+        job="name",
+        exe_only=True,
+        overrides={
+            "total_tasks": total_tasks,
+        },
+    )
+    # cmd is a tuple:
+    # cmd[0] contains the mpirun command (eg mpirun, mpiexe, etc) as string
+    # cmd[1] contains a list of strings that we append as options to cmd[0]
+    # The replace function removes unnecessary characters that appear in
+    # some such options
+    executable = f'{cmd[0]} {" ".join(cmd[1])}'.replace("ENV{", "").replace("}", "")
+
+    mksurfdata_path = os.path.join(bld_path, "mksurfdata")
+    env_mach_path = os.path.join(bld_path, ".env_mach_specific.sh")
+
+    return (executable, mksurfdata_path, env_mach_path)
+
 
 def write_runscript_part2(namelist_file, runfile, executable, mksurfdata_path, env_mach_path):
     """
@@ -184,7 +214,6 @@ def write_runscript_part2(namelist_file, runfile, executable, mksurfdata_path, e
     check = f'if [ $? != 0 ]; then echo "Error running for namelist  {namelist_file}"; exit -4; fi'
     runfile.write(f"{check} \n")
     runfile.write("echo Successfully ran resolution\n")
-
 
 def main():
     """
@@ -212,43 +241,7 @@ def main():
     # --------------------------
     # Obtain mpirun command from env_mach_specific.xml
     # --------------------------
-    bld_path = args.bld_path
-    # Get the ems_file object with standalone_configure=True
-    # and the fake_case object with mpilib=attribs['mpilib']
-    # so as to use the get_mpirun function pointing to fake_case
-    ems_file = EnvMachSpecific(bld_path, standalone_configure=True)
-    fake_case = FakeCase(compiler=None, mpilib=attribs["mpilib"], debug=False, comp_interface=None)
-    total_tasks = int(tasks_per_node) * int(number_of_nodes)
-    cmd = ems_file.get_mpirun(
-        fake_case,
-        attribs,
-        job="name",
-        exe_only=True,
-        overrides={
-            "total_tasks": total_tasks,
-        },
-    )
-    # cmd is a tuple:
-    # cmd[0] contains the mpirun command (eg mpirun, mpiexe, etc) as string
-    # cmd[1] contains a list of strings that we append as options to cmd[0]
-    # The replace function removes unnecessary characters that appear in
-    # some such options
-    executable = f'{cmd[0]} {" ".join(cmd[1])}'.replace("ENV{", "").replace("}", "")
-
-    mksurfdata_path = os.path.join(bld_path, "mksurfdata")
-    if not os.path.exists(mksurfdata_path):
-        abort(
-            "mksurfdata_esmf executable ("
-            + mksurfdata_path
-            + ") does NOT exist in the bld-path, aborting"
-        )
-    env_mach_path = os.path.join(bld_path, ".env_mach_specific.sh")
-    if not os.path.exists(env_mach_path):
-        abort(
-            "Environment machine specific file ("
-            + env_mach_path
-            + ") does NOT exist in the bld-path, aborting"
-        )
+    (executable, mksurfdata_path, env_mach_path) = get_mpirun( args, attribs )
 
     # --------------------------
     # Write run script (part 2)
