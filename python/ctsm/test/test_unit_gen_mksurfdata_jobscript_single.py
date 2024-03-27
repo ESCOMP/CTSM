@@ -119,7 +119,7 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         check_parser_args(args)
         with open(self._jobscript_file, "w", encoding="utf-8") as runfile:
             attribs = write_runscript_part1(nodes, tasks, machine, self._account, runfile)
-            self.assertEqual({"mpilib": "default", "ncpus": 128}, attribs, msg="attribs not as expected")
+            self.assertEqual({"mpilib": "default"}, attribs, msg="attribs not as expected")
 
         self.assertFileContentsEqual(self._output_compare, self._jobscript_file)
 
