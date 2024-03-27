@@ -168,7 +168,10 @@ def write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, run
 
 
 def get_mpirun(args, attribs):
-    """Get the mpirun command for this machine"""
+    """
+    Get the mpirun command for this machine
+    This requires a working env_mach_specific.xml file in the build directory
+    """
     bld_path = args.bld_path
     # Get the ems_file object with standalone_configure=True
     # and the fake_case object with mpilib=attribs['mpilib']
@@ -241,20 +244,20 @@ def main():
     account = args.account
 
     # --------------------------
-    # Write run script (part 1)
+    # Write to file
     # --------------------------
     with open(jobscript_file, "w", encoding="utf-8") as runfile:
+        # --------------------------
+        # Write batch header (part 1)
+        # --------------------------
         attribs = write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, runfile)
-
-    # --------------------------
-    # Obtain mpirun command from env_mach_specific.xml
-    # --------------------------
-    (executable, mksurfdata_path, env_mach_path) = get_mpirun(args, attribs)
-
-    # --------------------------
-    # Write run script (part 2)
-    # --------------------------
-    with open(jobscript_file, "a", encoding="utf-8") as runfile:
+        # --------------------------
+        # Obtain mpirun command from env_mach_specific.xml
+        # --------------------------
+        (executable, mksurfdata_path, env_mach_path) = get_mpirun(args, attribs)
+        # --------------------------
+        # Write commands to run
+        # --------------------------
         write_runscript_part2(namelist_file, runfile, executable, mksurfdata_path, env_mach_path)
 
     print(f"echo Successfully created jobscript {jobscript_file}\n")
