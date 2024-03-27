@@ -92,9 +92,12 @@ contains
             else
                ! Match above for matrix terms
                ! patch-level wood to column-level CWD (uncombusted wood)
-
+               cf_soil%matrix_Cinput%V(c,j+(i_cwd-1)*nlevdecomp) = cf_soil%matrix_Cinput%V(c,j+(i_cwd-1)*nlevdecomp) + &
+                 cf_veg%fire_mortality_c_to_cwdc_col(c,j) * dt
                ! patch-level wood to column-level litter (uncombusted wood)
                do i = i_litr_min, i_litr_max
+                  cf_soil%matrix_Cinput%V(c,j+(i-1)*nlevdecomp) = cf_soil%matrix_Cinput%V(c,j+(i-1)*nlevdecomp) + &
+                    cf_veg%m_c_to_litr_fire_col(c,j,i)* dt
                end do
             end if
          end do

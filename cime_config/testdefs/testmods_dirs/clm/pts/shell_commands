@@ -22,5 +22,3 @@
 ./xmlchange NTASKS_ROF=1
 ./xmlchange NTASKS_WAV=1
 ./xmlchange NTASKS_ESP=1
-./xmlchange MOSART_MODE=NULL
-./xmlchange RTM_MODE=NULL

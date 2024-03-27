@@ -182,6 +182,8 @@ contains
             else
                ! Do the above to the matrix solution
                do i = i_litr_min, i_litr_max
+                  nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) = &
+                       nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) + nf_veg%phenology_n_to_litr_n_col(c,j,i) *dt
                end do
             end if
          end do
@@ -286,6 +288,14 @@ contains
                   (nf_veg%leafn_to_biofueln_patch(p) + nf_veg%leafn_to_removedresiduen_patch(p))*dt
                ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_retransn_patch(p)*dt
                ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livestemn_to_retransn_patch(p)*dt
+               do k = repr_grain_min, repr_grain_max
+                  ns_veg%reproductiven_patch(p,k)   = ns_veg%reproductiven_patch(p,k) &
+                       - (nf_veg%repr_grainn_to_food_patch(p,k) + nf_veg%repr_grainn_to_seed_patch(p,k))*dt
+               end do
+               do k = repr_structure_min, repr_structure_max
+                  ns_veg%reproductiven_patch(p,k) = ns_veg%reproductiven_patch(p,k) &
+                       - (nf_veg%repr_structuren_to_cropprod_patch(p,k) + nf_veg%repr_structuren_to_litter_patch(p,k))*dt
+               end do
             !
             ! For the matrix solution the actual state update comes after the matrix
             ! multiply in VegMatrix, but the matrix needs to be setup with
@@ -298,14 +308,8 @@ contains
             ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
                     - nf_veg%crop_seedn_to_leaf_patch(p) * dt
             do k = repr_grain_min, repr_grain_max
-               ns_veg%reproductiven_patch(p,k)   = ns_veg%reproductiven_patch(p,k) &
-                    - (nf_veg%repr_grainn_to_food_patch(p,k) + nf_veg%repr_grainn_to_seed_patch(p,k))*dt
                ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
                     + nf_veg%repr_grainn_to_seed_patch(p,k) * dt
-            end do
-            do k = repr_structure_min, repr_structure_max
-               ns_veg%reproductiven_patch(p,k) = ns_veg%reproductiven_patch(p,k) &
-                    - (nf_veg%repr_structuren_to_cropprod_patch(p,k) + nf_veg%repr_structuren_to_litter_patch(p,k))*dt
             end do
          end if
 
