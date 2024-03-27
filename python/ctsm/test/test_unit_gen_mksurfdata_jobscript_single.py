@@ -162,7 +162,7 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
             self.assertEqual(attribs, expected_attribs)
             (executable, mksurfdata_path, env_mach_path) = get_mpirun(args, attribs)
             expected_exe = "mpibind "
-            self.assertEquals(executable, expected_exe)
+            self.assertEqual(executable, expected_exe)
             self.assertEqual(mksurfdata_path, self._mksurf_exe)
             self.assertEqual(env_mach_path, self._env_mach)
 
@@ -177,7 +177,8 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         with open(self._jobscript_file, "w", encoding="utf-8") as runfile:
             with self.assertRaisesRegex(
                 SystemExit,
-                "Number of tasks per node exceeds the number of processors per node on this machine",
+                "Number of tasks per node exceeds the number of processors per node"
+                + " on this machine",
             ):
                 write_runscript_part1(nodes, tasks, machine, self._account, runfile)
 
