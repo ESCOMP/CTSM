@@ -131,16 +131,17 @@ def write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, run
     runfile.write("#PBS -k eod\n")
     runfile.write("#PBS -S /bin/bash\n")
     if machine == "derecho":
-        attribs = {"mpilib": "default"}
+        attribs = {"mpilib": "default", "ncpus":128}
         runfile.write("#PBS -l walltime=59:00\n")
         runfile.write(f"#PBS -A {account}\n")
         runfile.write("#PBS -q main\n")
+        ncpus = attribs["ncpus"]
         runfile.write(
             "#PBS -l select="
-            + f"{number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node}\n"
+            + f"{number_of_nodes}:ncpus={ncpus}:mpiprocs={tasks_per_node}\n"
         )
     elif machine == "casper":
-        attribs = {"mpilib": "default"}
+        attribs = {"mpilib": "default", "ncpus":36}
         runfile.write("#PBS -l walltime=1:00:00\n")
         runfile.write(f"#PBS -A {account}\n")
         runfile.write("#PBS -q casper\n")
@@ -149,7 +150,7 @@ def write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, run
             f"mpiprocs={tasks_per_node}:mem=80GB\n"
         )
     elif machine == "izumi":
-        attribs = {"mpilib": "mvapich2"}
+        attribs = {"mpilib": "mvapich2", "ncpus":48}
         runfile.write("#PBS -l walltime=2:00:00\n")
         runfile.write("#PBS -q medium\n")
         runfile.write(f"#PBS -l nodes={number_of_nodes}:ppn={tasks_per_node},mem=555GB -r n\n")
@@ -158,6 +159,10 @@ def write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, run
         runfile.write(f"cd {tool_path}\n")
 
     runfile.write("\n")
+
+    # Make sure tasks_per_node doesn't exceed the number of cpus per node
+    #if tasks_per_node > attribs["ncpus"]:
+       #abort( "Number of tasks per node exceeds the number of processors per node on this machine" )
     return attribs
 
 def get_mpirun( args, attribs ):

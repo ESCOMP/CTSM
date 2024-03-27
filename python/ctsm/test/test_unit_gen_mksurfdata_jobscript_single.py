@@ -65,7 +65,7 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
 #PBS -l walltime=59:00
 #PBS -A ACCOUNT_NUMBER
 #PBS -q main
-#PBS -l select=1:ncpus=64:mpiprocs=64
+#PBS -l select=1:ncpus=128:mpiprocs=64
 
 """
         self._bld_path = os.path.join(self._tempdir, "tools_bld")
@@ -119,22 +119,24 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         check_parser_args(args)
         with open(self._jobscript_file, "w", encoding="utf-8") as runfile:
             attribs = write_runscript_part1(nodes, tasks, machine, self._account, runfile)
-            self.assertEqual({"mpilib": "default"}, attribs, msg="attribs not as expected")
+            self.assertEqual({"mpilib": "default", "ncpus": 128}, attribs, msg="attribs not as expected")
 
         self.assertFileContentsEqual(self._output_compare, self._jobscript_file)
 
-    def test_zero_nodes(self):
-        """test for fail on zero nodes"""
+    def test_too_many_tasks(self):
+        """test trying to use too many tasks"""
         machine = "derecho"
-        nodes = 0
-        tasks = 64
+        nodes = 1
+        tasks = 129
         add_args(machine, nodes, tasks)
         args = get_parser().parse_args()
-        with self.assertRaisesRegex(
-            SystemExit,
-            "Input argument --number_of_nodes is zero or negative and needs to be positive",
-        ):
-            check_parser_args(args)
+        check_parser_args(args)
+        with open(self._jobscript_file, "w", encoding="utf-8") as runfile:
+            with self.assertRaisesRegex(
+                SystemExit,
+                "Number of tasks per node exceeds the number of processors per node on this machine"
+            ):
+                write_runscript_part1(nodes, tasks, machine, self._account, runfile)
 
     def test_zero_tasks(self):
         """test for fail on zero tasks"""
