@@ -34,7 +34,7 @@ module CNSoilMatrixMod
   use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type  
   use CNSharedParamsMod                  , only : CNParamsShareInst
   use SoilStateType                      , only : soilstate_type  
-  use clm_varctl                         , only : isspinup, is_outmatrix, nyr_forcing, nyr_SASU, iloop_avg
+  use clm_varctl                         , only : spinup_matrixcn, hist_wrt_matrixcn_diag, nyr_forcing, nyr_SASU, iloop_avg
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
   use clm_varctl                         , only : use_c13, use_c14, iulog
@@ -67,14 +67,14 @@ contains
     if ( use_soil_matrixcn ) then
        write(iulog,*) 'CN Soil matrix solution is on'
        write(iulog,*) '*****************************'
-       if ( isspinup ) then
+       if ( spinup_matrixcn ) then
           write(iulog,*) '   Matrix spinup is on'
           write(iulog,*) '   *******************'
           write(iulog,*) '   nyr_forcing = ', nyr_forcing
           write(iulog,*) '   nyr_SASU    = ', nyr_SASU
           write(iulog,*) '   iloop_avg   = ', iloop_avg
        end if
-       if ( is_outmatrix )then
+       if ( hist_wrt_matrixcn_diag )then
           write(iulog,*) '   Extra matrix solution tracability output is turned on'
        else
           write(iulog,*) '   no extra matrix solution tracability output'
@@ -343,7 +343,7 @@ contains
          if(mod(iyr-1,nyr_forcing) .eq. 0)then
             iloop = iloop + 1
          end if
-         if(.not. isspinup .or. isspinup .and. mod(iyr-1,nyr_SASU) .eq. 0)then
+         if(.not. spinup_matrixcn .or. spinup_matrixcn .and. mod(iyr-1,nyr_SASU) .eq. 0)then
             do i = 1,ndecomp_pools
                do j = 1, nlevdecomp
                   do fc = 1,num_soilc
@@ -550,7 +550,7 @@ contains
 
       call t_stopf('CN Soil matrix-assign back')
 
-      if(use_soil_matrixcn .and. (is_outmatrix .or. isspinup))then
+      if(use_soil_matrixcn .and. (hist_wrt_matrixcn_diag .or. spinup_matrixcn))then
             
          ! Accumulate C transfers during a whole calendar year to calculate the C and N capacity
          do j=1,ndecomp_pools*nlevdecomp
@@ -665,7 +665,7 @@ contains
          end if
 
          call t_startf('CN Soil matrix-calc. C capacity')
-         if((.not. isspinup .and. is_end_curr_year()) .or. (isspinup .and. is_end_curr_year() .and. mod(iyr,nyr_SASU) .eq. 0))then
+         if((.not. spinup_matrixcn .and. is_end_curr_year()) .or. (spinup_matrixcn .and. is_end_curr_year() .and. mod(iyr,nyr_SASU) .eq. 0))then
             ! Copy C transfers from sparse matrix to 2D temporary variables tran_acc and tran_nacc
             ! Calculate the C and N transfer rate by dividing CN transfer by base value saved at begin of each year.
             do fc = 1,num_soilc
@@ -816,7 +816,7 @@ contains
                do j = 1,nlevdecomp
                   do fc = 1,num_soilc
                      c = filter_soilc(fc)
-                     if(isspinup .and. .not. is_first_step_of_this_run_segment())then
+                     if(spinup_matrixcn .and. .not. is_first_step_of_this_run_segment())then
                         cs_soil%decomp_cpools_vr_col(c,j,i) =  soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1)
                         if(use_c13)then
                            cs13_soil%decomp_cpools_vr_col(c,j,i) =  soilmatrixc13_cap(c,j+(i-1)*nlevdecomp,1)
@@ -871,7 +871,7 @@ contains
                end do
             end do
          
-            if(isspinup)call update_DA_nstep()
+            if(spinup_matrixcn)call update_DA_nstep()
             if(iloop .eq. iloop_avg .and. iyr .eq. nyr_forcing)iloop = 0
             if(iyr .eq. nyr_forcing)iyr = 0
 

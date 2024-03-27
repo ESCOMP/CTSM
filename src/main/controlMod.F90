@@ -189,7 +189,7 @@ contains
 
     ! CN Matrix solution
     namelist /clm_inparm / &
-         use_matrixcn, use_soil_matrixcn, is_outmatrix, isspinup, nyr_forcing, nyr_sasu, iloop_avg
+         use_matrixcn, use_soil_matrixcn, hist_wrt_matrixcn_diag, spinup_matrixcn, nyr_forcing, nyr_sasu, iloop_avg
 
     ! lake_melt_icealb is of dimension numrad
 
@@ -325,8 +325,8 @@ contains
     if(use_fates)then
        use_matrixcn = .false.
        use_soil_matrixcn = .false.
-       is_outmatrix = .false.
-       isspinup = .false.
+       hist_wrt_matrixcn_diag = .false.
+       spinup_matrixcn = .false.
     end if
     nyr_forcing = 10
 
@@ -850,8 +850,8 @@ contains
     call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_soil_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (is_outmatrix, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (isspinup, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (hist_wrt_matrixcn_diag, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (spinup_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (nyr_forcing, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (nyr_sasu, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (iloop_avg, 1, MPI_INTEGER, 0, mpicom, ier)

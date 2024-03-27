@@ -661,18 +661,18 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_soil_matrixcn               bgc_mode="fates" >.false.</use_soil_matrixcn>
 <use_soil_matrixcn                                >.false.</use_soil_matrixcn>
 
-<is_outmatrix clm_accelerated_spinup="on"                             >.false.</is_outmatrix>
-<is_outmatrix clm_accelerated_spinup="sasu"                           >.false.</is_outmatrix>
-<is_outmatrix clm_accelerated_spinup="off"                            >.false.</is_outmatrix>
-<isspinup     clm_accelerated_spinup="on"   use_soil_matrixcn=".true.">.true.</isspinup>
-<isspinup     clm_accelerated_spinup="sasu" use_soil_matrixcn=".true.">.true.</isspinup>
-<isspinup     clm_accelerated_spinup="off"                            >.false.</isspinup>
+<hist_wrt_matrixcn_diag clm_accelerated_spinup="on"                             >.false.</hist_wrt_matrixcn_diag>
+<hist_wrt_matrixcn_diag clm_accelerated_spinup="sasu"                           >.false.</hist_wrt_matrixcn_diag>
+<hist_wrt_matrixcn_diag clm_accelerated_spinup="off"                            >.false.</hist_wrt_matrixcn_diag>
+<spinup_matrixcn     clm_accelerated_spinup="on"   use_soil_matrixcn=".true.">.true.</spinup_matrixcn>
+<spinup_matrixcn     clm_accelerated_spinup="sasu" use_soil_matrixcn=".true.">.true.</spinup_matrixcn>
+<spinup_matrixcn     clm_accelerated_spinup="off"                            >.false.</spinup_matrixcn>
 <nyr_forcing                                                          >1</nyr_forcing>
-<nyr_forcing  isspinup=".true."             use_soil_matrixcn=".true.">20</nyr_forcing>
+<nyr_forcing  spinup_matrixcn=".true."             use_soil_matrixcn=".true.">20</nyr_forcing>
 <!-- for SASU spinup nyr_sasu will normally be set to nyr_forcing (slow mode spinup) -->
 <nyr_sasu                                                             >1</nyr_sasu>
 <iloop_avg                                                            >-999</iloop_avg>
-<iloop_avg    isspinup=".true."             use_soil_matrixcn=".true.">-999</iloop_avg>
+<iloop_avg    spinup_matrixcn=".true."             use_soil_matrixcn=".true.">-999</iloop_avg>
 
 
 <!-- General CN options -->

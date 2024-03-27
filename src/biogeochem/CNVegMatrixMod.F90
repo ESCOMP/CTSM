@@ -41,7 +41,7 @@ module CNVegMatrixMod
   use CNVegNitrogenFluxType          , only : cnveg_nitrogenflux_type
   use CNVegStateType                 , only : cnveg_state_type
   use SoilBiogeochemNitrogenFluxType , only : soilbiogeochem_nitrogenflux_type
-  use clm_varctl                     , only : isspinup, is_outmatrix, nyr_forcing, nyr_SASU, iloop_avg 
+  use clm_varctl                     , only : spinup_matrixcn, hist_wrt_matrixcn_diag, nyr_forcing, nyr_SASU, iloop_avg 
   use clm_varctl                     , only : use_c13, use_c14 
   use SparseMatrixMultiplyMod        , only : sparse_matrix_type,diag_matrix_type,vector_type
   use MatrixMod                      , only : inverse
@@ -1253,7 +1253,7 @@ td: associate(                          &
          if(mod(iyr-1,nyr_forcing) .eq. 0)then
             iloop = iloop + 1
          end if
-         if(.not. isspinup .or. isspinup .and. mod(iyr-1,nyr_SASU) .eq. 0)then
+         if(.not. spinup_matrixcn .or. spinup_matrixcn .and. mod(iyr-1,nyr_SASU) .eq. 0)then
             do fp = 1,num_soilp
                p = filter_soilp(fp)
                leafc0(p)                = max(leafc(p),  epsi)
@@ -1683,7 +1683,7 @@ td: associate(                          &
   ! Accumulate transfers during the whole calendar year
 
          call t_startf('CN veg matrix-accum. trans.')
-         if(isspinup .or. is_outmatrix)then
+         if(spinup_matrixcn .or. hist_wrt_matrixcn_diag)then
             do fp = 1,num_soilp
                p = filter_soilp(fp)
                matrix_calloc_leaf_acc(p)        = matrix_calloc_leaf_acc(p)        + vegmatrixc_input%V(p,ileaf)
@@ -2439,8 +2439,8 @@ td: associate(                          &
          call t_stopf('CN veg matrix-assign new value')
 
   ! Calculate C storage capacity. 2D matrix instead of sparse matrix is still used when calculating the inverse
-         if(isspinup .or. is_outmatrix)then
-            if((.not. isspinup .and. is_end_curr_year()) .or. (isspinup .and. is_end_curr_year() .and. mod(iyr,nyr_SASU) .eq. 0))then
+         if(spinup_matrixcn .or. hist_wrt_matrixcn_diag)then
+            if((.not. spinup_matrixcn .and. is_end_curr_year()) .or. (spinup_matrixcn .and. is_end_curr_year() .and. mod(iyr,nyr_SASU) .eq. 0))then
                do fp = 1,num_soilp
                   call t_startf('CN veg matrix-prepare AK^-1')
                   p = filter_soilp(fp)
@@ -2881,7 +2881,7 @@ td: associate(                          &
  
                   call t_startf('CN veg matrix-finalize spinup')
                   
-                  if(isspinup .and. .not. is_first_step_of_this_run_segment())then
+                  if(spinup_matrixcn .and. .not. is_first_step_of_this_run_segment())then
                      deadstemc(p)              = vegmatrixc_rt(ideadstem)
                      deadstemc_storage(p)      = vegmatrixc_rt(ideadstem_st)
                      deadcrootc(p)             = vegmatrixc_rt(ideadcroot)
@@ -3184,7 +3184,7 @@ td: associate(                          &
                   end if
 
   ! Save C storage capacity from temporary variables to module variables
-                  if(is_outmatrix)then
+                  if(hist_wrt_matrixcn_diag)then
                      matrix_cap_leafc(p)                  = vegmatrixc_rt(ileaf)
                      matrix_cap_leafc_storage(p)          = vegmatrixc_rt(ileaf_st)
                      matrix_cap_leafc_xfer(p)             = vegmatrixc_rt(ileaf_xf)
