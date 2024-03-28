@@ -32,7 +32,7 @@ blddir=$cwd/tool_bld  # may overwrite this default with command-line option (bel
 # May overwrite this default with command-line option --machine
 hostname=`hostname --short`
 case $hostname in
-  derecho* | r* )
+  derecho* | dec* )
       export MACH="derecho"
       pio_iotype=1
       ;;

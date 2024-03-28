@@ -39,6 +39,7 @@ class TestUtilsImportCoord(unittest.TestCase):
 
     def setUp(self):
         """Setup for trying out the methods"""
+        self._previous_dir = os.getcwd()
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         self._testinputs_path = testinputs_path
         self._tempdir = tempfile.mkdtemp()
@@ -55,6 +56,7 @@ class TestUtilsImportCoord(unittest.TestCase):
         """
         Remove temporary directory
         """
+        os.chdir(self._previous_dir)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_importcoord1d(self):

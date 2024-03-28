@@ -5,11 +5,18 @@ instructions, see README.
 """
 import os
 import sys
-import argparse
+import logging
 
-from ctsm.path_utils import path_to_ctsm_root
-from ctsm.toolchain.gen_mksurfdata_namelist import main as main_nml
 from ctsm.utils import abort
+from ctsm.toolchain.gen_mksurfdata_namelist import main as main_nml
+from ctsm.ctsm_logging import process_logging_args
+from ctsm.toolchain.gen_mksurfdata_jobscript_single import base_get_parser
+from ctsm.toolchain.gen_mksurfdata_jobscript_single import check_parser_args
+from ctsm.toolchain.gen_mksurfdata_jobscript_single import write_runscript_part1
+from ctsm.toolchain.gen_mksurfdata_jobscript_single import get_mpirun
+
+
+logger = logging.getLogger(__name__)
 
 valid_scenarios = [
     "global-potveg",
@@ -59,64 +66,8 @@ def get_parser():
     """
     Get parser object for this script.
     """
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
+    parser = base_get_parser(default_js_name="mksurfdata_jobscript_multi")
 
-    parser.print_usage = parser.print_help
-
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        help="ncrease output verbosity",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--account",
-        help="""account number (default P93300606)""",
-        action="store",
-        dest="account",
-        required=False,
-        default="P93300641",
-    )
-    parser.add_argument(
-        "--bld-path",
-        help="""Path to build directory for mksurfdata_esmf""",
-        action="store",
-        dest="bld_path",
-        default=os.path.join(path_to_ctsm_root(), "tools", "mksurfdata_esmf", "tool_bld"),
-    )
-    parser.add_argument(
-        "--number-of-nodes",
-        help="""number of derecho nodes requested (required)""",
-        action="store",
-        dest="number_of_nodes",
-        required=True,
-    )
-    parser.add_argument(
-        "--tasks-per-node",
-        help="""number of mpi tasks per node for derecho requested""",
-        action="store",
-        dest="tasks_per_node",
-        required=False,
-        default="128",
-    )
-    parser.add_argument(
-        "--walltime",
-        help="""Wallclock time for job submission default is 12:00:00)""",
-        action="store",
-        dest="walltime",
-        required=False,
-        default="12:00:00",
-    )
-    parser.add_argument(
-        "--queue",
-        help="""Queue to submit to)""",
-        action="store",
-        dest="queue",
-        required=False,
-        default="main",
-    )
     parser.add_argument(
         "--scenario",
         help="""scenario""",
@@ -125,61 +76,50 @@ def get_parser():
         dest="scenario",
         required=True,
     )
-    parser.add_argument(
-        "--jobscript-file",
-        help="""output jobscript file to be submitted with qsub
-                [default: %(default)s]""",
-        action="store",
-        dest="jobscript_file",
-        required=False,
-        default="mksurfdata_jobscript_multi.sh",
-    )
+
     return parser
 
 
 def write_runscript(
+    args,
     scenario,
     jobscript_file,
     number_of_nodes,
     tasks_per_node,
     account,
     walltime,
-    queue,
+    machine,
     target_list,
     resolution_dict,
     dataset_dict,
-    env_specific_script,
-    mksurfdata,
     runfile,
 ):
     """
     Write run script
     """
-    runfile.write("#!/bin/bash \n")
-    runfile.write(f"#PBS -A {account} \n")
-    runfile.write(f"#PBS -N mksrf_{scenario} \n")
-    runfile.write("#PBS -j oe \n")
-    runfile.write("#PBS -k eod \n")
-    runfile.write("#PBS -S /bin/bash \n")
-    runfile.write(f"#PBS -q {queue} \n")
-    runfile.write(f"#PBS -l walltime={walltime} \n")
-    runfile.write(
-        "#PBS -l select="
-        + f"{number_of_nodes}:ncpus={tasks_per_node}:mpiprocs={tasks_per_node}:mem=218GB \n"
+    # --------------------------
+    # Write batch header (part 1)
+    # --------------------------
+    name = f"mksrf_{scenario}"
+    attribs = write_runscript_part1(
+        number_of_nodes,
+        tasks_per_node,
+        machine,
+        account,
+        walltime,
+        runfile,
+        descrip=scenario,
+        name=name,
     )
-    runfile.write(
-        f"# This is a batch script to run a set of resolutions for mksurfdata_esmf {scenario}\n"
-    )
-    runfile.write(
-        "# NOTE: THIS SCRIPT IS AUTOMATICALLY GENERATED "
-        + "SO IN GENERAL YOU SHOULD NOT EDIT it!!\n\n"
-    )
-    runfile.write("\n")
+    # --------------------------
+    # Obtain mpirun command from env_mach_specific.xml
+    # --------------------------
+    (executable, mksurfdata_path, env_mach_path) = get_mpirun(args, attribs)
 
     # Run env_mach_specific.sh to control the machine dependent
     # environment including the paths to compilers and libraries
     # external to cime such as netcdf
-    runfile.write(". " + env_specific_script + "\n")
+    runfile.write(". " + env_mach_path + "\n")
     check = "if [ $? != 0 ]; then echo 'Error running env_specific_script'; exit -4; fi"
     runfile.write(f"{check} \n")
     for target in target_list:
@@ -196,7 +136,7 @@ def write_runscript(
             sys.argv = [x for x in command.split(" ") if x]
             main_nml()
             print(f"generated namelist {namelist}")
-            output = f"time mpiexec {mksurfdata} < {namelist}"
+            output = f"{executable} {mksurfdata_path} < {namelist}"
             runfile.write(f"{output} \n")
             check = f"if [ $? != 0 ]; then echo 'Error running resolution {res}'; exit -4; fi"
             runfile.write(f"{check} \n")
@@ -213,13 +153,14 @@ def main():
     # Obtain input args
     # --------------------------
     args = get_parser().parse_args()
+    process_logging_args(args)
+    check_parser_args(args)
     scenario = args.scenario
     jobscript_file = args.jobscript_file
     number_of_nodes = args.number_of_nodes
     tasks_per_node = args.tasks_per_node
     account = args.account
     walltime = args.walltime
-    queue = args.queue
 
     # --------------------------
     # Determine target list
@@ -435,47 +376,22 @@ def main():
     }
 
     # --------------------------
-    # TODO Here, reuse code from gen_mksurfdata_jobscript_single
-    # that's found in the section titled "Obtain mpirun command ..."
-    # --------------------------
-
-    # --------------------------
-    # Make sure files exist or exit
-    # --------------------------
-    if not os.path.exists(args.bld_path):
-        print(
-            args.bld_path
-            + " directory does NOT exist -- build mksurdata_esmf before running this script --"
-            + " using ./gen_mksurfdata_build.sh"
-        )
-        sys.exit(1)
-
-    env_specific_script = os.path.join(args.bld_path, ".env_mach_specific.sh")
-    if not os.path.exists(env_specific_script):
-        print(env_specific_script + " does NOT exist")
-        sys.exit(1)
-    mksurfdata = os.path.join(args.bld_path, "mksurfdata")
-    if not os.path.exists(mksurfdata):
-        print(mksurfdata + " does NOT exist")
-        sys.exit(1)
-    # --------------------------
     # Write run script
     # --------------------------
     with open(jobscript_file, "w", encoding="utf-8") as runfile:
 
         write_runscript(
+            args,
             scenario,
             jobscript_file,
             number_of_nodes,
             tasks_per_node,
             account,
             walltime,
-            queue,
+            args.machine,
             target_list,
             resolution_dict,
             dataset_dict,
-            env_specific_script,
-            mksurfdata,
             runfile,
         )
 

@@ -26,6 +26,7 @@ class TestSysBuildCtsm(unittest.TestCase):
     """System tests for lilac_build_ctsm"""
 
     def setUp(self):
+        self._previous_dir = os.getcwd()
         self._tempdir = tempfile.mkdtemp()
         self.assertTrue(os.path.isdir(self._tempdir))
 

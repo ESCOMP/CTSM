@@ -74,7 +74,7 @@ MACHINE_DEFAULTS = {
         baseline_dir=os.path.join(os.path.sep, "glade", "campaign", "cgd", "tss", "ctsm_baselines"),
         account_required=True,
         create_test_retry=0,
-        create_test_queue="regular",
+        create_test_queue=CREATE_TEST_QUEUE_UNSPECIFIED,
         job_launcher_defaults={
             JOB_LAUNCHER_QSUB: QsubDefaults(
                 queue="main",

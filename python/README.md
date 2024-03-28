@@ -21,7 +21,6 @@ all the conda commands and do this for you.
 Conda requirements files:
 
 conda_env_ctsm_py.txt --------- Standard conda environment to use for most machines
-conda_env_ctsm_py_cgd.txt ----- Standard conda environment for CGD machines
 conda_env_ctsm_py_latest.txt -- Test environment with latest versions that work
 
 ## Unit and system tests
