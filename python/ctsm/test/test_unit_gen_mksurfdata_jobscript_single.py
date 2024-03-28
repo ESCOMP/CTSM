@@ -65,10 +65,13 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
 #PBS -j oe
 #PBS -k eod
 #PBS -S /bin/bash
-#PBS -l walltime=59:00
+#PBS -l walltime=12:00:00
 #PBS -A ACCOUNT_NUMBER
 #PBS -q main
-#PBS -l select=1:ncpus=128:mpiprocs=64
+#PBS -l select=1:ncpus=128:mpiprocs=64:mem=218GB
+
+# This is a batch script to run a set of resolutions for mksurfdata_esmf input namelist
+# NOTE: THIS SCRIPT IS AUTOMATICALLY GENERATED SO IN GENERAL YOU SHOULD NOT EDIT it!!
 
 """
         self._bld_path = os.path.join(self._tempdir, "tools_bld")
@@ -123,7 +126,9 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         args = get_parser().parse_args()
         check_parser_args(args)
         with open(self._jobscript_file, "w", encoding="utf-8") as runfile:
-            attribs = write_runscript_part1(nodes, tasks, machine, self._account, runfile)
+            attribs = write_runscript_part1(
+                nodes, tasks, machine, self._account, args.walltime, runfile
+            )
             self.assertEqual({"mpilib": "default"}, attribs, msg="attribs not as expected")
 
         self.assertFileContentsEqual(self._output_compare, self._jobscript_file)
@@ -158,7 +163,9 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         self.assertTrue(os.path.exists(self._env_mach))
         expected_attribs = {"mpilib": "default"}
         with open(self._jobscript_file, "w", encoding="utf-8") as runfile:
-            attribs = write_runscript_part1(nodes, tasks, machine, self._account, runfile)
+            attribs = write_runscript_part1(
+                nodes, tasks, machine, self._account, args.walltime, runfile
+            )
             self.assertEqual(attribs, expected_attribs)
             (executable, mksurfdata_path, env_mach_path) = get_mpirun(args, attribs)
             expected_exe = "mpibind "
@@ -180,7 +187,7 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
                 "Number of tasks per node exceeds the number of processors per node"
                 + " on this machine",
             ):
-                write_runscript_part1(nodes, tasks, machine, self._account, runfile)
+                write_runscript_part1(nodes, tasks, machine, self._account, args.walltime, runfile)
 
     def test_zero_tasks(self):
         """test for fail on zero tasks"""

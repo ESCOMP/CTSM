@@ -91,6 +91,14 @@ def get_parser():
         required=False,
         default="mksurfdata_jobscript_single",
     )
+    parser.add_argument(
+        "--walltime",
+        help="""Wallclock time for job submission default is 12:00:00)""",
+        action="store",
+        dest="walltime",
+        required=False,
+        default="12:00:00",
+    )
     return parser
 
 
@@ -119,9 +127,11 @@ def check_parser_args(args):
         )
 
 
-def write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, runfile):
+def write_runscript_part1(
+    number_of_nodes, tasks_per_node, machine, account, walltime, runfile, descrip="input namelist"
+):
     """
-    Write run script (part 1)
+    Write run script (part 1) Batch headers
     """
     runfile.write("#!/bin/bash\n")
     runfile.write("# Edit the batch directives for your batch system\n")
@@ -129,20 +139,22 @@ def write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, run
     runfile.write("#PBS -N mksurfdata\n")
     runfile.write("#PBS -j oe\n")
     runfile.write("#PBS -k eod\n")
+
     runfile.write("#PBS -S /bin/bash\n")
     if machine == "derecho":
         attribs = {"mpilib": "default"}
-        runfile.write("#PBS -l walltime=59:00\n")
+        runfile.write(f"#PBS -l walltime={walltime}\n")
         runfile.write(f"#PBS -A {account}\n")
         runfile.write("#PBS -q main\n")
         ncpus = 128
         runfile.write(
-            "#PBS -l select=" + f"{number_of_nodes}:ncpus={ncpus}:mpiprocs={tasks_per_node}\n"
+            "#PBS -l select="
+            + f"{number_of_nodes}:ncpus={ncpus}:mpiprocs={tasks_per_node}:mem=218GB\n"
         )
     elif machine == "casper":
         attribs = {"mpilib": "default"}
         ncpus = 36
-        runfile.write("#PBS -l walltime=1:00:00\n")
+        runfile.write(f"#PBS -l walltime={walltime}\n")
         runfile.write(f"#PBS -A {account}\n")
         runfile.write("#PBS -q casper\n")
         runfile.write(
@@ -152,7 +164,7 @@ def write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, run
     elif machine == "izumi":
         attribs = {"mpilib": "mvapich2"}
         ncpus = 48
-        runfile.write("#PBS -l walltime=2:00:00\n")
+        runfile.write(f"#PBS -l walltime={walltime}\n")
         runfile.write("#PBS -q medium\n")
         runfile.write(f"#PBS -l nodes={number_of_nodes}:ppn={tasks_per_node},mem=555GB -r n\n")
         tool_path = os.path.dirname(os.path.abspath(__file__))
@@ -160,6 +172,13 @@ def write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, run
         runfile.write(f"cd {tool_path}\n")
 
     runfile.write("\n")
+    runfile.write(
+        f"# This is a batch script to run a set of resolutions for mksurfdata_esmf {descrip}\n"
+    )
+    runfile.write(
+        "# NOTE: THIS SCRIPT IS AUTOMATICALLY GENERATED "
+        + "SO IN GENERAL YOU SHOULD NOT EDIT it!!\n\n"
+    )
 
     # Make sure tasks_per_node doesn't exceed the number of cpus per node
     if tasks_per_node > ncpus:
@@ -211,7 +230,7 @@ def write_runscript_part2(namelist_file, runfile, executable, mksurfdata_path, e
         "compilers and libraries external to cime such as netcdf"
     )
     runfile.write(f"\n. {env_mach_path}\n")
-    check = 'if [ $? != 0 ]; then echo "Error running env_mach_specific"; exit -4; fi'
+    check = 'if [ $? != 0 ]; then echo "Error running env_mach_specific script"; exit -4; fi'
     runfile.write(f"{check} \n")
     runfile.write(
         "# Edit the mpirun command to use the MPI executable "
@@ -242,6 +261,7 @@ def main():
     tasks_per_node = args.tasks_per_node
     machine = args.machine
     account = args.account
+    walltime = args.walltime
 
     # --------------------------
     # Write to file
@@ -250,7 +270,9 @@ def main():
         # --------------------------
         # Write batch header (part 1)
         # --------------------------
-        attribs = write_runscript_part1(number_of_nodes, tasks_per_node, machine, account, runfile)
+        attribs = write_runscript_part1(
+            number_of_nodes, tasks_per_node, machine, account, walltime, runfile
+        )
         # --------------------------
         # Obtain mpirun command from env_mach_specific.xml
         # --------------------------
