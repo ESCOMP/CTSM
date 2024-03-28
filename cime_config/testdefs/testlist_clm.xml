@@ -3422,7 +3422,7 @@
     </options>
   </test>
 
-  <test name="MKSURFDATAESMF_P64x1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop">
+  <test name="MKSURFDATAESMF_P128x1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm">
         <options>
