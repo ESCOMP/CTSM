@@ -7,6 +7,7 @@ import os
 import argparse
 import logging
 
+
 from ctsm import add_cime_to_path  # pylint: disable=unused-import
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.utils import abort
@@ -19,7 +20,7 @@ from CIME.BuildTools.configure import FakeCase  # pylint: disable=import-error,w
 logger = logging.getLogger(__name__)
 
 
-def base_get_parser():
+def base_get_parser(default_js_name="mksurfdata_jobscript_single"):
     """
     Get parser object for the gen_mksurfdata_jobscript scripts
     """
@@ -62,7 +63,8 @@ def base_get_parser():
         action="store",
         dest="tasks_per_node",
         type=int,
-        required=True,
+        required=False,
+        default="128",
     )
     parser.add_argument(
         "--machine",
@@ -82,7 +84,7 @@ def base_get_parser():
         action="store",
         dest="jobscript_file",
         required=False,
-        default="mksurfdata_jobscript_single",
+        default=default_js_name,
     )
     parser.add_argument(
         "--walltime",

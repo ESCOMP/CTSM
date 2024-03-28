@@ -66,7 +66,7 @@ def get_parser():
     """
     Get parser object for this script.
     """
-    parser = base_get_parser()
+    parser = base_get_parser(default_js_name="mksurfdata_jobscript_multi")
 
     parser.add_argument(
         "--scenario",
