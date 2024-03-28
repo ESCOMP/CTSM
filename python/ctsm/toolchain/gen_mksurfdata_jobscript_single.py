@@ -95,6 +95,7 @@ def base_get_parser():
 
     return parser
 
+
 def get_parser():
     """
     Get parser object for this script.
@@ -107,7 +108,8 @@ def get_parser():
         dest="namelist_file",
         required=True,
     )
-    return( parser )
+    return parser
+
 
 def check_parser_args(args):
     """Checking for the argument parser values"""
@@ -133,8 +135,16 @@ def check_parser_args(args):
             + ") does NOT exist in the bld-path, aborting"
         )
 
+
 def write_runscript_part1(
-    number_of_nodes, tasks_per_node, machine, account, walltime, runfile, descrip="input namelist", name="mksurfdata"
+    number_of_nodes,
+    tasks_per_node,
+    machine,
+    account,
+    walltime,
+    runfile,
+    descrip="input namelist",
+    name="mksurfdata",
 ):
     """
     Write run script (part 1) Batch headers
@@ -258,7 +268,6 @@ def main():
     # --------------------------
     # Obtain input args
     # --------------------------
-    logging.setup_logging_pre_config()
     args = get_parser().parse_args()
     process_logging_args(args)
     check_parser_args(args)
