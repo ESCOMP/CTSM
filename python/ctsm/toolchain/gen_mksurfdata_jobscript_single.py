@@ -19,9 +19,9 @@ from CIME.BuildTools.configure import FakeCase  # pylint: disable=import-error,w
 logger = logging.getLogger(__name__)
 
 
-def get_parser():
+def base_get_parser():
     """
-    Get parser object for this script.
+    Get parser object for the gen_mksurfdata_jobscript scripts
     """
     # set up logging allowing user control
     setup_logging_pre_config()
@@ -77,13 +77,6 @@ def get_parser():
         default="derecho",
     )
     parser.add_argument(
-        "--namelist-file",
-        help="""input namelist file (required)""",
-        action="store",
-        dest="namelist_file",
-        required=True,
-    )
-    parser.add_argument(
         "--jobscript-file",
         help="""output jobscript file to be submitted with qsub (default: %(default)s)""",
         action="store",
@@ -99,8 +92,22 @@ def get_parser():
         required=False,
         default="12:00:00",
     )
+
     return parser
 
+def get_parser():
+    """
+    Get parser object for this script.
+    """
+    parser = base_get_parser()
+    parser.add_argument(
+        "--namelist-file",
+        help="""input namelist file (required)""",
+        action="store",
+        dest="namelist_file",
+        required=True,
+    )
+    return( parser )
 
 def check_parser_args(args):
     """Checking for the argument parser values"""
@@ -251,6 +258,7 @@ def main():
     # --------------------------
     # Obtain input args
     # --------------------------
+    logging.setup_logging_pre_config()
     args = get_parser().parse_args()
     process_logging_args(args)
     check_parser_args(args)
