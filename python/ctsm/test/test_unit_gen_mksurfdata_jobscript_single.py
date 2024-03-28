@@ -168,7 +168,7 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
             )
             self.assertEqual(attribs, expected_attribs)
             (executable, mksurfdata_path, env_mach_path) = get_mpirun(args, attribs)
-            expected_exe = "mpibind "
+            expected_exe = "time mpibind "
             self.assertEqual(executable, expected_exe)
             self.assertEqual(mksurfdata_path, self._mksurf_exe)
             self.assertEqual(env_mach_path, self._env_mach)

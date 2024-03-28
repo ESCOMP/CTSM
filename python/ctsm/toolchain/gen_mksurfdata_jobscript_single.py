@@ -126,9 +126,8 @@ def check_parser_args(args):
             + ") does NOT exist in the bld-path, aborting"
         )
 
-
 def write_runscript_part1(
-    number_of_nodes, tasks_per_node, machine, account, walltime, runfile, descrip="input namelist"
+    number_of_nodes, tasks_per_node, machine, account, walltime, runfile, descrip="input namelist", name="mksurfdata"
 ):
     """
     Write run script (part 1) Batch headers
@@ -136,7 +135,7 @@ def write_runscript_part1(
     runfile.write("#!/bin/bash\n")
     runfile.write("# Edit the batch directives for your batch system\n")
     runfile.write(f"# Below are default batch directives for {machine}\n")
-    runfile.write("#PBS -N mksurfdata\n")
+    runfile.write(f"#PBS -N {name}\n")
     runfile.write("#PBS -j oe\n")
     runfile.write("#PBS -k eod\n")
 
@@ -212,7 +211,7 @@ def get_mpirun(args, attribs):
     # cmd[1] contains a list of strings that we append as options to cmd[0]
     # The replace function removes unnecessary characters that appear in
     # some such options
-    executable = f'{cmd[0]} {" ".join(cmd[1])}'.replace("ENV{", "").replace("}", "")
+    executable = f'time {cmd[0]} {" ".join(cmd[1])}'.replace("ENV{", "").replace("}", "")
 
     mksurfdata_path = os.path.join(bld_path, "mksurfdata")
     env_mach_path = os.path.join(bld_path, ".env_mach_specific.sh")
