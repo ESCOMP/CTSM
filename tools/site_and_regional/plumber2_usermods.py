@@ -35,7 +35,7 @@ def write_usermods(lat,lon,site,start_year,end_year,
     iFile.close()
     
     #TODO, move these input files do a different directory and update script
-    LAIstream = '/glade/work/oleson/PLUMBER2/input_files/${PLUMBER2SITE}/LAI_stream_${PLUMBER2SITE}_'+ \
+    LAIstream = '$DIN_LOC_ROOT/lnd/clm2/lai_streams/PLUMBER2/${PLUMBER2SITE}/LAI_stream_${PLUMBER2SITE}_'+ \
                  str(start_year)+'-'+str(end_year)+'.nc'
     shell = os.path.join(site_dir,'shell_commands')
     sFile = open(shell, 'w') # or 'a' to add text instead of truncate
@@ -51,7 +51,7 @@ def write_usermods(lat,lon,site,start_year,end_year,
         './xmlchange ATM_NCPL='+str(atm_ncpl) + '\n' \
         '\n' \
         
-        'echo "CLM_USRDAT.PLUMBER2:datafiles=\'/glade/work/oleson/PLUMBER2/datm_files/'+site+'/CLM1PT_data/CTSM_DATM_'+site+'_'+str(start_year)+'-'+str(end_year)+'.nc \'" >> user_nl_datm_streams \n' \
+        'echo "CLM_USRDAT.PLUMBER2:datafiles=\'$DIN_LOC_ROOT/atm/datm7/CLM1PT_data/PLUMBER2/'+site+'/CLM1PT_data/CTSM_DATM_'+site+'_'+str(start_year)+'-'+str(end_year)+'.nc \'" >> user_nl_datm_streams \n' \
 
         'echo "presaero.SSP3-7.0:year_first='+str(start_year) + '" >> user_nl_datm_streams \n' \
         'echo "presaero.SSP3-7.0:year_last='+str(end_year) + '" >> user_nl_datm_streams \n' \

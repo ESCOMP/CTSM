@@ -8,7 +8,7 @@
 ./xmlchange START_TOD=50400
 ./xmlchange ATM_NCPL=48
 
-echo "CLM_USRDAT.PLUMBER2:datafiles='/glade/work/oleson/PLUMBER2/datm_files/AU-Rob/CLM1PT_data/CTSM_DATM_AU-Rob_2014-2017.nc '" >> user_nl_datm_streams 
+echo "CLM_USRDAT.PLUMBER2:datafiles='$DIN_LOC_ROOT/atm/datm7/CLM1PT_data/PLUMBER2/AU-Rob/CLM1PT_data/CTSM_DATM_AU-Rob_2014-2017.nc '" >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_first=2014" >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_last=2017" >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_align=2014" >> user_nl_datm_streams 
@@ -35,7 +35,7 @@ fi
 
 # Turn on LAI streams for a SP case 
 if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then 
-  echo "stream_fldfilename_lai='/glade/work/oleson/PLUMBER2/input_files/${PLUMBER2SITE}/LAI_stream_${PLUMBER2SITE}_2014-2017.nc'" >> user_nl_clm 
+  echo "stream_fldfilename_lai='$DIN_LOC_ROOT/lnd/clm2/lai_streams/PLUMBER2/${PLUMBER2SITE}/LAI_stream_${PLUMBER2SITE}_2014-2017.nc'" >> user_nl_clm 
   echo "model_year_align_lai=2014" >> user_nl_clm 
   echo "stream_year_first_lai=2014" >> user_nl_clm 
   echo "stream_year_last_lai=2017" >> user_nl_clm 
