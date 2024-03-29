@@ -103,10 +103,6 @@
     <entry>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_cdf5_c200129.nc</mesh_filename>
     </entry>
-    <entry pft_years="PtVg">
-      <data_filename>lnd/clm2/rawdata/mksrf_urban_0.05x0.05_zerourbanpct.cdf5.c181014.nc</data_filename>
-      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_cdf5_c200129.nc</mesh_filename>
-    </entry>
   </mksrf_furban>
 
   <!-- topography for urban threshold -->
@@ -221,7 +217,7 @@ version of the raw dataset will probably go away.
       <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.noanthro.c20230226/mksrf_landuse_ctsm52_noanthroLUH2_1.c20230226.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_1850.cdf5.c20220325.nc</lake_filename>
-      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/historical/urban_properties_GaoOneil_05deg_ThreeClass_1850_cdf5_c20220910.nc</urban_filename>
+      <urban_filename>lnd/clm2/rawdata/mksrf_urban_0.05x0.05_zerourbanpct.cdf5.c181014.nc</urban_filename>
     </entry>
 
     <entry pft_years="1850">

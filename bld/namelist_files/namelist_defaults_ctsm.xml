@@ -395,7 +395,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <reset_snow_glc_ela>1.e9</reset_snow_glc_ela>
 
 <snow_cover_fraction_method>SwensonLawrence2012</snow_cover_fraction_method>
+
 <snow_thermal_cond_method>Jordan1991</snow_thermal_cond_method>
+<snow_thermal_cond_method phys="clm5_1">Sturm1997</snow_thermal_cond_method>
 
 <!-- Default glacier behavior is:
      Mountain glaciers: single_at_atm_topo
@@ -437,10 +439,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm6_0" >lnd/clm2/paramdata/ctsm51_params.c240207b.nc</paramfile>
-<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c240207b.nc</paramfile>
-<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c240207b.nc</paramfile>
-<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c240207b.nc</paramfile>
+<paramfile phys="clm6_0" >lnd/clm2/paramdata/ctsm51_params.c240208.nc</paramfile>
+<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c240208.nc</paramfile>
+<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c240208.nc</paramfile>
+<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c240208.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
@@ -1593,7 +1595,8 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <snicar_solarspec    >mid_latitude_winter</snicar_solarspec>
 <snicar_dust_optics  >sahara</snicar_dust_optics>
 <snicar_snodst_intmix>.false.</snicar_snodst_intmix>
-<snicar_snobc_intmix >.false.</snicar_snobc_intmix>
+<snicar_snobc_intmix>.false.</snicar_snobc_intmix>
+<snicar_snobc_intmix phys="clm5_1">.true.</snicar_snobc_intmix>
 <snicar_use_aerosol  >.true.</snicar_use_aerosol>
 <do_sno_oc           >.false.</do_sno_oc>
 
@@ -1969,7 +1972,7 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <use_fates_luh                 use_fates=".true.">.false.</use_fates_luh>
 <fates_parteh_mode             use_fates=".true.">1</fates_parteh_mode>
 <fates_seeddisp_cadence        use_fates=".true.">0</fates_seeddisp_cadence>
-
+<fates_history_dimlevel        use_fates=".true.">2,2</fates_history_dimlevel>
 <use_fates_nocomp              use_fates=".true." use_fates_sp=".true.">.true.</use_fates_nocomp>
 <use_fates_nocomp              use_fates=".true."                      >.false.</use_fates_nocomp>
 <use_fates_fixed_biogeog       use_fates=".true." use_fates_sp=".true.">.true.</use_fates_fixed_biogeog>

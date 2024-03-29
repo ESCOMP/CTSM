@@ -44,10 +44,6 @@ class TestSysMeshMaskModifier(unittest.TestCase):
             path_to_ctsm_root(), "tools/modify_input_files/modify_mesh_template.cfg"
         )
         self.testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
-        fsurdat_in = os.path.join(
-            self.testinputs_path,
-            "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031.nc",
-        )
         self._tempdir = tempfile.mkdtemp()
         self._cfg_file_path = os.path.join(self._tempdir, "modify_mesh_mask.cfg")
         self._mesh_mask_in = os.path.join(self._tempdir, "mesh_mask_in.nc")
@@ -72,8 +68,8 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         except subprocess.CalledProcessError as e:
             sys.exit(f"{e} ERROR using {configure_cmd}")
 
-    def createScripGridAndMask(self):
-        """Create the SCRIP gird and mask file"""
+    def createScripGridAndMask(self, fsurdat_in):
+        """Create the SCRIP grid and mask file"""
         # Generate scrip file from fsurdat_in using nco
         # In the ctsm_py environment this requires running 'module load nco'
         # interactively
@@ -86,14 +82,14 @@ class TestSysMeshMaskModifier(unittest.TestCase):
 
         # This could also alturnatively be done, by using the stored SCRIP grid file for the resolution under CESM inputdata
         ncks_cmd = (
-            f"ncks --rgr infer --rgr scrip={self.scrip_file} {self.fsurdat_in} {self.metadata_file}"
+            f"ncks --rgr infer --rgr scrip={self.scrip_file} {fsurdat_in} {self.metadata_file}"
         )
         try:
             subprocess.check_call(ncks_cmd, shell=True)
         except subprocess.CalledProcessError as e:
             err_msg = (
                 f"{e} ERROR using ncks to generate {self.scrip_file} from "
-                + f"{self.fsurdat_in}; MOST LIKELY SHOULD INVOKE module load nco"
+                + f"{fsurdat_in}; MOST LIKELY SHOULD INVOKE module load nco"
             )
             sys.exit(err_msg)
         # Run .env_mach_specific.sh to load esmf and generate mesh_mask_in
@@ -109,13 +105,13 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         # Generate landmask_file from fsurdat_in
         self._lat_varname = "LATIXY"  # same as in fsurdat_in
         self._lon_varname = "LONGXY"  # same as in fsurdat_in
-        fsurdat_in_data = xr.open_dataset(self.fsurdat_in)
+        fsurdat_in_data = xr.open_dataset(fsurdat_in)
         assert self._lat_varname in fsurdat_in_data.variables
         assert self._lon_varname in fsurdat_in_data.variables
         self._lat_dimname = fsurdat_in_data[self._lat_varname].dims[0]
         self._lon_dimname = fsurdat_in_data[self._lat_varname].dims[1]
 
-    def createLandMaskFile(self):
+    def createLandMaskFile(self, fsurdat_in):
         """Create the LandMask file from the input fsurdat_in file"""
         if os.path.exists(self._landmask_file):
             os.remove(self._landmask_file)
@@ -124,14 +120,12 @@ class TestSysMeshMaskModifier(unittest.TestCase):
             + "-A -v -s 'landmask=LANDFRAC_MKSURFDATA.convert(NC_INT)' "
             + f"-A -v -s {self._lat_varname}={self._lat_varname} "
             + f"-A -v -s {self._lon_varname}={self._lon_varname} "
-            + f"{self.fsurdat_in} {self._landmask_file}"
+            + f"{fsurdat_in} {self._landmask_file}"
         )
         try:
             subprocess.check_call(ncap2_cmd, shell=True)
         except subprocess.CalledProcessError as e:
-            sys.exit(
-                f"{e} ERROR using ncap2 to generate {self._landmask_file} from {self.fsurdat_in}"
-            )
+            sys.exit(f"{e} ERROR using ncap2 to generate {self._landmask_file} from {fsurdat_in}")
 
     def tearDown(self):
         """
@@ -147,13 +141,13 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         For a case where the mesh remains unchanged, it's just output as
         ocean so the mesh is output as all zero's rather than the all 1's that came in.
         """
-        self.fsurdat_in = os.path.join(
+        fsurdat_in = os.path.join(
             self.testinputs_path,
             "surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517.nc",
         )
 
-        self.createScripGridAndMask()
-        self.createLandMaskFile()
+        self.createScripGridAndMask(fsurdat_in)
+        self.createLandMaskFile(fsurdat_in)
         self._create_config_file()
 
         # run the mesh_mask_modifier tool
@@ -185,12 +179,12 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         For a case where the mesh is changed.
         """
 
-        self.fsurdat_in = os.path.join(
+        fsurdat_in = os.path.join(
             self.testinputs_path,
             "surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517_modify_mask.nc",
         )
-        self.createScripGridAndMask()
-        self.createLandMaskFile()
+        self.createScripGridAndMask(fsurdat_in)
+        self.createLandMaskFile(fsurdat_in)
         self._create_config_file()
 
         if os.path.exists(self._mesh_mask_out):
