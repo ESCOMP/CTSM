@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 2755;
+my $ntests = 2455;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1842;
+   $ntests += 1511;
 }
 plan( tests=>$ntests );
 
@@ -1351,7 +1351,6 @@ foreach my $res ( @resolutions ) {
       $cfiles->shownmldiff( "default", "standard" );
       if ( defined($opts{'compare'}) ) {
          $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-         $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
          $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
       }
 
@@ -1436,7 +1435,6 @@ $cfiles->checkfilesexist( "$options", $mode );
 $cfiles->shownmldiff( "default", "standard" );
 if ( defined($opts{'compare'}) ) {
    $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-   $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
    $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
 }
 if ( defined($opts{'generate'}) ) {
@@ -1573,7 +1571,6 @@ foreach my $usecase ( "1850-2100_SSP5-8.5_transient", "1850-2100_SSP2-4.5_transi
       $cfiles->shownmldiff( "default", "standard" );
       if ( defined($opts{'compare'}) ) {
          $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-         $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
          $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
       }
       if ( defined($opts{'generate'}) ) {
