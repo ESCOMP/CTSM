@@ -17,7 +17,7 @@ import xarray as xr
 # -- add python/ctsm  to path (needed if we want to run the test stand-alone)
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 sys.path.insert(1, _CTSM_PYTHON)
-
+# pylint: disable=wrong-import-position
 from ctsm.path_utils import path_to_ctsm_root
 
 # pylint: disable=wrong-import-position
@@ -43,12 +43,14 @@ class TestModifySingleptSiteNeon(unittest.TestCase):
         Make /_tempdir for use by these tests.
         Check tempdir for history files
         """
+        self._previous_dir = os.getcwd()
         self._tempdir = tempfile.mkdtemp()
 
     def tearDown(self):
         """
         Remove temporary directory
         """
+        os.chdir(self._previous_dir)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_get_neon(self):

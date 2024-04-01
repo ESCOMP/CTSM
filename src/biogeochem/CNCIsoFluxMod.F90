@@ -428,6 +428,16 @@ contains
               num_soilp                                     , filter_soilp, 1._r8, 0, isotope)
 
          call CIsoFluxCalc(&
+              iso_cnveg_cf%leafc_to_removedresiduec_patch   , cnveg_cf%leafc_to_removedresiduec_patch, &
+              iso_cnveg_cs%leafc_patch                      , cnveg_cs%leafc_patch, &
+              num_soilp                                     , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%livestemc_to_removedresiduec_patch, cnveg_cf%livestemc_to_removedresiduec_patch, &
+              iso_cnveg_cs%livestemc_patch                  , cnveg_cs%livestemc_patch, &
+              num_soilp                                     , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
               iso_cnveg_cf%repr_grainc_to_seed_patch        , cnveg_cf%repr_grainc_to_seed_patch, &
               iso_cnveg_cs%reproductivec_patch              , cnveg_cs%reproductivec_patch, &
               num_soilp                                     , filter_soilp, 1._r8, 0, isotope)
@@ -496,7 +506,9 @@ contains
             p = filter_soilp(fp)
             iso_cnveg_cf%crop_harvestc_to_cropprodc_patch(p) = &
                  iso_cnveg_cf%leafc_to_biofuelc_patch(p) + &
-                 iso_cnveg_cf%livestemc_to_biofuelc_patch(p)
+                 iso_cnveg_cf%livestemc_to_biofuelc_patch(p) + &
+                 iso_cnveg_cf%leafc_to_removedresiduec_patch(p) + &
+                 iso_cnveg_cf%livestemc_to_removedresiduec_patch(p)
          end do
 
          if (use_grainproduct) then

@@ -1,5 +1,11 @@
+"""
+Functions for making crop calendar figures
+"""
+
 import numpy as np
 
+# It's fine if these can't be imported. The script using these will handle it.
+# pylint: disable=import-error
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -23,6 +29,9 @@ cropcal_colors = {
 
 # Cases (line and scatter plots)
 def cropcal_colors_cases(casename):
+    """
+    Define colors for each case
+    """
     case_color_dict = {
         "clm default": [x / 255 for x in [92, 219, 219]],
         "prescribed calendars": [x / 255 for x in [250, 102, 240]],
@@ -32,11 +41,8 @@ def cropcal_colors_cases(casename):
     case_color_dict["5.0 lu"] = case_color_dict["clm default"]
     case_color_dict["5.2 lu"] = case_color_dict["prescribed calendars"]
 
-    case_color = None
     casename_for_colors = casename.lower().replace(" (0)", "").replace(" (1)", "")
-    if casename_for_colors in case_color_dict:
-        case_color = case_color_dict[casename_for_colors]
-    return case_color
+    return case_color_dict.get(casename_for_colors, None)
 
 
 def make_map(
@@ -65,6 +71,9 @@ def make_map(
     vmin=None,
     vrange=None,
 ):
+    """
+    Make map
+    """
     if underlay is not None:
         if underlay_color is None:
             underlay_color = cropcal_colors["underlay"]
@@ -147,23 +156,25 @@ def make_map(
         # Need to do this for subplot row labels
         set_ticks(-1, fontsize, "y")
         plt.yticks([])
-    for x in ax.spines:
-        ax.spines[x].set_visible(False)
+    for spine in ax.spines:
+        ax.spines[spine].set_visible(False)
 
     if show_cbar:
         return im, cbar
-    else:
-        return im, None
+    return im, None
 
 
 def deal_with_ticklabels(cbar, cbar_max, ticklabels, ticklocations, units, im):
+    """
+    Handle settings related to ticklabels
+    """
     if ticklocations is not None:
         cbar.set_ticks(ticklocations)
         if units is not None and units.lower() == "month":
             cbar.set_ticklabels(
                 ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
             )
-            units == "Month"
+            units = "Month"
         elif ticklabels is not None:
             cbar.set_ticklabels(ticklabels)
     if isinstance(im, mplcol.QuadMesh):
@@ -173,7 +184,7 @@ def deal_with_ticklabels(cbar, cbar_max, ticklabels, ticklocations, units, im):
     if cbar_max is not None and clim_max > cbar_max:
         if ticklabels is not None:
             raise RuntimeError(
-                "How to handle this now that you are specifying ticklocations separate from ticklabels?"
+                "How to handle this now that ticklocations is specified separately from ticklabels?"
             )
         ticks = cbar.get_ticks()
         if ticks[-2] > cbar_max:
@@ -182,24 +193,28 @@ def deal_with_ticklabels(cbar, cbar_max, ticklabels, ticklocations, units, im):
             )
         ticklabels = ticks.copy()
         ticklabels[-1] = cbar_max
-        for i, x in enumerate(ticklabels):
-            if x == int(x):
-                ticklabels[i] = str(int(x))
+        for i, ticklabel in enumerate(ticklabels):
+            if ticklabel == int(ticklabel):
+                ticklabels[i] = str(int(ticklabel))
         cbar.set_ticks(
             ticks
-        )  # Calling this before set_xticklabels() avoids "UserWarning: FixedFormatter should only be used together with FixedLocator" (https://stackoverflow.com/questions/63723514/userwarning-fixedformatter-should-only-be-used-together-with-fixedlocator)
+        )  # Calling this before set_xticklabels() avoids "UserWarning: FixedFormatter should only
+        # be used together with FixedLocator" (https://stackoverflow.com/questions/63723514)
         cbar.set_ticklabels(ticklabels)
 
 
 def set_ticks(lonlat_bin_width, fontsize, x_or_y):
+    """
+    Plot tick marks
+    """
     if x_or_y == "x":
         ticks = np.arange(-180, 181, lonlat_bin_width)
     else:
         ticks = np.arange(-60, 91, lonlat_bin_width)
 
     ticklabels = [str(x) for x in ticks]
-    for i, x in enumerate(ticks):
-        if x % 2:
+    for i, tick in enumerate(ticks):
+        if tick % 2:
             ticklabels[i] = ""
 
     if x_or_y == "x":
