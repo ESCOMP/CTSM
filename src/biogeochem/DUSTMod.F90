@@ -420,6 +420,7 @@ contains
     real(r8), parameter :: z0a_glob = 1e-4_r8          ! [m] assumed globally constant aeolian roughness length value in Leung et al. (2023), for the log law of the wall for Comola et al. (2019) intermittency scheme. dmleung 20 Feb 2024
     real(r8), parameter :: hgt_sal = 0.1_r8            ! [m] saltation height used by Comola et al. (2019) intermittency scheme for the log law of the wall. dmleung 20 Feb 2024
     real(r8), parameter :: vai0_Okin = 0.1_r8          ! [m2/m2] minimum VAI needed for Okin-Pierre's vegetation drag partition equation. lai=0 in the equation will lead to infinity, so a small value is added into this lai dmleung defined.
+    real(r8), parameter :: zii = 1000.0_r8             ! [m] convective boundary layer height added by dmleung 20 Feb 2024, following other CTSM modules (e.g., CanopyFluxesMod). Should we transfer PBL height (PBLH) from CAM?
     real(r8) :: numer                                  ! Numerator term for threshold crossing rate
     real(r8) :: denom                                  ! Denominator term for threshold crossing rate
     !------------------------------------------------------------------------
@@ -467,7 +468,8 @@ contains
          vai_Okin            => dust_inst%vai_Okin_patch             , & ! vegetation area index for calculating Okin-Pierre vegetation drag partitioning. vai=0 in the ssr equation will lead to infinity, so a small value is added into this vai dmleung defined. (no need to output) 16 Feb 2024
          frc_thr_rghn_fct    => dust_inst%frc_thr_rghn_fct_patch     , & ! output hybrid/total drag partition factor considering both rock and vegetation drag partition factors.
          wnd_frc_thr_std     => dust_inst%wnd_frc_thr_std_patch      , & ! standardized dust emission threshold friction velocity defined in Jasper Kok et al. (2014).
-         dpfct_rock          => dust_inst%dpfct_rock_patch            & ! output rock drag partition factor defined in Marticorena and Bergametti 1995. A fraction between 0 and 1.
+         dpfct_rock          => dust_inst%dpfct_rock_patch           , & ! output rock drag partition factor defined in Marticorena and Bergametti 1995. A fraction between 0 and 1.
+         obu                 => frictionvel_inst%obu_patch             & ! Input:  [real(r8) (:)   ] Monin-Obukhov length from the friction Velocity module 
          )
 
       ttlai(bounds%begp : bounds%endp) = 0._r8
@@ -735,7 +737,8 @@ contains
             ! mean lowpass-filtered wind speed at hgt_sal = 0.1 m saltation height (assuming aerodynamic roughness length z0a_glob = 1e-4 m globally for ease; also assuming neutral condition)
             u_mean_slt(p) = (wnd_frc_slt/k) * log(hgt_sal / z0a_glob)  ! translating from ustar (velocity scale) to actual wind
 
-            stblty(p) = 0   ! -dmleung 2 Dec 2021: use stability = 0 for now, assuming no buoyancy contribution. Might uncomment the above lines in future revisions.
+            !stblty(p) = 0_r8   ! -dmleung 2 Dec 2021: use stability = 0 for now, assuming no buoyancy contribution. Might uncomment the above lines in future revisions.
+            stblty(p) = zii / obu(p)   ! -dmleung 20 Feb 2024: use obu from CTSM and PBL height = zii (= 1000_r8) which is default in CTSM. Should we transfer PBL height from CAM?
             if ((12_r8 - 0.5_r8 * stblty(p)) .GE. 0.001_r8) then ! should have used 0 theoretically; used 0.001 here to avoid undefined values
                u_sd_slt(p) = wnd_frc_slt * (12_r8 - 0.5_r8 * stblty(p))**0.333_r8
             else
