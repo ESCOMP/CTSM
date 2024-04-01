@@ -646,8 +646,8 @@ contains
          ! purpose: compute factor by which surface roughness increases threshold
          !          friction velocity (currently a constant)
 
-         !if (lnd_frc_mbl(p) > 0.0_r8  .AND. tlai_lu(l)<=1_r8) then
-         if (lnd_frc_mbl(p) > 0.0_r8  .AND. ttlai(p)<=1_r8) then
+         if (lnd_frc_mbl(p) > 0.0_r8  .AND. tlai_lu(l)<=1_r8) then
+         !if (lnd_frc_mbl(p) > 0.0_r8  .AND. ttlai(p)<=1_r8) then
             ! vegetation drag partition equation following Gregory Okin (2008) + Caroline Pierre et al. (2014)
             !lai(p) = tlai_lu(l)+0.1_r8       ! LAI+SAI averaged to landunit level; the equation is undefined at lai=0, and LAI in CTSM has some zeros over deserts, so we add in a small number.
             !lai(p) = ttlai(p) + lai0_Okin     ! ttlai = tlai+tsai. Okin-Pierre's equation is undefined at lai=0, and LAI in CTSM has some zeros over deserts, so we add in a small number. On 26 Feb 2024, dmleung changed from tlai_lu(l) to ttlai(p)
@@ -655,9 +655,17 @@ contains
             !   lai(p)  = 1_r8   ! setting LAI = 1 to be a max value (since K_length goes to negative when LAI>1)
             !end if              ! 
 
-            if (ttlai(p) + vai0_Okin <= 1_r8) then
-               vai_Okin(p) = ttlai(p) + vai0_Okin     ! ttlai = vai = tlai+tsai. Okin-Pierre's equation is undefined at vai=0, and VAI in CTSM has some zeros over deserts, so we add in a small number. On 26 Feb 2024, dmleung changed from tlai_lu(l) to ttlai(p)
-            end if                                    ! In the Okin-Pierre formulation, VAI has to be 0 < VAI <= 1.
+            !if (ttlai(p) + vai0_Okin <= 1_r8) then
+            !   vai_Okin(p) = ttlai(p) + vai0_Okin     ! ttlai = vai = tlai+tsai. Okin-Pierre's equation is undefined at vai=0, and VAI in CTSM has some zeros over deserts, so we add in a small number. On 26 Feb 2024, dmleung changed from tlai_lu(l) to ttlai(p)
+            !if (tlai_lu(l) + vai0_Okin <= 1_r8) then
+            !   vai_Okin(p) = tlai_lu(l) + vai0_Okin   ! testing on 27 Feb 2024
+            !end if                                    ! In the Okin-Pierre formulation, VAI has to be 0 < VAI <= 1.
+
+            vai_Okin(p) = tlai_lu(l)+vai0_Okin       ! LAI+SAI averaged to landunit level; the equation is undefined at lai=0, and LAI in CTSM has some zeros over deserts, so we add in a small number.
+            if (vai_Okin(p) > 1_r8) then
+               vai_Okin(p)  = 1_r8   ! setting LAI = 1 to be a max value (since K_length goes to negative when LAI>1)
+            end if 
+
 
             ! calculate Okin's shear stress ratio (SSR, which is vegetation drag partition factor) using Pierre's equation
             K_length = 2_r8 * (1_r8/vai_Okin(p) - 1_r8)   ! Here LAI has to be non-zero to avoid blowup, and < 1 to avoid -ve K_length. See this equation in Leung et al. (2023). This line is Okin's formulation
