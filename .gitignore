@@ -105,13 +105,6 @@ unit_test_build
 # Tools executables
 /tools/mkprocdata_map/mkprocdata_map
 
-# mkmapdata output files
-/tools/mkmapdata/PET*.RegridWeightGen.Log
-/tools/mkmapdata/regrid.*.out
-/tools/mkmapdata/regrid.*.err
-/tools/mkmapdata/regrid.o*
-/tools/mkmapdata/map*.nc
-
 # run_neon output directories
 /tools/site_and_regional/listing.csv
 /tools/site_and_regional/????/
