@@ -27,7 +27,6 @@ _config_cache_template = """
 </config_definition>
 """
 
-
 ###############################################################################
 def buildnml(case, caseroot, compname):
     ###############################################################################
@@ -60,8 +59,7 @@ def buildnml(case, caseroot, compname):
     run_refdate = case.get_value("RUN_REFDATE")
     run_reftod = case.get_value("RUN_REFTOD")
     glc_nec = case.get_value("GLC_NEC")
-    cism_use_antarctica = case.get_value("CISM_USE_ANTARCTICA")
-    dglc_use_antarctica = case.get_value("DGLC_USE_ANTARCTICA")
+    glc_use_antarctica = case.get_value("GLC_USE_ANTARCTICA")
     mask = case.get_value("MASK_GRID")
     driver = case.get_value("COMP_INTERFACE").lower()
 
@@ -98,9 +96,7 @@ def buildnml(case, caseroot, compname):
     clm_phys = case.get_value("CLM_PHYSICS_VERSION")
 
     config_cache_text = _config_cache_template.format(clm_phys=clm_phys)
-    config_cache_path = os.path.join(
-        caseroot, "Buildconf", compname + "conf", "config_cache.xml"
-    )
+    config_cache_path = os.path.join(caseroot, "Buildconf", compname + "conf", "config_cache.xml")
     with open(config_cache_path, "w") as config_cache_file:
         config_cache_file.write(config_cache_text)
 
@@ -157,12 +153,9 @@ def buildnml(case, caseroot, compname):
     else:
         nomeg = ""
 
-    glc_use_antarctica = cism_use_antarctica
     if glc_use_antarctica is None:
-        glc_use_antarctica = dglc_use_antarctica
-    if glc_use_antarctica is None:
-        # This is the case for compsets without CISM or DGLC, where the
-        # CISM_USE_ANTARCTICA and DGLC_USE_ANTARCTICA xml variables are not defined
+        # This is the case for compsets with SGLC where the GLC_USE_ANTARCTICA xml
+        # variable isn't defined
         glc_use_antarctica_flag = ""
     elif isinstance(glc_use_antarctica, bool):
         if glc_use_antarctica:
@@ -170,20 +163,10 @@ def buildnml(case, caseroot, compname):
         else:
             glc_use_antarctica_flag = ""
     else:
-        if cism_use_antarctia:
-            expect(
-                False,
-                "Unexpected value for CISM_USE_ANTARCTICA: {}".format(
-                    cism_use_antarctica
-                ),
-            )
-        else:
-            expect(
-                False,
-                "Unexpected value for DGLC_USE_ANTARCTICA: {}".format(
-                    dglc_use_antarctica
-                ),
-            )
+        expect(
+            False,
+            "Unexpected value for GLC_USE_ANTARCTICA: {}".format(glc_use_antarctica),
+        )
 
     if clm_nml_use_case != "UNSET":
         usecase = "-use_case %s" % clm_nml_use_case
@@ -218,9 +201,7 @@ def buildnml(case, caseroot, compname):
         lndfrac_file = os.path.join(lnd_domain_path, lnd_domain_file)
         lndfrac_setting = "-lnd_frac " + lndfrac_file
 
-    config_cache_file = os.path.join(
-        caseroot, "Buildconf", compname + "conf", "config_cache.xml"
-    )
+    config_cache_file = os.path.join(caseroot, "Buildconf", compname + "conf", "config_cache.xml")
 
     # -----------------------------------------------------
     # Clear out old data
@@ -235,6 +216,7 @@ def buildnml(case, caseroot, compname):
 
     ninst = int(ninst_lnd)
     for inst_counter in range(1, ninst + 1):
+
         # determine instance string
         inst_string = ""
         if ninst > 1:
@@ -282,9 +264,7 @@ def buildnml(case, caseroot, compname):
                         break
 
             if not os.path.exists(os.path.join(rundir, clm_startfile)):
-                logger.warning(
-                    "WARNING: Could NOT find a start file to use using" + clm_startfile
-                )
+                logger.warning("WARNING: Could NOT find a start file to use using" + clm_startfile)
             clm_icfile = "%s = '%s'" % (startfile_type, clm_startfile)
         else:
             clm_icfile = ""
@@ -295,9 +275,7 @@ def buildnml(case, caseroot, compname):
         user_nl_file = os.path.join(caseroot, "user_nl_clm" + inst_string)
         namelist_infile = os.path.join(ctsmconf, "namelist")
 
-        create_namelist_infile(
-            case, user_nl_file, namelist_infile, "\n".join(infile_lines)
-        )
+        create_namelist_infile(case, user_nl_file, namelist_infile, "\n".join(infile_lines))
 
         cmd = os.path.join(lnd_root, "bld", "build-namelist")
 
@@ -360,6 +338,7 @@ def buildnml(case, caseroot, compname):
 
 ###############################################################################
 def _main_func():
+
     caseroot = parse_input(sys.argv)
     with Case(caseroot) as case:
         compname = case.get_value("COMP_LND")
