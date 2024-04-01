@@ -166,7 +166,7 @@ my $testType="namelistTest";
 my $ntests = 2455;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1341;
+   $ntests += 1511;
 }
 plan( tests=>$ntests );
 
