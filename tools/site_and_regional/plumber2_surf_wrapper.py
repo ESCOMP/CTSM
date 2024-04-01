@@ -17,11 +17,6 @@ Instructions for running using conda python environments:
 conda activate ctsm_py
 
 """
-# TODO
-# Automatic downloading of missing files if they are missing
-#-[ ] Download neon sites and dom pft file
-#-[ ] Make sure verbose works for printing out commands running
-
 #  Import libraries
 from __future__ import print_function
 
