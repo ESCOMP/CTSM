@@ -657,15 +657,12 @@ contains
 
             !if (ttlai(p) + vai0_Okin <= 1_r8) then
             !   vai_Okin(p) = ttlai(p) + vai0_Okin     ! ttlai = vai = tlai+tsai. Okin-Pierre's equation is undefined at vai=0, and VAI in CTSM has some zeros over deserts, so we add in a small number. On 26 Feb 2024, dmleung changed from tlai_lu(l) to ttlai(p)
-            !if (tlai_lu(l) + vai0_Okin <= 1_r8) then
-            !   vai_Okin(p) = tlai_lu(l) + vai0_Okin   ! testing on 27 Feb 2024
             !end if                                    ! In the Okin-Pierre formulation, VAI has to be 0 < VAI <= 1.
 
             vai_Okin(p) = tlai_lu(l)+vai0_Okin       ! LAI+SAI averaged to landunit level; the equation is undefined at lai=0, and LAI in CTSM has some zeros over deserts, so we add in a small number.
             if (vai_Okin(p) > 1_r8) then
                vai_Okin(p)  = 1_r8   ! setting LAI = 1 to be a max value (since K_length goes to negative when LAI>1)
-            end if 
-
+            end if
 
             ! calculate Okin's shear stress ratio (SSR, which is vegetation drag partition factor) using Pierre's equation
             K_length = 2_r8 * (1_r8/vai_Okin(p) - 1_r8)   ! Here LAI has to be non-zero to avoid blowup, and < 1 to avoid -ve K_length. See this equation in Leung et al. (2023). This line is Okin's formulation
@@ -720,7 +717,8 @@ contains
                !################### for Leung et al. (2023) ################################################
                !################ uncomment the below block if want to use Leung's scheme ###################
 
-               flx_mss_vrt_dst_ttl(p) = dst_emiss_coeff(p) * mss_frc_cly_vld(c) * forc_rho(c) * ((wnd_frc_slt**2.0_r8 - wnd_frc_thr_slt_it**2.0_r8) / wnd_frc_thr_slt_std) * (wnd_frc_slt / wnd_frc_thr_slt_it)**frag_expt  ! Leung et al. (2022) uses Kok et al. (2014) dust emission euqation for emission flux
+               !flx_mss_vrt_dst_ttl(p) = dst_emiss_coeff(p) * mss_frc_cly_vld(c) * forc_rho(c) * ((wnd_frc_slt**2.0_r8 - wnd_frc_thr_slt_it**2.0_r8) / wnd_frc_thr_slt_std) * (wnd_frc_slt / wnd_frc_thr_slt_it)**frag_expt  ! Leung et al. (2022) uses Kok et al. (2014) dust emission euqation for emission flux
+               flx_mss_vrt_dst_ttl(p) = dst_emiss_coeff(p) * mss_frc_cly_vld(c) * forc_rho(c) * ((wnd_frc_slt**2.0_r8 - wnd_frc_thr_slt_it**2.0_r8) / wnd_frc_thr_slt_it) * (wnd_frc_slt / wnd_frc_thr_slt_it)**frag_expt  ! Leung et al. (2022) uses Kok et al. (2014) dust emission euqation for emission flux
 
                ! account for bare soil fraction, frozen soil fraction, and apply global tuning parameter (Kok et al. 2014)
                flx_mss_vrt_dst_ttl(p) = flx_mss_vrt_dst_ttl(p) * lnd_frc_mbl(p) * C_tune * liqfrac
