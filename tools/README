@@ -196,12 +196,12 @@ III. Process sequence to create input datasets needed to run CTSM
         file for CTSM. Output domain files will be named according to the input OCN/LND
         gridnames.
 
-    5.) Create surface datasets with mksurfdata_esmf on cheyenne
+    5.) Create surface datasets with mksurfdata_esmf on Derecho
         (See mksurfdata_esmf/README for more help on doing this)
 
        - gen_mksurfdata_build.sh to build
        - gen_mksurfdata_namelist to build the namelist
-       - gen_mksurfdata_jobscript_single to build a batch script to run on cheyenne
+       - gen_mksurfdata_jobscript_single to build a batch script to run on Derecho
        - Submit the batch script just created above
 
        - This step uses the results of step (3) entered into the XML database

@@ -15,7 +15,7 @@
 # make crop-numa
 #
 # NOTE: The default behavior is to parallelize data set creation using
-# the batch system by submitting jobs to the batch queue (on cheyenne).
+# the batch system by submitting jobs to the batch queue (on Derecho).
 #
 # In all cases where "--scenario $@" appears, the code executes the
 # recipe for the specific target/scenario that it finds in
