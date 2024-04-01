@@ -34,13 +34,13 @@ def write_usermods(lat,lon,site,start_year,end_year,
     iFile.write('../defaults')
     iFile.close()
     
-    #TODO, move these input files do a different directory and update script
-    LAIstream = '$DIN_LOC_ROOT/lnd/clm2/lai_streams/PLUMBER2/${PLUMBER2SITE}/LAI_stream_${PLUMBER2SITE}_'+ \
+    LAIstream = '\$DIN_LOC_ROOT/lnd/clm2/lai_streams/PLUMBER2/${PLUMBER2SITE}/LAI_stream_${PLUMBER2SITE}_'+ \
                  str(start_year)+'-'+str(end_year)+'.nc'
     shell = os.path.join(site_dir,'shell_commands')
     sFile = open(shell, 'w') # or 'a' to add text instead of truncate
     sFile.write(
-        './xmlchange PLUMBER2SITE='+site + '\n' \
+        #TODO turn on following line after cdeps changes are added
+        #'./xmlchange PLUMBER2SITE='+site + '\n' \
         './xmlchange PTS_LON='+str(lon) + '\n' \
         './xmlchange PTS_LAT='+str(lat) + '\n' \
         './xmlchange RUN_STARTDATE='+str(start_date) + '\n' \
@@ -50,8 +50,10 @@ def write_usermods(lat,lon,site,start_year,end_year,
         './xmlchange START_TOD='+str(start_tod) + '\n' \
         './xmlchange ATM_NCPL='+str(atm_ncpl) + '\n' \
         '\n' \
+        # TODO, get working for CTSM5.1, remove this line as it's redundant after PLUMBER2SITE is added
+        'echo "fsurdat=\'/glade/u/home/wwieder/CTSM/tools/site_and_regional/subset_data_single_point/surfdata_1x1_PLUMBER2_'+site+'_hist_16pfts_Irrig_CMIP6_simyr2000_c231005.nc \' " >> user_nl_clm \n' \
         
-        'echo "CLM_USRDAT.PLUMBER2:datafiles=\'$DIN_LOC_ROOT/atm/datm7/CLM1PT_data/PLUMBER2/'+site+'/CLM1PT_data/CTSM_DATM_'+site+'_'+str(start_year)+'-'+str(end_year)+'.nc \'" >> user_nl_datm_streams \n' \
+        'echo "CLM_USRDAT.PLUMBER2:datafiles= \$DIN_LOC_ROOT/atm/datm7/CLM1PT_data/PLUMBER2/'+site+'/CLM1PT_data/CTSM_DATM_'+site+'_'+str(start_year)+'-'+str(end_year)+'.nc " >> user_nl_datm_streams \n' \
 
         'echo "presaero.SSP3-7.0:year_first='+str(start_year) + '" >> user_nl_datm_streams \n' \
         'echo "presaero.SSP3-7.0:year_last='+str(end_year) + '" >> user_nl_datm_streams \n' \
@@ -82,9 +84,10 @@ def write_usermods(lat,lon,site,start_year,end_year,
         'fi \n'  \
         '\n' \
 
+        # TODO, check to see if this works after PLUMBER2SITE is added
         '# Turn on LAI streams for a SP case \n' \
         'if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then \n' \
-        '  echo "stream_fldfilename_lai=\''+LAIstream+'\'" >> user_nl_clm \n' \
+        '  echo "stream_fldfilename_lai='+LAIstream+'" >> user_nl_clm \n' \
         '  echo "model_year_align_lai='+str(start_year) + '" >> user_nl_clm \n' \
         '  echo "stream_year_first_lai='+str(start_year) + '" >> user_nl_clm \n' \
         '  echo "stream_year_last_lai='+str(end_year) + '" >> user_nl_clm \n' \
