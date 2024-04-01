@@ -11,7 +11,6 @@ I.  General directory structure:
         crop_calendars --- Regrid and process GGCMI sowing and harvest date files for use in CTSM.
 
         mkmapgrids ------- Create regular lat/lon SCRIP grid files
-        mkmapgrids ------- Create regular lat/lon SCRIP grid files needed by mkmapdata 
         mkprocdata_map --- Convert output unstructured grids into a 2D format that
                            can be plotted easily
 
