@@ -19,7 +19,7 @@
 !----------------------------------------------------------------------------------
 
 flanduse_timeseries = ' '   ! This isn't needed for a non transient case, but will be once we start using transient compsets
-fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/PLUMBER2/surfdata_1x1_PLUMBER2_${PLUMBER2SITE}_hist_2000_16pfts_c240326.nc
+fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/PLUMBER2/surfdata_1x1_PLUMBER2_${PLUMBER2SITE}_hist_2000_16pfts_c240326.nc"
 
 ! TODO, this is only needed for transient simulations, not spinup
 ! this allows for large h1 data files, regardless or run length
