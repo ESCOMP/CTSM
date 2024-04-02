@@ -27,6 +27,7 @@ _config_cache_template = """
 </config_definition>
 """
 
+
 ###############################################################################
 def buildnml(case, caseroot, compname):
     ###############################################################################
@@ -60,6 +61,7 @@ def buildnml(case, caseroot, compname):
     run_reftod = case.get_value("RUN_REFTOD")
     glc_nec = case.get_value("GLC_NEC")
     cism_use_antarctica = case.get_value("CISM_USE_ANTARCTICA")
+    dglc_use_antarctica = case.get_value("DGLC_USE_ANTARCTICA")
     mask = case.get_value("MASK_GRID")
     driver = case.get_value("COMP_INTERFACE").lower()
 
@@ -144,8 +146,8 @@ def buildnml(case, caseroot, compname):
                 or clm_usrdat_name is "NEON.PRISM"
             ):
                 logger.warning(
-                    "WARNING: Do you have approriprate initial conditions for this simulation?"
-                    + " Check that the finidat file used in the lnd_in namelist is apprporiately spunup for your case"
+                    "WARNING: Do you have appropriate initial conditions for this simulation?"
+                    + " Check that the finidat file used in the lnd_in namelist is appropriately spunup for your case"
                 )
 
     if comp_atm != "datm":
@@ -153,20 +155,29 @@ def buildnml(case, caseroot, compname):
     else:
         nomeg = ""
 
-    if cism_use_antarctica is None:
-        # This is the case for compsets without CISM, where the CISM_USE_ANTARCTICA xml
-        # variable isn't defined
+    glc_use_antarctica = cism_use_antarctica
+    if glc_use_antarctica is None:
+        glc_use_antarctica = dglc_use_antarctica
+    if glc_use_antarctica is None:
+        # This is the case for compsets without CISM or DGLC, where the
+        # CISM_USE_ANTARCTICA and DGLC_USE_ANTARCTICA xml variables are not defined
         glc_use_antarctica_flag = ""
-    elif isinstance(cism_use_antarctica, bool):
-        if cism_use_antarctica:
+    elif isinstance(glc_use_antarctica, bool):
+        if glc_use_antarctica:
             glc_use_antarctica_flag = "-glc_use_antarctica"
         else:
             glc_use_antarctica_flag = ""
     else:
-        expect(
-            False,
-            "Unexpected value for CISM_USE_ANTARCTICA: {}".format(cism_use_antarctica),
-        )
+        if cism_use_antarctia:
+            expect(
+                False,
+                "Unexpected value for CISM_USE_ANTARCTICA: {}".format(cism_use_antarctica),
+            )
+        else:
+            expect(
+                False,
+                "Unexpected value for DGLC_USE_ANTARCTICA: {}".format(dglc_use_antarctica),
+            )
 
     if clm_nml_use_case != "UNSET":
         usecase = "-use_case %s" % clm_nml_use_case
