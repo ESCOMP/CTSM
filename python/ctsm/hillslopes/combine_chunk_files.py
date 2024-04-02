@@ -201,51 +201,50 @@ def main():
 
         for i in range(sim):
             for j in range(sjm):
-                if chunk_mask[j, i] > 0 and landmask[j, i] > 0:
+                if not(chunk_mask[j, i] > 0 and landmask[j, i] > 0):
+                    continue
 
-                    h_elev[:, j, i] = h_elev0[:, j, i]
-                    h_dist[:, j, i] = h_dist0[:, j, i]
-                    h_width[:, j, i] = h_width0[:, j, i]
-                    h_area[:, j, i] = h_area0[:, j, i]
-                    h_slope[:, j, i] = h_slope0[:, j, i]
-                    h_aspect[:, j, i] = h_aspect0[:, j, i]
-                    if addBedrock:
-                        h_bedrock[:, j, i] = h_bedrock0[:, j, i]
-                    if addStream:
-                        h_stream_depth[j, i] = h_stream_depth0[j, i]
-                        h_stream_width[j, i] = h_stream_width0[j, i]
-                        h_stream_slope[j, i] = h_stream_slope0[j, i]
+                h_elev[:, j, i] = h_elev0[:, j, i]
+                h_dist[:, j, i] = h_dist0[:, j, i]
+                h_width[:, j, i] = h_width0[:, j, i]
+                h_area[:, j, i] = h_area0[:, j, i]
+                h_slope[:, j, i] = h_slope0[:, j, i]
+                h_aspect[:, j, i] = h_aspect0[:, j, i]
+                if addBedrock:
+                    h_bedrock[:, j, i] = h_bedrock0[:, j, i]
+                if addStream:
+                    h_stream_depth[j, i] = h_stream_depth0[j, i]
+                    h_stream_width[j, i] = h_stream_width0[j, i]
+                    h_stream_slope[j, i] = h_stream_slope0[j, i]
 
-                    nhillcolumns[j, i] = nhillcolumns0[j, i]
-                    pct_hillslope[:, j, i] = pct_hillslope0[:, j, i]
-                    hillslope_index[:, j, i] = hillslope_index0[:, j, i]
-                    column_index[:, j, i] = column_index0[:, j, i]
-                    downhill_column_index[:, j, i] = downhill_column_index0[:, j, i]
+                nhillcolumns[j, i] = nhillcolumns0[j, i]
+                pct_hillslope[:, j, i] = pct_hillslope0[:, j, i]
+                hillslope_index[:, j, i] = hillslope_index0[:, j, i]
+                column_index[:, j, i] = column_index0[:, j, i]
+                downhill_column_index[:, j, i] = downhill_column_index0[:, j, i]
 
-                    # if 2 or less valid aspects, remove all hillslope data
-                    minAspect = True
-                    if minAspect:
-                        if nhillcolumns0[j, i] > 0:
-                            # check number of hillslopes
-                            h_ndx = hillslope_index0[:, j, i]
-                            nactual_hillslopes = np.unique(h_ndx[h_ndx > 0]).size
-                            if nactual_hillslopes < 3:
-                                h_elev[:, j, i] = 0
-                                h_dist[:, j, i] = 0
-                                h_width[:, j, i] = 0
-                                h_area[:, j, i] = 0
-                                h_slope[:, j, i] = 0
-                                h_aspect[:, j, i] = 0
-                                h_bedrock[:, j, i] = 0
-                                h_stream_depth[j, i] = 0
-                                h_stream_width[j, i] = 0
-                                h_stream_slope[j, i] = 0
+                # if 2 or less valid aspects, remove all hillslope data
+                if nhillcolumns0[j, i] > 0:
+                    # check number of hillslopes
+                    h_ndx = hillslope_index0[:, j, i]
+                    nactual_hillslopes = np.unique(h_ndx[h_ndx > 0]).size
+                    if nactual_hillslopes < 3:
+                        h_elev[:, j, i] = 0
+                        h_dist[:, j, i] = 0
+                        h_width[:, j, i] = 0
+                        h_area[:, j, i] = 0
+                        h_slope[:, j, i] = 0
+                        h_aspect[:, j, i] = 0
+                        h_bedrock[:, j, i] = 0
+                        h_stream_depth[j, i] = 0
+                        h_stream_width[j, i] = 0
+                        h_stream_slope[j, i] = 0
 
-                                nhillcolumns[j, i] = 0
-                                pct_hillslope[:, j, i] = 0
-                                hillslope_index[:, j, i] = 0
-                                column_index[:, j, i] = 0
-                                downhill_column_index[:, j, i] = 0
+                        nhillcolumns[j, i] = 0
+                        pct_hillslope[:, j, i] = 0
+                        hillslope_index[:, j, i] = 0
+                        column_index[:, j, i] = 0
+                        downhill_column_index[:, j, i] = 0
 
     # -- Write data to file ------------------
 
