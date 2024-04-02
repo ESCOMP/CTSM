@@ -13,6 +13,7 @@ import numpy as np
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
 from ctsm.hillslopes.hillslope_utils import create_variables as shared_create_variables
+from ctsm.hillslopes.hillslope_utils import add_stream_channel_vars
 
 
 def parse_arguments(argv):
@@ -141,7 +142,7 @@ def main():
         nmaxhillcol = len(first_gridcell_file.dimensions["nmaxhillcol"])
 
         add_bedrock = "hillslope_bedrock_depth" in first_gridcell_file.variables.keys()
-        add_stream_channel_vars = "hillslope_stream_depth" in first_gridcell_file.variables.keys()
+        do_add_stream_channel_vars = "hillslope_stream_depth" in first_gridcell_file.variables.keys()
 
         first_gridcell_file.close()
 
@@ -153,7 +154,7 @@ def main():
             nhillslope,
             nmaxhillcol,
             add_bedrock,
-            add_stream_channel_vars,
+            do_add_stream_channel_vars,
         )
 
 
@@ -165,7 +166,7 @@ def write_to_file(
     nhillslope,
     nmaxhillcol,
     add_bedrock,
-    add_stream_channel_vars,
+    do_add_stream_channel_vars,
 ):
     """
     Write to file
@@ -200,7 +201,7 @@ def write_to_file(
         osdepth,
         oswidth,
         osslope,
-    ) = create_variables(add_stream_channel_vars, outfile)
+    ) = create_variables(do_add_stream_channel_vars, outfile)
 
     # loop over gridcell files
     for gfile in gfiles:
@@ -260,7 +261,7 @@ def write_to_file(
                     :,
                 ]
             )
-        if add_stream_channel_vars:
+        if do_add_stream_channel_vars:
             hillslope_stream_depth = np.asarray(
                 gfile_ds.variables["hillslope_stream_depth"][
                     :,
@@ -314,7 +315,7 @@ def write_to_file(
         if add_bedrock:
             obed[:, j, i] = hillslope_bedrock
 
-        if add_stream_channel_vars:
+        if do_add_stream_channel_vars:
             osdepth[j, i] = hillslope_stream_depth
             oswidth[j, i] = hillslope_stream_width
             osslope[j, i] = hillslope_stream_slope
@@ -323,7 +324,7 @@ def write_to_file(
     print(outfile_path + " created")
 
 
-def create_variables(add_stream_channel_vars, outfile):
+def create_variables(do_add_stream_channel_vars, outfile):
     """
     Create variables
     """
@@ -383,20 +384,8 @@ def create_variables(add_stream_channel_vars, outfile):
     ocmask.units = "unitless"
     ocmask.long_name = "chunk mask"
 
-    if add_stream_channel_vars:
-        wdims = outfile["LONGXY"].dimensions
-        osdepth = outfile.createVariable("hillslope_stream_depth", float, wdims)
-        oswidth = outfile.createVariable("hillslope_stream_width", float, wdims)
-        osslope = outfile.createVariable("hillslope_stream_slope", float, wdims)
-
-        osdepth.long_name = "stream channel bankfull depth"
-        osdepth.units = "m"
-
-        oswidth.long_name = "stream channel bankfull width"
-        oswidth.units = "m"
-
-        osslope.long_name = "stream channel slope"
-        osslope.units = "m/m"
+    if do_add_stream_channel_vars:
+        osdepth, oswidth, osslope = add_stream_channel_vars(outfile)
 
     # Initialize arrays
     olon[
@@ -452,7 +441,7 @@ def create_variables(add_stream_channel_vars, outfile):
         :,
     ] = 0
 
-    if add_stream_channel_vars:
+    if do_add_stream_channel_vars:
         osdepth[
             :,
         ] = 0

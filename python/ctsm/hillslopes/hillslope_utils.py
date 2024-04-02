@@ -8,148 +8,102 @@ def create_variables(outfile):
     """
     Create variables
     """
-    ohand = outfile.createVariable(
+    ohand = create_variable(
+        outfile,
         "hillslope_elevation",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+        "m",
+        "hillslope elevation",
     )
-    ohand.units = "m"
-    ohand.long_name = "hillslope elevation"
 
-    odtnd = outfile.createVariable(
+    odtnd = create_variable(
+        outfile,
         "hillslope_distance",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+        "m",
+        "hillslope distance",
     )
-    odtnd.units = "m"
-    odtnd.long_name = "hillslope distance"
 
-    owidth = outfile.createVariable(
+    owidth = create_variable(
+        outfile,
         "hillslope_width",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+        "m",
+        "hillslope width",
     )
-    owidth.units = "m"
-    owidth.long_name = "hillslope width"
 
-    oarea = outfile.createVariable(
+    oarea = create_variable(
+        outfile,
         "hillslope_area",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+        "m2",
+        "hillslope area",
     )
-    oarea.units = "m2"
-    oarea.long_name = "hillslope area"
 
-    oslop = outfile.createVariable(
+    oslop = create_variable(
+        outfile,
         "hillslope_slope",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+        "m/m",
+        "hillslope slope",
     )
-    oslop.units = "m/m"
-    oslop.long_name = "hillslope slope"
 
-    oasp = outfile.createVariable(
+    oasp = create_variable(
+        outfile,
         "hillslope_aspect",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+        "radians",
+        "hillslope aspect (clockwise from North)",
     )
-    oasp.units = "radians"
-    oasp.long_name = "hillslope aspect (clockwise from North)"
 
-    onhill = outfile.createVariable(
+    onhill = create_variable(
+        outfile,
         "nhillcolumns",
-        np.int32,
-        (
+        "unitless",
+        "number of columns per landunit",
+        dims=(
             "lsmlat",
             "lsmlon",
         ),
+        data_type=np.int32,
     )
-    onhill.units = "unitless"
-    onhill.long_name = "number of columns per landunit"
 
-    opcthill = outfile.createVariable(
+    opcthill = create_variable(
+        outfile,
         "pct_hillslope",
-        np.float64,
-        (
+        "per cent",
+        "percent hillslope of landunit",
+        dims=(
             "nhillslope",
             "lsmlat",
             "lsmlon",
-        ),
+        )
     )
-    opcthill.units = "per cent"
-    opcthill.long_name = "percent hillslope of landunit"
 
-    ohillndx = outfile.createVariable(
+    ohillndx = create_variable(
+        outfile,
         "hillslope_index",
-        np.int32,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+        "unitless",
+        "hillslope_index",
+        data_type=np.int32,
     )
-    ohillndx.units = "unitless"
-    ohillndx.long_name = "hillslope_index"
 
-    ocolndx = outfile.createVariable(
+    ocolndx = create_variable(
+        outfile,
         "column_index",
-        np.int32,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+        "unitless",
+        "column index",
+        data_type=np.int32,
     )
-    ocolndx.units = "unitless"
-    ocolndx.long_name = "column index"
 
-    odcolndx = outfile.createVariable(
+    odcolndx = create_variable(
+        outfile,
         "downhill_column_index",
-        np.int32,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+        "unitless",
+        "downhill column index",
+        data_type=np.int32,
     )
-    odcolndx.units = "unitless"
-    odcolndx.long_name = "downhill column index"
 
-    obed = outfile.createVariable(
+    obed = create_variable(
+        outfile,
         "hillslope_bedrock_depth",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+        "meters",
+        "hillslope bedrock depth",
     )
-    obed.units = "meters"
-    obed.long_name = "hillslope bedrock depth"
 
     return (
         ohand,
@@ -165,3 +119,59 @@ def create_variables(outfile):
         odcolndx,
         obed,
     )
+
+
+def add_stream_channel_vars(outfile):
+    """
+    Add stream channel variables
+    """
+    dims = ("lsmlat", "lsmlon")
+
+    wdepth = create_variable(
+        outfile,
+        "hillslope_stream_depth",
+        "m",
+        "stream channel bankfull depth",
+        dims=dims
+    )
+    wwidth = create_variable(
+        outfile,
+        "hillslope_stream_width",
+        "m",
+        "stream channel bankfull width",
+        dims=dims
+    )
+    wslope = create_variable(
+        outfile,
+        "hillslope_stream_slope",
+        "m/m",
+        "stream channel slope",
+        dims=dims
+    )
+
+    return wdepth, wwidth, wslope
+
+
+def create_variable(
+        outfile, name, units, long_name,
+        dims=(
+            "nmaxhillcol",
+            "lsmlat",
+            "lsmlon",
+        ),
+        data_type=np.float64,
+        ):
+    """
+    Convenient function to use for making hillslope variables
+    """
+
+    # Variable in netCDF output file
+    nc_var = outfile.createVariable(
+        name,
+        data_type,
+        dims,
+    )
+    nc_var.units = units
+    nc_var.long_name = long_name
+
+    return nc_var

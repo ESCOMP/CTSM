@@ -13,6 +13,7 @@ import numpy as np
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
 from ctsm.hillslopes.hillslope_utils import create_variables as shared_create_variables
+from ctsm.hillslopes.hillslope_utils import create_variable, add_stream_channel_vars
 
 
 def parse_arguments(argv):
@@ -166,18 +167,7 @@ def write_to_file(
     ] = 2
 
     # add stream variables
-    wdepth = outfile.createVariable("hillslope_stream_depth", np.float64, ("lsmlat", "lsmlon"))
-    wwidth = outfile.createVariable("hillslope_stream_width", np.float64, ("lsmlat", "lsmlon"))
-    wslope = outfile.createVariable("hillslope_stream_slope", np.float64, ("lsmlat", "lsmlon"))
-
-    wdepth.long_name = "stream channel bankfull depth"
-    wdepth.units = "m"
-
-    wwidth.long_name = "stream channel bankfull width"
-    wwidth.units = "m"
-
-    wslope.long_name = "stream channel slope"
-    wslope.units = "m/m"
+    wdepth, wwidth, wslope = add_stream_channel_vars(outfile)
 
     # Calculate stream geometry from hillslope parameters
     uharea = np.sum(area, axis=0)
@@ -216,17 +206,13 @@ def create_variables(outfile):
 
     shared_create_variables(outfile)
 
-    opft = outfile.createVariable(
+    create_variable(
+        outfile,
         "hillslope_pftndx",
-        np.int32,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+        "unitless",
+        "hillslope pft indices",
+        data_type=np.int32,
     )
-    opft.units = "unitless"
-    opft.long_name = "hillslope pft indices"
 
     outfile.variables["hillslope_pftndx"][
         :,
