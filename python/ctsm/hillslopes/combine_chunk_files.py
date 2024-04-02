@@ -6,9 +6,11 @@ import sys
 import os
 import shutil
 import datetime
-import netCDF4 as netcdf4
 import numpy as np
 
+# The below "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
+# though it does.
+from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
 def parse_arguments(argv):
     """
@@ -80,7 +82,7 @@ def main():
         args.input_dir, f"combined_chunk_ChunkIndex_HAND_4_col_hillslope_geo_params_section_quad_{args.dem_source}.nc"
     )
 
-    f = netcdf4.Dataset(args.input_file, "r")
+    f = Dataset(args.input_file, "r")
     landmask = f.variables["PFTDATA_MASK"][
         :,
     ]
@@ -96,7 +98,7 @@ def main():
         file_exists = os.path.exists(cfile)
 
         if initializeArrays and file_exists:
-            f = netcdf4.Dataset(cfile, "r")
+            f = Dataset(cfile, "r")
 
             ncolumns_per_gridcell = len(f.dimensions["nmaxhillcol"])
             nhillslope = len(f.dimensions["nhillslope"])
@@ -140,7 +142,7 @@ def main():
                 print(f"Skipping; chunk file not found: {cfile}")
             continue
         
-        f = netcdf4.Dataset(cfile, "r")
+        f = Dataset(cfile, "r")
         nhillslope = len(f.dimensions["nhillslope"])
         chunk_mask = f.variables["chunk_mask"][
             :,
@@ -249,7 +251,7 @@ def main():
     shutil.copyfile(args.input_file, args.output_file)
 
     print("appending file")
-    w = netcdf4.Dataset(args.output_file, "a")
+    w = Dataset(args.output_file, "a")
     w.creation_date = datetime.date.today().strftime("%y%m%d")
 
     w.createDimension("nhillslope", nhillslope)

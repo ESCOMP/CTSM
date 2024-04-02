@@ -7,11 +7,12 @@ import argparse
 import glob
 import datetime
 import numpy as np
-from netCDF4 import Dataset  # pylint: disable=no-name-in-module
-from ctsm.hillslopes.hillslope_utils import create_variables as shared_create_variables
 
-# The above "pylint: disable" is because pylint complains that netCDF4 has no
+# The below "pylint: disable" is because pylint complains that netCDF4 has no
 # member Dataset, even though it does.
+from netCDF4 import Dataset  # pylint: disable=no-name-in-module
+
+from ctsm.hillslopes.hillslope_utils import create_variables as shared_create_variables
 
 
 def parse_arguments(argv):

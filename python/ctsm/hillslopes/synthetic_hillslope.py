@@ -7,10 +7,11 @@ import os
 import shutil
 import sys
 import numpy as np
+
+# The below "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
+# though it does.
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
-# The above "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
-# though it does.
 from ctsm.hillslopes.hillslope_utils import create_variables as shared_create_variables
 
 
