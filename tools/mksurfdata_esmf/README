@@ -57,10 +57,7 @@ is not available on cime ported machines.
 IMPORTANT NOTE: ONLY WORKING ON DERECHO CURRENTLY
 =================================================
 
-Currently we have only tested and ran on Derecho. In the longer
-term we will make sure the process works for other CESM machines.
-
-Here's one issue tracking progress for this.
+Currently we have run and tested mksurfdata_esmf on Derecho. Please see this github issue about mksurfdata_esmf on other CESM machines:
 
 https://github.com/ESCOMP/CTSM/issues/2341
 
