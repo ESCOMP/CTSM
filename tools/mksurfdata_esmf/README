@@ -28,9 +28,9 @@ In addition for the build: python, bash-shell, CMake and GNU-Make are required
 These libraries need to be built such that they can all work together in the
 same executable. Hence, the above order may be required in building them.
 
-=========================================
-Use cime to manage the build requirements
-=========================================
+=======================================================================
+Use cime to manage the build requirements (but see IMPORTANT NOTE below)
+=======================================================================
 
 For users working on cime machines you can use the build script to build the
 tool. On other machines you'll need to do a port to cime and tell how to build
@@ -53,9 +53,31 @@ and able to be referenced with the env variable PIO which will need to be in
 the porting instructions for the machine. Currently an independent PIO library
 is not available on cime ported machines.
 
-=======================
+=================================================
+IMPORTANT NOTE: ONLY WORKING ON DERECHO CURRENTLY
+=================================================
+
+Currently we have only tested and ran on Derecho. In the longer
+term we will make sure the process works for other CESM machines.
+
+Here's one issue tracking progress for this.
+
+https://github.com/ESCOMP/CTSM/issues/2341
+
+========================================================
+IMPORTANT THERE HAVE BEEN PROBLEMS with REGIONAL grids!!
+========================================================
+
+See 
+
+https://github.com/ESCOMP/CTSM/issues/2430
+
+In general we recommend using subset_data and/or fsurdat_modifier
+for regional grids.
+
+==========================================================
 Building the executable (working in tools/mksurfdata_esmf)
-=======================
+==========================================================
 
 # Before starting, be sure that you have run
 > ./manage_externals/checkout_externals
@@ -67,9 +89,9 @@ Building the executable (working in tools/mksurfdata_esmf)
 # on derecho, casper, or izumi, you may need to update this, though
 # a default value does get set for other machines.
 
-=======================
+================================
 Running for a single submission:
-=======================
+================================
 # Work in the ctsm_pylib environment, which requires the following steps:
 > module unload python; module load conda
 > cd ../..; ./py_env_create
@@ -91,9 +113,9 @@ Running for a single submission:
 > qsub mksurfdata_jobscript_single
 # Read note about regional grids below.
 
-=======================
+===============================================
 Running for the generation of multiple datasets
-=======================
+===============================================
 # Work in the ctsm_pylib environment, as explained in earlier section.
 # gen_mksurfdata_jobscript_multi runs ./gen_mksurfdata_namelist for you
 > ./gen_mksurfdata_jobscript_multi --help
@@ -108,32 +130,3 @@ Running for the generation of multiple datasets
 NOTES
 ================
 
-------------------------------------
-slevis HAS LISTED ISSUES ENCOUNTERED
-------------------------------------
-0) New 30-sec raw data for soil texture fails. Try requesting more mem.
-1) Soil color & texture and ag fire peak month outputs too high in .log
-   TODO? Change frac_o from always 1.
-2) Pct lake has chged in the .log bc the old diagnostic omitted mask_i frac_o
-3) Slope, stddev have chged in the .log bc the old diag. used frac_o
-
---------------------------------------
-ALL raw dataset .nc FILES MUST BE cdf5
---------------------------------------
-> nccopy -k cdf5 oldfile newfile
--------------------------------------------------------------
-LAI raw dataset .nc FILE MUST HAVE "unlimited" time dimension
--------------------------------------------------------------
-ncks --mk_rec_dmn time file_with_time_equals_12.nc -o file_with_time_unlimited.nc
-
---------------------------------------------------------
-Override options removed that need to be placed in fsurdat_modifier
-and/or subset_data:
---------------------------------------------------------
---soil_clay --soil_sand for setting to these values everywhere
---all_urban = .true.
-Normalize so that sum(urban_classes_o(n,:)) = 100 for all n, even for grid
-cells where pcturb_o(n) = 0 (in the case where pcturb_o(n) = 0, come up with an
-arbitrary assignment of urban into the different classes).
-See comments in the normalize_urbn_by_tot subroutine for how urban_classes_o is
-determined when the total % urban is 0, according to the input data.
