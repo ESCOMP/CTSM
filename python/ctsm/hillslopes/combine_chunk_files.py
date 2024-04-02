@@ -12,6 +12,7 @@ import numpy as np
 # though it does.
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
+
 def parse_arguments(argv):
     """
     Parse arguments to script
@@ -79,7 +80,8 @@ def main():
 
     # Choose data files to combine and append
     cfile0 = os.path.join(
-        args.input_dir, f"combined_chunk_ChunkIndex_HAND_4_col_hillslope_geo_params_section_quad_{args.dem_source}.nc"
+        args.input_dir,
+        f"combined_chunk_ChunkIndex_HAND_4_col_hillslope_geo_params_section_quad_{args.dem_source}.nc",
     )
 
     f = Dataset(args.input_file, "r")
@@ -141,7 +143,7 @@ def main():
             if args.verbose:
                 print(f"Skipping; chunk file not found: {cfile}")
             continue
-        
+
         f = Dataset(cfile, "r")
         nhillslope = len(f.dimensions["nhillslope"])
         chunk_mask = f.variables["chunk_mask"][
