@@ -260,6 +260,9 @@ def main():
     )
     ohand.units = "m"
     ohand.long_name = "hillslope elevation above channel"
+    ohand[
+        :,
+    ] = h_elev
 
     odtnd = w.createVariable(
         "hillslope_distance",
@@ -272,6 +275,9 @@ def main():
     )
     odtnd.units = "m"
     odtnd.long_name = "hillslope  distance from channel"
+    odtnd[
+        :,
+    ] = h_dist
 
     owidth = w.createVariable(
         "hillslope_width",
@@ -284,6 +290,9 @@ def main():
     )
     owidth.units = "m"
     owidth.long_name = "hillslope width"
+    owidth[
+        :,
+    ] = h_width
 
     oarea = w.createVariable(
         "hillslope_area",
@@ -296,6 +305,9 @@ def main():
     )
     oarea.units = "m2"
     oarea.long_name = "hillslope area"
+    oarea[
+        :,
+    ] = h_area
 
     oslop = w.createVariable(
         "hillslope_slope",
@@ -308,6 +320,9 @@ def main():
     )
     oslop.units = "m/m"
     oslop.long_name = "hillslope slope"
+    oslop[
+        :,
+    ] = h_slope
 
     oasp = w.createVariable(
         "hillslope_aspect",
@@ -320,6 +335,9 @@ def main():
     )
     oasp.units = "radians"
     oasp.long_name = "hillslope aspect (clockwise from North)"
+    oasp[
+        :,
+    ] = h_aspect
 
     if add_bedrock:
         obed = w.createVariable(
@@ -333,6 +351,9 @@ def main():
         )
         obed.units = "meters"
         obed.long_name = "hillslope bedrock depth"
+        obed[
+            :,
+        ] = h_bedrock
 
     if add_stream:
         osdepth = w.createVariable(
@@ -345,6 +366,10 @@ def main():
         )
         osdepth.units = "meters"
         osdepth.long_name = "stream channel bankfull depth"
+        osdepth[
+            :,
+        ] = h_stream_depth
+
         oswidth = w.createVariable(
             "hillslope_stream_width",
             np.float64,
@@ -355,6 +380,10 @@ def main():
         )
         oswidth.units = "meters"
         oswidth.long_name = "stream channel bankfull width"
+        oswidth[
+            :,
+        ] = h_stream_width
+
         osslope = w.createVariable(
             "hillslope_stream_slope",
             np.float64,
@@ -365,6 +394,9 @@ def main():
         )
         osslope.units = "m/m"
         osslope.long_name = "stream channel slope"
+        osslope[
+            :,
+        ] = h_stream_slope
 
     onhill = w.createVariable(
         "nhillcolumns",
@@ -376,6 +408,9 @@ def main():
     )
     onhill.units = "unitless"
     onhill.long_name = "number of columns per landunit"
+    onhill[
+        :,
+    ] = nhillcolumns.astype(np.int32)
 
     opcthill = w.createVariable(
         "pct_hillslope",
@@ -388,6 +423,9 @@ def main():
     )
     opcthill.units = "per cent"
     opcthill.long_name = "percent hillslope of landunit"
+    opcthill[
+        :,
+    ] = pct_hillslope
 
     ohillndx = w.createVariable(
         "hillslope_index",
@@ -400,6 +438,9 @@ def main():
     )
     ohillndx.units = "unitless"
     ohillndx.long_name = "hillslope_index"
+    ohillndx[
+        :,
+    ] = hillslope_index.astype(np.int32)
 
     ocolndx = w.createVariable(
         "column_index",
@@ -412,6 +453,9 @@ def main():
     )
     ocolndx.units = "unitless"
     ocolndx.long_name = "column index"
+    ocolndx[
+        :,
+    ] = column_index.astype(np.int32)
 
     odcolndx = w.createVariable(
         "downhill_column_index",
@@ -424,52 +468,6 @@ def main():
     )
     odcolndx.units = "unitless"
     odcolndx.long_name = "downhill column index"
-
-    ohand[
-        :,
-    ] = h_elev
-    odtnd[
-        :,
-    ] = h_dist
-    oarea[
-        :,
-    ] = h_area
-    owidth[
-        :,
-    ] = h_width
-    oslop[
-        :,
-    ] = h_slope
-    # aspect should be in radians on surface data file
-    oasp[
-        :,
-    ] = h_aspect
-    if add_bedrock:
-        obed[
-            :,
-        ] = h_bedrock
-    if add_stream:
-        osdepth[
-            :,
-        ] = h_stream_depth
-        oswidth[
-            :,
-        ] = h_stream_width
-        osslope[
-            :,
-        ] = h_stream_slope
-    opcthill[
-        :,
-    ] = pct_hillslope
-    onhill[
-        :,
-    ] = nhillcolumns.astype(np.int32)
-    ohillndx[
-        :,
-    ] = hillslope_index.astype(np.int32)
-    ocolndx[
-        :,
-    ] = column_index.astype(np.int32)
     odcolndx[
         :,
     ] = downhill_column_index.astype(np.int32)
