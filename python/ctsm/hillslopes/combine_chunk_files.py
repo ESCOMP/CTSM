@@ -124,15 +124,8 @@ def main():
             column_index = np.zeros((ncolumns_per_gridcell, sjm, sim), dtype=int)
             downhill_column_index = np.zeros((ncolumns_per_gridcell, sjm, sim), dtype=int)
 
-            if "hillslope_bedrock_depth" in f.variables.keys():
-                addBedrock = True
-            else:
-                addBedrock = False
-
-            if "hillslope_stream_depth" in f.variables.keys():
-                addStream = True
-            else:
-                addStream = False
+            addBedrock = "hillslope_bedrock_depth" in f.variables.keys()
+            addStream = "hillslope_stream_depth" in f.variables.keys()
 
             arrays_uninitialized = False
             f.close()
