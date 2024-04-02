@@ -1,11 +1,11 @@
 # Instructions for Using mksurfdata_esmf to Create Surface Datasets
 
 ## Table of contents
-1. [#purpose]
-1. [#building]
-1. [#running-for-a-single-submission]
-1. [#running-for-the-generation-of-multiple-datasets]
-1. [#notes]
+1. [Purpose](#purpose)
+1. [Building](#building)
+1. [Running a Single Submission](#running-for-a-single-submission)
+1. [Running for Multiple Datasets](#running-for-the-generation-of-multiple-datasets)
+1. [Notes](#notes)
 
 <!-- ======= -->
 ## Purpose
@@ -189,9 +189,7 @@ Example to change time to unlimted dimension using the NCO operator ncks.
 ncks --mk_rec_dmn time file_with_time_equals_12.nc -o file_with_time_unlimited.nc
 ```
 
-# ========================================================
-# IMPORTANT THERE HAVE BEEN PROBLEMS with REGIONAL grids!!
-# ========================================================
+### IMPORTANT THERE HAVE BEEN PROBLEMS with REGIONAL grids!!
 
 > [!CAUTION]
 > See 
