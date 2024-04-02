@@ -41,13 +41,13 @@ In addition for the build: python, bash-shell, CMake and GNU-Make are required
 These libraries need to be built such that they can all work together in the
 same executable. Hence, the above order may be required in building them.
 
-CTSM externals that are required are: cime and ccs_config. See below on getting
+CTSM externals that are required are: cime and ccs_config. See [Building](#building-the-executable) on getting
 those. A python environment that includes particular packages is also required
 we demonstrate how to use the ctsm_pylib environment that we support in CTSM.
 
 Note, PNETCDF is an optional library that can be used, but is NOT required.
 
-#### Use cime to manage the build requirements (but see IMPORTANT NOTE below)
+#### Use cime to manage the build requirements (but see [IMPORTANT NOTE](important note-only-working-on-derecho-currently))
 
 For users working on cime machines you can use the build script to build the
 tool. On other machines you'll need to do a port to cime and tell how to build
