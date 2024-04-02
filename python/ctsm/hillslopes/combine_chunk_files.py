@@ -90,14 +90,14 @@ def main():
     ]
     f.close()
 
-    initializeArrays = True
+    arrays_uninitialized = True
     for cndx in 1 + np.arange(args.n_chunks):
         print(f"{cndx} / {args.n_chunks}")
         cstr = "{:02d}".format(cndx)
         cfile = cfile0.replace("ChunkIndex", cstr)
         file_exists = os.path.exists(cfile)
 
-        if initializeArrays and file_exists:
+        if arrays_uninitialized and file_exists:
             f = Dataset(cfile, "r")
 
             ncolumns_per_gridcell = len(f.dimensions["nmaxhillcol"])
@@ -134,7 +134,7 @@ def main():
             else:
                 addStream = False
 
-            initializeArrays = False
+            arrays_uninitialized = False
             f.close()
 
         if not file_exists:
