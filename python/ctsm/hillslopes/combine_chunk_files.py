@@ -91,10 +91,9 @@ def main():
     f.close()
 
     initializeArrays = True
-    for n in range(args.n_chunks):
-        print(n, args.n_chunks)
-        ndx = n + 1
-        cstr = "{:02d}".format(ndx)
+    for cndx in 1 + np.arange(args.n_chunks):
+        print(f"{cndx} / {args.n_chunks}")
+        cstr = "{:02d}".format(cndx)
         cfile = cfile0.replace("ChunkIndex", cstr)
         file_exists = os.path.exists(cfile)
 
