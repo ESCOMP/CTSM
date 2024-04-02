@@ -1,6 +1,15 @@
-=======
-Purpose
-=======
+# Instructions for Using mksurfdata_esmf to Create Surface Datasets
+
+## Table of contents
+1. [Purpose]
+1. [Building]
+1. [Running for a Single Submission]
+1. [Running for the Generation of Multiple Datasets]
+1. [NOTES]
+
+## =======
+## Purpose
+## =======
 This tool is intended to generate fsurdat files (surface datasets) for the
 CTSM. It can generate global, regional, and single-point fsurdat files, as long
 as a mesh file is available for the grid.
@@ -9,28 +18,38 @@ The subset_data tool allows users to make fsurdat files from existing fsurdat
 files when a mesh file is unavailable. Generally, users should consider the
 subset_data tool for generating regional and single-point fsurdat files.
 
-===================
-Build Requirements:
-===================
+## ========
+## Building
+## ========
+
+### ==================
+### Build Requirements
+### ==================
 
 mksurfdata_esmf is a distributed memory parallel program (using Message Passing
 Interface -- MPI) that utilizes both ESMF (Earth System Modelling Framework)
 for regridding as well as PIO (Parallel I/O) and NetCDF output. As
 such, libraries must be built for the following:
 
-1) MPI
-2) NetCDF
-3) PIO
-4) ESMF
+1. MPI
+2. NetCDF
+3. PIO
+4. ESMF
 
 In addition for the build: python, bash-shell, CMake and GNU-Make are required
 
 These libraries need to be built such that they can all work together in the
 same executable. Hence, the above order may be required in building them.
 
-=======================================================================
-Use cime to manage the build requirements (but see IMPORTANT NOTE below)
-=======================================================================
+CTSM externals that are required are: cime and ccs_config. See below on getting
+those. A python environment that includes particular packages is also required
+we demonstrate how to use the ctsm_pylib environment that we support in CTSM.
+
+Note, PNETCDF is an optional library that can be used, but is NOT required.
+
+#### =======================================================================
+#### Use cime to manage the build requirements (but see IMPORTANT NOTE below)
+#### =======================================================================
 
 For users working on cime machines you can use the build script to build the
 tool. On other machines you'll need to do a port to cime and tell how to build
@@ -44,26 +63,140 @@ run the model on your machine, you will be able to build the tool there.
 
 To get a list of the machines that have been ported to cime: 
 
+``` shell
 cd ../../cime/scripts  # assumes we are in tools/mksurfdata_esmf
 ./query_config --machines
+```
 
-NOTE:
+#### NOTE:
 In addition to having a port to cime, the machine also needs to have PIO built
 and able to be referenced with the env variable PIO which will need to be in
-the porting instructions for the machine. Currently an independent PIO library
-is not available on cime ported machines.
+the porting instructions for the machine. An independent PIO library
+is available on supported CESM machines.
 
-=================================================
-IMPORTANT NOTE: ONLY WORKING ON DERECHO CURRENTLY
-=================================================
+`#FF0000`
+[!IMPORTANT]
+#### =================================================
+#### IMPORTANT NOTE: ONLY WORKING ON DERECHO CURRENTLY
+#### =================================================
 
 Currently we have run and tested mksurfdata_esmf on Derecho. Please see this github issue about mksurfdata_esmf on other CESM machines:
 
 https://github.com/ESCOMP/CTSM/issues/2341
 
-========================================================
-IMPORTANT THERE HAVE BEEN PROBLEMS with REGIONAL grids!!
-========================================================
+`#000000`
+### =======================
+### Building the executable
+### =======================
+
+ Before starting, be sure that you have run
+
+``` shell
+ ./manage_externals/checkout_externals
+```
+
+This will bring in CIME and ccs_config which are required for building.
+
+``` shell
+cd tools/mksurfdata_esmf
+ ./gen_mksurfdata_build.sh      # For machines with a cime build
+```
+
+ Note: The pio_iotype value gets set and written to a simple .txt file
+ by this build script. The value depends on your machine. If not running
+ on derecho, casper, or izumi, you may need to update this, though
+ a default value does get set for other machines.
+
+## ===============================
+## Running for a single submission
+## ===============================
+ Work in the ctsm_pylib environment, which requires the following steps:
+
+``` shell
+ module unload python; module load conda
+ cd ../..; ./py_env_create
+ conda activate ctsm_pylib; cd tools/mksurfdata_esmf
+```
+
+to generate your target namelist:
+
+``` shell
+ ./gen_mksurfdata_namelist --help
+```
+
+for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
+
+``` shell
+ ./gen_mksurfdata_namelist --res <resolution> --start-year <year1> --end-year <year2>
+```
+
+[!TIP]
+ **IF FILES ARE MISSING FROM** /inputdata, a target namelist will be generated
+ but with a generic name and with warning to run `./download_input_data` next.
+ **IF A SMALLER SET OF FILES IS STILL MISSING AFTER RUNNING** `./download_input_data`
+ and rerunning `./gen_mksurfdata_namelist`, then rerun
+ `./gen_mksurfdata_namelist with your options needed.
+ and rerun `./download_input_data` until
+ `./gen_mksurfdata_namelist` finds all files.
+
+ Example, to generate your target jobscript (again use --help for instructions):
+
+``` shell
+ ./gen_mksurfdata_jobscript_single --number-of-nodes 2 --tasks-per-node 128 --namelist-file target.namelist
+ qsub mksurfdata_jobscript_single
+```
+
+ Read note about regional grids at the end.
+
+## ===============================================
+## Running for the generation of multiple datasets
+## ===============================================
+ Work in the ctsm_pylib environment, as explained in earlier section.
+ gen_mksurfdata_jobscript_multi runs `./gen_mksurfdata_namelist` for you
+
+``` shell
+ ./gen_mksurfdata_jobscript_multi --help
+ ./gen_mksurfdata_jobscript_multi --number-of-nodes 2 --scenario global-present
+ qsub mksurfdata_jobscript_multi
+```
+
+ If you are looking to generate all (or a large number of) the datasets or the
+ single-point (1x1) datasets, you are best off using the Makefile. For example
+
+``` shell
+ make all  # ...or
+ make all-subset
+```
+
+## =====
+## NOTES
+## =====
+
+[!TIP]
+# =====================================================
+# Guidelines for input datasets to mksurfdata_esmf
+# =====================================================
+
+ALL raw datasets \*.nc **FILES MUST NOT BE NetCDF4**.
+
+Example to convert to CDF5
+
+``` shell
+nccopy -k cdf5 oldfile newfile
+```
+
+The LAI raw dataset \*.nc **FILE MUST HAVE** an "unlimited" time dimension
+
+Example to change time to unlimted dimension using the NCO operator ncks.
+
+``` shell
+ncks --mk_rec_dmn time file_with_time_equals_12.nc -o file_with_time_unlimited.nc
+```
+
+[!CAUTION]
+# ========================================================
+# IMPORTANT THERE HAVE BEEN PROBLEMS with REGIONAL grids!!
+# ========================================================
 
 See 
 
@@ -71,59 +204,4 @@ https://github.com/ESCOMP/CTSM/issues/2430
 
 In general we recommend using subset_data and/or fsurdat_modifier
 for regional grids.
-
-==========================================================
-Building the executable (working in tools/mksurfdata_esmf)
-==========================================================
-
-# Before starting, be sure that you have run
-> ./manage_externals/checkout_externals
-# because without it we have come across strange behavior, such as transient
-# file generation (1850-2015) that aborts in the 1870s for no apparent reason.
-> ./gen_mksurfdata_build.sh      # For machines with a cime build
-# Note: The pio_iotype value gets set and written to a simple .txt file
-# by this build script. The value depends on your machine. If not running
-# on derecho, casper, or izumi, you may need to update this, though
-# a default value does get set for other machines.
-
-================================
-Running for a single submission:
-================================
-# Work in the ctsm_pylib environment, which requires the following steps:
-> module unload python; module load conda
-> cd ../..; ./py_env_create
-> conda activate ctsm_pylib; cd tools/mksurfdata_esmf
-# to generate your target namelist:
-> ./gen_mksurfdata_namelist --help
-# for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
-> ./gen_mksurfdata_namelist --res <resolution> --start-year <year1> --end-year <year2>
-# IF FILES ARE MISSING FROM /inputdata, a target namelist will be generated
-# but with a generic name and with warning to run ./download_input_data next.
-# IF A SMALLER SET OF FILES IS STILL MISSING AFTER RUNNING ./download_input_data
-# and rerunning ./gen_mksurfdata_namelist, then rerun
-# ./gen_mksurfdata_namelist with --vic selected (and iteratively additional
-# options if still necessary) and rerun ./download_input_data until
-# ./gen_mksurfdata_namelist finds all files.
-
-# to generate your target jobscript (again --help for instructions):
-> ./gen_mksurfdata_jobscript_single --number-of-nodes 2 --tasks-per-node 128 --namelist-file target.namelist
-> qsub mksurfdata_jobscript_single
-# Read note about regional grids below.
-
-===============================================
-Running for the generation of multiple datasets
-===============================================
-# Work in the ctsm_pylib environment, as explained in earlier section.
-# gen_mksurfdata_jobscript_multi runs ./gen_mksurfdata_namelist for you
-> ./gen_mksurfdata_jobscript_multi --help
-> ./gen_mksurfdata_jobscript_multi --number-of-nodes 2 --scenario global-present
-> qsub mksurfdata_jobscript_multi
-# If you are looking to generate all (or a large number of) the datasets or the
-# single-point (1x1) datasets, you are best off using the Makefile. For example
-> make all  # ...or
-> make all-subset
-
-================
-NOTES
-================
 
