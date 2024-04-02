@@ -124,8 +124,8 @@ def main():
             column_index = np.zeros((ncolumns_per_gridcell, sjm, sim), dtype=int)
             downhill_column_index = np.zeros((ncolumns_per_gridcell, sjm, sim), dtype=int)
 
-            addBedrock = "hillslope_bedrock_depth" in f.variables.keys()
-            addStream = "hillslope_stream_depth" in f.variables.keys()
+            add_bedrock = "hillslope_bedrock_depth" in f.variables.keys()
+            add_stream = "hillslope_stream_depth" in f.variables.keys()
 
             arrays_uninitialized = False
             f.close()
@@ -158,11 +158,11 @@ def main():
         h_aspect0 = f.variables["hillslope_aspect"][
             :,
         ]
-        if addBedrock:
+        if add_bedrock:
             h_bedrock0 = f.variables["hillslope_bedrock_depth"][
                 :,
             ]
-        if addStream:
+        if add_stream:
             h_stream_depth0 = f.variables["hillslope_stream_depth"][
                 :,
             ]
@@ -201,9 +201,9 @@ def main():
                 h_area[:, j, i] = h_area0[:, j, i]
                 h_slope[:, j, i] = h_slope0[:, j, i]
                 h_aspect[:, j, i] = h_aspect0[:, j, i]
-                if addBedrock:
+                if add_bedrock:
                     h_bedrock[:, j, i] = h_bedrock0[:, j, i]
-                if addStream:
+                if add_stream:
                     h_stream_depth[j, i] = h_stream_depth0[j, i]
                     h_stream_width[j, i] = h_stream_width0[j, i]
                     h_stream_slope[j, i] = h_stream_slope0[j, i]
@@ -321,7 +321,7 @@ def main():
     oasp.units = "radians"
     oasp.long_name = "hillslope aspect (clockwise from North)"
 
-    if addBedrock:
+    if add_bedrock:
         obed = w.createVariable(
             "hillslope_bedrock_depth",
             np.float64,
@@ -334,7 +334,7 @@ def main():
         obed.units = "meters"
         obed.long_name = "hillslope bedrock depth"
 
-    if addStream:
+    if add_stream:
         osdepth = w.createVariable(
             "hillslope_stream_depth",
             np.float64,
@@ -444,11 +444,11 @@ def main():
     oasp[
         :,
     ] = h_aspect
-    if addBedrock:
+    if add_bedrock:
         obed[
             :,
         ] = h_bedrock
-    if addStream:
+    if add_stream:
         osdepth[
             :,
         ] = h_stream_depth
