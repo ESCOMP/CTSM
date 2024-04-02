@@ -27,6 +27,7 @@ _config_cache_template = """
 </config_definition>
 """
 
+
 ###############################################################################
 def buildnml(case, caseroot, compname):
     ###############################################################################
@@ -153,7 +154,6 @@ def buildnml(case, caseroot, compname):
         nomeg = "-no-megan"
     else:
         nomeg = ""
-
 
     glc_use_antarctica = cism_use_antarctica
     if glc_use_antarctica is None:
