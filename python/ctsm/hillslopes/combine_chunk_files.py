@@ -96,7 +96,6 @@ def main():
         ndx = n + 1
         cstr = "{:02d}".format(ndx)
         cfile = cfile0.replace("ChunkIndex", cstr)
-        command = ["ls", cfile]
         file_exists = os.path.exists(cfile)
 
         if initializeArrays and file_exists:
