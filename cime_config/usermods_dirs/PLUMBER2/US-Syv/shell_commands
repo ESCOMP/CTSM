@@ -35,7 +35,7 @@ fi
 
 # Turn on LAI streams for a SP case 
 if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then 
-  echo "stream_fldfilename_lai=\$DIN_LOC_ROOT/lnd/clm2/lai_streams/PLUMBER2/${PLUMBER2SITE}/LAI_stream_${PLUMBER2SITE}_2002-2008.nc" >> user_nl_clm 
+  echo "stream_fldfilename_lai='\$DIN_LOC_ROOT/lnd/clm2/lai_streams/PLUMBER2/US-Syv/LAI_stream_US-Syv_2002-2008.nc'" >> user_nl_clm 
   echo "model_year_align_lai=2002" >> user_nl_clm 
   echo "stream_year_first_lai=2002" >> user_nl_clm 
   echo "stream_year_last_lai=2008" >> user_nl_clm 
