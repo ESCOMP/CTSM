@@ -7,10 +7,13 @@ import os
 import shutil
 import datetime
 import numpy as np
+import xarray as xr
 
 # The below "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
 # though it does.
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
+from ctsm.hillslopes.hillslope_utils import add_variable_xr
+
 
 
 def parse_arguments(argv):
@@ -239,238 +242,191 @@ def main():
 
     # -- Write data to file ------------------
 
-    # copy original file
-    shutil.copyfile(args.input_file, args.output_file)
+    print("saving")
 
-    print("appending file")
-    w = Dataset(args.output_file, "a")
-    w.creation_date = datetime.date.today().strftime("%y%m%d")
+    with xr.open_dataset(args.input_file) as ds_in:
+        lsmlat = ds_in["lsmlat"].load()
+        lsmlon = ds_in["lsmlon"].load()
 
-    w.createDimension("nhillslope", nhillslope)
-    w.createDimension("nmaxhillcol", ncolumns_per_gridcell)
+    ds_out = xr.Dataset()
 
-    ohand = w.createVariable(
-        "hillslope_elevation",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+    ds_out = add_variable_xr(
+        name="hillslope_elevation",
+        units="m",
+        long_name="hillslope elevation above channel",
+        data=h_elev,
+        dataset=ds_out,
+        lsmlat=lsmlat,
+        lsmlon=lsmlon,
+        ncolumns_per_gridcell=ncolumns_per_gridcell,
     )
-    ohand.units = "m"
-    ohand.long_name = "hillslope elevation above channel"
-    ohand[
-        :,
-    ] = h_elev
 
-    odtnd = w.createVariable(
-        "hillslope_distance",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+    ds_out = add_variable_xr(
+        name="hillslope_distance",
+        units="m",
+        long_name="hillslope distance from channel",
+        data=h_dist,
+        dataset=ds_out,
+        lsmlat=lsmlat,
+        lsmlon=lsmlon,
+        ncolumns_per_gridcell=ncolumns_per_gridcell,
     )
-    odtnd.units = "m"
-    odtnd.long_name = "hillslope  distance from channel"
-    odtnd[
-        :,
-    ] = h_dist
 
-    owidth = w.createVariable(
-        "hillslope_width",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+    ds_out = add_variable_xr(
+        name="hillslope_width",
+        units="m",
+        long_name="hillslope width",
+        data=h_width,
+        dataset=ds_out,
+        lsmlat=lsmlat,
+        lsmlon=lsmlon,
+        ncolumns_per_gridcell=ncolumns_per_gridcell,
     )
-    owidth.units = "m"
-    owidth.long_name = "hillslope width"
-    owidth[
-        :,
-    ] = h_width
 
-    oarea = w.createVariable(
-        "hillslope_area",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+    ds_out = add_variable_xr(
+        name="hillslope_area",
+        units="m2",
+        long_name="hillslope area",
+        data=h_area,
+        dataset=ds_out,
+        lsmlat=lsmlat,
+        lsmlon=lsmlon,
+        ncolumns_per_gridcell=ncolumns_per_gridcell,
     )
-    oarea.units = "m2"
-    oarea.long_name = "hillslope area"
-    oarea[
-        :,
-    ] = h_area
 
-    oslop = w.createVariable(
-        "hillslope_slope",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+    ds_out = add_variable_xr(
+        name="hillslope_slope",
+        units="m/m",
+        long_name="hillslope slope",
+        data=h_slope,
+        dataset=ds_out,
+        lsmlat=lsmlat,
+        lsmlon=lsmlon,
+        ncolumns_per_gridcell=ncolumns_per_gridcell,
     )
-    oslop.units = "m/m"
-    oslop.long_name = "hillslope slope"
-    oslop[
-        :,
-    ] = h_slope
 
-    oasp = w.createVariable(
-        "hillslope_aspect",
-        np.float64,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
+    ds_out = add_variable_xr(
+        name="hillslope_aspect",
+        units="radians",
+        long_name="hillslope aspect (clockwise from North)",
+        data=h_aspect,
+        dataset=ds_out,
+        lsmlat=lsmlat,
+        lsmlon=lsmlon,
+        ncolumns_per_gridcell=ncolumns_per_gridcell,
     )
-    oasp.units = "radians"
-    oasp.long_name = "hillslope aspect (clockwise from North)"
-    oasp[
-        :,
-    ] = h_aspect
+
 
     if add_bedrock:
-        obed = w.createVariable(
-            "hillslope_bedrock_depth",
-            np.float64,
-            (
-                "nmaxhillcol",
-                "lsmlat",
-                "lsmlon",
-            ),
+        ds_out = add_variable_xr(
+            name="hillslope_bedrock_depth",
+            units="meters",
+            long_name="hillslope bedrock depth",
+            data=h_bedrock,
+            dataset=ds_out,
+            lsmlat=lsmlat,
+            lsmlon=lsmlon,
+            ncolumns_per_gridcell=ncolumns_per_gridcell,
         )
-        obed.units = "meters"
-        obed.long_name = "hillslope bedrock depth"
-        obed[
-            :,
-        ] = h_bedrock
 
     if add_stream:
-        osdepth = w.createVariable(
-            "hillslope_stream_depth",
-            np.float64,
-            (
-                "lsmlat",
-                "lsmlon",
-            ),
+        ds_out = add_variable_xr(
+            name="hillslope_stream_depth",
+            units="meters",
+            long_name="stream channel bankfull depth",
+            data=h_stream_depth,
+            dataset=ds_out,
+            lsmlat=lsmlat,
+            lsmlon=lsmlon,
+            dims=["lsmlat", "lsmlon"],
         )
-        osdepth.units = "meters"
-        osdepth.long_name = "stream channel bankfull depth"
-        osdepth[
-            :,
-        ] = h_stream_depth
-
-        oswidth = w.createVariable(
-            "hillslope_stream_width",
-            np.float64,
-            (
-                "lsmlat",
-                "lsmlon",
-            ),
+        ds_out = add_variable_xr(
+            name="hillslope_stream_width",
+            units="meters",
+            long_name="stream channel bankfull width",
+            data=h_stream_width,
+            dataset=ds_out,
+            lsmlat=lsmlat,
+            lsmlon=lsmlon,
+            dims=["lsmlat", "lsmlon"],
         )
-        oswidth.units = "meters"
-        oswidth.long_name = "stream channel bankfull width"
-        oswidth[
-            :,
-        ] = h_stream_width
-
-        osslope = w.createVariable(
-            "hillslope_stream_slope",
-            np.float64,
-            (
-                "lsmlat",
-                "lsmlon",
-            ),
+        ds_out = add_variable_xr(
+            name="hillslope_stream_slope",
+            units="m/m",
+            long_name="stream channel slope",
+            data=h_stream_slope,
+            dataset=ds_out,
+            lsmlat=lsmlat,
+            lsmlon=lsmlon,
+            dims=["lsmlat", "lsmlon"],
         )
-        osslope.units = "m/m"
-        osslope.long_name = "stream channel slope"
-        osslope[
-            :,
-        ] = h_stream_slope
 
-    onhill = w.createVariable(
-        "nhillcolumns",
-        np.int32,
-        (
+    ds_out = add_variable_xr(
+        name="nhillcolumns",
+        units="unitless",
+        long_name="number of columns per landunit",
+        data=nhillcolumns.astype(np.int32),
+        dataset=ds_out,
+        lsmlat=lsmlat,
+        lsmlon=lsmlon,
+        dims=["lsmlat", "lsmlon"],
+    )
+
+    ds_out = add_variable_xr(
+        name="pct_hillslope",
+        units="per cent",
+        long_name="percent hillslope of landunit",
+        data=pct_hillslope,
+        dataset=ds_out,
+        lsmlat=lsmlat,
+        lsmlon=lsmlon,
+        dims=["nhillslope", "lsmlat", "lsmlon"],
+        nhillslope=nhillslope,
+    )
+
+    ds_out = add_variable_xr(
+        name="hillslope_index",
+        units="unitless",
+        long_name="hillslope_index",
+        data=hillslope_index.astype(np.int32),
+        dataset=ds_out,
+        lsmlat=lsmlat,
+        lsmlon=lsmlon,
+        ncolumns_per_gridcell=ncolumns_per_gridcell,
+    )
+
+    ds_out = add_variable_xr(
+        name="column_index",
+        units="unitless",
+        long_name="column index",
+        data=column_index.astype(np.int32),
+        dataset=ds_out,
+        lsmlat=lsmlat,
+        lsmlon=lsmlon,
+        ncolumns_per_gridcell=ncolumns_per_gridcell,
+    )
+
+    ds_out = add_variable_xr(
+        name="downhill_column_index",
+        units="unitless",
+        long_name="downhill column index",
+        data=downhill_column_index.astype(np.int32),
+        dataset=ds_out,
+        lsmlat=lsmlat,
+        lsmlon=lsmlon,
+        ncolumns_per_gridcell=ncolumns_per_gridcell,
+    )
+
+
+    # Before saving, drop coordinate variables (which aren't present on fsurdat)
+    ds_out = ds_out.drop_vars(
+        [
             "lsmlat",
             "lsmlon",
-        ),
+        ]
     )
-    onhill.units = "unitless"
-    onhill.long_name = "number of columns per landunit"
-    onhill[
-        :,
-    ] = nhillcolumns.astype(np.int32)
 
-    opcthill = w.createVariable(
-        "pct_hillslope",
-        np.float64,
-        (
-            "nhillslope",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    opcthill.units = "per cent"
-    opcthill.long_name = "percent hillslope of landunit"
-    opcthill[
-        :,
-    ] = pct_hillslope
+    # Save
+    ds_out.to_netcdf(args.output_file, "w")
 
-    ohillndx = w.createVariable(
-        "hillslope_index",
-        np.int32,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    ohillndx.units = "unitless"
-    ohillndx.long_name = "hillslope_index"
-    ohillndx[
-        :,
-    ] = hillslope_index.astype(np.int32)
-
-    ocolndx = w.createVariable(
-        "column_index",
-        np.int32,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    ocolndx.units = "unitless"
-    ocolndx.long_name = "column index"
-    ocolndx[
-        :,
-    ] = column_index.astype(np.int32)
-
-    odcolndx = w.createVariable(
-        "downhill_column_index",
-        np.int32,
-        (
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-    )
-    odcolndx.units = "unitless"
-    odcolndx.long_name = "downhill column index"
-    odcolndx[
-        :,
-    ] = downhill_column_index.astype(np.int32)
-
-    w.close()
     print(args.output_file + " created")
