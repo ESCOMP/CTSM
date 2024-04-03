@@ -445,6 +445,6 @@ def main():
     )
 
     # Save
-    ds_out.to_netcdf(args.output_file, "w")
+    ds_out.to_netcdf(args.output_file, "w", format="NETCDF4_CLASSIC")
 
     print(args.output_file + " created")
