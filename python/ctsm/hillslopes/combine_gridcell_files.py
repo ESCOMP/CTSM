@@ -60,7 +60,8 @@ def parse_arguments(argv):
         "--n-bins",
         type=int,
         default=default_n_bins,
-        help=f"Number of elevation bins (default: {default_n_bins})",
+        help=f"Number of elevation bins (default: {default_n_bins}). "
+             + "Used to generate input filename template.",
     )
     parser.add_argument(
         "--cndx",
