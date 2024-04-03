@@ -530,7 +530,7 @@
   </test>
   <test name="SMS_D" grid="f10_f10_mg37" compset="I1850Clm51BgcCrop" testmods="clm/ciso_soil_matrixcn_only">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
     </machines>
     <options>
@@ -540,7 +540,7 @@
   </test>
   <test name="ERS_Lm13" grid="f10_f10_mg37" compset="I1850Clm51Bgc" testmods="clm/monthly_matrixcn_fast_spinup">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="izumi"    compiler="intel" category="aux_clm"/>
     </machines>
     <options>
@@ -548,27 +548,9 @@
       <option name="comment"  >Run matrix solution fast spinup for restart beyond a year (to trigger next year logic) turning off extra options to make faster (so without crop or isotopes). This test would've caught a previous bug.</option>
     </options>
   </test>
-  <test name="SMS_Lm1" grid="f10_f10_mg37" compset="I1850Clm45Bgc" testmods="clm/clm45_monthly_matrixcn_soilCN30">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">01:20:00</option>
-      <option name="comment"  >Smoke test of soil CN-matrix on with soil CN ratio set to 30, since this crashes</option>
-    </options>
-  </test>
-  <test name="ERS_D_Lm3" grid="f09_g17" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">01:20:00</option>
-      <option name="comment"  >Run in DEBUG with the matrix solution on with all options it interacts with (requires Bgc, but also turn on Crop and Carbon isotopes)</option>
-    </options>
-  </test>
   <test name="ERS_D" grid="f19_g17" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="izumi"    compiler="nag" category="aux_clm"/>
     </machines>
     <options>
@@ -578,7 +560,7 @@
   </test>
   <test name="ERS_Lm54_Mmpi-serial" grid="1x1_numaIA" compset="I1850Clm50BgcCropQian" testmods="clm/ciso_monthly_matrixcn_spinup">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -587,7 +569,7 @@
   </test>
   <test name="LCISO_Lm13" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -804,7 +786,7 @@
   </test>
   <test name="SMS_D" grid="1x1_brazil" compset="I1850Clm51BgcCrop" testmods="clm/mimics_matrixcn">
     <machines>
-      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
