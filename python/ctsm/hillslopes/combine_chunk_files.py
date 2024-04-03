@@ -156,68 +156,8 @@ def main():
                 print(f"Skipping; chunk file not found: {cfile}")
             continue
 
-        f = Dataset(cfile, "r")
-        nhillslope = len(f.dimensions["nhillslope"])
-        chunk_mask = f.variables["chunk_mask"][:]
-        try:
-            h_elev0 = f.variables["hillslope_elevation"][:]
-        except KeyError:
-            h_elev0 = f.variables["h_height"][:]
-        try:
-            h_dist0 = f.variables["hillslope_distance"][:]
-        except KeyError:
-            h_dist0 = f.variables["h_length"][:]
-        try:
-            h_width0 = f.variables["hillslope_width"][:]
-        except KeyError:
-            h_width0 = f.variables["h_width"][:]
-        try:
-            h_area0 = f.variables["hillslope_area"][:]
-        except KeyError:
-            h_area0 = f.variables["h_area"][:]
-        try:
-            h_slope0 = f.variables["hillslope_slope"][:]
-        except KeyError:
-            h_slope0 = f.variables["h_slope"][:]
-        try:
-            h_aspect0 = f.variables["hillslope_aspect"][:]
-        except KeyError:
-            h_aspect0 = f.variables["h_aspect"][:]
-        if add_bedrock:
-            try:
-                h_bedrock0 = f.variables["hillslope_bedrock_depth"][:]
-            except KeyError:
-                h_bedrock0 = f.variables["h_bedrock"][:]
-        if add_stream:
-            try:
-                h_stream_depth0 = f.variables["h_stream_depth"][:]
-            except KeyError:
-                h_stream_depth0 = f.variables["hillslope_stream_depth"][:]
-            try:
-                h_stream_width0 = f.variables["hillslope_stream_width"][:]
-            except KeyError:
-                h_stream_width0 = f.variables["h_stream_width"][:]
-            try:
-                h_stream_slope0 = f.variables["hillslope_stream_slope"][:]
-            except KeyError:
-                h_stream_slope = f.variables["hillslope_stream_slope"][:]
-
-        nhillcolumns0 = f.variables["nhillcolumns"][
-            :,
-        ].astype(int)
-        pct_hillslope0 = f.variables["pct_hillslope"][
-            :,
-        ]
-        hillslope_index0 = f.variables["hillslope_index"][
-            :,
-        ].astype(int)
-        column_index0 = f.variables["column_index"][
-            :,
-        ].astype(int)
-        downhill_column_index0 = f.variables["downhill_column_index"][
-            :,
-        ].astype(int)
-        f.close()
+        # Read hillslope variables from one chunk file
+        nhillslope, h_stream_slope, chunk_mask, h_elev0, h_dist0, h_width0, h_area0, h_slope0, h_aspect0, h_bedrock0, h_stream_depth0, h_stream_width0, h_stream_slope0, nhillcolumns0, pct_hillslope0, hillslope_index0, column_index0, downhill_column_index0 = read_hillslope_vars(cfile, add_bedrock, add_stream)
 
         for i in range(sim):
             for j in range(sjm):
@@ -458,3 +398,76 @@ def main():
     ds_out.to_netcdf(args.output_file, "w", format="NETCDF4_CLASSIC")
 
     print(args.output_file + " created")
+
+
+def read_hillslope_vars(cfile, read_bedrock, read_stream):
+    """Read hillslope variables from one chunk file
+
+    Args:
+        cfile (str): Path to chunk file
+        read_bedrock (logical): Whether to read bedrock variable(s)
+        read_stream (logical): Whether to read stream variable(s)
+    """
+    f = Dataset(cfile, "r")
+    nhillslope = len(f.dimensions["nhillslope"])
+    chunk_mask = f.variables["chunk_mask"][:]
+    try:
+        h_elev0 = f.variables["hillslope_elevation"][:]
+    except KeyError:
+        h_elev0 = f.variables["h_height"][:]
+    try:
+        h_dist0 = f.variables["hillslope_distance"][:]
+    except KeyError:
+        h_dist0 = f.variables["h_length"][:]
+    try:
+        h_width0 = f.variables["hillslope_width"][:]
+    except KeyError:
+        h_width0 = f.variables["h_width"][:]
+    try:
+        h_area0 = f.variables["hillslope_area"][:]
+    except KeyError:
+        h_area0 = f.variables["h_area"][:]
+    try:
+        h_slope0 = f.variables["hillslope_slope"][:]
+    except KeyError:
+        h_slope0 = f.variables["h_slope"][:]
+    try:
+        h_aspect0 = f.variables["hillslope_aspect"][:]
+    except KeyError:
+        h_aspect0 = f.variables["h_aspect"][:]
+    if read_bedrock:
+        try:
+            h_bedrock0 = f.variables["hillslope_bedrock_depth"][:]
+        except KeyError:
+            h_bedrock0 = f.variables["h_bedrock"][:]
+    if read_stream:
+        try:
+            h_stream_depth0 = f.variables["h_stream_depth"][:]
+        except KeyError:
+            h_stream_depth0 = f.variables["hillslope_stream_depth"][:]
+        try:
+            h_stream_width0 = f.variables["hillslope_stream_width"][:]
+        except KeyError:
+            h_stream_width0 = f.variables["h_stream_width"][:]
+        try:
+            h_stream_slope0 = f.variables["hillslope_stream_slope"][:]
+        except KeyError:
+            h_stream_slope = f.variables["hillslope_stream_slope"][:]
+
+    nhillcolumns0 = f.variables["nhillcolumns"][
+            :,
+        ].astype(int)
+    pct_hillslope0 = f.variables["pct_hillslope"][
+            :,
+        ]
+    hillslope_index0 = f.variables["hillslope_index"][
+            :,
+        ].astype(int)
+    column_index0 = f.variables["column_index"][
+            :,
+        ].astype(int)
+    downhill_column_index0 = f.variables["downhill_column_index"][
+            :,
+        ].astype(int)
+    f.close()
+    return nhillslope,h_stream_slope,chunk_mask,h_elev0,h_dist0,h_width0,h_area0,h_slope0,h_aspect0,h_bedrock0,h_stream_depth0,h_stream_width0,h_stream_slope0,nhillcolumns0,pct_hillslope0,hillslope_index0,column_index0,downhill_column_index0
