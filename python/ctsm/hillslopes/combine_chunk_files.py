@@ -133,7 +133,6 @@ def main():
             h_slope = np.zeros((ncolumns_per_gridcell, sjm, sim))
             h_aspect = np.zeros((ncolumns_per_gridcell, sjm, sim))
             h_width = np.zeros((ncolumns_per_gridcell, sjm, sim))
-            h_pftndx = np.zeros((ncolumns_per_gridcell, sjm, sim))
             h_bedrock = np.zeros((ncolumns_per_gridcell, sjm, sim))
             h_stream_depth = np.zeros((sjm, sim))
             h_stream_width = np.zeros((sjm, sim))
