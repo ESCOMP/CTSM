@@ -439,6 +439,8 @@ def main():
         [
             "lsmlat",
             "lsmlon",
+            "nmaxhillcol",
+            "nhillslope",
         ]
     )
 
