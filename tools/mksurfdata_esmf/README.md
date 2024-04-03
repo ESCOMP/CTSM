@@ -47,7 +47,9 @@ we demonstrate how to use the ctsm_pylib environment that we support in CTSM.
 
 Note, PNETCDF is an optional library that can be used, but is NOT required.
 
-#### Use cime to manage the build requirements (but see [IMPORTANT NOTE](important note-only-working-on-derecho-currently))
+#### Use cime to manage the build requirements
+
+See [IMPORTANT NOTE](important note-only-working-on-derecho-currently)
 
 For users working on cime machines you can use the build script to build the
 tool. On other machines you'll need to do a port to cime and tell how to build
@@ -62,7 +64,8 @@ run the model on your machine, you will be able to build the tool there.
 To get a list of the machines that have been ported to cime: 
 
 ``` shell
-cd ../../cime/scripts  # assumes we are in tools/mksurfdata_esmf
+# Assuming pwd is the tools/mksurfdata_esmf directory
+cd ../../cime/scripts  # or ../../../../cime/scripts for a CESM checkout
 ./query_config --machines
 ```
 
@@ -89,13 +92,14 @@ https://github.com/ESCOMP/CTSM/issues/2341
  Before starting, be sure that you have run
 
 ``` shell
- ./manage_externals/checkout_externals
+# Assuming pwd is the tools/mksurfdata_esmf directory
+ ./manage_externals/checkout_externals # Assuming at the top level of the CTSM/CESM checkout
 ```
 
 This will bring in CIME and ccs_config which are required for building.
 
 ``` shell
-cd tools/mksurfdata_esmf
+# Assuming pwd is the tools/mksurfdata_esmf directory
  ./gen_mksurfdata_build.sh      # For machines with a cime build
 ```
 
@@ -107,23 +111,31 @@ cd tools/mksurfdata_esmf
 <!-- ========================= -->
 ## Running for a single submission
 <!-- ========================= -->
- Work in the ctsm_pylib environment, which requires the following steps:
+
+### Setup ctsm_pylib
+ Work in the ctsm_pylib environment, which requires the following steps when
+ running on Derecho. On other machines it will be similar but might be different
+ in order to get conda in your path and activate the ctsm_pylib environment.
 
 ``` shell
- module unload python; module load conda
- cd ../..; ./py_env_create
- conda activate ctsm_pylib; cd tools/mksurfdata_esmf
+# Assuming pwd is the tools/mksurfdata_esmf directory
+ module load conda
+ cd ../..  # or ../../../.. for a CESM checkout)
+ ./py_env_create    # Assuming at the top level of the CTSM/CESM checkout
+ conda activate ctsm_pylib
 ```
 
 to generate your target namelist:
 
 ``` shell
+# Assuming pwd is the tools/mksurfdata_esmf directory
  ./gen_mksurfdata_namelist --help
 ```
 
 for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
 
 ``` shell
+# Assuming pwd is the tools/mksurfdata_esmf directory
  ./gen_mksurfdata_namelist --res <resolution> --start-year <year1> --end-year <year2>
 ```
 
@@ -139,6 +151,7 @@ for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
  Example, to generate your target jobscript (again use --help for instructions):
 
 ``` shell
+# Assuming pwd is the tools/mksurfdata_esmf directory
  ./gen_mksurfdata_jobscript_single --number-of-nodes 2 --tasks-per-node 128 --namelist-file target.namelist
  qsub mksurfdata_jobscript_single
 ```
@@ -152,7 +165,7 @@ for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
  gen_mksurfdata_jobscript_multi runs `./gen_mksurfdata_namelist` for you
 
 ``` shell
- ./gen_mksurfdata_jobscript_multi --help
+# Assuming pwd is the tools/mksurfdata_esmf directory
  ./gen_mksurfdata_jobscript_multi --number-of-nodes 2 --scenario global-present
  qsub mksurfdata_jobscript_multi
 ```
@@ -161,6 +174,7 @@ for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
  single-point (1x1) datasets, you are best off using the Makefile. For example
 
 ``` shell
+# Assuming pwd is the tools/mksurfdata_esmf directory
  make all  # ...or
  make all-subset
 ```
