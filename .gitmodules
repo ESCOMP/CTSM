@@ -1,0 +1,98 @@
+[submodule "fates"]
+path = src/fates
+url = https://github.com/rgknox/fates
+fxtag = sci.1.72.2_api.34.0.0
+fxDONOTUSEurl = https://github.com/rgknox/fates
+fxrequired = AlwaysRequired
+
+[submodule "cism"]
+path = components/cism
+url = https://github.com/ESCOMP/CISM-wrapper
+fxtag = cismwrap_2_1_97
+fxDONOTUSEurl = https://github.com/ESCOMP/CISM-wrapper
+fxrequired = ToplevelRequired
+
+[submodule "rtm"]
+path = components/rtm
+url = https://github.com/ESCOMP/RTM
+fxtag = rtm1_0_79
+fxDONOTUSEurl = https://github.com/ESCOMP/RTM
+fxrequired = ToplevelRequired
+
+[submodule "mosart"]
+path = components/mosart
+url = https://github.com/ESCOMP/MOSART
+fxtag = mosart1_0_49
+fxDONOTUSEurl = https://github.com/ESCOMP/MOSART
+fxrequired = ToplevelRequired
+
+[submodule "mizuRoute"]
+path = components/mizuRoute
+url = https://github.com/nmizukami/mizuRoute
+fxtag = 34723c2
+fxDONOTUSEurl = https://github.com/nmizukami/mizuRoute
+fxrequired = ToplevelRequired
+
+[submodule "ccs_config"]
+path = ccs_config
+url = https://github.com/ESMCI/ccs_config_cesm.git
+fxtag = ccs_config_cesm0.0.92
+fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
+fxrequired = ToplevelRequired
+
+[submodule "cime"]
+path = cime
+url = https://github.com/ESMCI/cime
+fxtag = cime6.0.217_httpsbranch03
+fxDONOTUSEurl = https://github.com/ESMCI/cime
+fxrequired = ToplevelRequired
+
+[submodule "cmeps"]
+path = components/cmeps
+url = https://github.com/ESCOMP/CMEPS.git
+fxtag = cmeps0.14.50
+fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
+fxrequired = ToplevelRequired
+
+[submodule "cdeps"]
+path = components/cdeps
+url = https://github.com/ESCOMP/CDEPS.git
+fxtag = cdeps1.0.28
+fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
+fxrequired = ToplevelRequired
+
+[submodule "cpl7"]
+path = components/cpl7
+url = https://github.com/ESCOMP/CESM_CPL7andDataComps
+fxtag = cpl77.0.7
+fxDONOTUSEurl = https://github.com/ESCOMP/CESM_CPL7andDataComps
+fxrequired = ToplevelRequired
+
+[submodule "share"]
+path = share
+url = https://github.com/ESCOMP/CESM_share
+fxtag = share1.0.18
+fxDONOTUSEurl = https://github.com/ESCOMP/CESM_share
+fxrequired = ToplevelRequired
+
+[submodule "mct"]
+path = libraries/mct
+url = https://github.com/MCSclimate/MCT
+fxtag = MCT_2.11.0
+fxDONOTUSEurl = https://github.com/MCSclimate/MCT
+fxrequired = ToplevelRequired
+
+[submodule "parallelio"]
+path = libraries/parallelio
+url = https://github.com/NCAR/ParallelIO
+fxtag = pio2_6_2
+fxDONOTUSEurl = https://github.com/NCAR/ParallelIO
+fxrequired = ToplevelRequired
+
+[submodule "doc-builder"]
+path = doc/doc-builder
+url = https://github.com/ESMCI/doc-builder
+fxDONOTUSEurl = https://github.com/ESMCI/doc-builder
+fxrequired = AlwaysRequired
+fxtag = v1.0.8
+
