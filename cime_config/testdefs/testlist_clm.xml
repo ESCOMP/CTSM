@@ -3377,9 +3377,9 @@
     </options>
   </test>
 
-  <test name="LGRAIN2_Ly1_P72x1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso_soil_matrixcn_only--clm/cropMonthOutput">
+  <test name="LGRAIN2_Ly1_P128x1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso_soil_matrixcn_only--clm/cropMonthOutput">
     <machines>
-      <machine name="cheyenne" compiler="gnu" category="aux_clm">
+      <machine name="derecho" compiler="gnu" category="aux_clm">
         <options>
           <option name="wallclock">02:00:00</option>
           <option name="comment">Ensure that it works to have a second grain pool, and that we can get bit-for-bit identical answers with a standard run with just one grain pool. This tests infrastructure that will be needed when incorporating AgSys. This test can be dropped once we have some tests exercising AgSys (which will exercise this code). This and other tests with the ciso_soil_matrixcn_only testmods become redundant when default use_matrixcn = .false.. There are 2 more LGRAIN and two more LREPR tests with the same names but ciso testmods for when default use_matrixcn = .true..</option>
@@ -3387,42 +3387,12 @@
       </machine>
     </machines>
   </test>
-  <test name="LGRAIN2_Ly2_P72x1" grid="f10_f10_mg37" compset="I1850Clm45BgcCrop" testmods="clm/ciso_soil_matrixcn_only--clm/cropMonthOutput">
+  <test name="LREPRSTRUCT_Ly1_P128x1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso_soil_matrixcn_only--clm/cropMonthOutput">
     <machines>
-      <machine name="cheyenne" compiler="gnu" category="aux_clm">
-        <options>
-          <option name="wallclock">02:00:00</option>
-          <option name="comment">Ensure that it works to have a second grain pool, and that we can get bit-for-bit identical answers with a standard run with just one grain pool. This tests infrastructure that will be needed when incorporating AgSys. This test can be dropped once we have some tests exercising AgSys (which will exercise this code). Compared to the Clm50 test, this Clm45 test exercises code in NutrientCompetitionCLM45defaultMod and use_grainproduct false. Need two years because this test starts from a non-crop finidat, so there is no crop growth in the first year.</option>
-        </options>
-      </machine>
-    </machines>
-  </test>
-  <test name="LREPRSTRUCT_Ly1_P72x1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso_soil_matrixcn_only--clm/cropMonthOutput">
-    <machines>
-      <machine name="cheyenne" compiler="gnu" category="aux_clm">
+      <machine name="derecho" compiler="gnu" category="aux_clm">
         <options>
           <option name="wallclock">02:00:00</option>
           <option name="comment">Ensure that it works to have a crop reproductive structure pool, and that we can get bit-for-bit identical answers when using that pool compared to a run with a single reproductive grain pool. This tests infrastructure that will be needed when incorporating AgSys. This test can be dropped once we have some tests exercising AgSys (which will exercise this code).</option>
-        </options>
-      </machine>
-    </machines>
-  </test>
-  <test name="LREPRSTRUCT_Ly2_P72x1" grid="f10_f10_mg37" compset="I1850Clm45BgcCrop" testmods="clm/ciso_soil_matrixcn_only--clm/cropMonthOutput">
-    <machines>
-      <machine name="cheyenne" compiler="gnu" category="aux_clm">
-        <options>
-          <option name="wallclock">02:00:00</option>
-          <option name="comment">Ensure that it works to have a crop reproductive structure pool, and that we can get bit-for-bit identical answers when using that pool compared to a run with a single reproductive grain pool. This tests infrastructure that will be needed when incorporating AgSys. This test can be dropped once we have some tests exercising AgSys (which will exercise this code). Compared to the Clm50 test, this Clm45 test exercises code in NutrientCompetitionCLM45defaultMod and use_grainproduct false. Need two years because this test starts from a non-crop finidat, so there is no crop growth in the first year.</option>
-        </options>
-      </machine>
-    </machines>
-  </test>
-  <test name="LGRAIN2_Ly1_P72x1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso--clm/cropMonthOutput">
-    <machines>
-      <machine name="cheyenne" compiler="gnu" category="aux_clm">
-        <options>
-          <option name="wallclock">02:00:00</option>
-          <option name="comment">Ensure that it works to have a second grain pool, and that we can get bit-for-bit identical answers with a standard run with just one grain pool. This tests infrastructure that will be needed when incorporating AgSys. This test can be dropped once we have some tests exercising AgSys (which will exercise this code).</option>
         </options>
       </machine>
     </machines>
@@ -3436,16 +3406,6 @@
       <option name="comment">Ensure that it works to have a second grain pool, and that we can get bit-for-bit identical answers with a standard run with just one grain pool. This tests infrastructure that will be needed when incorporating AgSys. This test can be dropped once we have some tests exercising AgSys (which will exercise this code).</option>
     </options>
   </test>
-  <test name="LGRAIN2_Ly2_P72x1" grid="f10_f10_mg37" compset="I1850Clm45BgcCrop" testmods="clm/ciso--clm/cropMonthOutput">
-    <machines>
-      <machine name="cheyenne" compiler="gnu" category="aux_clm">
-        <options>
-          <option name="wallclock">02:00:00</option>
-          <option name="comment">Ensure that it works to have a second grain pool, and that we can get bit-for-bit identical answers with a standard run with just one grain pool. This tests infrastructure that will be needed when incorporating AgSys. This test can be dropped once we have some tests exercising AgSys (which will exercise this code). Compared to the Clm50 test, this Clm45 test exercises code in NutrientCompetitionCLM45defaultMod and use_grainproduct false. Need two years because this test starts from a non-crop finidat, so there is no crop growth in the first year.</option>
-        </options>
-      </machine>
-    </machines>
-  </test>
   <test name="LGRAIN2_Ly2_P128x1" grid="f10_f10_mg37" compset="I1850Clm45BgcCrop" testmods="clm/ciso--clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
@@ -3455,16 +3415,6 @@
       <option name="comment">Ensure that it works to have a second grain pool, and that we can get bit-for-bit identical answers with a standard run with just one grain pool. This tests infrastructure that will be needed when incorporating AgSys. This test can be dropped once we have some tests exercising AgSys (which will exercise this code). Compared to the Clm50 test, this Clm45 test exercises code in NutrientCompetitionCLM45defaultMod and use_grainproduct false. Need two years because this test starts from a non-crop finidat, so there is no crop growth in the first year.</option>
     </options>
   </test>
-  <test name="LREPRSTRUCT_Ly1_P72x1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso--clm/cropMonthOutput">
-    <machines>
-      <machine name="cheyenne" compiler="gnu" category="aux_clm">
-        <options>
-          <option name="wallclock">02:00:00</option>
-          <option name="comment">Ensure that it works to have a crop reproductive structure pool, and that we can get bit-for-bit identical answers when using that pool compared to a run with a single reproductive grain pool. This tests infrastructure that will be needed when incorporating AgSys. This test can be dropped once we have some tests exercising AgSys (which will exercise this code).</option>
-        </options>
-      </machine>
-    </machines>
-  </test>
   <test name="LREPRSTRUCT_Ly1_P128x1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso--clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
@@ -3472,15 +3422,6 @@
     <options>
       <option name="wallclock">02:00:00</option>
       <option name="comment">Ensure that it works to have a crop reproductive structure pool, and that we can get bit-for-bit identical answers when using that pool compared to a run with a single reproductive grain pool. This tests infrastructure that will be needed when incorporating AgSys. This test can be dropped once we have some tests exercising AgSys (which will exercise this code).</option>
-    </options>
-  </test>
-  <test name="LREPRSTRUCT_Ly2_P72x1" grid="f10_f10_mg37" compset="I1850Clm45BgcCrop" testmods="clm/ciso--clm/cropMonthOutput">
-    <machines>
-      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">02:00:00</option>
-      <option name="comment">Ensure that it works to have a crop reproductive structure pool, and that we can get bit-for-bit identical answers when using that pool compared to a run with a single reproductive grain pool. This tests infrastructure that will be needed when incorporating AgSys. This test can be dropped once we have some tests exercising AgSys (which will exercise this code). Compared to the Clm50 test, this Clm45 test exercises code in NutrientCompetitionCLM45defaultMod and use_grainproduct false. Need two years because this test starts from a non-crop finidat, so there is no crop growth in the first year.</option>
     </options>
   </test>
   <test name="LREPRSTRUCT_Ly2_P128x1" grid="f10_f10_mg37" compset="I1850Clm45BgcCrop" testmods="clm/ciso--clm/cropMonthOutput">
