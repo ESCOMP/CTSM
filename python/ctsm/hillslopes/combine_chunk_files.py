@@ -59,6 +59,13 @@ def parse_arguments(argv):
         type=int,
         default=default_n_chunks,
     )
+    default_n_bins = 4
+    parser.add_argument(
+        "--n-bins",
+        type=int,
+        default=default_n_bins,
+        help=f"Number of elevation bins (default: {default_n_bins})",
+    )
 
     parser.add_argument("-v", "--verbose", help="print info", action="store_true", default=False)
 
@@ -84,7 +91,8 @@ def main():
     # Choose data files to combine and append
     cfile0 = os.path.join(
         args.input_dir,
-        f"combined_chunk_ChunkIndex_HAND_4_col_hillslope_geo_params_section_quad_{args.dem_source}.nc",
+        f"combined_chunk_ChunkIndex_HAND_{args.n_bins}_col_hillslope_geo_params"
+        + f"_section_quad_{args.dem_source}.nc",
     )
 
     f = Dataset(args.input_file, "r")

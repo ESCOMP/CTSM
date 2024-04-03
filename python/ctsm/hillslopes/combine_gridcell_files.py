@@ -55,6 +55,13 @@ def parse_arguments(argv):
         type=int,
         default=default_n_chunks,
     )
+    default_n_bins = 4
+    parser.add_argument(
+        "--n-bins",
+        type=int,
+        default=default_n_bins,
+        help=f"Number of elevation bins (default: {default_n_bins})",
+    )
     parser.add_argument(
         "--cndx",
         help=(
@@ -102,8 +109,8 @@ def main():
         # Gridcell file directory
         cfile = os.path.join(
             args.input_dir,
-            "chunk_{:02d}_HAND_4_col_hillslope_geo_params_section_quad_{}.nc".format(
-                cndx, args.dem_source
+            "chunk_{:02d}_HAND_{:d}_col_hillslope_geo_params_section_quad_{}.nc".format(
+                cndx, args.n_bins, args.dem_source
             ),
         )
 
