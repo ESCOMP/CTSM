@@ -1,18 +1,3 @@
-# directories checked out by manage_externals, and other files created
-# by manage_externals
-manage_externals.log
-ccs_config
-/src/fates/
-/cime/
-/components/
-/libraries/
-/share/
-/doc/doc-builder/
-
-# ignore svn directories
-**/.svn/**
-.svn/
-
 # netcdf files
 *.nc
 # but don't ignore netcdf files here:

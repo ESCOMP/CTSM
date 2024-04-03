@@ -56,8 +56,8 @@ fxrequired = ToplevelRequired
 
 [submodule "cdeps"]
 path = components/cdeps
-url = https://github.com/ESCOMP/CDEPS.git
-fxtag = cdeps1.0.28
+url = https://github.com/jedwards4b/CDEPS.git
+fxtag = rme/cdeps1.0.28
 fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
 fxrequired = ToplevelRequired
 
@@ -95,4 +95,3 @@ url = https://github.com/ESMCI/doc-builder
 fxDONOTUSEurl = https://github.com/ESMCI/doc-builder
 fxrequired = AlwaysRequired
 fxtag = v1.0.8
-
