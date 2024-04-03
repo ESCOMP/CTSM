@@ -63,6 +63,14 @@ def parse_arguments(argv):
         help=f"Number of elevation bins (default: {default_n_bins}). "
              + "Used to generate input filename template.",
     )
+    default_hillslope_form = "Trapezoidal"
+    parser.add_argument(
+        "--hillslope-form",
+        help=f"Hillslope form (default: {default_hillslope_form}). "
+             + "Used to generate input filename template.",
+        type=str,
+        default=default_hillslope_form,
+    )
     parser.add_argument(
         "--cndx",
         help=(
@@ -110,8 +118,8 @@ def main():
         # Gridcell file directory
         cfile = os.path.join(
             args.input_dir,
-            "chunk_{:02d}_HAND_{:d}_col_hillslope_geo_params_section_quad_{}.nc".format(
-                cndx, args.n_bins, args.dem_source
+            "chunk_{:02d}_HAND_{:d}_col_hillslope_geo_params_{}_{}.nc".format(
+                cndx, args.n_bins, args.hillslope_form, args.dem_source
             ),
         )
 

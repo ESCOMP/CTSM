@@ -64,7 +64,17 @@ def parse_arguments(argv):
         "--n-bins",
         type=int,
         default=default_n_bins,
-        help=f"Number of elevation bins (default: {default_n_bins})",
+        help=f"Number of elevation bins (default: {default_n_bins}). "
+             + "Used to generate input filename template.",
+    )
+
+    default_hillslope_form = "Trapezoidal"
+    parser.add_argument(
+        "--hillslope-form",
+        help=f"Hillslope form (default: {default_hillslope_form}). "
+             + "Used to generate input filename template.",
+        type=str,
+        default=default_hillslope_form,
     )
 
     parser.add_argument("-v", "--verbose", help="print info", action="store_true", default=False)
@@ -92,7 +102,7 @@ def main():
     cfile0 = os.path.join(
         args.input_dir,
         f"combined_chunk_ChunkIndex_HAND_{args.n_bins}_col_hillslope_geo_params"
-        + f"_trapezoid_{args.dem_source}.nc",
+        + f"_{args.hillslope_form}_{args.dem_source}.nc",
     )
 
     f = Dataset(args.input_file, "r")
