@@ -8,6 +8,7 @@ ccs_config
 /libraries/
 /share/
 /doc/doc-builder/
+/tools/external/
 
 # ignore svn directories
 **/.svn/**
