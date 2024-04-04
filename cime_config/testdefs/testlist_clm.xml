@@ -45,7 +45,6 @@
   </test>
   <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
     <machines>
-      <machine name="derecho" compiler="intel" category="cesm3_dev"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
@@ -93,7 +92,6 @@
   </test>
   <test name="ERI_D" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
     <machines>
-      <machine name="derecho" compiler="intel" category="cesm3_dev"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
