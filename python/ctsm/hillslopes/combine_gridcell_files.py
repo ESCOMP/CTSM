@@ -112,6 +112,9 @@ def main():
             if cndx < 1 or cndx > args.n_chunks:
                 raise RuntimeError("All cndx must be 1-{:d}".format(args.n_chunks))
 
+    nhillslope = None
+    nmaxhillcol = None
+
     for cndx in chunks_to_process:
 
         # Gridcell file directory
@@ -151,15 +154,13 @@ def main():
             continue
         print(f"Chunk {cndx}: Combining {len(gfiles)} files...")
 
-        # Read hillslope data dimensions
-        first_gridcell_file = Dataset(gfiles[0], "r")
-        nhillslope = len(first_gridcell_file.dimensions["nhillslope"])
-        nmaxhillcol = len(first_gridcell_file.dimensions["nmaxhillcol"])
-
-        add_bedrock = "hillslope_bedrock_depth" in first_gridcell_file.variables.keys()
-        do_add_stream_channel_vars = "hillslope_stream_depth" in first_gridcell_file.variables.keys()
-
-        first_gridcell_file.close()
+        # Read hillslope data dimensions/settings, if not done yet
+        if nhillslope is None:
+            with Dataset(gfiles[0], "r") as first_gridcell_file:
+                nhillslope = len(first_gridcell_file.dimensions["nhillslope"])
+                nmaxhillcol = len(first_gridcell_file.dimensions["nmaxhillcol"])
+                add_bedrock = "hillslope_bedrock_depth" in first_gridcell_file.variables.keys()
+                do_add_stream_channel_vars = "hillslope_stream_depth" in first_gridcell_file.variables.keys()
 
         write_to_file(
             outfile_path,
