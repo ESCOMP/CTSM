@@ -14,7 +14,349 @@ import xarray as xr
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 from ctsm.hillslopes.hillslope_utils import add_variable_xr
 
+class HillslopeVars:
+    """
+    Fields to be added to hillslope_file
+    """
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self, ncolumns_per_gridcell, nhillslope, sjm, sim, recurse=True):
 
+        # Variables that will actually be saved
+        self.h_elev = np.zeros((ncolumns_per_gridcell, sjm, sim))
+        self.h_dist = np.zeros((ncolumns_per_gridcell, sjm, sim))
+        self.h_area = np.zeros((ncolumns_per_gridcell, sjm, sim))
+        self.h_slope = np.zeros((ncolumns_per_gridcell, sjm, sim))
+        self.h_aspect = np.zeros((ncolumns_per_gridcell, sjm, sim))
+        self.h_width = np.zeros((ncolumns_per_gridcell, sjm, sim))
+        self.h_bedrock = np.zeros((ncolumns_per_gridcell, sjm, sim))
+        self.h_stream_depth = np.zeros((sjm, sim))
+        self.h_stream_width = np.zeros((sjm, sim))
+        self.h_stream_slope = np.zeros((sjm, sim))
+        self.nhillcolumns = np.zeros((sjm, sim), dtype=int)
+        self.pct_hillslope = np.zeros((nhillslope, sjm, sim))
+        self.hillslope_index = np.zeros((ncolumns_per_gridcell, sjm, sim), dtype=int)
+        self.column_index = np.zeros((ncolumns_per_gridcell, sjm, sim), dtype=int)
+        self.downhill_column_index = np.zeros((ncolumns_per_gridcell, sjm, sim), dtype=int)
+
+        # Placeholders for read-in data from each chunk
+        if recurse:
+            self.chunk_mask = None
+            self.this_chunk = HillslopeVars(ncolumns_per_gridcell, nhillslope, sjm, sim, recurse=False)
+
+
+    def read(self, cfile, read_bedrock, read_stream):
+        """Read hillslope variables from one chunk file
+
+        Args:
+            cfile (str): Path to chunk file
+            read_bedrock (logical): Whether to read bedrock variable(s)
+            read_stream (logical): Whether to read stream variable(s)
+        """
+        # pylint: disable=too-many-statements
+
+        f = Dataset(cfile, "r")
+        self.chunk_mask = f.variables["chunk_mask"][:]
+        try:
+            self.this_chunk.h_elev = f.variables["hillslope_elevation"][:]
+        except KeyError:
+            self.this_chunk.h_elev = f.variables["h_height"][:]
+        try:
+            self.this_chunk.h_dist = f.variables["hillslope_distance"][:]
+        except KeyError:
+            self.this_chunk.h_dist = f.variables["h_length"][:]
+        try:
+            self.this_chunk.h_width = f.variables["hillslope_width"][:]
+        except KeyError:
+            self.this_chunk.h_width = f.variables["h_width"][:]
+        try:
+            self.this_chunk.h_area = f.variables["hillslope_area"][:]
+        except KeyError:
+            self.this_chunk.h_area = f.variables["h_area"][:]
+        try:
+            self.this_chunk.h_slope = f.variables["hillslope_slope"][:]
+        except KeyError:
+            self.this_chunk.h_slope = f.variables["h_slope"][:]
+        try:
+            self.this_chunk.h_aspect = f.variables["hillslope_aspect"][:]
+        except KeyError:
+            self.this_chunk.h_aspect = f.variables["h_aspect"][:]
+        if read_bedrock:
+            try:
+                self.this_chunk.h_bedrock = f.variables["hillslope_bedrock_depth"][:]
+            except KeyError:
+                self.this_chunk.h_bedrock = f.variables["h_bedrock"][:]
+        if read_stream:
+            try:
+                self.this_chunk.h_stream_depth = f.variables["h_stream_depth"][:]
+            except KeyError:
+                self.this_chunk.h_stream_depth = f.variables["hillslope_stream_depth"][:]
+            try:
+                self.this_chunk.h_stream_width = f.variables["hillslope_stream_width"][:]
+            except KeyError:
+                self.this_chunk.h_stream_width = f.variables["h_stream_width"][:]
+            try:
+                self.this_chunk.h_stream_slope = f.variables["hillslope_stream_slope"][:]
+            except KeyError:
+                self.h_stream_slope = f.variables["hillslope_stream_slope"][:]
+
+        self.this_chunk.nhillcolumns = f.variables["nhillcolumns"][
+                :,
+            ].astype(int)
+        self.this_chunk.pct_hillslope = f.variables["pct_hillslope"][
+                :,
+            ]
+        self.this_chunk.hillslope_index = f.variables["hillslope_index"][
+                :,
+            ].astype(int)
+        self.this_chunk.column_index = f.variables["column_index"][
+                :,
+            ].astype(int)
+        self.this_chunk.downhill_column_index = f.variables["downhill_column_index"][
+                :,
+            ].astype(int)
+        f.close()
+
+    def update(self, i, j, add_bedrock, add_stream, landmask):
+        """
+        Update a gridcell in chunk
+        """
+        if not(self.chunk_mask[j, i] > 0 and landmask[j, i] > 0):
+            return
+
+        self.h_elev[:, j, i] = self.this_chunk.h_elev[:, j, i]
+        self.h_dist[:, j, i] = self.this_chunk.h_dist[:, j, i]
+        self.h_width[:, j, i] = self.this_chunk.h_width[:, j, i]
+        self.h_area[:, j, i] = self.this_chunk.h_area[:, j, i]
+        self.h_slope[:, j, i] = self.this_chunk.h_slope[:, j, i]
+        self.h_aspect[:, j, i] = self.this_chunk.h_aspect[:, j, i]
+        if add_bedrock:
+            self.h_bedrock[:, j, i] = self.this_chunk.h_bedrock[:, j, i]
+        if add_stream:
+            self.h_stream_depth[j, i] = self.this_chunk.h_stream_depth[j, i]
+            self.h_stream_width[j, i] = self.this_chunk.h_stream_width[j, i]
+            self.h_stream_slope[j, i] = self.this_chunk.h_stream_slope[j, i]
+
+        self.nhillcolumns[j, i] = self.this_chunk.nhillcolumns[j, i]
+        self.pct_hillslope[:, j, i] = self.this_chunk.pct_hillslope[:, j, i]
+        self.hillslope_index[:, j, i] = self.this_chunk.hillslope_index[:, j, i]
+        self.column_index[:, j, i] = self.this_chunk.column_index[:, j, i]
+        self.downhill_column_index[:, j, i] = self.this_chunk.downhill_column_index[:, j, i]
+
+        # if 2 or less valid aspects, remove all hillslope data
+        if self.this_chunk.nhillcolumns[j, i] > 0:
+            # check number of hillslopes
+            h_ndx = self.this_chunk.hillslope_index[:, j, i]
+            nactual_hillslopes = np.unique(h_ndx[h_ndx > 0]).size
+            if nactual_hillslopes < 3:
+                self.h_elev[:, j, i] = 0
+                self.h_dist[:, j, i] = 0
+                self.h_width[:, j, i] = 0
+                self.h_area[:, j, i] = 0
+                self.h_slope[:, j, i] = 0
+                self.h_aspect[:, j, i] = 0
+                self.h_bedrock[:, j, i] = 0
+                self.h_stream_depth[j, i] = 0
+                self.h_stream_width[j, i] = 0
+                self.h_stream_slope[j, i] = 0
+
+                self.nhillcolumns[j, i] = 0
+                self.pct_hillslope[:, j, i] = 0
+                self.hillslope_index[:, j, i] = 0
+                self.column_index[:, j, i] = 0
+                self.downhill_column_index[:, j, i] = 0
+
+    def save(self, input_file, output_file, ncolumns_per_gridcell, nhillslope, add_bedrock, add_stream):
+        """
+        Save to netCDF
+        """
+        print("saving")
+
+        with xr.open_dataset(input_file) as ds_in:
+            lsmlat = ds_in["lsmlat"].load()
+            lsmlon = ds_in["lsmlon"].load()
+
+        ds_out = xr.Dataset()
+
+        ds_out = add_variable_xr(
+            name="hillslope_elevation",
+            units="m",
+            long_name="hillslope elevation above channel",
+            data = self.h_elev,
+            dataset=ds_out,
+            lsmlat=lsmlat,
+            lsmlon=lsmlon,
+            ncolumns_per_gridcell=ncolumns_per_gridcell,
+        )
+
+        ds_out = add_variable_xr(
+            name="hillslope_distance",
+            units="m",
+            long_name="hillslope distance from channel",
+            data = self.h_dist,
+            dataset=ds_out,
+            lsmlat=lsmlat,
+            lsmlon=lsmlon,
+            ncolumns_per_gridcell=ncolumns_per_gridcell,
+        )
+
+        ds_out = add_variable_xr(
+            name="hillslope_width",
+            units="m",
+            long_name="hillslope width",
+            data = self.h_width,
+            dataset=ds_out,
+            lsmlat=lsmlat,
+            lsmlon=lsmlon,
+            ncolumns_per_gridcell=ncolumns_per_gridcell,
+        )
+
+        ds_out = add_variable_xr(
+            name="hillslope_area",
+            units="m2",
+            long_name="hillslope area",
+            data = self.h_area,
+            dataset=ds_out,
+            lsmlat=lsmlat,
+            lsmlon=lsmlon,
+            ncolumns_per_gridcell=ncolumns_per_gridcell,
+        )
+
+        ds_out = add_variable_xr(
+            name="hillslope_slope",
+            units="m/m",
+            long_name="hillslope slope",
+            data = self.h_slope,
+            dataset=ds_out,
+            lsmlat=lsmlat,
+            lsmlon=lsmlon,
+            ncolumns_per_gridcell=ncolumns_per_gridcell,
+        )
+
+        ds_out = add_variable_xr(
+            name="hillslope_aspect",
+            units="radians",
+            long_name="hillslope aspect (clockwise from North)",
+            data = self.h_aspect,
+            dataset=ds_out,
+            lsmlat=lsmlat,
+            lsmlon=lsmlon,
+            ncolumns_per_gridcell=ncolumns_per_gridcell,
+        )
+
+
+        if add_bedrock:
+            ds_out = add_variable_xr(
+                name="hillslope_bedrock_depth",
+                units="meters",
+                long_name="hillslope bedrock depth",
+                data = self.h_bedrock,
+                dataset=ds_out,
+                lsmlat=lsmlat,
+                lsmlon=lsmlon,
+                ncolumns_per_gridcell=ncolumns_per_gridcell,
+            )
+
+        if add_stream:
+            ds_out = add_variable_xr(
+                name="hillslope_stream_depth",
+                units="meters",
+                long_name="stream channel bankfull depth",
+                data = self.h_stream_depth,
+                dataset=ds_out,
+                lsmlat=lsmlat,
+                lsmlon=lsmlon,
+                dims=["lsmlat", "lsmlon"],
+            )
+            ds_out = add_variable_xr(
+                name="hillslope_stream_width",
+                units="meters",
+                long_name="stream channel bankfull width",
+                data = self.h_stream_width,
+                dataset=ds_out,
+                lsmlat=lsmlat,
+                lsmlon=lsmlon,
+                dims=["lsmlat", "lsmlon"],
+            )
+            ds_out = add_variable_xr(
+                name="hillslope_stream_slope",
+                units="m/m",
+                long_name="stream channel slope",
+                data = self.h_stream_slope,
+                dataset=ds_out,
+                lsmlat=lsmlat,
+                lsmlon=lsmlon,
+                dims=["lsmlat", "lsmlon"],
+            )
+
+        ds_out = add_variable_xr(
+            name="nhillcolumns",
+            units="unitless",
+            long_name="number of columns per landunit",
+            data = self.nhillcolumns.astype(np.int32),
+            dataset=ds_out,
+            lsmlat=lsmlat,
+            lsmlon=lsmlon,
+            dims=["lsmlat", "lsmlon"],
+        )
+
+        ds_out = add_variable_xr(
+            name="pct_hillslope",
+            units="per cent",
+            long_name="percent hillslope of landunit",
+            data = self.pct_hillslope,
+            dataset=ds_out,
+            lsmlat=lsmlat,
+            lsmlon=lsmlon,
+            dims=["nhillslope", "lsmlat", "lsmlon"],
+            nhillslope=nhillslope,
+        )
+
+        ds_out = add_variable_xr(
+            name="hillslope_index",
+            units="unitless",
+            long_name="hillslope_index",
+            data = self.hillslope_index.astype(np.int32),
+            dataset=ds_out,
+            lsmlat=lsmlat,
+            lsmlon=lsmlon,
+            ncolumns_per_gridcell=ncolumns_per_gridcell,
+        )
+
+        ds_out = add_variable_xr(
+            name="column_index",
+            units="unitless",
+            long_name="column index",
+            data = self.column_index.astype(np.int32),
+            dataset=ds_out,
+            lsmlat=lsmlat,
+            lsmlon=lsmlon,
+            ncolumns_per_gridcell=ncolumns_per_gridcell,
+        )
+
+        ds_out = add_variable_xr(
+            name="downhill_column_index",
+            units="unitless",
+            long_name="downhill column index",
+            data = self.downhill_column_index.astype(np.int32),
+            dataset=ds_out,
+            lsmlat=lsmlat,
+            lsmlon=lsmlon,
+            ncolumns_per_gridcell=ncolumns_per_gridcell,
+        )
+
+
+        # Before saving, drop coordinate variables (which aren't present on fsurdat)
+        ds_out = ds_out.drop_vars(
+            [
+                "lsmlat",
+                "lsmlon",
+                "nmaxhillcol",
+                "nhillslope",
+            ]
+        )
+
+        # Save
+        ds_out.to_netcdf(output_file, "w", format="NETCDF4_CLASSIC")
 
 def parse_arguments(argv):
     """
@@ -126,29 +468,13 @@ def main():
             sjm = len(f.dimensions["lsmlat"])
             sim = len(f.dimensions["lsmlon"])
 
-            # initialize new fields to be added to surface data file
-            h_elev = np.zeros((ncolumns_per_gridcell, sjm, sim))
-            h_dist = np.zeros((ncolumns_per_gridcell, sjm, sim))
-            h_area = np.zeros((ncolumns_per_gridcell, sjm, sim))
-            h_slope = np.zeros((ncolumns_per_gridcell, sjm, sim))
-            h_aspect = np.zeros((ncolumns_per_gridcell, sjm, sim))
-            h_width = np.zeros((ncolumns_per_gridcell, sjm, sim))
-            h_bedrock = np.zeros((ncolumns_per_gridcell, sjm, sim))
-            h_stream_depth = np.zeros((sjm, sim))
-            h_stream_width = np.zeros((sjm, sim))
-            h_stream_slope = np.zeros((sjm, sim))
-
-            nhillcolumns = np.zeros((sjm, sim), dtype=int)
-            pct_hillslope = np.zeros((nhillslope, sjm, sim))
-            hillslope_index = np.zeros((ncolumns_per_gridcell, sjm, sim), dtype=int)
-            column_index = np.zeros((ncolumns_per_gridcell, sjm, sim), dtype=int)
-            downhill_column_index = np.zeros((ncolumns_per_gridcell, sjm, sim), dtype=int)
-
             add_bedrock = "hillslope_bedrock_depth" in f.variables.keys()
             add_stream = "hillslope_stream_depth" in f.variables.keys()
 
-            arrays_uninitialized = False
             f.close()
+
+            hillslope_vars = HillslopeVars(ncolumns_per_gridcell, nhillslope, sjm, sim)
+            arrays_uninitialized = False
 
         if not file_exists:
             if args.verbose:
@@ -156,317 +482,13 @@ def main():
             continue
 
         # Read hillslope variables from one chunk file
-        nhillslope, h_stream_slope, chunk_mask, h_elev0, h_dist0, h_width0, h_area0, h_slope0, h_aspect0, h_bedrock0, h_stream_depth0, h_stream_width0, h_stream_slope0, nhillcolumns0, pct_hillslope0, hillslope_index0, column_index0, downhill_column_index0 = read_hillslope_vars(cfile, add_bedrock, add_stream)
+        hillslope_vars.read(cfile, add_bedrock, add_stream)
 
         for i in range(sim):
             for j in range(sjm):
-                if not(chunk_mask[j, i] > 0 and landmask[j, i] > 0):
-                    continue
-
-                h_elev[:, j, i] = h_elev0[:, j, i]
-                h_dist[:, j, i] = h_dist0[:, j, i]
-                h_width[:, j, i] = h_width0[:, j, i]
-                h_area[:, j, i] = h_area0[:, j, i]
-                h_slope[:, j, i] = h_slope0[:, j, i]
-                h_aspect[:, j, i] = h_aspect0[:, j, i]
-                if add_bedrock:
-                    h_bedrock[:, j, i] = h_bedrock0[:, j, i]
-                if add_stream:
-                    h_stream_depth[j, i] = h_stream_depth0[j, i]
-                    h_stream_width[j, i] = h_stream_width0[j, i]
-                    h_stream_slope[j, i] = h_stream_slope0[j, i]
-
-                nhillcolumns[j, i] = nhillcolumns0[j, i]
-                pct_hillslope[:, j, i] = pct_hillslope0[:, j, i]
-                hillslope_index[:, j, i] = hillslope_index0[:, j, i]
-                column_index[:, j, i] = column_index0[:, j, i]
-                downhill_column_index[:, j, i] = downhill_column_index0[:, j, i]
-
-                # if 2 or less valid aspects, remove all hillslope data
-                if nhillcolumns0[j, i] > 0:
-                    # check number of hillslopes
-                    h_ndx = hillslope_index0[:, j, i]
-                    nactual_hillslopes = np.unique(h_ndx[h_ndx > 0]).size
-                    if nactual_hillslopes < 3:
-                        h_elev[:, j, i] = 0
-                        h_dist[:, j, i] = 0
-                        h_width[:, j, i] = 0
-                        h_area[:, j, i] = 0
-                        h_slope[:, j, i] = 0
-                        h_aspect[:, j, i] = 0
-                        h_bedrock[:, j, i] = 0
-                        h_stream_depth[j, i] = 0
-                        h_stream_width[j, i] = 0
-                        h_stream_slope[j, i] = 0
-
-                        nhillcolumns[j, i] = 0
-                        pct_hillslope[:, j, i] = 0
-                        hillslope_index[:, j, i] = 0
-                        column_index[:, j, i] = 0
-                        downhill_column_index[:, j, i] = 0
+                hillslope_vars.update(i, j, add_bedrock, add_stream, landmask)
 
     # -- Write data to file ------------------
-
-    print("saving")
-
-    with xr.open_dataset(args.input_file) as ds_in:
-        lsmlat = ds_in["lsmlat"].load()
-        lsmlon = ds_in["lsmlon"].load()
-
-    ds_out = xr.Dataset()
-
-    ds_out = add_variable_xr(
-        name="hillslope_elevation",
-        units="m",
-        long_name="hillslope elevation above channel",
-        data=h_elev,
-        dataset=ds_out,
-        lsmlat=lsmlat,
-        lsmlon=lsmlon,
-        ncolumns_per_gridcell=ncolumns_per_gridcell,
-    )
-
-    ds_out = add_variable_xr(
-        name="hillslope_distance",
-        units="m",
-        long_name="hillslope distance from channel",
-        data=h_dist,
-        dataset=ds_out,
-        lsmlat=lsmlat,
-        lsmlon=lsmlon,
-        ncolumns_per_gridcell=ncolumns_per_gridcell,
-    )
-
-    ds_out = add_variable_xr(
-        name="hillslope_width",
-        units="m",
-        long_name="hillslope width",
-        data=h_width,
-        dataset=ds_out,
-        lsmlat=lsmlat,
-        lsmlon=lsmlon,
-        ncolumns_per_gridcell=ncolumns_per_gridcell,
-    )
-
-    ds_out = add_variable_xr(
-        name="hillslope_area",
-        units="m2",
-        long_name="hillslope area",
-        data=h_area,
-        dataset=ds_out,
-        lsmlat=lsmlat,
-        lsmlon=lsmlon,
-        ncolumns_per_gridcell=ncolumns_per_gridcell,
-    )
-
-    ds_out = add_variable_xr(
-        name="hillslope_slope",
-        units="m/m",
-        long_name="hillslope slope",
-        data=h_slope,
-        dataset=ds_out,
-        lsmlat=lsmlat,
-        lsmlon=lsmlon,
-        ncolumns_per_gridcell=ncolumns_per_gridcell,
-    )
-
-    ds_out = add_variable_xr(
-        name="hillslope_aspect",
-        units="radians",
-        long_name="hillslope aspect (clockwise from North)",
-        data=h_aspect,
-        dataset=ds_out,
-        lsmlat=lsmlat,
-        lsmlon=lsmlon,
-        ncolumns_per_gridcell=ncolumns_per_gridcell,
-    )
-
-
-    if add_bedrock:
-        ds_out = add_variable_xr(
-            name="hillslope_bedrock_depth",
-            units="meters",
-            long_name="hillslope bedrock depth",
-            data=h_bedrock,
-            dataset=ds_out,
-            lsmlat=lsmlat,
-            lsmlon=lsmlon,
-            ncolumns_per_gridcell=ncolumns_per_gridcell,
-        )
-
-    if add_stream:
-        ds_out = add_variable_xr(
-            name="hillslope_stream_depth",
-            units="meters",
-            long_name="stream channel bankfull depth",
-            data=h_stream_depth,
-            dataset=ds_out,
-            lsmlat=lsmlat,
-            lsmlon=lsmlon,
-            dims=["lsmlat", "lsmlon"],
-        )
-        ds_out = add_variable_xr(
-            name="hillslope_stream_width",
-            units="meters",
-            long_name="stream channel bankfull width",
-            data=h_stream_width,
-            dataset=ds_out,
-            lsmlat=lsmlat,
-            lsmlon=lsmlon,
-            dims=["lsmlat", "lsmlon"],
-        )
-        ds_out = add_variable_xr(
-            name="hillslope_stream_slope",
-            units="m/m",
-            long_name="stream channel slope",
-            data=h_stream_slope,
-            dataset=ds_out,
-            lsmlat=lsmlat,
-            lsmlon=lsmlon,
-            dims=["lsmlat", "lsmlon"],
-        )
-
-    ds_out = add_variable_xr(
-        name="nhillcolumns",
-        units="unitless",
-        long_name="number of columns per landunit",
-        data=nhillcolumns.astype(np.int32),
-        dataset=ds_out,
-        lsmlat=lsmlat,
-        lsmlon=lsmlon,
-        dims=["lsmlat", "lsmlon"],
-    )
-
-    ds_out = add_variable_xr(
-        name="pct_hillslope",
-        units="per cent",
-        long_name="percent hillslope of landunit",
-        data=pct_hillslope,
-        dataset=ds_out,
-        lsmlat=lsmlat,
-        lsmlon=lsmlon,
-        dims=["nhillslope", "lsmlat", "lsmlon"],
-        nhillslope=nhillslope,
-    )
-
-    ds_out = add_variable_xr(
-        name="hillslope_index",
-        units="unitless",
-        long_name="hillslope_index",
-        data=hillslope_index.astype(np.int32),
-        dataset=ds_out,
-        lsmlat=lsmlat,
-        lsmlon=lsmlon,
-        ncolumns_per_gridcell=ncolumns_per_gridcell,
-    )
-
-    ds_out = add_variable_xr(
-        name="column_index",
-        units="unitless",
-        long_name="column index",
-        data=column_index.astype(np.int32),
-        dataset=ds_out,
-        lsmlat=lsmlat,
-        lsmlon=lsmlon,
-        ncolumns_per_gridcell=ncolumns_per_gridcell,
-    )
-
-    ds_out = add_variable_xr(
-        name="downhill_column_index",
-        units="unitless",
-        long_name="downhill column index",
-        data=downhill_column_index.astype(np.int32),
-        dataset=ds_out,
-        lsmlat=lsmlat,
-        lsmlon=lsmlon,
-        ncolumns_per_gridcell=ncolumns_per_gridcell,
-    )
-
-
-    # Before saving, drop coordinate variables (which aren't present on fsurdat)
-    ds_out = ds_out.drop_vars(
-        [
-            "lsmlat",
-            "lsmlon",
-            "nmaxhillcol",
-            "nhillslope",
-        ]
-    )
-
-    # Save
-    ds_out.to_netcdf(args.output_file, "w", format="NETCDF4_CLASSIC")
+    hillslope_vars.save(args.input_file, args.output_file, ncolumns_per_gridcell, nhillslope, add_bedrock, add_stream)
 
     print(args.output_file + " created")
-
-
-def read_hillslope_vars(cfile, read_bedrock, read_stream):
-    """Read hillslope variables from one chunk file
-
-    Args:
-        cfile (str): Path to chunk file
-        read_bedrock (logical): Whether to read bedrock variable(s)
-        read_stream (logical): Whether to read stream variable(s)
-    """
-    f = Dataset(cfile, "r")
-    nhillslope = len(f.dimensions["nhillslope"])
-    chunk_mask = f.variables["chunk_mask"][:]
-    try:
-        h_elev0 = f.variables["hillslope_elevation"][:]
-    except KeyError:
-        h_elev0 = f.variables["h_height"][:]
-    try:
-        h_dist0 = f.variables["hillslope_distance"][:]
-    except KeyError:
-        h_dist0 = f.variables["h_length"][:]
-    try:
-        h_width0 = f.variables["hillslope_width"][:]
-    except KeyError:
-        h_width0 = f.variables["h_width"][:]
-    try:
-        h_area0 = f.variables["hillslope_area"][:]
-    except KeyError:
-        h_area0 = f.variables["h_area"][:]
-    try:
-        h_slope0 = f.variables["hillslope_slope"][:]
-    except KeyError:
-        h_slope0 = f.variables["h_slope"][:]
-    try:
-        h_aspect0 = f.variables["hillslope_aspect"][:]
-    except KeyError:
-        h_aspect0 = f.variables["h_aspect"][:]
-    if read_bedrock:
-        try:
-            h_bedrock0 = f.variables["hillslope_bedrock_depth"][:]
-        except KeyError:
-            h_bedrock0 = f.variables["h_bedrock"][:]
-    if read_stream:
-        try:
-            h_stream_depth0 = f.variables["h_stream_depth"][:]
-        except KeyError:
-            h_stream_depth0 = f.variables["hillslope_stream_depth"][:]
-        try:
-            h_stream_width0 = f.variables["hillslope_stream_width"][:]
-        except KeyError:
-            h_stream_width0 = f.variables["h_stream_width"][:]
-        try:
-            h_stream_slope0 = f.variables["hillslope_stream_slope"][:]
-        except KeyError:
-            h_stream_slope = f.variables["hillslope_stream_slope"][:]
-
-    nhillcolumns0 = f.variables["nhillcolumns"][
-            :,
-        ].astype(int)
-    pct_hillslope0 = f.variables["pct_hillslope"][
-            :,
-        ]
-    hillslope_index0 = f.variables["hillslope_index"][
-            :,
-        ].astype(int)
-    column_index0 = f.variables["column_index"][
-            :,
-        ].astype(int)
-    downhill_column_index0 = f.variables["downhill_column_index"][
-            :,
-        ].astype(int)
-    f.close()
-    return nhillslope,h_stream_slope,chunk_mask,h_elev0,h_dist0,h_width0,h_area0,h_slope0,h_aspect0,h_bedrock0,h_stream_depth0,h_stream_width0,h_stream_slope0,nhillcolumns0,pct_hillslope0,hillslope_index0,column_index0,downhill_column_index0
