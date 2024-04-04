@@ -123,9 +123,14 @@ def write_to_file(
     """
     Write to file
     """
-    shutil.copyfile(args.input_file, args.output_file)
+    outfile = Dataset(args.output_file, "w", format="NETCDF3_64BIT_OFFSET")
 
-    outfile = Dataset(args.output_file, "a")
+    with Dataset(args.input_file, "r") as fsurdat:
+        n_lat = len(fsurdat.dimensions["lsmlat"])
+        n_lon = len(fsurdat.dimensions["lsmlon"])
+
+    outfile.createDimension("lsmlon", n_lon)
+    outfile.createDimension("lsmlat", n_lat)
     outfile.createDimension("nhillslope", args.num_hillslopes)
     outfile.createDimension("nmaxhillcol", max_columns_per_landunit)
 
@@ -187,8 +192,8 @@ def write_to_file(
     outfile.synth_hillslopes_delx = args.delx
     outfile.synth_hillslopes_hcase = args.hcase
     outfile.synth_hillslopes_hillslope_distance = args.hillslope_distance
-    outfile.synth_hillslopes_nmaxhillcol = args.nmaxhillcol
-    outfile.synth_hillslopes_num_hillslopes = args.num_hillslopes
+    outfile.synth_hillslopes_nmaxhillcol = np.int32(args.nmaxhillcol)
+    outfile.synth_hillslopes_num_hillslopes = np.int32(args.num_hillslopes)
     outfile.synth_hillslopes_phill = args.phill
     outfile.synth_hillslopes_thresh = args.thresh
     outfile.synth_hillslopes_width_reach = args.width_reach
