@@ -44,7 +44,7 @@ class HillslopeVars:
             self.this_chunk = HillslopeVars(ncolumns_per_gridcell, nhillslope, sjm, sim, recurse=False)
 
 
-    def read(self, cfile, read_bedrock, read_stream):
+    def read(self, chunk_file, read_bedrock, read_stream):
         """Read hillslope variables from one chunk file
 
         Args:
@@ -54,67 +54,67 @@ class HillslopeVars:
         """
         # pylint: disable=too-many-statements
 
-        f = Dataset(cfile, "r")
-        self.chunk_mask = f.variables["chunk_mask"][:]
+        chunk_ds = Dataset(chunk_file, "r")
+        self.chunk_mask = chunk_ds.variables["chunk_mask"][:]
         try:
-            self.this_chunk.h_elev = f.variables["hillslope_elevation"][:]
+            self.this_chunk.h_elev = chunk_ds.variables["hillslope_elevation"][:]
         except KeyError:
-            self.this_chunk.h_elev = f.variables["h_height"][:]
+            self.this_chunk.h_elev = chunk_ds.variables["h_height"][:]
         try:
-            self.this_chunk.h_dist = f.variables["hillslope_distance"][:]
+            self.this_chunk.h_dist = chunk_ds.variables["hillslope_distance"][:]
         except KeyError:
-            self.this_chunk.h_dist = f.variables["h_length"][:]
+            self.this_chunk.h_dist = chunk_ds.variables["h_length"][:]
         try:
-            self.this_chunk.h_width = f.variables["hillslope_width"][:]
+            self.this_chunk.h_width = chunk_ds.variables["hillslope_width"][:]
         except KeyError:
-            self.this_chunk.h_width = f.variables["h_width"][:]
+            self.this_chunk.h_width = chunk_ds.variables["h_width"][:]
         try:
-            self.this_chunk.h_area = f.variables["hillslope_area"][:]
+            self.this_chunk.h_area = chunk_ds.variables["hillslope_area"][:]
         except KeyError:
-            self.this_chunk.h_area = f.variables["h_area"][:]
+            self.this_chunk.h_area = chunk_ds.variables["h_area"][:]
         try:
-            self.this_chunk.h_slope = f.variables["hillslope_slope"][:]
+            self.this_chunk.h_slope = chunk_ds.variables["hillslope_slope"][:]
         except KeyError:
-            self.this_chunk.h_slope = f.variables["h_slope"][:]
+            self.this_chunk.h_slope = chunk_ds.variables["h_slope"][:]
         try:
-            self.this_chunk.h_aspect = f.variables["hillslope_aspect"][:]
+            self.this_chunk.h_aspect = chunk_ds.variables["hillslope_aspect"][:]
         except KeyError:
-            self.this_chunk.h_aspect = f.variables["h_aspect"][:]
+            self.this_chunk.h_aspect = chunk_ds.variables["h_aspect"][:]
         if read_bedrock:
             try:
-                self.this_chunk.h_bedrock = f.variables["hillslope_bedrock_depth"][:]
+                self.this_chunk.h_bedrock = chunk_ds.variables["hillslope_bedrock_depth"][:]
             except KeyError:
-                self.this_chunk.h_bedrock = f.variables["h_bedrock"][:]
+                self.this_chunk.h_bedrock = chunk_ds.variables["h_bedrock"][:]
         if read_stream:
             try:
-                self.this_chunk.h_stream_depth = f.variables["h_stream_depth"][:]
+                self.this_chunk.h_stream_depth = chunk_ds.variables["h_stream_depth"][:]
             except KeyError:
-                self.this_chunk.h_stream_depth = f.variables["hillslope_stream_depth"][:]
+                self.this_chunk.h_stream_depth = chunk_ds.variables["hillslope_stream_depth"][:]
             try:
-                self.this_chunk.h_stream_width = f.variables["hillslope_stream_width"][:]
+                self.this_chunk.h_stream_width = chunk_ds.variables["hillslope_stream_width"][:]
             except KeyError:
-                self.this_chunk.h_stream_width = f.variables["h_stream_width"][:]
+                self.this_chunk.h_stream_width = chunk_ds.variables["h_stream_width"][:]
             try:
-                self.this_chunk.h_stream_slope = f.variables["hillslope_stream_slope"][:]
+                self.this_chunk.h_stream_slope = chunk_ds.variables["hillslope_stream_slope"][:]
             except KeyError:
-                self.h_stream_slope = f.variables["hillslope_stream_slope"][:]
+                self.h_stream_slope = chunk_ds.variables["hillslope_stream_slope"][:]
 
-        self.this_chunk.nhillcolumns = f.variables["nhillcolumns"][
+        self.this_chunk.nhillcolumns = chunk_ds.variables["nhillcolumns"][
                 :,
             ].astype(int)
-        self.this_chunk.pct_hillslope = f.variables["pct_hillslope"][
+        self.this_chunk.pct_hillslope = chunk_ds.variables["pct_hillslope"][
                 :,
             ]
-        self.this_chunk.hillslope_index = f.variables["hillslope_index"][
+        self.this_chunk.hillslope_index = chunk_ds.variables["hillslope_index"][
                 :,
             ].astype(int)
-        self.this_chunk.column_index = f.variables["column_index"][
+        self.this_chunk.column_index = chunk_ds.variables["column_index"][
                 :,
             ].astype(int)
-        self.this_chunk.downhill_column_index = f.variables["downhill_column_index"][
+        self.this_chunk.downhill_column_index = chunk_ds.variables["downhill_column_index"][
                 :,
             ].astype(int)
-        f.close()
+        chunk_ds.close()
 
     def update(self, i, j, add_bedrock, add_stream, landmask):
         """
@@ -447,42 +447,42 @@ def main():
         + f"_{args.hillslope_form}_{args.dem_source}.nc",
     )
 
-    f = Dataset(args.input_file, "r")
-    landmask = f.variables["PFTDATA_MASK"][
+    surface_ds = Dataset(args.input_file, "r")
+    landmask = surface_ds.variables["PFTDATA_MASK"][
         :,
     ]
-    f.close()
+    surface_ds.close()
 
     arrays_uninitialized = True
     for cndx in 1 + np.arange(args.n_chunks):
         print(f"{cndx} / {args.n_chunks}")
         cstr = "{:02d}".format(cndx)
-        cfile = cfile0.replace("ChunkIndex", cstr)
-        file_exists = os.path.exists(cfile)
+        chunk_file = cfile0.replace("ChunkIndex", cstr)
+        file_exists = os.path.exists(chunk_file)
 
         if arrays_uninitialized and file_exists:
-            f = Dataset(cfile, "r")
+            chunk_ds = Dataset(chunk_file, "r")
 
-            ncolumns_per_gridcell = len(f.dimensions["nmaxhillcol"])
-            nhillslope = len(f.dimensions["nhillslope"])
-            sjm = len(f.dimensions["lsmlat"])
-            sim = len(f.dimensions["lsmlon"])
+            ncolumns_per_gridcell = len(chunk_ds.dimensions["nmaxhillcol"])
+            nhillslope = len(chunk_ds.dimensions["nhillslope"])
+            sjm = len(chunk_ds.dimensions["lsmlat"])
+            sim = len(chunk_ds.dimensions["lsmlon"])
 
-            add_bedrock = "hillslope_bedrock_depth" in f.variables.keys()
-            add_stream = "hillslope_stream_depth" in f.variables.keys()
+            add_bedrock = "hillslope_bedrock_depth" in chunk_ds.variables.keys()
+            add_stream = "hillslope_stream_depth" in chunk_ds.variables.keys()
 
-            f.close()
+            chunk_ds.close()
 
             hillslope_vars = HillslopeVars(ncolumns_per_gridcell, nhillslope, sjm, sim)
             arrays_uninitialized = False
 
         if not file_exists:
             if args.verbose:
-                print(f"Skipping; chunk file not found: {cfile}")
+                print(f"Skipping; chunk file not found: {chunk_file}")
             continue
 
         # Read hillslope variables from one chunk file
-        hillslope_vars.read(cfile, add_bedrock, add_stream)
+        hillslope_vars.read(chunk_file, add_bedrock, add_stream)
 
         for i in range(sim):
             for j in range(sjm):
