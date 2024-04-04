@@ -44,6 +44,58 @@ class HillslopeVars:
             self.this_chunk = HillslopeVars(ncolumns_per_gridcell, nhillslope, sjm, sim, recurse=False)
 
 
+    def read_samenames(self, chunk_ds):
+        """
+        Read hillslope variables from one chunk file with the same variable names
+        in old and new versions
+
+        Args:
+            chunk_ds (xarray Dataset): Opened chunk file
+        """
+        self.this_chunk.nhillcolumns = chunk_ds.variables["nhillcolumns"][
+            :,
+        ].astype(int)
+        self.this_chunk.pct_hillslope = chunk_ds.variables["pct_hillslope"][
+            :,
+        ]
+        self.this_chunk.hillslope_index = chunk_ds.variables["hillslope_index"][
+            :,
+        ].astype(int)
+        self.this_chunk.column_index = chunk_ds.variables["column_index"][
+            :,
+        ].astype(int)
+        self.this_chunk.downhill_column_index = chunk_ds.variables["downhill_column_index"][
+            :,
+        ].astype(int)
+
+
+    def read_oldnames(self, chunk_file, read_bedrock, read_stream):
+        """Read hillslope variables from one chunk file with old variable names
+
+        Args:
+            cfile (str): Path to chunk file
+            read_bedrock (logical): Whether to read bedrock variable(s)
+            read_stream (logical): Whether to read stream variable(s)
+        """
+        chunk_ds = Dataset(chunk_file, "r")
+        self.chunk_mask = chunk_ds.variables["chunk_mask"][:]
+        self.this_chunk.h_elev = chunk_ds.variables["h_height"][:]
+        self.this_chunk.h_dist = chunk_ds.variables["h_length"][:]
+        self.this_chunk.h_width = chunk_ds.variables["h_width"][:]
+        self.this_chunk.h_area = chunk_ds.variables["h_area"][:]
+        self.this_chunk.h_slope = chunk_ds.variables["h_slope"][:]
+        self.this_chunk.h_aspect = chunk_ds.variables["h_aspect"][:]
+        if read_bedrock:
+            self.this_chunk.h_bedrock = chunk_ds.variables["h_bedrock"][:]
+        if read_stream:
+            self.this_chunk.h_stream_depth = chunk_ds.variables["h_stream_depth"][:]
+            self.this_chunk.h_stream_width = chunk_ds.variables["h_stream_width"][:]
+            self.h_stream_slope = chunk_ds.variables["hillslope_stream_slope"][:]
+
+        self.read_samenames(chunk_ds)
+        chunk_ds.close()
+
+
     def read(self, chunk_file, read_bedrock, read_stream):
         """Read hillslope variables from one chunk file
 
@@ -52,69 +104,30 @@ class HillslopeVars:
             read_bedrock (logical): Whether to read bedrock variable(s)
             read_stream (logical): Whether to read stream variable(s)
         """
-        # pylint: disable=too-many-statements
 
         chunk_ds = Dataset(chunk_file, "r")
         self.chunk_mask = chunk_ds.variables["chunk_mask"][:]
         try:
             self.this_chunk.h_elev = chunk_ds.variables["hillslope_elevation"][:]
         except KeyError:
-            self.this_chunk.h_elev = chunk_ds.variables["h_height"][:]
-        try:
-            self.this_chunk.h_dist = chunk_ds.variables["hillslope_distance"][:]
-        except KeyError:
-            self.this_chunk.h_dist = chunk_ds.variables["h_length"][:]
-        try:
-            self.this_chunk.h_width = chunk_ds.variables["hillslope_width"][:]
-        except KeyError:
-            self.this_chunk.h_width = chunk_ds.variables["h_width"][:]
-        try:
-            self.this_chunk.h_area = chunk_ds.variables["hillslope_area"][:]
-        except KeyError:
-            self.this_chunk.h_area = chunk_ds.variables["h_area"][:]
-        try:
-            self.this_chunk.h_slope = chunk_ds.variables["hillslope_slope"][:]
-        except KeyError:
-            self.this_chunk.h_slope = chunk_ds.variables["h_slope"][:]
-        try:
-            self.this_chunk.h_aspect = chunk_ds.variables["hillslope_aspect"][:]
-        except KeyError:
-            self.this_chunk.h_aspect = chunk_ds.variables["h_aspect"][:]
+            chunk_ds.close()
+            self.read_oldnames(chunk_file, read_bedrock, read_stream)
+            return
+        self.this_chunk.h_dist = chunk_ds.variables["hillslope_distance"][:]
+        self.this_chunk.h_width = chunk_ds.variables["hillslope_width"][:]
+        self.this_chunk.h_area = chunk_ds.variables["hillslope_area"][:]
+        self.this_chunk.h_slope = chunk_ds.variables["hillslope_slope"][:]
+        self.this_chunk.h_aspect = chunk_ds.variables["hillslope_aspect"][:]
         if read_bedrock:
-            try:
-                self.this_chunk.h_bedrock = chunk_ds.variables["hillslope_bedrock_depth"][:]
-            except KeyError:
-                self.this_chunk.h_bedrock = chunk_ds.variables["h_bedrock"][:]
+            self.this_chunk.h_bedrock = chunk_ds.variables["hillslope_bedrock_depth"][:]
         if read_stream:
-            try:
-                self.this_chunk.h_stream_depth = chunk_ds.variables["h_stream_depth"][:]
-            except KeyError:
-                self.this_chunk.h_stream_depth = chunk_ds.variables["hillslope_stream_depth"][:]
-            try:
-                self.this_chunk.h_stream_width = chunk_ds.variables["hillslope_stream_width"][:]
-            except KeyError:
-                self.this_chunk.h_stream_width = chunk_ds.variables["h_stream_width"][:]
-            try:
-                self.this_chunk.h_stream_slope = chunk_ds.variables["hillslope_stream_slope"][:]
-            except KeyError:
-                self.h_stream_slope = chunk_ds.variables["hillslope_stream_slope"][:]
+            self.this_chunk.h_stream_depth = chunk_ds.variables["hillslope_stream_depth"][:]
+            self.this_chunk.h_stream_width = chunk_ds.variables["hillslope_stream_width"][:]
+            self.this_chunk.h_stream_slope = chunk_ds.variables["hillslope_stream_slope"][:]
 
-        self.this_chunk.nhillcolumns = chunk_ds.variables["nhillcolumns"][
-                :,
-            ].astype(int)
-        self.this_chunk.pct_hillslope = chunk_ds.variables["pct_hillslope"][
-                :,
-            ]
-        self.this_chunk.hillslope_index = chunk_ds.variables["hillslope_index"][
-                :,
-            ].astype(int)
-        self.this_chunk.column_index = chunk_ds.variables["column_index"][
-                :,
-            ].astype(int)
-        self.this_chunk.downhill_column_index = chunk_ds.variables["downhill_column_index"][
-                :,
-            ].astype(int)
+        self.read_samenames(chunk_ds)
         chunk_ds.close()
+
 
     def update(self, i, j, add_bedrock, add_stream, landmask):
         """
