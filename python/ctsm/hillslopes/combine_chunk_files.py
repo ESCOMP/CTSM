@@ -140,7 +140,7 @@ def main():
 
         for i in range(sim):
             for j in range(sjm):
-                hillslope_vars.update(i, j, add_bedrock, add_stream, landmask)
+                hillslope_vars.update(i, j, add_bedrock, add_stream, landmask=landmask)
 
     # -- Write data to file ------------------
     hillslope_vars.save(args.input_file, args.output_file, ncolumns_per_gridcell, nhillslope, add_bedrock, add_stream)
