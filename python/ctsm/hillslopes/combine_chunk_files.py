@@ -5,12 +5,11 @@ import argparse
 import sys
 import os
 import numpy as np
-import xarray as xr
 
 # The below "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
 # though it does.
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
-from ctsm.hillslopes.hillslope_utils import add_variable_xr
+from ctsm.hillslopes.hillslope_utils import add_variable_nc
 
 class HillslopeVars:
     """
@@ -182,192 +181,150 @@ class HillslopeVars:
         """
         print("saving")
 
-        with xr.open_dataset(input_file) as ds_in:
-            lsmlat = ds_in["lsmlat"].load()
-            lsmlon = ds_in["lsmlon"].load()
+        # Create and open file
+        ds_out = Dataset(output_file, "w", format="NETCDF3_64BIT_OFFSET")
 
-        ds_out = xr.Dataset()
+        # Create dimensions
+        with Dataset(input_file, "r") as fsurdat:
+            n_lat = len(fsurdat.dimensions["lsmlat"])
+            n_lon = len(fsurdat.dimensions["lsmlon"])
+        ds_out.createDimension("lsmlon", n_lon)
+        ds_out.createDimension("lsmlat", n_lat)
+        ds_out.createDimension("nhillslope", nhillslope)
+        ds_out.createDimension("nmaxhillcol", ncolumns_per_gridcell)
 
-        ds_out = add_variable_xr(
+        add_variable_nc(
             name="hillslope_elevation",
             units="m",
             long_name="hillslope elevation above channel",
             data = self.h_elev,
             dataset=ds_out,
-            lsmlat=lsmlat,
-            lsmlon=lsmlon,
-            ncolumns_per_gridcell=ncolumns_per_gridcell,
         )
 
-        ds_out = add_variable_xr(
+        add_variable_nc(
             name="hillslope_distance",
             units="m",
             long_name="hillslope distance from channel",
             data = self.h_dist,
             dataset=ds_out,
-            lsmlat=lsmlat,
-            lsmlon=lsmlon,
-            ncolumns_per_gridcell=ncolumns_per_gridcell,
         )
 
-        ds_out = add_variable_xr(
+        add_variable_nc(
             name="hillslope_width",
             units="m",
             long_name="hillslope width",
             data = self.h_width,
             dataset=ds_out,
-            lsmlat=lsmlat,
-            lsmlon=lsmlon,
-            ncolumns_per_gridcell=ncolumns_per_gridcell,
         )
 
-        ds_out = add_variable_xr(
+        add_variable_nc(
             name="hillslope_area",
             units="m2",
             long_name="hillslope area",
             data = self.h_area,
             dataset=ds_out,
-            lsmlat=lsmlat,
-            lsmlon=lsmlon,
-            ncolumns_per_gridcell=ncolumns_per_gridcell,
         )
 
-        ds_out = add_variable_xr(
+        add_variable_nc(
             name="hillslope_slope",
             units="m/m",
             long_name="hillslope slope",
             data = self.h_slope,
             dataset=ds_out,
-            lsmlat=lsmlat,
-            lsmlon=lsmlon,
-            ncolumns_per_gridcell=ncolumns_per_gridcell,
         )
 
-        ds_out = add_variable_xr(
+        add_variable_nc(
             name="hillslope_aspect",
             units="radians",
             long_name="hillslope aspect (clockwise from North)",
             data = self.h_aspect,
             dataset=ds_out,
-            lsmlat=lsmlat,
-            lsmlon=lsmlon,
-            ncolumns_per_gridcell=ncolumns_per_gridcell,
         )
 
 
         if add_bedrock:
-            ds_out = add_variable_xr(
+            add_variable_nc(
                 name="hillslope_bedrock_depth",
                 units="meters",
                 long_name="hillslope bedrock depth",
                 data = self.h_bedrock,
                 dataset=ds_out,
-                lsmlat=lsmlat,
-                lsmlon=lsmlon,
-                ncolumns_per_gridcell=ncolumns_per_gridcell,
             )
 
         if add_stream:
-            ds_out = add_variable_xr(
+            add_variable_nc(
                 name="hillslope_stream_depth",
                 units="meters",
                 long_name="stream channel bankfull depth",
                 data = self.h_stream_depth,
                 dataset=ds_out,
-                lsmlat=lsmlat,
-                lsmlon=lsmlon,
                 dims=["lsmlat", "lsmlon"],
             )
-            ds_out = add_variable_xr(
+            add_variable_nc(
                 name="hillslope_stream_width",
                 units="meters",
                 long_name="stream channel bankfull width",
                 data = self.h_stream_width,
                 dataset=ds_out,
-                lsmlat=lsmlat,
-                lsmlon=lsmlon,
                 dims=["lsmlat", "lsmlon"],
             )
-            ds_out = add_variable_xr(
+            add_variable_nc(
                 name="hillslope_stream_slope",
                 units="m/m",
                 long_name="stream channel slope",
                 data = self.h_stream_slope,
                 dataset=ds_out,
-                lsmlat=lsmlat,
-                lsmlon=lsmlon,
                 dims=["lsmlat", "lsmlon"],
             )
 
-        ds_out = add_variable_xr(
+        add_variable_nc(
             name="nhillcolumns",
             units="unitless",
             long_name="number of columns per landunit",
+            data_type=np.int32,
             data = self.nhillcolumns.astype(np.int32),
             dataset=ds_out,
-            lsmlat=lsmlat,
-            lsmlon=lsmlon,
             dims=["lsmlat", "lsmlon"],
         )
 
-        ds_out = add_variable_xr(
+        add_variable_nc(
             name="pct_hillslope",
             units="per cent",
             long_name="percent hillslope of landunit",
             data = self.pct_hillslope,
             dataset=ds_out,
-            lsmlat=lsmlat,
-            lsmlon=lsmlon,
             dims=["nhillslope", "lsmlat", "lsmlon"],
-            nhillslope=nhillslope,
         )
 
-        ds_out = add_variable_xr(
+        add_variable_nc(
             name="hillslope_index",
             units="unitless",
             long_name="hillslope_index",
             data = self.hillslope_index.astype(np.int32),
+            data_type=np.int32,
             dataset=ds_out,
-            lsmlat=lsmlat,
-            lsmlon=lsmlon,
-            ncolumns_per_gridcell=ncolumns_per_gridcell,
         )
 
-        ds_out = add_variable_xr(
+        add_variable_nc(
             name="column_index",
             units="unitless",
             long_name="column index",
             data = self.column_index.astype(np.int32),
+            data_type=np.int32,
             dataset=ds_out,
-            lsmlat=lsmlat,
-            lsmlon=lsmlon,
-            ncolumns_per_gridcell=ncolumns_per_gridcell,
         )
 
-        ds_out = add_variable_xr(
+        add_variable_nc(
             name="downhill_column_index",
             units="unitless",
             long_name="downhill column index",
             data = self.downhill_column_index.astype(np.int32),
             dataset=ds_out,
-            lsmlat=lsmlat,
-            lsmlon=lsmlon,
-            ncolumns_per_gridcell=ncolumns_per_gridcell,
-        )
-
-
-        # Before saving, drop coordinate variables (which aren't present on fsurdat)
-        ds_out = ds_out.drop_vars(
-            [
-                "lsmlat",
-                "lsmlon",
-                "nmaxhillcol",
-                "nhillslope",
-            ]
+            data_type=np.int32,
         )
 
         # Save
-        ds_out.to_netcdf(output_file, "w", format="NETCDF4_CLASSIC")
+        ds_out.close()
 
 def parse_arguments(argv):
     """

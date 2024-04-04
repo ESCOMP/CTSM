@@ -177,6 +177,30 @@ def create_variable(
 
     return nc_var
 
+def add_variable_nc(
+        name, units, long_name,
+        data,
+        dataset,
+        data_type=np.float64,
+        dims=("nmaxhillcol", "lsmlat", "lsmlon"),
+        ):
+    """
+    Convenient function to use for adding hillslope variables to a Dataset with netcdf
+    """
+
+    if isinstance(dims, list):
+        dims = tuple(dims)
+
+    # Make variable
+    nc_var = create_variable(
+        dataset, name, units, long_name,
+        dims=dims,
+        data_type=data_type,
+        )
+
+    # Fill with data
+    nc_var[:] = data
+
 def add_variable_xr(
         name, units, long_name,
         data,
@@ -188,8 +212,11 @@ def add_variable_xr(
         ):  # pylint: disable=dangerous-default-value
     # pylint disable above: pylint thinks the dims default is empty list []
     """
-    Convenient function to use for adding hillslope variables to a Dataset
+    Convenient function to use for adding hillslope variables to a Dataset with xarray
     """
+
+    if isinstance(dims, tuple):
+        dims = list(dims)
 
     coords = {}
     if dims == ["nmaxhillcol", "lsmlat", "lsmlon"]:
