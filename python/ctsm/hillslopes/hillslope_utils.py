@@ -44,7 +44,7 @@ class HillslopeVars:
             self.this_chunk = HillslopeVars(ncolumns_per_gridcell, nhillslope, sjm, sim, recurse=False, incl_latlon=incl_latlon)
 
 
-    def read_samenames(self, chunk_ds):
+    def _read_samenames(self, chunk_ds):
         """
         Read hillslope variables from one chunk file with the same variable names
         in old and new versions
@@ -69,7 +69,7 @@ class HillslopeVars:
         ].astype(int)
 
 
-    def read_oldnames(self, chunk_file, read_bedrock, read_stream):
+    def _read_oldnames(self, chunk_file, read_bedrock, read_stream):
         """Read hillslope variables from one chunk file with old variable names
 
         Args:
@@ -92,7 +92,7 @@ class HillslopeVars:
             self.this_chunk.h_stream_width = chunk_ds.variables["h_stream_width"][:]
             self.h_stream_slope = chunk_ds.variables["hillslope_stream_slope"][:]
 
-        self.read_samenames(chunk_ds)
+        self._read_samenames(chunk_ds)
         chunk_ds.close()
 
 
@@ -118,7 +118,7 @@ class HillslopeVars:
             self.this_chunk.h_elev = chunk_ds.variables["hillslope_elevation"][:]
         except KeyError:
             chunk_ds.close()
-            self.read_oldnames(chunk_file, read_bedrock, read_stream)
+            self._read_oldnames(chunk_file, read_bedrock, read_stream)
             return
         self.this_chunk.h_dist = chunk_ds.variables["hillslope_distance"][:]
         self.this_chunk.h_width = chunk_ds.variables["hillslope_width"][:]
@@ -132,7 +132,7 @@ class HillslopeVars:
             self.this_chunk.h_stream_width = chunk_ds.variables["hillslope_stream_width"][:]
             self.this_chunk.h_stream_slope = chunk_ds.variables["hillslope_stream_slope"][:]
 
-        self.read_samenames(chunk_ds)
+        self._read_samenames(chunk_ds)
         chunk_ds.close()
 
 
