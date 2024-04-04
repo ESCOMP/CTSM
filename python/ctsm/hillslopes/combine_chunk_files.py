@@ -4,8 +4,6 @@ Combine chunk files into single surface data file
 import argparse
 import sys
 import os
-import shutil
-import datetime
 import numpy as np
 import xarray as xr
 
