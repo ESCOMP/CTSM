@@ -136,7 +136,7 @@ class HillslopeVars:
         chunk_ds.close()
 
 
-    def update(self, i, j, add_bedrock, add_stream, landmask=None, incl_latlon=False, incl_chunkmask=True, this_chunk_1d=False, remove_if_too_few_aspects=True):
+    def update(self, i, j, add_bedrock, add_stream, landmask=None, incl_latlon=False, incl_chunkmask=False, this_chunk_1d=False, remove_if_too_few_aspects=True):
         """
         Update a gridcell in chunk
         """
