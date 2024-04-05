@@ -1927,6 +1927,10 @@ contains
       jday    = get_prev_calday()
       call get_prev_date(kyr, kmo, kda, mcsec)
 
+      if (is_beg_curr_year()) then
+         call UpdateSowingWindows()
+      end if
+
       if (use_fertilizer) then
        ndays_on = 20._r8 ! number of days to fertilize
       else

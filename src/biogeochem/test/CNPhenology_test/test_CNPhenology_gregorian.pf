@@ -240,6 +240,17 @@ contains
   end subroutine test_PlantDate_to_PlantJday_dec31
 
   @Test
+  subroutine test_PlantDate_to_PlantJday_dec31_begyr(this)
+    use clm_time_manager, only: is_beg_curr_year
+    class(TestCNPhenology), intent(inout) :: this
+
+    ! Beginning of a non-leap year
+    call unittest_timemgr_set_curr_date(5, 1, 1, this%dtime)
+
+    @assertEqual(365, PlantDate_to_PlantJday(1231))
+  end subroutine test_PlantDate_to_PlantJday_dec31_begyr
+
+  @Test
   subroutine test_PlantDate_to_PlantJday_jan1_leap(this)
     class(TestCNPhenology), intent(inout) :: this
 
@@ -268,5 +279,16 @@ contains
 
     @assertEqual(366, PlantDate_to_PlantJday(1231))
   end subroutine test_PlantDate_to_PlantJday_dec31_leap
+
+  @Test
+  subroutine test_PlantDate_to_PlantJday_dec31_leap_begyr(this)
+    use clm_time_manager, only: is_beg_curr_year
+    class(TestCNPhenology), intent(inout) :: this
+
+    ! Beginning of a leap year
+    call unittest_timemgr_set_curr_date(4, 1, 1, this%dtime)
+
+    @assertEqual(366, PlantDate_to_PlantJday(1231))
+  end subroutine test_PlantDate_to_PlantJday_dec31_leap_begyr
 
 end module test_CNPhenology_gregorian
