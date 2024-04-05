@@ -93,5 +93,5 @@ fxrequired = ToplevelRequired
 path = doc/doc-builder
 url = https://github.com/ESMCI/doc-builder
 fxDONOTUSEurl = https://github.com/ESMCI/doc-builder
-fxrequired = AlwaysRequired
+fxrequired = ToplevelOptional
 fxtag = v1.0.8
