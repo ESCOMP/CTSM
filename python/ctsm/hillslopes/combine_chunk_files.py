@@ -119,15 +119,15 @@ def main():
 
             ncolumns_per_gridcell = len(chunk_ds.dimensions["nmaxhillcol"])
             nhillslope = len(chunk_ds.dimensions["nhillslope"])
-            sjm = len(chunk_ds.dimensions["lsmlat"])
-            sim = len(chunk_ds.dimensions["lsmlon"])
+            n_lat = len(chunk_ds.dimensions["lsmlat"])
+            n_lon = len(chunk_ds.dimensions["lsmlon"])
 
             add_bedrock = "hillslope_bedrock_depth" in chunk_ds.variables.keys()
             add_stream = "hillslope_stream_depth" in chunk_ds.variables.keys()
 
             chunk_ds.close()
 
-            hillslope_vars = HillslopeVars(ncolumns_per_gridcell, nhillslope, sjm, sim)
+            hillslope_vars = HillslopeVars(ncolumns_per_gridcell, nhillslope, n_lat, n_lon)
             arrays_uninitialized = False
 
         if not file_exists:
@@ -138,8 +138,8 @@ def main():
         # Read hillslope variables from one chunk file
         hillslope_vars.read(chunk_file, add_bedrock, add_stream)
 
-        for i in range(sim):
-            for j in range(sjm):
+        for i in range(n_lon):
+            for j in range(n_lat):
                 hillslope_vars.update(i, j, add_bedrock, add_stream, landmask=landmask)
 
     # -- Write data to file ------------------

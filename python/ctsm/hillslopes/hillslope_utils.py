@@ -13,35 +13,35 @@ class HillslopeVars:
     Fields to be added to hillslope_file
     """
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, ncolumns_per_gridcell, nhillslope, sjm, sim, recurse=True, incl_latlon=False):
+    def __init__(self, ncolumns_per_gridcell, nhillslope, n_lat, n_lon, recurse=True, incl_latlon=False):
 
         # Variables that will actually be saved
-        self.h_elev = np.zeros((ncolumns_per_gridcell, sjm, sim))
-        self.h_dist = np.zeros((ncolumns_per_gridcell, sjm, sim))
-        self.h_area = np.zeros((ncolumns_per_gridcell, sjm, sim))
-        self.h_slope = np.zeros((ncolumns_per_gridcell, sjm, sim))
-        self.h_aspect = np.zeros((ncolumns_per_gridcell, sjm, sim))
-        self.h_width = np.zeros((ncolumns_per_gridcell, sjm, sim))
-        self.h_bedrock = np.zeros((ncolumns_per_gridcell, sjm, sim))
-        self.h_stream_depth = np.zeros((sjm, sim))
-        self.h_stream_width = np.zeros((sjm, sim))
-        self.h_stream_slope = np.zeros((sjm, sim))
-        self.nhillcolumns = np.zeros((sjm, sim), dtype=int)
-        self.pct_hillslope = np.zeros((nhillslope, sjm, sim))
-        self.hillslope_index = np.zeros((ncolumns_per_gridcell, sjm, sim), dtype=int)
-        self.column_index = np.zeros((ncolumns_per_gridcell, sjm, sim), dtype=int)
-        self.downhill_column_index = np.zeros((ncolumns_per_gridcell, sjm, sim), dtype=int)
+        self.h_elev = np.zeros((ncolumns_per_gridcell, n_lat, n_lon))
+        self.h_dist = np.zeros((ncolumns_per_gridcell, n_lat, n_lon))
+        self.h_area = np.zeros((ncolumns_per_gridcell, n_lat, n_lon))
+        self.h_slope = np.zeros((ncolumns_per_gridcell, n_lat, n_lon))
+        self.h_aspect = np.zeros((ncolumns_per_gridcell, n_lat, n_lon))
+        self.h_width = np.zeros((ncolumns_per_gridcell, n_lat, n_lon))
+        self.h_bedrock = np.zeros((ncolumns_per_gridcell, n_lat, n_lon))
+        self.h_stream_depth = np.zeros((n_lat, n_lon))
+        self.h_stream_width = np.zeros((n_lat, n_lon))
+        self.h_stream_slope = np.zeros((n_lat, n_lon))
+        self.nhillcolumns = np.zeros((n_lat, n_lon), dtype=int)
+        self.pct_hillslope = np.zeros((nhillslope, n_lat, n_lon))
+        self.hillslope_index = np.zeros((ncolumns_per_gridcell, n_lat, n_lon), dtype=int)
+        self.column_index = np.zeros((ncolumns_per_gridcell, n_lat, n_lon), dtype=int)
+        self.downhill_column_index = np.zeros((ncolumns_per_gridcell, n_lat, n_lon), dtype=int)
 
         if incl_latlon:
-            self.lon = np.zeros((sim))
-            self.lat = np.zeros((sjm))
-            self.lon2d = np.zeros((sjm, sim))
-            self.lat2d = np.zeros((sjm, sim))
+            self.lon = np.zeros((n_lon))
+            self.lat = np.zeros((n_lat))
+            self.lon2d = np.zeros((n_lat, n_lon))
+            self.lat2d = np.zeros((n_lat, n_lon))
 
         # Placeholders for read-in data from each chunk
-        self.chunk_mask = np.zeros((sjm, sim))
+        self.chunk_mask = np.zeros((n_lat, n_lon))
         if recurse:
-            self.this_chunk = HillslopeVars(ncolumns_per_gridcell, nhillslope, sjm, sim, recurse=False, incl_latlon=incl_latlon)
+            self.this_chunk = HillslopeVars(ncolumns_per_gridcell, nhillslope, n_lat, n_lon, recurse=False, incl_latlon=incl_latlon)
 
 
     def _read_samenames(self, chunk_ds):
