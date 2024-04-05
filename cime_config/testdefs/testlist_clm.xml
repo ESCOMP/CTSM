@@ -251,7 +251,7 @@
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment"  >Science support for I1850Clm50Sp at f09</option>
     </options>
   </test>
