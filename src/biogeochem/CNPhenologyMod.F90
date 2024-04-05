@@ -2485,14 +2485,20 @@ contains
     ! that's actually used in the model (e.g., minplantjday).
     !
     ! !USES:
-    use clm_time_manager, only: get_calday
+    use clm_time_manager, only: get_calday, get_prev_date
     ! !ARGUMENTS
     integer, intent(in) :: plantdate
+    !
+    ! !LOCAL VARIABLES
+    integer :: kyr, kmo, kda, mcsec
     !
     ! Return value
     integer :: jday
 
-    jday = int( get_calday( plantdate, 0 ) )
+    ! Get year to add to plantdate
+    call get_prev_date(kyr, kmo, kda, mcsec)
+
+    jday = int( get_calday(10000*kyr + plantdate, 0 ) )
   end function PlantDate_to_PlantJday
 
 
