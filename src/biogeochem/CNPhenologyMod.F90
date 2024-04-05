@@ -2502,6 +2502,29 @@ contains
   end function PlantDate_to_PlantJday
 
 
+  subroutine UpdateSowingWindows()
+    !
+    ! !DESCRIPTION:
+    ! Updates sowing windows with dates for this year.
+    !
+    ! !USES:
+    use pftconMod, only: npcropmin, npcropmax
+    !
+    ! !LOCAL VARIABLES
+    integer :: n
+
+    do n = npcropmin, npcropmax
+      if (pftcon%is_pft_known_to_model(n)) then
+         minplantjday(n, inNH) = PlantDate_to_PlantJday(pftcon%mnNHplantdate(n))
+         maxplantjday(n, inNH) = PlantDate_to_PlantJday(pftcon%mxNHplantdate(n))
+
+         minplantjday(n, inSH) = PlantDate_to_PlantJday(pftcon%mnSHplantdate(n))
+         maxplantjday(n, inSH) = PlantDate_to_PlantJday(pftcon%mxSHplantdate(n))
+      end if
+   end do
+  end subroutine UpdateSowingWindows
+
+
   !-----------------------------------------------------------------------
   subroutine CropPhenologyInit(bounds)
     !
@@ -2532,15 +2555,7 @@ contains
     ! Convert planting dates into julian day
     minplantjday(:,:) = huge(1)
     maxplantjday(:,:) = huge(1)
-    do n = npcropmin, npcropmax
-       if (pftcon%is_pft_known_to_model(n)) then
-          minplantjday(n, inNH) = PlantDate_to_PlantJday(pftcon%mnNHplantdate(n))
-          maxplantjday(n, inNH) = PlantDate_to_PlantJday(pftcon%mxNHplantdate(n))
-
-          minplantjday(n, inSH) = PlantDate_to_PlantJday(pftcon%mnSHplantdate(n))
-          maxplantjday(n, inSH) = PlantDate_to_PlantJday(pftcon%mxSHplantdate(n))
-       end if
-    end do
+    call UpdateSowingWindows()
 
     ! Figure out what hemisphere each PATCH is in
     do p = bounds%begp, bounds%endp
