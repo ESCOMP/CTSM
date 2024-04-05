@@ -594,4 +594,25 @@ contains
 
   end subroutine test_DaysPastPlanting_feb9_jan2_lastYrLeap
 
+  @Test
+  subroutine test_PlantDate_to_PlantJday_jan1(this)
+    class(TestCNPhenology), intent(inout) :: this
+
+    @assertEqual(1, PlantDate_to_PlantJday(101))
+  end subroutine test_PlantDate_to_PlantJday_jan1
+
+  @Test
+  subroutine test_PlantDate_to_PlantJday_mar25(this)
+    class(TestCNPhenology), intent(inout) :: this
+
+    @assertEqual(84, PlantDate_to_PlantJday(325))
+  end subroutine test_PlantDate_to_PlantJday_mar25
+
+  @Test
+  subroutine test_PlantDate_to_PlantJday_dec31(this)
+    class(TestCNPhenology), intent(inout) :: this
+
+    @assertEqual(365, PlantDate_to_PlantJday(1231))
+  end subroutine test_PlantDate_to_PlantJday_dec31
+
 end module test_CNPhenology

@@ -56,7 +56,7 @@ contains
     this%soila10 = 273._r8      ! Below freezing
     this%t_a5min = 273._r8      ! Below freezing
 
-    this%dayl = 19500._r8       ! Below half of critical dayl 
+    this%dayl = 19500._r8       ! Below half of critical dayl
     this%snow_5day = 1._r8      ! Above threshold
     this%ws_flag = 1._r8        ! After winter solstice
     this%crit_onset_gdd = 1._r8
@@ -208,5 +208,65 @@ contains
     @assertEqual(328, idpp)
 
   end subroutine test_DaysPastPlanting_feb9_jan2_lastYrLeap
+
+  @Test
+  subroutine test_PlantDate_to_PlantJday_jan1(this)
+    class(TestCNPhenology), intent(inout) :: this
+
+    ! Only year here should matter: non-leap
+    call unittest_timemgr_set_curr_date(5, 7, 24, this%dtime)
+
+    @assertEqual(1, PlantDate_to_PlantJday(101))
+  end subroutine test_PlantDate_to_PlantJday_jan1
+
+  @Test
+  subroutine test_PlantDate_to_PlantJday_mar25(this)
+    class(TestCNPhenology), intent(inout) :: this
+
+    ! Only year here should matter: non-leap
+    call unittest_timemgr_set_curr_date(5, 7, 24, this%dtime)
+
+    @assertEqual(84, PlantDate_to_PlantJday(325))
+  end subroutine test_PlantDate_to_PlantJday_mar25
+
+  @Test
+  subroutine test_PlantDate_to_PlantJday_dec31(this)
+    class(TestCNPhenology), intent(inout) :: this
+
+    ! Only year here should matter: non-leap
+    call unittest_timemgr_set_curr_date(5, 7, 24, this%dtime)
+
+    @assertEqual(365, PlantDate_to_PlantJday(1231))
+  end subroutine test_PlantDate_to_PlantJday_dec31
+
+  @Test
+  subroutine test_PlantDate_to_PlantJday_jan1_leap(this)
+    class(TestCNPhenology), intent(inout) :: this
+
+    ! Only year here should matter: leap
+    call unittest_timemgr_set_curr_date(4, 7, 24, this%dtime)
+
+    @assertEqual(1, PlantDate_to_PlantJday(101))
+  end subroutine test_PlantDate_to_PlantJday_jan1_leap
+
+  @Test
+  subroutine test_PlantDate_to_PlantJday_mar25_leap(this)
+    class(TestCNPhenology), intent(inout) :: this
+
+    ! Only year here should matter: leap
+    call unittest_timemgr_set_curr_date(4, 7, 24, this%dtime)
+
+    @assertEqual(85, PlantDate_to_PlantJday(325))
+  end subroutine test_PlantDate_to_PlantJday_mar25_leap
+
+  @Test
+  subroutine test_PlantDate_to_PlantJday_dec31_leap(this)
+    class(TestCNPhenology), intent(inout) :: this
+
+    ! Only year here should matter: leap
+    call unittest_timemgr_set_curr_date(4, 7, 24, this%dtime)
+
+    @assertEqual(366, PlantDate_to_PlantJday(1231))
+  end subroutine test_PlantDate_to_PlantJday_dec31_leap
 
 end module test_CNPhenology_gregorian
