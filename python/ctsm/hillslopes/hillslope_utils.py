@@ -140,7 +140,7 @@ class HillslopeVars:
         """
         Update a gridcell in chunk
         """
-        if landmask is not None and not(self.chunk_mask[j, i] > 0 and landmask[j, i] > 0):
+        if landmask is not None and not(self.this_chunk.chunk_mask[j, i] > 0 and landmask[j, i] > 0):
             return
 
         if incl_latlon:
