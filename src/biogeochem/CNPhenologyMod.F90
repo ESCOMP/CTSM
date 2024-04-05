@@ -61,6 +61,7 @@ module CNPhenologyMod
   public :: SeasonalCriticalDaylength ! Critical day length needed for Seasonal decidious offset
   public :: get_swindow
   public :: was_sown_in_this_window
+  public :: PlantDate_to_PlantJday
 
   ! !PRIVITE MEMBER FIUNCTIONS:
   private :: CNPhenologyClimate             ! Get climatological everages to figure out triggers for Phenology
@@ -2477,6 +2478,24 @@ contains
   end subroutine CropPhase
 
 
+  function PlantDate_to_PlantJday(plantdate) result(jday)
+    !
+    ! !DESCRIPTION:
+    ! Converts a plantdate from parameter file (e.g., mn[NS]Hplantdate) to a jday
+    ! that's actually used in the model (e.g., minplantjday).
+    !
+    ! !USES:
+    use clm_time_manager, only: get_calday
+    ! !ARGUMENTS
+    integer, intent(in) :: plantdate
+    !
+    ! Return value
+    integer :: jday
+
+    jday = int( get_calday( plantdate, 0 ) )
+  end function PlantDate_to_PlantJday
+
+
   !-----------------------------------------------------------------------
   subroutine CropPhenologyInit(bounds)
     !
@@ -2509,11 +2528,11 @@ contains
     maxplantjday(:,:) = huge(1)
     do n = npcropmin, npcropmax
        if (pftcon%is_pft_known_to_model(n)) then
-          minplantjday(n, inNH) = int( get_calday( pftcon%mnNHplantdate(n), 0 ) )
-          maxplantjday(n, inNH) = int( get_calday( pftcon%mxNHplantdate(n), 0 ) )
+          minplantjday(n, inNH) = PlantDate_to_PlantJday(pftcon%mnNHplantdate(n))
+          maxplantjday(n, inNH) = PlantDate_to_PlantJday(pftcon%mxNHplantdate(n))
 
-          minplantjday(n, inSH) = int( get_calday( pftcon%mnSHplantdate(n), 0 ) )
-          maxplantjday(n, inSH) = int( get_calday( pftcon%mxSHplantdate(n), 0 ) )
+          minplantjday(n, inSH) = PlantDate_to_PlantJday(pftcon%mnSHplantdate(n))
+          maxplantjday(n, inSH) = PlantDate_to_PlantJday(pftcon%mxSHplantdate(n))
        end if
     end do
 
