@@ -43,8 +43,6 @@
     </phase>
   </test>
 
-  <!-- cesm3_dev test suite failures -->
-
   <!-- aux_clm test suite failures -->
   <test name="SMS_D_Ld10.f10_f10_mg37.I2000Clm50BgcCrop.izumi_intel.clm-tracer_consistency">
     <phase name="RUN">

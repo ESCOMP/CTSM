@@ -65,7 +65,7 @@
   </test>
   <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="IHistClm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
     <machines>
-      <machine name="derecho" compiler="intel" category="cesm3_dev"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -74,7 +74,7 @@
   </test>
   <test name="PEM_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
     <machines>
-      <machine name="derecho" compiler="intel" category="cesm3_dev"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -83,7 +83,7 @@
   </test>
   <test name="ERS_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
     <machines>
-      <machine name="derecho" compiler="intel" category="cesm3_dev"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -101,7 +101,7 @@
   </test>
   <test name="SMS_Lm1" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
     <machines>
-      <machine name="derecho" compiler="intel" category="cesm3_dev"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -110,7 +110,7 @@
   </test>
   <test name="SMS" grid="ne30pg3_t232" compset="I2000Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
     <machines>
-      <machine name="derecho" compiler="intel" category="cesm3_dev"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
