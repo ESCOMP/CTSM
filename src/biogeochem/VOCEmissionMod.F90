@@ -416,6 +416,7 @@ contains
     !
     ! !USES:
     use subgridAveMod        , only : p2g
+    use clm_varctl           , only : use_fates
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                  
@@ -451,6 +452,7 @@ contains
     real(r8) :: par240_sha              ! temporary
     
     integer                            :: class_num, n_meg_comps, imech, imeg, ii
+    integer                            :: patchpft ! to transfer FATES PFT space into CLM PFT space.
     character(len=16)                  :: mech_name
     type(shr_megan_megcomp_t), pointer :: meg_cmp
     real(r8)                           :: cp, alpha,  Eopt, topt  ! for history output
@@ -582,14 +584,14 @@ contains
              ! set emis factor
              ! if specified, set EF for isoprene with mapped values
              if(use_fates)then
-                patchtype = canopystate_inst%voc_pftindex_patch
+                patchpft = canopystate_inst%voc_pftindex_patch(p)
              else
-                patchtype = patch%itype(p)
+                patchpft = patch%itype(p)
              endif 
              if ( trim(meg_cmp%name) == 'isoprene' .and. shr_megan_mapped_emisfctrs) then
-                epsilon = get_map_EF(patchtype,g, vocemis_inst)
+                epsilon = get_map_EF(patchpft,g, vocemis_inst)
              else
-                epsilon = meg_cmp%emis_factors(patchtype)
+                epsilon = meg_cmp%emis_factors(patchpft)
              end if
 
              
