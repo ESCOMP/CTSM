@@ -581,12 +581,18 @@ contains
 
              ! set emis factor
              ! if specified, set EF for isoprene with mapped values
-             if ( trim(meg_cmp%name) == 'isoprene' .and. shr_megan_mapped_emisfctrs) then
-                epsilon = get_map_EF(patch%itype(p),g, vocemis_inst)
+             if(use_fates)then
+                patchtype = canopystate_inst%voc_pftindex_patch
              else
-                epsilon = meg_cmp%emis_factors(patch%itype(p))
+                patchtype = patch%itype(p)
+             endif 
+             if ( trim(meg_cmp%name) == 'isoprene' .and. shr_megan_mapped_emisfctrs) then
+                epsilon = get_map_EF(patchtype,g, vocemis_inst)
+             else
+                epsilon = meg_cmp%emis_factors(patchtype)
              end if
 
+             
              class_num = meg_cmp%class_number
 
              ! Activity factor for PPFD
@@ -692,7 +698,6 @@ contains
     ! vocemis_inst%efisop_patch ! Output: [real(r8) (:,:)]  emission factors for isoprene for each patch [ug m-2 h-1]
 
     get_map_EF = 0._r8
-    
     if (     ivt_in == ndllf_evr_tmp_tree  &
          .or.     ivt_in == ndllf_evr_brl_tree) then   !fineleaf evergreen
        get_map_EF = vocemis_inst%efisop_grc(2,g_in)
@@ -710,7 +715,7 @@ contains
     else if (ivt_in >= nc3crop) then                   !crops
        get_map_EF = vocemis_inst%efisop_grc(6,g_in)
     end if
-
+    
   end function get_map_EF
 
   !-----------------------------------------------------------------------
