@@ -76,7 +76,7 @@ class MKSURFDATAESMF(SystemTestsCommon):
             try:
                 subprocess.check_call(f"{build_script_path} --blddir {self._tool_bld}", shell=True)
             except subprocess.CalledProcessError as e:
-                print( f"build directory = {self._tool_bld}\n" )
+                print(f"build directory = {self._tool_bld}\n")
                 sys.exit(
                     f"{e} ERROR RUNNING {build_script_path}. DETAILS IN {self._TestStatus_log_path}"
                 )
