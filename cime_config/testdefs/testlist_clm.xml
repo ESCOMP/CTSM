@@ -53,7 +53,7 @@
     </options>
   </test>
   <!-- this will be removed when CESM no longer needs it-->
-  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm51BgcCrop" testmods="clm/clm51cam6LndTuningMode">
+  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm51BgcCropG" testmods="clm/clm51cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -209,15 +209,6 @@
     </options>
   </test>
 -->
-  <test name="SMS_Ln9" grid="mpasa3p75_mpasa3p75_mt13" compset="I2000Clm60SpRs" testmods="clm/clm60cam6LndTuningMode">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:60:00</option>
-      <option name="comment">Ultra high resolution mpasa grid for CAM with latest CLM version. Include it in the less frequent ctsm_sci testing.</option>
-    </options>
-  </test>
   <test name="ERI_D_Ld9" grid="ne30_g17" compset="I2000Clm50BgcCru" testmods="clm/vrtlay">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -1978,7 +1969,6 @@
     <machines>
       <machine name="cheyenne" compiler="nvhpc" category="aux_clm"/>
       <machine name="derecho" compiler="nvhpc" category="aux_clm"/>
-      <machine name="derecho" compiler="nvhpc" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2121,11 +2111,7 @@
   </test>
   <test name="SMS_D" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/crop">
     <machines>
-      <machine name="cheyenne" compiler="nvhpc" category="aux_clm"/>
-      <machine name="cheyenne" compiler="nvhpc" category="prebeta"/>
-      <machine name="derecho" compiler="nvhpc" category="aux_clm"/>
-      <machine name="derecho" compiler="nvhpc" category="prebeta"/>
-      <machine name="izumi" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="nvhpc" category="aux_clm"/>     <machine name="izumi" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
