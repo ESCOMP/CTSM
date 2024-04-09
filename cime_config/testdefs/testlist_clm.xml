@@ -550,7 +550,6 @@
   </test>
   <test name="ERP_D_Ld5" grid="ne30_g17" compset="I1850Clm50BgcCrop" testmods="clm/default">
     <machines>
-      <machine name="izumi" compiler="nag" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
@@ -1251,6 +1250,7 @@
   </test>
   <test name="ERP_P64x2_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm45BgcCru" testmods="clm/ciso">
     <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
     </machines>
@@ -1407,6 +1407,7 @@
   </test>
   <test name="SMS_P384x2_D_Ld5" grid="f19_g17" compset="I2000Clm50Sp" testmods="clm/default">
     <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
     </machines>
     <options>
