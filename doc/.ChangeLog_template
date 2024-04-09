@@ -33,8 +33,6 @@ Bugs fixed
 
 CTSM issues fixed (include CTSM Issue #):
 
-Known bugs introduced in this tag (include issue #):
-
 Notes of particular relevance for users
 ---------------------------------------
 [Remove any lines that don't apply. Remove entire section if nothing applies.]
@@ -98,10 +96,6 @@ infrastructure should be run when appropriate, as described below.
 
     derecho -
 
-  tools-tests (test/tools) (if tools have been changed):
-
-    derecho -
-
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
     (any machine) -
@@ -126,6 +120,9 @@ infrastructure should be run when appropriate, as described below.
     izumi -------
 
   any other testing (give details below):
+
+  ctsm_sci
+     derecho ----
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 

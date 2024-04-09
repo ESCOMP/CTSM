@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+         ctsm5.2.0 multiple 04/03/2024 New mksurfdata_esmf tool to create new surface datasets that are in place
     ctsm5.1.dev175   slevis 03/21/2024 merge-b4bdev-20240321
     ctsm5.1.dev174   olyson 03/14/2024 Improve vegetation health at high latitudes
     ctsm5.1.dev173   rgknox 03/13/2024 New FATES namelist variable: fates_history_dimlevel
