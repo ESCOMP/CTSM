@@ -78,7 +78,7 @@ sub make_config_cache {
 <?xml version="1.0"?>
 <config_definition>
 <commandline></commandline>
-<entry id="phys" value="$phys" list="" valid_values="clm4_5,clm5_0,clm5_1">Specifies clm physics</entry>
+<entry id="phys" value="$phys" list="" valid_values="clm4_5,clm5_0,clm5_1,clm6_0">Specifies clm physics</entry>
 </config_definition>
 EOF
    $fh->close();
@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1990;
+my $ntests = 2455;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1201;
+   $ntests += 1511;
 }
 plan( tests=>$ntests );
 
@@ -366,7 +366,7 @@ foreach my $driver ( "mct", "nuopc" ) {
 print "\n===============================================================================\n";
 print "Test the NEON sites\n";
 print "=================================================================================\n";
-my $phys = "clm5_1";
+my $phys = "clm6_0";
 $mode = "-phys $phys";
 &make_config_cache($phys);
 my $neondir      = "../../cime_config/usermods_dirs/NEON";
@@ -575,7 +575,7 @@ my %failtest = (
      "onset_threh w SP"          =>{ options=>" -envxml_dir . -bgc sp",
                                      namelst=>"onset_thresh_depends_on_veg=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "dribble_crphrv w/o CN"     =>{ options=>" -envxml_dir . -bgc sp",
                                      namelst=>"dribble_crophrv_xsmrpool_2atm=.true.",
@@ -715,7 +715,7 @@ my %failtest = (
      "NEONlightresButGlobal"     =>{ options=>"--res 4x5 --bgc bgc --envxml_dir . --light_res 106x740",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "spno-fire"                 =>{ options=>"-bgc sp -envxml_dir . -use_case 2000_control",
                                      namelst=>"fire_method='nofire'",
@@ -905,27 +905,27 @@ my %failtest = (
      "lnd_frac set to UNSET"     =>{ options=>"-driver mct -lnd_frac UNSET -envxml_dir .",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "lnd_frac set but nuopc"    =>{ options=>"-driver nuopc -lnd_frac $DOMFILE -envxml_dir .",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "lnd_frac not set but lilac"=>{ options=>"-driver nuopc -lilac -envxml_dir . -lnd_frac UNSET",
                                      namelst=>"fsurdat='surfdata.nc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "fatmlndfrc set but nuopc"  =>{ options=>"-driver nuopc -envxml_dir .",
                                      namelst=>"fatmlndfrc='frac.nc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "force_send but not nuopc"  =>{ options=>"-driver mct -lnd_frac $DOMFILE -envxml_dir .",
                                      namelst=>"force_send_to_atm = .false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "branch but NO nrevsn"      =>{ options=>"-clm_start_type branch -envxml_dir .",
                                      namelst=>"",
@@ -965,7 +965,7 @@ my %failtest = (
      "useFATESWcrop"             =>{ options=>"-bgc fates -envxml_dir . -no-megan -crop",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "useFATESWcreatecrop"       =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"create_crop_landunit=.true.",
@@ -980,37 +980,37 @@ my %failtest = (
      "useFATESWbMH"              =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_biomass_heat_storage=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "FireNoneButFATESfireon"    =>{ options=>"-bgc fates -envxml_dir . -no-megan -light_res none",
                                      namelst=>"fates_spitfire_mode=4",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "FATESwspitfireOffLigtOn"    =>{ options=>"-bgc fates -envxml_dir . -no-megan -light_res 360x720",
                                      namelst=>"fates_spitfire_mode=0",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "useFATESWluna"             =>{ options=>"--bgc fates --envxml_dir . --no-megan",
                                      namelst=>"use_luna=TRUE",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "useFATESWfun"              =>{ options=>"--bgc fates --envxml_dir . --no-megan",
                                      namelst=>"use_fun=TRUE",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "useFATESWOsuplnitro"       =>{ options=>"--bgc fates --envxml_dir . --no-megan",
                                      namelst=>"suplnitro='NONE'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "FireNoneButBGCfireon"    =>{ options=>"-bgc bgc -envxml_dir . -light_res none",
                                      namelst=>"fire_method='li2021gswpfrc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "createcropFalse"           =>{ options=>"-bgc bgc -envxml_dir . -no-megan",
                                      namelst=>"create_crop_landunit=.false.",
@@ -1271,7 +1271,7 @@ my %warntest = (
      "methane off W nitrif_denit"=>{ options=>"-bgc bgc -envxml_dir .",
                                      namelst=>"use_nitrif_denitrif=.true.,use_lch4=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "soilm_stream w transient"  =>{ options=>"-res 0.9x1.25 -envxml_dir . -use_case 20thC_transient",
                                      namelst=>"use_soil_moisture_streams=T,soilm_tintalgo='linear'",
@@ -1291,12 +1291,12 @@ my %warntest = (
      "FUN_wo_flexCN"             =>{ options=>"-envxml_dir . -bgc bgc",
                                      namelst=>"use_fun=.true.,use_flexiblecn=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "NotNEONbutNEONlightres"    =>{ options=>"--res CLM_USRDAT --clm_usr_name regional --envxml_dir . --bgc bgc --light_res 106x174",
                                      namelst=>"fsurdat='build-namelist_test.pl'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
                );
 foreach my $key ( keys(%warntest) ) {
@@ -1319,7 +1319,7 @@ foreach my $key ( keys(%warntest) ) {
 #
 # Loop over all physics versions
 #
-foreach my $phys ( "clm4_5", "clm5_0", "clm5_1" ) {
+foreach my $phys ( "clm4_5", "clm5_0", "clm5_1", "clm6_0" ) {
 $mode = "-phys $phys";
 &make_config_cache($phys);
 
@@ -1558,7 +1558,7 @@ foreach my $usecase ( "1850-2100_SSP2-4.5_transient" ) {
 #
 # Test ALL SSP's for f09...
 #
-$phys = "clm5_1";
+$phys = "clm6_0";
 $mode = "-phys $phys";
 &make_config_cache($phys);
 my $res = "0.9x1.25";
@@ -1594,10 +1594,10 @@ foreach my $usecase ( "1850-2100_SSP5-3.4_transient", "1850-2100_SSP4-3.4", "185
 }
 
 print "\n==================================================\n";
-print "Test clm4.5/clm5.0/clm5_1 resolutions \n";
+print "Test clm4.5/clm5.0/clm5_1/clm6_0 resolutions \n";
 print "==================================================\n";
 
-foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
+foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1', "clm6_0" ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
   my @clmoptions = ( "-bgc bgc -envxml_dir .", "-bgc bgc -envxml_dir . -clm_accelerated_spinup=on", "-bgc bgc -envxml_dir . -light_res 360x720",
@@ -1697,7 +1697,7 @@ foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
 my $res = "0.9x1.25";
 my $mask = "gx1v7";
 my $simyr = "1850";
-foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
+foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1', 'clm6_0' ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
   my @forclist = ();
@@ -1706,6 +1706,9 @@ foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
      foreach my $bgc ( "sp", "bgc" ) {
         my $lndtuningmode = "${phys}_${forc}";
         if ( $lndtuningmode eq "clm5_1_CRUv7" ) {
+           next;
+        }
+        if ( $lndtuningmode eq "clm6_0_CRUv7" ) {
            next;
         }
         my $clmoptions = "-res $res -mask $mask -sim_year $simyr -envxml_dir . -lnd_tuning_mod $lndtuningmode -bgc $bgc";

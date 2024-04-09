@@ -1374,35 +1374,6 @@ Toggle to turn on the dynamic root model
 Toggle to turn on on diagnostic Snow Radiative Effect
 </entry>
 
-
-<!--                                                   -->
-<!-- mkmapdata  namelist                               -->
-<!--                                                   -->
-<entry id="scripgriddata" type="char*256" category="mkmapdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-SCRIP format grid data file
-</entry>
-
-<entry id="scripgriddata_lrgfile_needed" type="char*256" category="mkmapdata"
-       group="clmexp" valid_values="none,64bit_offset,netcdf4" >
-Flag to pass to the ESMF mapping utility, telling it what kind of large
-file support is needed for an output file generated with this grid as
-either the source or destination ('none', '64bit_offset' or 'netcdf4'). 
-</entry>
-
-<entry id="scripgriddata_type" type="char*256" category="mkmapdata"
-       group="clmexp" valid_values="SCRIP,UGRID" >
-Flag to pass to the ESMF mapping utility, telling it what kind of grid
-file this is (SCRIP or UGRID).
-</entry>
-
-<entry id="scripgriddata_meshname" type="char*256" category="mkmapdata"
-       group="clmexp" valid_values="" >
-For UGRID files, flag to pass to the ESMF mapping utility, telling it the
-name of the dummy variable that has all of the topology information stored
-in its attributes. (Only used if scripgriddata_src_type = UGRID.)
-</entry>
-
 <!--                                                   -->
 <!-- mksurfdata namelist                               -->
 <!--                                                   -->
@@ -2222,7 +2193,7 @@ Land mask description
 <!-- lnd_tuning_mode, there needs to be a setting for: CRUv7, GSWP3v1, and cam6.0 for each valid physics option -->
 <entry id="lnd_tuning_mode" type="char*20" category="default_settings"
        group="default_settings"
-       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_0_cam6.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_1_GSWP3v1,clm5_1_cam6.0">
+       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_0_cam6.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_1_GSWP3v1,clm5_1_cam6.0,clm6_0_GSWP3v1,clm6_0_cam6.0">
 General configuration of model version and atmospheric forcing to tune the model to run under.
 This sets the model to run with constants and initial conditions that were set to run well under 
 the configuration of model version and atmospheric forcing. To run well constants would need to be changed
