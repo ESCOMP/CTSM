@@ -1,25 +1,25 @@
 ./xmlchange PTS_LON=145.029404
 ./xmlchange PTS_LAT=-36.673199
 ./xmlchange RUN_STARTDATE=2014-12-31
-./xmlchange DATM_YR_ALIGN=2015
-./xmlchange DATM_YR_START=2015
+./xmlchange DATM_YR_ALIGN=2014
+./xmlchange DATM_YR_START=2014
 ./xmlchange DATM_YR_END=2016
 ./xmlchange START_TOD=46800
 ./xmlchange ATM_NCPL=48
 
 echo "fsurdat='/glade/u/home/wwieder/CTSM/tools/site_and_regional/subset_data_single_point/surfdata_1x1_PLUMBER2_AU-Whr_hist_16pfts_Irrig_CMIP6_simyr2000_c231005.nc ' " >> user_nl_clm 
 echo "CLM_USRDAT.PLUMBER2:datafiles= \$DIN_LOC_ROOT/atm/datm7/CLM1PT_data/PLUMBER2/AU-Whr/CLM1PT_data/CTSM_DATM_AU-Whr_2015-2016.nc " >> user_nl_datm_streams 
-echo "presaero.SSP3-7.0:year_first=2015" >> user_nl_datm_streams 
+echo "presaero.SSP3-7.0:year_first=2014" >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_last=2016" >> user_nl_datm_streams 
-echo "presaero.SSP3-7.0:year_align=2015" >> user_nl_datm_streams 
+echo "presaero.SSP3-7.0:year_align=2014" >> user_nl_datm_streams 
 
-echo "presndep.SSP3-7.0:year_first=2015" >> user_nl_datm_streams 
+echo "presndep.SSP3-7.0:year_first=2014" >> user_nl_datm_streams 
 echo "presndep.SSP3-7.0:year_last=2016" >> user_nl_datm_streams 
-echo "presndep.SSP3-7.0:year_align=2015" >> user_nl_datm_streams 
+echo "presndep.SSP3-7.0:year_align=2014" >> user_nl_datm_streams 
 
-echo "co2tseries.SSP3-7.0:year_first=2015" >> user_nl_datm_streams 
+echo "co2tseries.SSP3-7.0:year_first=2014" >> user_nl_datm_streams 
 echo "co2tseries.SSP3-7.0:year_last=2016" >> user_nl_datm_streams 
-echo "co2tseries.SSP3-7.0:year_align=2015" >> user_nl_datm_streams 
+echo "co2tseries.SSP3-7.0:year_align=2014" >> user_nl_datm_streams 
 
 compset=`./xmlquery COMPSET --value` 
 CLM_USRDAT_NAME=`./xmlquery CLM_USRDAT_NAME --value` 
@@ -36,7 +36,7 @@ fi
 # Turn on LAI streams for a SP case 
 if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then 
   echo "stream_fldfilename_lai='\$DIN_LOC_ROOT/lnd/clm2/lai_streams/PLUMBER2/AU-Whr/LAI_stream_AU-Whr_2015-2016.nc'" >> user_nl_clm 
-  echo "model_year_align_lai=2015" >> user_nl_clm 
-  echo "stream_year_first_lai=2015" >> user_nl_clm 
+  echo "model_year_align_lai=2014" >> user_nl_clm 
+  echo "stream_year_first_lai=2014" >> user_nl_clm 
   echo "stream_year_last_lai=2016" >> user_nl_clm 
 fi 
