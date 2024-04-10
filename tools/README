@@ -59,7 +59,7 @@ II. Notes on building/running for each of the above tools:
       so that you can use the debugger, and with bounds-checking, and float trapping on. 
       To speed up do the following...
 
-   gmake OPT=TRUE  (by default already on for mksurfdata_map)
+   gmake OPT=TRUE
 
       Also some of the tools allow for OpenMP shared memory parallelism 
       (such as mksurfdata) with
@@ -78,8 +78,10 @@ II. Notes on building/running for each of the above tools:
 
     mksurfdata_esmf has a cime configure and CMake based build using the following files:
 
-        CMakeLists.txt -- Tells CMake how to build the source code
-        Makefile -------- GNU makefile to link the program together
+        gen_mksurfdata_build.sh - Build mksurfdata_esmf
+        src/CMakeLists.txt ------ Tells CMake how to build the source code
+        Makefile ---------------- GNU makefile to link the program together
+        cmake ------------------- CMake macros for finding libraries
 
     mkmapgrids, and site_and_regional only contain scripts so don't have the above build files.
 
