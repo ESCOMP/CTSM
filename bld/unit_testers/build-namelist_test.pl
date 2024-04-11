@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1593;
+my $ntests = 1655;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 951;
+   $ntests += 989;
 }
 plan( tests=>$ntests );
 
@@ -469,6 +469,7 @@ foreach my $options (
                       "-bgc fates  -use_case 1850_control -no-megan -namelist \"&a use_fates_sp=T, soil_decomp_method='None'/\"",
                       "-bgc sp  -use_case 2000_control -res 0.9x1.25 -namelist '&a use_soil_moisture_streams = T/'",
                       "-bgc bgc -use_case 1850-2100_SSP5-8.5_transient -namelist '&a start_ymd=19101023/'",
+                      "-namelist \"&a dust_emis_method='Zender_2003', zender_soil_erod_source='lnd' /'\"",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
                       "-res 0.9x1.25 -bgc sp -use_case 1850_noanthro_control -drydep -fire_emis",
                       "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res 360x720",
@@ -1275,7 +1276,7 @@ my %failtest = (
                                      phys=>"clm5_0",
                                    },
      "NOlunabutsetJmaxb1"        =>{ options=>"-envxml_dir . -bgc sp",
-                                     namelst=>"use_luna=.false., jmaxb1=1.0",
+                                     namelst=>"use_luna=.fwlse., jmaxb1=1.0",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
@@ -1309,6 +1310,18 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                      },
+     "soil_erod_wo_Zender"      =>{ options=>"--envxml_dir . --ignore_warnings",
+                                     namelst=>"dust_emis_method='Leung_2023', " .
+                                     "stream_meshfile_zendersoilerod = '/dev/null'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                     },
+     "soil_erod_wo_lnd_source"  =>{ options=>"--envxml_dir .",
+                                     namelst=>"dust_emis_method='Zender_2003', " .
+                                     "stream_fldfilename_zendersoilerod = '/dev/null', zender_soil_erod_source='atm'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                     },
                );
 foreach my $key ( keys(%failtest) ) {
    print( "$key\n" );
@@ -1330,6 +1343,11 @@ print "=========================================================================
 
 my %warntest = (
      # Warnings without the -ignore_warnings option given
+     "dustemisLeung"             =>{ options=>"-envxml_dir .",
+                                     namelst=>"dust_emis_method = 'Leung_2023'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
      "coldwfinidat"              =>{ options=>"-envxml_dir . -clm_start_type cold",
                                      namelst=>"finidat = 'testfile.nc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1775,9 +1793,9 @@ foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
   &make_config_cache($phys);
   my @forclist = ();
   if ( $phys == "clm5_1" ) {
-    @forclist = ( "GSWP3v1" );
+    @forclist = ( "GSWP3v1", "cam6.0", "cam5.0", "cam4.0" );
   } else {
-    @forclist = ( "CRUv7", "GSWP3v1", "cam6.0" );
+    @forclist = ( "CRUv7", "GSWP3v1", "cam6.0", "cam5.0", "cam4.0" );
   }
   foreach my $forc ( @forclist ) {
      foreach my $bgc ( "sp", "bgc" ) {
