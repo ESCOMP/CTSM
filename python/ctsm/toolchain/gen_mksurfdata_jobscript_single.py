@@ -20,7 +20,7 @@ from CIME.BuildTools.configure import FakeCase  # pylint: disable=import-error,w
 logger = logging.getLogger(__name__)
 
 
-def base_get_parser(default_js_name="mksurfdata_jobscript_single"):
+def base_get_parser(default_js_name="mksurfdata_jobscript_single.sh"):
     """
     Get parser object for the gen_mksurfdata_jobscript scripts
     """

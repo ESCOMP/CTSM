@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.2.0
-Originator(s): erik (Erik Kluzek)
-Date: Wed Apr  3 01:17:18 MDT 2024
+Originator(s): many (see below)
+Date: Wed Apr 10 17:35:36 MDT 2024
 One-line Summary: New surface datasets and new mksurfdata_esmf tool to create them
 
 Purpose and description of changes
@@ -26,9 +26,9 @@ on coastal areas was also done.
 The following fields were added and removed to the list of fields on the datasets.
 
 Fields added:
-   ORGC, BULK, CFRAG, PHAQ (soil data)
+   ORGC, BULK, CFRAG, PHAQ (soil data) (currently NOT used by CTSM)
    mapunits (map units for the soil dataset)
-   LANDFRAC_MKSURFDATA
+   LANDFRAC_MKSURFDATA (for reference NOT used by CTSM)
    PCT_OCEAN (previously PCT_WETLAND was used)
 
 Fields removed:
@@ -70,7 +70,8 @@ New lake datasets: HydroLake: Messager et. al. (2016)
 
 Contributors
 ------------
-@mvertens @ekluzek @jedwards4b @billsacks @wwieder @lawrencepj1 @negin513 @dlawrenncar @olyson
+@mvertens @ekluzek @slevis-lmwg @jedwards4b @billsacks @wwieder @lawrencepj1 @negin513 @dlawrenncar @olyson
+@keerzhang1 @fang-bowen @Face2sea @adamrher @samsrabin
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -103,8 +104,11 @@ CTSM issues fixed (include CTSM Issue #):
    the landuse.timeseries file is made
    Fixes #2218 CTSM5.2 branch dies weirdly when clm5.0/ctsm5.1 datasets are
    used -- die with an error
-   Fixes #2278 Allow CTSM to output history files interpolated to a regular
-   grid (for example from SE unstructured grids to a FV grid)
+   Fixes #1483 hcru surface datasets
+   Fixes #2228 sys test requirements for mksurfdata_esmf
+   Fixes #90   Remove need for fatmgrid
+   Fixes #80   Improve modularity of mksurfdata_map
+   Fixes #1878 Convert wetlands to bare-ground
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -112,6 +116,16 @@ Notes of particular relevance for users
 Caveats for users (e.g., need to interpolate initial conditions):
    These surface datasets can NOT be used in previous versions of the model
    Older surface datasets can NOT be used with this model version
+
+   IMPORTANT NOTE FOR USERS FOR REGIONAL CASES:
+      Because of this issue:
+
+      https://github.com/ESCOMP/CTSM/issues/2430
+
+      We recommend that users use subset_data to subset your region from a global
+      grid. This could mean creating a global grid at the resolution you need (if
+      not standard) and then use subset_data on it to get the region of
+      interest.
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
    New CLM_PHYSICS_VERSION option of clm6_0 added (use it rather than clm5_1)

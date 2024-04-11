@@ -151,7 +151,7 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         self.assertEqual(self._account, args.account)
         # Create the env_mach_specific.xml file needed for get_mpirun
         # This will catch problems with our usage of CIME objects
-        # Doing this here will also catch potential issues in the gen_mksurfdata_build.sh script
+        # Doing this here will also catch potential issues in the gen_mksurfdata_build script
         configure_path = os.path.join(path_to_cime(), "CIME", "scripts", "configure")
         self.assertTrue(os.path.exists(configure_path))
         options = " --macros-format CMake --silent --compiler intel --machine " + machine
