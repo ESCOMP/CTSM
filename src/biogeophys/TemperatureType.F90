@@ -8,7 +8,7 @@ module TemperatureType
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
   use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop, use_biomass_heat_storage
-  use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevurb, nlevmaxurbgrnd
+  use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevurb, nlevmaxurbgrnd, nlevsoi
   use clm_varcon      , only : spval, ispval
   use GridcellType    , only : grc
   use LandunitType    , only : lun
@@ -141,7 +141,7 @@ contains
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, &
        em_roof_lun,  em_wall_lun, em_improad_lun, em_perroad_lun, &
-       is_simple_buildtemp, is_prog_buildtemp)
+       is_simple_buildtemp, is_prog_buildtemp, exice_init_stream_col)
     !
     ! !DESCRIPTION:
     !
@@ -156,6 +156,7 @@ contains
     real(r8)          , intent(in) :: em_perroad_lun(bounds%begl:)
     logical           , intent(in) :: is_simple_buildtemp  ! Simple building temp is being used
     logical           , intent(in) :: is_prog_buildtemp    ! Prognostic building temp is being used
+    real(r8)          , intent(in) :: exice_init_stream_col(bounds%begc:)  ! initial excess ice concentration from the stream file
 
     call this%InitAllocate ( bounds )
     call this%InitHistory ( bounds, is_simple_buildtemp, is_prog_buildtemp )
@@ -164,7 +165,8 @@ contains
          em_wall_lun(bounds%begl:bounds%endl),    &
          em_improad_lun(bounds%begl:bounds%endl), &
          em_perroad_lun(bounds%begl:bounds%endl), &
-         is_simple_buildtemp, is_prog_buildtemp)
+         is_simple_buildtemp, is_prog_buildtemp,  &
+         exice_init_stream_col(bounds%begc:bounds%endc) )
 
   end subroutine Init
 
@@ -639,7 +641,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine InitCold(this, bounds, &
        em_roof_lun,  em_wall_lun, em_improad_lun, em_perroad_lun, &
-       is_simple_buildtemp, is_prog_buildtemp)
+       is_simple_buildtemp, is_prog_buildtemp, exice_init_stream_col)
     !
     ! !DESCRIPTION:
     ! Initialize cold start conditions for module variables
@@ -647,11 +649,12 @@ contains
     ! !USES:
     use shr_kind_mod   , only : r8 => shr_kind_r8
     use shr_const_mod  , only : SHR_CONST_TKFRZ
-    use clm_varcon     , only : denice, denh2o
+    use clm_varcon     , only : denice, denh2o, zisoi
     use landunit_varcon, only : istwet, istsoil, istdlak, istice, istcrop
     use column_varcon  , only : icol_road_imperv, icol_roof, icol_sunwall
     use column_varcon  , only : icol_shadewall, icol_road_perv
     use clm_varctl     , only : iulog, use_vancouver, use_mexicocity, use_excess_ice
+    use initVerticalMod , only : find_soil_layer_containing_depth
     !
     ! !ARGUMENTS:
     class(temperature_type)        :: this
@@ -662,6 +665,7 @@ contains
     real(r8)          , intent(in) :: em_perroad_lun(bounds%begl:)
     logical           , intent(in) :: is_simple_buildtemp  ! Simple building temp is being used
     logical           , intent(in) :: is_prog_buildtemp    ! Prognostic building temp is being used
+    real(r8)          , intent(in) :: exice_init_stream_col(bounds%begc:) ! initial ammount of excess ice from the stream file
     !
     ! !LOCAL VARIABLES:
     integer  :: j,l,c,p ! indices
@@ -669,6 +673,7 @@ contains
     real(r8) :: snowbd  ! temporary calculation of snow bulk density (kg/m3)
     real(r8) :: fmelt   ! snowbd/100
     integer  :: lev
+    integer  :: n05m    ! layer number containing 0.5 meter depth
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(em_roof_lun)    == (/bounds%endl/)), sourcefile, __LINE__)
@@ -742,8 +747,14 @@ contains
                end if
             else
                this%t_soisno_col(c,1:nlevgrnd) = 272._r8
-               if (use_excess_ice .and. (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop)) then
-                  this%t_soisno_col(c,1:nlevgrnd) = SHR_CONST_TKFRZ - 5.0_r8 !needs to be below freezing to properly initiate excess ice
+               if (use_excess_ice .and. exice_init_stream_col(c) > 0.0_r8) then
+                  n05m = nlevsoi - 1
+                  if (zisoi(nlevsoi) >= 0.5_r8) then
+                     call find_soil_layer_containing_depth(0.5_r8,n05m)
+                  else
+                       n05m=nlevsoi-1
+                  endif
+                  this%t_soisno_col(c,n05m:nlevgrnd) = SHR_CONST_TKFRZ - 12.15_r8 !needs to be below freezing to properly initiate excess ice
                end if
             endif
          endif

@@ -11,6 +11,7 @@ module clm_instMod
   use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates, use_fates_bgc
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_crop, snow_cover_fraction_method, paramfile
+  use clm_varctl      , only : use_excess_ice
   use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, no_soil_decomp, century_decomp, decomp_method
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
   use landunit_varcon , only : istice, istsoil
@@ -193,6 +194,8 @@ contains
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
     use SoilBiogeochemDecompCascadeContype , only : init_decomp_cascade_constants
     use SoilBiogeochemCompetitionMod       , only : SoilBiogeochemCompetitionInit
+    use clm_varctl                         , only : use_excess_ice
+    use ExcessIceStreamType                , only : excessicestream_type, UseExcessIceStreams
     
     use initVerticalMod                    , only : initVertical
     use SnowHydrologyMod                   , only : InitSnowLayers
@@ -218,6 +221,8 @@ contains
     type(file_desc_t)     :: params_ncid  ! pio netCDF file id for parameter file
     real(r8), allocatable :: h2osno_col(:)
     real(r8), allocatable :: snow_depth_col(:)
+    real(r8), allocatable :: exice_init_stream_col(:)
+    type(excessicestream_type)  :: exice_stream
 
     integer :: dummy_to_make_pgi_happy
     !----------------------------------------------------------------------
@@ -295,12 +300,23 @@ contains
 
     ! Initialization of public data types
 
+    ! If excess ice is read from the stream, it has to be read before we coldstart the temperature
+    allocate(exice_init_stream_col(bounds%begc:bounds%endc))
+    exice_init_stream_col(bounds%begc:bounds%endc) = 0.0_r8
+    if (use_excess_ice) then
+       call exice_stream%Init(bounds, NLFilename)
+       if (UseExcessIceStreams()) then
+          call exice_stream%CalcExcessIce(bounds, exice_init_stream_col(bounds%begc:bounds%endc))
+       endif
+    endif
+
     call temperature_inst%Init(bounds,           &
          urbanparams_inst%em_roof(begl:endl),    &
          urbanparams_inst%em_wall(begl:endl),    &
          urbanparams_inst%em_improad(begl:endl), &
          urbanparams_inst%em_perroad(begl:endl), &
-         IsSimpleBuildTemp(), IsProgBuildTemp() )
+         IsSimpleBuildTemp(), IsProgBuildTemp(), &
+         exice_init_stream_col(begc:endc) )
 
     call active_layer_inst%Init(bounds)
 
@@ -314,7 +330,8 @@ contains
          snow_depth_col = snow_depth_col(begc:endc), &
          watsat_col = soilstate_inst%watsat_col(begc:endc, 1:), &
          t_soisno_col = temperature_inst%t_soisno_col(begc:endc, -nlevsno+1:), &
-         use_aquifer_layer = use_aquifer_layer())
+         use_aquifer_layer = use_aquifer_layer(), &
+         exice_init_stream_col = exice_init_stream_col(begc:endc))
 
     call glacier_smb_inst%Init(bounds)
 
@@ -452,6 +469,7 @@ contains
 
     deallocate (h2osno_col)
     deallocate (snow_depth_col)
+    deallocate (exice_init_stream_col)
 
     ! ------------------------------------------------------------------------
     ! Initialize accumulated fields
