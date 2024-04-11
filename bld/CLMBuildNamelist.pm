@@ -4564,6 +4564,10 @@ sub setup_logic_exice {
   my $use_exice = $nl->get_value( 'use_excess_ice' );
   my $use_exice_streams = $nl->get_value( 'use_excess_ice_streams' );
   # IF excess ice streams is on
+  if ( (not defined($use_exice_streams) && value_is_true($use_exice)) && ($nl_flags->{'clm_start_type'} == /cold/  || $nl_flags->{'clm_start_type'} == /arb_ic/ ) ) {
+   $nl->set_variable_value('exice_streams', 'use_excess_ice_streams' , '.true.');
+   $use_exice_streams = '.true.'
+   }
   if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
      # Can only be true if excess ice is also on, otherwise fail
      if (defined($use_exice) && not value_is_true($use_exice)) {
