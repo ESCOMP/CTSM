@@ -100,7 +100,7 @@ This will bring in CIME and ccs_config which are required for building.
 
 ``` shell
 # Assuming pwd is the tools/mksurfdata_esmf directory
- ./gen_mksurfdata_build.sh      # For machines with a cime build
+ ./gen_mksurfdata_build         # For machines with a cime build
 ```
 
  Note: The pio_iotype value gets set and written to a simple .txt file

@@ -60,7 +60,7 @@ class MKSURFDATAESMF(SystemTestsCommon):
         # if the test stops and gets restarted.
         if sharedlib_only:
             # Paths and strings
-            build_script_path = os.path.join(self._tool_path, "gen_mksurfdata_build.sh")
+            build_script_path = os.path.join(self._tool_path, "gen_mksurfdata_build")
             nml_script_path = os.path.join(self._tool_path, "gen_mksurfdata_namelist")
             gen_jobscript_path = os.path.join(self._tool_path, "gen_mksurfdata_jobscript_single.sh")
             gen_mksurfdata_namelist = f"{nml_script_path} --res {self._res} --start-year {self._model_yr} --end-year {self._model_yr}"

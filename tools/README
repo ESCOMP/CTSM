@@ -78,7 +78,7 @@ II. Notes on building/running for each of the above tools:
 
     mksurfdata_esmf has a cime configure and CMake based build using the following files:
 
-        gen_mksurfdata_build.sh - Build mksurfdata_esmf
+        gen_mksurfdata_build ---- Build mksurfdata_esmf
         src/CMakeLists.txt ------ Tells CMake how to build the source code
         Makefile ---------------- GNU makefile to link the program together
         cmake ------------------- CMake macros for finding libraries
@@ -200,7 +200,7 @@ III. Process sequence to create input datasets needed to run CTSM
     5.) Create surface datasets with mksurfdata_esmf on Derecho
         (See mksurfdata_esmf/README.md for more help on doing this)
 
-       - gen_mksurfdata_build.sh to build
+       - gen_mksurfdata_build to build
        - gen_mksurfdata_namelist to build the namelist
        - gen_mksurfdata_jobscript_single to build a batch script to run on Derecho
        - Submit the batch script just created above
@@ -213,7 +213,7 @@ III. Process sequence to create input datasets needed to run CTSM
        Example: for 0.9x1.25 resolution fro 1850
 
        cd mksurfdata_esmf
-       ./gen_mksurfdata_build.sh
+       ./gen_mksurfdata_build
        ./gen_mksurfdata_namelist --res 0.9x1.25 --start-year 1850 --end-year 1850
        ./gen_mksurfdata_jobscript_single --number-of-nodes 24 --tasks-per-node 12 --namelist-file target.namelist
        qsub mksurfdata_jobscript_single.sh

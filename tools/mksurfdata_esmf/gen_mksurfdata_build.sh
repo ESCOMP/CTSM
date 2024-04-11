@@ -6,7 +6,7 @@ usage() {
   echo ""
   echo "***********************************************************************"
   echo "usage:"
-  echo "./gen_mksurfdata_build.sh"
+  echo "./gen_mksurfdata_build"
   echo ""
   echo "valid arguments: "
   echo "[-h|--help]  "
@@ -14,14 +14,14 @@ usage() {
   echo "[-v|--verbose]  "
   echo "     Run in verbose mode"
   echo "[-b|--blddir <blddir>]  "
-  echo "     Overrides default, which is /tool_bld in the same directory as ./gen_mksurfdata_build.sh"
+  echo "     Overrides default, which is /tool_bld in the same directory as ./gen_mksurfdata_build"
   echo "[-m|--machine <machine>]  "
   echo "     Overrides default MACH"
   echo "***********************************************************************"
 }
 
 
-# Current working directory: the location of ./gen_mksurfdata_build.sh
+# Current working directory: the location of ./gen_mksurfdata_build
 cwd=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # Default settings
@@ -102,7 +102,7 @@ cd $blddir
 # Write pio_iotype to file with name pio_iotype.txt
 pio_iotype_filepath=../pio_iotype.txt  # one up from /tool_bld
 if [ ! -f "$pio_iotype_filepath" ]; then
-   echo 'VALUE OF pio_iotype WRITTEN BY gen_mksurfdata_build.sh AND USED BY mksurfdata (i.e. THE FORTRAN EXECUTABLE):' > $pio_iotype_filepath
+   echo 'VALUE OF pio_iotype WRITTEN BY gen_mksurfdata_build AND USED BY mksurfdata (i.e. THE FORTRAN EXECUTABLE):' > $pio_iotype_filepath
    echo $pio_iotype >> $pio_iotype_filepath
 else
    echo "Use existing $pio_iotype_filepath file" 
