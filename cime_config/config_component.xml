@@ -66,7 +66,10 @@
           Atm forcing options:
                CRUv7
                GSWP3
+               CAM4.0
+               CAM5.0
                CAM6.0
+               CAM7.0
                QIAN   (not tuned)
                1PT    (not tuned)
                NLDAS2 (not tuned)
@@ -74,8 +77,8 @@
           Other atm forcing options are invalid to run CLM and will result in an error.
     </desc>
     <default_value>UNSET</default_value>
-    <!-- 7 forcing options for each CLM physics option: CRUv7, GSWP3, cam6.0, QIAN, 1PT, NLDAS2, ERA5 -->
-    <valid_values>clm5_0_cam6.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm5_0_QIAN,clm5_0_1PT,clm5_0_NLDAS2,clm5_0_ERA5,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_QIAN,clm4_5_cam6.0,clm4_5_1PT,clm4_5_NLDAS2,clm4_5_ERA5,clm5_1_CRUv7,clm5_1_GSWP3v1,clm5_1_cam6.0,clm5_1_QIAN,clm5_1_1PT,clm5_1_NLDAS2,clm5_1_ERA5,clm6_0_CRUv7,clm6_0_GSWP3v1,clm6_0_cam6.0,clm6_0_QIAN,clm6_0_1PT,clm6_0_NLDAS2,clm6_0_ERA5</valid_values>
+    <!-- 7 forcing options for each CLM physics option: CRUv7, GSWP3, cam6.0, cam7.0, QIAN, 1PT, NLDAS2, ERA5 -->
+    <valid_values>clm5_0_cam6.0,clm5_0_cam7.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm5_0_QIAN,clm5_0_1PT,clm5_0_NLDAS2,clm5_0_ERA5,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_QIAN,clm4_5_cam6.0,clm4_5_cam7.0,clm4_5_1PT,clm4_5_NLDAS2,clm4_5_ERA5,clm5_1_CRUv7,clm5_1_GSWP3v1,clm5_1_cam6.0,clm5_1_QIAN,clm5_1_1PT,clm5_1_NLDAS2,clm5_1_ERA5,clm6_0_CRUv7,clm6_0_GSWP3v1,clm6_0_cam6.0,clm6_0_cam7.0,clm6_0_QIAN,clm6_0_1PT,clm6_0_NLDAS2,clm6_0_ERA5</valid_values>
     <values match="last">
       <!-- Options for atm forcing are: CRU, CRUv7, GSWP3, cam6.0 (also used for DATM%CPLHIST), QIAN, WISOQIA, 1PT, NLDAS2, and ERA5) -->
       <!-- All the clm4_5 physics options -->
@@ -84,6 +87,7 @@
       <value compset="DATM%CRU_CLM45"    >clm4_5_CRUv7</value>
       <value compset="DATM%GSWP3v1_CLM45">clm4_5_GSWP3v1</value>
       <value compset="CAM[^_]+_CLM45"    >clm4_5_cam6.0</value>
+      <value compset="CAM7[^_]+_CLM45"   >clm4_5_cam7.0</value>
       <value compset="DATM%CPLHIST_CLM45">clm4_5_cam6.0</value>
       <value compset="DATM%QIA_CLM45"    >clm4_5_QIAN</value>
       <value compset="DATM%WISOQIA_CLM45">clm4_5_QIAN</value>
@@ -96,6 +100,7 @@
       <value compset="SATM_CLM50"        >clm5_0_GSWP3v1</value>
       <value compset="DATM%GSWP3v1_CLM50">clm5_0_GSWP3v1</value>
       <value compset="CAM[^_]+_CLM50"    >clm5_0_cam6.0</value>
+      <value compset="CAM7[^_]+_CLM50"   >clm5_0_cam7.0</value>
       <value compset="DATM%CPLHIST_CLM50">clm5_0_cam6.0</value>
       <value compset="DATM%QIA_CLM50"    >clm5_0_QIAN</value>
       <value compset="DATM%WISOQIA_CLM50">clm5_0_QIAN</value>
@@ -113,6 +118,7 @@
       <value compset="SATM_CLM60"        >clm6_0_GSWP3v1</value>
       <value compset="DATM%GSWP3v1_CLM60">clm6_0_GSWP3v1</value>
       <value compset="CAM[^_]+_CLM60"    >clm6_0_cam6.0</value>
+      <value compset="CAM7[^_]+_CLM60"   >clm6_0_cam7.0</value>
       <value compset="DATM%CPLHIST_CLM60">clm6_0_cam6.0</value>
       <value compset="DATM%QIA_CLM60"    >clm6_0_QIAN</value>
       <value compset="DATM%WISOQIA_CLM60">clm6_0_QIAN</value>
