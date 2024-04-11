@@ -126,6 +126,8 @@ class RegionalCase(BaseCase):
         self.out_dir = out_dir
         self.check_region_bounds()
         self.create_tag()
+        self.ni = None
+        self.nj = None
 
     def create_tag(self):
         """
@@ -281,6 +283,9 @@ class RegionalCase(BaseCase):
 
         lats = ds_in[lat_name].astype(np.float32)
         lons = ds_in[lon_name].astype(np.float32)
+        
+        self.ni = len(lats.ni)
+        self.nj = len(lats.nj)
 
         mask = ds_in["mask"].astype(np.float32)
         if mask.max() > 1.0 or mask.min() < 0.0:
@@ -547,3 +552,7 @@ class RegionalCase(BaseCase):
             self.write_to_file("./xmlchange ATM_DOMAIN_MESH={}".format(str(self.mesh)), nl_file)
             self.write_to_file("./xmlchange LND_DOMAIN_MESH={}".format(str(self.mesh)), nl_file)
             self.write_to_file("./xmlchange MASK_MESH={}".format(str(str(self.mesh))), nl_file)
+            self.write_to_file("./xmlchange ATM_NX={}".format(str(str(self.ni))), nl_file)
+            self.write_to_file("./xmlchange LND_NX={}".format(str(str(self.ni))), nl_file)
+            self.write_to_file("./xmlchange ATM_NY={}".format(str(str(self.nj))), nl_file)
+            self.write_to_file("./xmlchange LND_NY={}".format(str(str(self.nj))), nl_file)
