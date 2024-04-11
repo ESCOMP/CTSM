@@ -732,7 +732,7 @@ contains
 
     ! Read snlsno_source_sgrid
     allocate(snlsno_source_sgrid(bounds_source%get_begc() : bounds_source%get_endc()))
-    call ncd_io(ncid=ncid_source, varname='SNLSNO', flag='read', &
+    call ncd_io(ncid=ncid_source, varname='SNLSNO', flag='read_noscm', &
          data=snlsno_source_sgrid)
     snlsno_source_sgrid(:) = abs(snlsno_source_sgrid(:))
 
