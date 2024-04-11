@@ -198,7 +198,7 @@ III. Process sequence to create input datasets needed to run CTSM
         gridnames.
 
     5.) Create surface datasets with mksurfdata_esmf on Derecho
-        (See mksurfdata_esmf/README for more help on doing this)
+        (See mksurfdata_esmf/README.md for more help on doing this)
 
        - gen_mksurfdata_build.sh to build
        - gen_mksurfdata_namelist to build the namelist
@@ -216,7 +216,7 @@ III. Process sequence to create input datasets needed to run CTSM
        ./gen_mksurfdata_build.sh
        ./gen_mksurfdata_namelist --res 0.9x1.25 --start-year 1850 --end-year 1850
        ./gen_mksurfdata_jobscript_single --number-of-nodes 24 --tasks-per-node 12 --namelist-file target.namelist
-       qsub mksurfdata_jobscript_single
+       qsub mksurfdata_jobscript_single.sh
    
        NOTE that surface dataset will be used by default for fatmgrid - and it will 
        contain the lat,lon,edges and area values for the atm grid - ASSUMING that 

@@ -153,7 +153,7 @@ for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
 ``` shell
 # Assuming pwd is the tools/mksurfdata_esmf directory
  ./gen_mksurfdata_jobscript_single --number-of-nodes 2 --tasks-per-node 128 --namelist-file target.namelist
- qsub mksurfdata_jobscript_single
+ qsub mksurfdata_jobscript_single.sh
 ```
 
  Read note about regional grids at the end.
@@ -167,7 +167,7 @@ for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
 ``` shell
 # Assuming pwd is the tools/mksurfdata_esmf directory
  ./gen_mksurfdata_jobscript_multi --number-of-nodes 2 --scenario global-present
- qsub mksurfdata_jobscript_multi
+ qsub mksurfdata_jobscript_multi.sh
 ```
 
  If you are looking to generate all (or a large number of) the datasets or the
