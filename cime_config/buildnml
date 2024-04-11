@@ -27,6 +27,7 @@ _config_cache_template = """
 </config_definition>
 """
 
+
 ###############################################################################
 def buildnml(case, caseroot, compname):
     ###############################################################################
@@ -59,7 +60,7 @@ def buildnml(case, caseroot, compname):
     run_refdate = case.get_value("RUN_REFDATE")
     run_reftod = case.get_value("RUN_REFTOD")
     glc_nec = case.get_value("GLC_NEC")
-    cism_use_antarctica = case.get_value("CISM_USE_ANTARCTICA")
+    glc_use_antarctica = case.get_value("GLC_USE_ANTARCTICA")
     mask = case.get_value("MASK_GRID")
     driver = case.get_value("COMP_INTERFACE").lower()
 
@@ -205,19 +206,19 @@ def buildnml(case, caseroot, compname):
     else:
         nomeg = ""
 
-    if cism_use_antarctica is None:
-        # This is the case for compsets without CISM, where the CISM_USE_ANTARCTICA xml
+    if glc_use_antarctica is None:
+        # This is the case for compsets with SGLC where the GLC_USE_ANTARCTICA xml
         # variable isn't defined
         glc_use_antarctica_flag = ""
-    elif isinstance(cism_use_antarctica, bool):
-        if cism_use_antarctica:
+    elif isinstance(glc_use_antarctica, bool):
+        if glc_use_antarctica:
             glc_use_antarctica_flag = "-glc_use_antarctica"
         else:
             glc_use_antarctica_flag = ""
     else:
         expect(
             False,
-            "Unexpected value for CISM_USE_ANTARCTICA: {}".format(cism_use_antarctica),
+            "Unexpected value for GLC_USE_ANTARCTICA: {}".format(glc_use_antarctica),
         )
 
     if clm_nml_use_case != "UNSET":

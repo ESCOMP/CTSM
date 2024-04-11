@@ -226,6 +226,72 @@ Pull Requests that document the changes (include PR ids):
 
 ===============================================================
 ===============================================================
+Tag name: ctsm5.1.dev176
+Originator(s): afoster (Adrianna Foster,UCAR/TSS,303-497-1728)
+Date: Thu 04 Apr 2024 06:29:36 PM MDT
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+change needed for the addition of a dglc component in cdeps #2449
+Move the dust emission source function soil erodibility for the Zender scheme from CAM to CTSM #1967
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+CTSM issues fixed (include CTSM Issue #):
+Closes #2222 - Fixing Negative Ice Fluxes from Ocean to Glacier
+Closes #2117 - Add LND_TUNING_MODE for CAM4, CAM5, CAM7
+Addresses #2149 - Change handling of LND_TUNING_MODE so user is warned of which option is used, add more supported options
+Addresses part of #1836 - Move the soil erodibility dataset dust emission source function from CAM to CTSM 
+Helps with ESCOMP/CAM#651 - Move the dust emission source function and global tuning factor from CAM to CTSM
+
+Known bugs introduced in this tag (include issue #):
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): new namelist options for dust
+
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  regular tests
+
+    derecho ----- OK
+    izumi ------- OK
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull):
+
+https://github.com/ESCOMP/CTSM/pull/2455
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev175
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Thu 21 Mar 2024 05:49:04 PM MDT
