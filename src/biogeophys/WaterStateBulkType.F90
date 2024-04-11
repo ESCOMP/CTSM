@@ -47,7 +47,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine InitBulk(this, bounds, info, vars, &
-       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer, NLFilename)
+       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer, NLFilename, exice_init_stream_col)
 
     class(waterstatebulk_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds
@@ -58,6 +58,7 @@ contains
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     logical           , intent(in) :: use_aquifer_layer                       ! whether an aquifer layer is used in this run
     character(len=*)  , intent(in) :: NLFilename                              ! Namelist filename
+    real(r8)          , intent(in) :: exice_init_stream_col(bounds%begc:) ! initial ammount of excess ice from stream
 
     call this%Init(bounds = bounds, &
          info = info, &
@@ -66,7 +67,7 @@ contains
          watsat_col = watsat_col, &
          t_soisno_col = t_soisno_col, &
          use_aquifer_layer = use_aquifer_layer, & 
-         NLFilename = NLFilename)
+         NLFilename = NLFilename, exice_init_stream_col = exice_init_stream_col(bounds%begc:bounds%endc))
 
     call this%InitBulkAllocate(bounds) 
 
