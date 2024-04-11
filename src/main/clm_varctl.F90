@@ -411,9 +411,13 @@ module clm_varctl
   logical, public :: use_hillslope_routing = .false. ! true => use surface water routing in hillslope hydrology
 
   !----------------------------------------------------------
-  ! excess ice physics switch
+  ! excess ice physics switch and params
   !----------------------------------------------------------
   logical, public :: use_excess_ice = .false. ! true. => use excess ice physics
+
+  real(r8), public :: excess_ice_coldstart_temp = rundef ! initial coldstart soil temperature for gridcells where excess ice is present
+
+  real(r8), public :: excess_ice_coldstart_depth = rundef ! initial coldstart depth at which excess ice might be present and excess_ice_coldstart_temp will be applied
 
   !----------------------------------------------------------
   ! plant hydraulic stress switch

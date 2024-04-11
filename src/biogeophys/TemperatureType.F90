@@ -653,7 +653,8 @@ contains
     use landunit_varcon, only : istwet, istsoil, istdlak, istice, istcrop
     use column_varcon  , only : icol_road_imperv, icol_roof, icol_sunwall
     use column_varcon  , only : icol_shadewall, icol_road_perv
-    use clm_varctl     , only : iulog, use_vancouver, use_mexicocity, use_excess_ice
+    use clm_varctl     , only : iulog, use_vancouver, use_mexicocity
+    use clm_varctl     , only : use_excess_ice, excess_ice_coldstart_depth, excess_ice_coldstart_temp
     use initVerticalMod , only : find_soil_layer_containing_depth
     !
     ! !ARGUMENTS:
@@ -673,7 +674,7 @@ contains
     real(r8) :: snowbd  ! temporary calculation of snow bulk density (kg/m3)
     real(r8) :: fmelt   ! snowbd/100
     integer  :: lev
-    integer  :: n05m    ! layer number containing 0.5 meter depth
+    integer  :: nexice_start    ! layer number containing 0.5 meter depth
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(em_roof_lun)    == (/bounds%endl/)), sourcefile, __LINE__)
@@ -748,13 +749,13 @@ contains
             else
                this%t_soisno_col(c,1:nlevgrnd) = 272._r8
                if (use_excess_ice .and. exice_init_stream_col(c) > 0.0_r8) then
-                  n05m = nlevsoi - 1
-                  if (zisoi(nlevsoi) >= 0.5_r8) then
-                     call find_soil_layer_containing_depth(0.5_r8,n05m)
+                  nexice_start = nlevsoi - 1
+                  if (zisoi(nlevsoi) >= excess_ice_coldstart_depth) then
+                     call find_soil_layer_containing_depth(0.5_r8,nexice_start)
                   else
-                       n05m=nlevsoi-1
+                       nexice_start=nlevsoi-1
                   endif
-                  this%t_soisno_col(c,n05m:nlevgrnd) = SHR_CONST_TKFRZ - 12.15_r8 !needs to be below freezing to properly initiate excess ice
+                  this%t_soisno_col(c,nexice_start:nlevgrnd) = SHR_CONST_TKFRZ + excess_ice_coldstart_temp !needs to be below freezing to properly initiate excess ice
                end if
             endif
          endif

@@ -4575,7 +4575,7 @@ sub setup_logic_exice {
      }
   # Otherwise if ice streams are off
   } else {
-     my @list = ( "stream_meshfile_exice", "stream_fldfilename_exice" );
+     my @list = ( "stream_meshfile_exice", "stream_fldfilename_exice" , "excess_ice_coldstart_temp" , "excess_ice_coldstart_depth");
      # fail is excess ice streams files are set
      foreach my $var ( @list ) {
         if ( defined($nl->get_value($var)) ) {
@@ -4594,6 +4594,8 @@ sub setup_logic_exice {
      if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_exice');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_mapalgo_exice');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_temp');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_depth');
        # If excess ice streams on, but NOT the NUOPC driver fail
        if ( not $opts->{'driver'} eq "nuopc" ) {
           $log->fatal_error("nuopc driver is required when use_excess_ice_streams is set to true" );
