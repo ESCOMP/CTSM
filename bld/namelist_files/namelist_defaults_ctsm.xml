@@ -245,9 +245,21 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >30.0d00</rh_low>
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam6.0"
 >20.0d00</rh_low>
+<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam5.0"
+>20.0d00</rh_low>
+<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam4.0"
+>20.0d00</rh_low>
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_1_cam6.0"
 >20.0d00</rh_low>
+<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_1_cam5.0"
+>20.0d00</rh_low>
+<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_1_cam4.0"
+>20.0d00</rh_low>
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm6_0_cam6.0"
+>20.0d00</rh_low>
+<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm6_0_cam5.0"
+>20.0d00</rh_low>
+<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm6_0_cam4.0"
 >20.0d00</rh_low>
 <rh_hgh                   fire_method="li2016crufrc" >80.0d00</rh_hgh>
 <bt_min                   fire_method="li2016crufrc" >0.85d00</bt_min>
@@ -260,9 +272,21 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >0.010d00</pot_hmn_ign_counts_alpha>
 <pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam6.0"
 >0.008d00</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam5.0"
+>0.008d00</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam4.0"
+>0.008d00</pot_hmn_ign_counts_alpha>
 <pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_1_cam6.0"
 >0.008d00</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_1_cam5.0"
+>0.008d00</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_1_cam4.0"
+>0.008d00</pot_hmn_ign_counts_alpha>
 <pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm6_0_cam6.0"
+>0.008d00</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm6_0_cam5.0"
+>0.008d00</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm6_0_cam4.0"
 >0.008d00</pot_hmn_ign_counts_alpha>
 <non_boreal_peatfire_c    fire_method="li2016crufrc" >0.17d-3</non_boreal_peatfire_c>
 <cropfire_a1              fire_method="li2016crufrc" >1.6d-4</cropfire_a1>
@@ -642,7 +666,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!--
      clm6_0 physics with CAM6.0 grids...
 -->
-<!-- These first five are for SP mode and CLM5.1 only -->
+<!-- These first five are for SP mode and CLM6.0 only -->
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm6_0_cam6.0"
                   maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="0.9x1.25"            >.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm6_0_cam6.0"
@@ -676,8 +700,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_init_interp use_cndv=".false." use_fates=".false." phys="clm5_0" lnd_tuning_mode="clm5_0_cam4.0" >.false.</use_init_interp>
 <use_init_interp use_cndv=".false." use_fates=".false." phys="clm5_1" lnd_tuning_mode="clm5_1_cam5.0" >.false.</use_init_interp>
 <use_init_interp use_cndv=".false." use_fates=".false." phys="clm5_1" lnd_tuning_mode="clm5_1_cam4.0" >.false.</use_init_interp>
+<use_init_interp use_cndv=".false." use_fates=".false." phys="clm5_1" lnd_tuning_mode="clm6_0_cam5.0" >.false.</use_init_interp>
+<use_init_interp use_cndv=".false." use_fates=".false." phys="clm5_1" lnd_tuning_mode="clm6_0_cam4.0" >.false.</use_init_interp>
 <!-- Default to FALSE if couldn't find a match -->
-<use_init_interp                                                                                            >.false.</use_init_interp>
+<use_init_interp                                                                                      >.false.</use_init_interp>
 <!-- NOTE: if use_init_interp is FALSE that indicates that you can't interpolate from an initial conditions file that's similar
            Either an existing file is too different, too different in the year, or a configuration that can't interpolate
            initial condition files.
