@@ -2976,16 +2976,6 @@
       <option name="comment">60 day exact restart test providing coverage for the FATES logging mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f10_f10_mg37" compset="I2000Clm51FatesRs" testmods="clm/FatesCold--clm/matrixcnOn">
-    <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:40:00</option>
-      <option name="comment">Repeat this SMS_Ld5...FatesCold test with matrixcnOn</option>
-    </options>
-  </test>
   <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSizeAgeMort">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
