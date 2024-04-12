@@ -43,9 +43,13 @@ def write_usermods(lat,lon,site,start_year,end_year,
         #'./xmlchange PLUMBER2SITE='+site + '\n' \
         './xmlchange PTS_LON='+str(lon) + '\n' \
         './xmlchange PTS_LAT='+str(lat) + '\n' \
-        './xmlchange RUN_STARTDATE='+str(start_date) + '\n' \
-        './xmlchange DATM_YR_ALIGN='+str(start_year_actual) + '\n' \
-        './xmlchange DATM_YR_START='+str(start_year_actual) + '\n' \
+        './xmlchange RUN_STARTDATE=0001-01-01' + '\n' \
+        './xmlchange DATM_YR_ALIGN='+str(1) + '\n' \
+        './xmlchange DATM_YR_START='+str(start_year) + '\n' \
+        # TODO, change this for transient simulations
+        # './xmlchange RUN_STARTDATE='+str(start_date) + '\n' \
+        # './xmlchange DATM_YR_ALIGN='+str(start_year_actual) + '\n' \
+        # './xmlchange DATM_YR_START='+str(start_year_actual) + '\n' \
         './xmlchange DATM_YR_END='+str(end_year) + '\n' \
         './xmlchange START_TOD='+str(start_tod) + '\n' \
         './xmlchange ATM_NCPL='+str(atm_ncpl) + '\n' \
@@ -56,19 +60,19 @@ def write_usermods(lat,lon,site,start_year,end_year,
         
         'echo "CLM_USRDAT.PLUMBER2:datafiles= \$DIN_LOC_ROOT/atm/datm7/CLM1PT_data/PLUMBER2/'+site+'/CLM1PT_data/CTSM_DATM_'+site+'_'+str(start_year)+'-'+str(end_year)+'.nc " >> user_nl_datm_streams \n' \
 
-        'echo "presaero.SSP3-7.0:year_first='+str(start_year_actual) + '" >> user_nl_datm_streams \n' \
+        'echo "presaero.SSP3-7.0:year_first='+str(start_year) + '" >> user_nl_datm_streams \n' \
         'echo "presaero.SSP3-7.0:year_last='+str(end_year) + '" >> user_nl_datm_streams \n' \
-        'echo "presaero.SSP3-7.0:year_align='+str(start_year_actual) + '" >> user_nl_datm_streams \n' \
+        'echo "presaero.SSP3-7.0:year_align='+str(start_year) + '" >> user_nl_datm_streams \n' \
         '\n' \
 
-        'echo "presndep.SSP3-7.0:year_first='+str(start_year_actual) + '" >> user_nl_datm_streams \n' \
+        'echo "presndep.SSP3-7.0:year_first='+str(start_year) + '" >> user_nl_datm_streams \n' \
         'echo "presndep.SSP3-7.0:year_last='+str(end_year) + '" >> user_nl_datm_streams \n' \
-        'echo "presndep.SSP3-7.0:year_align='+str(start_year_actual) + '" >> user_nl_datm_streams \n' \
+        'echo "presndep.SSP3-7.0:year_align='+str(start_year) + '" >> user_nl_datm_streams \n' \
         '\n' \
 
-        'echo "co2tseries.SSP3-7.0:year_first='+str(start_year_actual) + '" >> user_nl_datm_streams \n' \
+        'echo "co2tseries.SSP3-7.0:year_first='+str(start_year) + '" >> user_nl_datm_streams \n' \
         'echo "co2tseries.SSP3-7.0:year_last='+str(end_year) + '" >> user_nl_datm_streams \n' \
-        'echo "co2tseries.SSP3-7.0:year_align='+str(start_year_actual) + '" >> user_nl_datm_streams \n' \
+        'echo "co2tseries.SSP3-7.0:year_align='+str(start_year) + '" >> user_nl_datm_streams \n' \
         '\n' \
 
         'compset=`./xmlquery COMPSET --value` \n' \
@@ -88,10 +92,18 @@ def write_usermods(lat,lon,site,start_year,end_year,
         '# Turn on LAI streams for a SP case \n' \
         'if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then \n' \
         '  echo "stream_fldfilename_lai=\''+LAIstream+'\'" >> user_nl_clm \n' \
-        '  echo "model_year_align_lai='+str(start_year_actual) + '" >> user_nl_clm \n' \
-        '  echo "stream_year_first_lai='+str(start_year_actual) + '" >> user_nl_clm \n' \
+        '  echo "model_year_align_lai=1" >> user_nl_clm \n' \
+        '  echo "stream_year_first_lai='+str(start_year) + '" >> user_nl_clm \n' \
         '  echo "stream_year_last_lai='+str(end_year) + '" >> user_nl_clm \n' \
-        'fi \n'      
+        '  echo "stream_meshfile_lai=\'none\'" >> user_nl_clm \n' \
+        'fi \n'
+        # TODO, change this for transient simulations
+        #'  #echo "stream_fldfilename_lai=\''+LAIstream+'\'" >> user_nl_clm \n' \
+        #'  #echo "model_year_align_lai='+str(start_year_actual) + '" >> user_nl_clm \n' \
+        #'  #echo "stream_year_first_lai='+str(start_year_actual) + '" >> user_nl_clm \n' \
+        #'  #echo "stream_year_last_lai='+str(end_year) + '" >> user_nl_clm \n' \
+        #'  #echo "stream_meshfile_lai=\'none\' >> user_nl_clm \n' \
+        #'fi \n'      
     )
 
     sFile.close()

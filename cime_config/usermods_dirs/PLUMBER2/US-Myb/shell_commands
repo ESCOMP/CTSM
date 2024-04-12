@@ -1,7 +1,7 @@
 ./xmlchange PTS_LON=-121.765106
 ./xmlchange PTS_LAT=38.049801
-./xmlchange RUN_STARTDATE=2011-01-01
-./xmlchange DATM_YR_ALIGN=2011
+./xmlchange RUN_STARTDATE=0001-01-01
+./xmlchange DATM_YR_ALIGN=1
 ./xmlchange DATM_YR_START=2011
 ./xmlchange DATM_YR_END=2014
 ./xmlchange START_TOD=28800
@@ -36,9 +36,10 @@ fi
 # Turn on LAI streams for a SP case 
 if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then 
   echo "stream_fldfilename_lai='\$DIN_LOC_ROOT/lnd/clm2/lai_streams/PLUMBER2/US-Myb/LAI_stream_US-Myb_2011-2014.nc'" >> user_nl_clm 
-  echo "model_year_align_lai=2011" >> user_nl_clm 
+  echo "model_year_align_lai=1" >> user_nl_clm 
   echo "stream_year_first_lai=2011" >> user_nl_clm 
   echo "stream_year_last_lai=2014" >> user_nl_clm 
+  echo "stream_meshfile_lai='none'" >> user_nl_clm 
 fi 
 
 # set baseflow scalar to zero for wetland site 

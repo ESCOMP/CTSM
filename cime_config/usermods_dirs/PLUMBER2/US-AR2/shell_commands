@@ -1,7 +1,7 @@
 ./xmlchange PTS_LON=-99.597504
 ./xmlchange PTS_LAT=36.635799
-./xmlchange RUN_STARTDATE=2010-01-01
-./xmlchange DATM_YR_ALIGN=2010
+./xmlchange RUN_STARTDATE=0001-01-01
+./xmlchange DATM_YR_ALIGN=1
 ./xmlchange DATM_YR_START=2010
 ./xmlchange DATM_YR_END=2011
 ./xmlchange START_TOD=21600
@@ -36,7 +36,8 @@ fi
 # Turn on LAI streams for a SP case 
 if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then 
   echo "stream_fldfilename_lai='\$DIN_LOC_ROOT/lnd/clm2/lai_streams/PLUMBER2/US-AR2/LAI_stream_US-AR2_2010-2011.nc'" >> user_nl_clm 
-  echo "model_year_align_lai=2010" >> user_nl_clm 
+  echo "model_year_align_lai=1" >> user_nl_clm 
   echo "stream_year_first_lai=2010" >> user_nl_clm 
   echo "stream_year_last_lai=2011" >> user_nl_clm 
+  echo "stream_meshfile_lai='none'" >> user_nl_clm 
 fi 
