@@ -27,7 +27,7 @@ The following fields were added and removed to the list of fields on the dataset
 
 Fields added:
    ORGC, BULK, CFRAG, PHAQ (soil data) (currently NOT used by CTSM)
-   mapunits (map units for the soil dataset)
+   mapunits (map units from the soil dataset)
    LANDFRAC_MKSURFDATA (for reference NOT used by CTSM)
    PCT_OCEAN (previously PCT_WETLAND was used)
 
