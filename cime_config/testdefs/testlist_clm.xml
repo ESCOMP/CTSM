@@ -155,7 +155,7 @@
       <option name="comment">CESM3 development test at the standard coupled resolution for 2000</option>
     </options>
   </test>
-  <test name="SMS_P128x72_Ld5" grid="hcru_hcru_mt13" compset="I2000Clm60Sp" testmods="clm/default">
+  <test name="SMS_Ld5" grid="hcru_hcru_mt13" compset="I2000Clm60Sp" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -164,7 +164,7 @@
       <option name="comment"  >CTSM science test list for the half degree grid with latest CLM version for 2000</option>
     </options>
   </test>
-  <test name="SMS_P128x72_Ld5" grid="hcru_hcru_mt13" compset="IHistClm60BgcCrop" testmods="clm/default">
+  <test name="SMS_Ld5" grid="hcru_hcru_mt13" compset="IHistClm60BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -227,7 +227,7 @@
       <option name="comment">Higher resolution mpasa grid for CAM with latest CLM version. Include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
-  <test name="SMS_P36x128_Ln9" grid="mpasa15_mpasa15" compset="I2000Clm60SpRs" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="mpasa15_mpasa15" compset="I2000Clm60SpRs" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
