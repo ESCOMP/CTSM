@@ -96,7 +96,10 @@ def write_usermods(lat,lon,site,start_year,end_year,
         '  echo "stream_year_first_lai='+str(start_year) + '" >> user_nl_clm \n' \
         '  echo "stream_year_last_lai='+str(end_year) + '" >> user_nl_clm \n' \
         '  echo "stream_meshfile_lai=\'none\'" >> user_nl_clm \n' \
+        '  echo "lai_dtlimit=30." >> user_nl_clm \n' \
+
         'fi \n'
+
         # TODO, change this for transient simulations
         #'  #echo "stream_fldfilename_lai=\''+LAIstream+'\'" >> user_nl_clm \n' \
         #'  #echo "model_year_align_lai='+str(start_year_actual) + '" >> user_nl_clm \n' \

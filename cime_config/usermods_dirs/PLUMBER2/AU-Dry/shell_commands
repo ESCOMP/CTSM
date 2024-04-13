@@ -40,4 +40,5 @@ if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then
   echo "stream_year_first_lai=2011" >> user_nl_clm 
   echo "stream_year_last_lai=2015" >> user_nl_clm 
   echo "stream_meshfile_lai='none'" >> user_nl_clm 
+  echo "lai_dtlimit=30." >> user_nl_clm 
 fi 
