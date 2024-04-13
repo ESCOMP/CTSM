@@ -1748,6 +1748,7 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <stream_year_first_lai  >2001</stream_year_first_lai>
 <stream_year_last_lai   >2013</stream_year_last_lai>
 <model_year_align_lai   >2001</model_year_align_lai>
+<lai_dtlimit            >1.5_r8</lai_dtlimit>
 
 <stream_fldfilename_lai hgrid="360x720cru"       >lnd/clm2/lai_streams/MODISPFTLAI_0.5x0.5_c140711.nc</stream_fldfilename_lai>
 <stream_meshfile_lai    hgrid="360x720cru"       >lnd/clm2/lai_streams/MODISPFTLAI_0.5x0_ESMFmesh_cdf5_090621.nc</stream_meshfile_lai>

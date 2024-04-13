@@ -4049,6 +4049,7 @@ sub setup_logic_lai_streams {
   if ( $nl_flags->{'bgc_mode'} eq "sp" || ($nl_flags->{'bgc_mode'} eq "fates" && &value_is_true($nl->get_value('use_fates_sp')) )) {
      if ( &value_is_true($nl->get_value('use_lai_streams')) ) {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_dtlimit');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo',
                    'hgrid'=>$nl_flags->{'res'} );
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lai',

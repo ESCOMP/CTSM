@@ -1928,7 +1928,7 @@ Filename of input stream data for LAI
 Filename of input stream data for LAI
 </entry>
 
-<entry id="lai_dtlimit" type="integer" category="datasets"
+<entry id="lai_dtlimit" type="real" category="datasets"
        group="lai_streams" valid_values="" >
 dtlimit for LAI streams 
 </entry>

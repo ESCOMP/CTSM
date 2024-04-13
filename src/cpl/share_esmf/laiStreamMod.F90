@@ -62,6 +62,7 @@ contains
     integer                 :: nml_error                  ! namelist i/o error flag
     character(len=CL)       :: stream_fldFileName_lai     ! lai stream filename to read
     character(len=CL)       :: stream_meshfile_lai        ! lai stream meshfile
+    real(r8)                :: lai_dtlimit                ! dlimit for lai stream to use
     character(len=CL)       :: lai_mapalgo = 'bilinear'   ! Mapping alogrithm
     character(len=CL)       :: lai_tintalgo = 'linear'    ! Time interpolation alogrithm
     integer                 :: lai_offset = 0             ! Offset in time for dataset (sec)
@@ -75,6 +76,7 @@ contains
          stream_year_first_lai,    &
          stream_year_last_lai,     &
          model_year_align_lai,     &
+         lai_dtlimit,              &
          lai_mapalgo,              &
          stream_fldFileName_lai,   &
          stream_meshfile_lai,      &
@@ -144,7 +146,7 @@ contains
          stream_yearAlign    = model_year_align_lai,             &
          stream_offset       = lai_offset,                       &
          stream_taxmode      = 'cycle',                          &
-         stream_dtlimit      = 1.5_r8,                           &
+         stream_dtlimit      = lai_dtlimit,                      &
          stream_tintalgo     = lai_tintalgo,                     &
          stream_name         = 'LAI data',                       &
          rc                  = rc)
