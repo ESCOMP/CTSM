@@ -43,13 +43,6 @@ def write_usermods(lat,lon,site,start_year,end_year,
         #'./xmlchange PLUMBER2SITE='+site + '\n' \
         './xmlchange PTS_LON='+str(lon) + '\n' \
         './xmlchange PTS_LAT='+str(lat) + '\n' \
-        './xmlchange RUN_STARTDATE=0001-01-01' + '\n' \
-        './xmlchange DATM_YR_ALIGN='+str(1) + '\n' \
-        './xmlchange DATM_YR_START='+str(start_year) + '\n' \
-        # TODO, change this for transient simulations
-        # './xmlchange RUN_STARTDATE='+str(start_date) + '\n' \
-        # './xmlchange DATM_YR_ALIGN='+str(start_year_actual) + '\n' \
-        # './xmlchange DATM_YR_START='+str(start_year_actual) + '\n' \
         './xmlchange DATM_YR_END='+str(end_year) + '\n' \
         './xmlchange START_TOD='+str(start_tod) + '\n' \
         './xmlchange ATM_NCPL='+str(atm_ncpl) + '\n' \
@@ -86,27 +79,34 @@ def write_usermods(lat,lon,site,start_year,end_year,
         '  if [[ $TEST != "TRUE" ]]; then  \n' \
         '    ./xmlchange STOP_N='+str(stop_n) + '\n' \
         '  fi \n' \
+        '  # set start date for transient case with historical compset \n' \
+        '  ./xmlchange RUN_STARTDATE='+str(start_date) + '\n' \
+        '  ./xmlchange DATM_YR_ALIGN='+str(start_year_actual) + '\n' \
+        '  ./xmlchange DATM_YR_START='+str(start_year_actual) + '\n' \
+        'else \n' \
+        '  # for spinup case with I2000 compset \n' \
+        '  ./xmlchange RUN_STARTDATE=0001-01-01' + '\n' \
+        '  ./xmlchange DATM_YR_ALIGN='+str(1) + '\n' \
+        '  ./xmlchange DATM_YR_START='+str(start_year) + '\n' \
         'fi \n'  \
         '\n' \
 
         '# Turn on LAI streams for a SP case \n' \
         'if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then \n' \
         '  echo "stream_fldfilename_lai=\''+LAIstream+'\'" >> user_nl_clm \n' \
-        '  echo "model_year_align_lai=1" >> user_nl_clm \n' \
-        '  echo "stream_year_first_lai='+str(start_year) + '" >> user_nl_clm \n' \
         '  echo "stream_year_last_lai='+str(end_year) + '" >> user_nl_clm \n' \
-        '  echo "stream_meshfile_lai=\'none\'" >> user_nl_clm \n' \
-        '  echo "lai_dtlimit=30." >> user_nl_clm \n' \
-
+        '  if  [[ $compset =~ ^HIST ]]; then \n' \
+        '    # for transient case with a historical compset \n' \
+        '    echo "model_year_align_lai='+str(start_year_actual) + '" >> user_nl_clm \n' \
+        '    echo "stream_year_first_lai='+str(start_year_actual) + '" >> user_nl_clm \n' \
+        '  else \n' \
+        '    # for a spinup case with a i2000 compset \n' \
+        '    echo "model_year_align_lai=1" >> user_nl_clm \n' \
+        '    echo "stream_year_first_lai='+str(start_year) + '" >> user_nl_clm \n' \
+        '  fi \n' \
         'fi \n'
+        '\n' \
 
-        # TODO, change this for transient simulations
-        #'  #echo "stream_fldfilename_lai=\''+LAIstream+'\'" >> user_nl_clm \n' \
-        #'  #echo "model_year_align_lai='+str(start_year_actual) + '" >> user_nl_clm \n' \
-        #'  #echo "stream_year_first_lai='+str(start_year_actual) + '" >> user_nl_clm \n' \
-        #'  #echo "stream_year_last_lai='+str(end_year) + '" >> user_nl_clm \n' \
-        #'  #echo "stream_meshfile_lai=\'none\' >> user_nl_clm \n' \
-        #'fi \n'      
     )
 
     sFile.close()
