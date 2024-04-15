@@ -30,6 +30,8 @@ if  [[ $compset =~ ^HIST ]]; then
   echo "hist_nhtfrq = 0,1" >> user_nl_clm
   echo "hist_mfilt  = 1,438000" >> user_nl_clm
   echo " " >> user_nl_clm
+  echo "CLM_USRDAT.PLUMBER2:taxmode=extend" >> user_nl_datm_streams
+  echo "CLM_USRDAT.PLUMBER2:dtlimit=1e30" >> user_nl_datm_streams
 
 else
   # TODO, set this for spinup in BGC and SP cases
@@ -37,6 +39,8 @@ else
   ./xmlchange STOP_N=5
   ./xmlchange CLM_NML_USE_CASE="2000_control"
   ./xmlchange CLM_FORCE_COLDSTART=on
+  echo "CLM_USRDAT.PLUMBER2:taxmode=cycle" >> user_nl_datm_streams
+  echo "CLM_USRDAT.PLUMBER2:dtlimit=30" >> user_nl_datm_streams
 fi
 
 # If needed for SP simulations: & set history file variables
