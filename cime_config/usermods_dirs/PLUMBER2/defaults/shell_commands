@@ -48,11 +48,17 @@ fi
 
 # If needed for SP simulations: & set history file variables
 if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then
+  echo "! using LAI streams for SP cases" >> user_nl_clm
+  echo "use_lai_streams = .true." >> user_nl_clm
+  echo "lai_mapalgo = 'nn'" >> user_nl_clm
+  echo "stream_meshfile_lai='none'" >> user_nl_clm
   if [[ $TEST != "TRUE" ]]; then
     ./xmlchange STOP_OPTION=nyears
   fi
   echo "! h1 output stream  for SP case" >> user_nl_clm 
   if  [[ $compset =~ ^HIST ]]; then
+    echo "lai_dtlimit=1e30" >> user_nl_clm
+    echo "" >> user_nl_clm
     echo "! h1 output stream for transient SP case" >> user_nl_clm
     echo "hist_fincl2 = 'FSA','FIRA','EFLX_LH_TOT','FSH','FGR12','FGR','TSKIN','FSR','FSDS', 
             'SNOFSRVD','SNOFSRND','SNOFSRVI','SNOFSRNI','FSNO','TSOI','SNO_T','RAIN','SNOW', 
@@ -62,13 +68,12 @@ if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then
 	    'WIND','FIRE','FCTR','FCEV','FGEV','FSM','COSZEN','H2OSOI','BTRANMN','TV','RSSUN',
 	    'RSSHA','FSH_G','RHAF','RH_LEAF','RH','T10','TG','SABG','SABV','FPSN','TBOT','TAUX',
 	    'TAUY','QSNOEVAP','QFLX_SOLIDEVAP_FROM_TOP_LAYER','QFLX_SNOW_DRAIN','H2OSFC','FPSN'" >> user_nl_clm 
+  else
+    echo "lai_dtlimit=30." >> user_nl_clm
+    echo "" >> user_nl_clm
   fi
   echo " " >> user_nl_clm
-  echo "use_lai_streams = .true." >> user_nl_clm
-  echo "lai_mapalgo = 'nn'" >> user_nl_clm
-  echo "stream_meshfile_lai='none'" >> user_nl_clm 
-  echo "lai_dtlimit=30." >> user_nl_clm
-else
+else  # for BGC cases
   if  [[ $compset =~ ^HIST ]]; then
     echo "! h1 output stream for transient BGC case" >> user_nl_clm
     echo "hist_fincl2 = 'AR','ELAI','FCEV','FCTR','FGEV','FIRA','FSA','FSH','GPP','H2OSOI',
@@ -79,5 +84,6 @@ else
                'SOILLIQ','SOILWATER_10CM','TWS','SNOWLIQ','SNOWDP','RH2M','TSA','FLDS','Q2M','PBOT',
                'TLAI','WIND','FIRE','FSM','COSZEN','BTRANMN','TV','RSSUN','RSSHA','FSH_G','RHAF',
                'RH_LEAF','RH','T10','TG','SABG','SABV','TBOT','TAUX','TAUY','QSNOEVAP','H2OSFC'" >> user_nl_clm
+    echo "" >> user_nl_clm
   fi
 fi
