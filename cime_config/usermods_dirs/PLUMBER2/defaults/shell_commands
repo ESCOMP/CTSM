@@ -26,6 +26,7 @@ if  [[ $compset =~ ^HIST ]]; then
   ./xmlchange CLM_NML_USE_CASE="2018-PD_transient"
   # TODO, modify for postAD runs in tower script?  Remove from usermods?
   ./xmlchange CLM_FORCE_COLDSTART=off
+  ./xmlchange CALENDAR=GREGORIAN
   echo "! this allows for large h1 data files, regardless or run length " >> user_nl_clm
   echo "hist_nhtfrq = 0,1" >> user_nl_clm
   echo "hist_mfilt  = 1,438000" >> user_nl_clm
@@ -39,8 +40,10 @@ else
   ./xmlchange STOP_N=5
   ./xmlchange CLM_NML_USE_CASE="2000_control"
   ./xmlchange CLM_FORCE_COLDSTART=on
+  ./xmlchange CALENDAR=NO_LEAP
   echo "CLM_USRDAT.PLUMBER2:taxmode=cycle" >> user_nl_datm_streams
   echo "CLM_USRDAT.PLUMBER2:dtlimit=30" >> user_nl_datm_streams
+
 fi
 
 # If needed for SP simulations: & set history file variables
