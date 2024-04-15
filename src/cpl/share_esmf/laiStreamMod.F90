@@ -62,7 +62,7 @@ contains
     integer                 :: nml_error                  ! namelist i/o error flag
     character(len=CL)       :: stream_fldFileName_lai     ! lai stream filename to read
     character(len=CL)       :: stream_meshfile_lai        ! lai stream meshfile
-    real(r8)                :: lai_dtlimit                ! dlimit for lai stream to use
+    real(r8)                :: lai_dtlimit = 1.5_r8       ! dlimit for lai stream to use
     character(len=CL)       :: lai_mapalgo = 'bilinear'   ! Mapping alogrithm
     character(len=CL)       :: lai_tintalgo = 'linear'    ! Time interpolation alogrithm
     integer                 :: lai_offset = 0             ! Offset in time for dataset (sec)
@@ -112,6 +112,8 @@ contains
     call shr_mpi_bcast(stream_fldFileName_lai , mpicom)
     call shr_mpi_bcast(stream_meshfile_lai    , mpicom)
     call shr_mpi_bcast(lai_tintalgo           , mpicom)
+    call shr_mpi_bcast(lai_dtlimit            , mpicom)
+    call shr_mpi_bcast(lai_mapalgo            , mpicom)
 
     if (masterproc) then
        write(iulog,*)

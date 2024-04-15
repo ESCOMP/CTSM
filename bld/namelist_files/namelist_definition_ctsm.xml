@@ -1930,7 +1930,7 @@ Filename of input stream data for LAI
 
 <entry id="lai_dtlimit" type="real" category="datasets"
        group="lai_streams" valid_values="" >
-dtlimit for LAI streams 
+dtlimit (ratio of max/min stream delta times) for LAI streams, which allows for cycling over a year of data 
 </entry>
 
 
