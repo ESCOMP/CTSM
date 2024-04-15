@@ -30,6 +30,8 @@ module DUSTMod
   use LandunitType         , only : lun
   use ColumnType           , only : col
   use PatchType            , only : patch
+  use ZenderSoilErodStreamType,  only : soil_erod_stream_type
+  use clm_varctl           , only : dust_emis_method
   !  
   ! !PUBLIC TYPES
   implicit none
@@ -59,7 +61,8 @@ module DUSTMod
      real(r8), pointer, private :: vlc_trb_2_patch           (:)   ! turbulent deposition velocity 2(m/s)
      real(r8), pointer, private :: vlc_trb_3_patch           (:)   ! turbulent deposition velocity 3(m/s)
      real(r8), pointer, private :: vlc_trb_4_patch           (:)   ! turbulent deposition velocity 4(m/s)
-     real(r8), pointer, private :: mbl_bsn_fct_col           (:)   ! basin factor
+     type(soil_erod_stream_type), private :: soil_erod_stream ! Zender soil erodibility stream data
+     real(r8), pointer, private :: mbl_bsn_fct_col           (:)   ! [dimensionless] basin factor, or soil erodibility, time-constant
 
    contains
 
@@ -78,11 +81,13 @@ module DUSTMod
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds)
+  subroutine Init(this, bounds, NLFilename)
 
     class(dust_type) :: this
     type(bounds_type), intent(in) :: bounds  
+    character(len=*),  intent(in) :: NLFilename
 
+    call this%soil_erod_stream%Init( bounds, NLFilename )
     call this%InitAllocate (bounds)
     call this%InitHistory  (bounds)
     call this%InitCold     (bounds)
@@ -112,7 +117,7 @@ contains
     allocate(this%vlc_trb_2_patch           (begp:endp))        ; this%vlc_trb_2_patch           (:)   = nan 
     allocate(this%vlc_trb_3_patch           (begp:endp))        ; this%vlc_trb_3_patch           (:)   = nan
     allocate(this%vlc_trb_4_patch           (begp:endp))        ; this%vlc_trb_4_patch           (:)   = nan
-    allocate(this%mbl_bsn_fct_col           (begc:endc))        ; this%mbl_bsn_fct_col     (:)   = nan
+    allocate(this%mbl_bsn_fct_col           (begc:endc))        ; this%mbl_bsn_fct_col           (:)   = nan
 
   end subroutine InitAllocate
 
@@ -129,9 +134,11 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp,endp
+    integer :: begc,endc
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
+    begc = bounds%begc; endc = bounds%endc
 
     this%flx_mss_vrt_dst_tot_patch(begp:endp) = spval
     call hist_addfld1d (fname='DSTFLXT', units='kg/m2/s',  &
@@ -158,6 +165,15 @@ contains
          avgflag='A', long_name='turbulent deposition velocity 4', &
          ptr_patch=this%vlc_trb_4_patch, default='inactive')
 
+    if (dust_emis_method == 'Zender_2003') then
+       if ( this%soil_erod_stream%UseStreams() )then
+          this%mbl_bsn_fct_col(begc:endc) = spval
+          call hist_addfld1d (fname='LND_MBL', units='fraction',  &
+               avgflag='A', long_name='Soil erodibility factor', &
+               ptr_col=this%mbl_bsn_fct_col, default='inactive')
+       end if
+    end if
+
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -173,13 +189,26 @@ contains
 
     ! Set basin factor to 1 for now
 
-    do c = bounds%begc, bounds%endc
-       l = col%landunit(c)
+    if (dust_emis_method == 'Leung_2023') then
+       !do c = bounds%begc, bounds%endc
+       !   l = col%landunit(c)
 
-       if (.not.lun%lakpoi(l)) then
-          this%mbl_bsn_fct_col(c) = 1.0_r8
+       !   if (.not.lun%lakpoi(l)) then
+       !      this%mbl_bsn_fct_col(c) = 1.0_r8
+       !   end if
+       !end do
+       call endrun( msg="Leung_2023 dust_emis_method is currently not available"//errMsg(sourcefile, __LINE__))
+    else if (dust_emis_method == 'Zender_2003') then
+       if ( this%soil_erod_stream%UseStreams() )then
+          call this%soil_erod_stream%CalcDustSource( bounds, &
+                                   this%mbl_bsn_fct_col(bounds%begc:bounds%endc) )
+       else
+          this%mbl_bsn_fct_col(:) = 1.0_r8
        end if
-    end do
+    else
+       write(iulog,*) 'dust_emis_method not recognized = ', trim(dust_emis_method)
+       call endrun( msg="dust_emis_method namelist item is not valid "//errMsg(sourcefile, __LINE__))
+    end if
 
   end subroutine InitCold
 
@@ -262,7 +291,7 @@ contains
          fv                  => frictionvel_inst%fv_patch            , & ! Input:  [real(r8) (:)   ]  friction velocity (m/s) (for dust model)          
          u10                 => frictionvel_inst%u10_patch           , & ! Input:  [real(r8) (:)   ]  10-m wind (m/s) (created for dust model)          
          
-         mbl_bsn_fct         => dust_inst%mbl_bsn_fct_col            , & ! Input:  [real(r8) (:)   ]  basin factor                                      
+         mbl_bsn_fct         => dust_inst%mbl_bsn_fct_col            , & ! Input:  [real(r8) (:)   ]  basin factor
          flx_mss_vrt_dst     => dust_inst%flx_mss_vrt_dst_patch      , & ! Output: [real(r8) (:,:) ]  surface dust emission (kg/m**2/s)               
          flx_mss_vrt_dst_tot => dust_inst%flx_mss_vrt_dst_tot_patch    & ! Output: [real(r8) (:)   ]  total dust flux back to atmosphere (pft)
          )
@@ -681,10 +710,6 @@ contains
     real(r8), parameter :: dns_slt = 2650.0_r8         ! [kg m-3] Density of optimal saltation particles
     !------------------------------------------------------------------------
 
-    associate(& 
-         mbl_bsn_fct  =>  this%mbl_bsn_fct_col   & ! Output:  [real(r8) (:)] basin factor                                       
-         )
-
       ! allocate module variable
       allocate (ovr_src_snk_mss(dst_src_nbr,ndst))  
       allocate (dmt_vwr(ndst))
@@ -919,8 +944,6 @@ contains
       do m = 1, ndst
          stk_crc(m) = vlc_grv(m) / vlc_stk(m)
       end do
-
-    end associate 
 
   end subroutine InitDustVars
 

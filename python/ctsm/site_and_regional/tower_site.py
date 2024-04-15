@@ -391,11 +391,13 @@ class TowerSite:
                 case.set_value("RUN_TYPE", "hybrid")
 
             if run_type == "postad":
+                case.case_setup()
                 self.set_ref_case(case)
                 case.set_value("STOP_N", run_length)
 
             # For transient cases STOP will be set in the user_mod_directory
             if run_type == "transient":
+                case.case_setup()
                 if self.finidat:
                     case.set_value("RUN_TYPE", "startup")
                 else:
