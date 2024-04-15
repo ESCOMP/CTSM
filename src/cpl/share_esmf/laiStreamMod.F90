@@ -124,6 +124,9 @@ contains
        write(iulog,'(a,a)' ) '  stream_fldFileName_lai = ',trim(stream_fldFileName_lai)
        write(iulog,'(a,a)' ) '  stream_meshfile_lai    = ',trim(stream_meshfile_lai)
        write(iulog,'(a,a)' ) '  lai_tintalgo           = ',trim(lai_tintalgo)
+       write(iulog,'(a,a)' ) '  lai_mapalgo            = ',trim(lai_mapalgo)
+       write(iulog,'(a,a)' ) '  lai_dtlimit            = ',trim(lai_dtlimit)
+
        do n = 1,numLaiFields
           write(iulog,'(a,a)' ) '  stream_varname         = ',trim(stream_varnames(n))
        end do
