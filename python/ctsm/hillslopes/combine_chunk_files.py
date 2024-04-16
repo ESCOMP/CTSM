@@ -147,7 +147,16 @@ def main():
     with Dataset(args.input_file, "r") as ds_in:
         lon2d = ds_in.variables["LONGXY"][:]
         lat2d = ds_in.variables["LATIXY"][:]
+        area = ds_in.variables["AREA"][:]
     with Dataset(args.output_file, "a", format=NETCDF_FORMAT) as ds_out:
         add_longxy_latixy_nc(lon2d, lat2d, ds_out)
+        add_variable_nc(
+            name="AREA",
+            units="km^2",
+            long_name="area",
+            data = area,
+            dataset=ds_out,
+            dims=["lsmlat", "lsmlon"],
+        )
 
     print(args.output_file + " created")
