@@ -36,6 +36,8 @@ determine default values for namelists.
 <clm_start_type phys="clm5_0" lnd_tuning_mode="clm5_0_cam4.0" >cold</clm_start_type>
 <clm_start_type phys="clm5_1" lnd_tuning_mode="clm5_1_cam5.0" >cold</clm_start_type>
 <clm_start_type phys="clm5_1" lnd_tuning_mode="clm5_1_cam4.0" >cold</clm_start_type>
+<clm_start_type phys="clm6_0" lnd_tuning_mode="clm6_0_cam5.0" >cold</clm_start_type>
+<clm_start_type phys="clm6_0" lnd_tuning_mode="clm6_0_cam4.0" >cold</clm_start_type>
 
 <clm_start_type sim_year_range="1850-2100">arb_ic</clm_start_type>
 

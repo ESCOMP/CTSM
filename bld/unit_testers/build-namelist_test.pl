@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 2517;
+my $ntests = 2511;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1549;
+   $ntests += 1545;
 }
 plan( tests=>$ntests );
 
@@ -1199,7 +1199,7 @@ my %failtest = (
                                      phys=>"clm5_0",
                                    },
      "NOlunabutsetJmaxb1"        =>{ options=>"-envxml_dir . -bgc sp",
-                                     namelst=>"use_luna=.fwlse., jmaxb1=1.0",
+                                     namelst=>"use_luna=.false., jmaxb1=1.0",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
