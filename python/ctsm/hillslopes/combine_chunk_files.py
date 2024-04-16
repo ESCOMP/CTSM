@@ -4,6 +4,7 @@ Combine chunk files into single surface data file
 import argparse
 import sys
 import os
+import datetime as dt
 import numpy as np
 
 # The below "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
@@ -158,5 +159,9 @@ def main():
             dataset=ds_out,
             dims=["lsmlat", "lsmlon"],
         )
+        ds_out.setncattr("input_file", args.input_file)
+        now = dt.datetime.now()
+        datestr = now.strftime("%Y-%m-%d")
+        ds_out.setncattr("creation_date", datestr)
 
     print(args.output_file + " created")
