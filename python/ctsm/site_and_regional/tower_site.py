@@ -301,7 +301,7 @@ class TowerSite:
 
         print("using this version:", version)
 
-        if experiment is not False:
+        if (experiment is not False) and (experiment is not None):
             self.name = self.name + "." + experiment
         case_root = os.path.abspath(os.path.join(base_case_root, "..", self.name + "." + run_type))
 
