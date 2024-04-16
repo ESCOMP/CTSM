@@ -282,9 +282,9 @@ def create_bins(args, max_columns_per_hillslope, bin_fractions, hhgt):
 
     # create length bins from height bins
     lbins = np.zeros(max_columns_per_hillslope + 1)
-    for n in range(max_columns_per_hillslope + 1):
+    for k in range(max_columns_per_hillslope + 1):
         if hhgt > 0.0:
-            lbins[n] = icosp_height(hbins[n], args.hillslope_distance, hhgt, args.phill)
+            lbins[k] = icosp_height(hbins[k], args.hillslope_distance, hhgt, args.phill)
     return hbins, lbins
 
 
@@ -393,17 +393,17 @@ def main():
             for naspect in range(args.num_hillslopes):
                 pct_landunit[naspect, j, i] = 100 / float(args.num_hillslopes)
                 # index from ridge to channel (i.e. downhill)
-                for n in range(max_columns_per_hillslope):
-                    ncol = n + naspect * max_columns_per_hillslope
+                for k in range(max_columns_per_hillslope):
+                    ncol = k + naspect * max_columns_per_hillslope
 
                     cndx += 1  # start at 1 not zero (oceans are 0)
                     col_ndx[ncol, j, i] = cndx
                     hill_ndx[ncol, j, i] = naspect + 1
 
-                    uedge = lbins[n + 1]
-                    ledge = lbins[n]
+                    uedge = lbins[k + 1]
+                    ledge = lbins[k]
                     #      lowland column
-                    if n == 0:
+                    if k == 0:
                         col_dndx[ncol, j, i] = -999
                     else:  # upland columns
                         col_dndx[ncol, j, i] = col_ndx[ncol, j, i] - 1
@@ -415,7 +415,7 @@ def main():
                     # numerically integrate to calculate mean elevation
                     elevation[ncol, j, i] = calc_mean_elevation(args, hhgt, uedge, ledge)
 
-                    slope[ncol, j, i] = (hbins[n + 1] - hbins[n]) / (lbins[n + 1] - lbins[n])
+                    slope[ncol, j, i] = (hbins[k + 1] - hbins[k]) / (lbins[k + 1] - lbins[k])
                     if 0 <= naspect <= 3:
                         # 0 = north
                         # 1 = east
