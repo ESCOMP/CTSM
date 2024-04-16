@@ -8,6 +8,10 @@ import xarray as xr
 # though it does.
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
+
+NETCDF_FORMAT = "NETCDF3_64BIT_OFFSET"
+
+
 class HillslopeVars:
     """
     Fields to be added to hillslope_file
@@ -208,7 +212,7 @@ class HillslopeVars:
         print("saving")
 
         # Create and open file
-        ds_out = Dataset(output_file, "w", format="NETCDF3_64BIT_OFFSET")
+        ds_out = Dataset(output_file, "w", format=NETCDF_FORMAT)
 
         # Create dimensions
         if n_lon is None or n_lat is None:
