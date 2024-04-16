@@ -31,7 +31,10 @@ def parse_arguments(argv):
     parser.add_argument(
         "-o",
         "--output-file",
-        help="Output surface dataset",
+        help=(
+            "Output surface dataset (default: append .synth_hillslopes before extension of "
+            + "--input-file)"
+        ),
         default=None,
     )
     parser.add_argument(
@@ -42,54 +45,65 @@ def parse_arguments(argv):
     )
 
     # Synthetic hillslope settings
+    default = 1.0
     parser.add_argument(
         "--delx",
-        help="increments to use in numerical integration of mean elevation (m)",
+        help=(
+            "increments to use in numerical integration of mean elevation (m) "
+            + "(default: {default})"
+        ),
         type=float,
-        default=1.0,
+        default=default,
     )
+    default = "slope_aspect"
     parser.add_argument(
         "--hcase",
-        help="hcase",
+        help=f"hcase (default: {default})",
         type=str,
-        default="slope_aspect",
+        default=default,
         choices=["slope_aspect"],
     )
+    default = 500.0
     parser.add_argument(
         "--hillslope-distance",
-        help="distance from channel to ridge (m)",
+        help=f"distance from channel to ridge (m) (default: {default})",
         type=float,
-        default=500.0,
+        default=default,
     )
+    default = 16
     parser.add_argument(
         "--nmaxhillcol",
-        help="max. number of hillslope columns",
+        help=f"max. number of hillslope columns (default: {default})",
         type=int,
-        default=16,
+        default=default,
     )
+    default = 4
     parser.add_argument(
         "--num-hillslopes",
-        help="number of hillslopes",
+        help=f"number of hillslopes (default: {default})",
         type=int,
-        default=4,
+        default=default,
     )
+    default = 1.0
     parser.add_argument(
         "--phill",
-        help="shape parameter (power law exponent)",
+        help=f"shape parameter (power law exponent) (default: {default})",
         type=float,
-        default=1.0,
+        default=default,
     )
+    default = 2.0
     parser.add_argument(
         "--thresh",
-        help="threshold for freating specified fractional bins",
+        help=f"threshold for freating specified fractional bins (default: {default})",
         type=float,
-        default=2.0,
+        default=default,
     )
+    default = 500.0
     parser.add_argument(
         "--width-reach",
-        help="uniform width of reach (m)",
+        help=f"uniform width of reach (m) (default: {default})",
         type=float,
-        default=500.0,
+        default=default,
     )
 
     args = parser.parse_args(argv)
