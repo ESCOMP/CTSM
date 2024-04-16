@@ -88,6 +88,30 @@ def parse_arguments(argv):
     return args
 
 
+def finish_saving(args):
+    """
+    Save some extra stuff to the netCDF file
+    """
+    with Dataset(args.input_file, "r") as ds_in:
+        lon2d = ds_in.variables["LONGXY"][:]
+        lat2d = ds_in.variables["LATIXY"][:]
+        area = ds_in.variables["AREA"][:]
+    with Dataset(args.output_file, "a", format=NETCDF_FORMAT) as ds_out:
+        add_longxy_latixy_nc(lon2d, lat2d, ds_out)
+        add_variable_nc(
+            name="AREA",
+            units="km^2",
+            long_name="area",
+            data = area,
+            dataset=ds_out,
+            dims=["lsmlat", "lsmlon"],
+        )
+        ds_out.setncattr("input_file", args.input_file)
+        now = dt.datetime.now()
+        datestr = now.strftime("%Y-%m-%d")
+        ds_out.setncattr("creation_date", datestr)
+
+
 def main():
     """
     See module description
@@ -144,24 +168,6 @@ def main():
 
     # -- Write data to file ------------------
     hillslope_vars.save(args.input_file, args.output_file, ncolumns_per_gridcell, nhillslope, add_bedrock, add_stream)
-
-    with Dataset(args.input_file, "r") as ds_in:
-        lon2d = ds_in.variables["LONGXY"][:]
-        lat2d = ds_in.variables["LATIXY"][:]
-        area = ds_in.variables["AREA"][:]
-    with Dataset(args.output_file, "a", format=NETCDF_FORMAT) as ds_out:
-        add_longxy_latixy_nc(lon2d, lat2d, ds_out)
-        add_variable_nc(
-            name="AREA",
-            units="km^2",
-            long_name="area",
-            data = area,
-            dataset=ds_out,
-            dims=["lsmlat", "lsmlon"],
-        )
-        ds_out.setncattr("input_file", args.input_file)
-        now = dt.datetime.now()
-        datestr = now.strftime("%Y-%m-%d")
-        ds_out.setncattr("creation_date", datestr)
+    finish_saving(args)
 
     print(args.output_file + " created")
