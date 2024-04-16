@@ -21,17 +21,4 @@
 flanduse_timeseries = ' '   ! This isn't needed for a non transient case, but will be once we start using transient compsets
 fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/PLUMBER2/surfdata_1x1_PLUMBER2_${PLUMBER2SITE}_hist_2000_16pfts_c240326.nc"
 
-! TODO, this is only needed for transient simulations, not spinup
-! this allows for large h1 data files, regardless or run length
-hist_nhtfrq = 0,1
-hist_mfilt  = 1,438000
-
-! h1 output stream 
-hist_fincl2 = 'AR','ELAI','FCEV','FCTR','FGEV','FIRA','FSA','FSH','GPP','H2OSOI',
-             'HR','SNOW_DEPTH','TBOT','TSOI','SOILC_vr','FV','NET_NMIN_vr','EFLX_LH_TOT',
-             'FGR12','FGR','TSKIN','FSR','FSDS','SNOFSRVD','SNOFSRND','SNOFSRVI','SNOFSRNI',
-             'FSNO','SNO_T','RAIN','SNOW','QVEGT','QVEGE','QSOIL','QRUNOFF','QOVER','QH2OSFC',
-             'QDRAI','QDRAI_PERCH','SNO_EXISTENCE','QSNOMELT','H2OCAN','H2OSNO','SNOCAN','SOILICE',
-             'SOILLIQ','SOILWATER_10CM','TWS','SNOWLIQ','SNOWDP','RH2M','TSA','FLDS','Q2M','PBOT',
-             'TLAI','WIND','FIRE','FSM','COSZEN','BTRANMN','TV','RSSUN','RSSHA','FSH_G','RHAF',
-             'RH_LEAF','RH','T10','TG','SABG','SABV','TBOT','TAUX','TAUY','QSNOEVAP','H2OSFC'
+! custom namelist changes for each site / case
