@@ -9,7 +9,7 @@ import numpy as np
 # The below "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
 # though it does.
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
-from ctsm.hillslopes.hillslope_utils import add_variable_nc, HillslopeVars
+from ctsm.hillslopes.hillslope_utils import add_variable_nc, add_longxy_latixy_nc, HillslopeVars, NETCDF_FORMAT
 
 
 def parse_arguments(argv):
@@ -143,5 +143,11 @@ def main():
 
     # -- Write data to file ------------------
     hillslope_vars.save(args.input_file, args.output_file, ncolumns_per_gridcell, nhillslope, add_bedrock, add_stream)
+
+    with Dataset(args.input_file, "r") as ds_in:
+        lon2d = ds_in.variables["LONGXY"][:]
+        lat2d = ds_in.variables["LATIXY"][:]
+    with Dataset(args.output_file, "a", format=NETCDF_FORMAT) as ds_out:
+        add_longxy_latixy_nc(lon2d, lat2d, ds_out)
 
     print(args.output_file + " created")
