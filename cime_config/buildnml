@@ -121,6 +121,14 @@ def buildnml(case, caseroot, compname):
         "clm5_1_GSWP3v1": "clm5_0_GSWP3v1",
         "clm6_0_cam6.0": "clm5_0_cam6.0",
         "clm5_1_cam6.0": "clm5_0_cam6.0",
+        "clm6_0_cam5.0": "clm5_0_cam6.0",
+        "clm5_1_cam5.0": "clm5_0_cam6.0",
+        "clm5_0_cam5.0": "clm5_0_cam6.0",
+        "clm4_5_cam5.0": "clm4_5_cam6.0",
+        "clm6_0_cam4.0": "clm5_0_cam6.0",
+        "clm5_1_cam4.0": "clm5_0_cam6.0",
+        "clm5_0_cam4.0": "clm5_0_cam6.0",
+        "clm4_5_cam4.0": "clm4_5_cam6.0",
     }
     for mode, based_on in tuning_based_on.items():
         if lnd_tuning_mode == mode:

@@ -261,6 +261,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >20.0d00</rh_low>
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm6_0_cam4.0"
 >20.0d00</rh_low>
+<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam5.0"
+>20.0d00</rh_low>
+<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam4.0"
+>20.0d00</rh_low>
 <rh_hgh                   fire_method="li2016crufrc" >80.0d00</rh_hgh>
 <bt_min                   fire_method="li2016crufrc" >0.85d00</bt_min>
 <bt_max                   fire_method="li2016crufrc" >0.98d00</bt_max>
@@ -287,6 +291,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm6_0_cam5.0"
 >0.008d00</pot_hmn_ign_counts_alpha>
 <pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm6_0_cam4.0"
+>0.008d00</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam5.0"
+>0.008d00</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam4.0"
 >0.008d00</pot_hmn_ign_counts_alpha>
 <non_boreal_peatfire_c    fire_method="li2016crufrc" >0.17d-3</non_boreal_peatfire_c>
 <cropfire_a1              fire_method="li2016crufrc" >1.6d-4</cropfire_a1>
