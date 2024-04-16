@@ -1199,7 +1199,7 @@ my %failtest = (
                                      phys=>"clm5_0",
                                    },
      "NOlunabutsetJmaxb1"        =>{ options=>"-envxml_dir . -bgc sp",
-                                     namelst=>"use_luna=.fwlse., jmaxb1=1.0",
+                                     namelst=>"use_luna=.false., jmaxb1=1.0",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
