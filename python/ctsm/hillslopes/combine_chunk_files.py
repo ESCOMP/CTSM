@@ -51,7 +51,6 @@ def parse_arguments(argv):
     parser.add_argument(
         "--n-chunks",
         help=f"Number of chunks (default: {default_n_chunks})",
-        nargs=1,
         type=int,
         default=default_n_chunks,
     )
