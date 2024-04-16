@@ -188,22 +188,27 @@ class HillslopeVars:
             h_ndx = self.this_chunk.hillslope_index[:, j, i]
             nactual_hillslopes = np.unique(h_ndx[h_ndx > 0]).size
             if nactual_hillslopes < 3:
-                self.h_elev[:, j, i] = 0
-                self.h_dist[:, j, i] = 0
-                self.h_width[:, j, i] = 0
-                self.h_area[:, j, i] = 0
-                self.h_slope[:, j, i] = 0
-                self.h_aspect[:, j, i] = 0
-                self.h_bedrock[:, j, i] = 0
-                self.h_stream_depth[j, i] = 0
-                self.h_stream_width[j, i] = 0
-                self.h_stream_slope[j, i] = 0
+                self._remove_hillslope_data(i, j)
 
-                self.nhillcolumns[j, i] = 0
-                self.pct_hillslope[:, j, i] = 0
-                self.hillslope_index[:, j, i] = 0
-                self.column_index[:, j, i] = 0
-                self.downhill_column_index[:, j, i] = 0
+
+    def _remove_hillslope_data(self, i, j):
+        self.h_elev[:, j, i] = 0
+        self.h_dist[:, j, i] = 0
+        self.h_width[:, j, i] = 0
+        self.h_area[:, j, i] = 0
+        self.h_slope[:, j, i] = 0
+        self.h_aspect[:, j, i] = 0
+        self.h_bedrock[:, j, i] = 0
+        self.h_stream_depth[j, i] = 0
+        self.h_stream_width[j, i] = 0
+        self.h_stream_slope[j, i] = 0
+
+        self.nhillcolumns[j, i] = 0
+        self.pct_hillslope[:, j, i] = 0
+        self.hillslope_index[:, j, i] = 0
+        self.column_index[:, j, i] = 0
+        self.downhill_column_index[:, j, i] = 0
+
 
     def save(self, input_file, output_file, ncolumns_per_gridcell, nhillslope, add_bedrock, add_stream, n_lon=None, n_lat=None, incl_latlon=False, incl_chunkmask=False):
         """
