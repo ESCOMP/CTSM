@@ -65,6 +65,10 @@ class MKSURFDATAESMF(SystemTestsCommon):
             gen_jobscript_path = os.path.join(self._tool_path, "gen_mksurfdata_jobscript_single.sh")
             gen_mksurfdata_namelist = f"{nml_script_path} --res {self._res} --start-year {self._model_yr} --end-year {self._model_yr}"
             gen_mksurfdata_jobscript = f"{gen_jobscript_path} --number-of-nodes 1 --tasks-per-node 64 --namelist-file {self._fsurdat_namelist} --bld-path {self._tool_bld}"
+            if not os.path.exists(build_script_path):
+                sys.exit(
+                    "ERROR The build script {build_script_path} does NOT exist"
+                )
 
             # Rm tool_bld and build executable that will generate fsurdat
             try:
@@ -78,7 +82,7 @@ class MKSURFDATAESMF(SystemTestsCommon):
             except subprocess.CalledProcessError as e:
                 print(f"build directory = {self._tool_bld}\n")
                 sys.exit(
-                    f"{e} ERROR RUNNING {build_script_path}. DETAILS IN {self._TestStatus_log_path}"
+                    f"{e} ERROR RUNNING {build_script_path} DETAILS IN {self._TestStatus_log_path}"
                 )
 
             # Generate namelist for generating fsurdat (rm namelist if exists)
