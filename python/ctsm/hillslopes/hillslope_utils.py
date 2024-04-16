@@ -230,7 +230,7 @@ class HillslopeVars:
             add_variable_nc(
                 name="longitude",
                 units="degrees",
-                long_name="longitude",
+                long_name="longitude - 1d",
                 data = self.lon,
                 dataset=ds_out,
                 dims=["lsmlon"],
@@ -238,7 +238,7 @@ class HillslopeVars:
             add_variable_nc(
                 name="latitude",
                 units="degrees",
-                long_name="latitude",
+                long_name="latitude - 1d",
                 data = self.lat,
                 dataset=ds_out,
                 dims=["lsmlat"],
@@ -396,16 +396,16 @@ def add_longxy_latixy_nc(lon2d, lat2d, ds_out):
     """
     add_variable_nc(
         name="LONGXY",
-        units="degrees",
-        long_name="longitude - 2d",
+        units="degrees east",
+        long_name="longitude",
         data = lon2d,
         dataset=ds_out,
         dims=["lsmlat", "lsmlon"],
     )
     add_variable_nc(
         name="LATIXY",
-        units="degrees",
-        long_name="latitude - 2d",
+        units="degrees north",
+        long_name="latitude",
         data = lat2d,
         dataset=ds_out,
         dims=["lsmlat", "lsmlon"],
