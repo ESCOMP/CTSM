@@ -16,8 +16,11 @@ class HillslopeVars:
     """
     Fields to be added to hillslope_file
     """
+
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, ncolumns_per_gridcell, nhillslope, n_lat, n_lon, recurse=True, incl_latlon=False):
+    def __init__(
+        self, ncolumns_per_gridcell, nhillslope, n_lat, n_lon, recurse=True, incl_latlon=False
+    ):
 
         # Variables that will actually be saved
         self.h_elev = np.zeros((ncolumns_per_gridcell, n_lat, n_lon))
@@ -45,8 +48,14 @@ class HillslopeVars:
         # Placeholders for read-in data from each chunk
         self.chunk_mask = np.zeros((n_lat, n_lon))
         if recurse:
-            self.this_chunk = HillslopeVars(ncolumns_per_gridcell, nhillslope, n_lat, n_lon, recurse=False, incl_latlon=incl_latlon)
-
+            self.this_chunk = HillslopeVars(
+                ncolumns_per_gridcell,
+                nhillslope,
+                n_lat,
+                n_lon,
+                recurse=False,
+                incl_latlon=incl_latlon,
+            )
 
     def _read_samenames(self, chunk_ds):
         """
@@ -71,7 +80,6 @@ class HillslopeVars:
         self.this_chunk.downhill_column_index = chunk_ds.variables["downhill_column_index"][
             :,
         ].astype(int)
-
 
     def _read_oldnames(self, chunk_file, read_bedrock, read_stream):
         """Read hillslope variables from one chunk file with old variable names
@@ -98,7 +106,6 @@ class HillslopeVars:
 
         self._read_samenames(chunk_ds)
         chunk_ds.close()
-
 
     def read(self, chunk_file, read_bedrock, read_stream, incl_latlon=False):
         """Read hillslope variables from one chunk file
@@ -139,12 +146,24 @@ class HillslopeVars:
         self._read_samenames(chunk_ds)
         chunk_ds.close()
 
-
-    def update(self, i, j, add_bedrock, add_stream, landmask=None, incl_latlon=False, incl_chunkmask=False, this_chunk_1d=False, remove_if_too_few_aspects=True):
+    def update(
+        self,
+        i,
+        j,
+        add_bedrock,
+        add_stream,
+        landmask=None,
+        incl_latlon=False,
+        incl_chunkmask=False,
+        this_chunk_1d=False,
+        remove_if_too_few_aspects=True,
+    ):
         """
         Update a gridcell in chunk
         """
-        if landmask is not None and not(self.this_chunk.chunk_mask[j, i] > 0 and landmask[j, i] > 0):
+        if landmask is not None and not (
+            self.this_chunk.chunk_mask[j, i] > 0 and landmask[j, i] > 0
+        ):
             return
 
         if incl_latlon:
@@ -180,7 +199,9 @@ class HillslopeVars:
         self.pct_hillslope[:, j, i] = self.this_chunk.pct_hillslope[:, j_this, i_this]
         self.hillslope_index[:, j, i] = self.this_chunk.hillslope_index[:, j_this, i_this]
         self.column_index[:, j, i] = self.this_chunk.column_index[:, j_this, i_this]
-        self.downhill_column_index[:, j, i] = self.this_chunk.downhill_column_index[:, j_this, i_this]
+        self.downhill_column_index[:, j, i] = self.this_chunk.downhill_column_index[
+            :, j_this, i_this
+        ]
 
         # if 2 or less valid aspects, remove all hillslope data
         if remove_if_too_few_aspects and self.this_chunk.nhillcolumns[j, i] > 0:
@@ -189,7 +210,6 @@ class HillslopeVars:
             nactual_hillslopes = np.unique(h_ndx[h_ndx > 0]).size
             if nactual_hillslopes < 3:
                 self._remove_hillslope_data(i, j)
-
 
     def _remove_hillslope_data(self, i, j):
         self.h_elev[:, j, i] = 0
@@ -209,8 +229,19 @@ class HillslopeVars:
         self.column_index[:, j, i] = 0
         self.downhill_column_index[:, j, i] = 0
 
-
-    def save(self, input_file, output_file, ncolumns_per_gridcell, nhillslope, add_bedrock, add_stream, n_lon=None, n_lat=None, incl_latlon=False, incl_chunkmask=False):
+    def save(
+        self,
+        input_file,
+        output_file,
+        ncolumns_per_gridcell,
+        nhillslope,
+        add_bedrock,
+        add_stream,
+        n_lon=None,
+        n_lat=None,
+        incl_latlon=False,
+        incl_chunkmask=False,
+    ):
         """
         Save to netCDF
         """
@@ -236,7 +267,7 @@ class HillslopeVars:
                 name="longitude",
                 units="degrees",
                 long_name="longitude - 1d",
-                data = self.lon,
+                data=self.lon,
                 dataset=ds_out,
                 dims=["lsmlon"],
             )
@@ -244,7 +275,7 @@ class HillslopeVars:
                 name="latitude",
                 units="degrees",
                 long_name="latitude - 1d",
-                data = self.lat,
+                data=self.lat,
                 dataset=ds_out,
                 dims=["lsmlat"],
             )
@@ -255,17 +286,17 @@ class HillslopeVars:
                 name="chunk_mask",
                 units="unitless",
                 long_name="chunk mask",
-                data = self.chunk_mask,
+                data=self.chunk_mask,
                 dataset=ds_out,
                 dims=["lsmlat", "lsmlon"],
-                data_type=np.int32
+                data_type=np.int32,
             )
 
         add_variable_nc(
             name="hillslope_elevation",
             units="m",
             long_name="hillslope elevation above channel",
-            data = self.h_elev,
+            data=self.h_elev,
             dataset=ds_out,
         )
 
@@ -273,7 +304,7 @@ class HillslopeVars:
             name="hillslope_distance",
             units="m",
             long_name="hillslope distance from channel",
-            data = self.h_dist,
+            data=self.h_dist,
             dataset=ds_out,
         )
 
@@ -281,7 +312,7 @@ class HillslopeVars:
             name="hillslope_width",
             units="m",
             long_name="hillslope width",
-            data = self.h_width,
+            data=self.h_width,
             dataset=ds_out,
         )
 
@@ -289,7 +320,7 @@ class HillslopeVars:
             name="hillslope_area",
             units="m2",
             long_name="hillslope area",
-            data = self.h_area,
+            data=self.h_area,
             dataset=ds_out,
         )
 
@@ -297,7 +328,7 @@ class HillslopeVars:
             name="hillslope_slope",
             units="m/m",
             long_name="hillslope slope",
-            data = self.h_slope,
+            data=self.h_slope,
             dataset=ds_out,
         )
 
@@ -305,17 +336,16 @@ class HillslopeVars:
             name="hillslope_aspect",
             units="radians",
             long_name="hillslope aspect (clockwise from North)",
-            data = self.h_aspect,
+            data=self.h_aspect,
             dataset=ds_out,
         )
-
 
         if add_bedrock:
             add_variable_nc(
                 name="hillslope_bedrock_depth",
                 units="meters",
                 long_name="hillslope bedrock depth",
-                data = self.h_bedrock,
+                data=self.h_bedrock,
                 dataset=ds_out,
             )
 
@@ -324,7 +354,7 @@ class HillslopeVars:
                 name="hillslope_stream_depth",
                 units="meters",
                 long_name="stream channel bankfull depth",
-                data = self.h_stream_depth,
+                data=self.h_stream_depth,
                 dataset=ds_out,
                 dims=["lsmlat", "lsmlon"],
             )
@@ -332,7 +362,7 @@ class HillslopeVars:
                 name="hillslope_stream_width",
                 units="meters",
                 long_name="stream channel bankfull width",
-                data = self.h_stream_width,
+                data=self.h_stream_width,
                 dataset=ds_out,
                 dims=["lsmlat", "lsmlon"],
             )
@@ -340,7 +370,7 @@ class HillslopeVars:
                 name="hillslope_stream_slope",
                 units="m/m",
                 long_name="stream channel slope",
-                data = self.h_stream_slope,
+                data=self.h_stream_slope,
                 dataset=ds_out,
                 dims=["lsmlat", "lsmlon"],
             )
@@ -350,7 +380,7 @@ class HillslopeVars:
             units="unitless",
             long_name="number of columns per landunit",
             data_type=np.int32,
-            data = self.nhillcolumns.astype(np.int32),
+            data=self.nhillcolumns.astype(np.int32),
             dataset=ds_out,
             dims=["lsmlat", "lsmlon"],
         )
@@ -359,7 +389,7 @@ class HillslopeVars:
             name="pct_hillslope",
             units="per cent",
             long_name="percent hillslope of landunit",
-            data = self.pct_hillslope,
+            data=self.pct_hillslope,
             dataset=ds_out,
             dims=["nhillslope", "lsmlat", "lsmlon"],
         )
@@ -368,7 +398,7 @@ class HillslopeVars:
             name="hillslope_index",
             units="unitless",
             long_name="hillslope_index",
-            data = self.hillslope_index.astype(np.int32),
+            data=self.hillslope_index.astype(np.int32),
             data_type=np.int32,
             dataset=ds_out,
         )
@@ -377,7 +407,7 @@ class HillslopeVars:
             name="column_index",
             units="unitless",
             long_name="column index",
-            data = self.column_index.astype(np.int32),
+            data=self.column_index.astype(np.int32),
             data_type=np.int32,
             dataset=ds_out,
         )
@@ -386,7 +416,7 @@ class HillslopeVars:
             name="downhill_column_index",
             units="unitless",
             long_name="downhill column index",
-            data = self.downhill_column_index.astype(np.int32),
+            data=self.downhill_column_index.astype(np.int32),
             dataset=ds_out,
             data_type=np.int32,
         )
@@ -403,7 +433,7 @@ def add_longxy_latixy_nc(lon2d, lat2d, ds_out):
         name="LONGXY",
         units="degrees east",
         long_name="longitude",
-        data = lon2d,
+        data=lon2d,
         dataset=ds_out,
         dims=["lsmlat", "lsmlon"],
     )
@@ -411,7 +441,7 @@ def add_longxy_latixy_nc(lon2d, lat2d, ds_out):
         name="LATIXY",
         units="degrees north",
         long_name="latitude",
-        data = lat2d,
+        data=lat2d,
         dataset=ds_out,
         dims=["lsmlat", "lsmlon"],
     )
@@ -484,7 +514,7 @@ def create_variables(outfile):
             "nhillslope",
             "lsmlat",
             "lsmlon",
-        )
+        ),
     )
 
     ohillndx = create_variable(
@@ -541,39 +571,30 @@ def add_stream_channel_vars(outfile):
     dims = ("lsmlat", "lsmlon")
 
     wdepth = create_variable(
-        outfile,
-        "hillslope_stream_depth",
-        "m",
-        "stream channel bankfull depth",
-        dims=dims
+        outfile, "hillslope_stream_depth", "m", "stream channel bankfull depth", dims=dims
     )
     wwidth = create_variable(
-        outfile,
-        "hillslope_stream_width",
-        "m",
-        "stream channel bankfull width",
-        dims=dims
+        outfile, "hillslope_stream_width", "m", "stream channel bankfull width", dims=dims
     )
     wslope = create_variable(
-        outfile,
-        "hillslope_stream_slope",
-        "m/m",
-        "stream channel slope",
-        dims=dims
+        outfile, "hillslope_stream_slope", "m/m", "stream channel slope", dims=dims
     )
 
     return wdepth, wwidth, wslope
 
 
 def create_variable(
-        outfile, name, units, long_name,
-        dims=(
-            "nmaxhillcol",
-            "lsmlat",
-            "lsmlon",
-        ),
-        data_type=np.float64,
-        ):
+    outfile,
+    name,
+    units,
+    long_name,
+    dims=(
+        "nmaxhillcol",
+        "lsmlat",
+        "lsmlon",
+    ),
+    data_type=np.float64,
+):
     """
     Convenient function to use for making hillslope variables
     """
@@ -589,13 +610,16 @@ def create_variable(
 
     return nc_var
 
+
 def add_variable_nc(
-        name, units, long_name,
-        data,
-        dataset,
-        data_type=np.float64,
-        dims=("nmaxhillcol", "lsmlat", "lsmlon"),
-        ):
+    name,
+    units,
+    long_name,
+    data,
+    dataset,
+    data_type=np.float64,
+    dims=("nmaxhillcol", "lsmlat", "lsmlon"),
+):
     """
     Convenient function to use for adding hillslope variables to a Dataset with netcdf
     """
@@ -605,23 +629,30 @@ def add_variable_nc(
 
     # Make variable
     nc_var = create_variable(
-        dataset, name, units, long_name,
+        dataset,
+        name,
+        units,
+        long_name,
         dims=dims,
         data_type=data_type,
-        )
+    )
 
     # Fill with data
     nc_var[:] = data
 
+
 def add_variable_xr(
-        name, units, long_name,
-        data,
-        dataset,
-        lsmlat, lsmlon,
-        dims=["nmaxhillcol", "lsmlat", "lsmlon"],
-        ncolumns_per_gridcell=None,
-        nhillslope=None,
-        ):  # pylint: disable=dangerous-default-value
+    name,
+    units,
+    long_name,
+    data,
+    dataset,
+    lsmlat,
+    lsmlon,
+    dims=["nmaxhillcol", "lsmlat", "lsmlon"],
+    ncolumns_per_gridcell=None,
+    nhillslope=None,
+):  # pylint: disable=dangerous-default-value
     # pylint disable above: pylint thinks the dims default is empty list []
     """
     Convenient function to use for adding hillslope variables to a Dataset with xarray
@@ -655,7 +686,7 @@ def add_variable_xr(
         attrs={
             "units": units,
             "long_name": long_name,
-        }
+        },
     )
 
     dataset[name] = data_array

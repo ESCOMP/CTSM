@@ -10,7 +10,12 @@ import numpy as np
 # The below "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
 # though it does.
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
-from ctsm.hillslopes.hillslope_utils import add_variable_nc, add_longxy_latixy_nc, HillslopeVars, NETCDF_FORMAT
+from ctsm.hillslopes.hillslope_utils import (
+    add_variable_nc,
+    add_longxy_latixy_nc,
+    HillslopeVars,
+    NETCDF_FORMAT,
+)
 
 
 def parse_arguments(argv):
@@ -61,14 +66,14 @@ def parse_arguments(argv):
         type=int,
         default=default_n_bins,
         help=f"Number of elevation bins (default: {default_n_bins}). "
-             + "Used to generate input filename template.",
+        + "Used to generate input filename template.",
     )
 
     default_hillslope_form = "Trapezoidal"
     parser.add_argument(
         "--hillslope-form",
         help=f"Hillslope form (default: {default_hillslope_form}). "
-             + "Used to generate input filename template.",
+        + "Used to generate input filename template.",
         type=str,
         default=default_hillslope_form,
     )
@@ -102,7 +107,7 @@ def finish_saving(args):
             name="AREA",
             units="km^2",
             long_name="area",
-            data = area,
+            data=area,
             dataset=ds_out,
             dims=["lsmlat", "lsmlon"],
         )
@@ -167,7 +172,14 @@ def main():
                 hillslope_vars.update(i, j, add_bedrock, add_stream, landmask=landmask)
 
     # -- Write data to file ------------------
-    hillslope_vars.save(args.input_file, args.output_file, ncolumns_per_gridcell, nhillslope, add_bedrock, add_stream)
+    hillslope_vars.save(
+        args.input_file,
+        args.output_file,
+        ncolumns_per_gridcell,
+        nhillslope,
+        add_bedrock,
+        add_stream,
+    )
     finish_saving(args)
 
     print(args.output_file + " created")

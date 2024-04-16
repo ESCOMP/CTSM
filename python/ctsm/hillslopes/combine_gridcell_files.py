@@ -60,13 +60,13 @@ def parse_arguments(argv):
         type=int,
         default=default_n_bins,
         help=f"Number of elevation bins (default: {default_n_bins}). "
-             + "Used to generate input filename template.",
+        + "Used to generate input filename template.",
     )
     default_hillslope_form = "Trapezoidal"
     parser.add_argument(
         "--hillslope-form",
         help=f"Hillslope form (default: {default_hillslope_form}). "
-             + "Used to generate input filename template.",
+        + "Used to generate input filename template.",
         type=str,
         default=default_hillslope_form,
     )
@@ -160,7 +160,9 @@ def main():
                 nhillslope = len(first_gridcell_file.dimensions["nhillslope"])
                 nmaxhillcol = len(first_gridcell_file.dimensions["nmaxhillcol"])
                 add_bedrock = "hillslope_bedrock_depth" in first_gridcell_file.variables.keys()
-                do_add_stream_channel_vars = "hillslope_stream_depth" in first_gridcell_file.variables.keys()
+                do_add_stream_channel_vars = (
+                    "hillslope_stream_depth" in first_gridcell_file.variables.keys()
+                )
 
         write_to_file(
             outfile_path,
@@ -206,7 +208,27 @@ def write_to_file(
 
         hillslope_vars.read(gfile, add_bedrock, do_add_stream_channel_vars, incl_latlon=True)
 
-        hillslope_vars.update(i, j, add_bedrock, do_add_stream_channel_vars, incl_latlon=True, incl_chunkmask=True, this_chunk_1d=True, remove_if_too_few_aspects=False)
+        hillslope_vars.update(
+            i,
+            j,
+            add_bedrock,
+            do_add_stream_channel_vars,
+            incl_latlon=True,
+            incl_chunkmask=True,
+            this_chunk_1d=True,
+            remove_if_too_few_aspects=False,
+        )
 
-    hillslope_vars.save(None, outfile_path, nmaxhillcol, nhillslope, add_bedrock, do_add_stream_channel_vars, n_lon=n_lon, n_lat=n_lat, incl_latlon=True, incl_chunkmask=True)
+    hillslope_vars.save(
+        None,
+        outfile_path,
+        nmaxhillcol,
+        nhillslope,
+        add_bedrock,
+        do_add_stream_channel_vars,
+        n_lon=n_lon,
+        n_lat=n_lat,
+        incl_latlon=True,
+        incl_chunkmask=True,
+    )
     print(outfile_path + " created")
