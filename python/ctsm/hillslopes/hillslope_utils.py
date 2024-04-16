@@ -243,22 +243,7 @@ class HillslopeVars:
                 dataset=ds_out,
                 dims=["lsmlat"],
             )
-            add_variable_nc(
-                name="LONGXY",
-                units="degrees",
-                long_name="longitude - 2d",
-                data = self.lon2d,
-                dataset=ds_out,
-                dims=["lsmlat", "lsmlon"],
-            )
-            add_variable_nc(
-                name="LATIXY",
-                units="degrees",
-                long_name="latitude - 2d",
-                data = self.lat2d,
-                dataset=ds_out,
-                dims=["lsmlat", "lsmlon"],
-            )
+            add_longxy_latixy_nc(self.lon2d, self.lat2d, ds_out)
 
         if incl_chunkmask:
             add_variable_nc(
@@ -403,6 +388,28 @@ class HillslopeVars:
 
         # Save
         ds_out.close()
+
+
+def add_longxy_latixy_nc(lon2d, lat2d, ds_out):
+    """
+    Add LONGXY and LATIXY to a netCDF file
+    """
+    add_variable_nc(
+        name="LONGXY",
+        units="degrees",
+        long_name="longitude - 2d",
+        data = lon2d,
+        dataset=ds_out,
+        dims=["lsmlat", "lsmlon"],
+    )
+    add_variable_nc(
+        name="LATIXY",
+        units="degrees",
+        long_name="latitude - 2d",
+        data = lat2d,
+        dataset=ds_out,
+        dims=["lsmlat", "lsmlon"],
+    )
 
 
 def create_variables(outfile):
