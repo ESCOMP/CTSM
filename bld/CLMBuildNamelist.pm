@@ -3610,7 +3610,7 @@ sub setup_logic_urbantv_streams {
                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
   }
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_urbantv', 'phys'=>$nl_flags->{'phys'},
-              'hgrid'=>"0.9x1.25" );
+              'hgrid'=>"0.9x1.25", 'urban_explicit_ac'=>$nl->get_value('urban_explicit_ac') );
   if ($opts->{'driver'} eq "nuopc" ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_urbantv', 'phys'=>$nl_flags->{'phys'},
                   'hgrid'=>"0.9x1.25" );
