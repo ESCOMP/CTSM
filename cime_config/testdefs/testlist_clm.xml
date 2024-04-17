@@ -81,7 +81,7 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution, use soil eroditability in CTSM</option>
     </options>
   </test>
-    <test name="ERP_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm51BgcCrop" testmods="clm/clm60cam6LndTuningModeZDustSoilErod">
+    <test name="ERP_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningModeZDustSoilErod">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
