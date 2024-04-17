@@ -236,4 +236,15 @@
     </phase>
   </test>
 
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.derecho_intel.clm-FatesFireLightningPopDens--clm-NEON-FATES-NIWO">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+  </test>
+
 </expectedFails>
