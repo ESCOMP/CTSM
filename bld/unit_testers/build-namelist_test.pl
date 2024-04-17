@@ -1046,6 +1046,7 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
+     # TODO SSR: Replace this with fates_harvest_mode
      "useloggingButNOTFATES"     =>{ options=>"-envxml_dir . -no-megan",
                                      namelst=>"use_fates_logging=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",

@@ -734,10 +734,15 @@ Toggle to turn on no competition mode (only relevant if FATES is being used).
 Toggle to turn on FATES satellite phenology mode (only relevant if FATES is being used).                        
 </entry>
 
-<entry id="use_fates_logging" type="logical" category="physics"
-        group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on the logging module
-(Only relevant if FATES is on)
+<entry id="fates_harvest_mode" type="integer" category="physics"
+        group="clm_inparm" valid_values="0,1,2,3,4", value="0" >
+Set FATES harvesting mode by setting fates_harvest_mode > 0.
+Allowed values are:
+ 0 : no fates harvesting of any kind
+ 1 : fates logging via fates logging event codes (see fates parameter file) only
+ 2 : fates harvest driven by CLM landuse timeseries data (dynHarvestMod)
+ 3 : fates harvest driven by LUH2 raw harvest data, area-based (dynFATESLandUseChangeMod)
+ 4 : fates harvest driven by LUH2 raw harvest data, mass-based (dynFATESLandUseChangeMod)
 </entry>
 
 <entry id="use_fates_planthydro" type="logical" category="physics"
@@ -781,7 +786,15 @@ Full pathname to the inventory initialization control file.
 <entry id="use_fates_luh" type="logical" category="physics"
        group="clm_inparm" valid_values="" >
 If TRUE, enable use of land use harmonization (LUH) state and transition data from luh_timeseries file.
+This is enabled by default if fates_harvest_mode is set to use the raw LUH2 harvest
+data (fates_harvest_mode >= 3)
 (Also, only valid for use_fates = true and is incompatible with transient runs currently.)
+</entry>
+
+<entry id="use_fates_potentialveg" type="logical" category="physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, ignore the land-use state vector and transitions, and assert that all lands
+are primary, and that there is no harvest.
 </entry>
 
 <!-- This could eventually be included in the "dynamic_subgrid" -->
@@ -791,6 +804,11 @@ Full pathname of unified land use harmonization (LUH) data file. This causes the
 types to vary over time.
 (Required, if use_fates_luh=T)
 (Only relevant if FATES is on).
+</entry>
+
+<entry id="flandusepftdat" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname of fates landuse x pft data map.
 </entry>
 
 <entry id="use_luna" type="logical" category="physics"

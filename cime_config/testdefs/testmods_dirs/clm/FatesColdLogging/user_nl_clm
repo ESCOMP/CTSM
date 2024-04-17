@@ -1,1 +1,2 @@
+! TODO SSR: Replace this with fates_harvest_mode
 use_fates_logging= .true.

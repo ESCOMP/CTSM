@@ -783,7 +783,7 @@ sub setup_cmdl_fates_mode {
        # dis-allow fates specific namelist items with non-fates runs
        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                       "use_fates_cohort_age_tracking","use_fates_inventory_init","use_fates_fixed_biogeog",
-                      "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging",
+                      "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","fates_harvest_mode",
                       "fates_parteh_mode","use_fates_tree_damage","fates_seeddisp_cadence","use_fates_luh","fluh_timeseries" );
        # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
@@ -4370,7 +4370,7 @@ sub setup_logic_fates {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
         my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                        "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp","fates_seeddisp_cadence",
-                       "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage","use_fates_luh" );
+                       "fates_harvest_mode","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage","use_fates_luh" );
         foreach my $var ( @list ) {
  	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
                       'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
@@ -4423,6 +4423,28 @@ sub setup_logic_fates {
                  $log->fatal_error("$var is required when use_fates_luh is set" );
               } elsif ( ! -f "$fname" ) {
                  $log->fatal_error("$fname does NOT point to a valid filename" );
+              }
+           }
+        }
+
+        # Check fates_harvest_mode compatibility
+        my $var = "fates_harvest_mode";
+        if ( defined($nl->get_value($var))  ) {
+           # using fates_harvest_mode with CLM landuse driver data - for user convienence
+           # if ( $nl->get_value($var) == 2) {
+           #    # Make sure that do_harvest is set to true
+           #    if ( ! &value_is_true($nl->get_value('do_harvest')) ) {
+           #      fatal_error("do_harvest must be true when $var is equal to 2" );
+           # }
+           # using fates_harvest mode with raw luh2 harvest data
+           if ( $nl->get_value($var) > 2) {
+              # Make sure that use_fates_luh is true when using raw fates luh2 harvest data
+              if ( ! &value_is_true($nl->get_value('use_fates_luh')) ) {
+                fatal_error("use_fates_luh is required to be true when $var is greater than 2" );
+              }
+              # do_harvest can not be on if we are using the raw fates luh2 harvest data
+              if ( &value_is_true($nl->get_value('do_harvest')) ) {
+                fatal_error("do_harvest can not be true when $var is greater than 2" );
               }
            }
         }
