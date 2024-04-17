@@ -80,7 +80,6 @@ class MKSURFDATAESMF(SystemTestsCommon):
             if not os.path.exists(build_script_path):
                 sys.exit(f"ERROR The build script {build_script_path} does NOT exist")
 
-            os.system( "module list")
             # Rm tool_bld and build executable that will generate fsurdat
             try:
                 subprocess.check_call(f"rm -rf {self._tool_bld}", shell=True)
@@ -95,8 +94,6 @@ class MKSURFDATAESMF(SystemTestsCommon):
                 sys.exit(
                     f"{e} ERROR RUNNING {build_script_path} DETAILS IN {self._TestStatus_log_path}"
                 )
-
-            os.system( "module list")
 
             # Generate namelist for generating fsurdat (rm namelist if exists)
             if os.path.exists(self._fsurdat_namelist):

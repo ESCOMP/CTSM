@@ -116,8 +116,8 @@ def buildnml(case, caseroot, compname):
             )
             lnd_tuning_mode = closest
 
-    # CAM4 and CAM5 options are based on cam6 tuning 
-    # (other than the Zender dust emission soil eroditability file which is specific 
+    # CAM4 and CAM5 options are based on cam6 tuning
+    # (other than the Zender dust emission soil eroditability file which is specific
     #  to the CAM version)
     tuning_based_on = {
         "clm6_0_GSWP3v1": "clm5_0_GSWP3v1",
