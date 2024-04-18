@@ -225,7 +225,7 @@ class TestSinglePointCase(unittest.TestCase):
         single_point.dom_pft = [1, 5, 15]
         single_point.num_pft = 78
         with self.assertRaisesRegex(
-            argparse.ArgumentTypeError, "WARNING, you are subsetting using mixed land*"
+            argparse.ArgumentTypeError, "You are subsetting using mixed land*"
         ):
             single_point.check_dom_pft()
 

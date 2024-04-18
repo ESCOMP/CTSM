@@ -175,7 +175,7 @@ class SinglePointCase(BaseCase):
             - 0 - NAT_PFT-1 range
             or
             - NAT_PFT - MAX_PFT range
-            - give a warning: mixed land units should be checked
+            - give an error: mixed land units not possible
 
         -------------
         Raises:
@@ -183,7 +183,7 @@ class SinglePointCase(BaseCase):
                 If any dom_pft is bigger than MAX_PFT.
             Error (ArgumentTypeError):
                 If any dom_pft is less than 1.
-            Warning:
+            Error (ArgumentTypeError):
                 If mixed land units are chosen.
                 dom_pft values are both in range of (0 - NAT_PFT-1) and (NAT_PFT - MAX_PFT).
 
@@ -214,14 +214,12 @@ class SinglePointCase(BaseCase):
                 logger.info(
                     "WARNING, you trying to run with generic crops (16 PFT surface dataset)"
                 )
-                # raise argparse.ArgumentTypeError(err_msg)
 
             # -- check if all dom_pft are in the same range:
             if min_dom_pft < NAT_PFT <= max_dom_pft:
                 err_msg = (
-                    "WARNING, you are subsetting using mixed land "
-                    "units that have both natural pfts and crop cfts. Check "
-                    "your surface dataset."
+                    "You are subsetting using mixed land units that have both "
+                    "natural pfts and crop cfts. Check your surface dataset. "
                 )
                 raise argparse.ArgumentTypeError(err_msg)
 
