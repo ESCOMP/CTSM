@@ -288,8 +288,10 @@ contains
              if (stream_varnames((lun%itype(l)-6)) == stream_varnames(n)) then
                 this%t_building_max(l) = dataptr2d(ig,n)
              end if
-             if (stream_varnames((lun%itype(l)-3)) == stream_varnames(n)) then
-                this%p_ac(l) = dataptr2d(ig,n)
+             if (urban_explicit_ac) then
+                if (stream_varnames((lun%itype(l)-3)) == stream_varnames(n)) then
+                   this%p_ac(l) = dataptr2d(ig,n)
+                end if
              end if
           end do
        else
