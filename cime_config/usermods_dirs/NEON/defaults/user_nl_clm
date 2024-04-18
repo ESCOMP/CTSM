@@ -18,7 +18,6 @@
 ! Set glc_do_dynglacier  with GLC_TWO_WAY_COUPLING               env variable
 !----------------------------------------------------------------------------------
 
-flanduse_timeseries = ' '   ! This isn't needed for a non transient case, but will be once we start using transient compsets
 fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_map/NEON/surfdata_1x1_NEON_${NEONSITE}_hist_78pfts_CMIP6_simyr2000_c230601.nc"
 
 ! h1 output stream 

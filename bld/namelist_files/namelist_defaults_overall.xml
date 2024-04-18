@@ -22,6 +22,12 @@ determine default values for namelists.
 
 -->
 
+<clm_start_type phys="clm4_5" lnd_tuning_mode="clm4_5_cam5.0" >cold</clm_start_type>
+<clm_start_type phys="clm4_5" lnd_tuning_mode="clm4_5_cam4.0" >cold</clm_start_type>
+<clm_start_type phys="clm5_0" lnd_tuning_mode="clm5_0_cam5.0" >cold</clm_start_type>
+<clm_start_type phys="clm5_0" lnd_tuning_mode="clm5_0_cam4.0" >cold</clm_start_type>
+<clm_start_type phys="clm5_1" lnd_tuning_mode="clm5_1_cam5.0" >cold</clm_start_type>
+<clm_start_type phys="clm5_1" lnd_tuning_mode="clm5_1_cam4.0" >cold</clm_start_type>
 <clm_start_type phys="clm5_1"  use_cndv=".true." >arb_ic</clm_start_type>
 <clm_start_type phys="clm5_0"  use_cndv=".true." >arb_ic</clm_start_type>
 <clm_start_type phys="clm4_5"  use_cndv=".true." >arb_ic</clm_start_type>
