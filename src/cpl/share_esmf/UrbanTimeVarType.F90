@@ -231,6 +231,7 @@ contains
     use dshr_methods_mod , only : dshr_fldbun_getfldptr
     use dshr_strdata_mod , only : shr_strdata_advance
     use shr_infnan_mod   , only : nan => shr_infnan_nan, assignment(=)
+    use UrbanParamsType  , only : urban_explicit_ac
     !
     ! !ARGUMENTS:
     class(urbantv_type)           :: this
