@@ -218,9 +218,12 @@ class SinglePointCase(BaseCase):
 
             # -- check if all dom_pft are in the same range:
             if min_dom_pft < NAT_PFT <= max_dom_pft:
-                logger.info(
-                    "WARNING, you are subsetting using mixed land units that have both natural pfts and crop cfts. Check that your surface dataset looks correct."
+                err_msg = (
+                    "WARNING, you are subsetting using mixed land "
+                    + "units that have both natural pfts and crop cfts. Check "
+                    + "that your surface dataset looks correct."
                 )
+                logger.info(err_msg)
 
     def check_nonveg(self):
         """
