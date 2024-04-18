@@ -47,8 +47,8 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
     evenly_split_cropland = False
     pct_pft = None
     num_pft = 16
-    cth = [0.9]
-    cbh = [0.1]
+    cth = [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9]
+    cbh = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
     include_nonveg = False
     uni_snow = True
     cap_saturation = True
@@ -58,6 +58,8 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
     # -- dimensions of xarray dataset
     lsmlat = [plat]
     lsmlon = [plon]
+    months = np.arange(1, 13, 1, dtype=int)
+    lsmpft = np.arange(0, 79, 1, dtype=int)
     natpft = np.arange(0, 15, 1, dtype=int)
     cft = np.arange(15, 17, 1, dtype=int)
     numurbl = np.arange(0, 3, 1, dtype=int)
@@ -137,6 +139,24 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
                 attrs={
                     "long_name": "maximum fractional saturated area",
                     "units": "unitless",
+                },
+            ),
+            "MONTHLY_HEIGHT_TOP": xr.DataArray(
+                data=np.random.rand(1, 1, months[-1], lsmpft[-1] + 1),
+                dims=["lsmlat", "lsmlon", "time", "lsmpft"],
+                coords={"lsmlat": lsmlat, "lsmlon": lsmlon, "time": months, "lsmpft": lsmpft},
+                attrs={
+                    "long_name": "monthly height top by pft and month",
+                    "units": "m",
+                },
+            ),
+            "MONTHLY_HEIGHT_BOT": xr.DataArray(
+                data=np.random.rand(1, 1, months[-1], lsmpft[-1] + 1),
+                dims=["lsmlat", "lsmlon", "time", "lsmpft"],
+                coords={"lsmlat": lsmlat, "lsmlon": lsmlon, "time": months, "lsmpft": lsmpft},
+                attrs={
+                    "long_name": "monthly height bottom by pft and month",
+                    "units": "m",
                 },
             ),
         },
@@ -642,8 +662,8 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
     evenly_split_cropland = False
     pct_pft = None
     num_pft = 78
-    cth = [0.9]
-    cbh = [0.1]
+    cth = [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9]
+    cbh = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
     include_nonveg = False
     uni_snow = False
     cap_saturation = False
@@ -653,6 +673,8 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
     # -- dimensions of xarray dataset
     lsmlat = [plat]
     lsmlon = [plon]
+    months = np.arange(1, 12, 1, dtype=int)
+    lsmpft = np.arange(0, 79, 1, dtype=int)
     natpft = np.arange(0, 15, 1, dtype=int)
     cft = np.arange(15, 79, 1, dtype=int)
     numurbl = np.arange(0, 3, 1, dtype=int)
@@ -732,6 +754,24 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
                 attrs={
                     "long_name": "maximum fractional saturated area",
                     "units": "unitless",
+                },
+            ),
+            "MONTHLY_HEIGHT_TOP": xr.DataArray(
+                data=np.random.rand(1, 1, months[-1], lsmpft[-1] + 1),
+                dims=["lsmlat", "lsmlon", "time", "lsmpft"],
+                coords={"lsmlat": lsmlat, "lsmlon": lsmlon, "time": months, "lsmpft": lsmpft},
+                attrs={
+                    "long_name": "monthly height top by pft and month",
+                    "units": "m",
+                },
+            ),
+            "MONTHLY_HEIGHT_BOT": xr.DataArray(
+                data=np.random.rand(1, 1, months[-1], lsmpft[-1] + 1),
+                dims=["lsmlat", "lsmlon", "time", "lsmpft"],
+                coords={"lsmlat": lsmlat, "lsmlon": lsmlon, "time": months, "lsmpft": lsmpft},
+                attrs={
+                    "long_name": "monthly height bottom by pft and month",
+                    "units": "m",
                 },
             ),
         },
