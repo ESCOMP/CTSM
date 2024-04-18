@@ -1,2 +1,7 @@
 ./xmlchange CLM_BLDNML_OPTS="-no-megan" --append
 ./xmlchange BFBFLAG="TRUE"
+
+SRCROOT=`./xmlquery SRCROOT --value`
+. "${SRCROOT}"/cime_config/testdefs/testmods_dirs/clm/_scripts/get_fates_shell_commands_vars.sh
+
+ncgen -o $FATESPARAMFILE $FATESDIR/parameter_files/fates_params_default.cdl
