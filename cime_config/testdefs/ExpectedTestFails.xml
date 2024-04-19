@@ -254,4 +254,13 @@
     </phase>
   </test>
 
+  <!-- Other external test list failures (MOSART, RTM, etc. -->
+
+  <test name="SMS_Lh3.f10_f10_mg37.I2000Clm51Sp.derecho_intel.mosart-clmAccelSpinupIgnoreWarn">
+    <phase name="CREATE_NEWCASE">
+      <status>FAIL</status>
+      <issue>MOSART#91</issue>
+    </phase>
+  </test>
+
 </expectedFails>
