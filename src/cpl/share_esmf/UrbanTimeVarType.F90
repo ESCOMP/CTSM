@@ -297,7 +297,8 @@ contains
           end do
        else
           this%t_building_max(l) = spval
-          this%p_ac(l) = nan ! set to nan for non-urban landunit
+          ! this%p_ac(l) = nan ! set to nan for non-urban landunit
+          this%p_ac(l) = 0._r8
        end if
     end do
     deallocate(dataptr2d)
