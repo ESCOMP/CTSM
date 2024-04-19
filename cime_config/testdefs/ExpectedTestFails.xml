@@ -154,8 +154,29 @@
       <issue>#2454</issue>
     </phase>
   </test>
-    
-    
+
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.izumi_nag.clm-FatesFireLightningPopDens--clm-NEON-FATES-NIWO">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.izumi_nag.clm-FatesPRISM--clm-NEON-FATES-YELL">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+  </test>
+
   <!-- fates test suite failures -->
 
   <test name="SMS_D_Ld3.f09_g17.I2000Clm60FatesSpCruRsGs.derecho_gnu.clm-FatesColdSatPhen_prescribed">
