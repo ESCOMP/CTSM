@@ -1,14 +1,15 @@
 <?xml version="1.0"?>
 <!--
      CTSM test list. Test suites included:
-        ctsm_pymods: System tests for the python codes that also run CTSM cases
+        ctsm_pymods: System tests for the python codes that also run CTSM cases (subset of aux_clm tests)
         clm_short: The short CLM test for basic testing of a few configurations
         aux_clm: Main workhorse test list to be run on main machines before most tags are made
         fates: The FATES testlist, run when FATES is updated
         ctsm_sci: Tests for all science supported compset/resolution configurations, plus all supported resolutions
-        prelpha: Run before CESM alpha tags
-        prebeta: Run before CESM beta tags (more extensive, but should have tests outside of prealpha)
-        aux_cime_baselines: CESM cime baselines
+        prelpha: Run before CESM alpha tags (subset of aux_clm tests)
+        prebeta: Run before CESM beta tags (more extensive, but should have tests outside of prealpha) (subset of aux_clm tests)
+        aux_cime_baselines: CESM cime baselines (subset of aux_clm tests)
+        hillslope: Experimental test list used for the hillslope option of the model
 -->
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
