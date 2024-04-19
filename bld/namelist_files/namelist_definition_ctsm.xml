@@ -1375,209 +1375,6 @@ Toggle to turn on on diagnostic Snow Radiative Effect
 </entry>
 
 <!--                                                   -->
-<!-- mksurfdata namelist                               -->
-<!--                                                   -->
-<entry id="gitdescribe" type="char*80" category="mksurfdata"
-       group="clmexp" valid_values="" >
-Output of "git describe" to give the tag/commit the version being used corresponds to
-</entry>
-
-<entry id="mksrf_filename" type="char*256" category="mksurfdata"
-       group="default_settings" 
-       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fglacierregion,mksrf_fvocef,mksrf_furbtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fhrvtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fsoildepth,mksrf_fabm,mksrf_ftopostats,mksrf_fvic" >
-Filename for mksurfdata_map to remap raw data into the output surface dataset
-</entry>
-
-<entry id="mksrf_fvegtyp" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Plant Function Type dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fhrvtyp" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Harvest dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fglacier" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Dataset for percent glacier land-unit for mksurfdata
-</entry>
-
-<entry id="mksrf_fglacierregion" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Dataset for glacier region ID for mksurfdata
-</entry>
-
-<entry id="mksrf_furbtopo" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Dataset for topography used to define urban threshold
-</entry>
-
-<entry id="mksrf_flai" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Leaf Area Index dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fsoitex" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Soil texture dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fsoicol" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Soil color dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fmax" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Soil max fraction dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_ffrac" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-High resolution land mask/fraction dataset for mksurfdata
-(used for glacier_mec land-units)
-</entry>
-
-<entry id="mksrf_gridtype" type="char*256" category="mksurfdata"
-       group="clmexp" value="global" valid_values="global,regional" >
-Type of grid to create for mksurfdata
-</entry>
-
-<entry id="mksrf_fgrid" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Grid file at the output resolution for mksurfdata
-</entry>
-
-<entry id="mksrf_fdynuse" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Text file with filepaths (or list of XML elements) for vegetation fractions
-and harvesting for each year to run over for mksurfdata to be able to model
-transient land-use change
-</entry>
-
-<entry id="mksrf_ftopo" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-High resolution topography dataset for mksurfdata
-(used for glacier_mec land-units)
-</entry>
-
-<entry id="mksrf_firrig" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Irrigation dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_forganic" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Organic soil dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_flakwat" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Lake water dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fwetlnd" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Wetland dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_furban" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Urban dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fvocef" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Biogenic Volatile Organic Compounds (VOC) emissions dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fgdp" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-GDP dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fpeat" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Peat dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fsoildepth" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Soil depth dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fabm" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Agricultural burning dominant month dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_ftopostats" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Topography statistics dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fvic" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-VIC parameters dataset for mksurfdata
-</entry>
-
-<entry id="outnc_double" type="logical" category="mksurfdata"
-       group="clmexp" value=".true.">
-If TRUE, output variables in double precision for mksurfdata
-</entry>
-
-<entry id="all_urban" type="logical" category="mksurfdata"
-       group="clmexp" value=".false.">
-If TRUE, ignore other files, and set the output percentage to 100% urban and
-zero for other land-use types.
-</entry>
-
-<entry id="no_inlandwet" type="logical" category="mksurfdata"
-       group="clmexp" value=".true.">
-If TRUE, set wetland to 0% over land (renormalizing other landcover types as needed);
-wetland will only be used for ocean points.
-</entry>
-
-<entry id="numpft" type="integer" category="mksurfdata"
-       group="clmexp" value="16" valid_values="16,20" >
-Number of Plant Functional Types (excluding bare-soil)
-</entry>
-
-<entry id="pft_idx" type="integer" category="mksurfdata"
-       group="clmexp"
-       valid_values="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20" >
-Plant Function Type index to override global file with for mksurfdata
-</entry>
-
-<entry id="pft_frc" type="real" category="mksurfdata"
-       group="clmexp" valid_values="">
-Plant Function Type fraction to override global file with for mksurfdata
-</entry>
-
-<entry id="soil_color" type="integer" category="mksurfdata"
-       group="clmexp"
-       valid_values="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20" >
-Soil color index to override global file with for mksurfdata
-</entry>
-
-<entry id="soil_fmax" type="real" category="mksurfdata"
-       group="clmexp" >
-Soil maximum fraction to override global file with for mksurfdata
-</entry>
-
-<entry id="soil_sand" type="real" category="mksurfdata"
-       group="clmexp" >
-Soil percent sand to override global file with for mksurfdata
-</entry>
-
-<entry id="soil_clay" type="real" category="mksurfdata"
-       group="clmexp" >
-Soil percent clay to override global file with for mksurfdata
-</entry>
-
-
-<!--                                                   -->
 <!-- mkgriddata namelist                               -->
 <!--                                                   -->
 <entry id="mksrf_fnavyoro" type="char*256" category="mkgriddata"
@@ -1809,6 +1606,49 @@ Mapping method from Nitrogen deposition input file to the model resolution
     nnonj    = nearest neighbor on the "j" (latitude) axis
     spval    = set to special value
     copy     = copy using the same indices
+</entry>
+
+<!-- ========================================================================================  -->
+<!-- Dust namelist and Zender soil erodibility stream                                          -->
+<!-- ========================================================================================  -->
+
+<entry id="dust_emis_method" type="char*12" category="physics"
+       group="clm_inparm" valid_values="Zender_2003,Leung_2023" >
+Which dust emission method is going to be used. Either the Zender 2003 scheme or the Leung 2023
+scheme.
+(NOTE: The Leung 2023 method is NOT currently available)
+</entry>
+
+<entry id="zender_soil_erod_source" type="char*3" category="physics"
+       group="zendersoilerod" valid_values="lnd,atm" >
+Option only applying for the Zender_2003 method for whether the soil erodibility file is handled
+here in CTSM, or in the ATM model.
+(only used when dust_emis_method is Zender_2003)
+</entry>
+
+<entry id="zendersoilerod_mapalgo" type="char*256" category="physics"
+       group="zendersoilerod" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+Option only applying for the Zender_2003 method for whether the soil erodibility file is handled
+here in CTSM, or in the ATM model.
+(only used when dust_emis_method is Zender_2003)
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    nnoni    = nearest neighbor on the "i" (longitude) axis
+    nnonj    = nearest neighbor on the "j" (latitude) axis
+    spval    = set to special value
+    copy     = copy using the same indices
+</entry>
+
+<entry id="stream_fldfilename_zendersoilerod" type="char*256" category="datasets"
+       input_pathname="abs" group="zendersoilerod" valid_values="" >
+Filename of input stream data for Zender's soil erodibility source function
+(only used when dust_emis_method is Zender_2003, and zender_soil_erod_source is lnd)
+</entry>
+
+<entry id="stream_meshfile_zendersoilerod" type="char*256" category="datasets"
+       input_pathname="abs" group="zendersoilerod" valid_values="" >
+mesh filename of input stream data for Zender's soil erodibility source function
+(only used when dust_emis_method is Zender_2003, and zender_soil_erod_source is lnd)
 </entry>
 
 <!-- ========================================================================================  -->
@@ -2193,7 +2033,7 @@ Land mask description
 <!-- lnd_tuning_mode, there needs to be a setting for: CRUv7, GSWP3v1, and cam6.0 for each valid physics option -->
 <entry id="lnd_tuning_mode" type="char*20" category="default_settings"
        group="default_settings"
-       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_0_cam6.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_1_GSWP3v1,clm5_1_cam6.0,clm6_0_GSWP3v1,clm6_0_cam6.0">
+       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm4_5_cam5.0,clm4_5_cam4.0,clm5_0_cam6.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_1_GSWP3v1,clm5_1_CRUv7,clm5_1_cam6.0,clm5_1_cam5.0,clm5_1_cam4.0,clm6_0_GSWP3v1,clm6_0_cam6.0,clm6_0_cam5.0,clm6_0_cam4.0">
 General configuration of model version and atmospheric forcing to tune the model to run under.
 This sets the model to run with constants and initial conditions that were set to run well under 
 the configuration of model version and atmospheric forcing. To run well constants would need to be changed

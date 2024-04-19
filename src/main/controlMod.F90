@@ -207,6 +207,12 @@ contains
          for_testing_no_crop_seed_replenishment, &
          z0param_method, use_z0m_snowmelt
 
+    ! NOTE: EBK 02/26/2024: dust_emis_method is here in CTSM temporarily until it's moved to CMEPS
+    ! See: https://github.com/ESCOMP/CMEPS/pull/429
+    ! Normally this should also need error checking and a broadcast, but since
+    ! there is only one hardcoded option right now that is unneeded.
+    namelist /clm_inparm/ dust_emis_method
+
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
          som_adv_flux, max_depth_cryoturb

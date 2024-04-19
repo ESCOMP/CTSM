@@ -1,14 +1,15 @@
 <?xml version="1.0"?>
 <!--
      CTSM test list. Test suites included:
-        ctsm_pymods: System tests for the python codes that also run CTSM cases
+        ctsm_pymods: System tests for the python codes that also run CTSM cases (subset of aux_clm tests)
         clm_short: The short CLM test for basic testing of a few configurations
         aux_clm: Main workhorse test list to be run on main machines before most tags are made
         fates: The FATES testlist, run when FATES is updated
         ctsm_sci: Tests for all science supported compset/resolution configurations, plus all supported resolutions
-        prelpha: Run before CESM alpha tags
-        prebeta: Run before CESM beta tags (more extensive, but should have tests outside of prealpha)
-        aux_cime_baselines: CESM cime baselines
+        prelpha: Run before CESM alpha tags (subset of aux_clm tests)
+        prebeta: Run before CESM beta tags (more extensive, but should have tests outside of prealpha) (subset of aux_clm tests)
+        aux_cime_baselines: CESM cime baselines (subset of aux_clm tests)
+        hillslope: Experimental test list used for the hillslope option of the model
 -->
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
@@ -43,13 +44,51 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="f10_f10_mg37" compset="I1850Clm45Bgc" testmods="clm/clm45cam4LndTuningModeZDustSoilErod">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Simple test use soil eroditability in CTSM for CAM4 tuning</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="f09_f09_mg17" compset="I1850Clm45Bgc" testmods="clm/clm45cam4LndTuningModeZDustSoilErod">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution</option>
+      <option name="comment">Simple test use soil eroditability in CTSM for CAM4 tuning, at 1-degree</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/clm50cam5LndTuningModeZDustSoilErod">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Simple test use soil eroditability in CTSM for CAM5 tuning</option>
+    </options>
+  </test>
+  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningModeZDustSoilErod">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution, use soil eroditability in CTSM</option>
+    </options>
+  </test>
+    <test name="ERP_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningModeZDustSoilErod">
+    <machines>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">CESM3 development Exact restart test with change in the processor count at f10, for izumi nag, use soil eroditability in CTSM</option>
     </options>
   </test>
   <!-- this will be removed when CESM no longer needs it-->
@@ -117,7 +156,7 @@
       <option name="comment">CESM3 development test at the standard coupled resolution for 2000</option>
     </options>
   </test>
-  <test name="SMS_P128x72_Ld5" grid="hcru_hcru_mt13" compset="I2000Clm60Sp" testmods="clm/default">
+  <test name="SMS_Ld5" grid="hcru_hcru_mt13" compset="I2000Clm60Sp" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -126,7 +165,7 @@
       <option name="comment"  >CTSM science test list for the half degree grid with latest CLM version for 2000</option>
     </options>
   </test>
-  <test name="SMS_P128x72_Ld5" grid="hcru_hcru_mt13" compset="IHistClm60BgcCrop" testmods="clm/default">
+  <test name="SMS_Ld5" grid="hcru_hcru_mt13" compset="IHistClm60BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -189,7 +228,7 @@
       <option name="comment">Higher resolution mpasa grid for CAM with latest CLM version. Include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
-  <test name="SMS_P36x128_Ln9" grid="mpasa15_mpasa15" compset="I2000Clm60SpRs" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="mpasa15_mpasa15" compset="I2000Clm60SpRs" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>

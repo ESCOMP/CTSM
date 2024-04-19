@@ -35,7 +35,9 @@ class MKSURFDATAESMF(SystemTestsCommon):
         time_stamp = datetime.today().strftime("%y%m%d")
         self._res = "10x15"  # see important comment in script's docstring
         self._model_yr = "1850"
-        self._jobscript = os.path.join(self._get_caseroot(), "mksurfdata_jobscript_single")
+        self._jobscript = os.path.join(
+            self._get_caseroot(), "mksurfdataesmf_test_jobscript_single.sh"
+        )
         self._fsurdat_namelist = os.path.join(
             self._get_caseroot(),
             f"surfdata_{self._res}_hist_{self._model_yr}_78pfts_c{time_stamp}.namelist",
@@ -60,11 +62,23 @@ class MKSURFDATAESMF(SystemTestsCommon):
         # if the test stops and gets restarted.
         if sharedlib_only:
             # Paths and strings
-            build_script_path = os.path.join(self._tool_path, "gen_mksurfdata_build.sh")
+            build_script_path = os.path.join(self._tool_path, "gen_mksurfdata_build")
             nml_script_path = os.path.join(self._tool_path, "gen_mksurfdata_namelist")
             gen_jobscript_path = os.path.join(self._tool_path, "gen_mksurfdata_jobscript_single")
             gen_mksurfdata_namelist = f"{nml_script_path} --res {self._res} --start-year {self._model_yr} --end-year {self._model_yr}"
-            gen_mksurfdata_jobscript = f"{gen_jobscript_path} --number-of-nodes 1 --tasks-per-node 64 --namelist-file {self._fsurdat_namelist} --bld-path {self._tool_bld}"
+
+            if not os.path.exists(nml_script_path):
+                sys.exit(f"ERROR The build naemlist script {nml_script_path} does NOT exist")
+
+            if not os.path.exists(gen_jobscript_path):
+                sys.exit(f"ERROR The jobscript script {gen_jobscript_path} does NOT exist")
+
+            gen_mksurfdata_jobscript = (
+                f"{gen_jobscript_path} --number-of-nodes 1 --tasks-per-node 64 --namelist-file "
+                + f"{self._fsurdat_namelist} --bld-path {self._tool_bld} --jobscript-file {self._jobscript}"
+            )
+            if not os.path.exists(build_script_path):
+                sys.exit(f"ERROR The build script {build_script_path} does NOT exist")
 
             # Rm tool_bld and build executable that will generate fsurdat
             try:
@@ -78,7 +92,7 @@ class MKSURFDATAESMF(SystemTestsCommon):
             except subprocess.CalledProcessError as e:
                 print(f"build directory = {self._tool_bld}\n")
                 sys.exit(
-                    f"{e} ERROR RUNNING {build_script_path}. DETAILS IN {self._TestStatus_log_path}"
+                    f"{e} ERROR RUNNING {build_script_path} DETAILS IN {self._TestStatus_log_path}"
                 )
 
             # Generate namelist for generating fsurdat (rm namelist if exists)
