@@ -187,6 +187,10 @@
   </test>
       
   <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdHydro">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2373</issue>
+    </phase>
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>FATES#701</issue>
