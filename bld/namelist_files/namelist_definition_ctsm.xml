@@ -171,7 +171,7 @@ dust optics type for SNICAR snow albedo calculation
 <entry id="snicar_snw_shape" type="char*25" category="clm_physics"
        group="clm_inparm" valid_values="sphere,spheroid,hexagonal_plate,koch_snowflake" value="hexagonal_plate" >
 snow grain shape used in SNICAR snow albedo calculation
-(snicar_dust_optics='hexagonal_plate' is supported in ctsm5.1 and 'sphere' in older model versions; others are EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
+(snicar_snw_shape='hexagonal_plate' is supported in ctsm5.1 and 'sphere' in older model versions; others are EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <entry id="snicar_use_aerosol" type="logical" category="clm_physics"
@@ -1300,6 +1300,14 @@ Toggle for vancouver specific logic.
 Toggle for mexico city specific logic.
 </entry>
 
+<entry id="convert_ocean_to_land" type="logical" category="physics"
+       group="clm_inparm" value=".false.">
+If true, any ocean (i.e., wetland) points on the surface dataset are
+converted to bare ground (or whatever vegetation is given in that grid
+cell - but typically this will be bare ground due to lack of vegetation
+in grid cells with 100% ocean).
+</entry>
+
 <entry id="n_dom_pfts" type="integer" category="physics"
        group="clm_inparm"
        valid_values="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14" value="0">
@@ -1365,238 +1373,6 @@ Toggle to turn on the dynamic root model
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on on diagnostic Snow Radiative Effect
 </entry>
-
-
-<!--                                                   -->
-<!-- mkmapdata  namelist                               -->
-<!--                                                   -->
-<entry id="scripgriddata" type="char*256" category="mkmapdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-SCRIP format grid data file
-</entry>
-
-<entry id="scripgriddata_lrgfile_needed" type="char*256" category="mkmapdata"
-       group="clmexp" valid_values="none,64bit_offset,netcdf4" >
-Flag to pass to the ESMF mapping utility, telling it what kind of large
-file support is needed for an output file generated with this grid as
-either the source or destination ('none', '64bit_offset' or 'netcdf4'). 
-</entry>
-
-<entry id="scripgriddata_type" type="char*256" category="mkmapdata"
-       group="clmexp" valid_values="SCRIP,UGRID" >
-Flag to pass to the ESMF mapping utility, telling it what kind of grid
-file this is (SCRIP or UGRID).
-</entry>
-
-<entry id="scripgriddata_meshname" type="char*256" category="mkmapdata"
-       group="clmexp" valid_values="" >
-For UGRID files, flag to pass to the ESMF mapping utility, telling it the
-name of the dummy variable that has all of the topology information stored
-in its attributes. (Only used if scripgriddata_src_type = UGRID.)
-</entry>
-
-<!--                                                   -->
-<!-- mksurfdata namelist                               -->
-<!--                                                   -->
-<entry id="gitdescribe" type="char*80" category="mksurfdata"
-       group="clmexp" valid_values="" >
-Output of "git describe" to give the tag/commit the version being used corresponds to
-</entry>
-
-<entry id="mksrf_filename" type="char*256" category="mksurfdata"
-       group="default_settings" 
-       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fglacierregion,mksrf_fvocef,mksrf_furbtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fhrvtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fsoildepth,mksrf_fabm,mksrf_ftopostats,mksrf_fvic" >
-Filename for mksurfdata_map to remap raw data into the output surface dataset
-</entry>
-
-<entry id="mksrf_fvegtyp" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Plant Function Type dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fhrvtyp" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Harvest dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fglacier" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Dataset for percent glacier land-unit for mksurfdata
-</entry>
-
-<entry id="mksrf_fglacierregion" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Dataset for glacier region ID for mksurfdata
-</entry>
-
-<entry id="mksrf_furbtopo" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Dataset for topography used to define urban threshold
-</entry>
-
-<entry id="mksrf_flai" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Leaf Area Index dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fsoitex" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Soil texture dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fsoicol" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Soil color dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fmax" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Soil max fraction dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_ffrac" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-High resolution land mask/fraction dataset for mksurfdata
-(used for glacier_mec land-units)
-</entry>
-
-<entry id="mksrf_gridtype" type="char*256" category="mksurfdata"
-       group="clmexp" value="global" valid_values="global,regional" >
-Type of grid to create for mksurfdata
-</entry>
-
-<entry id="mksrf_fgrid" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Grid file at the output resolution for mksurfdata
-</entry>
-
-<entry id="mksrf_fdynuse" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Text file with filepaths (or list of XML elements) for vegetation fractions
-and harvesting for each year to run over for mksurfdata to be able to model
-transient land-use change
-</entry>
-
-<entry id="mksrf_ftopo" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-High resolution topography dataset for mksurfdata
-(used for glacier_mec land-units)
-</entry>
-
-<entry id="mksrf_firrig" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Irrigation dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_forganic" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Organic soil dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_flakwat" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Lake water dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fwetlnd" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Wetland dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_furban" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Urban dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fvocef" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Biogenic Volatile Organic Compounds (VOC) emissions dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fgdp" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-GDP dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fpeat" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Peat dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fsoildepth" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Soil depth dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fabm" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Agricultural burning dominant month dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_ftopostats" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Topography statistics dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fvic" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-VIC parameters dataset for mksurfdata
-</entry>
-
-<entry id="outnc_double" type="logical" category="mksurfdata"
-       group="clmexp" value=".true.">
-If TRUE, output variables in double precision for mksurfdata
-</entry>
-
-<entry id="all_urban" type="logical" category="mksurfdata"
-       group="clmexp" value=".false.">
-If TRUE, ignore other files, and set the output percentage to 100% urban and
-zero for other land-use types.
-</entry>
-
-<entry id="no_inlandwet" type="logical" category="mksurfdata"
-       group="clmexp" value=".true.">
-If TRUE, set wetland to 0% over land (renormalizing other landcover types as needed);
-wetland will only be used for ocean points.
-</entry>
-
-<entry id="numpft" type="integer" category="mksurfdata"
-       group="clmexp" value="16" valid_values="16,20" >
-Number of Plant Functional Types (excluding bare-soil)
-</entry>
-
-<entry id="pft_idx" type="integer" category="mksurfdata"
-       group="clmexp"
-       valid_values="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20" >
-Plant Function Type index to override global file with for mksurfdata
-</entry>
-
-<entry id="pft_frc" type="real" category="mksurfdata"
-       group="clmexp" valid_values="">
-Plant Function Type fraction to override global file with for mksurfdata
-</entry>
-
-<entry id="soil_color" type="integer" category="mksurfdata"
-       group="clmexp"
-       valid_values="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20" >
-Soil color index to override global file with for mksurfdata
-</entry>
-
-<entry id="soil_fmax" type="real" category="mksurfdata"
-       group="clmexp" >
-Soil maximum fraction to override global file with for mksurfdata
-</entry>
-
-<entry id="soil_sand" type="real" category="mksurfdata"
-       group="clmexp" >
-Soil percent sand to override global file with for mksurfdata
-</entry>
-
-<entry id="soil_clay" type="real" category="mksurfdata"
-       group="clmexp" >
-Soil percent clay to override global file with for mksurfdata
-</entry>
-
 
 <!--                                                   -->
 <!-- mkgriddata namelist                               -->
@@ -1943,7 +1719,6 @@ prescribed data.
 <entry id="use_lai_streams" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on use of LAI streams in place of the LAI on the surface dataset when using Satellite Phenology mode.
-(EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <entry id="stream_year_first_lai" type="integer" category="datasets"
@@ -2200,13 +1975,6 @@ Mapping file to go from one resolution/land-mask to another resolution/land-mask
 Land mask description for mksurfdata input files
 </entry> 
 
-<entry id="hgrid" type="char*10" category="mksurfdata"
-       group="default_settings"  
-       valid_values="0.25x0.25,0.5x0.5,10x10min,5x5min,360x720cru,0.9x1.25,19basin,1km-merge-10min">
-Horizontal grid resolutions for mksurfdata input files
-</entry> 
-
-
 <!-- ========================================================================================  -->
 <!-- Generic issues (resolution, mask etc.)                                                    -->
 <!-- ========================================================================================  -->
@@ -2245,13 +2013,6 @@ CLM run type.
     'branch' is a restart run in which properties of the output history files may be changed.
 </entry>
 
-<entry id="res" type="char*30" category="default_settings"
-       group="default_settings"  
-       valid_values="512x1024,360x720cru,128x256,64x128,48x96,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,0.125nldas2,5x5_amazon,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.25x0.25,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,0.125x0.125,ne3np4.pg3,ne4np4,ne5np4.pg3,ne16np4,ne16np4.pg3,ne30np4.pg2,ne30np4.pg3,ne30np4,ne60np4,ne120np4,ne120np4.pg2,ne120np4.pg3,ne0np4CONUS.ne30x8,ne0np4.ARCTIC.ne30x4,ne0np4.ARCTICGRIS.ne30x8,ne240np4,1km-merge-10min,C24,C48,C96,C192,C384,mpasa480,mpasa240,mpasa120,mpasa60,mpasa30,mpasa15">
-Horizontal resolutions
-Note: 0.25x0.25, 0.5x0.5, 5x5min, 10x10min, 3x3min, 1km-merge-10min and 0.33x0.33 are only used for CLM toolsI
-</entry> 
-
 <entry id="ssp_rcp" type="char*8" category="default_settings"
        group="default_settings"  
        valid_values="hist,SSP1-2.6,SSP3-7.0,SSP5-3.4,SSP2-4.5,SSP1-1.9,SSP4-3.4,SSP4-6.0,SSP5-8.5">
@@ -2268,13 +2029,15 @@ hist means do NOT use a future scenario, just use historical data.
 Land mask description
 </entry> 
 
+<!-- lnd_tuning_mode, there needs to be a setting for: CRUv7, GSWP3v1, and cam6.0 for each valid physics option -->
 <entry id="lnd_tuning_mode" type="char*20" category="default_settings"
        group="default_settings"
-       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm4_5_cam5.0,clm4_5_cam4.0,clm5_0_cam6.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_1_GSWP3v1,clm5_1_CRUv7,clm5_1_cam6.0,clm5_1_cam5.0,clm5_1_cam4.0">
+       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm4_5_cam5.0,clm4_5_cam4.0,clm5_0_cam6.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_1_GSWP3v1,clm5_1_CRUv7,clm5_1_cam6.0,clm5_1_cam5.0,clm5_1_cam4.0,clm6_0_GSWP3v1,clm6_0_cam6.0,clm6_0_cam5.0,clm6_0_cam4.0">
 General configuration of model version and atmospheric forcing to tune the model to run under.
 This sets the model to run with constants and initial conditions that were set to run well under 
 the configuration of model version and atmospheric forcing. To run well constants would need to be changed
 to run with a different type of atmospheric forcing.
+(Some options for the newest physics will be based on previous tuning, and buildnml will let you know about this)
 </entry> 
 
 <entry id="megan" type="integer" category="default_settings"

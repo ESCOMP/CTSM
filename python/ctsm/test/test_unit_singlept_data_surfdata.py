@@ -107,6 +107,12 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
                 coords={"lsmlat": lsmlat, "lsmlon": lsmlon},
                 attrs={"long_name": "percent wetland", "units": "unitless"},
             ),
+            "PCT_OCEAN": xr.DataArray(
+                data=np.random.rand(1, 1),
+                dims=["lsmlat", "lsmlon"],
+                coords={"lsmlat": lsmlat, "lsmlon": lsmlon},
+                attrs={"long_name": "percent ocean", "units": "unitless"},
+            ),
             "PCT_URBAN": xr.DataArray(
                 data=np.random.rand(1, 1, 3),
                 dims=["lsmlat", "lsmlon", "numurbl"],
@@ -671,6 +677,12 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
                 dims=["lsmlat", "lsmlon"],
                 coords={"lsmlat": lsmlat, "lsmlon": lsmlon},
                 attrs={"long_name": "percent wetland", "units": "unitless"},
+            ),
+            "PCT_OCEAN": xr.DataArray(
+                data=np.random.rand(1, 1),
+                dims=["lsmlat", "lsmlon"],
+                coords={"lsmlat": lsmlat, "lsmlon": lsmlon},
+                attrs={"long_name": "percent ocean", "units": "unitless"},
             ),
             "PCT_URBAN": xr.DataArray(
                 data=np.random.rand(1, 1, 3),

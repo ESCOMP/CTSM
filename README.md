@@ -50,12 +50,18 @@ Software engineering team:
 - [Ryan Knox](https://github.com/rgknox)
 
 Science team:
-- [Dave Lawrence](https://github.com/dlawrenncar)
 - [Will Wieder](https://github.com/wwieder)
+- [Dave Lawrence](https://github.com/dlawrenncar)
 - [Danica Lombardozzi](https://github.com/danicalombardozzi)
 - [Keith Oleson](https://github.com/olyson)
 - [Sean Swenson](https://github.com/swensosc)
-- [Jackie Shuman](https://github.com/jkshuman)
 - [Peter Lawrence](https://github.com/lawrencepj1)
-- [Rosie Fisher](https://github.com/rosiealice)
 - Gordon Bonan
+
+FATES Project:
+- https://github.com/NGEET/fates?tab=readme-ov-file
+
+Perturbed Parameter Experiment (PPE) Science team:
+- [Katie Dagon] (https://github.com/katiedagon)
+- [Daniel Kennedy] (https://github.com/djk2120)
+- [Linnea Hawkins] (https://github.com/linniahawkins)

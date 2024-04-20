@@ -1,8 +1,14 @@
 do_transient_lakes = .true.
 
-! This file was created with the following command:
-! ncap2 -s 'PCT_LAKE=array(0.0,0.0,PCT_CROP); PCT_LAKE={0.,50.,25.,25.,25.,25.}; HASLAKE=array(1.,1.,AREA); PCT_CROP=array(0.0,0.0,PCT_LAKE); PCT_CROP={0.,25.,12.,12.,12.,12.}' landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_c160127.nc landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_dynLakes_c200928.nc
+! The fsurdat and flanduse_timeseries files were created with the following script:
+! tools/modify_input_files/modify_smallville.sh
+
 ! Key points are that lake area starts as 0, increases after the first year, then decreases after the second year.
 ! PCT_CROP is also changed so that PCT_LAKE + PCT_CROP <= 100. (Here, PCT_CROP increases and decreases at the same time as PCT_LAKE in order to exercise the simultaneous increase or decrease of two landunits, but that isn't a critical part of this test.)
 ! Note that the use of this file means that this testmod can only be used with the 1x1_smallvilleIA grid.
-flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_dynLakes_c200928.nc'
+flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_1x1_smallvilleIA_SSP2-4.5_1850-1855_78pfts_dynLakes_c240221.nc'
+
+! NOTE slevis (2024/2/23) Adding option for tests to pass. In the long term
+! ensure that subset_data generates fsurdat and landuse files consistent with
+! each other.
+check_dynpft_consistency = .false.

@@ -360,7 +360,7 @@ class SinglePointCase(BaseCase):
         f_out = f_out.expand_dims(["lsmlat", "lsmlon"])
 
         # specify dimension order
-        f_out = f_out.transpose("time", "cft", "natpft", "lsmlat", "lsmlon")
+        f_out = f_out.transpose("time", "cft", "natpft", "lsmlat", "lsmlon", "numurbl")
 
         # revert expand dimensions of YEAR
         year = np.squeeze(np.asarray(f_out["YEAR"]))
@@ -425,6 +425,7 @@ class SinglePointCase(BaseCase):
             f_mod["PCT_WETLAND"][:, :] = 0.0
             f_mod["PCT_URBAN"][:, :, :] = 0.0
             f_mod["PCT_GLACIER"][:, :] = 0.0
+            f_mod["PCT_OCEAN"][:, :] = 0.0
 
             if self.dom_pft is not None:
                 max_dom_pft = max(self.dom_pft)

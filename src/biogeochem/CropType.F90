@@ -775,7 +775,7 @@ contains
     use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep
-    use clm_varpar       , only : nlevsno, nlevgrnd
+    use clm_varpar       , only : nlevsno, nlevmaxurbgrnd
     use pftconMod        , only : nswheat, nirrig_swheat, pftcon
     use pftconMod        , only : nwwheat, nirrig_wwheat
     use pftconMod        , only : nsugarcane, nirrig_sugarcane
@@ -806,7 +806,7 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL_FL((ubound(t_ref2m_patch)  == (/endp/))          , sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(t_soisno_col)   == (/endc,nlevgrnd/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno_col)   == (/endc,nlevmaxurbgrnd/)) , sourcefile, __LINE__)
 
     dtime = get_step_size()
     nstep = get_nstep()
