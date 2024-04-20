@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.2.0
 Originator(s): many (see below)
-Date: Wed Apr 10 17:35:36 MDT 2024
+Date: Fri 19 Apr 2024 07:15:10 PM MDT
 One-line Summary: New surface datasets and new mksurfdata_esmf tool to create them
 
 Purpose and description of changes
@@ -13,6 +13,8 @@ Changes to CTSM:
 All new surface datasets. Transient urban and lake by default turned on for transient cases.
 Ocean is run as baresoil rather than wetland (for clm6_0). The urban streams file was also
 updated. The new surface datasets have new updated input datasets (see below).
+
+Update the README files.
 
 New surface datasets:
 =====================
@@ -80,6 +82,8 @@ Does this tag change answers significantly for any of the following physics conf
 (Details of any changes will be given in the "Answer changes" section below.)
 
     [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm6_0 (new)
 
 [x] clm5_1
 
@@ -173,7 +177,7 @@ Testing summary: regular ctsm_sci fates mosart rtm tools python
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-sci.1.72.2_api.34.0.0-ctsm5.2.0)
     derecho ----- OK
-    izumi ------- OK (also ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLandUse FAIL because of conda issues)
+    izumi ------- OK
 
   any other testing (give details below):
 
@@ -185,9 +189,9 @@ Testing summary: regular ctsm_sci fates mosart rtm tools python
 
   mosart (mosart1_0_49_ctsm5.2.0)
      derecho ---- OK
-     izumi ------ (conda issues)
+     izumi  ----- PASS
 
-If the tag used for baseline comparisons was NOT the previous tag, note that here: ctsm5.1.dev175
+If the tag used for baseline comparisons was NOT the previous tag, note that here: ctsm5.1.dev176
 
 
 Answer changes

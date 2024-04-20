@@ -32,36 +32,31 @@ Testing:
 
   build-namelist tests:
 
-    cheyenne - 
+    derecho - 
 
   unit-tests (components/clm/src):
 
-    cheyenne - 
-    izumi ----
-
-  tools-tests (components/clm/test/tools):
-
-    cheyenne - 
+    derecho - 
     izumi ----
 
   regular tests (aux_clm):
 
-    cheyenne_intel ---- 
-    cheyenne_gnu ------ 
+    derecho_intel ---- 
+    derecho_gnu ------ 
     izumi_nag --------- 
     izumi_pgi --------- 
     izumi_intel ------- 
 
   regular tests (prealpha):
 
-    cheyenne_intel -
-    cheyenne_gnu ---
+    derecho_intel -
+    derecho_gnu ---
     izumi_nag ------
 
   regular tests (prebeta):
 
-    cheyenne_intel -
-    cheyenne_gnu ---
+    derecho_intel -
+    derecho_gnu ---
     izumi_nag ------
 
 Summary of Answer changes:
