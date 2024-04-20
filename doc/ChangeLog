@@ -172,8 +172,8 @@ Testing summary: regular ctsm_sci fates mosart rtm tools python
     izumi ------- OK
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-sci.1.72.2_api.34.0.0-ctsm5.2.0)
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK (also ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLandUse FAIL because of conda issues)
 
   any other testing (give details below):
 
@@ -181,10 +181,11 @@ Testing summary: regular ctsm_sci fates mosart rtm tools python
      derecho ---- PASS
 
   rtm  (rtm1_0_79_ctsm5.2.0)
-     derecho ----
+     derecho ---- PASS
 
   mosart (mosart1_0_49_ctsm5.2.0)
-     derecho ----
+     derecho ---- OK
+     izumi ------ (conda issues)
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here: ctsm5.1.dev175
 
@@ -211,6 +212,7 @@ Other details
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
 
+  #2464 -- Update ctsm5.2 branch to ctsm5.1.dev176 and some small updates
   #2417 -- Addition of clm6_0 physics option
   #2447 -- Update ctsm5.2 branch to ctsm5.1.dev175
   #2427 -- Merge ctsm5.2 branch up to ctsm5.1.dev174

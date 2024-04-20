@@ -1,10 +1,10 @@
-$CTSMROOT/doc/Quickstart.GUIDE                                    Jun/08/2018
+$CTSMROOT/doc/Quickstart.GUIDE                                    Apr/19/2024
 
-          Quick-Start to Using NUOPC Scripts for clm5_0
-          ============================================
+          Quick-Start to Using NUOPC Scripts for ctsm6_0
+          ==============================================
 
-Assumptions: You want to use cheyenne with clm5_0 BGC
-             to do a clm simulation with data atmosphere and the
+Assumptions: You want to use derecho with ctsm_0 BGC
+             to do a CTSM climate simulation with data atmosphere and the
              latest GSWP3v1 atm forcing files and settings. You also want to cycle
              the GSWP3v1 atm data between 1950 to 2010 and you want to run at
              0.9x1.25 degree resolution.
@@ -15,7 +15,7 @@ Process:
 
    cd cime/scripts
 
-   ./create_newcase --case <testcase> --mach cheyenne --res f09_g16_gl4 -compset I2000Clm50BgcCrop
+   ./create_newcase --case <testcase> --mach derecho --res f09_g16_gl4 -compset I2000Clm60BgcCrop
    (./create_newcase -help -- to get help on the script)
 
    # Setup the case
@@ -39,8 +39,8 @@ Process:
 
 Information on Compsets:
 
-     "I" compsets are the ones with clm and NUOPC driver and CDEPS data models without ice and ocean.
-     Most of the "I" compsets for CLM5.0 use the GSWP3v1 data with solar following
+     "I" compsets are the ones with CTSM and NUOPC driver and CDEPS data models without ice and ocean.
+     Most of the "I" compsets for ctsm5.0 physics and use the GSWP3v1 data with solar following
      the cosine of solar zenith angle, precipitation constant, and other
      variables linear interpolated in time (and with appropriate time-stamps on
      the date). 

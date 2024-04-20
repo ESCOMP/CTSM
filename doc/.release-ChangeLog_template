@@ -44,11 +44,6 @@ Testing:
     cheyenne - 
     izumi ----
 
-  PTCLM testing (components/clm/tools/shared/PTCLM/test):
-
-     cheyenne - 
-     izumi ----
-
   regular tests (aux_clm):
 
     cheyenne_intel ---- 

@@ -171,7 +171,7 @@ dust optics type for SNICAR snow albedo calculation
 <entry id="snicar_snw_shape" type="char*25" category="clm_physics"
        group="clm_inparm" valid_values="sphere,spheroid,hexagonal_plate,koch_snowflake" value="hexagonal_plate" >
 snow grain shape used in SNICAR snow albedo calculation
-(snicar_dust_optics='hexagonal_plate' is supported in ctsm5.1 and 'sphere' in older model versions; others are EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
+(snicar_snw_shape='hexagonal_plate' is supported in ctsm5.1 and 'sphere' in older model versions; others are EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <entry id="snicar_use_aerosol" type="logical" category="clm_physics"
@@ -1719,7 +1719,6 @@ prescribed data.
 <entry id="use_lai_streams" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on use of LAI streams in place of the LAI on the surface dataset when using Satellite Phenology mode.
-(EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <entry id="stream_year_first_lai" type="integer" category="datasets"

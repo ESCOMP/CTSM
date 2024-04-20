@@ -22,6 +22,8 @@ General Checklist to always do:
    (./xmlquery LND_TUNING_MODE)
  - For an "I compset" make sure you are running over the right forcing years 
    (usually ./xmlquery -p DATM_YR)
+ - Again for an "I compset" make sure the DATM streams are operating over the right years
+   (look at the CaseDocs/datm.streams.xml file)
  - First and align year for streams should be the start year of a historical simulation 
    (./xmlquery RUN_STARTDATE)
    (grep stream_year_first CaseDocs/lnd_in; grep model_year_align CaseDocs/lnd_in)
