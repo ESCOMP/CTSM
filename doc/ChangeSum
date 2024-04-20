@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-         ctsm5.2.0     many 04/19/2024 New mksurfdata_esmf tool to create new surface datasets that are in place
+         ctsm5.2.0     many 04/20/2024 New mksurfdata_esmf tool to create new surface datasets that are in place
     ctsm5.1.dev176  afoster 04/04/2024 Merge b4b-dev
     ctsm5.1.dev175   slevis 03/21/2024 merge-b4bdev-20240321
     ctsm5.1.dev174   olyson 03/14/2024 Improve vegetation health at high latitudes

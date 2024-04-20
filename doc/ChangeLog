@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.2.0
 Originator(s): many (see below)
-Date: Fri 19 Apr 2024 07:15:10 PM MDT
+Date: Sat 20 Apr 2024 12:33:33 AM MDT
 One-line Summary: New surface datasets and new mksurfdata_esmf tool to create them
 
 Purpose and description of changes
@@ -146,6 +146,11 @@ Changes to the datasets (e.g., parameter, surface or initial files):
    urbantv streams datasets updated
    Some initial condition datasets updated to go with the new datasets
 
+Things being deprecated (which will be removed):
+   manage_externlas will be removed for git submodules
+   mkmapgrids and other NCL scripts
+   tools/test directory
+
 Notes of particular relevance for developers:
 ---------------------------------------------
 
@@ -175,13 +180,17 @@ Testing summary: regular ctsm_sci fates mosart rtm tools python
     derecho ----- OK
     izumi ------- OK
 
-  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-sci.1.72.2_api.34.0.0-ctsm5.2.0)
+  fates tests: (fates-sci.1.72.2_api.34.0.0-ctsm5.2.0)
     derecho ----- OK
     izumi ------- OK
 
   any other testing (give details below):
 
-  ctsm_sci
+  mksurfdata_esmf
+     derecho ---- run "make all" to create all datasets (completes in 2-6 hours)
+     (crop-global-SSP2-4.5-ne30 was longest at 6 hr, most completed in 3.5 hours)
+
+  ctsm_sci (ctsm_sci-ctsm5.2.0)
      derecho ---- PASS
 
   rtm  (rtm1_0_79_ctsm5.2.0)
@@ -192,7 +201,6 @@ Testing summary: regular ctsm_sci fates mosart rtm tools python
      izumi  ----- PASS
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here: ctsm5.1.dev176
-
 
 Answer changes
 --------------
