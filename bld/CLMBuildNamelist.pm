@@ -1968,9 +1968,12 @@ sub setup_logic_irrigate {
                 'use_crop'=>$nl_flags->{'use_crop'}, 'use_cndv'=>$nl_flags->{'use_cndv'},
                 'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, );
   if ( &value_is_true($nl->get_value('irrigate') ) ) {
-     $nl_flags->{'irrigate'} = ".true."
+     $nl_flags->{'irrigate'} = ".true.";
+     if ( $nl_flags->{'sim_year'} eq "PtVg" ) {
+        $log->fatal_error("irrigate=TRUE does NOT make sense with the Potential Vegetation dataset, leave irrigate=FALSE");
+     }
   } else {
-     $nl_flags->{'irrigate'} = ".false."
+     $nl_flags->{'irrigate'} = ".false.";
   }
 }
 
@@ -2168,6 +2171,7 @@ sub setup_logic_subgrid {
 
    my $var = 'run_zero_weight_urban';
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'convert_ocean_to_land');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'collapse_urban',
                'structure'=>$nl_flags->{'structure'});
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_dom_landunits',
@@ -2390,17 +2394,15 @@ sub setup_logic_demand {
     if ( $item eq "finidat" ) {
         $log->fatal_error( "Do NOT put findat in the clm_demand list, set the clm_start_type=startup so initial conditions are required");
     }
-    # For landuse.timeseries try with crop and irrigate on first, if found use it, otherwise try with exact settings
+    # For landuse.timeseries try with crop on first eise try with exact settings
     # Logic for this is identical for fsurdat
     if ( $item eq "flanduse_timeseries" ) {
-       $settings{'irrigate'} = ".true.";
        $settings{'use_crop'} = ".true.";
        $settings{'nofail'}   = 1;
     }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $item, %settings );
     if ( $item eq "flanduse_timeseries" ) {
        $settings{'nofail'}   = 0;
-       $settings{'irrigate'} = $nl_flags->{'irrigate'};
        $settings{'use_crop'} = $nl_flags->{'use_crop'};
        if ( ! defined($nl->get_value( $item )) ) {
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $item, %settings );
@@ -2443,8 +2445,8 @@ sub setup_logic_surface_dataset {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                  'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
                  'neon'=>$nl_flags->{'neon'}, 'neonsite'=>$nl_flags->{'neonsite'},
-                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>".true.", 'use_vichydro'=>$nl_flags->{'use_vichydro'},
-                 'use_crop'=>".true.", 'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_fates'=>$nl_flags->{'use_fates'}, 'nofail'=>1);
+                 'sim_year'=>$nl_flags->{'sim_year'}, 'use_vichydro'=>$nl_flags->{'use_vichydro'},
+                 'use_crop'=>".true.", 'use_fates'=>$nl_flags->{'use_fates'}, 'nofail'=>1);
   }
   # If didn't find the crop version check for the exact match
   my $fsurdat = $nl->get_value($var);
@@ -2454,17 +2456,9 @@ sub setup_logic_surface_dataset {
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                  'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'use_vichydro'=>$nl_flags->{'use_vichydro'},
-                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>$nl_flags->{'irrigate'}, 'use_fates'=>$nl_flags->{'use_fates'},
+                 'sim_year'=>$nl_flags->{'sim_year'}, 'use_fates'=>$nl_flags->{'use_fates'},
                  'neon'=>$nl_flags->{'neon'}, 'neonsite'=>$nl_flags->{'neonsite'},
-                 'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'}, 'nofail'=>1 );
-     if ( ! defined($fsurdat) ) {
-        $log->verbose_message( "Exact match of $var NOT found, searching for version with irrigate true" );
-     }
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                 'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'use_vichydro'=>$nl_flags->{'use_vichydro'},
-                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>".true.", 'use_fates'=>$nl_flags->{'use_fates'}, 
-                 'neon'=>$nl_flags->{'neon'}, 'neonsite'=>$nl_flags->{'neonsite'},
-                 'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'} );
+                 'use_crop'=>$nl_flags->{'use_crop'} );
   }
   #
   # Expand the XML variables for NEON cases so that NEONSITE will be used
@@ -2514,11 +2508,17 @@ sub setup_logic_initial_conditions {
   }
   my $useinitvar = "use_init_interp";
 
+  my %settings;
+  my $use_init_interp_default = $nl->get_value($useinitvar);
+  $settings{$useinitvar} = $use_init_interp_default;
+  if ( string_is_undef_or_empty( $use_init_interp_default ) ) {
+    $use_init_interp_default = $defaults->get_value($useinitvar, \%settings);
+    $settings{$useinitvar} = ".false.";
+  }
   if (not defined $finidat ) {
     my $ic_date = $nl->get_value('start_ymd');
     my $st_year = $nl_flags->{'st_year'};
     my $nofail = 1;
-    my %settings;
     $settings{'hgrid'}   = $nl_flags->{'res'};
     $settings{'phys'}    = $physv->as_string();
     $settings{'nofail'}  = $nofail;
@@ -2555,12 +2555,6 @@ sub setup_logic_initial_conditions {
     }
     my $try = 0;
     my $done = 2;
-    my $use_init_interp_default = $nl->get_value($useinitvar);
-    $settings{$useinitvar} = $use_init_interp_default;
-    if ( string_is_undef_or_empty( $use_init_interp_default ) ) {
-      $use_init_interp_default = $defaults->get_value($useinitvar, \%settings);
-      $settings{$useinitvar} = ".false.";
-    }
     do {
        $try++;
        add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, %settings );
@@ -2607,14 +2601,24 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
              }
           }    # SIMYR:
           $settings{'sim_year'} = $closest_sim_year;
+          # Add options set here to the "$set" variable below...
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $useinitvar,
                       'use_cndv'=>$nl_flags->{'use_cndv'}, 'phys'=>$physv->as_string(), 'hgrid'=>$nl_flags->{'res'},
                       'sim_year'=>$settings{'sim_year'}, 'nofail'=>1, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                       'use_fates'=>$nl_flags->{'use_fates'} );
           $settings{$useinitvar} = $nl->get_value($useinitvar);
           if ( ! &value_is_true($nl->get_value($useinitvar) ) ) {
-             if ( $nl_flags->{'clm_start_type'} =~ /startup/  ) {
-                $log->fatal_error("clm_start_type is startup so an initial conditions ($var) file is required, but can't find one without $useinitvar being set to true");
+             if ( $nl_flags->{'clm_start_type'} =~ /startup/ ) {
+                my $err_msg = "clm_start_type is startup so an initial conditions ($var) file is required,";
+                if ( defined($use_init_interp_default) ) {
+                   $log->fatal_error($err_msg." but can't find one without $useinitvar being set to true, change it to true in your user_nl_clm file in your case");
+                } else {
+                   my $set = "Relevent settings: use_cndv = ". $nl_flags->{'use_cndv'} . " phys = " . 
+                              $physv->as_string() . " hgrid = " . $nl_flags->{'res'} . " sim_year = " . 
+                              $settings{'sim_year'} . " lnd_tuning_mode = " . $nl_flags->{'lnd_tuning_mode'} .
+                              "use_fates = " . $nl_flags->{'use_fates'};
+                   $log->fatal_error($err_msg." but the default setting of $useinitvar is false, so set both $var to a startup file and $useinitvar==TRUE, or developers should modify the namelist_defaults file".$set);
+                }
              }
           } else {
              my $stat = add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_attributes",
@@ -2623,7 +2627,7 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
                                  'hgrid'=>$nl_flags->{'res'},
                                  'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'}, 'nofail'=>1 );
              if ( $stat ) {
-                $log->fatal_error("$useinitvar is NOT synchronized with init_interp_attributes");
+                $log->fatal_error("$useinitvar is NOT synchronized with init_interp_attributes in the namelist_defaults file, this should be corrected there");
              }
              my $attributes = $nl->get_value("init_interp_attributes");
              my $attributes_string = remove_leading_and_trailing_quotes($attributes);
@@ -2631,7 +2635,7 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
                 if ( $pair =~ /^([a-z_]+)=([a-zA-Z._0-9]+)$/ ) {
                    $settings{$1} = $2;
                 } else {
-                   $log->fatal_error("Problem interpreting init_interp_attributes: $pair");
+                   $log->fatal_error("Problem interpreting init_interp_attributes from the namelist_defaults file: $pair");
                 }
              }
           }
@@ -2646,7 +2650,11 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
   }
   $finidat = $nl->get_value($var);
   if ( &value_is_true($nl->get_value($useinitvar) ) && string_is_undef_or_empty($finidat) ) {
-     $log->fatal_error("$useinitvar is set BUT $var is NOT, need to set both" );
+     if ( ! defined($use_init_interp_default) ) {
+        $log->fatal_error("You set $useinitvar but a $var file could not be found for this case, try setting $var explicitly, and/or removing the setting for $useinitvar" );
+     } else {
+        $log->fatal_error("$useinitvar is being set for you but a $var was not found, so $useinitvar, init_interp_attributes, and finidat must not be set correctly for this configuration in the namelist_default file" );
+     }
   }
 } # end initial conditions
 
@@ -2850,6 +2858,13 @@ sub setup_logic_do_transient_lakes {
 
    my $var = 'do_transient_lakes';
 
+   # Start by assuming a default value of '.true.'. Then check a number of
+   # conditions under which do_transient_lakes cannot be true. Under these
+   # conditions: (1) set default value to '.false.'; (2) make sure that the
+   # value is indeed false (e.g., that the user didn't try to set it to true).
+
+   my $default_val = ".true.";
+
    # cannot_be_true will be set to a non-empty string in any case where
    # do_transient_lakes should not be true; if it turns out that
    # do_transient_lakes IS true in any of these cases, a fatal error will be
@@ -2873,7 +2888,7 @@ sub setup_logic_do_transient_lakes {
       # Note that, if the variable cannot be true, we don't call add_default
       # - so that we don't clutter up the namelist with variables that don't
       # matter for this case
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, val=>$default_val);
    }
 
    # Make sure the value is false when it needs to be false - i.e., that the
@@ -2915,6 +2930,13 @@ sub setup_logic_do_transient_urban {
 
    my $var = 'do_transient_urban';
 
+   # Start by assuming a default value of '.true.'. Then check a number of
+   # conditions under which do_transient_urban cannot be true. Under these
+   # conditions: (1) set default value to '.false.'; (2) make sure that the
+   # value is indeed false (e.g., that the user didn't try to set it to true).
+
+   my $default_val = ".true.";
+
    # cannot_be_true will be set to a non-empty string in any case where
    # do_transient_urban should not be true; if it turns out that
    # do_transient_urban IS true in any of these cases, a fatal error will be
@@ -2938,7 +2960,7 @@ sub setup_logic_do_transient_urban {
       # Note that, if the variable cannot be true, we don't call add_default
       # - so that we don't clutter up the namelist with variables that don't
       # matter for this case
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, val=>$default_val);
    }
 
    # Make sure the value is false when it needs to be false - i.e., that the
@@ -4048,7 +4070,6 @@ sub setup_logic_megan {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_soilm_streams {
-  # prescribed soil moisture streams require clm4_5/clm5_0/clm5_1
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_soil_moisture_streams');

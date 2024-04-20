@@ -1,4 +1,4 @@
-# Makefile for mksurfdata_map
+# Makefile for mkprocdata_map
 
 EXENAME = ../mkprocdata_map
 

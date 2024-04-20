@@ -1,0 +1,351 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet type="text/xsl" href="namelist_defaults.xsl"?>
+
+<rawdata_files>
+
+  <!-- ======================== -->
+  <!-- lai -->
+  <!-- ======================== -->
+
+  <mksrf_flai>
+    <entry>
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c20230226/mksrf_pftlaihgt_ctsm52_histLUH2_2005.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+    <entry pft_years="2005" hires_pft='on'>
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190116/mksrf_lai_histclm52deg005_earthstatmirca_2005.cdf5.c220228.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+  </mksrf_flai>
+
+  <!-- ======================== -->
+  <!-- soil properties: fmax, soil-texture (sand/clay, orgc), and soil color-->
+  <!-- ======================== -->
+
+  <mksrf_fsoicol>
+    <entry>
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c20230226/mksrf_soilcolor_ctsm52_histLUH2_2005.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+    <entry pft_years="2005" hires_pft='on'>
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190116/mksrf_soilcolor_histclm52deg005_earthstatmirca_2005.cdf5.c220228.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+  </mksrf_fsoicol>
+
+  <mksrf_fsoitex>
+    <entry>
+      <data_filename>lnd/clm2/rawdata/mksrf_soil_mapunits_5x5min_WISE.c220330.nc</data_filename>
+      <lookup_filename>lnd/clm2/rawdata/mksrf_soil_lookup.10level.WISE.c220330.nc</lookup_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_5x5min_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+    <entry hires_soitex='on'>
+      <data_filename>lnd/clm2/rawdata/mksrf_soil_mapunits_30sec_WISE.c220330.nc</data_filename>
+      <lookup_filename>lnd/clm2/rawdata/mksrf_soil_lookup.10level.WISE.c220330.nc</lookup_filename>
+      <mesh_filename>lnd/clm2/rawdata/mksrf_soil_mapunits_30sec_WISE.c220330.nc</mesh_filename>
+    </entry>
+  </mksrf_fsoitex>
+
+  <mksrf_fmax>
+    <entry>
+      <data_filename>lnd/clm2/rawdata/mksrf_fmax_0.125x0.125_c200220.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.125x0.125_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+  </mksrf_fmax>
+
+  <!-- ======================== -->
+  <!-- lakes and wetlands -->
+  <!-- mksrf_fpctlak data_filename has moved to the transient time periods -->
+  <!-- as lake_filename -->
+  <!-- ======================== -->
+
+  <mksrf_fpctlak>
+    <entry>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+  </mksrf_fpctlak>
+
+  <mksrf_flakdep>
+    <entry>
+      <!-- NB slevis 20220928 -->
+      <!-- lake depth files for 1850, 1900, 2017 contain identical depths -->
+      <data_filename>lnd/clm2/rawdata/mksrf_LakePnDepth_3x3min_simyr2017_MODISgrid.cdf5.c200305.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+  </mksrf_flakdep>
+
+  <mksrf_fwetlnd>
+    <entry>
+      <data_filename>lnd/clm2/rawdata/mksrf_lanwat.050425.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+  </mksrf_fwetlnd>
+
+  <!-- ======================== -->
+  <!-- VOC emission factors -->
+  <!-- ======================== -->
+
+  <mksrf_fvocef>
+    <entry>
+      <data_filename>lnd/clm2/rawdata/mksrf_vocef_0.5x0.5_simyr2000.c110531.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+  </mksrf_fvocef>
+
+  <!-- ======================== -->
+  <!-- urban -->
+  <!-- mksrf_furban data_filename has moved to the transient time periods -->
+  <!-- as urban_filename -->
+  <!-- ======================== -->
+
+  <mksrf_furban>
+    <entry>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+  </mksrf_furban>
+
+  <!-- topography for urban threshold -->
+  <mksrf_furbtopo>
+    <entry>
+      <data_filename>lnd/clm2/rawdata/mksrf_topo.10min.cdf5.c220201.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_10x10min_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+  </mksrf_furbtopo>
+
+  <!-- ======================== -->
+  <!-- Glacier -->
+  <!-- ======================== -->
+
+  <!-- mksrf_fglacier % glacier land-unit -->
+  <!-- WJS (9-26-12):
+       There are two versions of this dataset: the "standard" version uses
+       data from Gardner globally. The "mergeGreenland" version uses data from Gardner
+       outside of Greenland, merged with data from a CISM input file over Greenland. The
+       rationale is that, if you're not running with CISM, then it's probably best to use
+       the Gardner data globally. But if you are running with CISM, then it's probably best
+       to use the merged data, since CLM will then be more consistent with CISM.
+
+In the longer-term, once we have dynamic landunits, I plan to make CLM adjust its
+initial conditions to match CISM. At that point, the need for the "mergeGreenland"
+version of the raw dataset will probably go away.
+  -->
+
+  <mksrf_fglacier>
+    <entry>
+      <data_filename>lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000.c20210708.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+  </mksrf_fglacier>
+
+  <mksrf_fglacierregion>
+    <entry>
+      <data_filename>lnd/clm2/rawdata/mksrf_GlacierRegion_10x10min_nomask_cd5_c220131.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_10x10min_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+  </mksrf_fglacierregion>
+
+  <!-- ======================== -->
+  <!-- fire-related datasets -->
+  <!-- ======================== -->
+
+  <mksrf_fgdp>
+    <entry>
+      <data_filename>lnd/clm2/rawdata/mksrf_gdp_0.5x0.5_AVHRR_simyr2000.c130228.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+    <entry pft_years="PtVg">
+      <data_filename>lnd/clm2/rawdata/mksrf_gdp_0.5x0.5_zerogdp.cdf5.c200413.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+  </mksrf_fgdp>
+
+  <mksrf_fpeat>
+    <entry>
+      <data_filename>lnd/clm2/rawdata/mksrf_peatf_0.5x0.5_AVHRR_simyr2000.c130228.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+  </mksrf_fpeat>
+
+  <mksrf_fsoildepth>
+    <entry>
+      <data_filename>lnd/clm2/rawdata/mksf_soilthk_5x5min_ORNL-Soil_simyr1900-2015_c170630.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_5x5min_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+  </mksrf_fsoildepth>
+
+  <mksrf_fabm>
+    <entry>
+      <data_filename>lnd/clm2/rawdata/mksrf_abm_0.5x0.5_AVHRR_simyr2000.c130201.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+    <entry pft_years="PtVg">
+      <data_filename>lnd/clm2/rawdata/mksrf_abm_0.5x0.5_missingabm.cdf5.c200413.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+  </mksrf_fabm>
+
+  <!-- ======================== -->
+  <!-- Topo -->
+  <!-- ======================== -->
+
+  <mksrf_ftopostats>
+    <entry>
+      <data_filename>lnd/clm2/rawdata/mksrf_topostats_1km-merge-10min_HYDRO1K-merge-nomask_simyr2000.c130402.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UGRID_1km-merge-10min_HYDRO1K-merge-nomask_cdf5_c130402.nc</mesh_filename>
+    </entry>
+  </mksrf_ftopostats>
+
+  <!-- ======================== -->
+  <!-- Vic hydrology -->
+  <!-- ======================== -->
+
+  <mksrf_fvic>
+    <entry>
+      <data_filename>lnd/clm2/rawdata/mksrf_vic_0.9x1.25_GRDC_simyr2000.c130307.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.9x1.25_nomask_cdf5_c200129.nc</mesh_filename>
+    </entry>
+  </mksrf_fvic>
+
+  <!-- ======================== -->
+  <!-- mksrf_fvegtyp -->
+  <!-- ======================== -->
+
+  <mksrf_fvegtyp>
+    <!-- Potential Vegetation dataset -->
+    <entry pft_years="PtVg" >
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.noanthro.c20230226/mksrf_landuse_ctsm52_noanthroLUH2_1.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_1850.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/mksrf_urban_0.05x0.05_zerourbanpct.cdf5.c181014.nc</urban_filename>
+    </entry>
+
+    <entry pft_years="1850">
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c20230226/mksrf_landuse_ctsm52_histLUH2_1850.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_1850.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/historical/urban_properties_GaoOneil_05deg_ThreeClass_1850_cdf5_c20220910.nc</urban_filename>
+    </entry>
+
+    <entry pft_years="2000">
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c20230226/mksrf_landuse_ctsm52_histLUH2_2000.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_2000.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/historical/urban_properties_GaoOneil_05deg_ThreeClass_2000_cdf5_c20220910.nc</urban_filename>
+    </entry>
+
+    <entry pft_years="2005">
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c20230226/mksrf_landuse_ctsm52_histLUH2_2005.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_2005.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/historical/urban_properties_GaoOneil_05deg_ThreeClass_2005_cdf5_c20220910.nc</urban_filename>
+    </entry>
+
+    <entry pft_years="2005" hires_pft='on'>
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190116/mksrf_landuse_clm52deg005_histLUH2_2005.cdf5.c190119.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_2005.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/historical/urban_properties_GaoOneil_05deg_ThreeClass_2005_cdf5_c20220910.nc</urban_filename>
+    </entry>
+
+    <!-- Last millenium Historical period from 0850 to 1849 -->
+    <entry pft_years="0850-1849" >
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1850.c20230226/mksrf_landuse_ctsm52_histLUH2_%y.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_1850.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/historical/urban_properties_GaoOneil_05deg_ThreeClass_1850_cdf5_c20220910.nc</urban_filename>
+    </entry>
+
+    <!-- Historical period from 1850 to 2015 -->
+    <entry pft_years="1850-2015" >
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c20230226/mksrf_landuse_ctsm52_histLUH2_%y.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/historical/urban_properties_GaoOneil_05deg_ThreeClass_%y_cdf5_c20220910.nc</urban_filename>
+    </entry>
+
+  </mksrf_fvegtyp>
+
+
+  <!-- Future scenarios  (up to 2100)-->
+  <mksrf_fvegtyp_ssp>
+
+    <!-- SSP1-RCP 2.6 -->
+    <entry  ssp_rcp="SSP1-2.6" pft_years_ssp="2016-2100" >
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP1-2.6.simyr2015-2100.c20230226/mksrf_landuse_ctsm52_SSP1-2.6_%y.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp1/urban_properties_GaoOneil_05deg_ThreeClass_ssp1_%y_cdf5_c20220910.nc</urban_filename>
+    </entry>
+    <entry  ssp_rcp="SSP1-2.6" pft_years_ssp="2101-2300" >
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP1-2.6.simyr2100-2300.c20230226/mksrf_landuse_ctsm52_SSP1-2.6_%y.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_2100.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp1/urban_properties_GaoOneil_05deg_ThreeClass_ssp1_2100_cdf5_c20220910.nc</urban_filename>
+    </entry>
+    <!-- SSP1-RCP 1.9 -->
+    <entry  ssp_rcp="SSP1-1.9" pft_years_ssp="2016-2100" >
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP1-1.9.simyr2015-2100.c20230226/mksrf_landuse_ctsm52_SSP1-1.9_%y.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp1/urban_properties_GaoOneil_05deg_ThreeClass_ssp1_%y_cdf5_c20220910.nc</urban_filename>
+    </entry>
+    <!-- SSP2-RCP 4.5 -->
+    <entry  ssp_rcp="SSP2-4.5" pft_years_ssp="2016-2100" >
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP2-4.5.simyr2015-2100.c20230226/mksrf_landuse_ctsm52_SSP2-4.5_%y.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp2/urban_properties_GaoOneil_05deg_ThreeClass_ssp2_%y_cdf5_c20220910.nc</urban_filename>
+    </entry>
+    <!-- SSP3-RCP 7.0 -->
+    <entry  ssp_rcp="SSP3-7.0" pft_years_ssp="2016-2100" >
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP3-7.0.simyr2015-2100.c20230226/mksrf_landuse_ctsm52_SSP3-7.0_%y.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp3/urban_properties_GaoOneil_05deg_ThreeClass_ssp3_%y_cdf5_c20220910.nc</urban_filename>
+    </entry>
+    <!-- SSP4-RCP 3.4 -->
+    <entry  ssp_rcp="SSP4-3.4" pft_years_ssp="2016-2100" >
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP4-3.4.simyr2015-2100.c20230226/mksrf_landuse_ctsm52_SSP4-3.4_%y.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp4/urban_properties_GaoOneil_05deg_ThreeClass_ssp4_%y_cdf5_c20220910.nc</urban_filename>
+    </entry>
+    <!-- SSP4-RCP 6.0 -->
+    <entry  ssp_rcp="SSP4-6.0" pft_years_ssp="2016-2100" >
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP4-6.0.simyr2015-2100.c20230226/mksrf_landuse_ctsm52_SSP4-6.0_%y.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp4/urban_properties_GaoOneil_05deg_ThreeClass_ssp4_%y_cdf5_c20220910.nc</urban_filename>
+    </entry>
+    <!-- SSP5-RCP 8.5 -->
+    <entry  ssp_rcp="SSP5-8.5" pft_years_ssp="2016-2100" >
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2015-2100.c20230226/mksrf_landuse_ctsm52_SSP5-8.5_%y.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp5/urban_properties_GaoOneil_05deg_ThreeClass_ssp5_%y_cdf5_c20220910.nc</urban_filename>
+    </entry>
+    <entry  ssp_rcp="SSP5-8.5" pft_years_ssp="2101-2300" >
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2100-2300.c20230226/mksrf_landuse_ctsm52_SSP5-8.5_%y.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_2100.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp5/urban_properties_GaoOneil_05deg_ThreeClass_ssp5_2100_cdf5_c20220910.nc</urban_filename>
+    </entry>
+    <!-- SSP5-RCP 3.4 -->
+    <entry  ssp_rcp="SSP5-3.4" pft_years_ssp="2016-2100" >
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-3.4.simyr2015-2100.c20230226/mksrf_landuse_ctsm52_SSP5-3.4_%y.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp5/urban_properties_GaoOneil_05deg_ThreeClass_ssp5_%y_cdf5_c20220910.nc</urban_filename>
+    </entry>
+    <entry  ssp_rcp="SSP5-3.4" pft_years_ssp="2101-2300" >
+      <data_filename>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-3.4.simyr2100-2300.c20230226/mksrf_landuse_ctsm52_SSP5-3.4_%y.c20230226.nc</data_filename>
+      <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
+      <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_2100.cdf5.c20220325.nc</lake_filename>
+      <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp5/urban_properties_GaoOneil_05deg_ThreeClass_ssp5_2100_cdf5_c20220910.nc</urban_filename>
+    </entry>
+
+  </mksrf_fvegtyp_ssp>
+
+</rawdata_files>
+

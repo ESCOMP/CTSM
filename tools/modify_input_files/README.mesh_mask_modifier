@@ -36,12 +36,8 @@ F-Case, modifying the continental geometry
 User wants to make the Indian Ocean into grassland. They specify their
 own land fraction mask on the CESM 1-degree grid, as well as the area to
 be specified as grassland in a netcdf file. This has been obtained by
-modifying the default land fraction of CESM. An example netcdf file
-containing the masks for such a case is on cheyenne:
+modifying the default land fraction of CESM. The file contains two arrays:
 
-/glade/work/slevis/git/mksurfdata_toolchain/tools/modify_input_files/islas_examples/modify_mesh_mask/fill_indian_ocean/fill_indianocean_slevis.nc
-
-This contains two arrays:
 - landmask = the new landmask
 - mod_lnd_props = set to 1 where the new land surface has been specified
 (i.e., where grassland needs to be specified) and zero elsewhere

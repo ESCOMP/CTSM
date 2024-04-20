@@ -17,7 +17,7 @@ module clm_initializeMod
   use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, nhillslope
   use clm_varctl            , only : use_soil_moisture_streams
   use clm_instur            , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft
-  use clm_instur            , only : irrig_method, wt_glc_mec, topo_glc_mec, haslake, ncolumns_hillslope, pct_urban_max
+  use clm_instur            , only : irrig_method, wt_glc_mec, topo_glc_mec, pct_lake_max, pct_urban_max, ncolumns_hillslope
   use perf_mod              , only : t_startf, t_stopf
   use readParamsMod         , only : readParameters
   use ncdio_pio             , only : file_desc_t
@@ -41,6 +41,7 @@ module clm_initializeMod
   public :: initialize2  ! Phase two initialization
 
   integer :: actual_numcft  ! numcft from sfc dataset
+  integer :: actual_nlevurb ! nlevurb from sfc dataset
   integer :: actual_numpft  ! numpft from sfc dataset
 
 !-----------------------------------------------------------------------
@@ -57,7 +58,7 @@ contains
     use clm_varcon           , only: clm_varcon_init
     use landunit_varcon      , only: landunit_varcon_init
     use clm_varctl           , only: fsurdat, version
-    use surfrdMod            , only: surfrd_get_num_patches
+    use surfrdMod            , only: surfrd_get_num_patches, surfrd_get_nlevurb
     use controlMod           , only: control_init, control_print, NLFilename
     use ncdio_pio            , only: ncd_pio_init
     use initGridCellsMod     , only: initGridCells
@@ -100,6 +101,7 @@ contains
     call control_init(dtime)
     call ncd_pio_init()
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numpft, actual_numcft)
+    call surfrd_get_nlevurb(fsurdat, actual_nlevurb)
 
     ! If fates is on, we override actual_maxsoil_patches. FATES dictates the
     ! number of patches per column.  We still use numcft from the surface
@@ -108,7 +110,7 @@ contains
        call CLMFatesGlobals1(actual_numpft, actual_numcft, actual_maxsoil_patches)
     end if
 
-    call clm_varpar_init(actual_maxsoil_patches, actual_numpft, actual_numcft)
+    call clm_varpar_init(actual_maxsoil_patches, actual_numpft, actual_numcft, actual_nlevurb)
     call decomp_cascade_par_init( NLFilename )
     call clm_varcon_init( IsSimpleBuildTemp() )
     call landunit_varcon_init()
@@ -239,11 +241,11 @@ contains
     allocate (irrig_method (begg:endg, cft_lb:cft_ub       ))
     allocate (wt_glc_mec   (begg:endg, maxpatch_glc     ))
     allocate (topo_glc_mec (begg:endg, maxpatch_glc     ))
-    allocate (haslake      (begg:endg                      ))
+    allocate (pct_lake_max (begg:endg                      ))
+    allocate (pct_urban_max(begg:endg, numurbl             ))
     if (use_hillslope) then
        allocate (ncolumns_hillslope  (begg:endg            ))
     endif
-    allocate (pct_urban_max(begg:endg, numurbl             ))
     allocate (wt_nat_patch (begg:endg, surfpft_lb:surfpft_ub ))
 
     ! Read list of Patches and their corresponding parameter values
@@ -329,7 +331,7 @@ contains
     ! Some things are kept until the end of initialize2; urban_valid is kept through the
     ! end of the run for error checking, pct_urban_max is kept through the end of the run
     ! for reweighting in subgridWeights.
-    deallocate (wt_lunit, wt_cft, wt_glc_mec, haslake)
+    deallocate (wt_lunit, wt_cft, wt_glc_mec, pct_lake_max)
     if (use_hillslope)  deallocate (ncolumns_hillslope)
 
     ! Determine processor bounds and clumps for this processor
