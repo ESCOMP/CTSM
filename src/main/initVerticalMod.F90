@@ -16,7 +16,7 @@ module initVerticalMod
   use clm_varpar        , only : toplev_equalspace, nlev_equalspace
   use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb, nlevmaxurbgrnd
   use clm_varctl        , only : fsurdat, iulog
-  use clm_varctl        , only : use_vancouver, use_mexicocity, use_extralakelayers
+  use clm_varctl        , only : use_extralakelayers
   use clm_varctl        , only : use_bedrock, rundef
   use clm_varctl        , only : soil_layerstruct_predefined, soil_layerstruct_userdefined
   use clm_varctl        , only : use_fates
@@ -40,7 +40,8 @@ module initVerticalMod
   public :: initVertical
   public :: find_soil_layer_containing_depth
   public :: readParams
-
+  public :: setSoilLayerClass
+  
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: hasBedrock  ! true if the given column type includes bedrock layers
   type, private :: params_type
@@ -80,9 +81,75 @@ contains
 
   end subroutine readParams
 
+    !------------------------------------------------------------------------
+  subroutine setSoilLayerClass(bounds)
+
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! LOCAL VARAIBLES:
+    integer               :: c,l,j             ! indices
+
+    ! Possible values for levgrnd_class. The important thing is that, for a given column,
+    ! layers that are fundamentally different (e.g., soil vs bedrock) have different
+    ! values. This information is used in the vertical interpolation in init_interp.
+    !
+    ! IMPORTANT: These values should not be changed lightly. e.g., try to avoid changing
+    ! the values assigned to LEVGRND_CLASS_STANDARD, LEVGRND_CLASS_DEEP_BEDROCK, etc.  The
+    ! problem with changing these is that init_interp expects that layers with a value of
+    ! (e.g.) 1 on the source file correspond to layers with a value of 1 on the
+    ! destination file. So if you change the values of these constants, you either need to
+    ! adequately inform users of this change, or build in some translation mechanism in
+    ! init_interp (such as via adding more metadata to the restart file on the meaning of
+    ! these different values).
+    !
+    ! The distinction between "shallow" and "deep" bedrock is not made explicitly
+    ! elsewhere. But, since these classes have somewhat different behavior, they are
+    ! distinguished explicitly here.
+    integer, parameter :: LEVGRND_CLASS_STANDARD        = 1
+    integer, parameter :: LEVGRND_CLASS_DEEP_BEDROCK    = 2
+    integer, parameter :: LEVGRND_CLASS_SHALLOW_BEDROCK = 3
+
+    character(len=*), parameter :: subname = 'setSoilLayerClass'
+
+    ! ------------------------------------------------------------------------
+    ! Set classes of layers
+    ! ------------------------------------------------------------------------
+
+    do c = bounds%begc, bounds%endc
+       l = col%landunit(c)
+       if (hasBedrock(col_itype=col%itype(c), lun_itype=lun%itype(l))) then
+          ! NOTE(wjs, 2015-10-17) We are assuming that points with bedrock have both
+          ! "shallow" and "deep" bedrock. Currently, this is not true for lake columns:
+          ! lakes do not distinguish between "shallow" bedrock and "normal" soil.
+          ! However, that was just due to an oversight that is supposed to be corrected
+          ! soon; so to keep things simple we assume that any point with bedrock
+          ! potentially has both shallow and deep bedrock.
+          col%levgrnd_class(c, 1:col%nbedrock(c)) = LEVGRND_CLASS_STANDARD
+          if (col%nbedrock(c) < nlevsoi) then
+             col%levgrnd_class(c, (col%nbedrock(c) + 1) : nlevsoi) = LEVGRND_CLASS_SHALLOW_BEDROCK
+          end if
+          col%levgrnd_class(c, (nlevsoi + 1) : nlevmaxurbgrnd) = LEVGRND_CLASS_DEEP_BEDROCK
+       else
+          col%levgrnd_class(c, 1:nlevmaxurbgrnd) = LEVGRND_CLASS_STANDARD
+       end if
+    end do
+
+    do j = 1, nlevmaxurbgrnd
+       do c = bounds%begc, bounds%endc
+          if (col%z(c,j) == spval) then
+             col%levgrnd_class(c,j) = ispval
+          end if
+       end do
+    end do
+
+  end subroutine setSoilLayerClass
+
   !------------------------------------------------------------------------
   subroutine initVertical(bounds, glc_behavior, thick_wall, thick_roof)
-    use clm_varcon, only : zmin_bedrock
+    use clm_varcon           , only : zmin_bedrock
+
     !
     ! !ARGUMENTS:
     type(bounds_type)   , intent(in)    :: bounds
@@ -91,7 +158,7 @@ contains
     real(r8)            , intent(in)    :: thick_roof(bounds%begl:)
     !
     ! LOCAL VARAIBLES:
-    integer               :: c,l,g,i,j,lev     ! indices 
+    integer               :: c,l,g,i,j,lev     ! indices
     type(file_desc_t)     :: ncid              ! netcdf id
     logical               :: readvar 
     integer               :: dimid             ! dimension id
@@ -115,27 +182,6 @@ contains
     integer               :: begc, endc
     integer               :: begl, endl
     integer               :: jmin_bedrock
-
-    ! Possible values for levgrnd_class. The important thing is that, for a given column,
-    ! layers that are fundamentally different (e.g., soil vs bedrock) have different
-    ! values. This information is used in the vertical interpolation in init_interp.
-    !
-    ! IMPORTANT: These values should not be changed lightly. e.g., try to avoid changing
-    ! the values assigned to LEVGRND_CLASS_STANDARD, LEVGRND_CLASS_DEEP_BEDROCK, etc.  The
-    ! problem with changing these is that init_interp expects that layers with a value of
-    ! (e.g.) 1 on the source file correspond to layers with a value of 1 on the
-    ! destination file. So if you change the values of these constants, you either need to
-    ! adequately inform users of this change, or build in some translation mechanism in
-    ! init_interp (such as via adding more metadata to the restart file on the meaning of
-    ! these different values).
-    !
-    ! The distinction between "shallow" and "deep" bedrock is not made explicitly
-    ! elsewhere. But, since these classes have somewhat different behavior, they are
-    ! distinguished explicitly here.
-    integer, parameter :: LEVGRND_CLASS_STANDARD        = 1
-    integer, parameter :: LEVGRND_CLASS_DEEP_BEDROCK    = 2
-    integer, parameter :: LEVGRND_CLASS_SHALLOW_BEDROCK = 3
-
     character(len=*), parameter :: subname = 'initVertical'
     !------------------------------------------------------------------------
 
@@ -224,7 +270,7 @@ contains
              dzsoi(j) = soil_layerstruct_userdefined(j)
           end do
        else if (soil_layerstruct_predefined == '49SL_10m') then
-          !scs: 10 meter soil column, nlevsoi set to 49 in clm_varpar
+          ! 10 meter soil column, nlevsoi set to 49 in clm_varpar
           do j = 1, 10
              dzsoi(j) = 1.e-2_r8     ! 10-mm layers
           enddo
@@ -283,6 +329,11 @@ contains
        write(iulog, *) 'dzsoi_decomp: ',dzsoi_decomp
     end if
 
+    if (nlevurb == ispval) then
+       call shr_sys_abort(' ERROR nlevurb has not been defined '//&
+            errMsg(sourcefile, __LINE__))
+    end if
+
     if (nlevurb > 0) then
        allocate(zurb_wall(bounds%begl:bounds%endl,nlevurb),    &
             zurb_roof(bounds%begl:bounds%endl,nlevurb),    &
@@ -303,122 +354,36 @@ contains
 
        ! "0" refers to urban wall/roof surface and "nlevsoi" refers to urban wall/roof bottom
        if (lun%urbpoi(l)) then
-          if (use_vancouver) then       
-             zurb_wall(l,1) = 0.010_r8/2._r8
-             zurb_wall(l,2) = zurb_wall(l,1) + 0.010_r8/2._r8 + 0.020_r8/2._r8
-             zurb_wall(l,3) = zurb_wall(l,2) + 0.020_r8/2._r8 + 0.070_r8/2._r8
-             zurb_wall(l,4) = zurb_wall(l,3) + 0.070_r8/2._r8 + 0.070_r8/2._r8
-             zurb_wall(l,5) = zurb_wall(l,4) + 0.070_r8/2._r8 + 0.030_r8/2._r8
+          do j = 1, nlevurb
+             zurb_wall(l,j) = (j-0.5)*(thick_wall(l)/float(nlevurb))  !node depths
+          end do
+          do j = 1, nlevurb
+             zurb_roof(l,j) = (j-0.5)*(thick_roof(l)/float(nlevurb))  !node depths
+          end do
 
-             zurb_roof(l,1) = 0.010_r8/2._r8
-             zurb_roof(l,2) = zurb_roof(l,1) + 0.010_r8/2._r8 + 0.010_r8/2._r8
-             zurb_roof(l,3) = zurb_roof(l,2) + 0.010_r8/2._r8 + 0.010_r8/2._r8
-             zurb_roof(l,4) = zurb_roof(l,3) + 0.010_r8/2._r8 + 0.010_r8/2._r8
-             zurb_roof(l,5) = zurb_roof(l,4) + 0.010_r8/2._r8 + 0.030_r8/2._r8
+          dzurb_roof(l,1) = 0.5*(zurb_roof(l,1)+zurb_roof(l,2))    !thickness b/n two interfaces
+          do j = 2,nlevurb-1
+             dzurb_roof(l,j)= 0.5*(zurb_roof(l,j+1)-zurb_roof(l,j-1)) 
+          enddo
+          dzurb_roof(l,nlevurb) = zurb_roof(l,nlevurb)-zurb_roof(l,nlevurb-1)
 
-             dzurb_wall(l,1) = 0.010_r8
-             dzurb_wall(l,2) = 0.020_r8
-             dzurb_wall(l,3) = 0.070_r8
-             dzurb_wall(l,4) = 0.070_r8
-             dzurb_wall(l,5) = 0.030_r8
-             write(iulog,*)'Total thickness of wall: ',sum(dzurb_wall(l,:))
-             write(iulog,*)'Wall layer thicknesses: ',dzurb_wall(l,:)
+          dzurb_wall(l,1) = 0.5*(zurb_wall(l,1)+zurb_wall(l,2))    !thickness b/n two interfaces
+          do j = 2,nlevurb-1
+             dzurb_wall(l,j)= 0.5*(zurb_wall(l,j+1)-zurb_wall(l,j-1)) 
+          enddo
+          dzurb_wall(l,nlevurb) = zurb_wall(l,nlevurb)-zurb_wall(l,nlevurb-1)
 
-             dzurb_roof(l,1) = 0.010_r8
-             dzurb_roof(l,2) = 0.010_r8
-             dzurb_roof(l,3) = 0.010_r8
-             dzurb_roof(l,4) = 0.010_r8
-             dzurb_roof(l,5) = 0.030_r8
-             write(iulog,*)'Total thickness of roof: ',sum(dzurb_roof(l,:))
-             write(iulog,*)'Roof layer thicknesses: ',dzurb_roof(l,:)
+          ziurb_wall(l,0) = 0.
+          do j = 1, nlevurb-1
+             ziurb_wall(l,j) = 0.5*(zurb_wall(l,j)+zurb_wall(l,j+1))          !interface depths
+          enddo
+          ziurb_wall(l,nlevurb) = zurb_wall(l,nlevurb) + 0.5*dzurb_wall(l,nlevurb)
 
-             ziurb_wall(l,0) = 0.
-             ziurb_wall(l,1) = dzurb_wall(l,1)
-             do j = 2,nlevurb
-                ziurb_wall(l,j) = sum(dzurb_wall(l,1:j))
-             end do
-             write(iulog,*)'Wall layer interface depths: ',ziurb_wall(l,:)
-
-             ziurb_roof(l,0) = 0.
-             ziurb_roof(l,1) = dzurb_roof(l,1)
-             do j = 2,nlevurb
-                ziurb_roof(l,j) = sum(dzurb_roof(l,1:j))
-             end do
-             write(iulog,*)'Roof layer interface depths: ',ziurb_roof(l,:)
-          else if (use_mexicocity) then
-             zurb_wall(l,1) = 0.015_r8/2._r8
-             zurb_wall(l,2) = zurb_wall(l,1) + 0.015_r8/2._r8 + 0.120_r8/2._r8
-             zurb_wall(l,3) = zurb_wall(l,2) + 0.120_r8/2._r8 + 0.150_r8/2._r8
-             zurb_wall(l,4) = zurb_wall(l,3) + 0.150_r8/2._r8 + 0.150_r8/2._r8
-             zurb_wall(l,5) = zurb_wall(l,4) + 0.150_r8/2._r8 + 0.015_r8/2._r8
-
-             zurb_roof(l,1) = 0.010_r8/2._r8
-             zurb_roof(l,2) = zurb_roof(l,1) + 0.010_r8/2._r8 + 0.050_r8/2._r8
-             zurb_roof(l,3) = zurb_roof(l,2) + 0.050_r8/2._r8 + 0.050_r8/2._r8
-             zurb_roof(l,4) = zurb_roof(l,3) + 0.050_r8/2._r8 + 0.050_r8/2._r8
-             zurb_roof(l,5) = zurb_roof(l,4) + 0.050_r8/2._r8 + 0.025_r8/2._r8
-
-             dzurb_wall(l,1) = 0.015_r8
-             dzurb_wall(l,2) = 0.120_r8
-             dzurb_wall(l,3) = 0.150_r8
-             dzurb_wall(l,4) = 0.150_r8
-             dzurb_wall(l,5) = 0.015_r8
-             write(iulog,*)'Total thickness of wall: ',sum(dzurb_wall(l,:))
-             write(iulog,*)'Wall layer thicknesses: ',dzurb_wall(l,:)
-
-             dzurb_roof(l,1) = 0.010_r8
-             dzurb_roof(l,2) = 0.050_r8
-             dzurb_roof(l,3) = 0.050_r8
-             dzurb_roof(l,4) = 0.050_r8
-             dzurb_roof(l,5) = 0.025_r8
-             write(iulog,*)'Total thickness of roof: ',sum(dzurb_roof(l,:))
-             write(iulog,*)'Roof layer thicknesses: ',dzurb_roof(l,:)
-
-             ziurb_wall(l,0) = 0.
-             ziurb_wall(l,1) = dzurb_wall(l,1)
-             do j = 2,nlevurb
-                ziurb_wall(l,j) = sum(dzurb_wall(l,1:j))
-             end do
-             write(iulog,*)'Wall layer interface depths: ',ziurb_wall(l,:)
-
-             ziurb_roof(l,0) = 0.
-             ziurb_roof(l,1) = dzurb_roof(l,1)
-             do j = 2,nlevurb
-                ziurb_roof(l,j) = sum(dzurb_roof(l,1:j))
-             end do
-             write(iulog,*)'Roof layer interface depths: ',ziurb_roof(l,:)
-          else
-             do j = 1, nlevurb
-                zurb_wall(l,j) = (j-0.5)*(thick_wall(l)/float(nlevurb))  !node depths
-             end do
-             do j = 1, nlevurb
-                zurb_roof(l,j) = (j-0.5)*(thick_roof(l)/float(nlevurb))  !node depths
-             end do
-
-             dzurb_roof(l,1) = 0.5*(zurb_roof(l,1)+zurb_roof(l,2))    !thickness b/n two interfaces
-             do j = 2,nlevurb-1
-                dzurb_roof(l,j)= 0.5*(zurb_roof(l,j+1)-zurb_roof(l,j-1)) 
-             enddo
-             dzurb_roof(l,nlevurb) = zurb_roof(l,nlevurb)-zurb_roof(l,nlevurb-1)
-
-             dzurb_wall(l,1) = 0.5*(zurb_wall(l,1)+zurb_wall(l,2))    !thickness b/n two interfaces
-             do j = 2,nlevurb-1
-                dzurb_wall(l,j)= 0.5*(zurb_wall(l,j+1)-zurb_wall(l,j-1)) 
-             enddo
-             dzurb_wall(l,nlevurb) = zurb_wall(l,nlevurb)-zurb_wall(l,nlevurb-1)
-
-             ziurb_wall(l,0) = 0.
-             do j = 1, nlevurb-1
-                ziurb_wall(l,j) = 0.5*(zurb_wall(l,j)+zurb_wall(l,j+1))          !interface depths
-             enddo
-             ziurb_wall(l,nlevurb) = zurb_wall(l,nlevurb) + 0.5*dzurb_wall(l,nlevurb)
-
-             ziurb_roof(l,0) = 0.
-             do j = 1, nlevurb-1
-                ziurb_roof(l,j) = 0.5*(zurb_roof(l,j)+zurb_roof(l,j+1))          !interface depths
-             enddo
-             ziurb_roof(l,nlevurb) = zurb_roof(l,nlevurb) + 0.5*dzurb_roof(l,nlevurb)
-          end if
+          ziurb_roof(l,0) = 0.
+          do j = 1, nlevurb-1
+             ziurb_roof(l,j) = 0.5*(zurb_roof(l,j)+zurb_roof(l,j+1))          !interface depths
+          enddo
+          ziurb_roof(l,nlevurb) = zurb_roof(l,nlevurb) + 0.5*dzurb_roof(l,nlevurb)
        end if
     end do
 
@@ -639,36 +604,11 @@ contains
        end if
     end do
 
-    ! ------------------------------------------------------------------------
+    ! ----------------------------------------------
     ! Set classes of layers
-    ! ------------------------------------------------------------------------
+    ! ----------------------------------------------
 
-    do c = bounds%begc, bounds%endc
-       l = col%landunit(c)
-       if (hasBedrock(col_itype=col%itype(c), lun_itype=lun%itype(l))) then
-          ! NOTE(wjs, 2015-10-17) We are assuming that points with bedrock have both
-          ! "shallow" and "deep" bedrock. Currently, this is not true for lake columns:
-          ! lakes do not distinguish between "shallow" bedrock and "normal" soil.
-          ! However, that was just due to an oversight that is supposed to be corrected
-          ! soon; so to keep things simple we assume that any point with bedrock
-          ! potentially has both shallow and deep bedrock.
-          col%levgrnd_class(c, 1:col%nbedrock(c)) = LEVGRND_CLASS_STANDARD
-          if (col%nbedrock(c) < nlevsoi) then
-             col%levgrnd_class(c, (col%nbedrock(c) + 1) : nlevsoi) = LEVGRND_CLASS_SHALLOW_BEDROCK
-          end if
-          col%levgrnd_class(c, (nlevsoi + 1) : nlevmaxurbgrnd) = LEVGRND_CLASS_DEEP_BEDROCK
-       else
-          col%levgrnd_class(c, 1:nlevmaxurbgrnd) = LEVGRND_CLASS_STANDARD
-       end if
-    end do
-
-    do j = 1, nlevmaxurbgrnd
-       do c = bounds%begc, bounds%endc
-          if (col%z(c,j) == spval) then
-             col%levgrnd_class(c,j) = ispval
-          end if
-       end do
-    end do
+    call setSoilLayerClass(bounds)
 
     !-----------------------------------------------
     ! Read in topographic index and slope
@@ -707,7 +647,13 @@ contains
     do c = begc,endc
        ! microtopographic parameter, units are meters (try smooth function of slope)
        slope0 = params_inst%slopemax**(1._r8/params_inst%slopebeta)
-       col%micro_sigma(c) = (col%topo_slope(c) + slope0)**(params_inst%slopebeta)
+
+       if (col%is_hillslope_column(c)) then
+          col%micro_sigma(c) = (atan(col%hill_slope(c)) + slope0)**(params_inst%slopebeta)
+       else
+          col%micro_sigma(c) = (col%topo_slope(c) + slope0)**(params_inst%slopebeta)
+       endif
+
     end do
 
     call ncd_pio_closefile(ncid)

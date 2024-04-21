@@ -15,7 +15,7 @@ module surfrdMod
   use clm_varcon      , only : grlnd
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_cndv, use_crop, use_fates
-  use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types
+  use surfrdUtilsMod  , only : check_sums_equal_1, apply_convert_ocean_to_land, collapse_crop_types
   use surfrdUtilsMod  , only : collapse_to_dominant, collapse_crop_var, collapse_individual_lunits
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
   use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim_size, ncd_inqdid, ncd_inqdlen
@@ -29,6 +29,7 @@ module surfrdMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: surfrd_get_data         ! Read surface dataset and determine subgrid weights
   public :: surfrd_get_num_patches  ! Read surface dataset to determine maxsoil_patches and numcft
+  public :: surfrd_get_nlevurb      ! Read surface dataset to determine nlevurb
 
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: surfrd_special   ! Read the special landunits
@@ -69,7 +70,7 @@ contains
     !    o real % abundance PFTs (as a percent of vegetated area)
     !
     ! !USES:
-    use clm_varctl  , only : create_crop_landunit, collapse_urban, &
+    use clm_varctl  , only : create_crop_landunit, convert_ocean_to_land, collapse_urban, &
                              toosmall_soil, toosmall_crop, toosmall_glacier, &
                              toosmall_lake, toosmall_wetland, toosmall_urban, &
                              n_dom_landunits
@@ -118,13 +119,6 @@ contains
 
     call getfil( lfsurdat, locfn, 0 )
     call ncd_pio_openfile (ncid, trim(locfn), 0)
-
-    ! Read in patch mask - this variable is only on the surface dataset - but not
-    ! on the domain dataset
-
-    call ncd_io(ncid=ncid, varname= 'PFTDATA_MASK', flag='read', data=ldomain%pftm, &
-         dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( msg=' ERROR: pftm NOT on surface dataset'//errMsg(sourcefile, __LINE__))
 
     ! Cmopare surfdat_domain attributes to ldomain attributes
 
@@ -198,6 +192,10 @@ contains
     call ncd_pio_closefile(ncid)
 
     call check_sums_equal_1(wt_lunit, begg, 'wt_lunit', subname)
+
+    if (convert_ocean_to_land) then
+       call apply_convert_ocean_to_land(wt_lunit(begg:endg,:), begg, endg)
+    end if
 
     ! if collapse_urban = .true.
     ! collapse urban landunits to the dominant urban landunit
@@ -322,6 +320,48 @@ contains
   end subroutine surfrd_get_num_patches
 
 !-----------------------------------------------------------------------
+  subroutine surfrd_get_nlevurb (lfsurdat, actual_nlevurb)
+    !
+    ! !DESCRIPTION:
+    ! Read nlevurb from the surface dataset
+    !
+    ! !USES:
+    use fileutils   , only : getfil
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: lfsurdat  ! surface dataset filename
+    integer, intent(out) :: actual_nlevurb    ! nlevurb from surface dataset
+    !
+    ! !LOCAL VARIABLES:
+    character(len=256):: locfn                ! local file name
+    type(file_desc_t) :: ncid                 ! netcdf file id
+    integer :: dimid                          ! netCDF dimension id
+    character(len=32) :: subname = 'surfrd_get_nlevurb'  ! subroutine name
+    !-----------------------------------------------------------------------
+
+    if (masterproc) then
+       write(iulog,*) 'Attempting to read nlevurb from the surface data .....'
+       if (lfsurdat == ' ') then
+          write(iulog,*)'lfsurdat must be specified'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       endif
+    endif
+
+    ! Open surface dataset
+    call getfil( lfsurdat, locfn, 0 )
+    call ncd_pio_openfile (ncid, trim(locfn), 0)
+
+    ! Read nlevurb
+    call ncd_inqdlen(ncid, dimid, actual_nlevurb, 'nlevurb')
+
+    if ( masterproc )then
+       write(iulog,*) 'Successfully read nlevurb from the surface data'
+       write(iulog,*)
+    end if
+
+  end subroutine surfrd_get_nlevurb
+
+!-----------------------------------------------------------------------
   subroutine surfrd_special(begg, endg, ncid, ns)
     !
     ! !DESCRIPTION:
@@ -330,7 +370,7 @@ contains
     !
     ! !USES:
     use clm_varpar      , only : maxpatch_glc, nlevurb
-    use landunit_varcon , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice
+    use landunit_varcon , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice, istocn
     use clm_instur      , only : wt_lunit, urban_valid, wt_glc_mec, topo_glc_mec
     use UrbanParamsType , only : CheckUrban
     !
@@ -350,6 +390,7 @@ contains
     real(r8),pointer :: pctgla(:)     ! percent of grid cell is glacier
     real(r8),pointer :: pctlak(:)     ! percent of grid cell is lake
     real(r8),pointer :: pctwet(:)     ! percent of grid cell is wetland
+    real(r8),pointer :: pctocn(:)     ! percent of grid cell is ocean
     real(r8),pointer :: pcturb(:,:)   ! percent of grid cell is urbanized
     integer ,pointer :: urban_region_id(:)
     real(r8),pointer :: pcturb_tot(:) ! percent of grid cell is urban (sum over density classes)
@@ -363,6 +404,7 @@ contains
     allocate(pctgla(begg:endg))
     allocate(pctlak(begg:endg))
     allocate(pctwet(begg:endg))
+    allocate(pctocn(begg:endg))
     allocate(pcturb(begg:endg,numurbl))
     allocate(pcturb_tot(begg:endg))
     allocate(urban_region_id(begg:endg))
@@ -371,6 +413,12 @@ contains
     call check_dim_size(ncid, 'nlevsoi', nlevsoifl)
 
        ! Obtain non-grid surface properties of surface dataset other than percent patch
+
+    call ncd_io(ncid=ncid, varname='PCT_OCEAN', flag='read', data=pctocn, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( msg= &
+       ' ERROR: PCT_OCEAN NOT on surfdata file but required when running ctsm5.2 or newer; ' // &
+       ' you are advised to generate a new surfdata file using the mksurfdata_esmf tool ' // errMsg(sourcefile, __LINE__))
 
     call ncd_io(ncid=ncid, varname='PCT_WETLAND', flag='read', data=pctwet, &
          dim1name=grlnd, readvar=readvar)
@@ -435,9 +483,9 @@ contains
 
     topo_glc_mec(:,:) = max(topo_glc_mec(:,:), 0._r8)
 
-    pctspec = pctwet + pctlak + pcturb_tot + pctgla
+    pctspec = pctwet + pctlak + pcturb_tot + pctgla + pctocn
 
-    ! Error check: glacier, lake, wetland, urban sum must be less than 100
+    ! Error check: sum of glacier, lake, wetland, urban, ocean must be < 100
 
     found = .false.
     do nl = begg,endg
@@ -457,22 +505,25 @@ contains
 
     do nl = begg,endg
 
-       wt_lunit(nl,istdlak)     = pctlak(nl)/100._r8
+       wt_lunit(nl,istdlak) = pctlak(nl) / 100._r8
 
-       wt_lunit(nl,istwet)      = pctwet(nl)/100._r8
-
-       wt_lunit(nl,istice)  = pctgla(nl)/100._r8
+       ! Until ctsm5.1 we would label ocean points as wetland in fsurdat
+       ! files. Starting with ctsm5.2 we label ocean points as ocean
+       ! (always 100%) and wetland points as wetland.
+       wt_lunit(nl,istwet) = pctwet(nl) / 100._r8
+       wt_lunit(nl,istocn) = pctocn(nl) / 100._r8
+       wt_lunit(nl,istice) = pctgla(nl) / 100._r8
 
        do n = isturb_MIN, isturb_MAX
           dens_index = n - isturb_MIN + 1
-          wt_lunit(nl,n)        = pcturb(nl,dens_index) / 100._r8
+          wt_lunit(nl,n) = pcturb(nl,dens_index) / 100._r8
        end do
 
     end do
 
     call CheckUrban(begg, endg, pcturb(begg:endg,:), subname)
 
-    deallocate(pctgla,pctlak,pctwet,pcturb,pcturb_tot,urban_region_id,pctspec)
+    deallocate(pctgla,pctlak,pctwet,pctocn,pcturb,pcturb_tot,urban_region_id,pctspec)
 
   end subroutine surfrd_special
 
@@ -721,7 +772,7 @@ contains
     ! Determine weight arrays for non-dynamic landuse mode
     !
     ! !USES:
-    use clm_varctl      , only : create_crop_landunit, use_fates, n_dom_pfts
+    use clm_varctl      , only : create_crop_landunit, use_fates, n_dom_pfts, use_hillslope
     use clm_varpar      , only : natpft_lb, natpft_ub, natpft_size, cft_size, cft_lb, cft_ub
     use clm_varpar      , only : surfpft_lb, surfpft_ub
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
@@ -815,7 +866,12 @@ contains
                ' must also have a separate crop landunit, and vice versa)'//&
                errMsg(sourcefile, __LINE__))
     end if
-    
+
+    ! Obtain hillslope hydrology information and modify pft weights
+    if (use_hillslope) then
+       call surfrd_hillslope(begg, endg, ncid, ns)
+    endif
+
     ! Convert from percent to fraction
     wt_lunit(begg:endg,istsoil) = wt_lunit(begg:endg,istsoil) / 100._r8
     wt_lunit(begg:endg,istcrop) = wt_lunit(begg:endg,istcrop) / 100._r8
@@ -883,6 +939,115 @@ contains
   end subroutine surfrd_veg_dgvm
 
   !-----------------------------------------------------------------------
+  subroutine surfrd_hillslope(begg, endg, ncid, ns)
+    !
+    ! !DESCRIPTION:
+    ! Determine number of hillslopes and columns for hillslope hydrology mode
+    !
+    ! !USES:
+    use clm_instur, only : ncolumns_hillslope, wt_nat_patch
+    use clm_varctl, only : nhillslope,max_columns_hillslope
+    use clm_varpar, only : natpft_size, natpft_lb, natpft_ub
+    use ncdio_pio,  only : ncd_inqdid, ncd_inqdlen
+    use pftconMod , only : noveg
+    use HillslopeHydrologyMod, only : pft_distribution_method, pft_standard, pft_from_file, pft_uniform_dominant_pft, pft_lowland_dominant_pft, pft_lowland_upland
+    use array_utils, only: find_k_max_indices
+    use surfrdUtilsMod, only: collapse_to_dominant
+
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: begg, endg
+    type(file_desc_t),intent(inout) :: ncid   ! netcdf id
+    integer          ,intent(in)    :: ns     ! domain size
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: g, nh, m, n                       ! index
+    integer  :: dimid,varid                    ! netCDF id's
+    integer  :: ier                            ! error status
+    integer, allocatable  :: max_indices(:)    ! largest weight pft indices
+    logical  :: readvar                        ! is variable on dataset
+    integer,pointer :: arrayl(:)               ! local array (needed because ncd_io expects a pointer)
+    character(len=32) :: subname = 'surfrd_hillslope'  ! subroutine name
+    logical, allocatable :: do_not_collapse(:)
+    integer :: n_dominant
+    !-----------------------------------------------------------------------
+
+    ! number of hillslopes per landunit
+    call ncd_inqdid(ncid,'nhillslope',dimid,readvar)
+    if (.not. readvar) then
+       call endrun( msg=' ERROR: nhillslope not on surface data file'//errMsg(sourcefile, __LINE__))
+    else
+       call ncd_inqdlen(ncid,dimid,nh)
+       nhillslope = nh
+    endif
+    ! maximum number of columns per landunit
+    call ncd_inqdid(ncid,'nmaxhillcol',dimid,readvar)
+    if (.not. readvar) then
+       call endrun( msg=' ERROR: nmaxhillcol not on surface data file'//errMsg(sourcefile, __LINE__))
+    else
+       call ncd_inqdlen(ncid,dimid,nh)
+       max_columns_hillslope = nh
+    endif
+    ! actual number of columns per landunit
+    allocate(arrayl(begg:endg))
+    call ncd_io(ncid=ncid, varname='nhillcolumns', flag='read', data=arrayl, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) then
+       call endrun( msg=' ERROR: nhillcolumns not on surface data file'//errMsg(sourcefile, __LINE__))
+    else
+       ncolumns_hillslope(begg:endg) = arrayl(begg:endg)
+    endif
+    deallocate(arrayl)
+
+    ! pft_from_file and pft_lowland_upland assume that 1 pft
+    ! will exist on each hillslope column.  In prepration, set one
+    ! pft weight to 100 and the rest to 0.  The vegetation type
+    ! (patch%itype) will be reassigned when initHillslope is called later.
+    if(pft_distribution_method == pft_from_file .or. &
+         pft_distribution_method == pft_lowland_upland) then
+       do g = begg, endg
+          ! If hillslopes will be used in a gridcell, modify wt_nat_patch, otherwise use original patch distribution
+          if(ncolumns_hillslope(g) > 0) then
+             ! First patch gets 100% weight; all other natural patches are zeroed out
+             wt_nat_patch(g,:)         = 0._r8
+             wt_nat_patch(g,natpft_lb) = 100._r8
+          endif
+       enddo
+
+    else if (pft_distribution_method == pft_uniform_dominant_pft &
+        .or. pft_distribution_method == pft_lowland_dominant_pft) then
+
+       ! If hillslopes will be used in a gridcell, modify wt_nat_patch,
+       ! otherwise use original patch distribution
+       allocate(do_not_collapse(begg:endg))
+       do_not_collapse(begg:endg) = .false.
+       do g = begg, endg
+          if (ncolumns_hillslope(g) == 0) then
+             do_not_collapse(g) = .true.
+          end if
+       end do
+
+       if (pft_distribution_method == pft_uniform_dominant_pft) then
+         ! pft_uniform_dominant_pft uses the patch with the
+         ! largest weight for all hillslope columns in the gridcell
+         n_dominant = 1
+       else if (pft_distribution_method == pft_lowland_dominant_pft) then
+         ! pft_lowland_dominant_pft uses the two patches with the
+         ! largest weights for the hillslope columns in the gridcell
+         n_dominant = 2
+       else
+          call endrun( msg=' ERROR: unrecognized hillslope_pft_distribution_method'//errMsg(sourcefile, __LINE__))
+       end if
+
+       call collapse_to_dominant(wt_nat_patch(begg:endg,:), natpft_lb, natpft_ub, begg, endg, n_dominant, do_not_collapse)
+       deallocate(do_not_collapse)
+
+    else if (pft_distribution_method /= pft_standard) then
+      call endrun( msg=' ERROR: unrecognized hillslope_pft_distribution_method'//errMsg(sourcefile, __LINE__))
+    endif
+
+  end subroutine surfrd_hillslope
+
   subroutine surfrd_lakemask(begg, endg)
     !
     ! !DESCRIPTION:
@@ -891,7 +1056,7 @@ contains
     ! Necessary for the initialisation of the lake land units
     !
     ! !USES:
-     use clm_instur           , only : haslake
+     use clm_instur           , only : pct_lake_max
      use dynSubgridControlMod , only : get_flanduse_timeseries
      use clm_varctl           , only : fname_len
      use fileutils            , only : getfil
@@ -927,9 +1092,9 @@ contains
     call ncd_pio_openfile (ncid_dynuse, trim(locfn), 0)
 
     ! read the lakemask
-    call ncd_io(ncid=ncid_dynuse, varname='HASLAKE'  , flag='read', data=haslake, &
+    call ncd_io(ncid=ncid_dynuse, varname='PCT_LAKE_MAX'  , flag='read', data=pct_lake_max, &
            dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( msg=' ERROR: HASLAKE is not on landuse.timeseries file'//errMsg(sourcefile, __LINE__))
+    if (.not. readvar) call endrun( msg=' ERROR: PCT_LAKE_MAX is not on landuse.timeseries file'//errMsg(sourcefile, __LINE__))
 
     ! close landuse_timeseries file again
     call ncd_pio_closefile(ncid_dynuse)
