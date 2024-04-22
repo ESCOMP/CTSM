@@ -1746,6 +1746,12 @@ Filename of input stream data for LAI
 Filename of input stream data for LAI
 </entry>
 
+<entry id="lai_dtlimit" type="real" category="datasets"
+       group="lai_streams" valid_values="" >
+dtlimit (ratio of max/min stream delta times) for LAI streams, which allows for cycling over a year of data 
+</entry>
+
+
 <entry id="lai_tintalgo" type="char*80" category="datasets"
        group="lai_streams" valid_values="linear,nearest,lower,upper" >
 Time interpolation method to use with LAI streams

@@ -3147,16 +3147,16 @@ contains
                   units='m', ncid=nfid(t))             
              call ncd_defvar(varname='hillslope_area', xtype=ncd_double, &
                   dim1name=namec, long_name='hillslope column area', &
-                  units='m', ncid=nfid(t))             
+                  units='m2', ncid=nfid(t))
              call ncd_defvar(varname='hillslope_elev', xtype=ncd_double, &
                   dim1name=namec, long_name='hillslope column elevation', &
                   units='m', ncid=nfid(t))             
              call ncd_defvar(varname='hillslope_slope', xtype=ncd_double, &
                   dim1name=namec, long_name='hillslope column slope', &
-                  units='m', ncid=nfid(t))             
+                  units='m/m', ncid=nfid(t))
              call ncd_defvar(varname='hillslope_aspect', xtype=ncd_double, &
                   dim1name=namec, long_name='hillslope column aspect', &
-                  units='m', ncid=nfid(t))             
+                  units='radians', ncid=nfid(t))
              call ncd_defvar(varname='hillslope_index', xtype=ncd_int, &
                   dim1name=namec, long_name='hillslope index', &
                   ncid=nfid(t))             
