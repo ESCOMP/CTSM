@@ -270,7 +270,7 @@ def get_parser():
             action="store_true",
             dest="create_domain",
             required=False,
-    )
+        )
         subparser.add_argument(
             "--create-user-mods",
             help="Create user mods directories and files for running CTSM with the subset data.",
@@ -386,14 +386,7 @@ def check_args(args):
         )
         raise argparse.ArgumentError(None, err_msg)
 
-    if not any(
-        [
-            args.create_surfdata,
-            args.create_landuse,
-            args.create_datm,
-            args.create_domain
-        ]
-    ):
+    if not any([args.create_surfdata, args.create_landuse, args.create_datm, args.create_domain]):
         err_msg = textwrap.dedent(
             """\
                 \n ------------------------------------
