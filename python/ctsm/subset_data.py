@@ -228,15 +228,6 @@ def get_parser():
         dest="create_mesh",
         required=False,
     )
-    rg_parser.add_argument(
-        "--create-domain",
-        help="Create CLM domain file for a region. \
-        Domain files are not needed for NUOPC cases, \
-        but are needed to create mesh files that are needed for NUOPC cases.",
-        action="store_true",
-        dest="create_domain",
-        required=False,
-    )
 
     # -- common options between both subparsers
     for subparser in [pt_parser, rg_parser]:
@@ -259,18 +250,27 @@ def get_parser():
         )
         subparser.add_argument(
             "--create-landuse",
-            help="Create landuse data file at single point/region.",
+            help="Create landuse data file at a single point/region.",
             action="store_true",
             dest="create_landuse",
             required=False,
         )
         subparser.add_argument(
             "--create-datm",
-            help="Create DATM forcing data at single point.",
+            help="Create DATM forcing data at a single point/region.",
             action="store_true",
             dest="create_datm",
             required=False,
         )
+        subparser.add_argument(
+            "--create-domain",
+            help="Create CLM domain file for a single point/region \
+            Domain files are not needed for NUOPC cases, \
+            but are needed to create mesh files that are needed for NUOPC cases.",
+            action="store_true",
+            dest="create_domain",
+            required=False,
+    )
         subparser.add_argument(
             "--create-user-mods",
             help="Create user mods directories and files for running CTSM with the subset data.",
