@@ -283,7 +283,7 @@ class RegionalCase(BaseCase):
 
         lats = ds_in[lat_name].astype(np.float32)
         lons = ds_in[lon_name].astype(np.float32)
-        
+
         self.ni = len(lats.ni)
         self.nj = len(lats.nj)
 

@@ -391,13 +391,14 @@ def check_args(args):
             args.create_surfdata,
             args.create_landuse,
             args.create_datm,
+            args.create_domain
         ]
     ):
         err_msg = textwrap.dedent(
             """\
                 \n ------------------------------------
                 \n Must supply one of:
-                \n --create-surface \n --create-landuse \n --create-datm \n \n
+                \n --create-surface \n --create-landuse \n --create-datm \n --create-domain \n \n
                 """
         )
         raise argparse.ArgumentError(None, err_msg)
