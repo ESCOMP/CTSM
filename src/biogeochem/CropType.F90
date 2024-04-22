@@ -352,7 +352,9 @@ contains
          ptr_patch=this%sowing_reason_perharv_patch, default='inactive')
 
     this%harvest_reason_thisyr_patch(begp:endp,:) = spval
-    call hist_addfld2d (fname='HARVEST_REASON_PERHARV', units='1 = mature; 2 = max season length; 3 = incorrect Dec. 31 sowing; 4 = sowing today; 5 = sowing tomorrow; 6 = tomorrow == idop; 7 = killed by cold temperature during vernalization', type2d='mxharvests', &
+    call hist_addfld2d (fname='HARVEST_REASON_PERHARV', units='1 = mature; 2 = max season length; 3 = incorrect Dec. 31 '// &
+    'sowing; 4 = sowing today; 5 = sowing tomorrow; 6 = tomorrow == idop; 7 = killed by cold temperature during vernalization', &
+         type2d='mxharvests', &
          avgflag='I', long_name='Reason for each crop harvest; should only be output annually', &
          ptr_patch=this%harvest_reason_thisyr_patch, default='inactive')
 
@@ -773,7 +775,7 @@ contains
     use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep
-    use clm_varpar       , only : nlevsno, nlevgrnd
+    use clm_varpar       , only : nlevsno, nlevmaxurbgrnd
     use pftconMod        , only : nswheat, nirrig_swheat, pftcon
     use pftconMod        , only : nwwheat, nirrig_wwheat
     use pftconMod        , only : nsugarcane, nirrig_sugarcane
@@ -804,7 +806,7 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL_FL((ubound(t_ref2m_patch)  == (/endp/))          , sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(t_soisno_col)   == (/endc,nlevgrnd/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno_col)   == (/endc,nlevmaxurbgrnd/)) , sourcefile, __LINE__)
 
     dtime = get_step_size()
     nstep = get_nstep()

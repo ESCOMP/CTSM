@@ -207,6 +207,12 @@ contains
          for_testing_no_crop_seed_replenishment, &
          z0param_method, use_z0m_snowmelt
 
+    ! NOTE: EBK 02/26/2024: dust_emis_method is here in CTSM temporarily until it's moved to CMEPS
+    ! See: https://github.com/ESCOMP/CMEPS/pull/429
+    ! Normally this should also need error checking and a broadcast, but since
+    ! there is only one hardcoded option right now that is unneeded.
+    namelist /clm_inparm/ dust_emis_method
+
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
          som_adv_flux, max_depth_cryoturb
@@ -235,7 +241,8 @@ contains
           fates_inventory_ctrl_filename,                &
           fates_parteh_mode,                            &
           fates_seeddisp_cadence,                       &
-          use_fates_tree_damage
+          use_fates_tree_damage,                        &
+          fates_history_dimlevel
 
     ! Ozone vegetation stress method
     namelist / clm_inparm / o3_veg_stress_method
@@ -271,6 +278,8 @@ contains
          use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
 
     ! All old cpp-ifdefs are below and have been converted to namelist variables
+
+    namelist /clm_inparm/ convert_ocean_to_land
 
     ! Number of dominant pfts and landunits. Enhance ctsm performance by
     ! reducing the number of active pfts to n_dom_pfts and
@@ -495,7 +504,7 @@ contains
              call endrun(msg=' ERROR: C13 and C14 dynamics are not compatible with FATES.'//&
                   errMsg(sourcefile, __LINE__))
           end if
-          
+
        else
           
           ! These do default to false anyway, but this emphasizes they
@@ -636,7 +645,7 @@ contains
          snicar_solarspec /= 'mid_latitude_winter' .or.  &
          snicar_dust_optics /= 'sahara' .or.  &
          snicar_numrad_snw /= 5 .or.  &
-         snicar_snobc_intmix .or. snicar_snodst_intmix .or.  &
+         snicar_snodst_intmix .or.  &
          .not. snicar_use_aerosol .or.  &
          do_sno_oc) then
        call endrun(msg=' ERROR: You have selected an option that is EXPERIMENTAL, UNSUPPORTED, and UNTESTED. For guidance see namelist_defaults_ctsm.xml'//&
@@ -743,6 +752,7 @@ contains
     ! Other subgrid logic
     call mpi_bcast(run_zero_weight_urban, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast(all_active, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast(convert_ocean_to_land, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! Number of dominant pfts and landunits. Enhance ctsm performance by
     ! reducing the number of active pfts to n_dom_pfts and
@@ -797,6 +807,7 @@ contains
     call mpi_bcast (fluh_timeseries, len(fluh_timeseries) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (fates_seeddisp_cadence, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (fates_history_dimlevel, 2, MPI_INTEGER, 0, mpicom, ier)
 
     ! flexibleCN nitrogen model
     call mpi_bcast (use_flexibleCN, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -994,6 +1005,7 @@ contains
     else
        write(iulog,*) '   land frac data = ',trim(fatmlndfrc)
     end if
+    write(iulog,*) '   Convert ocean to land = ', convert_ocean_to_land
     write(iulog,*) '   Number of ACTIVE PFTS (0 means input pft data NOT collapsed to n_dom_pfts) =', n_dom_pfts
     write(iulog,*) '   Number of ACTIVE LANDUNITS (0 means input landunit data NOT collapsed to n_dom_landunits) =', n_dom_landunits
     write(iulog,*) '   Collapse urban landunits; done before collapsing all landunits to n_dom_landunits; .false. means do nothing i.e. keep all the urban landunits, though n_dom_landunits may still remove them =', collapse_urban

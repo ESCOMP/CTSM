@@ -180,7 +180,7 @@ module histFileMod
   private :: hist_set_snow_field_2d    ! Set values in history field dimensioned by levsno
   private :: list_index                ! Find index of field in exclude list
   private :: set_hist_filename         ! Determine history dataset filenames
-  private :: getname                   ! Retrieve name portion of input "inname"
+  public  :: getname                   ! Retrieve name portion of input "inname" (PUBLIC FOR FATES)
   private :: getflag                   ! Retrieve flag
   private :: next_history_pointer_index ! Latest index into raw history data (clmptr_r*) arrays
   private :: max_nFields               ! The max number of fields on any tape
@@ -3505,17 +3505,6 @@ contains
               imissing_value=ispval, ifill_value=ispval)
        end if
        if (ldomain%isgrid2d) then
-          call ncd_defvar(varname='pftmask' , xtype=ncd_int, &
-              dim1name='lon', dim2name='lat', &
-              long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
-              imissing_value=ispval, ifill_value=ispval)
-       else
-          call ncd_defvar(varname='pftmask' , xtype=ncd_int, &
-              dim1name=grlnd, &
-              long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
-              imissing_value=ispval, ifill_value=ispval)
-       end if
-       if (ldomain%isgrid2d) then
           call ncd_defvar(varname='nbedrock' , xtype=ncd_int, &
               dim1name='lon', dim2name='lat', &
               long_name='index of shallowest bedrock layer', ncid=nfid(t), &
@@ -3542,7 +3531,6 @@ contains
        call ncd_io(varname='area'    , data=ldomain%area, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='landfrac', data=ldomain%frac, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='landmask', data=ldomain%mask, dim1name=grlnd, ncid=nfid(t), flag='write')
-       call ncd_io(varname='pftmask' , data=ldomain%pftm, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='nbedrock' , data=grc%nbedrock, dim1name=grlnd, ncid=nfid(t), flag='write')
 
     end if  ! (define/write mode

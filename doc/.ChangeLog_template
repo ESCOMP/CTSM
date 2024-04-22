@@ -18,6 +18,8 @@ Does this tag change answers significantly for any of the following physics conf
 
     [Put an [X] in the box for any configuration with significant answer changes.]
 
+[ ] clm6_0
+
 [ ] clm5_1
 
 [ ] clm5_0
@@ -31,9 +33,7 @@ Bugs fixed
 ----------
 [Remove any lines that don't apply. Remove entire section if nothing applies.]
 
-CTSM issues fixed (include CTSM Issue #):
-
-Known bugs introduced in this tag (include issue #):
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -69,11 +69,7 @@ Testing summary:
 Nearly all CTSM tags should undergo 'regular' (aux_clm) testing.
 However, it occasionally makes sense to do more or less system testing;
 here is guidance on different available levels of system testing:
-    a) no system testing (for use when the only changes are ones that
-                          have absolutely no impact on system runs; this
-                          includes documentation-only tags, tags that
-                          just change the tools or some python code that
-                          does not impact system runs, etc.)
+    a) no system testing (this would normally be something that would go to the b4b-dev branch)
     b) minimal (for use in rare cases where only a small change with
                 known behavior is added ... eg. a minor bug fix. This
 		might be to just run the "short" test list, or to run
@@ -82,10 +78,10 @@ here is guidance on different available levels of system testing:
                     run the python testing listed below)
     d) regular (regular tests on normal machines if CTSM source is modified)
     e) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
-                and normally all of the ancillary tests (build-namelist, python, ptclm, etc.)
-		would be run as well)
+                and normally all of the ancillary tests (build-namelist, python, etc.)
+		            would be run as well)
 
-In addition, various other tests of the tools, python and perl
+In addition, various other tests of the tools, python and namelist script
 infrastructure should be run when appropriate, as described below.
 
 ...]
@@ -95,10 +91,6 @@ infrastructure should be run when appropriate, as described below.
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
-
-    derecho -
-
-  tools-tests (test/tools) (if tools have been changed):
 
     derecho -
 
@@ -126,6 +118,9 @@ infrastructure should be run when appropriate, as described below.
     izumi -------
 
   any other testing (give details below):
+
+  ctsm_sci
+     derecho ----
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
