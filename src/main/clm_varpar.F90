@@ -122,7 +122,7 @@ module clm_varpar
 contains
 
   !------------------------------------------------------------------------------
-  subroutine clm_varpar_init(actual_maxsoil_patches, surf_numpft, surf_numcft)
+  subroutine clm_varpar_init(actual_maxsoil_patches, surf_numpft, surf_numcft, actual_nlevurb)
     !
     ! !DESCRIPTION:
     ! Initialize module variables 
@@ -135,6 +135,7 @@ contains
                                                    ! from fates (via its parameter file)
     integer, intent(in) :: surf_numpft             ! Number of PFTs in the surf dataset
     integer, intent(in) :: surf_numcft             ! Number of CFTs in the surf dataset
+    integer, intent(in) :: actual_nlevurb          ! nlevurb from surface dataset
     !
     ! !LOCAL VARIABLES:
     !
@@ -195,7 +196,7 @@ contains
     mxharvests = mxsowings + 1
 
     nlevsoifl   =  10
-    nlevurb     =  5
+    nlevurb     =  actual_nlevurb
 
     if ( masterproc ) write(iulog, *) 'soil_layerstruct_predefined varpar ', soil_layerstruct_predefined
     if ( masterproc ) write(iulog, *) 'soil_layerstruct_userdefined varpar ', soil_layerstruct_userdefined
