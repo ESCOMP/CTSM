@@ -4424,6 +4424,9 @@ sub setup_logic_fates {
               } elsif ( ! -f "$fname" ) {
                  $log->fatal_error("$fname does NOT point to a valid filename" );
               }
+
+              $var = "flandusepftdat";
+              add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'phys'=>$nl_flags->{'phys'}, 'hgrid'=>$nl_flags->{'res'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, nofail=>1 );
            }
         }
 
