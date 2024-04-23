@@ -89,10 +89,12 @@ contains
           avgflag='A', long_name='prescribed maximum interior building temperature',   &
           ptr_lunit=this%t_building_max, default='inactive', set_nourb=spval, &
           l2g_scale_type='unity')
-    call hist_addfld1d (fname='P_AC', units='a fraction between 0 and 1',      &
-          avgflag='A', long_name='prescribed air-conditioning ownership rate',   &
-          ptr_lunit=this%p_ac, default='inactive', set_nourb=spval, &
-          l2g_scale_type='unity')
+    if (urban_explicit_ac) then
+       call hist_addfld1d (fname='P_AC', units='a fraction between 0 and 1',      &
+             avgflag='A', long_name='prescribed air-conditioning ownership rate',   &
+             ptr_lunit=this%p_ac, default='inactive', set_nourb=spval, &
+             l2g_scale_type='unity')
+    end if
 
   end subroutine Init
 
