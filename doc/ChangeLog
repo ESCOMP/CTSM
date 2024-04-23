@@ -1,4 +1,107 @@
 ===============================================================
+Tag name: ctsm5.2.001
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon 22 Apr 2024 02:10:55 PM MDT
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+Some fixes for run_neon that came up in ctsm5.1.dev172.
+Small bug fix for units of vector format hillslope hydrology.
+Start adding PLUMBER2 users-mods (NOT functional)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  #2470 -- NEON case won't build
+  #2471 -- run_neon calendar issues
+  #2474 -- externals prevent creation of directory
+  #2414 -- Correct subset_data error checking
+  #2437 -- externals update broke NEON features
+  #2435 -- Issues with run_neon with the --experiment flag starting in ctsm5.1.dev172
+  Partial for #2137 -- Create csv file and user-mod directories for PLUMBER2 sites
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   NOTE: The new PLUMBER2 user-mods can NOT be used right now!
+         More changes need to happen before PLUMBER2 sites can be run
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New namelist item:  lai_dtlimit (when use_lai_streams is on)
+   User-mod directories are coming in for: PLUMBER2
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Introduces some NCL scripts for PLUMBER2 that we need to convert to python
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+@ekluzek @olyson @slevis-lmwg @TeaganKing @wwieder
+
+#2155 -- PLUMBER2 plumbing (csv file, wrapper script, usermods, and scripts).
+#2477 -- One-line fix for izumi NEON-MOAB test error introduced in #2472
+#2472 -- B4b neon  tag: simple bfb
+#2475 -- fix units for vector hh output
+#2435 -- experiment bug fix
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.0
 Originator(s): many (see below)
 Date: Sat 20 Apr 2024 12:33:33 AM MDT

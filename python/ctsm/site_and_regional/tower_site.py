@@ -257,11 +257,11 @@ class TowerSite:
         user_version,
         tower_type,
         user_mods_dirs,
-        overwrite=False,
-        setup_only=False,
-        no_batch=False,
-        rerun=False,
-        experiment=False,
+        overwrite,
+        setup_only,
+        no_batch,
+        rerun,
+        experiment,
     ):
         """
         Run case.
@@ -301,7 +301,7 @@ class TowerSite:
 
         print("using this version:", version)
 
-        if experiment is not False:
+        if (experiment is not False) and (experiment is not None):
             self.name = self.name + "." + experiment
         case_root = os.path.abspath(os.path.join(base_case_root, "..", self.name + "." + run_type))
 
@@ -391,11 +391,13 @@ class TowerSite:
                 case.set_value("RUN_TYPE", "hybrid")
 
             if run_type == "postad":
+                case.case_setup()
                 self.set_ref_case(case)
                 case.set_value("STOP_N", run_length)
 
             # For transient cases STOP will be set in the user_mod_directory
             if run_type == "transient":
+                case.case_setup()
                 if self.finidat:
                     case.set_value("RUN_TYPE", "startup")
                 else:

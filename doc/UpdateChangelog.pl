@@ -41,7 +41,7 @@ EXAMPLES:
 
      To document a new tag
 
-     $ProgName ctsm5.2.dev099 "Description of this tag"
+     $ProgName ctsm5.3.099 "Description of this tag"
 EOF
 }
 
@@ -67,8 +67,8 @@ if ( ! $opts{'update'} ) {
    $tag = $ARGV[0];
    $sum = $ARGV[1];
 
-   # Tags should be something like ctsm5.3.dev001 or ctsm5.3.0
-   if ( ($tag !~ /ctsm[0-9]\.[0-9]\.(dev[0-9][0-9][0-9]|[0-9][0-9])/) && ($tag !~ /ctsm[0-9]\.([0-9])\.([0-9])/) ) {
+   # Tags should be something like ctsm5.3.001 or ctsm5.3.0
+   if ( ($tag !~ /ctsm[0-9]\.[0-9]\.([0-9][0-9][0-9]|[0-9][0-9])/) && ($tag !~ /ctsm[0-9]\.([0-9])\.([0-9])/) ) {
      print "ERROR: bad tagname: $tag\n";
      usage();
    }
