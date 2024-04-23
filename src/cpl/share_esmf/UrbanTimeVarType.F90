@@ -78,7 +78,7 @@ contains
     ! Allocate urbantv data structure
 
     allocate(this%t_building_max(begl:endl)); this%t_building_max(:) = nan
-    allocate(this%p_ac(begl:endl)); this%p_ac(:) = 0._r8
+    allocate(this%p_ac(begl:endl)); this%p_ac(:) = nan
     allocate(stream_varnames(stream_varname_MIN:stream_varname_MAX))
 
     call this%urbantv_init(bounds, NLFilename)
@@ -299,8 +299,7 @@ contains
           end do
        else
           this%t_building_max(l) = spval
-          ! this%p_ac(l) = nan ! set to nan for non-urban landunit
-          this%p_ac(l) = 0._r8
+          this%p_ac(l) = spval
        end if
     end do
     deallocate(dataptr2d)
@@ -314,8 +313,13 @@ contains
              ig = ig+1
              if (g == lun%gridcell(l)) exit
           end do
-          if ( .not. urban_valid(g) .or. (this%t_building_max(l) <= 0._r8) &
-             .or. (this%p_ac(l) < 0._r8) .or. (this%p_ac(l) > 1._r8)) then   ! check if AC adoption rate is outside of range 0 to 1
+          ! Check for valid urban data
+          if ( .not. urban_valid(g) .or. (this%t_building_max(l) <= 0._r8)) then
+             found = .true.
+             gindx = g
+             lindx = l
+             exit
+          else if (urban_explicit_ac .and. (this%p_ac(l) < 0._r8 .or. this%p_ac(l) > 1._r8)) then
              found = .true.
              gindx = g
              lindx = l
