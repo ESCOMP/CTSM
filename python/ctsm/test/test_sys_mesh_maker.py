@@ -30,7 +30,7 @@ class SysTestMeshMaker(unittest.TestCase):
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         self._testinputs_path = testinputs_path
         self._infile = os.path.join(
-            testinputs_path, "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_modified.nc"
+            testinputs_path, "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031_modified.nc"
         )
         self._tempdir = tempfile.mkdtemp()
         self.mesh_out = os.path.join(self._tempdir, "mesh_out.nc")
@@ -60,7 +60,7 @@ class SysTestMeshMaker(unittest.TestCase):
         """Do a basic test for a small regional grid"""
         infile = os.path.join(
             self._testinputs_path,
-            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_modified_with_crop.nc",
+            "surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517_modified_with_crop.nc",
         )
         sys.argv = [
             "mesh_maker",
@@ -71,7 +71,7 @@ class SysTestMeshMaker(unittest.TestCase):
             "--lon",
             "LONGXY",
             "--mask",
-            "PFTDATA_MASK",
+            "LANDFRAC_PFT",
             "--output",
             self.mesh_out,
         ]
@@ -245,7 +245,7 @@ class SysTestMeshMaker(unittest.TestCase):
             "--lon",
             "LONGXY",
             "--mask",
-            "PFTDATA_MASK",
+            "LANDFRAC_PFT",
             "--output",
             self.mesh_out,
         ]
@@ -386,7 +386,7 @@ class SysTestMeshMaker(unittest.TestCase):
         """Missing area units"""
         self._infile = os.path.join(
             self._testinputs_path,
-            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_modified_with_crop.nc",
+            "surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517_modified_with_crop.nc",
         )
         sys.argv = [
             "mesh_maker",
