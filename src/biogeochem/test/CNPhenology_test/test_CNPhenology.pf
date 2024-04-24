@@ -2,7 +2,7 @@ module test_CNPhenology
 
   ! Tests of CNPhenologyMod
 
-  use pfunit_mod
+  use funit
   use unittestSubgridMod
   use CNPhenologyMod
   use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
@@ -293,6 +293,212 @@ contains
     end do
   end subroutine check_crit_dayl_dependsonlatnveg
 
+  @Test
+  subroutine test_get_swindow_startend(this)
+    use clm_time_manager, only : get_curr_days_per_year
+    class(TestCNPhenology), intent(inout) :: this
+    integer, dimension(3), parameter :: rx_starts = (/1, 150, -1/)
+    integer, dimension(3), parameter :: rx_ends   = (/45, 180, -1/)
+    integer, parameter :: param_start = 200
+    integer, parameter :: param_end   = 250
+    integer :: w, start_w, end_w
 
+    call get_swindow(1, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w)
+    @assertEqual(1, w)
+    @assertEqual(1, start_w)
+    @assertEqual(45, end_w)
+
+    call get_swindow(45, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w)
+    @assertEqual(1, w)
+    @assertEqual(1, start_w)
+    @assertEqual(45, end_w)
+
+    call get_swindow(149, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w)
+    @assertEqual(2, w)
+    @assertEqual(150, start_w)
+    @assertEqual(180, end_w)
+
+    call get_swindow(175, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w)
+    @assertEqual(2, w)
+    @assertEqual(150, start_w)
+    @assertEqual(180, end_w)
+
+    call get_swindow(229, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w)
+    @assertEqual(1, w)
+    @assertEqual(1, start_w)
+    @assertEqual(45, end_w)
+
+    call get_swindow(get_curr_days_per_year(), rx_starts, rx_ends, param_start, param_end, w, start_w, end_w)
+    @assertEqual(1, w)
+    @assertEqual(1, start_w)
+    @assertEqual(45, end_w)
+  end subroutine test_get_swindow_startend
+
+  @Test
+  subroutine test_get_swindow_endstart(this)
+    use clm_time_manager, only : get_curr_days_per_year
+    class(TestCNPhenology), intent(inout) :: this
+    integer, dimension(3), parameter :: rx_starts = (/360, 150, -1/)
+    integer, dimension(3), parameter :: rx_ends   = (/45,  180, -1/)
+    integer, parameter :: param_start = 200
+    integer, parameter :: param_end   = 250
+    integer :: w, start_w, end_w
+
+    call get_swindow(1, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w)
+    @assertEqual(1, w)
+    @assertEqual(360, start_w)
+    @assertEqual(45, end_w)
+
+    call get_swindow(45, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w)
+    @assertEqual(1, w)
+    @assertEqual(start_w, 360)
+    @assertEqual(end_w, 45)
+
+    call get_swindow(149, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w)
+    @assertEqual(2, w)
+    @assertEqual(150, start_w)
+    @assertEqual(180, end_w)
+
+    call get_swindow(175, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w)
+    @assertEqual(2, w)
+    @assertEqual(150, start_w)
+    @assertEqual(180, end_w)
+
+    call get_swindow(229, rx_starts, rx_ends, param_start, param_end, w, start_w, end_w)
+    @assertEqual(1, w)
+    @assertEqual(360, start_w)
+    @assertEqual(45, end_w)
+
+    call get_swindow(get_curr_days_per_year(), rx_starts, rx_ends, param_start, param_end, w, start_w, end_w)
+    @assertEqual(1, w)
+    @assertEqual(360, start_w)
+    @assertEqual(45, end_w)
+  end subroutine test_get_swindow_endstart
+
+  @Test
+  subroutine test_was_sown_in_this_window_startend(this)
+    use clm_time_manager , only : is_doy_in_interval
+    class(TestCNPhenology), intent(inout) :: this
+    integer, parameter :: sowing_window_startdate = 84
+    integer, parameter :: sowing_window_enddate   = 205
+    integer :: jday, idop
+
+    jday = 100
+
+    idop = 90
+    @assertTrue(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    ! With jday 100 and idop 90 (as well as idop 100 below), if the existing value of sown_in_this_window is false, then even though it LOOKS like it was sown in the current window, it must have been in a previous year. If it had been sown in this window this year, sown_in_this_window would be true.
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+
+    idop = 100
+    @assertTrue(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+
+    idop = 101
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+
+    idop = 120
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+
+    idop = 360
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+
+    jday = 300
+
+    idop = 90
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+
+    idop = 360
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+  end subroutine test_was_sown_in_this_window_startend
+
+  @Test
+  subroutine test_was_sown_in_this_window_endstart(this)
+    use clm_time_manager , only : is_doy_in_interval
+    class(TestCNPhenology), intent(inout) :: this
+    integer, parameter :: sowing_window_startdate = 205
+    integer, parameter :: sowing_window_enddate   = 84
+    integer :: jday, idop
+
+    jday = 300
+
+    idop = 60
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+
+    idop = 205
+    @assertTrue(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    ! With jday 300 and idop 205 (as well as jday 70 idop 60 below), if the existing value of sown_in_this_window is false, then even though it LOOKS like it was sown in the current window, it must have been in a previous year. If it had been sown in the actual current window, sown_in_this_window would be true.
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+
+    idop = 300
+    @assertTrue(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+
+    idop = 301
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+
+    jday = 70
+
+    idop = 60
+    @assertTrue(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+
+    idop = 75
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+
+    idop = 301
+    @assertTrue(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+
+  end subroutine test_was_sown_in_this_window_endstart
+
+  @Test
+  subroutine test_was_sown_in_this_window_sameday(this)
+    use clm_time_manager , only : is_doy_in_interval
+    class(TestCNPhenology), intent(inout) :: this
+    integer, parameter :: sowing_window_startdate = 205
+    integer, parameter :: sowing_window_enddate   = 205
+    integer :: jday, idop
+
+    ! If today == start == end, we trust whatever the current value of sown_in_this_window is.
+    jday = 205
+    idop = 205
+    ! If it's false, then even if idop == jday, it that idop value must be left over from planting in a PREVIOUS year.
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+    ! The ONLY way was_sown_in_this_window() should return true is if today == start == end == idop AND the current value is true.
+    @assertTrue(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+
+    ! There is no other situation where was_sown_in_this_window() should return true.
+
+    jday = 300
+    idop = 60
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+
+    idop = 205
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+
+    idop = 300
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+
+    idop = 301
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+
+    jday = 70
+
+    idop = 60
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+
+    idop = 75
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+
+    idop = 301
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .true.))
+    @assertFalse(was_sown_in_this_window(sowing_window_startdate, sowing_window_enddate, jday, idop, .false.))
+
+  end subroutine test_was_sown_in_this_window_sameday
 
 end module test_CNPhenology

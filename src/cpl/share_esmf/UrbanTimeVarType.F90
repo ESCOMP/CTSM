@@ -282,11 +282,10 @@ contains
     ! Determine this%tbuilding_max (and this%p_ac, if applicable) for all landunits
     do l = bounds%begl,bounds%endl
        if (lun%urbpoi(l)) then
-          ig = 0
-          do g = bounds%begg,bounds%endg
-             ig = ig+1
-             if (g == lun%gridcell(l)) exit
-          end do
+          ! Note that since l is within [begl, endl] bounds, we can assume
+          ! lun%gricell(l) is within [begg, endg]
+          ig = lun%gridcell(l) - bounds%begg + 1
+
           do n = stream_varname_MIN,stream_varname_MAX
              if (stream_varnames((lun%itype(l)-6)) == stream_varnames(n)) then
                 this%t_building_max(l) = dataptr2d(ig,n)
@@ -308,9 +307,7 @@ contains
     found = .false.
     do l = bounds%begl,bounds%endl
        if (lun%urbpoi(l)) then
-          ig = 0
           do g = bounds%begg,bounds%endg
-             ig = ig+1
              if (g == lun%gridcell(l)) exit
           end do
           ! Check for valid urban data

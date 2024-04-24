@@ -2,7 +2,7 @@ module test_set_tracers
 
   ! Tests of Wateratm2lndType: routines that set tracers
 
-  use pfunit_mod
+  use funit
   use Wateratm2lndType
   use WaterInfoBulkType, only : water_info_bulk_type
   use WaterInfoTracerType, only : water_info_tracer_type

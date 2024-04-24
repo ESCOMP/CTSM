@@ -2,13 +2,14 @@ module test_downscale_forcings
 
   ! Tests of atm2lndMod: downscale_forcings
 
-  use pfunit_mod
+  use funit
   use atm2lndMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestSubgridMod
   use unittestSimpleSubgridSetupsMod
   use unittestArrayMod
   use atm2lndType, only : atm2lnd_type, atm2lnd_params_type
+  use SurfaceAlbedoType, only : surfalb_type
   use Wateratm2lndBulkType, only : wateratm2lndbulk_type
   use WaterInfoBulkType, only : water_info_bulk_type
   use TopoMod, only : topo_type
@@ -25,6 +26,7 @@ module test_downscale_forcings
   @TestCase
   type, extends(TestCase) :: TestDownscaleForcings
      type(atm2lnd_type) :: atm2lnd_inst
+     type(surfalb_type) :: surfalb_inst
      type(wateratm2lndbulk_type) :: wateratm2lndbulk_inst
      type(topo_type_always_downscale) :: topo_inst
      real(r8), allocatable :: eflx_sh_precip_conversion(:)
@@ -204,8 +206,13 @@ contains
     class(TestDownscaleForcings), intent(inout) :: this
 
     this%eflx_sh_precip_conversion = col_array()
-    call downscale_forcings(bounds, this%topo_inst, &
-         this%atm2lnd_inst, this%wateratm2lndbulk_inst, &
+    call downscale_forcings(bounds, &
+         this%topo_inst, &
+         this%atm2lnd_inst, &
+         ! Currently surfalb_inst is only used for hillslope downscaling; we need to pass
+         ! it to satisfy the interface but we haven't bothered setting it up
+         this%surfalb_inst, &
+         this%wateratm2lndbulk_inst, &
          this%eflx_sh_precip_conversion)
   end subroutine call_downscale_forcings
 

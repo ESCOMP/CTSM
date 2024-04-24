@@ -2,7 +2,7 @@ module test_daylength
 
   ! Tests of the daylength function in DaylengthMod
 
-  use pfunit_mod
+  use funit
 
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_const_mod, only : SHR_CONST_PI

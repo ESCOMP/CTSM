@@ -68,8 +68,20 @@ module ColumnType
      real(r8), pointer :: z_lake               (:,:) ! layer depth for lake (m)
      real(r8), pointer :: lakedepth            (:)   ! variable lake depth (m)                             
      integer , pointer :: nbedrock             (:)   ! variable depth to bedrock index
+     ! hillslope hydrology variables
+     integer,  pointer :: col_ndx              (:)   ! column index of column (hillslope hydrology)
+     integer,  pointer :: colu                 (:)   ! column index of uphill column (hillslope hydrology)
+     integer,  pointer :: cold                 (:)   ! column index of downhill column (hillslope hydrology)
+     integer,  pointer :: hillslope_ndx        (:)   ! hillslope identifier
+     real(r8), pointer :: hill_elev            (:)   ! mean elevation of column relative to stream channel (m)
+     real(r8), pointer :: hill_slope           (:)   ! mean along-hill slope (m/m)
+     real(r8), pointer :: hill_area            (:)   ! mean surface area (m2)
+     real(r8), pointer :: hill_width           (:)   ! across-hill width of bottom boundary of column (m)
+     real(r8), pointer :: hill_distance        (:)   ! along-hill distance of column from bottom of hillslope (m)
+     real(r8), pointer :: hill_aspect          (:)   ! azimuth angle of column wrt to north, positive to east (radians)
 
      ! other column characteristics
+     logical , pointer :: is_hillslope_column(:)     ! true if this column is a hillslope element
      logical , pointer :: hydrologically_active(:)   ! true if this column is a hydrologically active type
      logical , pointer :: urbpoi               (:)   ! true=>urban point
 
@@ -130,13 +142,22 @@ contains
     allocate(this%lakedepth   (begc:endc))                     ; this%lakedepth   (:)   = spval  
     allocate(this%dz_lake     (begc:endc,nlevlak))             ; this%dz_lake     (:,:) = nan
     allocate(this%z_lake      (begc:endc,nlevlak))             ; this%z_lake      (:,:) = nan
-
+    allocate(this%col_ndx    (begc:endc))                      ; this%col_ndx(:) = ispval
+    allocate(this%colu       (begc:endc))                      ; this%colu   (:) = ispval
+    allocate(this%cold       (begc:endc))                      ; this%cold   (:) = ispval
+    allocate(this%hillslope_ndx(begc:endc))                    ; this%hillslope_ndx (:) = ispval
+    allocate(this%hill_elev(begc:endc))                        ; this%hill_elev     (:) = spval
+    allocate(this%hill_slope(begc:endc))                       ; this%hill_slope    (:) = spval
+    allocate(this%hill_area(begc:endc))                        ; this%hill_area     (:) = spval
+    allocate(this%hill_width(begc:endc))                       ; this%hill_width    (:) = spval
+    allocate(this%hill_distance(begc:endc))                    ; this%hill_distance (:) = spval
+    allocate(this%hill_aspect(begc:endc))                      ; this%hill_aspect (:) = spval
     allocate(this%nbedrock   (begc:endc))                      ; this%nbedrock   (:)   = ispval  
     allocate(this%levgrnd_class(begc:endc,nlevmaxurbgrnd))     ; this%levgrnd_class(:,:) = ispval
     allocate(this%micro_sigma (begc:endc))                     ; this%micro_sigma (:)   = nan
     allocate(this%topo_slope  (begc:endc))                     ; this%topo_slope  (:)   = nan
     allocate(this%topo_std    (begc:endc))                     ; this%topo_std    (:)   = nan
-
+    allocate(this%is_hillslope_column(begc:endc))              ; this%is_hillslope_column(:) = .false.
     allocate(this%hydrologically_active(begc:endc))            ; this%hydrologically_active(:) = .false.
     allocate(this%urbpoi      (begc:endc))                     ; this%urbpoi      (:)   = .false.
 
@@ -174,9 +195,19 @@ contains
     deallocate(this%topo_std   )
     deallocate(this%nbedrock   )
     deallocate(this%levgrnd_class)
+    deallocate(this%is_hillslope_column)
     deallocate(this%hydrologically_active)
-    deallocate(this%urbpoi)
-
+    deallocate(this%col_ndx    )
+    deallocate(this%colu       )
+    deallocate(this%cold       )
+    deallocate(this%hillslope_ndx)
+    deallocate(this%hill_elev    )
+    deallocate(this%hill_slope   )
+    deallocate(this%hill_area    )
+    deallocate(this%hill_width   )
+    deallocate(this%hill_distance)
+    deallocate(this%hill_aspect  )
+    deallocate(this%urbpoi       )
   end subroutine Clean
 
   !-----------------------------------------------------------------------

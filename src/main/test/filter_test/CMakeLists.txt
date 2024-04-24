@@ -1,4 +1,3 @@
-create_pFUnit_test(filter test_filter_exe
-  "test_filter_col.pf" "")
-
-target_link_libraries(test_filter_exe clm csm_share)
+add_pfunit_ctest(filter
+  TEST_SOURCES "test_filter_col.pf"
+  LINK_LIBRARIES clm csm_share)
