@@ -154,14 +154,14 @@ contains
     ! Local variables
     integer                          :: atm_ozone_frequency_val
     !-----------------------------------------------------------------------
-    
-    ! read what atm ozone frequency we have 
+
+    ! read what atm ozone frequency we have
     call shr_ozone_coupling_readnl("drv_flds_in", atm_ozone_frequency_val)
     this%atm_ozone_freq = atm_ozone_frequency_val
-    
+
     ! if we have multi-day average input ozone, we need to convert to sub-daily using
     ! an input anomaly file
-    if (this%atm_ozone_freq == atm_ozone_frequency_multiday_average) then 
+    if (this%atm_ozone_freq == atm_ozone_frequency_multiday_average) then
       ! initialize and read in data for diurnal O3 anomaly stream
       call read_O3_stream(this%diurnalOzoneAnomInst, bounds)
     end if
@@ -431,14 +431,14 @@ contains
 
          ! Ozone uptake for shaded leaves
          call CalcOzoneUptakeOnePoint( &
-              forc_ozone=forc_o3(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+              forc_ozone=forc_o3_down(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
               rs=rssha(p), rb=rb(p), ram=ram(p), &
               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
               o3uptake=o3uptakesha(p))
 
          ! Ozone uptake for sunlit leaves
          call CalcOzoneUptakeOnePoint( &
-              forc_ozone=forc_o3(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+              forc_ozone=forc_o3_down(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
               rs=rssun(p), rb=rb(p), ram=ram(p), &
               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
               o3uptake=o3uptakesun(p))
