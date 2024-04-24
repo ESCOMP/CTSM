@@ -7,6 +7,7 @@ module surfrdUtilsMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod , only : r8 => shr_kind_r8
+  use clm_varcon   , only : sum_to_1_tol
   use clm_varctl   , only : iulog,use_fates
   use abortutils   , only : endrun
   use shr_log_mod  , only : errMsg => shr_log_errMsg
@@ -20,7 +21,8 @@ module surfrdUtilsMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: check_sums_equal_1  ! Confirm that sum(arr(n,:)) == 1 for all n
   public :: renormalize         ! Renormalize an array
-  public :: convert_cft_to_pft  ! Conversion of crop CFT to natural veg PFT:w
+  public :: apply_convert_ocean_to_land ! Apply the conversion of ocean to land points
+  public :: convert_cft_to_pft  ! Conversion of crop CFT to natural veg PFT
   public :: collapse_crop_types ! Collapse unused crop types into types used in this run
   public :: collapse_individual_lunits  ! Collapse landunits by user-defined thresholds
   public :: collapse_to_dominant ! Collapse to dominant pfts or landunits
@@ -45,13 +47,12 @@ contains
     character(len=*), intent(in) :: name         ! name of array
     character(len=*), intent(in) :: caller       ! identifier of caller, for more meaningful error messages
     integer, optional, intent(out):: ier         ! Return an error code rather than abort
-    real(r8), optional, intent(out):: sumto(lb:)  ! The value the array should sum to (1.0 if not provided)
+    real(r8), optional, intent(in):: sumto(lb:)  ! The value the array should sum to (1.0 if not provided)
     !
     ! !LOCAL VARIABLES:
     logical :: found
     integer :: nl
     integer :: nindx
-    real(r8), parameter :: eps = 1.e-13_r8
     real(r8), allocatable :: TotalSum(:)
     integer :: ub  ! upper bound of the first dimension of arr
     !-----------------------------------------------------------------------
@@ -63,8 +64,8 @@ contains
     if( present(ier) ) ier = 0
     found = .false.
 
-    do nl = lbound(arr, 1), ub
-       if (abs(sum(arr(nl,:)) - TotalSum(nl)) > eps) then
+    do nl = lb, ub
+       if (abs(sum(arr(nl,:)) - TotalSum(nl)) > sum_to_1_tol) then
           found = .true.
           nindx = nl
           exit
@@ -111,6 +112,40 @@ contains
     end do
 
   end subroutine renormalize
+
+  !-----------------------------------------------------------------------
+  subroutine apply_convert_ocean_to_land(wt_lunit, begg, endg)
+    !
+    ! !DESCRIPTION:
+    ! Convert ocean points to land by changing ocean to natveg;
+    ! typically these points will become bare ground.
+    !
+    ! Originally ocean points were assigned to wetland, so the motivation for
+    ! for this subroutine was to avoid the negative runoff that sometimes comes
+    ! from wetlands.
+    !
+    ! !USES:
+    use landunit_varcon, only : istsoil, istocn, max_lunit
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: begg  ! Beginning grid cell index
+    integer, intent(in) :: endg  ! Ending grid cell index
+    ! This array is modified in-place:
+    real(r8), intent(inout) :: wt_lunit(begg:endg, max_lunit) ! Weights of landunits per grid cell
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g
+
+    character(len=*), parameter :: subname = 'apply_convert_ocean_to_land'
+    !-----------------------------------------------------------------------
+
+    do g = begg, endg
+       wt_lunit(g,istsoil) = wt_lunit(g,istsoil) + wt_lunit(g,istocn)
+       wt_lunit(g,istocn) = 0._r8
+    end do
+
+  end subroutine apply_convert_ocean_to_land
+
 
 !-----------------------------------------------------------------------
   subroutine convert_cft_to_pft( begg, endg, cftsize, wt_cft )
@@ -235,7 +270,7 @@ contains
   end subroutine collapse_individual_lunits
 
   !-----------------------------------------------------------------------
-  subroutine collapse_to_dominant(weight, lower_bound, upper_bound, begg, endg, n_dominant)
+  subroutine collapse_to_dominant(weight, lower_bound, upper_bound, begg, endg, n_dominant, do_not_collapse)
     !
     ! DESCRIPTION
     ! Collapse to the top N dominant pfts or landunits (n_dominant)
@@ -251,6 +286,7 @@ contains
     integer, intent(in) :: lower_bound  ! lower bound of pft or landunit indices
     integer, intent(in) :: upper_bound  ! upper bound of pft or landunit indices
     integer, intent(in) :: n_dominant  ! # dominant pfts or landunits
+    logical, intent(in), optional :: do_not_collapse(begg:endg)
     ! This array modified in-place
     ! Weights of pfts or landunits per grid cell
     ! Dimensioned [g, lower_bound:upper_bound]
@@ -277,6 +313,14 @@ contains
     if (n_dominant > 0 .and. n_dominant < upper_bound) then
        allocate(max_indices(n_dominant))
        do g = begg, endg
+
+          ! original sum of all the weights
+          wt_sum(g) = sum(weight(g,:))
+
+          if (present(do_not_collapse) .and. do_not_collapse(g)) then
+             cycle
+          end if
+
           max_indices = 0  ! initialize
           call find_k_max_indices(weight(g,:), lower_bound, n_dominant, &
                                   max_indices)
@@ -286,7 +330,6 @@ contains
           ! Typically the original sum of weights = 1, but if
           ! collapse_urban = .true., it equals the sum of the urban landunits.
           ! Also set the remaining weights to 0.
-          wt_sum(g) = sum(weight(g,:))  ! original sum of all the weights
           wt_dom_sum = 0._r8  ! initialize the dominant pft or landunit sum
           do n = 1, n_dominant
              m = max_indices(n)

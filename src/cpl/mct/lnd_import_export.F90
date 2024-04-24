@@ -10,6 +10,7 @@ module lnd_import_export
   use Waterlnd2atmBulkType , only: waterlnd2atmbulk_type
   use Wateratm2lndBulkType , only: wateratm2lndbulk_type
   use clm_cpl_indices
+  use GridcellType      , only : grc
   !
   implicit none
   !===============================================================================
@@ -96,8 +97,8 @@ contains
        atm2lnd_inst%forc_topo_grc(g)                 = x2l(index_x2l_Sa_topo,i)      ! Atm surface height (m)
        atm2lnd_inst%forc_u_grc(g)                    = x2l(index_x2l_Sa_u,i)         ! forc_uxy  Atm state m/s
        atm2lnd_inst%forc_v_grc(g)                    = x2l(index_x2l_Sa_v,i)         ! forc_vxy  Atm state m/s
-       atm2lnd_inst%forc_solad_grc(g,2)              = x2l(index_x2l_Faxa_swndr,i)   ! forc_sollxy  Atm flux  W/m^2
-       atm2lnd_inst%forc_solad_grc(g,1)              = x2l(index_x2l_Faxa_swvdr,i)   ! forc_solsxy  Atm flux  W/m^2
+       atm2lnd_inst%forc_solad_not_downscaled_grc(g,2) = x2l(index_x2l_Faxa_swndr,i)   ! forc_sollxy  Atm flux  W/m^2
+       atm2lnd_inst%forc_solad_not_downscaled_grc(g,1) = x2l(index_x2l_Faxa_swvdr,i)   ! forc_solsxy  Atm flux  W/m^2
        atm2lnd_inst%forc_solai_grc(g,2)              = x2l(index_x2l_Faxa_swndf,i)   ! forc_solldxy Atm flux  W/m^2
        atm2lnd_inst%forc_solai_grc(g,1)              = x2l(index_x2l_Faxa_swvdf,i)   ! forc_solsdxy Atm flux  W/m^2
 
@@ -136,7 +137,7 @@ contains
        ! Check for nans from coupler
        !--------------------------
 
-       call check_for_nans(x2l(:,i), fname, begg)
+       call check_for_nans(x2l(:,i), fname, begg, "x2l")
 
     end do
 
@@ -344,7 +345,7 @@ contains
        ! Check for nans to coupler
        !--------------------------
 
-       call check_for_nans(l2x(:,i), fname, begg)
+       call check_for_nans(l2x(:,i), fname, begg, "l2x")
 
     end do
 

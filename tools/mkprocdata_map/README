@@ -47,8 +47,7 @@ the output.
 
     However, you may want to wrap this in a job script to run it on
     multiple processors (using mpirun), and you may have to set other
-    machine-specific environment variables. You can follow the method
-    used in tools/mkmapdata/mkmapdata.sh.
+    machine-specific environment variables.
 
 (4) Build the mkprocdata_map tool. From the current directory, do the
     following:

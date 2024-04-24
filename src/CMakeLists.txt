@@ -19,15 +19,12 @@ add_definitions(-DHIDE_MPI)
 add_subdirectory(${CLM_ROOT}/share/src csm_share)
 add_subdirectory(${CLM_ROOT}/share/unit_test_stubs/util csm_share_stubs)
 add_subdirectory(${CLM_ROOT}/share/src/esmf_wrf_timemgr esmf_wrf_timemgr)
-add_subdirectory(${CLM_ROOT}/components/cpl7/driver/shr drv_share)
 
-# Extract just the files we need from drv_share
-set (drv_sources_needed_base
-  glc_elevclass_mod.F90
-  )
-extract_sources("${drv_sources_needed_base}" "${drv_sources}" drv_sources_needed)
+# Add the single file we need from CMEPS
+set (drv_sources_needed
+  ${CLM_ROOT}/components/cmeps/cesm/nuopc_cap_share/glc_elevclass_mod.F90)
 
-# Add CLM source directories (these add their own test directories)
+# Add CLM source directories
 add_subdirectory(${CLM_ROOT}/src/utils clm_utils)
 add_subdirectory(${CLM_ROOT}/src/biogeochem clm_biogeochem)
 add_subdirectory(${CLM_ROOT}/src/soilbiogeochem clm_soilbiogeochem)

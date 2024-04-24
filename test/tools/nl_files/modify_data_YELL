@@ -1,1 +1,1 @@
---neon_site YELL --surf_dir CSMDATA/lnd/clm2/surfdata_map/NEON --out_dir EXEDIR
+--neon_site YELL --surf_dir CSMDATA/lnd/clm2/surfdata_esmf/NEON --out_dir EXEDIR --inputdata-dir CSMDATA

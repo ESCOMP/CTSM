@@ -113,7 +113,6 @@ module clm_varpar
   integer, public :: cft_size           ! Number of PFTs on crop landunit in arrays of PFTs
 
   integer, public :: maxpatch_glc    ! max number of elevation classes
-  integer, public :: max_patch_per_col
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public clm_varpar_init          ! set parameters
@@ -123,7 +122,7 @@ module clm_varpar
 contains
 
   !------------------------------------------------------------------------------
-  subroutine clm_varpar_init(actual_maxsoil_patches, surf_numpft, surf_numcft)
+  subroutine clm_varpar_init(actual_maxsoil_patches, surf_numpft, surf_numcft, actual_nlevurb)
     !
     ! !DESCRIPTION:
     ! Initialize module variables 
@@ -136,6 +135,7 @@ contains
                                                    ! from fates (via its parameter file)
     integer, intent(in) :: surf_numpft             ! Number of PFTs in the surf dataset
     integer, intent(in) :: surf_numcft             ! Number of CFTs in the surf dataset
+    integer, intent(in) :: actual_nlevurb          ! nlevurb from surface dataset
     !
     ! !LOCAL VARIABLES:
     !
@@ -195,15 +195,8 @@ contains
     
     mxharvests = mxsowings + 1
 
-    ! TODO(wjs, 2015-10-04, bugz 2227) Using surf_numcft in this 'max' gives a significant
-    ! overestimate of max_patch_per_col when use_crop is true. This should be reworked -
-    ! or, better, removed from the code entirely (because it is a maintenance problem, and
-    ! I can't imagine that looping idioms that use it help performance that much, and
-    ! likely they hurt performance.)
-    max_patch_per_col= max(maxsoil_patches, surf_numcft, maxpatch_urb)
-
     nlevsoifl   =  10
-    nlevurb     =  5
+    nlevurb     =  actual_nlevurb
 
     if ( masterproc ) write(iulog, *) 'soil_layerstruct_predefined varpar ', soil_layerstruct_predefined
     if ( masterproc ) write(iulog, *) 'soil_layerstruct_userdefined varpar ', soil_layerstruct_userdefined

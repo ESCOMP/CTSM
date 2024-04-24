@@ -7,7 +7,7 @@ module laiStreamMod
   ! Read LAI from stream
   !
   ! !USES:
-  use ESMF
+  use ESMF             , only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU, ESMF_Finalize, ESMF_END_ABORT
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_CL, CS => shr_kind_CS
   use dshr_strdata_mod , only : shr_strdata_type
   use decompMod        , only : bounds_type
@@ -54,7 +54,7 @@ contains
     type(bounds_type), intent(in) :: bounds          ! bounds
     !
     ! !LOCAL VARIABLES:
-    integer                 :: i,n                        ! index
+    integer                 :: i,n, ig, g                 ! index
     integer                 :: stream_year_first_lai      ! first year in Lai stream to use
     integer                 :: stream_year_last_lai       ! last year in Lai stream to use
     integer                 :: model_year_align_lai       ! align stream_year_first_lai with
@@ -62,6 +62,7 @@ contains
     integer                 :: nml_error                  ! namelist i/o error flag
     character(len=CL)       :: stream_fldFileName_lai     ! lai stream filename to read
     character(len=CL)       :: stream_meshfile_lai        ! lai stream meshfile
+    real(r8)                :: lai_dtlimit = 1.5_r8       ! dlimit for lai stream to use
     character(len=CL)       :: lai_mapalgo = 'bilinear'   ! Mapping alogrithm
     character(len=CL)       :: lai_tintalgo = 'linear'    ! Time interpolation alogrithm
     integer                 :: lai_offset = 0             ! Offset in time for dataset (sec)
@@ -75,6 +76,7 @@ contains
          stream_year_first_lai,    &
          stream_year_last_lai,     &
          model_year_align_lai,     &
+         lai_dtlimit,              &
          lai_mapalgo,              &
          stream_fldFileName_lai,   &
          stream_meshfile_lai,      &
@@ -110,6 +112,8 @@ contains
     call shr_mpi_bcast(stream_fldFileName_lai , mpicom)
     call shr_mpi_bcast(stream_meshfile_lai    , mpicom)
     call shr_mpi_bcast(lai_tintalgo           , mpicom)
+    call shr_mpi_bcast(lai_dtlimit            , mpicom)
+    call shr_mpi_bcast(lai_mapalgo            , mpicom)
 
     if (masterproc) then
        write(iulog,*)
@@ -120,6 +124,9 @@ contains
        write(iulog,'(a,a)' ) '  stream_fldFileName_lai = ',trim(stream_fldFileName_lai)
        write(iulog,'(a,a)' ) '  stream_meshfile_lai    = ',trim(stream_meshfile_lai)
        write(iulog,'(a,a)' ) '  lai_tintalgo           = ',trim(lai_tintalgo)
+       write(iulog,'(a,a)' ) '  lai_mapalgo            = ',trim(lai_mapalgo)
+       write(iulog,'(a,a)' ) '  lai_dtlimit            = ', lai_dtlimit
+
        do n = 1,numLaiFields
           write(iulog,'(a,a)' ) '  stream_varname         = ',trim(stream_varnames(n))
        end do
@@ -144,12 +151,21 @@ contains
          stream_yearAlign    = model_year_align_lai,             &
          stream_offset       = lai_offset,                       &
          stream_taxmode      = 'cycle',                          &
-         stream_dtlimit      = 1.5_r8,                           &
+         stream_dtlimit      = lai_dtlimit,                      &
          stream_tintalgo     = lai_tintalgo,                     &
          stream_name         = 'LAI data',                       &
          rc                  = rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    end if
+    
+    if ( .not. allocated(g_to_ig) )then
+       allocate (g_to_ig(bounds%begg:bounds%endg) )
+       ig = 0
+       do g = bounds%begg,bounds%endg
+          ig = ig+1
+          g_to_ig(g) = ig
+       end do
     end if
 
   end subroutine lai_init

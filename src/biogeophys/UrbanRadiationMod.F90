@@ -117,9 +117,9 @@ contains
          canyon_hwr         =>    lun%canyon_hwr                             , & ! Input:  [real(r8) (:)   ]  ratio of building height to street width          
          wtroad_perv        =>    lun%wtroad_perv                            , & ! Input:  [real(r8) (:)   ]  weight of pervious road wrt total road            
 
-         forc_solad         =>    atm2lnd_inst%forc_solad_grc                , & ! Input:  [real(r8) (:,:) ]  direct beam radiation  (vis=forc_sols , nir=forc_soll ) (W/m**2)
+         forc_solad         =>    atm2lnd_inst%forc_solad_not_downscaled_grc          , & ! Input:  [real(r8) (:,:) ]  direct beam radiation  (vis=forc_sols , nir=forc_soll ) (W/m**2)
          forc_solai         =>    atm2lnd_inst%forc_solai_grc                , & ! Input:  [real(r8) (:,:) ]  diffuse beam radiation (vis=forc_sols , nir=forc_soll ) (W/m**2)
-         forc_solar         =>    atm2lnd_inst%forc_solar_grc                , & ! Input:  [real(r8) (:)   ]  incident solar radiation (W/m**2)                 
+         forc_solar         =>    atm2lnd_inst%forc_solar_not_downscaled_grc          , & ! Input:  [real(r8) (:)   ]  incident solar radiation (W/m**2)                 
          forc_lwrad         =>    atm2lnd_inst%forc_lwrad_not_downscaled_grc , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)   
 
          frac_sno           =>    waterdiagnosticbulk_inst%frac_sno_col               , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       

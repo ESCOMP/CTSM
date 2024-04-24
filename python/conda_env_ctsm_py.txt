@@ -1,20 +1,24 @@
 #
-#  NOTE: Changes here should be coordinated with the cgd python environment file
+# NOTE: On Derecho you may need to "module load conda"
 #
-# To install this on cheyenne with conda loaded in modules
 # use the top level bash script:
-# ../py_env_create                                        # Do this each time you update your CTSM Version
-# conda activate ctsm_py                                  # Do this anytime you want to run a CTSM python script
+# ../py_env_create                                           # Do this each time you update your CTSM Version
+# conda activate ctsm_pylib                                  # Do this anytime you want to run a CTSM python script
 # Or the individual conda commands:
-# conda create  -n ctsm_py                                # Do this one time for each machine
-# conda install -n ctsm_py --file conda_env_ctsm_py.txt   # Do this each time you update your CTSM Version
-# conda activate ctsm_py                                  # Do this anytime you want to run a CTSM python script
+# conda create  -n ctsm_pylib                                # Do this one time for each machine
+# conda install -n ctsm_pylib --file conda_env_ctsm_py.txt   # Do this each time you update your CTSM Version
+# conda activate ctsm_pylib                                  # Do this anytime you want to run a CTSM python script
 #
 python=3.7.9
+pandas
+tqdm
 scipy
 netcdf4
 requests
-numpy=1.18.5
-xarray=0.16.2
+packaging
+numpy=1.19.5
+xarray=0.17.0
+xesmf
+numba=0.55.2  # Avoid 0.56 until numpy>=1.20.  This is the minimum for xesmf
 pylint=2.8.3
-black=22.3.0       # NOTE: The version here needs to be coordinated with the black github action under ../.github/workflows
+black=22.3.0  # NOTE: The version here needs to be coordinated with the black github action under ../.github/workflows

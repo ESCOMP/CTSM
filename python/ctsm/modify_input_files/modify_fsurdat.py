@@ -29,7 +29,12 @@ class ModifyFsurdat:
         self, my_data, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
     ):
 
+        self.numurbl = 3  # Number of urban density types
         self.file = my_data
+        if "numurbl" in self.file.dims:
+            self.numurbl = self.file.dims["numurbl"]
+        else:
+            abort("numurbl is not a dimension on the input surface dataset file and needs to be")
 
         self.rectangle = self._get_rectangle(
             lon_1=lon_1,
@@ -115,6 +120,10 @@ class ModifyFsurdat:
 
         return rectangle
 
+    def get_urb_dens(self):
+        """Get the number of urban density classes"""
+        return self.numurbl
+
     def write_output(self, fsurdat_in, fsurdat_out):
         """
         Description
@@ -156,6 +165,18 @@ class ModifyFsurdat:
         logger.info("Successfully created fsurdat_out: %s", fsurdat_out)
         self.file.close()
 
+    def evenly_split_cropland(self):
+        """
+        Description
+        -----------
+        In rectangle selected by user (or default -90 to 90 and 0 to 360),
+        replace fsurdat file's PCT_CFT with equal values for all crop types.
+        """
+        pct_cft = np.full_like(self.file["PCT_CFT"].values, 100 / self.file.dims["cft"])
+        self.file["PCT_CFT"] = xr.DataArray(
+            data=pct_cft, attrs=self.file["PCT_CFT"].attrs, dims=self.file["PCT_CFT"].dims
+        )
+
     def set_dom_pft(self, dom_pft, lai, sai, hgt_top, hgt_bot):
         """
         Description
@@ -171,6 +192,8 @@ class ModifyFsurdat:
         ---------
         dom_pft:
             (int) User's entry of PFT/CFT to be set to 100% everywhere
+                  If user left this UNSET in the configure file, then it
+                  will default to 0 (bare ground).
         lai:
             (float) User's entry of MONTHLY_LAI for their dom_pft
         sai:
@@ -214,6 +237,110 @@ class ModifyFsurdat:
             if val is not None:
                 self.set_lai_sai_hgts(dom_pft=dom_pft, var=var, val=val)
 
+    def check_varlist(
+        self, settings, allow_uppercase_vars=False, source="input settings dictionary"
+    ):
+        """
+        Check a list of variables from a dictionary of settings
+        """
+        settings_return = {}
+        varlist = settings.keys()
+        for var in varlist:
+            varname = var
+            val = settings[varname]
+            if not var in self.file:
+                if not allow_uppercase_vars:
+                    errmsg = "Error: Variable " + varname + " is NOT in the " + source
+                    abort(errmsg)
+                if not varname.upper() in self.file:
+                    errmsg = "Error: Variable " + varname.upper() + " is NOT in the " + source
+                    abort(errmsg)
+                varname = varname.upper()
+
+            settings_return[varname] = val
+            #
+            # Check that dimensions are as expected
+            #
+            if len(self.file[varname].dims) == 2:
+                if not isinstance(val, float):
+                    abort(
+                        "For 2D vars, there should only be a single value for variable = "
+                        + varname
+                        + " in "
+                        + source
+                    )
+            elif len(self.file[varname].dims) >= 3:
+                dim1 = int(self.file.sizes[self.file[varname].dims[0]])
+                if not isinstance(val, list):
+                    abort(
+                        "For higher dimensional vars, the variable needs to be expressed "
+                        + "as a list of values of the dimension size = "
+                        + str(dim1)
+                        + " for variable="
+                        + varname
+                        + " in "
+                        + source
+                    )
+                if len(val) != dim1:
+                    abort(
+                        "Variable "
+                        + varname
+                        + " is "
+                        + str(len(val))
+                        + " is of the wrong size. It should be = "
+                        + str(dim1)
+                        + " in "
+                        + source
+                    )
+        return settings_return
+
+    def set_varlist(self, settings, cfg_path="unknown-config-file"):
+        """
+        Set a list of variables from a dictionary of settings
+        """
+        for var in settings.keys():
+            if var in self.file:
+                if len(self.file[var].dims) == 2:
+                    if not isinstance(settings[var], float):
+                        abort(
+                            "For 2D vars, there should only be a single value for variable = " + var
+                        )
+                    self.setvar_lev0(var, settings[var])
+                elif len(self.file[var].dims) == 3:
+                    dim1 = int(self.file.sizes[self.file[var].dims[0]])
+                    vallist = settings[var]
+                    if not isinstance(vallist, list):
+                        abort(
+                            "For higher dimensional vars, there must be a list of values "
+                            + "for variable= "
+                            + var
+                            + " from the config file = "
+                            + cfg_path
+                        )
+                    if len(vallist) != dim1:
+                        abort(
+                            "Variable " + var + " is of the wrong size. It should be = " + str(dim1)
+                        )
+                    for lev1 in range(dim1):
+                        self.setvar_lev1(var, vallist[lev1], lev1_dim=lev1)
+                elif len(self.file[var].dims) == 4:
+                    dim_lev1 = int(self.file.sizes[self.file[var].dims[1]])
+                    dim_lev2 = int(self.file.sizes[self.file[var].dims[0]])
+                    vallist = settings[var]
+                    for lev1 in range(dim_lev1):
+                        for lev2 in range(dim_lev2):
+                            self.setvar_lev2(var, vallist[lev2], lev1_dim=lev1, lev2_dim=lev2)
+                else:
+                    abort(
+                        "Error: Variable "
+                        + var
+                        + " is a higher dimension than currently allowed = "
+                        + str(self.file[var].dims)
+                    )
+            else:
+                errmsg = "Error: Variable " + var + " is NOT in the file"
+                abort(errmsg)
+
     def set_lai_sai_hgts(self, dom_pft, var, val):
         """
         Description
@@ -250,6 +377,7 @@ class ModifyFsurdat:
         self.setvar_lev0("PCT_WETLAND", 0)
         self.setvar_lev0("PCT_URBAN", 0)
         self.setvar_lev0("PCT_GLACIER", 0)
+        self.setvar_lev0("PCT_OCEAN", 0)
 
     def setvar_lev0(self, var, val):
         """
@@ -295,8 +423,8 @@ class ModifyFsurdat:
         max_sat_area = 0  # max saturated area
         std_elev = 0  # standard deviation of elevation
         slope = 0  # mean topographic slope
-        pftdata_mask = 1
         landfrac_pft = 1
+        landfrac_mksurfdata = 1
         # if pct_nat_veg had to be set to less than 100, then each special
         # landunit would have to receive a unique pct value rather than the
         # common value used here in pct_not_nat_veg = 0
@@ -313,13 +441,14 @@ class ModifyFsurdat:
         self.setvar_lev0("SLOPE", slope)
         self.setvar_lev0("zbedrock", zbedrock)
         self.setvar_lev0("SOIL_COLOR", soil_color)
-        self.setvar_lev0("PFTDATA_MASK", pftdata_mask)
         self.setvar_lev0("LANDFRAC_PFT", landfrac_pft)
+        self.setvar_lev0("LANDFRAC_MKSURFDATA", landfrac_mksurfdata)
         self.setvar_lev0("PCT_WETLAND", pct_not_nat_veg)
         self.setvar_lev0("PCT_CROP", pct_not_nat_veg)
         self.setvar_lev0("PCT_LAKE", pct_not_nat_veg)
         self.setvar_lev0("PCT_URBAN", pct_not_nat_veg)
         self.setvar_lev0("PCT_GLACIER", pct_not_nat_veg)
+        self.setvar_lev0("PCT_OCEAN", pct_not_nat_veg)
         self.setvar_lev0("PCT_NATVEG", pct_nat_veg)
 
         for lev in self.file.nlevsoi:
