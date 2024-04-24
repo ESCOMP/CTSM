@@ -114,11 +114,11 @@ module DiurnalOzoneType
     integer  :: tod            ! time of day (seconds past 0Z)
     integer  :: begg, endg     ! bounds
     integer  :: t_prev         ! previous time index
-    real(r8) ::
     real(r8) :: anomaly_val_start
     real(r8) :: anomaly_val_end
     real(r8) :: anomaly_scalar
     real(r8) :: tdiff_end, tdiff_start
+    real(r8) :: tdiff
     !-----------------------------------------------------------------------
 
     begg = bounds%begg; endg = bounds%endg
