@@ -20,14 +20,19 @@ def parse_arguments(argv):
     """
     parser = argparse.ArgumentParser(description="Specify a synthetic hillslope profile")
 
+    # Use these groups to organize --help output. Otherwise, required but named (i.e., non-
+    # positional) arguments (e.g., --input-file) get shown as optional.
+    required_named = parser.add_argument_group('Required named arguments')
+    optional_named = parser.add_argument_group('Optional named arguments')
+
     # Input and output file settings
-    parser.add_argument(
+    required_named.add_argument(
         "-i",
         "--input-file",
         help="Input surface dataset",
         required=True,
     )
-    parser.add_argument(
+    optional_named.add_argument(
         "-o",
         "--output-file",
         help=(
@@ -36,7 +41,7 @@ def parse_arguments(argv):
         ),
         default=None,
     )
-    parser.add_argument(
+    optional_named.add_argument(
         "--overwrite",
         help="Overwrite existing output file",
         dest="overwrite",
@@ -45,17 +50,17 @@ def parse_arguments(argv):
 
     # Synthetic hillslope settings
     default = 1.0
-    parser.add_argument(
+    optional_named.add_argument(
         "--delx",
         help=(
             "increments to use in numerical integration of mean elevation (m) "
-            + "(default: {default})"
+            + f"(default: {default})"
         ),
         type=float,
         default=default,
     )
     default = "slope_aspect"
-    parser.add_argument(
+    optional_named.add_argument(
         "--hcase",
         help=f"hcase (default: {default})",
         type=str,
@@ -63,42 +68,42 @@ def parse_arguments(argv):
         choices=["slope_aspect"],
     )
     default = 500.0
-    parser.add_argument(
+    optional_named.add_argument(
         "--hillslope-distance",
         help=f"distance from channel to ridge (m) (default: {default})",
         type=float,
         default=default,
     )
     default = 16
-    parser.add_argument(
+    optional_named.add_argument(
         "--nmaxhillcol",
         help=f"max. number of hillslope columns (default: {default})",
         type=int,
         default=default,
     )
     default = 4
-    parser.add_argument(
+    optional_named.add_argument(
         "--num-hillslopes",
         help=f"number of hillslopes (default: {default})",
         type=int,
         default=default,
     )
     default = 1.0
-    parser.add_argument(
+    optional_named.add_argument(
         "--phill",
         help=f"shape parameter (power law exponent) (default: {default})",
         type=float,
         default=default,
     )
     default = 2.0
-    parser.add_argument(
+    optional_named.add_argument(
         "--thresh",
-        help=f"threshold for freating specified fractional bins (default: {default})",
+        help=f"threshold for creating specified fractional bins (default: {default})",
         type=float,
         default=default,
     )
     default = 500.0
-    parser.add_argument(
+    optional_named.add_argument(
         "--width-reach",
         help=f"uniform width of reach (m) (default: {default})",
         type=float,

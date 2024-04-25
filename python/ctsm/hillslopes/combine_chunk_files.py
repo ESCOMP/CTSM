@@ -22,31 +22,36 @@ def parse_arguments(argv):
     """
     Parse arguments to script
     """
-    parser = argparse.ArgumentParser(description="Specify a synthetic hillslope profile")
+    parser = argparse.ArgumentParser(description="Combine files for each chunk into a file for use in CTSM")
+
+    # Use these groups to organize --help output. Otherwise, required but named (i.e., non-
+    # positional) arguments (e.g., --input-file) get shown as optional.
+    required_named = parser.add_argument_group('Required named arguments')
+    optional_named = parser.add_argument_group('Optional named arguments')
 
     # Input and output file settings
-    parser.add_argument(
+    required_named.add_argument(
         "-i",
         "--input-file",
         help="Input surface dataset",
         required=True,
     )
-    parser.add_argument(
+    required_named.add_argument(
         "-d",
         "--input-dir",
         help="Directory containing combined-chunk files (outputs of combine_gridcell_files)",
         required=True,
     )
-    parser.add_argument(
+    required_named.add_argument(
         "-o",
         "--output-file",
         help="Output file",
         required=True,
     )
-    parser.add_argument("--overwrite", help="overwrite", action="store_true", default=False)
+    optional_named.add_argument("--overwrite", help="overwrite", action="store_true", default=False)
 
     dem_source_default = "MERIT"
-    parser.add_argument(
+    optional_named.add_argument(
         "--dem-source",
         help=f"DEM to use (default: {dem_source_default})",
         type=str,
@@ -54,14 +59,14 @@ def parse_arguments(argv):
     )
 
     default_n_chunks = 36
-    parser.add_argument(
+    optional_named.add_argument(
         "--n-chunks",
         help=f"Number of chunks (default: {default_n_chunks})",
         type=int,
         default=default_n_chunks,
     )
     default_n_bins = 4
-    parser.add_argument(
+    optional_named.add_argument(
         "--n-bins",
         type=int,
         default=default_n_bins,
@@ -70,7 +75,7 @@ def parse_arguments(argv):
     )
 
     default_hillslope_form = "Trapezoidal"
-    parser.add_argument(
+    optional_named.add_argument(
         "--hillslope-form",
         help=f"Hillslope form (default: {default_hillslope_form}). "
         + "Used to generate input filename template.",
@@ -78,7 +83,7 @@ def parse_arguments(argv):
         default=default_hillslope_form,
     )
 
-    parser.add_argument("-v", "--verbose", help="print info", action="store_true", default=False)
+    optional_named.add_argument("-v", "--verbose", help="print info", action="store_true", default=False)
 
     args = parser.parse_args(argv)
 

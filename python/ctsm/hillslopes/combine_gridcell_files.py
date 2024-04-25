@@ -21,33 +21,38 @@ def parse_arguments(argv):
     """
     parser = argparse.ArgumentParser(description="Combine gridcell files into single file")
 
-    parser.add_argument(
+    # Use these groups to organize --help output. Otherwise, required but named (i.e., non-
+    # positional) arguments (e.g., --input-file) get shown as optional.
+    required_named = parser.add_argument_group('Required named arguments')
+    optional_named = parser.add_argument_group('Optional named arguments')
+
+    required_named.add_argument(
         "-i",
         "--input-file",
         help="Input surface dataset with grid information",
         required=True,
     )
-    parser.add_argument(
+    required_named.add_argument(
         "-d",
         "--input-dir",
         help="Directory containing chunk files",
         required=True,
     )
-    parser.add_argument(
+    optional_named.add_argument(
         "-o",
         "--output-dir",
         help="Directory where output file should be saved (default: current dir)",
         default=os.getcwd(),
     )
     dem_source_default = "MERIT"
-    parser.add_argument(
+    optional_named.add_argument(
         "--dem-source",
         help=f"DEM to use (default: {dem_source_default})",
         type=str,
         default=dem_source_default,
     )
     default_n_chunks = 36
-    parser.add_argument(
+    optional_named.add_argument(
         "--n-chunks",
         help=f"Number of chunks (default: {default_n_chunks})",
         nargs=1,
@@ -55,7 +60,7 @@ def parse_arguments(argv):
         default=default_n_chunks,
     )
     default_n_bins = 4
-    parser.add_argument(
+    optional_named.add_argument(
         "--n-bins",
         type=int,
         default=default_n_bins,
@@ -63,14 +68,14 @@ def parse_arguments(argv):
         + "Used to generate input filename template.",
     )
     default_hillslope_form = "Trapezoidal"
-    parser.add_argument(
+    optional_named.add_argument(
         "--hillslope-form",
         help=f"Hillslope form (default: {default_hillslope_form}). "
         + "Used to generate input filename template.",
         type=str,
         default=default_hillslope_form,
     )
-    parser.add_argument(
+    optional_named.add_argument(
         "--cndx",
         help=(
             "Chunk(s) to process. If excluded will process all chunks (see --n-chunks). To "
@@ -80,8 +85,8 @@ def parse_arguments(argv):
         type=str,
         default=None,
     )
-    parser.add_argument("--overwrite", help="overwrite", action="store_true", default=False)
-    parser.add_argument("-v", "--verbose", help="print info", action="store_true", default=False)
+    optional_named.add_argument("--overwrite", help="overwrite", action="store_true", default=False)
+    optional_named.add_argument("-v", "--verbose", help="print info", action="store_true", default=False)
 
     args = parser.parse_args(argv)
 
