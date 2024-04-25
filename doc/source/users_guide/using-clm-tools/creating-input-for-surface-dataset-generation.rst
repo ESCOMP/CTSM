@@ -1,18 +1,19 @@
-.. _creating-maps-for-mksurfdata:
-
 .. include:: ../substitutions.rst
+
+.. _creating-maps-for-mksurfdata:
 
 *********************************************
 Creating input for surface dataset generation
 *********************************************
 
-1. Generating SCRIP grid files 
+Generating SCRIP grid files
 ==================================
 
-The utility ``mkmapdata.sh`` requires SCRIP format input files to describe the input and output grids that maps are generated for. CLM provides a utility, ``mkmapgrids`` that generates those files.
-The program converts old formats of CAM or CLM grid files to SCRIP grid format. There is also a NCL script (``mkscripgrid.ncl``) to create regular latitude longitude regional or single-point grids at the resolution the user desires.
+The utility ``mkmapdata.sh`` requires SCRIP format input files to describe the input and output grids that maps are generated for. CLM provides a utility, ``mkmapgrids`` that generates those files. The program converts old formats of CAM or CLM grid files to SCRIP grid format. There is also a NCL script (``mkscripgrid.ncl``) to create regular latitude longitude regional or single-point grids at the resolution the user desires.
 
 SCRIP grid files for all the standard model resolutions and the raw surface datasets have already been done and the files are in the XML database. Hence, this step doesn't need to be done -- EXCEPT WHEN YOU ARE CREATING YOUR OWN GRIDS.
+
+.. _using-mkocnmap:
 
 Using mknocnmap.pl to create grid and maps for single-point regional grids
 --------------------------------------------------------------------------
@@ -27,9 +28,9 @@ If you want to create a regular latitude/longitude single-point or regional grid
 	-name [-or -n] <name>	    Name to use to describe point
 
    OPTIONS
-	-dx <number>                   Size of total grid in degrees in longitude direction 
+	-dx <number>                   Size of total grid in degrees in longitude direction
 				       (default is 0.1)
-	-dy <number>                   Size of total grid in degrees in latitude direction 
+	-dy <number>                   Size of total grid in degrees in latitude direction
 				       (default is 0.1)
 	-silent [or -s]		    Make output silent
 	-help [or -h]		    Print usage to STDOUT.
@@ -39,34 +40,27 @@ If you want to create a regular latitude/longitude single-point or regional grid
 
 See :numref:`Figure mknoocnmap.pl` for a visual representation of this process.
 
-
-2. Creating mapping files for mksurfdata_map
+Creating mapping files for mksurfdata_esmf
 ==============================================
 
-``mkmapdata.sh`` uses the above SCRIP grid input files to create SCRIP mapping data files (uses ESMF). 
+``mkmapdata.sh`` uses the above SCRIP grid input files to create SCRIP mapping data files (uses ESMF).
 
-The bash shell script ``$CTSMROOT/tools/mkmapgrids/mkmapdata.sh`` uses **ESMF_RegridWeightGen** to create a list of maps from the raw datasets that are input to **mksurfdata_map**. 
-Each dataset that has a different grid, or land-mask needs a different mapping file for it, but many different raw datasets share the same grid/land-mask as other files. 
-Hence, there doesn't need to be a different mapping file for EACH raw dataset -- just for each raw dataset that has a DIFFERENT grid or land-mask.. 
-See :numref:`Figure mkmapdata.sh` for a visual representation of how this works. 
-The bash script figures out which mapping files it needs to create and then runs **ESMF_RegridWeightGen** for each one. 
-You can then either enter the datasets into the XML database (see `Chapter 3 <CLM-URL>`_ or leave the files in place, and use the "-res usrspec -usr_gname -usr_gdate" options to **mksurfdata_map** (see `the Section called Running mksurfdata.pl <CLM-URL>`_ below). 
-mkmapdata.sh has a help option with the following
+The bash shell script ``$CTSMROOT/tools/mkmapgrids/mkmapdata.sh`` uses ``ESMF_RegridWeightGen`` to create a list of maps from the raw datasets that are input to ``mksurfdata_esmf``. Each dataset that has a different grid, or land-mask needs a different mapping file for it, but many different raw datasets share the same grid/land-mask as other files. Hence, there doesn't need to be a different mapping file for EACH raw dataset---just for each raw dataset that has a DIFFERENT grid or land-mask. See :numref:`Figure mkmapdata.sh` for a visual representation of how this works. The bash script figures out which mapping files it needs to create and then runs ``ESMF_RegridWeightGen`` for each one. You can then either enter the datasets into the XML database (see Chapter :numref:`adding-new-resolutions-section`), or leave the files in place and use the ``-res usrspec -usr_gname -usr_gdate`` options to ``mksurfdata_esmf``. ``mkmapdata.sh`` has a help option with the following
 ::
 
    ../../tools/mkmapdata/mkmapdata.sh
 
    **********************
-   usage on cheyenne:
+   usage on cheyenne:Figure mkmapdata.sh
    ./mkmapdata.sh
 
-   valid arguments: 
-   [-f|--gridfile <gridname>] 
-	Full pathname of model SCRIP grid file to use 
+   valid arguments:
+   [-f|--gridfile <gridname>]
+	Full pathname of model SCRIP grid file to use
 	This variable should be set if this is not a supported grid
 	This variable will override the automatic generation of the
-	filename generated from the -res argument 
-	the filename is generated ASSUMING that this is a supported 
+	filename generated from the -res argument
+	the filename is generated ASSUMING that this is a supported
 	grid that has entries in the file namelist_defaults_clm.xml
 	the -r|--res argument MUST be specied if this argument is specified
    [-r|--res <res>]
@@ -75,7 +69,7 @@ mkmapdata.sh has a help option with the following
 	Model output grid type
 	supported values are [regional,global], (default is global)
    [-b|--batch]
-	Toggles batch mode usage. 
+	Toggles batch mode usage.
    If you want to run in batch mode
 	you need to have a separate batch script for a supported machine
 	that calls this script interactively - you cannot submit this
@@ -85,13 +79,13 @@ mkmapdata.sh has a help option with the following
 	also writes data to clm.input_data_list
    [-d|--debug]
 	Toggles debug-only (don't actually run mkmapdata just echo what would happen)
-   [-h|--help]  
+   [-h|--help]
 	Displays this help message
    [-v|--verbose]
-	Toggle verbose usage -- log more information on what is happening 
+	Toggle verbose usage -- log more information on what is happening
 
     You can also set the following env variables:
-     ESMFBIN_PATH - Path to ESMF binaries 
+     ESMFBIN_PATH - Path to ESMF binaries
 		    (default is /contrib/esmf-5.3.0-64-O/bin)
      CSMDATA ------ Path to CESM input data
 		    (default is /glade/p/cesm/cseg/inputdata)
@@ -100,10 +94,9 @@ mkmapdata.sh has a help option with the following
      REGRID_PROC -- Number of MPI processors to use
 		    (default is 8)
 
-   **pass environment variables by preceding above commands 
+   **pass environment variables by preceding above commands
      with 'env var1=setting var2=setting '
    **********************
-
 
 .. _Figure mkmapdata.sh:
 
@@ -111,4 +104,4 @@ mkmapdata.sh has a help option with the following
 
   Details of running mkmapdata.sh
 
-Each of the raw datasets for **mksurfdata_map** needs a mapping file to map from the output grid you are running on to the grid and land-mask for that dataset. This is what **mkmapdata.sh** does. To create the mapping files you need a SCRIP grid file to correspond with each resolution and land mask that you have a raw data file in **mksurfdata_map**. Some raw datasets share the same grid and land mask -- hence they can share the same SCRIP grid file. The output maps created here go into **mksurfdata_map** see :numref:`Figure mksurfdatamap`.
+Each of the raw datasets for ``mksurfdata_esmf`` needs a mapping file to map from the output grid you are running on to the grid and land-mask for that dataset. This is what ``mkmapdata.sh`` does. To create the mapping files you need a SCRIP grid file to correspond with each resolution and land mask that you have a raw data file in ``mksurfdata_esmf``. Some raw datasets share the same grid and land mask -- hence they can share the same SCRIP grid file. The output maps created here go into ``mksurfdata_esmf`` see :numref:`Figure Workflow of CLM5 Land Use Data Tool and mksurfdata_esmf Tool`.

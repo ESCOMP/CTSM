@@ -128,6 +128,7 @@ contains
     rcode = pio_put_att (pioid, pio_global, 'Version', trim(gitdescribe))
     rcode = pio_put_att (pioid, pio_global, 'Logname', trim(logname))
     rcode = pio_put_att (pioid, pio_global, 'Host', trim(hostname))
+    rcode = pio_put_att (pioid, pio_global, 'Number-of-tasks', npes)
 
     ! TODO: check that this works
     !rcode = pio_put_att_int(pioid, pio_global, 'nglcec', nglcec)
@@ -430,10 +431,10 @@ contains
             long_name='soil depth', units='m')
 
        call mkpio_def_spatial_var(pioid=pioid, varname='abm', xtype=PIO_INT, &
-            long_name='agricultural fire peak month', units='unitless')
+            long_name='agricultural fire peak month', units='month')
 
        call mkpio_def_spatial_var(pioid=pioid, varname='gdp', xtype=xtype, &
-            long_name='gdp', units='unitless')
+            long_name='gdp', units='k 1995US$ capita-1')
 
        call mkpio_def_spatial_var(pioid=pioid, varname='SLOPE', xtype=PIO_REAL, &
             long_name='mean topographic slope', units='degrees')
@@ -455,6 +456,9 @@ contains
                long_name='VIC Ds parameter for the ARNO curve', units='unitless')
 
        end if
+
+       call mkpio_def_spatial_var(pioid=pioid, varname='PCT_OCEAN', xtype=xtype, &
+            long_name='percent ocean', units='unitless')
 
        call mkpio_def_spatial_var(pioid=pioid, varname='LAKEDEPTH', xtype=xtype, &
             long_name='lake depth', units='m')

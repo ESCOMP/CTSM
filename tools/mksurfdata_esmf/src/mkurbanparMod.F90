@@ -796,7 +796,7 @@ contains
                   write(6,*) 'urban_classes_gcell_o(n,k): ', urban_classes_gcell_o(n,k)
                   if (.not. urban_skip_abort_on_invalid_data_check) then
                      ! NOTE(bja, 2015-01) added to work around a ?bug? noted in
-                     ! /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
+                     ! /glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/surfdata_map/README_c141219
                      call shr_sys_abort()
                   end if
                end if

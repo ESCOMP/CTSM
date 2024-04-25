@@ -1,6 +1,11 @@
 Obtaining the full model code and associated scripting infrastructure
 =====================================================================
 
+[!CAUTION]
+This is deprecated and will be replaced with git submodules. See
+https://github.com/ESCOMP/CTSM/pull/2443
+
+
 CTSM is released via GitHub. You will need some familiarity with git in order
 to modify the code and commit these changes. However, to simply checkout and run the
 code, no git knowledge is required other than what is documented in the following steps.

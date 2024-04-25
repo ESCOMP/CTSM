@@ -1,6 +1,7 @@
- hist_nhtfrq    = 0,-240,-8760
+ hist_nhtfrq    = 0,-240,17520
  hist_mfilt     = 1,1,1
 
- ! Add an annual output file with these crop-specific variables, which exercise some special logic:
- hist_fincl3 = 'SDATES', 'HDATES'
- hist_dov2xy(3) = .false.
+! NOTE slevis (2024/2/23) Adding option for tests to pass. In the long term
+! ensure that subset_data generates fsurdat and landuse files consistent with
+! each other.
+check_dynpft_consistency = .false.

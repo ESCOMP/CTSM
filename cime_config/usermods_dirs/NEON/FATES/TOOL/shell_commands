@@ -6,5 +6,7 @@
 # Different default start date and number of months to run for transient case
 if  [[ $compset =~ ^HIST ]]; then
   ./xmlchange RUN_STARTDATE=2020-01-01
-  ./xmlchange STOP_N=27
+  if [[ $TEST != "TRUE" ]]; then
+    ./xmlchange STOP_N=27
+  fi
 fi

@@ -647,11 +647,11 @@ contains
     ! !USES:
     use shr_kind_mod   , only : r8 => shr_kind_r8
     use shr_const_mod  , only : SHR_CONST_TKFRZ
-    use clm_varcon     , only : denice, denh2o, sb
-    use landunit_varcon, only : istwet, istsoil, istdlak, istice
+    use clm_varcon     , only : denice, denh2o
+    use landunit_varcon, only : istwet, istsoil, istdlak, istice, istcrop
     use column_varcon  , only : icol_road_imperv, icol_roof, icol_sunwall
     use column_varcon  , only : icol_shadewall, icol_road_perv
-    use clm_varctl     , only : iulog, use_vancouver, use_mexicocity
+    use clm_varctl     , only : iulog, use_vancouver, use_mexicocity, use_excess_ice
     !
     ! !ARGUMENTS:
     class(temperature_type)        :: this
@@ -732,7 +732,7 @@ contains
                   end if
                else
                   if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
-                     this%t_soisno_col(c,1:nlevgrnd) = 272._r8
+                     this%t_soisno_col(c,1:nlevgrnd) = 274._r8
                   else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
                        .or. col%itype(c) == icol_roof) then
                      ! Set sunwall, shadewall, roof to fairly high temperature to avoid initialization
@@ -741,8 +741,10 @@ contains
                   end if
                end if
             else
-               this%t_soisno_col(c,1:nlevgrnd) = 274._r8
-
+               this%t_soisno_col(c,1:nlevgrnd) = 272._r8
+               if (use_excess_ice .and. (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop)) then
+                  this%t_soisno_col(c,1:nlevgrnd) = SHR_CONST_TKFRZ - 5.0_r8 !needs to be below freezing to properly initiate excess ice
+               end if
             endif
          endif
       end do
@@ -1213,6 +1215,17 @@ contains
        call init_accum_field (name='GDD10', units='K', &
             desc='growing degree-days base 10C from planting', accum_type='runaccum', accum_period=not_used,  &
             subgrid_type='pft', numlev=1, init_value=0._r8)
+       
+       ! 20-year running means (20*365 days)
+       call init_accum_field (name='GDD020', units='K', &
+            desc='20-year running mean of growing degree days base 0C from planting', accum_type='runmean', accum_period=-20*365, &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
+       call init_accum_field (name='GDD820', units='K', &
+            desc='20-year running mean of growing degree days base 8C from planting', accum_type='runmean', accum_period=-20*365, &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
+       call init_accum_field (name='GDD1020', units='K', &
+            desc='20-year running mean of growing degree days base 10C from planting', accum_type='runmean', accum_period=-20*365, &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
 
     end if
 
@@ -1328,6 +1341,15 @@ contains
        call extract_accum_field ('GDD10', rbufslp, nstep)
        this%gdd10_patch(begp:endp) = rbufslp(begp:endp)
 
+       call extract_accum_field ('GDD020', rbufslp, nstep)
+       this%gdd020_patch(begp:endp) = rbufslp(begp:endp)
+
+       call extract_accum_field ('GDD820', rbufslp, nstep)
+       this%gdd820_patch(begp:endp) = rbufslp(begp:endp)
+
+       call extract_accum_field ('GDD1020', rbufslp, nstep)
+       this%gdd1020_patch(begp:endp) = rbufslp(begp:endp)
+
     end if
 
     deallocate(rbufslp)
@@ -1340,7 +1362,7 @@ contains
     !
     ! USES
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
-    use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date
+    use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date, is_end_curr_year
     use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
     use CNSharedParamsMod, only : upper_soil_layer
     !
@@ -1574,11 +1596,42 @@ contains
        call update_accum_field  ('GDD10', rbufslp, nstep)
        call extract_accum_field ('GDD10', this%gdd10_patch, nstep)
 
+       ! Accumulate and extract running 20-year means
+       if (is_end_curr_year()) then
+          call update_accum_field  ('GDD020', this%gdd0_patch, nstep)
+          call extract_accum_field ('GDD020', this%gdd020_patch, nstep)
+          call update_accum_field  ('GDD820', this%gdd8_patch, nstep)
+          call extract_accum_field ('GDD820', this%gdd820_patch, nstep)
+          call update_accum_field  ('GDD1020', this%gdd10_patch, nstep)
+          call extract_accum_field ('GDD1020', this%gdd1020_patch, nstep)
+       end if
+
     end if
 
     deallocate(rbufslp)
     deallocate(rbufslc)
 
   end subroutine UpdateAccVars
+
+  subroutine Clean(this)
+     !
+     ! !DESCRIPTION:
+     ! Finalize this instance
+     !
+     ! !USES:
+     !
+     ! !ARGUMENTS:
+     class(temperature_type), intent(inout) :: this
+     !
+     ! !LOCAL VARIABLES:
+ 
+     character(len=*), parameter :: subname = 'Clean'
+     !-----------------------------------------------------------------------
+ 
+     deallocate(this%gdd020_patch)
+     deallocate(this%gdd820_patch)
+     deallocate(this%gdd1020_patch)
+  
+   end subroutine Clean
 
 end module TemperatureType

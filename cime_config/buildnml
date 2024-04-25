@@ -3,7 +3,7 @@
 """
 CTSM namelist creator
 """
-import sys, os, shutil
+import sys, os, shutil, re
 
 _CIMEROOT = os.environ.get("CIMEROOT")
 if _CIMEROOT is None:
@@ -12,10 +12,10 @@ if _CIMEROOT is None:
 _LIBDIR = os.path.join(_CIMEROOT, "CIME", "Tools")
 sys.path.append(_LIBDIR)
 
-from standard_script_setup          import *
-from CIME.buildnml                  import create_namelist_infile, parse_input
-from CIME.case                      import Case
-from CIME.utils                     import expect, run_cmd
+from standard_script_setup import *
+from CIME.buildnml import create_namelist_infile, parse_input
+from CIME.case import Case
+from CIME.utils import expect, run_cmd
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +23,15 @@ _config_cache_template = """
 <?xml version="1.0"?>
 <config_definition>
 <commandline></commandline>
-<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,clm5_1">Specifies CTSM physics</entry>
+<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,clm5_1,clm6_0">Specifies CTSM physics</entry>
 </config_definition>
 """
 
+
 ###############################################################################
 def buildnml(case, caseroot, compname):
-###############################################################################
-    """Build the CTSM namelist """
+    ###############################################################################
+    """Build the CTSM namelist"""
 
     # Build the component namelist
     if compname != "ctsm" and compname != "clm":
@@ -41,6 +42,7 @@ def buildnml(case, caseroot, compname):
     configuration = case.get_value("CLM_CONFIGURATION")
     structure = case.get_value("CLM_STRUCTURE")
     ccsm_co2_ppmv = case.get_value("CCSM_CO2_PPMV")
+    casename = case.get_value("CASE")
     clm_co2_type = case.get_value("CLM_CO2_TYPE")
     clm_namelist_opts = case.get_value("CLM_NAMELIST_OPTS")
     clm_bldnml_opts = case.get_value("CLM_BLDNML_OPTS")
@@ -58,27 +60,94 @@ def buildnml(case, caseroot, compname):
     run_refdate = case.get_value("RUN_REFDATE")
     run_reftod = case.get_value("RUN_REFTOD")
     glc_nec = case.get_value("GLC_NEC")
-    cism_use_antarctica = case.get_value("CISM_USE_ANTARCTICA")
+    glc_use_antarctica = case.get_value("GLC_USE_ANTARCTICA")
     mask = case.get_value("MASK_GRID")
     driver = case.get_value("COMP_INTERFACE").lower()
 
     # Create init_generated_files directory if not there
-    newdir = os.path.join(rundir,"init_generated_files")
+    newdir = os.path.join(rundir, "init_generated_files")
     if not os.path.exists(newdir):
         os.mkdir(newdir)
 
     # -----------------------------------------------------
     # Error checking
     # -----------------------------------------------------
-    if ( clm_bldnml_opts.find("-namelist") >= 0 ):
-        expect(False, "The -namelist option is NOT allowed to be part of CLM_BLDNML_OPTS, " + \
-               "use the CLM_NAMELIST_OPTS option or add namelist items to user_nl_clm instead " );
+    if clm_bldnml_opts.find("-namelist") >= 0:
+        expect(
+            False,
+            "The -namelist option is NOT allowed to be part of CLM_BLDNML_OPTS, "
+            + "use the CLM_NAMELIST_OPTS option or add namelist items to user_nl_clm instead ",
+        )
+    #
+    # Warnings for land tuning modes
+    #
+    closest_tuning = {
+        "clm4_5_1PT": "clm4_5_CRUv7",
+        "clm4_5_QIAN": "clm4_5_CRUv7",
+        "clm4_5_NLDAS2": "clm4_5_CRUv7",
+        "clm4_5_ERA5": "clm4_5_CRUv7",
+        "clm5_0_1PT": "clm5_0_GSWP3v1",
+        "clm5_0_QIAN": "clm5_0_GSWP3v1",
+        "clm5_0_NLDAS2": "clm5_0_GSWP3v1",
+        "clm5_0_ERA5": "clm5_0_GSWP3v1",
+        "clm5_1_1PT": "clm5_1_GSWP3v1",
+        "clm5_1_QIAN": "clm5_1_GSWP3v1",
+        "clm5_1_NLDAS2": "clm5_1_GSWP3v1",
+        "clm5_1_ERA5": "clm5_1_GSWP3v1",
+        "clm5_1_CRUv7": "clm5_1_GSWP3v1",
+        "clm6_0_1PT": "clm6_0_GSWP3v1",
+        "clm6_0_QIAN": "clm6_0_GSWP3v1",
+        "clm6_0_NLDAS2": "clm6_0_GSWP3v1",
+        "clm6_0_ERA5": "clm6_0_GSWP3v1",
+        "clm6_0_CRUv7": "clm6_0_GSWP3v1",
+    }
+    for mode, closest in closest_tuning.items():
+        if lnd_tuning_mode == mode:
+            logger.warning(
+                "IMPORTANT NOTE: LND_TUNING_MODE is "
+                + lnd_tuning_mode
+                + " which does NOT have tuned settings, so using the closest option which is "
+                + closest
+            )
+            logger.warning(
+                "              : To suppress this message explicitly set LND_TUNING_MODE="
+                + lnd_tuning_mode
+                + " for your case"
+            )
+            lnd_tuning_mode = closest
+
+    # CAM4 and CAM5 options are based on cam6 tuning
+    # (other than the Zender dust emission soil eroditability file which is specific
+    #  to the CAM version)
+    tuning_based_on = {
+        "clm6_0_GSWP3v1": "clm5_0_GSWP3v1",
+        "clm5_1_GSWP3v1": "clm5_0_GSWP3v1",
+        "clm6_0_cam6.0": "clm5_0_cam6.0",
+        "clm6_0_cam5.0": "clm5_0_cam6.0",
+        "clm6_0_cam4.0": "clm5_0_cam6.0",
+        "clm5_1_cam6.0": "clm5_0_cam6.0",
+        "clm5_1_cam5.0": "clm5_0_cam6.0",
+        "clm5_1_cam4.0": "clm5_0_cam6.0",
+        "clm5_0_cam5.0": "clm5_0_cam6.0",
+        "clm5_0_cam4.0": "clm5_0_cam6.0",
+        "clm4_5_cam6.0": "clm5_0_cam6.0",
+        "clm4_5_cam5.0": "clm5_0_cam6.0",
+        "clm4_5_cam4.0": "clm5_0_cam6.0",
+    }
+    for mode, based_on in tuning_based_on.items():
+        if lnd_tuning_mode == mode:
+            logger.warning(
+                "NOTE: LND_TUNING_MODE is "
+                + lnd_tuning_mode
+                + " which is NOT tuned, but is based on "
+                + based_on
+            )
 
     # -----------------------------------------------------
     # Set ctsmconf
     # -----------------------------------------------------
 
-    ctsmconf = os.path.join(caseroot, "Buildconf", compname+"conf")
+    ctsmconf = os.path.join(caseroot, "Buildconf", compname + "conf")
     if not os.path.isdir(ctsmconf):
         os.makedirs(ctsmconf)
 
@@ -92,8 +161,8 @@ def buildnml(case, caseroot, compname):
     clm_phys = case.get_value("CLM_PHYSICS_VERSION")
 
     config_cache_text = _config_cache_template.format(clm_phys=clm_phys)
-    config_cache_path = os.path.join(caseroot, "Buildconf", compname+"conf", "config_cache.xml")
-    with open(config_cache_path, 'w') as config_cache_file:
+    config_cache_path = os.path.join(caseroot, "Buildconf", compname + "conf", "config_cache.xml")
+    with open(config_cache_path, "w") as config_cache_file:
         config_cache_file.write(config_cache_text)
 
     # -----------------------------------------------------
@@ -111,80 +180,93 @@ def buildnml(case, caseroot, compname):
         startfile_type = "nrevsn"
         if clm_force_coldstart == "on":
             clm_force_coldstart = "off"
-            logger.warning( "WARNING: You've turned on CLM_FORCE_COLDSTART for a branch run_type, which is a contradiction, the coldstart will be ignored\n" +
-                            "  turn off CLM_FORCE_COLDSTART, or set RUN_TYPE=hybrid to get rid of this warning")
+            logger.warning(
+                "WARNING: You've turned on CLM_FORCE_COLDSTART for a branch run_type, which is a contradiction, the coldstart will be ignored\n"
+                + "  turn off CLM_FORCE_COLDSTART, or set RUN_TYPE=hybrid to get rid of this warning"
+            )
 
-
-    if (clm_force_coldstart == "on"):
-        logger.warning( "WARNING: CLM is starting up from a cold state" )
+    if clm_force_coldstart == "on":
+        logger.warning("WARNING: CLM is starting up from a cold state")
         start_type = "cold"
 
-    if lnd_grid == 'T31':
-        lnd_grid = '48x96'
-    if lnd_grid == 'T42':
-        lnd_grid = '64x128'
-    if lnd_grid == 'T85':
-        lnd_grid = '128x256'
-    if lnd_grid == 'T341':
-        lnd_grid = '512x1024'
+    if lnd_grid == "T31":
+        lnd_grid = "48x96"
+    if lnd_grid == "T42":
+        lnd_grid = "64x128"
+    if lnd_grid == "T85":
+        lnd_grid = "128x256"
+    if lnd_grid == "T341":
+        lnd_grid = "512x1024"
 
     clmusr = ""
     if lnd_grid == "CLM_USRDAT":
         clm_usrdat_name = case.get_value("CLM_USRDAT_NAME")
-        lnd_grid = clm_usrdat_name
-        clmusr = " -clm_usr_name %s "%clm_usrdat_name
+        clmusr = " -clm_usr_name %s " % clm_usrdat_name
+        # Write warning about initial condition data
+        if "NEON" in clm_usrdat_name and clm_force_coldstart == "off":
+            if ("_transient" in clm_nml_use_case) and (
+                re.fullmatch(r"\w\w\w\w\.transient", casename) is None
+                or clm_usrdat_name is "NEON.PRISM"
+            ):
+                logger.warning(
+                    "WARNING: Do you have appropriate initial conditions for this simulation?"
+                    + " Check that the finidat file used in the lnd_in namelist is appropriately spunup for your case"
+                )
 
     if comp_atm != "datm":
         nomeg = "-no-megan"
     else:
         nomeg = ""
 
-    if cism_use_antarctica is None:
-        # This is the case for compsets without CISM, where the CISM_USE_ANTARCTICA xml
+    if glc_use_antarctica is None:
+        # This is the case for compsets with SGLC where the GLC_USE_ANTARCTICA xml
         # variable isn't defined
         glc_use_antarctica_flag = ""
-    elif isinstance(cism_use_antarctica, bool):
-        if cism_use_antarctica:
+    elif isinstance(glc_use_antarctica, bool):
+        if glc_use_antarctica:
             glc_use_antarctica_flag = "-glc_use_antarctica"
         else:
             glc_use_antarctica_flag = ""
     else:
-        expect(False, "Unexpected value for CISM_USE_ANTARCTICA: {}".format(cism_use_antarctica))
+        expect(
+            False,
+            "Unexpected value for GLC_USE_ANTARCTICA: {}".format(glc_use_antarctica),
+        )
 
     if clm_nml_use_case != "UNSET":
-        usecase = "-use_case %s" %clm_nml_use_case
+        usecase = "-use_case %s" % clm_nml_use_case
     else:
         usecase = ""
 
-    if ( (mask != "null") and (mask != "UNSET") ):
-        gridmask = "-mask %s" %mask
+    if (mask != "null") and (mask != "UNSET"):
+        gridmask = "-mask %s" % mask
     else:
         gridmask = ""
 
-    start_ymd = run_startdate.replace('-','')
+    start_ymd = run_startdate.replace("-", "")
 
-    if ('-01-01' in run_startdate) or ('-09-01' in run_startdate):
+    if ("-01-01" in run_startdate) or ("-09-01" in run_startdate):
         ignore = "-ignore_ic_year"
     else:
         ignore = "-ignore_ic_date"
 
-    tuning = "-lnd_tuning_mode %s "%lnd_tuning_mode
+    tuning = "-lnd_tuning_mode %s " % lnd_tuning_mode
 
-    spinup = "-clm_accelerated_spinup %s "%clm_accelerated_spinup
+    spinup = "-clm_accelerated_spinup %s " % clm_accelerated_spinup
 
     infile = os.path.join(ctsmconf, "namelist")
 
-    inputdata_file = os.path.join(caseroot,"Buildconf","ctsm.input_data_list")
+    inputdata_file = os.path.join(caseroot, "Buildconf", "ctsm.input_data_list")
 
     if driver == "nuopc":
         lndfrac_setting = " "
     else:
         lnd_domain_path = case.get_value("LND_DOMAIN_PATH")
         lnd_domain_file = case.get_value("LND_DOMAIN_FILE")
-        lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
-        lndfrac_setting = "-lnd_frac "+lndfrac_file
+        lndfrac_file = os.path.join(lnd_domain_path, lnd_domain_file)
+        lndfrac_setting = "-lnd_frac " + lndfrac_file
 
-    config_cache_file = os.path.join(caseroot,"Buildconf", compname+"conf","config_cache.xml")
+    config_cache_file = os.path.join(caseroot, "Buildconf", compname + "conf", "config_cache.xml")
 
     # -----------------------------------------------------
     # Clear out old data
@@ -198,40 +280,57 @@ def buildnml(case, caseroot, compname):
     # -----------------------------------------------------
 
     ninst = int(ninst_lnd)
-    for inst_counter in range(1, ninst+1):
+    for inst_counter in range(1, ninst + 1):
 
         # determine instance string
         inst_string = ""
         if ninst > 1:
-            inst_string = '_' + '%04d' % inst_counter
+            inst_string = "_" + "%04d" % inst_counter
 
         # If multi-instance case does not have restart file, use
         # single-case restart for each instance
         rpointer = "rpointer.lnd"
-        if (os.path.isfile(os.path.join(rundir,rpointer)) and
-            (not os.path.isfile(os.path.join(rundir,rpointer + inst_string)))):
-            shutil.copy(os.path.join(rundir, rpointer),
-                        os.path.join(rundir, rpointer + inst_string))
+        if os.path.isfile(os.path.join(rundir, rpointer)) and (
+            not os.path.isfile(os.path.join(rundir, rpointer + inst_string))
+        ):
+            shutil.copy(
+                os.path.join(rundir, rpointer),
+                os.path.join(rundir, rpointer + inst_string),
+            )
 
         # -----------------------------------------------------
         # call build-namelist
         # -----------------------------------------------------
 
         if run_type == "hybrid" or run_type == "branch":
-            compnames = [ "clm4", "clm5", "clm2" ]
+            compnames = ["clm4", "clm5", "clm2"]
             for comp in compnames:
-               clm_startfile = "%s.%s%s.r.%s-%s.nc"%(run_refcase,comp,inst_string,run_refdate,run_reftod)
-               if os.path.exists(os.path.join(rundir, clm_startfile)):
-                 break
-               else:
-                 clm_startfile = "%s.%s.r.%s-%s.nc"%(run_refcase,comp,run_refdate,run_reftod)
-                 if os.path.exists(os.path.join(rundir, clm_startfile)):
-                    logger.warning( "WARNING: the start file being used for a multi-instance case is a single instance: "+clm_startfile )
+                clm_startfile = "%s.%s%s.r.%s-%s.nc" % (
+                    run_refcase,
+                    comp,
+                    inst_string,
+                    run_refdate,
+                    run_reftod,
+                )
+                if os.path.exists(os.path.join(rundir, clm_startfile)):
                     break
+                else:
+                    clm_startfile = "%s.%s.r.%s-%s.nc" % (
+                        run_refcase,
+                        comp,
+                        run_refdate,
+                        run_reftod,
+                    )
+                    if os.path.exists(os.path.join(rundir, clm_startfile)):
+                        logger.warning(
+                            "WARNING: the start file being used for a multi-instance case is a single instance: "
+                            + clm_startfile
+                        )
+                        break
 
             if not os.path.exists(os.path.join(rundir, clm_startfile)):
-               logger.warning( "WARNING: Could NOT find a start file to use using"+clm_startfile )
-            clm_icfile = "%s = \'%s\'"%(startfile_type, clm_startfile)
+                logger.warning("WARNING: Could NOT find a start file to use using" + clm_startfile)
+            clm_icfile = "%s = '%s'" % (startfile_type, clm_startfile)
         else:
             clm_icfile = ""
 
@@ -243,25 +342,51 @@ def buildnml(case, caseroot, compname):
 
         create_namelist_infile(case, user_nl_file, namelist_infile, "\n".join(infile_lines))
 
-        cmd = os.path.join(lnd_root,"bld","build-namelist")
+        cmd = os.path.join(lnd_root, "bld", "build-namelist")
 
-        command = ("%s -cimeroot %s -infile %s -csmdata %s -inputdata %s %s -namelist \"&clm_inparm  start_ymd=%s %s/ \" "
-                   "%s %s -res %s %s -clm_start_type %s -envxml_dir %s "
-                   "-configuration %s -structure %s "
-                   "%s -glc_nec %s %s -co2_ppmv %s -co2_type %s -config %s -driver %s "
-                   "%s %s %s %s"
-                   %(cmd, _CIMEROOT, infile, din_loc_root, inputdata_file, ignore, start_ymd, clm_namelist_opts,
-                     nomeg, usecase, lnd_grid, clmusr, start_type, caseroot,
-                     configuration, structure,
-                     lndfrac_setting, glc_nec, glc_use_antarctica_flag, ccsm_co2_ppmv, clm_co2_type, config_cache_file, driver, 
-                     clm_bldnml_opts, spinup, tuning, gridmask))
+        command = (
+            '%s -cimeroot %s -infile %s -csmdata %s -inputdata %s %s -namelist "&clm_inparm  start_ymd=%s %s/ " '
+            "%s %s -res %s %s -clm_start_type %s -envxml_dir %s "
+            "-configuration %s -structure %s "
+            "%s -glc_nec %s %s -co2_ppmv %s -co2_type %s -config %s -driver %s "
+            "%s %s %s %s"
+            % (
+                cmd,
+                _CIMEROOT,
+                infile,
+                din_loc_root,
+                inputdata_file,
+                ignore,
+                start_ymd,
+                clm_namelist_opts,
+                nomeg,
+                usecase,
+                lnd_grid,
+                clmusr,
+                start_type,
+                caseroot,
+                configuration,
+                structure,
+                lndfrac_setting,
+                glc_nec,
+                glc_use_antarctica_flag,
+                ccsm_co2_ppmv,
+                clm_co2_type,
+                config_cache_file,
+                driver,
+                clm_bldnml_opts,
+                spinup,
+                tuning,
+                gridmask,
+            )
+        )
 
         rc, out, err = run_cmd(command, from_dir=ctsmconf)
-        expect(rc==0,"Command %s failed rc=%d\nout=%s\nerr=%s"%(cmd,rc,out,err))
+        expect(rc == 0, "Command %s failed rc=%d\nout=%s\nerr=%s" % (cmd, rc, out, err))
         if out is not None:
-            logger.debug("     %s"%out)
+            logger.debug("     %s" % out)
         if err is not None:
-            logger.debug("     %s"%err)
+            logger.debug("     %s" % err)
 
         # -----------------------------------------------------
         # copy resolved namelist to rundir
@@ -272,8 +397,9 @@ def buildnml(case, caseroot, compname):
             file2 = os.path.join(rundir, "lnd_in")
             if ninst > 1:
                 file2 += inst_string
-            logger.debug("CTSM namelist copy: file1 %s file2 %s " %(file1, file2))
-            shutil.copy(file1,file2)
+            logger.debug("CTSM namelist copy: file1 %s file2 %s " % (file1, file2))
+            shutil.copy(file1, file2)
+
 
 ###############################################################################
 def _main_func():
@@ -281,9 +407,12 @@ def _main_func():
     caseroot = parse_input(sys.argv)
     with Case(caseroot) as case:
         compname = case.get_value("COMP_LND")
-        logger.warning( "WARNING: buildnml is being called a s program rather than a subroutine " +
-                        "as it is expected to be in the CESM context" )
+        logger.warning(
+            "WARNING: buildnml is being called a s program rather than a subroutine "
+            + "as it is expected to be in the CESM context"
+        )
         buildnml(case, caseroot, compname)
+
 
 if __name__ == "__main__":
     _main_func()

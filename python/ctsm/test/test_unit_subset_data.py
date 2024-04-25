@@ -31,7 +31,9 @@ class TestSubsetData(unittest.TestCase):
 
     def setUp(self):
         sys.argv = ["subset_data", "point", "--create-surface"]
-        DEFAULTS_FILE = os.path.join(os.getcwd(), "ctsm/test/testinputs/default_data.cfg")
+        DEFAULTS_FILE = os.path.join(
+            os.getcwd(), "../tools/site_and_regional/default_data_2000.cfg"
+        )
         self.parser = get_parser()
         self.args = self.parser.parse_args()
         self.cesmroot = path_to_ctsm_root()
@@ -46,7 +48,7 @@ class TestSubsetData(unittest.TestCase):
         files = setup_files(self.args, self.defaults, self.cesmroot)
         self.assertEqual(
             files["fsurf_in"],
-            "surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
+            "surfdata_0.9x1.25_hist_2000_16pfts_c240216.nc",
             "fsurf_in filename not whats expected",
         )
         self.assertEqual(
@@ -56,7 +58,7 @@ class TestSubsetData(unittest.TestCase):
         )
         self.assertEqual(
             files["main_dir"],
-            "/glade/p/cesmdata/inputdata",
+            "/glade/campaign/cesm/cesmdata/cseg/inputdata",
             "main_dir directory not whats expected",
         )
 
@@ -134,7 +136,7 @@ class TestSubsetData(unittest.TestCase):
         outfile = os.path.join(
             os.getcwd(),
             "ctsm/test/testinputs/",
-            "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc",
+            "surfdata_1x1_mexicocityMEX_hist_16pfts_CMIP6_2000_c231103.nc",
         )
         self.assertTrue(os.path.exists(outfile), str(outfile) + " outfile should exist")
 

@@ -19,8 +19,6 @@ Module SoilHydrologyType
   type, public :: soilhydrology_type
 
      integer :: h2osfcflag              ! true => surface water is active (namelist)       
-     integer :: origflag                ! used to control soil hydrology properties (namelist)
-
      real(r8), pointer :: num_substeps_col   (:)    ! col adaptive timestep counter     
      ! NON-VIC
      real(r8), pointer :: frost_table_col   (:)     ! col frost table depth                    
@@ -28,7 +26,6 @@ Module SoilHydrologyType
      real(r8), pointer :: zwts_col          (:)     ! col water table depth, the shallower of the two water depths
      real(r8), pointer :: zwt_perched_col   (:)     ! col perched water table depth
      real(r8), pointer :: qcharge_col       (:)     ! col aquifer recharge rate (mm/s) 
-     real(r8), pointer :: fracice_col       (:,:)   ! col fractional impermeability (-)
      real(r8), pointer :: icefrac_col       (:,:)   ! col fraction of ice       
      real(r8), pointer :: h2osfc_thresh_col (:)     ! col level at which h2osfc "percolates"   (time constant)
      real(r8), pointer :: xs_urban_col      (:)     ! col excess soil water above urban ponding limit
@@ -121,7 +118,6 @@ contains
     allocate(this%zwts_col          (begc:endc))                 ; this%zwts_col          (:)     = nan
 
     allocate(this%qcharge_col       (begc:endc))                 ; this%qcharge_col       (:)     = nan
-    allocate(this%fracice_col       (begc:endc,nlevgrnd))        ; this%fracice_col       (:,:)   = nan
     allocate(this%icefrac_col       (begc:endc,nlevgrnd))        ; this%icefrac_col       (:,:)   = nan
     allocate(this%h2osfc_thresh_col (begc:endc))                 ; this%h2osfc_thresh_col (:)     = nan
     allocate(this%xs_urban_col      (begc:endc))                 ; this%xs_urban_col      (:)     = nan
@@ -340,16 +336,14 @@ contains
      ! !LOCAL VARIABLES:
      integer :: ierr                 ! error code
      integer :: unitn                ! unit for namelist file
-     integer :: origflag=0            !use to control soil hydraulic properties
      integer :: h2osfcflag=1          !If surface water is active or not
      character(len=32) :: subname = 'SoilHydrology_readnl'  ! subroutine name
      !-----------------------------------------------------------------------
 
-     namelist / clm_soilhydrology_inparm / h2osfcflag, origflag
+     namelist / clm_soilhydrology_inparm / h2osfcflag
 
      ! preset values
 
-     origflag = 0          
      h2osfcflag = 1        
 
      if ( masterproc )then
@@ -371,10 +365,8 @@ contains
      end if
 
      call shr_mpi_bcast(h2osfcflag, mpicom)
-     call shr_mpi_bcast(origflag,   mpicom)
 
      this%h2osfcflag = h2osfcflag
-     this%origflag   = origflag
 
    end subroutine ReadNL
 

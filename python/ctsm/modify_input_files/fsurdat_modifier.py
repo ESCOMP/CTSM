@@ -110,7 +110,15 @@ def read_cfg_subgrid(config, cfg_path, numurbl=3):
 
     subgrid_settings = {}
     var_list = config.options(section)
-    valid_list = ["pct_natveg", "pct_crop", "pct_lake", "pct_glacier", "pct_wetland", "pct_urban"]
+    valid_list = [
+        "pct_natveg",
+        "pct_crop",
+        "pct_lake",
+        "pct_glacier",
+        "pct_wetland",
+        "pct_urban",
+        "pct_ocean",
+    ]
     varsum = 0
     for var in var_list:
         if valid_list.count(var) == 0:
@@ -237,6 +245,7 @@ def modify_optional(
     std_elev,
     soil_color,
     dom_pft,
+    evenly_split_cropland,
     lai,
     sai,
     hgt_top,
@@ -280,6 +289,10 @@ def modify_optional(
             dom_pft=dom_pft, lai=lai, sai=sai, hgt_top=hgt_top, hgt_bot=hgt_bot
         )
         logger.info("dom_pft complete")
+
+    if evenly_split_cropland:
+        modify_fsurdat.evenly_split_cropland()
+        logger.info("evenly_split_cropland complete")
 
 
 def read_cfg_optional_basic_opts(modify_fsurdat, config, cfg_path, section):
@@ -429,10 +442,30 @@ def read_cfg_option_control(
         logger.info("dom_pft option is on and = %s", str(dom_pft))
     else:
         logger.info("dom_pft option is off")
+    evenly_split_cropland = get_config_value(
+        config=config,
+        section=section,
+        item="evenly_split_cropland",
+        file_path=cfg_path,
+        convert_to_type=bool,
+    )
+    if (
+        evenly_split_cropland
+        and dom_pft is not None
+        and dom_pft > int(max(modify_fsurdat.file.natpft.values))
+    ):
+        abort("dom_pft must not be set to a crop PFT when evenly_split_cropland is True")
     if process_subgrid and idealized:
         abort("idealized AND process_subgrid_section can NOT both be on, pick one or the other")
 
-    return (idealized, process_subgrid, process_var_list, include_nonveg, dom_pft)
+    return (
+        idealized,
+        process_subgrid,
+        process_var_list,
+        include_nonveg,
+        dom_pft,
+        evenly_split_cropland,
+    )
 
 
 def read_cfg_required_basic_opts(config, section, cfg_path):
@@ -555,6 +588,7 @@ def fsurdat_modifier(parser):
         process_var_list,
         include_nonveg,
         dom_pft,
+        evenly_split_cropland,
     ) = read_cfg_option_control(
         modify_fsurdat,
         config,
@@ -584,6 +618,7 @@ def fsurdat_modifier(parser):
         std_elev,
         soil_color,
         dom_pft,
+        evenly_split_cropland,
         lai,
         sai,
         hgt_top,
@@ -601,7 +636,9 @@ def fsurdat_modifier(parser):
 
     if process_var_list:
         varlist = read_cfg_var_list(config, idealized=idealized)
-        update_list = modify_fsurdat.check_varlist(varlist, allow_uppercase_vars=True)
+        update_list = modify_fsurdat.check_varlist(
+            varlist, allow_uppercase_vars=True, source="Config file: " + cfg_path
+        )
         modify_fsurdat.set_varlist(update_list, cfg_path)
         logger.info("process_var_list is complete")
     else:

@@ -18,6 +18,8 @@ Does this tag change answers significantly for any of the following physics conf
 
     [Put an [X] in the box for any configuration with significant answer changes.]
 
+[ ] clm6_0
+
 [ ] clm5_1
 
 [ ] clm5_0
@@ -27,18 +29,11 @@ Does this tag change answers significantly for any of the following physics conf
 [ ] clm4_5
 
 
-Bugs fixed or introduced
-------------------------
+Bugs fixed
+----------
 [Remove any lines that don't apply. Remove entire section if nothing applies.]
 
-CTSM issues fixed (include CTSM Issue #):
-
-Externals issues fixed (include issue #):
-
-Known bugs introduced in this tag (include issue #):
-
-Known bugs found since the previous tag (include issue #):
-
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -74,11 +69,7 @@ Testing summary:
 Nearly all CTSM tags should undergo 'regular' (aux_clm) testing.
 However, it occasionally makes sense to do more or less system testing;
 here is guidance on different available levels of system testing:
-    a) no system testing (for use when the only changes are ones that
-                          have absolutely no impact on system runs; this
-                          includes documentation-only tags, tags that
-                          just change the tools or some python code that
-                          does not impact system runs, etc.)
+    a) no system testing (this would normally be something that would go to the b4b-dev branch)
     b) minimal (for use in rare cases where only a small change with
                 known behavior is added ... eg. a minor bug fix. This
 		might be to just run the "short" test list, or to run
@@ -87,10 +78,10 @@ here is guidance on different available levels of system testing:
                     run the python testing listed below)
     d) regular (regular tests on normal machines if CTSM source is modified)
     e) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
-                and normally all of the ancillary tests (build-namelist, python, ptclm, etc.)
-		would be run as well)
+                and normally all of the ancillary tests (build-namelist, python, etc.)
+		            would be run as well)
 
-In addition, various other tests of the tools, python and perl
+In addition, various other tests of the tools, python and namelist script
 infrastructure should be run when appropriate, as described below.
 
 ...]
@@ -101,11 +92,7 @@ infrastructure should be run when appropriate, as described below.
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    cheyenne -
-
-  tools-tests (test/tools) (if tools have been changed):
-
-    cheyenne -
+    derecho -
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
@@ -119,18 +106,21 @@ infrastructure should be run when appropriate, as described below.
      doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
      separately run the clm_pymods test suite, and you can remove the following line.]
 
-    clm_pymods test suite on cheyenne - 
+    clm_pymods test suite on derecho - 
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ----
+    derecho -----
     izumi -------
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    cheyenne ----
+    derecho -----
     izumi -------
 
   any other testing (give details below):
+
+  ctsm_sci
+     derecho ----
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
@@ -150,7 +140,9 @@ Changes answers relative to baseline:
     - nature of change (roundoff; larger than roundoff/same climate; new climate):
 
    If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
+   than roundoff? Roundoff differences means one or more lines of code change results
+   only by roundoff level (because order of operation changes for example). Roundoff
+   changes to state fields usually grow to greater than roundoff as the simulation progresses.
 
    If this tag changes climate describe the run(s) done to evaluate the new
    climate (put details of the simulations in the experiment database)

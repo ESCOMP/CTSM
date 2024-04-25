@@ -22,30 +22,31 @@ determine default values for namelists.
 
 -->
 
-<clm_start_type phys="clm5_1"  use_cndv=".true." >arb_ic</clm_start_type>
-<clm_start_type phys="clm5_0"  use_cndv=".true." >arb_ic</clm_start_type>
-<clm_start_type phys="clm4_5"  use_cndv=".true." >arb_ic</clm_start_type>
-<clm_start_type phys="clm4_5"  use_fates=".true.">arb_ic</clm_start_type>
-<clm_start_type phys="clm5_1"  use_fates=".true.">arb_ic</clm_start_type>
-<clm_start_type phys="clm5_0"  use_fates=".true.">arb_ic</clm_start_type>
-<clm_start_type phys="clm4_5"  sim_year="1850"   >startup</clm_start_type>
-<clm_start_type phys="clm5_1"  sim_year="1850"   >startup</clm_start_type>
-<clm_start_type phys="clm5_0"  sim_year="1850"   >startup</clm_start_type>
-<clm_start_type phys="clm4_5"  sim_year="2000"   >startup</clm_start_type>
-<clm_start_type phys="clm5_1"  sim_year="2000"   >startup</clm_start_type>
-<clm_start_type phys="clm5_0"  sim_year="2000"   >startup</clm_start_type>
-<clm_start_type phys="clm4_5"                    >arb_ic</clm_start_type>
-<clm_start_type phys="clm5_0"                    >arb_ic</clm_start_type>
-<clm_start_type phys="clm5_1"                    >arb_ic</clm_start_type>
-<clm_start_type phys="clm4_5"  use_fates=".true.">arb_ic</clm_start_type>
+<clm_start_type                                  >arb_ic</clm_start_type>
 <clm_start_type bgc_spinup="on"                  >cold</clm_start_type>
+<clm_start_type                use_cndv=".true." >cold</clm_start_type>
+<clm_start_type                use_fates=".true.">cold</clm_start_type>
+<clm_start_type                sim_year="1850"   >startup</clm_start_type>
+<clm_start_type                sim_year="2000"   >startup</clm_start_type>
+
+<!-- CAM4 and CAM5 tuning are all cold starts -->
+<clm_start_type phys="clm4_5" lnd_tuning_mode="clm4_5_cam5.0" >cold</clm_start_type>
+<clm_start_type phys="clm4_5" lnd_tuning_mode="clm4_5_cam4.0" >cold</clm_start_type>
+<clm_start_type phys="clm5_0" lnd_tuning_mode="clm5_0_cam5.0" >cold</clm_start_type>
+<clm_start_type phys="clm5_0" lnd_tuning_mode="clm5_0_cam4.0" >cold</clm_start_type>
+<clm_start_type phys="clm5_1" lnd_tuning_mode="clm5_1_cam5.0" >cold</clm_start_type>
+<clm_start_type phys="clm5_1" lnd_tuning_mode="clm5_1_cam4.0" >cold</clm_start_type>
+<clm_start_type phys="clm6_0" lnd_tuning_mode="clm6_0_cam5.0" >cold</clm_start_type>
+<clm_start_type phys="clm6_0" lnd_tuning_mode="clm6_0_cam4.0" >cold</clm_start_type>
 
 <clm_start_type sim_year_range="1850-2100">arb_ic</clm_start_type>
 
 
 <!-- For transient cases, turn on demand to set flanduse_timeseries -->
-<clm_demand sim_year_range="1850-2000">flanduse_timeseries</clm_demand>
-<clm_demand sim_year_range="1850-2100">flanduse_timeseries</clm_demand>
+<clm_demand sim_year_range="1850-2100" neon=".true." >null</clm_demand>    <!-- NEON sites don't have transient PFT datasets yet -->
+<clm_demand sim_year_range="constant"                >null</clm_demand>
+<clm_demand sim_year_range="1850-2000"               >flanduse_timeseries</clm_demand>
+<clm_demand sim_year_range="1850-2100"               >flanduse_timeseries</clm_demand>
 
 
 <!-- Default location of {csmdata} -->

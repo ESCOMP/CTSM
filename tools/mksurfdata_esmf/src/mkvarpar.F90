@@ -16,7 +16,7 @@ module mkvarpar
   integer, parameter :: noveg   = 0             ! value for non-vegetated pft
   integer, parameter :: numsolar = 2            ! number of solar types (Direct,Diffuse)
   integer, parameter :: numrad = 2              ! number of solar bands (VIS,NIR)
-  real(r8),parameter :: elev_thresh  = 2600._r8 ! elevation threshold for screening urban areas
-  real(r8),parameter :: re = SHR_CONST_REARTH*0.001
+  real(r8),parameter :: elev_thresh  = 2600._r8  ! elevation threshold for screening urban areas (m)
+  real(r8),parameter :: re = SHR_CONST_REARTH * 0.001  ! radius of earth (km)
 
 end module mkvarpar

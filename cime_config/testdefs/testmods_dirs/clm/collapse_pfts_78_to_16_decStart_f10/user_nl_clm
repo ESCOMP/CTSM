@@ -1,2 +1,2 @@
-fsurdat = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/surfdata_10x15_78pfts_CMIP6_simyr1850_c170824.nc'
-flanduse_timeseries = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/landuse.timeseries_10x15_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc'
+fsurdat = '$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_10x15_hist_1850_78pfts_c240216.nc'
+flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_10x15_SSP2-4.5_1850-2100_78pfts_c240216.nc'
