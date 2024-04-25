@@ -1428,6 +1428,14 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_mexicocityMEX_hist_2000_78pfts_c24
 <fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" >
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_urbanc_alpha_hist_2000_78pfts_c240221.nc</fsurdat>
 
+<!-- for 1979 simulations (SSP2 label is irrelevant in these files) -->
+<fsurdat hgrid="ne0np4.ARCTICGRIS.ne30x8" sim_year="1979">
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne0np4.ARCTICGRIS.ne30x8_SSP2-4.5_1979_78pfts_c240425.nc</fsurdat>
+<fsurdat hgrid="ne0np4.ARCTIC.ne30x4"     sim_year="1979">
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne0np4.ARCTIC.ne30x4_SSP2-4.5_1979_78pfts_c240425.nc</fsurdat>
+<fsurdat hgrid="ne0np4CONUS.ne30x8"       sim_year="1979">
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne0np4CONUS.ne30x8_SSP2-4.5_1979_78pfts_c240425.nc</fsurdat>
+
 <!-- for pre-industrial simulations - year 1850 -->
 
 <fsurdat hgrid="360x720cru"  sim_year="1850">
@@ -1498,6 +1506,7 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 >lnd/clm2/surfdata_esmf/NEON/landuse.timeseries_NEON_${NEONSITE}_hist_78pfts_simyr2018-2023_c230931.nc</flanduse_timeseries>
 -->
 
+<!-- Historical 1850-2000 (SSP2 label is irrelevant in these files) -->
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2000"
  >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_0.9x1.25_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1.9x2.5"       sim_year_range="1850-2000"
@@ -1570,6 +1579,13 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 
 <flanduse_timeseries hgrid="C96"           sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
 >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_C96_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+
+<flanduse_timeseries hgrid="ne0np4.ARCTICGRIS.ne30x8" sim_year_range="1979-2026" ssp_rcp="SSP2-4.5"
+>lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_ne0np4.ARCTICGRIS.ne30x8_SSP2-4.5_1979-2026_78pfts_c240425.nc</flanduse_timeseries>
+<flanduse_timeseries hgrid="ne0np4.ARCTIC.ne30x4" sim_year_range="1979-2026" ssp_rcp="SSP2-4.5"
+>lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_ne0np4.ARCTIC.ne30x4_SSP2-4.5_1979-2026_78pfts_c240425.nc</flanduse_timeseries>
+<flanduse_timeseries hgrid="ne0np4CONUS.ne30x8" sim_year_range="1979-2026" ssp_rcp="SSP2-4.5"
+>lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_ne0np4CONUS.ne30x8_SSP2-4.5_1979-2026_78pfts_c240425.nc</flanduse_timeseries>
 
 <!-- SSP3-RCP7.0 - relative to {csmdata}) -->
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2100" ssp_rcp="SSP3-7.0"
