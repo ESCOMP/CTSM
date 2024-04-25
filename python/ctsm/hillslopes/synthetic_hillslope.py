@@ -208,14 +208,13 @@ def main():
 
     args = parse_arguments(sys.argv[1:])
 
-    infile = Dataset(args.input_file, "r")
-    n_lon = len(infile.dimensions["lsmlon"])
-    n_lat = len(infile.dimensions["lsmlat"])
-    std_elev = np.asarray(infile.variables["STD_ELEV"][:, :])
-    lfrac = np.asarray(infile.variables["LANDFRAC_PFT"][:, :])
-    lmask = lfrac > 0
-    pct_natveg = np.asarray(infile.variables["PCT_NATVEG"][:, :])
-    infile.close()
+    with Dataset(args.input_file, "r") as infile:
+        n_lon = len(infile.dimensions["lsmlon"])
+        n_lat = len(infile.dimensions["lsmlat"])
+        std_elev = np.asarray(infile.variables["STD_ELEV"][:, :])
+        lfrac = np.asarray(infile.variables["LANDFRAC_PFT"][:, :])
+        lmask = lfrac > 0
+        pct_natveg = np.asarray(infile.variables["PCT_NATVEG"][:, :])
 
     # are any points in land mask but have zero % natveg?
     print("zero natveg pts ", np.sum(np.where(np.logical_and(lmask == 1, pct_natveg == 0), 1, 0)))
