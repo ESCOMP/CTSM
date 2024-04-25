@@ -27,27 +27,27 @@ module clm_varctl
   ! Run control variables
   !
   ! case id
-  character(len=256), public :: caseid  = ' '                            
+  character(len=256), public :: caseid  = ' '
 
   ! case title
-  character(len=256), public :: ctitle  = ' '                            
+  character(len=256), public :: ctitle  = ' '
 
   ! Type of run
-  integer, public :: nsrest                = iundef                         
+  integer, public :: nsrest                = iundef
   logical, public :: is_cold_start         = .false.
 
   ! Startup from initial conditions
-  integer, public, parameter :: nsrStartup  = 0                          
+  integer, public, parameter :: nsrStartup  = 0
 
   ! Continue from restart files
-  integer, public, parameter :: nsrContinue = 1                          
+  integer, public, parameter :: nsrContinue = 1
 
   ! Branch from restart files
-  integer, public, parameter :: nsrBranch   = 2                          
+  integer, public, parameter :: nsrBranch   = 2
 
   ! true => allow case name to remain the same for branch run
   ! by default this is not allowed
-  logical, public :: brnch_retain_casename = .false.                     
+  logical, public :: brnch_retain_casename = .false.
 
   ! true => run tests of ncdio_pio
   logical, public :: for_testing_run_ncdiopio_tests = .false.
@@ -74,19 +74,19 @@ module clm_varctl
   logical, public :: for_testing_no_crop_seed_replenishment = .false.
 
   ! Hostname of machine running on
-  character(len=256), public :: hostname = ' '                           
+  character(len=256), public :: hostname = ' '
 
   ! username of user running program
-  character(len=256), public :: username = ' '                           
+  character(len=256), public :: username = ' '
 
   ! description of this source
   character(len=256), public :: source   = "Community Terrestrial Systems Model"
 
   ! version of program
-  character(len=256), public :: version  = " "                           
+  character(len=256), public :: version  = " "
 
   ! dataset conventions
-  character(len=256), public :: conventions = "CF-1.0"                   
+  character(len=256), public :: conventions = "CF-1.0"
 
   ! component name for filenames (history or restart files)
   character(len=8), public :: compname = 'clm2'
@@ -120,14 +120,14 @@ module clm_varctl
   !----------------------------------------------------------
   ! Flag to read ndep rather than obtain it from coupler
   !----------------------------------------------------------
-  
+
   logical, public :: ndep_from_cpl = .false.
 
   !----------------------------------------------------------
   ! Interpolation of finidat if requested
   !----------------------------------------------------------
 
-  logical, public :: bound_h2osoi = .true. ! for debugging 
+  logical, public :: bound_h2osoi = .true. ! for debugging
 
   ! If finidat_interp_source is non-blank and finidat is blank then interpolation will be
   ! done from finidat_interp_source to finidat_interp_dest. Note that
@@ -150,8 +150,8 @@ module clm_varctl
   logical, public, parameter :: use_crop_agsys = .false.
 
   ! true => separate crop landunit is not created by default
-  logical, public :: create_crop_landunit = .false.     
-  
+  logical, public :: create_crop_landunit = .false.
+
   ! number of hillslopes per landunit
   integer, public :: nhillslope = 0
 
@@ -159,14 +159,14 @@ module clm_varctl
   integer, public :: max_columns_hillslope = 1
 
   ! do not irrigate by default
-  logical, public :: irrigate = .false.            
+  logical, public :: irrigate = .false.
 
   ! set saturated excess runoff to zero for crops
   logical, public :: crop_fsat_equals_zero = .false.
 
   ! remove this fraction of crop residues to a 1-year product pool (instead of going to litter)
   real(r8), public :: crop_residue_removal_frac = 0.0
-  
+
   !----------------------------------------------------------
   ! Other subgrid logic
   !----------------------------------------------------------
@@ -175,7 +175,7 @@ module clm_varctl
   logical, public :: run_zero_weight_urban = .false.
 
   ! true => make ALL patches, cols & landunits active (even if weight is 0)
-  logical, public :: all_active = .false.          
+  logical, public :: all_active = .false.
 
   ! true => any ocean (i.e., "wetland") points on the surface dataset are converted to
   ! bare ground (or whatever vegetation is given in that grid cell... but typically this
@@ -198,33 +198,33 @@ module clm_varctl
   !----------------------------------------------------------
 
   ! values of 'prognostic','diagnostic','constant'
-  character(len=16), public :: co2_type = 'constant'    
+  character(len=16), public :: co2_type = 'constant'
 
-  ! State of the model for the accelerated decomposition (AD) spinup. 
+  ! State of the model for the accelerated decomposition (AD) spinup.
   ! 0 (default) = normal model; 1 = AD SPINUP
-  integer, public :: spinup_state = 0 
+  integer, public :: spinup_state = 0
 
   ! true => anoxia is applied to heterotrophic respiration also considered in CH4 model
   ! default value reset in controlMod
-  logical, public :: anoxia  = .true. 
+  logical, public :: anoxia  = .true.
 
   ! used to override an error check on reading in restart files
-  logical, public :: override_bgc_restart_mismatch_dump = .false. 
+  logical, public :: override_bgc_restart_mismatch_dump = .false.
 
   ! Set in CNAllocationInit (TODO - had to move it here to avoid circular dependency)
-  logical, private:: carbon_only      
+  logical, private:: carbon_only
 
-  ! Set in CNNDynamicsInit 
+  ! Set in CNNDynamicsInit
   ! NOTE (mvertens, 2014-9 had to move it here to avoid confusion when carbon data types
-  ! wehre split - TODO - should move it our of this module) 
+  ! wehre split - TODO - should move it our of this module)
   ! NOTE(bandre, 2013-10) according to Charlie Koven, nfix_timeconst
-  ! is currently used as a flag and rate constant. 
+  ! is currently used as a flag and rate constant.
   ! Rate constant: time over which to exponentially relax the npp flux for N fixation term
   ! (days) time over which to exponentially relax the npp flux for N fixation term
-  ! flag: (if  <=  0. or  >=  365; use old annual method). 
+  ! flag: (if  <=  0. or  >=  365; use old annual method).
   ! Default value is junk that should always be overwritten by the namelist or init function!
   !
-  real(r8), public :: nfix_timeconst = -1.2345_r8 
+  real(r8), public :: nfix_timeconst = -1.2345_r8
 
   !----------------------------------------------------------
   ! Physics
@@ -244,10 +244,16 @@ module clm_varctl
   ! ozone vegitation stress method, valid values: unset, stress_lombardozzi2015, stress_falk
   character(len=64), public    :: o3_veg_stress_method = 'unset'
 
+  ! other o3_streams parameters
+  logical, public :: use_do3_streams = .false.
+  character(len=fname_len), public :: stream_fldfilename_do3
+  character(len=fname_len), public :: stream_meshfile_do3
+  character(len=fname_len), public :: do3_mapalgo
+
   real(r8), public  :: o3_ppbv = 100._r8
 
   ! number of wavelength bands used in SNICAR snow albedo calculation
-  integer, public :: snicar_numrad_snw = 5 
+  integer, public :: snicar_numrad_snw = 5
 
   ! type of downward solar radiation spectrum for SNICAR snow albedo calculation
   ! options:
@@ -316,7 +322,7 @@ module clm_varctl
   integer, public            :: fates_parteh_mode = -9                  ! 1 => carbon only
                                                                         ! 2 => C+N+P (not enabled yet)
                                                                         ! no others enabled
-  integer, public            :: fates_spitfire_mode = 0                
+  integer, public            :: fates_spitfire_mode = 0
                                                                         ! 0 for no fire; 1 for constant ignitions;
                                                                         ! > 1 for external data (lightning and/or anthropogenic ignitions)
                                                                         ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
@@ -336,13 +342,13 @@ module clm_varctl
   ! Performing this output can be expensive, so we allow different history dimension
   ! levels.
   ! The first index is output at the model timescale
-  ! The second index is output at the dynamics (daily) timescale      
+  ! The second index is output at the dynamics (daily) timescale
   ! 0 - no output
   ! 1 - include only column level means (3D)
   ! 2 - include output that includes the 4th dimension
-  
+
   integer, dimension(2), public   :: fates_history_dimlevel = (/2,2/)
-  
+
   logical, public            :: use_fates_luh = .false.                 ! true => use FATES landuse data mode
   character(len=256), public :: fluh_timeseries = ''                    ! filename for fates landuse timeseries data
   character(len=256), public :: fates_inventory_ctrl_filename = ''      ! filename for inventory control
@@ -351,9 +357,9 @@ module clm_varctl
   ! BUT... THEY CAN BOTH BE OFF (IF FATES IS OFF)
   logical, public            :: use_fates_sp = .false.                  ! true => use FATES satellite phenology mode
   logical, public            :: use_fates_bgc = .false.                 ! true => use FATES along with CLM soil biogeochemistry
-  
+
   !----------------------------------------------------------
-  !  LUNA switches		
+  !  LUNA switches
   !----------------------------------------------------------
 
   logical, public :: use_luna = .false.            ! true => use  LUNA
@@ -373,7 +379,7 @@ module clm_varctl
   integer, public :: carbon_resp_opt = 0
 
   !----------------------------------------------------------
-  ! prescribed soil moisture streams switch 
+  ! prescribed soil moisture streams switch
   !----------------------------------------------------------
 
   logical, public :: use_soil_moisture_streams = .false. ! true => use prescribed soil moisture stream
@@ -436,11 +442,11 @@ module clm_varctl
   ! glacier_mec control variables: default values (may be overwritten by namelist)
   !----------------------------------------------------------
 
-  ! true => CLM glacier area & topography changes dynamically 
-  logical , public :: glc_do_dynglacier = .false.           
+  ! true => CLM glacier area & topography changes dynamically
+  logical , public :: glc_do_dynglacier = .false.
 
   ! number of days before one considers the perennially snow-covered point 'land ice'
-  integer , public :: glc_snow_persistence_max_days = 7300  
+  integer , public :: glc_snow_persistence_max_days = 7300
 
   !
   !----------------------------------------------------------
@@ -464,21 +470,21 @@ module clm_varctl
   !----------------------------------------------------------
 
   ! number of segments per clump for decomp
-  integer, public :: nsegspc = 20                       
+  integer, public :: nsegspc = 20
 
   !----------------------------------------------------------
   ! Derived variables (run, history and restart file)
   !----------------------------------------------------------
 
   ! directory name for local restart pointer file
-  character(len=256), public :: rpntdir = '.'            
+  character(len=256), public :: rpntdir = '.'
 
   ! file name for local restart pointer file
-  character(len=256), public :: rpntfil = 'rpointer.lnd' 
+  character(len=256), public :: rpntfil = 'rpointer.lnd'
 
   ! moved hist_wrtch4diag from histFileMod.F90 to here - caused compiler error with intel
   ! namelist: write CH4 extra diagnostic output
-  logical, public :: hist_wrtch4diag = .false.         
+  logical, public :: hist_wrtch4diag = .false.
 
   ! namelist: write list of all history fields to a file for use in documentation
   logical, public :: hist_fields_list_file = .false.
@@ -532,7 +538,7 @@ contains
     ! !ARGUMENTS:
     character(len=256), optional, intent(IN) :: caseid_in                ! case id
     character(len=256), optional, intent(IN) :: ctitle_in                ! case title
-    logical,            optional, intent(IN) :: brnch_retain_casename_in ! true => allow case name to remain the 
+    logical,            optional, intent(IN) :: brnch_retain_casename_in ! true => allow case name to remain the
                                                                          ! same for branch run
     logical,            optional, intent(IN) :: single_column_in         ! true => single column mode
     real(r8),           optional, intent(IN) :: scmlat_in                ! single column lat

@@ -1581,6 +1581,7 @@ sub process_namelist_inline_logic {
   setup_logic_luna($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_hillslope($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_o3_veg_stress_method($opts, $nl_flags, $definition, $defaults, $nl,$physv);
+  setup_logic_do3_streams($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_hydrstress($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_dynamic_roots($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_params_file($opts,  $nl_flags, $definition, $defaults, $nl);

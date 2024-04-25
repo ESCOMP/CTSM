@@ -419,7 +419,7 @@ contains
          )
 
     if (this%atm_ozone_freq == atm_ozone_frequency_multiday_average) then
-      call this%diurnalOzoneAnomInst%Interp(forc_o3, forc_o3_down)
+      call this%diurnalOzoneAnomInst%Interp(bounds, forc_o3, forc_o3_down)
     else
       forc_o3_down(bounds%begg:bounds%endg) = forc_o3(bounds%begg:bounds%endg)
     end if

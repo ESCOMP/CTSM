@@ -92,32 +92,32 @@ module DiurnalOzoneType
   !-----------------------------------------------------------------------
 
   !-----------------------------------------------------------------------
-  subroutine Interp(this, forc_o3, forc_o3_down)
+  subroutine Interp(this, bounds, forc_o3, forc_o3_down)
     !
     ! !DESCRIPTION:
     ! Downscale/interpolate multi-day ozone data to subdaily
     !
     ! !USES:
-    use clm_time_manager , only : get_curr_time
+    use clm_time_manager , only : get_curr_date
     use clm_varcon       , only : secspday
     !
     ! !ARGUMENTS:
     class(diurnal_ozone_anom_type), intent(in)  :: this
-    real(r8),                       intent(in)  :: forc_o3(bounds%begg:bounds%endg)      ! ozone partial pressure (mol/mol)
-    real(r8),                       intent(out) :: forc_o3_down(bounds%begg:bounds%endg) ! ozone partial pressure, downscaled (mol/mol)
+    type(bounds_type),              intent(in)  :: bounds          ! bounds type
+    real(r8),                       intent(in)  :: forc_o3(:)      ! ozone partial pressure (mol/mol)
+    real(r8),                       intent(out) :: forc_o3_down(:) ! ozone partial pressure, downscaled (mol/mol)
+
     !
     ! LOCAL VARIABLES:
-    integer :: t               ! looping index
-    integer :: yr              ! year
-    integer :: mon             ! month
+    integer  :: t               ! looping index
+    integer  :: yr              ! year
+    integer  :: mon             ! month
     integer  :: day            ! day of month
     integer  :: tod            ! time of day (seconds past 0Z)
     integer  :: begg, endg     ! bounds
     integer  :: t_prev         ! previous time index
-    real(r8) :: anomaly_val_start
-    real(r8) :: anomaly_val_end
-    real(r8) :: anomaly_scalar
-    real(r8) :: tdiff_end, tdiff_start
+    real(r8) :: tdiff_end
+    real(r8) :: tdiff_start
     real(r8) :: tdiff
     !-----------------------------------------------------------------------
 
@@ -135,6 +135,7 @@ module DiurnalOzoneType
 
     ! interpolate, checking for edge cases
     if (t == 1) then
+      ! wrap around back
       t_prev = this%ntimes
       tdiff_end = secspday - this%time_arr(t_prev) + real(tod)
       tdiff = this%time_arr(t) + secspday - this%time_arr(t_prev)
@@ -144,14 +145,12 @@ module DiurnalOzoneType
       tdiff = this%time_arr(t) - this%time_arr(t_prev)
     end if
 
-    anomaly_val_start = this%o3_anomaly_grc(begg:endg, t_prev)
-    anomaly_val_end = this%o3_anomaly_grc(begg:endg, t)
     tdiff_start = this%time_arr(t) - real(tod)
 
     ! interpolate
-    anomaly_scalar = (anomaly_val_start*tdiff_start + anomaly_val_end*tdiff_end)/tdiff
-
-    forc_o3_down(begg:endg) = forc_o3(begg:endg)*anomaly_scalar
+    forc_o3_down(begg:endg) = forc_o3(begg:endg)*               &
+      ((this%o3_anomaly_grc(begg:endg, t_prev)*tdiff_start +    &
+      this%o3_anomaly_grc(begg:endg, t_prev)*tdiff_end)/tdiff)
 
     end subroutine Interp
 
