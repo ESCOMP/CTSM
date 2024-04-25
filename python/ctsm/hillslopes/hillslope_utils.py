@@ -19,7 +19,7 @@ class HillslopeVars:
 
     # pylint: disable=too-many-instance-attributes
     def __init__(
-        self, ncolumns_per_gridcell, nhillslope, n_lat, n_lon, recurse=True, incl_latlon=False
+        self, ncolumns_per_gridcell, nhillslope, n_lat, n_lon, recurse=True, incl_latlon=False, incl_pftndx=False
     ):
 
         # Variables that will actually be saved
@@ -44,6 +44,11 @@ class HillslopeVars:
             self.lat = np.zeros((n_lat))
             self.lon2d = np.zeros((n_lat, n_lon))
             self.lat2d = np.zeros((n_lat, n_lon))
+        
+        if incl_pftndx:
+            self.hillslope_pftndx = np.zeros((ncolumns_per_gridcell, n_lat, n_lon), dtype=int)
+        else:
+            self.hillslope_pftndx = None
 
         # Placeholders for read-in data from each chunk
         self.chunk_mask = np.zeros((n_lat, n_lon))
@@ -420,6 +425,17 @@ class HillslopeVars:
             dataset=ds_out,
             data_type=np.int32,
         )
+
+        if self.hillslope_pftndx is not None:
+            add_variable_nc(
+                name="hillslope_pftndx",
+                units="unitless",
+                long_name="hillslope pft indices",
+                data=self.hillslope_pftndx.astype(np.int32),
+                dataset=ds_out,
+                data_type=np.int32,
+            )
+
 
         # Save
         ds_out.close()

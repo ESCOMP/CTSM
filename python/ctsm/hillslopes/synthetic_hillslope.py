@@ -11,8 +11,7 @@ import numpy as np
 # though it does.
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
-from ctsm.hillslopes.hillslope_utils import create_variables as shared_create_variables
-from ctsm.hillslopes.hillslope_utils import create_variable, add_stream_channel_vars
+from ctsm.hillslopes.hillslope_utils import HillslopeVars
 
 
 def parse_arguments(argv):
@@ -118,123 +117,23 @@ def parse_arguments(argv):
     return args
 
 
-def write_to_file(
-    args,
-    lmask,
-    max_columns_per_landunit,
-    pct_landunit,
-    distance,
-    area,
-    width,
-    elevation,
-    slope,
-    aspect,
-    col_ndx,
-    col_dndx,
-    hill_ndx,
-):
+def calc_stream_geom(hillslope_vars):
     """
-    Write to file
+    Calculate stream geometry variables
     """
-    outfile = Dataset(args.output_file, "w", format="NETCDF3_64BIT_OFFSET")
-
-    with Dataset(args.input_file, "r") as fsurdat:
-        n_lat = len(fsurdat.dimensions["lsmlat"])
-        n_lon = len(fsurdat.dimensions["lsmlon"])
-
-    outfile.createDimension("lsmlon", n_lon)
-    outfile.createDimension("lsmlat", n_lat)
-    outfile.createDimension("nhillslope", args.num_hillslopes)
-    outfile.createDimension("nmaxhillcol", max_columns_per_landunit)
-
-    create_variables(outfile)
-
-    outfile.variables["nhillcolumns"][:, :] = max_columns_per_landunit * lmask
-    outfile.variables["pct_hillslope"][
-        :,
-    ] = pct_landunit
-    outfile.variables["hillslope_index"][
-        :,
-    ] = hill_ndx
-    outfile.variables["column_index"][
-        :,
-    ] = col_ndx
-    outfile.variables["downhill_column_index"][
-        :,
-    ] = col_dndx
-    outfile.variables["hillslope_distance"][
-        :,
-    ] = distance
-    outfile.variables["hillslope_width"][
-        :,
-    ] = width
-    outfile.variables["hillslope_elevation"][
-        :,
-    ] = elevation
-    outfile.variables["hillslope_slope"][
-        :,
-    ] = slope
-    outfile.variables["hillslope_aspect"][
-        :,
-    ] = aspect
-    outfile.variables["hillslope_area"][
-        :,
-    ] = area
-    outfile.variables["hillslope_bedrock_depth"][
-        :,
-    ] = 2
-
-    # add stream variables
-    wdepth, wwidth, wslope = add_stream_channel_vars(outfile)
-
-    # Calculate stream geometry from hillslope parameters
-    uharea = np.sum(area, axis=0)
+    uharea = np.sum(hillslope_vars.h_area, axis=0)
     adepth, bdepth = 1e-3, 0.4
-    wdepth[
+    hillslope_vars.h_stream_depth[
         :,
     ] = adepth * (uharea**bdepth)
     awidth, bwidth = 1e-3, 0.6
-    wwidth[
+    hillslope_vars.h_stream_width[
         :,
     ] = awidth * (uharea**bwidth)
-    wslope[
+    hillslope_vars.h_stream_slope[
         :,
     ] = 1e-2
-
-    # Save settings as global attributes
-    outfile.synth_hillslopes_delx = args.delx
-    outfile.synth_hillslopes_hcase = args.hcase
-    outfile.synth_hillslopes_hillslope_distance = args.hillslope_distance
-    outfile.synth_hillslopes_nmaxhillcol = np.int32(args.nmaxhillcol)
-    outfile.synth_hillslopes_num_hillslopes = np.int32(args.num_hillslopes)
-    outfile.synth_hillslopes_phill = args.phill
-    outfile.synth_hillslopes_thresh = args.thresh
-    outfile.synth_hillslopes_width_reach = args.width_reach
-
-    print("created ", args.output_file)
-
-    # --  Close output file
-    outfile.close()
-
-
-def create_variables(outfile):
-    """
-    Create variables in output file
-    """
-
-    shared_create_variables(outfile)
-
-    create_variable(
-        outfile,
-        "hillslope_pftndx",
-        "unitless",
-        "hillslope pft indices",
-        data_type=np.int32,
-    )
-
-    outfile.variables["hillslope_pftndx"][
-        :,
-    ] = 13
+    return hillslope_vars
 
 
 """
@@ -302,44 +201,6 @@ def create_bins(args, max_columns_per_hillslope, bin_fractions, hhgt):
     return hbins, lbins
 
 
-def define_hillslope_geom_arrays(args, n_lon, n_lat, max_columns_per_landunit):
-    """
-    Define arrays governing hillslope geometry
-    """
-    # percentage of landunit occupied by each hillslope (must sum to 100)
-    pct_landunit = np.zeros((args.num_hillslopes, n_lat, n_lon))
-    # distance of column midpoint from stream channel
-    distance = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=float)
-    # area of column
-    area = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=float)
-    # width of interface with downstream column (or channel)
-    width = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=float)
-    # elevation of column midpoint
-    elevation = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=float)
-    # mean slope of column
-    slope = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=float)
-    # azimuth angle of column
-    aspect = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=float)
-    # column identifier index
-    col_ndx = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=np.int32)
-    # index of downhill column
-    col_dndx = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=np.int32)
-    # index of hillslope type
-    hill_ndx = np.zeros((max_columns_per_landunit, n_lat, n_lon), dtype=np.int32)
-    return (
-        pct_landunit,
-        distance,
-        area,
-        width,
-        elevation,
-        slope,
-        aspect,
-        col_ndx,
-        col_dndx,
-        hill_ndx,
-    )
-
-
 def main():
     """
     See module description
@@ -373,19 +234,7 @@ def main():
 
     max_columns_per_landunit = args.num_hillslopes * max_columns_per_hillslope
 
-    # --  define geometry of hillslopes
-    (
-        pct_landunit,
-        distance,
-        area,
-        width,
-        elevation,
-        slope,
-        aspect,
-        col_ndx,
-        col_dndx,
-        hill_ndx,
-    ) = define_hillslope_geom_arrays(args, n_lon, n_lat, max_columns_per_landunit)
+    hillslope_vars = HillslopeVars(max_columns_per_landunit, args.num_hillslopes, n_lat, n_lon, recurse=False, incl_latlon=True, incl_pftndx=True)
 
     cndx = 0
     for i in range(n_lon):
@@ -405,53 +254,65 @@ def main():
 
             # loop over aspect bins
             for naspect in range(args.num_hillslopes):
-                pct_landunit[naspect, j, i] = 100 / float(args.num_hillslopes)
+                hillslope_vars.pct_hillslope[naspect, j, i] = 100 / float(args.num_hillslopes)
                 # index from ridge to channel (i.e. downhill)
                 for k in range(max_columns_per_hillslope):
                     ncol = k + naspect * max_columns_per_hillslope
 
                     cndx += 1  # start at 1 not zero (oceans are 0)
-                    col_ndx[ncol, j, i] = cndx
-                    hill_ndx[ncol, j, i] = naspect + 1
+                    hillslope_vars.column_index[ncol, j, i] = cndx
+                    hillslope_vars.hillslope_index[ncol, j, i] = naspect + 1
 
                     uedge = lbins[k + 1]
                     ledge = lbins[k]
                     #      lowland column
                     if k == 0:
-                        col_dndx[ncol, j, i] = -999
+                        hillslope_vars.downhill_column_index[ncol, j, i] = -999
                     else:  # upland columns
-                        col_dndx[ncol, j, i] = col_ndx[ncol, j, i] - 1
+                        hillslope_vars.downhill_column_index[ncol, j, i] = hillslope_vars.column_index[ncol, j, i] - 1
 
-                    distance[ncol, j, i] = 0.5 * (uedge + ledge)
-                    area[ncol, j, i] = args.width_reach * (uedge - ledge)
-                    width[ncol, j, i] = args.width_reach
+                    hillslope_vars.h_dist[ncol, j, i] = 0.5 * (uedge + ledge)
+                    hillslope_vars.h_area[ncol, j, i] = args.width_reach * (uedge - ledge)
+                    hillslope_vars.h_width[ncol, j, i] = args.width_reach
 
                     # numerically integrate to calculate mean elevation
-                    elevation[ncol, j, i] = calc_mean_elevation(args, hhgt, uedge, ledge)
+                    hillslope_vars.h_elev[ncol, j, i] = calc_mean_elevation(args, hhgt, uedge, ledge)
 
-                    slope[ncol, j, i] = (hbins[k + 1] - hbins[k]) / (lbins[k + 1] - lbins[k])
+                    hillslope_vars.h_slope[ncol, j, i] = (hbins[k + 1] - hbins[k]) / (lbins[k + 1] - lbins[k])
                     if 0 <= naspect <= 3:
                         # 0 = north
                         # 1 = east
                         # 2 = south
                         # 3 = west
-                        aspect[ncol, j, i] = naspect * np.pi / 2
+                        hillslope_vars.h_aspect[ncol, j, i] = naspect * np.pi / 2
                     else:
                         raise RuntimeError(f"Unhandled naspect: {naspect}")
 
+    # Fill stream geometry variables
+    hillslope_vars = calc_stream_geom(hillslope_vars)
+
+    # Fill other variables
+    hillslope_vars.nhillcolumns = max_columns_per_landunit * lmask
+    hillslope_vars.h_bedrock = 2.0
+    hillslope_vars.hillslope_pftndx[:] = 13
+
     # write to file  --------------------------------------------
-    write_to_file(
-        args,
-        lmask,
+    hillslope_vars.save(
+        args.input_file,
+        args.output_file,
         max_columns_per_landunit,
-        pct_landunit,
-        distance,
-        area,
-        width,
-        elevation,
-        slope,
-        aspect,
-        col_ndx,
-        col_dndx,
-        hill_ndx,
+        args.num_hillslopes,
+        add_bedrock=True,
+        add_stream=True,
     )
+
+    # Save settings as global attributes
+    with Dataset(args.output_file, "a") as outfile:
+        outfile.synth_hillslopes_delx = args.delx
+        outfile.synth_hillslopes_hcase = args.hcase
+        outfile.synth_hillslopes_hillslope_distance = args.hillslope_distance
+        outfile.synth_hillslopes_nmaxhillcol = np.int32(args.nmaxhillcol)
+        outfile.synth_hillslopes_num_hillslopes = np.int32(args.num_hillslopes)
+        outfile.synth_hillslopes_phill = args.phill
+        outfile.synth_hillslopes_thresh = args.thresh
+        outfile.synth_hillslopes_width_reach = args.width_reach
