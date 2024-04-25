@@ -28,10 +28,6 @@ def main(description):
         pattern = "test_unit*.py"
     elif args.sys:
         pattern = "test_sys*.py"
-    elif args.adv_unit:
-        pattern = "test_advanced_unit*.py"
-    elif args.adv_sys:
-        pattern = "test_advanced_sys*.py"
     else:
         pattern = "test*.py"
 
