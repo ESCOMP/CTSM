@@ -1330,7 +1330,7 @@ contains
     integer, target    :: tmp(1)
     type(ESMF_VM)      :: vm
     character(*), parameter :: nml_name = "ctsm_nuopc_cap" ! MUST match with namelist name below
-
+    
 
     namelist  /ctsm_nuopc_cap/ force_send_to_atm
 
@@ -1355,7 +1355,7 @@ contains
 
     ! Broadcast namelist to all processors
     call ESMF_VMBroadcast(vm, tmp, 1, 0, rc=rc)
-
+   
     force_send_to_atm = (tmp(1) == 1)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
