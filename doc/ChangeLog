@@ -1,4 +1,545 @@
 ===============================================================
+Tag name: ctsm5.2.002
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Fri 26 Apr 2024 11:13:46 AM MDT
+One-line Summary: FATES default allometry parameter file update
+
+Purpose and description of changes
+----------------------------------
+
+This updates the default FATES parameter file which includes a number
+of changes:
+
+   - Default global tree pft allometry update
+   - New allometric mode options
+   - New scaling coefficients for alternative leaf maintenance respiration
+   - New switch to control the use of host land model day length scaling factor
+
+This also incorporates some testing additions and clean up, including:
+
+   - Removes cheyenne expected failure tests that have been converted to derecho
+   - Adds a 5x5_amazon test to aux_clm and the expected failures list
+   - Temporarilry converts a fates 5x5_amazon test to f10 test
+   - Adds namelist check and corresponding unit test to make sure fates hydro
+     and fates satellite phenology mode can not be used together
+
+The FATES externals tag is also updated which includes a number of bug fixes
+and the addition of new history output.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   NOTE: FATES hydro mode and FATES satellite phenology mode can not
+	 be used in conjunction as of this API update
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   FATES parameter file default updated to fates_params_api.35.0.0_12pft_c240326.nc
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+   A 5x5_amazon smoke test, not using MPI-serial has been added to the test list
+   and list of expected failures to track issue #2423.
+   Out-of-date cheyenne tests on the expected failure list have been removed.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, only for FATES configurations
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: FATES
+    - what platforms/compilers: ALL
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff
+
+   The FATES externals update incorporates a number of bug fixes and the new allometry default
+   paramters result in a new scientific baseline.
+
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+   FATES: sci.1.72.2_api.34.0.0 -> sci.1.73.0_api.35.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+#2436 -- FATES API35 parameter file update
+NGEET#1093 -- Update default allometry parameters for tree PFTs
+NGEET#1128 -- New allometric modes
+NGEET#1149 -- Alternative vertical scaling of leaf maintenance respiration
+NGEET#1161 -- Adding day length factor switch
+
+===============================================================
+===============================================================
+Tag name: ctsm5.2.001
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon 22 Apr 2024 02:10:55 PM MDT
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+Some fixes for run_neon that came up in ctsm5.1.dev172.
+Small bug fix for units of vector format hillslope hydrology.
+Start adding PLUMBER2 users-mods (NOT functional)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  #2470 -- NEON case won't build
+  #2471 -- run_neon calendar issues
+  #2474 -- externals prevent creation of directory
+  #2414 -- Correct subset_data error checking
+  #2437 -- externals update broke NEON features
+  #2435 -- Issues with run_neon with the --experiment flag starting in ctsm5.1.dev172
+  Partial for #2137 -- Create csv file and user-mod directories for PLUMBER2 sites
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   NOTE: The new PLUMBER2 user-mods can NOT be used right now!
+         More changes need to happen before PLUMBER2 sites can be run
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New namelist item:  lai_dtlimit (when use_lai_streams is on)
+   User-mod directories are coming in for: PLUMBER2
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Introduces some NCL scripts for PLUMBER2 that we need to convert to python
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+@ekluzek @olyson @slevis-lmwg @TeaganKing @wwieder
+
+#2155 -- PLUMBER2 plumbing (csv file, wrapper script, usermods, and scripts).
+#2477 -- One-line fix for izumi NEON-MOAB test error introduced in #2472
+#2472 -- B4b neon  tag: simple bfb
+#2475 -- fix units for vector hh output
+#2435 -- experiment bug fix
+
+
+===============================================================
+===============================================================
+Tag name: ctsm5.2.0
+Originator(s): many (see below)
+Date: Sat 20 Apr 2024 12:33:33 AM MDT
+One-line Summary: New surface datasets and new mksurfdata_esmf tool to create them
+
+Purpose and description of changes
+----------------------------------
+
+Changes to CTSM:
+================
+
+All new surface datasets. Transient urban and lake by default turned on for transient cases.
+Ocean is run as baresoil rather than wetland (for clm6_0). The urban streams file was also
+updated. The new surface datasets have new updated input datasets (see below).
+
+Update the README files.
+
+New surface datasets:
+=====================
+
+The new surface datasets are incompatible with previous versions (for example the ctsm5.1 series)
+ctsm5.2.0 and following versions also can NOT use the previous ctsm5.1 datasets.
+
+See the section below about the new datasets used in their creation. Improvements in how landunits
+on coastal areas was also done.
+
+The following fields were added and removed to the list of fields on the datasets.
+
+Fields added:
+   ORGC, BULK, CFRAG, PHAQ (soil data) (currently NOT used by CTSM)
+   mapunits (map units from the soil dataset)
+   LANDFRAC_MKSURFDATA (for reference NOT used by CTSM)
+   PCT_OCEAN (previously PCT_WETLAND was used)
+
+Fields removed:
+   AREA, PFTDATA_MASK
+
+New mksurfdata_esmf Tool:
+=========================
+
+Implement a parallel version of mksurfdata (mksurfdata_esmf) that uses ESMF regridding directly
+in mksurfdata so that offline mapping files don't have to be created as a separate step. This
+allows mksurfdata to create surface datasets at much higher resolutions
+
+The build for the tool is based on the CESM/CIME build system and uses cmake. This allows the build
+to be kept up with changes in CESM. Currently it's only setup and working on Derecho. But, this design
+will enable it to be built and run on any CESM supported machine (or a machine that a user ports to).
+
+Any input grid from ccs_config can be used, or the user can supply their own mesh file to define
+the output grid. The user no longer has to add to the list of valid resolutions as in mksurfdata_map.
+
+Creation of supported single point datasets. These datasets are created through the use of subset_data.
+
+Test datasets for dynUrban, dynLake, and dynPFT is done with a simple NCO script.
+
+All datasets can be easily made by running "make all" in the tools/mksurfdata_esmf directory.
+
+For instructions see:
+    tools/mksurfdata_esmf/README.md
+
+New input datasets to mksurfdata_esmf:
+======================================
+
+New soil dataset: ISRIC/WISE dataset Batjes (2016) https://doi.org/10.1016/j.geoderma.2016.01.034
+New PFT, soil-color, LAI dataset: Created by Lawrence P.J. 2022
+New Glacier datasets: Glacier outlines from RGI version 6 (Arendt et al., 2017).
+   vector data for GrIS and AIS retrieved from BedMachine version 4 and version 2 (Morlighem et al., 2017, 2020), respectively.
+   30-arcsec topography/land mask retrieved GMTED2010 (Danielson and Gesch, 2011).
+New urban datasets:  Gao and O'Neill (2021) and Gao and Pesaresi (2022), Oleson and Feddema (2020)
+New lake datasets: HydroLake: Messager et. al. (2016)
+
+Contributors
+------------
+@mvertens @ekluzek @slevis-lmwg @jedwards4b @billsacks @wwieder @lawrencepj1 @negin513 @dlawrenncar @olyson
+@keerzhang1 @fang-bowen @Face2sea @adamrher @samsrabin
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm6_0 (new)
+
+[x] clm5_1
+
+[x] clm5_0
+
+[x] ctsm5_0-nwp
+
+[x] clm4_5
+
+
+Bugs fixed
+----------
+
+CTSM issues fixed (include CTSM Issue #):
+   Fixes #1903 Create new surface datasets, CTSM5.2 branch
+   Fixes #1716 Wetland area and areas of landunits in coastal grid cells
+   should be determined more rigorously
+   Fixes #1556 Remake PCT_PFT raw datasets to NOT force landunit area to 100%,
+   and some other fixes needed to PCT_PFT raw datasets
+   Fixes #1878 Convert wetlands to bare ground
+   Fixes #2131 Add a "successfully completed" message to mksurfdata_esmf when
+   the landuse.timeseries file is made
+   Fixes #2218 CTSM5.2 branch dies weirdly when clm5.0/ctsm5.1 datasets are
+   used -- die with an error
+   Fixes #1483 hcru surface datasets
+   Fixes #2228 sys test requirements for mksurfdata_esmf
+   Fixes #90   Remove need for fatmgrid
+   Fixes #80   Improve modularity of mksurfdata_map
+   Fixes #1878 Convert wetlands to bare-ground
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   These surface datasets can NOT be used in previous versions of the model
+   Older surface datasets can NOT be used with this model version
+
+   IMPORTANT NOTE FOR USERS FOR REGIONAL CASES:
+      Because of this issue:
+
+      https://github.com/ESCOMP/CTSM/issues/2430
+
+      We recommend that users use subset_data to subset your region from a global
+      grid. This could mean creating a global grid at the resolution you need (if
+      not standard) and then use subset_data on it to get the region of
+      interest.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New CLM_PHYSICS_VERSION option of clm6_0 added (use it rather than clm5_1)
+   New compsets for Clm60 added
+   New namelist item: convert_ocean_to_land (default true for clm5_1 and clm6_0 physics)
+
+Changes made to namelist defaults (e.g., changed parameter values):
+  clm5_1 physics options copied to clm6_0
+  do_transient_lake and do_transient_urban set to TRUE for transient cases
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   New ctsm6.0 parameter file copied from the ctsm5.1 verison
+   fsurdat and landuse.timeseries datasets all updated
+   urbantv streams datasets updated
+   Some initial condition datasets updated to go with the new datasets
+
+Things being deprecated (which will be removed):
+   manage_externlas will be removed for git submodules
+   mkmapgrids and other NCL scripts
+   tools/test directory
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   The namelist_defaults_ctsm.xml file was simplified which should make it easier to work with
+Changes to tests or testing:
+   New system test in prealpha and aux_clm to create a surface dataset and run with it
+   ctsm_sci testlist updated to run all CESM3 supported datasets
+   See this document for the list of supported grids:
+       https://docs.google.com/spreadsheets/d/1Osq56e423CF107zhoNQ0VS7-iH_JXLF9AtCvBdXyfJ4
+
+Testing summary: regular ctsm_sci fates mosart rtm tools python
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS (1396 tests compare different because of the namelist changes)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (fates-sci.1.72.2_api.34.0.0-ctsm5.2.0)
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  mksurfdata_esmf
+     derecho ---- run "make all" to create all datasets (completes in 2-6 hours)
+     (crop-global-SSP2-4.5-ne30 was longest at 6 hr, most completed in 3.5 hours)
+
+  ctsm_sci (ctsm_sci-ctsm5.2.0)
+     derecho ---- PASS
+
+  rtm  (rtm1_0_79_ctsm5.2.0)
+     derecho ---- PASS
+
+  mosart (mosart1_0_49_ctsm5.2.0)
+     derecho ---- OK
+     izumi  ----- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: ctsm5.1.dev176
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: new climate
+
+   Discussion on the new datasets and new results are here:
+
+      https://github.com/ESCOMP/CTSM/discussions/1868
+
+      It includes case comparision
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #2464 -- Update ctsm5.2 branch to ctsm5.1.dev176 and some small updates
+  #2417 -- Addition of clm6_0 physics option
+  #2447 -- Update ctsm5.2 branch to ctsm5.1.dev175
+  #2427 -- Merge ctsm5.2 branch up to ctsm5.1.dev174
+  #2424 -- Clean up "make all" for 5.2 branch  tag: bfb type: code cleanup
+  #2318 -- Workaround for transient Smallville tests #1673 + testing all new datasets
+  #1586 -- Enable the mksurfdata_map to generate landuse_timeseries for dynamic urban and lake
+  #2327 -- Working on Derecho
+  #2008 -- Get the Makefile working for CTSM5.2 surface dataset creation
+  #2164 -- Distinguish between ocean and wetland in fsurdat files
+  #2016 -- Preparing alpha-ctsm5.2.mksrf.16_ctsm5.1.dev123 tag
+  #1946 -- Newest raw datasets for pft, lai, soilcolor
+  #1873 -- Ctsm52 various updates
+  #1920 -- mksurfdata: Rework mapping of landunits to handle coastal areas more rigorously
+  #1890 -- Add option to convert wetlands to land; apply it by default for CLM51 physics
+  #1866 -- Remove pftmask from history and PFTDATA_MASK from fsurdat files
+  #1732 -- New soiltex for ctsm5.2.mksurfdata
+  #1853 -- Implement GaoOneill raw urban datasets and OlesonFeddema urban
+					    properties into mksurfdata_esmf.
+  #1796 -- Add consistency checks for mesh_nx mesh_ny relative to mesh_file in
+           gen_mksurfdata_namelist.py
+  #1748 -- Enable mksurfdata esmf to build and run on casper and izumi
+  #1756 -- Add mksurfdata_esmf system test to test-suite tag: support tools only
+  #1721 -- cmake build working on cheyenne for mksurfdata_esmf
+  #1746 -- Change repo_url from git@... to https:...  for ccs_config
+  #1728 -- Accelerate generation of transient data with mksurfdata_esmf
+  #1663 -- New parallel surface dataset generation with online regridding
+
+===============================================================
+===============================================================
+Tag name: ctsm5.1.dev176
+Originator(s): afoster (Adrianna Foster,UCAR/TSS,303-497-1728)
+Date: Thu 04 Apr 2024 06:29:36 PM MDT
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+change needed for the addition of a dglc component in cdeps #2449
+Move the dust emission source function soil erodibility for the Zender scheme from CAM to CTSM #1967
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+CTSM issues fixed (include CTSM Issue #):
+Closes #2222 - Fixing Negative Ice Fluxes from Ocean to Glacier
+Closes #2117 - Add LND_TUNING_MODE for CAM4, CAM5, CAM7
+Addresses #2149 - Change handling of LND_TUNING_MODE so user is warned of which option is used, add more supported options
+Addresses part of #1836 - Move the soil erodibility dataset dust emission source function from CAM to CTSM 
+Helps with ESCOMP/CAM#651 - Move the dust emission source function and global tuning factor from CAM to CTSM
+
+Known bugs introduced in this tag (include issue #):
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): new namelist options for dust
+
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  regular tests
+
+    derecho ----- OK
+    izumi ------- OK
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull):
+
+https://github.com/ESCOMP/CTSM/pull/2455
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev175
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Thu 21 Mar 2024 05:49:04 PM MDT

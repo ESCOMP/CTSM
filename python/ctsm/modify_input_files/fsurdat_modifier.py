@@ -110,7 +110,15 @@ def read_cfg_subgrid(config, cfg_path, numurbl=3):
 
     subgrid_settings = {}
     var_list = config.options(section)
-    valid_list = ["pct_natveg", "pct_crop", "pct_lake", "pct_glacier", "pct_wetland", "pct_urban"]
+    valid_list = [
+        "pct_natveg",
+        "pct_crop",
+        "pct_lake",
+        "pct_glacier",
+        "pct_wetland",
+        "pct_urban",
+        "pct_ocean",
+    ]
     varsum = 0
     for var in var_list:
         if valid_list.count(var) == 0:
@@ -628,7 +636,9 @@ def fsurdat_modifier(parser):
 
     if process_var_list:
         varlist = read_cfg_var_list(config, idealized=idealized)
-        update_list = modify_fsurdat.check_varlist(varlist, allow_uppercase_vars=True)
+        update_list = modify_fsurdat.check_varlist(
+            varlist, allow_uppercase_vars=True, source="Config file: " + cfg_path
+        )
         modify_fsurdat.set_varlist(update_list, cfg_path)
         logger.info("process_var_list is complete")
     else:

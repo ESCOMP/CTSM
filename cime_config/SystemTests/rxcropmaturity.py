@@ -328,6 +328,7 @@ class RXCROPMATURITY(SystemTestsCommon):
             cfg_out.write("PCT_GLACIER = 0.0\n")
             cfg_out.write("PCT_WETLAND = 0.0\n")
             cfg_out.write("PCT_LAKE    = 0.0\n")
+            cfg_out.write("PCT_OCEAN   = 0.0\n")
             cfg_out.write("PCT_URBAN   = 0.0 0.0 0.0\n")
 
     def _run_check_rxboth_run(self):

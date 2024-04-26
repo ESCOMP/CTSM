@@ -1,0 +1,89 @@
+#!/bin/bash
+./xmlchange CLM_USRDAT_NAME=PLUMBER2
+./xmlchange DATM_MODE=1PT
+# Set data forcing data to future scenario so will have data from 2018 to present-day
+./xmlchange DATM_PRESAERO=SSP3-7.0
+./xmlchange DATM_CO2_TSERIES=SSP3-7.0
+./xmlchange DATM_PRESNDEP=SSP3-7.0
+
+# Explicitly set the MPI library to mpi-serial so won't have the build/run complexity of a full MPI library
+./xmlchange MPILIB=mpi-serial
+# Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
+./xmlchange PIO_TYPENAME=netcdf
+
+#
+compset=`./xmlquery COMPSET --value`
+CLM_USRDAT_NAME=`./xmlquery CLM_USRDAT_NAME --value`
+TEST=`./xmlquery TEST --value`
+
+# For a transient case run the whole length and don't cycle
+if  [[ $compset =~ ^HIST ]]; then
+  # Number of months that can be run for the full transient case
+  if [[ $TEST != "TRUE" ]]; then
+    ./xmlchange STOP_OPTION="nyears"
+  fi
+  # TODO, makde this accurate for plumber2
+  ./xmlchange CLM_NML_USE_CASE="2018-PD_transient"
+  # TODO, modify for postAD runs in tower script?  Remove from usermods?
+  ./xmlchange CLM_FORCE_COLDSTART=off
+  ./xmlchange CALENDAR=GREGORIAN
+  echo "! this allows for large h1 data files, regardless or run length " >> user_nl_clm
+  echo "hist_nhtfrq = 0,1" >> user_nl_clm
+  echo "hist_mfilt  = 1,438000" >> user_nl_clm
+  echo " " >> user_nl_clm
+  echo "CLM_USRDAT.PLUMBER2:taxmode=extend" >> user_nl_datm_streams
+  echo "CLM_USRDAT.PLUMBER2:dtlimit=1e30" >> user_nl_datm_streams
+
+else
+  # TODO, set this for spinup in BGC and SP cases
+  ./xmlchange STOP_OPTION="nyears"  
+  ./xmlchange STOP_N=5
+  ./xmlchange CLM_NML_USE_CASE="2000_control"
+  ./xmlchange CLM_FORCE_COLDSTART=on
+  ./xmlchange CALENDAR=NO_LEAP
+  echo "CLM_USRDAT.PLUMBER2:taxmode=cycle" >> user_nl_datm_streams
+  echo "CLM_USRDAT.PLUMBER2:dtlimit=30" >> user_nl_datm_streams
+
+fi
+
+# If needed for SP simulations: & set history file variables
+if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then
+  echo "! using LAI streams for SP cases" >> user_nl_clm
+  echo "use_lai_streams = .true." >> user_nl_clm
+  echo "lai_mapalgo = 'nn'" >> user_nl_clm
+  echo "stream_meshfile_lai='none'" >> user_nl_clm
+  if [[ $TEST != "TRUE" ]]; then
+    ./xmlchange STOP_OPTION=nyears
+  fi
+  echo "! h1 output stream  for SP case" >> user_nl_clm 
+  if  [[ $compset =~ ^HIST ]]; then
+    echo "lai_dtlimit=1e30" >> user_nl_clm
+    echo "" >> user_nl_clm
+    echo "! h1 output stream for transient SP case" >> user_nl_clm
+    echo "hist_fincl2 = 'FSA','FIRA','EFLX_LH_TOT','FSH','FGR12','FGR','TSKIN','FSR','FSDS', 
+            'SNOFSRVD','SNOFSRND','SNOFSRVI','SNOFSRNI','FSNO','TSOI','SNO_T','RAIN','SNOW', 
+	    'QVEGT','QVEGE','QSOIL','QRUNOFF','QOVER','QH2OSFC','QDRAI','QDRAI_PERCH',
+	    'SNO_EXISTENCE','QSNOMELT','H2OCAN','H2OSNO','SNOCAN','SOILICE','SOILLIQ',
+	    'SOILWATER_10CM','TWS','SNOWLIQ','SNOWDP','RH2M','TSA','FLDS','Q2M','PBOT','TLAI',
+	    'WIND','FIRE','FCTR','FCEV','FGEV','FSM','COSZEN','H2OSOI','BTRANMN','TV','RSSUN',
+	    'RSSHA','FSH_G','RHAF','RH_LEAF','RH','T10','TG','SABG','SABV','FPSN','TBOT','TAUX',
+	    'TAUY','QSNOEVAP','QFLX_SOLIDEVAP_FROM_TOP_LAYER','QFLX_SNOW_DRAIN','H2OSFC','FPSN'" >> user_nl_clm 
+  else
+    echo "lai_dtlimit=30." >> user_nl_clm
+    echo "" >> user_nl_clm
+  fi
+  echo " " >> user_nl_clm
+else  # for BGC cases
+  if  [[ $compset =~ ^HIST ]]; then
+    echo "! h1 output stream for transient BGC case" >> user_nl_clm
+    echo "hist_fincl2 = 'AR','ELAI','FCEV','FCTR','FGEV','FIRA','FSA','FSH','GPP','H2OSOI',
+               'HR','SNOW_DEPTH','TBOT','TSOI','SOILC_vr','FV','NET_NMIN_vr','EFLX_LH_TOT',
+               'FGR12','FGR','TSKIN','FSR','FSDS','SNOFSRVD','SNOFSRND','SNOFSRVI','SNOFSRNI',
+               'FSNO','SNO_T','RAIN','SNOW','QVEGT','QVEGE','QSOIL','QRUNOFF','QOVER','QH2OSFC',
+               'QDRAI','QDRAI_PERCH','SNO_EXISTENCE','QSNOMELT','H2OCAN','H2OSNO','SNOCAN','SOILICE',
+               'SOILLIQ','SOILWATER_10CM','TWS','SNOWLIQ','SNOWDP','RH2M','TSA','FLDS','Q2M','PBOT',
+               'TLAI','WIND','FIRE','FSM','COSZEN','BTRANMN','TV','RSSUN','RSSHA','FSH_G','RHAF',
+               'RH_LEAF','RH','T10','TG','SABG','SABV','TBOT','TAUX','TAUY','QSNOEVAP','H2OSFC'" >> user_nl_clm
+    echo "" >> user_nl_clm
+  fi
+fi

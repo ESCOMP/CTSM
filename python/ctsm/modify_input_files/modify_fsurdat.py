@@ -237,7 +237,9 @@ class ModifyFsurdat:
             if val is not None:
                 self.set_lai_sai_hgts(dom_pft=dom_pft, var=var, val=val)
 
-    def check_varlist(self, settings, allow_uppercase_vars=False):
+    def check_varlist(
+        self, settings, allow_uppercase_vars=False, source="input settings dictionary"
+    ):
         """
         Check a list of variables from a dictionary of settings
         """
@@ -248,10 +250,10 @@ class ModifyFsurdat:
             val = settings[varname]
             if not var in self.file:
                 if not allow_uppercase_vars:
-                    errmsg = "Error: Variable " + varname + " is NOT in the file"
+                    errmsg = "Error: Variable " + varname + " is NOT in the " + source
                     abort(errmsg)
                 if not varname.upper() in self.file:
-                    errmsg = "Error: Variable " + varname.upper() + " is NOT in the file"
+                    errmsg = "Error: Variable " + varname.upper() + " is NOT in the " + source
                     abort(errmsg)
                 varname = varname.upper()
 
@@ -262,7 +264,10 @@ class ModifyFsurdat:
             if len(self.file[varname].dims) == 2:
                 if not isinstance(val, float):
                     abort(
-                        "For 2D vars, there should only be a single value for variable = " + varname
+                        "For 2D vars, there should only be a single value for variable = "
+                        + varname
+                        + " in "
+                        + source
                     )
             elif len(self.file[varname].dims) >= 3:
                 dim1 = int(self.file.sizes[self.file[varname].dims[0]])
@@ -273,10 +278,19 @@ class ModifyFsurdat:
                         + str(dim1)
                         + " for variable="
                         + varname
+                        + " in "
+                        + source
                     )
                 if len(val) != dim1:
                     abort(
-                        "Variable " + varname + " is of the wrong size. It should be = " + str(dim1)
+                        "Variable "
+                        + varname
+                        + " is "
+                        + str(len(val))
+                        + " is of the wrong size. It should be = "
+                        + str(dim1)
+                        + " in "
+                        + source
                     )
         return settings_return
 
@@ -363,6 +377,7 @@ class ModifyFsurdat:
         self.setvar_lev0("PCT_WETLAND", 0)
         self.setvar_lev0("PCT_URBAN", 0)
         self.setvar_lev0("PCT_GLACIER", 0)
+        self.setvar_lev0("PCT_OCEAN", 0)
 
     def setvar_lev0(self, var, val):
         """
@@ -408,8 +423,8 @@ class ModifyFsurdat:
         max_sat_area = 0  # max saturated area
         std_elev = 0  # standard deviation of elevation
         slope = 0  # mean topographic slope
-        pftdata_mask = 1
         landfrac_pft = 1
+        landfrac_mksurfdata = 1
         # if pct_nat_veg had to be set to less than 100, then each special
         # landunit would have to receive a unique pct value rather than the
         # common value used here in pct_not_nat_veg = 0
@@ -426,13 +441,14 @@ class ModifyFsurdat:
         self.setvar_lev0("SLOPE", slope)
         self.setvar_lev0("zbedrock", zbedrock)
         self.setvar_lev0("SOIL_COLOR", soil_color)
-        self.setvar_lev0("PFTDATA_MASK", pftdata_mask)
         self.setvar_lev0("LANDFRAC_PFT", landfrac_pft)
+        self.setvar_lev0("LANDFRAC_MKSURFDATA", landfrac_mksurfdata)
         self.setvar_lev0("PCT_WETLAND", pct_not_nat_veg)
         self.setvar_lev0("PCT_CROP", pct_not_nat_veg)
         self.setvar_lev0("PCT_LAKE", pct_not_nat_veg)
         self.setvar_lev0("PCT_URBAN", pct_not_nat_veg)
         self.setvar_lev0("PCT_GLACIER", pct_not_nat_veg)
+        self.setvar_lev0("PCT_OCEAN", pct_not_nat_veg)
         self.setvar_lev0("PCT_NATVEG", pct_nat_veg)
 
         for lev in self.file.nlevsoi:
