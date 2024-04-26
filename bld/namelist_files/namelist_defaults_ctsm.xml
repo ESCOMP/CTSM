@@ -1580,11 +1580,11 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <flanduse_timeseries hgrid="C96"           sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
 >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_C96_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
 
-<flanduse_timeseries hgrid="ne0np4.ARCTICGRIS.ne30x8" sim_year_range="1979-2026" ssp_rcp="SSP2-4.5"
+<flanduse_timeseries hgrid="ne0np4.ARCTICGRIS.ne30x8" ssp_rcp="SSP2-4.5"
 >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_ne0np4.ARCTICGRIS.ne30x8_SSP2-4.5_1979-2026_78pfts_c240425.nc</flanduse_timeseries>
-<flanduse_timeseries hgrid="ne0np4.ARCTIC.ne30x4" sim_year_range="1979-2026" ssp_rcp="SSP2-4.5"
+<flanduse_timeseries hgrid="ne0np4.ARCTIC.ne30x4" ssp_rcp="SSP2-4.5"
 >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_ne0np4.ARCTIC.ne30x4_SSP2-4.5_1979-2026_78pfts_c240425.nc</flanduse_timeseries>
-<flanduse_timeseries hgrid="ne0np4CONUS.ne30x8" sim_year_range="1979-2026" ssp_rcp="SSP2-4.5"
+<flanduse_timeseries hgrid="ne0np4CONUS.ne30x8" ssp_rcp="SSP2-4.5"
 >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_ne0np4CONUS.ne30x8_SSP2-4.5_1979-2026_78pfts_c240425.nc</flanduse_timeseries>
 
 <!-- SSP3-RCP7.0 - relative to {csmdata}) -->
