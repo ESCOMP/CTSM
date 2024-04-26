@@ -20,9 +20,11 @@ add_subdirectory(${CLM_ROOT}/share/src csm_share)
 add_subdirectory(${CLM_ROOT}/share/unit_test_stubs/util csm_share_stubs)
 add_subdirectory(${CLM_ROOT}/share/src/esmf_wrf_timemgr esmf_wrf_timemgr)
 
-# Add the single file we need from CMEPS
-set (drv_sources_needed
-  ${CLM_ROOT}/components/cmeps/cesm/nuopc_cap_share/glc_elevclass_mod.F90)
+# Add files needed from CMEPS
+list ( APPEND drv_sources_needed
+  ${CLM_ROOT}/components/cmeps/cesm/nuopc_cap_share/glc_elevclass_mod.F90
+  ${CLM_ROOT}/components/cmeps/cesm/nuopc_cap_share/shr_dust_emis_mod.F90
+  )
 
 # Add CLM source directories
 add_subdirectory(${CLM_ROOT}/src/utils clm_utils)
