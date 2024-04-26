@@ -40,6 +40,7 @@ module OzoneMod
 
      real(r8), pointer :: o3uptakesha_patch(:) ! ozone dose, shaded leaves (mmol O3/m^2)
      real(r8), pointer :: o3uptakesun_patch(:) ! ozone dose, sunlit leaves (mmol O3/m^2)
+     real(r8), pointer :: o3force_grid(:)      ! ozone forcing (mol/mol)
 
      ! NOTE(wjs, 2014-09-29) tlai_old_patch really belongs alongside tlai_patch in
      ! CanopyStateType.  But there are problems with any way I can think to implement
@@ -197,16 +198,20 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
+    integer :: begg, endg
     !-----------------------------------------------------------------------
 
     begp = bounds%begp
     endp = bounds%endp
+    begg = bounds%begg
+    endg = bounds%endg
 
     call this%InitAllocateBase(bounds)
 
     allocate(this%o3uptakesha_patch(begp:endp)) ; this%o3uptakesha_patch(:) = nan
     allocate(this%o3uptakesun_patch(begp:endp)) ; this%o3uptakesun_patch(:) = nan
     allocate(this%tlai_old_patch(begp:endp))    ; this%tlai_old_patch(:) = nan
+    allocate(this%o3force_grid(begg:endg))     ; this%o3force_grid(:) = nan
 
   end subroutine InitAllocate
 
@@ -225,12 +230,15 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
+    integer :: begg, endg
 
     character(len=*), parameter :: subname = 'InitHistory'
     !-----------------------------------------------------------------------
 
     begp = bounds%begp
     endp = bounds%endp
+    begg = bounds%begg
+    endg = bounds%endg
 
     this%o3uptakesun_patch(begp:endp) = spval
     call hist_addfld1d (fname='O3UPTAKESUN', units='mmol/m^2', &
@@ -241,6 +249,11 @@ contains
     call hist_addfld1d (fname='O3UPTAKESHA', units='mmol/m^2', &
          avgflag='A', long_name='total ozone flux into shaded leaves', &
          ptr_patch=this%o3uptakesha_patch)
+
+   this%o3force_grid(begg:endg) = spval
+   call hist_addfld1d (fname='FORCE_O3', units='mol/mol', &
+            avgflag='A', long_name='ozone partial pressure', &
+            ptr_lnd=this%o3force_grid)
 
     if (this%stress_method==stress_method_lombardozzi2015) then
        ! For this and the following variables: how should we include leaf area in the
@@ -313,18 +326,22 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
+    integer :: begg, endg
 
     character(len=*), parameter :: subname = 'InitCold'
     !-----------------------------------------------------------------------
 
     begp = bounds%begp
     endp = bounds%endp
+    begg = bounds%begg
+    endg = bounds%endg
 
     call this%InitColdBase(bounds)
 
     this%o3uptakesha_patch(begp:endp) = 0._r8
     this%o3uptakesun_patch(begp:endp) = 0._r8
     this%tlai_old_patch(begp:endp) = 0._r8
+    this%o3force_grid(begg:endg) = 0._r8
 
   end subroutine InitCold
 
@@ -364,6 +381,11 @@ contains
          dim1name='pft', &
          long_name='ozone uptake for sunlit leaves', units='mmol m^-3', &
          readvar=readvar, interpinic_flag='interp', data=this%o3uptakesun_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='o3force', xtype=ncd_double, &
+         dim1name='gridcell', &
+         long_name='ozone forcing', units='mol mol^-1', &
+         readvar=readvar, interpinic_flag='interp', data=this%o3force_grid)
 
   end subroutine Restart
 
@@ -423,6 +445,7 @@ contains
     else
       forc_o3_down(bounds%begg:bounds%endg) = forc_o3(bounds%begg:bounds%endg)
     end if
+      this%o3force_grid(bounds%begg:bounds%endg) = forc_o3_down(bounds%begg:bounds%endg)
 
       do fp = 1, num_exposedvegp
          p = filter_exposedvegp(fp)
