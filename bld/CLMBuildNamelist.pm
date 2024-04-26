@@ -97,7 +97,7 @@ OPTIONS
 				        CENTURY or MIMICS decomposition
                                         This toggles on the namelist variables:
 				        use_fates. use_lch4 and use_nitrif_denitrif are optional
-
+				 
                               (Only for CLM4.5/CLM5.0)
      -[no-]chk_res            Also check [do NOT check] to make sure the resolution and
                               land-mask is valid.
@@ -1011,7 +1011,7 @@ sub setup_cmdl_fire_light_res {
      if ( ! &value_is_true($nl_flags->{'neon'}) ) {
          if ( defined($opts->{'clm_usr_name'}) ) {
             $log->warning("The NEON lightning dataset does NOT cover the entire globe, make sure it covers the region for your grid");
-         } else {
+         } else { 
             $log->fatal_error("The NEON lightning dataset can NOT be used for global grids or regions or points outside of its area as it does NOT cover the entire globe.");
          }
      }
@@ -2278,7 +2278,7 @@ sub setup_logic_crop_inparm {
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "initial_seed_at_planting",
                  'use_crop'=>$nl->get_value('use_crop') );
-
+     
      my $crop_residue_removal_frac = $nl->get_value('crop_residue_removal_frac');
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'crop_residue_removal_frac' );
      if ( $crop_residue_removal_frac < 0.0 or $crop_residue_removal_frac > 1.0 ) {
@@ -2619,8 +2619,8 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
                 if ( defined($use_init_interp_default) ) {
                    $log->fatal_error($err_msg." but can't find one without $useinitvar being set to true, change it to true in your user_nl_clm file in your case");
                 } else {
-                   my $set = "Relevent settings: use_cndv = ". $nl_flags->{'use_cndv'} . " phys = " .
-                              $physv->as_string() . " hgrid = " . $nl_flags->{'res'} . " sim_year = " .
+                   my $set = "Relevent settings: use_cndv = ". $nl_flags->{'use_cndv'} . " phys = " . 
+                              $physv->as_string() . " hgrid = " . $nl_flags->{'res'} . " sim_year = " . 
                               $settings{'sim_year'} . " lnd_tuning_mode = " . $nl_flags->{'lnd_tuning_mode'} .
                               "use_fates = " . $nl_flags->{'use_fates'};
                    $log->fatal_error($err_msg." but the default setting of $useinitvar is false, so set both $var to a startup file and $useinitvar==TRUE, or developers should modify the namelist_defaults file".$set);
@@ -3163,7 +3163,7 @@ sub setup_logic_supplemental_nitrogen {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
 		  'suplnitro', 'use_fates'=>$nl_flags->{'use_fates'});
   }
-
+  
   #
   # Error checking for suplnitro
   #
@@ -3688,10 +3688,10 @@ sub setup_logic_nitrogen_deposition {
                 'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_taxmode', 'phys'=>$nl_flags->{'phys'},
-		'use_cn'=>$nl_flags->{'use_cn'},
+		'use_cn'=>$nl_flags->{'use_cn'}, 
 		'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_varlist', 'phys'=>$nl_flags->{'phys'},
-		'use_cn'=>$nl_flags->{'use_cn'},
+		'use_cn'=>$nl_flags->{'use_cn'}, 
 		'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_ndep', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
@@ -4556,8 +4556,8 @@ sub setup_logic_fates {
         my $suplnitro = $nl->get_value('suplnitro');
         my $parteh_mode = $nl->get_value('fates_parteh_mode');
         if ( ($parteh_mode == 1) &&  ($suplnitro !~ /ALL/) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
-          $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to ALL, FATES is on, " .
-                            "but and FATES-SP is not active, but fates_parteh_mode is 1, so Nitrogen is not active" .
+          $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to ALL, FATES is on, " . 
+                            "but and FATES-SP is not active, but fates_parteh_mode is 1, so Nitrogen is not active" . 
                             "Change suplnitro back to ALL");
         }
         #
