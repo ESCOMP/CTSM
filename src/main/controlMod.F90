@@ -245,9 +245,9 @@ contains
           fates_history_dimlevel
 
     ! Ozone vegetation stress method and streams file
-    namelist / clm_inparm / o3_veg_stress_method, use_do3_streams,                       &
+    namelist / clm_inparm / o3_veg_stress_method, use_do3_streams,  &
       stream_fldfilename_do3, stream_meshfile_do3, do3_mapalgo
-
+   
     ! CLM 5.0 nitrogen flags
     namelist /clm_inparm/ use_flexibleCN, use_luna
 
@@ -466,7 +466,7 @@ contains
           else
              use_fates_bgc = .true.
           end if
-
+          
           if (fates_parteh_mode == 1 .and. suplnitro == suplnNon .and. use_fates_bgc )then
              write(iulog,*) ' When FATES with fates_parteh_mode == 1 (ie carbon only mode),'
              write(iulog,*) '  you must have supplemental nitrogen turned on, there will be'
@@ -475,7 +475,7 @@ contains
              call endrun(msg=' ERROR: fates_parteh_mode=1 must have suplnitro set to suplnAll.'//&
                    errMsg(sourcefile, __LINE__))
           end if
-
+          
           if ( use_cn) then
              call endrun(msg=' ERROR: use_cn and use_fates cannot both be set to true.'//&
                    errMsg(sourcefile, __LINE__))
@@ -507,21 +507,21 @@ contains
           end if
 
        else
-
+          
           ! These do default to false anyway, but this emphasizes they
           ! are false when fates is false
           use_fates_sp  = .false.
           use_fates_bgc = .false.
-
+          
        end if
 
        ! Check compatibility with use_lai_streams
        if (use_lai_streams) then
-        if ((use_fates .and. .not. use_fates_sp) .or. use_cn) then
+        if ((use_fates .and. .not. use_fates_sp) .or. use_cn) then 
           call endrun(msg=' ERROR: cannot use LAI streams unless in SP mode (use_cn = .false. or use_fates_sp=.true.).'//&
                   errMsg(sourcefile, __LINE__))
-        end if
-       end if
+        end if 
+       end if 
 
        ! If nfix_timeconst is equal to the junk default value, then it was not specified
        ! by the user namelist and we need to assign it the correct default value. If the
@@ -775,7 +775,7 @@ contains
 
     ! BGC
     call mpi_bcast (co2_type, len(co2_type), MPI_CHARACTER, 0, mpicom, ier)
-
+    
     call mpi_bcast (use_fates, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     if (use_cn .or. use_fates) then
