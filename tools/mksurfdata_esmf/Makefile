@@ -275,6 +275,7 @@ crop-global-SSP2-4.5         : crop-global-SSP2-4.5-f09 \
                                crop-global-SSP2-4.5-hcru \
                                crop-global-SSP2-4.5-ne16 \
                                crop-global-SSP2-4.5-ne30 \
+                               crop-global-SSP2-4.5-ne0np4 \
                                crop-global-SSP2-4.5-C96 \
                                crop-global-SSP2-4.5-mpasa120
 
@@ -315,6 +316,10 @@ crop-global-SSP2-4.5-ne16 : FORCE
 	$(BATCHJOBS) $@.sh
 
 crop-global-SSP2-4.5-ne30 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 9 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-SSP2-4.5-ne0np4 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 9 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
 	$(BATCHJOBS) $@.sh
 
