@@ -11,6 +11,6 @@ jobs:
     - uses: actions/checkout@v1
     - uses: ammaraskar/sphinx-action@master
       with:
-        docs-folder: "doc/source"
+        docs-folder: "doc"
         pre-build-command: "make fetch-images"
         build-command: "make html"
