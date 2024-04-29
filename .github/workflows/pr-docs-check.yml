@@ -4,7 +4,7 @@ on:
 
 jobs:
   docs:
-    runs-on: ubuntu-latest
+    runs-on: centos-latest
     container:
       image: escomp/base:latest
     steps:
