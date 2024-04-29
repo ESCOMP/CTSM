@@ -116,9 +116,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <atm_c14_filename use_c14=".true." use_c14_bombspike =".true." ssp_rcp="SSP5-8.5" >lnd/clm2/isotopes/atm_delta_C14_CMIP6_SSP5B_3x1_global_1850-2100_yearly_c181209.nc</atm_c14_filename>
 
 <!-- Irrigation default -->
-<irrigate >.false.</irrigate>
 <irrigate               use_cndv=".false."  sim_year_range="1850-2100">.true.</irrigate>
 <irrigate phys="clm4_5" use_cndv=".false."  sim_year_range="1850-2100">.false.</irrigate>
+<irrigate >.false.</irrigate>
 
 <!-- Saturation excess runoff for crops  -->
 <crop_fsat_equals_zero>.false.</crop_fsat_equals_zero>
@@ -430,6 +430,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <snow_thermal_cond_method>Jordan1991</snow_thermal_cond_method>
 <snow_thermal_cond_method phys="clm5_1">Sturm1997</snow_thermal_cond_method>
+<snow_thermal_cond_method phys="clm6_0">Sturm1997</snow_thermal_cond_method>
 
 <!-- Default glacier behavior is:
      Mountain glaciers: single_at_atm_topo
@@ -1638,6 +1639,7 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <snicar_snodst_intmix>.false.</snicar_snodst_intmix>
 <snicar_snobc_intmix>.false.</snicar_snobc_intmix>
 <snicar_snobc_intmix phys="clm5_1">.true.</snicar_snobc_intmix>
+<snicar_snobc_intmix phys="clm6_0">.true.</snicar_snobc_intmix>
 <snicar_use_aerosol  >.true.</snicar_use_aerosol>
 <do_sno_oc           >.false.</do_sno_oc>
 
