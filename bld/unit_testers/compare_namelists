@@ -91,18 +91,22 @@ for file in ${filenames[*]}
 do
    fileA="./$file"
    fileB="$baseline/$file"
-   #if [[ $file =~ $pattern ]]; then
-   if ! test -f $fileB; then
-      if [ "$verbose" = "YES" ]; then echo "$fileB does NOT exist -- skipping"; fi
-   fi
-   if [ "$verbose" = "YES" ]; then echo "Compare namelists for $file"; fi
-   if [ "$fileA" = "$fileB" ]; then
-      echo "Comparing files to themself:"
-      echo "fileA = $fileA"
-      echo "fileB = $fileB"
-      exit 1
-   fi
-   # send standard error to /dev/null to ignore it
-   $cwd/../../cime/CIME/Tools/compare_namelists $fileA $fileB 2>/dev/null
+   # If physicsA option used and the file matches the physics input
+   if [[ $fileA =~ "-phys+$PHYSA" ]]; then
+      # Replace physicsB for fileB
+      fileB=${fileB/-phys+$PHYSA/-phys+$PHYSB}
+      if ! test -f $fileB; then
+         if [ "$verbose" = "YES" ]; then echo "$fileB does NOT exist -- skipping"; fi
+      else
+         if [ "$verbose" = "YES" ]; then echo "Compare namelists for $file"; fi
+         if [ "$fileA" = "$fileB" ]; then
+            echo "Comparing files to themself:"
+            echo "fileA = $fileA"
+            echo "fileB = $fileB"
+            exit 1
+         fi
+         $cwd/../../cime/CIME/Tools/compare_namelists $fileA $fileB
+      fi
+    fi
 done
 if [ "$verbose" = "YES" ]; then echo "Successfully ran through lnd_in files to compare"; fi
