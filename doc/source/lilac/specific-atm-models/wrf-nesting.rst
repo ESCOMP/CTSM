@@ -50,13 +50,7 @@ A full description of all steps for a WRF-CTSM run are included here.
   Therefore, we are not repeating the steps necessary for building WRF and
   CTSM.
 
-In this example we use a nested domain over the CONUS as shows below:
-
-.. _Figure ctsm-ndown:
-
-.. figure:: ndown_ctsm_diagram.svg
-
-    Flowchart for WRF-CTSM one-way nested simulations
+In this example we use a nested domain over the continental United States.
 
 Nested Simulations : Pre-processing (geogrid.exe)
 -------------------------------------------------
