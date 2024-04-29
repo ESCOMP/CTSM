@@ -12,5 +12,5 @@ jobs:
     - uses: ammaraskar/sphinx-action@master
       with:
         docs-folder: "doc/source"
-        pre-build-command: "git lfs install && git lfs pull --exclude='' --include=''"
-        build-command: "sphinx-build -W --keep-going -n -b html . _build"
+        pre-build-command: "make fetch-images"
+        build-command: "make html"
