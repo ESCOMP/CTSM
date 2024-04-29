@@ -13,4 +13,4 @@ jobs:
       with:
         docs-folder: "doc"
         pre-build-command: "make fetch-images"
-        build-command: "make html"
+        build-command: "make"
