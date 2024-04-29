@@ -42,14 +42,3 @@ If something went wrong, you can find the failing tests like so:
 ::
 
    > grep -E "^[0-9]+/[0-9]+ < [a-zA-Z]+" namelist_test.log | grep -v "PASS"
-
-Testing PTCLM
-=============
-
-.. include:: ../../../../tools/PTCLM/README
-   :literal:
-
-To run on cheyenne, you do the following:
-
-.. include:: ../../../../tools/PTCLM/test/README.run_cheyenne
-   :literal:
