@@ -320,7 +320,7 @@ crop-global-SSP2-4.5-ne30 : FORCE
 	$(BATCHJOBS) $@.sh
 
 crop-global-SSP2-4.5-ne0np4 : FORCE
-	$(MKSURFDATA)  --number-of-nodes 9 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(MKSURFDATA)  --number-of-nodes 2 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
 	$(BATCHJOBS) $@.sh
 
 crop-global-SSP2-4.5-C96 : FORCE
