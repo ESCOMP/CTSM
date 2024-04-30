@@ -60,4 +60,35 @@ contains
 
   end subroutine check_when_initialized_runs
  
+   @Test
+  subroutine check_dust_emis(this)
+    ! Test that the dust_emis logical functions work as expected
+    class(TestDustEmis), intent(inout) :: this
+    logical :: not_init
+
+    call dust_emis_set_options( 'Zender_2003', 'lnd')
+    @assertTrue( is_dust_emis_zender() )
+    @assertFalse( is_dust_emis_leung() )
+    call dust_emis_set_options( 'Leung_2023', 'lnd')
+    @assertFalse( is_dust_emis_zender() )
+    @assertTrue( is_dust_emis_leung() )
+
+  end subroutine check_dust_emis
+
+   
+  @Test
+  subroutine check_zender_soil(this)
+    ! Test that the dust_emis_Zender logical functions work as expected
+    class(TestDustEmis), intent(inout) :: this
+    logical :: not_init
+
+    call dust_emis_set_options( 'Zender_2003', 'lnd')
+    @assertTrue( is_zender_soil_erod_from_land() )
+    @assertFalse( is_zender_soil_erod_from_atm() )
+    call dust_emis_set_options( 'Zender_2003', 'atm')
+    @assertFalse( is_zender_soil_erod_from_land() )
+    @assertTrue( is_zender_soil_erod_from_atm() )
+
+  end subroutine check_zender_soil
+ 
 end module test_shr_dust_emis
