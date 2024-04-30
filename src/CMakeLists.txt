@@ -105,3 +105,7 @@ add_subdirectory(${CLM_ROOT}/src/dyn_subgrid/test clm_dyn_subgrid_test)
 add_subdirectory(${CLM_ROOT}/src/main/test clm_main_test)
 add_subdirectory(${CLM_ROOT}/src/init_interp/test clm_init_interp_test)
 add_subdirectory(${CLM_ROOT}/src/self_tests/test clm_self_tests_test)
+
+# Add driver unit test directories
+add_subdirectory(${CLM_ROOT}/src/drv_test drv_test)
+
