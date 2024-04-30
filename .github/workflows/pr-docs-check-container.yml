@@ -12,5 +12,5 @@ jobs:
     - uses: ammaraskar/sphinx-action@master
       with:
         docs-folder: "doc"
-        pre-build-command: "make fetch-images"
+        pre-build-command: "(cd doc && make fetch-images)"
         build-command: "make html"
