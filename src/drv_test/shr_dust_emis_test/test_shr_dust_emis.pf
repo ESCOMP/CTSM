@@ -1,0 +1,50 @@
+module test_shr_dust_emis
+
+  ! Tests of shr_dust_emis_mod.F90 from CMEPS nuopc_cap_share
+
+  use funit
+  use shr_dust_emis_mod, only : check_if_initialized
+  use unittestUtils, only : endrun_msg
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestDustEmis
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestDustEmis
+
+contains
+
+  ! ========================================================================
+  ! Helper routines
+  ! ========================================================================
+
+  subroutine setUp(this)
+    class(TestDustEmis), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestDustEmis), intent(inout) :: this
+
+  end subroutine tearDown
+
+
+
+  ! ========================================================================
+  ! Begin tests
+  ! ========================================================================
+
+   @Test
+  subroutine check_if_initialized_aborts(this)
+    ! Test that the check_if_initialized check aborts when called initially
+    class(TestDustEmis), intent(inout) :: this
+
+    call check_if_initialized()
+    @assertExceptionRaised(endrun_msg('ERROR: dust emission namelist has NOT been read in yet, shr_dust_emis_mod is NOT initialized') )
+
+  end subroutine check_if_initialized_aborts
+
+ 
+end module test_shr_dust_emis
