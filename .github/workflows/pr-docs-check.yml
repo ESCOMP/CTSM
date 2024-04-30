@@ -5,12 +5,10 @@ on:
 jobs:
   docs:
     runs-on: ubuntu-latest
-    container:
-      image: escomp/base:latest
     steps:
     - uses: actions/checkout@v1
     - uses: ammaraskar/sphinx-action@master
       with:
-        docs-folder: "doc"
-        pre-build-command: "make fetch-images"
-        build-command: "make html"
+        docs-folder: "doc/source"
+        pre-build-command: "git lfs install && git lfs pull --exclude='' --include=''"
+        build-command: "sphinx-build -W --keep-going -n -b html . _build"
