@@ -1498,7 +1498,7 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 >lnd/clm2/surfdata_esmf/NEON/landuse.timeseries_NEON_${NEONSITE}_hist_78pfts_simyr2018-2023_c230931.nc</flanduse_timeseries>
 -->
 
-<!-- Historical 1850-2000 (SSP2 label is irrelevant in these files) -->
+<!-- Historical 1850-2000 -->
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2000"
  >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_0.9x1.25_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1.9x2.5"       sim_year_range="1850-2000"
