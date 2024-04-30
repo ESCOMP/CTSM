@@ -10,5 +10,5 @@ jobs:
     - uses: samsrabin/sphinx-action@use-escomp-base-container
       with:
         docs-folder: "doc"
-        pre-build-command: "(cd doc && make fetch-images)"
+        pre-build-command: "git lfs pull --exclude='' --include=''"
         build-command: "make html"
