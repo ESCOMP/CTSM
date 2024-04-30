@@ -1,0 +1,14 @@
+name: "Pull Request Docs Check (SSR Fork)"
+on: 
+- pull_request
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: samsrabin/sphinx-action@use-escomp-base-container
+      with:
+        docs-folder: "doc/source"
+        pre-build-command: "git lfs install && git lfs pull --exclude='' --include=''"
+        build-command: "sphinx-build -W --keep-going -n -b html . _build"
