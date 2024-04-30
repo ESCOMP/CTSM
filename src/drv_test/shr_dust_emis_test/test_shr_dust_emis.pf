@@ -3,7 +3,7 @@ module test_shr_dust_emis
   ! Tests of shr_dust_emis_mod.F90 from CMEPS nuopc_cap_share
 
   use funit
-  use shr_dust_emis_mod, only : check_if_initialized
+  use shr_dust_emis_mod, only : is_NOT_initialized
   use unittestUtils, only : endrun_msg
 
   implicit none
@@ -40,9 +40,11 @@ contains
   subroutine check_if_initialized_aborts(this)
     ! Test that the check_if_initialized check aborts when called initially
     class(TestDustEmis), intent(inout) :: this
+    logical :: not_init
 
-    call check_if_initialized()
+    not_init = is_NOT_initialized()
     @assertExceptionRaised(endrun_msg('ERROR: dust emission namelist has NOT been read in yet, shr_dust_emis_mod is NOT initialized') )
+    @assertTrue(not_init)
 
   end subroutine check_if_initialized_aborts
 
