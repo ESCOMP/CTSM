@@ -1,6 +1,6 @@
-$CTSMROOT/README                                          06/08/2018
+$CTSMROOT/README                                          04/19/2023
 
-Community Terrestrial Systems Model (CTSM) science version 5.1  series -- source code, tools, 
+Community Terrestrial Systems Model (CTSM) science version 5.2  series -- source code, tools, 
 offline-build and test scripts. This gives you everything you need
 to run CTSM with CESM with the CMEPS driver and CDEPS data models to provide CRU NCEP or GSWP3 forcing data in 
 place of a modeled atmosphere.
@@ -35,40 +35,47 @@ this checkout. For a CESM checkout $CIMEROOT will be the "cime" directory
 beneath the top level directory. For a CTSM checkout $CIMEROOT will
 be $CTSMROOT/cime.
 
+IMPORTANT NOTE ABOUT (deprecated)
+
+Anything marked with (deprecated) is something is going to be removed in a future update.
+Often this means it will be replaced with something else.
+
+
 General directory structure ($CTSMROOT):
 
 doc --------------- Documentation of CTSM.
-bld --------------- Template, configure and build-namelist scripts for clm.
+bld --------------- build-namelist scripts for CTSM.
 src --------------- CTSM Source code.
 lilac ------------- Lightweight Infrastructure for Land-Atmosphere Coupling (for coupling to a host atmosphere model)
-test -------------- CTSM Testing scripts for CTSM offline tools.
+test -------------- CTSM Testing scripts for CTSM offline tools (deprecated)
 tools ------------- CTSM Offline tools to prepare input datasets and process output.
 cime_config ------- Configuration files of cime for compsets and CTSM settings
-manage_externals -- Script to manage the external source directories
+manage_externals -- Script to manage the external source directories (deprecated)
 py_env_create ----- Script to setup the python environment for CTSM python tools using conda
-python ------------ Some python modules mostly for use by run_sys_tests (but could be used elsewhere l
+python ------------ Python modules used in tools and testing and automated checking of ALL CTSM python scirpts
 
 Directory structure only for a CTSM checkout:
 
 components -------- Other active sub-components needed for CTSM to run (river routing and land-ice models)
-libraries --------- CESM libraries: MCT (Model Coupling Toolkit) and PIO
+libraries --------- CESM libraries: MCT (Model Coupling Toolkit) and PIO (deprecated)
 share ------------- CESM shared code
+ccs_config -------- CIME configure files (for grids, compsets, and machines) for CESM
 
 cime/scripts --------------- cesm/cime driver scripts
 
 components/cmeps -------------------- CESM top level driver (for NUOPC driver [which is the default]) source code.
 components/cdeps -------------------- CESM top level data model shared code (for NUOPC driver).
-cime/src/externals ------------------ CESM external utility codes  (genf90)
 components/cism --------------------- CESM Community land Ice Sheet Model.
 components/mosart ------------------- Model for Scale Adaptive River Transport
 components/rtm ---------------------- CESM River Transport Model.
-components/cpl7 --------------------- CESM top level driver for MCT driver (being deprecated)
+components/cpl7 --------------------- CESM top level driver for MCT driver (deprecated will be removed)
 
 Top level documentation ($CTSMROOT):
 
 README ------------------- This file
+README.md ---------------- File that displays on github under https::/github.com/ESCOMP/CTSM.git
 README.rst --------------- File that displays under the project in github
-README_EXTERNALS.rst ----- Information on how to work with subversion externals for clm
+README_EXTERNALS.rst ----- Information on how to work with manage_externals for CTSM (deprecated)
 CODE_OF_CONDUCT.md ------- Code of Conduct for how to work with each other on the CTSM project
 Copyright ---------------- CESM Copyright file
 doc/UpdateChangeLog.pl --- Script to add documentation on a tag to the
@@ -92,7 +99,7 @@ bld/namelist_files/namelist_defaults_ctsm.xml ----- Default values
 Important files in main directories (under $CTSMROOT):
 =============================================================================================
 
-Externals.cfg --------------- File for management of the main high level externals
+Externals.cfg --------------- File for management of the main high level external (deprecated)
 Externals_CLM.cfg ----------- File for management of the CTSM specific externals (i.e. FATES)
 
 run_sys_tests --------------- Python script to send the standard CTSM testing off (submits
@@ -103,18 +110,15 @@ parse_cime.cs.status -------- Script to parse test status files cs.status.* crea
                               (can be used along with run_sys_tests)
 doc/Quickstart.GUIDE -------- Quick guide to using NUOPC scripts.
 doc/IMPORTANT_NOTES --------- Some important notes about this version of 
-                                                 clm, configuration modes and namelist items 
+                                                 CTSM, configuration modes and namelist items 
                                                  that are not validated or functional.
 doc/ChangeLog --------------- Detailed list of changes for each model version.
 doc/ChangeSum --------------- Summary one-line list of changes for each 
                               model version.
-doc/README ------------------ Documentation similar to this file
 doc/UsersGuide -------------- CTSM Users Guide
 doc/IMPORTANT_NOTES --------- Some important notes on caveats for some configurations/namelist items
 
-bld/README ------------------ Description of how to use the configure and
-                              build-namelist scripts.
-bld/configure --------------- Script to prepare CTSM to be built.
+bld/README ------------------ Description of how to use the build-namelist scripts.
 bld/build-namelist ---------- Script to build CTSM namelists.
 
 cime_config/buildnml ------------- Build the CTSM namelist for CIME
@@ -127,23 +131,15 @@ cime_config/testdefs ------------- Directory for specification of CTSM testing
 cime_config/testdefs/ExpectedTestFails.xml -- List of tests that are expected to fail
 cime_config/usermods_dirs -------- Directories of sets of user-modification subdirs
                                    (These are directories that add specific user modifications to
-                                    simulations created using "cime/scripts/create_newcase --user-mods-dir".
-                                    Current sub directories are for various CMIP6 configurations)
+                                    simulations created using "cime/scripts/create_newcase --user-mods-dir".)
 
-test/tools/test_driver.sh -- Script for general software testing of 
-                             CTSM's offline tools.
-
-tools/mksurfdata_map ---------- Directory to build program to create surface dataset 
+tools/mksurfdata_esmf --------- Directory to build program to create surface dataset 
                                 at any resolution.
-tools/mkdatadomain ------------ Directory to build program to create datm7 or docn7 
-                                domain files from clm files.
 tools/mkprocdata_map ---------- Process history data from unstructed grids to a gridded 
                                 format.
-tools/mkmapgrids -------------- NCL script to create a SCRIP grid file for a regular lat/lon grid
-tools/ncl_scripts  ------------ Directory of NCL and perl scripts to do various
-                                tasks. Most notably to plot perturbation error growth
-                                testing and to extract regional information from
-                                global datasets for single-point/regional simulations.
+tools/mkmapgrids -------------- NCL script to create a SCRIP grid file for a regular lat/lon grid (deprecated)
+tools/crop_calendars ---------- Tools to process and process and create crop calendar datasets for CTSM
+tools/modify_input_files ------ Script to modify existing CTSM input datasets in standard ways
 tools/site_and_regional ------- Scripts to create input datasets for single site and regional
                                 cases, primarily by modifying existing global datasets
 tools/contrib ----------------- Miscellansous useful scripts for pre and post processing
@@ -166,6 +162,7 @@ scr/fates --------- FATES model and sub-directories
                     Functionally Assembled Terrestrial Ecosystem Simulator (FATES)
                     Experimental Ecosystem Demography model
 src/utils --------- Utility codes
+src/self_tests ---- Internal testing (unit tests run as a part of a CTSM simulation)
 src/unit_test_shr - Unit test shared modules for unit testing
 src/unit_test_stubs Unit test stubs that replicate CTSM code simpler
 
@@ -175,11 +172,10 @@ src/unit_test_stubs Unit test stubs that replicate CTSM code simpler
 
          cd $CIMEROOT/scripts
          ./create_newcase            # get help on how to run create_newcase
-         ./create_newcase --case testI --res f19_g17_gl4 --compset I2000Clm50BgcCrop
+         ./create_newcase --case testI --res f19_g17_gl4 --compset I2000Clm60BgcCrop
                                      # create new "I" case for default machine at 1.9x2.5_gx1v7 
-                                     # with 4km greenland ice sheetres resolution
-                                     # "I2000Clm50BgcCrop" case is clm5_0 active, datm8, and inactive ice/ocn
-                                     # With no-evolve ice-sheet, and MOSART for river-routing
+                                     # "I2000Clm60BgcCrop" case is clm6_0 physics, CDEPS, and inactive ice/ocn/glc
+                                     # and MOSART for river-routing
          cd testI
          ./case.setup                # create the $CASE.run file
          ./case.build                # build model and create namelists

@@ -152,7 +152,7 @@ Example: Creating a surface dataset for a single point
    > ./mknoocnmap.pl -p 40,255 -n $GRIDNAME
    # Set pointer to MAPFILE just created that will be used later
    > setenv MAPFILE `pwd`/map_${GRIDNAME}_noocean_to_${GRIDNAME}_nomask_aave_da_${CDATE}.nc
-   # create the mapping files needed by mksurfdata_map.
+   # create the mapping files needed by mksurfdata_esmf.
    > cd ../.././mkmapdata
    > setenv GRIDFILE ../mkmapgrids/SCRIPgrid_${GRIDNAME}_nomask_${CDATE}.nc
    > ./mkmapdata.sh -r $GRIDNAME -f $GRIDFILE -t regional
@@ -167,7 +167,7 @@ Example: Creating a surface dataset for a single point
    # Save the location where the domain file was created
    > setenv GENDOM_PATH `pwd`
    # Finally create the surface dataset
-   > cd ../../../../lnd/clm/tools/|version|/mksurfdata_map/src
+   > cd ../../../../lnd/clm/tools/|version|/mksurfdata_esmf/src
    > gmake
    > cd ..
    > ./mksurfdata.pl -r usrspec -usr_gname $GRIDNAME -usr_gdate $CDATE
@@ -186,7 +186,7 @@ Example: Setting up a case from the single-point surface dataset just created
    > ./link_dirtree $CSMDATA $MYCSMDATA
    # Copy the file you created above to your new $MYCSMDATA location following the CLMUSRDAT
    # naming convention (leave off the creation date)
-   > cp $CESMROOT/$CTSMROOT/tools/mksurfdata_map/surfdata_${GRIDNAME}_simyr1850_$CDATE.nc \
+   > cp $CESMROOT/$CTSMROOT/tools/mksurfdata_esmf/surfdata_${GRIDNAME}_simyr1850_$CDATE.nc \
    $MYCSMDATA/lnd/clm2/surfdata_map/surfdata_${GRIDNAME}_simyr1850.nc
    > cd $CESMROOT/scripts
    > ./create_newcase -case my_usernldatasets_test -res CLM_USRDAT -compset I1850Clm50BgcCropCru \
