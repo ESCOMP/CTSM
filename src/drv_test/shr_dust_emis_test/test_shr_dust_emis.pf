@@ -3,8 +3,8 @@ module test_shr_dust_emis
   ! Tests of shr_dust_emis_mod.F90 from CMEPS nuopc_cap_share
 
   use funit
-  use shr_dust_emis_mod, only : is_NOT_initialized
-  use unittestUtils, only : endrun_msg
+  use shr_dust_emis_mod
+  use unittestUtils    , only : endrun_msg
 
   implicit none
 
@@ -48,5 +48,16 @@ contains
 
   end subroutine check_if_initialized_aborts
 
+   @Test
+  subroutine check_when_initialized_runs(this)
+    ! Test that the initializiation check runs when it is initialized
+    class(TestDustEmis), intent(inout) :: this
+    logical :: not_init
+
+    call dust_emis_set_options( 'Zender_2003', 'lnd')
+    not_init = is_NOT_initialized()
+    @assertFalse(not_init)
+
+  end subroutine check_when_initialized_runs
  
 end module test_shr_dust_emis
