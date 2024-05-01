@@ -69,7 +69,7 @@ contains
     call dust_emis_set_options( 'Zender_2003', 'lnd')
     @assertTrue( is_dust_emis_zender() )
     @assertFalse( is_dust_emis_leung() )
-    call dust_emis_set_options( 'Leung_2023', 'lnd')
+    call dust_emis_set_options( 'Leung_2023', 'none')
     @assertFalse( is_dust_emis_zender() )
     @assertTrue( is_dust_emis_leung() )
 
@@ -90,5 +90,25 @@ contains
     @assertTrue( is_zender_soil_erod_from_atm() )
 
   end subroutine check_zender_soil
+
+     
+  @Test
+  subroutine check_options(this)
+    ! Test that the check_options subroutine catches errors that should die
+    class(TestDustEmis), intent(inout) :: this
+    logical :: not_init
+
+    call dust_emis_set_options( 'zztop', 'zztop')
+    @assertExceptionRaised(endrun_msg('(check_options_finish_init) ERROR: dust_emis_method namelist item is not valid'))
+    call dust_emis_set_options( 'Leung_2023', 'lnd')
+    @assertExceptionRaised(endrun_msg('(check_options_finish_init) ERROR: zender_soil_erod_source should NOT be set, when dust_emis_method=Leung_2023'))
+    call dust_emis_set_options( 'Leung_2023', 'atm')
+    @assertExceptionRaised(endrun_msg('(check_options_finish_init) ERROR: zender_soil_erod_source should NOT be set, when dust_emis_method=Leung_2023'))
+    call dust_emis_set_options( 'Zender_2003', 'none')
+    @assertExceptionRaised(endrun_msg('(check_options_finish_init) ERROR: zender_soil_erod_source can only be lnd or atm'))
+    call dust_emis_set_options( 'Zender_2003', 'zztop')
+    @assertExceptionRaised(endrun_msg('(check_options_finish_init) ERROR: zender_soil_erod_source can only be lnd or atm'))
+
+  end subroutine check_options
  
 end module test_shr_dust_emis
