@@ -1,1 +1,2 @@
 use_fates_luh = .true.
+use_fates_nocomp = .false.
