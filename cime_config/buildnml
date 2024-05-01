@@ -204,8 +204,9 @@ def buildnml(case, caseroot, compname):
         if clm_force_coldstart == "on":
             clm_force_coldstart = "off"
             logger.warning(
-                "WARNING: You've turned on CLM_FORCE_COLDSTART for a branch run_type, which is a contradiction, the coldstart will be ignored\n"
-                + "  turn off CLM_FORCE_COLDSTART, or set RUN_TYPE=hybrid to get rid of this warning"
+                "WARNING: You've turned on CLM_FORCE_COLDSTART for a branch run_type,\n"
+                + "which is a contradiction, the coldstart will be ignored\n"
+                + "turn off CLM_FORCE_COLDSTART or set RUN_TYPE=hybrid to get rid of this warning"
             )
 
     if clm_force_coldstart == "on":
