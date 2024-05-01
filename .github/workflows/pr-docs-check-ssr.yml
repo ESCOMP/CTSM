@@ -11,4 +11,4 @@ jobs:
       with:
         docs-folder: "doc/source"
         pre-build-command: "git lfs install && git lfs pull --exclude='' --include=''"
-        build-command: "sphinx-build -W --keep-going -n -b html . _build"
+        build-command: "sphinx-build -W --keep-going -n -b html . /home/user/mounted_home/_build"
