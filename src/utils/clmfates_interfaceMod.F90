@@ -60,6 +60,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_nocomp
    use clm_varctl        , only : use_fates_sp
    use clm_varctl        , only : use_fates_luh
+   use clm_varctl        , only : use_fates_lupft
    use clm_varctl        , only : use_fates_potentialveg
    use clm_varctl        , only : flandusepftdat
    use clm_varctl        , only : fates_seeddisp_cadence
@@ -567,13 +568,6 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('use_fates_potentialveg',ival=pass_use_potentialveg)
 
-        if(flandusepftdat /= '') then
-           pass_lupftdat = 1
-        else
-           pass_lupftdat = 0
-        end if
-        call set_fates_ctrlparms('use_landusepft_data',ival=pass_lupftdat)
-
         ! Wait to set the harvest and logging variables after checking get_do_harvest
         ! and fates_harvest_modes
         call set_fates_ctrlparms('use_lu_harvest',ival=pass_lu_harvest)
@@ -710,7 +704,7 @@ module CLMFatesInterfaceMod
       end if
 
       ! Retrieve the landuse x pft static data if the file is present
-      if (flandusepftdat /= '') then
+      if (use_fates_lupft) then
          call GetLandusePFTData(bounds_proc, flandusepftdat, landuse_pft_map, landuse_bareground)
       end if
 
@@ -821,12 +815,12 @@ module CLMFatesInterfaceMod
             this%fates(nc)%sites(s)%lon = grc%londeg(g)
 
             ! Transfer the landuse x pft data to fates via bc_in if file is given
-            if (flandusepftdat /= '') then
+            if (use_fates_lupft) then
                this%fates(nc)%bc_in(s)%pft_areafrac_lu(:,1:num_landuse_pft_vars) = landuse_pft_map(g,:,1:num_landuse_pft_vars)
                this%fates(nc)%bc_in(s)%baregroundfrac = landuse_bareground(g)
             end if
 
-            if (flandusepftdat == '') then
+            if (.not. use_fates_lupft) then
                ! initialize static layers for reduced complexity FATES versions from HLM
                ! maybe make this into a subroutine of it's own later.
                this%fates(nc)%bc_in(s)%pft_areafrac(:)=0._r8
@@ -882,7 +876,7 @@ module CLMFatesInterfaceMod
       call create_fates_fire_data_method( this%fates_fire_data_method )
 
       ! deallocate the local landuse x pft array
-      if (flandusepftdat /= '') then
+      if (use_fates_lupft) then
          deallocate(landuse_pft_map)
          deallocate(landuse_bareground)
       end if
