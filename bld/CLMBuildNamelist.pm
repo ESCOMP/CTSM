@@ -4455,7 +4455,18 @@ sub setup_logic_fates {
               add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'phys'=>$nl_flags->{'phys'}, 'hgrid'=>$nl_flags->{'res'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, nofail=>1 );
            }
         }
-
+        # check that fates landuse is on and harvest mode is off when potential veg switch is true
+        my $var = "use_potentialveg";
+        if ( defined($nl->get_value($var))  ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+            if ( ! &value_is_true($nl->get_value('use_fates_luh')) ) {
+              fatal_error("use_fates_luh must be true when $var is true" );
+            }
+            if ( $nl->get_value('fates_harvest_mode') > 0) {
+              fatal_error("fates_harvest_mode must be off (i.e. set to zero) when $var is true" );
+            }
+          }
+        }
         # Check fates_harvest_mode compatibility
         my $var = "fates_harvest_mode";
         if ( defined($nl->get_value($var))  ) {
