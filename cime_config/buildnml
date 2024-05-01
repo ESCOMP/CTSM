@@ -23,7 +23,7 @@ _config_cache_template = """
 <?xml version="1.0"?>
 <config_definition>
 <commandline></commandline>
-<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,clm5_1">Specifies CTSM physics</entry>
+<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,clm5_1,clm6_0">Specifies CTSM physics</entry>
 </config_definition>
 """
 
@@ -99,6 +99,70 @@ def buildnml(case, caseroot, compname):
             "The -namelist option is NOT allowed to be part of CLM_BLDNML_OPTS, "
             + "use the CLM_NAMELIST_OPTS option or add namelist items to user_nl_clm instead ",
         )
+    #
+    # Warnings for land tuning modes
+    #
+    closest_tuning = {
+        "clm4_5_1PT": "clm4_5_CRUv7",
+        "clm4_5_QIAN": "clm4_5_CRUv7",
+        "clm4_5_NLDAS2": "clm4_5_CRUv7",
+        "clm4_5_ERA5": "clm4_5_CRUv7",
+        "clm5_0_1PT": "clm5_0_GSWP3v1",
+        "clm5_0_QIAN": "clm5_0_GSWP3v1",
+        "clm5_0_NLDAS2": "clm5_0_GSWP3v1",
+        "clm5_0_ERA5": "clm5_0_GSWP3v1",
+        "clm5_1_1PT": "clm5_1_GSWP3v1",
+        "clm5_1_QIAN": "clm5_1_GSWP3v1",
+        "clm5_1_NLDAS2": "clm5_1_GSWP3v1",
+        "clm5_1_ERA5": "clm5_1_GSWP3v1",
+        "clm5_1_CRUv7": "clm5_1_GSWP3v1",
+        "clm6_0_1PT": "clm6_0_GSWP3v1",
+        "clm6_0_QIAN": "clm6_0_GSWP3v1",
+        "clm6_0_NLDAS2": "clm6_0_GSWP3v1",
+        "clm6_0_ERA5": "clm6_0_GSWP3v1",
+        "clm6_0_CRUv7": "clm6_0_GSWP3v1",
+    }
+    for mode, closest in closest_tuning.items():
+        if lnd_tuning_mode == mode:
+            logger.warning(
+                "IMPORTANT NOTE: LND_TUNING_MODE is "
+                + lnd_tuning_mode
+                + " which does NOT have tuned settings, so using the closest option which is "
+                + closest
+            )
+            logger.warning(
+                "              : To suppress this message explicitly set LND_TUNING_MODE="
+                + lnd_tuning_mode
+                + " for your case"
+            )
+            lnd_tuning_mode = closest
+
+    # CAM4 and CAM5 options are based on cam6 tuning
+    # (other than the Zender dust emission soil eroditability file which is specific
+    #  to the CAM version)
+    tuning_based_on = {
+        "clm6_0_GSWP3v1": "clm5_0_GSWP3v1",
+        "clm5_1_GSWP3v1": "clm5_0_GSWP3v1",
+        "clm6_0_cam6.0": "clm5_0_cam6.0",
+        "clm6_0_cam5.0": "clm5_0_cam6.0",
+        "clm6_0_cam4.0": "clm5_0_cam6.0",
+        "clm5_1_cam6.0": "clm5_0_cam6.0",
+        "clm5_1_cam5.0": "clm5_0_cam6.0",
+        "clm5_1_cam4.0": "clm5_0_cam6.0",
+        "clm5_0_cam5.0": "clm5_0_cam6.0",
+        "clm5_0_cam4.0": "clm5_0_cam6.0",
+        "clm4_5_cam6.0": "clm5_0_cam6.0",
+        "clm4_5_cam5.0": "clm5_0_cam6.0",
+        "clm4_5_cam4.0": "clm5_0_cam6.0",
+    }
+    for mode, based_on in tuning_based_on.items():
+        if lnd_tuning_mode == mode:
+            logger.warning(
+                "NOTE: LND_TUNING_MODE is "
+                + lnd_tuning_mode
+                + " which is NOT tuned, but is based on "
+                + based_on
+            )
 
     # -----------------------------------------------------
     # Set ctsmconf
