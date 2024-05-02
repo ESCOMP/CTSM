@@ -830,7 +830,7 @@
       <option name="comment"  >Run in DEBUG with the matrix solution on for spinup with all options it interacts with (requires Bgc, but also turn on Crop and Carbon isotopes)</option>
     </options>
   </test>
-  <test name="ERS_Lm54_Mmpi-serial" grid="1x1_numaIA" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
+  <test name="ERS_Lm54_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
