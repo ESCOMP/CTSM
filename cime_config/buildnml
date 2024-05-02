@@ -224,7 +224,7 @@ def buildnml(case, caseroot, compname):
         clm_usrdat_name = case.get_value("CLM_USRDAT_NAME")
         clmusr = " -clm_usr_name %s " % clm_usrdat_name
         # Write warning about initial condition data
-        if ("NEON" in clm_usrdat_name) and clm_force_coldstart == "off":
+        if (("NEON" in clm_usrdat_name) or False) and clm_force_coldstart == "off":
             if ("_transient" in clm_nml_use_case) and (
                 re.fullmatch(r"\w\w\w\w\.transient", casename) is None
                 or clm_usrdat_name is "NEON.PRISM"
