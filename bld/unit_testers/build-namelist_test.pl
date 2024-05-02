@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 2513;
+my $ntests = 3665;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1545;
+   $ntests += 2313;
 }
 plan( tests=>$ntests );
 
@@ -1421,32 +1421,40 @@ foreach my $res ( @resolutions ) {
 }
 
 print "\n==================================================\n";
-print " Rest all use-cases \n";
+print " Test all use-cases over all physics options\n";
 print "==================================================\n";
 
 # Run over all use-cases...
 my $list = `$bldnml -use_case list 2>&1 | grep "use case"`;
 my @usecases;
 if ( $list =~ /build-namelist : use cases : (.+)$/ ) {
-  my @usecases  = split( / /, $list );
+  @usecases  = split( / /, $1 );
 } else {
   die "ERROR:: Trouble getting list of use-cases\n";
 }
-foreach my $usecase ( @usecases ) {
-   $options = "-use_case $usecase  -envxml_dir .";
-   &make_env_run();
-   eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
-   is( $@, '', "options: $options" );
-   $cfiles->checkfilesexist( "$options", $mode );
-   $cfiles->shownmldiff( "default", "standard" );
-   if ( defined($opts{'compare'}) ) {
-      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+if ( $#usecases != 15 ) {
+  print "use-cases = @usecases\n";
+  die "ERROR:: Number of use-cases isn't what's expected\n";
+}
+foreach my $phys ( "clm4_5", "clm5_0", "clm5_1", "clm6_0" ) {
+   print "physics = $phys\n";
+   foreach my $usecase ( @usecases ) {
+      print "usecase = $usecase\n";
+      $options = "-use_case $usecase  -envxml_dir .";
+      &make_env_run();
+      eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
+      is( $@, '', "options: $options" );
+      $cfiles->checkfilesexist( "$options", $mode );
+      $cfiles->shownmldiff( "default", "standard" );
+      if ( defined($opts{'compare'}) ) {
+         $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+         $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+      }
+      if ( defined($opts{'generate'}) ) {
+         $cfiles->copyfiles( "$options", $mode );
+      }
+      &cleanup();
    }
-   if ( defined($opts{'generate'}) ) {
-      $cfiles->copyfiles( "$options", $mode );
-   }
-   &cleanup();
 }
 
 print "\n==================================================\n";
