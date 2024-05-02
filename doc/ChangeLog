@@ -1,4 +1,121 @@
 ===============================================================
+Tag name: ctsm5.2.002
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Fri 26 Apr 2024 11:13:46 AM MDT
+One-line Summary: FATES default allometry parameter file update
+
+Purpose and description of changes
+----------------------------------
+
+This updates the default FATES parameter file which includes a number
+of changes:
+
+   - Default global tree pft allometry update
+   - New allometric mode options
+   - New scaling coefficients for alternative leaf maintenance respiration
+   - New switch to control the use of host land model day length scaling factor
+
+This also incorporates some testing additions and clean up, including:
+
+   - Removes cheyenne expected failure tests that have been converted to derecho
+   - Adds a 5x5_amazon test to aux_clm and the expected failures list
+   - Temporarilry converts a fates 5x5_amazon test to f10 test
+   - Adds namelist check and corresponding unit test to make sure fates hydro
+     and fates satellite phenology mode can not be used together
+
+The FATES externals tag is also updated which includes a number of bug fixes
+and the addition of new history output.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   NOTE: FATES hydro mode and FATES satellite phenology mode can not
+	 be used in conjunction as of this API update
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   FATES parameter file default updated to fates_params_api.35.0.0_12pft_c240326.nc
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+   A 5x5_amazon smoke test, not using MPI-serial has been added to the test list
+   and list of expected failures to track issue #2423.
+   Out-of-date cheyenne tests on the expected failure list have been removed.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, only for FATES configurations
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: FATES
+    - what platforms/compilers: ALL
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff
+
+   The FATES externals update incorporates a number of bug fixes and the new allometry default
+   paramters result in a new scientific baseline.
+
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+   FATES: sci.1.72.2_api.34.0.0 -> sci.1.73.0_api.35.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+#2436 -- FATES API35 parameter file update
+NGEET#1093 -- Update default allometry parameters for tree PFTs
+NGEET#1128 -- New allometric modes
+NGEET#1149 -- Alternative vertical scaling of leaf maintenance respiration
+NGEET#1161 -- Adding day length factor switch
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.001
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Mon 22 Apr 2024 02:10:55 PM MDT
