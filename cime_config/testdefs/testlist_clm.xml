@@ -2654,24 +2654,24 @@
       <option name="comment"  >5x5_amazon grid with FATES and latest CLM</option>
     </options>
   </test>
-  <test name="ERS_D_Ld15" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
+  <test name="ERS_D_Ld15" grid="f10_f10_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="fates"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
-      <option name="comment"  >This test should be convered to an ERP test once the PEM version of this test is passing COMPARE_base_modpes.</option>
+      <option name="comment"  >This test should be converted to an ERP test once the PEM version of this test is passing COMPARE_base_modpes. Also change to 5x5_amazon once ccs_config updated to allow it</option>
     </options>
   </test>
-  <test name="PEM_D_Ld15" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
+  <test name="PEM_D_Ld15" grid="f10_f10_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="fates"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
-      <option name="comment"  >This checks that the FATES seed dispersal MPI communication is consistent when the PE layout changes.</option>
+      <option name="comment"  >This checks that the FATES seed dispersal MPI communication is consistent when the PE layout changes. Could convert to 5x5_amazon as above</option>
     </options>
   </test>
   <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTreeDamage">
@@ -3662,6 +3662,16 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Ld5" grid="5x5_amazon" compset="I1850Clm60Bgc" testmods="clm/HillslopeC">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Add a non-FATES test to aux_clm for 5x5_amazon that fails because of the ccs_config issue, can remove once this passes</option>
     </options>
   </test>
 
