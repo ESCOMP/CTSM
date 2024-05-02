@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.2.002 glemieux 04/26/2024 FATES default allometry parameter file update
        ctsm5.2.001     erik 04/22/2024 Merge b4b-dev
          ctsm5.2.0     many 04/20/2024 New mksurfdata_esmf tool to create new surface datasets that are in place
     ctsm5.1.dev176  afoster 04/04/2024 Merge b4b-dev
