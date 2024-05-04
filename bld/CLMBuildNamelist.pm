@@ -4389,7 +4389,6 @@ sub setup_logic_fates {
                             "Change suplnitro back to ALL");
         }
 
-        #
         # For FATES SP mode make sure no-competetiion, and fixed-biogeography are also set
         # And also check for other settings that can't be trigged on as well
         #
@@ -4434,12 +4433,13 @@ sub setup_logic_fates {
             } elsif ( ! -f "$fname" ) {
               $log->fatal_error("$fname does NOT point to a valid filename" );
             }
-          }
-          # make sure that nocomp and fbg mode are enabled as well as use_fates_luh
-          my @list = ( "use_fates_nocomp", "use_fates_fixed_biogeog, use_fates_luh" );
-          foreach my $var ( @list ) {
-            if ( ! &value_is_true($nl->get_value($var)) ) {
-              $log->fatal_error("$var is required when use_fates_lupft is true" );
+
+            # make sure that nocomp and fbg mode are enabled as well as use_fates_luh
+            my @list = ( "use_fates_nocomp", "use_fates_fixed_biogeog, use_fates_luh" );
+            foreach my $var ( @list ) {
+              if ( ! &value_is_true($nl->get_value($var)) ) {
+                $log->fatal_error("$var is required when use_fates_lupft is true" );
+              }
             }
           }
         }
@@ -4456,9 +4456,6 @@ sub setup_logic_fates {
               } elsif ( ! -f "$fname" ) {
                  $log->fatal_error("$fname does NOT point to a valid filename" );
               }
-
-              $var = "flandusepftdat";
-              add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'phys'=>$nl_flags->{'phys'}, 'hgrid'=>$nl_flags->{'res'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, nofail=>1 );
            }
         }
         # check that fates landuse is on and harvest mode is off when potential veg switch is true
