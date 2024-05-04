@@ -20,6 +20,12 @@ subset_data
     For extracting domain files, surface dataset, and DATM files at a region, use:
         ./subset_data region
 
+mesh_maker
+    This script creates a mesh file from a netcdf file with valid lats and lons.
+
+mesh_plotter
+    This script plots a mesh file
+
 modify_singlept_site_neon.py
     After running subset_data.py overwrite some fields with site-specific
     data for neon sites.
