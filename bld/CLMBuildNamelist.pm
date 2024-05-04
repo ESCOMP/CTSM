@@ -4379,7 +4379,7 @@ sub setup_logic_fates {
 
  	add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_lupft', 'use_fates'=>$nl_flags->{'use_fates'});
  	add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_luh', 'use_fates'=>$nl_flags->{'use_fates'},
-                      'use_fates_lupft'=>$nl_flags->{'use_fates_lupft'} );
+                      'use_fates_lupft'=>$nl->get_value('use_fates_lupft') );
 
         my $suplnitro = $nl->get_value('suplnitro');
         my $parteh_mode = $nl->get_value('fates_parteh_mode');
