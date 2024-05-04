@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 2513;
+my $ntests = 2515;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 1545;
@@ -1252,6 +1252,18 @@ my %failtest = (
      "soil_erod_wo_lnd_source"  =>{ options=>"--envxml_dir .",
                                      namelst=>"dust_emis_method='Zender_2003', " .
                                      "stream_fldfilename_zendersoilerod = '/dev/null', zender_soil_erod_source='atm'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                     },
+     "soil_erod_none_w_Zender"  =>{ options=>"--envxml_dir .",
+                                     namelst=>"dust_emis_method='Zender_2003', " .
+                                     "zender_soil_erod_source='none'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                     },
+     "soil_erod_bad_w_Zender"   =>{ options=>"--envxml_dir .",
+                                     namelst=>"dust_emis_method='Zender_2003', " .
+                                     "zender_soil_erod_source='zztop'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                      },

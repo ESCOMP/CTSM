@@ -517,6 +517,7 @@ sub read_namelist_defaults {
                             "$cfgdir/namelist_files/namelist_defaults_ctsm.xml",
                             "$cfgdir/namelist_files/namelist_defaults_drv.xml",
                             "$cfgdir/namelist_files/namelist_defaults_fire_emis.xml",
+                            "$cfgdir/namelist_files/namelist_defaults_dust_emis.xml",
                             "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
 
   # Add the location of the use case defaults files to the options hash
@@ -3988,7 +3989,7 @@ sub setup_logic_fire_emis {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_dust_emis {
-  # Logic to handle the dust emissions
+  # Logic to handle the dust emissions namelists, both drv_flds_in and lnd_in files
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   # First get the dust emission method
@@ -4011,14 +4012,16 @@ sub setup_logic_dust_emis {
                        'dust_emis_method'=>$dust_emis_method, 'zender_soil_erod_source'=>$zender_source,
                        'hgrid'=>$nl_flags->{'res'}, 'lnd_tuning_mod'=>$nl_flags->{'lnd_tuning_mode'} );
         }
-     } else {
+     } elsif ( $zender_source eq "atm" ) {
         foreach my $option ( @zender_files_in_lnd_opts ) {
            if ( defined($nl->get_value($option)) ) {
-             $log->fatal_error("zender_soil_erod_source is NOT lnd, but the file option $option is being set" .
-                               " and should NOT be unless you want it handled here in the LAND model, " .
+             $log->fatal_error("zender_soil_erod_source is atm, and the file option $option is being set" .
+                               " which should NOT be unless you want it handled here in the LAND model, " .
                                "otherwise the equivalent option is set in CAM" );
            }
         }
+     } elsif ( $zender_source eq "none" ) {
+        $log->fatal_error("zender_soil_erod_source is set to none and only atm or lnd should be used when $var is Zender_2002" );
      }
   } else {
      # Verify that NONE of the Zender options are being set if Zender is NOT being used
@@ -4736,7 +4739,7 @@ sub write_output_files {
   $log->verbose_message("Writing clm namelist to $outfile");
 
   # Drydep, fire-emission or MEGAN namelist for driver
-  @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl carma_inparm);
+  @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl carma_inparm dust_emis_inparm);
   $outfile = "$opts->{'dir'}/drv_flds_in";
   $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
   $log->verbose_message("Writing @groups namelists to $outfile");
