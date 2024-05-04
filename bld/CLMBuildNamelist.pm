@@ -4370,7 +4370,7 @@ sub setup_logic_fates {
     if (&value_is_true( $nl_flags->{'use_fates'})  ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
         my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
-                       "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp","fates_seeddisp_cadence",
+                       "use_fates_inventory_init","fates_seeddisp_cadence",
                        "fates_harvest_mode","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage");
         foreach my $var ( @list ) {
  	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
@@ -4380,6 +4380,12 @@ sub setup_logic_fates {
  	add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_lupft', 'use_fates'=>$nl_flags->{'use_fates'});
  	add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_luh', 'use_fates'=>$nl_flags->{'use_fates'},
                       'use_fates_lupft'=>$nl->get_value('use_fates_lupft') );
+ 	add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_nocomp', 'use_fates'=>$nl_flags->{'use_fates'},
+                      'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
+                      'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+ 	add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_fixed_biogeog', 'use_fates'=>$nl_flags->{'use_fates'},
+                      'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
+                      'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
 
         my $suplnitro = $nl->get_value('suplnitro');
         my $parteh_mode = $nl->get_value('fates_parteh_mode');
@@ -4435,7 +4441,7 @@ sub setup_logic_fates {
             }
 
             # make sure that nocomp and fbg mode are enabled as well as use_fates_luh
-            my @list = ( "use_fates_nocomp", "use_fates_fixed_biogeog, use_fates_luh" );
+            my @list = ( "use_fates_luh", "use_fates_nocomp", "use_fates_fixed_biogeog" );
             foreach my $var ( @list ) {
               if ( ! &value_is_true($nl->get_value($var)) ) {
                 $log->fatal_error("$var is required when use_fates_lupft is true" );
