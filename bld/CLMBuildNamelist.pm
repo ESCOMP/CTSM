@@ -4377,9 +4377,11 @@ sub setup_logic_fates {
                       'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
         }
 
+ 	add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_potentialveg', 'use_fates'=>$nl_flags->{'use_fates'});
  	add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_lupft', 'use_fates'=>$nl_flags->{'use_fates'});
  	add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_luh', 'use_fates'=>$nl_flags->{'use_fates'},
                       'use_fates_lupft'=>$nl->get_value('use_fates_lupft'), 
+                      'use_fates_potentialveg'=>$nl->get_value('use_fates_potentialveg'), 
                       'fates_harvest_mode'=>$nl->get_value('fates_harvest_mode') );
  	add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_nocomp', 'use_fates'=>$nl_flags->{'use_fates'},
                       'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
@@ -4466,7 +4468,7 @@ sub setup_logic_fates {
            }
         }
         # check that fates landuse is on and harvest mode is off when potential veg switch is true
-        my $var = "use_potentialveg";
+        my $var = "use_fates_potentialveg";
         if ( defined($nl->get_value($var))  ) {
           if ( &value_is_true($nl->get_value($var)) ) {
             if ( ! &value_is_true($nl->get_value('use_fates_luh')) ) {
