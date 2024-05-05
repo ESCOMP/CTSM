@@ -4414,6 +4414,10 @@ sub setup_logic_fates {
               if ( $nl->get_value('fates_spitfire_mode') > 0 ) {
                     $log->fatal_error('fates_spitfire_mode can NOT be set to greater than 0 when use_fates_sp is true');
               }
+              # fates landuse can't be on with FATES SP mode is active
+              if ( &value_is_true($nl->get_value('use_fates_luh')) ) {
+                    $log->fatal_error('use_fates_luh can NOT be true when use_fates_sp is true');
+              }
            }
         }
         my $var = "use_fates_inventory_init";
