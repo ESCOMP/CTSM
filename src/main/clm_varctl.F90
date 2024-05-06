@@ -245,7 +245,7 @@ module clm_varctl
   character(len=64), public    :: o3_veg_stress_method = 'unset'
   
  ! o3_streams parameters
-  logical, public :: use_do3_streams = .false.
+  logical, public :: use_do3_streams = .true.
   character(len=fname_len), public :: stream_fldfilename_do3
   character(len=fname_len), public :: stream_meshfile_do3
   character(len=fname_len), public :: do3_mapalgo

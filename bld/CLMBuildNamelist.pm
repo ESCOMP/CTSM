@@ -4247,7 +4247,7 @@ sub setup_logic_do3_streams {
       } else {
          if ( defined($nl->get_value('stream_fldfilename_do3'))) {
              $log->fatal_error("One of the do3 streams namelist items (stream_fldfilename_do3, " .
-                                " is defined, but use_do3_streams option NOT set to true");
+                                " is defined, but use_do3_streams option set to false");
          }
       }
 }

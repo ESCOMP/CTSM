@@ -1733,8 +1733,7 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
 
 <!-- do3 streams namelist defaults -->
-<use_do3_streams>.false.</use_do3_streams>
-
+<use_do3_streams>.true.</use_do3_streams>
 <stream_fldfilename_do3>/glade/work/afoster/ozone_update/ozone_damage_files/converted/diurnal_factor_O3surface_ssp370_2015-2024_c20220502.nc</stream_fldfilename_do3>
 <stream_meshfile_do3>share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc</stream_meshfile_do3>
 <do3_mapalgo>bilinear</do3_mapalgo>

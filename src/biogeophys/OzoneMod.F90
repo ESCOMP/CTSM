@@ -26,6 +26,7 @@ module OzoneMod
   use shr_ozone_coupling_mod , only : atm_ozone_frequency_multiday_average, shr_ozone_coupling_readnl
   use DiurnalOzoneType       , only : diurnal_ozone_anom_type
   use diurnalOzoneStreamMod  , only : read_O3_stream
+  use controlMod             , only : use_do3_streams
 
   implicit none
   save
@@ -162,7 +163,7 @@ contains
 
     ! if we have multi-day average input ozone, we need to convert to sub-daily using
     ! an input anomaly file
-    if (this%atm_ozone_freq == atm_ozone_frequency_multiday_average) then
+    if (this%atm_ozone_freq == atm_ozone_frequency_multiday_average .and. use_do3_streams) then
       ! initialize and read in data for diurnal O3 anomaly stream
       call read_O3_stream(this%diurnalOzoneAnomInst, bounds)
     end if
@@ -440,7 +441,7 @@ contains
          tlai_old    => this%tlai_old_patch                     & ! Output: [real(r8) (:)] tlai from last time step
          )
 
-    if (this%atm_ozone_freq == atm_ozone_frequency_multiday_average) then
+    if (this%atm_ozone_freq == atm_ozone_frequency_multiday_average .and. use_do3_streams) then
       call this%diurnalOzoneAnomInst%Interp(bounds, forc_o3, forc_o3_down)
     else
       forc_o3_down(bounds%begg:bounds%endg) = forc_o3(bounds%begg:bounds%endg)
