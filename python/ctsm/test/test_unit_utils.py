@@ -356,7 +356,7 @@ class TestUtilsEnsureIterable(unittest.TestCase):
         """
         Tests that ensure_iterable() errors if input is iterable but of the wrong length
         """
-        with self.assertRaisesRegex(SystemExit, "Input is iterable but wrong length"):
+        with self.assertRaisesRegex(ValueError, "Input is iterable but wrong length"):
             ensure_iterable([11, 12], 3)
 
 
