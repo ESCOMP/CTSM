@@ -259,7 +259,7 @@ module histFileMod
   ! overridden by namelist params like hist_fincl1.
   type, extends(entry_base) :: allhistfldlist_entry
      logical :: actflag(max_tapes)  ! which history tapes to write to. 
-     ! 10) TODO Add second dimension to avgflag as necessary
+     ! 10) TODO NEXT Add second dimension to avgflag as necessary
      character(len=avgflag_strlen) :: avgflag(max_tapes, maxsplitfiles)  ! type of time averaging
   contains
      procedure :: copy => copy_allhistfldlist_entry
@@ -333,7 +333,7 @@ module histFileMod
   ! Other variables
   !
   character(len=max_length_filename) :: locfnh(max_tapes, maxsplitfiles)  ! local history file names
-  ! TODO History restart files seem to mirror history files => need the second dimension I think
+  ! 11) TODO History restart files seem to mirror history files => need the second dimension I think
   character(len=max_length_filename) :: locfnhr(max_tapes) ! local history restart file names
   logical :: htapes_defined = .false.        ! flag indicates history output fields have been defined
   !
