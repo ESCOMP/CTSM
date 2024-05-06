@@ -35,12 +35,12 @@ def ensure_iterable(thing_we_want_iterable, iterable_length):
         iter(thing_we_want_iterable)
     except TypeError:
         already_iterable = False
-    
+
     if not already_iterable:
         thing_we_want_iterable = [thing_we_want_iterable] * iterable_length
     elif len(thing_we_want_iterable) != iterable_length:
-        raise ValueError(f"Input is iterable but wrong length")
-    
+        raise ValueError("Input is iterable but wrong length")
+
     return thing_we_want_iterable
 
 
