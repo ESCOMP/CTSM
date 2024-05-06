@@ -814,7 +814,7 @@ types to vary over time.
 
 <entry id="flandusepftdat" type="char*256" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
-Full pathname of fates landuse x pft data map.
+Full pathname of fates landuse x pft static data map.
 </entry>
 
 <entry id="use_luna" type="logical" category="physics"
