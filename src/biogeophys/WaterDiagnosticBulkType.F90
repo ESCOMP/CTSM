@@ -346,7 +346,7 @@ contains
          fname=this%info%fname('RH2M_R'), &
          units='%',  &
          avgflag='A', &
-         long_name=this%info%lname('Rural 2m specific humidity'), &
+         long_name=this%info%lname('Rural 2m relative humidity'), &
          ptr_patch=this%rh_ref2m_r_patch, set_spec=spval, default='inactive')
 
     this%rh_ref2m_u_patch(begp:endp) = spval
