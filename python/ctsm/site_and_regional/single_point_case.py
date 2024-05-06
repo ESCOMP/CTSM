@@ -14,7 +14,7 @@ import xarray as xr
 
 # -- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR, DatmFiles
-from ctsm.utils import add_tag_to_filename
+from ctsm.utils import add_tag_to_filename, ensure_iterable
 
 logger = logging.getLogger(__name__)
 
@@ -25,14 +25,6 @@ MAX_PFT = 78  # for runs with explicit crops
 # -- constants to represent months of year
 FIRST_MONTH = 1
 LAST_MONTH = 12
-
-
-def _ensure_iterable(thing_we_want_iterable, iterable_length):
-    try:
-        iter(thing_we_want_iterable)
-        return thing_we_want_iterable
-    except TypeError:
-        return [thing_we_want_iterable] * iterable_length
 
 
 class SinglePointCase(BaseCase):
@@ -424,8 +416,8 @@ class SinglePointCase(BaseCase):
 
             # -- loop over all dom_pft and pct_pft
             iterable_length = len(self.dom_pft)
-            cth_to_zip = _ensure_iterable(self.cth, iterable_length)
-            cbh_to_zip = _ensure_iterable(self.cbh, iterable_length)
+            cth_to_zip = ensure_iterable(self.cth, iterable_length)
+            cbh_to_zip = ensure_iterable(self.cbh, iterable_length)
             zip_pfts = zip(self.dom_pft, self.pct_pft, cth_to_zip, cbh_to_zip)
             for dom_pft, pct_pft, cth, cbh in zip_pfts:
                 if cth is not None:
