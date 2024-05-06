@@ -80,9 +80,10 @@ if [ "$PHYSB" = "all" ] && [ "$PHYSA" != "all" ]; then
 fi
 
 if [ "$verbose" = "YES" ]; then echo "Get list of lnd_in.* files"; fi
+if [ "$verbose" = "YES" ]; then pwd; fi
 filepat="lnd_in.*"
 filenames=($filepat)
-if [ "$verbose" = "YES" ]; then echo "filename list = $filenames"; fi
+if [ "$verbose" = "YES" ]; then echo "filename list = ${filenames[*]}"; fi
 if [ "${filenames[*]}" = "$filepat" ]; then
    echo "No lnd_in files exist in the current directory -- run ./build-namelist_test.pl first"
    exit 1
@@ -92,9 +93,11 @@ do
    fileA="./$file"
    fileB="$baseline/$file"
    # If physicsA option used and the file matches the physics input
-   if [[ $fileA =~ "-phys+$PHYSA" ]]; then
+   if [[ "$fileA" =~ "-phys+$PHYSA" ]] || [ "$PHYSA" = "all" ]; then
       # Replace physicsB for fileB
-      fileB=${fileB/-phys+$PHYSA/-phys+$PHYSB}
+      if [ ! "$PHYSA" = "all" ]; then
+         fileB=${fileB/-phys+$PHYSA/-phys+$PHYSB}
+      fi
       if ! test -f $fileB; then
          if [ "$verbose" = "YES" ]; then echo "$fileB does NOT exist -- skipping"; fi
       else
