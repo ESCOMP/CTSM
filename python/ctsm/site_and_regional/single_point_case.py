@@ -27,6 +27,14 @@ FIRST_MONTH = 1
 LAST_MONTH = 12
 
 
+def _ensure_iterable(thing_we_want_iterable, iterable_length):
+    try:
+        iter(thing_we_want_iterable)
+        return thing_we_want_iterable
+    except TypeError:
+        return [thing_we_want_iterable] * iterable_length
+
+
 class SinglePointCase(BaseCase):
     """
     A class to encapsulate everything for single point cases.
@@ -415,7 +423,10 @@ class SinglePointCase(BaseCase):
             # f_mod["PCT_CROP"][:, :] = 0
 
             # -- loop over all dom_pft and pct_pft
-            zip_pfts = zip(self.dom_pft, self.pct_pft, self.cth, self.cbh)
+            iterable_length = len(self.dom_pft)
+            cth_to_zip = _ensure_iterable(self.cth, iterable_length)
+            cbh_to_zip = _ensure_iterable(self.cbh, iterable_length)
+            zip_pfts = zip(self.dom_pft, self.pct_pft, cth_to_zip, cbh_to_zip)
             for dom_pft, pct_pft, cth, cbh in zip_pfts:
                 if cth is not None:
                     f_mod["MONTHLY_HEIGHT_TOP"][:, :, :, dom_pft] = cth
