@@ -1,0 +1,33 @@
+#!/usr/bin/env python3
+"""
+This is a just top-level skeleton script that calls
+mesh_plotter.py.
+The original code (mesh_plotter.py) is located under the
+python/ctsm folder.
+
+For full instructions on how to run the code and different options,
+please check the python/ctsm/mesh_plotter.py file.
+
+----------------------------------------------------------------
+Instructions for running using conda python environments:
+
+../../py_env_create --dask
+conda activate ctsm_py_wdask
+|------------------------------------------------------------------|
+|---------------------  Instructions  -----------------------------|
+|------------------------------------------------------------------|
+This script plots a  ESMF unstructured GRID (mesh file).
+"""
+import os
+import sys
+
+# -- add python/ctsm  to path
+_CTSM_PYTHON = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python"
+)
+sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm.mesh_plotter import main
+
+if __name__ == "__main__":
+    main()
