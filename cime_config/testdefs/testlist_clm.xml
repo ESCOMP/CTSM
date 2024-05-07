@@ -73,7 +73,7 @@
       <option name="comment">Simple test use soil eroditability in CTSM for CAM5 tuning</option>
     </options>
   </test>
-  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningModeZDustSoilErod">
+  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningModeZDustSoilErod">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -102,7 +102,7 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="IHistClm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
+  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="IHistClm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -111,7 +111,7 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution for transient</option>
     </options>
   </test>
-  <test name="PEM_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
+  <test name="PEM_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -120,7 +120,7 @@
       <option name="comment">CESM3 development test with change in the processor count at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="ERS_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
+  <test name="ERS_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -129,7 +129,7 @@
       <option name="comment">CESM3 development simple exact restart test at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="ERI_D" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
+  <test name="ERI_D" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -138,7 +138,7 @@
       <option name="comment">CESM3 development Exact restart test for all startup types at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="SMS_Lm1" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Lm1" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -329,6 +329,24 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Science support for 1850 with clm5_1 for SP mode at f19</option>
+    </options>
+  </test>
+  <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm60Sp" testmods="clm/clm60cam60LndTuningMode">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Science support for 1850 with clm5_1 for SP mode at f09 with cam60</option>
+    </options>
+  </test>
+  <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm60Sp" testmods="clm/clm60cam60LndTuningMode">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Science support for 1850 with clm5_1 for SP mode at f19 with cam60</option>
     </options>
   </test>
   <test name="ERP_D_Ld3_PS" grid="f09_g17" compset="I2000Clm50Sp" testmods="clm/prescribed">
@@ -685,7 +703,7 @@
       <option name="comment">Workhorse SE grid for running with CAM and with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="ne120pg3_t13" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="ne120pg3_t13" compset="I2000Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
