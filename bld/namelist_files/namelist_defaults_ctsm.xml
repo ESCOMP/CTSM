@@ -1396,6 +1396,8 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne16np4.pg3_hist_2000_78pfts_c240216.n
 <fsurdat hgrid="0.125nldas2" sim_year="2000">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_0.125nldas2_hist_2000_78pfts_c240216.nc</fsurdat>
 
+<fsurdat hgrid="64x128"      sim_year="2000">
+lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_T42_hist_2000_78pfts_c240425.nc</fsurdat>
 <fsurdat hgrid="360x720cru"  sim_year="2000">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_360x720cru_hist_2000_78pfts_c240216.nc</fsurdat>
 <fsurdat hgrid="C96"          sim_year="2000">

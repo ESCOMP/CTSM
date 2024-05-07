@@ -47,6 +47,8 @@ Changes made to namelist defaults (e.g., changed parameter values):
 
 Changes to the datasets (e.g., parameter, surface or initial files):
 
+Changes to documentation:
+
 Substantial timing or memory changes:
 [e.g., check PFS test in the test suite and look at timings, if you
 expect possible significant timing changes]
