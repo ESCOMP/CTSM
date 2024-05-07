@@ -311,6 +311,7 @@ module clm_varctl
   logical, public            :: use_fates_fixed_biogeog = .false.       ! true => use fixed biogeography mode
   logical, public            :: use_fates_nocomp = .false.              ! true => use no comopetition mode
   logical, public            :: use_fates_luh = .false.                 ! true => use FATES landuse data mode
+  logical, public            :: use_fates_lupft = .false.               ! true => use FATES landuse x pft static mapping mode
   logical, public            :: use_fates_potentialveg = .false.        ! true => FATES potential veg only
   character(len=256), public :: fluh_timeseries = ''                    ! filename for fates landuse timeseries data
   character(len=256), public :: flandusepftdat = ''                     ! filename for fates landuse x pft data

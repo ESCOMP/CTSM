@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1999;
+my $ntests = 2007;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1353;
+   $ntests += 1360;
 }
 plan( tests=>$ntests );
 
@@ -1046,9 +1046,8 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
-     # TODO SSR: Replace this with fates_harvest_mode
      "useloggingButNOTFATES"     =>{ options=>"-envxml_dir . -no-megan",
-                                     namelst=>"use_fates_logging=.true.",
+                                     namelst=>"fates_harvest_mode=1",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
@@ -1062,8 +1061,13 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
-     "useinventorybutnotfile"    =>{ options=>"--res 0.9x1.25 --bgc fates --envxml_dir . --no-megan",
+     "useFATESLUH2butnotfile"    =>{ options=>"--res 0.9x1.25 --bgc fates --envxml_dir . --no-megan",
                                      namelst=>"use_fates_luh=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm4_5",
+                                   },
+     "useFATESLUPFTbutnotfile"   =>{ options=>"--res 0.9x1.25 --bgc fates --envxml_dir . --no-megan",
+                                     namelst=>"use_fates_lupft=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
@@ -1089,6 +1093,36 @@ my %failtest = (
                                    },
      "useFATESSPWONOCOMP"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_fates_sp=T,use_fates_nocomp=F",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "useFATESSPwithLUH"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"use_fates_sp=T,use_fates_luh=T",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "useFATESPOTVEGwithHARVEST" =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"use_fates_potentialveg=T,fates_harvest_mode=1",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "useFATESHARVEST3WOLUH"     =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"use_fates_luh=F,fates_harvest_mode=3",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "useFATESLUPFTWOLUH"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"use_fates_lupft=T,use_fates_luh=F",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "useFATESLUPFTWONOCOMP"     =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"use_fates_lupft=T,use_fates_nocomp=F",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "useFATESLUPFTWOFBG"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"use_fates_lupft=T,use_fates_fixedbiogeog=F",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },

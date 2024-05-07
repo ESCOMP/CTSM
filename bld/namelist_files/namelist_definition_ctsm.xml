@@ -791,6 +791,12 @@ data (fates_harvest_mode >= 3)
 (Also, only valid for use_fates = true and is incompatible with transient runs currently.)
 </entry>
 
+<entry id="use_fates_lupft" type="logical" category="physics"
+       group="elm_inparm" valid_values="" value=".false.">
+If TRUE, enable use of fates land use x pft mapping data file.
+(Only valid for use_fates = true and is incompatible with transient runs currently.)
+</entry>
+
 <entry id="use_fates_potentialveg" type="logical" category="physics"
        group="clm_inparm" valid_values="" >
 If TRUE, ignore the land-use state vector and transitions, and assert that all lands
@@ -808,7 +814,7 @@ types to vary over time.
 
 <entry id="flandusepftdat" type="char*256" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
-Full pathname of fates landuse x pft data map.
+Full pathname of fates landuse x pft static data map.
 </entry>
 
 <entry id="use_luna" type="logical" category="physics"
