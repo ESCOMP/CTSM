@@ -210,7 +210,7 @@
       <value compset="^SSP370_"	                    >1850-2100_SSP3-7.0_transient</value>
       <value compset="^SSP534_"	                    >1850-2100_SSP5-3.4_transient</value>
       <value compset="^SSP245_"	                    >1850-2100_SSP2-4.5_transient</value>
-      <value compset="^HIST_ne0np4"                 >1850-2100_SSP2-4.5_transient</value>
+      <value compset="^HIST" grid="ne0np4"          >1850-2100_SSP2-4.5_transient</value>
       <value compset="^SSP119_"	                    >1850-2100_SSP1-1.9_transient</value>
       <value compset="^SSP434_"	                    >1850-2100_SSP4-3.4_transient</value>
       <value compset="^SSP460_"	                    >1850-2100_SSP4-6.0_transient</value>
