@@ -62,7 +62,7 @@ module OzoneMod
      real(r8), pointer             :: tlai_old_patch(:)  ! tlai from last time step
      type(diurnal_ozone_anom_type) :: diurnalOzoneAnomInst
 
-   contains
+  contains
      ! Public routines
      procedure, public :: Init
      procedure, public :: Restart
@@ -146,7 +146,7 @@ contains
     ! Initialize ozone data structure
     !
     ! !USES:
-   use clm_varctl   , only : use_luna
+    use clm_varctl   , only : use_luna
     !
     ! !ARGUMENTS:
     class(ozone_type), intent(inout) :: this
@@ -251,10 +251,10 @@ contains
          avgflag='A', long_name='total ozone flux into shaded leaves', &
          ptr_patch=this%o3uptakesha_patch)
 
-   this%o3force_grid(begg:endg) = spval
-   call hist_addfld1d (fname='FORCE_O3', units='mol/mol', &
-            avgflag='A', long_name='ozone partial pressure', &
-            ptr_lnd=this%o3force_grid)
+    this%o3force_grid(begg:endg) = spval
+    call hist_addfld1d (fname='FORCE_O3', units='mol/mol', &
+              avgflag='A', long_name='ozone partial pressure', &
+              ptr_lnd=this%o3force_grid)
 
     if (this%stress_method==stress_method_lombardozzi2015) then
        ! For this and the following variables: how should we include leaf area in the
@@ -446,30 +446,31 @@ contains
     else
       forc_o3_down(bounds%begg:bounds%endg) = forc_o3(bounds%begg:bounds%endg)
     end if
-      this%o3force_grid(bounds%begg:bounds%endg) = forc_o3_down(bounds%begg:bounds%endg)
+    
+    this%o3force_grid(bounds%begg:bounds%endg) = forc_o3_down(bounds%begg:bounds%endg)
 
-      do fp = 1, num_exposedvegp
-         p = filter_exposedvegp(fp)
-         c = patch%column(p)
-         g = patch%gridcell(p)
+    do fp = 1, num_exposedvegp
+        p = filter_exposedvegp(fp)
+        c = patch%column(p)
+        g = patch%gridcell(p)
 
-         ! Ozone uptake for shaded leaves
-         call CalcOzoneUptakeOnePoint( &
-              forc_ozone=forc_o3_down(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
-              rs=rssha(p), rb=rb(p), ram=ram(p), &
-              tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
-              o3uptake=o3uptakesha(p))
+        ! Ozone uptake for shaded leaves
+        call CalcOzoneUptakeOnePoint( &
+            forc_ozone=forc_o3_down(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+            rs=rssha(p), rb=rb(p), ram=ram(p), &
+            tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
+            o3uptake=o3uptakesha(p))
 
-         ! Ozone uptake for sunlit leaves
-         call CalcOzoneUptakeOnePoint( &
-              forc_ozone=forc_o3_down(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
-              rs=rssun(p), rb=rb(p), ram=ram(p), &
-              tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
-              o3uptake=o3uptakesun(p))
+        ! Ozone uptake for sunlit leaves
+        call CalcOzoneUptakeOnePoint( &
+            forc_ozone=forc_o3_down(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+            rs=rssun(p), rb=rb(p), ram=ram(p), &
+            tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
+            o3uptake=o3uptakesun(p))
 
-         tlai_old(p) = tlai(p)
+        tlai_old(p) = tlai(p)
 
-      end do
+    end do
 
     end associate
 

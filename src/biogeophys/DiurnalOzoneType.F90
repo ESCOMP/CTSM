@@ -25,7 +25,7 @@ module DiurnalOzoneType
        real(r8), public, allocatable :: o3_anomaly_grc(:,:)  ! o3 anomaly data [grc, ntimes]
        real(r8), public, allocatable :: time_arr(:)          ! time dimension (units = seconds of day)
 
-     contains
+    contains
        ! Public routines
        procedure, public  :: Init
        procedure, private :: InitAllocate
