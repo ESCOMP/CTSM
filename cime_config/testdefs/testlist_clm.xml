@@ -21,16 +21,24 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld3_PS" grid="f09_g17" compset="I1850Clm50BgcNoAnthro" testmods="clm/decStart1851_noinitial">
+  <test name="SMS_D_Ld3_PS" grid="f09_g17" compset="I1850Clm60SpNoAnthro" testmods="clm/decStart1851_noinitial">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="cheyenne" compiler="intel" category="prebeta"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >No anthropogenic compset</option>
+    </options>
+  </test>
+  <test name="SMS_Ld3_PS" grid="f09_g17" compset="I1850Clm60BgcNoAnthro" testmods="clm/decStart1851_noinitial">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >No anthropogenic compset for Bgc and ctsm_sci test list</option>
     </options>
   </test>
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
@@ -141,6 +149,7 @@
   <test name="SMS_Lm1" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
