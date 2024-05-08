@@ -1,15 +1,39 @@
 #!/bin/bash
+#
+# A simple script to compare lnd_in namelists between two baselines on Derecho
+#
 
+#----------------------------------------------------------------------
+# Usage subroutine
+usage() {
+  echo ""
+  echo "***********************************************************************"
+  echo "usage:"
+  echo "./cmp_baseline_lnd_in_files.sh <baseline> <comparison-baseline>"
+  echo "  "
+  echo "Compares lnd_in files between two baselines on Derecho"
+  echo "***********************************************************************"
+}
+
+#----------------------------------------------------------------------
+
+if [ "$#" -ne 2 ]; then
+   echo "Need to give two baseline directories to compare"
+   usage
+   exit 1
+fi
 baseline=$1
 compare=$2
 
 cwd=`pwd`
 if [ -z "$1" ]; then
    echo "Need to enter a baseline directory tag name"
+   usage
    exit 1
 fi
 if [ -z "$2" ]; then
    echo "Need to enter a comparison directory tag name"
+   usage
    exit 1
 fi
 
@@ -22,6 +46,7 @@ fi
 comp_root=$BASELINE_ROOT/$compare
 if ! test -d "$comp_root"; then
    echo "Root comparison directory of $comp_root does NOT exist"
+   usage
    exit 1
 fi
 cd $root
