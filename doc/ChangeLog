@@ -1,4 +1,109 @@
 ===============================================================
+Tag name: ctsm5.2.004
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Thu 09 May 2024 03:10:52 PM MDT
+One-line Summary: CTSM5.2 1979 fsurdat and 1979-2026 landuse ne0np4 files + two fixes
+
+Purpose and description of changes
+----------------------------------
+
+ Includes work by multiple people:
+ @slevis-lmwg: new fsurdat/landuse files and corresponding infrastructure for
+ the three so-called VR grids (ne0np4)
+ @samsrabin: a subset_data fix
+ @olyson: corrections to a couple of history long-names and updates to
+ history_fields_fates.rst and history_fields_nofates.rst
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #2487 VR grids
+ Fixes #2527 subset_data is broken
+ Fixes #2511 a hist long name is incorrect
+ Fixes #2506 a hist long name is incorrect
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ The so-called VR grids now use 1979 fsurdat files for 1850 compsets
+ and 1979-2026 landuse for historical compsets. The latter cross over into
+ SSP years and use SSP2-4.5 for that.
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ Same comment.
+
+Changes to documentation:
+ See Purpose and Description above.
+
+Substantial timing or memory changes:
+ Not considered.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Updated the ctsm_sci tests for the three VR grids.
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+ However, note that the ctsm_sci test-suite showed diffs in
+ - Fates cases as expected since the last available baseline was ctsm_sci-ctsm5.2.0.
+ - the preexisting VR grid test for 1850 as expected since the fsurdat changed to 1979.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2590
+ https://github.com/ESCOMP/ctsm/pull/2512
+ https://github.com/ESCOMP/ctsm/pull/2528
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.003
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Thu May  2 14:06:54 MDT 2024
