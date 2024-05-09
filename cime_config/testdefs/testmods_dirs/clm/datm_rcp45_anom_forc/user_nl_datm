@@ -1,0 +1,1 @@
+anomaly_forcing = 'Anomaly.Forcing.Precip', 'Anomaly.Forcing.Temperature', 'Anomaly.Forcing.Pressure', 'Anomaly.Forcing.Humidity', 'Anomaly.Forcing.Uwind', 'Anomaly.Forcing.Vwind', 'Anomaly.Forcing.Shortwave', 'Anomaly.Forcing.Longwave'
