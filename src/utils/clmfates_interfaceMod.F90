@@ -526,6 +526,7 @@ module CLMFatesInterfaceMod
               pass_lu_harvest = 0
               pass_num_lu_harvest_cats = 0
            end if
+        end if
 
         ! FATES landuse modes
         if(use_fates_luh) then
