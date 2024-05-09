@@ -521,7 +521,7 @@ module CLMFatesInterfaceMod
            ! LUH2 landuse timeseries driven  harvest rates
            else if (fates_harvest_mode >= fates_harvest_luh_area) then
               pass_lu_harvest = 1
-              pass_num_lu_harvest_types = num_landuse_harvest_vars
+              pass_num_lu_harvest_cats = num_landuse_harvest_vars
            else
               pass_lu_harvest = 0
               pass_num_lu_harvest_cats = 0
