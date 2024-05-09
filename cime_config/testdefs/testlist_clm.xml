@@ -576,6 +576,15 @@
       <option name="comment"  >cism is not answer preserving across processor changes, but short test length should be ok.</option>
     </options>
   </test>
+  <test name="SMS" grid="f09_mg17" compset="I1850Clm50BgcCropG" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Science support for 1850 clm5_0 physics for BgcCrop wtih CISM at f09</option>
+    </options>
+  </test>
   <!-- clm5_0 physics workhorse resolution BGC science test list -->
   <test name="SMS_Ld5" grid="f19_g17" compset="I1850Clm50Bgc" testmods="clm/default">
     <machines>
