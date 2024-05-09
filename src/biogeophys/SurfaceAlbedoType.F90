@@ -226,7 +226,7 @@ contains
 
     this%azsun_grc(begg:endg) = spval
     call hist_addfld1d (fname='AZSUN', units='radians', &
-         avgflag='A', long_name='cosine of solar zenith angle', &
+         avgflag='A', long_name='azimuth angle of the sun', &
          ptr_lnd=this%azsun_grc, default='inactive')
 
     this%coszen_grc(begg:endg) = spval

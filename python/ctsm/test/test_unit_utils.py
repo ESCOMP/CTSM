@@ -9,7 +9,7 @@ import unittest
 import os
 
 from ctsm import unit_testing
-from ctsm.utils import fill_template_file
+from ctsm.utils import fill_template_file, ensure_iterable
 from ctsm.config_utils import lon_range_0_to_360, _handle_config_value
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
@@ -326,6 +326,38 @@ class TestUtilsHandleConfigValue(unittest.TestCase):
         )
 
         self.assertEqual(val_out, float(val_in))
+
+
+class TestUtilsEnsureIterable(unittest.TestCase):
+    """Tests of utils: ensure_iterable"""
+
+    def test_ensure_iterable_number(self):
+        """
+        Tests that ensure_iterable(NUMBER, 3) produces a list of 3 NUMBERs
+        """
+        val = 724.1987
+        self.assertEqual(ensure_iterable(val, 3), [val, val, val])
+
+    def test_ensure_iterable_none(self):
+        """
+        Tests that ensure_iterable(None, 2) produces a list of 2 Nones
+        """
+        val = None
+        self.assertEqual(ensure_iterable(val, 2), [val, val])
+
+    def test_ensure_iterable_already(self):
+        """
+        Tests that ensure_iterable() returns the input if it's already iterable
+        """
+        val = [11, 12]
+        self.assertEqual(ensure_iterable(val, 2), val)
+
+    def test_ensure_iterable_error_wrong_length(self):
+        """
+        Tests that ensure_iterable() errors if input is iterable but of the wrong length
+        """
+        with self.assertRaisesRegex(ValueError, "Input is iterable but wrong length"):
+            ensure_iterable([11, 12], 3)
 
 
 if __name__ == "__main__":
