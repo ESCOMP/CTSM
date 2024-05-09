@@ -128,7 +128,7 @@ contains
     ! flanduse_timeseries file. However, this could theoretically be changed so that the
     ! harvest data were separated from the pftdyn data, allowing them to differ in the
     ! years over which they apply.
-    if (get_do_harvest() .or. fates_harvest_mode >= fates_harvest_clmlanduse) then
+    if (get_do_harvest() .or. fates_harvest_mode == fates_harvest_clmlanduse) then
        call dynHarvest_init(bounds_proc, harvest_filename=get_flanduse_timeseries())
     end if
 
