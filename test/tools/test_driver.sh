@@ -463,8 +463,7 @@ if [ ! -d \$CLM_TESTDIR ]; then
     fi
 fi
 
-## MCT and PIO build directorys
-export MCT_LIBDIR=\$CLM_TESTDIR/mct
+## PIO build directory
 export PIO_LIBDIR=\$CLM_TESTDIR/pio
 
 ##set our own environment vars
