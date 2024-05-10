@@ -18,11 +18,11 @@ Root directory of CLM source distribution (directory above CLM configure).
 </entry>
 
 <entry id="comp_intf" 
-       valid_values="ESMF,MCT,cpl_\$COMP" 
-       value="MCT"
+       valid_values="ESMF,cpl_\$COMP"
+       value="ESMF"
        category="directories">
 Component framework interface to use 
-(Model Coupling Toolkit, or Earth System Modeling Framework)
+(Earth System Modeling Framework)
 </entry>
 
 <entry id="usr_src" 
