@@ -57,7 +57,7 @@ python ------------ Python modules used in tools and testing and automated check
 Directory structure only for a CTSM checkout:
 
 components -------- Other active sub-components needed for CTSM to run (river routing and land-ice models)
-libraries --------- CESM libraries: MCT (Model Coupling Toolkit) and PIO (deprecated)
+libraries --------- CESM libraries: PIO (deprecated)
 share ------------- CESM shared code
 ccs_config -------- CIME configure files (for grids, compsets, and machines) for CESM
 
@@ -68,7 +68,6 @@ components/cdeps -------------------- CESM top level data model shared code (for
 components/cism --------------------- CESM Community land Ice Sheet Model.
 components/mosart ------------------- Model for Scale Adaptive River Transport
 components/rtm ---------------------- CESM River Transport Model.
-components/cpl7 --------------------- CESM top level driver for MCT driver (deprecated will be removed)
 
 Top level documentation ($CTSMROOT):
 
@@ -154,7 +153,7 @@ Source code directory structure:
 
 src/biogeochem ---- Biogeochemisty
 src/main ---------- Main control and high level code
-src/cpl ----------- Land model high level caps for NUOPC driver (and MCT and LILAC)
+src/cpl ----------- Land model high level caps for NUOPC driver (and LILAC)
 src/biogeophys ---- Biogeophysics (Hydrology)
 src/dyn_subgrid --- Dynamic land unit change
 src/init_interp --- Online interpolation
