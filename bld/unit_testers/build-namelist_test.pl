@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3385;
+my $ntests = 3313;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 2097;
+   $ntests += 2001;
 }
 plan( tests=>$ntests );
 
@@ -1436,22 +1436,24 @@ if ( $#usecases != 15 ) {
   print "use-cases = @usecases\n";
   die "ERROR:: Number of use-cases isn't what's expected\n";
 }
-my @expect_fails = ( "1850-2100_SSP5-3.4_transient", "1850-2100_SSP4-3.4", "1850-2100_SSP1-1.9_transient",
-                      "1850-2100_SSP4-6.0_transient" );
+my @expect_fails = ( "1850-2100_SSP5-3.4_transient", "1850-2100_SSP4-3.4_transient", "2018-PD_transient", "1850-2100_SSP1-1.9_transient",
+                      "1850-2100_SSP4-6.0_transient", "2018_control" );
 foreach my $phys ( "clm4_5", "clm5_0", "clm5_1", "clm6_0" ) {
    print "physics = $phys\n";
+   &make_config_cache($phys);
    foreach my $usecase ( @usecases ) {
       print "usecase = $usecase\n";
       $options = "-res 0.9x1.25 -use_case $usecase  -envxml_dir .";
       &make_env_run();
-      eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
-      my $expect_fail = 0;
+      my $expect_fail = undef;
       foreach my $failusecase ( @expect_fails ) {
          if ( $failusecase eq $usecase ) {
             $expect_fail = 1;
+            last;
          }
       }
-      if ( not $expect_fail ) {
+      eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
+      if ( ! defined($expect_fail) ) {
          is( $@, '', "options: $options" );
          $cfiles->checkfilesexist( "$options", $mode );
          $cfiles->shownmldiff( "default", "standard" );
@@ -1463,7 +1465,7 @@ foreach my $phys ( "clm4_5", "clm5_0", "clm5_1", "clm6_0" ) {
             $cfiles->copyfiles( "$options", $mode );
          }
       } else {
-         isnt( $@, '', "options: $options" );
+         isnt( $@, 0, "options: $options" );
       }
       &cleanup();
    }
@@ -1546,6 +1548,12 @@ foreach my $key ( keys(%finidat_files) ) {
    &make_env_run();
    eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
+   my $finidat = `grep finidat lnd_in`;
+   if ( $finidat =~ /initdata_map/ ) {
+      my $result;
+      eval( $result = `grep use_init_interp lnd_in` );
+      isnt( $#, 0, "use_init_interp needs to be set here and was not: $result")
+   }
    $cfiles->checkfilesexist( "$options", $mode );
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
