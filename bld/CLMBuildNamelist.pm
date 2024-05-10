@@ -71,7 +71,7 @@ REQUIRED OPTIONS
                               (if read they allow user_nl_clm and CLM_BLDNML_OPTS to expand
                                variables [for example to use \$DIN_LOC_ROOT])
                               (default current directory)
-     -lnd_frac "domainfile"   Land fraction file (the input domain file) (needed for MCT driver and LILAC)
+     -lnd_frac "domainfile"   Land fraction file (the input domain file) (needed for LILAC)
      -res "resolution"        Specify horizontal grid.  Use nlatxnlon for spectral grids;
                               dlatxdlon for fv grids (dlat and dlon are the grid cell size
                               in degrees for latitude and longitude respectively)
@@ -83,7 +83,7 @@ REQUIRED OPTIONS
                               (default 2000)
      -structure "structure"   The overall structure being used [ standard | fast ]
 OPTIONS
-     -driver "value"          CESM driver type you will run with [ mct | nuopc ]
+     -driver "value"          CESM driver type you will run with [ nuopc ]
      -bgc "value"             Build CLM with BGC package [ sp | bgc | fates ]
                               (default is sp).
                                 CLM Biogeochemistry mode
@@ -1893,10 +1893,10 @@ sub setup_logic_lnd_frac {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
   #
-  # fatmlndfrc is required for the MCT driver (or LILAC), but uneeded for NUOPC
+  # fatmlndfrc is required for LILAC but uneeded for NUOPC
   #
   my $var = "lnd_frac";
-  if ( ($opts->{'driver'} eq "mct") || $opts->{'lilac'} ) {
+  if ( $opts->{'lilac'} ) {
      if ( defined($opts->{$var}) ) {
        if ( defined($nl->get_value('fatmlndfrc')) ) {
          $log->fatal_error("Can NOT set both -lnd_frac option (set via LND_DOMAIN_PATH/LND_DOMAIN_FILE " .
@@ -3838,9 +3838,7 @@ sub setup_logic_popd_streams {
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_popdens', 'phys'=>$nl_flags->{'phys'},
                  'cnfireson'=>$nl_flags->{'cnfireson'}, 'hgrid'=>"0.5x0.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
-     #
-     # TODO (mvertens, 2021-06-22) the following is needed for MCT since a use case enforces this  - so for now stream_meshfile_popdens will be added to the mct
-     # stream namelist but simply not used
+
     if ($opts->{'driver'} eq "nuopc" ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_popdens', 'hgrid'=>"0.5x0.5");
         my $inputdata_rootdir = $nl_flags->{'inputdata_rootdir'};
@@ -3854,12 +3852,6 @@ sub setup_logic_popd_streams {
             $val = &quote_string( $val );
             $nl->set_variable_value($group, $var, $val);
         }
-    } else {
-        my $var = 'stream_meshfile_popdens';
-        my $group = $definition->get_group_name($var);
-        my $val = "none";
-        $val = &quote_string( $val );
-        $nl->set_variable_value($group, $var, $val);
     }
   } else {
      # If bgc is NOT CN/CNDV or fire_method==nofire then make sure none of the popdens settings are set
