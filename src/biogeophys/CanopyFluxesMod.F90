@@ -78,11 +78,9 @@ module CanopyFluxesMod
   logical,  public :: perchroot_alt = .false.  
   !
   ! !PRIVATE DATA MEMBERS:
-  logical, private :: use_undercanopy_stability = .false.      ! use undercanopy stability term or not
-  integer, private :: itmax_canopy_fluxes = -1  ! max # of iterations used in subroutine CanopyFluxes
+  logical, private :: use_undercanopy_stability = .false.         ! use undercanopy stability term or not
+  integer,dimension(2), private :: itmax_canopy_fluxes = /-1,-1/  ! max # of iterations used in subroutine CanopyFluxes
 
-  integer, parameter :: itmax_stoma_calcs = 50
-  
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !------------------------------------------------------------------------------
@@ -135,7 +133,7 @@ contains
           call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
        end if
 
-       if (itmax_canopy_fluxes < 1) then
+       if (any(itmax_canopy_fluxes < 1)) then
           call endrun(msg=' ERROR: expecting itmax_canopy_fluxes > 0 ' // &
             errMsg(sourcefile, __LINE__))
        end if
@@ -145,8 +143,9 @@ contains
 
     call shr_mpi_bcast (use_undercanopy_stability, mpicom)
     call shr_mpi_bcast (use_biomass_heat_storage, mpicom)
-    call shr_mpi_bcast (itmax_canopy_fluxes, mpicom)
-
+    call shr_mpi_bcast (itmax_canopy_fluxes(1), mpicom)
+    call shr_mpi_bcast (itmax_canopy_fluxes(2), mpicom)
+    
     if (masterproc) then
        write(iulog,*) ' '
        write(iulog,*) nmlname//' settings:'
@@ -448,7 +447,10 @@ contains
 
     logical :: converge_stoma ! logical switch that flags if the tveg loop converged
     logical :: converge_tveg  ! logical swithc that flags if the stomatal loop converged
-
+    real(r8) :: del_gs        ! The maximum difference in stomatal conductance
+                              ! from current iteration to previous, between sunlit and
+                              ! shaded portions of the leaves [m/s]
+    
 
     ! Asynchronous stomatal conductance coupling.
     ! Instead of calling photosynthesis/stomatal resistance
@@ -458,6 +460,11 @@ contains
 
     logical, parameter :: use_vari_coupling = .true.
 
+    ! We set the minum allowable difference in the conductance iteration
+    ! to be equal to the maximum allowable stomatal resistance (this number is from fates)
+    real(r8),parameter :: max_del_gs =  1._r8/2.e8_r8   ! [m/s]
+
+    
     integer :: dummy_to_make_pgi_happy
     !------------------------------------------------------------------------------
 
@@ -1051,7 +1058,7 @@ contains
 
             itlef = 0
             converge_tveg = .false.
-            iterate_tveg: do while(.not.converge_tveg) !  itlef <= itmax_canopy_fluxes)
+            iterate_tveg: do while(.not.converge_tveg)
 
                call frictionvel_inst%FrictionVelocity (begp, endp, 1, filterp(f), &
                     displa(begp:endp), z0mv(begp:endp), z0hv(begp:endp), z0qv(begp:endp), &
@@ -1406,7 +1413,7 @@ contains
                det(p)  = max(del(p),del2(p))
 
                ! Test for convergence
-               if ((det(p) < dtmin .and. dele(p) < dlemin) .or. (itlef > itmax_canopy_fluxes) ) then
+               if ((det(p) < dtmin .and. dele(p) < dlemin) .or. (itlef > itmax_canopy_fluxes(1) ) ) then
                   converge_tveg = .true.
                else
                   converge_tveg = .false.
@@ -1425,12 +1432,15 @@ contains
             !    last solution. If the difference is negligable, and
             !    condition 1 is satisfied, then you have a solution
             ! 3) Exit if too many attempts and accept what you have
-            !    (ie. itstoma>itmax_stoma_calcs)
+            !    (ie. itstoma>itmax_canopy_fluxes(2))
 
-            reldel_rs = 2._r8*max( abs(rssun(p)-rssun_old(p))/(rssun(p)+rssun_old(p)), &
-                                   abs(rssha(p)-rssha_old(p))/(rssha(p)+rssha_old(p)) )
-
-            istoma_converge_if: if( (itstoma>0 .and. (reldel_rs < reldel_rs_min)) .or. itstoma>itmax_stoma_calcs  ) then
+            !reldel_rs = 2._r8*max( abs(rssun(p)-rssun_old(p))/(rssun(p)+rssun_old(p)), &
+            !     abs(rssha(p)-rssha_old(p))/(rssha(p)+rssha_old(p)) )
+            
+            del_gs = max( abs(1._r8/rssun(p)-1._r8/rssun_old(p)), &
+                          abs(1._r8/rssha(p)-1._r8/rssha_old(p)) )
+            
+            istoma_converge_if: if( (itstoma>0 .and. (del_gs < max_del_gs )) .or. itstoma>itmax_canopy_fluxes(2)  ) then
                converge_stoma = .true.
                
             else
