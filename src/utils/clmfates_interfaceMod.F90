@@ -514,7 +514,7 @@ module CLMFatesInterfaceMod
         if (fates_harvest_mode > fates_harvest_no_logging) then
            pass_logging = 1 ! Time driven logging, without landuse harvest
            ! CLM landuse timeseries driven harvest rates
-           if (fates_harvest_mode == fates_harvest_clmlanduse)
+           if (fates_harvest_mode == fates_harvest_clmlanduse) then
               pass_num_lu_harvest_cats = num_harvest_inst
               pass_lu_harvest = 1
 
@@ -979,7 +979,7 @@ module CLMFatesInterfaceMod
       call GetAndSetTime
 
       ! Get harvest rates for CLM landuse timeseries driven rates
-      if (fates_harvest_mode == fates_harvest_clmlanduse)
+      if (fates_harvest_mode == fates_harvest_clmlanduse) then
          call dynHarvest_interp_resolve_harvesttypes(bounds_clump, &
               harvest_rates=harvest_rates(begg:endg,1:num_harvest_inst), &
               after_start_of_harvest_ts=after_start_of_harvest_ts)
@@ -1105,7 +1105,7 @@ module CLMFatesInterfaceMod
          ! for now there is one veg column per gridcell, so store all harvest data in each site
          ! this will eventually change
          ! today's hlm harvest flag needs to be set no matter what
-         if (fates_harvest_mode == fates_harvest_clmlanduse)
+         if (fates_harvest_mode == fates_harvest_clmlanduse) then
             if (after_start_of_harvest_ts) then
                this%fates(nc)%bc_in(s)%hlm_harvest_rates(1:num_harvest_inst) = harvest_rates(g,1:num_harvest_inst)
             else
