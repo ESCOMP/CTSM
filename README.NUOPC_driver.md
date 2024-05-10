@@ -43,9 +43,6 @@ by having an updated copy in your case directory.
 
 ## What if I want to use the MCT driver?
 
-The MCT driver is now deprecated, and will be removed. So at this point we don't
-suggest using it anymore.
-
-For more notes see:
+The MCT driver is now removed. For more notes see:
 
 https://docs.google.com/presentation/d/1yjiKSEV53JDAJbYxhpY2T9GTxlWFzQAn
