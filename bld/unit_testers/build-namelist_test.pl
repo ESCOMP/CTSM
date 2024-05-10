@@ -314,7 +314,7 @@ print "Test configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, te
 print "=================================================================================\n";
 
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
-foreach my $driver ( "mct", "nuopc" ) {
+foreach my $driver ( "nuopc" ) {
    print "   For $driver driver\n\n";
    # configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, test, sim_year, use_case
    foreach my $options ( "-res 0.9x1.25 -configuration nwp",
@@ -335,13 +335,7 @@ foreach my $driver ( "mct", "nuopc" ) {
       my $file = $startfile;
       &make_env_run();
       my $base_options = "-envxml_dir . -driver $driver";
-      if ( $driver eq "mct" ) {
-         $base_options = "$base_options -lnd_frac $DOMFILE";
-         # Skip the MCT test for excess ice streams
-         if ( $options =~ /use_excess_ice_streams=.true./ ) {
-           next;
-         }
-      } else {
+      if ( $driver eq "nuopc" ) {
          $base_options = "$base_options -namelist '&a force_send_to_atm = .false./'";
       }
       eval{ system( "$bldnml $base_options $options > $tempfile 2>&1 " ); };
@@ -545,11 +539,6 @@ my %failtest = (
                                    },
      "exice stream off, but setmap"=>{ options=>"-res 0.9x1.25 -envxml_dir .",
                                      namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.,stream_mapalgo_exice='bilinear'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
-     "exice stream on, but mct"    =>{ options=>"--res 0.9x1.25 --envxml_dir . --driver mct --lnd_frac $DOMFILE ",
-                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
@@ -898,16 +887,6 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "both lnd_frac and on nml"  =>{ options=>"-driver mct -lnd_frac $DOMFILE -envxml_dir .",
-                                     namelst=>"fatmlndfrc='frac.nc'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
-     "lnd_frac set to UNSET"     =>{ options=>"-driver mct -lnd_frac UNSET -envxml_dir .",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm6_0",
-                                   },
      "lnd_frac set but nuopc"    =>{ options=>"-driver nuopc -lnd_frac $DOMFILE -envxml_dir .",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -920,11 +899,6 @@ my %failtest = (
                                    },
      "fatmlndfrc set but nuopc"  =>{ options=>"-driver nuopc -envxml_dir .",
                                      namelst=>"fatmlndfrc='frac.nc'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm6_0",
-                                   },
-     "force_send but not nuopc"  =>{ options=>"-driver mct -lnd_frac $DOMFILE -envxml_dir .",
-                                     namelst=>"force_send_to_atm = .false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
