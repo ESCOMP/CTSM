@@ -31,7 +31,7 @@
   <!-- ctsm_sci test suite failures -->
   <test name="RXCROPMATURITY_Lm61.f09_g17.IHistClm50BgcCrop.derecho_intel.clm-cropMonthOutput">
     <phase name="RUN">
-      <status>PEND</status>
+      <status>FAIL</status>
       <issue>#2460</issue>
     </phase>
   </test>

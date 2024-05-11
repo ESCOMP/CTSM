@@ -14,7 +14,7 @@ import xarray as xr
 
 # -- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR, DatmFiles
-from ctsm.utils import add_tag_to_filename
+from ctsm.utils import add_tag_to_filename, ensure_iterable
 
 logger = logging.getLogger(__name__)
 
@@ -415,7 +415,10 @@ class SinglePointCase(BaseCase):
             # f_mod["PCT_CROP"][:, :] = 0
 
             # -- loop over all dom_pft and pct_pft
-            zip_pfts = zip(self.dom_pft, self.pct_pft, self.cth, self.cbh)
+            iterable_length = len(self.dom_pft)
+            cth_to_zip = ensure_iterable(self.cth, iterable_length)
+            cbh_to_zip = ensure_iterable(self.cbh, iterable_length)
+            zip_pfts = zip(self.dom_pft, self.pct_pft, cth_to_zip, cbh_to_zip)
             for dom_pft, pct_pft, cth, cbh in zip_pfts:
                 if cth is not None:
                     f_mod["MONTHLY_HEIGHT_TOP"][:, :, :, dom_pft] = cth
