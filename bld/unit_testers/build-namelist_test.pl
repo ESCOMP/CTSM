@@ -1480,57 +1480,73 @@ my %finidat_files = (
                                      atm_forc=>"GSWP3v1",
                                      res => "0.9x1.25",
                                      bgc => "bgc",
+                                     crop => "--no-crop",
                                      use_case => "1850_control",
                                      start_ymd => "18500101",
+                                     namelist => "irrigate=T",
                                    },
      "f091850Clm45BgcCRU"        =>{ phys =>"clm4_5",
                                      atm_forc=>"CRUv7",
                                      res => "0.9x1.25",
                                      bgc => "bgc",
+                                     crop => "--no-crop",
                                      use_case => "1850_control",
                                      start_ymd => "18500101",
+                                     namelist => "irrigate=T",
                                    },
      "f091850Clm45BgcCAM6"       =>{ phys =>"clm4_5",
                                      atm_forc=>"cam6.0",
                                      res => "0.9x1.25",
                                      bgc => "bgc",
+                                     crop => "--crop",
                                      use_case => "1850_control",
                                      start_ymd => "18500101",
+                                     namelist => "irrigate=F",
                                    },
      "f091850Clm50BgcGSW"        =>{ phys =>"clm5_0",
                                      atm_forc=>"GSWP3v1",
                                      res => "0.9x1.25",
                                      bgc => "bgc",
+                                     crop => "--crop",
                                      use_case => "1850_control",
                                      start_ymd => "18500101",
+                                     namelist => "irrigate=F",
                                    },
      "f091850Clm50SpGSW"         =>{ phys =>"clm5_0",
                                      atm_forc=>"GSWP3v1",
                                      res => "0.9x1.25",
                                      bgc => "sp",
+                                     crop => "--no-crop",
                                      use_case => "1850_control",
                                      start_ymd => "18500101",
+                                     namelist => "irrigate=T",
                                    },
      "f091850Clm50BgcCRU"        =>{ phys =>"clm5_0",
                                      atm_forc=>"CRUv7",
                                      res => "0.9x1.25",
                                      bgc => "bgc",
+                                     crop => "--crop",
                                      use_case => "1850_control",
                                      start_ymd => "18500101",
+                                     namelist => "irrigate=F",
                                    },
      "f091850Clm50SpCRU"         =>{ phys =>"clm5_0",
                                      atm_forc=>"CRUv7",
                                      res => "0.9x1.25",
                                      bgc => "sp",
+                                     crop => "--no-crop",
                                      use_case => "1850_control",
                                      start_ymd => "18500101",
+                                     namelist => "irrigate=T",
                                    },
      "f091850Clm50BgcCAM6"       =>{ phys =>"clm5_0",
                                      atm_forc=>"cam6.0",
                                      res => "0.9x1.25",
                                      bgc => "bgc",
+                                     crop => "--crop",
                                      use_case => "1850_control",
                                      start_ymd => "18500101",
+                                     namelist => "irrigate=F",
                                    },
    );
 
@@ -1542,9 +1558,12 @@ foreach my $key ( keys(%finidat_files) ) {
    my $usecase = $finidat_files{$key}{'use_case'};
    my $bgc = $finidat_files{$key}{'bgc'};
    my $res = $finidat_files{$key}{'res'};
+   my $crop = $finidat_files{$key}{'crop'};
+   my $namelist = $finidat_files{$key}{'namelist'};
    my $start_ymd = $finidat_files{$key}{'start_ymd'};
    my $lnd_tuning_mode = "${phys}_" . $finidat_files{$key}{'atm_forc'};
-   $options = "-bgc $bgc -res $res -use_case $usecase -envxml_dir . --lnd_tuning_mode $lnd_tuning_mode -namelist '&a start_ymd=$start_ymd/'";
+   $options = "-bgc $bgc -res $res -use_case $usecase -envxml_dir . $crop --lnd_tuning_mode $lnd_tuning_mode " . 
+              "-namelist '&a start_ymd=$start_ymd, $namelist/'";
    &make_env_run();
    eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
@@ -1552,7 +1571,7 @@ foreach my $key ( keys(%finidat_files) ) {
    if ( $finidat =~ /initdata_map/ ) {
       my $result;
       eval( $result = `grep use_init_interp lnd_in` );
-      isnt( $#, 0, "use_init_interp needs to be set here and was not: $result")
+      is ( $result =~ /.true./, 1, "use_init_interp needs to be true here: $result");
    }
    $cfiles->checkfilesexist( "$options", $mode );
    $cfiles->shownmldiff( "default", "standard" );
