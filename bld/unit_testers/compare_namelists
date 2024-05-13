@@ -18,10 +18,10 @@ usage() {
   echo "     Run in verbose mode"
   echo "[-pa|--physicsA <physics-version>]  "
   echo "     Namelists of first physics version for comparison"
-  echo "     (in current directory)"
+  echo "     (in baseline directory)"
   echo "[-pb|--physicsB <physics-version>]  "
   echo "     Namelists of second physics version to compare to the first one"
-  echo "     (in baseline directory)"
+  echo "     (in current directory)"
   echo "[-b|--baseline <baseline>]  "
   echo "     Baseline directory to compare to (default current directory)"
   echo "  "
@@ -90,8 +90,8 @@ if [ "${filenames[*]}" = "$filepat" ]; then
 fi
 for file in ${filenames[*]}
 do
-   fileA="./$file"
-   fileB="$baseline/$file"
+   fileA="$baseline/$file"
+   fileB="./$file"
    # If physicsA option used and the file matches the physics input
    if [[ "$fileA" =~ "-phys+$PHYSA" ]] || [ "$PHYSA" = "all" ]; then
       # Replace physicsB for fileB
