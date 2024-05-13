@@ -302,7 +302,7 @@ module clm_varctl
                                                                         ! > 1 for external data (lightning and/or anthropogenic ignitions)
                                                                         ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
   logical, public            :: use_fates_tree_damage = .false.         ! true => turn on tree damage module
-  integer, public            :: fates_harvest_mode = 0                  ! 0 for no harvest/logging; 1-4 for harvest mode options
+  character(len=256), public :: fates_harvest_mode = ''                 ! five different harvest modes; see namelist definition
   logical, public            :: use_fates_planthydro = .false.          ! true => turn on fates hydro
   logical, public            :: use_fates_cohort_age_tracking = .false. ! true => turn on cohort age tracking
   logical, public            :: use_fates_ed_st3   = .false.            ! true => static stand structure
