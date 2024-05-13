@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.2.005
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Mon 13 May 2024 02:44:33 AM MDT
+Date: Mon 13 May 2024 04:46:10 PM MDT
 One-line Summary: Fix clm6_0 defaults and CESM testing issues, add tests to detect these problems
 
 Purpose and description of changes
@@ -76,11 +76,11 @@ Testing summary: regular ctsm_sci
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho - PASS (except
+    derecho - PASS (737 compare different to baseline)
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    derecho - PASS (except
+    derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
