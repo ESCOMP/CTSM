@@ -8,9 +8,9 @@
 
 <sim_year_range>constant</sim_year_range>
 
-<irrigate use_crop=".true." =".false."    >.true.</irrigate>
-<irrigate use_crop=".true." =".false."    >.true.</irrigate>
-<irrigate use_crop=".true." phys="clm4_5" >.false.</irrigate>
+<irrigate use_crop=".true." use_cndv=".false."               >.true.</irrigate>
+<irrigate use_crop=".true." use_cndv=".true."                >.false.</irrigate>
+<irrigate use_crop=".true." use_cndv=".false." phys="clm4_5" >.false.</irrigate>
 
 <stream_year_first_ndep bgc="cn" use_cn=".true." >2010</stream_year_first_ndep>
 <stream_year_last_ndep  bgc="cn" use_cn=".true." >2010</stream_year_last_ndep>

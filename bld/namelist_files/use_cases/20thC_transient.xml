@@ -20,7 +20,7 @@
 
 <irrigate use_crop=".true."               use_cndv=".false.">.true.</irrigate>
 <irrigate use_crop=".true."               use_cndv=".true." >.false.</irrigate>
-<irrigate use_crop=".true." phys="clm4_5"                   >.false.</irrigate>
+<irrigate use_crop=".true." phys="clm4_5" use_cndv=".false.">.false.</irrigate>
 
 <stream_year_first_ndep use_cn=".true."   >1850</stream_year_first_ndep>
 <stream_year_last_ndep  use_cn=".true."   >2015</stream_year_last_ndep>
