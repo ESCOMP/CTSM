@@ -9,7 +9,7 @@ usage() {
   echo ""
   echo "***********************************************************************"
   echo "usage:"
-  echo "./cmp_baseline_lnd_in_files.sh <baseline> <comparison-baseline>"
+  echo "./cmp_baseline_lnd_in_files <baseline> <comparison-baseline>"
   echo "  "
   echo "Compares lnd_in files between two baselines on Derecho"
   echo "***********************************************************************"
