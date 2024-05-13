@@ -758,34 +758,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false.
 </init_interp_attributes>
 
-<!-- 1850 for CTSM5.1 -->
-<!-- These two needs to specify use_cn=F/T since there is a version for both, other files just use the BGC version -->
-<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_1_GSWP3v1" use_cn=".false."
->hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+<!-- 1850 for CLM5.1/CLM6.0 -->
+<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." phys="clm5_1"
+>hgrid=ne30np4.pg3 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. lnd_tuning_mode=clm6_0_GSWP3v1
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_1_GSWP3v1" use_cn=".true."
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false.
-</init_interp_attributes>
-
-<!-- 1850 spinup for CESM3 development for CLM5.1-->
-<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_1_cam6.0"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false.
-</init_interp_attributes>
-
-<!-- 1850 for CTSM6.0 -->
-<!-- These two needs to specify use_cn=F/T since there is a version for both, other files just use the BGC version -->
-<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_GSWP3v1" use_cn=".false."
->hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
-</init_interp_attributes>
-
-<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_GSWP3v1" use_cn=".true."
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false.
-</init_interp_attributes>
-
-<!-- 1850 spinup for CESM3 development for CLM6.0-->
-<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam6.0"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false.
+<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." phys="clm6_0"
+>hgrid=ne30np4.pg3 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. lnd_tuning_mode=clm6_0_GSWP3v1
 </init_interp_attributes>
 
 <!-- present day -->
@@ -1049,26 +1028,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.B1850Clm50BgcCrop.0161-01-01.0.9x1.25_gx1v7_simyr1850_c200729.nc
 </finidat>
 
-<!-- CTSM6_0 -->
-<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="18500101"  sim_year="1850" do_transient_pfts=".false."
-         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
-         lnd_tuning_mode="clm6_0_GSWP3v1" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.I1850Clm50Sp.0181-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
-</finidat>
-<finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false."
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
-         lnd_tuning_mode="clm6_0_GSWP3v1"
->lnd/clm2/initdata_esmf/ctsm5.2/clmi.I1850Clm50BgcCrop-ciso.1366-01-01.0.9x1.25_gx1v7_simyr1850_c240223.nc
-</finidat>
-<!-- From the clm5_0_cam6.0 setting above...-->
-<!-- Use f09 clm5_0 cam6 spinup file for clm6_0 cam6-->
-<finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false."
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
-         lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.B1850Clm50BgcCrop.0161-01-01.0.9x1.25_gx1v7_simyr1850_c200729.nc
+<!-- CTSM6_0 - use clm6_0_GSWP3v1 BgcCrop at ne30pg3_mg17 for all clm5_1/clm6_0 options -->
+<!-- use_init_interp true because even though this is a ctsm5.2 dataset it was with early fsurfdat files -->
+<finidat hgrid="ne30np4.pg3" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="18500101" do_transient_pfts=".false."
+         use_crop=".true." irrigate=".false." lnd_tuning_mode="clm6_0_GSWP3v1" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.2/clmi.I1850Clm60BgcCrop-ciso.1361-01-01.ne30pg3_mg17_c240317.nc
 </finidat>
 
 <!--
