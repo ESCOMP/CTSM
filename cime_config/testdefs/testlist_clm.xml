@@ -576,7 +576,7 @@
       <option name="comment"  >cism is not answer preserving across processor changes, but short test length should be ok.</option>
     </options>
   </test>
-  <test name="SMS" grid="f09_mg17" compset="I1850Clm50BgcCropG" testmods="clm/default">
+  <test name="SMS" grid="f09_g17" compset="I1850Clm50BgcCropG" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
