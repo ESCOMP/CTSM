@@ -511,6 +511,9 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('use_cohort_age_tracking',ival=pass_cohort_age_tracking)
 
         ! FATES logging and harvest modes
+        pass_logging = 0
+        pass_lu_harvest = 0
+        pass_num_lu_harvest_cats = 0
         if (fates_harvest_mode > fates_harvest_no_logging) then
            pass_logging = 1 ! Time driven logging, without landuse harvest
            ! CLM landuse timeseries driven harvest rates
@@ -522,9 +525,6 @@ module CLMFatesInterfaceMod
            else if (fates_harvest_mode >= fates_harvest_luh_area) then
               pass_lu_harvest = 1
               pass_num_lu_harvest_cats = num_landuse_harvest_vars
-           else
-              pass_lu_harvest = 0
-              pass_num_lu_harvest_cats = 0
            end if
         end if
 
