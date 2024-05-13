@@ -1,4 +1,121 @@
 ===============================================================
+Tag name: ctsm5.2.005
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon 13 May 2024 04:46:10 PM MDT
+One-line Summary: Fix clm6_0 defaults and CESM testing issues, add tests to detect these problems
+
+Purpose and description of changes
+----------------------------------
+
+Fix the clm6_0 defaults that were incorrect in ctsm5.2.0. The use-cases needed to be changed to handle clm6_0.
+And clm6_0 wasn't handled in the merge of ctsm5.1.dev174 for the two new settings. Simplified the use-cases which
+should help prevent these problems in the future. use_init_interp will be set for ctsm5.1 finidat files.
+
+Fix some testing. mksurfdata_esmf and the MKSUIRFDATA test didn't work in a CESM checkout. build-namelist unit tests
+weren't going over the use-cases. Also started adding some tests to go over finidat files, but didn't yet capture all of them.
+Add some scripts to compare namelists in order to detect namelist issues for physics
+version updates, and more easily see namelist changes in one place (bld/unit_testers/cmp_baseline_lnd_in_files,
+bld/unit_testers/compare_namelists).
+
+Add some tests to detect issues in CESM and CAM testing (add more tests for cam6.0 forcing, add new IHistClm60BgcCropG
+compset). Add a NoAnthro compset to the ctsm_sci testing. Add I1850Clm60Sp test for f09 and f19 to ctsm_sci.
+
+Change NoAnthro compsets to use RTM rather than MOSART. Add science support to some clm6_0 compsets, as was obvious.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes #2492 -- Fix clm6_0 defaults
+   Fixes #2504 -- build-namelist unit tests for use-cases
+   Fixes #2519 -- MKSURFDATAESMF for CESM checkout
+   Fixes #2520 -- B1850 compsets are failing
+   One tick box in #2403 (new initial conditions)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values):
+  Fixes: snow_thermal_cond_method, irrigate and snicar_snobc_intmix for clm6_0
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+  New initial conditions for clm5_1/clm6_0 for 1850 from ne30pg3_g17 GSWP3v1 forcing for BgcCrop with ciso
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   build-namelist unit tester started to add some finidat tests, but only some of them were added to the list
+
+Changes to tests or testing: Add some tests to detect the CESM test issues
+
+
+Testing summary: regular ctsm_sci
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS (737 compare different to baseline)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm6_0 (some clm4_5 see below)
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      new climate so agrees with clm5_1 namelists, and fixes irrigate for clm4_5
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #2501 -- Fix clm6_0 defaults
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.004
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Thu 09 May 2024 03:10:52 PM MDT

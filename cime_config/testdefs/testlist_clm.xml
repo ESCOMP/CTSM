@@ -21,16 +21,24 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld3_PS" grid="f09_g17" compset="I1850Clm50BgcNoAnthro" testmods="clm/decStart1851_noinitial">
+  <test name="SMS_D_Ld3_PS" grid="f09_g17" compset="I1850Clm60SpNoAnthro" testmods="clm/decStart1851_noinitial">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="cheyenne" compiler="intel" category="prebeta"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >No anthropogenic compset</option>
+    </options>
+  </test>
+  <test name="SMS_Ld3_PS" grid="f09_g17" compset="I1850Clm60BgcNoAnthro" testmods="clm/decStart1851_noinitial">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >No anthropogenic compset for Bgc and ctsm_sci test list</option>
     </options>
   </test>
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
@@ -73,7 +81,7 @@
       <option name="comment">Simple test use soil eroditability in CTSM for CAM5 tuning</option>
     </options>
   </test>
-  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningModeZDustSoilErod">
+  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningModeZDustSoilErod">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -102,7 +110,7 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="IHistClm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
+  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="IHistClm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -111,7 +119,7 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution for transient</option>
     </options>
   </test>
-  <test name="PEM_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
+  <test name="PEM_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -120,7 +128,7 @@
       <option name="comment">CESM3 development test with change in the processor count at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="ERS_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
+  <test name="ERS_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -129,7 +137,7 @@
       <option name="comment">CESM3 development simple exact restart test at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="ERI_D" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
+  <test name="ERI_D" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -138,9 +146,10 @@
       <option name="comment">CESM3 development Exact restart test for all startup types at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="SMS_Lm1" grid="ne30pg3_t232" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Lm1" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -312,14 +321,14 @@
       <option name="comment"  >Science support for I1850Clm50SpCru at f19</option>
     </options>
   </test>
-  <!-- science support for workhorse resolutions with CLM5_1 physics -->
+  <!-- science support for workhorse resolutions with CLM6_0 physics -->
   <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm60Sp" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Science support for 1850 with clm5_1 for SP mode at f09</option>
+      <option name="comment"  >Science support for 1850 with clm6_0 for SP mode at f09</option>
     </options>
   </test>
   <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm60Sp" testmods="clm/default">
@@ -328,7 +337,25 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Science support for 1850 with clm5_1 for SP mode at f19</option>
+      <option name="comment"  >Science support for 1850 with clm6_0 for SP mode at f19</option>
+    </options>
+  </test>
+  <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Science support for 1850 with clm6_0 for SP mode at f09 with CAM6</option>
+    </options>
+  </test>
+  <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Science support for 1850 with clm6_0 for SP mode at f19 with CAM6</option>
     </options>
   </test>
   <test name="ERP_D_Ld3_PS" grid="f09_g17" compset="I2000Clm50Sp" testmods="clm/prescribed">
@@ -549,6 +576,15 @@
       <option name="comment"  >cism is not answer preserving across processor changes, but short test length should be ok.</option>
     </options>
   </test>
+  <test name="SMS" grid="f09_g17" compset="I1850Clm50BgcCropG" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Science support for 1850 clm5_0 physics for BgcCrop wtih CISM at f09</option>
+    </options>
+  </test>
   <!-- clm5_0 physics workhorse resolution BGC science test list -->
   <test name="SMS_Ld5" grid="f19_g17" compset="I1850Clm50Bgc" testmods="clm/default">
     <machines>
@@ -568,14 +604,14 @@
       <option name="comment"  >Science support for 1850 clm5_0 physics for Bgc at f09</option>
     </options>
   </test>
-  <!-- clm5_1 physics workhorse resolution BGC science test list -->
+  <!-- clm6_0 physics workhorse resolution BGC science test list -->
   <test name="SMS_Ld5" grid="f19_g17" compset="I1850Clm60Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Science support for 1850 Clm5_1 physics for Bgc at f19</option>
+      <option name="comment"  >Science support for 1850 Clm6_0 physics for Bgc at f19</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f09_g17" compset="I1850Clm60Bgc" testmods="clm/default">
@@ -584,7 +620,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Science support for 1850 Clm5_1 physics for Bgc at f09</option>
+      <option name="comment"  >Science support for 1850 Clm6_0 physics for Bgc at f09</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="ne30_g17" compset="I1850Clm50BgcCrop" testmods="clm/default">
@@ -685,7 +721,7 @@
       <option name="comment">Workhorse SE grid for running with CAM and with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="ne120pg3_t13" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="ne120pg3_t13" compset="I2000Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -731,14 +767,14 @@
       <option name="comment"  >Science support for Historical clm5_0 physics with BGC-Crop at f19</option>
     </options>
   </test>
-  <!-- Historical clm5_1 physics BgcCrop science support -->
+  <!-- Historical clm6_0 physics BgcCrop science support -->
   <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm60BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Science support for Historical clm5_1 physics with BGC-Crop at f09</option>
+      <option name="comment"  >Science support for Historical clm6_0 physics with BGC-Crop at f09</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm60BgcCrop" testmods="clm/default">
@@ -747,7 +783,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Science support for Historical clm5_1 physics with BGC-Crop at f19</option>
+      <option name="comment"  >Science support for Historical clm6_0 physics with BGC-Crop at f19</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/allActive">
@@ -2089,14 +2125,14 @@
       <option name="comment"  >Science support for historical clm5_0 physics with SP mode at f19</option>
     </options>
   </test>
-  <!-- Historical science support for clm5_1 workhorse resolutions -->
+  <!-- Historical science support for clm6_0 workhorse resolutions -->
   <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm60Sp" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Science support for historical clm5_1 physics with SP mode at f09</option>
+      <option name="comment"  >Science support for historical clm6_0 physics with SP mode at f09</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm60Sp" testmods="clm/default">
@@ -2105,7 +2141,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Science support for historical clm5_1 physics with SP mode at f19</option>
+      <option name="comment"  >Science support for historical clm6_0 physics with SP mode at f19</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne30pg2_ne30pg2_mg17" compset="I1850Clm50Sp" testmods="clm/clm50cam6LndTuningMode">
@@ -2778,7 +2814,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Fates with clm5_1</option>
+      <option name="comment"  >Fates with clm6_0</option>
     </options>
   </test>
   <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60FatesRs" testmods="clm/FatesCold">
@@ -2788,7 +2824,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Run a Fates test with latest Clm5_1</option>
+      <option name="comment"  >Run a Fates test with latest Clm6_0</option>
     </options>
   </test>
   <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm45Fates" testmods="clm/FatesCold">
