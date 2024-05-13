@@ -186,6 +186,7 @@ module CLMFatesInterfaceMod
    use dynFATESLandUseChangeMod, only : fates_harvest_no_logging
    use dynFATESLandUseChangeMod, only : fates_harvest_clmlanduse
    use dynFATESLandUseChangeMod, only : fates_harvest_luh_area
+   use dynFATESLandUseChangeMod, only : fates_harvest_luh_mass
    use dynFATESLandUseChangeMod, only : landuse_harvest
    use dynFATESLandUseChangeMod, only : landuse_harvest_units
    use dynFATESLandUseChangeMod, only : landuse_harvest_varnames
@@ -514,19 +515,24 @@ module CLMFatesInterfaceMod
         pass_logging = 0
         pass_lu_harvest = 0
         pass_num_lu_harvest_cats = 0
-        if (fates_harvest_mode > fates_harvest_no_logging) then
+        if (trim(fates_harvest_mode) /= fates_harvest_no_logging) then
            pass_logging = 1 ! Time driven logging, without landuse harvest
            ! CLM landuse timeseries driven harvest rates
-           if (fates_harvest_mode == fates_harvest_clmlanduse) then
+           if (trim(fates_harvest_mode) == fates_harvest_clmlanduse) then
               pass_num_lu_harvest_cats = num_harvest_inst
               pass_lu_harvest = 1
 
            ! LUH2 landuse timeseries driven  harvest rates
-           else if (fates_harvest_mode >= fates_harvest_luh_area) then
+           else if (trim(fates_harvest_mode)== fates_harvest_luh_area .or. &
+                    trim(fates_harvest_mode)== fates_harvest_luh_mass) then
               pass_lu_harvest = 1
               pass_num_lu_harvest_cats = num_landuse_harvest_vars
            end if
         end if
+
+        call set_fates_ctrlparms('use_lu_harvest',ival=pass_lu_harvest)
+        call set_fates_ctrlparms('num_lu_harvest_cats',ival=pass_num_lu_harvest_cats)
+        call set_fates_ctrlparms('use_logging',ival=pass_logging)
 
         ! FATES landuse modes
         if(use_fates_luh) then
@@ -549,11 +555,6 @@ module CLMFatesInterfaceMod
            pass_use_potentialveg = 0
         end if
         call set_fates_ctrlparms('use_fates_potentialveg',ival=pass_use_potentialveg)
-
-        ! Wait to set the harvest and logging variables after checking fates_harvest_modes
-        call set_fates_ctrlparms('use_lu_harvest',ival=pass_lu_harvest)
-        call set_fates_ctrlparms('num_lu_harvest_cats',ival=pass_num_lu_harvest_cats)
-        call set_fates_ctrlparms('use_logging',ival=pass_logging)
 
         if(use_fates_inventory_init) then
            pass_inventory_init = 1
@@ -979,7 +980,7 @@ module CLMFatesInterfaceMod
       call GetAndSetTime
 
       ! Get harvest rates for CLM landuse timeseries driven rates
-      if (fates_harvest_mode == fates_harvest_clmlanduse) then
+      if (trim(fates_harvest_mode) == fates_harvest_clmlanduse) then
          call dynHarvest_interp_resolve_harvesttypes(bounds_clump, &
               harvest_rates=harvest_rates(begg:endg,1:num_harvest_inst), &
               after_start_of_harvest_ts=after_start_of_harvest_ts)
@@ -1105,7 +1106,7 @@ module CLMFatesInterfaceMod
          ! for now there is one veg column per gridcell, so store all harvest data in each site
          ! this will eventually change
          ! today's hlm harvest flag needs to be set no matter what
-         if (fates_harvest_mode == fates_harvest_clmlanduse) then
+         if (trim(fates_harvest_mode) == fates_harvest_clmlanduse) then
             if (after_start_of_harvest_ts) then
                this%fates(nc)%bc_in(s)%hlm_harvest_rates(1:num_harvest_inst) = harvest_rates(g,1:num_harvest_inst)
             else
@@ -1124,7 +1125,8 @@ module CLMFatesInterfaceMod
                call endrun(msg=errMsg(sourcefile, __LINE__))
            end if
 
-         else if (fates_harvest_mode >= fates_harvest_luh_area) then
+         else if (trim(fates_harvest_mode) == fates_harvest_luh_area .or. &
+                  trim(fates_harvest_mode) == fates_harvest_luh_mass) then
               this%fates(nc)%bc_in(s)%hlm_harvest_rates = landuse_harvest(:,g)
               this%fates(nc)%bc_in(s)%hlm_harvest_catnames = landuse_harvest_varnames
               this%fates(nc)%bc_in(s)%hlm_harvest_units = landuse_harvest_units
@@ -2082,7 +2084,8 @@ module CLMFatesInterfaceMod
                     this%fates(nc)%bc_in(s)%hlm_luh_transitions = landuse_transitions(:,g)
                     this%fates(nc)%bc_in(s)%hlm_luh_transition_names = landuse_transition_varnames
 
-                    if (fates_harvest_mode >= fates_harvest_luh_area ) then
+                    if (trim(fates_harvest_mode) == fates_harvest_luh_area .or. &
+                        trim(fates_harvest_mode) == fates_harvest_luh_mass) then
                        this%fates(nc)%bc_in(s)%hlm_harvest_rates = landuse_harvest(:,g)
                        this%fates(nc)%bc_in(s)%hlm_harvest_catnames = landuse_harvest_varnames
                        this%fates(nc)%bc_in(s)%hlm_harvest_units = landuse_harvest_units

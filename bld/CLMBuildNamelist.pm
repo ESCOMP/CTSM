@@ -4478,7 +4478,7 @@ sub setup_logic_fates {
             if ( ! &value_is_true($nl->get_value('use_fates_luh')) ) {
               $log->fatal_error("use_fates_luh must be true when $var is true" );
             }
-            if ( $nl->get_value('fates_harvest_mode') > 0) {
+            if ( $nl->get_value('fates_harvest_mode') ne 'no_harvest') {
               $log->fatal_error("fates_harvest_mode must be off (i.e. set to zero) when $var is true" );
             }
           }
@@ -4487,7 +4487,7 @@ sub setup_logic_fates {
         my $var = "fates_harvest_mode";
         if ( defined($nl->get_value($var))  ) {
            # using fates_harvest mode with raw luh2 harvest data
-           if ( $nl->get_value($var) > 2) {
+           if ( $nl->get_value($var) eq 'luhdata_area' || $nl->get_value($var) eq 'luhdata_mass' ) {
               # Make sure that use_fates_luh is true when using raw fates luh2 harvest data
               if ( ! &value_is_true($nl->get_value('use_fates_luh')) ) {
                 $log->fatal_error("use_fates_luh is required to be true when $var is greater than 2" );

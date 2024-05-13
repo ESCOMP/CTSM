@@ -735,14 +735,14 @@ Toggle to turn on FATES satellite phenology mode (only relevant if FATES is bein
 </entry>
 
 <entry id="fates_harvest_mode" type="integer" category="physics"
-        group="clm_inparm" valid_values="0,1,2,3,4", value="0" >
-Set FATES harvesting mode by setting fates_harvest_mode > 0.
+        group="clm_inparm" valid_values="no_harvest_event_code,surfdata_file,luhdata_area,luhdata_mass">
+Set FATES harvesting mode by setting fates_harvest_mode to a valid string option.
 Allowed values are:
- 0 : no fates harvesting of any kind
- 1 : fates logging via fates logging event codes (see fates parameter file) only
- 2 : fates harvest driven by CLM landuse timeseries data (dynHarvestMod)
- 3 : fates harvest driven by LUH2 raw harvest data, area-based (dynFATESLandUseChangeMod)
- 4 : fates harvest driven by LUH2 raw harvest data, mass-based (dynFATESLandUseChangeMod)
+ no_harvest: no fates harvesting of any kind
+ event_code: fates logging via fates logging event codes (see fates parameter file) only
+ surfdata_file: fates harvest driven by CLM landuse timeseries data (dynHarvestMod)
+ luhdata_area: fates harvest driven by LUH2 raw harvest data, area-based (dynFATESLandUseChangeMod)
+ luhdata_mass: fates harvest driven by LUH2 raw harvest data, mass-based (dynFATESLandUseChangeMod)
 </entry>
 
 <entry id="use_fates_planthydro" type="logical" category="physics"
@@ -786,8 +786,7 @@ Full pathname to the inventory initialization control file.
 <entry id="use_fates_luh" type="logical" category="physics"
        group="clm_inparm" valid_values="" >
 If TRUE, enable use of land use harmonization (LUH) state and transition data from luh_timeseries file.
-This is enabled by default if fates_harvest_mode is set to use the raw LUH2 harvest
-data (fates_harvest_mode >= 3)
+This is enabled by default if fates_harvest_mode is set to use the raw LUH2 harvest data
 (Also, only valid for use_fates = true and is incompatible with transient runs currently.)
 </entry>
 
