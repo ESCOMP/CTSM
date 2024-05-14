@@ -696,6 +696,10 @@ contains
        write(iulog,*) 'The matching input grid cell had some non-zero-weight subgrid type'
        write(iulog,*) 'that is not present in memory in the new run.'
        write(iulog,*) ' '
+       write(iulog,*) 'If you are using a ctsm5.2 or later fsurdat file containing'
+       write(iulog,*) 'PCT_OCEAN > 0, then you may solve the error by setting'
+       write(iulog,*) 'convert_ocean_to_land = .true.'
+       write(iulog,*) ' '
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
