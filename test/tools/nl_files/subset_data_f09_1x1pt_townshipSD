@@ -1,0 +1,1 @@
+point --lon 257.5 --lat 43.822 --site f09_1x1pt_townshipSD  --include-nonveg --crop --create-datm --create-user-mods --datm-syr 2000 --datm-eyr 2000 --create-surface --outdir EXEDIR/f09_US_pt_user-mod_and_data --user-mods-dir EXEDIR/f09_US_pt_user-mod_and_data --verbose --inputdata-dir CSMDATA

@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 2555;
+my $ntests = 3357;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1589;
+   $ntests += 2045;
 }
 plan( tests=>$ntests );
 
@@ -1098,6 +1098,16 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
+     "usespitfireusefatessp"    =>{ options=>"-envxml_dir . --bgc fates",
+                                     namelst=>"fates_spitfire_mode=1,use_fates_sp=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "usefatesspusefateshydro"   =>{ options=>"-envxml_dir . --bgc fates",
+                                     namelst=>"use_fates_sp=.true.,use_fates_planthydro=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
      "useloggingButNOTFATES"     =>{ options=>"-envxml_dir . -no-megan",
                                      namelst=>"use_fates_logging=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1486,30 +1496,166 @@ foreach my $res ( @resolutions ) {
 }
 
 print "\n==================================================\n";
-print " Rest all use-cases \n";
+print " Test all use-cases over all physics options\n";
 print "==================================================\n";
 
-# Run over all use-cases...
+# Run over all use-cases for f09 and all physics...
 my $list = `$bldnml -use_case list 2>&1 | grep "use case"`;
 my @usecases;
 if ( $list =~ /build-namelist : use cases : (.+)$/ ) {
-  my @usecases  = split( / /, $list );
+  @usecases  = split( / /, $1 );
 } else {
   die "ERROR:: Trouble getting list of use-cases\n";
 }
-foreach my $usecase ( @usecases ) {
-   $options = "-use_case $usecase  -envxml_dir .";
+if ( $#usecases != 15 ) {
+  print "use-cases = @usecases\n";
+  die "ERROR:: Number of use-cases isn't what's expected\n";
+}
+my @expect_fails = ( "1850-2100_SSP5-3.4_transient", "1850-2100_SSP4-3.4_transient", "2018-PD_transient", "1850-2100_SSP1-1.9_transient",
+                      "1850-2100_SSP4-6.0_transient", "2018_control" );
+foreach my $phys ( "clm4_5", "clm5_0", "clm5_1", "clm6_0" ) {
+   print "physics = $phys\n";
+   &make_config_cache($phys);
+   foreach my $usecase ( @usecases ) {
+      print "usecase = $usecase\n";
+      $options = "-res 0.9x1.25 -use_case $usecase  -envxml_dir .";
+      &make_env_run();
+      my $expect_fail = undef;
+      foreach my $failusecase ( @expect_fails ) {
+         if ( $failusecase eq $usecase ) {
+            $expect_fail = 1;
+            last;
+         }
+      }
+      eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
+      if ( ! defined($expect_fail) ) {
+         is( $@, '', "options: $options" );
+         $cfiles->checkfilesexist( "$options", $mode );
+         $cfiles->shownmldiff( "default", "standard" );
+         if ( defined($opts{'compare'}) ) {
+            $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+            $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+         }
+         if ( defined($opts{'generate'}) ) {
+            $cfiles->copyfiles( "$options", $mode );
+         }
+      } else {
+         isnt( $@, 0, "options: $options" );
+      }
+      &cleanup();
+   }
+}
+
+print "\n=======================================================================================\n";
+print " Test the seperate initial condition files, for ones not tested elsewhere\n";
+print "=========================================================================================\n";
+
+my %finidat_files = (
+     "f091850Clm45BgcGSW"        =>{ phys =>"clm4_5",
+                                     atm_forc=>"GSWP3v1",
+                                     res => "0.9x1.25",
+                                     bgc => "bgc",
+                                     crop => "--no-crop",
+                                     use_case => "1850_control",
+                                     start_ymd => "18500101",
+                                     namelist => "irrigate=T",
+                                   },
+     "f091850Clm45BgcCRU"        =>{ phys =>"clm4_5",
+                                     atm_forc=>"CRUv7",
+                                     res => "0.9x1.25",
+                                     bgc => "bgc",
+                                     crop => "--no-crop",
+                                     use_case => "1850_control",
+                                     start_ymd => "18500101",
+                                     namelist => "irrigate=T",
+                                   },
+     "f091850Clm45BgcCAM6"       =>{ phys =>"clm4_5",
+                                     atm_forc=>"cam6.0",
+                                     res => "0.9x1.25",
+                                     bgc => "bgc",
+                                     crop => "--crop",
+                                     use_case => "1850_control",
+                                     start_ymd => "18500101",
+                                     namelist => "irrigate=F",
+                                   },
+     "f091850Clm50BgcGSW"        =>{ phys =>"clm5_0",
+                                     atm_forc=>"GSWP3v1",
+                                     res => "0.9x1.25",
+                                     bgc => "bgc",
+                                     crop => "--crop",
+                                     use_case => "1850_control",
+                                     start_ymd => "18500101",
+                                     namelist => "irrigate=F",
+                                   },
+     "f091850Clm50SpGSW"         =>{ phys =>"clm5_0",
+                                     atm_forc=>"GSWP3v1",
+                                     res => "0.9x1.25",
+                                     bgc => "sp",
+                                     crop => "--no-crop",
+                                     use_case => "1850_control",
+                                     start_ymd => "18500101",
+                                     namelist => "irrigate=T",
+                                   },
+     "f091850Clm50BgcCRU"        =>{ phys =>"clm5_0",
+                                     atm_forc=>"CRUv7",
+                                     res => "0.9x1.25",
+                                     bgc => "bgc",
+                                     crop => "--crop",
+                                     use_case => "1850_control",
+                                     start_ymd => "18500101",
+                                     namelist => "irrigate=F",
+                                   },
+     "f091850Clm50SpCRU"         =>{ phys =>"clm5_0",
+                                     atm_forc=>"CRUv7",
+                                     res => "0.9x1.25",
+                                     bgc => "sp",
+                                     crop => "--no-crop",
+                                     use_case => "1850_control",
+                                     start_ymd => "18500101",
+                                     namelist => "irrigate=T",
+                                   },
+     "f091850Clm50BgcCAM6"       =>{ phys =>"clm5_0",
+                                     atm_forc=>"cam6.0",
+                                     res => "0.9x1.25",
+                                     bgc => "bgc",
+                                     crop => "--crop",
+                                     use_case => "1850_control",
+                                     start_ymd => "18500101",
+                                     namelist => "irrigate=F",
+                                   },
+   );
+
+foreach my $key ( keys(%finidat_files) ) {
+   print( "$key\n" );
+   my $phys = $finidat_files{$key}{'phys'};
+   print "physics = $phys\n";
+   &make_config_cache($phys);
+   my $usecase = $finidat_files{$key}{'use_case'};
+   my $bgc = $finidat_files{$key}{'bgc'};
+   my $res = $finidat_files{$key}{'res'};
+   my $crop = $finidat_files{$key}{'crop'};
+   my $namelist = $finidat_files{$key}{'namelist'};
+   my $start_ymd = $finidat_files{$key}{'start_ymd'};
+   my $lnd_tuning_mode = "${phys}_" . $finidat_files{$key}{'atm_forc'};
+   $options = "-bgc $bgc -res $res -use_case $usecase -envxml_dir . $crop --lnd_tuning_mode $lnd_tuning_mode " . 
+              "-namelist '&a start_ymd=$start_ymd, $namelist/'";
    &make_env_run();
    eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
+   my $finidat = `grep finidat lnd_in`;
+   if ( $finidat =~ /initdata_map/ ) {
+      my $result;
+      eval( $result = `grep use_init_interp lnd_in` );
+      is ( $result =~ /.true./, 1, "use_init_interp needs to be true here: $result");
+   }
    $cfiles->checkfilesexist( "$options", $mode );
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
-      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+         $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+         $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
    if ( defined($opts{'generate'}) ) {
-      $cfiles->copyfiles( "$options", $mode );
+         $cfiles->copyfiles( "$options", $mode );
    }
    &cleanup();
 }
@@ -1576,7 +1722,7 @@ my @use_cases = (
                   "20thC_transient",
                  );
 foreach my $res ( @glc_res ) {
-   foreach my $usecase ( @usecases ) {
+   foreach my $usecase ( @use_cases ) {
       my $startymd = undef;
       if ( ($usecase eq "1850_control") || ($usecase eq "20thC_transient") ) {
          $startymd = 18500101;
@@ -1648,43 +1794,6 @@ foreach my $usecase ( "1850-2100_SSP2-4.5_transient" ) {
 #
 # End loop over versions
 #
-#
-# Test ALL SSP's for f09...
-#
-$phys = "clm6_0";
-$mode = "-phys $phys";
-&make_config_cache($phys);
-my $res = "0.9x1.25";
-foreach my $usecase ( "1850-2100_SSP5-8.5_transient", "1850-2100_SSP2-4.5_transient", "1850-2100_SSP1-2.6_transient", "1850-2100_SSP3-7.0_transient" ) {
-      $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . -namelist '&a start_ymd=20150101/'";
-      &make_env_run();
-      eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
-      is( $@, '', "$options" );
-      $cfiles->checkfilesexist( "$options", $mode );
-      $cfiles->shownmldiff( "default", "standard" );
-      if ( defined($opts{'compare'}) ) {
-         $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-         $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
-      }
-      if ( defined($opts{'generate'}) ) {
-         $cfiles->copyfiles( "$options", $mode );
-      }
-      &cleanup();
-}
-
-# The SSP's that fail because of missing ndep files...
-$phys = "clm5_0";
-$mode = "-phys $phys";
-&make_config_cache($phys);
-my $res = "0.9x1.25";
-foreach my $usecase ( "1850-2100_SSP5-3.4_transient", "1850-2100_SSP4-3.4", "1850-2100_SSP1-1.9_transient",
-                      "1850-2100_SSP4-6.0_transient" ) {
-      $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . -namelist '&a start_ymd=20150101/'";
-      &make_env_run();
-      eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
-      isnt( $?, 0, $usecase );
-      system( "cat $tempfile" );
-}
 
 print "\n==================================================\n";
 print "Test clm4.5/clm5.0/clm5_1/clm6_0 resolutions \n";

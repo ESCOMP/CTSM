@@ -1,0 +1,1 @@
+region --lat1 -40 --lat2 15 --lon1 275 --lon2 330 --create-mesh --create-surface --create-user-mods --create-domain --create-landuse --verbose --overwrite --reg f09_58x45_SouthAmerica --inputdata-dir CSMDATA
