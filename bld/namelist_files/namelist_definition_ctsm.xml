@@ -734,8 +734,8 @@ Toggle to turn on no competition mode (only relevant if FATES is being used).
 Toggle to turn on FATES satellite phenology mode (only relevant if FATES is being used).                        
 </entry>
 
-<entry id="fates_harvest_mode" type="integer" category="physics"
-        group="clm_inparm" valid_values="no_harvest_event_code,surfdata_file,luhdata_area,luhdata_mass">
+<entry id="fates_harvest_mode" type="char*13" category="physics"
+        group="clm_inparm" valid_values="no_harvest,event_code,surfdata_file,luhdata_area,luhdata_mass">
 Set FATES harvesting mode by setting fates_harvest_mode to a valid string option.
 Allowed values are:
  no_harvest: no fates harvesting of any kind
