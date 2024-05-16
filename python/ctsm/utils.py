@@ -26,6 +26,24 @@ def abort(errmsg):
     sys.exit("ERROR: {}".format(errmsg))
 
 
+def ensure_iterable(thing_we_want_iterable, iterable_length):
+    """
+    Ensure that a variable is iterable
+    """
+    already_iterable = True
+    try:
+        iter(thing_we_want_iterable)
+    except TypeError:
+        already_iterable = False
+
+    if not already_iterable:
+        thing_we_want_iterable = [thing_we_want_iterable] * iterable_length
+    elif len(thing_we_want_iterable) != iterable_length:
+        raise ValueError("Input is iterable but wrong length")
+
+    return thing_we_want_iterable
+
+
 def fill_template_file(path_to_template, path_to_final, substitutions):
     """Given a template file (based on python's template strings), write a copy of the
     file with template values filled in.

@@ -1,4 +1,85 @@
 ===============================================================
+Tag name: ctsm5.2.003
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Thu May  2 14:06:54 MDT 2024
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+Brings in 4 PRs from b4b-dev to master:
+- Regional CTSM Simulations and Capability of Creating Mesh Files (ESCOMP/CTSM#1892; Negin Sobhani and Adrianna Foster)
+- Add line about documentation in PR template (ESCOMP/CTSM#2488; Sam Rabin)
+- CTSM5.2 2000 fsurdat T42 64x128 file (ESCOMP/CTSM#2495; Sam Levis)
+- Move plumber2 scripts to python directory (ESCOMP/CTSM#2505; Teagan King)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- Resolves ESCOMP/CTSM#1513: Need a process to subset ESMF mesh files from global ones for regional grids
+- Resolves ESCOMP/CTSM#1773: High resolution regional simulations
+- Resolves ESCOMP/CTSM#2187: Move new PLUMBER2 scripts to python directory to enable python testing
+- Resolves ESCOMP/CTSM#2486: Temporarily add back a T42 dataset for CAM
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to documentation:
+- Adds documentation for making mesh files
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Adds testing for mesh-making Python scripts
+- Adds testing for plumber2_surf_wrapper
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2513: Merge b4b-dev 2024-05-02
+- Constituent PRs:
+  - ESCOMP/CTSM#1892: Regional CTSM Simulations and Capability of Creating Mesh Files (https://github.com/ESCOMP/CTSM/pull/1892)
+  - ESCOMP/CTSM#2488: Add line about documentation in PR template (https://github.com/ESCOMP/CTSM/pull/2488)
+  - ESCOMP/CTSM#2495: CTSM5.2 2000 fsurdat T42 64x128 file (https://github.com/ESCOMP/CTSM/pull/2495)
+  - ESCOMP/CTSM#2505: Move plumber2 scripts to python directory (https://github.com/ESCOMP/CTSM/pull/2505)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.002
 Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
 Date: Fri 26 Apr 2024 11:13:46 AM MDT
