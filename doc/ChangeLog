@@ -1,4 +1,110 @@
 ===============================================================
+Tag name: ctsm5.2.006
+Originator(s): slevis (Samuel Levis)
+Date: Fri May 17 16:17:54 MDT 2024
+One-line Summary: Update externals to cesm2_3_beta17
+
+Purpose and description of changes
+----------------------------------
+
+#2493 update externals to beta17
+#2294 remove references to mct but do not remove /src/mct
+
+Changes unrelated to the tag's title:
+#2546 fix error in cam4/cam5 test
+Remove /test/tools/test_driver.sh
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Fixes #2493 update externals to beta17
+Fixes #2546 fix error in cam4/cam5 test (unrelated)
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation: Remove references to mct and cpl7
+
+Substantial timing or memory changes: Not considered
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+I added a long list of izumi nag debug tests to ExpectedFailures as per
+https://github.com/ESCOMP/CMEPS/pull/460
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) -
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho -----
+    izumi ------- IN PROGRESS
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ----
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  [ If a tag changes answers relative to baseline comparison the
+    following should be filled in (otherwise remove this section).
+    And always remove these three lines and parts that don't apply. ]
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? Roundoff differences means one or more lines of code change results
+   only by roundoff level (because order of operation changes for example). Roundoff
+   changes to state fields usually grow to greater than roundoff as the simulation progresses.
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+cism, ccs_config, cime, cmeps, cdeps
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2539
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.005
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Mon 13 May 2024 04:46:10 PM MDT
