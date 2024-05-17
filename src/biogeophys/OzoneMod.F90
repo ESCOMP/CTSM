@@ -212,7 +212,7 @@ contains
     allocate(this%o3uptakesha_patch(begp:endp)) ; this%o3uptakesha_patch(:) = nan
     allocate(this%o3uptakesun_patch(begp:endp)) ; this%o3uptakesun_patch(:) = nan
     allocate(this%tlai_old_patch(begp:endp))    ; this%tlai_old_patch(:) = nan
-    allocate(this%o3force_grid(begg:endg))     ; this%o3force_grid(:) = nan
+    allocate(this%o3force_grid(begg:endg))      ; this%o3force_grid(:) = nan
 
   end subroutine InitAllocate
 
@@ -417,10 +417,10 @@ contains
     !
     ! !LOCAL VARIABLES:
     real(r8)          :: forc_o3_down(bounds%begg:bounds%endg) ! downscaled ozone partial pressure (mol/mol)
-    integer           :: fp                          ! filter index
-    integer           :: p                            ! patch index
-    integer           :: c                            ! column index
-    integer           :: g                            ! gridcell index
+    integer           :: fp                                    ! filter index
+    integer           :: p                                     ! patch index
+    integer           :: c                                     ! column index
+    integer           :: g                                     ! gridcell index
 
     character(len=*), parameter :: subname = 'CalcOzoneUptake'
     !-----------------------------------------------------------------------

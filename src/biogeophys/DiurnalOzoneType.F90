@@ -109,10 +109,10 @@ module DiurnalOzoneType
       integer  :: t               ! looping index
       integer  :: yr              ! year
       integer  :: mon             ! month
-      integer  :: day            ! day of month
-      integer  :: tod            ! time of day (seconds past 0Z)
-      integer  :: begg, endg     ! bounds
-      integer  :: t_prev         ! previous time index
+      integer  :: day             ! day of month
+      integer  :: tod             ! time of day (seconds past 0Z)
+      integer  :: begg, endg      ! bounds
+      integer  :: t_prev          ! previous time index
       real(r8) :: tdiff_end
       real(r8) :: tdiff_start
       real(r8) :: tdiff
