@@ -3,13 +3,31 @@ module test_DustEmis
   ! Tests of DustEmis
 
   use funit
+  use unittestSubgridMod
+  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
   use DUSTMod
   use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestFilterBuilderMod, only : filter_from_range
+  use atm2lndType, only : atm2lnd_type
+  use SoilStateType, only : soilstate_type
+  use CanopyStateType, only : canopystate_type
+  use WaterStateBulkType, only : waterstatebulk_type
+  use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
+  use FrictionVelocityMod, only : frictionvel_type
 
   implicit none
 
   @TestCase
   type, extends(TestCase) :: TestDustEmis
+     type(dust_type) :: dust_emis
+     integer, allocatable :: filter_nolakep(:)      ! non-lake filter (patches)
+     integer :: num_nolakep              ! number of patches in non-lake filter
+     type(atm2lnd_type) :: atm2lnd_inst
+     type(soilstate_type) :: soilstate_inst
+     type(canopystate_type) :: canopystate_inst
+     type(WaterStateBulk_Type) :: waterstatebulk_inst
+     type(waterdiagnosticbulk_type) :: waterdiagnosticbulk_inst
+     type(frictionvel_type) :: frictionvel_inst
    contains
      procedure :: setUp
      procedure :: tearDown
@@ -19,15 +37,29 @@ contains
 
   subroutine setUp(this)
     class(TestDustEmis), intent(inout) :: this
+
+    character(len=5) :: NLFilename = 'none'
+
+     call setup_single_veg_patch( pft_type=0 )
+     call this%dust_emis%Init( bounds, NLFilename )
+     call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%num_nolakep, filter=this%filter_nolakep)
   end subroutine setUp
 
   subroutine tearDown(this)
     class(TestDustEmis), intent(inout) :: this
+
+    call unittest_subgrid_teardown()
+    deallocate( this%filter_nolakep )
   end subroutine tearDown
 
   @Test
   subroutine check_dust_emis(this)
     class(TestDustEmis), intent(inout) :: this
+
+    call DustEmission(bounds, this%num_nolakep, this%filter_nolakep, this%atm2lnd_inst, &
+                      this%soilstate_inst, this%canopystate_inst, this%waterstatebulk_inst, &
+                      this%waterdiagnosticbulk_inst, this%frictionvel_inst, this%dust_emis)
+    call DustDryDep(bounds, this%atm2lnd_inst, this%frictionvel_inst, this%dust_emis)
 
   end subroutine check_dust_emis
 
