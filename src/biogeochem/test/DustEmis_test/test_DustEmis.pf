@@ -1,0 +1,34 @@
+module test_DustEmis
+
+  ! Tests of DustEmis
+
+  use funit
+  use DUSTMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestDustEmis
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestDustEmis
+
+contains
+
+  subroutine setUp(this)
+    class(TestDustEmis), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestDustEmis), intent(inout) :: this
+  end subroutine tearDown
+
+  @Test
+  subroutine check_dust_emis(this)
+    class(TestDustEmis), intent(inout) :: this
+
+  end subroutine check_dust_emis
+
+end module test_DustEmis
