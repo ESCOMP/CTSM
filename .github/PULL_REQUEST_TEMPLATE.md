@@ -10,6 +10,8 @@ Are answers expected to change (and if so in what way)?
 
 Any User Interface Changes (namelist or namelist defaults changes)?
 
+Does this create a need to change or add documentation? Did you do so?
+
 Testing performed, if any:
 (List what testing you did to show your changes worked as expected)
 (This can be manual testing or running of the different test suites)

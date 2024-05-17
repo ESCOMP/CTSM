@@ -1,0 +1,1 @@
+region --lat1 -55 --lat2 30 --lon1 0 --lon2 360 --crop --create-surface --create-domain --create-mesh --overwrite --reg f09_90x288pt_1850PanTropics --inputdata-dir CSMDATA --cfg-file CTSM_ROOT/tools/mksurfdata_map/default_data_1850.cfg --verbose

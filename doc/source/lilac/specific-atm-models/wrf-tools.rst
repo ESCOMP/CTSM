@@ -52,9 +52,9 @@ is described in here.
 
      ./gen_domain -m /glade/work/$USER/ctsm/nldas_grid/scrip/wrf2clm_mapping_noneg.nc -o wrf2clm_ocn_noneg -l wrf2clm_lnd_noneg
 
-6. Create surface datasets in ``tools/mksurfdata_map``::
+6. Create surface datasets in ``tools/mksurfdata_esmf``::
 
-     ./mksurfdata.pl -res usrspec -usr_gname "nldas" -usr_gdate "190124" -usr_mapdir "/glade/work/$USER/ctsm/nldas_grid/map" -y 2000 -exedir "/glade/u/home/$USER/src/ctsm/ctsm_surfdata/tools/mksurfdata_map" -no-crop
+     ./mksurfdata.pl -res usrspec -usr_gname "nldas" -usr_gdate "190124" -usr_mapdir "/glade/work/$USER/ctsm/nldas_grid/map" -y 2000 -exedir "/glade/u/home/$USER/src/ctsm/ctsm_surfdata/tools/mksurfdata_esmf" -no-crop
 
 Merge WRF initial conditions into an existing CTSM initial condition file
 --------------------------------------------------------------------------

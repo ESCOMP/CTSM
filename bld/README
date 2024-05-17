@@ -19,28 +19,12 @@ build-namelist --- Build the namelists needed
 
 env_run.xml --- Sample case runtime environment variables, so build-namelist can run outside of a case directory.
 
---------- Scripts to query namelist defaults
-listDefaultNamelist.pl -- List the files needed, for a list of resolutions,
-                          to run CLM that are currently NOT on your machine.
-                          This file can then be used by 
-                            cime/CIME/Tools/check_input_data
-                          to retreive them from the inputdata repository.
-                          Setting up cases with create_newcase also does
-                          this -- but only for the exact configuration
-                          given. This tries to get all the files need
-                          for several different resolutions and configurations
-                          at once.
-queryDefaultNamelist.pl - Query default namelist for settings of variables
-queryDefaultXML.pm ------ Subroutines needed by queryDefaultNamelist.pl script
-
-
 --------- Test scripts directory
 unit_testers --- Directory of scripts to test scipts in this directory
                  (most notably build-namelist)
 
 ---------- XML Files describing namelists in namelist_files
 namelist_files/namelist_defaults_ctsm.xml --------- List of default values for the ctsm namelist
-namelist_files/namelist_defaults_ctsm_tools.xml --- List of default values for the ctsm tools
 namelist_files/namelist_defaults_overall.xml ------ List of default values for overall settings
 namelist_files/namelist_defaults_usr_files.xml ---- List of default values for the user-files
 namelist_files/namelist_definition_ctsm.xml -------- Definition of all namelist items for ctsm
@@ -59,7 +43,5 @@ namelist_files/namelist_definition_drv_flds.xml --- Definition of add driver fie
 
 ---------- XML helper files
 namelist_files/LogMessages.pm  ---- Perl module to handle log output
-namelist_files/checkmapfiles.ncl -- NCL script to check that all of the mapping files are valid
-namelist_files/createMapEntry.pl -- Perl script to create a map entry for the 
 namelist_files/history_fields.xsl - Style sheet for history fields as created by script that lists all of the
                                     history fields from the source files (../src/main/findHistFields.pl)
