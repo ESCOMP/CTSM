@@ -4510,7 +4510,8 @@ sub setup_logic_fates {
            } elsif ( $mode  eq 'surfdata_file' ) {
               # Check to make sure that the user set the flanduse_timeseries file
               # Since the flanduse_timeseries logic checking is upstream of the fates logic,
-              # don't try and add the default here
+              # don't add the default here.  The onus is on the user to match the correct timeseries
+              # data to the correct surface dataset resolution
               my $var = "flanduse_timeseries";
               my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
               if ( ! defined($nl->get_value($var))  ) {
