@@ -785,7 +785,7 @@ sub setup_cmdl_fates_mode {
                       "use_fates_cohort_age_tracking","use_fates_inventory_init","use_fates_fixed_biogeog",
                       "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","fates_harvest_mode",
                       "fates_parteh_mode","use_fates_tree_damage","fates_seeddisp_cadence","use_fates_luh","fluh_timeseries",
-                      "flandusepftdat","use_fates_potentialveg","use_fates_lupft","fates_history_dimlevel");
+                      "flandusepftdat","use_fates_potentialveg","use_fates_lupft","fates_history_dimlevel" );
 
        # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
@@ -4517,7 +4517,7 @@ sub setup_logic_fates {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
         my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                        "use_fates_inventory_init","fates_seeddisp_cadence","fates_history_dimlevel",
-                       "fates_harvest_mode","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage");
+                       "fates_harvest_mode","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage" );
 
         foreach my $var ( @list ) {
  	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
@@ -4564,12 +4564,12 @@ sub setup_logic_fates {
 
               # fates landuse can't be on with FATES SP mode is active
               if ( &value_is_true($nl->get_value('use_fates_luh')) ) {
-                    $log->fatal_error('use_fates_luh can NOT be true when use_fates_sp is true');
+		  $log->fatal_error('use_fates_luh can NOT be true when use_fates_sp is true');
+	      }
 
               # hydro isn't currently supported to work when FATES SP mode is active
               if (&value_is_true( $nl->get_value('use_fates_planthydro') )) {
                     $log->fatal_error('fates sp mode is currently not supported to work with fates hydro');
-
               }
            }
         }
