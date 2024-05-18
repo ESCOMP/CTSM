@@ -296,11 +296,11 @@ contains
     ! Initialization of public data types
 
     call temperature_inst%Init(bounds,           &
-         urbanparams_inst%em_roof(begl:endl),    &
-         urbanparams_inst%em_wall(begl:endl),    &
-         urbanparams_inst%em_improad(begl:endl), &
-         urbanparams_inst%em_perroad(begl:endl), &
-         IsSimpleBuildTemp(), IsProgBuildTemp() )
+         em_roof_lun=urbanparams_inst%em_roof(begl:endl),    &
+         em_wall_lun=urbanparams_inst%em_wall(begl:endl),    &
+         em_improad_lun=urbanparams_inst%em_improad(begl:endl), &
+         em_perroad_lun=urbanparams_inst%em_perroad(begl:endl), &
+         is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp() )
 
     call active_layer_inst%Init(bounds)
 
