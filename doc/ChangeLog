@@ -11,7 +11,7 @@ Purpose and description of changes
 #2294 remove references to mct but do not remove /src/mct
 
 Changes unrelated to the tag's title:
-#2546 fix error in cam4/cam5 test
+#2546 fix error in cam4/cam5 test (ekluzek)
 Remove /test/tools/test_driver.sh
 
 Significant changes to scientifically-supported configurations
