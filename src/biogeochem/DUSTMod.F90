@@ -37,11 +37,6 @@ module DUSTMod
   implicit none
   private
   !
-  ! !PUBLIC MEMBER FUNCTIONS:
-  !
-  public DustEmission   ! Dust mobilization 
-  public DustDryDep     ! Turbulent dry deposition for dust
-  !
   ! !PUBLIC DATA:
   !
   real(r8) , allocatable :: ovr_src_snk_mss(:,:)
@@ -61,16 +56,18 @@ module DUSTMod
      real(r8), pointer, private :: vlc_trb_2_patch           (:)   ! turbulent deposition velocity 2(m/s)
      real(r8), pointer, private :: vlc_trb_3_patch           (:)   ! turbulent deposition velocity 3(m/s)
      real(r8), pointer, private :: vlc_trb_4_patch           (:)   ! turbulent deposition velocity 4(m/s)
-     type(soil_erod_stream_type), private :: soil_erod_stream ! Zender soil erodibility stream data
+     type(soil_erod_stream_type), private :: soil_erod_stream      ! Zender soil erodibility stream data
      real(r8), pointer, private :: mbl_bsn_fct_col           (:)   ! [dimensionless] basin factor, or soil erodibility, time-constant
 
    contains
 
      procedure , public  :: Init
+     procedure , public  :: DustEmission   ! Dust mobilization 
+     procedure , public  :: DustDryDep     ! Turbulent dry deposition for dust
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
      procedure , private :: InitCold     
-     procedure , private :: InitDustVars ! Initialize variables used in subroutine Dust
+     procedure , private :: InitDustVars   ! Initialize variables used in DustEmission method
 
   end type dust_type
   !------------------------------------------------------------------------
@@ -213,10 +210,10 @@ contains
   end subroutine InitCold
 
   !------------------------------------------------------------------------
-  subroutine DustEmission (bounds, &
+  subroutine DustEmission (this, bounds, &
        num_nolakep, filter_nolakep, &
        atm2lnd_inst, soilstate_inst, canopystate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
-       frictionvel_inst, dust_inst)
+       frictionvel_inst)
     !
     ! !DESCRIPTION: 
     ! Dust mobilization. This code simulates dust mobilization due to wind
@@ -230,6 +227,7 @@ contains
     use subgridaveMod, only : p2g
     !
     ! !ARGUMENTS:
+    class (dust_type)                      :: this
     type(bounds_type)      , intent(in)    :: bounds                      
     integer                , intent(in)    :: num_nolakep                 ! number of column non-lake points in patch filter
     integer                , intent(in)    :: filter_nolakep(num_nolakep) ! patch filter for non-lake points
@@ -239,7 +237,6 @@ contains
     type(waterstatebulk_type)  , intent(in)    :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(in)    :: waterdiagnosticbulk_inst
     type(frictionvel_type) , intent(in)    :: frictionvel_inst
-    type(dust_type)        , intent(inout) :: dust_inst
 
     !
     ! !LOCAL VARIABLES
@@ -291,9 +288,9 @@ contains
          fv                  => frictionvel_inst%fv_patch            , & ! Input:  [real(r8) (:)   ]  friction velocity (m/s) (for dust model)          
          u10                 => frictionvel_inst%u10_patch           , & ! Input:  [real(r8) (:)   ]  10-m wind (m/s) (created for dust model)          
          
-         mbl_bsn_fct         => dust_inst%mbl_bsn_fct_col            , & ! Input:  [real(r8) (:)   ]  basin factor
-         flx_mss_vrt_dst     => dust_inst%flx_mss_vrt_dst_patch      , & ! Output: [real(r8) (:,:) ]  surface dust emission (kg/m**2/s)               
-         flx_mss_vrt_dst_tot => dust_inst%flx_mss_vrt_dst_tot_patch    & ! Output: [real(r8) (:)   ]  total dust flux back to atmosphere (pft)
+         mbl_bsn_fct         => this%mbl_bsn_fct_col                 , & ! Input:  [real(r8) (:)   ]  basin factor
+         flx_mss_vrt_dst     => this%flx_mss_vrt_dst_patch           , & ! Output: [real(r8) (:,:) ]  surface dust emission (kg/m**2/s)               
+         flx_mss_vrt_dst_tot => this%flx_mss_vrt_dst_tot_patch         & ! Output: [real(r8) (:)   ]  total dust flux back to atmosphere (pft)
          )
 
       ttlai(bounds%begp : bounds%endp) = 0._r8
@@ -498,8 +495,8 @@ contains
   end subroutine DustEmission
 
    !------------------------------------------------------------------------
-  subroutine DustDryDep (bounds, &
-       atm2lnd_inst, frictionvel_inst, dust_inst)
+  subroutine DustDryDep (this, bounds, &
+       atm2lnd_inst, frictionvel_inst)
     !
     ! !DESCRIPTION: 
     !
@@ -520,10 +517,10 @@ contains
     use shr_const_mod, only : SHR_CONST_PI, SHR_CONST_RDAIR, SHR_CONST_BOLTZ
     !
     ! !ARGUMENTS:
+    class (dust_type)                      :: this
     type(bounds_type)      , intent(in)    :: bounds 
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(frictionvel_type) , intent(in)    :: frictionvel_inst
-    type(dust_type)        , intent(inout) :: dust_inst
     !
     ! !LOCAL VARIABLES
     integer  :: p,c,g,m,n                             ! indices
@@ -550,11 +547,11 @@ contains
          ram1      =>    frictionvel_inst%ram1_patch           , & ! Input:  [real(r8)  (:)   ]  aerodynamical resistance (s/m)                    
          fv        =>    frictionvel_inst%fv_patch             , & ! Input:  [real(r8)  (:)   ]  friction velocity (m/s)                           
          
-         vlc_trb   =>    dust_inst%vlc_trb_patch               , & ! Output:  [real(r8) (:,:) ]  Turbulent deposn velocity (m/s)                 
-         vlc_trb_1 =>    dust_inst%vlc_trb_1_patch             , & ! Output:  [real(r8) (:)   ]  Turbulent deposition velocity 1                   
-         vlc_trb_2 =>    dust_inst%vlc_trb_2_patch             , & ! Output:  [real(r8) (:)   ]  Turbulent deposition velocity 2                   
-         vlc_trb_3 =>    dust_inst%vlc_trb_3_patch             , & ! Output:  [real(r8) (:)   ]  Turbulent deposition velocity 3                   
-         vlc_trb_4 =>    dust_inst%vlc_trb_4_patch               & ! Output:  [real(r8) (:)   ]  Turbulent deposition velocity 4                   
+         vlc_trb   =>    this%vlc_trb_patch                   , & ! Output:  [real(r8) (:,:) ]  Turbulent deposn velocity (m/s)                 
+         vlc_trb_1 =>    this%vlc_trb_1_patch                 , & ! Output:  [real(r8) (:)   ]  Turbulent deposition velocity 1                   
+         vlc_trb_2 =>    this%vlc_trb_2_patch                 , & ! Output:  [real(r8) (:)   ]  Turbulent deposition velocity 2                   
+         vlc_trb_3 =>    this%vlc_trb_3_patch                 , & ! Output:  [real(r8) (:)   ]  Turbulent deposition velocity 3                   
+         vlc_trb_4 =>    this%vlc_trb_4_patch                   & ! Output:  [real(r8) (:)   ]  Turbulent deposition velocity 4                   
          )
 
       do p = bounds%begp,bounds%endp

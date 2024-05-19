@@ -239,13 +239,13 @@ contains
 
     call this%create_atm2lnd()
     call this%create_fv()
-    call DustEmission(bounds, this%num_nolakep, this%filter_nolakep, this%atm2lnd_inst, &
+    call this%dust_emis%DustEmission(bounds, this%num_nolakep, this%filter_nolakep, this%atm2lnd_inst, &
                       this%soilstate_inst, this%canopystate_inst, this%water_inst%waterstatebulk_inst, &
-                      this%water_inst%waterdiagnosticbulk_inst, this%frictionvel_inst, this%dust_emis)
-    call DustDryDep(bounds, this%atm2lnd_inst, this%frictionvel_inst, this%dust_emis)
-
-  !-----------------------------------------------------------------------
+                      this%water_inst%waterdiagnosticbulk_inst, this%frictionvel_inst)
+    call this%dust_emis%DustDryDep(bounds, this%atm2lnd_inst, this%frictionvel_inst)
 
   end subroutine check_dust_emis
+
+  !-----------------------------------------------------------------------
 
 end module test_DustEmis
