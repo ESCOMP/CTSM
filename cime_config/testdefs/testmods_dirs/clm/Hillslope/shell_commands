@@ -1,0 +1,4 @@
+./xmlchange CLM_BLDNML_OPTS="-bgc sp"
+DIN_LOC_ROOT=$(./xmlquery --value DIN_LOC_ROOT)
+meshfile=$DIN_LOC_ROOT/lnd/clm2/testdata/ESMFmesh_10x15_synthetic_cosphill_1.0.nc
+./xmlchange ATM_DOMAIN_MESH=${meshfile},LND_DOMAIN_MESH=${meshfile}

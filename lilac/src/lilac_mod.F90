@@ -8,7 +8,6 @@ module lilac_mod
 
   ! External libraries
   use ESMF
-  use mct_mod        , only : mct_world_init
 
   ! shr code routines
   use shr_sys_mod   , only : shr_sys_abort
@@ -146,10 +145,7 @@ contains
     integer, parameter          :: debug = 1   !-- internal debug level
     character(len=*), parameter :: subname=trim(modname)//': [lilac_init] '
 
-    ! initialization of mct and pio
-    integer           :: ncomps = 1                 ! for mct
-    integer, pointer  :: mycomms(:)                 ! for mct
-    integer, pointer  :: myids(:)                   ! for mct
+    ! initialization of pio
     integer           :: compids(1) = (/1/)         ! for pio_init2 - array with component ids
     character(len=32) :: compLabels(1) = (/'LND'/)  ! for pio_init2
     character(len=64) :: comp_name(1) = (/'LND'/)   ! for pio_init2
@@ -219,14 +215,6 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMGet(vm, localPet=mytask,  rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    !-------------------------------------------------------------------------
-    ! Initialize MCT (this is needed for data model functionality)
-    !-------------------------------------------
-    allocate(mycomms(1), myids(1))
-    mycomms = (/mpicom/) ; myids = (/1/)
-    call mct_world_init(ncomps, mpicom, mycomms, myids)
-    call ESMF_LogWrite(subname//"initialized mct ...  ", ESMF_LOGMSG_INFO)
 
     !-------------------------------------------------------------------------
     ! Initialize PIO with second initialization

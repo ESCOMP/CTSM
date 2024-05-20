@@ -1,0 +1,1 @@
+ --input CSMDATA/atm/datm7/domain.lnd.fv0.9x1.25_gx1v6.090309.nc --lat yc --lon xc --overwrite --mask mask --area area --verbose
