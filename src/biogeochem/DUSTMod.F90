@@ -62,12 +62,14 @@ module DUSTMod
    contains
 
      procedure , public  :: Init
-     procedure , public  :: DustEmission   ! Dust mobilization 
-     procedure , public  :: DustDryDep     ! Turbulent dry deposition for dust
+     procedure , public  :: DustEmission    ! Dust mobilization
+     procedure , public  :: DustDryDep      ! Turbulent dry deposition for dust
+     procedure , public  :: WritePatchToLog ! Write information on the given patch to the log file
+     procedure , public  :: GetPatchVars    ! Get important variables on a given patch
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
      procedure , private :: InitCold     
-     procedure , private :: InitDustVars   ! Initialize variables used in DustEmission method
+     procedure , private :: InitDustVars    ! Initialize variables used in DustEmission method
 
   end type dust_type
   !------------------------------------------------------------------------
@@ -208,6 +210,52 @@ contains
     end if
 
   end subroutine InitCold
+
+    !-----------------------------------------------------------------------
+
+  subroutine WritePatchToLog(this, p)
+    !
+    ! !DESCRIPTION:
+    ! Write out information on dust emisisons for this patch to the log file
+    ! !ARGUMENTS:
+    class(dust_type), intent(in) :: this
+    integer         , intent(in) :: p      ! Patch to display
+
+    write(iulog,*) 'flx_mss_vrt_dst', this%flx_mss_vrt_dst_patch(p,:)
+    write(iulog,*) 'flx_mss_vrt_dst_tot', this%flx_mss_vrt_dst_tot_patch(p)
+    write(iulog,*) 'vlc_trb_1', this%vlc_trb_1_patch(p)
+    write(iulog,*) 'vlc_trb_2', this%vlc_trb_2_patch(p)
+    write(iulog,*) 'vlc_trb_3', this%vlc_trb_3_patch(p)
+    write(iulog,*) 'vlc_trb_4', this%vlc_trb_4_patch(p)
+    write(iulog,*) 'mbl_bsn_fct', this%mbl_bsn_fct_col(p)
+ end subroutine WritePatchToLog
+
+    !-----------------------------------------------------------------------
+
+ subroutine GetPatchVars(this, p, flx_mss_vrt_dst, flx_mss_vrt_dst_tot, vlc_trb, vlc_trb_1, &
+                         vlc_trb_2, vlc_trb_3, vlc_trb_4)
+   !
+   ! !DESCRIPTION:
+   ! Get important variables on the given patch
+   ! !ARGUMENTS:
+   class(dust_type)  , intent(in)  :: this
+   integer           , intent(in)  :: p      ! Patch to get
+   real(r8), optional, intent(out) :: flx_mss_vrt_dst(ndst)
+   real(r8), optional, intent(out) :: flx_mss_vrt_dst_tot
+   real(r8), optional, intent(out) :: vlc_trb(ndst)
+   real(r8), optional, intent(out) :: vlc_trb_1
+   real(r8), optional, intent(out) :: vlc_trb_2
+   real(r8), optional, intent(out) :: vlc_trb_3
+   real(r8), optional, intent(out) :: vlc_trb_4
+
+   if ( present(flx_mss_vrt_dst    ) ) flx_mss_vrt_dst     = this%flx_mss_vrt_dst_patch(p,:)
+   if ( present(flx_mss_vrt_dst_tot) ) flx_mss_vrt_dst_tot = this%flx_mss_vrt_dst_tot_patch(p)
+   if ( present(vlc_trb  ) ) vlc_trb   = this%vlc_trb_patch(p,:)
+   if ( present(vlc_trb_1) ) vlc_trb_1 = this%vlc_trb_1_patch(p)
+   if ( present(vlc_trb_2) ) vlc_trb_2 = this%vlc_trb_2_patch(p)
+   if ( present(vlc_trb_3) ) vlc_trb_3 = this%vlc_trb_3_patch(p)
+   if ( present(vlc_trb_4) ) vlc_trb_4 = this%vlc_trb_4_patch(p)
+end subroutine GetPatchVars
 
   !------------------------------------------------------------------------
   subroutine DustEmission (this, bounds, &
