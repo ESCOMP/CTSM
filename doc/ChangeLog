@@ -1,18 +1,18 @@
 ===============================================================
 Tag name: ctsm5.2.006
 Originator(s): slevis (Samuel Levis)
-Date: Fri May 17 16:17:54 MDT 2024
-One-line Summary: Update externals to cesm2_3_beta17
+Date: Tue 21 May 2024 02:59:05 PM MDT
+One-line Summary: Update externals to cesm2_3_beta17, remove mct, retire /test/tools
 
 Purpose and description of changes
 ----------------------------------
 
-#2493 update externals to beta17
-#2294 remove references to mct but do not remove /src/mct
+ #2493 update externals to beta17
+ #2294 remove mct but not in Externals.cfg
+ #2279 Retire the /test/tools framework for CESM test system custom tests that do the same thing
 
-Changes unrelated to the tag's title:
-#2546 fix error in cam4/cam5 test (ekluzek)
-Remove /test/tools/test_driver.sh
+ Changes unrelated to the tag's title:
+ #2546 fix error in cam4/cam5 test (ekluzek)
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -36,20 +36,23 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed
 ----------
 List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
-Fixes #2493 update externals to beta17
-Fixes #2546 fix error in cam4/cam5 test (unrelated)
+ Fixes #2493 update externals to beta17
+ Fixes #2279 Retire the /test/tools framework for CESM test system custom tests that do the same thing
+ Fixes #2546 fix error in cam4/cam5 test (unrelated)
 
 Notes of particular relevance for users
 ---------------------------------------
-Changes to documentation: Remove references to mct and cpl7
+Changes to documentation:
+ Remove references to mct and cpl7
 
-Substantial timing or memory changes: Not considered
+Substantial timing or memory changes:
+ Not considered
 
 Notes of particular relevance for developers:
 ---------------------------------------------
 Changes to tests or testing:
-I added a long list of izumi nag debug tests to ExpectedFailures as per
-https://github.com/ESCOMP/CMEPS/pull/460
+ I added a long list of izumi nag debug tests to ExpectedFailures as per
+ https://github.com/ESCOMP/CMEPS/pull/460
 
 Testing summary:
 ----------------
@@ -57,16 +60,16 @@ Testing summary:
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho -
+    derecho - PASS
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    (any machine) -
+    derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     derecho -----
-    izumi ------- IN PROGRESS
+    izumi ------- OK
 
   any other testing (give details below):
 
@@ -98,7 +101,7 @@ Changes answers relative to baseline:
 Other details
 -------------
 List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
-cism, ccs_config, cime, cmeps, cdeps
+ cism, ccs_config, cime, cmeps, cdeps
 
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/2539
