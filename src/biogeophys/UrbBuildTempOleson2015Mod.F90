@@ -383,9 +383,11 @@ contains
 
     ! Get terms from soil temperature equations to compute conduction flux
     ! Negative is toward surface - heat added
-    ! Note that the conduction flux here is in W m-2 wall area but for purposes of solving the set of
-    ! simultaneous equations this must be converted to W m-2 floor area. This is done below when 
-    ! setting up the equation coefficients.
+    ! Note that the convection and conduction fluxes for the walls are in W m-2 wall area 
+    ! but for purposes of solving the set of simultaneous equations this must be converted to W m-2 
+    ! floor or roof area. This is done below when setting up the equation coefficients by multiplying by building_hwr.
+    ! Note also that the longwave radiation terms for the walls are in terms of W m-2 floor area since the view
+    ! factors implicitly convert from per unit wall area to per unit floor or roof area.
 
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
@@ -424,10 +426,8 @@ contains
          ! This view factor implicitly converts from per unit wall area to per unit floor area
          vf_wf(l)  = 0.5_r8*(1._r8 - vf_rf(l))
 
-         ! This view factor implicitly converts from per unit floor area to per unit wall area
-         vf_fw(l) = vf_wf(l) / building_hwr(l)
+         vf_fw(l) = vf_wf(l)
 
-         ! This view factor implicitly converts from per unit roof area to per unit wall area
          vf_rw(l)  = vf_fw(l)
 
          ! This view factor implicitly converts from per unit wall area to per unit roof area
@@ -831,7 +831,7 @@ contains
                         + em_floori(l)*sb*t_floor_bef(l)**4._r8 &
                         + 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*(t_floor(l) - t_floor_bef(l))
 
-         qrd_building(l) = qrd_roof(l) + building_hwr(l)*(qrd_sunw(l) + qrd_shdw(l)) + qrd_floor(l)
+         qrd_building(l) = qrd_roof(l) + qrd_sunw(l) + qrd_shdw(l) + qrd_floor(l)
 
          if (abs(qrd_building(l)) > .10_r8 ) then
            write (iulog,*) 'urban inside building net longwave radiation balance error ',qrd_building(l)

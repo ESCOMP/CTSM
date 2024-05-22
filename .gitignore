@@ -79,31 +79,30 @@ test_driver_*.sh
 
 # mksurfdata output
 surfdata_*.log
-surfdata_*.namelist
-landuse.timeseries_*.namelist
+*.namelist
+mksurfdata.o*
 landuse.timeseries_*.log
 landuse_timeseries_*.txt
 ctsm.input_data_list
 ctsm.input_data_list.previous
 *.stdout.txt.o*
+/tools/mksurfdata_esmf/PET*
+/tools/mksurfdata_esmf/job_name.o*
+/tools/mksurfdata_esmf/mksurfdata_in
+/tools/mksurfdata_esmf/surfdata_*.nc
+/tools/mksurfdata_esmf/landuse.timeseries_*.nc
+/tools/mksurfdata_esmf/mksurfdata_jobscript_multi.sh
+/tools/mksurfdata_esmf/mksurfdata_jobscript_single.sh
+/tools/mksurfdata_esmf/pio_iotype.txt
+/tools/mksurfdata_esmf/*.sh
+/tools/mksurfdata_esmf/tool_bld
+/tools/mksurfdata_esmf/pio_iotype.txt
 
 # mksurfdata unit tests
 unit_test_build
 
 # Tools executables
-/tools/mksurfdata_map/mksurfdata_map
 /tools/mkprocdata_map/mkprocdata_map
-
-# mksurfdata output files
-/tools/mksurfdata_map/surfdata_*.nc
-/tools/mksurfdata_map/landuse.timeseries_*.nc
-
-# mkmapdata output files
-/tools/mkmapdata/PET*.RegridWeightGen.Log
-/tools/mkmapdata/regrid.*.out
-/tools/mkmapdata/regrid.*.err
-/tools/mkmapdata/regrid.o*
-/tools/mkmapdata/map*.nc
 
 # run_neon output directories
 /tools/site_and_regional/listing.csv
@@ -111,6 +110,7 @@ unit_test_build
 /tools/site_and_regional/????.ad/
 /tools/site_and_regional/????.postad/
 /tools/site_and_regional/????.transient/
+/tools/site_and_regional/archive/
 
 # build output
 *.o

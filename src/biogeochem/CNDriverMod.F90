@@ -285,9 +285,9 @@ contains
             nvegnpool, &
             num_bgc_vegp, filter_bgc_vegp, 0._r8, &
             num_bgc_soilc, filter_bgc_soilc, 0._r8)
+       call t_stopf('CNZero-vegbgc-nflux')
     end if
        
-    call t_stopf('CNZero-vegbgc-nflux')
     call t_startf('CNZero-soilbgc-nflux')
     call soilbiogeochem_nitrogenflux_inst%SetValues( &
          num_bgc_soilc, filter_bgc_soilc, 0._r8)
@@ -343,12 +343,14 @@ contains
     call t_startf('DecompRate')
     if (decomp_method == century_decomp) then
        call decomp_rate_constants_bgc(bounds, num_bgc_soilc, filter_bgc_soilc, &
-            soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
+            soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst, &
+            cnveg_state_inst%idop_patch)
     else if (decomp_method == mimics_decomp) then
        call decomp_rates_mimics(bounds, num_bgc_soilc, filter_bgc_soilc, &
             num_bgc_vegp, filter_bgc_vegp, clm_fates, &
             soilstate_inst, temperature_inst, cnveg_carbonflux_inst, ch4_inst, &
-            soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
+            soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
+            cnveg_state_inst%idop_patch)
     end if
     call t_stopf('DecompRate')
 

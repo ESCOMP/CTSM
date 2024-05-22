@@ -152,11 +152,20 @@ module clm_varctl
   ! true => separate crop landunit is not created by default
   logical, public :: create_crop_landunit = .false.     
   
+  ! number of hillslopes per landunit
+  integer, public :: nhillslope = 0
+
+  ! maximum number of hillslope columns per landunit
+  integer, public :: max_columns_hillslope = 1
+
   ! do not irrigate by default
   logical, public :: irrigate = .false.            
 
   ! set saturated excess runoff to zero for crops
   logical, public :: crop_fsat_equals_zero = .false.
+
+  ! remove this fraction of crop residues to a 1-year product pool (instead of going to litter)
+  real(r8), public :: crop_residue_removal_frac = 0.0
   
   !----------------------------------------------------------
   ! Other subgrid logic
@@ -167,6 +176,11 @@ module clm_varctl
 
   ! true => make ALL patches, cols & landunits active (even if weight is 0)
   logical, public :: all_active = .false.          
+
+  ! true => any ocean (i.e., "wetland") points on the surface dataset are converted to
+  ! bare ground (or whatever vegetation is given in that grid cell... but typically this
+  ! will be bare ground)
+  logical, public :: convert_ocean_to_land = .false.
 
   logical, public :: collapse_urban = .false.  ! true => collapse urban landunits to the dominant urban landunit; default = .false. means "do nothing" i.e. keep all urban landunits as found in the input data
   integer, public :: n_dom_landunits = -1  ! # of dominant landunits; determines the number of active landunits; default = 0 (set in namelist_defaults_ctsm.xml) means "do nothing"
@@ -263,6 +277,11 @@ module clm_varctl
   logical, public :: do_sno_oc = .false.  ! control to include organic carbon (OC) in snow
 
   !----------------------------------------------------------
+  ! DUST emission method
+  !----------------------------------------------------------
+  character(len=25), public :: dust_emis_method = 'Zender_2003'  ! Dust emisison method to use: Zender_2003 or Leung_2023
+
+  !----------------------------------------------------------
   ! C isotopes
   !----------------------------------------------------------
 
@@ -310,6 +329,20 @@ module clm_varctl
   logical, public            :: use_fates_inventory_init = .false.      ! true => initialize fates from inventory
   logical, public            :: use_fates_fixed_biogeog = .false.       ! true => use fixed biogeography mode
   logical, public            :: use_fates_nocomp = .false.              ! true => use no comopetition mode
+
+  ! FATES history dimension level
+  ! fates can produce history at either the daily timescale (dynamics)
+  ! and the model step timescale. It can also generate output on the extra dimension
+  ! Performing this output can be expensive, so we allow different history dimension
+  ! levels.
+  ! The first index is output at the model timescale
+  ! The second index is output at the dynamics (daily) timescale      
+  ! 0 - no output
+  ! 1 - include only column level means (3D)
+  ! 2 - include output that includes the 4th dimension
+  
+  integer, dimension(2), public   :: fates_history_dimlevel = (/2,2/)
+  
   logical, public            :: use_fates_luh = .false.                 ! true => use FATES landuse data mode
   logical, public            :: use_fates_lupft = .false.               ! true => use FATES landuse x pft static mapping mode
   logical, public            :: use_fates_potentialveg = .false.        ! true => FATES potential veg only
@@ -378,7 +411,15 @@ module clm_varctl
   integer, public :: soil_layerstruct_userdefined_nlevsoi = iundef
 
   !----------------------------------------------------------
-  !excess ice physics switch
+  ! hillslope hydrology switch
+  !----------------------------------------------------------
+
+  logical, public :: use_hillslope = .false. ! true => use multi-column hillslope hydrology
+  logical, public :: downscale_hillslope_meteorology = .false. ! true => downscale meteorological forcing in hillslope model
+  logical, public :: use_hillslope_routing = .false. ! true => use surface water routing in hillslope hydrology
+
+  !----------------------------------------------------------
+  ! excess ice physics switch
   !----------------------------------------------------------
   logical, public :: use_excess_ice = .false. ! true. => use excess ice physics
 

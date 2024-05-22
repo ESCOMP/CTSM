@@ -30,6 +30,8 @@ module Wateratm2lndBulkType
 
      real(r8), pointer :: volrmch_grc                   (:)   ! rof volr main channel (m3)
      real(r8), pointer :: volr_grc                      (:)   ! rof volr total volume (m3)
+     real(r8), pointer :: tdepth_grc                    (:)   ! rof tributary water depth (m)
+     real(r8), pointer :: tdepthmax_grc                 (:)   ! rof tributary bankfull water depth (m)
      real(r8), pointer :: forc_rh_grc                   (:)   ! atmospheric relative humidity (%)
      real(r8) , pointer :: prec365_col                  (:)   ! col 365-day running mean of tot. precipitation (see comment in UpdateAccVars regarding why this is col-level despite other prec accumulators being patch-level)
      real(r8) , pointer :: prec60_patch                 (:)   ! patch 60-day running mean of tot. precipitation (mm/s)
@@ -117,6 +119,8 @@ contains
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
 
+    allocate(this%tdepth_grc                    (begg:endg))        ; this%tdepth_grc    (:)   = ival
+    allocate(this%tdepthmax_grc                 (begg:endg))        ; this%tdepthmax_grc (:)   = ival
     allocate(this%volr_grc                      (begg:endg))        ; this%volr_grc    (:)   = ival
     allocate(this%volrmch_grc                   (begg:endg))        ; this%volrmch_grc (:)   = ival
     allocate(this%forc_rh_grc                   (begg:endg))        ; this%forc_rh_grc (:)   = ival
@@ -154,6 +158,15 @@ contains
     begp = bounds%begp; endp= bounds%endp
     begg = bounds%begg; endg= bounds%endg
 
+    this%tdepth_grc(begg:endg) = spval
+    call hist_addfld1d (fname='TDEPTH',  units='m',  &
+         avgflag='A', long_name='tributary water depth', &
+         ptr_lnd=this%tdepth_grc, default = 'inactive')
+
+    this%tdepthmax_grc(begg:endg) = spval
+    call hist_addfld1d (fname='TDEPTHMAX',  units='m',  &
+         avgflag='A', long_name='tributary bankfull water depth', &
+         ptr_lnd=this%tdepthmax_grc, default = 'inactive')
 
     this%volr_grc(begg:endg) = spval
     call hist_addfld1d (fname=this%info%fname('VOLR'),  units='m3',  &
@@ -462,6 +475,8 @@ contains
 
     ! rof->lnd
     deallocate(this%forc_flood_grc)
+    deallocate(this%tdepth_grc)
+    deallocate(this%tdepthmax_grc)
     deallocate(this%volr_grc)
     deallocate(this%volrmch_grc)
 

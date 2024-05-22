@@ -170,7 +170,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak
+    use clm_varpar     , only : nlevgrnd
     implicit none
     !
     ! !ARGUMENTS:
@@ -287,7 +287,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varpar     , only : nlevsno, nlevgrnd
+    use clm_varpar     , only : nlevgrnd
     use clm_varctl     , only : use_cn, use_hydrstress
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     use ncdio_pio      , only : ncd_inqvdlen
@@ -700,13 +700,8 @@ contains
     !
     ! !USES:
     use shr_kind_mod    , only : r8 => shr_kind_r8
-    use shr_const_mod   , only : SHR_CONST_TKFRZ
-    use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
-    use clm_varcon      , only : denice, denh2o, sb
-    use landunit_varcon , only : istwet, istsoil, istdlak
-    use column_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
-    use column_varcon   , only : icol_shadewall, icol_road_perv
-    use clm_varctl      , only : use_vancouver, use_mexicocity
+    use clm_varpar      , only : nlevgrnd
+    use clm_varcon      , only : sb
     implicit none
     !
     ! !ARGUMENTS:
@@ -936,7 +931,6 @@ contains
     ! !USES 
     use accumulMod       , only : init_accum_field
     use clm_time_manager , only : get_step_size_real
-    use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     !
     ! !ARGUMENTS:
     class(energyflux_type) :: this
@@ -964,7 +958,6 @@ contains
     ! is read in and the accumulation buffer is obtained)
     !
     ! !USES 
-    use accumulMod       , only : init_accum_field, extract_accum_field
     use clm_time_manager , only : get_nstep
     use clm_varctl       , only : nsrest, nsrStartup
     use abortutils       , only : endrun
@@ -994,7 +987,6 @@ contains
   subroutine UpdateAccVars (this, bounds)
     !
     ! USES
-    use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date
     use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
     use abortutils       , only : endrun
