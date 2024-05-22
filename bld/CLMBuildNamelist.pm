@@ -4640,23 +4640,37 @@ sub setup_logic_fates {
               if ( ! &value_is_true($nl->get_value('use_fates_luh')) ) {
                 $log->fatal_error("use_fates_luh must be true when $var is true" );
               }
-              if ( $nl->get_value('fates_harvest_mode') > 0) {
-                $log->fatal_error("fates_harvest_mode must be off (i.e. set to zero) when $var is true" );
+              my $var = remove_leading_and_trailing_quotes($nl->get_value('fates_harvest_mode'));
+              if ( $var ne 'no_harvest') {
+                $log->fatal_error("fates_harvest_mode set to $var.  It must set to no_harvest when use_potential_veg is true." );
               }
               my $var = "fluh_timeseries";
               if ( defined($nl->get_value($var))  ) {
                  $log->fatal_error("fluh_timeseries can not be defined when use_fates_potentialveg is true" );
-                 }
-           }
+              }
+            }
         }
         # Check fates_harvest_mode compatibility
         my $var = "fates_harvest_mode";
         if ( defined($nl->get_value($var))  ) {
            # using fates_harvest mode with raw luh2 harvest data
-           if ( $nl->get_value($var) > 2) {
+           my $mode = remove_leading_and_trailing_quotes($nl->get_value($var));
+           if ( $mode eq 'luhdata_area' || $mode  eq 'luhdata_mass' ) {
               # Make sure that use_fates_luh is true when using raw fates luh2 harvest data
               if ( ! &value_is_true($nl->get_value('use_fates_luh')) ) {
-                $log->fatal_error("use_fates_luh is required to be true when $var is greater than 2" );
+                $log->fatal_error("use_fates_luh is required to be true when $var is luhdata_mass or luhdata_area" );
+              }
+           } elsif ( $mode  eq 'surfdata_file' ) {
+              # Check to make sure that the user set the flanduse_timeseries file
+              # Since the flanduse_timeseries logic checking is upstream of the fates logic,
+              # don't add the default here.  The onus is on the user to match the correct timeseries
+              # data to the correct surface dataset resolution
+              my $var = "flanduse_timeseries";
+              my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
+              if ( ! defined($nl->get_value($var))  ) {
+                $log->fatal_error("$var is required when fates_harvest_mode is surfdata_file" );
+              } elsif ( ! -f "$fname" ) {
+                $log->fatal_error("$var does NOT point to a valid filename" );
               }
            }
         }

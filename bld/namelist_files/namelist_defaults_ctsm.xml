@@ -2015,7 +2015,7 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 
 <!-- ===== FATES DEFAULTS =========== -->
 <fates_spitfire_mode           use_fates=".true.">0</fates_spitfire_mode>
-<fates_harvest_mode            use_fates=".true.">0</fates_harvest_mode>
+<fates_harvest_mode            use_fates=".true.">no_harvest</fates_harvest_mode>
 <use_fates_planthydro          use_fates=".true.">.false.</use_fates_planthydro>
 <use_fates_tree_damage         use_fates=".true.">.false.</use_fates_tree_damage>
 <use_fates_cohort_age_tracking use_fates=".true.">.false.</use_fates_cohort_age_tracking>
@@ -2025,8 +2025,8 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <use_fates_sp                  use_fates=".true.">.false.</use_fates_sp>
 <use_fates_lupft               use_fates=".true.">.false.</use_fates_lupft>
 <use_fates_potentialveg        use_fates=".true.">.false.</use_fates_potentialveg>
-<use_fates_luh                 use_fates=".true." fates_harvest_mode="3"  >.true.</use_fates_luh>
-<use_fates_luh                 use_fates=".true." fates_harvest_mode="4"  >.true.</use_fates_luh>
+<use_fates_luh                 use_fates=".true." fates_harvest_mode="luhdata_area"  >.true.</use_fates_luh>
+<use_fates_luh                 use_fates=".true." fates_harvest_mode="luhdata_mass"  >.true.</use_fates_luh>
 <use_fates_luh                 use_fates=".true." use_fates_lupft=".true.">.true.</use_fates_luh>
 <use_fates_luh                 use_fates=".true." use_fates_potentialveg=".true.">.true.</use_fates_luh>
 <use_fates_luh                 use_fates=".true."                                >.false.</use_fates_luh>

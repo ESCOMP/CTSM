@@ -35,11 +35,11 @@ module dynFATESLandUseChangeMod
   integer, public, parameter    :: num_landuse_harvest_vars = 5
 
   ! Define the fates landuse namelist mode switch values
-  integer, public, parameter    :: fates_harvest_no_logging   = 0
-  integer, public, parameter    :: fates_harvest_logging_only = 1
-  integer, public, parameter    :: fates_harvest_clmlanduse   = 2
-  integer, public, parameter    :: fates_harvest_luh_area     = 3
-  integer, public, parameter    :: fates_harvest_luh_mass     = 4
+  character(len=13), public, parameter    :: fates_harvest_no_logging   = 'no_harvest'
+  character(len=13), public, parameter    :: fates_harvest_logging_only = 'event_code'
+  character(len=13), public, parameter    :: fates_harvest_clmlanduse   = 'surfdata_file'
+  character(len=13), public, parameter    :: fates_harvest_luh_area     = 'luhdata_area'
+  character(len=13), public, parameter    :: fates_harvest_luh_mass     = 'luhdata_mass'
 
   ! Define landuse harvest unit integer representation
   integer, public, parameter    :: landuse_harvest_area_units = 1
@@ -171,13 +171,14 @@ contains
        end do
 
        ! Get the harvest rate data from the fates luh2 timeseries dataset if enabled
-       if (fates_harvest_mode .ge. fates_harvest_luh_area ) then
+       if (trim(fates_harvest_mode) .eq. fates_harvest_luh_area .or. &
+           trim(fates_harvest_mode) .eq. fates_harvest_luh_mass) then
 
           ! change the harvest varnames being used depending on the mode selected
-          if (fates_harvest_mode .eq. fates_harvest_luh_area ) then
+          if (trim(fates_harvest_mode) .eq. fates_harvest_luh_area ) then
              landuse_harvest_varnames => landuse_harvest_area_varnames
              landuse_harvest_units = landuse_harvest_area_units
-          elseif (fates_harvest_mode .eq. fates_harvest_luh_mass ) then
+          elseif (trim(fates_harvest_mode) .eq. fates_harvest_luh_mass ) then
              landuse_harvest_varnames => landuse_harvest_mass_varnames
              landuse_harvest_units = landuse_harvest_mass_units
           else
@@ -256,7 +257,8 @@ contains
           call landuse_state_vars(varnum)%get_current_data(this_data)
           landuse_states(varnum,bounds%begg:bounds%endg) = this_data(bounds%begg:bounds%endg)
        end do
-       if (fates_harvest_mode .ge. fates_harvest_luh_area ) then
+       if (trim(fates_harvest_mode) .eq. fates_harvest_luh_area .or. &
+           trim(fates_harvest_mode) .eq. fates_harvest_luh_mass) then
           do varnum = 1, num_landuse_harvest_vars
              call landuse_harvest_vars(varnum)%get_current_data(this_data)
              landuse_harvest(varnum,bounds%begg:bounds%endg) = this_data(bounds%begg:bounds%endg)
