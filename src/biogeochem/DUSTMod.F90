@@ -66,6 +66,8 @@ module DUSTMod
      procedure , public  :: DustDryDep      ! Turbulent dry deposition for dust
      procedure , public  :: WritePatchToLog ! Write information on the given patch to the log file
      procedure , public  :: GetPatchVars    ! Get important variables on a given patch
+     procedure , public  :: GetConstVars    ! Get important constant variables
+     procedure , public  :: Clean           ! Deallocate data 
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
      procedure , private :: InitCold     
@@ -93,6 +95,32 @@ contains
     call this%InitDustVars (bounds)
 
   end subroutine Init
+
+
+
+  !------------------------------------------------------------------------
+  subroutine Clean(this)
+   !
+   ! !ARGUMENTS:
+   class (dust_type) :: this
+   !
+   ! !LOCAL VARIABLES:
+   !------------------------------------------------------------------------
+
+   deallocate(this%flx_mss_vrt_dst_patch)
+   deallocate(this%flx_mss_vrt_dst_tot_patch)
+   deallocate(this%vlc_trb_patch)
+   deallocate(this%vlc_trb_1_patch)
+   deallocate(this%vlc_trb_2_patch)
+   deallocate(this%vlc_trb_3_patch)
+   deallocate(this%vlc_trb_4_patch)
+   deallocate(this%mbl_bsn_fct_col)
+
+   deallocate (ovr_src_snk_mss)
+   deallocate (dmt_vwr)
+   deallocate (stk_crc)
+
+ end subroutine Clean
 
   !------------------------------------------------------------------------
   subroutine InitAllocate(this, bounds)
@@ -221,19 +249,17 @@ contains
     class(dust_type), intent(in) :: this
     integer         , intent(in) :: p      ! Patch to display
 
-    write(iulog,*) 'flx_mss_vrt_dst', this%flx_mss_vrt_dst_patch(p,:)
     write(iulog,*) 'flx_mss_vrt_dst_tot', this%flx_mss_vrt_dst_tot_patch(p)
     write(iulog,*) 'vlc_trb_1', this%vlc_trb_1_patch(p)
     write(iulog,*) 'vlc_trb_2', this%vlc_trb_2_patch(p)
     write(iulog,*) 'vlc_trb_3', this%vlc_trb_3_patch(p)
     write(iulog,*) 'vlc_trb_4', this%vlc_trb_4_patch(p)
-    write(iulog,*) 'mbl_bsn_fct', this%mbl_bsn_fct_col(p)
- end subroutine WritePatchToLog
+  end subroutine WritePatchToLog
 
     !-----------------------------------------------------------------------
 
- subroutine GetPatchVars(this, p, flx_mss_vrt_dst, flx_mss_vrt_dst_tot, vlc_trb, vlc_trb_1, &
-                         vlc_trb_2, vlc_trb_3, vlc_trb_4)
+  subroutine GetPatchVars(this, p, flx_mss_vrt_dst, flx_mss_vrt_dst_tot, vlc_trb, vlc_trb_1, &
+                          vlc_trb_2, vlc_trb_3, vlc_trb_4)
    !
    ! !DESCRIPTION:
    ! Get important variables on the given patch
@@ -255,7 +281,20 @@ contains
    if ( present(vlc_trb_2) ) vlc_trb_2 = this%vlc_trb_2_patch(p)
    if ( present(vlc_trb_3) ) vlc_trb_3 = this%vlc_trb_3_patch(p)
    if ( present(vlc_trb_4) ) vlc_trb_4 = this%vlc_trb_4_patch(p)
-end subroutine GetPatchVars
+  end subroutine GetPatchVars
+
+    !-----------------------------------------------------------------------
+
+  subroutine GetConstVars(this, SaltationFactor )
+  !
+  ! !DESCRIPTION:
+  ! Get important constant variables
+  ! !ARGUMENTS:
+    class(dust_type)  , intent(in)  :: this
+    real(r8)          , intent(out) :: SaltationFactor
+
+    SaltationFactor = tmp1
+  end subroutine GetConstVars
 
   !------------------------------------------------------------------------
   subroutine DustEmission (this, bounds, &

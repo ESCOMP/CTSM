@@ -8,7 +8,7 @@ module test_DustEmis
   use clm_varpar, only : nlevsoi, nlevgrnd, nlevsno, clm_varpar_init, ndst
   use clm_varctl, only : soil_layerstruct_predefined, create_crop_landunit, use_crop, create_crop_landunit
   use clm_varcon, only : clm_varcon_init, clm_varcon_clean
-  use SnowHydrologyMod, only : InitSnowLayers, SnowHydrologySetControlForTesting
+  use SnowHydrologyMod, only : InitSnowLayers, SnowHydrologySetControlForTesting, SnowHydrologyClean
   use DUSTMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestFilterBuilderMod, only : filter_from_range
@@ -16,7 +16,7 @@ module test_DustEmis
   use SoilStateType, only : soilstate_type
   use CanopyStateType, only : canopystate_type
   use TemperatureType, only : temperature_type
-  use WaterType, only : water_type 
+  use WaterType, only : water_type
   use FrictionVelocityMod, only : frictionvel_type
   use unittestWaterTypeFactory, only : unittest_water_type_factory_type
   use abortutils, only : endrun
@@ -43,7 +43,7 @@ module test_DustEmis
      procedure :: setupEnvironment
      procedure :: create_atm2lnd
      procedure :: create_fv
-     procedure :: print_patch
+     procedure :: print_values
      procedure :: validate_patch
   end type TestDustEmis
 
@@ -116,7 +116,9 @@ contains
   subroutine tearDown(this)
     class(TestDustEmis), intent(inout) :: this
 
+    call this%dust_emis%Clean()
     call this%water_factory%teardown(this%water_inst)
+    call SnowHydrologyClean()
     call unittest_subgrid_teardown()
     call this%atm2lnd_inst%Clean()
     call clm_varcon_clean()
@@ -163,7 +165,7 @@ contains
     grc%londeg(:) = 0.0_r8
 
     grc%area(:) = 10.0_r8
-    
+
   end subroutine setupEnvironment
 
   !-----------------------------------------------------------------------
@@ -207,40 +209,43 @@ contains
     ! Initializes some fields needed for dust emissions in this%frictionvel_inst, and sets
     ! fields based on inputs. Excluded inputs are given a default value
     class(TestDustEmis), intent(inout) :: this
-    real(r8), intent(in), optional :: fv(:)
-    real(r8), intent(in), optional :: u10(:)
-    real(r8), intent(in), optional :: ram1(:)
+    real(r8), intent(in), optional :: fv
+    real(r8), intent(in), optional :: u10
+    real(r8), intent(in), optional :: ram1
 
-    real(r8), parameter :: fv_default = 0.2_r8
+    real(r8), parameter :: fv_default = 2.0_r8
     real(r8), parameter :: u10_default = 4._r8
     real(r8), parameter :: ram1_default = 200._r8
     ! ------------------------------------------------------------------------
 
     if (present(fv)) then
-       this%frictionvel_inst%fv_patch(bounds%begp:bounds%endp) = fv(:)
+       this%frictionvel_inst%fv_patch(bounds%begp:bounds%endp) = fv
     else
        this%frictionvel_inst%fv_patch(bounds%begp:bounds%endp) = fv_default
     end if
 
     if (present(u10)) then
-       this%frictionvel_inst%u10_patch(bounds%begp:bounds%endp) = u10(:)
+       this%frictionvel_inst%u10_patch(bounds%begp:bounds%endp) = u10
     else
        this%frictionvel_inst%u10_patch(bounds%begp:bounds%endp) = u10_default
     end if
 
     if (present(ram1)) then
-       this%frictionvel_inst%ram1_patch(bounds%begp:bounds%endp) = ram1(:)
+       this%frictionvel_inst%ram1_patch(bounds%begp:bounds%endp) = ram1
     else
        this%frictionvel_inst%ram1_patch(bounds%begp:bounds%endp) = ram1_default
     end if
 
   end subroutine create_fv
 
-  subroutine print_patch(this)
+  subroutine print_values(this)
     use LandunitType, only : lun
+    use PatchType, only : patch
     class(TestDustEmis), intent(inout) :: this
+    real(r8) :: SaltationFactor
     integer :: p, c, l
 
+    call this%dust_emis%GetConstVars( SaltationFactor )
     do l = bounds%begl, bounds%endl
        print *, 'landunit type= ', lun%itype(l)
     end do
@@ -248,13 +253,22 @@ contains
        print *, 'watsat = ', this%soilstate_inst%watsat_col(c,1)
        print *, 'h2osoi_vol = ', this%water_inst%waterstatebulk_inst%h2osoi_vol_col(c,1)
        print *, 'frac_sno = ', this%water_inst%waterdiagnosticbulk_inst%frac_sno_col(c)
+       print *, 'mss_frac_clay_vld = ', this%soilstate_inst%mss_frc_cly_vld_col(c)
+       print *, 'saltation per rho = ', (SaltationFactor / this%atm2lnd_inst%forc_rho_downscaled_col(c))
     end do
     do p = bounds%begp, bounds%endp
+       print *, 'patch type= ', patch%itype(p)
+       print *, 'patch weight= ', patch%wtgcell(p)
+       print *, 'patch active= ', patch%active(p)
        print *, 'tlai = ', this%canopystate_inst%tlai_patch(p)
+       print *, 'tsai = ', this%canopystate_inst%tsai_patch(p)
+       c = patch%column(p)
+       print *, 'Wind threshold fraction = ', (SaltationFactor / this%atm2lnd_inst%forc_rho_downscaled_col(c)) &
+                                     / this%frictionvel_inst%fv_patch(p)
        call this%dust_emis%WritePatchToLog( p )
     end do
     call endrun( "exit early")
-  end subroutine print_patch
+  end subroutine print_values
 
   !-----------------------------------------------------------------------
   subroutine validate_patch(this, p)
@@ -284,6 +298,7 @@ contains
 
   @Test
   subroutine check_dust_emis(this)
+    ! Check dust emissions for default values
     class(TestDustEmis), intent(inout) :: this
     integer :: p
     real(r8) :: flx_mss_vrt_dst_tot
@@ -303,14 +318,57 @@ contains
        call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot, &
                                vlc_trb_1=vlc_trb_1, vlc_trb_2=vlc_trb_2, vlc_trb_3=vlc_trb_3, &
                                vlc_trb_4=vlc_trb_4)
-       @assertEqual( 0.0_r8, flx_mss_vrt_dst_tot )
-       @assertEqual( 3.319559266672431d-5, vlc_trb_1, tolerance=tol )
-       @assertEqual( 1.699714729099379d-5, vlc_trb_2, tolerance=tol )
-       @assertEqual( 9.163854318535118d-6, vlc_trb_3, tolerance=tol )
-       @assertEqual( 3.614237762488103d-5, vlc_trb_4, tolerance=tol )
+       @assertEqual( flx_mss_vrt_dst_tot, 2.239779135859605d-5, tolerance=tol )
+       @assertEqual( vlc_trb_1, 3.407721147709135d-003, tolerance=tol )
+       @assertEqual( vlc_trb_2, 4.961153753164878d-003, tolerance=tol )
+       @assertEqual( vlc_trb_3, 4.980100969983446d-003, tolerance=tol )
+       @assertEqual( vlc_trb_4, 4.977071672163210d-003, tolerance=tol )
     end do
 
   end subroutine check_dust_emis
+
+  @Test
+  subroutine check_dust_emis_increasing_wind(this)
+    ! Check dust emissions with increasing wind
+    class(TestDustEmis), intent(inout) :: this
+    integer :: p, c
+    real(r8) :: flx_mss_vrt_dst_tot
+    real(r8) :: vlc_trb_1
+    real(r8) :: vlc_trb_2
+    real(r8) :: vlc_trb_3
+    real(r8) :: vlc_trb_4
+    real(r8) :: fv = 4.0_r8
+    real(r8) :: u10 = 10._r8
+    real(r8) :: total_dust0, total_dust_higher
+
+    ! Run baseline u10
+    call this%create_atm2lnd()
+    call this%create_fv( u10=u10, fv=fv )
+    call this%dust_emis%DustEmission(bounds, this%num_nolakep, this%filter_nolakep, this%atm2lnd_inst, &
+                      this%soilstate_inst, this%canopystate_inst, this%water_inst%waterstatebulk_inst, &
+                      this%water_inst%waterdiagnosticbulk_inst, this%frictionvel_inst)
+    call this%dust_emis%DustDryDep(bounds, this%atm2lnd_inst, this%frictionvel_inst)
+    do p = bounds%begp, bounds%endp
+       call this%validate_patch(p)
+       call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot )
+       total_dust0 = flx_mss_vrt_dst_tot
+       @assertEqual( flx_mss_vrt_dst_tot, 1.971366884000767d-4, tolerance=tol )
+    end do
+    ! Double u10 and show result is higher
+    call this%create_fv( u10=u10*2.0_r8, fv=fv)
+    call this%dust_emis%DustEmission(bounds, this%num_nolakep, this%filter_nolakep, this%atm2lnd_inst, &
+                      this%soilstate_inst, this%canopystate_inst, this%water_inst%waterstatebulk_inst, &
+                      this%water_inst%waterdiagnosticbulk_inst, this%frictionvel_inst)
+    call this%dust_emis%DustDryDep(bounds, this%atm2lnd_inst, this%frictionvel_inst)
+    do p = bounds%begp, bounds%endp
+       call this%validate_patch(p)
+       call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot )
+       total_dust_higher = flx_mss_vrt_dst_tot
+       @assertEqual( flx_mss_vrt_dst_tot, 3.288208220877217d-4, tolerance=tol )
+    end do
+    @assertGreaterThan( total_dust_higher, total_dust0 )
+
+  end subroutine check_dust_emis_increasing_wind
 
   !-----------------------------------------------------------------------
 
