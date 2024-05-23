@@ -4607,8 +4607,8 @@ sub setup_logic_fates {
               if ( defined($nl->get_value($var))  ) {
                  if ( ! &value_is_true($nl->get_value($var)) ) {
                     $var = "fluh_timeseries";
-                    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'phys'=>$nl_flags->{'phys'}, 
-                    'hgrid'=>$nl_flags->{'res'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, nofail=>1 );
+                    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
+           			'hgrid'=>$nl_flags->{'res'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
                     my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
                     if ( ! defined($nl->get_value($var))  ) {
                        $log->fatal_error("$var is required when use_fates_luh is set and use_fates_potentialveg is false" );
@@ -4620,17 +4620,17 @@ sub setup_logic_fates {
               $var = "use_fates_fixed_biogeog";
               if ( defined($nl->get_value($var))  ) {
                  if ( &value_is_true($nl->get_value($var)) ) {
-                    $var = "flandusepftdat";
-                    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                                'phys'=>$nl_flags->{'phys'}, 'hgrid'=>$nl_flags->{'res'}, nofail=>1 );
-                    my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
-                    if ( ! defined($nl->get_value($var))  ) {
-                      $log->fatal_error("$var is required when use_fates_luh and use_fates_fixed_biogeog is set" );
-                    } elsif ( ! -f "$fname" ) {
-                      $log->fatal_error("$var does NOT point to a valid filename" );
-                    }
-                 }
-              }
+            	    $var = "flandusepftdat";
+            	    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
+            	                'phys'=>$nl_flags->{'phys'}, 'hgrid'=>$nl_flags->{'res'}, nofail=>1 );
+            	    my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
+            	    if ( ! defined($nl->get_value($var))  ) {
+            	      $log->fatal_error("$var is required when use_fates_luh and use_fates_fixed_biogeog is set" );
+            	    } elsif ( ! -f "$fname" ) {
+            	      $log->fatal_error("$var does NOT point to a valid filename" );
+            	    }
+		 }
+	      }
            }
         }
         # check that fates landuse is on and harvest mode is off when potential veg switch is true
