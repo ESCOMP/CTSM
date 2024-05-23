@@ -142,6 +142,9 @@ module CNPhenologyMod
   logical,  public :: generate_crop_gdds = .false. ! If true, harvest the day before next sowing
   logical,  public :: use_mxmat = .true.           ! If true, ignore crop maximum growing season length
 
+  ! For use with adapt_cropcal_rx_cultivar_gdds .true.
+  real(r8), parameter :: min_gdd20_baseline = 0._r8  ! If gdd20_baseline_patch is ≤ this, do not consider baseline.
+
   ! Constants for seasonal decidious leaf onset and offset
   logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
   integer,  public, parameter :: critical_daylight_constant           = 1
@@ -2691,9 +2694,9 @@ contains
       if (use_cropcal_rx_cultivar_gdds .and. crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p)) .ge. 0._r8) then
          gddmaturity(p) = crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p))
          did_rx_gdds = .true.
-         if (adapt_cropcal_rx_cultivar_gdds) then
+         if (adapt_cropcal_rx_cultivar_gdds .and. crop_inst%gdd20_baseline_patch(p) > min_gdd20_baseline) then
             gddmaturity(p) = gddmaturity(p) * gdd20 / crop_inst%gdd20_baseline_patch(p)
-            !TODO SSR: Set maximum gddmaturity
+            !TODO SSR: Set maximum and minimum gddmaturity
          end if
       else if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
          gddmaturity(p) = hybgdd(ivt(p))
