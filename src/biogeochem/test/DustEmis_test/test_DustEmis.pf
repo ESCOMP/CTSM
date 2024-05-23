@@ -407,6 +407,27 @@ contains
 
   !-----------------------------------------------------------------------
 
+  @Test
+  subroutine aborts_on_bad_dust_mobility(this)
+    ! Check dust abort when dust mobility is bad
+    class(TestDustEmis), intent(inout) :: this
+    real(r8) :: flx_mss_vrt_dst_tot
+    character(100) :: expected_msg
+ 
+    call this%create_atm2lnd()
+    call this%create_fv( )
+    ! Dust should abort with an error on dust mobility when snow fraction greater than 1
+    this%water_inst%waterdiagnosticbulk_inst%frac_sno_col(:) = 1.0_r8 + 1.e-15_r8
+    call this%dust_emis%DustEmission(bounds, this%num_nolakep, this%filter_nolakep, this%atm2lnd_inst, &
+                         this%soilstate_inst, this%canopystate_inst, this%water_inst%waterstatebulk_inst, &
+                         this%water_inst%waterdiagnosticbulk_inst, this%frictionvel_inst)
+    expected_msg = "ABORTED: Bad value for dust mobilization fraction"
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine aborts_on_bad_dust_mobility
+ 
+  !-----------------------------------------------------------------------
+
  @Test
  subroutine dust_zero_when_tlai_high(this)
    ! Check dust emissions are zero when LAI is high enough
