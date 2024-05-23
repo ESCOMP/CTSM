@@ -358,7 +358,7 @@ contains
 
  @Test
  subroutine dust_zero_when_fsno_one(this)
-   ! Check dust emissions are zero for a no wind
+   ! Check dust emissions are zero when snow fraction is identically 1
    class(TestDustEmis), intent(inout) :: this
    integer :: p
    real(r8) :: flx_mss_vrt_dst_tot
@@ -377,6 +377,30 @@ contains
    end do
 
   end subroutine dust_zero_when_fsno_one
+
+  !-----------------------------------------------------------------------
+
+ @Test
+ subroutine dust_zero_when_tlai_high(this)
+   ! Check dust emissions are zero when LAI is high enough
+   class(TestDustEmis), intent(inout) :: this
+   integer :: p
+   real(r8) :: flx_mss_vrt_dst_tot
+
+   call this%create_atm2lnd()
+   call this%create_fv( )
+   this%canopystate_inst%tlai_patch(:) = 0.3_r8
+   call this%dust_emis%DustEmission(bounds, this%num_nolakep, this%filter_nolakep, this%atm2lnd_inst, &
+                     this%soilstate_inst, this%canopystate_inst, this%water_inst%waterstatebulk_inst, &
+                     this%water_inst%waterdiagnosticbulk_inst, this%frictionvel_inst)
+   call this%dust_emis%DustDryDep(bounds, this%atm2lnd_inst, this%frictionvel_inst)
+   do p = bounds%begp, bounds%endp
+      call this%validate_patch(p)
+      call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot )
+      @assertEqual( flx_mss_vrt_dst_tot, 0.0_r8 )
+   end do
+
+  end subroutine dust_zero_when_tlai_high
 
   !-----------------------------------------------------------------------
 
