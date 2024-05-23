@@ -107,9 +107,9 @@ To represent the LUH2 transient LULCC dataset in CLM5, the annual fractional com
 
 To support this translation task the CLM5 Land Use Data tool has been built that extends the methods described in Lawrence et al (2012) to include all the new functionality of CMIP6 and CLM5 LULCC. The tool translates each of the LUH2 land units for a given year into fractional PFT and CFT values based on the current day CLM5 data for the land unit in that grid cell. The current day land unit descriptions are generated from from 1km resolution MODIS, MIRCA2000, ICESAT, AVHRR, SRTM, and CRU climate data products combined with reference year LUH2 land unit data, usually set to 2005. Where the land unit does not exist in a grid cell for the current day, the land unit description is generated from nearest neighbors with an inverse distance weighted search algorithm.
 
-The Land Use Data tool produces raw vegetation, crop, and management data files which are combined with other raw land surface data to produce the CLM5 initial surface dataset and the dynamic *landuse.timeseries* dataset with the CLM5 mksurfdata_map tool. The schematic of this entire process from LUH2 time series and high resolution current day data to the output of CLM5 surface datasets from the mksurfdata_map tool is shown in Figure 21.2.
+The Land Use Data tool produces raw vegetation, crop, and management data files which are combined with other raw land surface data to produce the CLM5 initial surface dataset and the dynamic *landuse.timeseries* dataset with the CLM5 mksurfdata_esmf tool. The schematic of this entire process from LUH2 time series and high resolution current day data to the output of CLM5 surface datasets from the mksurfdata_esmf tool is shown in Figure 21.2.
 
-The methodology for creating the CLM5 transient PFT and CFT dataset is based on four steps which are applied across all of the historical and future time series. The first step involves generating the current day descriptions of natural and managed vegetation PFTs at 1km resolution from the global source datasets, and the current day description of crop CFTs at the 10km resolution from the MIRCA 2000 datasets. The second step combines the current day (2005) LUH2 land units with the current day CLM5 PFT and CFT distributions to get CLM5 land unit descriptions in either PFTs or CFTs at the LUH2 resolution of 0.25 degrees. The third step involves combining the LUH2 land unit time series with the CLM5 PFT and CFT descriptions for that land unit to generate the CLM5 raw PFT and CFT time series in the *landuse.timeseries* file. At this point in the process management information in terms of fertilizer, irrigation and wood harvest are added to the CLM5 PFT and CFT data to complete the CLM5 raw PFT and CFT files. The final step is to combine these files with the other raw CLM5 surface data files in the mksurfdata_map tool.
+The methodology for creating the CLM5 transient PFT and CFT dataset is based on four steps which are applied across all of the historical and future time series. The first step involves generating the current day descriptions of natural and managed vegetation PFTs at 1km resolution from the global source datasets, and the current day description of crop CFTs at the 10km resolution from the MIRCA 2000 datasets. The second step combines the current day (2005) LUH2 land units with the current day CLM5 PFT and CFT distributions to get CLM5 land unit descriptions in either PFTs or CFTs at the LUH2 resolution of 0.25 degrees. The third step involves combining the LUH2 land unit time series with the CLM5 PFT and CFT descriptions for that land unit to generate the CLM5 raw PFT and CFT time series in the *landuse.timeseries* file. At this point in the process management information in terms of fertilizer, irrigation and wood harvest are added to the CLM5 PFT and CFT data to complete the CLM5 raw PFT and CFT files. The final step is to combine these files with the other raw CLM5 surface data files in the mksurfdata_esmf tool.
 
 .. _Figure Schematic of land cover change:
 
@@ -123,8 +123,8 @@ The methodology for creating the CLM5 transient PFT and CFT dataset is based on 
 
  Schematic of translation of annual LUH2 land units to CLM5 plant and crop functional types.
 
-.. _Figure Workflow of CLM5 Land Use Data Tool and Mksurfdata_map Tool:
+.. _Figure Workflow of CLM5 Land Use Data Tool and mksurfdata_esmf Tool:
 
 .. figure:: image3.png
 
- Workflow of CLM5 Land Use Data Tool and Mksurfdata_map Tool
+ Workflow of CLM5 Land Use Data Tool and mksurfdata_esmf Tool

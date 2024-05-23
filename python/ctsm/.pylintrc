@@ -433,10 +433,19 @@ good-names=i,
            k,
            ex,
            Run,
+           ds,
+           m,
+           n,
+           l1,
+           l2,
+           ax,
            _,
 # --- default list is above here, our own list is below here ---
 # Allow logger as a global name in each module, because this seems to follow general recommended convention:
-           logger
+           logger,
+# Allow these names, which are commonly used in matplotlib instructions
+           ax,
+           im
 
 # Include a hint for the correct naming format with invalid-name.
 include-naming-hint=no

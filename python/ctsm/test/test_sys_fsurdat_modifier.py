@@ -38,6 +38,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         - modify_fsurdat.cfg
         - fsurdat_out.nc
         """
+        self._previous_dir = os.getcwd()
         self._cfg_template_path = os.path.join(
             path_to_ctsm_root(), "tools/modify_input_files/modify_fsurdat_template.cfg"
         )
@@ -45,7 +46,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._testinputs_path = testinputs_path
         self._fsurdat_in = os.path.join(
             testinputs_path,
-            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc",
+            "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031.nc",
         )
         self._tempdir = tempfile.mkdtemp()
         self._cfg_file_path = os.path.join(self._tempdir, "modify_fsurdat.cfg")
@@ -55,6 +56,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         """
         Remove temporary directory
         """
+        os.chdir(self._previous_dir)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_no_files_given_fail(self):
@@ -76,8 +78,8 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_short.cfg")
         sys.argv = ["fsurdat_modifier", self._cfg_file_path]
         parser = fsurdat_modifier_arg_process()
-        fsurdat_out = (
-            "ctsm/test/testinputs/surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_out.nc"
+        fsurdat_out = os.path.join(
+            self._testinputs_path, "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031.out.nc"
         )
         if os.path.exists(fsurdat_out):
             os.remove(fsurdat_out)
@@ -134,14 +136,14 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_opt_sections.cfg")
         outfile = os.path.join(
             self._tempdir,
-            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_output_urban.nc",
+            "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031_output_urban.nc",
         )
         sys.argv = [
             "fsurdat_modifier",
             self._cfg_file_path,
             "-i",
             os.path.join(
-                self._testinputs_path, "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc"
+                self._testinputs_path, "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031.nc"
             ),
             "-o",
             outfile,
@@ -180,12 +182,9 @@ class TestSysFsurdatModifier(unittest.TestCase):
         lev2_two = np.empty((2, 3, 5, 5))
         lev2_two[0, :, :, :] = 200.0
         lev2_two[1, :, :, :] = 100.0
-        lev2_five = np.empty((5, 3, 5, 5))
-        lev2_five[0, :, :, :] = 1.0
-        lev2_five[1, :, :, :] = 2.0
-        lev2_five[2, :, :, :] = 3.0
-        lev2_five[3, :, :, :] = 4.0
-        lev2_five[4, :, :, :] = 5.0
+        lev2_ten = np.empty((10, 3, 5, 5))
+        for x in range(10):
+            lev2_ten[x, :, :, :] = float(x + 1)
         lev1 = np.array(
             [
                 [
@@ -215,12 +214,13 @@ class TestSysFsurdatModifier(unittest.TestCase):
         np.testing.assert_array_equal(fsurdat_out_data.PCT_CROP, zero0d)
         np.testing.assert_array_equal(fsurdat_out_data.PCT_LAKE, zero0d)
         np.testing.assert_array_equal(fsurdat_out_data.PCT_WETLAND, zero0d)
+        np.testing.assert_array_equal(fsurdat_out_data.PCT_OCEAN, zero0d)
         np.testing.assert_array_equal(fsurdat_out_data.PCT_GLACIER, zero0d)
         np.testing.assert_array_equal(fsurdat_out_data.PCT_URBAN, pct_urban)
         np.testing.assert_array_equal(fsurdat_out_data.LAKEDEPTH, one0d * 200.0)
         np.testing.assert_array_equal(fsurdat_out_data.T_BUILDING_MIN, lev1)
         np.testing.assert_array_equal(fsurdat_out_data.ALB_ROOF_DIR, lev2_two)
-        np.testing.assert_array_equal(fsurdat_out_data.TK_ROOF, lev2_five)
+        np.testing.assert_array_equal(fsurdat_out_data.TK_ROOF, lev2_ten)
 
     def test_evenly_split_cropland(self):
         """
@@ -255,15 +255,15 @@ class TestSysFsurdatModifier(unittest.TestCase):
         )
         expectfile = os.path.join(
             self._testinputs_path,
-            "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206_modified.nc",
+            "surfdata_1x1_mexicocityMEX_hist_16pfts_CMIP6_2000_c231103_modified.nc",
         )
         outfile = os.path.join(
             self._tempdir,
-            "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206_modified.nc",
+            "surfdata_1x1_mexicocityMEX_hist_16pfts_CMIP6_2000_c231103_modified.nc",
         )
         infile = os.path.join(
             self._testinputs_path,
-            "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc",
+            "surfdata_1x1_mexicocityMEX_hist_16pfts_CMIP6_2000_c231103.nc",
         )
         sys.argv = [
             "fsurdat_modifier",

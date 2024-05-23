@@ -3,27 +3,6 @@
 smc#4 TSMscript_tools.sh mkprocdata_map mkprocdata_map_wrap mkprocdata_ne30_to_f19_I2000^tools__ds
 blc#4 TBLscript_tools.sh mkprocdata_map mkprocdata_map_wrap mkprocdata_ne30_to_f19_I2000^tools__ds
 
-smg54 TSMtools.sh mksurfdata_map   tools__s  namelist
-blg54 TBLtools.sh mksurfdata_map   tools__s  namelist
-
-smi24 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_T31_crpglc_2000^tools__ds
-bli24 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_T31_crpglc_2000^tools__ds
-
-smi04 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_f09_PtVg^tools__ds
-bli04 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_f09_PtVg^tools__ds
-
-smi53 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__o
-bli53 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__o
-smi54 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__ds
-bli54 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__ds
-smi57 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__do
-bli57 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__do
-smi58 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_crp_1850-2000^tools__do
-bli58 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_crp_1850-2000^tools__do
-
-smi64 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_5x5_amazon_hirespft_2005^tools__ds
-bli64 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_5x5_amazon_hirespft_2005^tools__ds
-
 sm0c1 TSMscript_tools.sh site_and_regional run_neon.py run_neon_OSBS
 bl0c1 TBLscript_tools.sh site_and_regional run_neon.py run_neon_OSBS
 sm0a1 TSMscript_tools.sh site_and_regional run_neon.py run_neon_YELL_PRISM
@@ -35,15 +14,19 @@ smbb1 TSMscript_tools.sh site_and_regional subset_data subset_data_KONA
 blbb1 TBLscript_tools.sh site_and_regional subset_data subset_data_KONA
 smb81 TSMscript_tools.sh site_and_regional subset_data subset_data_US-UMB
 blb81 TBLscript_tools.sh site_and_regional subset_data subset_data_US-UMB
-smbc1 TSMscript_tools.sh site_and_regional subset_data subset_data_f09_US_pt
-blbc1 TBLscript_tools.sh site_and_regional subset_data subset_data_f09_US_pt
-smbd1 TSMscript_tools.sh site_and_regional subset_data subset_data_region1
-blbd1 TBLscript_tools.sh site_and_regional subset_data subset_data_region1
+smbh1 TSMscript_tools.sh site_and_regional subset_data subset_data_f09_1x1pt_townshipSD
+blbh1 TBLscript_tools.sh site_and_regional subset_data subset_data_f09_1x1pt_townshipSD
+smbd1 TSMscript_tools.sh site_and_regional subset_data subset_data_f09_58x45pt_SouthAmerica
+blbd1 TBLscript_tools.sh site_and_regional subset_data subset_data_f09_58x45pt_SouthAmerica
+smbe1 TSMscript_tools.sh site_and_regional subset_data subset_data_f09_90x288pt_1850PanTropics
+blbe1 TBLscript_tools.sh site_and_regional subset_data subset_data_f09_90x288pt_1850PanTropics
+smbf1 TSMscript_tools.sh site_and_regional subset_data subset_data_f09_37x288pt_PanBoreal
+blbf1 TBLscript_tools.sh site_and_regional subset_data subset_data_f09_37x288pt_PanBoreal
+smbg1 TSMscript_tools.sh site_and_regional subset_data subset_data_f09_4x9pt_AlaskaTananaValley
+blbg1 TBLscript_tools.sh site_and_regional subset_data subset_data_f09_4x9pt_AlaskaTananaValley
+
+sm901 TSMscript_tools.sh site_and_regional mesh_maker mesh_maker_fv09
+bl901 TBLscript_tools.sh site_and_regional mesh_maker mesh_maker_fv09
 
 smaa2 TSMscript_tools.sh site_and_regional modify_singlept_site_neon.py modify_data_YELL
 blaa2 TBLscript_tools.sh site_and_regional modify_singlept_site_neon.py modify_data_YELL
-
-smi#2 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
-bli#2 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
-smi59 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
-bli59 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
