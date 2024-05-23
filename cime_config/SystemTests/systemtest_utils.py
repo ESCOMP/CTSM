@@ -2,7 +2,7 @@
 Reduce code duplication by putting reused functions here.
 """
 
-import os, subprocess
+import os, subprocess, re
 
 
 def cmds_to_setup_conda(caseroot):
@@ -84,3 +84,21 @@ def run_python_script(caseroot, this_conda_env, command_in, tool_path):
     except:
         print(f"ERROR trying to run {tool_name}.")
         raise
+
+def read_user_nl_clm(self,namelist_option):
+    user_nl_clm_path = os.path.join(self._get_caseroot(), "user_nl_clm")
+    with open(user_nl_clm_path) as f:
+        user_nl_clm_text = f.read()
+        reg = fr'{namelist_option}\s*=\s*([^\n]+)'
+        find_out = re.findall(reg, user_nl_clm_text)
+        # This could be more robust
+        if len(find_out) == 0:
+            return 0, False
+        elif len(find_out) > 1:
+            error_message = (
+                "ERROR: read_user_nl_clm: namelist option is set more than once"
+            )
+            # logger.error(error_message)
+            raise RuntimeError(error_message)
+        else:
+            return find_out[0], True
