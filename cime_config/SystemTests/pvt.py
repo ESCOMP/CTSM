@@ -18,20 +18,17 @@ import shutil, glob, os
 logger = logging.getLogger(__name__)
 
 class PVT(SystemTestsCommon):
-    def __init_(self,case):
+    def __init__(self,case):
         SystemTestsCommon.__init__(self,case)
 
         # Do not allow PVT to be run with certain testmods
         # Should this be targeted to a specific testmod for simplicity for now?
         # Technically this could be run with the luh fates_harvest_modes
+        error_message = None
         casebaseid = self._case.get_value("CASEBASEID")
-        casebasid = casebaseid.split("-")[-1]
+        casebaseid = casebaseid.split("-")[-1]
         if casebaseid[0:10] != "FatesLUPFT":
-            error_message = (
-                "Only call PVT with test FatesLUPFT"
-            )
-            logger.error(error_message)
-            raise RuntimeError(error_message)
+            error_message = (f"Only call PVT with testmod FatesLUPFT. {casebaseid} selected.")
 
         # Only allow to run if resolution is 4x5 for now
         # Eventually we could set this up to generate the necessary land use x pft mapping
@@ -39,12 +36,11 @@ class PVT(SystemTestsCommon):
         # regridding on the fly which is a more time consuming endevour currently
         lnd_grid = self._case.get_value("LND_GRID")
         if lnd_grid != "4x5":
-            error_message = (
-                "PVT can currently only be run with 4x5 resolution"
-            )
+            error_message = (f"PVT can currently only be run with 4x5 resolution. {lnd_grid} selected.")
+
+        if error_message is not None:
             logger.error(error_message)
             raise RuntimeError(error_message)
-
     def run_phase(self):
         # -------------------------------------------------------------------
         # (1) Run FATES spin-up case in potential vegetation mode
