@@ -31,7 +31,7 @@
   <!-- ctsm_sci test suite failures -->
   <test name="RXCROPMATURITY_Lm61.f09_g17.IHistClm50BgcCrop.derecho_intel.clm-cropMonthOutput">
     <phase name="RUN">
-      <status>PEND</status>
+      <status>FAIL</status>
       <issue>#2460</issue>
     </phase>
   </test>
@@ -48,6 +48,13 @@
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#2444</issue>
+    </phase>
+  </test>
+
+  <test name="PEM_D_Ld3.ne30pg3_t232.I1850Clm60BgcCropG.derecho_intel.clm-clm60cam6LndTuningMode">
+    <phase name="COMPARE_base_modpes">
+      <status>FAIL</status>
+      <issue>#2542</issue>
     </phase>
   </test>
 
