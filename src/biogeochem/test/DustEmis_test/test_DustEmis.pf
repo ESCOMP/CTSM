@@ -371,12 +371,39 @@ contains
                      this%water_inst%waterdiagnosticbulk_inst, this%frictionvel_inst)
    call this%dust_emis%DustDryDep(bounds, this%atm2lnd_inst, this%frictionvel_inst)
    do p = bounds%begp, bounds%endp
-      call this%validate_patch(p)
       call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot )
       @assertEqual( flx_mss_vrt_dst_tot, 0.0_r8 )
    end do
 
   end subroutine dust_zero_when_fsno_one
+
+  !-----------------------------------------------------------------------
+
+ @Test
+ subroutine dust_zero_non_veg_lu(this)
+   ! Check dust emissions are zero for non-veg landunits
+   use landunit_varcon, only: istcrop, max_lunit
+   use LandunitType, only : lun
+   class(TestDustEmis), intent(inout) :: this
+   integer :: p, l
+   real(r8) :: flx_mss_vrt_dst_tot
+
+   call this%create_atm2lnd()
+   call this%create_fv( )
+   ! Set the lanunit type for
+   do l = istcrop+1, max_lunit
+      lun%itype(bounds%begl:bounds%endl) = l
+      call this%dust_emis%DustEmission(bounds, this%num_nolakep, this%filter_nolakep, this%atm2lnd_inst, &
+                        this%soilstate_inst, this%canopystate_inst, this%water_inst%waterstatebulk_inst, &
+                        this%water_inst%waterdiagnosticbulk_inst, this%frictionvel_inst)
+      call this%dust_emis%DustDryDep(bounds, this%atm2lnd_inst, this%frictionvel_inst)
+      do p = bounds%begp, bounds%endp
+         call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot )
+         @assertEqual( flx_mss_vrt_dst_tot, 0.0_r8 )
+      end do
+   end do
+
+  end subroutine dust_zero_non_veg_lu
 
   !-----------------------------------------------------------------------
 
