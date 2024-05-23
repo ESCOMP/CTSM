@@ -9,7 +9,7 @@ module test_DustEmis
   use clm_varctl, only : soil_layerstruct_predefined, create_crop_landunit, use_crop, create_crop_landunit
   use clm_varcon, only : clm_varcon_init, clm_varcon_clean
   use SnowHydrologyMod, only : InitSnowLayers, SnowHydrologySetControlForTesting, SnowHydrologyClean
-  use DUSTMod
+  use DustEmisZender2003
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestFilterBuilderMod, only : filter_from_range
   use atm2lndType, only : atm2lnd_type, atm2lnd_params_type

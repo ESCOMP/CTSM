@@ -1,4 +1,4 @@
-module DUSTMod
+module DustEmisZender2003
 
   !----------------------------------------------------------------------- 
   ! !DESCRIPTION: 
@@ -1033,4 +1033,4 @@ contains
 
   end subroutine InitDustVars
 
-end module DUSTMod
+end module DustEmisZender2003

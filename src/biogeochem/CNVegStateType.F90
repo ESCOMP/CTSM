@@ -519,7 +519,7 @@ contains
 
     ! --------------------------------------------------------------------
     ! Initialize terms needed for dust model
-    ! TODO - move these terms to DUSTMod module variables
+    ! TODO - move these terms to DustEmisZender2003 module variables
     ! --------------------------------------------------------------------
 
     do c = bounds%begc, bounds%endc

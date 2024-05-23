@@ -20,7 +20,7 @@ module lnd2atmMod
   use lnd2atmType          , only : lnd2atm_type
   use atm2lndType          , only : atm2lnd_type
   use ch4Mod               , only : ch4_type
-  use DUSTMod              , only : dust_type
+  use DustEmisZender2003              , only : dust_type
   use DryDepVelocity       , only : drydepvel_type
   use VocEmissionMod       , only : vocemis_type
   use CNFireEmissionsMod   , only : fireemis_type

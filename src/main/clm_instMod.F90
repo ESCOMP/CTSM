@@ -45,7 +45,7 @@ module clm_instMod
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use CropType                        , only : crop_type
   use DryDepVelocity                  , only : drydepvel_type
-  use DUSTMod                         , only : dust_type
+  use DustEmisZender2003                         , only : dust_type
   use EnergyFluxType                  , only : energyflux_type
   use FrictionVelocityMod             , only : frictionvel_type
   use GlacierSurfaceMassBalanceMod    , only : glacier_smb_type

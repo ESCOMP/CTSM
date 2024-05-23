@@ -62,7 +62,7 @@ module clm_driver
   use ndepStreamMod          , only : ndep_interp
   use cropcalStreamMod       , only : cropcal_advance, cropcal_interp
   use ch4Mod                 , only : ch4, ch4_init_gridcell_balance_check, ch4_init_column_balance_check
-  use DUSTMod                , only : DustDryDep, DustEmission
+  use DustEmisZender2003                , only : DustDryDep, DustEmission
   use VOCEmissionMod         , only : VOCEmission
   !
   use filterMod              , only : setFilters
