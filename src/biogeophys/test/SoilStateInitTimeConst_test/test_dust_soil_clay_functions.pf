@@ -1,0 +1,29 @@
+module test_dust_soil_clay_functions
+
+  ! Tests of SoilStateInitTimeConst functions for dust emission in regard to clay content
+
+  use funit
+  use SoilStateInitTimeConstMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestDustEmisSoilFunctions
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestDustEmisSoilFunctions
+
+contains
+
+  subroutine setUp(this)
+    class(TestDustEmisSoilFunctions), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestDustEmisSoilFunctions), intent(inout) :: this
+
+  end subroutine tearDown
+
+end module test_dust_soil_clay_functions

@@ -25,6 +25,7 @@ list(APPEND clm_sources
   SoilHydrologyType.F90
   SoilStateType.F90
   SoilWaterRetentionCurveMod.F90
+  SoilStateInitTimeConstMod.F90
   SolarAbsorbedType.F90
   PhotosynthesisMod.F90
   SurfaceAlbedoType.F90
