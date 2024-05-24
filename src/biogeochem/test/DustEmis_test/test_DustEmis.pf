@@ -19,6 +19,7 @@ module test_DustEmis
   use WaterType, only : water_type
   use FrictionVelocityMod, only : frictionvel_type
   use unittestWaterTypeFactory, only : unittest_water_type_factory_type
+  use SoilStateInitTimeConstMod, only : ThresholdSoilMoist, ThresholdSoilMoistKok2014, MassFracClay
 
   implicit none
 
@@ -155,8 +156,8 @@ contains
        ! considered bedrock
        col%nbedrock(c) = nlevsoi
 
-       this%soilstate_inst%gwc_thr_col(c) = 0.17_r8 + 0.14_r8 * clay * 0.01_r8
-       this%soilstate_inst%mss_frc_cly_vld_col(c) = 0.17_r8
+       this%soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoist( clay )
+       this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay )
     end do
 
 
@@ -316,7 +317,7 @@ contains
        call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot, &
                                vlc_trb_1=vlc_trb_1, vlc_trb_2=vlc_trb_2, vlc_trb_3=vlc_trb_3, &
                                vlc_trb_4=vlc_trb_4)
-       @assertEqual( flx_mss_vrt_dst_tot, 2.239779135859605d-5, tolerance=tol )
+       @assertEqual( flx_mss_vrt_dst_tot, 2.583480541056971d-6, tolerance=tol )
        @assertEqual( vlc_trb_1, 3.407721147709135d-003, tolerance=tol )
        @assertEqual( vlc_trb_2, 4.961153753164878d-003, tolerance=tol )
        @assertEqual( vlc_trb_3, 4.980100969983446d-003, tolerance=tol )
@@ -473,7 +474,7 @@ contains
        call this%validate_patch(p)
        call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot )
        total_dust0 = flx_mss_vrt_dst_tot
-       @assertEqual( flx_mss_vrt_dst_tot, 1.971366884000767d-4, tolerance=tol )
+       @assertEqual( flx_mss_vrt_dst_tot, 2.273879554711299d-5, tolerance=tol )
     end do
     ! Double u10 and show result is higher
     call this%create_fv( u10=u10*2.0_r8, fv=fv)
@@ -485,7 +486,7 @@ contains
        call this%validate_patch(p)
        call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot )
        total_dust_higher = flx_mss_vrt_dst_tot
-       @assertEqual( flx_mss_vrt_dst_tot, 3.288208220877217d-4, tolerance=tol )
+       @assertEqual( flx_mss_vrt_dst_tot, 3.792794484764924d-5, tolerance=tol )
     end do
     @assertGreaterThan( total_dust_higher, total_dust0 )
 
