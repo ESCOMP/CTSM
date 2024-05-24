@@ -1,0 +1,298 @@
+module test_DustEmisBase
+
+  ! Tests of DustEmisBase
+
+  use funit
+  use unittestSubgridMod
+  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
+  use clm_varpar, only : nlevsoi, nlevgrnd, nlevsno, clm_varpar_init, ndst
+  use clm_varctl, only : soil_layerstruct_predefined, create_crop_landunit, use_crop, create_crop_landunit
+  use clm_varcon, only : clm_varcon_init, clm_varcon_clean
+  use SnowHydrologyMod, only : InitSnowLayers, SnowHydrologySetControlForTesting, SnowHydrologyClean
+  use DustEmisZender2003
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestFilterBuilderMod, only : filter_from_range
+  use atm2lndType, only : atm2lnd_type, atm2lnd_params_type
+  use SoilStateType, only : soilstate_type
+  use CanopyStateType, only : canopystate_type
+  use TemperatureType, only : temperature_type
+  use WaterType, only : water_type
+  use FrictionVelocityMod, only : frictionvel_type
+  use unittestWaterTypeFactory, only : unittest_water_type_factory_type
+  use SoilStateInitTimeConstMod, only : ThresholdSoilMoist, ThresholdSoilMoistKok2014, MassFracClay
+
+  implicit none
+
+  real(r8), parameter :: tol = 1.e-18_r8
+
+  @TestCase
+  type, extends(TestCase) :: TestDustEmisBase
+     type(dust_type) :: dust_emis
+     integer, allocatable :: filter_nolakep(:)      ! non-lake filter (patches)
+     integer :: num_nolakep              ! number of patches in non-lake filter
+     type(atm2lnd_type) :: atm2lnd_inst
+     type(soilstate_type) :: soilstate_inst
+     type(canopystate_type) :: canopystate_inst
+     type(temperature_type) :: temperature_inst
+     type(unittest_water_type_factory_type) :: water_factory
+     type(water_type) :: water_inst
+     type(frictionvel_type) :: frictionvel_inst
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+     procedure :: setupEnvironment
+     procedure :: create_atm2lnd
+     procedure :: create_fv
+     procedure :: print_values
+     procedure :: validate_patch
+  end type TestDustEmisBase
+
+contains
+
+  !-----------------------------------------------------------------------
+
+  subroutine setUp(this)
+    use ColumnType, only : col
+    class(TestDustEmisBase), intent(inout) :: this
+
+    character(len=5) :: NLFilename = 'none'
+    real(r8), allocatable :: snow_depth_col(:)
+    real(r8), allocatable :: urb_em(:)
+    integer :: begl, endl, begc, endc
+    integer :: c
+    type(atm2lnd_params_type) :: atm2lnd_params
+
+    soil_layerstruct_predefined = '20SL_8.5m'
+    create_crop_landunit = .true.
+    use_crop = .false.
+    call clm_varpar_init( actual_maxsoil_patches=17, surf_numpft=15, surf_numcft=2, actual_nlevurb=5 )
+    call clm_varcon_init( is_simple_buildtemp=.true.)
+    call this%water_factory%init()
+    call this%water_factory%setup_before_subgrid( &
+        my_nlevsoi = nlevsoi, &
+        nlevgrnd_additional = nlevgrnd - nlevsoi, &
+        my_nlevsno = 3)
+    call setup_single_veg_patch( pft_type=0 )
+    begl = bounds%begl
+    endl = bounds%endl
+    begc = bounds%begc
+    endc = bounds%endc
+    allocate( urb_em(begl:endl) )
+
+    call this%dust_emis%Init( bounds, NLFilename )
+    call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%num_nolakep, filter=this%filter_nolakep)
+    atm2lnd_params = atm2lnd_params_type( repartition_rain_snow = .false., &
+                                          glcmec_downscale_longwave = .false., &
+                                          lapse_rate = 0.01_r8 &  ! arbitrary (this is unused for these tests)
+    )
+    allocate (snow_depth_col(begc:endc))
+    snow_depth_col(begc:endc) = 0.0_r8
+    call SnowHydrologySetControlForTesting()
+    call InitSnowLayers(bounds, snow_depth_col(bounds%begc:bounds%endc))
+    call this%water_factory%setup_after_subgrid(snl = 3)
+    call this%soilstate_inst%Init(bounds)
+    do c = begc, endc
+       this%soilstate_inst%watsat_col(c,:) = 0.05_r8 * (c - bounds%begc + 1)
+    end do
+    call this%setupEnvironment( )
+    call this%water_factory%create_water_type(this%water_inst, watsat_col=this%soilstate_inst%watsat_col)
+    call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
+    call this%canopystate_inst%SetNMLForTesting()
+    call this%canopystate_inst%Init(bounds)
+    call this%frictionvel_inst%InitForTesting(bounds)
+    urb_em(begl:endl) = 0.99_r8
+    call this%temperature_inst%Init(bounds,           &
+                               em_roof_lun=urb_em(begl:endl), &
+                               em_wall_lun=urb_em(begl:endl), &
+                               em_improad_lun=urb_em(begl:endl), &
+                               em_perroad_lun=urb_em(begl:endl), &
+                               is_simple_buildtemp=.true., is_prog_buildtemp=.false.)
+    deallocate (snow_depth_col )
+    deallocate( urb_em )
+  end subroutine setUp
+
+  !-----------------------------------------------------------------------
+
+  subroutine tearDown(this)
+    class(TestDustEmisBase), intent(inout) :: this
+
+    call this%dust_emis%Clean()
+    call this%water_factory%teardown(this%water_inst)
+    call SnowHydrologyClean()
+    call unittest_subgrid_teardown()
+    call this%atm2lnd_inst%Clean()
+    call clm_varcon_clean()
+    deallocate( this%filter_nolakep )
+  end subroutine tearDown
+
+  !-----------------------------------------------------------------------
+
+  subroutine setupEnvironment(this)
+    !
+    ! !DESCRIPTION:
+    ! Sets up the external environment used by Dust emissions - i.e., things accessed via
+    ! 'use' statements.
+    !
+    ! Assumes nlevgrnd and nlevsoi have been set, and that all necessary subgrid setup has
+    ! been completed.
+    !
+    use ColumnType, only : col
+    use GridcellType, only : grc
+    class(TestDustEmisBase), intent(in) :: this
+    !
+    integer :: c,j
+    real(r8), parameter :: clay = 10.0_r8
+
+    !-----------------------------------------------------------------------
+    col%dz(:,1:nlevgrnd) = 1.0_r8
+    do j = 1, nlevgrnd
+       do c = bounds%begc, bounds%endc
+          col%z(c,j) = sum(col%dz(c,1:j-1)) + 0.5_r8*col%dz(c,j)
+       end do
+    end do
+
+    do c = bounds%begc, bounds%endc
+       ! Setting nbedrock to nlevsoi means that none of the layers from 1:nlevsoi are
+       ! considered bedrock
+       col%nbedrock(c) = nlevsoi
+
+       this%soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoist( clay )
+       this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay )
+    end do
+
+
+    ! Use longitude along Greenich so don't have to calculate offsets for longitudes (that's calculated in clm_time_manager)
+    grc%londeg(:) = 0.0_r8
+
+    grc%area(:) = 10.0_r8
+
+  end subroutine setupEnvironment
+
+  !-----------------------------------------------------------------------
+
+  subroutine create_atm2lnd(this, forc_t, forc_pbot, forc_rho )
+    ! Initializes some fields needed for dust emissions in this%atm2lnd_inst, and sets
+    ! forcing fields based on inputs. Excluded inputs are given a default value
+    class(TestDustEmisBase), intent(inout) :: this
+    real(r8), intent(in), optional :: forc_t(:)
+    real(r8), intent(in), optional :: forc_pbot(:)
+    real(r8), intent(in), optional :: forc_rho(:)
+
+    real(r8), parameter :: forc_t_default = 301._r8
+    real(r8), parameter :: forc_pbot_default = 100000._r8
+    real(r8), parameter :: forc_rho_default = 1.1_r8
+    ! ------------------------------------------------------------------------
+
+    if (present(forc_t)) then
+       this%atm2lnd_inst%forc_t_downscaled_col(bounds%begc:bounds%endc) = forc_t(:)
+    else
+       this%atm2lnd_inst%forc_t_downscaled_col(bounds%begc:bounds%endc) = forc_t_default
+    end if
+
+    if (present(forc_pbot)) then
+       this%atm2lnd_inst%forc_pbot_downscaled_col(bounds%begc:bounds%endc) = forc_pbot(:)
+    else
+       this%atm2lnd_inst%forc_pbot_downscaled_col(bounds%begc:bounds%endc) = forc_pbot_default
+    end if
+
+    if (present(forc_rho)) then
+       this%atm2lnd_inst%forc_rho_downscaled_col(bounds%begc:bounds%endc) = forc_rho(:)
+    else
+       this%atm2lnd_inst%forc_rho_downscaled_col(bounds%begc:bounds%endc) = forc_rho_default
+    end if
+
+  end subroutine create_atm2lnd
+
+  !-----------------------------------------------------------------------
+
+  subroutine create_fv(this, fv, u10, ram1)
+    ! Initializes some fields needed for dust emissions in this%frictionvel_inst, and sets
+    ! fields based on inputs. Excluded inputs are given a default value
+    class(TestDustEmisBase), intent(inout) :: this
+    real(r8), intent(in), optional :: fv
+    real(r8), intent(in), optional :: u10
+    real(r8), intent(in), optional :: ram1
+
+    real(r8), parameter :: fv_default = 2.0_r8
+    real(r8), parameter :: u10_default = 4._r8
+    real(r8), parameter :: ram1_default = 200._r8
+    ! ------------------------------------------------------------------------
+
+    if (present(fv)) then
+       this%frictionvel_inst%fv_patch(bounds%begp:bounds%endp) = fv
+    else
+       this%frictionvel_inst%fv_patch(bounds%begp:bounds%endp) = fv_default
+    end if
+
+    if (present(u10)) then
+       this%frictionvel_inst%u10_patch(bounds%begp:bounds%endp) = u10
+    else
+       this%frictionvel_inst%u10_patch(bounds%begp:bounds%endp) = u10_default
+    end if
+
+    if (present(ram1)) then
+       this%frictionvel_inst%ram1_patch(bounds%begp:bounds%endp) = ram1
+    else
+       this%frictionvel_inst%ram1_patch(bounds%begp:bounds%endp) = ram1_default
+    end if
+
+  end subroutine create_fv
+
+  subroutine print_values(this)
+    use LandunitType, only : lun
+    use PatchType, only : patch
+    class(TestDustEmisBase), intent(inout) :: this
+    real(r8) :: SaltationFactor
+    integer :: p, c, l
+
+    call this%dust_emis%GetConstVars( SaltationFactor )
+    do l = bounds%begl, bounds%endl
+       print *, 'landunit type= ', lun%itype(l)
+    end do
+    do c = bounds%begc, bounds%endc
+       print *, 'watsat = ', this%soilstate_inst%watsat_col(c,1)
+       print *, 'h2osoi_vol = ', this%water_inst%waterstatebulk_inst%h2osoi_vol_col(c,1)
+       print *, 'frac_sno = ', this%water_inst%waterdiagnosticbulk_inst%frac_sno_col(c)
+       print *, 'mss_frac_clay_vld = ', this%soilstate_inst%mss_frc_cly_vld_col(c)
+       print *, 'saltation per rho = ', (SaltationFactor / this%atm2lnd_inst%forc_rho_downscaled_col(c))
+    end do
+    do p = bounds%begp, bounds%endp
+       print *, 'patch type= ', patch%itype(p)
+       print *, 'patch weight= ', patch%wtgcell(p)
+       print *, 'patch active= ', patch%active(p)
+       print *, 'tlai = ', this%canopystate_inst%tlai_patch(p)
+       print *, 'tsai = ', this%canopystate_inst%tsai_patch(p)
+       c = patch%column(p)
+       print *, 'Wind threshold fraction = ', (SaltationFactor / this%atm2lnd_inst%forc_rho_downscaled_col(c)) &
+                                     / this%frictionvel_inst%fv_patch(p)
+       call this%dust_emis%WritePatchToLog( p )
+    end do
+  end subroutine print_values
+
+  !-----------------------------------------------------------------------
+  subroutine validate_patch(this, p)
+    class(TestDustEmisBase), intent(inout) :: this
+    integer, intent(in) :: p
+
+    real(r8) :: flx_mss_vrt_dst(ndst)
+    real(r8) :: flx_mss_vrt_dst_tot
+    real(r8) :: vlc_trb(ndst)
+    real(r8) :: vlc_trb_1
+    real(r8) :: vlc_trb_2
+    real(r8) :: vlc_trb_3
+    real(r8) :: vlc_trb_4
+
+    call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst=flx_mss_vrt_dst, &
+             flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot, vlc_trb=vlc_trb, &
+             vlc_trb_1=vlc_trb_1, vlc_trb_2=vlc_trb_2, vlc_trb_3=vlc_trb_3, &
+             vlc_trb_4=vlc_trb_4 )
+    @assertEqual( sum(flx_mss_vrt_dst), flx_mss_vrt_dst_tot )
+    @assertEqual( vlc_trb(1), vlc_trb_1)
+    @assertEqual( vlc_trb(2), vlc_trb_2)
+    @assertEqual( vlc_trb(3), vlc_trb_3)
+    @assertEqual( vlc_trb(4), vlc_trb_4)
+  end subroutine validate_patch
+
+  !-----------------------------------------------------------------------
+
+end module test_DustEmisBase
