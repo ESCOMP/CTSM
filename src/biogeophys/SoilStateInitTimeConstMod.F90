@@ -724,8 +724,15 @@ contains
 
   real(r8) function ThresholdSoilMoist( clay )
   ! Calculate the threshold soil moisture needed for dust emission, based on clay content
+      use abortUtils    , only : endrun    
+      use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
       real(r8), intent(IN) :: clay ! Fraction of clay in the soil (%)
 
+      if ( clay < 0.0_r8 .or. clay > 100.0_r8 )then
+         ThresholdSoilMoist = nan
+         call endrun( 'Clay fraction is out of bounds (0 to 100)')
+         return
+      end if
       ThresholdSoilMoist = 0.17_r8 + 0.14_r8 * clay * 0.01_r8
   end function ThresholdSoilMoist
 
