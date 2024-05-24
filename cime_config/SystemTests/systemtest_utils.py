@@ -3,6 +3,7 @@ Reduce code duplication by putting reused functions here.
 """
 
 import os, subprocess, re, glob
+from collections import OrderedDict
 
 
 def cmds_to_setup_conda(caseroot):
@@ -99,7 +100,7 @@ def find_user_nl_option(caseroot, component, namelist_option):
         raise RuntimeError("No user_nl files found for component " + component)
 
     # Read through the file list and look for a match and return the whole entry
-    output = {}
+    output = OrderedDict()
     for one_file in file_list:
         with open(one_file, "r") as user_nl_file:
             user_nl_text = user_nl_file.read()
