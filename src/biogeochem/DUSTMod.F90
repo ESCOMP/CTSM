@@ -742,7 +742,7 @@ contains
             if ((12_r8 - 0.5_r8 * stblty(p)) .GE. 0.001_r8) then ! should have used 0 theoretically; used 0.001 here to avoid undefined values
                u_sd_slt(p) = wnd_frc_slt * (12_r8 - 0.5_r8 * stblty(p))**0.333_r8
             else
-               u_sd_slt(p) = 0.001_r8   ! should have used 0 theoretically; used 0.001 here to avoid undefined values
+               u_sd_slt(p) = wnd_frc_slt * (0.001_r8)**0.333_r8   ! should have used 0 theoretically; used 0.001 here to avoid undefined values
             end if
 
             ! threshold velocities
