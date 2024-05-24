@@ -555,16 +555,6 @@ contains
          ! Note that the size of dataptr1d includes ocean points so it will be around 3x larger than lsize
          ! So an explicit loop is required here
          do g = 1,lsize
-  
-            !  Ensure valid values
-            if (dataptr1d_gdd20_baseline(g) < 0 .or. dataptr1d_gdd20_baseline(g) > 1000000._r8) then
-               write(iulog, *) 'ERROR: invalid read-in gdd20_baseline value: ',dataptr1d_gdd20_baseline(g)
-               call ESMF_Finalize(endflag=ESMF_END_ABORT)
-            else if (dataptr1d_gdd20_baseline(g) == 0) then
-               write(iulog, *) 'ERROR: read-in gdd20_baseline value 0 will cause inf'
-               call ESMF_Finalize(endflag=ESMF_END_ABORT)
-            end if
-           
             dataptr2d_gdd20_baseline(g,n) = dataptr1d_gdd20_baseline(g)
          end do
       end do
