@@ -15,7 +15,7 @@ module test_dust_soil_clay_functions
      procedure :: tearDown
   end type TestDustEmisSoilFunctions
 
-  real(r8), parameter :: tol = 1.e-15_r8
+  real(r8), parameter :: tol = 1.e-16_r8
 
 contains
 
