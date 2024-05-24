@@ -15,6 +15,8 @@ module test_dust_soil_clay_functions
      procedure :: tearDown
   end type TestDustEmisSoilFunctions
 
+  real(r8), parameter :: tol = 1.e-15_r8
+
 contains
 
   subroutine setUp(this)
@@ -23,7 +25,58 @@ contains
 
   subroutine tearDown(this)
     class(TestDustEmisSoilFunctions), intent(inout) :: this
-
   end subroutine tearDown
+
+  @Test
+  subroutine TestClayOutOfRangeThreshold(this)
+    class(TestDustEmisSoilFunctions), intent(inout) :: this
+    real(r8) :: value
+    character(len=100) :: expected_msg
+
+    value = ThresholdSoilMoist( -1.e-15_r8 )
+    expected_msg = "ABORTED: Percent clay is less than zero"
+    @assertExceptionRaised(expected_msg)
+    value = ThresholdSoilMoist( 1._r8 + 1.-15_r8 )
+    expected_msg = "ABORTED: Percent clay is greater than 100"
+    @assertExceptionRaised(expected_msg)
+  end subroutine TestClayOutOfRangeThreshold
+
+  @Test
+  subroutine TestThresholdValues(this)
+    class(TestDustEmisSoilFunctions), intent(inout) :: this
+    real(r8) :: value
+
+    value = ThresholdSoilMoist( 0.0_r8 )
+    @assertEqual( value, 0.17_r8, tolerance=tol )
+    value = ThresholdSoilMoist( 100.0_r8 )
+    @assertEqual( value, 0.31_r8, tolerance=tol )
+  end subroutine TestThresholdValues
+
+  @Test
+  subroutine TestThresholdKok2014Values(this)
+    class(TestDustEmisSoilFunctions), intent(inout) :: this
+    real(r8) :: value
+
+    value = ThresholdSoilMoistKok2014( 0.0_r8 )
+    @assertEqual( value, 0.0_r8, tolerance=tol )
+    value = ThresholdSoilMoistKok2014( 100.0_r8 )
+    @assertEqual( value, 0.31_r8, tolerance=tol )
+    value = ThresholdSoilMoistKok2014( 1.0_r8 )
+    @assertEqual( value, 0.001714_r8, tolerance=tol )
+  end subroutine TestThresholdKok2014Values
+
+  @Test
+  subroutine TestClayMassFracValues(this)
+    class(TestDustEmisSoilFunctions), intent(inout) :: this
+    real(r8) :: value
+
+    value = MassFracClay( 0.0_r8 )
+    @assertEqual( value, 0.20_r8, tolerance=tol )
+    value = MassFracClay( 20.0_r8 )
+    @assertEqual( value, 0.20_r8, tolerance=tol )
+    value = MassFracClay( 100.0_r8 )
+    @assertEqual( value, 1.0_r8, tolerance=tol )
+
+  end subroutine TestClayMassFracValues
 
 end module test_dust_soil_clay_functions

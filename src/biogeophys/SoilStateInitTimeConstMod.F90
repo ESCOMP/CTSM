@@ -17,6 +17,11 @@ module SoilStateInitTimeConstMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public  :: SoilStateInitTimeConst
   public  :: readParams
+
+  ! PRIVATE FUNCTIONS MADE PUBLIC Just for unit-testing:
+  public :: ThresholdSoilMoist
+  public :: ThresholdSoilMoistKok2014
+  public :: MassFracClay
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: ReadNL
@@ -719,10 +724,19 @@ contains
 
   real(r8) function ThresholdSoilMoist( clay )
   ! Calculate the threshold soil moisture needed for dust emission, based on clay content
-      real(r8), intent(IN) :: clay ! Fraction of lay in the soil (%)
+      real(r8), intent(IN) :: clay ! Fraction of clay in the soil (%)
 
       ThresholdSoilMoist = 0.17_r8 + 0.14_r8 * clay * 0.01_r8
-  end function ThresholdSoilMoist 
+  end function ThresholdSoilMoist
+
+  !------------------------------------------------------------------------------
+
+  real(r8) function ThresholdSoilMoistKok2014( clay )
+  ! Calculate the threshold soil moisture needed for dust emission, based on clay content
+      real(r8), intent(IN) :: clay ! Fraction of clay in the soil (%)
+
+      ThresholdSoilMoistKok2014 = 0.01_r8*(0.17_r8*clay + 0.0014_r8*clay*clay)
+  end function ThresholdSoilMoistKok2014
 
   !------------------------------------------------------------------------------
 
@@ -731,7 +745,7 @@ contains
       real(r8), intent(IN) :: clay ! Fraction of lay in the soil (%)
 
       MassFracClay = min(clay * 0.01_r8, 0.20_r8)
-  end function MassFracClay 
+  end function MassFracClay
 
   !------------------------------------------------------------------------------
 
