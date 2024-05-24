@@ -407,6 +407,7 @@ class LILACSMOKE(SystemTestsCommon):
         # case.get_mpirun_cmd creates a command that runs the executable given by
         # case.run_exe. So it's important that (elsewhere in this test script) we create a
         # link pointing from that to the atm_driver.exe executable.
+        self._case.load_env(reset=True)
         lid = new_lid()
         os.environ["OMP_NUM_THREADS"] = str(self._case.thread_count)
         cmd = self._case.get_mpirun_cmd(allow_unresolved_envvars=False)
