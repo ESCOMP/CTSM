@@ -715,4 +715,24 @@ contains
 
   end subroutine SoilStateInitTimeConst
 
+  !------------------------------------------------------------------------------
+
+  real(r8) function ThresholdSoilMoist( clay )
+  ! Calculate the threshold soil moisture needed for dust emission, based on clay content
+      real(r8), intent(IN) :: clay ! Fraction of lay in the soil (%)
+
+      ThresholdSoilMoist = 0.17_r8 + 0.14_r8 * clay * 0.01_r8
+  end function ThresholdSoilMoist 
+
+  !------------------------------------------------------------------------------
+
+  real(r8) function MassFracClay( clay )
+  ! Calculate the mass fraction of clay needed for dust emission, based on clay content
+      real(r8), intent(IN) :: clay ! Fraction of lay in the soil (%)
+
+      MassFracClay = min(clay * 0.01_r8, 0.20_r8)
+  end function MassFracClay 
+
+  !------------------------------------------------------------------------------
+
 end module SoilStateInitTimeConstMod
