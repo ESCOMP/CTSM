@@ -1,6 +1,6 @@
-module test_DustEmis
+module test_DustEmisZender2003
 
-  ! Tests of DustEmis
+  ! Tests of DustEmisZender2003
 
   use funit
   use unittestSubgridMod
@@ -26,7 +26,7 @@ module test_DustEmis
   real(r8), parameter :: tol = 1.e-18_r8
 
   @TestCase
-  type, extends(TestCase) :: TestDustEmis
+  type, extends(TestCase) :: TestDustEmisZender2003
      type(dust_type) :: dust_emis
      integer, allocatable :: filter_nolakep(:)      ! non-lake filter (patches)
      integer :: num_nolakep              ! number of patches in non-lake filter
@@ -45,7 +45,7 @@ module test_DustEmis
      procedure :: create_fv
      procedure :: print_values
      procedure :: validate_patch
-  end type TestDustEmis
+  end type TestDustEmisZender2003
 
 contains
 
@@ -53,7 +53,7 @@ contains
 
   subroutine setUp(this)
     use ColumnType, only : col
-    class(TestDustEmis), intent(inout) :: this
+    class(TestDustEmisZender2003), intent(inout) :: this
 
     character(len=5) :: NLFilename = 'none'
     real(r8), allocatable :: snow_depth_col(:)
@@ -114,7 +114,7 @@ contains
   !-----------------------------------------------------------------------
 
   subroutine tearDown(this)
-    class(TestDustEmis), intent(inout) :: this
+    class(TestDustEmisZender2003), intent(inout) :: this
 
     call this%dust_emis%Clean()
     call this%water_factory%teardown(this%water_inst)
@@ -138,7 +138,7 @@ contains
     !
     use ColumnType, only : col
     use GridcellType, only : grc
-    class(TestDustEmis), intent(in) :: this
+    class(TestDustEmisZender2003), intent(in) :: this
     !
     integer :: c,j
     real(r8), parameter :: clay = 10.0_r8
@@ -173,7 +173,7 @@ contains
   subroutine create_atm2lnd(this, forc_t, forc_pbot, forc_rho )
     ! Initializes some fields needed for dust emissions in this%atm2lnd_inst, and sets
     ! forcing fields based on inputs. Excluded inputs are given a default value
-    class(TestDustEmis), intent(inout) :: this
+    class(TestDustEmisZender2003), intent(inout) :: this
     real(r8), intent(in), optional :: forc_t(:)
     real(r8), intent(in), optional :: forc_pbot(:)
     real(r8), intent(in), optional :: forc_rho(:)
@@ -208,7 +208,7 @@ contains
   subroutine create_fv(this, fv, u10, ram1)
     ! Initializes some fields needed for dust emissions in this%frictionvel_inst, and sets
     ! fields based on inputs. Excluded inputs are given a default value
-    class(TestDustEmis), intent(inout) :: this
+    class(TestDustEmisZender2003), intent(inout) :: this
     real(r8), intent(in), optional :: fv
     real(r8), intent(in), optional :: u10
     real(r8), intent(in), optional :: ram1
@@ -241,7 +241,7 @@ contains
   subroutine print_values(this)
     use LandunitType, only : lun
     use PatchType, only : patch
-    class(TestDustEmis), intent(inout) :: this
+    class(TestDustEmisZender2003), intent(inout) :: this
     real(r8) :: SaltationFactor
     integer :: p, c, l
 
@@ -271,7 +271,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine validate_patch(this, p)
-    class(TestDustEmis), intent(inout) :: this
+    class(TestDustEmisZender2003), intent(inout) :: this
     integer, intent(in) :: p
 
     real(r8) :: flx_mss_vrt_dst(ndst)
@@ -298,7 +298,7 @@ contains
   @Test
   subroutine check_dust_emis(this)
     ! Check dust emissions for default values
-    class(TestDustEmis), intent(inout) :: this
+    class(TestDustEmisZender2003), intent(inout) :: this
     integer :: p
     real(r8) :: flx_mss_vrt_dst_tot
     real(r8) :: vlc_trb_1
@@ -331,7 +331,7 @@ contains
  @Test
  subroutine dust_zero_for_fixed_ratio(this)
    ! Check dust emissions are zero for a no wind
-   class(TestDustEmis), intent(inout) :: this
+   class(TestDustEmisZender2003), intent(inout) :: this
    integer :: p
    real(r8) :: flx_mss_vrt_dst_tot
    real(r8) :: fv
@@ -360,7 +360,7 @@ contains
  @Test
  subroutine dust_zero_when_fsno_one(this)
    ! Check dust emissions are zero when snow fraction is identically 1
-   class(TestDustEmis), intent(inout) :: this
+   class(TestDustEmisZender2003), intent(inout) :: this
    integer :: p
    real(r8) :: flx_mss_vrt_dst_tot
 
@@ -385,7 +385,7 @@ contains
    ! Check dust emissions are zero for non-veg landunits
    use landunit_varcon, only: istcrop, max_lunit
    use LandunitType, only : lun
-   class(TestDustEmis), intent(inout) :: this
+   class(TestDustEmisZender2003), intent(inout) :: this
    integer :: p, l
    real(r8) :: flx_mss_vrt_dst_tot
 
@@ -411,7 +411,7 @@ contains
   @Test
   subroutine aborts_on_bad_dust_mobility(this)
     ! Check dust abort when dust mobility is bad
-    class(TestDustEmis), intent(inout) :: this
+    class(TestDustEmisZender2003), intent(inout) :: this
     real(r8) :: flx_mss_vrt_dst_tot
     character(100) :: expected_msg
  
@@ -432,7 +432,7 @@ contains
  @Test
  subroutine dust_zero_when_tlai_high(this)
    ! Check dust emissions are zero when LAI is high enough
-   class(TestDustEmis), intent(inout) :: this
+   class(TestDustEmisZender2003), intent(inout) :: this
    integer :: p
    real(r8) :: flx_mss_vrt_dst_tot
 
@@ -456,7 +456,7 @@ contains
   @Test
   subroutine check_dust_emis_increasing_wind(this)
     ! Check dust emissions with increasing wind
-    class(TestDustEmis), intent(inout) :: this
+    class(TestDustEmisZender2003), intent(inout) :: this
     integer :: p, c
     real(r8) :: flx_mss_vrt_dst_tot
     real(r8) :: fv = 4.0_r8
@@ -494,4 +494,4 @@ contains
 
   !-----------------------------------------------------------------------
 
-end module test_DustEmis
+end module test_DustEmisZender2003
