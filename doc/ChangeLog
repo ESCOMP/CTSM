@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.2.006
 Originator(s): slevis (Samuel Levis)
-Date: Tue 21 May 2024 02:59:05 PM MDT
+Date: Tue 28 May 2024 08:45:50 AM MDT
 One-line Summary: Update externals to cesm2_3_beta17, remove mct, retire /test/tools
 
 Purpose and description of changes
@@ -48,12 +48,6 @@ Changes to documentation:
 Substantial timing or memory changes:
  Not considered
 
-Notes of particular relevance for developers:
----------------------------------------------
-Changes to tests or testing:
- I added a long list of izumi nag debug tests to ExpectedFailures as per
- https://github.com/ESCOMP/CMEPS/pull/460
-
 Testing summary:
 ----------------
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
@@ -68,7 +62,7 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
+    derecho ----- OK
     izumi ------- OK
 
   any other testing (give details below):
@@ -82,21 +76,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:
-
-  [ If a tag changes answers relative to baseline comparison the
-    following should be filled in (otherwise remove this section).
-    And always remove these three lines and parts that don't apply. ]
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
-    - nature of change (roundoff; larger than roundoff/same climate; new climate):
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? Roundoff differences means one or more lines of code change results
-   only by roundoff level (because order of operation changes for example). Roundoff
-   changes to state fields usually grow to greater than roundoff as the simulation progresses.
+Changes answers relative to baseline: NO
 
 Other details
 -------------
