@@ -761,9 +761,9 @@ contains
 
             ! threshold crossing rate
             numer = (u_fld_thr(p)**2.0_r8 - u_impct_thr(p)**2.0_r8 - 2.0_r8 * u_mean_slt(p) * (u_fld_thr(p) - u_impct_thr(p)))
-            denom = (2.0_r8 * u_sd_slt(p)**2.0_r8)
+            denom = (2.0_r8 * u_sd_slt(p)**2.0_r8) ! note that u_sd_slt should be always positive
             ! Truncate to zero if the expression inside exp is becoming too large
-            if ( numer/denom < 30._r8  .and. denom/=0.0_r8)then  ! set numer/denom to be < 30 given exp(30) below is already very large; also set denom to be non-zero (and denom should be autonamtically non-negative given the standard deviation u_sd_slt of the subtimestep wind fluctuation is non-negative)
+            if ( numer/denom < 30._r8 ) then  ! set numer/denom to be < 30 given exp(30) below is already very large; also denom itself should be non-zero and non-negative given the standard deviation (u_sd_slt) of the subtimestep wind fluctuation is non-negative. dmleung 28 May 2024
                thr_crs_rate(p) = (exp((u_fld_thr(p)**2.0_r8 - u_impct_thr(p)**2.0_r8 - 2.0_r8 * u_mean_slt(p) * (u_fld_thr(p) - u_impct_thr(p))) / (2.0_r8 * u_sd_slt(p)**2.0_r8)) + 1.0_r8)**(-1.0_r8)
             else
                thr_crs_rate(p) = 0.0_r8
