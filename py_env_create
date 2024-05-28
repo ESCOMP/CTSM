@@ -20,6 +20,7 @@ if [ $error != 0 ]; then
    echo "For notes on installing on a user system see: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html"
    echo "Error code was $error"
    cat condahelp.txt
+   rm condahelp.txt
    exit -1
 fi
 rm condahelp.txt
@@ -44,7 +45,7 @@ usage() {
   echo "[-v|--verbose]  "
   echo "     Run with verbose mode for the install so you see the progress bar"
   echo "[-f|--file <file>]  "
-  echo "     Conda environment file to use (can be a text format or YAML format)"
+  echo "     Conda environment requirements text file to use (text format) in addition to the others"
   echo "     Assumed to be under the directory: $condadir"
   echo "     Default is: $condafile"
   echo "[--option <option>]  "
@@ -80,6 +81,9 @@ while [ $# -gt 0 ]; do
    shift
 done
 
+#
+# Error checking options and setup
+#
 if [ ! -f $condadir/$condafile ]; then
    echo "$condadir/$condafile does NOT exist"
    echo "Use the --file option with a valid filename"
@@ -89,11 +93,13 @@ fi
 echo "Use conda to install the python environment needed to run the CTSM python tools in the conda environment: $ctsm_python"
 echo "Using the file: $condadir/$condafile"
 
+#
 # Check if the environment already exists, if it does continue, if not create it
+#
 conda list -n $ctsm_python >& /dev/null
 if [ $? != 0 ]; then
    echo "Create $ctsm_python"
-   cmd="conda create --force -n $ctsm_python -q"
+   cmd="conda create --force --name $ctsm_python --quiet"
    echo "$cmd"
    $cmd
    if [ $? != 0 ]; then
@@ -103,12 +109,20 @@ if [ $? != 0 ]; then
 else
    echo "$ctsm_python environment already exists"
 fi
-echo "Install $ctsm_python this can take a long time, be patient...."
-verbosity="-q"
+#
+# Install the environemnt
+#
+echo "Install $ctsm_python this can take a long time (12 to 20 minutes is expected), be patient...."
+echo "    ...."
+echo "    ...."
+echo "    ...."
+verbosity="--quiet"
+loglevel="ERROR"
 if [ "$verbose" == "Yes" ]; then
-  verbosity="-v"
+  verbosity="--verbose"
+  loglevel="INFO"
 fi
-cmd="conda install --yes $verbosity -c conda-forge -n $ctsm_python --file $condadir/$condafile $option"
+cmd="conda install --yes $verbosity --channel conda-forge --name $ctsm_python $condadir/$condafile $option"
 echo "$cmd"
 $cmd
 if [ $? != 0 ]; then
@@ -117,6 +131,9 @@ if [ $? != 0 ]; then
    echo "Change the file and try again"
    exit -2
 fi
+#
+# Report on success
+#
 echo "Successfully installed the $ctsm_python python environment"
 echo
 echo "activate the environment by doing the following..."
