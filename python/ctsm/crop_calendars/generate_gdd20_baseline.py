@@ -22,7 +22,7 @@ VAR_LIST_IN = ["GDD0", "GDD8", "GDD10"]
 VAR_LIST_IN = [x + "20" for x in VAR_LIST_IN]  # TODO: Delete this once using the right variables
 MISSING_FILL = -1  # Something negative to ensure that gddmaturity never changes (see PlantCrop)
 STREAM_YEAR = 2000  # The year specified for stream_yearFirst and stream_yearLast in the call of
-                    # shr_strdata_init_from_inline() for sdat_cropcal_gdd20_baseline
+# shr_strdata_init_from_inline() for sdat_cropcal_gdd20_baseline
 
 
 def _parse_args():
