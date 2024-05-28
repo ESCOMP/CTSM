@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.2.006
 Originator(s): slevis (Samuel Levis)
-Date: Tue 28 May 2024 08:45:50 AM MDT
+Date: Tue 28 May 2024 03:14:18 PM MDT
 One-line Summary: Update externals to cesm2_3_beta17, remove mct, retire /test/tools
 
 Purpose and description of changes
@@ -68,15 +68,15 @@ Testing summary:
   any other testing (give details below):
 
   ctsm_sci
-     derecho ----
-
-If the tag used for baseline comparisons was NOT the previous tag, note that here:
+     derecho ---- OK
 
 
 Answer changes
 --------------
 
 Changes answers relative to baseline: NO
+ Except two derecho_nvhpc tests due to an update to the nvhpc compiler
+ as documented in the Pull Request listed a few lines down.
 
 Other details
 -------------
