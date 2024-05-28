@@ -673,7 +673,14 @@ contains
             ! calculation of the hybrid/total drag partition effect considering both rock and vegetation drag partitioning using LUH2 bare and veg fractions within a grid
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                if (patch%itype(p) == noveg) then ! if bare, uses rock drag partition factor
-                  frc_thr_rgh_fct = dpfct_rock(p)
+                  if (dpfct_rock(p) /= dpfct_rock(p)) then ! dmleung added 24 May 2024: dpfct_rock(p) could be NaN; CLM could run when DEBUG=FALSE in env_build.xml but dies when DEBUG=TRUE (usually when checking if wnd_frc_slt > wnd_frc_thr_slt_it and if numer/denom < 30._r8 below)
+                     !write(iulog,*) 'dpfct_rock(p) == NaN; dpfct_rock(p) = ', dpfct_rock(p)
+                     frc_thr_rgh_fct = 0.001_r8 ! Set drag partition effect to be a very small value (or zero) such that there is no emission whenever dpfct_rock(p) = NaN; dmleung 24 May 2024
+                  else
+                     !write(iulog,*) 'dpfct_rock(p) = ', dpfct_rock(p)
+                     frc_thr_rgh_fct = dpfct_rock(p)
+                  end if
+                  !frc_thr_rgh_fct = dpfct_rock(p) ! This should be the original code when dpfct_rock(p) has values everywhere
                else   ! if vegetation, uses vegetation drag partition factor
                   frc_thr_rgh_fct = ssr(p)  
                end if
@@ -681,7 +688,7 @@ contains
                frc_thr_rgh_fct = 1.0_r8
             end if
 
-            wnd_frc_slt = fv(p) * frc_thr_rgh_fct   ! wnd_frc_slt will be used in the dust emission equation
+            wnd_frc_slt = fv(p) * frc_thr_rgh_fct   ! wnd_frc_slt is the drag-parition-modified wind speed and will be used in the dust emission equation below
 
             frc_thr_rghn_fct(p) = frc_thr_rgh_fct   ! save and output hybrid drag partition factor
 
@@ -756,7 +763,7 @@ contains
             numer = (u_fld_thr(p)**2.0_r8 - u_impct_thr(p)**2.0_r8 - 2.0_r8 * u_mean_slt(p) * (u_fld_thr(p) - u_impct_thr(p)))
             denom = (2.0_r8 * u_sd_slt(p)**2.0_r8)
             ! Truncate to zero if the expression inside exp is becoming too large
-            if ( numer/denom < 30._r8 )then
+            if ( numer/denom < 30._r8  .and. denom/=0.0_r8)then  ! set numer/denom to be < 30 given exp(30) below is already very large; also set denom to be non-zero (and denom should be autonamtically non-negative given the standard deviation u_sd_slt of the subtimestep wind fluctuation is non-negative)
                thr_crs_rate(p) = (exp((u_fld_thr(p)**2.0_r8 - u_impct_thr(p)**2.0_r8 - 2.0_r8 * u_mean_slt(p) * (u_fld_thr(p) - u_impct_thr(p))) / (2.0_r8 * u_sd_slt(p)**2.0_r8)) + 1.0_r8)**(-1.0_r8)
             else
                thr_crs_rate(p) = 0.0_r8
