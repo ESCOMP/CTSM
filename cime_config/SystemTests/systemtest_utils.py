@@ -85,9 +85,8 @@ def run_python_script(caseroot, this_conda_env, command_in, tool_path):
     except:
         print(f"ERROR trying to run {tool_name}.")
         raise
-"""
-Read a user_nl file and return the namelist option if found
-"""
+
+# Read a user_nl file and return the namelist option if found
 def find_user_nl_option(caseroot, component, namelist_option):
     
     # This is a copy of the CIME _get_list_of_user_nl_files

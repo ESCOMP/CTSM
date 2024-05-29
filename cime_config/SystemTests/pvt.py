@@ -8,12 +8,10 @@ This is a FATES specific test:
     - use CLM_ACCELERATED_SPINUP?
 2) run a transient landuse case with use_fates_lupft
     - start from the restart file generated in (1)
-
 """
 from CIME.XML.standard_module_setup import *
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
 from CIME.SystemTests.test_utils.user_nl_utils import append_to_user_nl_files
-from systemtest_utils import find_user_nl_option
 import shutil, glob, os
 
 logger = logging.getLogger(__name__)
