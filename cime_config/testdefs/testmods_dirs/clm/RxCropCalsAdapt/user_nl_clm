@@ -1,0 +1,3 @@
+
+! Eventually replace this with half-degree version in the proper place
+stream_fldFileName_gdd20_baseline = '/glade/u/home/samrabin/ctsm_scale-mat-reqs/tools/crop_calendars/test.nc'
