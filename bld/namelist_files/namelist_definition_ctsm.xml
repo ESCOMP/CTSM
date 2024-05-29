@@ -1773,14 +1773,19 @@ Mapping method from LAI input file to the model resolution
 <!-- ========================================================================================  -->
 
 <!-- Crop calendars -->
+<entry id="cropcals_rx" type="logical" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Flag to enable prescribed crop calendars (sowing window dates and maturity requirement)
+</entry>
+
 <entry id="stream_year_first_cropcal" type="integer" category="datasets"
        group="cropcal_streams" valid_values="" >
-First year to loop over for crop calendar data
+First year to loop over for crop calendar data (not including gdd20_baseline file)
 </entry>
 
 <entry id="stream_year_last_cropcal" type="integer" category="datasets"
        group="cropcal_streams" valid_values="" >
-Last year to loop over for crop calendar data
+Last year to loop over for crop calendar data (not including gdd20_baseline file)
 </entry>
 
 <entry id="model_year_align_cropcal" type="integer" category="datasets"
