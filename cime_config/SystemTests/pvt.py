@@ -51,6 +51,11 @@ class PVT(SystemTestsCommon):
         orig_casevar = self._case.get_value("CASE")
         caseroot = self._case.get_value("CASEROOT")
 
+        # Set the run start date based on the desired starting reference case year
+        refcase_year = 1700
+        stop_n_pveg = 5
+        startyear_pveg = refcase_year - stop_n_pveg
+
         # clone the main case to create spinup case
         logger.info("PVT log:  cloning setup")
         clone_path = "{}.potveg".format(caseroot)
@@ -65,10 +70,11 @@ class PVT(SystemTestsCommon):
         self._set_active_case(clone)
 
         # set the clone case values
-        stop_n_pveg = 1
         with clone:
-            # clone.set_value("CLM_ACCELERATED_SPINUP", "on")
+            clone.set_value("CLM_ACCELERATED_SPINUP", "off")
             clone.set_value("STOP_N", stop_n_pveg)
+            clone.set_value("STOP_OPTION", "nyears")
+            clone.set_value("RUN_STARTDATE", "{}-01-01".format(startyear_pveg))
 
         # Modify the spin up case to use the potential vegetation mode.
         # Checks for incompatible cases and necessary mapping files are
@@ -93,11 +99,33 @@ class PVT(SystemTestsCommon):
         os.chdir(caseroot)
         self._set_active_case(orig_case)
 
+        # Copy restart files from spin up to the transient case run directory
+        # obtain rpointer files and necessary restart files from short term archiving directory
+        rundir = self._case.get_value("RUNDIR")
+
+        refdate = str(refcase_year) + '-01-01-00000'
+        rest_path = os.path.join(dout_sr, "rest", "{}".format(refdate))
+
+        for item in glob.glob("{}/*{}*".format(rest_path, refdate)):
+            link_name = os.path.join(rundir, os.path.basename(item))
+            if os.path.islink(link_name) and os.readlink(link_name) == item:
+                # Link is already set up correctly: do nothing
+                # (os.symlink raises an exception if you try to replace an
+                # existing file)
+                pass
+            else:
+                os.symlink(item, link_name)
+
+        for item in glob.glob("{}/*rpointer*".format(rest_path)):
+            shutil.copy(item, rundir)
+
+        # Update run case settings
         self._case.set_value("CLM_ACCELERATED_SPINUP", "off")
         self._case.set_value("RUN_TYPE", "hybrid")
         self._case.set_value("GET_REFCASE", False)
         self._case.set_value("RUN_REFCASE", "{}.potveg".format(orig_casevar))
-        self._case.set_value("RUN_REFDATE", "1700-01-01")
+        self._case.set_value("RUN_REFDATE", "{}-01-01".format(refcase_year))
+        self._case.set_value("RUN_STARTDATE", "{}-01-01".format(refcase_year))
         self._case.set_value("DOUT_S", False)
         self._case.flush()
 
