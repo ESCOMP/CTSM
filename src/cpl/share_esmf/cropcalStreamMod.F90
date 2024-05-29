@@ -48,6 +48,7 @@ module cropcalStreamMod
   character(len=CL)       :: stream_fldFileName_cultivar_gdds ! cultivar growing degree-days stream filename to read
   character(len=CL)       :: stream_fldFileName_gdd20_baseline ! GDD20 baseline stream filename to read
   logical                 :: cropcals_rx ! Used only for setting input files in namelist; does nothing in code, but needs to be here so namelist read doesn't crash
+  logical                 :: cropcals_rx_adapt ! Used only for setting input files in namelist; does nothing in code, but needs to be here so namelist read doesn't crash
 
   character(len=*), parameter :: sourcefile = &
        __FILE__
@@ -97,7 +98,8 @@ contains
          stream_fldFileName_cultivar_gdds, &
          stream_fldFileName_gdd20_baseline, &
          stream_meshfile_cropcal, &
-         cropcals_rx
+         cropcals_rx, &
+         cropcals_rx_adapt
 
     ! Default values for namelist
     stream_year_first_cropcal  = 1      ! first year in stream to use
