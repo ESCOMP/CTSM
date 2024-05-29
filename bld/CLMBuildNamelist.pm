@@ -4206,8 +4206,8 @@ sub setup_logic_cropcal_streams {
   if ( &string_is_undef_or_empty($gdd_file) and ! &string_is_undef_or_empty($gdd20_baseline_file) ) {
       $log->fatal_error("If not providing stream_fldFileName_cultivar_gdds, don't provide stream_fldFileName_gdd20_baseline");
   }
-  if ( $generate_crop_gdds eq '.true.' ) {
-      if ( $use_mxmat eq '.true.' ) {
+  if ( &value_is_true($generate_crop_gdds) ) {
+      if ( &value_is_true($use_mxmat) ) {
           $log->fatal_error("If generate_crop_gdds is true, you must also set use_mxmat to false" );
       }
       if ( &string_is_undef_or_empty($swindow_start_file) or &string_is_undef_or_empty($swindow_end_file) ) {
