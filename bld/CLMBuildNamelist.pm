@@ -4200,30 +4200,30 @@ sub setup_logic_cropcal_streams {
   my $gdd_file = $nl->get_value('stream_fldFileName_cultivar_gdds') ;
   my $gdd20_baseline_file = $nl->get_value('stream_fldFileName_gdd20_baseline') ;
   my $mesh_file = $nl->get_value('stream_meshfile_cropcal') ;
-  if ( ($swindow_start_file eq '' and $swindow_end_file ne '') or ($swindow_start_file ne '' and $swindow_end_file eq '') ) {
+  if ( (&string_is_undef_or_empty($swindow_start_file) and !&string_is_undef_or_empty($swindow_end_file)) or (!&string_is_undef_or_empty($swindow_start_file) and &string_is_undef_or_empty($swindow_end_file)) ) {
     $log->fatal_error("When specifying sowing window dates, you must provide both stream_fldFileName_swindow_start and stream_fldFileName_swindow_end. To specify exact sowing dates, use the same file." );
   }
-  if ( $gdd_file eq '' and $gdd20_baseline_file ne '' ) {
+  if ( &string_is_undef_or_empty($gdd_file) and ! &string_is_undef_or_empty($gdd20_baseline_file) ) {
       $log->fatal_error("If not providing stream_fldFileName_cultivar_gdds, don't provide stream_fldFileName_gdd20_baseline");
   }
   if ( $generate_crop_gdds eq '.true.' ) {
       if ( $use_mxmat eq '.true.' ) {
           $log->fatal_error("If generate_crop_gdds is true, you must also set use_mxmat to false" );
       }
-      if ( $swindow_start_file eq '' or $swindow_end_file eq '' ) {
+      if ( &string_is_undef_or_empty($swindow_start_file) or &string_is_undef_or_empty($swindow_end_file) ) {
           $log->fatal_error("If generate_crop_gdds is true, you must specify stream_fldFileName_swindow_start and stream_fldFileName_swindow_end")
       }
       if ( $swindow_start_file ne $swindow_end_file ) {
           $log->fatal_error("If generate_crop_gdds is true, you must specify exact sowing dates by setting stream_fldFileName_swindow_start and stream_fldFileName_swindow_end to the same file")
       }
-      if ( $gdd_file ne '' ) {
+      if ( ! &string_is_undef_or_empty($gdd_file) ) {
           $log->fatal_error("If generate_crop_gdds is true, do not specify stream_fldFileName_cultivar_gdds")
       }
-      if ( $gdd20_baseline_file ne '' ) {
+      if ( ! &string_is_undef_or_empty($gdd20_baseline_file) ) {
           $log->fatal_error("If generate_crop_gdds is true, do not specify stream_fldFileName_gdd20_baseline")
       }
   }
-  if ( $mesh_file eq '' and ( $swindow_start_file ne '' or $gdd_file ne '' ) ) {
+  if ( &string_is_undef_or_empty($mesh_file) and ( ! &string_is_undef_or_empty($swindow_start_file) or ! &string_is_undef_or_empty($gdd_file) ) ) {
       $log->fatal_error("If prescribing crop sowing dates and/or maturity requirements, you must specify stream_meshfile_cropcal")
   }
 }
