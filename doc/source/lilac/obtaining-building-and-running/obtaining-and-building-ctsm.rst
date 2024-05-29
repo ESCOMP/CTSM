@@ -26,7 +26,7 @@ Obtain CTSM by running::
 
   git clone https://github.com/ESCOMP/CTSM.git
   cd CTSM
-  ./manage_externals/checkout_externals
+  ./bin/git-fleximod update
 
 Then build CTSM and its dependencies. On a machine that has been ported to CIME, the
 command will look like this (example given for NCAR's ``cheyenne`` machine)::
@@ -101,11 +101,11 @@ above<building-ctsm-and-lilac-prerequisites>`) can be obtained with::
 
   git clone https://github.com/ESCOMP/CTSM.git
   cd CTSM
-  ./manage_externals/checkout_externals
+  ./bin/git-fleximod update
 
 By default, this will put you on the ``master`` branch of CTSM, which is the main
 development branch. You can checkout a different branch or tag using ``git checkout``;
-**be sure to rerun** ``./manage_externals/checkout_externals`` **after doing so.**
+**be sure to rerun** ``./bin/git-fleximod update`` **after doing so.**
 
 For more details, see
 https://github.com/ESCOMP/CTSM/wiki/Quick-start-to-CTSM-development-with-git

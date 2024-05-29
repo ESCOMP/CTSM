@@ -18,11 +18,11 @@ To obtain the CTSM code you need to do the following:
 
    This will create a directory ``my_ctsm_sandbox/`` in your current working directory.
 
-#. Run the script **manage_externals/checkout_externals**. ::
+#. Run **./bin/git-fleximod update**. ::
 
-      ./manage_externals/checkout_externals
+      ./bin/git-fleximod update
 
-   The **checkout_externals** script is a package manager that will
+   **git-fleximod** is a package manager that will
    populate the ctsm directory with the relevant versions of each of the
    components along with the CIME infrastructure code.
 
@@ -30,21 +30,21 @@ At this point you have a working version of CTSM.
 
 To see full details of how to set up a case, compile and run, see the CIME documentation at http://esmci.github.io/cime/ .
 
-More details on checkout_externals
-----------------------------------
+More details on git-fleximod
+----------------------------
 
 The file **Externals.cfg** in your top-level CTSM directory tells
-**checkout_externals** which tag/branch of each component should be
+**git-fleximod** which tag/branch of each component should be
 brought in to generate your sandbox. **Externals_CLM.cfg** is used similarly to point to the correct version of FATES (and possibly other CTSM-specific externals in the future); the below instructions referring to **Externals.cfg** also apply to modifying **Externals_CLM.cfg**.
 
-NOTE: checkout_externals will always attempt
+NOTE: git-fleximod will always attempt
 to make the working copy exactly match the externals description. If
 you manually modify an external without updating Externals.cfg, e.g. switch
-to a different tag, then rerunning checkout_externals will switch you
+to a different tag, then rerunning git-fleximod will switch you
 back to the external described in Externals.cfg. See below
 documentation `Customizing your CTSM sandbox`_ for more details.
 
-**You need to rerun checkout_externals whenever Externals.cfg has
+**You need to rerun git-fleximod whenever Externals.cfg has
 changed** (unless you have already manually updated the relevant
 external(s) to have the correct branch/tag checked out). Common times
 when this is needed are:
@@ -54,17 +54,17 @@ when this is needed are:
 * After merging some other CTSM branch/tag into your currently
   checked-out branch
 
-**checkout_externals** must be run from the root of the source
+**git-fleximod** must be run from the root of the source
 tree. For example, if you cloned CTSM with::
 
   git clone https://github.com/escomp/ctsm.git my_ctsm_sandbox
 
-then you must run **checkout_externals** from
+then you must run **git-fleximod** from
 ``/path/to/my_ctsm_sandbox``.
 
-To see more details of **checkout_externals**, issue ::
+To see more details of **git-fleximod**, issue ::
 
-  ./manage_externals/checkout_externals --help
+  ./bin/git-fleximod --help
 
 Customizing your CTSM sandbox
 =============================
@@ -80,7 +80,7 @@ checked out ctsm1.0.0 but really wanted to have ctsm1.1.0;
 you would simply do the following::
 
   git checkout ctsm1.1.0
-  ./manage_externals/checkout_externals
+  ./bin/git-fleximod update
 
 You should **not** use this method if you have made any source code
 changes, or if you have any ongoing CTSM cases that were created from
@@ -107,11 +107,11 @@ Each entry specifies either a tag, a hash or a branch. To point to a new tag:
 
 #. Checkout the new component(s)::
 
-     ./manage_externals/checkout_externals
+     ./bin/git-fleximod update
 
 To point to a hash, the process is the same, except also change ``tag = ...`` to ``hash = ...``.
 
-To point to a branch, use ``branch = ...``. Pointing to a branch means that, each time you run ``manage_externals/checkout_externals`` you will get the current latest version of that branch. This can be convenient for in-progress development work, but should not be used when you need a stable version for scientific simulations. There are a number of gotchas with this workflow, so in general you should default to pointing to fixed hashes. (For CTSM master, we require a fixed hash or, usually, a tag.)
+To point to a branch, use ``branch = ...``. Pointing to a branch means that, each time you run ``./bin/git-fleximod update`` you will get the current latest version of that branch. This can be convenient for in-progress development work, but should not be used when you need a stable version for scientific simulations. There are a number of gotchas with this workflow, so in general you should default to pointing to fixed hashes. (For CTSM master, we require a fixed hash or, usually, a tag.)
 
 Keep in mind that changing individual components from a tag may result
 in an invalid model (won't compile, won't run, not scientifically
