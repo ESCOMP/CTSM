@@ -107,6 +107,7 @@ contains
 
     ! !USES:
     use clm_varctl            , only : use_cn, use_fates_luh, fates_harvest_mode
+    use clm_varctl            , only : use_fates_potentialveg
     use dynVarTimeUninterpMod , only : dyn_var_time_uninterp_type
     use dynTimeInfoMod        , only : YEAR_POSITION_START_OF_TIMESTEP
     use dynTimeInfoMod        , only : YEAR_POSITION_END_OF_TIMESTEP
@@ -148,55 +149,58 @@ contains
     landuse_transitions = 0._r8
     landuse_harvest = 0._r8
 
-    if (use_fates_luh) then
+    ! Avoid initializing the landuse timeseries file if in fates potential vegetation mode
+    if (.not. use_fates_potentialveg) then
+       if (use_fates_luh) then
 
-       ! Generate the dyn_file_type object.
-       ! Start calls get_prev_date, whereas end calls get_curr_date
-       dynFatesLandUse_file = dyn_file_type(landuse_filename, YEAR_POSITION_END_OF_TIMESTEP)
+          ! Generate the dyn_file_type object.
+          ! Start calls get_prev_date, whereas end calls get_curr_date
+          dynFatesLandUse_file = dyn_file_type(landuse_filename, YEAR_POSITION_END_OF_TIMESTEP)
 
-       ! Get initial land use data from the fates luh2 timeseries dataset
-       num_points = (bounds%endg - bounds%begg + 1)
-       landuse_shape(1) = num_points ! Does this need an explicit array shape to be passed to the constructor?
-       do varnum = 1, num_landuse_transition_vars
-          landuse_transition_vars(varnum) = dyn_var_time_uninterp_type( &
-               dyn_file=dynFatesLandUse_file, varname=landuse_transition_varnames(varnum), &
-               dim1name=grlnd, conversion_factor=1.0_r8, &
-               do_check_sums_equal_1=.false., data_shape=landuse_shape)
-       end do
-       do varnum = 1, num_landuse_state_vars
-          landuse_state_vars(varnum) = dyn_var_time_uninterp_type( &
-               dyn_file=dynFatesLandUse_file, varname=landuse_state_varnames(varnum), &
-               dim1name=grlnd, conversion_factor=1.0_r8, &
-               do_check_sums_equal_1=.false., data_shape=landuse_shape)
-       end do
-
-       ! Get the harvest rate data from the fates luh2 timeseries dataset if enabled
-       if (trim(fates_harvest_mode) .eq. fates_harvest_luh_area .or. &
-           trim(fates_harvest_mode) .eq. fates_harvest_luh_mass) then
-
-          ! change the harvest varnames being used depending on the mode selected
-          if (trim(fates_harvest_mode) .eq. fates_harvest_luh_area ) then
-             landuse_harvest_varnames => landuse_harvest_area_varnames
-             landuse_harvest_units = landuse_harvest_area_units
-          elseif (trim(fates_harvest_mode) .eq. fates_harvest_luh_mass ) then
-             landuse_harvest_varnames => landuse_harvest_mass_varnames
-             landuse_harvest_units = landuse_harvest_mass_units
-          else
-             call endrun(msg=' undefined fates harvest mode selected'//errMsg(__FILE__, __LINE__))
-          end if
-
-          do varnum = 1, num_landuse_harvest_vars
-             landuse_harvest_vars(varnum) = dyn_var_time_uninterp_type( &
-                  dyn_file=dynFatesLandUse_file, varname=landuse_harvest_varnames(varnum), &
+          ! Get initial land use data from the fates luh2 timeseries dataset
+          num_points = (bounds%endg - bounds%begg + 1)
+          landuse_shape(1) = num_points ! Does this need an explicit array shape to be passed to the constructor?
+          do varnum = 1, num_landuse_transition_vars
+             landuse_transition_vars(varnum) = dyn_var_time_uninterp_type( &
+                  dyn_file=dynFatesLandUse_file, varname=landuse_transition_varnames(varnum), &
                   dim1name=grlnd, conversion_factor=1.0_r8, &
                   do_check_sums_equal_1=.false., data_shape=landuse_shape)
           end do
-       end if
-    end if
+          do varnum = 1, num_landuse_state_vars
+             landuse_state_vars(varnum) = dyn_var_time_uninterp_type( &
+                  dyn_file=dynFatesLandUse_file, varname=landuse_state_varnames(varnum), &
+                  dim1name=grlnd, conversion_factor=1.0_r8, &
+                  do_check_sums_equal_1=.false., data_shape=landuse_shape)
+          end do
 
-    ! Since fates needs state data during initialization, make sure to call
-    ! the interpolation routine at the start
-    call dynFatesLandUseInterp(bounds,init_state=.true.)
+          ! Get the harvest rate data from the fates luh2 timeseries dataset if enabled
+          if (trim(fates_harvest_mode) .eq. fates_harvest_luh_area .or. &
+              trim(fates_harvest_mode) .eq. fates_harvest_luh_mass) then
+
+             ! change the harvest varnames being used depending on the mode selected
+             if (trim(fates_harvest_mode) .eq. fates_harvest_luh_area ) then
+                landuse_harvest_varnames => landuse_harvest_area_varnames
+                landuse_harvest_units = landuse_harvest_area_units
+             elseif (trim(fates_harvest_mode) .eq. fates_harvest_luh_mass ) then
+                landuse_harvest_varnames => landuse_harvest_mass_varnames
+                landuse_harvest_units = landuse_harvest_mass_units
+             else
+                call endrun(msg=' undefined fates harvest mode selected'//errMsg(__FILE__, __LINE__))
+             end if
+
+             do varnum = 1, num_landuse_harvest_vars
+                landuse_harvest_vars(varnum) = dyn_var_time_uninterp_type( &
+                     dyn_file=dynFatesLandUse_file, varname=landuse_harvest_varnames(varnum), &
+                     dim1name=grlnd, conversion_factor=1.0_r8, &
+                     do_check_sums_equal_1=.false., data_shape=landuse_shape)
+             end do
+          end if
+       end if
+
+       ! Since fates needs state data during initialization, make sure to call
+       ! the interpolation routine at the start
+       call dynFatesLandUseInterp(bounds,init_state=.true.)
+    end if
 
   end subroutine dynFatesLandUseInit
 

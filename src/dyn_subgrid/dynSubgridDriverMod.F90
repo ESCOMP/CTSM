@@ -206,7 +206,7 @@ contains
     ! OUTSIDE any loops over clumps in the driver.
     !
     ! !USES:
-    use clm_varctl              , only : use_cn, use_fates, use_fates_luh
+    use clm_varctl              , only : use_cn, use_fates, use_fates_luh, use_fates_potentialveg
     use dynInitColumnsMod       , only : initialize_new_columns
     use dynConsBiogeophysMod    , only : dyn_hwcontent_init, dyn_hwcontent_final
     use dynEDMod                , only : dyn_ED
@@ -295,7 +295,7 @@ contains
        call dynurban_interp(bounds_proc)
     end if
 
-    if (use_fates_luh) then
+    if (use_fates_luh .and. .not. use_fates_potentialveg) then
        call dynFatesLandUseInterp(bounds_proc)
     end if
 
