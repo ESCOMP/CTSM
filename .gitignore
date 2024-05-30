@@ -75,7 +75,6 @@ buildnmlc
 td.*.status
 td.*.log
 td.*.status.xFail
-test_driver_*.sh
 
 # mksurfdata output
 surfdata_*.log
