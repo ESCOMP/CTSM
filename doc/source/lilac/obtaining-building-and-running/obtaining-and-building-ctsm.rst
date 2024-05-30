@@ -91,7 +91,7 @@ Building CTSM requires:
 
 - ESMF version 8 or later
 
-  - **ESMF is not needed in general for CTSM, but is needed for LILAC**
+  - **ESMF is needed for LILAC (and for CESM3 and later)**
 
 Obtaining CTSM
 ==============
@@ -149,10 +149,11 @@ If you are using a machine that has been ported to CIME_ (for example, NCAR's ``
 machine), then you do not need to specify much information to ``build_ctsm``. In addition,
 in this case, CIME will load the appropriate modules and set the appropriate environment
 variables at build time, so you do not need to do anything to set up your environment
-ahead of time. **Building CTSM with LILAC requires ESMF. ESMF is currently an optional
-CIME dependency, so many CIME-ported machines do not provide information on an ESMF
-installation. NCAR's derecho machine DOES provide ESMF, but for other machines, you may
-need to add this to your CIME port.**
+ahead of time. **Building CTSM with LILAC requires ESMF. ESMF is an optional
+CIME dependency before CESM3 and not optional for CESM3.
+NCAR's derecho machine DOES provide ESMF. For other machines, you may
+need to add this to your CIME port. Please see esmf.org for download and build
+instructions.**
 
 To build CTSM and its dependencies in this case, run::
 
