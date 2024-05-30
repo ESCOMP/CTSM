@@ -115,7 +115,7 @@ module clm_varctl
   character(len=fname_len), public :: fsnowaging   = ' '      ! snow aging parameters file name
 
   character(len=fname_len), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
-                                                              ! only needed for LILAC and MCT drivers
+                                                              ! only needed for LILAC
 
   !----------------------------------------------------------
   ! Flag to read ndep rather than obtain it from coupler
