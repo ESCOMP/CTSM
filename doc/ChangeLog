@@ -1,4 +1,103 @@
 ===============================================================
+Tag name: ctsm5.2.007
+Originator(s): jedwards4b (Jim Edwards, UCAR/CGD) slevis (Sam Levis, UCAR/CGD)
+Date: Fri 31 May 2024 13:49:29 AM MDT
+One-line Summary: Rm manage_externals and update documentation accordingly
+
+Purpose and description of changes
+----------------------------------
+#2443 Jim replaced this PR with the next one
+#2559 Remove manage externals
+#2564 Replace checkout_externals with git-fleximod in documentation
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Fixes #2537 Remove manage_externals stuff from run_sys_tests
+Fixes #2536 Update documentation for git-fleximod
+Fixes #2467 Remove references to cheyenne from the testlist
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ ./manage_externals/checkout_externals
+ is replaced with
+ ./bin/git-fleximod
+
+Changes to documentation:
+ Accordingly
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
+     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
+     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
+     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
+     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
+     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
+     separately run the clm_pymods test suite, and you can remove the following line.]
+
+    clm_pymods test suite on derecho - 
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ Comparing .gitmodules against Externals.cfg and Externals_CLM_cfg:
+ - cismwrap_2_2_001 from cismwrap_2_1_100
+ - cime6.0.246 from cime6.0.238_httpsbranch01
+ - cdeps1.0.34 from cdeps1.0.33
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2443
+ https://github.com/ESCOMP/ctsm/pull/2559
+ https://github.com/ESCOMP/ctsm/pull/2564
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.006
 Originator(s): slevis (Samuel Levis)
 Date: Tue 28 May 2024 03:14:18 PM MDT
