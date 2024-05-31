@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.2.007
 Originator(s): jedwards4b (Jim Edwards, UCAR/CGD) slevis (Sam Levis, UCAR/CGD)
-Date: Fri 31 May 2024 11:24:29 AM MDT
+Date: Fri 31 May 2024 13:49:29 AM MDT
 One-line Summary: Rm manage_externals and update documentation accordingly
 
 Purpose and description of changes
@@ -85,8 +85,11 @@ Changes answers relative to baseline: No
 
 Other details
 -------------
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
- JIM: What's the answer here?
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ Comparing .gitmodules against Externals.cfg and Externals_CLM_cfg:
+ - cismwrap_2_2_001 from cismwrap_2_1_100
+ - cime6.0.246 from cime6.0.238_httpsbranch01
+ - cdeps1.0.34 from cdeps1.0.33
 
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/2443
