@@ -1,4 +1,93 @@
 ===============================================================
+Tag name: ctsm5.2.006
+Originator(s): slevis (Samuel Levis)
+Date: Tue 28 May 2024 03:14:18 PM MDT
+One-line Summary: Update externals to cesm2_3_beta17, remove mct, retire /test/tools
+
+Purpose and description of changes
+----------------------------------
+
+ #2493 update externals to beta17
+ #2294 remove mct but not in Externals.cfg
+ #2279 Retire the /test/tools framework for CESM test system custom tests that do the same thing
+
+ Changes unrelated to the tag's title:
+ #2546 fix error in cam4/cam5 test (ekluzek)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #2493 update externals to beta17
+ Fixes #2279 Retire the /test/tools framework for CESM test system custom tests that do the same thing
+ Fixes #2546 fix error in cam4/cam5 test (unrelated)
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation:
+ Remove references to mct and cpl7
+
+Substantial timing or memory changes:
+ Not considered
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+ Except two derecho_nvhpc tests due to an update to the nvhpc compiler
+ as documented in the Pull Request listed a few lines down.
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+ cism, ccs_config, cime, cmeps, cdeps
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2539
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.005
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Mon 13 May 2024 04:46:10 PM MDT
