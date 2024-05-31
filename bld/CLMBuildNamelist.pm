@@ -4225,11 +4225,14 @@ sub setup_logic_cropcal_streams {
       $log->fatal_error("If providing any crop calendar input file(s), you must provide stream_meshfile_cropcal" );
     }
 
-    # Set first and last stream years
+    # Set stream years
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal',
                 'sim_year'=>$nl_flags->{'sim_year'},
                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_cropcal',
                 'sim_year'=>$nl_flags->{'sim_year'},
                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
 
@@ -4242,11 +4245,6 @@ sub setup_logic_cropcal_streams {
       if ( !&string_is_undef_or_empty($gdd20_baseline_file) ) {
         $log->fatal_error("If cropcals_rx_adapt is true (i.e., stream_fldFileName_gdd20_baseline is provided), no crop calendar input is allowed to vary over time (i.e., stream_year_first_cropcal and stream_year_last_cropcal must be the same)." );
       }
-
-      # Set align year
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                  'model_year_align_cropcal', 'sim_year'=>$nl_flags->{'sim_year'},
-                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
     }
   }
 
