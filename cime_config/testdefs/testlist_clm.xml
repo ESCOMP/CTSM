@@ -2736,8 +2736,6 @@
   </test>
   <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="cheyenne" compiler="intel" category="prebeta"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
@@ -3017,7 +3015,6 @@
   </test>
   <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesCold">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -3284,8 +3281,6 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-      <machine name="cheyenne" compiler="intel" category="aux_cime_baselines"/>
-      <machine name="cheyenne" compiler="gnu" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
