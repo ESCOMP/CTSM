@@ -1689,9 +1689,12 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <!-- crop calendars: default settings -->
 <cropcals_rx>.false.</cropcals_rx>
 <cropcals_rx_adapt>.false.</cropcals_rx_adapt>
-<stream_year_first_cropcal  >2000</stream_year_first_cropcal>
-<stream_year_last_cropcal   >2000</stream_year_last_cropcal>
-<model_year_align_cropcal   >2000</model_year_align_cropcal>
+<stream_year_first_cropcal_swindows  >2000</stream_year_first_cropcal_swindows>
+<stream_year_last_cropcal_swindows   >2000</stream_year_last_cropcal_swindows>
+<model_year_align_cropcal_swindows   >2000</model_year_align_cropcal_swindows>
+<stream_year_first_cropcal_cultivar_gdds  >2000</stream_year_first_cropcal_cultivar_gdds>
+<stream_year_last_cropcal_cultivar_gdds   >2000</stream_year_last_cropcal_cultivar_gdds>
+<model_year_align_cropcal_cultivar_gdds   >2000</model_year_align_cropcal_cultivar_gdds>
 
 <!-- crop calendars: default input files -->
 <stream_fldFileName_swindow_start cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/swindow_starts_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.nc</stream_fldFileName_swindow_start>

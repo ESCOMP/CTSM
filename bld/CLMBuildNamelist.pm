@@ -4226,25 +4226,30 @@ sub setup_logic_cropcal_streams {
     }
 
     # Set stream years
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal',
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal_swindows',
                 'sim_year'=>$nl_flags->{'sim_year'},
                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal',
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal_swindows',
                 'sim_year'=>$nl_flags->{'sim_year'},
                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_cropcal',
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_cropcal_swindows',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal_cultivar_gdds',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal_cultivar_gdds',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_cropcal_cultivar_gdds',
                 'sim_year'=>$nl_flags->{'sim_year'},
                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
 
-    # Check/set things if first and last years are different
-    if ( $nl->get_value('stream_year_first_cropcal') !=
-        $nl->get_value('stream_year_last_cropcal') ) {
-
-      # Do not allow maturity requirements to change over time if stream_fldFileName_gdd20_baseline is provided. That would be nonsensical.
-      # Note that this restricts sowing windows from changing over time as well, because there are not separate stream_year settings for that.
-      if ( !&string_is_undef_or_empty($gdd20_baseline_file) ) {
-        $log->fatal_error("If cropcals_rx_adapt is true (i.e., stream_fldFileName_gdd20_baseline is provided), no crop calendar input is allowed to vary over time (i.e., stream_year_first_cropcal and stream_year_last_cropcal must be the same)." );
-      }
+    # Do not allow maturity requirements to change over time if stream_fldFileName_gdd20_baseline is provided. That would be nonsensical.
+    if ( $nl->get_value('stream_year_first_cropcal_cultivar_gdds') !=
+        $nl->get_value('stream_year_last_cropcal_cultivar_gdds')
+        and !&string_is_undef_or_empty($gdd20_baseline_file) ) {
+      $log->fatal_error("If cropcals_rx_adapt is true (i.e., stream_fldFileName_gdd20_baseline is provided), baseline maturity requirements are allowed to vary over time (i.e., stream_year_first_cropcal_cultivar_gdds and stream_year_last_cropcal_cultivar_gdds must be the same)." );
     }
   }
 

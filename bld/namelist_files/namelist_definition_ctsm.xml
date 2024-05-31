@@ -1783,19 +1783,34 @@ Flag to enable prescribed crop calendars (sowing window dates and maturity requi
 Flag to enable prescribed crop calendars (sowing window dates and maturity requirement), with maturity requirement adaptive based on recent climate
 </entry>
 
-<entry id="stream_year_first_cropcal" type="integer" category="datasets"
+<entry id="stream_year_first_cropcal_swindows" type="integer" category="datasets"
        group="cropcal_streams" valid_values="" >
-First year to loop over for crop calendar data (not including gdd20_baseline file)
+First year to loop over for crop sowing windows
 </entry>
 
-<entry id="stream_year_last_cropcal" type="integer" category="datasets"
+<entry id="stream_year_last_cropcal_swindows" type="integer" category="datasets"
        group="cropcal_streams" valid_values="" >
-Last year to loop over for crop calendar data (not including gdd20_baseline file)
+Last year to loop over for crop sowing windows
 </entry>
 
-<entry id="model_year_align_cropcal" type="integer" category="datasets"
+<entry id="model_year_align_cropcal_swindows" type="integer" category="datasets"
        group="cropcal_streams" valid_values="" >
-Simulation year that aligns with stream_year_first_cropcal value
+Simulation year that aligns with stream_year_first_cropcal_swindows value
+</entry>
+
+<entry id="stream_year_first_cropcal_cultivar_gdds" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+First year to loop over for crop maturity requirements
+</entry>
+
+<entry id="stream_year_last_cropcal_cultivar_gdds" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Last year to loop over for crop maturity requirements
+</entry>
+
+<entry id="model_year_align_cropcal_cultivar_gdds" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Simulation year that aligns with stream_year_first_cropcal_cultivar_gdds value
 </entry>
 
 <entry id="allow_invalid_swindow_inputs" type="logical" category="datasets"

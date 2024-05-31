@@ -73,9 +73,12 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer                 :: i,n,ivt                    ! index
-    integer                 :: stream_year_first_cropcal  ! first year in crop calendar streams to use
-    integer                 :: stream_year_last_cropcal   ! last year in crop calendar streams to use
-    integer                 :: model_year_align_cropcal   ! align stream_year_first_cropcal with
+    integer                 :: stream_year_first_cropcal_swindows  ! first year in sowing window streams to use
+    integer                 :: stream_year_last_cropcal_swindows   ! last year in sowing window streams to use
+    integer                 :: model_year_align_cropcal_swindows   ! alignment year for sowing window streams
+    integer                 :: stream_year_first_cropcal_cultivar_gdds  ! first year in cultivar gdd stream to use
+    integer                 :: stream_year_last_cropcal_cultivar_gdds   ! last year in cultivar gdd stream to use
+    integer                 :: model_year_align_cropcal_cultivar_gdds   ! alignment year for cultivar gdd stream
     integer                 :: nu_nml                     ! unit for namelist file
     integer                 :: nml_error                  ! namelist i/o error flag
     character(len=CL)       :: stream_meshfile_cropcal    ! crop calendar stream meshfile
@@ -89,9 +92,12 @@ contains
     ! deal with namelist variables here in init
     !
     namelist /cropcal_streams/         &
-         stream_year_first_cropcal,    &
-         stream_year_last_cropcal,     &
-         model_year_align_cropcal,     &
+         stream_year_first_cropcal_swindows, &
+         stream_year_last_cropcal_swindows,  &
+         model_year_align_cropcal_swindows,  &
+         stream_year_first_cropcal_cultivar_gdds, &
+         stream_year_last_cropcal_cultivar_gdds,  &
+         model_year_align_cropcal_cultivar_gdds,  &
          allow_invalid_swindow_inputs, &
          stream_fldFileName_swindow_start, &
          stream_fldFileName_swindow_end,   &
@@ -102,9 +108,12 @@ contains
          cropcals_rx_adapt
 
     ! Default values for namelist
-    stream_year_first_cropcal  = 1      ! first year in stream to use
-    stream_year_last_cropcal   = 1      ! last  year in stream to use
-    model_year_align_cropcal   = 1      ! align stream_year_first_cropcal with this model year
+    stream_year_first_cropcal_swindows  = 1      ! first year in sowing window streams to use
+    stream_year_last_cropcal_swindows   = 1      ! last  year in sowing window streams to use
+    model_year_align_cropcal_swindows   = 1      ! alignment year for sowing window streams
+    stream_year_first_cropcal_cultivar_gdds  = 1 ! first year in cultivar gdd stream to use
+    stream_year_last_cropcal_cultivar_gdds   = 1 ! last  year in cultivar gdd stream to use
+    model_year_align_cropcal_cultivar_gdds   = 1 ! alignment year for cultivar gdd stream
     allow_invalid_swindow_inputs = .false.
     stream_meshfile_cropcal    = ''
     stream_fldFileName_swindow_start = ''
@@ -137,9 +146,12 @@ contains
        end if
        close(nu_nml)
     endif
-    call shr_mpi_bcast(stream_year_first_cropcal  , mpicom)
-    call shr_mpi_bcast(stream_year_last_cropcal   , mpicom)
-    call shr_mpi_bcast(model_year_align_cropcal   , mpicom)
+    call shr_mpi_bcast(stream_year_first_cropcal_swindows  , mpicom)
+    call shr_mpi_bcast(stream_year_last_cropcal_swindows   , mpicom)
+    call shr_mpi_bcast(model_year_align_cropcal_swindows   , mpicom)
+    call shr_mpi_bcast(stream_year_first_cropcal_cultivar_gdds, mpicom)
+    call shr_mpi_bcast(stream_year_last_cropcal_cultivar_gdds , mpicom)
+    call shr_mpi_bcast(model_year_align_cropcal_cultivar_gdds , mpicom)
     call shr_mpi_bcast(allow_invalid_swindow_inputs, mpicom)
     call shr_mpi_bcast(stream_fldFileName_swindow_start, mpicom)
     call shr_mpi_bcast(stream_fldFileName_swindow_end  , mpicom)
@@ -150,9 +162,12 @@ contains
     if (masterproc) then
        write(iulog,*)
        write(iulog,*) 'cropcal_stream settings:'
-       write(iulog,'(a,i8)') '  stream_year_first_cropcal  = ',stream_year_first_cropcal
-       write(iulog,'(a,i8)') '  stream_year_last_cropcal   = ',stream_year_last_cropcal
-       write(iulog,'(a,i8)') '  model_year_align_cropcal   = ',model_year_align_cropcal
+       write(iulog,'(a,i8)') '  stream_year_first_cropcal_swindows  = ',stream_year_first_cropcal_swindows
+       write(iulog,'(a,i8)') '  stream_year_last_cropcal_swindows   = ',stream_year_last_cropcal_swindows
+       write(iulog,'(a,i8)') '  model_year_align_cropcal_swindows   = ',model_year_align_cropcal_swindows
+       write(iulog,'(a,i8)') '  stream_year_first_cropcal_cultivar_gdds  = ',stream_year_first_cropcal_cultivar_gdds
+       write(iulog,'(a,i8)') '  stream_year_last_cropcal_cultivar_gdds   = ',stream_year_last_cropcal_cultivar_gdds
+       write(iulog,'(a,i8)') '  model_year_align_cropcal_cultivar_gdds   = ',model_year_align_cropcal_cultivar_gdds
        write(iulog,'(a,l1)') '  allow_invalid_swindow_inputs = ',allow_invalid_swindow_inputs
        write(iulog,'(a,a)' ) '  stream_fldFileName_swindow_start   = ',trim(stream_fldFileName_swindow_start)
        write(iulog,'(a,a)' ) '  stream_fldFileName_swindow_end     = ',trim(stream_fldFileName_swindow_end)
@@ -188,9 +203,9 @@ contains
             stream_filenames    = (/trim(stream_fldFileName_swindow_start)/), &
             stream_fldlistFile  = stream_varnames_sdate,              &
             stream_fldListModel = stream_varnames_sdate,              &
-            stream_yearFirst    = stream_year_first_cropcal,          &
-            stream_yearLast     = stream_year_last_cropcal,           &
-            stream_yearAlign    = model_year_align_cropcal,           &
+            stream_yearFirst    = stream_year_first_cropcal_swindows, &
+            stream_yearLast     = stream_year_last_cropcal_swindows,  &
+            stream_yearAlign    = model_year_align_cropcal_swindows,           &
             stream_offset       = cropcal_offset,                     &
             stream_taxmode      = 'extend',                           &
             stream_dtlimit      = 1.0e30_r8,                          &
@@ -215,9 +230,9 @@ contains
             stream_filenames    = (/trim(stream_fldFileName_swindow_end)/), &
             stream_fldlistFile  = stream_varnames_sdate,              &
             stream_fldListModel = stream_varnames_sdate,              &
-            stream_yearFirst    = stream_year_first_cropcal,          &
-            stream_yearLast     = stream_year_last_cropcal,           &
-            stream_yearAlign    = model_year_align_cropcal,           &
+            stream_yearFirst    = stream_year_first_cropcal_swindows, &
+            stream_yearLast     = stream_year_last_cropcal_swindows,  &
+            stream_yearAlign    = model_year_align_cropcal_swindows,  &
             stream_offset       = cropcal_offset,                     &
             stream_taxmode      = 'extend',                           &
             stream_dtlimit      = 1.0e30_r8,                          &
@@ -244,9 +259,9 @@ contains
             stream_filenames    = (/trim(stream_fldFileName_cultivar_gdds)/), &
             stream_fldlistFile  = stream_varnames_cultivar_gdds,      &
             stream_fldListModel = stream_varnames_cultivar_gdds,      &
-            stream_yearFirst    = stream_year_first_cropcal,          &
-            stream_yearLast     = stream_year_last_cropcal,           &
-            stream_yearAlign    = model_year_align_cropcal,           &
+            stream_yearFirst    = stream_year_first_cropcal_cultivar_gdds,&
+            stream_yearLast     = stream_year_last_cropcal_cultivar_gdds, &
+            stream_yearAlign    = model_year_align_cropcal_cultivar_gdds, &
             stream_offset       = cropcal_offset,                     &
             stream_taxmode      = 'extend',                           &
             stream_dtlimit      = 1.0e30_r8,                          &
