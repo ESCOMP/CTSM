@@ -43,7 +43,7 @@ module DustEmisZender2003
   real(r8) , allocatable :: dmt_vwr(:) ![m] Mass-weighted mean diameter resolved
   real(r8) , allocatable :: stk_crc(:) ![frc] Correction to Stokes settling velocity
   real(r8) tmp1                        !Factor in saltation computation (named as in Charlie's code)
-  real(r8) dns_aer                     ![kg m-3] Aerosol density
+  real(r8), parameter :: dns_aer = 2.5e+3_r8 ![kg m-3] Aerosol density
   !
   ! !PUBLIC DATA TYPES:
   !
@@ -880,7 +880,6 @@ contains
 
       gsd_anl = 2.0_r8      ! [frc] Geometric std dev PaG77 p. 2080 Table1
       ln_gsd = log(gsd_anl)
-      dns_aer = 2.5e+3_r8   ! [kg m-3] Aerosol density
 
       ! Set a fundamental statistic for each bin
 
