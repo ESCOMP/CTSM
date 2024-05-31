@@ -241,7 +241,7 @@ from directory {working_directory}
 has taken {hanging_sec} seconds. It may be hanging.
 
 The command will continue to run, but you may want to abort
-manage_externals with ^C and investigate. A possible cause of hangs is
+git-fleximod with ^C and investigate. A possible cause of hangs is
 when svn or git require authentication to access a private
 repository. On some systems, svn and git requests for authentication
 information will not be displayed to the user. In this case, the program
