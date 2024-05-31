@@ -1,0 +1,3 @@
+echo "ERROR: Instead of ./manage_externals/checkout_externals"
+echo "please type './bin/git-fleximod update'"
+echo "For additional information, please type './bin/git-fleximod --help'"

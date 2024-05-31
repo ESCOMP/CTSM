@@ -73,6 +73,7 @@ Top level documentation ($CTSMROOT):
 README ------------------- This file
 README.md ---------------- File that displays on github under https::/github.com/ESCOMP/CTSM.git
 README.rst --------------- File that displays under the project in github
+README_GITFLEXIMOD.rst --- Information on how to work with git-fleximod for CTSM
 CODE_OF_CONDUCT.md ------- Code of Conduct for how to work with each other on the CTSM project
 Copyright ---------------- CESM Copyright file
 doc/UpdateChangeLog.pl --- Script to add documentation on a tag to the
