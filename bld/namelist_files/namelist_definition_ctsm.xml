@@ -1838,6 +1838,21 @@ Filename of input stream data for cultivar growing degree-day targets
 Filename of input stream data for baseline GDD20 values
 </entry>
 
+<entry id="stream_fldFileName_gdd20_season_start" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for date (day of year) of start of gdd20 accumulation season.
+</entry>
+
+<entry id="stream_gdd20_seasons" type="logical" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Set this to true to read gdd20 accumulation season start and end dates from stream files, rather than using hard-coded hemisphere-specific "warm seasons."
+</entry>
+
+<entry id="stream_fldFileName_gdd20_season_end" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for date (day of year) of end of gdd20 accumulation season.
+</entry>
+
 <entry id="stream_meshfile_cropcal" type="char*256" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
 Filename of input stream data for crop calendar inputs

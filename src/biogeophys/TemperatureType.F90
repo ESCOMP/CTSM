@@ -1358,11 +1358,13 @@ contains
 
   end subroutine InitAccVars
 
-  subroutine UpdateAccVars_CropGDDs(this, rbufslp, begp, endp, month, day, secs, dtime, nstep, basetemp_int, gddx_patch)
+  subroutine UpdateAccVars_CropGDDs(this, rbufslp, begp, endp, month, day, secs, dtime, nstep, basetemp_int, gddx_patch, crop_inst)
     !
     ! USES
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
+    use clm_time_manager , only : is_doy_in_interval
+    use CropType, only : crop_type
     !
     ! !ARGUMENTS
     class(temperature_type) :: this
@@ -1371,13 +1373,22 @@ contains
     integer, intent(in) :: month, day, secs, dtime, nstep
     integer, intent(in) :: basetemp_int  ! Crop base temperature. Integer to avoid possible float weirdness
     real(r8), intent(inout), pointer, dimension(:) :: gddx_patch  ! E.g., gdd0_patch
+    type(crop_type), intent(inout) :: crop_inst
     !
     ! !LOCAL VARIABLES
     real(r8) :: basetemp_r8  ! real(r8) version of basetemp for arithmetic
     real(r8) :: max_accum    ! Maximum daily accumulation
     character(8) :: field_name   ! E.g., GDD0
     character(32) :: format_string
-    integer :: p, g
+    integer :: p
+    logical :: in_accumulation_season
+    real(r8) :: lat  ! latitude
+    integer :: gdd20_season_start, gdd20_season_end
+
+    associate( &
+     gdd20_season_starts => crop_inst%gdd20_season_start_patch, &
+     gdd20_season_ends   => crop_inst%gdd20_season_end_patch    &
+     )
 
     basetemp_r8 = real(basetemp_int, r8)
 
@@ -1396,15 +1407,28 @@ contains
           cycle
        end if
 
-       g = patch%gridcell(p)
+       ! Is this patch in its gdd20 accumulation season?
+       ! First, check based on latitude. This will be fallback if read-in gdd20 accumulation season is invalid.
+       lat = grc%latdeg(patch%gridcell(p))
+       in_accumulation_season = &
+          ((month > 3 .and. month < 10) .and. lat >= 0._r8) .or. &
+          ((month > 9 .or.  month < 4)  .and. lat <  0._r8)
+       ! Replace with read-in gdd20 accumulation season, if valid
+       ! (If these aren't being read in or they're invalid, they'll be -1)
+       gdd20_season_start = crop_inst%gdd20_season_start_patch(p)
+       gdd20_season_end = crop_inst%gdd20_season_end_patch(p)
+       if (gdd20_season_start >= 1 .and. gdd20_season_end >= 1) then
+          in_accumulation_season = is_doy_in_interval( &
+             gdd20_season_starts(p), gdd20_season_ends(p), day)
+       end if
+
        if (month==1 .and. day==1 .and. secs==dtime) then
           rbufslp(p) = accumResetVal ! reset gdd
-       else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
-            ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
+       else if (in_accumulation_season) then
           rbufslp(p) = max(0._r8, min(max_accum, &
                this%t_ref2m_patch(p)-(SHR_CONST_TKFRZ + basetemp_r8))) * dtime/SHR_CONST_CDAY
        else
-          rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+          rbufslp(p) = 0._r8      ! keeps gdd unchanged outside accumulation season
        end if
     end do
 
@@ -1421,24 +1445,28 @@ contains
     ! Save
     call update_accum_field  (trim(field_name), rbufslp, nstep)
     call extract_accum_field (trim(field_name), gddx_patch, nstep)
+
+    end associate
   end subroutine UpdateAccVars_CropGDDs
 
   !-----------------------------------------------------------------------
-  subroutine UpdateAccVars (this, bounds)
+  subroutine UpdateAccVars (this, bounds, crop_inst)
     !
     ! USES
-    use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
+    use shr_const_mod    , only : SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date, is_end_curr_year
-    use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
+    use accumulMod       , only : update_accum_field, extract_accum_field
     use CNSharedParamsMod, only : upper_soil_layer
+    use CropType         , only : crop_type
     !
     ! !ARGUMENTS:
     class(temperature_type)                :: this
     type(bounds_type)      , intent(in)    :: bounds
+    type(crop_type), intent(inout)         :: crop_inst
 
     !
     ! !LOCAL VARIABLES:
-    integer :: m,g,l,c,p                 ! indices
+    integer :: m,l,c,p                 ! indices
     integer :: ier                       ! error status
     integer :: dtime                     ! timestep size [seconds]
     integer :: nstep                     ! timestep number
@@ -1604,13 +1632,13 @@ contains
 
 
        ! Accumulate and extract GDD0
-       call this%UpdateAccVars_CropGDDs(rbufslp, begp, endp, month, day, secs, dtime, nstep, 0, this%gdd0_patch)
+       call this%UpdateAccVars_CropGDDs(rbufslp, begp, endp, month, day, secs, dtime, nstep, 0, this%gdd0_patch, crop_inst)
 
        ! Accumulate and extract GDD8
-       call this%UpdateAccVars_CropGDDs(rbufslp, begp, endp, month, day, secs, dtime, nstep, 8, this%gdd8_patch)
+       call this%UpdateAccVars_CropGDDs(rbufslp, begp, endp, month, day, secs, dtime, nstep, 8, this%gdd8_patch, crop_inst)
 
        ! Accumulate and extract GDD10
-       call this%UpdateAccVars_CropGDDs(rbufslp, begp, endp, month, day, secs, dtime, nstep, 10, this%gdd10_patch)
+       call this%UpdateAccVars_CropGDDs(rbufslp, begp, endp, month, day, secs, dtime, nstep, 10, this%gdd10_patch, crop_inst)
 
 
        ! Accumulate and extract running 20-year means

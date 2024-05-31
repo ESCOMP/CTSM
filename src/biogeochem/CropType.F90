@@ -53,6 +53,8 @@ module CropType
      integer , pointer :: rx_swindow_ends_thisyr_patch  (:,:) ! all prescribed sowing window end   dates for this patch this year (day of year) [patch, mxsowings]
      real(r8), pointer :: rx_cultivar_gdds_thisyr_patch (:,:) ! all cultivar GDD targets for this patch this year (ddays) [patch, mxsowings]
      real(r8), pointer :: gdd20_baseline_patch          (:)   ! GDD20 baseline for this patch (ddays) [patch]
+     integer , pointer :: gdd20_season_start_patch(:) ! gdd20 season start date for this patch (day of year) [patch]
+     integer , pointer :: gdd20_season_end_patch  (:) ! gdd20 season end   date for this patch (day of year) [patch]
      real(r8), pointer :: sdates_thisyr_patch     (:,:) ! all actual sowing dates for this patch this year (day of year) [patch, mxsowings]
      real(r8), pointer :: swindow_starts_thisyr_patch(:,:) ! all sowing window start dates for this patch this year (day of year) [patch, mxsowings]
      real(r8), pointer :: swindow_ends_thisyr_patch  (:,:) ! all sowing window end   dates for this patch this year (day of year) [patch, mxsowings]
@@ -237,6 +239,8 @@ contains
     allocate(this%rx_swindow_ends_thisyr_patch(begp:endp,1:mxsowings))  ; this%rx_swindow_ends_thisyr_patch  (:,:) = -1
     allocate(this%rx_cultivar_gdds_thisyr_patch(begp:endp,1:mxsowings)) ; this%rx_cultivar_gdds_thisyr_patch(:,:) = spval
     allocate(this%gdd20_baseline_patch(begp:endp)) ; this%gdd20_baseline_patch(:) = spval
+    allocate(this%gdd20_season_start_patch(begp:endp)); this%gdd20_season_start_patch(:) = -1
+    allocate(this%gdd20_season_end_patch(begp:endp))  ; this%gdd20_season_end_patch  (:) = -1
     allocate(this%sdates_thisyr_patch(begp:endp,1:mxsowings)) ; this%sdates_thisyr_patch(:,:) = spval
     allocate(this%swindow_starts_thisyr_patch(begp:endp,1:mxsowings)) ; this%swindow_starts_thisyr_patch(:,:) = spval
     allocate(this%swindow_ends_thisyr_patch  (begp:endp,1:mxsowings)) ; this%swindow_ends_thisyr_patch  (:,:) = spval
