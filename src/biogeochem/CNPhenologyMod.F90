@@ -143,6 +143,9 @@ module CNPhenologyMod
   logical,  public :: generate_crop_gdds = .false. ! If true, harvest the day before next sowing
   logical,  public :: use_mxmat = .true.           ! If true, ignore crop maximum growing season length
 
+  ! For use with adapt_cropcal_rx_cultivar_gdds .true.
+  real(r8), parameter :: min_gdd20_baseline = 0._r8  ! If gdd20_baseline_patch is ≤ this, do not consider baseline.
+
   ! Constants for seasonal decidious leaf onset and offset
   logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
   integer,  public, parameter :: critical_daylight_constant           = 1
@@ -1808,7 +1811,7 @@ contains
     use clm_varctl       , only : use_fertilizer 
     use clm_varctl       , only : use_c13, use_c14
     use clm_varcon       , only : c13ratio, c14ratio
-    use clm_varctl       , only : use_cropcal_rx_swindows, use_cropcal_rx_cultivar_gdds, use_cropcal_streams
+    use clm_varctl       , only : use_cropcal_rx_swindows, use_cropcal_streams
     !
     ! !ARGUMENTS:
     integer                        , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
@@ -2559,7 +2562,7 @@ contains
 
     ! !USES:
     use clm_varctl       , only : use_c13, use_c14
-    use clm_varctl       , only : use_cropcal_rx_cultivar_gdds, use_cropcal_streams
+    use clm_varctl       , only : use_cropcal_rx_cultivar_gdds, use_cropcal_streams, adapt_cropcal_rx_cultivar_gdds
     use clm_varcon       , only : c13ratio, c14ratio
     use clm_varpar       , only : mxsowings
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
@@ -2590,6 +2593,7 @@ contains
     ! LOCAL VARAIBLES:
     integer s              ! growing season index
     integer k              ! grain pool index
+    real(r8) gdd20         ! GDD*20 value for this crop type
     real(r8) gdd_target    ! cultivar GDD target this growing season
     real(r8) this_sowing_reason ! number representing sowing reason(s)
     logical did_rx_gdds    ! did this patch use a prescribed harvest requirement?
@@ -2668,32 +2672,56 @@ contains
          endif
       endif
 
+      ! which GDD*20 variable does this crop use?
+      if (ivt(p) == ntmp_soybean .or. ivt(p) == nirrig_tmp_soybean .or. &
+            ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean) then
+         gdd20 = gdd1020(p)
+      else if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
+            ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
+            ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
+            ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
+            ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
+         gdd20 = gdd820(p)
+      else if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
+            ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat .or. &
+            ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
+            ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
+         gdd20 = gdd020(p)
+      else
+         write(iulog, *) 'ERROR: PlantCrop(): unrecognized ivt for gdd20: ',ivt(p)
+         call endrun(msg="Stopping")
+      end if
+
       ! set GDD target
       did_rx_gdds = .false.
       if (use_cropcal_rx_cultivar_gdds .and. crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p)) .ge. 0._r8) then
          gddmaturity(p) = crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p))
          did_rx_gdds = .true.
+         if (adapt_cropcal_rx_cultivar_gdds .and. crop_inst%gdd20_baseline_patch(p) > min_gdd20_baseline) then
+            gddmaturity(p) = gddmaturity(p) * gdd20 / crop_inst%gdd20_baseline_patch(p)
+            !TODO SSR: Set maximum and minimum gddmaturity
+         end if
       else if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
          gddmaturity(p) = hybgdd(ivt(p))
       else
          if (ivt(p) == ntmp_soybean .or. ivt(p) == nirrig_tmp_soybean .or. &
-               ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean) then
-            gddmaturity(p) = min(gdd1020(p), hybgdd(ivt(p)))
-         end if
-         if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
+               ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean .or. &
+               ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
+               ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
+               ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
+            gddmaturity(p) = min(gdd20, hybgdd(ivt(p)))
+         else if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
                ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
                ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
                ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
                ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
-            gddmaturity(p) = max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
+            gddmaturity(p) = max(950._r8, min(gdd20*0.85_r8, hybgdd(ivt(p))))
             if (do_plant_normal) then
                gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
             end if
-         end if
-         if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
-               ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
-               ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
-            gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
+         else
+            write(iulog, *) 'ERROR: PlantCrop(): unrecognized ivt for GDD target: ',ivt(p)
+            call endrun(msg="Stopping")
          end if
 
       endif

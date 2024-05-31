@@ -4172,52 +4172,119 @@ sub setup_logic_lai_streams {
 sub setup_logic_cropcal_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  # Set first and last stream years
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal',
-              'sim_year'=>$nl_flags->{'sim_year'},
-              'sim_year_range'=>$nl_flags->{'sim_year_range'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal',
-              'sim_year'=>$nl_flags->{'sim_year'},
-              'sim_year_range'=>$nl_flags->{'sim_year_range'});
-
-  # Set align year, if first and last years are different
-  if ( $nl->get_value('stream_year_first_cropcal') !=
-      $nl->get_value('stream_year_last_cropcal') ) {
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                'model_year_align_cropcal', 'sim_year'=>$nl_flags->{'sim_year'},
-                'sim_year_range'=>$nl_flags->{'sim_year_range'});
-  }
-
   # Set up other crop calendar parameters
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'cropcals_rx');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'cropcals_rx_adapt');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'generate_crop_gdds');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_mxmat');
 
-  # Option checks
-  my $generate_crop_gdds = $nl->get_value('generate_crop_gdds') ;
-  my $use_mxmat = $nl->get_value('use_mxmat') ;
+  # These can't both be true
+  my $cropcals_rx = $nl->get_value('cropcals_rx') ;
+  my $cropcals_rx_adapt = $nl->get_value('cropcals_rx_adapt') ;
+  if (&value_is_true($cropcals_rx) and &value_is_true($cropcals_rx_adapt)) {
+    $log->fatal_error("cropcals_rx and cropcals_rx_adapt may not both be true" );
+  }
+
+  # Add defaults if using prescribed crop calendars
+  if ( &value_is_true($cropcals_rx) or &value_is_true($cropcals_rx_adapt) ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_swindow_start');
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_swindow_end');
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_cultivar_gdds');
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_cropcal');
+    if ( &value_is_true($cropcals_rx_adapt) ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_gdd20_baseline');
+    }
+  }
+
+  # Add defaults if using any crop calendar input files
   my $swindow_start_file = $nl->get_value('stream_fldFileName_swindow_start') ;
   my $swindow_end_file = $nl->get_value('stream_fldFileName_swindow_end') ;
   my $gdd_file = $nl->get_value('stream_fldFileName_cultivar_gdds') ;
+  my $gdd20_baseline_file = $nl->get_value('stream_fldFileName_gdd20_baseline') ;
   my $mesh_file = $nl->get_value('stream_meshfile_cropcal') ;
-  if ( ($swindow_start_file eq '' and $swindow_start_file ne '') or ($swindow_start_file ne '' and $swindow_start_file eq '') ) {
-    $log->fatal_error("When specifying sowing window dates, you must provide both swindow_start_file and swindow_end_file. To specify exact sowing dates, use the same file." );
+  if ( !&string_is_undef_or_empty($swindow_start_file) or !&string_is_undef_or_empty($swindow_end_file) or !&string_is_undef_or_empty($gdd_file) or !&string_is_undef_or_empty($gdd20_baseline_file) or !&string_is_undef_or_empty($mesh_file)) {
+
+    # User gave an input file without specifying cropcals_rx or cropcals_rx_adapt = .true.
+    # Requiring this means nothing to the code, but helps namelist make more sense
+    if ( !&value_is_true($cropcals_rx) and !&value_is_true($cropcals_rx_adapt) ){
+      $log->fatal_error("If providing any crop calendar input file(s), cropcals_rx or cropcals_rx_adapt must be true" );
+    }
+
+    # User set cropcals_rx_adapt to true but set stream_fldFileName_gdd20_baseline to empty
+    if ( &value_is_true($cropcals_rx_adapt) and &string_is_undef_or_empty($gdd20_baseline_file) ) {
+      $log->fatal_error("If cropcals_rx_adapt is true, stream_fldFileName_gdd20_baseline must be provided" );
+    }
+
+    # cropcals_rx_adapt is false but user provided stream_fldFileName_gdd20_baseline
+    if ( !&value_is_true($cropcals_rx_adapt) and !&string_is_undef_or_empty($gdd20_baseline_file) ) {
+      $log->fatal_error("If stream_fldFileName_gdd20_baseline provided, cropcals_rx_adapt must be true" );
+    }
+
+    # User provided an input file but set mesh file to empty
+    if ( &string_is_undef_or_empty($mesh_file) ) {
+      $log->fatal_error("If providing any crop calendar input file(s), you must provide stream_meshfile_cropcal" );
+    }
+
+    # Set stream years
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal_swindows',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal_swindows',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_cropcal_swindows',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal_cultivar_gdds',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal_cultivar_gdds',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_cropcal_cultivar_gdds',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+
+    # Do not allow maturity requirements to change over time if stream_fldFileName_gdd20_baseline is provided. That would be nonsensical.
+    if ( $nl->get_value('stream_year_first_cropcal_cultivar_gdds') !=
+        $nl->get_value('stream_year_last_cropcal_cultivar_gdds')
+        and !&string_is_undef_or_empty($gdd20_baseline_file) ) {
+      $log->fatal_error("If cropcals_rx_adapt is true (i.e., stream_fldFileName_gdd20_baseline is provided), baseline maturity requirements are allowed to vary over time (i.e., stream_year_first_cropcal_cultivar_gdds and stream_year_last_cropcal_cultivar_gdds must be the same)." );
+    }
   }
-  if ( $generate_crop_gdds eq '.true.' ) {
-      if ( $use_mxmat eq '.true.' ) {
+
+  # If running with prescribed crop calendars, certain files must be provided
+  my $generate_crop_gdds = $nl->get_value('generate_crop_gdds') ;
+  if ( &value_is_true($cropcals_rx) or &value_is_true($cropcals_rx_adapt) ) {
+    if ( &string_is_undef_or_empty($swindow_start_file) or &string_is_undef_or_empty($swindow_end_file) ) {
+      $log->fatal_error("If cropcals_rx or cropcals_rx_adapt is true, sowing window start and end files must be provided. To specify exact sowing dates, use the same file." );
+    }
+    if ( &string_is_undef_or_empty($gdd_file) and (! &value_is_true($generate_crop_gdds)) ){
+      $log->fatal_error("If cropcals_rx or cropcals_rx_adapt is true and generate_crop_gdds is false, maturity requirement file stream_fldFileName_cultivar_gdds must be provided" );
+    }
+  }
+
+  # Option checks
+  if ( &string_is_undef_or_empty($gdd_file) and ! &string_is_undef_or_empty($gdd20_baseline_file) ) {
+      $log->fatal_error("If not providing stream_fldFileName_cultivar_gdds, don't provide stream_fldFileName_gdd20_baseline");
+  }
+  if ( &value_is_true($generate_crop_gdds) ) {
+      my $use_mxmat = $nl->get_value('use_mxmat') ;
+      if ( &value_is_true($use_mxmat) ) {
           $log->fatal_error("If generate_crop_gdds is true, you must also set use_mxmat to false" );
       }
-      if ( $swindow_start_file eq '' or $swindow_end_file eq '' ) {
+      if ( &string_is_undef_or_empty($swindow_start_file) or &string_is_undef_or_empty($swindow_end_file) ) {
           $log->fatal_error("If generate_crop_gdds is true, you must specify stream_fldFileName_swindow_start and stream_fldFileName_swindow_end")
       }
       if ( $swindow_start_file ne $swindow_end_file ) {
           $log->fatal_error("If generate_crop_gdds is true, you must specify exact sowing dates by setting stream_fldFileName_swindow_start and stream_fldFileName_swindow_end to the same file")
       }
-      if ( $gdd_file ne '' ) {
+      if ( ! &string_is_undef_or_empty($gdd_file) ) {
           $log->fatal_error("If generate_crop_gdds is true, do not specify stream_fldFileName_cultivar_gdds")
       }
-  }
-  if ( $mesh_file eq '' and ( $swindow_start_file ne '' or $gdd_file ne '' ) ) {
-      $log->fatal_error("If prescribing crop sowing dates and/or maturity requirements, you must specify stream_meshfile_cropcal")
+      if ( ! &string_is_undef_or_empty($gdd20_baseline_file) ) {
+          $log->fatal_error("If generate_crop_gdds is true, do not specify stream_fldFileName_gdd20_baseline")
+      }
   }
 }
 

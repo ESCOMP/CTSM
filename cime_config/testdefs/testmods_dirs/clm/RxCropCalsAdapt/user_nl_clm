@@ -1,0 +1,3 @@
+
+cropcals_rx = .false.
+cropcals_rx_adapt = .true.
