@@ -274,8 +274,9 @@ contains
     end if
 
     ! Initialize the cdeps data type sdat_cropcal_gdd20_baseline
-    ! NOTE: stream_dtlimit 1.5 didn't work for some reason
-    !TODO SSR: Do not allow time axis length > 1
+    ! NOTE: Hard-coded to one particular year because it should NOT vary over time. Note that the
+    ! particular year chosen doesn't matter. Users can base their file on whatever baseline they
+    ! want; they just need to put 2000 on the time axis.
     if (adapt_cropcal_rx_cultivar_gdds) then
        call shr_strdata_init_from_inline(sdat_cropcal_gdd20_baseline,  &
             my_task             = iam,                                &
