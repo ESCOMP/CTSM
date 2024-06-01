@@ -20,7 +20,8 @@ import ctsm.crop_calendars.cropcal_utils as utils
 
 VAR_LIST_IN = ["GDD0", "GDD8", "GDD10"]
 VAR_LIST_IN = [x + "20" for x in VAR_LIST_IN]  # TODO: Delete this once using the right variables
-MISSING_FILL = -1  # Something negative to ensure that gddmaturity never changes (see PlantCrop)
+MISSING_FILL = -1  # Something impossible to ensure that you can mark it as a missing value, to be
+# bilinear-interpolated
 STREAM_YEAR = 2000  # The year specified for stream_yearFirst and stream_yearLast in the call of
 # shr_strdata_init_from_inline() for sdat_cropcal_gdd20_baseline
 
@@ -211,7 +212,8 @@ def generate_gdd20_baseline(input_files, output_file, author):
             long_name = "Dummy GDD20"
             print("   dummy GDD20")
         else:
-            this_da = ds_in[gddn].fillna(MISSING_FILL)
+            # this_da = ds_in[gddn].fillna(MISSING_FILL)
+            this_da = ds_in[gddn]
             this_da = _add_time_axis(this_da)
             long_name = gddn
             print(f"   {gddn}")
@@ -219,6 +221,7 @@ def generate_gdd20_baseline(input_files, output_file, author):
         # Add attributes
         this_da.attrs["long_name"] = long_name + f" baseline for {cft_str}"
         this_da.attrs["units"] = "°C days"
+        # this_da.attrs["_FillValue"] = MISSING_FILL
 
         # Copy that to ds_out
         var_out = _get_output_varname(cft_str)
