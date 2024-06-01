@@ -197,6 +197,7 @@ def generate_gdd20_baseline(input_files, output_file, author):
             "created": dt.datetime.now().astimezone().isoformat(),
         },
     )
+    encoding_dict = {}
     for cft_str in utils.define_mgdcrop_list():
         cft_int = utils.vegtype_str2int(cft_str)[0]
         print(f"{cft_str} ({cft_int})")
@@ -227,9 +228,10 @@ def generate_gdd20_baseline(input_files, output_file, author):
         var_out = _get_output_varname(cft_str)
         print(f"   Output variable {var_out}")
         ds_out[var_out] = this_da
+        encoding_dict[var_out] = {"dtype": "float64"}
 
     # Save
-    ds_out.to_netcdf(output_file, format="NETCDF3_CLASSIC")
+    ds_out.to_netcdf(output_file, format="NETCDF3_CLASSIC", encoding=encoding_dict)
 
     print("Done!")
 
