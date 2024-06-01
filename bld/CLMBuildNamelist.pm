@@ -4188,14 +4188,17 @@ sub setup_logic_cropcal_streams {
 
   # Add defaults if reading gdd20 seasons from stream files
   my $stream_gdd20_seasons = $nl->get_value('stream_gdd20_seasons') ;
-  my $gdd20_season_start_file = $nl->get_value('stream_fldFileName_gdd20_season_start') ;
-  my $gdd20_season_end_file = $nl->get_value('stream_fldFileName_gdd20_season_end') ;
   if ( &value_is_true($stream_gdd20_seasons)) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_gdd20_season_start');
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_gdd20_season_end');
 
     # Check
+    my $gdd20_season_start_file = $nl->get_value('stream_fldFileName_gdd20_season_start') ;
+    my $gdd20_season_end_file = $nl->get_value('stream_fldFileName_gdd20_season_end') ;
     if ( &string_is_undef_or_empty($gdd20_season_start_file) or &string_is_undef_or_empty($gdd20_season_end_file) ) {
+      $log->message($gdd20_season_start_file);
+      $log->message('abcd');
+      $log->message($gdd20_season_end_file);
       $log->fatal_error("If stream_gdd20_seasons is true, gdd20 season start and end files must be provided." );
     }
   }
