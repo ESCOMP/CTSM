@@ -226,7 +226,7 @@ def generate_gdd20_baseline(input_files, output_file, author):
         ds_out[var_out] = this_da
 
     # Save
-    ds_out.to_netcdf(output_file)
+    ds_out.to_netcdf(output_file, format="NETCDF3_CLASSIC")
 
     print("Done!")
 
