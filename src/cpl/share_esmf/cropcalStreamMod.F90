@@ -573,7 +573,7 @@ contains
        ! Handle invalid sowing window values
        if (any(swindow_starts(begp:endp,:) < 1 .or. swindow_ends(begp:endp,:) < 1)) then
            ! Fail if not allowing fallback to paramfile sowing windows
-           if ((.not. allow_invalid_swindow_inputs) .and. any(all(swindow_starts(begp:endp,:) < 1, dim=2) .and. patch%wtgcell > 0._r8 .and. patch%itype >= npcropmin)) then
+           if ((.not. allow_invalid_swindow_inputs) .and. any(all(swindow_starts(begp:endp,:) < 1, dim=2) .and. patch%wtgcell(begp:endp) > 0._r8 .and. patch%itype(begp:endp) >= npcropmin)) then
                write(iulog, *) 'At least one crop in one gridcell has invalid prescribed sowing window start date(s). To ignore and fall back to paramfile sowing windows, set allow_invalid_swindow_inputs to .true.'
                write(iulog, *) 'Affected crops:'
                do ivt = npcropmin, mxpft
