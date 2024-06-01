@@ -608,6 +608,21 @@ contains
             avgflag='A', long_name='Growing degree days base 10C from planting', &
             ptr_patch=this%gdd10_patch, default='inactive')
 
+       this%gdd0_patch(begp:endp) = spval
+       call hist_addfld1d (fname='GDD0X', units='ddays', &
+            avgflag='X', long_name='Growing degree days base  0C from planting, max', &
+            ptr_patch=this%gdd0_patch, default='inactive')
+
+       this%gdd8_patch(begp:endp) = spval
+       call hist_addfld1d (fname='GDD8X', units='ddays', &
+            avgflag='X', long_name='Growing degree days base  8C from planting, max', &
+            ptr_patch=this%gdd8_patch, default='inactive')
+
+       this%gdd10_patch(begp:endp) = spval
+       call hist_addfld1d (fname='GDD10X', units='ddays', &
+            avgflag='X', long_name='Growing degree days base 10C from planting, max', &
+            ptr_patch=this%gdd10_patch, default='inactive')
+
        this%gdd020_patch(begp:endp) = spval
        call hist_addfld1d (fname='GDD020', units='ddays', &
             avgflag='A', long_name='Twenty year average of growing degree days base  0C from planting', &
