@@ -597,9 +597,7 @@ contains
        call hist_addfld1d (fname='GDD0', units='ddays', &
             avgflag='A', long_name='Growing degree days base  0C from planting', &
             ptr_patch=this%gdd0_patch, default='inactive')
-    end if
 
-    if (use_crop) then
        this%gdd8_patch(begp:endp) = spval
        call hist_addfld1d (fname='GDD8', units='ddays', &
             avgflag='A', long_name='Growing degree days base  8C from planting', &
