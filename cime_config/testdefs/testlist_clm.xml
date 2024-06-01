@@ -3737,5 +3737,14 @@
     </options>
   </test>
 
+  <test name="SMS_P128x1_Lm25" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/RxCropCalsAdaptGGCMI">
+    <machines>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:00:00</option>
+    </options>
+  </test>
+
 
 </testlist>
