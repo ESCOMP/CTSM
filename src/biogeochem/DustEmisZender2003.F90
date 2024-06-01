@@ -39,15 +39,15 @@ module DustEmisZender2003
   !
   ! !PRIVATE DATA:
   !
-  real(r8) , allocatable :: ovr_src_snk_mss(:,:) ! overlap factors between the source and sin
-  real(r8) , allocatable :: dmt_vwr(:) ![m] Mass-weighted mean diameter resolved
-  real(r8) , allocatable :: stk_crc(:) ![frc] Correction to Stokes settling velocity
   real(r8), parameter :: dns_aer = 2.5e+3_r8 ![kg m-3] Aerosol density
   !
   ! !PUBLIC DATA TYPES:
   !
   type, public :: dust_type
 
+     real(r8) , allocatable, private :: ovr_src_snk_mss(:,:)       ! overlap factors between the source and sin
+     real(r8) , allocatable, private :: dmt_vwr(:)                 ! [m] Mass-weighted mean diameter resolved
+     real(r8) , allocatable, private :: stk_crc(:)                 ! [frc] Correction to Stokes settling velocity
      real(r8), private          :: tmp1                            ! Factor in saltation computation (named as in Charlie's code)
      real(r8), pointer, PUBLIC  :: flx_mss_vrt_dst_patch     (:,:) ! surface dust emission (kg/m**2/s) [ + = to atm] (ndst) 
      real(r8), pointer, private :: flx_mss_vrt_dst_tot_patch (:)   ! total dust flux into atmosphere
@@ -116,9 +116,9 @@ contains
    deallocate(this%vlc_trb_4_patch)
    deallocate(this%mbl_bsn_fct_col)
 
-   deallocate (ovr_src_snk_mss)
-   deallocate (dmt_vwr)
-   deallocate (stk_crc)
+   deallocate (this%ovr_src_snk_mss)
+   deallocate (this%dmt_vwr)
+   deallocate (this%stk_crc)
 
  end subroutine Clean
 
@@ -145,6 +145,11 @@ contains
     allocate(this%vlc_trb_3_patch           (begp:endp))        ; this%vlc_trb_3_patch           (:)   = nan
     allocate(this%vlc_trb_4_patch           (begp:endp))        ; this%vlc_trb_4_patch           (:)   = nan
     allocate(this%mbl_bsn_fct_col           (begc:endc))        ; this%mbl_bsn_fct_col           (:)   = nan
+
+    allocate (this%ovr_src_snk_mss(dst_src_nbr,ndst))           ; this%ovr_src_snk_mss           (:,:) = nan
+    allocate (this%dmt_vwr(ndst))                               ; this%dmt_vwr                   (:)   = nan
+    allocate (this%stk_crc(ndst))                               ; this%stk_crc                   (:)   = nan
+
 
   end subroutine InitAllocate
 
@@ -564,7 +569,7 @@ contains
             do fp = 1,num_nolakep
                p = filter_nolakep(fp)
                if (lnd_frc_mbl(p) > 0.0_r8) then
-                  flx_mss_vrt_dst(p,n) = flx_mss_vrt_dst(p,n) +  ovr_src_snk_mss(m,n) * flx_mss_vrt_dst_ttl(p)
+                  flx_mss_vrt_dst(p,n) = flx_mss_vrt_dst(p,n) +  this%ovr_src_snk_mss(m,n) * flx_mss_vrt_dst_ttl(p)
                end if
             end do
          end do
@@ -663,11 +668,11 @@ contains
 
             do m = 1, ndst
                slp_crc(p,m) = 1.0_r8 + 2.0_r8 * mfp_atm * &
-                    (1.257_r8+0.4_r8*exp(-1.1_r8*dmt_vwr(m)/(2.0_r8*mfp_atm))) / &
-                    dmt_vwr(m)   ![frc] Slip correction factor SeP97 p. 464
-               vlc_grv(p,m) = (1.0_r8/18.0_r8) * dmt_vwr(m) * dmt_vwr(m) * dns_aer * &
+                    (1.257_r8+0.4_r8*exp(-1.1_r8*this%dmt_vwr(m)/(2.0_r8*mfp_atm))) / &
+                    this%dmt_vwr(m)   ![frc] Slip correction factor SeP97 p. 464
+               vlc_grv(p,m) = (1.0_r8/18.0_r8) * this%dmt_vwr(m) * this%dmt_vwr(m) * dns_aer * &
                     grav * slp_crc(p,m) / vsc_dyn_atm(p)   ![m s-1] Stokes' settling velocity SeP97 p. 466
-               vlc_grv(p,m) = vlc_grv(p,m) * stk_crc(m)    ![m s-1] Correction to Stokes settling velocity
+               vlc_grv(p,m) = vlc_grv(p,m) * this%stk_crc(m)    ![m s-1] Correction to Stokes settling velocity
             end do
          end if
       end do
@@ -680,7 +685,7 @@ contains
 
                stk_nbr = vlc_grv(p,m) * fv(p) * fv(p) / (grav * vsc_knm_atm(p))  ![frc] SeP97 p.965
                dff_aer = SHR_CONST_BOLTZ * forc_t(c) * slp_crc(p,m) / &          ![m2 s-1]
-                    (3.0_r8*SHR_CONST_PI * vsc_dyn_atm(p) * dmt_vwr(m))          !SeP97 p.474
+                    (3.0_r8*SHR_CONST_PI * vsc_dyn_atm(p) * this%dmt_vwr(m))     !SeP97 p.474
                shm_nbr = vsc_knm_atm(p) / dff_aer                                ![frc] SeP97 p.972
                shm_nbr_xpn = shm_nbr_xpn_lnd                                     ![frc]
 
@@ -796,11 +801,6 @@ contains
     real(r8), parameter :: dns_slt = 2650.0_r8         ! [kg m-3] Density of optimal saltation particles
     !------------------------------------------------------------------------
 
-      ! allocate module variable
-      allocate (ovr_src_snk_mss(dst_src_nbr,ndst))  
-      allocate (dmt_vwr(ndst))
-      allocate (stk_crc(ndst))
-
       ! allocate local variable
       allocate (dmt_vma_src(dst_src_nbr))  
       allocate (gsd_anl_src(dst_src_nbr))  
@@ -824,7 +824,7 @@ contains
             lndminjovrdmdni = log(dmt_grd(n  )/dmt_vma_src(m))
             ovr_src_snk_frc = 0.5_r8 * (erf(lndmaxjovrdmdni/sqrt2lngsdi) - &
                  erf(lndminjovrdmdni/sqrt2lngsdi))
-            ovr_src_snk_mss(m,n) = ovr_src_snk_frc * mss_frc_src(m)
+            this%ovr_src_snk_mss(m,n) = ovr_src_snk_frc * mss_frc_src(m)
          end do
       end do
 
@@ -914,7 +914,7 @@ contains
          end do
 
          lngsdsqrttwopi_rcp = 1.0_r8 / (ln_gsd*sqrt(2.0_r8*SHR_CONST_PI))
-         dmt_vwr(n) = 0.0_r8 ! [m] Mass wgted diameter resolved
+         this%dmt_vwr(n) = 0.0_r8 ! [m] Mass wgted diameter resolved
          vlm_rsl(n) = 0.0_r8 ! [m3 m-3] Volume concentration resolved
 
          do m = 1, sz_nbr
@@ -924,7 +924,7 @@ contains
             lgn_dst = lngsdsqrttwopi_rcp * exp(-0.5_r8*tmp*tmp) / sz_ctr(m)
 
             ! Integrate moments of size distribution
-            dmt_vwr(n) = dmt_vwr(n) + sz_ctr(m) *                    &
+            this%dmt_vwr(n) = this%dmt_vwr(n) + sz_ctr(m) *                    &
                  SHR_CONST_PI / 6.0_r8 * (sz_ctr(m)**3.0_r8) * & ![m3] Volume
                  lgn_dst * sz_dlt(m)                ![# m-3] Number concentrn
             vlm_rsl(n) = vlm_rsl(n) +                                &
@@ -933,7 +933,7 @@ contains
 
          end do
 
-         dmt_vwr(n) = dmt_vwr(n) / vlm_rsl(n) ![m] Mass weighted diameter resolved
+         this%dmt_vwr(n) = this%dmt_vwr(n) / vlm_rsl(n) ![m] Mass weighted diameter resolved
 
       end do
 
@@ -952,9 +952,9 @@ contains
 
       do m = 1, ndst
          slp_crc(m) = 1.0_r8 + 2.0_r8 * mfp_atm *                      &
-              (1.257_r8+0.4_r8*exp(-1.1_r8*dmt_vwr(m)/(2.0_r8*mfp_atm))) / &
-              dmt_vwr(m)                      ! [frc] Slip correction factor SeP97 p.464
-         vlc_stk(m) = (1.0_r8/18.0_r8) * dmt_vwr(m) * dmt_vwr(m) * dns_aer * &
+              (1.257_r8+0.4_r8*exp(-1.1_r8*this%dmt_vwr(m)/(2.0_r8*mfp_atm))) / &
+              this%dmt_vwr(m)                      ! [frc] Slip correction factor SeP97 p.464
+         vlc_stk(m) = (1.0_r8/18.0_r8) * this%dmt_vwr(m) * this%dmt_vwr(m) * dns_aer * &
               grav * slp_crc(m) / vsc_dyn_atm ! [m s-1] SeP97 p.466
       end do
 
@@ -979,7 +979,7 @@ contains
 
             ! Save terminal velocity for convergence test
             vlc_grv_old = vlc_grv(m) ![m s-1]
-            ryn_nbr_grv(m) = vlc_grv(m) * dmt_vwr(m) / vsc_knm_atm !SeP97 p.460
+            ryn_nbr_grv(m) = vlc_grv(m) * this%dmt_vwr(m) / vsc_knm_atm !SeP97 p.460
 
             ! Update drag coefficient based on new Reynolds number
             if (ryn_nbr_grv(m) < 0.1_r8) then
@@ -1003,7 +1003,7 @@ contains
             ! Update terminal velocity based on new Reynolds number and drag coeff
             ! [m s-1] Terminal veloc SeP97 p.467 (8.44)
 
-            vlc_grv(m) = sqrt(4.0_r8 * grav * dmt_vwr(m) * slp_crc(m) * dns_aer / &
+            vlc_grv(m) = sqrt(4.0_r8 * grav * this%dmt_vwr(m) * slp_crc(m) * dns_aer / &
                  (3.0_r8*cff_drg_grv(m)*dns_mdp))   
             eps_crr = abs((vlc_grv(m)-vlc_grv_old)/vlc_grv(m)) !Relative convergence
             if (itr_idx == 12) then
@@ -1027,7 +1027,7 @@ contains
       ! actual settling velocities
 
       do m = 1, ndst
-         stk_crc(m) = vlc_grv(m) / vlc_stk(m)
+         this%stk_crc(m) = vlc_grv(m) / vlc_stk(m)
       end do
 
   end subroutine InitDustVars
