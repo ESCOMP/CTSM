@@ -1,2 +1,4 @@
 
 stream_gdd20_seasons = .true.
+!TODO SSR: Try without this once you have half-degree inputs
+allow_invalid_gdd20_season_inputs = .true.
