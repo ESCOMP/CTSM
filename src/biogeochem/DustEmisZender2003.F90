@@ -39,7 +39,7 @@ module DustEmisZender2003
   !
   ! !PRIVATE DATA:
   !
-  real(r8), parameter :: dns_aer = 2.5e+3_r8 ![kg m-3] Aerosol density
+  real(r8), parameter :: dns_aer = 2.5e+3_r8        ![kg m-3] Aerosol density
   !
   ! !PUBLIC DATA TYPES:
   !
@@ -48,7 +48,7 @@ module DustEmisZender2003
      real(r8) , allocatable, private :: ovr_src_snk_mss(:,:)       ! overlap factors between the source and sin
      real(r8) , allocatable, private :: dmt_vwr(:)                 ! [m] Mass-weighted mean diameter resolved
      real(r8) , allocatable, private :: stk_crc(:)                 ! [frc] Correction to Stokes settling velocity
-     real(r8), private          :: tmp1                            ! Factor in saltation computation (named as in Charlie's code)
+     real(r8), private          :: saltation_factor                ! Factor in saltation computation (named as in Charlie's code)
      real(r8), pointer, PUBLIC  :: flx_mss_vrt_dst_patch     (:,:) ! surface dust emission (kg/m**2/s) [ + = to atm] (ndst) 
      real(r8), pointer, private :: flx_mss_vrt_dst_tot_patch (:)   ! total dust flux into atmosphere
      real(r8), pointer, private :: vlc_trb_patch             (:,:) ! turbulent deposition velocity  (m/s) (ndst) 
@@ -298,7 +298,7 @@ contains
     class(dust_type)  , intent(in)  :: this
     real(r8)          , intent(out) :: SaltationFactor
 
-    SaltationFactor = this%tmp1
+    SaltationFactor = this%saltation_factor
   end subroutine GetConstVars
 
   !------------------------------------------------------------------------
@@ -506,11 +506,11 @@ contains
 
             ! the following lines come from subr. dst_mbl
             ! purpose: adjust threshold friction velocity to acct for moisture and
-            !          roughness. The ratio tmp1 / sqrt(forc_rho) comes from
+            !          roughness. The ratio saltation_factor / sqrt(forc_rho) comes from
             !          subr. wnd_frc_thr_slt_get which computes dry threshold
             !          friction velocity for saltation
 
-            wnd_frc_thr_slt = this%tmp1 / sqrt(forc_rho(c)) * frc_thr_wet_fct * frc_thr_rgh_fct
+            wnd_frc_thr_slt = this%saltation_factor / sqrt(forc_rho(c)) * frc_thr_wet_fct * frc_thr_rgh_fct
 
             ! reset these variables which will be updated in the following if-block
 
@@ -733,7 +733,7 @@ contains
      !
      ! Compute source efficiency factor from topography
      ! Initialize other variables used in subroutine Dust:
-     ! ovr_src_snk_mss(m,n) and tmp1.
+     ! ovr_src_snk_mss(m,n) and saltation_factor.
      ! Define particle diameter and density needed by atm model
      ! as well as by dry dep model
      ! Source: Paul Ginoux (for source efficiency factor)
@@ -829,7 +829,7 @@ contains
       end do
 
       ! The following code from subroutine wnd_frc_thr_slt_get was placed 
-      ! here because tmp1 needs to be defined just once
+      ! here because saltation_factor needs to be defined just once
 
       ryn_nbr_frc_thr_prx_opt = 0.38_r8 + 1331.0_r8 * (100.0_r8*dmt_slt_opt)**1.56_r8
 
@@ -846,7 +846,7 @@ contains
 
       icf_fct = 1.0_r8 + 6.0e-07_r8 / (dns_slt * grav * (dmt_slt_opt**2.5_r8))
       dns_fct = dns_slt * grav * dmt_slt_opt
-      this%tmp1 = sqrt(icf_fct * dns_fct * ryn_nbr_frc_thr_opt_fnc)
+      this%saltation_factor = sqrt(icf_fct * dns_fct * ryn_nbr_frc_thr_opt_fnc)
 
       ! Introducing particle diameter. Needed by atm model and by dry dep model.
       ! Taken from Charlie Zender's subroutines dst_psd_ini, dst_sz_rsl,
