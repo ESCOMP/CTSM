@@ -432,10 +432,26 @@ contains
        end if
     end if
 
-    ! The following should not have an associated time axis and thus will not be advanced here:
+    ! The following should not have an associated time axis, but still need to be here
     ! - GDD20 baseline values
     ! - GDD20 season start dates
     ! - GDD20 season end dates
+    if (adapt_cropcal_rx_cultivar_gdds) then
+       call shr_strdata_advance(sdat_cropcal_gdd20_baseline, ymd=mcdate, tod=sec, logunit=iulog, istr='cropcaldyn', rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       end if
+    end if
+    if (stream_gdd20_seasons) then
+       call shr_strdata_advance(sdat_cropcal_gdd20_season_start, ymd=mcdate, tod=sec, logunit=iulog, istr='cropcaldyn', rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       end if
+       call shr_strdata_advance(sdat_cropcal_gdd20_season_end, ymd=mcdate, tod=sec, logunit=iulog, istr='cropcaldyn', rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       end if
+    end if
 
     if ( .not. allocated(g_to_ig) )then
        allocate (g_to_ig(bounds%begg:bounds%endg) )
