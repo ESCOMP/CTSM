@@ -37,18 +37,18 @@ module DustEmisZender2003
   implicit none
   private
   !
-  ! !PUBLIC DATA:
+  ! !PRIVATE DATA:
   !
-  real(r8) , allocatable :: ovr_src_snk_mss(:,:)
+  real(r8) , allocatable :: ovr_src_snk_mss(:,:) ! overlap factors between the source and sin
   real(r8) , allocatable :: dmt_vwr(:) ![m] Mass-weighted mean diameter resolved
   real(r8) , allocatable :: stk_crc(:) ![frc] Correction to Stokes settling velocity
-  real(r8) tmp1                        !Factor in saltation computation (named as in Charlie's code)
   real(r8), parameter :: dns_aer = 2.5e+3_r8 ![kg m-3] Aerosol density
   !
   ! !PUBLIC DATA TYPES:
   !
   type, public :: dust_type
 
+     real(r8), private          :: tmp1                            ! Factor in saltation computation (named as in Charlie's code)
      real(r8), pointer, PUBLIC  :: flx_mss_vrt_dst_patch     (:,:) ! surface dust emission (kg/m**2/s) [ + = to atm] (ndst) 
      real(r8), pointer, private :: flx_mss_vrt_dst_tot_patch (:)   ! total dust flux into atmosphere
      real(r8), pointer, private :: vlc_trb_patch             (:,:) ! turbulent deposition velocity  (m/s) (ndst) 
@@ -293,7 +293,7 @@ contains
     class(dust_type)  , intent(in)  :: this
     real(r8)          , intent(out) :: SaltationFactor
 
-    SaltationFactor = tmp1
+    SaltationFactor = this%tmp1
   end subroutine GetConstVars
 
   !------------------------------------------------------------------------
@@ -505,7 +505,7 @@ contains
             !          subr. wnd_frc_thr_slt_get which computes dry threshold
             !          friction velocity for saltation
 
-            wnd_frc_thr_slt = tmp1 / sqrt(forc_rho(c)) * frc_thr_wet_fct * frc_thr_rgh_fct
+            wnd_frc_thr_slt = this%tmp1 / sqrt(forc_rho(c)) * frc_thr_wet_fct * frc_thr_rgh_fct
 
             ! reset these variables which will be updated in the following if-block
 
@@ -846,7 +846,7 @@ contains
 
       icf_fct = 1.0_r8 + 6.0e-07_r8 / (dns_slt * grav * (dmt_slt_opt**2.5_r8))
       dns_fct = dns_slt * grav * dmt_slt_opt
-      tmp1 = sqrt(icf_fct * dns_fct * ryn_nbr_frc_thr_opt_fnc)
+      this%tmp1 = sqrt(icf_fct * dns_fct * ryn_nbr_frc_thr_opt_fnc)
 
       ! Introducing particle diameter. Needed by atm model and by dry dep model.
       ! Taken from Charlie Zender's subroutines dst_psd_ini, dst_sz_rsl,
