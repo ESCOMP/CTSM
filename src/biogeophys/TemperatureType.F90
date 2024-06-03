@@ -1428,11 +1428,11 @@ contains
           ((month > 9 .or.  month < 4)  .and. lat <  0._r8)
        ! Replace with read-in gdd20 accumulation season, if valid
        ! (If these aren't being read in or they're invalid, they'll be -1)
-       gdd20_season_start = crop_inst%gdd20_season_start_patch(p)
-       gdd20_season_end = crop_inst%gdd20_season_end_patch(p)
+       gdd20_season_start = gdd20_season_starts(p)
+       gdd20_season_end = gdd20_season_ends(p)
        if (gdd20_season_start >= 1 .and. gdd20_season_end >= 1) then
           in_accumulation_season = is_doy_in_interval( &
-             gdd20_season_starts(p), gdd20_season_ends(p), day)
+          gdd20_season_start, gdd20_season_end, day)
        end if
 
        if (month==1 .and. day==1 .and. secs==dtime) then
