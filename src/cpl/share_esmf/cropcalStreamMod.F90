@@ -312,7 +312,7 @@ contains
             model_mesh          = mesh,                               &
             stream_meshfile     = trim(stream_meshfile_cropcal),      &
             stream_lev_dimname  = 'null',                             &
-            stream_mapalgo      = 'bilinear',                         &
+            stream_mapalgo      = 'nn',                         &
             stream_filenames    = (/trim(stream_fldFileName_gdd20_baseline)/), &
             stream_fldlistFile  = stream_varnames_gdd20_baseline,     &
             stream_fldListModel = stream_varnames_gdd20_baseline,     &
