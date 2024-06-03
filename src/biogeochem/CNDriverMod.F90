@@ -936,7 +936,7 @@ contains
             num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, &
             atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
             waterstatebulk_inst, soilstate_inst, soil_water_retention_curve, &
-            cnveg_state_inst, cnveg_carbonstate_inst, &
+            crop_inst, cnveg_state_inst, cnveg_carbonstate_inst, &
             totlitc_col=soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
             decomp_cpools_vr_col=soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools), &
             t_soi17cm_col=temperature_inst%t_soi17cm_col(begc:endc))
