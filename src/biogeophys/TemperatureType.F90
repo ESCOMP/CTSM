@@ -1426,14 +1426,16 @@ contains
        in_accumulation_season = &
           ((month > 3 .and. month < 10) .and. lat >= 0._r8) .or. &
           ((month > 9 .or.  month < 4)  .and. lat <  0._r8)
-       ! Replace with read-in gdd20 accumulation season, if valid
+       ! Replace with read-in gdd20 accumulation season, if needed and valid
        ! (If these aren't being read in or they're invalid, they'll be -1)
-       ! REAL FOR DEVELOPMENT ONLY; REVERT TO INTEGER BEFORE MERGE
-       gdd20_season_start = int(gdd20_season_starts(p))
-       gdd20_season_end = int(gdd20_season_ends(p))
-       if (gdd20_season_start >= 1 .and. gdd20_season_end >= 1) then
-          in_accumulation_season = is_doy_in_interval( &
-          gdd20_season_start, gdd20_season_end, day)
+       if (gdd20_season_starts(p)==gdd20_season_starts(p) .and. gdd20_season_ends(p)==gdd20_season_ends(p) .and. gdd20_season_starts(p)<=366 .and. gdd20_season_ends(p)<=366) then
+          ! REAL FOR DEVELOPMENT ONLY; REVERT TO INTEGER BEFORE MERGE
+          gdd20_season_start = int(gdd20_season_starts(p))
+          gdd20_season_end = int(gdd20_season_ends(p))
+          if (gdd20_season_start >= 1 .and. gdd20_season_end >= 1) then
+             in_accumulation_season = is_doy_in_interval( &
+             gdd20_season_start, gdd20_season_end, day)
+          end if
        end if
 
        if (month==1 .and. day==1 .and. secs==dtime) then
