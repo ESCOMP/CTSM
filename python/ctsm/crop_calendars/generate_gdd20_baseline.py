@@ -17,8 +17,10 @@ sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
 from ctsm.crop_calendars.import_ds import import_ds
 import ctsm.crop_calendars.cropcal_utils as utils
+from ctsm.crop_calendars.grid_one_variable import grid_one_variable
 
 VAR_LIST_IN = ["GDD0X", "GDD8X", "GDD10X"]
+GRIDDING_VAR_LIST = ["patches1d_ixy", "patches1d_jxy", "lat", "lon"]
 MISSING_FILL = -1  # Something impossible to ensure that you can mark it as a missing value, to be
 # bilinear-interpolated
 STREAM_YEAR = 2000  # The year specified for stream_yearFirst and stream_yearLast in the call of
@@ -171,7 +173,7 @@ def generate_gdd20_baseline(input_files, output_file, author):
     input_files.sort()
 
     # Import history files and ensure they have lat/lon dims
-    ds_in = import_ds(input_files, VAR_LIST_IN)
+    ds_in = import_ds(input_files, VAR_LIST_IN + GRIDDING_VAR_LIST)
     if not all(x in ds_in.dims for x in ["lat", "lon"]):
         raise RuntimeError("Input files must have lat and lon dimensions")
 
@@ -188,8 +190,11 @@ def generate_gdd20_baseline(input_files, output_file, author):
     dummy_da = _add_time_axis(dummy_da)
 
     # Process all crops
+    data_var_dict = {}
+    for v in GRIDDING_VAR_LIST:
+        data_var_dict[v] = ds_in[v]
     ds_out = xr.Dataset(
-        data_vars=None,
+        data_vars=data_var_dict,
         attrs={
             "author": author,
             "created": dt.datetime.now().astimezone().isoformat(),
@@ -227,6 +232,10 @@ def generate_gdd20_baseline(input_files, output_file, author):
         print(f"   Output variable {var_out}")
         ds_out[var_out] = this_da
         encoding_dict[var_out] = {"dtype": "float64"}
+
+        # Grid, if needed
+        if any(x not in this_da.dims for x in ["lat", "lon"]):
+            ds_out[var_out] = grid_one_variable(ds_out, var_out)
 
     # Save
     ds_out.to_netcdf(output_file, format="NETCDF3_CLASSIC", encoding=encoding_dict)
