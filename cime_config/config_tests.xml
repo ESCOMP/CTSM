@@ -133,6 +133,26 @@ This defines various CTSM-specific system tests
     <HIST_N>$STOP_N</HIST_N>
   </test>
 
+  <test NAME="RXCROPMATURITYSKIPRUN">
+    <DESC>As RXCROPMATURITY but don't actually run or postprocess; just setup</DESC>
+    <INFO_DBUG>1</INFO_DBUG>
+    <DOUT_S>FALSE</DOUT_S>
+    <CONTINUE_RUN>FALSE</CONTINUE_RUN>
+    <REST_OPTION>never</REST_OPTION>
+    <HIST_OPTION>$STOP_OPTION</HIST_OPTION>
+    <HIST_N>$STOP_N</HIST_N>
+  </test>
+
+  <test NAME="RXCROPMATURITYSKIPBUILD">
+    <DESC>As RXCROPMATURITY but don't actually build; just setup and then start "run." Will fail when run start is requested, but should successfully test preprocessing.</DESC>
+    <INFO_DBUG>1</INFO_DBUG>
+    <DOUT_S>FALSE</DOUT_S>
+    <CONTINUE_RUN>FALSE</CONTINUE_RUN>
+    <REST_OPTION>never</REST_OPTION>
+    <HIST_OPTION>$STOP_OPTION</HIST_OPTION>
+    <HIST_N>$STOP_N</HIST_N>
+  </test>
+
 <!--
 SSP    smoke CLM spinup test (only valid for CLM compsets with CLM45)
        do an initial spin test (setting CLM_ACCELERATED_SPINUP to on)
