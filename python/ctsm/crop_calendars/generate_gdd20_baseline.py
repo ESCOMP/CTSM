@@ -219,7 +219,7 @@ def generate_gdd20_baseline(input_files, output_file, author):
             # this_da = ds_in[gddn].fillna(MISSING_FILL)
             this_da = ds_in[gddn]
             this_da = _add_time_axis(this_da)
-            long_name = gddn
+            long_name = gddn.replace("X", "20")
             print(f"   {gddn}")
 
         # Add attributes
