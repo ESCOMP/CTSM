@@ -11,6 +11,10 @@ at the original resolution (for GGCMI phase 3, 0.5°) and have the stream
 code do the interpolation. However, that wouldn't act on harvest dates
 (which are needed for generate_gdds.py). I could have Python interpolate
 those, but this would cause a potential inconsistency.
+
+Note that this is just a parent class. The actual tests are RXCROPMATURITY and
+RXCROPMATURITY_SKIPRUN, the latter of which does everything except perform and 
+check the CTSM runs.
 """
 
 import os
@@ -25,7 +29,7 @@ import shutil, glob
 logger = logging.getLogger(__name__)
 
 
-class RXCROPMATURITY(SystemTestsCommon):
+class RXCROPMATURITYSHARED(SystemTestsCommon):
     def __init__(self, case):
         # initialize an object interface to the SMS system test
         SystemTestsCommon.__init__(self, case)
@@ -84,7 +88,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         # Which conda environment should we use?
         self._get_conda_env()
 
-    def run_phase(self):
+    def _run_phase(self, skip_run=False):
         # Modeling this after the SSP test, we create a clone to be the case whose outputs we don't
         # want to be saved as baseline.
 
@@ -146,9 +150,10 @@ class RXCROPMATURITY(SystemTestsCommon):
         # "No history files expected, set suffix=None to avoid compare error"
         # We *do* expect history files here, but anyway. This works.
         self._skip_pnl = False
-        self.run_indv(suffix=None, st_archive=True)
 
-        self._run_generate_gdds(case_gddgen)
+        if not skip_run:
+            self.run_indv(suffix=None, st_archive=True)
+            self._run_generate_gdds(case_gddgen)
 
         # -------------------------------------------------------------------
         # (3) Set up and perform Prescribed Calendars run
@@ -168,13 +173,15 @@ class RXCROPMATURITY(SystemTestsCommon):
             ]
         )
 
-        self.run_indv()
+        if not skip_run:
+            self.run_indv()
 
         # -------------------------------------------------------------------
         # (4) Check Prescribed Calendars run
         # -------------------------------------------------------------------
         logger.info("RXCROPMATURITY log:  output check: Prescribed Calendars")
-        self._run_check_rxboth_run()
+        if not skip_run:
+            self._run_check_rxboth_run()
 
     # Get sowing and harvest dates for this resolution.
     def _get_rx_dates(self):
