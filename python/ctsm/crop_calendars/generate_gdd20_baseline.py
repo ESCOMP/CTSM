@@ -18,8 +18,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 from ctsm.crop_calendars.import_ds import import_ds
 import ctsm.crop_calendars.cropcal_utils as utils
 
-VAR_LIST_IN = ["GDD0", "GDD8", "GDD10"]
-VAR_LIST_IN = [x + "20" for x in VAR_LIST_IN]  # TODO: Delete this once using the right variables
+VAR_LIST_IN = ["GDD0X", "GDD8X", "GDD10X"]
 MISSING_FILL = -1  # Something impossible to ensure that you can mark it as a missing value, to be
 # bilinear-interpolated
 STREAM_YEAR = 2000  # The year specified for stream_yearFirst and stream_yearLast in the call of
@@ -111,26 +110,25 @@ def _get_gddn_for_cft(cft_str):
         cft_str (str): E.g., "irrigated_temperate_corn"
 
     Returns:
-        str or None: Name of variable to use (e.g., "GDD8"). If crop isn't yet handled, return None.
+        str or None: Name of variable to use (e.g., "GDD8X"). If crop isn't yet handled, return None.
     """
 
     gddn = None
 
     gdd0_list_str = ["wheat", "cotton", "rice"]
     if cft_str in _get_cft_list(gdd0_list_str):
-        gddn = "GDD0"
+        gddn = 0
 
     gdd8_list_str = ["corn", "sugarcane", "miscanthus", "switchgrass"]
     if cft_str in _get_cft_list(gdd8_list_str):
-        gddn = "GDD8"
+        gddn = 8
 
     gdd10_list_str = ["soybean"]
     if cft_str in _get_cft_list(gdd10_list_str):
-        gddn = "GDD10"
+        gddn = 10
 
-    # TODO: Delete this once using the right variables
     if gddn is not None:
-        gddn += "20"
+        gddn = f"GDD{gddn}X"
 
     return gddn
 
