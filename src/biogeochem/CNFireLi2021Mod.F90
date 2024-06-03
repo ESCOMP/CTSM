@@ -534,7 +534,7 @@ contains
             if((use_crop .and. (.not. croplive(p))) &
                    .or. (.not. use_crop)) then
                 burndate(p) = kda
-                baf_crop(c) = baf_crop(c)+0.21_r8 / secsphr * fhd * fgdp * patch%wtcol(p)
+                baf_crop(c) = baf_crop(c)+cropfire_a1 / secsphr * fhd * fgdp * patch%wtcol(p)
            end if 
        end if
      end do
