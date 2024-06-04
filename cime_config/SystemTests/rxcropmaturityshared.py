@@ -118,6 +118,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         self._append_to_user_nl_clm(
             [
                 "generate_crop_gdds = .true.",
+                "stream_fldFileName_cultivar_gdds = ''"
                 "use_mxmat = .false.",
                 " ",
                 "! (h2) Daily outputs for GDD generation and figure-making",
@@ -364,6 +365,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
 
     def _modify_user_nl_allruns(self):
         nl_additions = [
+            "cropcals_rx = .true."
             "stream_meshfile_cropcal = '{}'".format(self._case.get_value("LND_DOMAIN_MESH")),
             "stream_fldFileName_swindow_start = '{}'".format(self._sdatefile),
             "stream_fldFileName_swindow_end   = '{}'".format(self._sdatefile),
