@@ -42,7 +42,7 @@ module DustEmisBase
   !
   ! !PUBLIC DATA TYPES:
   !
-  type, abstract, public :: dust_base_type
+  type, abstract, public :: dust_emis_base_type
 
      real(r8) , allocatable, public  :: ovr_src_snk_mss(:,:)       ! overlap factors between the source and sin
      real(r8) , allocatable, private :: dmt_vwr(:)                 ! [m] Mass-weighted mean diameter resolved
@@ -71,7 +71,7 @@ module DustEmisBase
      procedure , private  :: InitHistory  
      procedure , private  :: InitDustVars    ! Initialize variables used in DustEmission method
 
-  end type dust_base_type
+  end type dust_emis_base_type
   !------------------------------------------------------------------------
 
   abstract interface
@@ -97,10 +97,10 @@ module DustEmisBase
     use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
     use FrictionVelocityMod    , only : frictionvel_type
 
-    import :: dust_base_type
+    import :: dust_emis_base_type
     !
     ! !ARGUMENTS:
-    class (dust_base_type)                 :: this
+    class (dust_emis_base_type)                 :: this
     type(bounds_type)      , intent(in)    :: bounds                      
     integer                , intent(in)    :: num_nolakep                 ! number of column non-lake points in patch filter
     integer                , intent(in)    :: filter_nolakep(num_nolakep) ! patch filter for non-lake points
@@ -125,7 +125,7 @@ contains
 
    ! Base level initialization of this base object, this allows classes that extend
    ! this base class to use this one and extend it with additional initialization
-    class(dust_base_type) :: this
+    class(dust_emis_base_type) :: this
     type(bounds_type), intent(in) :: bounds  
     character(len=*),  intent(in) :: NLFilename
 
@@ -141,7 +141,7 @@ contains
    ! Base level deallocation of this base object, this allows classes that extend
    ! this base class to use this one and extend it with additional deallocation.
    ! !ARGUMENTS:
-   class (dust_base_type) :: this
+   class (dust_emis_base_type) :: this
    !
    ! !LOCAL VARIABLES:
    !------------------------------------------------------------------------
@@ -164,7 +164,7 @@ contains
   subroutine InitAllocate(this, bounds)
     !
     ! !ARGUMENTS:
-    class (dust_base_type) :: this
+    class (dust_emis_base_type) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -198,7 +198,7 @@ contains
     !
     !
     ! !ARGUMENTS:
-    class (dust_base_type) :: this
+    class (dust_emis_base_type) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -243,7 +243,7 @@ contains
     ! !DESCRIPTION:
     ! Write out information on dust emisisons for this patch to the log file
     ! !ARGUMENTS:
-    class(dust_base_type), intent(in) :: this
+    class(dust_emis_base_type), intent(in) :: this
     integer         , intent(in) :: p      ! Patch to display
 
     write(iulog,*) 'flx_mss_vrt_dst_tot', this%flx_mss_vrt_dst_tot_patch(p)
@@ -261,7 +261,7 @@ contains
    ! !DESCRIPTION:
    ! Get important variables on the given patch
    ! !ARGUMENTS:
-   class(dust_base_type)  , intent(in)  :: this
+   class(dust_emis_base_type)  , intent(in)  :: this
    integer           , intent(in)  :: p      ! Patch to get
    real(r8), optional, intent(out) :: flx_mss_vrt_dst(ndst)
    real(r8), optional, intent(out) :: flx_mss_vrt_dst_tot
@@ -287,7 +287,7 @@ contains
   ! !DESCRIPTION:
   ! Get important constant variables
   ! !ARGUMENTS:
-    class(dust_base_type)  , intent(in)  :: this
+    class(dust_emis_base_type)  , intent(in)  :: this
     real(r8)          , intent(out) :: SaltationFactor
 
     SaltationFactor = this%saltation_factor
@@ -316,7 +316,7 @@ contains
     use shr_const_mod, only : SHR_CONST_PI, SHR_CONST_RDAIR, SHR_CONST_BOLTZ
     !
     ! !ARGUMENTS:
-    class (dust_base_type)                      :: this
+    class (dust_emis_base_type)                      :: this
     type(bounds_type)      , intent(in)    :: bounds 
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(frictionvel_type) , intent(in)    :: frictionvel_inst
@@ -451,7 +451,7 @@ contains
      use decompMod     , only : get_proc_bounds
      !
      ! !ARGUMENTS:
-     class(dust_base_type)  :: this
+     class(dust_emis_base_type)  :: this
      type(bounds_type), intent(in) :: bounds  
      !
      ! !LOCAL VARIABLES

@@ -30,7 +30,7 @@ module DustEmisZender2003
   use LandunitType         , only : lun
   use PatchType            , only : patch
   use ZenderSoilErodStreamType,  only : soil_erod_stream_type
-  use DustEmisBase         , only : dust_base_type
+  use DustEmisBase         , only : dust_emis_base_type
   use clm_varctl           , only : dust_emis_method
   !  
   ! !PUBLIC TYPES
@@ -42,7 +42,7 @@ module DustEmisZender2003
   !
   ! !PUBLIC DATA TYPES:
   !
-  type, public, extends(dust_base_type) :: dust_emis_zender2003_type
+  type, public, extends(dust_emis_base_type) :: dust_emis_zender2003_type
 
      real(r8), pointer, private :: mbl_bsn_fct_col           (:)   ! [dimensionless] basin factor, or soil rodibility, time-constant
      type(soil_erod_stream_type), private :: soil_erod_stream      ! Zender soil erodibility stream data
