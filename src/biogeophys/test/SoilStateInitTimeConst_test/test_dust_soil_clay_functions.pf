@@ -33,10 +33,10 @@ contains
     real(r8) :: value
     character(len=100) :: expected_msg
 
-    value = ThresholdSoilMoist( -1.e-15_r8 )
+    value = ThresholdSoilMoistZender2003( -1.e-15_r8 )
     expected_msg = "ABORTED: Clay fraction is out of bounds (0 to 100)"
     @assertExceptionRaised(expected_msg)
-    value = ThresholdSoilMoist( 1._r8 + 1.-15_r8 )
+    value = ThresholdSoilMoistZender2003( 1._r8 + 1.-15_r8 )
     @assertExceptionRaised(expected_msg)
   end subroutine TestClayOutOfRangeThreshold
 
@@ -45,9 +45,9 @@ contains
     class(TestDustEmisSoilFunctions), intent(inout) :: this
     real(r8) :: value
 
-    value = ThresholdSoilMoist( 0.0_r8 )
+    value = ThresholdSoilMoistZender2003( 0.0_r8 )
     @assertEqual( value, 0.17_r8, tolerance=tol )
-    value = ThresholdSoilMoist( 100.0_r8 )
+    value = ThresholdSoilMoistZender2003( 100.0_r8 )
     @assertEqual( value, 0.31_r8, tolerance=tol )
   end subroutine TestThresholdValues
 

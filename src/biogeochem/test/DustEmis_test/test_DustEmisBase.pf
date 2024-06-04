@@ -19,7 +19,7 @@ module test_DustEmisBase
   use WaterType, only : water_type
   use FrictionVelocityMod, only : frictionvel_type
   use unittestWaterTypeFactory, only : unittest_water_type_factory_type
-  use SoilStateInitTimeConstMod, only : ThresholdSoilMoist, ThresholdSoilMoistKok2014, MassFracClay
+  use SoilStateInitTimeConstMod, only : ThresholdSoilMoistZender2003, ThresholdSoilMoistKok2014, MassFracClay
 
   implicit none
 
@@ -156,7 +156,7 @@ contains
        ! considered bedrock
        col%nbedrock(c) = nlevsoi
 
-       this%soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoist( clay )
+       this%soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoistZender2003( clay )
        this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay )
     end do
 
