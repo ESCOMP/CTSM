@@ -1,0 +1,8 @@
+! 20240604 slevis introduced this file to bypass test failures in the
+! cnmatrix branch (so cnmatrix on by default) with two izumi tests:
+! SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.izumi_nag.clm-default--clm-NEON-NIWO--clm-matrixcnOn
+! SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.izumi_nag.clm-default--clm-NEON-NIWO
+! when the tests point to the default finidat, as documented in this post:
+! https://github.com/ESCOMP/CTSM/pull/640#issuecomment-2143101361
+use_init_interp = .true.
+finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_esmf/ctsm5.2/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc'
