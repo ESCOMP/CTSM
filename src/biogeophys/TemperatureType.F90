@@ -8,6 +8,7 @@ module TemperatureType
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
   use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop, use_biomass_heat_storage
+  use clm_varctl      , only : stream_gdd20_seasons
   use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevurb, nlevmaxurbgrnd
   use clm_varcon      , only : spval, ispval
   use GridcellType    , only : grc
@@ -94,6 +95,7 @@ module TemperatureType
      real(r8), pointer :: gdd020_patch            (:)   ! patch 20-year average of gdd0                     (ddays)
      real(r8), pointer :: gdd820_patch            (:)   ! patch 20-year average of gdd8                     (ddays)
      real(r8), pointer :: gdd1020_patch           (:)   ! patch 20-year average of gdd10                    (ddays)
+     logical           :: flush_gdd20 = .false.         ! whether accumulated GDD20s need to be flushed
 
      ! Heat content
      real(r8), pointer :: beta_col                 (:)   ! coefficient of convective velocity [-]
@@ -895,7 +897,7 @@ contains
     use shr_log_mod     , only : errMsg => shr_log_errMsg
     use spmdMod         , only : masterproc
     use abortutils      , only : endrun
-    use ncdio_pio       , only : file_desc_t, ncd_double, ncd_int
+    use ncdio_pio       , only : file_desc_t, ncd_double, ncd_int, ncd_log
     use restUtilMod
     !
     ! !ARGUMENTS:
@@ -907,8 +909,9 @@ contains
     logical          , intent(in)    :: is_prog_buildtemp    ! Prognostic building temp is being used
     !
     ! !LOCAL VARIABLES:
-    integer :: j,c       ! indices
+    integer :: j,c,p     ! indices
     logical :: readvar   ! determine if variable is on initial file
+    integer, pointer :: logical_as_int(:) ! used for saving/reading logicals
     !-----------------------------------------------------------------------
 
     call restartvar(ncid=ncid, flag=flag, varname='T_SOISNO', xtype=ncd_double,   &
@@ -1131,6 +1134,29 @@ contains
           if (masterproc) write(iulog,*) "Initialize t_floor to taf"
           this%t_floor_lun(bounds%begl:bounds%endl) = this%taf_lun(bounds%begl:bounds%endl)
        end if
+    end if
+
+    if (use_crop .and. stream_gdd20_seasons) then
+       allocate(logical_as_int(1))
+       if (flag == 'write') then
+          if (this%flush_gdd20) then
+             logical_as_int(1) = 1
+          else
+             logical_as_int(1) = 0
+          end if
+       end if
+       call restartvar(ncid=ncid, flag=flag,  varname='flush_gdd20', xtype=ncd_log,  &
+            dim1name='pft', &
+            long_name='Flag indicating that GDD20 values need to be flushed', &
+            units='none', interpinic_flag='interp', readvar=readvar, data=logical_as_int)
+       if (flag == 'read') then
+          if (readvar .and. logical_as_int(1) == 0) then
+             this%flush_gdd20 = .false.
+          else
+             this%flush_gdd20 = .true.
+          end if
+       end if
+       deallocate(logical_as_int)
     end if
 
 
@@ -1428,7 +1454,7 @@ contains
           ((month > 9 .or.  month < 4)  .and. lat <  0._r8)
        ! Replace with read-in gdd20 accumulation season, if needed and valid
        ! (If these aren't being read in or they're invalid, they'll be -1)
-       if (gdd20_season_starts(p)==gdd20_season_starts(p) .and. gdd20_season_ends(p)==gdd20_season_ends(p) .and. gdd20_season_starts(p)<=366 .and. gdd20_season_ends(p)<=366) then
+       if (stream_gdd20_seasons) then
           ! REAL FOR DEVELOPMENT ONLY; REVERT TO INTEGER BEFORE MERGE
           gdd20_season_start = int(gdd20_season_starts(p))
           gdd20_season_end = int(gdd20_season_ends(p))
@@ -1471,7 +1497,7 @@ contains
     ! USES
     use shr_const_mod    , only : SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date, is_end_curr_year
-    use accumulMod       , only : update_accum_field, extract_accum_field
+    use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
     use CNSharedParamsMod, only : upper_soil_layer
     use CropType         , only : crop_type
     !
@@ -1659,6 +1685,13 @@ contains
 
        ! Accumulate and extract running 20-year means
        if (is_end_curr_year()) then
+          ! Flush, if needed
+          if (this%flush_gdd20) then
+              this%gdd020_patch(begp:endp) = accumResetVal
+              this%gdd820_patch(begp:endp) = accumResetVal
+              this%gdd1020_patch(begp:endp) = accumResetVal
+              this%flush_gdd20 = .false.
+          end if
           call update_accum_field  ('GDD020', this%gdd0_patch, nstep)
           call extract_accum_field ('GDD020', this%gdd020_patch, nstep)
           call update_accum_field  ('GDD820', this%gdd8_patch, nstep)

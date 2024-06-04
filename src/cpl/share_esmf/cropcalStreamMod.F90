@@ -16,6 +16,7 @@ module cropcalStreamMod
   use clm_varctl       , only : iulog
   use clm_varctl       , only : use_cropcal_rx_swindows, use_cropcal_rx_cultivar_gdds, use_cropcal_streams
   use clm_varctl       , only : adapt_cropcal_rx_cultivar_gdds
+  use clm_varctl       , only : stream_gdd20_seasons
   use clm_varpar       , only : mxpft
   use clm_varpar       , only : mxsowings
   use perf_mod         , only : t_startf, t_stopf
@@ -52,7 +53,6 @@ module cropcalStreamMod
   character(len=CL)       :: stream_fldFileName_gdd20_baseline ! GDD20 baseline stream filename to read
   logical                 :: cropcals_rx ! Used only for setting input files in namelist; does nothing in code, but needs to be here so namelist read doesn't crash
   logical                 :: cropcals_rx_adapt ! Used only for setting input files in namelist; does nothing in code, but needs to be here so namelist read doesn't crash
-  logical                 :: stream_gdd20_seasons  ! Read stream file for GDD20 accumulation seasons, instead of per-hemisphere periods
   logical                     :: allow_invalid_gdd20_season_inputs ! Fall back on hemisphere "warm periods" in cases of invalid values in stream_fldFileName_gdd20_season_start and _end?
   character(len=CL)       :: stream_fldFileName_gdd20_season_start ! Stream filename to read for start of gdd20 season
   character(len=CL)       :: stream_fldFileName_gdd20_season_end ! Stream filename to read for end of gdd20 season
