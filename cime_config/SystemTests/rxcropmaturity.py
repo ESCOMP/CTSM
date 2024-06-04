@@ -1,4 +1,4 @@
-from RXCROPMATURITYSHARED import RXCROPMATURITYSHARED
+from rxcropmaturityshared import RXCROPMATURITYSHARED
 
 class RXCROPMATURITY(RXCROPMATURITYSHARED):
     def run_phase(self):

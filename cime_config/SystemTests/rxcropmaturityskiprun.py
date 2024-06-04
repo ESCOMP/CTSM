@@ -1,5 +1,4 @@
-print("pre-import")
-from RXCROPMATURITYSHARED import RXCROPMATURITYSHARED
+from rxcropmaturityshared import RXCROPMATURITYSHARED
 
 class RXCROPMATURITYSKIPRUN(RXCROPMATURITYSHARED):
     def run_phase(self):
