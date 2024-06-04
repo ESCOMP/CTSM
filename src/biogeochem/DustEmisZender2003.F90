@@ -1,18 +1,18 @@
 module DustEmisZender2003
 
-  !----------------------------------------------------------------------- 
-  ! !DESCRIPTION: 
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
   ! Routines in this module calculate Dust mobilization and dry deposition for dust.
-  ! Simulates dust mobilization due to wind from the surface into the 
-  ! lowest atmospheric layer. On output flx_mss_vrt_dst(ndst) is the surface dust 
+  ! Simulates dust mobilization due to wind from the surface into the
+  ! lowest atmospheric layer. On output flx_mss_vrt_dst(ndst) is the surface dust
   ! emission (kg/m**2/s) [ + = to atm].
-  ! Calculates the turbulent component of dust dry deposition, (the turbulent deposition 
-  ! velocity through the lowest atmospheric layer). CAM will calculate the settling 
-  ! velocity through the whole atmospheric column. The two calculations will determine 
+  ! Calculates the turbulent component of dust dry deposition, (the turbulent deposition
+  ! velocity through the lowest atmospheric layer). CAM will calculate the settling
+  ! velocity through the whole atmospheric column. The two calculations will determine
   ! the dust dry deposition flux to the surface.
-  !                              
+  !
   ! !USES:
-  use shr_kind_mod         , only : r8 => shr_kind_r8 
+  use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_log_mod          , only : errMsg => shr_log_errMsg
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
   use clm_varpar           , only : dst_src_nbr, ndst
@@ -32,7 +32,7 @@ module DustEmisZender2003
   use ZenderSoilErodStreamType,  only : soil_erod_stream_type
   use DustEmisBase         , only : dust_emis_base_type
   use clm_varctl           , only : dust_emis_method
-  !  
+  !
   ! !PUBLIC TYPES
   implicit none
   private
@@ -54,7 +54,7 @@ module DustEmisZender2003
      procedure , public  :: Clean => CleanZender2003
      procedure , private :: InitAllocate    ! Allocate data
      procedure , private :: InitHistory     ! History initialization
-     procedure , private :: InitCold     
+     procedure , private :: InitCold
 
   end type dust_emis_zender2003_type
   !------------------------------------------------------------------------
@@ -65,11 +65,12 @@ module DustEmisZender2003
 contains
 
   !------------------------------------------------------------------------
+
   subroutine InitZender2003(this, bounds, NLFilename)
 
    ! Initialization for this extended class, calling base level initiation and adding to it
     class(dust_emis_zender2003_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     character(len=*),  intent(in) :: NLFilename
 
     call this%soil_erod_stream%Init( bounds, NLFilename )
@@ -81,11 +82,12 @@ contains
   end subroutine InitZender2003
 
   !------------------------------------------------------------------------
+
   subroutine InitAllocate(this, bounds)
    !
    ! !ARGUMENTS:
    class (dust_emis_zender2003_type) :: this
-   type(bounds_type), intent(in) :: bounds  
+   type(bounds_type), intent(in) :: bounds
    !
    ! !LOCAL VARIABLES:
    integer :: begc,endc
@@ -95,9 +97,10 @@ contains
 
    allocate(this%mbl_bsn_fct_col           (begc:endc))        ; this%mbl_bsn_fct_col           (:)   = nan
 
- end subroutine InitAllocate
+  end subroutine InitAllocate
 
-   !------------------------------------------------------------------------
+  !------------------------------------------------------------------------
+
   subroutine CleanZender2003(this)
     !
     ! Deallocation for this extended class, calling base level deallocation and adding to it
@@ -113,6 +116,7 @@ contains
   end subroutine CleanZender2003
 
   !------------------------------------------------------------------------
+
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
@@ -121,7 +125,7 @@ contains
     !
     ! !ARGUMENTS:
     class (dust_emis_zender2003_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: begc,endc
@@ -139,11 +143,12 @@ contains
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
+
   subroutine InitCold(this, bounds)
     !
     ! !ARGUMENTS:
     class (dust_emis_zender2003_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: c,l
@@ -175,15 +180,16 @@ contains
   end subroutine InitCold
 
   !------------------------------------------------------------------------
+
   subroutine DustEmission (this, bounds, &
        num_nolakep, filter_nolakep, &
        atm2lnd_inst, soilstate_inst, canopystate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
        frictionvel_inst)
     !
-    ! !DESCRIPTION: 
+    ! !DESCRIPTION:
     ! Dust mobilization. This code simulates dust mobilization due to wind
     ! from the surface into the lowest atmospheric layer
-    ! On output flx_mss_vrt_dst(ndst) is the surface dust emission 
+    ! On output flx_mss_vrt_dst(ndst) is the surface dust emission
     ! (kg/m**2/s) [ + = to atm]
     ! Source: C. Zender's dust model
     !
@@ -192,8 +198,8 @@ contains
     use subgridaveMod, only : p2g
     !
     ! !ARGUMENTS:
-    class (dust_emis_zender2003_type)                      :: this
-    type(bounds_type)      , intent(in)    :: bounds                      
+    class (dust_emis_zender2003_type)      :: this
+    type(bounds_type)      , intent(in)    :: bounds
     integer                , intent(in)    :: num_nolakep                 ! number of column non-lake points in patch filter
     integer                , intent(in)    :: filter_nolakep(num_nolakep) ! patch filter for non-lake points
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
@@ -226,7 +232,7 @@ contains
     real(r8) :: sumwt(bounds%begl:bounds%endl) ! sum of weights
     logical  :: found                          ! temporary for error check
     integer  :: index
-    !    
+    !
     ! constants
     !
     real(r8), parameter :: cst_slt = 2.61_r8           ! [frc] Saltation constant
@@ -235,26 +241,26 @@ contains
     character(len=*),parameter :: subname = 'DUSTEmission'
     !------------------------------------------------------------------------
 
-    associate(                                                         & 
-         forc_rho            => atm2lnd_inst%forc_rho_downscaled_col , & ! Input:  [real(r8) (:)   ]  downscaled density (kg/m**3)                                 
-         
+    associate(                                                         &
+         forc_rho            => atm2lnd_inst%forc_rho_downscaled_col , & ! Input:  [real(r8) (:)   ]  downscaled density (kg/m**3)
+
          gwc_thr             => soilstate_inst%gwc_thr_col           , & ! Input:  [real(r8) (:)   ]  threshold gravimetric soil moisture based on clay content
-         mss_frc_cly_vld     => soilstate_inst%mss_frc_cly_vld_col   , & ! Input:  [real(r8) (:)   ]  [frc] Mass fraction clay limited to 0.20          
-         watsat              => soilstate_inst%watsat_col            , & ! Input:  [real(r8) (:,:) ]  saturated volumetric soil water                 
-         
-         tlai                => canopystate_inst%tlai_patch          , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index, no burying by snow     
-         tsai                => canopystate_inst%tsai_patch          , & ! Input:  [real(r8) (:)   ]  one-sided stem area index, no burying by snow     
-         
-         frac_sno            => waterdiagnosticbulk_inst%frac_sno_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
-         h2osoi_vol          => waterstatebulk_inst%h2osoi_vol_col       , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat)   
-         h2osoi_liq          => waterstatebulk_inst%h2osoi_liq_col       , & ! Input:  [real(r8) (:,:) ]  liquid soil water (kg/m2)                       
-         h2osoi_ice          => waterstatebulk_inst%h2osoi_ice_col       , & ! Input:  [real(r8) (:,:) ]  frozen soil water (kg/m2)                       
-         
-         fv                  => frictionvel_inst%fv_patch            , & ! Input:  [real(r8) (:)   ]  friction velocity (m/s) (for dust model)          
-         u10                 => frictionvel_inst%u10_patch           , & ! Input:  [real(r8) (:)   ]  10-m wind (m/s) (created for dust model)          
-         
+         mss_frc_cly_vld     => soilstate_inst%mss_frc_cly_vld_col   , & ! Input:  [real(r8) (:)   ]  [frc] Mass fraction clay limited to 0.20
+         watsat              => soilstate_inst%watsat_col            , & ! Input:  [real(r8) (:,:) ]  saturated volumetric soil water
+
+         tlai                => canopystate_inst%tlai_patch          , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index, no burying by snow
+         tsai                => canopystate_inst%tsai_patch          , & ! Input:  [real(r8) (:)   ]  one-sided stem area index, no burying by snow
+
+         frac_sno            => waterdiagnosticbulk_inst%frac_sno_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+         h2osoi_vol          => waterstatebulk_inst%h2osoi_vol_col       , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat)
+         h2osoi_liq          => waterstatebulk_inst%h2osoi_liq_col       , & ! Input:  [real(r8) (:,:) ]  liquid soil water (kg/m2)
+         h2osoi_ice          => waterstatebulk_inst%h2osoi_ice_col       , & ! Input:  [real(r8) (:,:) ]  frozen soil water (kg/m2)
+
+         fv                  => frictionvel_inst%fv_patch            , & ! Input:  [real(r8) (:)   ]  friction velocity (m/s) (for dust model)
+         u10                 => frictionvel_inst%u10_patch           , & ! Input:  [real(r8) (:)   ]  10-m wind (m/s) (created for dust model)
+
          mbl_bsn_fct         => this%mbl_bsn_fct_col                 , & ! Input:  [real(r8) (:)   ]  basin factor
-         flx_mss_vrt_dst     => this%flx_mss_vrt_dst_patch           , & ! Output: [real(r8) (:,:) ]  surface dust emission (kg/m**2/s)               
+         flx_mss_vrt_dst     => this%flx_mss_vrt_dst_patch           , & ! Output: [real(r8) (:,:) ]  surface dust emission (kg/m**2/s)
          flx_mss_vrt_dst_tot => this%flx_mss_vrt_dst_tot_patch         & ! Output: [real(r8) (:)   ]  total dust flux back to atmosphere (pft)
          )
 
@@ -315,8 +321,8 @@ contains
                lnd_frc_mbl(p) = 0.0_r8
             endif
             lnd_frc_mbl(p) = lnd_frc_mbl(p) * (1.0_r8 - frac_sno(c))
-         else          
-            lnd_frc_mbl(p) = 0.0_r8   
+         else
+            lnd_frc_mbl(p) = 0.0_r8
          end if
       end do
 
@@ -349,7 +355,7 @@ contains
          l = patch%landunit(p)
          g = patch%gridcell(p)
 
-         ! only perform the following calculations if lnd_frc_mbl is non-zero 
+         ! only perform the following calculations if lnd_frc_mbl is non-zero
 
          if (lnd_frc_mbl(p) > 0.0_r8) then
 
@@ -396,7 +402,7 @@ contains
 
             wnd_rfr_thr_slt = u10(p) * wnd_frc_thr_slt / fv(p)
 
-            ! the following if-block comes from subr. wnd_frc_slt_get 
+            ! the following if-block comes from subr. wnd_frc_slt_get
             ! purpose: compute the saltating friction velocity
             ! theory: saltation roughens the boundary layer, AKA "Owen's effect"
 
@@ -416,7 +422,7 @@ contains
 
                ! the following loop originates from subr. dst_mbl
                ! purpose: apply land sfc and veg limitations and global tuning factor
-               ! slevis: multiply flx_mss_hrz_slt_ttl by liqfrac to incude the effect 
+               ! slevis: multiply flx_mss_hrz_slt_ttl by liqfrac to incude the effect
                ! of frozen soil
 
                flx_mss_hrz_slt_ttl = flx_mss_hrz_slt_ttl * lnd_frc_mbl(p) * mbl_bsn_fct(c) * &
@@ -460,5 +466,7 @@ contains
     end associate
 
   end subroutine DustEmission
+
+  !------------------------------------------------------------------------
 
 end module DustEmisZender2003
