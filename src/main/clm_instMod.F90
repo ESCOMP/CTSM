@@ -45,7 +45,7 @@ module clm_instMod
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use CropType                        , only : crop_type
   use DryDepVelocity                  , only : drydepvel_type
-  use DustEmisZender2003                         , only : dust_type
+  use DustEmisZender2003                         , only : dust_emis_zender2003_type
   use EnergyFluxType                  , only : energyflux_type
   use FrictionVelocityMod             , only : frictionvel_type
   use GlacierSurfaceMassBalanceMod    , only : glacier_smb_type
@@ -151,7 +151,7 @@ module clm_instMod
   ! General biogeochem types
   type(ch4_type)      , public            :: ch4_inst
   type(crop_type)     , public            :: crop_inst
-  type(dust_type)     , public            :: dust_inst
+  type(dust_emis_zender2003_type)     , public            :: dust_inst
   type(vocemis_type)  , public            :: vocemis_inst
   type(fireemis_type) , public            :: fireemis_inst
   type(drydepvel_type), public            :: drydepvel_inst

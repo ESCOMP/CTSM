@@ -42,7 +42,7 @@ module DustEmisZender2003
   !
   ! !PUBLIC DATA TYPES:
   !
-  type, public, extends(dust_base_type) :: dust_type
+  type, public, extends(dust_base_type) :: dust_emis_zender2003_type
 
      real(r8), pointer, private :: mbl_bsn_fct_col           (:)   ! [dimensionless] basin factor, or soil rodibility, time-constant
      type(soil_erod_stream_type), private :: soil_erod_stream      ! Zender soil erodibility stream data
@@ -56,7 +56,7 @@ module DustEmisZender2003
      procedure , private :: InitHistory     ! History initialization
      procedure , private :: InitCold     
 
-  end type dust_type
+  end type dust_emis_zender2003_type
   !------------------------------------------------------------------------
 
   character(len=*), parameter, private :: sourcefile = &
@@ -68,7 +68,7 @@ contains
   subroutine InitZender2003(this, bounds, NLFilename)
 
    ! Initialization for this extended class, calling base level initiation and adding to it
-    class(dust_type) :: this
+    class(dust_emis_zender2003_type) :: this
     type(bounds_type), intent(in) :: bounds  
     character(len=*),  intent(in) :: NLFilename
 
@@ -84,7 +84,7 @@ contains
   subroutine InitAllocate(this, bounds)
    !
    ! !ARGUMENTS:
-   class (dust_type) :: this
+   class (dust_emis_zender2003_type) :: this
    type(bounds_type), intent(in) :: bounds  
    !
    ! !LOCAL VARIABLES:
@@ -102,7 +102,7 @@ contains
     !
     ! Deallocation for this extended class, calling base level deallocation and adding to it
     ! !ARGUMENTS:
-    class (dust_type) :: this
+    class (dust_emis_zender2003_type) :: this
     !
     ! !LOCAL VARIABLES:
     !------------------------------------------------------------------------
@@ -120,7 +120,7 @@ contains
     !
     !
     ! !ARGUMENTS:
-    class (dust_type) :: this
+    class (dust_emis_zender2003_type) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -142,7 +142,7 @@ contains
   subroutine InitCold(this, bounds)
     !
     ! !ARGUMENTS:
-    class (dust_type) :: this
+    class (dust_emis_zender2003_type) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -192,7 +192,7 @@ contains
     use subgridaveMod, only : p2g
     !
     ! !ARGUMENTS:
-    class (dust_type)                      :: this
+    class (dust_emis_zender2003_type)                      :: this
     type(bounds_type)      , intent(in)    :: bounds                      
     integer                , intent(in)    :: num_nolakep                 ! number of column non-lake points in patch filter
     integer                , intent(in)    :: filter_nolakep(num_nolakep) ! patch filter for non-lake points
