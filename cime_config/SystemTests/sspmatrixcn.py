@@ -163,28 +163,18 @@ class SSPMATRIXCN(SystemTestsCommon):
         self.check_n(n)
         # For all set output to yearly
         contents_to_append = "hist_nhtfrq = -8760"
-        contents_to_append = (
-            contents_to_append + ", hist_mfilt = " + str(self.nyr_forcing)
-        )
+        contents_to_append = contents_to_append + ", hist_mfilt = " + str(self.nyr_forcing)
         # For all but last step turn extra matrix output to off
         b4last = self.n_steps() - 1
         if n < b4last:
-            contents_to_append = (
-                contents_to_append + ", hist_wrt_matrixcn_diag = .False."
-            )
+            contents_to_append = contents_to_append + ", hist_wrt_matrixcn_diag = .False."
         # For matrix spinup steps, set the matrix spinup and other variables associated with it
         if self.spin[n] == "sasu":
-            contents_to_append = (
-                contents_to_append + ", nyr_forcing = " + str(self.nyr_forcing)
-            )
+            contents_to_append = contents_to_append + ", nyr_forcing = " + str(self.nyr_forcing)
             if self.sasu[n] != -999:
-                contents_to_append = (
-                    contents_to_append + ", nyr_sasu = " + str(self.sasu[n])
-                )
+                contents_to_append = contents_to_append + ", nyr_sasu = " + str(self.sasu[n])
             if self.iloop[n] != -999:
-                contents_to_append = (
-                    contents_to_append + ", iloop_avg = " + str(self.iloop[n])
-                )
+                contents_to_append = contents_to_append + ", iloop_avg = " + str(self.iloop[n])
 
         # For cold start, run with matrix off
         if self.cold[n]:
