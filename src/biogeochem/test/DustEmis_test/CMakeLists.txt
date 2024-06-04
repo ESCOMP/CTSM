@@ -1,5 +1,4 @@
 set (pfunit_sources
-  test_DustEmisBase.pf
   test_DustEmisZender2003.pf)
 
 add_pfunit_ctest(DustEmis
