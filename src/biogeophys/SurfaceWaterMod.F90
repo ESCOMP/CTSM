@@ -489,7 +489,6 @@ contains
           k_wet=1.0e-4_r8 * sin((rpi/180._r8) * topo_slope(c))
           if (col%is_hillslope_column(c)) then
              ! require a minimum value to ensure non-zero outflow
-             !k_wet = 1e-4 * max(col%hill_slope(c),min_hill_slope)
              k_wet = params_inst%h2osfc_outflow_scalar * max(col%hill_slope(c),min_hill_slope)
           endif
           qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))
