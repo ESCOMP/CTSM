@@ -373,7 +373,6 @@ contains
     real(r8) :: flx_mss_vrt_dst_ttl(bounds%begp:bounds%endp)
     real(r8) :: frc_thr_wet_fct
     real(r8) :: frc_thr_rgh_fct
-    real(r8) :: wnd_rfr_thr_slt
     real(r8) :: wnd_frc_slt
     real(r8) :: lnd_frc_mbl(bounds%begp:bounds%endp)
     real(r8) :: bd
@@ -399,7 +398,6 @@ contains
     !
     real(r8), parameter :: cst_slt = 2.61_r8           ! [frc] Saltation constant
     real(r8), parameter :: flx_mss_fdg_fct = 5.0e-4_r8 ! [frc] Empir. mass flx tuning eflx_lh_vegt
-    !real(r8), parameter :: vai_mbl_thr = 0.3_r8        ! [m2 m-2] VAI threshold quenching dust mobilization
     character(len=*),parameter :: subname = 'DUSTEmission'
     real(r8), parameter :: vai_mbl_thr = 1.0_r8        ! [m2 m-2] new VAI threshold; Danny M. Leung suggests 1, and Zender's scheme uses 0.3
     real(r8), parameter :: Cd0 = 4.4e-5_r8             ! [dimless] proportionality constant in calculation of dust emission coefficient
@@ -712,11 +710,6 @@ contains
             ! reset these variables which will be updated in the following if-block
             flx_mss_hrz_slt_ttl = 0.0_r8
             flx_mss_vrt_dst_ttl(p) = 0.0_r8
-
-            ! the following line comes from subr. dst_mbl
-            ! purpose: threshold saltation wind speed
-
-            wnd_rfr_thr_slt = u10(p) * wnd_frc_thr_slt / fv(p)     ! use if we want the default Z03 scheme; for Leung 2023 this is not needed
 
             ! the following comes from subr. flx_mss_hrz_slt_ttl_Whi79_get
             ! purpose: compute vertically integrated streamwise mass flux of particles
