@@ -30,6 +30,7 @@ module VOCEmissionMod
   use SolarAbsorbedType  , only : solarabs_type
   use TemperatureType    , only : temperature_type
   use PatchType          , only : patch                
+  use EnergyFluxType     , only : energyflux_type
   !
   implicit none
   private 
@@ -84,10 +85,15 @@ contains
   !------------------------------------------------------------------------
   subroutine Init(this, bounds)
 
+    use clm_varctl     , only : use_fates, use_fates_sp
     class(vocemis_type) :: this
     type(bounds_type), intent(in)    :: bounds  
 
     if ( shr_megan_mechcomps_n > 0) then
+       if ( use_fates .and. (.not. use_fates_sp) ) then
+           call endrun( msg='ERROR: MEGAN currently does NOT work with FATES outside of FATES-SP mode (see github issue #115)'//&
+                     errMsg(sourcefile, __LINE__))
+       end if
        call this%InitAllocate(bounds) 
        call this%InitHistory(bounds)
        call this%InitCold(bounds)
@@ -373,7 +379,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine VOCEmission (bounds, num_soilp, filter_soilp, &
        atm2lnd_inst, canopystate_inst, photosyns_inst, temperature_inst, &
-       vocemis_inst)
+       vocemis_inst, energyflux_inst)
     !
     ! ! NEW DESCRIPTION
     ! Volatile organic compound emission
@@ -417,6 +423,8 @@ contains
     type(photosyns_type)   , intent(in)    :: photosyns_inst
     type(temperature_type) , intent(in)    :: temperature_inst
     type(vocemis_type)     , intent(inout) :: vocemis_inst
+    !by Hui,
+    type(energyflux_type)  , intent(in)    :: energyflux_inst
     !
     ! !REVISION HISTORY:
     ! 4/29/11: Colette L. Heald: expand MEGAN to 20 compound classes
@@ -479,8 +487,9 @@ contains
          !sucsat       => soilstate_inst%sucsat_col             , & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm) (nlevgrnd)            
          !h2osoi_vol   => waterstate_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (m3/m3)                   
          !h2osoi_ice   => waterstate_inst%h2osoi_ice_col        , & ! Input:  [real(r8) (:,:) ]  ice soil content (kg/m3)                        
+         btran         => energyflux_inst%btran_patch           , & ! Input: [real(r8) (:)    ]  transpiration wetness factor (0 to 1)
          
-         forc_solad    => atm2lnd_inst%forc_solad_grc           , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (visible only)            
+         forc_solad    => atm2lnd_inst%forc_solad_downscaled_col, & ! Input:  [real(r8) (:,:) ]  direct beam radiation (visible only)            
          forc_solai    => atm2lnd_inst%forc_solai_grc           , & ! Input:  [real(r8) (:,:) ]  diffuse radiation     (visible only)            
          forc_pbot     => atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ]  downscaled atmospheric pressure (Pa)                          
          forc_pco2     => atm2lnd_inst%forc_pco2_grc            , & ! Input:  [real(r8) (:)   ]  partial pressure co2 (Pa)                                             
@@ -552,7 +561,7 @@ contains
           ! Calculate PAR: multiply w/m2 by 4.6 to get umol/m2/s for par (added 8/14/02)
           !------------------------
           ! SUN:
-          par_sun    = (forc_solad(g,1)  + fsun(p)    * forc_solai(g,1))  * 4.6_r8
+          par_sun    = (forc_solad(c,1)  + fsun(p)    * forc_solai(g,1))  * 4.6_r8
           par24_sun  = (forc_solad24(p)  + fsun24(p)  * forc_solai24(p))  * 4.6_r8
           par240_sun = (forc_solad240(p) + fsun240(p) * forc_solai240(p)) * 4.6_r8
 
@@ -564,10 +573,12 @@ contains
           ! Activity factor for LAI (Guenther et al., 2006): all species
           gamma_l = get_gamma_L(fsun240(p), elai(p))
 
+          !gamma_sm = 1.0_r8
+          !Impact of soil moisture on isoprene emission
+          gamma_sm = get_gamma_SM(btran(p))
           ! Activity factor for soil moisture: all species (commented out for now)
           !          gamma_sm = get_gamma_SM(clayfrac(p), sandfrac(p), h2osoi_vol(c,:), h2osoi_ice(c,:), &
           !               col%dz(c,:), soilstate_inst%bsw_col(c,:), watsat(c,:), sucsat(c,:), root_depth(patch%itype(p)))
-          gamma_sm = 1.0_r8
 
           ! Loop through VOCs for light, temperature and leaf age activity factor & apply
           ! all final activity factors to baseline emission factors
@@ -601,7 +612,7 @@ contains
 
              ! Activity factor for CO2 (only for isoprene)
              if (trim(meg_cmp%name) == 'isoprene') then 
-                co2_ppmv = 1.e6*forc_pco2(g)/forc_pbot(c)
+                co2_ppmv = 1.e6_r8*forc_pco2(g)/forc_pbot(c)
                 gamma_c = get_gamma_C(cisun_z(p,1),cisha_z(p,1),forc_pbot(c),fsun(p), co2_ppmv)
              else
                 gamma_c = 1._r8
@@ -813,77 +824,98 @@ contains
   end function get_gamma_L
 
   !-----------------------------------------------------------------------
-  function get_gamma_SM(clayfrac_in, sandfrac_in, h2osoi_vol_in, h2osoi_ice_in, dz_in, &
-       bsw_in, watsat_in, sucsat_in, root_depth_in)
-    !
-    ! Activity factor for soil moisture (Guenther et al., 2006): all species
-    !----------------------------------
-    ! Calculate the mean scaling factor throughout the root depth.
-    ! wilting point potential is in units of matric potential (mm) 
-    ! (1 J/Kg = 0.001 MPa, approx = 0.1 m)
-    ! convert to volumetric soil water using equation 7.118 of the CLM4 Technical Note
-    !
-    ! !USES:
-    use clm_varcon , only : denice
-    use clm_varpar , only : nlevsoi
-    !
-    ! !ARGUMENTS:
+  function get_gamma_SM(btran_in)
+    !---------------------------------------
+    ! May 22, 2024
+    ! Activity factor for soil moisture of Isoprene (Wang et al., 2022, JAMES)
+    ! It is based on eq. (11) in the paper. Because the temperature response
+    ! of isoprene has been explicitly included in CLM; 
+    !ARGUMENTS:
     implicit none
-    real(r8),intent(in) :: clayfrac_in
-    real(r8),intent(in) :: sandfrac_in
-    real(r8),intent(in) :: h2osoi_vol_in(nlevsoi)
-    real(r8),intent(in) :: h2osoi_ice_in(nlevsoi)
-    real(r8),intent(in) :: dz_in(nlevsoi)
-    real(r8),intent(in) :: bsw_in(nlevsoi)
-    real(r8),intent(in) :: watsat_in(nlevsoi)
-    real(r8),intent(in) :: sucsat_in(nlevsoi)
-    real(r8),intent(in) :: root_depth_in
-    !
-    ! !LOCAL VARIABLES:
+    real(r8),intent(in) :: btran_in
+    
+    !!!------- the drought algorithm--------
+    real(r8), parameter :: a1 = -7.4463      
+    real(r8), parameter :: b1 = 3.2552       
     real(r8)            :: get_gamma_SM
-    integer  :: j
-    real(r8) :: nl                      ! temporary number of soil levels
-    real(r8) :: theta_ice               ! water content in ice in m3/m3
-    real(r8) :: wilt                    ! wilting point in m3/m3
-    real(r8) :: theta1                  ! temporary
-    real(r8), parameter :: deltheta1=0.06_r8               ! empirical coefficient
-    real(r8), parameter :: smpmax = 2.57e5_r8              ! maximum soil matrix potential
-    !-----------------------------------------------------------------------
-
-    if ((clayfrac_in > 0) .and. (sandfrac_in > 0)) then 
-       get_gamma_SM = 0._r8
-       nl=0._r8
-       
-       do j = 1,nlevsoi
-          if  (sum(dz_in(1:j)) < root_depth_in)  then
-             theta_ice = h2osoi_ice_in(j)/(dz_in(j)*denice)
-             wilt = ((smpmax/sucsat_in(j))**(-1._r8/bsw_in(j))) * (watsat_in(j) - theta_ice)
-             theta1 = wilt + deltheta1
-             if (h2osoi_vol_in(j) >= theta1) then 
-                get_gamma_SM = get_gamma_SM + 1._r8
-             else if ( (h2osoi_vol_in(j) > wilt) .and. (h2osoi_vol_in(j) < theta1) ) then
-                get_gamma_SM = get_gamma_SM + ( h2osoi_vol_in(j) - wilt ) / deltheta1
+             if (btran_in >= 1.) then
+                get_gamma_SM = 1
              else
-                get_gamma_SM = get_gamma_SM + 0._r8
-             end if
-             nl=nl+1._r8
-          end if
-       end do
-       
-       if (nl > 0._r8) then
-          get_gamma_SM = get_gamma_SM/nl
-       endif
-
-       if (get_gamma_SM > 1.0_r8) then 
-          write(iulog,*) 'healdSM > 1: gamma_SM, nl', get_gamma_SM, nl
-          get_gamma_SM=1.0_r8
-       endif
-
-    else
-       get_gamma_SM = 1.0_r8
-    end if
-
+                get_gamma_SM = 1/(1+b1*exp(a1*(btran_in-0.2)))
+             endif 
   end function get_gamma_SM
+ 
+  !function get_gamma_SM(clayfrac_in, sandfrac_in, h2osoi_vol_in, h2osoi_ice_in, dz_in, &
+  !     bsw_in, watsat_in, sucsat_in, root_depth_in)
+  !  !
+  !  ! Activity factor for soil moisture (Guenther et al., 2006): all species
+  !  !----------------------------------
+  !  ! Calculate the mean scaling factor throughout the root depth.
+  !  ! wilting point potential is in units of matric potential (mm) 
+  !  ! (1 J/Kg = 0.001 MPa, approx = 0.1 m)
+  !  ! convert to volumetric soil water using equation 7.118 of the CLM4 Technical Note
+  !  !
+  !  ! !USES:
+  !  use clm_varcon , only : denice
+  !  use clm_varpar , only : nlevsoi
+  !  !
+  !  ! !ARGUMENTS:
+  !  implicit none
+  !  real(r8),intent(in) :: clayfrac_in
+  !  real(r8),intent(in) :: sandfrac_in
+  !  real(r8),intent(in) :: h2osoi_vol_in(nlevsoi)
+  !  real(r8),intent(in) :: h2osoi_ice_in(nlevsoi)
+  !  real(r8),intent(in) :: dz_in(nlevsoi)
+  !  real(r8),intent(in) :: bsw_in(nlevsoi)
+  !  real(r8),intent(in) :: watsat_in(nlevsoi)
+  !  real(r8),intent(in) :: sucsat_in(nlevsoi)
+  !  real(r8),intent(in) :: root_depth_in
+  !  !
+  !  ! !LOCAL VARIABLES:
+  !  real(r8)            :: get_gamma_SM
+  !  integer  :: j
+  !  real(r8) :: nl                      ! temporary number of soil levels
+  !  real(r8) :: theta_ice               ! water content in ice in m3/m3
+  !  real(r8) :: wilt                    ! wilting point in m3/m3
+  !  real(r8) :: theta1                  ! temporary
+  !  real(r8), parameter :: deltheta1=0.06_r8               ! empirical coefficient
+  !  real(r8), parameter :: smpmax = 2.57e5_r8              ! maximum soil matrix potential
+  !  !-----------------------------------------------------------------------
+
+  !  if ((clayfrac_in > 0) .and. (sandfrac_in > 0)) then 
+  !     get_gamma_SM = 0._r8
+  !     nl=0._r8
+  !     
+  !     do j = 1,nlevsoi
+  !        if  (sum(dz_in(1:j)) < root_depth_in)  then
+  !           theta_ice = h2osoi_ice_in(j)/(dz_in(j)*denice)
+  !           wilt = ((smpmax/sucsat_in(j))**(-1._r8/bsw_in(j))) * (watsat_in(j) - theta_ice)
+  !           theta1 = wilt + deltheta1
+  !           if (h2osoi_vol_in(j) >= theta1) then 
+  !              get_gamma_SM = get_gamma_SM + 1._r8
+  !           else if ( (h2osoi_vol_in(j) > wilt) .and. (h2osoi_vol_in(j) < theta1) ) then
+  !              get_gamma_SM = get_gamma_SM + ( h2osoi_vol_in(j) - wilt ) / deltheta1
+  !           else
+  !              get_gamma_SM = get_gamma_SM + 0._r8
+  !           end if
+  !           nl=nl+1._r8
+  !        end if
+  !     end do
+  !     
+  !     if (nl > 0._r8) then
+  !        get_gamma_SM = get_gamma_SM/nl
+  !     endif
+
+  !     if (get_gamma_SM > 1.0_r8) then 
+  !        write(iulog,*) 'healdSM > 1: gamma_SM, nl', get_gamma_SM, nl
+  !        get_gamma_SM=1.0_r8
+  !     endif
+
+  !  else
+  !     get_gamma_SM = 1.0_r8
+  !  end if
+
+  !end function get_gamma_SM
   
   !-----------------------------------------------------------------------
   function get_gamma_T(t_veg240_in, t_veg24_in,t_veg_in, ct1_in, ct2_in, betaT_in, LDF_in, Ceo_in, Eopt, topt, ivt_in)
@@ -934,7 +966,7 @@ contains
     if ( (t_veg240_in > 0.0_r8) .and. (t_veg240_in < 1.e30_r8) ) then 
        ! topt and Eopt from eq 8 and 9:
        topt = co1 + (co2 * (t_veg240_in-tstd0))
-       if ( (ivt_in == nbrdlf_dcd_brl_shrub) ) then  ! boreal-shrub
+       if ( (ivt_in == nbrdlf_dcd_brl_shrub) ) then  ! boreal-deciduous-shrub
        ! coming from BEAR-oNS campaign willows results
              Eopt = 7.9 * exp (0.217_r8 * (t_veg24_in-273.15_r8-24.0_r8))
        else if ( (ivt_in == nc3_arctic_grass ) ) then  ! boreal-grass
