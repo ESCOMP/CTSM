@@ -588,7 +588,7 @@ contains
          !####################################################################################################
          ! calculate soil moisture effect for dust emission threshold
          ! following Fecan, Marticorena et al. (1999)
-         ! also see Zender et al. (2003) for DEAD emission scheme and Kok et al. (2014b) for K14 emission scheme in CESM
+         ! also see Zender et al. (2003) for DUST emission scheme and Kok et al. (2014b) for K14 emission scheme in CESM
          bd = (1._r8-watsat(c,1))*dns_slt      ![kg m-3] Bulk density of dry surface soil (dmleung changed from 2700 to dns_slt, soil particle density, on 16 Feb 2024. Note that dns_slt=2650 kg m-3 so the value is changed by a tiny bit from 2700 to 2650. dns_slt has been here for many years so dns_slt should be used here instead of explicitly typing the value out. dmleung 16 Feb 2024)
 
          ! use emission threshold to calculate standardized threshold and dust emission coefficient
@@ -699,7 +699,7 @@ contains
 
          ! save soil friction velocity and roughness effect before the if-statement
          wnd_frc_soil(p) = wnd_frc_slt  ! save soil friction velocity for CLM output, which has drag partition and Owen effect
-         ! 20 Feb 2024: dmleung notes that Leung does not consider the Owen's effect. This is Jasper Kok's decision. The Owen's effect should be in Zender's DEAD emission scheme.
+         ! 20 Feb 2024: dmleung notes that Leung does not consider the Owen's effect. This is Jasper Kok's decision. The Owen's effect should be in Zender's DUST emission scheme.
 
          ! save land mobile fraction
          lnd_frc_mble(p) = lnd_frc_mbl(p)  ! save land mobile fraction first, before the if-statement
@@ -719,8 +719,8 @@ contains
                !################### for Leung et al. (2023) ################################################
                !################ uncomment the below block if want to use Leung's scheme ###################
 
-               !flx_mss_vrt_dst_ttl(p) = dst_emiss_coeff(p) * mss_frc_cly_vld(c) * forc_rho(c) * ((wnd_frc_slt**2.0_r8 - wnd_frc_thr_slt_it**2.0_r8) / wnd_frc_thr_slt_std) * (wnd_frc_slt / wnd_frc_thr_slt_it)**frag_expt  ! Leung et al. (2022) uses Kok et al. (2014) dust emission euqation for emission flux
-               flx_mss_vrt_dst_ttl(p) = dst_emiss_coeff(p) * mss_frc_cly_vld(c) * forc_rho(c) * ((wnd_frc_slt**2.0_r8 - wnd_frc_thr_slt_it**2.0_r8) / wnd_frc_thr_slt_it) * (wnd_frc_slt / wnd_frc_thr_slt_it)**frag_expt  ! Leung et al. (2022) uses Kok et al. (2014) dust emission euqation for emission flux
+               !flx_mss_vrt_dst_ttl(p) = dst_emiss_coeff(p) * mss_frc_cly_vld(c) * forc_rho(c) * ((wnd_frc_slt**2.0_r8 - wnd_frc_thr_slt_it**2.0_r8) / wnd_frc_thr_slt_std) * (wnd_frc_slt / wnd_frc_thr_slt_it)**frag_expt  ! Leung et al. (2022) uses Kok et al. (2014) dust emission equation for emission flux
+               flx_mss_vrt_dst_ttl(p) = dst_emiss_coeff(p) * mss_frc_cly_vld(c) * forc_rho(c) * ((wnd_frc_slt**2.0_r8 - wnd_frc_thr_slt_it**2.0_r8) / wnd_frc_thr_slt_it) * (wnd_frc_slt / wnd_frc_thr_slt_it)**frag_expt  ! Leung et al. (2022) uses Kok et al. (2014) dust emission equation for emission flux
 
                ! account for bare soil fraction, frozen soil fraction, and apply global tuning parameter (Kok et al. 2014)
                flx_mss_vrt_dst_ttl(p) = flx_mss_vrt_dst_ttl(p) * lnd_frc_mbl(p) * C_tune * liqfrac
