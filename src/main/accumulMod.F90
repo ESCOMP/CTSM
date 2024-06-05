@@ -681,7 +681,7 @@ contains
        if (this%active(k)) then
           kf = k - begi + 1
           if (nint(field(kf)) == -99999) then
-             this%val(k,level) = 0._r8
+             this%val(k,level) = 0._r8  ! TODO SSR: Should 0 instead be this%initval?
              this%nsteps(k,level) = 0
           else
              this%val(k,level) = &
