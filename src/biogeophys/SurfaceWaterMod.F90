@@ -41,6 +41,7 @@ module SurfaceWaterMod
   type, private :: params_type
      real(r8) :: pc              ! Threshold probability for surface water (unitless)
      real(r8) :: mu              ! Connectivity exponent for surface water (unitless)
+     real(r8) :: h2osfc_outflow_scalar    ! H2osfc outflow scalar (unitless)
   end type params_type
   type(params_type), private ::  params_inst
 
@@ -68,7 +69,9 @@ contains
     call readNcdioScalar(ncid, 'pc', subname, params_inst%pc)
     ! Connectivity exponent for surface water (unitless)
     call readNcdioScalar(ncid, 'mu', subname, params_inst%mu)
-
+    ! H2osfc outflow scalar (unitless)
+    call readNcdioScalar(ncid, 'h2osfc_outflow_scalar', subname, params_inst%h2osfc_outflow_scalar)
+    
   end subroutine readParams
 
   !-----------------------------------------------------------------------
@@ -486,7 +489,8 @@ contains
           k_wet=1.0e-4_r8 * sin((rpi/180._r8) * topo_slope(c))
           if (col%is_hillslope_column(c)) then
              ! require a minimum value to ensure non-zero outflow
-             k_wet = 1e-4_r8 * max(col%hill_slope(c),min_hill_slope)
+             !k_wet = 1e-4 * max(col%hill_slope(c),min_hill_slope)
+             k_wet = params_inst%h2osfc_outflow_scalar * max(col%hill_slope(c),min_hill_slope)
           endif
           qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))
 
