@@ -87,6 +87,8 @@ module accumulMod
      ! different reset points for different levels.
      integer, pointer   :: nsteps(:,:)!number of steps each point has accumulated, since last reset time
 
+     integer, pointer   :: nresets(:,:)!number of times a reset has been requested (not including timeavg getting reset at end of period)
+
      ! NOTE(wjs, 2017-12-03) We should convert this to fully object-oriented (with
      ! inheritance / polymorphism). For now, in the interest of time, I'm going with a
      ! semi-object-oriented solution of using procedure pointers.
@@ -301,6 +303,9 @@ contains
     allocate(accum(nf)%nsteps(beg1d:end1d,numlev))
     accum(nf)%nsteps(beg1d:end1d,1:numlev) = 0
 
+    allocate(accum(nf)%nresets(beg1d:end1d,numlev))
+    accum(nf)%nresets(beg1d:end1d,1:numlev) = 0
+
   end subroutine init_accum_field
 
   !------------------------------------------------------------------------
@@ -467,6 +472,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: begi,endi         !subgrid beginning,ending indices
     integer :: k, kf
+    integer :: effective_nstep  ! Timestep accounting for resets
 
     character(len=*), parameter :: subname = 'extract_accum_field_basic'
     !-----------------------------------------------------------------------
@@ -475,17 +481,15 @@ contains
     endi = this%end1d
     SHR_ASSERT_FL((size(field) == endi-begi+1), sourcefile, __LINE__)
 
-    if (mod(nstep,this%period) == 0) then
-       do k = begi, endi
-          kf = k - begi + 1
+    do k = begi, endi
+       kf = k - begi + 1
+       effective_nstep = nstep - this%nresets(k,level)
+       if (mod(effective_nstep,this%period) == 0) then
           field(kf) = this%val(k,level)
-       end do
-    else
-       do k = begi, endi
-          kf = k - begi + 1
+       else
           field(kf) = spval
-       end do
-    end if
+       end if
+    end do
 
   end subroutine extract_accum_field_timeavg
 
@@ -576,6 +580,7 @@ contains
     integer :: begi,endi         !subgrid beginning,ending indices
     integer :: k, kf
     logical :: time_to_reset
+    integer :: effective_nstep  ! Timestep accounting for resets
 
     character(len=*), parameter :: subname = 'update_accum_field_timeavg'
     !-----------------------------------------------------------------------
@@ -587,11 +592,15 @@ contains
     ! time average field: reset every accumulation period; normalize at end of
     ! accumulation period
 
-    time_to_reset = (mod(nstep,this%period) == 1 .or. this%period == 1) .and. nstep /= 0
     do k = begi,endi
+       effective_nstep = nstep - this%nresets(k,level)
+       time_to_reset = (mod(effective_nstep,this%period) == 1 .or. this%period == 1) .and. effective_nstep /= 0
        if (this%active(k) .and. (time_to_reset .or. this%reset(k,level))) then
           this%val(k,level) = 0._r8
           this%nsteps(k,level) = 0
+          if (this%reset(k,level) .and. .not. time_to_reset) then
+             this%nresets(k,level) = this%nresets(k,level) + 1
+          end if
           this%reset(k,level) = .false.
        end if
     end do
@@ -607,13 +616,12 @@ contains
        end if
     end do
 
-    if (mod(nstep,this%period) == 0) then
-       do k = begi,endi
-          if (this%active(k)) then
-             this%val(k,level) = this%val(k,level) / this%nsteps(k,level)
-          end if
-       end do
-    end if
+    do k = begi,endi
+       effective_nstep = nstep - this%nresets(k,level)
+       if (this%active(k) .and. mod(effective_nstep,this%period) == 0) then
+          this%val(k,level) = this%val(k,level) / this%nsteps(k,level)
+       end if
+    end do
 
   end subroutine update_accum_field_timeavg
 
@@ -647,8 +655,6 @@ contains
              this%nsteps(k,level) = 0
              this%val(k,level) = this%initval
              this%reset(k,level) = .false.
-             ! SSR 2024-06-05: Note that, unlike other accumulator types, runmean preserves reset
-             ! requests that occurred when the patch was inactive.
           end if
           kf = k - begi + 1
           this%nsteps(k,level) = this%nsteps(k,level) + 1
@@ -663,7 +669,10 @@ contains
                ((accper-1)*this%val(k,level) + field(kf)) / accper
        end if
     end do
-       
+
+    ! SSR 2024-06-05: Note that, unlike other accumulator types, runmean preserves reset requests
+    ! that occurred when the patch was inactive.
+
   end subroutine update_accum_field_runmean
 
   !-----------------------------------------------------------------------
@@ -853,8 +862,14 @@ contains
        if (associated(accum(i)%val)) then
           deallocate(accum(i)%val)
        end if
+       if (associated(accum(i)%reset)) then
+          deallocate(accum(i)%reset)
+       end if
        if (associated(accum(i)%nsteps)) then
           deallocate(accum(i)%nsteps)
+       end if
+       if (associated(accum(i)%nresets)) then
+          deallocate(accum(i)%nresets)
        end if
     end do
 
