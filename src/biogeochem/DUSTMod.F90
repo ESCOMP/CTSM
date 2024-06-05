@@ -32,7 +32,7 @@ module DUSTMod
   use ColumnType           , only : col
   use PatchType            , only : patch
   use pftconMod            , only : noveg
-  use PrigentRoughnessStreamType    , only : prigentroughnessstream_type
+  use PrigentRoughnessStreamType    , only : prigent_roughness_stream_type
   !  
   ! !PUBLIC TYPES
   implicit none
@@ -85,7 +85,7 @@ module DUSTMod
      real(r8), pointer, private :: vai_Okin_patch             (:)   ! [m2 leaf /m2 land] LAI+SAI for calculating Okin drag partition
      real(r8), pointer, private :: frc_thr_rghn_fct_patch    (:)   ! [dimless] hybrid drag partition (or called roughness) factor
      real(r8), pointer, private :: wnd_frc_thr_std_patch     (:)   ! standardized fluid threshold friction velocity (m/s)
-     type(prigentroughnessstream_type), private :: prigent_roughness_stream      ! Prigent roughness stream data
+     type(prigent_roughness_stream_type), private :: prigent_roughness_stream      ! Prigent roughness stream data
      real(r8), pointer, private :: dpfct_rock_patch          (:)   ! [fraction] rock drag partition factor, time-constant
    contains
 
@@ -1296,7 +1296,7 @@ contains
     implicit none
     class(dust_type) , intent(inout) :: this
     type(bounds_type), intent(in) :: bounds
-    type(prigentroughnessstream_type), intent(in) :: prigent_roughness_stream
+    type(prigent_roughness_stream_type), intent(in) :: prigent_roughness_stream
     !
     ! !LOCAL VARIABLES:
     integer  :: g, p, fp, l    ! Indices
