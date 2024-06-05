@@ -61,6 +61,7 @@ module DustEmisBase
      procedure , public   :: InitBase        ! Base object initiatlization (allows it to be extended)
      procedure , public   :: Init => InitBase ! Initialization name used by callers
      procedure(DustEmission_interface) , public, deferred  :: DustEmission    ! Dust mobilization
+     procedure , public   :: CheckDustEmisIsValid ! Check that the dust emission type is valid
      procedure , public   :: DustDryDep      ! Turbulent dry deposition for dust
      procedure , public   :: WritePatchToLog ! Write information on the given patch to the log file
      procedure , public   :: GetPatchVars    ! Get important variables on a given patch
@@ -278,6 +279,52 @@ contains
    if ( present(vlc_trb_3) ) vlc_trb_3 = this%vlc_trb_3_patch(p)
    if ( present(vlc_trb_4) ) vlc_trb_4 = this%vlc_trb_4_patch(p)
   end subroutine GetPatchVars
+
+  !------------------------------------------------------------------------
+  subroutine CheckDustEmisIsValid( this, p )
+   ! Check that dust emission state for this patch is valid
+   ! This means ensuring that total dust is the sum of all the dust bins
+   ! And that dry deposition for each dust bins agrees with the array of all
+   class(dust_emis_base_type) :: this
+   integer         , intent(in) :: p      ! Patch to display
+   integer :: i
+
+   if ( abs(sum(this%flx_mss_vrt_dst_patch(p,:)) - this%flx_mss_vrt_dst_tot_patch(p)) > 0.0_r8 )then
+      write(iulog,*) 'sum(flx_mss_vrt_dst(:)) /=flx_mss_vrt_dst_tot for p = ', p, &
+                     errMsg(sourcefile, __LINE__)
+      call endrun(msg="Sum over dust bins does NOT equal total dust")
+      return
+   end if
+   i = 1
+   if ( this%vlc_trb_patch(p,i) /= this%vlc_trb_1_patch(p) )then
+      write(iulog,*) 'vlc_trb(i)) /= glc_trb for p = ', p, 'dust bin = ', i, &
+                     errMsg(sourcefile, __LINE__)
+      call endrun(msg="Dry deposition for dust bin not equal to the array bin for it")
+      return
+   end if
+   i = 2
+   if ( this%vlc_trb_patch(p,i) /= this%vlc_trb_2_patch(p) )then
+      write(iulog,*) 'vlc_trb(i) /= glc_trb for p = ', p, 'dust bin = ', i, &
+                     errMsg(sourcefile, __LINE__)
+      call endrun(msg="Dry deposition for dust bin not equal to the array bin for it")
+      return
+   end if
+   i = 3
+   if ( this%vlc_trb_patch(p,i) /= this%vlc_trb_3_patch(p) )then
+      write(iulog,*) 'vlc_trb(i)) /= glc_trb for p = ', p, 'dust bin = ', i, &
+                     errMsg(sourcefile, __LINE__)
+      call endrun(msg="Dry deposition for dust bin not equal to the array bin for it")
+      return
+   end if
+   i = 4
+   if ( this%vlc_trb_patch(p,i) /= this%vlc_trb_4_patch(p) )then
+      write(iulog,*) 'vlc_trb(i)) /= glc_trb for p = ', p, 'dust bin = ', i, &
+                     errMsg(sourcefile, __LINE__)
+      call endrun(msg="Dry deposition for dust bin not equal to the array bin for it")
+      return
+   end if
+
+  end subroutine CheckDustEmisIsValid
 
   !-----------------------------------------------------------------------
 

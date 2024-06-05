@@ -274,23 +274,7 @@ contains
     class(TestDustEmisZender2003), intent(inout) :: this
     integer, intent(in) :: p
 
-    real(r8) :: flx_mss_vrt_dst(ndst)
-    real(r8) :: flx_mss_vrt_dst_tot
-    real(r8) :: vlc_trb(ndst)
-    real(r8) :: vlc_trb_1
-    real(r8) :: vlc_trb_2
-    real(r8) :: vlc_trb_3
-    real(r8) :: vlc_trb_4
-
-    call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst=flx_mss_vrt_dst, &
-             flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot, vlc_trb=vlc_trb, &
-             vlc_trb_1=vlc_trb_1, vlc_trb_2=vlc_trb_2, vlc_trb_3=vlc_trb_3, &
-             vlc_trb_4=vlc_trb_4 )
-    @assertEqual( sum(flx_mss_vrt_dst), flx_mss_vrt_dst_tot )
-    @assertEqual( vlc_trb(1), vlc_trb_1)
-    @assertEqual( vlc_trb(2), vlc_trb_2)
-    @assertEqual( vlc_trb(3), vlc_trb_3)
-    @assertEqual( vlc_trb(4), vlc_trb_4)
+    call this%dust_emis%CheckDustEmisIsValid( p )
   end subroutine validate_patch
 
   !-----------------------------------------------------------------------
