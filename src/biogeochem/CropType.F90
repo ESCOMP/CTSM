@@ -772,7 +772,7 @@ contains
     ! Should only be called if use_crop is true.
     !
     ! !USES:
-    use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
+    use accumulMod       , only : update_accum_field, extract_accum_field, markreset_accum_field
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep
     use clm_varpar       , only : nlevsno, nlevmaxurbgrnd
@@ -848,7 +848,8 @@ contains
              rbufslp(p) = rbufslp(p) * this%vf_patch(p)
           end if
        else
-          rbufslp(p) = accumResetVal
+          call markreset_accum_field('HUI', p)
+          call markreset_accum_field('GDDACCUM', p)
        end if
     end do
     call update_accum_field  ('HUI', rbufslp, nstep)
@@ -872,7 +873,7 @@ contains
              rbufslp(p) = rbufslp(p) * this%vf_patch(p)
           end if
        else
-          rbufslp(p) = accumResetVal
+          call markreset_accum_field('GDDTSOI', p)
        end if
     end do
     call update_accum_field  ('GDDTSOI', rbufslp, nstep)

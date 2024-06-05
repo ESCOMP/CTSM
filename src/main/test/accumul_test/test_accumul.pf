@@ -99,7 +99,7 @@ contains
   end subroutine init_ml_patch_field
 
   subroutine update_and_extract_sl_patch_field(this, fieldname, values, val_output, &
-       pactive, timestep_start)
+       pactive, timestep_start, reset)
     ! Calls update_accum_field once for each value in 'values', assuming that the values
     ! come once per timestep. For the first call, all input values are set equal to
     ! values(1); for the second call, all input values are set equal to values(2); etc.
@@ -122,16 +122,23 @@ contains
     ! If present, this specifies the starting nstep value. If absent, we start with 1.
     integer, optional, intent(in) :: timestep_start
 
+    ! If present, same size as 'values', indicating whether each should be associated with a reset
+    logical, optional, intent(in) :: reset(:)
+
     integer :: n_timesteps
     integer :: timestep
     integer :: timestep_offset
     real(r8), pointer :: vals_input(:)
     real(r8), pointer :: vals_output(:)
     logical, allocatable :: l_pactive(:)  ! local version of pactive
+    logical, allocatable :: l_reset(:)    ! local version of reset
 
     n_timesteps = size(values)
     if (present(pactive)) then
        @assertEqual(n_timesteps, size(pactive))
+    end if
+    if (present(reset)) then
+       @assertEqual(n_timesteps, size(reset))
     end if
 
     allocate(l_pactive(n_timesteps))
@@ -147,11 +154,21 @@ contains
        timestep_offset = 0
     end if
 
+    allocate(l_reset(n_timesteps))
+    if (present(reset)) then
+       l_reset(:) = reset(:)
+    else
+       l_reset(:) = .false.
+    end if
+
     allocate(vals_input(bounds%begp:bounds%endp))
     allocate(vals_output(bounds%begp:bounds%endp))
     do timestep = 1, n_timesteps
        vals_input(:) = values(timestep)
        patch%active(bounds%begp) = l_pactive(timestep)
+       if (l_reset(timestep)) then
+          call markreset_accum_field(fieldname)
+       end if
        call update_accum_field(fieldname, vals_input, timestep+timestep_offset)
     end do
     call extract_accum_field(fieldname, vals_output, n_timesteps+timestep_offset)
@@ -599,7 +616,8 @@ contains
     class(TestAccumul), intent(inout) :: this
     character(len=*), parameter :: fieldname = 'foo'
     integer, parameter :: accum_period = 3  ! irrelevant for this type
-    real(r8), parameter :: values(5) = [11._r8, 12._r8, accumResetVal, 13._r8, 24._r8]
+    real(r8), parameter :: values(5) = [11._r8,  12._r8,  -99999._r8, 13._r8,  24._r8]
+    logical , parameter :: reset(5)  = [.false., .false., .true.,     .false., .false.]
     real(r8) :: val_output
     real(r8) :: expected
 
@@ -609,7 +627,7 @@ contains
          accum_period = accum_period)
 
     ! Exercise
-    call this%update_and_extract_sl_patch_field(fieldname, values, val_output)
+    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, reset=reset)
 
     ! Verify
     expected = sum(values(4:5))
@@ -626,7 +644,8 @@ contains
     class(TestAccumul), intent(inout) :: this
     character(len=*), parameter :: fieldname = 'foo'
     integer, parameter :: accum_period = 3  ! irrelevant for this type
-    real(r8), parameter :: values(5) = [11._r8,  accumResetVal, 12._r8,  13._r8, 24._r8]
+    real(r8), parameter :: values(5) = [11._r8,  -99999._r8, 12._r8,  13._r8,  24._r8]
+    logical , parameter :: reset(5)  = [.false., .true.,     .false., .false., .false.]
     logical, parameter :: pactive(5) = [.false., .false.,       .false., .true., .true.]
     real(r8) :: val_output
     real(r8) :: expected
@@ -649,7 +668,7 @@ contains
     ! Test runaccum with a point that starts active, becomes inactive, then later becomes
     ! active again.
     !
-    ! Should ignore values and accumResetVal in the inactive steps.
+    ! Should ignore values and reset request in the inactive steps.
     !
     ! Also, should continue where it left off - i.e., including the values accumulated
     ! when it was first active. This may or may not be the ideal behavior; we can change
@@ -657,7 +676,8 @@ contains
     class(TestAccumul), intent(inout) :: this
     character(len=*), parameter :: fieldname = 'foo'
     integer, parameter :: accum_period = 3  ! irrelevant for this type
-    real(r8), parameter :: values(5) = [11._r8,  accumResetVal, 12._r8,  17._r8, 24._r8]
+    real(r8), parameter :: values(5) = [11._r8,  -99999._r8, 12._r8,  17._r8,  24._r8]
+    logical , parameter :: reset(5)  = [.false., .true.,     .false., .false., .false.]
     logical, parameter :: pactive(5) = [.true., .false.,       .false., .true., .true.]
     real(r8) :: val_output
     real(r8) :: expected
@@ -668,7 +688,7 @@ contains
          accum_period = accum_period)
 
     ! Exercise
-    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, pactive=pactive)
+    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, pactive=pactive, reset=reset)
 
     ! Verify
     expected = values(1) + values(4) + values(5)
