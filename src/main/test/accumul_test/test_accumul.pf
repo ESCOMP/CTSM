@@ -275,6 +275,30 @@ contains
   end subroutine timeavg_basic
 
   @Test
+  subroutine timeavg_reset(this)
+    ! Test reset of timeavg field
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: accum_period = 3
+    real(r8), parameter :: values(accum_period+1) = [11._r8, 12._r8, 13._r8, 14._r8]
+    logical, parameter :: reset(accum_period+1) = [.false., .true., .false., .false.]
+    real(r8) :: val_output
+    real(r8) :: expected
+
+    ! Setup
+    call setup_single_veg_patch(pft_type=1)
+    call this%init_sl_patch_field(name=fieldname, accum_type='timeavg', &
+         accum_period = accum_period)
+
+    ! Exercise
+    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, reset=reset)
+
+    ! Verify
+    expected = sum(values(2:4))/accum_period
+    @assertEqual(expected, val_output, tolerance=tol)
+  end subroutine timeavg_reset
+
+  @Test
   subroutine timeavg_wrongTime(this)
     ! Test a timeavg field when it's the wrong time for producing an average
     class(TestAccumul), intent(inout) :: this
@@ -319,6 +343,32 @@ contains
     expected = sum(values(accum_period+1:2*accum_period))/accum_period
     @assertEqual(expected, val_output, tolerance=tol)
   end subroutine timeavg_onlyLatestPeriod
+
+  @Test
+  subroutine timeavg_onlyLatestPeriod_redundantReset(this)
+    ! Manually requesting a reset when one was going to happen anyway should have no effect.
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: accum_period = 3
+    real(r8), parameter :: values(accum_period*2) = &
+         [11._r8, 12._r8, 13._r8, 21._r8, 22._r8, 23._r8]
+    logical, parameter :: reset(accum_period*2) = &
+         [.false., .false., .false., .true., .false., .false.]
+    real(r8) :: val_output
+    real(r8) :: expected
+
+    ! Setup
+    call setup_single_veg_patch(pft_type=1)
+    call this%init_sl_patch_field(name=fieldname, accum_type='timeavg', &
+         accum_period = accum_period)
+
+    ! Exercise
+    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, reset=reset)
+
+    ! Verify
+    expected = sum(values(accum_period+1:2*accum_period))/accum_period
+    @assertEqual(expected, val_output, tolerance=tol)
+  end subroutine timeavg_onlyLatestPeriod_redundantReset
 
   @Test
   subroutine timeavg_newlyActive(this)
@@ -521,6 +571,54 @@ contains
     expected_ts5 = (2._r8 * expected_ts4 + values(5)) / 3._r8
     @assertEqual(expected_ts5, val_output, tolerance=tol)
   end subroutine runmean_afterPeriod
+
+  @Test
+  subroutine runmean_afterPeriod_reset(this)
+    ! Test runmean accumulation after accum_period is reached, with a reset
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: accum_period = 3
+    real(r8), parameter :: values(5) = [11._r8,  22._r8,  43._r8,  110._r8, 17._r8]
+    logical,  parameter :: reset(5)  = [.false., .false., .false., .true.,  .false.]
+    real(r8) :: val_output
+    real(r8) :: expected_ts5
+
+    ! Setup
+    call setup_single_veg_patch(pft_type=1)
+    call this%init_sl_patch_field(name=fieldname, accum_type='runmean', &
+         accum_period = accum_period)
+
+    ! Exercise
+    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, reset=reset)
+
+    ! Verify
+    expected_ts5 = (values(4) + values(5)) / 2._r8
+    @assertEqual(expected_ts5, val_output, tolerance=tol)
+  end subroutine runmean_afterPeriod_reset
+
+  @Test
+  subroutine runmean_afterPeriod_resetWhileInactive(this)
+    ! Test runmean accumulation after accum_period is reached, with a reset while the patch was inactive. Unlike the other accumulator types, runmean should preserve this reset request and apply it when the patch is active again. This may or may not be the ideal behavior; we can change this if some other
+    ! behavior would be better in this situation.
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: accum_period = 3
+    real(r8), parameter :: values(5)  = [11._r8,  22._r8,  43._r8,  110._r8, 17._r8]
+    logical,  parameter :: pactive(5) = [.true.,  .true.,  .true.,  .false., .true.]
+    logical,  parameter :: reset(5)   = [.false., .false., .false., .true.,  .false.]
+    real(r8) :: val_output
+
+    ! Setup
+    call setup_single_veg_patch(pft_type=1)
+    call this%init_sl_patch_field(name=fieldname, accum_type='runmean', &
+         accum_period = accum_period)
+
+    ! Exercise
+    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, pactive=pactive, reset=reset)
+
+    ! Verify
+    @assertEqual(values(5), val_output, tolerance=tol)
+  end subroutine runmean_afterPeriod_resetWhileInactive
 
   @Test
   subroutine runmean_newlyActive(this)
