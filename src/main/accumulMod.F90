@@ -40,6 +40,7 @@ module accumulMod
   public :: print_accum_fields   ! Print info about accumulator fields
   public :: extract_accum_field  ! Extracts the current value of an accumulator field
   public :: update_accum_field   ! Update the current value of an accumulator field
+  public :: markreset_accum_field  ! Mark (value(s) in) an accumulator field as needing to be reset
   public :: clean_accum_fields   ! Deallocate space and reset accum fields list
 
   interface extract_accum_field
@@ -76,6 +77,7 @@ module accumulMod
      logical, pointer   :: active(:)!whether each point (patch, column, etc.) is active
      real(r8)           :: initval  !initial value of accumulated field
      real(r8), pointer  :: val(:,:) !accumulated field
+     logical , pointer  :: reset(:,:) !whether accumulated field needs to be reset
      integer            :: period   !field accumulation period (in model time steps)
      logical            :: scale_by_thickness  ! true/false flag to scale vertically interpolated variable by soil thickness or not
      character(len=128) :: old_name !previous name of variable (may be present in restart files)
@@ -111,8 +113,6 @@ module accumulMod
        real(r8), intent(in) :: field(:)  ! field values for current time step
      end subroutine update_accum_field_interface
   end interface
-
-  real(r8), parameter, public :: accumResetVal = -99999._r8 ! used to do an annual reset ( put in for bug 1858)
 
   integer, parameter :: ACCTYPE_TIMEAVG  = 1
   integer, parameter :: ACCTYPE_RUNMEAN  = 2
@@ -294,6 +294,9 @@ contains
        end if
     end if
     accum(nf)%val(beg1d:end1d,1:numlev) = init_value
+
+    allocate(accum(nf)%reset(beg1d:end1d,numlev))
+    accum(nf)%reset(beg1d:end1d,1:numlev) = .false.
 
     allocate(accum(nf)%nsteps(beg1d:end1d,numlev))
     accum(nf)%nsteps(beg1d:end1d,1:numlev) = 0
@@ -572,6 +575,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: begi,endi         !subgrid beginning,ending indices
     integer :: k, kf
+    logical :: time_to_reset
 
     character(len=*), parameter :: subname = 'update_accum_field_timeavg'
     !-----------------------------------------------------------------------
@@ -583,14 +587,17 @@ contains
     ! time average field: reset every accumulation period; normalize at end of
     ! accumulation period
 
-    if ((mod(nstep,this%period) == 1 .or. this%period == 1) .and. (nstep /= 0))then
-       do k = begi,endi
-          if (this%active(k)) then
-             this%val(k,level) = 0._r8
-             this%nsteps(k,level) = 0
-          end if
-       end do
-    end if
+    time_to_reset = (mod(nstep,this%period) == 1 .or. this%period == 1) .and. nstep /= 0
+    do k = begi,endi
+       if (this%active(k) .and. (time_to_reset .or. this%reset(k,level))) then
+          this%val(k,level) = 0._r8
+          this%nsteps(k,level) = 0
+          this%reset(k,level) = .false.
+       end if
+    end do
+
+    ! Ignore reset requests that occurred when patch was inactive
+    this%reset(begi:endi,level) = .false.
 
     do k = begi,endi
        if (this%active(k)) then
@@ -636,6 +643,13 @@ contains
 
     do k = begi,endi
        if (this%active(k)) then
+          if (this%reset(k,level)) then
+             this%nsteps(k,level) = 0
+             this%val(k,level) = this%initval
+             this%reset(k,level) = .false.
+             ! SSR 2024-06-05: Note that, unlike other accumulator types, runmean preserves reset
+             ! requests that occurred when the patch was inactive.
+          end if
           kf = k - begi + 1
           this%nsteps(k,level) = this%nsteps(k,level) + 1
           ! Cap nsteps at 'period' - partly to avoid overflow, but also because it doesn't
@@ -680,18 +694,71 @@ contains
     do k = begi,endi
        if (this%active(k)) then
           kf = k - begi + 1
-          if (nint(field(kf)) == -99999) then
+          if (this%reset(k,level)) then
+             ! SSR 2024-06-05: Note that, unlike the other accumulator types, runaccum can not
+             ! reset AND update in the same call of its update_accum_field subroutine.
              this%val(k,level) = 0._r8
              this%nsteps(k,level) = 0
+             this%reset(k,level) = .false.
           else
              this%val(k,level) = &
                   min(max(this%val(k,level) + field(kf), 0._r8), 99999._r8)
              this%nsteps(k,level) = this%nsteps(k,level) + 1
           end if
-       end if
+      end if
     end do
 
+    ! Ignore reset requests that occurred when patch was inactive
+    this%reset(begi:endi,level) = .false.
+
   end subroutine update_accum_field_runaccum
+
+
+  !-----------------------------------------------------------------------
+  subroutine markreset_accum_field(name, kf, level)
+    !
+    ! !DESCRIPTION:
+    ! Mark accumulator values as needing to be reset. Note that resetting happens in
+    ! update_accum_field subroutines.
+    !
+    ! !ARGUMENTS:
+    character(len=*),  intent(in)  :: name  ! field name
+    integer, optional, intent(in)  :: kf    ! point index to update (in field, not accumulator's val)
+    integer, optional, intent(in)  :: level ! level index to update (in accumulator's val; 1 for a 1-d field)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: nf          ! field index within the accum(nf) array
+    integer :: begi, endi  ! subgrid beginning, ending indices
+    integer :: k           ! index in accumulator's beg1d:end1d
+    integer :: numlev      ! number of levels in this accumulator
+
+    character(len=*), parameter :: subname = 'markreset_accum_field'
+    !-----------------------------------------------------------------------
+
+    call find_field(field_name=name, caller_name=subname, field_index=nf)
+    begi = accum(nf)%beg1d
+    endi = accum(nf)%end1d
+    numlev = accum(nf)%numlev
+
+    if (present(kf)) then
+       k = kf + begi - 1
+       SHR_ASSERT_FL(k >= begi .and. k <= endi, sourcefile, __LINE__)
+       if (present(level)) then
+          ! Reset one level of a single point
+          accum(nf)%reset(k,level) = .true.
+       else
+          ! Reset all levels of a single point
+          accum(nf)%reset(k,1:numlev) = .true.
+       end if
+    else if (present(level)) then
+       ! Reset one level of all points
+       accum(nf)%reset(begi:endi,level) = .true.
+    else
+       ! Reset all levels of all points
+       accum(nf)%reset(begi:endi,1:numlev) = .true.
+    end if
+
+  end subroutine markreset_accum_field
 
 
   !------------------------------------------------------------------------

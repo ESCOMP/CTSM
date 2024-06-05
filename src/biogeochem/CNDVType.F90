@@ -439,7 +439,7 @@ contains
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep, get_curr_date
     use pftconMod        , only : ndllf_dcd_brl_tree
-    use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
+    use accumulMod       , only : update_accum_field, extract_accum_field, markreset_accum_field
     !
     ! !ARGUMENTS:
     class(dgvs_type)  , intent(inout) :: this
@@ -493,8 +493,11 @@ contains
        rbufslp(p) = max(0._r8, &
             (t_a10_patch(p) - SHR_CONST_TKFRZ - dgv_ecophyscon%twmax(ndllf_dcd_brl_tree)) &
             * dtime/SHR_CONST_CDAY)
-       if (month==1 .and. day==1 .and. secs==int(dtime)) rbufslp(p) = accumResetVal
     end do
+    if (month==1 .and. day==1 .and. secs==int(dtime)) then
+       ! Reset annually
+       call markreset_accum_field('AGDD')
+    end if
     call update_accum_field  ('AGDDTW', rbufslp, nstep)
     call extract_accum_field ('AGDDTW', this%agddtw_patch, nstep)
 
@@ -503,11 +506,11 @@ contains
     do p = begp,endp
        rbufslp(p) = max(0.0_r8, &
             (t_ref2m_patch(p) - (SHR_CONST_TKFRZ + 5.0_r8)) * dtime/SHR_CONST_CDAY)
-       !
-       ! Fix (for bug 1858) from Sam Levis to reset the annual AGDD variable
-       ! 
-       if (month==1 .and. day==1 .and. secs==int(dtime)) rbufslp(p) = accumResetVal
     end do
+    if (month==1 .and. day==1 .and. secs==int(dtime)) then
+       ! Reset annually
+       call markreset_accum_field('AGDD')
+    end if
     call update_accum_field  ('AGDD', rbufslp, nstep)
     call extract_accum_field ('AGDD', this%agdd_patch, nstep)
 
