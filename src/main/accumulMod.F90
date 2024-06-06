@@ -597,7 +597,7 @@ contains
        effective_nstep = nstep - this%nresets(k,level)
        time_to_reset = (mod(effective_nstep,this%period) == 1 .or. this%period == 1) .and. effective_nstep /= 0
        if (this%active(k) .and. (time_to_reset .or. this%reset(k,level))) then
-          this%val(k,level) = 0._r8
+          this%val(k,level) = this%initval
           this%nsteps(k,level) = 0
           if (this%reset(k,level) .and. .not. time_to_reset) then
              this%nresets(k,level) = this%nresets(k,level) + 1
@@ -708,7 +708,7 @@ contains
              ! SSR 2024-06-05: Note that, unlike the other accumulator types, runaccum can not
              ! reset AND update in the same call of its update_accum_field subroutine.
              this%val(k,level) = 0._r8
-             this%nsteps(k,level) = 0
+             this%nsteps(k,level) = this%initval
              this%reset(k,level) = .false.
           else
              this%val(k,level) = &
