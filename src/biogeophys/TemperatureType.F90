@@ -1401,7 +1401,7 @@ contains
     !
     ! USES
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
-    use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
+    use accumulMod       , only : update_accum_field, extract_accum_field, markreset_accum_field
     use clm_time_manager , only : is_doy_in_interval
     use CropType, only : crop_type
     !
@@ -1439,6 +1439,16 @@ contains
        max_accum = 30._r8
     end if
 
+    ! Get field name
+    if (basetemp_int < 10) then
+       format_string = "(A3,I1)"
+    else if (basetemp_int < 100) then
+       format_string = "(A3,I2)"
+    else
+       format_string = "(A3,I3)"
+    end if
+    write(field_name, format_string) "GDD",basetemp_int
+
     do p = begp,endp
 
        ! Avoid unnecessary calculations over inactive points
@@ -1465,7 +1475,7 @@ contains
        end if
 
        if (month==1 .and. day==1 .and. secs==dtime) then
-          rbufslp(p) = accumResetVal ! reset gdd
+          call markreset_accum_field(field_name, p)
        else if (in_accumulation_season) then
           rbufslp(p) = max(0._r8, min(max_accum, &
                this%t_ref2m_patch(p)-(SHR_CONST_TKFRZ + basetemp_r8))) * dtime/SHR_CONST_CDAY
@@ -1473,16 +1483,6 @@ contains
           rbufslp(p) = 0._r8      ! keeps gdd unchanged outside accumulation season
        end if
     end do
-
-    ! Get field name
-    if (basetemp_int < 10) then
-       format_string = "(A3,I1)"
-    else if (basetemp_int < 100) then
-       format_string = "(A3,I2)"
-    else
-       format_string = "(A3,I3)"
-    end if
-    write(field_name, format_string) "GDD",basetemp_int
 
     ! Save
     call update_accum_field  (trim(field_name), rbufslp, nstep)
@@ -1497,7 +1497,7 @@ contains
     ! USES
     use shr_const_mod    , only : SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date, is_end_curr_year
-    use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
+    use accumulMod       , only : update_accum_field, extract_accum_field, markreset_accum_field
     use CNSharedParamsMod, only : upper_soil_layer
     use CropType         , only : crop_type
     !
