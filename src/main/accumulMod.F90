@@ -102,14 +102,13 @@ module accumulMod
        real(r8), intent(inout) :: field(:) ! field values for current time step
      end subroutine extract_accum_field_interface
 
-     subroutine update_accum_field_interface(this, level, nstep, field, reset)
+     subroutine update_accum_field_interface(this, level, nstep, field)
        use shr_kind_mod, only: r8 => shr_kind_r8
        import :: accum_field
        class(accum_field), intent(in) :: this
        integer, intent(in) :: level      ! level index to update (1 for a 1-d field)
        integer, intent(in) :: nstep      ! timestep index
        real(r8), intent(in) :: field(:)  ! field values for current time step
-       logical, optional, intent(in) :: reset  ! whether to reset accumulator
      end subroutine update_accum_field_interface
   end interface
 
@@ -488,7 +487,7 @@ contains
   end subroutine extract_accum_field_timeavg
 
   !------------------------------------------------------------------------
-  subroutine update_accum_field_sl (name, field, nstep, reset_in)
+  subroutine update_accum_field_sl (name, field, nstep)
     !
     ! !DESCRIPTION:
     ! Accumulate single level field over specified time interval.
@@ -502,21 +501,13 @@ contains
     character(len=*), intent(in) :: name     !field name
     real(r8), pointer, dimension(:) :: field !field values for current time step
     integer , intent(in) :: nstep            !time step index
-    logical, optional, intent(in) :: reset_in  ! whether to reset accumulator
     !
     ! !LOCAL VARIABLES:
     integer :: nf     ! field index
     integer :: numlev ! number of vertical levels
-    logical :: reset
 
     character(len=*), parameter :: subname = 'update_accum_field_sl'
     !------------------------------------------------------------------------
-
-    if (present(reset_in)) then
-       reset = reset_in
-    else
-       reset = .false.
-    end if
 
     call find_field(field_name=name, caller_name=subname, field_index=nf)
 
@@ -526,13 +517,12 @@ contains
     call accum(nf)%update_accum_field_func( &
          level = 1, &
          nstep = nstep, &
-         field = field, &
-         reset = reset)
+         field = field)
 
   end subroutine update_accum_field_sl
 
   !------------------------------------------------------------------------
-  subroutine update_accum_field_ml (name, field, nstep, reset_in)
+  subroutine update_accum_field_ml (name, field, nstep)
     !
     ! !DESCRIPTION:
     ! Accumulate multi level field over specified time interval.
@@ -545,21 +535,13 @@ contains
     character(len=*), intent(in) :: name       !field name
     real(r8), pointer, dimension(:,:) :: field !field values for current time step
     integer , intent(in) :: nstep              !time step index
-    logical, optional, intent(in) :: reset_in  ! whether to reset accumulator
     !
     ! !LOCAL VARIABLES:
     integer :: j,nf            !indices
     integer :: numlev          !number of vertical levels
-    logical :: reset
 
     character(len=*), parameter :: subname = 'update_accum_field_ml'
     !------------------------------------------------------------------------
-
-    if (present(reset_in)) then
-       reset = reset_in
-    else
-       reset = .false.
-    end if
 
     call find_field(field_name=name, caller_name=subname, field_index=nf)
 
@@ -570,14 +552,13 @@ contains
        call accum(nf)%update_accum_field_func( &
             level = j, &
             nstep = nstep, &
-            field = field(:,j), &
-            reset = reset)
+            field = field(:,j))
     end do
 
   end subroutine update_accum_field_ml
 
   !-----------------------------------------------------------------------
-  subroutine update_accum_field_timeavg(this, level, nstep, field, reset)
+  subroutine update_accum_field_timeavg(this, level, nstep, field)
     !
     ! !DESCRIPTION:
     ! Update values for one level of the given timeavg field
@@ -587,7 +568,6 @@ contains
     integer, intent(in) :: level      ! level index to update (1 for a 1-d field)
     integer, intent(in) :: nstep      ! timestep index
     real(r8), intent(in) :: field(:)  ! field values for current time step
-    logical, intent(in)  :: reset     ! whether to reset accumulator
     !
     ! !LOCAL VARIABLES:
     integer :: begi,endi         !subgrid beginning,ending indices
@@ -599,11 +579,6 @@ contains
     begi = this%beg1d
     endi = this%end1d
     SHR_ASSERT_FL((size(field) == endi-begi+1), sourcefile, __LINE__)
-
-    if (reset) then
-       write(iulog,*) trim(subname), 'ERROR: field name ',trim(this%name),' may not use reset=.true.'
-       call endrun('Unhandled use of reset=.true. for ',subname)
-    end if
 
     ! time average field: reset every accumulation period; normalize at end of
     ! accumulation period
@@ -636,7 +611,7 @@ contains
   end subroutine update_accum_field_timeavg
 
   !-----------------------------------------------------------------------
-  subroutine update_accum_field_runmean(this, level, nstep, field, reset)
+  subroutine update_accum_field_runmean(this, level, nstep, field)
     !
     ! !DESCRIPTION:
     ! Update values for one level of the given runmean field
@@ -646,7 +621,6 @@ contains
     integer, intent(in) :: level      ! level index to update (1 for a 1-d field)
     integer, intent(in) :: nstep      ! timestep index
     real(r8), intent(in) :: field(:)  ! field values for current time step
-    logical, intent(in)  :: reset     ! whether to reset accumulator
     !
     ! !LOCAL VARIABLES:
     integer :: begi,endi         !subgrid beginning,ending indices
@@ -661,18 +635,7 @@ contains
     SHR_ASSERT_FL((size(field) == endi-begi+1), sourcefile, __LINE__)
 
     do k = begi,endi
-       ! Whether or not this patch/landunit/etc. is active, mark it for reset. Don't actually reset it now, because it might become active again (and thus, its value might be needed) before it has another chance to get reset.
-       if (reset) then
-          this%nsteps(k,level) = -1
-       end if
-
        if (this%active(k)) then
-          ! Negative nsteps means this was marked as needing to be reset
-          if (this%nsteps(k,level) < 0) then
-             this%val(k,level) = 0._r8
-             this%nsteps(k,level) = 0
-          end if
-
           kf = k - begi + 1
           this%nsteps(k,level) = this%nsteps(k,level) + 1
           ! Cap nsteps at 'period' - partly to avoid overflow, but also because it doesn't
@@ -690,7 +653,7 @@ contains
   end subroutine update_accum_field_runmean
 
   !-----------------------------------------------------------------------
-  subroutine update_accum_field_runaccum(this, level, nstep, field, reset)
+  subroutine update_accum_field_runaccum(this, level, nstep, field)
     !
     ! !DESCRIPTION:
     ! Update values for one level of the given runaccum field
@@ -700,7 +663,6 @@ contains
     integer, intent(in) :: level      ! level index to update (1 for a 1-d field)
     integer, intent(in) :: nstep      ! timestep index
     real(r8), intent(in) :: field(:)  ! field values for current time step
-    logical, intent(in)  :: reset     ! whether to reset accumulator
     !
     ! !LOCAL VARIABLES:
     integer :: begi,endi         !subgrid beginning,ending indices
@@ -712,11 +674,6 @@ contains
     begi = this%beg1d
     endi = this%end1d
     SHR_ASSERT_FL((size(field) == endi-begi+1), sourcefile, __LINE__)
-
-    if (reset) then
-       write(iulog,*) trim(subname), 'ERROR: field name ',trim(this%name),' may not use reset=.true.; set value to -99999 instead'
-       call endrun('Unhandled use of reset=.true. for ',subname)
-    end if
 
     !running accumulation field; reset at trigger -99999
 
