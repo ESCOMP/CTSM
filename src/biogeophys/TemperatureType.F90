@@ -1687,9 +1687,9 @@ contains
        if (is_end_curr_year()) then
           ! Flush, if needed
           if (this%flush_gdd20) then
-              this%gdd020_patch(begp:endp) = accumResetVal
-              this%gdd820_patch(begp:endp) = accumResetVal
-              this%gdd1020_patch(begp:endp) = accumResetVal
+              call markreset_accum_field('GDD020')
+              call markreset_accum_field('GDD820')
+              call markreset_accum_field('GDD1020')
               this%flush_gdd20 = .false.
           end if
           call update_accum_field  ('GDD020', this%gdd0_patch, nstep)
