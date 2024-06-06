@@ -1497,7 +1497,7 @@ contains
     ! USES
     use shr_const_mod    , only : SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date, is_end_curr_year
-    use accumulMod       , only : update_accum_field, extract_accum_field
+    use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
     use CNSharedParamsMod, only : upper_soil_layer
     use CropType         , only : crop_type
     !
@@ -1685,13 +1685,19 @@ contains
 
        ! Accumulate and extract running 20-year means
        if (is_end_curr_year()) then
-          call update_accum_field  ('GDD020', this%gdd0_patch, nstep, this%flush_gdd20)
+          ! Flush, if needed
+          if (this%flush_gdd20) then
+              this%gdd020_patch(begp:endp) = accumResetVal
+              this%gdd820_patch(begp:endp) = accumResetVal
+              this%gdd1020_patch(begp:endp) = accumResetVal
+              this%flush_gdd20 = .false.
+          end if
+          call update_accum_field  ('GDD020', this%gdd0_patch, nstep)
           call extract_accum_field ('GDD020', this%gdd020_patch, nstep)
-          call update_accum_field  ('GDD820', this%gdd8_patch, nstep, this%flush_gdd20)
+          call update_accum_field  ('GDD820', this%gdd8_patch, nstep)
           call extract_accum_field ('GDD820', this%gdd820_patch, nstep)
-          call update_accum_field  ('GDD1020', this%gdd10_patch, nstep, this%flush_gdd20)
+          call update_accum_field  ('GDD1020', this%gdd10_patch, nstep)
           call extract_accum_field ('GDD1020', this%gdd1020_patch, nstep)
-          this%flush_gdd20 = .false.
        end if
 
     end if
