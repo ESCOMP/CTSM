@@ -151,7 +151,7 @@ module clm_instMod
   ! General biogeochem types
   type(ch4_type)      , public            :: ch4_inst
   type(crop_type)     , public            :: crop_inst
-  type(dust_emis_zender2003_type)     , public            :: dust_inst
+  type(dust_emis_zender2003_type)     , public            :: dust_emis_inst
   type(vocemis_type)  , public            :: vocemis_inst
   type(fireemis_type) , public            :: fireemis_inst
   type(drydepvel_type), public            :: drydepvel_inst
@@ -350,7 +350,7 @@ contains
 
     call surfrad_inst%Init(bounds)
 
-    call dust_inst%Init(bounds, NLFilename)
+    call dust_emis_inst%Init(bounds, NLFilename)
 
     allocate(scf_method, source = CreateAndInitSnowCoverFraction( &
          snow_cover_fraction_method = snow_cover_fraction_method, &
