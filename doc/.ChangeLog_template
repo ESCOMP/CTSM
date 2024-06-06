@@ -157,7 +157,7 @@ Other details
 -------------
 [Remove any lines that don't apply. Remove entire section if nothing applies.]
 
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
 
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
