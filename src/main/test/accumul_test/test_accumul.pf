@@ -5,7 +5,7 @@ module test_accumul
   use funit
   use accumulMod
   use unittestSubgridMod
-  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
+  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch, setup_n_veg_patches
   use shr_kind_mod , only : r8 => shr_kind_r8
   use clm_varcon, only : spval
   use PatchType, only : patch
@@ -19,6 +19,7 @@ module test_accumul
      procedure :: tearDown
      procedure :: init_sl_patch_field
      procedure :: init_ml_patch_field
+     procedure :: init_ml_mpatch_field
      procedure :: update_and_extract_sl_patch_field
      procedure :: update_and_extract_ml_patch_field
   end type TestAccumul
@@ -97,6 +98,36 @@ contains
          type2d = 'irrelevant', &  ! type2d just needed for restart
          scale_by_thickness = .false.)
   end subroutine init_ml_patch_field
+
+  subroutine init_ml_mpatch_field(this, name, accum_type, accum_period, nlev, init_value)
+     ! Call init_accum_field for a multi-level, multi-patch field
+     class(TestAccumul), intent(in) :: this
+     character(len=*), intent(in) :: name
+     character(len=*), intent(in) :: accum_type ! timeavg, runmean, runaccum
+     integer, intent(in) :: accum_period
+     integer, intent(in) :: nlev
+     real(r8), intent(in), optional :: init_value ! if absent, use 0
+
+     real(r8) :: l_init_value
+
+     if (present(init_value)) then
+        l_init_value = init_value
+     else
+        l_init_value = 0._r8
+     end if
+
+     call init_accum_field(&
+          name = name, &
+          units = 'none', &
+          desc = 'no desc', &
+          accum_type = accum_type, &
+          accum_period = accum_period, &
+          numlev = nlev, &
+          subgrid_type = 'pft', &
+          init_value = l_init_value, &
+          type2d = 'patch', &
+          scale_by_thickness = .false.)
+   end subroutine init_ml_mpatch_field
 
   subroutine update_and_extract_sl_patch_field(this, fieldname, values, val_output, &
        pactive, timestep_start, reset)
@@ -835,5 +866,183 @@ contains
     @assertEqual(expected1, val_output1, tolerance=tol)
     @assertEqual(expected2, val_output2, tolerance=tol)
   end subroutine multipleFields
+
+  ! ------------------------------------------------------------------------
+  ! Tests of markreset_accum_field()
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine markreset_nopoints_nolevels(this)
+    ! Make sure that NOT calling markreset_accum_field() means no point-levels are marked for reset.
+    !
+    ! Note that type of accumulator and values don't matter.
+
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: npatches = 2
+    integer, parameter :: nlevels = 5
+    real(r8), parameter :: pwtcol(npatches) = [0.5, 0.5]
+    integer, parameter :: pft_type(npatches) = [1, 2]
+    integer, parameter :: accum_period = 3
+    integer, parameter :: expected(npatches, nlevels) = transpose(reshape([ &
+         0, 0, 0, 0, 0, &
+         0, 0, 0, 0, 0 &
+         ], [nlevels, npatches]))
+    logical :: reset_output(npatches, nlevels)
+    integer :: reset_output_int(npatches, nlevels)
+    integer :: l, p
+
+    ! Setup
+    call setup_n_veg_patches(pwtcol, pft_type)
+    call this%init_ml_mpatch_field(name=fieldname, accum_type='timeavg', &
+         accum_period = accum_period, nlev=nlevels)
+
+    ! Exercise
+    reset_output = get_accum_reset(fieldname)
+
+    ! Verify
+    do l = 1,nlevels
+       do p = 1,npatches
+          if (reset_output(p,l)) then
+             reset_output_int(p,l) = 1
+          else
+             reset_output_int(p,l) = 0
+          end if
+       end do
+    end do
+    @assertEqual(expected, reset_output_int)
+  end subroutine markreset_nopoints_nolevels
+
+  @Test
+  subroutine markreset_1point_nolevels(this)
+    ! Make sure that calling markreset_accum_field() with kf but no level works right (marks
+    ! all levels of that patch for reset).
+    ! Note that type of accumulator and values don't matter.
+
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: npatches = 2
+    integer, parameter :: nlevels = 5
+    real(r8), parameter :: pwtcol(npatches) = [0.5, 0.5]
+    integer, parameter :: pft_type(npatches) = [1, 2]
+    integer, parameter :: accum_period = 3
+    integer, parameter :: expected(npatches, nlevels) = transpose(reshape([ &
+         1, 1, 1, 1, 1, &
+         0, 0, 0, 0, 0 &
+         ], [nlevels, npatches]))
+    logical :: reset_output(npatches, nlevels)
+    integer :: reset_output_int(npatches, nlevels)
+    integer :: l, p
+
+    ! Setup
+    call setup_n_veg_patches(pwtcol, pft_type)
+    call this%init_ml_mpatch_field(name=fieldname, accum_type='timeavg', &
+         accum_period = accum_period, nlev=nlevels)
+
+    ! Exercise
+    call markreset_accum_field(fieldname, kf=1)
+    reset_output = get_accum_reset(fieldname)
+
+    ! Verify
+    do l = 1,nlevels
+       do p = 1,npatches
+          if (reset_output(p,l)) then
+             reset_output_int(p,l) = 1
+          else
+             reset_output_int(p,l) = 0
+          end if
+       end do
+    end do
+    @assertEqual(expected, reset_output_int)
+  end subroutine markreset_1point_nolevels
+
+  @Test
+  subroutine markreset_allpoints_1level(this)
+    ! Make sure that calling markreset_accum_field() with level but no kf works right (marks that
+    ! level for reset for all points).
+    !
+    ! Note that type of accumulator and values don't matter.
+
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: npatches = 2
+    integer, parameter :: nlevels = 5
+    real(r8), parameter :: pwtcol(npatches) = [0.5, 0.5]
+    integer, parameter :: pft_type(npatches) = [1, 2]
+    integer, parameter :: accum_period = 3
+    integer, parameter :: expected(npatches, nlevels) = transpose(reshape([ &
+         0, 0, 1, 0, 0, &
+         0, 0, 1, 0, 0 &
+         ], [nlevels, npatches]))
+    logical :: reset_output(npatches, nlevels)
+    integer :: reset_output_int(npatches, nlevels)
+    integer :: l, p
+
+    ! Setup
+    call setup_n_veg_patches(pwtcol, pft_type)
+    call this%init_ml_mpatch_field(name=fieldname, accum_type='timeavg', &
+         accum_period = accum_period, nlev=nlevels)
+
+    ! Exercise
+    call markreset_accum_field(fieldname, level=3)
+    reset_output = get_accum_reset(fieldname)
+
+    ! Verify
+    do l = 1,nlevels
+       do p = 1,npatches
+          if (reset_output(p,l)) then
+             reset_output_int(p,l) = 1
+          else
+             reset_output_int(p,l) = 0
+          end if
+       end do
+    end do
+    @assertEqual(expected, reset_output_int)
+end subroutine markreset_allpoints_1level
+
+@Test
+subroutine markreset_allpoints_alllevels(this)
+  ! Make sure that calling markreset_accum_field() with neither kf nor level works right (marks
+  ! all for reset).
+  !
+  ! Note that type of accumulator and values don't matter.
+
+  class(TestAccumul), intent(inout) :: this
+  character(len=*), parameter :: fieldname = 'foo'
+  integer, parameter :: npatches = 2
+  integer, parameter :: nlevels = 5
+  real(r8), parameter :: pwtcol(npatches) = [0.5, 0.5]
+  integer, parameter :: pft_type(npatches) = [1, 2]
+  integer, parameter :: accum_period = 3
+  integer, parameter :: expected(npatches, nlevels) = transpose(reshape([ &
+       1, 1, 1, 1, 1, &
+       1, 1, 1, 1, 1 &
+       ], [nlevels, npatches]))
+  logical :: reset_output(npatches, nlevels)
+  integer :: reset_output_int(npatches, nlevels)
+  integer :: l, p
+
+  ! Setup
+  call setup_n_veg_patches(pwtcol, pft_type)
+  call this%init_ml_mpatch_field(name=fieldname, accum_type='timeavg', &
+       accum_period = accum_period, nlev=nlevels)
+
+  ! Exercise
+  call markreset_accum_field(fieldname)
+  reset_output = get_accum_reset(fieldname)
+
+  ! Verify
+  do l = 1,nlevels
+     do p = 1,npatches
+        if (reset_output(p,l)) then
+           reset_output_int(p,l) = 1
+        else
+           reset_output_int(p,l) = 0
+        end if
+     end do
+  end do
+  @assertEqual(expected, reset_output_int)
+end subroutine markreset_allpoints_alllevels
+
 
 end module test_accumul

@@ -41,6 +41,7 @@ module accumulMod
   public :: extract_accum_field  ! Extracts the current value of an accumulator field
   public :: update_accum_field   ! Update the current value of an accumulator field
   public :: markreset_accum_field  ! Mark (value(s) in) an accumulator field as needing to be reset
+  public :: get_accum_reset      ! Get reset array of accumulator
   public :: clean_accum_fields   ! Deallocate space and reset accum fields list
 
   interface extract_accum_field
@@ -768,6 +769,32 @@ contains
     end if
 
   end subroutine markreset_accum_field
+
+
+  !-----------------------------------------------------------------------
+  function get_accum_reset(name) result(reset)
+   !
+   ! !DESCRIPTION:
+   ! Get reset array for an accumulator
+   !
+   ! !ARGUMENTS:
+   character(len=*),  intent(in)  :: name  ! field name
+   !
+   ! !RESULT:
+   logical, pointer :: reset(:,:)
+   !
+   ! !LOCAL VARIABLES:
+   integer :: nf          ! field index within the accum(nf) array
+
+   character(len=*), parameter :: subname = 'get_reset'
+   !-----------------------------------------------------------------------
+
+   call find_field(field_name=name, caller_name=subname, field_index=nf)
+
+   allocate(reset(size(accum(nf)%reset, dim=1), size(accum(nf)%reset, dim=2)))
+   reset(:,:) = accum(nf)%reset
+
+  end function get_accum_reset
 
 
   !------------------------------------------------------------------------
