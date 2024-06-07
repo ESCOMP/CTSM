@@ -45,7 +45,7 @@ module clm_instMod
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use CropType                        , only : crop_type
   use DryDepVelocity                  , only : drydepvel_type
-  use DustEmisZender2003                         , only : dust_emis_zender2003_type
+  use DustEmisBase                    , only : dust_emis_base_type
   use EnergyFluxType                  , only : energyflux_type
   use FrictionVelocityMod             , only : frictionvel_type
   use GlacierSurfaceMassBalanceMod    , only : glacier_smb_type
@@ -151,7 +151,7 @@ module clm_instMod
   ! General biogeochem types
   type(ch4_type)      , public            :: ch4_inst
   type(crop_type)     , public            :: crop_inst
-  type(dust_emis_zender2003_type)     , public            :: dust_emis_inst
+  class(dust_emis_base_type), public, allocatable :: dust_emis_inst
   type(vocemis_type)  , public            :: vocemis_inst
   type(fireemis_type) , public            :: fireemis_inst
   type(drydepvel_type), public            :: drydepvel_inst
@@ -203,6 +203,7 @@ contains
     use clm_varctl                         , only : use_hillslope
     use HillslopeHydrologyMod              , only : SetHillslopeSoilThickness
     use initVerticalMod                    , only : setSoilLayerClass
+    use DustEmisFactory                    , only : create_dust_emissions
     !
     ! !ARGUMENTS    
     type(bounds_type), intent(in) :: bounds  ! processor bounds
@@ -350,7 +351,7 @@ contains
 
     call surfrad_inst%Init(bounds)
 
-    call dust_emis_inst%Init(bounds, NLFilename)
+    allocate(dust_emis_inst, source = create_dust_emissions(bounds, NLFilename))
 
     allocate(scf_method, source = CreateAndInitSnowCoverFraction( &
          snow_cover_fraction_method = snow_cover_fraction_method, &

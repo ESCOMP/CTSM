@@ -9,6 +9,7 @@ module test_DustEmisZender2003
   use clm_varctl, only : soil_layerstruct_predefined, create_crop_landunit, use_crop, create_crop_landunit
   use clm_varcon, only : clm_varcon_init, clm_varcon_clean
   use SnowHydrologyMod, only : InitSnowLayers, SnowHydrologySetControlForTesting, SnowHydrologyClean
+  use DustEmisBase
   use DustEmisZender2003
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestFilterBuilderMod, only : filter_from_range
@@ -20,6 +21,7 @@ module test_DustEmisZender2003
   use FrictionVelocityMod, only : frictionvel_type
   use unittestWaterTypeFactory, only : unittest_water_type_factory_type
   use SoilStateInitTimeConstMod, only : ThresholdSoilMoistZender2003, ThresholdSoilMoistKok2014, MassFracClay
+  use DustEmisFactory, only : create_dust_emissions
 
   implicit none
 
@@ -27,7 +29,7 @@ module test_DustEmisZender2003
 
   @TestCase
   type, extends(TestCase) :: TestDustEmisZender2003
-     type(dust_emis_zender2003_type) :: dust_emis
+     class(dust_emis_base_type), allocatable :: dust_emis
      integer, allocatable :: filter_nolakep(:)      ! non-lake filter (patches)
      integer :: num_nolakep              ! number of patches in non-lake filter
      type(atm2lnd_type) :: atm2lnd_inst
@@ -79,7 +81,7 @@ contains
     endc = bounds%endc
     allocate( urb_em(begl:endl) )
 
-    call this%dust_emis%Init( bounds, NLFilename )
+    allocate(this%dust_emis, source = create_dust_emissions(bounds, NLFilename))
     call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%num_nolakep, filter=this%filter_nolakep)
     atm2lnd_params = atm2lnd_params_type( repartition_rain_snow = .false., &
                                           glcmec_downscale_longwave = .false., &

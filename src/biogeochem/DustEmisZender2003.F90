@@ -57,12 +57,26 @@ module DustEmisZender2003
      procedure , private :: InitCold
 
   end type dust_emis_zender2003_type
+
+  interface dust_emis_zender2003_type
+     ! initialize a new dust emission object
+      module procedure constructor
+  end interface dust_emis_zender2003_type
   !------------------------------------------------------------------------
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 contains
+
+  !-----------------------------------------------------------------------
+  type(dust_emis_zender2003_type) function constructor()
+  !
+  ! Creates a dust emission object for Zender-2003 type
+  ! For now this is just a placeholder
+  !-----------------------------------------------------------------------
+
+  end function constructor
 
   !------------------------------------------------------------------------
 

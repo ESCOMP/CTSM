@@ -20,7 +20,7 @@ module lnd2atmMod
   use lnd2atmType          , only : lnd2atm_type
   use atm2lndType          , only : atm2lnd_type
   use ch4Mod               , only : ch4_type
-  use DustEmisZender2003              , only : dust_emis_zender2003_type
+  use DustEmisBase         , only : dust_emis_base_type
   use DryDepVelocity       , only : drydepvel_type
   use VocEmissionMod       , only : vocemis_type
   use CNFireEmissionsMod   , only : fireemis_type
@@ -173,7 +173,7 @@ contains
     type(drydepvel_type)        , intent(in)    :: drydepvel_inst
     type(vocemis_type)          , intent(in)    :: vocemis_inst
     type(fireemis_type)         , intent(in)    :: fireemis_inst
-    type(dust_emis_zender2003_type)             , intent(in)    :: dust_emis_inst
+    class(dust_emis_base_type)  , intent(in)    :: dust_emis_inst
     type(ch4_type)              , intent(in)    :: ch4_inst
     type(glc_behavior_type)     , intent(in)    :: glc_behavior
     type(lnd2atm_type)          , intent(inout) :: lnd2atm_inst
