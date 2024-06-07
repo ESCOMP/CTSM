@@ -275,8 +275,8 @@ contains
   end subroutine timeavg_basic
 
   @Test
-  subroutine timeavg_reset(this)
-    ! Test reset of timeavg field
+  subroutine timeavg_reset1(this)
+    ! Test reset of timeavg field 1 day after period start
     class(TestAccumul), intent(inout) :: this
     character(len=*), parameter :: fieldname = 'foo'
     integer, parameter :: accum_period = 3
@@ -296,7 +296,31 @@ contains
     ! Verify
     expected = sum(values(2:4))/accum_period
     @assertEqual(expected, val_output, tolerance=tol)
-  end subroutine timeavg_reset
+  end subroutine timeavg_reset1
+
+  @Test
+  subroutine timeavg_reset2(this)
+    ! Test reset of timeavg field 2 days after period start
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: accum_period = 3
+    real(r8), parameter :: values(accum_period+2) = [11._r8, 12._r8, 13._r8, 14._r8, 15._r8]
+    logical, parameter :: reset(accum_period+2) = [.false., .false., .true., .false., .false.]
+    real(r8) :: val_output
+    real(r8) :: expected
+
+    ! Setup
+    call setup_single_veg_patch(pft_type=1)
+    call this%init_sl_patch_field(name=fieldname, accum_type='timeavg', &
+         accum_period = accum_period)
+
+    ! Exercise
+    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, reset=reset)
+
+    ! Verify
+    expected = sum(values(3:5))/accum_period
+    @assertEqual(expected, val_output, tolerance=tol)
+  end subroutine timeavg_reset2
 
   @Test
   subroutine timeavg_wrongTime(this)
