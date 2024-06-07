@@ -2913,7 +2913,7 @@
       <machine name="derecho" compiler="intel" category="prealpha">
         <options>
           <option name="wallclock">00:40:00</option>
-          <option name="comment">Run prealpha for this test as mksurfdata_esmf is tightly coupled to externals and we want to catch issues with externals for it ASAP.</option>
+          <option name="comment">Run prealpha for this test as mksurfdata_esmf is tightly coupled to submodule updates and we want to catch issues with submodules for it ASAP.</option>
         </options>
       </machine>
     </machines>
