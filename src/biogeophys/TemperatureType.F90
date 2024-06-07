@@ -1539,6 +1539,9 @@ contains
 
        ! Accumulate and extract GDD0
 
+       ! SSR 2024-06-07: Don't wrap this do-loop in an "if it's not time to reset." Behavior would
+       ! be identical for now, but if "missed update" behavior is fixed (see ESCOMP/CTSM#2585), you
+       ! would end up updating GDD0 with uninitialized values.
        do p = begp,endp
           ! Avoid unnecessary calculations over inactive points
           if (patch%active(p)) then
@@ -1558,6 +1561,9 @@ contains
 
        ! Accumulate and extract GDD8
 
+       ! SSR 2024-06-07: Don't wrap this do-loop in an "if it's not time to reset." Behavior would
+       ! be identical for now, but if "missed update" behavior is fixed (see ESCOMP/CTSM#2585), you
+       ! would end up updating GDD8 with uninitialized values.
        do p = begp,endp
           ! Avoid unnecessary calculations over inactive points
           if (patch%active(p)) then
@@ -1578,6 +1584,9 @@ contains
 
        ! Accumulate and extract GDD10
 
+       ! SSR 2024-06-07: Don't wrap this do-loop in an "if it's not time to reset." Behavior would
+       ! be identical for now, but if "missed update" behavior is fixed (see ESCOMP/CTSM#2585), you
+       ! would end up updating GDD10 with uninitialized values.
        do p = begp,endp
           ! Avoid unnecessary calculations over inactive points
           if (patch%active(p)) then
