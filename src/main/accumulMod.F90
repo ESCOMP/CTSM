@@ -88,7 +88,7 @@ module accumulMod
      ! different reset points for different levels.
      integer, pointer   :: nsteps(:,:)!number of steps each point has accumulated, since last reset time
 
-     integer, pointer   :: nresets(:,:)!number of times a reset has been requested (not including timeavg getting reset at end of period)
+     integer, pointer   :: ndays_reset_shifted(:,:)!accumulated number of days that resetting timeavg field has moved it out of sync with model timestep
 
      ! NOTE(wjs, 2017-12-03) We should convert this to fully object-oriented (with
      ! inheritance / polymorphism). For now, in the interest of time, I'm going with a
@@ -304,8 +304,8 @@ contains
     allocate(accum(nf)%nsteps(beg1d:end1d,numlev))
     accum(nf)%nsteps(beg1d:end1d,1:numlev) = 0
 
-    allocate(accum(nf)%nresets(beg1d:end1d,numlev))
-    accum(nf)%nresets(beg1d:end1d,1:numlev) = 0
+    allocate(accum(nf)%ndays_reset_shifted(beg1d:end1d,numlev))
+    accum(nf)%ndays_reset_shifted(beg1d:end1d,1:numlev) = 0
 
   end subroutine init_accum_field
 
@@ -484,7 +484,7 @@ contains
 
     do k = begi, endi
        kf = k - begi + 1
-       effective_nstep = nstep - this%nresets(k,level)
+       effective_nstep = nstep - this%ndays_reset_shifted(k,level)
        if (mod(effective_nstep,this%period) == 0) then
           field(kf) = this%val(k,level)
        else
@@ -594,14 +594,14 @@ contains
     ! accumulation period
 
     do k = begi,endi
-       effective_nstep = nstep - this%nresets(k,level)
+       effective_nstep = nstep - this%ndays_reset_shifted(k,level)
        time_to_reset = (mod(effective_nstep,this%period) == 1 .or. this%period == 1) .and. effective_nstep /= 0
        if (this%active(k) .and. (time_to_reset .or. this%reset(k,level))) then
+          if (this%reset(k,level) .and. .not. time_to_reset) then
+             this%ndays_reset_shifted(k,level) = this%ndays_reset_shifted(k,level) + this%nsteps(k,level)
+          end if
           this%val(k,level) = this%initval
           this%nsteps(k,level) = 0
-          if (this%reset(k,level) .and. .not. time_to_reset) then
-             this%nresets(k,level) = this%nresets(k,level) + 1
-          end if
           this%reset(k,level) = .false.
        end if
     end do
@@ -618,7 +618,7 @@ contains
     end do
 
     do k = begi,endi
-       effective_nstep = nstep - this%nresets(k,level)
+       effective_nstep = nstep - this%ndays_reset_shifted(k,level)
        if (this%active(k) .and. mod(effective_nstep,this%period) == 0) then
           this%val(k,level) = this%val(k,level) / this%nsteps(k,level)
        end if
@@ -895,8 +895,8 @@ contains
        if (associated(accum(i)%nsteps)) then
           deallocate(accum(i)%nsteps)
        end if
-       if (associated(accum(i)%nresets)) then
-          deallocate(accum(i)%nresets)
+       if (associated(accum(i)%ndays_reset_shifted)) then
+          deallocate(accum(i)%ndays_reset_shifted)
        end if
     end do
 
