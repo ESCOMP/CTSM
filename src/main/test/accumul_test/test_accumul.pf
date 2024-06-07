@@ -870,15 +870,7 @@ contains
     reset_output = get_accum_reset(fieldname)
 
     ! Verify
-    do l = 1,nlevels
-       do p = 1,npatches
-          if (reset_output(p,l)) then
-             reset_output_int(p,l) = 1
-          else
-             reset_output_int(p,l) = 0
-          end if
-       end do
-    end do
+    reset_output_int = merge(1, 0, reset_output)
     @assertEqual(expected, reset_output_int)
   end subroutine markreset_nopoints_nolevels
 
@@ -913,15 +905,7 @@ contains
     reset_output = get_accum_reset(fieldname)
 
     ! Verify
-    do l = 1,nlevels
-       do p = 1,npatches
-          if (reset_output(p,l)) then
-             reset_output_int(p,l) = 1
-          else
-             reset_output_int(p,l) = 0
-          end if
-       end do
-    end do
+    reset_output_int = merge(1, 0, reset_output)
     @assertEqual(expected, reset_output_int)
   end subroutine markreset_1point_nolevels
 
@@ -957,15 +941,7 @@ contains
     reset_output = get_accum_reset(fieldname)
 
     ! Verify
-    do l = 1,nlevels
-       do p = 1,npatches
-          if (reset_output(p,l)) then
-             reset_output_int(p,l) = 1
-          else
-             reset_output_int(p,l) = 0
-          end if
-       end do
-    end do
+    reset_output_int = merge(1, 0, reset_output)
     @assertEqual(expected, reset_output_int)
 end subroutine markreset_allpoints_1level
 
@@ -1001,15 +977,7 @@ subroutine markreset_allpoints_alllevels(this)
   reset_output = get_accum_reset(fieldname)
 
   ! Verify
-  do l = 1,nlevels
-     do p = 1,npatches
-        if (reset_output(p,l)) then
-           reset_output_int(p,l) = 1
-        else
-           reset_output_int(p,l) = 0
-        end if
-     end do
-  end do
+  reset_output_int = merge(1, 0, reset_output)
   @assertEqual(expected, reset_output_int)
 end subroutine markreset_allpoints_alllevels
 
