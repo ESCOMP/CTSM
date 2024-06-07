@@ -715,7 +715,7 @@ contains
                   min(max(this%val(k,level) + field(kf), 0._r8), 99999._r8)
              this%nsteps(k,level) = this%nsteps(k,level) + 1
           end if
-      end if
+       end if
     end do
 
     ! Ignore reset requests that occurred when patch was inactive
