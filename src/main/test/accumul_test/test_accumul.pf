@@ -19,7 +19,6 @@ module test_accumul
      procedure :: tearDown
      procedure :: init_sl_patch_field
      procedure :: init_ml_patch_field
-     procedure :: init_ml_mpatch_field
      procedure :: update_and_extract_sl_patch_field
      procedure :: update_and_extract_ml_patch_field
   end type TestAccumul
@@ -95,39 +94,9 @@ contains
          numlev = nlev, &
          subgrid_type = 'pft', &
          init_value = l_init_value, &
-         type2d = 'irrelevant', &  ! type2d just needed for restart
+         type2d = 'patch', &  ! Irrelevant for one-patch fields, but some tests have more than one
          scale_by_thickness = .false.)
   end subroutine init_ml_patch_field
-
-  subroutine init_ml_mpatch_field(this, name, accum_type, accum_period, nlev, init_value)
-     ! Call init_accum_field for a multi-level, multi-patch field
-     class(TestAccumul), intent(in) :: this
-     character(len=*), intent(in) :: name
-     character(len=*), intent(in) :: accum_type ! timeavg, runmean, runaccum
-     integer, intent(in) :: accum_period
-     integer, intent(in) :: nlev
-     real(r8), intent(in), optional :: init_value ! if absent, use 0
-
-     real(r8) :: l_init_value
-
-     if (present(init_value)) then
-        l_init_value = init_value
-     else
-        l_init_value = 0._r8
-     end if
-
-     call init_accum_field(&
-          name = name, &
-          units = 'none', &
-          desc = 'no desc', &
-          accum_type = accum_type, &
-          accum_period = accum_period, &
-          numlev = nlev, &
-          subgrid_type = 'pft', &
-          init_value = l_init_value, &
-          type2d = 'patch', &
-          scale_by_thickness = .false.)
-   end subroutine init_ml_mpatch_field
 
   subroutine update_and_extract_sl_patch_field(this, fieldname, values, val_output, &
        pactive, timestep_start, reset)
@@ -306,8 +275,8 @@ contains
   end subroutine timeavg_basic
 
   @Test
-  subroutine timeavg_reset(this)
-    ! Test reset of timeavg field
+  subroutine timeavg_reset1(this)
+    ! Test reset of timeavg field 1 day after period start
     class(TestAccumul), intent(inout) :: this
     character(len=*), parameter :: fieldname = 'foo'
     integer, parameter :: accum_period = 3
@@ -327,7 +296,31 @@ contains
     ! Verify
     expected = sum(values(2:4))/accum_period
     @assertEqual(expected, val_output, tolerance=tol)
-  end subroutine timeavg_reset
+  end subroutine timeavg_reset1
+
+  @Test
+  subroutine timeavg_reset2(this)
+    ! Test reset of timeavg field 2 days after period start
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: accum_period = 3
+    real(r8), parameter :: values(accum_period+2) = [11._r8, 12._r8, 13._r8, 14._r8, 15._r8]
+    logical, parameter :: reset(accum_period+2) = [.false., .false., .true., .false., .false.]
+    real(r8) :: val_output
+    real(r8) :: expected
+
+    ! Setup
+    call setup_single_veg_patch(pft_type=1)
+    call this%init_sl_patch_field(name=fieldname, accum_type='timeavg', &
+         accum_period = accum_period)
+
+    ! Exercise
+    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, reset=reset)
+
+    ! Verify
+    expected = sum(values(3:5))/accum_period
+    @assertEqual(expected, val_output, tolerance=tol)
+  end subroutine timeavg_reset2
 
   @Test
   subroutine timeavg_wrongTime(this)
@@ -894,22 +887,14 @@ contains
 
     ! Setup
     call setup_n_veg_patches(pwtcol, pft_type)
-    call this%init_ml_mpatch_field(name=fieldname, accum_type='timeavg', &
+    call this%init_ml_patch_field(name=fieldname, accum_type='timeavg', &
          accum_period = accum_period, nlev=nlevels)
 
     ! Exercise
     reset_output = get_accum_reset(fieldname)
 
     ! Verify
-    do l = 1,nlevels
-       do p = 1,npatches
-          if (reset_output(p,l)) then
-             reset_output_int(p,l) = 1
-          else
-             reset_output_int(p,l) = 0
-          end if
-       end do
-    end do
+    reset_output_int = merge(1, 0, reset_output)
     @assertEqual(expected, reset_output_int)
   end subroutine markreset_nopoints_nolevels
 
@@ -936,7 +921,7 @@ contains
 
     ! Setup
     call setup_n_veg_patches(pwtcol, pft_type)
-    call this%init_ml_mpatch_field(name=fieldname, accum_type='timeavg', &
+    call this%init_ml_patch_field(name=fieldname, accum_type='timeavg', &
          accum_period = accum_period, nlev=nlevels)
 
     ! Exercise
@@ -944,15 +929,7 @@ contains
     reset_output = get_accum_reset(fieldname)
 
     ! Verify
-    do l = 1,nlevels
-       do p = 1,npatches
-          if (reset_output(p,l)) then
-             reset_output_int(p,l) = 1
-          else
-             reset_output_int(p,l) = 0
-          end if
-       end do
-    end do
+    reset_output_int = merge(1, 0, reset_output)
     @assertEqual(expected, reset_output_int)
   end subroutine markreset_1point_nolevels
 
@@ -980,7 +957,7 @@ contains
 
     ! Setup
     call setup_n_veg_patches(pwtcol, pft_type)
-    call this%init_ml_mpatch_field(name=fieldname, accum_type='timeavg', &
+    call this%init_ml_patch_field(name=fieldname, accum_type='timeavg', &
          accum_period = accum_period, nlev=nlevels)
 
     ! Exercise
@@ -988,15 +965,7 @@ contains
     reset_output = get_accum_reset(fieldname)
 
     ! Verify
-    do l = 1,nlevels
-       do p = 1,npatches
-          if (reset_output(p,l)) then
-             reset_output_int(p,l) = 1
-          else
-             reset_output_int(p,l) = 0
-          end if
-       end do
-    end do
+    reset_output_int = merge(1, 0, reset_output)
     @assertEqual(expected, reset_output_int)
 end subroutine markreset_allpoints_1level
 
@@ -1024,7 +993,7 @@ subroutine markreset_allpoints_alllevels(this)
 
   ! Setup
   call setup_n_veg_patches(pwtcol, pft_type)
-  call this%init_ml_mpatch_field(name=fieldname, accum_type='timeavg', &
+  call this%init_ml_patch_field(name=fieldname, accum_type='timeavg', &
        accum_period = accum_period, nlev=nlevels)
 
   ! Exercise
@@ -1032,15 +1001,7 @@ subroutine markreset_allpoints_alllevels(this)
   reset_output = get_accum_reset(fieldname)
 
   ! Verify
-  do l = 1,nlevels
-     do p = 1,npatches
-        if (reset_output(p,l)) then
-           reset_output_int(p,l) = 1
-        else
-           reset_output_int(p,l) = 0
-        end if
-     end do
-  end do
+  reset_output_int = merge(1, 0, reset_output)
   @assertEqual(expected, reset_output_int)
 end subroutine markreset_allpoints_alllevels
 
