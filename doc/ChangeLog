@@ -1,4 +1,94 @@
 ===============================================================
+Tag name: ctsm5.2.008
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri 07 Jun 2024 01:23:07 PM MDT
+One-line Summary: Another update of git-fleximod
+
+Purpose and description of changes
+----------------------------------
+
+Just update the gitfleximod subtree to v0.7.7. This fixes an issue in identifying that a tag is out of sync in a submodule.
+An issue about recursion on a submodule. Allows untracked files, and fixes a MS Window Memory error.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed:
+  Fixes #2591 -- Start using submodule rather than external
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+   doc-builder checkout seems to be required to use "git commit ." at the top level
+
+Changes to documentation:
+   Tweak some of the documentation around git-fleximod and use submodule rather than external.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+
+Testing summary: minimual
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) -
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho -----
+    izumi -------
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   git-fleximod subtree updated
+
+Pull Requests that document the changes (include PR ids):
+  #2577 -- Update git-fleximod
+(https://github.com/ESCOMP/ctsm/pull)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.007
 Originator(s): jedwards4b (Jim Edwards, UCAR/CGD) slevis (Sam Levis, UCAR/CGD)
 Date: Fri 31 May 2024 13:49:29 AM MDT
