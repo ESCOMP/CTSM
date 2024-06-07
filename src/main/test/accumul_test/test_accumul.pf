@@ -19,7 +19,6 @@ module test_accumul
      procedure :: tearDown
      procedure :: init_sl_patch_field
      procedure :: init_ml_patch_field
-     procedure :: init_ml_mpatch_field
      procedure :: update_and_extract_sl_patch_field
      procedure :: update_and_extract_ml_patch_field
   end type TestAccumul
@@ -95,39 +94,9 @@ contains
          numlev = nlev, &
          subgrid_type = 'pft', &
          init_value = l_init_value, &
-         type2d = 'irrelevant', &  ! type2d just needed for restart
+         type2d = 'patch', &  ! Irrelevant for one-patch fields, but some tests have more than one
          scale_by_thickness = .false.)
   end subroutine init_ml_patch_field
-
-  subroutine init_ml_mpatch_field(this, name, accum_type, accum_period, nlev, init_value)
-     ! Call init_accum_field for a multi-level, multi-patch field
-     class(TestAccumul), intent(in) :: this
-     character(len=*), intent(in) :: name
-     character(len=*), intent(in) :: accum_type ! timeavg, runmean, runaccum
-     integer, intent(in) :: accum_period
-     integer, intent(in) :: nlev
-     real(r8), intent(in), optional :: init_value ! if absent, use 0
-
-     real(r8) :: l_init_value
-
-     if (present(init_value)) then
-        l_init_value = init_value
-     else
-        l_init_value = 0._r8
-     end if
-
-     call init_accum_field(&
-          name = name, &
-          units = 'none', &
-          desc = 'no desc', &
-          accum_type = accum_type, &
-          accum_period = accum_period, &
-          numlev = nlev, &
-          subgrid_type = 'pft', &
-          init_value = l_init_value, &
-          type2d = 'patch', &
-          scale_by_thickness = .false.)
-   end subroutine init_ml_mpatch_field
 
   subroutine update_and_extract_sl_patch_field(this, fieldname, values, val_output, &
        pactive, timestep_start, reset)
@@ -894,7 +863,7 @@ contains
 
     ! Setup
     call setup_n_veg_patches(pwtcol, pft_type)
-    call this%init_ml_mpatch_field(name=fieldname, accum_type='timeavg', &
+    call this%init_ml_patch_field(name=fieldname, accum_type='timeavg', &
          accum_period = accum_period, nlev=nlevels)
 
     ! Exercise
@@ -936,7 +905,7 @@ contains
 
     ! Setup
     call setup_n_veg_patches(pwtcol, pft_type)
-    call this%init_ml_mpatch_field(name=fieldname, accum_type='timeavg', &
+    call this%init_ml_patch_field(name=fieldname, accum_type='timeavg', &
          accum_period = accum_period, nlev=nlevels)
 
     ! Exercise
@@ -980,7 +949,7 @@ contains
 
     ! Setup
     call setup_n_veg_patches(pwtcol, pft_type)
-    call this%init_ml_mpatch_field(name=fieldname, accum_type='timeavg', &
+    call this%init_ml_patch_field(name=fieldname, accum_type='timeavg', &
          accum_period = accum_period, nlev=nlevels)
 
     ! Exercise
@@ -1024,7 +993,7 @@ subroutine markreset_allpoints_alllevels(this)
 
   ! Setup
   call setup_n_veg_patches(pwtcol, pft_type)
-  call this%init_ml_mpatch_field(name=fieldname, accum_type='timeavg', &
+  call this%init_ml_patch_field(name=fieldname, accum_type='timeavg', &
        accum_period = accum_period, nlev=nlevels)
 
   ! Exercise
