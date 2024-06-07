@@ -163,6 +163,9 @@ module pftconMod
      real(r8), allocatable :: rstem_per_dbh  (:)  ! stem resistance per dbh (s/m/m)
      real(r8), allocatable :: wood_density  (:)   ! wood density (kg/m3)
 
+     ! MIMICS
+     real(r8), allocatable :: mimics_fi(:)
+
      !  crop
 
      ! These arrays give information about the merge of unused crop types to the types CLM
@@ -506,6 +509,8 @@ contains
     allocate( this%taper         (0:mxpft) )
     allocate( this%rstem_per_dbh (0:mxpft) )
     allocate( this%wood_density  (0:mxpft) )
+
+    allocate( this%mimics_fi(2) )
  
   end subroutine InitAllocate
 
@@ -1090,6 +1095,9 @@ contains
     !
     ! clm 5 nitrogen variables
     !
+    call ncd_io('mimics_fi',this%mimics_fi, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
     if (use_flexibleCN) then
        call ncd_io('i_vcad', this%i_vcad, 'read', ncid, readvar=readv) 
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__)) 
@@ -1132,6 +1140,7 @@ contains
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
        call ncd_io('wood_density',this%wood_density, 'read', ncid, readvar=readv)
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
     else
        this%dbh = 0.0_r8
        this%fbw = 0.0_r8
@@ -1595,6 +1604,8 @@ contains
     deallocate( this%rstem_per_dbh)
     deallocate( this%wood_density)
     deallocate( this%taper)
+
+    deallocate( this%mimics_fi)
   end subroutine Clean
 
 end module pftconMod

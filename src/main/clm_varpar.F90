@@ -82,6 +82,9 @@ module clm_varpar
   integer, public            :: i_litr_min    = -9    ! min index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
   integer, public            :: i_litr_max    = -9    ! max index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
   integer, public            :: i_met_lit     = -9    ! index of metabolic litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_str_lit     = -9    ! index of structural litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_phys_som    = -9    ! index of physically protected Soil Organic Matter (SOM); overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public            :: i_chem_som    = -9    ! index of chemically protected Soil Organic Matter (SOM); overwritten in SoilBiogeochemDecompCascade*Mod
   integer, public            :: i_cop_mic     = -9    ! index of copiotrophic microbial pool; overwritten in SoilBiogeochemDecompCascade*Mod
   integer, public            :: i_oli_mic     = -9    ! index of oligotrophic microbial pool; overwritten in SoilBiogeochemDecompCascade*Mod
   integer, public            :: i_cwd         = -9    ! index of cwd pool; overwritten in SoilBiogeochemDecompCascade*Mod
