@@ -496,7 +496,7 @@ contains
     end do
     if (month==1 .and. day==1 .and. secs==int(dtime)) then
        ! Reset annually
-       call markreset_accum_field('AGDD')
+       call markreset_accum_field('AGDDTW')
     end if
     call update_accum_field  ('AGDDTW', rbufslp, nstep)
     call extract_accum_field ('AGDDTW', this%agddtw_patch, nstep)
