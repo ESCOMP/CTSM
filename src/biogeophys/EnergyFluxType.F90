@@ -988,7 +988,7 @@ contains
     !
     ! USES
     use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date
-    use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
+    use accumulMod       , only : update_accum_field, extract_accum_field
     use abortutils       , only : endrun
     !
     ! !ARGUMENTS:

@@ -1363,7 +1363,7 @@ contains
     ! USES
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date, is_end_curr_year
-    use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
+    use accumulMod       , only : update_accum_field, extract_accum_field, markreset_accum_field
     use CNSharedParamsMod, only : upper_soil_layer
     !
     ! !ARGUMENTS:
@@ -1539,12 +1539,15 @@ contains
 
        ! Accumulate and extract GDD0
 
+       ! SSR 2024-06-07: Don't wrap this do-loop in an "if it's not time to reset." Behavior would
+       ! be identical for now, but if "missed update" behavior is fixed (see ESCOMP/CTSM#2585), you
+       ! would end up updating GDD0 with uninitialized values.
        do p = begp,endp
           ! Avoid unnecessary calculations over inactive points
           if (patch%active(p)) then
              g = patch%gridcell(p)
              if (month==1 .and. day==1 .and. secs==dtime) then
-                rbufslp(p) = accumResetVal ! reset gdd
+                call markreset_accum_field('GDD0', p)  ! reset gdd
              else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
                   ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
                 rbufslp(p) = max(0._r8, min(26._r8, this%t_ref2m_patch(p)-SHR_CONST_TKFRZ)) * dtime/SHR_CONST_CDAY
@@ -1558,12 +1561,15 @@ contains
 
        ! Accumulate and extract GDD8
 
+       ! SSR 2024-06-07: Don't wrap this do-loop in an "if it's not time to reset." Behavior would
+       ! be identical for now, but if "missed update" behavior is fixed (see ESCOMP/CTSM#2585), you
+       ! would end up updating GDD8 with uninitialized values.
        do p = begp,endp
           ! Avoid unnecessary calculations over inactive points
           if (patch%active(p)) then
              g = patch%gridcell(p)
              if (month==1 .and. day==1 .and. secs==dtime) then
-                rbufslp(p) = accumResetVal ! reset gdd
+                call markreset_accum_field('GDD8', p)  ! reset gdd
              else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
                   ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
                 rbufslp(p) = max(0._r8, min(30._r8, &
@@ -1578,12 +1584,15 @@ contains
 
        ! Accumulate and extract GDD10
 
+       ! SSR 2024-06-07: Don't wrap this do-loop in an "if it's not time to reset." Behavior would
+       ! be identical for now, but if "missed update" behavior is fixed (see ESCOMP/CTSM#2585), you
+       ! would end up updating GDD10 with uninitialized values.
        do p = begp,endp
           ! Avoid unnecessary calculations over inactive points
           if (patch%active(p)) then
              g = patch%gridcell(p)
              if (month==1 .and. day==1 .and. secs==dtime) then
-                rbufslp(p) = accumResetVal ! reset gdd
+                call markreset_accum_field('GDD10', p)  ! reset gdd
              else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
                   ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
                 rbufslp(p) = max(0._r8, min(30._r8, &
