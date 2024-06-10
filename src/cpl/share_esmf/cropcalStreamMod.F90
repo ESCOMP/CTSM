@@ -113,7 +113,6 @@ contains
          stream_meshfile_cropcal, &
          cropcals_rx, &
          cropcals_rx_adapt, &
-         stream_gdd20_seasons, &
          allow_invalid_gdd20_season_inputs, &
          stream_fldFileName_gdd20_season_start, &
          stream_fldFileName_gdd20_season_end
@@ -131,7 +130,6 @@ contains
     stream_fldFileName_swindow_end   = ''
     stream_fldFileName_cultivar_gdds = ''
     stream_fldFileName_gdd20_baseline = ''
-    stream_gdd20_seasons = .false.
     allow_invalid_gdd20_season_inputs = .false.
     stream_fldFileName_gdd20_season_start = ''
     stream_fldFileName_gdd20_season_end = ''
@@ -175,7 +173,6 @@ contains
     call shr_mpi_bcast(stream_fldFileName_cultivar_gdds, mpicom)
     call shr_mpi_bcast(stream_fldFileName_gdd20_baseline, mpicom)
     call shr_mpi_bcast(stream_meshfile_cropcal    , mpicom)
-    call shr_mpi_bcast(stream_gdd20_seasons, mpicom)
     call shr_mpi_bcast(allow_invalid_gdd20_season_inputs, mpicom)
     call shr_mpi_bcast(stream_fldFileName_gdd20_season_start, mpicom)
     call shr_mpi_bcast(stream_fldFileName_gdd20_season_end, mpicom)
