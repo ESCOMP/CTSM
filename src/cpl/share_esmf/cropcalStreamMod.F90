@@ -744,7 +744,9 @@ contains
 
            ! If read-in value is invalid, set to -1. Will be handled later in this subroutine.
            if (dataptr1d_gdd20_season_start(g) <= 0 .or. dataptr1d_gdd20_season_start(g) > 366 &
-               .or. dataptr1d_gdd20_season_end(g) <= 0 .or. dataptr1d_gdd20_season_end(g) > 366) then
+               .or. dataptr1d_gdd20_season_end(g) <= 0 .or. dataptr1d_gdd20_season_end(g) > 366 &
+               .or. dataptr1d_gdd20_season_start(g) /= dataptr1d_gdd20_season_start(g) &
+               .or. dataptr1d_gdd20_season_end(g) /= dataptr1d_gdd20_season_end(g)) then
               dataptr1d_gdd20_season_start(g) = -1
               dataptr1d_gdd20_season_end  (g) = -1
            end if
