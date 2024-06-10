@@ -134,10 +134,6 @@ module CLMFatesInterfaceMod
    use FatesParametersInterface, only : fates_parameters_type
 
    use FatesInterfaceMod     , only : DetermineGridCellNeighbors
-   use FatesIOVariableKindMod, only : group_dyna_simple, group_dyna_complx
-   use FatesIOVariableKindMod, only : group_hifr_simple, group_hifr_complx
-   use FatesIOVariableKindMod, only : group_nflx_simple, group_nflx_complx
-   use FatesIOVariableKindMod, only : group_hydr_simple, group_hydr_complx
    use FatesHistoryInterfaceMod, only : fates_hist
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
