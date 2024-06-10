@@ -1973,29 +1973,7 @@ module CLMFatesInterfaceMod
                ! not overwright values outside the columns that it is in charge of.
                ! ------------------------------------------------------------------------
 
-               ! tbd: fates_hist%flush_all_hvars(nc)    
-               
-               if_dim1: if(fates_history_dimlevel(1)>0) then
-                  call fates_hist%flush_hvars(nc,upfreq_in=group_hifr_simple)
-                  if (use_fates_planthydro) then
-                     call fates_hist%flush_hvars(nc,upfreq_in=group_hydr_simple)
-                  end if
-                  if(fates_history_dimlevel(1)>1) then
-                     call fates_hist%flush_hvars(nc,upfreq_in=group_hifr_complx)
-                     if (use_fates_planthydro) then
-                        call fates_hist%flush_hvars(nc,upfreq_in=group_hydr_complx)
-                     end if
-                  end if
-               end if if_dim1
-               
-               if_dim2: if(fates_history_dimlevel(2)>0) then
-                  call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_simple)
-                  call fates_hist%flush_hvars(nc,upfreq_in=group_nflx_simple)
-                  if(fates_history_dimlevel(2)>1) then
-                     call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_complx)
-                     call fates_hist%flush_hvars(nc,upfreq_in=group_nflx_complx)
-                  end if
-               end if if_dim2
+               call fates_hist%flush_all_hvars(nc)    
                
                call fates_hist%update_history_dyn( nc,                     &
                                                    this%fates(nc)%nsites,  &
@@ -2181,30 +2159,7 @@ module CLMFatesInterfaceMod
            ! We also start off by setting all values on FATES columns to zero.
            ! ------------------------------------------------------------------------
 
-           ! tbd: fates_hist%flush_all_hvars(nc)
-           
-           if_dim1: if(fates_history_dimlevel(1)>0) then
-              call fates_hist%flush_hvars(nc,upfreq_in=group_hifr_simple)
-              if (use_fates_planthydro) then
-                 call fates_hist%flush_hvars(nc,upfreq_in=group_hydr_simple)
-              end if
-              if(fates_history_dimlevel(1)>1) then
-                 call fates_hist%flush_hvars(nc,upfreq_in=group_hifr_complx)
-                 if (use_fates_planthydro) then
-                    call fates_hist%flush_hvars(nc,upfreq_in=group_hydr_complx)
-                 end if
-              end if
-           end if if_dim1
-           
-           if_dim2: if(fates_history_dimlevel(2)>0) then
-              call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_simple)
-              call fates_hist%flush_hvars(nc,upfreq_in=group_nflx_simple)
-              if(fates_history_dimlevel(2)>1) then
-                 call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_complx)
-                 call fates_hist%flush_hvars(nc,upfreq_in=group_nflx_complx)
-              end if
-           end if if_dim2
-
+           call fates_hist%flush_all_hvars(nc)
            
            call fates_hist%update_history_dyn( nc,                     &
                 this%fates(nc)%nsites,                                  &
