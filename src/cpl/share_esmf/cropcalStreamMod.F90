@@ -209,9 +209,11 @@ contains
     use_cropcal_rx_swindows      = stream_fldFileName_swindow_start /= ''
     use_cropcal_rx_cultivar_gdds = stream_fldFileName_cultivar_gdds /= ''
     adapt_cropcal_rx_cultivar_gdds = stream_fldFileName_gdd20_baseline /= ''
-    use_cropcal_streams = use_cropcal_rx_swindows .or. use_cropcal_rx_cultivar_gdds
+    use_cropcal_streams = .false.  ! Will be set to true if any file is read
 
     if (use_cropcal_rx_swindows) then
+       use_cropcal_streams = .true.
+
        ! Initialize the cdeps data type sdat_cropcal_swindow_start
        ! NOTE: stream_dtlimit 1.5 didn't work for some reason
        call shr_strdata_init_from_inline(sdat_cropcal_swindow_start,  &
@@ -270,6 +272,7 @@ contains
     ! Initialize the cdeps data type sdat_cropcal_cultivar_gdds
     ! NOTE: stream_dtlimit 1.5 didn't work for some reason
     if (use_cropcal_rx_cultivar_gdds) then
+       use_cropcal_streams = .true.
        call shr_strdata_init_from_inline(sdat_cropcal_cultivar_gdds,  &
             my_task             = iam,                                &
             logunit             = iulog,                              &
@@ -301,6 +304,7 @@ contains
     ! particular year chosen doesn't matter. Users can base their file on whatever baseline they
     ! want; they just need to put 2000 on the time axis.
     if (adapt_cropcal_rx_cultivar_gdds) then
+       use_cropcal_streams = .true.
        call shr_strdata_init_from_inline(sdat_cropcal_gdd20_baseline,  &
             my_task             = iam,                                &
             logunit             = iulog,                              &
@@ -328,7 +332,9 @@ contains
     end if
 
     if (stream_gdd20_seasons) then
-      ! Initialize the cdeps data type sdat_cropcal_gdd20_season_start
+       use_cropcal_streams = .true.
+
+       ! Initialize the cdeps data type sdat_cropcal_gdd20_season_start
       ! NOTE: Hard-coded to one particular year because it should NOT vary over time. Note that the
       ! particular year chosen doesn't matter.
       call shr_strdata_init_from_inline(sdat_cropcal_gdd20_season_start,  &
