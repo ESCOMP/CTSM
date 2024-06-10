@@ -4178,6 +4178,7 @@ sub setup_logic_cropcal_streams {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_gdd20_seasons');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'generate_crop_gdds');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_mxmat');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_cropcal');
 
   # These can't both be true
   my $cropcals_rx = $nl->get_value('cropcals_rx') ;
@@ -4208,7 +4209,6 @@ sub setup_logic_cropcal_streams {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_swindow_start');
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_swindow_end');
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_cultivar_gdds');
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_cropcal');
     if ( &value_is_true($cropcals_rx_adapt) ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_gdd20_baseline');
     }
@@ -4220,7 +4220,7 @@ sub setup_logic_cropcal_streams {
   my $gdd_file = $nl->get_value('stream_fldFileName_cultivar_gdds') ;
   my $gdd20_baseline_file = $nl->get_value('stream_fldFileName_gdd20_baseline') ;
   my $mesh_file = $nl->get_value('stream_meshfile_cropcal') ;
-  if ( !&string_is_undef_or_empty($swindow_start_file) or !&string_is_undef_or_empty($swindow_end_file) or !&string_is_undef_or_empty($gdd_file) or !&string_is_undef_or_empty($gdd20_baseline_file) or !&string_is_undef_or_empty($mesh_file)) {
+  if ( !&string_is_undef_or_empty($swindow_start_file) or !&string_is_undef_or_empty($swindow_end_file) or !&string_is_undef_or_empty($gdd_file) or !&string_is_undef_or_empty($gdd20_baseline_file)) {
 
     # User gave an input file without specifying cropcals_rx or cropcals_rx_adapt = .true.
     # Requiring this means nothing to the code, but helps namelist make more sense
