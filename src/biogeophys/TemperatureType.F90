@@ -1403,6 +1403,7 @@ contains
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use accumulMod       , only : update_accum_field, extract_accum_field, markreset_accum_field
     use clm_time_manager , only : is_doy_in_interval
+    use pftconMod        , only : npcropmin
     use CropType, only : crop_type
     !
     ! !ARGUMENTS
@@ -1420,6 +1421,7 @@ contains
     character(8) :: field_name   ! E.g., GDD0
     character(32) :: format_string
     integer :: p
+    integer :: ivt  ! vegetation type
     logical :: in_accumulation_season
     real(r8) :: lat  ! latitude
     integer :: gdd20_season_start, gdd20_season_end
@@ -1451,8 +1453,9 @@ contains
 
     do p = begp,endp
 
-       ! Avoid unnecessary calculations over inactive points
-       if (.not. patch%active(p)) then
+       ! Avoid unnecessary calculations over inactive points and non-crops
+       ivt = patch%itype(p)
+       if (ivt < npcropmin .or. .not. patch%active(p)) then
           cycle
        end if
 
