@@ -571,6 +571,7 @@ contains
     ! ----------------------------------------------------------------------
     ! Read in other namelists for other modules
     ! ----------------------------------------------------------------------
+
     call mpi_bcast (use_init_interp, 1, MPI_LOGICAL, 0, mpicom, ierr)
     if (use_init_interp) then
        call initInterp_readnl( NLFilename )
@@ -580,6 +581,7 @@ contains
     !For future version, I suggest to  put the following two calls inside their
     !own modules, which are called from their own initializing methods
     call init_hydrology( NLFilename )
+
     call soil_resistance_readnl ( NLFilename )
     call CanopyFluxesReadNML    ( NLFilename )
     call CanopyHydrology_readnl ( NLFilename )
@@ -592,6 +594,7 @@ contains
     ! ----------------------------------------------------------------------
     ! Broadcast all control information if appropriate
     ! ----------------------------------------------------------------------
+
     call control_spmd()
 
     ! ----------------------------------------------------------------------
@@ -1218,7 +1221,7 @@ contains
     end if
   end subroutine control_print
 
-  
+
   !-----------------------------------------------------------------------
   subroutine check_missing_initdata_status(finidat_interp_dest)
    !
@@ -1302,8 +1305,9 @@ contains
     inquire(file=trim(finidat_interp_dest), exist=lexists)
     if (lexists) then
 
-      ! Check that the status file also exists (i.e., that finidat_interp_dest was written successfully)
-      call check_missing_initdata_status(finidat_interp_dest)
+       ! Check that the status file also exists (i.e., that finidat_interp_dest was written successfully)
+       call check_missing_initdata_status(finidat_interp_dest)
+
        ! open the input file and check for the name of the input source file
        status = nf90_open(trim(finidat_interp_dest), 0, ncid)
        if (status /= nf90_noerr) call handle_err(status)
