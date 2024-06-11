@@ -174,7 +174,7 @@ contains
     use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg, SatellitePhenology
     use SnowSnicarMod                 , only : SnowAge_init, SnowOptics_init
     use lnd2atmMod                    , only : lnd2atm_minimal
-    use controlMod                    , only : NLFilename
+    use controlMod                    , only : NLFilename, check_missing_initdata_status
     use clm_instMod                   , only : clm_fates
     use BalanceCheckMod               , only : BalanceCheckInit
     use CNSharedParamsMod             , only : CNParamsSetSoilDepth

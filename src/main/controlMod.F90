@@ -59,10 +59,10 @@ module controlMod
   public :: control_setNL ! Set namelist filename
   public :: control_init  ! initial run control information
   public :: control_print ! print run control information
+  public :: check_missing_initdata_status  ! check for missing finidat_interp_dest .status file
   !
   !
   ! !PRIVATE MEMBER FUNCTIONS:
-  private :: check_missing_initdata_status  ! check for missing finidat_interp_dest .status file
   private :: apply_use_init_interp  ! apply the use_init_interp namelist option, if set
   !
   ! !PRIVATE TYPES:
