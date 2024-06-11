@@ -366,7 +366,7 @@ sub check_for_perl_utils {
     } else {
       die <<"EOF";
 ** Cannot find the root of the cime directory  enter it using the -cimeroot option
-   Did you run the checkout_externals scripts?
+   Did you run ./bin/git-fleximod update?
 EOF
     }
   }

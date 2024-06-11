@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.2.007 multiple 05/31/2024 Rm manage_externals and update documentation accordingly
        ctsm5.2.006   slevis 05/28/2024 Update externals to cesm2_3_beta17, remove mct, retire /test/tools
        ctsm5.2.005     erik 05/13/2024 Fix clm6_0 defaults and CESM testing issues, add tests to detect these problems
        ctsm5.2.004 multiple 05/09/2024 CTSM5.2 1979 fsurdat and 1979-2026 landuse ne0np4 files + two fixes
