@@ -911,7 +911,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: j,c,p     ! indices
     logical :: readvar   ! determine if variable is on initial file
-    integer, pointer :: logical_as_int(:) ! used for saving/reading logicals
+    integer :: idata
     !-----------------------------------------------------------------------
 
     call restartvar(ncid=ncid, flag=flag, varname='T_SOISNO', xtype=ncd_double,   &
@@ -1137,26 +1137,23 @@ contains
     end if
 
     if (use_crop .and. stream_gdd20_seasons) then
-       allocate(logical_as_int(1))
        if (flag == 'write') then
           if (this%flush_gdd20) then
-             logical_as_int(1) = 1
+             idata = 1
           else
-             logical_as_int(1) = 0
+             idata = 0
           end if
        end if
-       call restartvar(ncid=ncid, flag=flag,  varname='flush_gdd20', xtype=ncd_log,  &
-            dim1name='pft', &
+       call restartvar(ncid=ncid, flag=flag,  varname='flush_gdd20', xtype=ncd_int,  &
             long_name='Flag indicating that GDD20 values need to be flushed', &
-            units='none', interpinic_flag='interp', readvar=readvar, data=logical_as_int)
+            units='none', interpinic_flag='copy', readvar=readvar, data=idata)
        if (flag == 'read') then
-          if (readvar .and. logical_as_int(1) == 0) then
+          if (readvar .and. idata == 0) then
              this%flush_gdd20 = .false.
           else
              this%flush_gdd20 = .true.
           end if
        end if
-       deallocate(logical_as_int)
     end if
 
 
