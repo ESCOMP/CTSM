@@ -1,7 +1,7 @@
 [submodule "fates"]
 path = src/fates
-url = https://github.com/NGEET/fates
-fxtag = sci.1.73.0_api.35.0.0
+url = https://github.com/ckoven/fates
+fxtag = 4b018eade498d063b21dddf26f77c9658ff80261
 fxrequired = AlwaysRequired
 fxDONOTUSEurl = https://github.com/NCAR/fates-release
 
