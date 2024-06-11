@@ -626,7 +626,6 @@ contains
          version_in=model_version, &
          hostname_in=hostname, &
          username_in=username)
-
     call initialize1(dtime=dtime_sync)
 
     ! ---------------------
