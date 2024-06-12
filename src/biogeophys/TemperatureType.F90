@@ -1469,6 +1469,12 @@ contains
           gdd20_season_start = int(gdd20_season_starts(p))
           gdd20_season_end = int(gdd20_season_ends(p))
           if (gdd20_season_start >= 1 .and. gdd20_season_end >= 1) then
+             if (gdd20_season_start > 366 .or. gdd20_season_end > 366) then
+                write(iulog,*) 'invalid gdd20 season!'
+                write(iulog,*) '               start: ',gdd20_season_start
+                write(iulog,*) '                 end: ',gdd20_season_end
+                call endrun(msg=errMsg(sourcefile, __LINE__))
+             end if
              in_accumulation_season = is_doy_in_interval( &
              gdd20_season_start, gdd20_season_end, day)
           end if
