@@ -1687,6 +1687,7 @@ contains
        if (is_end_curr_year()) then
           ! Flush, if needed
           if (this%flush_gdd20) then
+              write(iulog, *) 'Flushing GDD20 variables'
               call markreset_accum_field('GDD020')
               call markreset_accum_field('GDD820')
               call markreset_accum_field('GDD1020')
