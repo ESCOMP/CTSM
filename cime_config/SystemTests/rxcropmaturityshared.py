@@ -137,6 +137,12 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
             # Download files from the server, if needed
             case_gddgen.check_all_input_data()
 
+            # Copy needed file from original to gddgen directory
+            shutil.copyfile(
+                os.path.join(caseroot, ".env_mach_specific.sh"),
+                os.path.join(self._path_gddgen, ".env_mach_specific.sh"),
+            )
+
             # Make custom version of surface file
             logger.info("RXCROPMATURITY log:  run fsurdat_modifier")
             self._run_fsurdat_modifier()
