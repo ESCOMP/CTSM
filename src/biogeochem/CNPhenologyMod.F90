@@ -2694,31 +2694,24 @@ contains
 
       ! set GDD target
       did_rx_gdds = .false.
-      write(iulog, *) 'ssr PlantCrop point A'
       if (generate_crop_gdds) then
-         write(iulog, *) 'ssr PlantCrop point AA'
          ! Value mostly doesn't matter; it just needs to be large enough to avoid divide-by-zero errors.
          gddmaturity(p) = 1.e36_r8
       else if (use_cropcal_rx_cultivar_gdds .and. crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p)) .ge. 0._r8) then
-         write(iulog, *) 'ssr PlantCrop point B'
          gddmaturity(p) = crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p))
          did_rx_gdds = .true.
          if (adapt_cropcal_rx_cultivar_gdds .and. crop_inst%gdd20_baseline_patch(p) > min_gdd20_baseline) then
-            write(iulog, *) 'ssr PlantCrop point C'
             gddmaturity(p) = gddmaturity(p) * gdd20 / crop_inst%gdd20_baseline_patch(p)
             !TODO SSR: Set maximum and minimum gddmaturity
          end if
       else if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
-         write(iulog, *) 'ssr PlantCrop point D'
          gddmaturity(p) = hybgdd(ivt(p))
       else
-         write(iulog, *) 'ssr PlantCrop gdd20 = ',gdd20
          if (ivt(p) == ntmp_soybean .or. ivt(p) == nirrig_tmp_soybean .or. &
                ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean .or. &
                ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
                ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
                ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
-            write(iulog, *) 'ssr PlantCrop point E'
             gddmaturity(p) = min(gdd20, hybgdd(ivt(p)))
          else if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
                ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
@@ -2726,13 +2719,10 @@ contains
                ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
                ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
             gddmaturity(p) = max(950._r8, min(gdd20*0.85_r8, hybgdd(ivt(p))))
-            write(iulog, *) 'ssr PlantCrop point F'
             if (do_plant_normal) then
-               write(iulog, *) 'ssr PlantCrop point G'
                gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
             end if
          else
-            write(iulog, *) 'ERROR: PlantCrop(): unrecognized ivt for GDD target: ',ivt(p)
             call endrun(msg="Stopping")
          end if
 
