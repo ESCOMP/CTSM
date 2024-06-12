@@ -2726,12 +2726,17 @@ contains
 
       endif
 
-      if (use_cropcal_rx_cultivar_gdds .and. gddmaturity(p) < min_gddmaturity) then
-          if (did_rx_gdds) then
-              write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gddmaturity',gddmaturity(p),'; using min_gddmaturity instead (',min_gddmaturity,')'
-          endif
-          gddmaturity(p) = min_gddmaturity
-      endif
+      if (gddmaturity(p) < min_gddmaturity) then
+         if (use_cropcal_rx_cultivar_gdds) then
+             if (did_rx_gdds) then
+                 write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gddmaturity',gddmaturity(p),'; using min_gddmaturity instead (',min_gddmaturity,')'
+             end if
+             gddmaturity(p) = min_gddmaturity
+         else
+            write(iulog, *) 'ERROR: PlantCrop(): gddmaturity < minimum for ivt ',ivt(p)
+            call endrun(msg="Stopping")
+         end if
+      end if
 
       ! Initialize allocation coefficients.
       ! Because crops have no live carbon pools when planted but not emerged, this shouldn't
