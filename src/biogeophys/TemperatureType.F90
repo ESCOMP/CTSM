@@ -8,7 +8,7 @@ module TemperatureType
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
   use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop, use_biomass_heat_storage
-  use clm_varctl      , only : stream_gdd20_seasons
+  use clm_varctl      , only : stream_gdd20_seasons, flush_gdd20
   use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevurb, nlevmaxurbgrnd
   use clm_varcon      , only : spval, ispval
   use GridcellType    , only : grc
@@ -1686,12 +1686,13 @@ contains
        ! Accumulate and extract running 20-year means
        if (is_end_curr_year()) then
           ! Flush, if needed
-          if (this%flush_gdd20) then
+          if (flush_gdd20 .or. this%flush_gdd20) then
               write(iulog, *) 'Flushing GDD20 variables'
               call markreset_accum_field('GDD020')
               call markreset_accum_field('GDD820')
               call markreset_accum_field('GDD1020')
               this%flush_gdd20 = .false.
+              flush_gdd20 = .false.
           end if
           call update_accum_field  ('GDD020', this%gdd0_patch, nstep)
           call extract_accum_field ('GDD020', this%gdd020_patch, nstep)

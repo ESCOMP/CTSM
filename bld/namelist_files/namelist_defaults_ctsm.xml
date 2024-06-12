@@ -1690,6 +1690,7 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <cropcals_rx>.false.</cropcals_rx>
 <cropcals_rx_adapt>.false.</cropcals_rx_adapt>
 <stream_gdd20_seasons>.false.</stream_gdd20_seasons>
+<flush_gdd20>.false.</flush_gdd20>
 <stream_year_first_cropcal_swindows  >2000</stream_year_first_cropcal_swindows>
 <stream_year_last_cropcal_swindows   >2000</stream_year_last_cropcal_swindows>
 <model_year_align_cropcal_swindows   >2000</model_year_align_cropcal_swindows>

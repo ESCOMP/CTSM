@@ -302,7 +302,7 @@ contains
          use_lch4, use_nitrif_denitrif, use_extralakelayers, &
          use_vichydro, use_cn, use_cndv, use_crop, use_fertilizer, &
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
-         use_nguardrail, crop_residue_removal_frac, stream_gdd20_seasons
+         use_nguardrail, crop_residue_removal_frac, stream_gdd20_seasons, flush_gdd20
 
     ! SNICAR
     namelist /clm_inparm/ &
@@ -712,6 +712,7 @@ contains
     call mpi_bcast (use_nguardrail, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_crop, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (stream_gdd20_seasons, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (flush_gdd20, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fertilizer, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_grainproduct, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (crop_residue_removal_frac, 1, MPI_REAL8, 0, mpicom, ier)
@@ -985,6 +986,7 @@ contains
     write(iulog,*) '    use_cndv = ', use_cndv
     write(iulog,*) '    use_crop = ', use_crop
     write(iulog,*) '    stream_gdd20_seasons = ', stream_gdd20_seasons
+    write(iulog,*) '    flush_gdd20 = ', flush_gdd20
     write(iulog,*) '    use_fertilizer = ', use_fertilizer
     write(iulog,*) '    use_grainproduct = ', use_grainproduct
     write(iulog,*) '    crop_residue_removal_frac = ', crop_residue_removal_frac
