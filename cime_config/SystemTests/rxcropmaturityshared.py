@@ -299,16 +299,16 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
                 tool_path,
             )
 
-        # # Modify namelist
-        # logger.info("RXCROPMATURITY log:  modify user_nl files: new fsurdat")
-        # self._append_to_user_nl_clm(
-        #     [
-        #         "fsurdat = '{}'".format(self._fsurdat_out),
-        #         "do_transient_crops = .false.",
-        #         "flanduse_timeseries = ''",
-        #         "use_init_interp = .true.",
-        #     ]
-        # )
+        # Modify namelist
+        logger.info("RXCROPMATURITY log:  modify user_nl files: new fsurdat")
+        self._append_to_user_nl_clm(
+            [
+                "fsurdat = '{}'".format(self._fsurdat_out),
+                "do_transient_crops = .false.",
+                "flanduse_timeseries = ''",
+                "use_init_interp = .true.",
+            ]
+        )
 
     def _create_config_file_evenlysplitcrop(self):
         """
