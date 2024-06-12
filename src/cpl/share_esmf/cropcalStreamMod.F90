@@ -392,6 +392,16 @@ contains
 
    end if
 
+   if (masterproc) then
+      write(iulog,*)
+      write(iulog,*) 'cropcal_stream DERIVED settings:'
+      write(iulog,'(a,l1)') '  use_cropcal_rx_swindows  = ',use_cropcal_rx_swindows
+      write(iulog,'(a,l1)') '  use_cropcal_rx_cultivar_gdds   = ',use_cropcal_rx_cultivar_gdds
+      write(iulog,'(a,l1)') '  adapt_cropcal_rx_cultivar_gdds   = ',adapt_cropcal_rx_cultivar_gdds
+      write(iulog,'(a,l1)') '  use_cropcal_streams  = ',use_cropcal_streams
+      write(iulog,*)
+   endif
+
   end subroutine cropcal_init
 
   !================================================================
