@@ -1,14 +1,15 @@
 ===============================================================
 Tag name: ctsm5.2.008
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Fri 07 Jun 2024 01:23:07 PM MDT
+Date: Thu 13 Jun 2024 01:13:24 PM MDT
 One-line Summary: Another update of git-fleximod
 
 Purpose and description of changes
 ----------------------------------
 
-Just update the gitfleximod subtree to v0.7.7. This fixes an issue in identifying that a tag is out of sync in a submodule.
-An issue about recursion on a submodule. Allows untracked files, and fixes a MS Window Memory error.
+Just update the gitfleximod subtree to v0.7.8. This fixes an issue in identifying that a tag is out of sync in a submodule.
+An issue about recursion on a submodule. Allows untracked files, and fixes a MS Window Memory error. And
+also git-fleximod status marks optional submodules, which helps explain why they are marked as not-checked out.
 
 
 Significant changes to scientifically-supported configurations
@@ -39,7 +40,7 @@ List of CTSM issues fixed:
 Notes of particular relevance for users
 ---------------------------------------
 Caveats for users (e.g., need to interpolate initial conditions):
-   doc-builder checkout seems to be required to use "git commit ." at the top level
+   doc-builder checkout requires use of "git commit ." at the top level
 
 Changes to documentation:
    Tweak some of the documentation around git-fleximod and use submodule rather than external.
@@ -50,25 +51,23 @@ NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the
 [Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 
-Testing summary: minimual
+Testing summary: regular
 ----------------
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho -
+    derecho - PASS
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    (any machine) -
+    derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
-
-  any other testing (give details below):
+    derecho ----- OK
+    izumi ------- OK
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
