@@ -184,9 +184,9 @@ contains
     allocate(this%vlc_trb_3_patch           (begp:endp))        ; this%vlc_trb_3_patch           (:)   = nan
     allocate(this%vlc_trb_4_patch           (begp:endp))        ; this%vlc_trb_4_patch           (:)   = nan
 
-    allocate (this%ovr_src_snk_mss(dst_src_nbr,ndst))           ; this%ovr_src_snk_mss           (:,:) = nan
-    allocate (this%dmt_vwr(ndst))                               ; this%dmt_vwr                   (:)   = nan
-    allocate (this%stk_crc(ndst))                               ; this%stk_crc                   (:)   = nan
+    allocate (this%ovr_src_snk_mss(1:dst_src_nbr,1:ndst))       ; this%ovr_src_snk_mss           (:,:) = nan
+    allocate (this%dmt_vwr(1:ndst))                             ; this%dmt_vwr                   (:)   = nan
+    allocate (this%stk_crc(1:ndst))                             ; this%stk_crc                   (:)   = nan
 
   end subroutine InitAllocate
 
