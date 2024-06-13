@@ -1399,7 +1399,7 @@ contains
     ! USES
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use accumulMod       , only : update_accum_field, extract_accum_field, markreset_accum_field
-    use clm_time_manager , only : is_doy_in_interval
+    use clm_time_manager , only : is_doy_in_interval, get_curr_calday
     use pftconMod        , only : npcropmin
     use CropType, only : crop_type
     !
@@ -1422,6 +1422,7 @@ contains
     logical :: in_accumulation_season
     real(r8) :: lat  ! latitude
     integer :: gdd20_season_start, gdd20_season_end
+    integer :: jday  ! Julian day of year (1, ..., 366)
 
     associate( &
      gdd20_season_starts => crop_inst%gdd20_season_start_patch, &
@@ -1429,6 +1430,11 @@ contains
      )
 
     basetemp_r8 = real(basetemp_int, r8)
+
+    ! SSR 2024-06-13: This should probably be _prev_. Keeping it _curr_ for now for consistency with
+    ! parent subroutine UpdateAccVars(), which uses get_curr_date() to get the month/day/etc. values
+    ! that are passed into this subroutine.
+    jday = int(get_curr_calday())
 
     ! Get maximum daily accumulation
     if (basetemp_int == 0) then
@@ -1476,7 +1482,7 @@ contains
                 call endrun(msg=errMsg(sourcefile, __LINE__))
              end if
              in_accumulation_season = is_doy_in_interval( &
-             gdd20_season_start, gdd20_season_end, day)
+             gdd20_season_start, gdd20_season_end, jday)
           end if
        end if
 
@@ -1534,6 +1540,7 @@ contains
 
     dtime = get_step_size()
     nstep = get_nstep()
+    ! SSR 2024-06-13: This should probably be changed to _prev_
     call get_curr_date (year, month, day, secs)
 
     ! Allocate needed dynamic memory for single level pft field
@@ -1677,8 +1684,6 @@ contains
        call update_accum_field  ('TDM10', rbufslp, nstep)
        call extract_accum_field ('TDM10', this%t_a10min_patch, nstep)
 
-
-
        ! Accumulate and extract GDD0
        call this%UpdateAccVars_CropGDDs(rbufslp, begp, endp, month, day, secs, dtime, nstep, 0, this%gdd0_patch, crop_inst)
 
@@ -1687,7 +1692,6 @@ contains
 
        ! Accumulate and extract GDD10
        call this%UpdateAccVars_CropGDDs(rbufslp, begp, endp, month, day, secs, dtime, nstep, 10, this%gdd10_patch, crop_inst)
-
 
        ! Accumulate and extract running 20-year means
        if (is_end_curr_year()) then
