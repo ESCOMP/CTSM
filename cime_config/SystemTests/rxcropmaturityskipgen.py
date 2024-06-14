@@ -1,4 +1,4 @@
-from rxcropmaturityshared import RXCROPMATURITYSHARED
+from rxcropmaturity import RXCROPMATURITYSHARED
 
 
 class RXCROPMATURITYSKIPGEN(RXCROPMATURITYSHARED):
