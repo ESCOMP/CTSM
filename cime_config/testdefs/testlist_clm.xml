@@ -3636,6 +3636,27 @@
     </options>
   </test>
 
+  <test name="RXCROPMATURITY_Lm61" grid="f10_f10_mg37" compset="IHistClm50BgcCrop"  testmods="clm/cropMonthOutput">
+    <machines>
+      <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
+    </machines>
+    <options>
+      <option name="wallclock">6:00:00</option>
+      <option name="comment">This test is designed to test the ability to prescribe crop sowing dates and maturity requirements. It first performs a GDD-generating run, then calls Python code to generate the maturity requirement file. This is then used in a sowing+maturity forced run, which finally is tested to ensure correct behavior.</option>
+    </options>
+  </test>
+
+  <test name="RXCROPMATURITYSKIPGEN_Ld1097" grid="f10_f10_mg37" compset="IHistClm50BgcCrop"  testmods="clm/cropMonthOutput">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:45:00</option>
+      <option name="comment">This test is designed to test the ability to prescribe crop sowing dates and maturity requirements. Unlike the RXCROPMATURITY test, however, it does not generate its own maturity requirements, instead interpolating a pre-existing maturity requirement file. (This allows the "GDD-generating" run to be mostly skipped.) This is then used in a sowing+maturity forced run, which finally is tested to ensure correct behavior.</option>
+    </options>
+  </test>
+
   <test name="ERP_D_P64x2_Ld10" grid="f10_f10_mg37" compset="I2000Clm60Bgc" testmods="clm/Hillslope">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
