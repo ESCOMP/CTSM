@@ -1471,7 +1471,6 @@ contains
        ! Replace with read-in gdd20 accumulation season, if needed and valid
        ! (If these aren't being read in or they're invalid, they'll be -1)
        if (stream_gdd20_seasons) then
-          ! REAL FOR DEVELOPMENT ONLY; REVERT TO INTEGER BEFORE MERGE
           gdd20_season_start = int(gdd20_season_starts(p))
           gdd20_season_end = int(gdd20_season_ends(p))
           if (gdd20_season_start >= 1 .and. gdd20_season_end >= 1) then

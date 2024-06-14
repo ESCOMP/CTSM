@@ -783,7 +783,6 @@ contains
            ! vegetated pft
            ig = g_to_ig(patch%gridcell(p))
 
-           ! REAL FOR DEVELOPMENT ONLY; REVERT TO INTEGER BEFORE MERGE
            gdd20_season_starts(p) = real(dataptr2d_gdd20_season_start(ig,n), r8)
            gdd20_season_ends(p)   = real(dataptr2d_gdd20_season_end  (ig,n), r8)
        else
@@ -793,17 +792,14 @@ contains
      end do
 
      ! Handle invalid gdd20 season values
-     ! gdd20_season_starts and gdd20_season_ends REAL FOR DEVELOPMENT ONLY; REVERT TO INTEGER BEFORE MERGE
      if (any(gdd20_season_starts(begp:endp) < 1._r8 .or. gdd20_season_ends(begp:endp) < 1._r8)) then
          ! Fail if not allowing fallback to paramfile sowing windows
-         ! gdd20_season_starts REAL FOR DEVELOPMENT ONLY; REVERT TO INTEGER BEFORE MERGE
          if ((.not. allow_invalid_gdd20_season_inputs) .and. any(gdd20_season_starts(begp:endp) < 1._r8 .and. patch%wtgcell(begp:endp) > 0._r8 .and. patch%itype(begp:endp) >= npcropmin)) then
              write(iulog, *) 'At least one crop in one gridcell has invalid gdd20 season start date(s). To ignore and fall back to paramfile sowing windows, set allow_invalid_gdd20_season_inputs to .true.'
              write(iulog, *) 'Affected crops:'
              do ivt = npcropmin, mxpft
                  do fp = 1, num_pcropp
                      p = filter_pcropp(fp)
-                     ! gdd20_season_starts REAL FOR DEVELOPMENT ONLY; REVERT TO INTEGER BEFORE MERGE
                      if (ivt == patch%itype(p) .and. patch%wtgcell(p) > 0._r8 .and. gdd20_season_starts(p) < 1._r8) then
                          write(iulog, *) '    ',pftname(ivt),'  (',ivt,')'
                          exit  ! Stop looking for patches of this type
@@ -813,7 +809,6 @@ contains
              call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
          ! Fail if a gdd20 season start date is given without an end date (or vice versa)
-         ! gdd20_season_starts and gdd20_season_ends REAL FOR DEVELOPMENT ONLY; REVERT TO INTEGER BEFORE MERGE
          else if (any((gdd20_season_starts(begp:endp) >= 1._r8 .and. gdd20_season_ends(begp:endp) < 1._r8) .or. (gdd20_season_starts(begp:endp) < 1._r8 .and. gdd20_season_ends(begp:endp) >= 1._r8))) then
              write(iulog, *) 'Every gdd20 season start date must have a corresponding end date.'
              call ESMF_Finalize(endflag=ESMF_END_ABORT)
