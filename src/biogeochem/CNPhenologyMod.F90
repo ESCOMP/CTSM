@@ -2694,10 +2694,7 @@ contains
 
       ! set GDD target
       did_rx_gdds = .false.
-      if (generate_crop_gdds) then
-         ! Value mostly doesn't matter; it just needs to be large enough to avoid divide-by-zero errors.
-         gddmaturity(p) = 1.e36_r8
-      else if (use_cropcal_rx_cultivar_gdds .and. crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p)) .ge. 0._r8) then
+      if (use_cropcal_rx_cultivar_gdds .and. crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p)) .ge. 0._r8) then
          gddmaturity(p) = crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p))
          did_rx_gdds = .true.
          if (adapt_cropcal_rx_cultivar_gdds .and. crop_inst%gdd20_baseline_patch(p) > min_gdd20_baseline) then
