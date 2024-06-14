@@ -95,8 +95,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         # Get cultivar maturity requirement file to fall back on if not generating it here
         self._gdds_file = None
         self._fallback_gdds_file = os.path.join(
-            os.path.dirname(self._sdatefile),
-            "gdds_20230829_161011.nc"
+            os.path.dirname(self._sdatefile), "gdds_20230829_161011.nc"
         )
 
         # Which conda environment should we use?

@@ -96,7 +96,9 @@ def main(argv):
     )
     any_bad = any_bad or any_bad_import_output
 
-    _, any_bad_check_const_vars = check_constant_vars(case["ds"], case, ignore_nan=True, verbose=True, throw_error=True)
+    _, any_bad_check_const_vars = check_constant_vars(
+        case["ds"], case, ignore_nan=True, verbose=True, throw_error=True
+    )
     any_bad = any_bad or any_bad_check_const_vars
 
     # Import GGCMI sowing and harvest dates, and check sims

@@ -13,7 +13,7 @@ _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pard
 sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm import ctsm_logging  # pylint: disable=wrong-import-position
-from ctsm.crop_calendars.cropcal_module import ( # pylint: disable=wrong-import-position
+from ctsm.crop_calendars.cropcal_module import (  # pylint: disable=wrong-import-position
     unexpected_negative_rx_gdd,
 )
 
