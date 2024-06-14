@@ -102,7 +102,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         # Which conda environment should we use?
         self._get_conda_env()
 
-    def _run_phase(self, skip_run=False, skip_gen=False):
+    def _run_phase(self, skip_gen=False):
         # Modeling this after the SSP test, we create a clone to be the case whose outputs we don't
         # want to be saved as baseline.
 
@@ -177,8 +177,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
                 case.set_value("STOP_N", 5)
                 case.set_value("STOP_OPTION", "ndays")
 
-        if not skip_run:
-            self.run_indv(suffix=None, st_archive=True)
+        self.run_indv(suffix=None, st_archive=True)
         if skip_gen:
             # Interpolate an existing GDD file. Needed to check obedience to GDD inputs.
             self._run_interpolate_gdds()
@@ -203,15 +202,13 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
             ]
         )
 
-        if not skip_run:
-            self.run_indv()
+        self.run_indv()
 
         # -------------------------------------------------------------------
         # (4) Check Prescribed Calendars run
         # -------------------------------------------------------------------
         logger.info("RXCROPMATURITY log:  output check: Prescribed Calendars")
-        if not skip_run:
-            self._run_check_rxboth_run(skip_gen)
+        self._run_check_rxboth_run(skip_gen)
 
     # Get sowing and harvest dates for this resolution.
     def _get_rx_dates(self):
