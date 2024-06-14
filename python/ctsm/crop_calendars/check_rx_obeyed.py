@@ -104,6 +104,27 @@ def get_extreme_info(diff_array, rx_array, mxn, dims, gs_da, patches1d_lon, patc
     return round(themxn, 3), round(this_lon, 3), round(this_lat, 3), this_gs, round(this_rx)
 
 
+def summarize_results(which_ds, output_var, verbose, all_ok, gdd_tolerance, diffs_eg_txt):
+    """
+    Summarize results
+    """
+    bad = True
+    if all_ok == 2:
+        bad = False
+        print(f"✅ {which_ds}: Prescribed {output_var} always obeyed")
+    elif all_ok == 1:
+        bad = False
+        # print(f"🟨 {which_ds}: Prescribed {output_var} *not* always obeyed, but acceptable:")
+        # for x in diff_str_list: print(x)
+        print(
+            f"🟨 {which_ds}: Prescribed {output_var} *not* always obeyed, but acceptable (diffs <= "
+            + f"{gdd_tolerance})"
+        )
+    elif not verbose:
+        print(f"❌ {which_ds}: Prescribed {output_var} *not* always obeyed. E.g., {diffs_eg_txt}")
+    return bad
+
+
 def check_rx_obeyed(
     vegtype_list, rx_ds, dates_ds, which_ds, output_var, gdd_min=None, verbose=False
 ):
@@ -203,19 +224,6 @@ def check_rx_obeyed(
                     else:
                         break
 
-    bad = True
-    if all_ok == 2:
-        bad = False
-        print(f"✅ {which_ds}: Prescribed {output_var} always obeyed")
-    elif all_ok == 1:
-        bad = False
-        # print(f"🟨 {which_ds}: Prescribed {output_var} *not* always obeyed, but acceptable:")
-        # for x in diff_str_list: print(x)
-        print(
-            f"🟨 {which_ds}: Prescribed {output_var} *not* always obeyed, but acceptable (diffs <= "
-            + f"{gdd_tolerance})"
-        )
-    elif not verbose:
-        print(f"❌ {which_ds}: Prescribed {output_var} *not* always obeyed. E.g., {diffs_eg_txt}")
+    bad = summarize_results(which_ds, output_var, verbose, all_ok, gdd_tolerance, diffs_eg_txt)
 
     return bad
