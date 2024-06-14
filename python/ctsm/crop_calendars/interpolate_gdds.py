@@ -13,6 +13,9 @@ _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pard
 sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm import ctsm_logging  # pylint: disable=wrong-import-position
+from ctsm.crop_calendars.cropcal_module import ( # pylint: disable=wrong-import-position
+    unexpected_negative_rx_gdd,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -113,13 +116,14 @@ def interpolate_gdds(args):
             continue
 
         # Interpolate
-        da_in = ds_in[var]
-        da_out = ds_in[var].interp_like(ds_target)
+        da_out = ds_in[var].interp_like(
+            ds_target,
+            method="nearest",
+            kwargs={"fill_value": "extrapolate"},  # Otherwise you get NaNs at edges
+        )
 
-        # Ensure minimum GDD is respected
-        min_allowed = min(0, da_in.min())
-        da_out = da_out.where(da_out >= min_allowed)
-        da_out = da_out.fillna(min_allowed)
+        if unexpected_negative_rx_gdd(da_out):
+            raise RuntimeError("Unexpected negative value")
 
         # Add to dataset
         ds_out[var] = da_out
