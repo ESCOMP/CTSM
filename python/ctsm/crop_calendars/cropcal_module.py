@@ -170,8 +170,10 @@ def check_v0_le_v1(this_ds, var_list, msg_txt=" ", both_nan_ok=False, throw_erro
     if both_nan_ok:
         gdd_lt_hui = gdd_lt_hui | (np.isnan(this_ds[var0]) & np.isnan(this_ds[var1]))
     if np.all(gdd_lt_hui):
+        any_bad = False
         print(f"✅{msg_txt}{var0} always <= {var1}")
     else:
+        any_bad = True
         msg = f"❌{msg_txt}{var0} *not* always <= {var1}"
         gdd_lt_hui_vals = gdd_lt_hui.values
         patch_index = np.where(~gdd_lt_hui_vals)[0][0]
@@ -187,6 +189,7 @@ def check_v0_le_v1(this_ds, var_list, msg_txt=" ", both_nan_ok=False, throw_erro
             print(msg)
         else:
             raise RuntimeError(msg)
+    return any_bad
 
 
 def get_gs_len_da(this_da):
@@ -346,10 +349,13 @@ def import_output(
     sdates_rx_ds=None,
     gdds_rx_ds=None,
     verbose=False,
+    throw_errors=True,
 ):
     """
     Import CLM output
     """
+    any_bad = False
+
     # Import
     this_ds = import_ds(filename, my_vars=my_vars, my_vegtypes=my_vegtypes)
 
@@ -419,7 +425,7 @@ def import_output(
     # Check that e.g., GDDACCUM <= HUI
     for var_list in [["GDDACCUM", "HUI"], ["SYEARS", "HYEARS"]]:
         if all(v in this_ds_gs for v in var_list):
-            check_v0_le_v1(this_ds_gs, var_list, both_nan_ok=True, throw_error=True)
+            any_bad = check_v0_le_v1(this_ds_gs, var_list, both_nan_ok=True, throw_error=throw_errors)
 
     # Check that prescribed calendars were obeyed
     if sdates_rx_ds:
@@ -447,7 +453,7 @@ def import_output(
         raise RuntimeError("How to get NHARVEST_DISCREP for NHARVESTS > 2?")
     this_ds_gs["NHARVEST_DISCREP"] = (this_ds_gs["NHARVESTS"] == 2).astype(int)
 
-    return this_ds_gs
+    return this_ds_gs, any_bad
 
 
 def handle_zombie_crops(this_ds):

@@ -203,9 +203,12 @@ def check_rx_obeyed(
                     else:
                         break
 
+    bad = True
     if all_ok == 2:
+        bad = False
         print(f"✅ {which_ds}: Prescribed {output_var} always obeyed")
     elif all_ok == 1:
+        bad = False
         # print(f"🟨 {which_ds}: Prescribed {output_var} *not* always obeyed, but acceptable:")
         # for x in diff_str_list: print(x)
         print(
@@ -214,3 +217,5 @@ def check_rx_obeyed(
         )
     elif not verbose:
         print(f"❌ {which_ds}: Prescribed {output_var} *not* always obeyed. E.g., {diffs_eg_txt}")
+
+    return bad
