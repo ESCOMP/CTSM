@@ -1,4 +1,5 @@
 module DustEmisBase
+#include "shr_assert.h"
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -68,8 +69,8 @@ module DustEmisBase
      procedure , public   :: GetConstVars    ! Get important constant variables
      procedure , public   :: CleanBase       ! Base object deallocation (allows extension)
      procedure , public   :: Clean => CleanBase ! Deallocation used by callers
-     procedure , private  :: InitAllocate
-     procedure , private  :: InitHistory
+     procedure , private  :: InitAllocateBase
+     procedure , private  :: InitHistoryBase
      procedure , private  :: InitDustVars    ! Initialize variables used in DustEmission method
 
   end type dust_emis_base_type
@@ -130,8 +131,8 @@ contains
     type(bounds_type), intent(in) :: bounds
     character(len=*),  intent(in) :: NLFilename
 
-    call this%InitAllocate (bounds)
-    call this%InitHistory  (bounds)
+    call this%InitAllocateBase (bounds)
+    call this%InitHistoryBase  (bounds)
     call this%InitDustVars (bounds)
 
   end subroutine InitBase
@@ -162,7 +163,7 @@ contains
   end subroutine CleanBase
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds)
+  subroutine InitAllocateBase(this, bounds)
     !
     ! !ARGUMENTS:
     class (dust_emis_base_type) :: this
@@ -188,10 +189,10 @@ contains
     allocate (this%dmt_vwr(1:ndst))                             ; this%dmt_vwr                   (:)   = nan
     allocate (this%stk_crc(1:ndst))                             ; this%stk_crc                   (:)   = nan
 
-  end subroutine InitAllocate
+  end subroutine InitAllocateBase
 
   !------------------------------------------------------------------------
-  subroutine InitHistory(this, bounds)
+  subroutine InitHistoryBase(this, bounds)
     !
     ! !USES:
     use histFileMod, only : hist_addfld1d
@@ -234,7 +235,7 @@ contains
          avgflag='A', long_name='turbulent deposition velocity 4', &
          ptr_patch=this%vlc_trb_4_patch, default='inactive')
 
-  end subroutine InitHistory
+  end subroutine InitHistoryBase
 
   !-----------------------------------------------------------------------
 
@@ -554,6 +555,8 @@ contains
     real(r8), parameter :: dns_slt = 2650.0_r8         ! [kg m-3] Density of optimal saltation particles
     !------------------------------------------------------------------------
 
+      call shr_assert_all((lbound(this%ovr_src_snk_mss) == (/1,1/) ), file=sourcefile, line=__LINE__)
+      call shr_assert_all((ubound(this%ovr_src_snk_mss) == (/dst_src_nbr,ndst/) ), file=sourcefile, line=__LINE__)
       ! allocate local variable
       allocate (dmt_vma_src(dst_src_nbr))
       allocate (gsd_anl_src(dst_src_nbr))
