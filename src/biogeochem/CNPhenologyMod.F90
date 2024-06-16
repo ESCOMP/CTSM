@@ -2704,6 +2704,10 @@ contains
       else if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
          gddmaturity(p) = hybgdd(ivt(p))
       else
+         if (gdd20 <= 0._r8) then
+            write(iulog, *) 'ERROR: gdd20 ',gdd20,' for ivt ',ivt(p)
+            call endrun(msg="Stopping")
+         end if
          if (ivt(p) == ntmp_soybean .or. ivt(p) == nirrig_tmp_soybean .or. &
                ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean .or. &
                ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
@@ -2716,10 +2720,11 @@ contains
                ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
                ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
             gddmaturity(p) = max(950._r8, min(gdd20*0.85_r8, hybgdd(ivt(p))))
-            if (do_plant_normal) then
+            if (do_plant_normal) then  ! TODO SSR: Add ".and. .not. do_plant_prescribed"?
                gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
             end if
          else
+            ! TODO SSR: Add more descriptive error message
             call endrun(msg="Stopping")
          end if
 
