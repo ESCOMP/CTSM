@@ -130,6 +130,8 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         logger.info("RXCROPMATURITY log:  modify user_nl files: generate GDDs")
         self._append_to_user_nl_clm(
             [
+                "cropcals_rx = .true.",
+                "stream_fldFileName_cultivar_gdds = ''",
                 "generate_crop_gdds = .true.",
                 "use_mxmat = .false.",
                 " ",
