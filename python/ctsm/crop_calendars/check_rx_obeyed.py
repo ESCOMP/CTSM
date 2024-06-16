@@ -135,6 +135,7 @@ def check_rx_obeyed(
         dates_ds, which_ds, output_var, verbose
     )
 
+    diffs_eg_txt = None
     for vegtype_str in vegtype_list:
         thisveg_patches = np.where(dates_ds.patches1d_itype_veg_str == vegtype_str)[0]
         if thisveg_patches.size == 0:
