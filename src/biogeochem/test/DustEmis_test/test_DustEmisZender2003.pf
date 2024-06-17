@@ -64,16 +64,19 @@ contains
     integer :: c
     type(atm2lnd_params_type) :: atm2lnd_params
 
+    ! Settings needed for clm_varpar
     soil_layerstruct_predefined = '20SL_8.5m'
     create_crop_landunit = .true.
     use_crop = .false.
     call clm_varpar_init( actual_maxsoil_patches=17, surf_numpft=15, surf_numcft=2, actual_nlevurb=5 )
     call clm_varcon_init( is_simple_buildtemp=.true.)
+    ! Water factor initialization
     call this%water_factory%init()
     call this%water_factory%setup_before_subgrid( &
         my_nlevsoi = nlevsoi, &
         nlevgrnd_additional = nlevgrnd - nlevsoi, &
         my_nlevsno = 3)
+    ! Setup the subgrid structure for a single bare-soil patch
     call setup_single_veg_patch( pft_type=0 )
     begl = bounds%begl
     endl = bounds%endl
@@ -81,15 +84,21 @@ contains
     endc = bounds%endc
     allocate( urb_em(begl:endl) )
 
+    ! Create the nolake filter
     call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%num_nolakep, filter=this%filter_nolakep)
+    ! atmospher to land parameter object
     atm2lnd_params = atm2lnd_params_type( repartition_rain_snow = .false., &
                                           glcmec_downscale_longwave = .false., &
                                           lapse_rate = 0.01_r8 &  ! arbitrary (this is unused for these tests)
     )
+    call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
+    ! Hydrology and snow (needed for water types)
     allocate (snow_depth_col(begc:endc))
     snow_depth_col(begc:endc) = 0.0_r8
     call SnowHydrologySetControlForTesting()
     call InitSnowLayers(bounds, snow_depth_col(bounds%begc:bounds%endc))
+    deallocate (snow_depth_col )
+    ! Water and soil state -- after the subgrid setup
     call this%water_factory%setup_after_subgrid(snl = 3)
     call this%soilstate_inst%Init(bounds)
     do c = begc, endc
@@ -97,7 +106,7 @@ contains
     end do
     call this%setupEnvironment( )
     call this%water_factory%create_water_type(this%water_inst, watsat_col=this%soilstate_inst%watsat_col)
-    call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
+    ! Canopy state, friction velocity, and temperature state ojects
     call this%canopystate_inst%SetNMLForTesting()
     call this%canopystate_inst%Init(bounds)
     call this%frictionvel_inst%InitForTesting(bounds)
@@ -108,7 +117,6 @@ contains
                                em_improad_lun=urb_em(begl:endl), &
                                em_perroad_lun=urb_em(begl:endl), &
                                is_simple_buildtemp=.true., is_prog_buildtemp=.false.)
-    deallocate (snow_depth_col )
     deallocate( urb_em )
     ! Create the dust emission object last
     allocate(this%dust_emis, source = create_dust_emissions(bounds, NLFilename))
