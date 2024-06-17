@@ -7,7 +7,6 @@ module test_DustEmisZender2003
   use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
   use clm_varpar, only : nlevsoi, nlevgrnd, nlevsno, clm_varpar_init, ndst
   use clm_varctl, only : soil_layerstruct_predefined, create_crop_landunit, use_crop, create_crop_landunit
-  use clm_varcon, only : clm_varcon_init, clm_varcon_clean
   use SnowHydrologyMod, only : InitSnowLayers, SnowHydrologySetControlForTesting, SnowHydrologyClean
   use DustEmisBase
   use DustEmisZender2003
@@ -69,7 +68,6 @@ contains
     create_crop_landunit = .true.
     use_crop = .false.
     call clm_varpar_init( actual_maxsoil_patches=17, surf_numpft=15, surf_numcft=2, actual_nlevurb=5 )
-    call clm_varcon_init( is_simple_buildtemp=.true.)
     ! Water object initialization -- before subgrid
     call this%water_factory%init()
     call this%water_factory%setup_before_subgrid( &
@@ -128,7 +126,6 @@ contains
     call SnowHydrologyClean()
     call unittest_subgrid_teardown()
     call this%atm2lnd_inst%Clean()
-    call clm_varcon_clean()
     deallocate( this%filter_nolakep )
   end subroutine tearDown
 
