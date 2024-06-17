@@ -18,7 +18,7 @@ module test_DustEmisZender2003
   use WaterType, only : water_type
   use FrictionVelocityMod, only : frictionvel_type
   use unittestWaterTypeFactory, only : unittest_water_type_factory_type
-  use SoilStateInitTimeConstMod, only : ThresholdSoilMoistZender2003, ThresholdSoilMoistKok2014, MassFracClay
+  use SoilStateInitTimeConstMod, only : ThresholdSoilMoistZender2003, MassFracClay
   use DustEmisFactory, only : create_dust_emissions
 
   implicit none
@@ -54,12 +54,14 @@ contains
   subroutine setUp(this)
     use ColumnType, only : col
     class(TestDustEmisZender2003), intent(inout) :: this
+    ! Allocate and initiatlize the test object for input objects dust-emission needs
 
     character(len=5) :: NLFilename = 'none'
     real(r8), allocatable :: urb_em(:)
     integer :: begl, endl, begc, endc
     integer :: c
     type(atm2lnd_params_type) :: atm2lnd_params
+    integer, parameter :: snl = 3
 
     ! Settings needed for clm_varpar
     soil_layerstruct_predefined = '20SL_8.5m'
@@ -71,7 +73,7 @@ contains
     call this%water_factory%setup_before_subgrid( &
         my_nlevsoi = nlevsoi, &
         nlevgrnd_additional = nlevgrnd - nlevsoi, &
-        my_nlevsno = 3)
+        my_nlevsno = snl)
     ! Setup the subgrid structure for a single bare-soil patch
     call setup_single_veg_patch( pft_type=0 )
     begl = bounds%begl
@@ -88,7 +90,7 @@ contains
     )
     call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
     ! Water and soil state -- after the subgrid setup
-    call this%water_factory%setup_after_subgrid(snl = 3)
+    call this%water_factory%setup_after_subgrid(snl = snl)
     call this%setupSoilState( )   ! This needs to happen before the water_type object creation
     call this%water_factory%create_water_type(this%water_inst, watsat_col=this%soilstate_inst%watsat_col)
     ! Canopy state, friction velocity, and temperature state ojects
@@ -96,7 +98,7 @@ contains
     call this%canopystate_inst%Init(bounds)
     call this%frictionvel_inst%InitForTesting(bounds)
     allocate( urb_em(begl:endl) )
-    urb_em(begl:endl) = 0.99_r8
+    urb_em(begl:endl) = 0.99_r8  ! Arbitrary won't matter here
     call this%temperature_inst%Init(bounds,           &
                                em_roof_lun=urb_em(begl:endl), &
                                em_wall_lun=urb_em(begl:endl), &
