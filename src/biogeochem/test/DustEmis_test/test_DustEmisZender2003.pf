@@ -7,7 +7,6 @@ module test_DustEmisZender2003
   use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
   use clm_varpar, only : nlevsoi, nlevgrnd, nlevsno, clm_varpar_init, ndst
   use clm_varctl, only : soil_layerstruct_predefined, create_crop_landunit, use_crop, create_crop_landunit
-  use SnowHydrologyMod, only : InitSnowLayers, SnowHydrologySetControlForTesting, SnowHydrologyClean
   use DustEmisBase
   use DustEmisZender2003
   use shr_kind_mod , only : r8 => shr_kind_r8
@@ -57,7 +56,6 @@ contains
     class(TestDustEmisZender2003), intent(inout) :: this
 
     character(len=5) :: NLFilename = 'none'
-    real(r8), allocatable :: snow_depth_col(:)
     real(r8), allocatable :: urb_em(:)
     integer :: begl, endl, begc, endc
     integer :: c
@@ -89,12 +87,6 @@ contains
                                           lapse_rate = 0.01_r8 &  ! arbitrary (this is unused for these tests)
     )
     call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
-    ! Hydrology and snow (needed for water types)
-    allocate (snow_depth_col(begc:endc))
-    snow_depth_col(begc:endc) = 0.0_r8
-    call SnowHydrologySetControlForTesting()
-    call InitSnowLayers(bounds, snow_depth_col(bounds%begc:bounds%endc))
-    deallocate (snow_depth_col )
     ! Water and soil state -- after the subgrid setup
     call this%water_factory%setup_after_subgrid(snl = 3)
     call this%setupSoilState( )   ! This needs to happen before the water_type object creation
@@ -123,7 +115,6 @@ contains
 
     call this%dust_emis%Clean()
     call this%water_factory%teardown(this%water_inst)
-    call SnowHydrologyClean()
     call unittest_subgrid_teardown()
     call this%atm2lnd_inst%Clean()
     deallocate( this%filter_nolakep )
