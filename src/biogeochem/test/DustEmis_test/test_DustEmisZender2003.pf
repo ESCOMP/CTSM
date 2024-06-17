@@ -42,7 +42,7 @@ module test_DustEmisZender2003
    contains
      procedure :: setUp
      procedure :: tearDown
-     procedure :: setupEnvironment
+     procedure :: setupSoilState
      procedure :: create_atm2lnd
      procedure :: create_fv
      procedure :: print_values
@@ -70,7 +70,7 @@ contains
     use_crop = .false.
     call clm_varpar_init( actual_maxsoil_patches=17, surf_numpft=15, surf_numcft=2, actual_nlevurb=5 )
     call clm_varcon_init( is_simple_buildtemp=.true.)
-    ! Water factor initialization
+    ! Water object initialization -- before subgrid
     call this%water_factory%init()
     call this%water_factory%setup_before_subgrid( &
         my_nlevsoi = nlevsoi, &
@@ -82,11 +82,10 @@ contains
     endl = bounds%endl
     begc = bounds%begc
     endc = bounds%endc
-    allocate( urb_em(begl:endl) )
 
     ! Create the nolake filter
     call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%num_nolakep, filter=this%filter_nolakep)
-    ! atmospher to land parameter object
+    ! atmosphere to land parameter object
     atm2lnd_params = atm2lnd_params_type( repartition_rain_snow = .false., &
                                           glcmec_downscale_longwave = .false., &
                                           lapse_rate = 0.01_r8 &  ! arbitrary (this is unused for these tests)
@@ -100,16 +99,13 @@ contains
     deallocate (snow_depth_col )
     ! Water and soil state -- after the subgrid setup
     call this%water_factory%setup_after_subgrid(snl = 3)
-    call this%soilstate_inst%Init(bounds)
-    do c = begc, endc
-       this%soilstate_inst%watsat_col(c,:) = 0.05_r8 * (c - bounds%begc + 1)
-    end do
-    call this%setupEnvironment( )
+    call this%setupSoilState( )   ! This needs to happen before the water_type object creation
     call this%water_factory%create_water_type(this%water_inst, watsat_col=this%soilstate_inst%watsat_col)
     ! Canopy state, friction velocity, and temperature state ojects
     call this%canopystate_inst%SetNMLForTesting()
     call this%canopystate_inst%Init(bounds)
     call this%frictionvel_inst%InitForTesting(bounds)
+    allocate( urb_em(begl:endl) )
     urb_em(begl:endl) = 0.99_r8
     call this%temperature_inst%Init(bounds,           &
                                em_roof_lun=urb_em(begl:endl), &
@@ -138,7 +134,7 @@ contains
 
   !-----------------------------------------------------------------------
 
-  subroutine setupEnvironment(this)
+  subroutine setupSoilState(this)
     !
     ! !DESCRIPTION:
     ! Sets up the external environment used by Dust emissions - i.e., things accessed via
@@ -163,12 +159,17 @@ contains
        end do
     end do
 
+    call this%soilstate_inst%Init(bounds)
+    do c = bounds%begc, bounds%endc
+       this%soilstate_inst%watsat_col(c,:) = 0.05_r8 * (c - bounds%begc + 1)
+    end do
+    ! These are needed for dust emissions initialization
     do c = bounds%begc, bounds%endc
        this%soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoistZender2003( clay )
        this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay )
     end do
 
-  end subroutine setupEnvironment
+  end subroutine setupSoilState
 
   !-----------------------------------------------------------------------
 
