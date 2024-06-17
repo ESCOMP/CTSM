@@ -3,7 +3,7 @@ module test_DustEmisZender2003
   ! Tests of DustEmisZender2003
 
   use funit
-  use unittestSubgridMod
+  use unittestSubgridMod, only : bounds, unittest_subgrid_teardown
   use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
   use clm_varpar, only : nlevsoi, nlevgrnd, nlevsno, clm_varpar_init, ndst
   use clm_varctl, only : soil_layerstruct_predefined, create_crop_landunit, use_crop, create_crop_landunit
@@ -161,12 +161,6 @@ contains
        this%soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoistZender2003( clay )
        this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay )
     end do
-
-
-    ! Use longitude along Greenich so don't have to calculate offsets for longitudes (that's calculated in clm_time_manager)
-    grc%londeg(:) = 0.0_r8
-
-    grc%area(:) = 10.0_r8
 
   end subroutine setupEnvironment
 
