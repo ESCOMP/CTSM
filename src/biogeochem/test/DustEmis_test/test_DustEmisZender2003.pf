@@ -4,22 +4,10 @@ module test_DustEmisZender2003
 
   use funit
   use unittestDustEmisInputs, only : unittest_dust_emis_input_type
-  use unittestSubgridMod, only : bounds, unittest_subgrid_teardown
-  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
-  use clm_varpar, only : nlevsoi, nlevgrnd, nlevsno, clm_varpar_init, ndst
-  use clm_varctl, only : soil_layerstruct_predefined, create_crop_landunit, use_crop, create_crop_landunit
+  use unittestSubgridMod, only : bounds
   use DustEmisBase
   use DustEmisZender2003
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestFilterBuilderMod, only : filter_from_range
-  use atm2lndType, only : atm2lnd_type, atm2lnd_params_type
-  use SoilStateType, only : soilstate_type
-  use CanopyStateType, only : canopystate_type
-  use TemperatureType, only : temperature_type
-  use WaterType, only : water_type
-  use FrictionVelocityMod, only : frictionvel_type
-  use unittestWaterTypeFactory, only : unittest_water_type_factory_type
-  use SoilStateInitTimeConstMod, only : ThresholdSoilMoistZender2003, MassFracClay
   use DustEmisFactory, only : create_dust_emissions
 
   implicit none

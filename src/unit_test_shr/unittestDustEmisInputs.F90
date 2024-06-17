@@ -4,7 +4,7 @@ module unittestDustEmisInputs
 
   use unittestSubgridMod, only : bounds, unittest_subgrid_teardown
   use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
-  use clm_varpar, only : nlevsoi, nlevgrnd, nlevsno, clm_varpar_init, ndst
+  use clm_varpar, only : nlevsoi, nlevgrnd, clm_varpar_init
   use clm_varctl, only : soil_layerstruct_predefined, create_crop_landunit, use_crop, create_crop_landunit
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestFilterBuilderMod, only : filter_from_range
@@ -26,8 +26,8 @@ module unittestDustEmisInputs
      type(atm2lnd_type) :: atm2lnd_inst
      type(soilstate_type) :: soilstate_inst
      type(canopystate_type) :: canopystate_inst
-     type(temperature_type) :: temperature_inst
-     type(unittest_water_type_factory_type) :: water_factory
+     type(temperature_type), private :: temperature_inst
+     type(unittest_water_type_factory_type), private :: water_factory
      type(water_type) :: water_inst
      type(frictionvel_type) :: frictionvel_inst
    contains
@@ -219,6 +219,8 @@ contains
     end if
 
   end subroutine create_fv
+
+  !-----------------------------------------------------------------------
 
   subroutine print_values(this)
     use LandunitType, only : lun
