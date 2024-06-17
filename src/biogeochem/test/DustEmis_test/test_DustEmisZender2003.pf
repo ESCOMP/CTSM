@@ -81,7 +81,6 @@ contains
     endc = bounds%endc
     allocate( urb_em(begl:endl) )
 
-    allocate(this%dust_emis, source = create_dust_emissions(bounds, NLFilename))
     call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%num_nolakep, filter=this%filter_nolakep)
     atm2lnd_params = atm2lnd_params_type( repartition_rain_snow = .false., &
                                           glcmec_downscale_longwave = .false., &
@@ -111,6 +110,8 @@ contains
                                is_simple_buildtemp=.true., is_prog_buildtemp=.false.)
     deallocate (snow_depth_col )
     deallocate( urb_em )
+    ! Create the dust emission object last
+    allocate(this%dust_emis, source = create_dust_emissions(bounds, NLFilename))
   end subroutine setUp
 
   !-----------------------------------------------------------------------
