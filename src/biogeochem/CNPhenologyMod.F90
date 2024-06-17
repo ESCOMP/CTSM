@@ -2704,10 +2704,6 @@ contains
       else if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
          gddmaturity(p) = hybgdd(ivt(p))
       else
-         if (gdd20 <= 0._r8) then
-            write(iulog, *) 'ERROR: gdd20 ',gdd20,' for ivt ',ivt(p)
-            call endrun(msg="Stopping")
-         end if
          if (ivt(p) == ntmp_soybean .or. ivt(p) == nirrig_tmp_soybean .or. &
                ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean .or. &
                ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
@@ -2731,7 +2727,7 @@ contains
       endif
 
       if (gddmaturity(p) < min_gddmaturity) then
-         if (use_cropcal_rx_cultivar_gdds) then
+         if (use_cropcal_rx_cultivar_gdds .or. generate_crop_gdds) then
              if (did_rx_gdds) then
                  write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gddmaturity',gddmaturity(p),'; using min_gddmaturity instead (',min_gddmaturity,')'
              end if
