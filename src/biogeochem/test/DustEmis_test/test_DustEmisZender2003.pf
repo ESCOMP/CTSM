@@ -99,6 +99,7 @@ contains
                       this%input%soilstate_inst, this%input%canopystate_inst, this%input%water_inst%waterstatebulk_inst, &
                       this%input%water_inst%waterdiagnosticbulk_inst, this%input%frictionvel_inst)
     call this%dust_emis%DustDryDep(bounds, this%input%atm2lnd_inst, this%input%frictionvel_inst)
+    call this%print_values()   ! Call print subroutine just to make sure it can be used for debugging
     do p = bounds%begp, bounds%endp
        call this%validate_patch(p)
        call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot, &
@@ -133,7 +134,6 @@ contains
                       this%input%soilstate_inst, this%input%canopystate_inst, this%input%water_inst%waterstatebulk_inst, &
                       this%input%water_inst%waterdiagnosticbulk_inst, this%input%frictionvel_inst)
    call this%dust_emis%DustDryDep(bounds, this%input%atm2lnd_inst, this%input%frictionvel_inst)
-   call this%print_values()
    do p = bounds%begp, bounds%endp
       call this%validate_patch(p)
       call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot )
