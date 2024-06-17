@@ -147,6 +147,7 @@ contains
     real(r8), parameter :: clay = 10.0_r8
 
     !-----------------------------------------------------------------------
+    ! Setting the soil structrure is needed for water_state types
     col%dz(:,1:nlevgrnd) = 1.0_r8
     do j = 1, nlevgrnd
        do c = bounds%begc, bounds%endc
@@ -155,10 +156,6 @@ contains
     end do
 
     do c = bounds%begc, bounds%endc
-       ! Setting nbedrock to nlevsoi means that none of the layers from 1:nlevsoi are
-       ! considered bedrock
-       col%nbedrock(c) = nlevsoi
-
        this%soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoistZender2003( clay )
        this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay )
     end do
