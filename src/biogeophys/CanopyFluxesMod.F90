@@ -1624,7 +1624,8 @@ bioms:   do f = 1, fn
       ! snocan < rel_epsilon * snocan_baseline will be set to zero
       ! See NumericsMod for rel_epsilon value
       call truncate_small_values(fn, filterp, begp, endp, &
-         snocan_baseline(begp:endp), snocan(begp:endp))
+         snocan_baseline(begp:endp), snocan(begp:endp), &
+         custom_rel_epsilon=1.e-10_r8)
       
       if ( use_fates ) then
          
