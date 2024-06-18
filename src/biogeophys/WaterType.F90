@@ -213,7 +213,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Init(this, bounds, NLFilename, &
-       h2osno_col, snow_depth_col, watsat_col, t_soisno_col, use_aquifer_layer)
+       h2osno_col, snow_depth_col, watsat_col, t_soisno_col, use_aquifer_layer, exice_init_stream_col)
     !
     ! !DESCRIPTION:
     ! Initialize all water variables
@@ -227,6 +227,7 @@ contains
     real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     logical           , intent(in) :: use_aquifer_layer ! whether an aquifer layer is used in this run
+    real(r8)          , intent(in) :: exice_init_stream_col(bounds%begc:) ! initial ammount of excess ice from stream
     !
     ! !LOCAL VARIABLES:
 
@@ -240,14 +241,14 @@ contains
          watsat_col = watsat_col, &
          t_soisno_col = t_soisno_col, &
          use_aquifer_layer = use_aquifer_layer, &
-         NLFilename = NLFilename)
+         NLFilename = NLFilename, exice_init_stream_col = exice_init_stream_col)
 
   end subroutine Init
 
   !-----------------------------------------------------------------------
   subroutine InitForTesting(this, bounds, params, &
        h2osno_col, snow_depth_col, watsat_col, &
-       t_soisno_col, use_aquifer_layer, NLFilename)
+       t_soisno_col, use_aquifer_layer, NLFilename, exice_init_stream_col)
     !
     ! !DESCRIPTION:
     ! Version of Init routine just for unit tests
@@ -262,8 +263,9 @@ contains
     real(r8)          , intent(in) :: snow_depth_col(bounds%begc:)
     real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)            ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
-    character(len=*) , intent(in) :: NLFilename                               ! Namelist filename
+    character(len=*)  , intent(in) :: NLFilename                               ! Namelist filename
     logical , intent(in), optional :: use_aquifer_layer                       ! whether an aquifer layer is used in this run (false by default)
+    real(r8)          , intent(in) :: exice_init_stream_col(bounds%begc:) ! initial ammount of excess ice from stream
     !
     ! !LOCAL VARIABLES:
     logical :: l_use_aquifer_layer
@@ -283,13 +285,14 @@ contains
          watsat_col = watsat_col, &
          t_soisno_col = t_soisno_col, &
          use_aquifer_layer = l_use_aquifer_layer, &
-         NLFilename = NLFilename)
+         NLFilename = NLFilename, &
+          exice_init_stream_col = exice_init_stream_col )
 
   end subroutine InitForTesting
 
   !-----------------------------------------------------------------------
   subroutine DoInit(this, bounds, &
-       h2osno_col, snow_depth_col, watsat_col, t_soisno_col, use_aquifer_layer, NLFilename)
+       h2osno_col, snow_depth_col, watsat_col, t_soisno_col, use_aquifer_layer, NLFilename, exice_init_stream_col)
     !
     ! !DESCRIPTION:
     ! Actually do the initialization (shared between main Init routine and InitForTesting)
@@ -305,6 +308,7 @@ contains
     real(r8)         , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     logical          , intent(in) :: use_aquifer_layer                       ! whether an aquifer layer is used in this run
     character(len=*) , intent(in) :: NLFilename                              ! Namelist filename
+    real(r8)          , intent(in) :: exice_init_stream_col(bounds%begc:) ! initial ammount of excess ice from stream
     !
     ! !LOCAL VARIABLES:
     integer :: begc, endc
@@ -321,6 +325,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(snow_depth_col) == [endc]), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(watsat_col, 1) == endc), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(t_soisno_col, 1) == endc), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(exice_init_stream_col, 1) == endc), sourcefile, __LINE__)
 
     call this%SetupTracerInfo()
 
@@ -340,7 +345,8 @@ contains
          watsat_col = watsat_col(begc:endc, 1:),   &
          t_soisno_col = t_soisno_col(begc:endc, -nlevsno+1:), &
          use_aquifer_layer = use_aquifer_layer, & 
-         NLFilename = NLFilename)
+         NLFilename = NLFilename, &
+         exice_init_stream_col = exice_init_stream_col)
 
     call this%waterdiagnosticbulk_inst%InitBulk(bounds, &
          bulk_info, &
@@ -381,7 +387,8 @@ contains
             watsat_col = watsat_col(begc:endc, 1:),   &
             t_soisno_col = t_soisno_col(begc:endc, -nlevsno+1:), &
             use_aquifer_layer = use_aquifer_layer, &
-            NLFilename = NLFilename)
+            NLFilename = NLFilename, &
+            exice_init_stream_col = exice_init_stream_col)
 
        call this%bulk_and_tracers(i)%waterdiagnostic_inst%Init(bounds, &
             this%bulk_and_tracers(i)%info, &

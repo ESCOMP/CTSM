@@ -4580,15 +4580,25 @@ sub setup_logic_exice {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
   my $use_exice = $nl->get_value( 'use_excess_ice' );
   my $use_exice_streams = $nl->get_value( 'use_excess_ice_streams' );
-  # IF excess ice streams is on
+  my $finidat = $nl->get_value('finidat');
+  # If coldstart and use_excess_ice is on:
+  if ( ( (not defined($use_exice_streams)) && value_is_true($use_exice) ) && string_is_undef_or_empty($finidat) ) {
+   $nl->set_variable_value('exice_streams', 'use_excess_ice_streams' , '.true.');
+   $use_exice_streams = '.true.';
+   # if excess ice is turned off
+   } elsif ( (not defined($use_exice_streams)) && (not value_is_true($use_exice)) ) {
+   $nl->set_variable_value('exice_streams', 'use_excess_ice_streams' , '.false.');
+   $use_exice_streams = '.false.';
+   }
+  # If excess ice streams is on
   if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
      # Can only be true if excess ice is also on, otherwise fail
-     if (defined($use_exice) && not value_is_true($use_exice)) {
+     if ( defined($use_exice) && (not value_is_true($use_exice)) ) {
         $log->fatal_error("use_excess_ice_streams can NOT be TRUE when use_excess_ice is FALSE" );
      }
   # Otherwise if ice streams are off
   } else {
-     my @list = ( "stream_meshfile_exice", "stream_fldfilename_exice" );
+     my @list = ( "stream_meshfile_exice", "stream_fldfilename_exice" , "excess_ice_coldstart_temp" , "excess_ice_coldstart_depth");
      # fail is excess ice streams files are set
      foreach my $var ( @list ) {
         if ( defined($nl->get_value($var)) ) {
@@ -4607,6 +4617,8 @@ sub setup_logic_exice {
      if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_exice');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_mapalgo_exice');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_temp');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_depth');
        # If excess ice streams on, but NOT the NUOPC driver fail
        if ( not $opts->{'driver'} eq "nuopc" ) {
           $log->fatal_error("nuopc driver is required when use_excess_ice_streams is set to true" );
