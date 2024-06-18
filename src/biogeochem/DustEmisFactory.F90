@@ -37,11 +37,8 @@ contains
         type(bounds_type), intent(in) :: bounds
         character(len=*),  intent(in) :: NLFilename
         ! Local variables
-        character(len=CL) :: method
 
-        method = dust_emis_method
-
-        select case ( trim(method) )
+        select case ( trim(dust_emis_method) )
 
         case( "Zender_2003" )
            allocate(dust_emis, source=dust_emis_zender2003_type() )
@@ -50,7 +47,7 @@ contains
         !case( "Leung_2023" )
         !  allocate(dust_emis, source=dust_emis_zender2003_type() )
         case default
-           write(iulog,*) 'ERROR: unknown dust_emis_method: ', method, &
+           write(iulog,*) 'ERROR: unknown dust_emis_method: ', dust_emis_method, &
                            errMsg(sourcefile, __LINE__)
            call endrun( "Unrecognized dust_emis_method"  )
 
