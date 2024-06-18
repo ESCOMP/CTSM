@@ -455,7 +455,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         self._gdds_file = generated_gdd_files[0]
 
     def _run_interpolate_gdds(self):
-        # Save where?
+        # File where interpolated GDDs should be saved
         self._gdds_file = os.path.join(self._get_caseroot(), "interpolated_gdds.nc")
 
         # It'd be much nicer to call interpolate_gdds.main(), but I can't import interpolate_gdds.
