@@ -218,11 +218,18 @@ contains
 
  @Test
  subroutine dust_zero_when_tlai_high(this)
+   use PatchType, only : patch
    ! Check dust emissions are zero when LAI is high enough
    class(TestDustEmisZender2003), intent(inout) :: this
    integer :: p
    real(r8) :: flx_mss_vrt_dst_tot
 
+   ! Explicitly set the patch type to a hard-coded 1 (so NOT bare-soil)
+   ! pft indices can't be used without reading them from the parameter file
+   !
+   ! To do this fully the subgrid setup in unittestDustEmisInputs to baresoil
+   ! should really be run again. But, just doing this is likely sufficient for testing
+   patch%itype(bounds%begp:bounds%endp) = 1
    call this%input%create_atm2lnd()
    call this%input%create_fv( )
    this%input%canopystate_inst%tlai_patch(:) = 0.3_r8
