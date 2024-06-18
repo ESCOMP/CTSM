@@ -10,6 +10,7 @@
         prebeta: Run before CESM beta tags (more extensive, but should have tests outside of prealpha) (subset of aux_clm tests)
         aux_cime_baselines: CESM cime baselines (subset of aux_clm tests)
         hillslope: Experimental test list used for the hillslope option of the model
+        rxcropmaturity: Short tests to be run during development related to prescribed crop calendars
 -->
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
