@@ -1400,6 +1400,7 @@ contains
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use accumulMod       , only : update_accum_field, extract_accum_field, markreset_accum_field
     use clm_time_manager , only : is_doy_in_interval, get_curr_calday
+    use pftconMod        , only : npcropmin
     use CropType, only : crop_type
     !
     ! !ARGUMENTS
@@ -1467,7 +1468,7 @@ contains
           ((month > 9 .or.  month < 4)  .and. lat <  0._r8)
        ! Replace with read-in gdd20 accumulation season, if needed and valid
        ! (If these aren't being read in or they're invalid, they'll be -1)
-       if (stream_gdd20_seasons) then
+       if (stream_gdd20_seasons .and. patch%itype(p) >= npcropmin) then
           gdd20_season_start = int(gdd20_season_starts(p))
           gdd20_season_end = int(gdd20_season_ends(p))
           if (gdd20_season_start >= 1 .and. gdd20_season_end >= 1) then
