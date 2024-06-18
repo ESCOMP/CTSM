@@ -1,0 +1,11 @@
+cropcals_rx = .true.
+stream_meshfile_cropcal = '/glade/campaign/cesm/cesmdata/inputdata/share/meshes/10x15_nomask_c110308_ESMFmesh.nc'
+stream_fldFileName_swindow_start = '/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/cropdata/calendars/processed/sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f10_f10_mg37.2000-2000.20230330_165301.nc'
+stream_fldFileName_swindow_end   = '/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/cropdata/calendars/processed/sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-f10_f10_mg37.2000-2000.20230330_165301.nc'
+stream_year_first_cropcal_swindows = 2000
+stream_year_last_cropcal_swindows = 2000
+model_year_align_cropcal_swindows = 2000
+
+stream_fldFileName_cultivar_gdds = ''
+generate_crop_gdds = .true.
+use_mxmat = .false.
