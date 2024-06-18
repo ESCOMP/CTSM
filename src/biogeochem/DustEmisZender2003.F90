@@ -31,7 +31,6 @@ module DustEmisZender2003
   use PatchType            , only : patch
   use ZenderSoilErodStreamType,  only : soil_erod_stream_type
   use DustEmisBase         , only : dust_emis_base_type
-  use clm_varctl           , only : dust_emis_method
   !
   ! !PUBLIC TYPES
   implicit none
@@ -160,6 +159,7 @@ contains
 
   subroutine InitCold(this, bounds)
     !
+    ! Initialize values from a cold start
     ! !ARGUMENTS:
     class (dust_emis_zender2003_type) :: this
     type(bounds_type), intent(in) :: bounds
@@ -168,27 +168,11 @@ contains
     integer :: c,l
     !-----------------------------------------------------------------------
 
-    ! Set basin factor to 1 for now
-
-    if (dust_emis_method == 'Leung_2023') then
-       !do c = bounds%begc, bounds%endc
-       !   l = col%landunit(c)
-
-       !   if (.not.lun%lakpoi(l)) then
-       !      this%mbl_bsn_fct_col(c) = 1.0_r8
-       !   end if
-       !end do
-       call endrun( msg="Leung_2023 dust_emis_method is currently not available"//errMsg(sourcefile, __LINE__))
-    else if (dust_emis_method == 'Zender_2003') then
-       if ( this%soil_erod_stream%UseStreams() )then
-          call this%soil_erod_stream%CalcDustSource( bounds, &
-                                   this%mbl_bsn_fct_col(bounds%begc:bounds%endc) )
-       else
-          this%mbl_bsn_fct_col(:) = 1.0_r8
-       end if
+    if ( this%soil_erod_stream%UseStreams() )then
+       call this%soil_erod_stream%CalcDustSource( bounds, &
+                               this%mbl_bsn_fct_col(bounds%begc:bounds%endc) )
     else
-       write(iulog,*) 'dust_emis_method not recognized = ', trim(dust_emis_method)
-       call endrun( msg="dust_emis_method namelist item is not valid "//errMsg(sourcefile, __LINE__))
+       this%mbl_bsn_fct_col(:) = 1.0_r8
     end if
 
   end subroutine InitCold
