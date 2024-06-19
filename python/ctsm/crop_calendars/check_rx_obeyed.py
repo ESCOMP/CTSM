@@ -114,8 +114,6 @@ def summarize_results(which_ds, output_var, verbose, all_ok, gdd_tolerance, diff
         print(f"✅ {which_ds}: Prescribed {output_var} always obeyed")
     elif all_ok == 1:
         bad = False
-        # print(f"🟨 {which_ds}: Prescribed {output_var} *not* always obeyed, but acceptable:")
-        # for x in diff_str_list: print(x)
         print(
             f"🟨 {which_ds}: Prescribed {output_var} *not* always obeyed, but acceptable (diffs <= "
             + f"{gdd_tolerance})"
