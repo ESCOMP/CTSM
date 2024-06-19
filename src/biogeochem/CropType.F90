@@ -366,15 +366,15 @@ contains
 
     this%gdd20_baseline_patch(begp:endp) = spval
     call hist_addfld1d (fname='GDD20_BASELINE', units='ddays', &
-         avgflag='A', long_name='Baseline mean growing-degree days accumulated during accumulation period (from input)', &
+         avgflag='I', long_name='Baseline mean growing-degree days accumulated during accumulation period (from input)', &
          ptr_patch=this%gdd20_baseline_patch, default='inactive')
     this%gdd20_season_start_patch(begp:endp) = spval
     call hist_addfld1d (fname='GDD20_SEASON_START', units='day of year', &
-         avgflag='A', long_name='Start of the GDD20 accumulation season (from input)', &
+         avgflag='I', long_name='Start of the GDD20 accumulation season (from input)', &
          ptr_patch=this%gdd20_season_start_patch, default='inactive')
     this%gdd20_season_end_patch(begp:endp) = spval
     call hist_addfld1d (fname='GDD20_SEASON_END', units='day of year', &
-         avgflag='A', long_name='End of the GDD20 accumulation season (from input)', &
+         avgflag='I', long_name='End of the GDD20 accumulation season (from input)', &
          ptr_patch=this%gdd20_season_end_patch, default='inactive')
 
   end subroutine InitHistory
