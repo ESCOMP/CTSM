@@ -424,6 +424,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         hdates_file = self._hdatefile
 
         # It'd be much nicer to call generate_gdds.main(), but I can't import generate_gdds.
+        # See https://github.com/ESCOMP/CTSM/issues/2603
         tool_path = os.path.join(
             self._ctsm_root, "python", "ctsm", "crop_calendars", "generate_gdds.py"
         )
@@ -459,6 +460,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         self._gdds_file = os.path.join(self._get_caseroot(), "interpolated_gdds.nc")
 
         # It'd be much nicer to call interpolate_gdds.main(), but I can't import interpolate_gdds.
+        # See https://github.com/ESCOMP/CTSM/issues/2603
         tool_path = os.path.join(
             self._ctsm_root, "python", "ctsm", "crop_calendars", "interpolate_gdds.py"
         )
