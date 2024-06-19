@@ -3772,7 +3772,7 @@
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
     <options>
-      <option name="wallclock">20:00</option>
+      <option name="wallclock">00:20:00</option>
     </options>
   </test>
 
@@ -3781,7 +3781,7 @@
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
     <options>
-      <option name="wallclock">20:00</option>
+      <option name="wallclock">00:20:00</option>
     </options>
   </test>
 
@@ -3790,7 +3790,7 @@
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
     <options>
-      <option name="wallclock">20:00</option>
+      <option name="wallclock">00:20:00</option>
     </options>
   </test>
 
@@ -3799,7 +3799,7 @@
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
     <options>
-      <option name="wallclock">20:00</option>
+      <option name="wallclock">00:20:00</option>
     </options>
   </test>
 
