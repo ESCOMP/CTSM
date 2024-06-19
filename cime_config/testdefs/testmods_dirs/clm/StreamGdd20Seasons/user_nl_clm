@@ -1,5 +1,2 @@
 stream_gdd20_seasons = .true.
 allow_invalid_gdd20_season_inputs = .true.
-
-! Annual crop variables (including per-sowing/per-harvest axes), per PFT.
-hist_fincl3 += 'GDD20_BASELINE', 'GDD20_SEASON_START', 'GDD20_SEASON_END'

@@ -1,5 +1,0 @@
-fsurdat = '/glade/derecho/scratch/samrabin/tests_0618-093950de/RXCROPMATURITY_Lm61.f10_f10_mg37.IHistClm50BgcCrop.derecho_intel.clm-cropMonthOutput.0618-093950de.gddgen/surfdata_10x15_hist_1850_78pfts_c240216.all_crops_everywhere.nc'
-do_transient_crops = .false.
-flanduse_timeseries = ''
-use_init_interp = .true.
-
