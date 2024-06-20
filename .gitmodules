@@ -7,22 +7,22 @@ fxDONOTUSEurl = https://github.com/NCAR/fates-release
 
 [submodule "cism"]
 path = components/cism
-url = https://github.com/ESCOMP/CISM-wrapper
-fxtag = cismwrap_2_2_001
+url = https://github.com/mvertens/CISM-wrapper
+fxtag = 34339777afa7b810fd4822fce1039826668b33e4
 fxrequired = ToplevelRequired
 fxDONOTUSEurl = https://github.com/ESCOMP/CISM-wrapper
 
 [submodule "rtm"]
 path = components/rtm
-url = https://github.com/ESCOMP/RTM
-fxtag = rtm1_0_79
+url = https://github.com/swensosc/RTM
+fxtag = 420c5979d8abf05184992fdfba5ac41c41c91c2e
 fxrequired = ToplevelRequired
 fxDONOTUSEurl = https://github.com/ESCOMP/RTM
 
 [submodule "mosart"]
 path = components/mosart
-url = https://github.com/ESCOMP/MOSART
-fxtag = mosart1_0_49
+url = https://github.com/mvertens/MOSART
+fxtag = 01f40dcf589d4e6c5932c76128e3d42faea91e9f
 fxrequired = ToplevelRequired
 fxDONOTUSEurl = https://github.com/ESCOMP/MOSART
 
@@ -35,8 +35,8 @@ fxDONOTUSEurl = https://github.com/ESCOMP/mizuRoute
         
 [submodule "ccs_config"]
 path = ccs_config
-url = https://github.com/ESMCI/ccs_config_cesm.git
-fxtag = ccs_config_cesm0.0.106
+url = https://github.com/mvertens/ccs_config_cesm.git
+fxtag = dbb02c0ccd1492fe278885f8a07a71fa80064319
 fxrequired = ToplevelRequired
 fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
 
@@ -49,8 +49,8 @@ fxDONOTUSEurl = https://github.com/ESMCI/cime
 
 [submodule "cmeps"]
 path = components/cmeps
-url = https://github.com/ESCOMP/CMEPS.git
-fxtag = cmeps0.14.63
+url = https://github.com/mvertens/CMEPS.git
+fxtag = 4dca7c602e54189b74b1d0195c433d1b83475553
 fxrequired = ToplevelRequired
 fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 
