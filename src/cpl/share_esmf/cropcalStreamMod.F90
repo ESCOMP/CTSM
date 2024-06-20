@@ -741,7 +741,7 @@ contains
   dataptr2d_gdd20_season_start(:,:) = -1._r8
   allocate(dataptr2d_gdd20_season_end  (lsize, ncft))
   dataptr2d_gdd20_season_end(:,:) = -1._r8
-  if (stream_gdd20_seasons .and. init) then
+  if (stream_gdd20_seasons) then
      ! Starting with npcropmin will skip generic crops
      do n = 1, ncft
         call dshr_fldbun_getFldPtr(sdat_cropcal_gdd20_season_start%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
@@ -815,7 +815,7 @@ contains
          end if
      end if
 
-  end if ! stream_gdd20_seasons and init
+  end if ! stream_gdd20_seasons
   deallocate(dataptr2d_gdd20_season_start)
   deallocate(dataptr2d_gdd20_season_end)
 
