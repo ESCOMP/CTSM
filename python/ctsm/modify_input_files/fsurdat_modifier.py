@@ -254,8 +254,8 @@ def modify_optional(
     """Modify the dataset according to the optional settings"""
 
     # Set fsurdat variables in a rectangle that could be global (default).
-    # Note that the land/ocean mask gets specified in the domain file for
-    # MCT or the ocean mesh files for NUOPC. Here the user may specify
+    # Note that the land/ocean mask gets specified in
+    # the ocean mesh files. Here the user may specify
     # fsurdat variables inside a box but cannot change which points will
     # run as land and which as ocean.
     if idealized:
