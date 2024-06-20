@@ -1136,7 +1136,7 @@ contains
        end if
     end if
 
-    if (use_crop .and. stream_gdd20_seasons) then
+    if (use_crop) then
        if (flag == 'write') then
           if (this%flush_gdd20) then
              idata = 1
