@@ -14,15 +14,15 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CISM-wrapper
 
 [submodule "rtm"]
 path = components/rtm
-url = https://github.com/swensosc/RTM
-fxtag = 420c5979d8abf05184992fdfba5ac41c41c91c2e
+url = https://github.com/ESCOMP/RTM
+fxtag = rtm1_0_80
 fxrequired = ToplevelRequired
 fxDONOTUSEurl = https://github.com/ESCOMP/RTM
 
 [submodule "mosart"]
 path = components/mosart
-url = https://github.com/mvertens/MOSART
-fxtag = ca0acc0336365456bec653c4c233abb57d9bc62d
+url = https://github.com/ESCOMP/MOSART
+fxtag = mosart1.1.02
 fxrequired = ToplevelRequired
 fxDONOTUSEurl = https://github.com/ESCOMP/MOSART
 
