@@ -685,7 +685,7 @@ contains
    deallocate(dataptr2d_cultivar_gdds)
 
    allocate(dataptr2d_gdd20_baseline(lsize, ncft))
-   if (adapt_cropcal_rx_cultivar_gdds .and. init) then
+   if (adapt_cropcal_rx_cultivar_gdds) then
       ! Read GDD20 baselines from input files
       ! Starting with npcropmin will skip generic crops
       do n = 1, ncft
