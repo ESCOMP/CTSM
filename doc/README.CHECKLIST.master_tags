@@ -14,9 +14,9 @@ https://github.com/ESCOMP/ctsm/wiki/CTSM-development-workflow
    2a -- run 'git pull' to pull in the latest version from GitHub
    2b -- run 'git status' and/or 'git diff' to make sure you don't have any uncommitted
          local changes
-   2c -- run './manage_externals/checkout_externals -S' to make sure all externals are
-         updated and don't have any uncommitted changes. (If any are marked with 's' in
-         the first column, run ./manage_externals/checkout_externals to update them.)
+   2c -- run './bin/git-fleximod status' to make sure all externals are
+         updated and don't have any uncommitted changes. If any are marked with 's' in
+         the first column, run './bin/git-fleximod update'.
 
 (3) Do all testing on your fork/feature-branch
 
