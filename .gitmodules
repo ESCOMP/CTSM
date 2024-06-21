@@ -22,7 +22,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/RTM
 [submodule "mosart"]
 path = components/mosart
 url = https://github.com/mvertens/MOSART
-fxtag = 01f40dcf589d4e6c5932c76128e3d42faea91e9f
+fxtag = ca0acc0336365456bec653c4c233abb57d9bc62d
 fxrequired = ToplevelRequired
 fxDONOTUSEurl = https://github.com/ESCOMP/MOSART
 
