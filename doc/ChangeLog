@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: tmp-240620.n01.ctsm5.2.007
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Thu 20 Jun 2024 03:00:43 PM MDT
+Date: Fri 21 Jun 2024 09:42:26 AM MDT
 One-line Summary: Merge b4b-dev
 
 Purpose and description of changes
@@ -60,8 +60,8 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho ----- IN PROG
-    izumi ------- IN PROG
+    derecho ----- OK
+    izumi ------- OK
 
   any other testing (give details below):
 
