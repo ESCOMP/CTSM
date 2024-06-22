@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: tmp-240620.n02.ctsm5.2.007
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Thu 13 Jun 2024 01:13:24 PM MDT
+Date: Fri 21 Jun 2024 10:21:01 PM MDT
 One-line Summary: Another update of git-fleximod
 
 Purpose and description of changes
@@ -47,8 +47,6 @@ Changes to documentation:
 
 Notes of particular relevance for developers:
 ---------------------------------------------
-NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 
 Testing summary: regular
