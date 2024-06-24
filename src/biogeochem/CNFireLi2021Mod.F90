@@ -151,11 +151,9 @@ contains
     real(r8) :: afuel    !weight for arh and arh30
     real(r8) :: btran_col(bounds%begc:bounds%endc)
     logical  :: transient_landcover  ! whether this run has any prescribed transient landcover
-    real(r8), target  :: prec60_col_target(bounds%begc:bounds%endc)
-    real(r8), target  :: prec10_col_target(bounds%begc:bounds%endc)
+    real(r8), target  :: prec30_col_target(bounds%begc:bounds%endc)
     real(r8), target  :: rh30_col_target(bounds%begc:bounds%endc)
-    real(r8), pointer :: prec60_col(:)
-    real(r8), pointer :: prec10_col(:)
+    real(r8), pointer :: prec30_col(:)
     real(r8), pointer :: rh30_col(:)
     !-----------------------------------------------------------------------
 
@@ -194,8 +192,7 @@ contains
          forc_t             => atm2lnd_inst%forc_t_downscaled_col              , & ! Input:  [real(r8) (:)     ]  downscaled atmospheric temperature (Kelvin)
          forc_rain          => wateratm2lndbulk_inst%forc_rain_downscaled_col  , & ! Input:  [real(r8) (:)     ]  downscaled rain
          forc_snow          => wateratm2lndbulk_inst%forc_snow_downscaled_col  , & ! Input:  [real(r8) (:)     ]  downscaled snow
-         prec60             => wateratm2lndbulk_inst%prec60_patch              , & ! Input:  [real(r8) (:)     ]  60-day running mean of tot. precipitation
-         prec10             => wateratm2lndbulk_inst%prec10_patch              , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
+         prec30             => wateratm2lndbulk_inst%prec30_patch              , & 
          rh30               => wateratm2lndbulk_inst%rh30_patch                , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
          dwt_smoothed       => cnveg_state_inst%dwt_smoothed_patch             , & ! Input:  [real(r8) (:)     ]  change in patch weight (-1 to 1) on the gridcell, smoothed over the year
          cropf_col          => cnveg_state_inst%cropf_col                      , & ! Input:  [real(r8) (:)     ]  cropland fraction in veg column
@@ -246,15 +243,11 @@ contains
       transient_landcover = run_has_transient_landcover()
 
       !pft to column average
-      prec10_col =>prec10_col_target
+      prec30_col =>prec30_col_target
       call p2c(bounds, num_soilc, filter_soilc, &
-           prec10(bounds%begp:bounds%endp), &
-           prec10_col(bounds%begc:bounds%endc))
+           prec30(bounds%begp:bounds%endp), &
+           prec30_col(bounds%begc:bounds%endc))
 
-      prec60_col =>prec60_col_target
-      call p2c(bounds, num_soilc, filter_soilc, &
-           prec60(bounds%begp:bounds%endp), &
-           prec60_col(bounds%begc:bounds%endc))
 
       rh30_col =>rh30_col_target
       call p2c(bounds, num_soilc, filter_soilc, &
@@ -545,9 +538,12 @@ contains
         c = filter_soilc(fc)
         g= col%gridcell(c)
         if(grc%latdeg(g) < cnfire_const%borealat )then
+          if((trotr1_col(c)+trotr2_col(c))*col%wtgcell(c)<=0.8_r8.and.trotr1_col(c)+trotr2_col(c)>0.0_r8) then
            baf_peatf(c) = non_boreal_peatfire_c/secsphr*max(0._r8, &
-                min(1._r8,(4.0_r8-prec60_col(c)*secspday)/ &
-                4.0_r8))**2*peatf_lf(c)*(1._r8-fsat(c))
+                min(1._r8,(1._r8-prec30_col(c)*secspday/6._r8)))*peatf_lf(c)
+          else
+            baf_peatf(c)=0._r8
+          end if
         else
            baf_peatf(c) = boreal_peatfire_c/secsphr*exp(-SHR_CONST_PI*(max(wf2(c),0._r8)/0.3_r8))* &
                 max(0._r8,min(1._r8,(tsoi17(c)-SHR_CONST_TKFRZ)/10._r8))*peatf_lf(c)* &
