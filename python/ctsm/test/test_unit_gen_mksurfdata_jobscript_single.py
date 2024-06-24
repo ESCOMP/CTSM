@@ -136,7 +136,7 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
     def test_derecho_mpirun(self):
         """
         test derecho mpirun. This would've helped caught a problem we ran into
-        It will also be helpful when externals are updated to guide to solutions
+        It will also be helpful when sumodules are updated to guide to solutions
         to problems
         """
         machine = "derecho"
