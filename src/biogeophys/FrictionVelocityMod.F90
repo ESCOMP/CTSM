@@ -437,6 +437,11 @@ contains
          long_name='ground momentum roughness length', units='m', &
          interpinic_flag='interp', readvar=readvar, data=this%z0mg_col)
 
+    call restartvar(ncid=ncid, flag=flag, varname='OBU', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='Monin-Obukhov length', units='m', &
+         interpinic_flag='interp', readvar=readvar, data=this%obu_patch)
+
     if(use_luna)then
        call restartvar(ncid=ncid, flag=flag, varname='rb10', xtype=ncd_double,  &
             dim1name='pft', long_name='10-day mean boundary layer resistance at the pacth', units='s/m', &
