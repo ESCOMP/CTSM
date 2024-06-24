@@ -4678,14 +4678,14 @@ sub setup_logic_cnmatrix {
       if ( &value_is_true($nl->get_value("use_matrixcn")) && &value_is_true($nl_flags->{"for_testing_use_repr_structure_pool"}) ) {
          $log->fatal_error("for_testing_use_repr_structure_pool can NOT be on when use_matrixcn is on" );
       }
-      # If both matrixcn and soil_matrix are off outmatrix can't be on
+      # If both matrixcn and soil_matrix are off hist_wrt_matrixcn_diag can't be on
       if ( ! &value_is_true($nl->get_value("use_matrixcn")) && ! &value_is_true($nl_flags->{"use_soil_matrixcn"}) ) {
          my $var = "hist_wrt_matrixcn_diag";
          if ( &value_is_true($nl->get_value($var)) ) {
             $log->fatal_error("$var can NOT be on when both use_matrixcn and use_soil_matrixcn are off" );
          }
       }
-      # If soil_matrix is off ispspinup can't be on
+      # If soil_matrix is off spinup_matrixcn can't be on
       if ( ! &value_is_true($nl_flags->{"use_soil_matrixcn"}) ) {
          my $var = "spinup_matrixcn";
          if ( &value_is_true($nl->get_value($var)) ) {
