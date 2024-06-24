@@ -625,17 +625,17 @@ contains
                     fbac1(c)        = 0._r8
                     farea_burned(c) = baf_crop(c)+baf_peatf(c)
                  else
-                    cri = (4.0_r8*trotr1_col(c)+1.8_r8*trotr2_col(c))/(trotr1_col(c)+trotr2_col(c))
-                    cli = (max(0._r8,min(1._r8,(cri-prec60_col(c)*secspday)/cri))**0.5)* &
-                         (max(0._r8,min(1._r8,(cri-prec10_col(c)*secspday)/cri))**0.5)* &
+                    cri = (1.4_r8*trotr1_col(c)+0.5_r8*trotr2_col(c))/(trotr1_col(c)+trotr2_col(c))
+                    cli = max(0._r8,min(1._r8,1._r8-prec30_col(c)*secspday/cri))* &
                          (15._r8*min(0.0016_r8,dtrotr_col(c)/dt*dayspyr*secspday)+0.009_r8)* &
                          max(0._r8,min(1._r8,(0.25_r8-(forc_rain(c)+forc_snow(c))*secsphr)/0.25_r8))
-                    farea_burned(c) = fb*cli*(cli_scale/secspday)+baf_crop(c)+baf_peatf(c)
+                    
+                    farea_burned(c) = farea_burned(c)+fb*cli*(0.01_r8/secspday)
                     ! burned area out of conversion region due to land use fire
                     fbac1(c) = max(0._r8,fb*cli*(cli_scale/secspday) - 2.0_r8*lfc(c)/dt)
                  end if
                  ! total burned area out of conversion
-                 fbac(c) = fbac1(c)+baf_crop(c)+baf_peatf(c)
+                 fbac(c) = farea_burned(c) + fbac1(c)
               else
                  fbac(c) = farea_burned(c)
               end if
