@@ -736,12 +736,28 @@ def _check_py_env(test_attributes):
     # whether import is possible.
     # pylint: disable=import-error disable
 
-    # Check requirements for FSURDATMODIFYCTSM, if needed
-    if any("FSURDATMODIFYCTSM" in t for t in test_attributes):
+    # Check requirements for using modify_fsurdat, if needed
+    modify_fsurdat_users = ["FSURDATMODIFYCTSM", "RXCROPMATURITY"]
+    if any(any(u in t for u in modify_fsurdat_users) for t in test_attributes):
         try:
             import ctsm.modify_input_files.modify_fsurdat
         except ModuleNotFoundError as err:
             raise ModuleNotFoundError("modify_fsurdat" + err_msg) from err
+
+    # Check requirements for RXCROPMATURITY, if needed
+    if any("RXCROPMATURITY" in t for t in test_attributes):
+        try:
+            import ctsm.crop_calendars.check_rxboth_run
+        except ModuleNotFoundError as err:
+            raise ModuleNotFoundError("check_rxboth_run" + err_msg) from err
+        try:
+            import ctsm.crop_calendars.generate_gdds
+        except ModuleNotFoundError as err:
+            raise ModuleNotFoundError("generate_gdds" + err_msg) from err
+        try:
+            import ctsm.crop_calendars.interpolate_gdds
+        except ModuleNotFoundError as err:
+            raise ModuleNotFoundError("interpolate_gdds" + err_msg) from err
 
     # Check that list for any testmods that use modify_fates_paramfile.py
     testmods_to_check = ["clm-FatesColdTwoStream", "clm-FatesColdTwoStreamNoCompFixedBioGeo"]
