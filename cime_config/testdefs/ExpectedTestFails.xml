@@ -170,6 +170,13 @@
     </phase>
   </test>
 
+  <test name="ERP_D_P128x1_Ld26.f10_f10_mg37.IHistClm60BgcCrop.derecho_intel.clm-midDecStart--clm-RxCropCalsAdaptGGCMI">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#2593</issue>
+    </phase>
+  </test>
+
   <!-- fates test suite failures -->
 
   <test name="SMS_D_Ld3.f09_g17.I2000Clm60FatesSpCruRsGs.derecho_gnu.clm-FatesColdSatPhen_prescribed">
