@@ -4650,6 +4650,16 @@ sub setup_logic_cnmatrix {
                 , 'spinup_matrixcn'=>$nl_flags->{'spinup_matrixcn'}, 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
     }
     @matrixlist = ( "use_matrixcn", "use_soil_matrixcn", "hist_wrt_matrixcn_diag", "spinup_matrixcn" );
+    # Matrix items can't be on for transient
+    $nl_flags->{'flanduse_timeseries'} = "null";
+    my $flanduse_timeseries = $nl->get_value('flanduse_timeseries');
+    if ( $flanduse_timeseries ne "null" ) {
+       foreach my $var ( @matrixlist ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+             $log->warning("$var may FAIL with balance error in transient mode" );
+          }
+       }
+    }
     # Matrix items can't be on for SP mode
     if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
        foreach my $var ( @matrixlist ) {
