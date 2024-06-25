@@ -4651,9 +4651,7 @@ sub setup_logic_cnmatrix {
     }
     @matrixlist = ( "use_matrixcn", "use_soil_matrixcn", "hist_wrt_matrixcn_diag", "spinup_matrixcn" );
     # Matrix items can't be on for transient
-    $nl_flags->{'flanduse_timeseries'} = "null";
-    my $flanduse_timeseries = $nl->get_value('flanduse_timeseries');
-    if ( $flanduse_timeseries ne "null" ) {
+    if (not string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
        foreach my $var ( @matrixlist ) {
           if ( &value_is_true($nl->get_value($var)) ) {
              $log->warning("$var may FAIL with balance error in transient mode" );
