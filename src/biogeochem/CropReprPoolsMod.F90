@@ -98,6 +98,10 @@ contains
     end if
 
     nrepr = nrepr_grain + nrepr_structure
+    ! matrixcn works with nrepr = 1 only
+    if (use_matrixcn .and. nrepr != 1) then
+       call endrun(msg="ERROR: nrepr should be 1 when use_matrixcn = .true."//errMsg(sourcefile, __LINE__))
+    end if
     allocate(repr_hist_fnames(nrepr))
     allocate(repr_rest_fnames(nrepr))
     allocate(repr_longnames(nrepr))
