@@ -168,7 +168,7 @@ def parse_neon_listing(listing_file, valid_neon_sites):
     return available_list
 
 
-def parse_plumber_listing(valid_plumber_sites):
+def check_plumber_data(valid_plumber_sites):
     """
     A function to find plumber sites with the dates
     where data is available.
@@ -182,28 +182,17 @@ def parse_plumber_listing(valid_plumber_sites):
 
     for site_name in valid_plumber_sites:
 
-        # -- figure out start_year and end_year from shell commands
-        # TODO: do we even need this though if the shell commands accomplish the same thing?
-        # start_year = tmp_df2[0].iloc[0]
-        # end_year = tmp_df2[0].iloc[-1]
-
-        # -- figure out start_month and end_month
-        # start_month = tmp_df2[1].iloc[0]
-        # end_month = tmp_df2[1].iloc[-1]
+        # TODO: figure out start_year and end_year from shell commands
+        start_year = 'DUMMY_START_YEAR'
+        end_year = 'DUMMY_END_YEAR'
+        start_month = "DUMMY_START_MONTH"
+        end_month = "DUMMY_END_MONTH"
 
         logger.debug("Valid plumber site %s found!", site_name)
-        # logger.debug("File version %s", latest_version)
-        # logger.debug("start_year=%s", start_year)
-        # logger.debug("end_year=%s", end_year)
-        # logger.debug("start_month=%s", start_month)
-        # logger.debug("end_month=%s", end_month)
-        # finidat = None
-        # for line in finidatlist["object"]:
-        #     if site_name in line:
-        #         finidat = line.split(",")[0].split("/")[-1]
+        finidat = None  # TODO: may need to update? 
 
-        # plumber_site = Plumber2Site(site_name, start_year, end_year, start_month, end_month, finidat)
-        # available_list.append(plumber_site)
+        plumber_site = Plumber2Site(site_name, start_year, end_year, start_month, end_month, finidat)
+        available_list.append(plumber_site)
 
     return available_list
 
@@ -292,27 +281,29 @@ def main(description):
                 experiment=experiment,
             )
 
+    # -- check for available plumber data:
+    available_plumber_list = check_plumber_data(valid_plumber_sites)
+
     # --  Looping over plumber sites
-    # TODO: define available_plumber_list!
-    # for plumber_site in available_plumber_list:
-    #     if plumber_site.name in site_list:
-    #         if run_from_postad:
-    #             plumber_site.finidat = None
-    #         if not base_case_root:
-    #             user_mods_dirs = None
-    #             base_case_root = plumber_site.build_base_case(
-    #                 cesmroot, output_root, res, compset, user_mods_dirs, overwrite, setup_only
-    #             )
-    #         logger.info("-----------------------------------")
-    #         logger.info("Running CTSM for plumber site : %s", plumber_site.name)
-    #         plumber_site.run_case(
-    #             base_case_root,
-    #             run_type,
-    #             prism,
-    #             user_version,
-    #             overwrite,
-    #             setup_only,
-    #             no_batch,
-    #             rerun,
-    #             experiment,
-    #         )
+    for plumber_site in available_plumber_list:
+        if plumber_site.name in site_list:
+            if run_from_postad:
+                plumber_site.finidat = None
+            if not base_case_root:
+                user_mods_dirs = None
+                base_case_root = plumber_site.build_base_case(
+                    cesmroot, output_root, res, compset, user_mods_dirs, overwrite, setup_only
+                )
+            logger.info("-----------------------------------")
+            logger.info("Running CTSM for plumber site : %s", plumber_site.name)
+            plumber_site.run_case(
+                base_case_root,
+                run_type,
+                prism,
+                user_version,
+                overwrite,
+                setup_only,
+                no_batch,
+                rerun,
+                experiment,
+            )
