@@ -1,0 +1,5 @@
+The GddGen test is set up just like a GDD-Generating run, with two differences:
+1) It doesn't include an all-crops-everywhere surface dataset,
+2) it doesn't actually run the GDD-generating script,
+and
+3) it includes some extra outputs.

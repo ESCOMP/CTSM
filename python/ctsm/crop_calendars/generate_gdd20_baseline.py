@@ -17,10 +17,12 @@ sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
 from ctsm.crop_calendars.import_ds import import_ds
 import ctsm.crop_calendars.cropcal_utils as utils
+from ctsm.crop_calendars.grid_one_variable import grid_one_variable
 
-VAR_LIST_IN = ["GDD0", "GDD8", "GDD10"]
-VAR_LIST_IN = [x + "20" for x in VAR_LIST_IN]  # TODO: Delete this once using the right variables
-MISSING_FILL = -1  # Something negative to ensure that gddmaturity never changes (see PlantCrop)
+VAR_LIST_IN = ["GDD0X", "GDD8X", "GDD10X"]
+GRIDDING_VAR_LIST = ["patches1d_ixy", "patches1d_jxy", "lat", "lon"]
+MISSING_FILL = -1  # Something impossible to ensure that you can mark it as a missing value, to be
+# bilinear-interpolated
 STREAM_YEAR = 2000  # The year specified for stream_yearFirst and stream_yearLast in the call of
 # shr_strdata_init_from_inline() for sdat_cropcal_gdd20_baseline
 
@@ -110,26 +112,25 @@ def _get_gddn_for_cft(cft_str):
         cft_str (str): E.g., "irrigated_temperate_corn"
 
     Returns:
-        str or None: Name of variable to use (e.g., "GDD8"). If crop isn't yet handled, return None.
+        str or None: Name of variable to use (e.g., "GDD8X"). If crop isn't yet handled, return None.
     """
 
     gddn = None
 
     gdd0_list_str = ["wheat", "cotton", "rice"]
     if cft_str in _get_cft_list(gdd0_list_str):
-        gddn = "GDD0"
+        gddn = 0
 
     gdd8_list_str = ["corn", "sugarcane", "miscanthus", "switchgrass"]
     if cft_str in _get_cft_list(gdd8_list_str):
-        gddn = "GDD8"
+        gddn = 8
 
     gdd10_list_str = ["soybean"]
     if cft_str in _get_cft_list(gdd10_list_str):
-        gddn = "GDD10"
+        gddn = 10
 
-    # TODO: Delete this once using the right variables
     if gddn is not None:
-        gddn += "20"
+        gddn = f"GDD{gddn}X"
 
     return gddn
 
@@ -172,7 +173,7 @@ def generate_gdd20_baseline(input_files, output_file, author):
     input_files.sort()
 
     # Import history files and ensure they have lat/lon dims
-    ds_in = import_ds(input_files, VAR_LIST_IN)
+    ds_in = import_ds(input_files, VAR_LIST_IN + GRIDDING_VAR_LIST)
     if not all(x in ds_in.dims for x in ["lat", "lon"]):
         raise RuntimeError("Input files must have lat and lon dimensions")
 
@@ -189,13 +190,17 @@ def generate_gdd20_baseline(input_files, output_file, author):
     dummy_da = _add_time_axis(dummy_da)
 
     # Process all crops
+    data_var_dict = {}
+    for v in GRIDDING_VAR_LIST:
+        data_var_dict[v] = ds_in[v]
     ds_out = xr.Dataset(
-        data_vars=None,
+        data_vars=data_var_dict,
         attrs={
             "author": author,
             "created": dt.datetime.now().astimezone().isoformat(),
         },
     )
+    encoding_dict = {}
     for cft_str in utils.define_mgdcrop_list():
         cft_int = utils.vegtype_str2int(cft_str)[0]
         print(f"{cft_str} ({cft_int})")
@@ -211,22 +216,29 @@ def generate_gdd20_baseline(input_files, output_file, author):
             long_name = "Dummy GDD20"
             print("   dummy GDD20")
         else:
-            this_da = ds_in[gddn].fillna(MISSING_FILL)
+            # this_da = ds_in[gddn].fillna(MISSING_FILL)
+            this_da = ds_in[gddn]
             this_da = _add_time_axis(this_da)
-            long_name = gddn
+            long_name = gddn.replace("X", "20")
             print(f"   {gddn}")
 
         # Add attributes
         this_da.attrs["long_name"] = long_name + f" baseline for {cft_str}"
         this_da.attrs["units"] = "°C days"
+        # this_da.attrs["_FillValue"] = MISSING_FILL
 
         # Copy that to ds_out
         var_out = _get_output_varname(cft_str)
         print(f"   Output variable {var_out}")
         ds_out[var_out] = this_da
+        encoding_dict[var_out] = {"dtype": "float64"}
+
+        # Grid, if needed
+        if any(x not in this_da.dims for x in ["lat", "lon"]):
+            ds_out[var_out] = grid_one_variable(ds_out, var_out)
 
     # Save
-    ds_out.to_netcdf(output_file)
+    ds_out.to_netcdf(output_file, format="NETCDF3_CLASSIC", encoding=encoding_dict)
 
     print("Done!")
 

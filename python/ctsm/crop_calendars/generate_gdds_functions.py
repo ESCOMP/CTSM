@@ -575,6 +575,7 @@ def import_and_process_1yr(
         this_crop_gddaccum_da = this_crop_ds[clm_gdd_var]
         if save_figs:
             this_crop_gddharv_da = this_crop_ds["GDDHARV"]
+            check_gddharv = True
         if not this_crop_gddaccum_da.size:
             continue
         log(logger, f"      {vegtype_str}...")
@@ -625,11 +626,18 @@ def import_and_process_1yr(
                 + "NaN after extracting GDDs accumulated at harvest",
             )
         if save_figs and np.any(np.isnan(gddharv_atharv_p)):
-            log(
-                logger,
-                f"         ❗ {np.sum(np.isnan(gddharv_atharv_p))}/{len(gddharv_atharv_p)} "
-                + "NaN after extracting GDDHARV",
-            )
+            if np.all(np.isnan(gddharv_atharv_p)):
+                log(
+                    logger,
+                    "         ❗ All GDDHARV are NaN; should only affect figure"
+                )
+                check_gddharv = False
+            else:
+                log(
+                    logger,
+                    f"         ❗ {np.sum(np.isnan(gddharv_atharv_p))}/{len(gddharv_atharv_p)} "
+                    + "NaN after extracting GDDHARV",
+                )
 
         # Assign these to growing seasons based on whether gs crossed new year
         this_year_active_patch_indices = [
@@ -712,7 +720,7 @@ def import_and_process_1yr(
                     )
                 else:
                     error(logger, "Unexpected NaN for last season's GDD accumulation.")
-            if save_figs and np.any(
+            if save_figs and check_gddharv and np.any(
                 np.isnan(
                     gddharv_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices]
                 )
@@ -1160,9 +1168,13 @@ if CAN_PLOT:
             else:
                 error(logger, f"layout {layout} not recognized")
 
-            this_min = int(np.round(np.nanmin(gddharv_map_yx)))
-            this_max = int(np.round(np.nanmax(gddharv_map_yx)))
-            this_title = f"{run1_name} (range {this_min}–{this_max})"
+            gddharv_all_nan = np.all(np.isnan(gddharv_map_yx.values))
+            if gddharv_all_nan:
+                this_title = f"{run1_name} (GDDHARV all NaN?)"
+            else:
+                this_min = int(np.round(np.nanmin(gddharv_map_yx)))
+                this_max = int(np.round(np.nanmax(gddharv_map_yx)))
+                this_title = f"{run1_name} (range {this_min}–{this_max})"
             make_gengdd_map(
                 this_axis,
                 gddharv_map_yx,
@@ -1195,7 +1207,7 @@ if CAN_PLOT:
             )
 
             # Difference
-            if layout == "3x2":
+            if not gddharv_all_nan and layout == "3x2":
                 this_axis = fig.add_subplot(spec[2, 0], projection=ccrs.PlateCarree())
                 this_min = int(np.round(np.nanmin(gdd_map_yx)))
                 this_max = int(np.round(np.nanmax(gdd_map_yx)))

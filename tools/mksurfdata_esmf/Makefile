@@ -54,7 +54,10 @@ SUBSETDATA_POINT_URBAN = $(SUBSETDATA_POINT) --include-nonveg
 # Subset data sites...
 SUBSETDATA_1X1_BRAZIL := --lat -7 --lon -55 --site 1x1_brazil
 SUBSETDATA_1X1_NUMAIA := --lat 40.6878 --lon 267.0228 --site 1x1_numaIA
-SUBSETDATA_1X1_SMALL  := --lat 40.6878 --lon 267.0228 --site 1x1_smallvilleIA \
+SUBSETDATA_1X1_SMALL_IA  := --lat 40.6878 --lon 267.0228 --site 1x1_smallvilleIA \
+		--dompft 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 \
+		--pctpft 6.5 1.5 1.6 1.7 1.8 1.9 1.5 1.6 1.7 1.8 1.9 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5
+SUBSETDATA_1X1_SMALL_BR  := --lat -12.9952 --lon 305.3233 --site 1x1_cidadinhoBR \
 		--dompft 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 \
 		--pctpft 6.5 1.5 1.6 1.7 1.8 1.9 1.5 1.6 1.7 1.8 1.9 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5
 # NOTE: The 1850 smallvilleIA site is constructed to start with 100% natural vegetation, so we can test transition to crops
@@ -112,6 +115,7 @@ all-subset : \
 	1x1-smallville-present \
 	1x1-smallville-1850 \
 	1x1-smallville-transient \
+	1x1-cidadinho-present \
 	urban
 
 DEBUG:
@@ -239,7 +243,7 @@ crop-global-hist-ne30 : FORCE
 	$(SUBSETDATA_POINT_ALLLU) --create-surface $(SUBSETDATA_1X1_NUMAIA)
 
 1x1-smallville-present : FORCE
-	$(SUBSETDATA_POINT) --create-surface $(SUBSETDATA_1X1_SMALL)
+	$(SUBSETDATA_POINT) --create-surface $(SUBSETDATA_1X1_SMALL_IA)
 
 # Note that the smallville 1850 dataset is entirely natural vegetation. This
 # facilitates testing a transient case that starts with no crop, and then later
@@ -253,6 +257,9 @@ crop-global-hist-ne30 : FORCE
 1x1-smallville-transient : FORCE
 	$(SUBSETDATA_POINT) --create-landuse $(SUBSETDATA_1X1_SMALLTRANSIENT)
 	../modify_input_files/modify_smallville.sh
+
+1x1-cidadinho-present : FORCE
+	$(SUBSETDATA_POINT) --create-surface $(SUBSETDATA_1X1_SMALL_BR)
 
 #
 # Crop with future scenarios

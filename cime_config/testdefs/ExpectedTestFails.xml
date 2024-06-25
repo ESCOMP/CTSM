@@ -29,13 +29,6 @@
 
 
   <!-- ctsm_sci test suite failures -->
-  <test name="RXCROPMATURITY_Lm61.f09_g17.IHistClm50BgcCrop.derecho_intel.clm-cropMonthOutput">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2460</issue>
-    </phase>
-  </test>
-
   <test name="SMS_Ld12_Mmpi-serial.1x1_urbanc_alpha.I1PtClm60SpRs.derecho_intel.clm-output_sp_highfreq">
     <phase name="RUN">
       <status>FAIL</status>
@@ -174,6 +167,13 @@
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#2310</issue>
+    </phase>
+  </test>
+
+  <test name="ERP_D_P128x1_Ld26.f10_f10_mg37.IHistClm60BgcCrop.derecho_intel.clm-midDecStart--clm-RxCropCalsAdaptGGCMI">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#2593</issue>
     </phase>
   </test>
 

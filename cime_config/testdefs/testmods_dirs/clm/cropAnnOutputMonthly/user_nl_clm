@@ -1,0 +1,3 @@
+! These variables SHOULD only be saved annually in real runs, but for testing purposes it's fine to have them monthly.
+! Modifies h2 history file defined in crop testmod.
+hist_nhtfrq(3) = 0
