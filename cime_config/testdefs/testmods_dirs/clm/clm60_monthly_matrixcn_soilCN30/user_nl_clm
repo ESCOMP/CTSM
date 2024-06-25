@@ -1,4 +1,2 @@
 use_soil_matrixcn = .true.
-paramfile = '/glade/u/home/slevis/paramfiles/ctsm60_params_cn30.c240625.nc'
-! If we keep this paramfile, it should move to the repository
-! paramfile = '$DIN_LOC_ROOT/lnd/clm2/paramdata/ctsm60_params_cn30.c240625.nc'
+paramfile = '$DIN_LOC_ROOT/lnd/clm2/paramdata/ctsm60_params_cn30.c240625.nc'
