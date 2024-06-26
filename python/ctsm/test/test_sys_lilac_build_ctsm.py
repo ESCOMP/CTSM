@@ -42,8 +42,12 @@ class TestSysBuildCtsm(unittest.TestCase):
         else:
             self._ncarhost = None
 
+        self._original_wd = os.getcwd()
+        os.chdir(self._tempdir)
+
     def tearDown(self):
-        os.chdir(self._previous_dir)
+        """tear down"""
+        os.chdir(self._original_wd)
         shutil.rmtree(self._tempdir, ignore_errors=True)
         if self._ncarhost is not None:
             os.environ["NCAR_HOST"] = self._ncarhost
