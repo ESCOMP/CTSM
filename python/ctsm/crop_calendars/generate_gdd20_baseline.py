@@ -70,6 +70,24 @@ def _parse_args():
         help="Overwrite existing output file, if any",
         action="store_true",
     )
+    parser.add_argument(
+        "-y1",
+        "--first-year",
+        help=(
+            "First calendar year to include"
+        ),
+        type=int,
+        required=False,
+    )
+    parser.add_argument(
+        "-yN",
+        "--last-year",
+        help=(
+            "Last calendar year to include"
+        ),
+        type=int,
+        required=False,
+    )
 
     # Get arguments
     args = parser.parse_args(sys.argv[1:])
@@ -78,7 +96,19 @@ def _parse_args():
     if os.path.exists(args.output_file) and not args.overwrite:
         raise FileExistsError("Output file exists but --overwrite is not specified")
 
-    return args
+    # Process time slice
+    # Assumes CESM behavior where data for e.g. 1987 is saved as 1988-01-01
+    if args.first_year is not None:
+        date_1 = f"{args.first_year+1}-01-01"
+    else:
+        date_1 = "0000-01-01"
+    if args.last_year is not None:
+        date_n = f"{args.last_year+1}-01-01"
+    else:
+        date_n = "9999-12-31"
+    time_slice = slice(date_1, date_n)
+
+    return args, time_slice
 
 
 def _get_cft_list(crop_list):
@@ -161,7 +191,7 @@ def _add_time_axis(da_in):
     return da_out
 
 
-def generate_gdd20_baseline(input_files, output_file, author):
+def generate_gdd20_baseline(input_files, output_file, author, time_slice):
     """
     Generate stream_fldFileName_gdd20_baseline file from CTSM outputs
     """
@@ -173,7 +203,7 @@ def generate_gdd20_baseline(input_files, output_file, author):
     input_files.sort()
 
     # Import history files and ensure they have lat/lon dims
-    ds_in = import_ds(input_files, VAR_LIST_IN + GRIDDING_VAR_LIST)
+    ds_in = import_ds(input_files, VAR_LIST_IN + GRIDDING_VAR_LIST, time_slice=time_slice)
     if not all(x in ds_in.dims for x in ["lat", "lon"]):
         raise RuntimeError("Input files must have lat and lon dimensions")
 
@@ -247,9 +277,10 @@ def main():
     """
     main() function for calling generate_gdd20_baseline.py from command line.
     """
-    args = _parse_args()
+    args, time_slice = _parse_args()
     generate_gdd20_baseline(
         args.input_files,
         args.output_file,
         args.author,
+        time_slice
     )
