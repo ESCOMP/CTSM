@@ -330,14 +330,7 @@ contains
     ! Set basin factor to 1 for now
 
     if (dust_emis_method == 'Leung_2023') then
-       !do c = bounds%begc, bounds%endc
-       !   l = col%landunit(c)
-
-       !   if (.not.lun%lakpoi(l)) then
-       !      this%mbl_bsn_fct_col(c) = 1.0_r8
-       !   end if
-       !end do
-       call endrun( msg="Leung_2023 dust_emis_method is currently not available"//errMsg(sourcefile, __LINE__))
+       write(iulog,*) 'Using the new Leung_2023 dust emission scheme'
     else if (dust_emis_method == 'Zender_2003') then
        if ( this%soil_erod_stream%UseStreams() )then
           call this%soil_erod_stream%CalcDustSource( bounds, &
@@ -345,6 +338,7 @@ contains
        else
           this%mbl_bsn_fct_col(:) = 1.0_r8
        end if
+       write(iulog,*) 'WARNING: Asked to use the old Zender_2003 dust emission scheme, which is not currently setup completely'
     else
        write(iulog,*) 'dust_emis_method not recognized = ', trim(dust_emis_method)
        call endrun( msg="dust_emis_method namelist item is not valid "//errMsg(sourcefile, __LINE__))
