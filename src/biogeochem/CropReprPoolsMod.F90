@@ -57,6 +57,11 @@ contains
     ! !DESCRIPTION:
     ! Initialize module-level data
     !
+    ! !USES:
+    use abortutils, only: endrun
+    use shr_log_mod, only: errmsg => shr_log_errMsg
+    use CNSharedParamsMod, only: use_matrixcn
+    !
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
@@ -77,16 +82,26 @@ contains
     ! repr_hist_fnames(1) = 'GRAIN_MEAL', grain_hist_fnames(2) = 'GRAIN_OIL', etc.
     if (for_testing_use_second_grain_pool) then
        nrepr_grain = 2
+       if (use_matrixcn) then
+          call endrun(msg="ERROR: for_testing_use_second_grain_pool should be .false. when use_matrixcn = .true."//errmsg(sourcefile, __LINE__))
+       end if
     else
        nrepr_grain = 1
     end if
     if (for_testing_use_repr_structure_pool) then
        nrepr_structure = 2
+       if (use_matrixcn) then
+          call endrun(msg="ERROR: for_testing_use_repr_structure_pool should be .false. when use_matrixcn = .true."//errMsg(sourcefile, __LINE__))
+       end if
     else
        nrepr_structure = 0
     end if
 
     nrepr = nrepr_grain + nrepr_structure
+    ! matrixcn works with nrepr = 1 only
+    if (use_matrixcn .and. nrepr /= 1) then
+       call endrun(msg="ERROR: nrepr should be 1 when use_matrixcn = .true."//errMsg(sourcefile, __LINE__))
+    end if
     allocate(repr_hist_fnames(nrepr))
     allocate(repr_rest_fnames(nrepr))
     allocate(repr_longnames(nrepr))

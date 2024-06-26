@@ -18,7 +18,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   use spmdMod                            , only : masterproc
   use abortutils                         , only : endrun
   use CNSharedParamsMod                  , only : CNParamsShareInst, nlev_soildecomp_standard 
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, InitSoilTransfer, use_soil_matrixcn
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
@@ -734,6 +734,8 @@ contains
          nue_decomp_cascade(i_cwdl2) = 1.0_r8
       end if
 
+      if (use_soil_matrixcn) call InitSoilTransfer()
+
       deallocate(params_inst%mimics_mge)
       deallocate(params_inst%mimics_vmod)
       deallocate(params_inst%mimics_vint)
@@ -763,7 +765,7 @@ contains
     ! decomposition cascade model
     !
     ! !USES:
-    use clm_time_manager , only : get_average_days_per_year
+    use clm_time_manager , only : get_average_days_per_year, get_step_size
     use clm_varcon       , only : secspday, secsphr, tfrz
     use clm_varcon       , only : g_to_mg, cm3_to_m3
     use subgridAveMod    , only : p2c
@@ -822,6 +824,7 @@ contains
     integer :: p, fp, c, fc, j, k, l, s  ! indices
     integer :: pf  ! fates patch index
     integer :: nc  ! clump index
+    real(r8):: dt                           ! decomposition time step
     real(r8):: days_per_year                ! days per year
     real(r8):: depth_scalar(bounds%begc:bounds%endc,1:nlevdecomp) 
     real(r8):: w_d_o_scalars  ! product of w_scalar * depth_scalar * o_scalar
@@ -882,6 +885,7 @@ contains
          cn_col         => soilbiogeochem_carbonflux_inst%cn_col       , & ! Output: [real(r8) (:,:)   ]  C:N ratio
          ligninNratioAvg => soilbiogeochem_carbonflux_inst%litr_lig_c_to_n_col, &  ! Input: [real(r8) (:) ] C:N ratio of litter lignin
          decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col , & ! Output: [real(r8) (:,:,:) ]  rate for decomposition (1./sec)
+         Ksoil          => soilbiogeochem_carbonflux_inst%Ksoil        , & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
          spinup_factor  => decomp_cascade_con%spinup_factor              & ! Input:  [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
          )
 
@@ -892,6 +896,7 @@ contains
       mino2lim = CNParamsShareInst%mino2lim
 
       days_per_year = get_average_days_per_year()
+      dt = real( get_step_size(), r8 )
 
 !     ! Set "decomp_depth_efolding" parameter
 !     decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
@@ -1311,6 +1316,23 @@ contains
             if (get_do_tillage()) then
                call get_apply_tillage_multipliers(idop, c, j, decomp_k(c,j,:))
             end if
+
+! Above into soil matrix
+            if(use_soil_matrixcn)then
+               Ksoil%DM(c,j+nlevdecomp*(i_met_lit-1)) = decomp_k(c,j,i_met_lit) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_str_lit-1)) = decomp_k(c,j,i_str_lit) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_avl_som-1)) = decomp_k(c,j,i_avl_som) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_phys_som-1)) = decomp_k(c,j,i_phys_som) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_chem_som-1)) = decomp_k(c,j,i_chem_som) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_cop_mic-1)) = decomp_k(c,j,i_cop_mic) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_oli_mic-1)) = decomp_k(c,j,i_oli_mic) * dt
+               ! same for cwd but only if fates is not enabled; fates handles
+               ! CWD
+               ! on its own structure
+               if (.not. use_fates) then
+                  Ksoil%DM(c,j+nlevdecomp*(i_cwd-1))   = decomp_k(c,j,i_cwd) * dt
+               end if
+            end if !use_soil_matrixcn
          end do
       end do
 

@@ -5,7 +5,14 @@ module CNVegNitrogenFluxType
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, i_litr_min, i_litr_max
-  use clm_varpar                         , only : nvegnpool
+  use clm_varpar                         , only : nvegnpool,nnphtrans,nngmtrans,nnfitrans,nnphouttrans,&
+                                                  nngmouttrans,nnfiouttrans
+  use clm_varpar                         , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
+                                                  ilivestem,ilivestem_st,ilivestem_xf,&
+                                                  ideadstem,ideadstem_st,ideadstem_xf,&
+                                                  ilivecroot,ilivecroot_st,ilivecroot_xf,&
+                                                  ideadcroot,ideadcroot_st,ideadcroot_xf,&
+                                                  igrain,igrain_st,igrain_xf,iretransn,ioutn
   use clm_varpar                         , only : mxharvests
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use clm_varctl                         , only : use_nitrif_denitrif, use_crop
@@ -277,8 +284,127 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: cost_nactive_patch                        (:)     ! Average cost of active uptake     (gN/m2/s)
      real(r8), pointer :: cost_nretrans_patch                       (:)     ! Average cost of retranslocation   (gN/m2/s)
      real(r8), pointer :: nuptake_npp_fraction_patch                (:)     ! frac of npp spent on N acquisition   (gN/m2/s)
+	 ! Matrix
+     real(r8), pointer :: matrix_nalloc_patch                       (:,:)   ! B-matrix for nitrogen allocation
+     real(r8), pointer :: matrix_Ninput_patch                       (:)     ! I-matrix for nitrogen input
+	 
+     real(r8), pointer :: matrix_nphtransfer_patch                  (:,:)   ! A-matrix_phenologh for nitrogen
+     real(r8), pointer :: matrix_nphturnover_patch                  (:,:)   ! K-matrix_phenologh for nitrogen
+     integer,  pointer :: matrix_nphtransfer_doner_patch            (:)     ! A-matrix_phenology non-zero indices (column indices) for nitrogen
+     integer,  pointer :: matrix_nphtransfer_receiver_patch         (:)     ! A-matrix_phenology non-zero indices (row indices) for nitrogen
+ 
+     real(r8), pointer :: matrix_ngmtransfer_patch                  (:,:)   ! A-matrix_gap mortality for nitrogen
+     real(r8), pointer :: matrix_ngmturnover_patch                  (:,:)   ! K-matrix_gap mortality for nitrogen 
+     integer,  pointer :: matrix_ngmtransfer_doner_patch            (:)     ! A-matrix_gap mortality non-zero indices (column indices) for nitrogen
+     integer,  pointer :: matrix_ngmtransfer_receiver_patch         (:)     ! A-matrix_gap mortality non-zero indices (row indices) for nitrogen
+  
+     real(r8), pointer :: matrix_nfitransfer_patch                  (:,:)   ! A-matrix_fire for nitrogen
+     real(r8), pointer :: matrix_nfiturnover_patch                  (:,:)   ! K-matrix_fire for nitrogen
+     integer,  pointer :: matrix_nfitransfer_doner_patch            (:)     ! A-matrix_fire non-zero indices (column indices) for nitrogen
+     integer,  pointer :: matrix_nfitransfer_receiver_patch         (:)     ! A-matrix_fire non-zero indices (row indices) for nitrogen
 
-     ! Matrix solution variables
+     integer ileafst_to_ileafxf_ph                    ! Index of phenology related N transfer from leaf storage pool to leaf transfer pool
+     integer ileafxf_to_ileaf_ph                      ! Index of phenology related N transfer from leaf transfer pool to leaf pool  
+     integer ifrootst_to_ifrootxf_ph                  ! Index of phenology related N transfer from fine root storage pool to fine root transfer pool
+     integer ifrootxf_to_ifroot_ph                    ! Index of phenology related N transfer from fine root transfer pool to fine root pool  
+     integer ilivestemst_to_ilivestemxf_ph            ! Index of phenology related N transfer from live stem storage pool to live stem transfer pool
+     integer ilivestemxf_to_ilivestem_ph              ! Index of phenology related N transfer from live stem transfer pool to live stem pool  
+     integer ideadstemst_to_ideadstemxf_ph            ! Index of phenology related N transfer from dead stem storage pool to dead stem transfer pool
+     integer ideadstemxf_to_ideadstem_ph              ! Index of phenology related N transfer from dead stem transfer pool to dead stem pool  
+     integer ilivecrootst_to_ilivecrootxf_ph          ! Index of phenology related N transfer from live coarse root storage pool to live coarse root transfer pool
+     integer ilivecrootxf_to_ilivecroot_ph            ! Index of phenology related N transfer from live coarse root transfer pool to live coarse root pool  
+     integer ideadcrootst_to_ideadcrootxf_ph          ! Index of phenology related N transfer from dead coarse root storage pool to dead coarse root transfer pool
+     integer ideadcrootxf_to_ideadcroot_ph            ! Index of phenology related N transfer from dead coarse root transfer pool to dead coarse root pool  
+     integer ilivestem_to_ideadstem_ph                ! Index of phenology related N transfer from live stem pool to dead stem pool  
+     integer ilivecroot_to_ideadcroot_ph              ! Index of phenology related N transfer from live coarse root pool to dead coarse root pool  
+     integer iretransn_to_ileaf_ph                    ! Index of phenology related N transfer from retranslocation pool to leaf pool
+     integer iretransn_to_ileafst_ph                  ! Index of phenology related N transfer from retranslocation pool to leaf storage pool
+     integer iretransn_to_ifroot_ph                   ! Index of phenology related N transfer from retranslocation pool to fine root pool
+     integer iretransn_to_ifrootst_ph                 ! Index of phenology related N transfer from retranslocation pool to fine root storage pool
+     integer iretransn_to_ilivestem_ph                ! Index of phenology related N transfer from retranslocation pool to live stem pool
+     integer iretransn_to_ilivestemst_ph              ! Index of phenology related N transfer from retranslocation pool to live stem storage pool
+     integer iretransn_to_ideadstem_ph                ! Index of phenology related N transfer from retranslocation pool to dead stem pool
+     integer iretransn_to_ideadstemst_ph              ! Index of phenology related N transfer from retranslocation pool to dead stem storage pool
+     integer iretransn_to_ilivecroot_ph               ! Index of phenology related N transfer from retranslocation pool to live coarse root pool
+     integer iretransn_to_ilivecrootst_ph             ! Index of phenology related N transfer from retranslocation pool to live coarse root storage pool
+     integer iretransn_to_ideadcroot_ph               ! Index of phenology related N transfer from retranslocation pool to dead coarse root pool
+     integer iretransn_to_ideadcrootst_ph             ! Index of phenology related N transfer from retranslocation pool to dead coarse root storage pool
+     integer iretransn_to_igrain_ph                   ! Index of phenology related N transfer from retranslocation pool to grain pool
+     integer iretransn_to_igrainst_ph                 ! Index of phenology related N transfer from retranslocation pool to grain storage pool
+     integer ileaf_to_iout_ph                         ! Index of phenology related N transfer from leaf pool to outside of vegetation pools  
+     integer ifroot_to_iout_ph                        ! Index of phenology related N transfer from fine root pool to outside of vegetation pools  
+     integer ilivestem_to_iout_ph                     ! Index of phenology related N transfer from live stem pool to outside of vegetation pools  
+     integer ileaf_to_iretransn_ph                    ! Index of phenology related N transfer from leaf pool to retranslocation pools
+     integer ifroot_to_iretransn_ph                   ! Index of phenology related N transfer from fine root pool to retranslocation pools
+     integer ilivestem_to_iretransn_ph                ! Index of phenology related N transfer from live stem pool to retranslocation pools
+     integer ilivecroot_to_iretransn_ph               ! Index of phenology related N transfer from live coarse root pool to retranslocation pools
+     integer igrain_to_iout_ph                        ! Index of phenology related N transfer from grain pool to outside of vegetation pools  
+     integer iretransn_to_iout_ph                     ! Index of phenology related N transfer from retranslocation pool to outside of vegetation pools
+     integer ileaf_to_iout_gm                         ! Index of gap mortality related N transfer from leaf pool to outside of vegetation pools
+     integer ileafst_to_iout_gm                       ! Index of gap mortality related N transfer from leaf storage pool to outside of vegetation pools
+     integer ileafxf_to_iout_gm                       ! Index of gap mortality related N transfer from leaf transfer pool to outside of vegetation pools
+     integer ifroot_to_iout_gm                        ! Index of gap mortality related N transfer from fine root pool to outside of vegetation pools
+     integer ifrootst_to_iout_gm                      ! Index of gap mortality related N transfer from fine root storage pool to outside of vegetation pools
+     integer ifrootxf_to_iout_gm                      ! Index of gap mortality related N transfer from fine root transfer pool to outside of vegetation pools
+     integer ilivestem_to_iout_gm                     ! Index of gap mortality related N transfer from live stem pool to outside of vegetation pools
+     integer ilivestemst_to_iout_gm                   ! Index of gap mortality related N transfer from live stem storage pool to outside of vegetation pools
+     integer ilivestemxf_to_iout_gm                   ! Index of gap mortality related N transfer from live stem transfer pool to outside of vegetation pools
+     integer ideadstem_to_iout_gm                     ! Index of gap mortality related N transfer from dead stem pool to outside of vegetation pools
+     integer ideadstemst_to_iout_gm                   ! Index of gap mortality related N transfer from dead stem storage pool to outside of vegetation pools
+     integer ideadstemxf_to_iout_gm                   ! Index of gap mortality related N transfer from dead stem transfer pool to outside of vegetation pools
+     integer ilivecroot_to_iout_gm                    ! Index of gap mortality related N transfer from live coarse root pool to outside of vegetation pools
+     integer ilivecrootst_to_iout_gm                  ! Index of gap mortality related N transfer from live coarse root storage pool to outside of vegetation pools
+     integer ilivecrootxf_to_iout_gm                  ! Index of gap mortality related N transfer from live coarse root transfer pool to outside of vegetation pools
+     integer ideadcroot_to_iout_gm                    ! Index of gap mortality related N transfer from dead coarse root pool to outside of vegetation pools
+     integer ideadcrootst_to_iout_gm                  ! Index of gap mortality related N transfer from dead coarse root storage pool to outside of vegetation pools
+     integer ideadcrootxf_to_iout_gm                  ! Index of gap mortality related N transfer from dead coarse root transfer pool to outside of vegetation pools
+     integer iretransn_to_iout_gm                     ! Index of gap mortality related N transfer from retranslocation to outside of vegetation pools
+     integer ileaf_to_iout_fi                         ! Index of fire related N transfer from leaf pool to outside of vegetation pools
+     integer ileafst_to_iout_fi                       ! Index of fire related N transfer from leaf storage pool to outside of vegetation pools
+     integer ileafxf_to_iout_fi                       ! Index of fire related N transfer from leaf transfer pool to outside of vegetation pools
+     integer ifroot_to_iout_fi                        ! Index of fire related N transfer from fine root pool to outside of vegetation pools
+     integer ifrootst_to_iout_fi                      ! Index of fire related N transfer from fine root storage pool to outside of vegetation pools
+     integer ifrootxf_to_iout_fi                      ! Index of fire related N transfer from fine root transfer pool to outside of vegetation pools
+     integer ilivestem_to_iout_fi                     ! Index of fire related N transfer from live stem pool to outside of vegetation pools
+     integer ilivestemst_to_iout_fi                   ! Index of fire related N transfer from live stem storage pool to outside of vegetation pools
+     integer ilivestemxf_to_iout_fi                   ! Index of fire related N transfer from live stem transfer pool to outside of vegetation pools
+     integer ideadstem_to_iout_fi                     ! Index of fire related N transfer from dead stem pool to outside of vegetation pools
+     integer ideadstemst_to_iout_fi                   ! Index of fire related N transfer from dead stem storage pool to outside of vegetation pools
+     integer ideadstemxf_to_iout_fi                   ! Index of fire related N transfer from dead stem transfer pool to outside of vegetation pools
+     integer ilivecroot_to_iout_fi                    ! Index of fire related N transfer from live coarse root pool to outside of vegetation pools
+     integer ilivecrootst_to_iout_fi                  ! Index of fire related N transfer from live coarse root storage pool to outside of vegetation pools
+     integer ilivecrootxf_to_iout_fi                  ! Index of fire related N transfer from live coarse root transfer pool to outside of vegetation pools
+     integer ideadcroot_to_iout_fi                    ! Index of fire related N transfer from dead coarse root pool to outside of vegetation pools
+     integer ideadcrootst_to_iout_fi                  ! Index of fire related N transfer from dead coarse root storage pool to outside of vegetation pools
+     integer ideadcrootxf_to_iout_fi                  ! Index of fire related N transfer from dead coarse root transfer pool to outside of vegetation pools
+     integer iretransn_to_iout_fi                     ! Index of fire related N transfer from retranslocation transfer pool to outside of vegetation pools
+     integer ilivestem_to_ideadstem_fi                ! Index of fire related N transfer from live stem pool to dead stem pools
+     integer ilivecroot_to_ideadcroot_fi              ! Index of fire related N transfer from live coarse root pool to dead coarse root pools
+
+     integer,pointer :: list_phn_phgmn     (:)        ! Index mapping for sparse matrix addition (save to reduce computational cost): from AKphn to AKphn+AKgmn
+     integer,pointer :: list_gmn_phgmn     (:)        ! Index mapping for sparse matrix addition (save to reduce computational cost): from AKgmn to AKphn+AKgmn
+     integer,pointer :: list_phn_phgmfin   (:)        ! Index mapping for sparse matrix addition (save to reduce computational cost): from AKphn to AKphn+AKgmn+AKfin
+     integer,pointer :: list_gmn_phgmfin   (:)        ! Index mapping for sparse matrix addition (save to reduce computational cost): from AKgmn to AKphn+AKgmn+AKfin
+     integer,pointer :: list_fin_phgmfin   (:)        ! Index mapping for sparse matrix addition (save to reduce computational cost): from AKfin to AKphn+AKgmn+AKfin
+     integer,pointer :: list_aphn          (:)        ! Indices of non-diagnoal entries in full sparse matrix Aph for N cycle
+     integer,pointer :: list_agmn          (:)        ! Indices of non-diagnoal entries in full sparse matrix Agm for N cycle
+     integer,pointer :: list_afin          (:)        ! Indices of non-diagnoal entries in full sparse matrix Afi for N cycle
+
+     type(sparse_matrix_type)      :: AKphvegn        ! Aph*Kph for N cycle in sparse matrix format
+     type(sparse_matrix_type)      :: AKgmvegn        ! Agm*Kgm for N cycle in sparse matrix format
+     type(sparse_matrix_type)      :: AKfivegn        ! Afi*Kfi for N cycle in sparse matrix format
+     type(sparse_matrix_type)      :: AKallvegn       ! Aph*Kph + Agm*Kgm + Afi*Kfi for N cycle in sparse matrix format
+     integer                       :: NE_AKallvegn    ! Number of entries in AKallvegn
+     integer,pointer,dimension(:)  :: RI_AKallvegn    ! Row indices in Akallvegn
+     integer,pointer,dimension(:)  :: CI_AKallvegn    ! Column indices in AKallvegn
+     integer,pointer,dimension(:)  :: RI_phn          ! Row indices of non-diagonal entires in Aph for N cycle
+     integer,pointer,dimension(:)  :: CI_phn          ! Column indices of non-diagonal entries in Aph for N cycle
+     integer,pointer,dimension(:)  :: RI_gmn          ! Row indices of non-diagonal entires in Agm for N cycle
+     integer,pointer,dimension(:)  :: CI_gmn          ! Column indices of non-diagonal entries in Agm for N cycle
+     integer,pointer,dimension(:)  :: RI_fin          ! Row indices of non-diagonal entires in Afi for N cycle
+     integer,pointer,dimension(:)  :: CI_fin          ! Column indices of non-diagonal entries in Afi for N cycle
+     type(diag_matrix_type)        :: Kvegn           ! Temporary variable of Kph, Kgm or Kfi for N cycle in diagonal matrix format
+     type(vector_type)             :: Xvegn           ! Vegetation N of each compartment in a vector format
 
    contains
 
@@ -289,7 +415,7 @@ module CNVegNitrogenFluxType
      procedure , public  :: ZeroGRU
      procedure , public  :: Summary => Summary_nitrogenflux
      procedure , private :: InitAllocate 
-     procedure , private :: InitTransfer
+     procedure , private :: InitTransfer 
      procedure , private :: InitHistory
      procedure , private :: InitCold
 
@@ -318,19 +444,336 @@ contains
 
   subroutine InitTransfer (this)
     !
-    ! !DESCRIPTION:
-    ! Initialize the transfer indices for the matrix solution method
-    !
     ! !AGRUMENTS:
     class (cnveg_nitrogenflux_type) :: this
+    
+    this%ileaf_to_iretransn_ph           = 1
+    this%matrix_nphtransfer_doner_patch(this%ileaf_to_iretransn_ph)              = ileaf
+    this%matrix_nphtransfer_receiver_patch(this%ileaf_to_iretransn_ph)           = iretransn
+    
+    this%ileafst_to_ileafxf_ph           = 2
+    this%matrix_nphtransfer_doner_patch(this%ileafst_to_ileafxf_ph)              = ileaf_st
+    this%matrix_nphtransfer_receiver_patch(this%ileafst_to_ileafxf_ph)           = ileaf_xf
 
-    ! General indices
+    this%ileafxf_to_ileaf_ph             = 3
+    this%matrix_nphtransfer_doner_patch(this%ileafxf_to_ileaf_ph)                = ileaf_xf
+    this%matrix_nphtransfer_receiver_patch(this%ileafxf_to_ileaf_ph)             = ileaf
+
+    this%ifroot_to_iretransn_ph          = 4
+    this%matrix_nphtransfer_doner_patch(this%ifroot_to_iretransn_ph)             = ifroot
+    this%matrix_nphtransfer_receiver_patch(this%ifroot_to_iretransn_ph)          = iretransn
+    
+    this%ifrootst_to_ifrootxf_ph         = 5
+    this%matrix_nphtransfer_doner_patch(this%ifrootst_to_ifrootxf_ph)            = ifroot_st
+    this%matrix_nphtransfer_receiver_patch(this%ifrootst_to_ifrootxf_ph)         = ifroot_xf
+
+    this%ifrootxf_to_ifroot_ph           = 6
+    this%matrix_nphtransfer_doner_patch(this%ifrootxf_to_ifroot_ph)              = ifroot_xf
+    this%matrix_nphtransfer_receiver_patch(this%ifrootxf_to_ifroot_ph)           = ifroot
+
+    this%ilivestem_to_ideadstem_ph       = 7
+    this%matrix_nphtransfer_doner_patch(this%ilivestem_to_ideadstem_ph)          = ilivestem
+    this%matrix_nphtransfer_receiver_patch(this%ilivestem_to_ideadstem_ph)       = ideadstem
+    
+    this%ilivestem_to_iretransn_ph       = 8
+    this%matrix_nphtransfer_doner_patch(this%ilivestem_to_iretransn_ph)          = ilivestem
+    this%matrix_nphtransfer_receiver_patch(this%ilivestem_to_iretransn_ph)       = iretransn
+    
+    this%ilivestemst_to_ilivestemxf_ph   = 9
+    this%matrix_nphtransfer_doner_patch(this%ilivestemst_to_ilivestemxf_ph)      = ilivestem_st
+    this%matrix_nphtransfer_receiver_patch(this%ilivestemst_to_ilivestemxf_ph)   = ilivestem_xf
+
+    this%ilivestemxf_to_ilivestem_ph     = 10
+    this%matrix_nphtransfer_doner_patch(this%ilivestemxf_to_ilivestem_ph)        = ilivestem_xf
+    this%matrix_nphtransfer_receiver_patch(this%ilivestemxf_to_ilivestem_ph)     = ilivestem
+
+    this%ideadstemst_to_ideadstemxf_ph   = 11
+    this%matrix_nphtransfer_doner_patch(this%ideadstemst_to_ideadstemxf_ph)      = ideadstem_st
+    this%matrix_nphtransfer_receiver_patch(this%ideadstemst_to_ideadstemxf_ph)   = ideadstem_xf
+
+    this%ideadstemxf_to_ideadstem_ph     = 12
+    this%matrix_nphtransfer_doner_patch(this%ideadstemxf_to_ideadstem_ph)        = ideadstem_xf
+    this%matrix_nphtransfer_receiver_patch(this%ideadstemxf_to_ideadstem_ph)     = ideadstem
+
+    this%ilivecroot_to_ideadcroot_ph     = 13
+    this%matrix_nphtransfer_doner_patch(this%ilivecroot_to_ideadcroot_ph)        = ilivecroot
+    this%matrix_nphtransfer_receiver_patch(this%ilivecroot_to_ideadcroot_ph)     = ideadcroot
+    
+    this%ilivecroot_to_iretransn_ph      = 14
+    this%matrix_nphtransfer_doner_patch(this%ilivecroot_to_iretransn_ph)         = ilivecroot
+    this%matrix_nphtransfer_receiver_patch(this%ilivecroot_to_iretransn_ph)      = iretransn
+    
+    this%ilivecrootst_to_ilivecrootxf_ph = 15
+    this%matrix_nphtransfer_doner_patch(this%ilivecrootst_to_ilivecrootxf_ph)    = ilivecroot_st
+    this%matrix_nphtransfer_receiver_patch(this%ilivecrootst_to_ilivecrootxf_ph) = ilivecroot_xf
+
+    this%ilivecrootxf_to_ilivecroot_ph   = 16
+    this%matrix_nphtransfer_doner_patch(this%ilivecrootxf_to_ilivecroot_ph)      = ilivecroot_xf
+    this%matrix_nphtransfer_receiver_patch(this%ilivecrootxf_to_ilivecroot_ph)   = ilivecroot
+
+    this%ideadcrootst_to_ideadcrootxf_ph = 17
+    this%matrix_nphtransfer_doner_patch(this%ideadcrootst_to_ideadcrootxf_ph)    = ideadcroot_st
+    this%matrix_nphtransfer_receiver_patch(this%ideadcrootst_to_ideadcrootxf_ph) = ideadcroot_xf
+
+    this%ideadcrootxf_to_ideadcroot_ph   = 18
+    this%matrix_nphtransfer_doner_patch(this%ideadcrootxf_to_ideadcroot_ph)      = ideadcroot_xf
+    this%matrix_nphtransfer_receiver_patch(this%ideadcrootxf_to_ideadcroot_ph)   = ideadcroot
+
+    this%iretransn_to_ileaf_ph           = 19
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ileaf_ph)              = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ileaf_ph)           = ileaf
+    
+    this%iretransn_to_ileafst_ph         = 20
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ileafst_ph)            = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ileafst_ph)         = ileaf_st
+    
+    this%iretransn_to_ifroot_ph          = 21
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ifroot_ph)             = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ifroot_ph)          = ifroot
+    
+    this%iretransn_to_ifrootst_ph        = 22
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ifrootst_ph)           = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ifrootst_ph)        = ifroot_st
+    
+    this%iretransn_to_ilivestem_ph       = 23
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ilivestem_ph)          = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ilivestem_ph)       = ilivestem
+    
+    this%iretransn_to_ilivestemst_ph     = 24
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ilivestemst_ph)        = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ilivestemst_ph)     = ilivestem_st
+    
+    this%iretransn_to_ideadstem_ph       = 25
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ideadstem_ph)          = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ideadstem_ph)       = ideadstem
+    
+    this%iretransn_to_ideadstemst_ph     = 26
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ideadstemst_ph)        = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ideadstemst_ph)     = ideadstem_st
+    
+    this%iretransn_to_ilivecroot_ph      = 27
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ilivecroot_ph)         = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ilivecroot_ph)      = ilivecroot
+    
+    this%iretransn_to_ilivecrootst_ph    = 28
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ilivecrootst_ph)       = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ilivecrootst_ph)    = ilivecroot_st
+    
+    this%iretransn_to_ideadcroot_ph      = 29
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ideadcroot_ph)         = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ideadcroot_ph)      = ideadcroot
+    
+    this%iretransn_to_ideadcrootst_ph    = 30
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ideadcrootst_ph)       = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ideadcrootst_ph)    = ideadcroot_st
+    
     if(.not. use_crop)then
-    ! Indices for crop
+       this%ileaf_to_iout_ph             = 31
+       this%matrix_nphtransfer_doner_patch(this%ileaf_to_iout_ph)                = ileaf
+       this%matrix_nphtransfer_receiver_patch(this%ileaf_to_iout_ph)             = ioutn
+    
+       this%ifroot_to_iout_ph            = 32
+       this%matrix_nphtransfer_doner_patch(this%ifroot_to_iout_ph)               = ifroot
+       this%matrix_nphtransfer_receiver_patch(this%ifroot_to_iout_ph)            = ioutn
+    
+       this%ilivestem_to_iout_ph         = 33
+       this%matrix_nphtransfer_doner_patch(this%ilivestem_to_iout_ph)            = ilivestem
+       this%matrix_nphtransfer_receiver_patch(this%ilivestem_to_iout_ph)         = ioutn
+    
+       this%iretransn_to_iout_ph         = 34
+       this%matrix_nphtransfer_doner_patch(this%iretransn_to_iout_ph)            = iretransn
+       this%matrix_nphtransfer_receiver_patch(this%iretransn_to_iout_ph)         = ioutn
     else
+       this%iretransn_to_igrain_ph       = 31
+       this%matrix_nphtransfer_doner_patch(this%iretransn_to_igrain_ph)          = iretransn
+       this%matrix_nphtransfer_receiver_patch(this%iretransn_to_igrain_ph)       = igrain
+
+       this%iretransn_to_igrainst_ph     = 32
+       this%matrix_nphtransfer_doner_patch(this%iretransn_to_igrainst_ph)        = iretransn
+       this%matrix_nphtransfer_receiver_patch(this%iretransn_to_igrainst_ph)     = igrain_st
+
+       this%ileaf_to_iout_ph             = 33
+       this%matrix_nphtransfer_doner_patch(this%ileaf_to_iout_ph)                = ileaf
+       this%matrix_nphtransfer_receiver_patch(this%ileaf_to_iout_ph)             = ioutn
+       
+       this%ifroot_to_iout_ph            = 34
+       this%matrix_nphtransfer_doner_patch(this%ifroot_to_iout_ph)               = ifroot
+       this%matrix_nphtransfer_receiver_patch(this%ifroot_to_iout_ph)            = ioutn
+    
+       this%ilivestem_to_iout_ph         = 35
+       this%matrix_nphtransfer_doner_patch(this%ilivestem_to_iout_ph)            = ilivestem
+       this%matrix_nphtransfer_receiver_patch(this%ilivestem_to_iout_ph)         = ioutn
+
+       this%igrain_to_iout_ph            = 36
+       this%matrix_nphtransfer_doner_patch(this%igrain_to_iout_ph)               = igrain
+       this%matrix_nphtransfer_receiver_patch(this%igrain_to_iout_ph)            = ioutn
+    
+       this%iretransn_to_iout_ph         = 37
+       this%matrix_nphtransfer_doner_patch(this%iretransn_to_iout_ph)            = iretransn
+       this%matrix_nphtransfer_receiver_patch(this%iretransn_to_iout_ph)         = ioutn
     end if
-   
-  end subroutine InitTransfer
+
+    this%ileaf_to_iout_gm                = 1
+    this%matrix_ngmtransfer_doner_patch(this%ileaf_to_iout_gm)                   = ileaf 
+    this%matrix_ngmtransfer_receiver_patch(this%ileaf_to_iout_gm)                = ioutn
+    
+    this%ileafst_to_iout_gm              = 2
+    this%matrix_ngmtransfer_doner_patch(this%ileafst_to_iout_gm)                 = ileaf_st
+    this%matrix_ngmtransfer_receiver_patch(this%ileafst_to_iout_gm)              = ioutn
+    
+    this%ileafxf_to_iout_gm              = 3
+    this%matrix_ngmtransfer_doner_patch(this%ileafxf_to_iout_gm)                 = ileaf_xf
+    this%matrix_ngmtransfer_receiver_patch(this%ileafxf_to_iout_gm)              = ioutn
+    
+    this%ifroot_to_iout_gm               = 4
+    this%matrix_ngmtransfer_doner_patch(this%ifroot_to_iout_gm)                  = ifroot 
+    this%matrix_ngmtransfer_receiver_patch(this%ifroot_to_iout_gm)               = ioutn
+    
+    this%ifrootst_to_iout_gm             = 5
+    this%matrix_ngmtransfer_doner_patch(this%ifrootst_to_iout_gm)                = ifroot_st
+    this%matrix_ngmtransfer_receiver_patch(this%ifrootst_to_iout_gm)             = ioutn
+    
+    this%ifrootxf_to_iout_gm             = 6
+    this%matrix_ngmtransfer_doner_patch(this%ifrootxf_to_iout_gm)                = ifroot_xf
+    this%matrix_ngmtransfer_receiver_patch(this%ifrootxf_to_iout_gm)             = ioutn
+    
+    this%ilivestem_to_iout_gm            = 7
+    this%matrix_ngmtransfer_doner_patch(this%ilivestem_to_iout_gm)               = ilivestem 
+    this%matrix_ngmtransfer_receiver_patch(this%ilivestem_to_iout_gm)            = ioutn
+    
+    this%ilivestemst_to_iout_gm          = 8
+    this%matrix_ngmtransfer_doner_patch(this%ilivestemst_to_iout_gm)             = ilivestem_st
+    this%matrix_ngmtransfer_receiver_patch(this%ilivestemst_to_iout_gm)          = ioutn
+    
+    this%ilivestemxf_to_iout_gm          = 9
+    this%matrix_ngmtransfer_doner_patch(this%ilivestemxf_to_iout_gm)             = ilivestem_xf
+    this%matrix_ngmtransfer_receiver_patch(this%ilivestemxf_to_iout_gm)          = ioutn
+    
+    this%ideadstem_to_iout_gm            = 10
+    this%matrix_ngmtransfer_doner_patch(this%ideadstem_to_iout_gm)               = ideadstem 
+    this%matrix_ngmtransfer_receiver_patch(this%ideadstem_to_iout_gm)            = ioutn
+    
+    this%ideadstemst_to_iout_gm          = 11
+    this%matrix_ngmtransfer_doner_patch(this%ideadstemst_to_iout_gm)             = ideadstem_st
+    this%matrix_ngmtransfer_receiver_patch(this%ideadstemst_to_iout_gm)          = ioutn
+    
+    this%ideadstemxf_to_iout_gm          = 12
+    this%matrix_ngmtransfer_doner_patch(this%ideadstemxf_to_iout_gm)             = ideadstem_xf
+    this%matrix_ngmtransfer_receiver_patch(this%ideadstemxf_to_iout_gm)          = ioutn
+    
+    this%ilivecroot_to_iout_gm           = 13
+    this%matrix_ngmtransfer_doner_patch(this%ilivecroot_to_iout_gm)              = ilivecroot 
+    this%matrix_ngmtransfer_receiver_patch(this%ilivecroot_to_iout_gm)           = ioutn
+    
+    this%ilivecrootst_to_iout_gm         = 14
+    this%matrix_ngmtransfer_doner_patch(this%ilivecrootst_to_iout_gm)            = ilivecroot_st
+    this%matrix_ngmtransfer_receiver_patch(this%ilivecrootst_to_iout_gm)         = ioutn
+    
+    this%ilivecrootxf_to_iout_gm         = 15
+    this%matrix_ngmtransfer_doner_patch(this%ilivecrootxf_to_iout_gm)            = ilivecroot_xf
+    this%matrix_ngmtransfer_receiver_patch(this%ilivecrootxf_to_iout_gm)         = ioutn
+    
+    this%ideadcroot_to_iout_gm           = 16
+    this%matrix_ngmtransfer_doner_patch(this%ideadcroot_to_iout_gm)              = ideadcroot 
+    this%matrix_ngmtransfer_receiver_patch(this%ideadcroot_to_iout_gm)           = ioutn
+    
+    this%ideadcrootst_to_iout_gm         = 17
+    this%matrix_ngmtransfer_doner_patch(this%ideadcrootst_to_iout_gm)            = ideadcroot_st
+    this%matrix_ngmtransfer_receiver_patch(this%ideadcrootst_to_iout_gm)         = ioutn
+    
+    this%ideadcrootxf_to_iout_gm         = 18
+    this%matrix_ngmtransfer_doner_patch(this%ideadcrootxf_to_iout_gm)            = ideadcroot_xf
+    this%matrix_ngmtransfer_receiver_patch(this%ideadcrootxf_to_iout_gm)         = ioutn
+    
+    this%iretransn_to_iout_gm            = 19
+    this%matrix_ngmtransfer_doner_patch(this%iretransn_to_iout_gm)               = iretransn
+    this%matrix_ngmtransfer_receiver_patch(this%iretransn_to_iout_gm)            = ioutn
+    
+    this%ilivestem_to_ideadstem_fi       = 1
+    this%matrix_nfitransfer_doner_patch(this%ilivestem_to_ideadstem_fi)          = ilivestem 
+    this%matrix_nfitransfer_receiver_patch(this%ilivestem_to_ideadstem_fi)       = ideadstem
+    
+    this%ilivecroot_to_ideadcroot_fi     = 2
+    this%matrix_nfitransfer_doner_patch(this%ilivecroot_to_ideadcroot_fi)        = ilivecroot 
+    this%matrix_nfitransfer_receiver_patch(this%ilivecroot_to_ideadcroot_fi)     = ideadcroot
+
+    this%ileaf_to_iout_fi                = 3
+    this%matrix_nfitransfer_doner_patch(this%ileaf_to_iout_fi)                   = ileaf 
+    this%matrix_nfitransfer_receiver_patch(this%ileaf_to_iout_fi)                = ioutn
+    
+    this%ileafst_to_iout_fi              = 4
+    this%matrix_nfitransfer_doner_patch(this%ileafst_to_iout_fi)                 = ileaf_st
+    this%matrix_nfitransfer_receiver_patch(this%ileafst_to_iout_fi)              = ioutn
+    
+    this%ileafxf_to_iout_fi              = 5
+    this%matrix_nfitransfer_doner_patch(this%ileafxf_to_iout_fi)                 = ileaf_xf
+    this%matrix_nfitransfer_receiver_patch(this%ileafxf_to_iout_fi)              = ioutn
+    
+    this%ifroot_to_iout_fi               = 6
+    this%matrix_nfitransfer_doner_patch(this%ifroot_to_iout_fi)                  = ifroot 
+    this%matrix_nfitransfer_receiver_patch(this%ifroot_to_iout_fi)               = ioutn
+    
+    this%ifrootst_to_iout_fi             = 7
+    this%matrix_nfitransfer_doner_patch(this%ifrootst_to_iout_fi)                = ifroot_st
+    this%matrix_nfitransfer_receiver_patch(this%ifrootst_to_iout_fi)             = ioutn
+    
+    this%ifrootxf_to_iout_fi             = 8
+    this%matrix_nfitransfer_doner_patch(this%ifrootxf_to_iout_fi)                = ifroot_xf
+    this%matrix_nfitransfer_receiver_patch(this%ifrootxf_to_iout_fi)             = ioutn
+    
+    this%ilivestem_to_iout_fi            = 9
+    this%matrix_nfitransfer_doner_patch(this%ilivestem_to_iout_fi)               = ilivestem 
+    this%matrix_nfitransfer_receiver_patch(this%ilivestem_to_iout_fi)            = ioutn
+    
+    this%ilivestemst_to_iout_fi          = 10
+    this%matrix_nfitransfer_doner_patch(this%ilivestemst_to_iout_fi)             = ilivestem_st
+    this%matrix_nfitransfer_receiver_patch(this%ilivestemst_to_iout_fi)          = ioutn
+    
+    this%ilivestemxf_to_iout_fi          = 11
+    this%matrix_nfitransfer_doner_patch(this%ilivestemxf_to_iout_fi)             = ilivestem_xf
+    this%matrix_nfitransfer_receiver_patch(this%ilivestemxf_to_iout_fi)          = ioutn
+    
+    this%ideadstem_to_iout_fi            = 12
+    this%matrix_nfitransfer_doner_patch(this%ideadstem_to_iout_fi)               = ideadstem 
+    this%matrix_nfitransfer_receiver_patch(this%ideadstem_to_iout_fi)            = ioutn
+    
+    this%ideadstemst_to_iout_fi          = 13
+    this%matrix_nfitransfer_doner_patch(this%ideadstemst_to_iout_fi)             = ideadstem_st
+    this%matrix_nfitransfer_receiver_patch(this%ideadstemst_to_iout_fi)          = ioutn
+    
+    this%ideadstemxf_to_iout_fi          = 14
+    this%matrix_nfitransfer_doner_patch(this%ideadstemxf_to_iout_fi)             = ideadstem_xf
+    this%matrix_nfitransfer_receiver_patch(this%ideadstemxf_to_iout_fi)          = ioutn
+    
+    this%ilivecroot_to_iout_fi           = 15
+    this%matrix_nfitransfer_doner_patch(this%ilivecroot_to_iout_fi)              = ilivecroot 
+    this%matrix_nfitransfer_receiver_patch(this%ilivecroot_to_iout_fi)           = ioutn
+    
+    this%ilivecrootst_to_iout_fi         = 16
+    this%matrix_nfitransfer_doner_patch(this%ilivecrootst_to_iout_fi)            = ilivecroot_st
+    this%matrix_nfitransfer_receiver_patch(this%ilivecrootst_to_iout_fi)         = ioutn
+    
+    this%ilivecrootxf_to_iout_fi         = 17
+    this%matrix_nfitransfer_doner_patch(this%ilivecrootxf_to_iout_fi)            = ilivecroot_xf
+    this%matrix_nfitransfer_receiver_patch(this%ilivecrootxf_to_iout_fi)         = ioutn
+    
+    this%ideadcroot_to_iout_fi           = 18
+    this%matrix_nfitransfer_doner_patch(this%ideadcroot_to_iout_fi)              = ideadcroot 
+    this%matrix_nfitransfer_receiver_patch(this%ideadcroot_to_iout_fi)           = ioutn
+    
+    this%ideadcrootst_to_iout_fi         = 19
+    this%matrix_nfitransfer_doner_patch(this%ideadcrootst_to_iout_fi)            = ideadcroot_st
+    this%matrix_nfitransfer_receiver_patch(this%ideadcrootst_to_iout_fi)         = ioutn
+    
+    this%ideadcrootxf_to_iout_fi         = 20
+    this%matrix_nfitransfer_doner_patch(this%ideadcrootxf_to_iout_fi)            = ideadcroot_xf
+    this%matrix_nfitransfer_receiver_patch(this%ideadcrootxf_to_iout_fi)         = ioutn
+    
+    this%iretransn_to_iout_fi            = 21
+    this%matrix_nfitransfer_doner_patch(this%iretransn_to_iout_fi)               = iretransn
+    this%matrix_nfitransfer_receiver_patch(this%iretransn_to_iout_fi)            = ioutn
+    
+  end subroutine InitTransfer 
 
   !------------------------------------------------------------------------
   subroutine InitAllocate(this, bounds, alloc_full_veg)
@@ -612,10 +1055,57 @@ contains
     allocate(this%cost_nactive_patch           (begp:endp)) ;    this%cost_nactive_patch         (:) = nan
     allocate(this%cost_nretrans_patch          (begp:endp)) ;    this%cost_nretrans_patch        (:) = nan
     allocate(this%nuptake_npp_fraction_patch   (begp:endp)) ;    this%nuptake_npp_fraction_patch            (:) = nan
+	! Matrix
+    if(use_matrixcn)then
+       allocate(this%matrix_Ninput_patch               (begp:endp))               ; this%matrix_Ninput_patch              (:)   =  nan
+       allocate(this%matrix_nalloc_patch               (begp:endp,1:nvegnpool))   ; this%matrix_nalloc_patch              (:,:) =  nan
 
-    ! Allocate for matrix solution arrays
-    if ( use_matrixcn )then
-    end if
+       allocate(this%matrix_nphtransfer_patch          (begp:endp,1:nnphtrans))   ; this%matrix_nphtransfer_patch         (:,:) =  nan
+       allocate(this%matrix_nphturnover_patch          (begp:endp,1:nvegnpool))   ; this%matrix_nphturnover_patch         (:,:) =  nan
+       allocate(this%matrix_nphtransfer_doner_patch    (1:nnphtrans))             ; this%matrix_nphtransfer_doner_patch   (:)   = -9999
+       allocate(this%matrix_nphtransfer_receiver_patch (1:nnphtrans))             ; this%matrix_nphtransfer_receiver_patch(:)   = -9999
+
+       allocate(this%matrix_ngmtransfer_patch          (begp:endp,1:nngmtrans))   ; this%matrix_ngmtransfer_patch         (:,:) =  nan
+       allocate(this%matrix_ngmturnover_patch          (begp:endp,1:nvegnpool))   ; this%matrix_ngmturnover_patch         (:,:) =  nan
+       allocate(this%matrix_ngmtransfer_doner_patch    (1:nngmtrans))             ; this%matrix_ngmtransfer_doner_patch   (:)   = -9999
+       allocate(this%matrix_ngmtransfer_receiver_patch (1:nngmtrans))             ; this%matrix_ngmtransfer_receiver_patch(:)   = -9999
+
+       allocate(this%matrix_nfitransfer_patch          (begp:endp,1:nnfitrans))   ; this%matrix_nfitransfer_patch         (:,:) =  nan
+       allocate(this%matrix_nfiturnover_patch          (begp:endp,1:nvegnpool))   ; this%matrix_nfiturnover_patch         (:,:) =  nan
+       allocate(this%matrix_nfitransfer_doner_patch    (1:nnfitrans))             ; this%matrix_nfitransfer_doner_patch   (:)   = -9999
+       allocate(this%matrix_nfitransfer_receiver_patch (1:nnfitrans))             ; this%matrix_nfitransfer_receiver_patch(:)   = -9999
+
+       allocate(this%list_phn_phgmn                    (1:nnphtrans+nvegnpool))   ; this%list_phn_phgmn   = -9999
+       allocate(this%list_gmn_phgmn                    (1:nvegnpool))             ; this%list_gmn_phgmn   = -9999
+       allocate(this%list_phn_phgmfin                  (1:nnphtrans+nvegnpool))   ; this%list_phn_phgmfin = -9999
+       allocate(this%list_gmn_phgmfin                  (1:nvegnpool))             ; this%list_gmn_phgmfin = -9999
+       allocate(this%list_fin_phgmfin                  (1:nnfitrans+nvegnpool))   ; this%list_fin_phgmfin = -9999
+
+       allocate(this%list_aphn                         (1:nnphtrans-nnphouttrans)); this%list_aphn        = -9999
+       allocate(this%list_agmn                         (1:nngmtrans-nngmouttrans)); this%list_agmn        = -9999
+       allocate(this%list_afin                         (1:nnfitrans-nnfiouttrans)); this%list_afin        = -9999
+
+       call this%AKphvegn%InitSM  (nvegnpool,begp,endp,nnphtrans-nnphouttrans+nvegnpool)
+       call this%AKgmvegn%InitSM  (nvegnpool,begp,endp,nngmtrans-nngmouttrans+nvegnpool)
+       call this%AKfivegn%InitSM  (nvegnpool,begp,endp,nnfitrans-nnfiouttrans+nvegnpool)
+
+       this%NE_AKallvegn = (nnphtrans-nnphouttrans+nvegnpool) + (nngmtrans-nngmouttrans+nvegnpool) + &
+                           nnfitrans-nnfiouttrans+nvegnpool
+
+       call this%AKallvegn%InitSM (nvegnpool,begp,endp,this%NE_AKallvegn)
+
+       allocate(this%RI_AKallvegn                      (1:this%NE_AKallvegn))     ; this%RI_AKallvegn(:) = -9999
+       allocate(this%CI_AKallvegn                      (1:this%NE_AKallvegn))     ; this%CI_AKallvegn(:) = -9999
+       allocate(this%RI_phn             (1:nnphtrans-nnphouttrans+nvegnpool))     ; this%RI_phn(:)       = -9999
+       allocate(this%CI_phn             (1:nnphtrans-nnphouttrans+nvegnpool))     ; this%CI_phn(:)       = -9999
+       allocate(this%RI_gmn             (1:nngmtrans-nngmouttrans+nvegnpool))     ; this%RI_gmn(:)       = -9999
+       allocate(this%CI_gmn             (1:nngmtrans-nngmouttrans+nvegnpool))     ; this%CI_gmn(:)       = -9999
+       allocate(this%RI_fin             (1:nnfitrans-nnfiouttrans+nvegnpool))     ; this%RI_fin(:)       = -9999
+       allocate(this%CI_fin             (1:nnfitrans-nnfiouttrans+nvegnpool))     ; this%CI_fin(:)       = -9999
+
+       call this%Kvegn%InitDM (nvegnpool,begp,endp)
+       call this%Xvegn%InitV  (nvegnpool,begp,endp)
+     end if
 
   end subroutine InitAllocate
 
@@ -1248,10 +1738,12 @@ contains
     call hist_addfld1d (fname='PLANT_NALLOC', units='gN/m^2/s', &
          avgflag='A', long_name='total allocated N flux', &
          ptr_patch=this%plant_nalloc_patch, default='inactive')
-
-    ! Matrix solution history variables
-    if ( use_matrixcn )then
-    end if
+    if (use_matrixcn) then		 
+       this%matrix_Ninput_patch(begp:endp) = spval
+       call hist_addfld1d (fname='MATRIX PLANT_NALLOC', units='gN/m^2/s', &
+            avgflag='A', long_name='total allocated N flux for matrix', &
+            ptr_patch=this%matrix_Ninput_patch, default='inactive')
+    end if 
     
     if ( use_fun ) then
        this%Nactive_patch(begp:endp)  = spval
@@ -1676,7 +2168,7 @@ contains
              long_name='', units='', &
              interpinic_flag='interp', readvar=readvar, data=this%Nactive_patch) 
         call set_missing_vals_to_constant(this%Nactive_patch, 0._r8)
-
+    
         call restartvar(ncid=ncid, flag=flag, varname='Nnonmyc', xtype=ncd_double,       &
              dim1name='pft', &
              long_name='', units='', &
@@ -1792,7 +2284,7 @@ contains
   end subroutine Restart
 
   !-----------------------------------------------------------------------
-  subroutine SetValues ( this, nvegnpool, &
+  subroutine SetValues ( this,nvegnpool, &
        num_patch, filter_patch, value_patch, &
        num_column, filter_column, value_column)
     !
@@ -1802,8 +2294,7 @@ contains
     ! !ARGUMENTS:
     ! !ARGUMENTS:
     class (cnveg_nitrogenflux_type) :: this
-    integer , intent(in) :: num_patch
-    integer , intent(in) :: nvegnpool
+    integer , intent(in) :: num_patch,nvegnpool
     integer , intent(in) :: filter_patch(:)
     real(r8), intent(in) :: value_patch
     integer , intent(in) :: num_column
@@ -2042,12 +2533,40 @@ contains
           this%m_decomp_npools_to_fire_col(i,k) = value_column
        end do
     end do
+! Matrix
+    if(use_matrixcn)then
+       do j = 1, nvegnpool
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%matrix_nalloc_patch(i,j)       = value_patch
+             this%matrix_nphturnover_patch (i,j) = value_patch
+             this%matrix_ngmturnover_patch (i,j) = value_patch
+             this%matrix_nfiturnover_patch (i,j) = value_patch
+          end do
+       end do
 
-    ! Matrix solution
-    if ( use_matrixcn )then
+       do j = 1, nnphtrans
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%matrix_nphtransfer_patch (i,j) = value_patch
+          end do
+       end do
+
+       do j = 1, nngmtrans
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%matrix_ngmtransfer_patch (i,j) = value_patch
+          end do
+       end do
+
+       do j = 1, nnfitrans
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%matrix_nfitransfer_patch (i,j) = value_patch
+          end do
+       end do
+
     end if
-
-
     do k = 1, ndecomp_pools
        do j = 1, nlevdecomp_full
           do fi = 1,num_column

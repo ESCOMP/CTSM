@@ -131,7 +131,8 @@ contains
          decomp_cascade_hr_vr             =>    soilbiogeochem_carbonflux_inst%decomp_cascade_hr_vr_col               , & ! Output: [real(r8) (:,:,:) ]  vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
          decomp_cascade_ctransfer_vr      =>    soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_vr_col        , & ! Output: [real(r8) (:,:,:) ]  vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
          phr_vr                           =>    soilbiogeochem_carbonflux_inst%phr_vr_col                             , & ! Input:  [real(r8) (:,:)   ]  potential HR (gC/m3/s)                           
-         fphr                             =>    soilbiogeochem_carbonflux_inst%fphr_col                                 & ! Output: [real(r8) (:,:)   ]  fraction of potential SOM + LITTER heterotrophic
+         fphr                             =>    soilbiogeochem_carbonflux_inst%fphr_col                               , & ! Output: [real(r8) (:,:)   ]  fraction of potential SOM + LITTER heterotrophic
+         Ksoil                            =>    soilbiogeochem_carbonflux_inst%Ksoil                                    & ! In/Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
          )
 
       ! column loop to calculate actual immobilization and decomp rates, following
@@ -177,6 +178,8 @@ contains
                      p_decomp_cpool_loss(c,j,k) = p_decomp_cpool_loss(c,j,k) * fpi_vr(c,j)
                      pmnf_decomp_cascade(c,j,k) = pmnf_decomp_cascade(c,j,k) * fpi_vr(c,j)
                      if (use_soil_matrixcn)then ! correct only when one transfer from each litter pool
+                        Ksoil%DM(c,j+nlevdecomp*(cascade_donor_pool(k)-1)) =  &
+                          Ksoil%DM(c,j+nlevdecomp*(cascade_donor_pool(k)-1)) * fpi_vr(c,j)
                      end if
                      if (.not. use_nitrif_denitrif) then
                         sminn_to_denit_decomp_cascade_vr(c,j,k) = 0._r8

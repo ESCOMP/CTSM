@@ -588,7 +588,8 @@ contains
          w_scalar       => soilbiogeochem_carbonflux_inst%w_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           
          o_scalar       => soilbiogeochem_carbonflux_inst%o_scalar_col , & ! Output: [real(r8) (:,:)   ]  fraction by which decomposition is limited by anoxia   
          decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col , & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
-         spinup_factor  => decomp_cascade_con%spinup_factor              & ! Input:  [real(r8) (:)     ]  factor for AD spinup associated with each pool           
+         Ksoil          => soilbiogeochem_carbonflux_inst%Ksoil        , & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
+         spinup_factor  => decomp_cascade_con%spinup_factor            & ! Input:  [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
          )
 
       mino2lim = CNParamsShareInst%mino2lim
@@ -910,9 +911,16 @@ contains
 
             ! Above into soil matrix
             if(use_soil_matrixcn)then
+               Ksoil%DM(c,j+nlevdecomp*(i_met_lit-1)) = decomp_k(c,j,i_met_lit) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_cel_lit-1)) = decomp_k(c,j,i_cel_lit) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_lig_lit-1)) = decomp_k(c,j,i_lig_lit) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_act_som-1)) = decomp_k(c,j,i_act_som) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_slo_som-1)) = decomp_k(c,j,i_slo_som) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_pas_som-1)) = decomp_k(c,j,i_pas_som) * dt
                ! same for cwd but only if fates is not enabled; fates handles CWD
                ! on its own structure
                if (.not. use_fates) then
+                  Ksoil%DM(c,j+nlevdecomp*(i_cwd-1))   = decomp_k(c,j,i_cwd) * dt
                end if
             end if !use_soil_matrixcn
          end do
