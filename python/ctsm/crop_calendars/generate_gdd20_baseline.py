@@ -97,7 +97,10 @@ def _parse_args():
         raise FileExistsError("Output file exists but --overwrite is not specified")
 
     # Process time slice
-    # Assumes CESM behavior where data for e.g. 1987 is saved as 1988-01-01
+    # Assumes CESM behavior where data for e.g. 1987 is saved as 1988-01-01.
+    # It would be more robust, accounting for upcoming behavior (where timestamp for a year is the
+    # middle of that year), to do slice("YEAR1-01-03", "YEARN-01-02"), but that's not compatible
+    # with ctsm_pylib as of the version using python 3.7.9. See safer_timeslice() in cropcal_utils.
     if args.first_year is not None:
         date_1 = f"{args.first_year+1}-01-01"
     else:

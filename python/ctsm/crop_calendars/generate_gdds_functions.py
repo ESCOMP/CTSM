@@ -22,6 +22,7 @@ try:
     # pylint: disable=import-error
     from ctsm.crop_calendars.cropcal_figs_module import *
     from matplotlib.transforms import Bbox
+    import matplotlib.pyplot as plt
 
     warnings.filterwarnings(
         "ignore",
@@ -63,7 +64,7 @@ def error(logger, string):
     raise RuntimeError(string)
 
 
-def check_sdates(dates_ds, sdates_rx, logger, verbose=False):
+def check_sdates(dates_ds, sdates_rx, outdir_figs, logger, verbose=False):
     """
     Checking that input and output sdates match
     """
@@ -106,7 +107,27 @@ def check_sdates(dates_ds, sdates_rx, logger, verbose=False):
             log(logger, out_map_notnan[here][0:4])
             log(logger, "diff:")
             log(logger, diff_map_notnan[here][0:4])
+            first_diff = all_ok
             all_ok = False
+
+            if CAN_PLOT:
+                sdate_diffs_dir = os.path.join(outdir_figs, "sdate_diffs")
+                if first_diff:
+                    log(logger, f"Saving sdate difference figures to {sdate_diffs_dir}")
+                if not os.path.exists(sdate_diffs_dir):
+                    os.makedirs(sdate_diffs_dir)
+                in_map.where(~np.isnan(out_map)).plot()
+                plt.title(f"{vegtype_str} sdates in (masked)")
+                plt.savefig(os.path.join(sdate_diffs_dir, f"{vegtype_str}.in.png"))
+                plt.close()
+                out_map.plot()
+                plt.title(f"{vegtype_str} sdates out")
+                plt.savefig(os.path.join(sdate_diffs_dir, f"{vegtype_str}.out.png"))
+                plt.close()
+                diff_map.plot()
+                plt.title(f"{vegtype_str} sdates diff (out - in)")
+                plt.savefig(os.path.join(sdate_diffs_dir, f"{vegtype_str}.diff.png"))
+                plt.close()
 
     if not any_found:
         error(logger, "No matching variables found in sdates_rx!")
@@ -234,6 +255,7 @@ def import_and_process_1yr(
     mxmats,
     get_gs_len_da,
     skip_crops,
+    outdir_figs,
     logger,
 ):
     """
@@ -272,6 +294,8 @@ def import_and_process_1yr(
         time_slice=slice(f"{this_year}-01-01", f"{this_year}-12-31"),
         chunks=chunks,
     )
+    for timestep in dates_ds["time"].values:
+        print(timestep)
 
     if dates_ds.dims["time"] > 1:
         if dates_ds.dims["time"] == 365:
@@ -466,7 +490,7 @@ def import_and_process_1yr(
     # Import expected sowing dates. This will also be used as our template output file.
     imported_sdates = isinstance(sdates_rx, str)
     sdates_rx = import_rx_dates("s", sdates_rx, incl_patches1d_itype_veg, mxsowings, logger)
-    check_sdates(dates_incl_ds, sdates_rx, logger)
+    check_sdates(dates_incl_ds, sdates_rx, outdir_figs, logger)
 
     # Import hdates, if needed
     imported_hdates = isinstance(hdates_rx, str)
