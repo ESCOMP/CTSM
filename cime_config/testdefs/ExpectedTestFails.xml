@@ -244,10 +244,6 @@
       <status>FAIL</status>
       <issue>#2310</issue>
     </phase>
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2310</issue>
-    </phase>
   </test>
 
   <!-- Other external test list failures (MOSART, RTM, etc. -->
