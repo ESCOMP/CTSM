@@ -2780,7 +2780,7 @@ use_crop=".true.">lnd/clm2/surfdata_map/ctsm5.1.dev052/landuse.timeseries_mpasa1
 <!-- Defaults for Zender's soil erodibility data  -->
 <!-- ===========================================  -->
 
-<dust_emis_method>Zender_2003</dust_emis_method>
+<dust_emis_method>Leung_2023</dust_emis_method>
 <zender_soil_erod_source dust_emis_method="Zender_2003">atm</zender_soil_erod_source>
 <zendersoilerod_mapalgo>bilinear</zendersoilerod_mapalgo>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam45_cam6.0"

@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1612;
+my $ntests = 1611;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 945;
@@ -1273,11 +1273,6 @@ print "=========================================================================
 
 my %warntest = (
      # Warnings without the -ignore_warnings option given
-     "dustemisLeung"             =>{ options=>"-envxml_dir .",
-                                     namelst=>"dust_emis_method = 'Leung_2023'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
-                                   },
      "coldwfinidat"              =>{ options=>"-envxml_dir . -clm_start_type cold",
                                      namelst=>"finidat = 'testfile.nc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",

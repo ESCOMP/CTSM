@@ -4008,9 +4008,6 @@ sub setup_logic_dust_emis {
                             "$option is being set, need to change one or the other" );
         }
      }
-     if ( $dust_emis_method eq "Leung_2023" ) {
-        $log->warning("dust_emis_method is Leung_2023 and that option has NOT been brought into CTSM yet");
-     }
   }
 }
 
