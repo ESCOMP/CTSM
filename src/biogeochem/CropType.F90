@@ -352,7 +352,9 @@ contains
          ptr_patch=this%sowing_reason_perharv_patch, default='inactive')
 
     this%harvest_reason_thisyr_patch(begp:endp,:) = spval
-    call hist_addfld2d (fname='HARVEST_REASON_PERHARV', units='1 = mature; 2 = max season length; 3 = incorrect Dec. 31 sowing; 4 = sowing today; 5 = sowing tomorrow; 6 = tomorrow == idop; 7 = killed by cold temperature during vernalization', type2d='mxharvests', &
+    call hist_addfld2d (fname='HARVEST_REASON_PERHARV', units='1 = mature; 2 = max season length; 3 = incorrect Dec. 31 '// &
+    'sowing; 4 = sowing today; 5 = sowing tomorrow; 6 = tomorrow == idop; 7 = killed by cold temperature during vernalization', &
+         type2d='mxharvests', &
          avgflag='I', long_name='Reason for each crop harvest; should only be output annually', &
          ptr_patch=this%harvest_reason_thisyr_patch, default='inactive')
 

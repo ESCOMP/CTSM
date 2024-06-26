@@ -16,6 +16,8 @@ module SurfaceAlbedoType
   ! !PUBLIC DATA MEMBERS:
   type, public :: surfalb_type
 
+     real(r8), pointer :: azsun_grc            (:)   ! azimuth angle of sun
+     real(r8), pointer :: coszen_grc           (:)   ! gridcell cosine of solar zenith angle
      real(r8), pointer :: coszen_col           (:)   ! col cosine of solar zenith angle
      real(r8), pointer :: albd_patch           (:,:) ! patch surface albedo (direct)   (numrad)                    
      real(r8), pointer :: albi_patch           (:,:) ! patch surface albedo (diffuse)  (numrad)                    
@@ -123,11 +125,15 @@ contains
     ! !LOCAL VARIABLES:
     integer :: begp, endp
     integer :: begc, endc
+    integer :: begg, endg
     !---------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
+    begg = bounds%begg; endg = bounds%endg
 
+    allocate(this%azsun_grc          (begg:endg))              ; this%azsun_grc         (:)   = nan
+    allocate(this%coszen_grc         (begg:endg))              ; this%coszen_grc         (:)   = nan
     allocate(this%coszen_col         (begc:endc))              ; this%coszen_col         (:)   = nan
     allocate(this%albgrd_col         (begc:endc,numrad))       ; this%albgrd_col         (:,:) = nan
     allocate(this%albgri_col         (begc:endc,numrad))       ; this%albgri_col         (:,:) = nan
@@ -210,15 +216,27 @@ contains
     ! !LOCAL VARIABLES:
     integer :: begp, endp
     integer :: begc, endc
+    integer :: begg, endg
     character(len=cs) :: defaultoutput
     !---------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
+    begg = bounds%begg; endg = bounds%endg
+
+    this%azsun_grc(begg:endg) = spval
+    call hist_addfld1d (fname='AZSUN', units='radians', &
+         avgflag='A', long_name='cosine of solar zenith angle', &
+         ptr_lnd=this%azsun_grc, default='inactive')
+
+    this%coszen_grc(begg:endg) = spval
+    call hist_addfld1d (fname='COSZEN_GRC', units='none', &
+         avgflag='A', long_name='cosine of solar zenith angle', &
+         ptr_lnd=this%coszen_grc, default='inactive')
 
     this%coszen_col(begc:endc) = spval
     call hist_addfld1d (fname='COSZEN', units='none', &
-         avgflag='A', long_name='cosine of solar zenith angle', &
+         avgflag='A', long_name='cosine of solar zenith angle (downscaled if downscaling is activated)', &
          ptr_col=this%coszen_col, default='inactive')
 
     this%albgrd_col(begc:endc,:) = spval
@@ -417,6 +435,11 @@ contains
 
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
+
+    call restartvar(ncid=ncid, flag=flag, varname='coszen_grc', xtype=ncd_double,  & 
+         dim1name='gridcell', &
+         long_name='cosine of solar zenith angle', units='unitless', &
+         interpinic_flag='interp', readvar=readvar, data=this%coszen_grc)
 
     call restartvar(ncid=ncid, flag=flag, varname='coszen', xtype=ncd_double,  & 
          dim1name='column', &

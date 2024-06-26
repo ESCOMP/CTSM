@@ -75,6 +75,8 @@ contains
     ! atm_topo is arbitrary for the sake of getting these counts. We don't have a true
     ! atm_topo value at the point of this call, so use 0.
     real(r8), parameter :: atm_topo = 0._r8
+
+
     !------------------------------------------------------------------------------
 
     npatches = 0
@@ -84,6 +86,11 @@ contains
 
     call subgrid_get_info_natveg(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
+
+    ! call this after natveg call because we allocate space for
+    ! FATES cohorts based on the number of naturally vegetated columns
+    ! and nothing else
+    call subgrid_get_info_cohort(gi, ncols_temp, ncohorts)
 
     call subgrid_get_info_urban_tbd(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
@@ -107,8 +114,6 @@ contains
     call subgrid_get_info_crop(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
    
-    call subgrid_get_info_cohort(gi,ncohorts)
-
   contains
     subroutine accumulate_counters
       ! Accumulate running sums of patches, columns and landunits.
@@ -131,6 +136,8 @@ contains
     !
     ! !USES
     use clm_varpar, only : natpft_lb, natpft_ub
+    use clm_instur, only : ncolumns_hillslope
+    use clm_varctl, only : use_hillslope
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
@@ -154,9 +161,16 @@ contains
     end do
 
     if (npatches > 0) then
-       ! Assume that the vegetated landunit has one column
-       ncols = 1
        nlunits = 1
+       if (use_hillslope) then
+          ! ensure ncols is > 0
+          ncols = max(ncolumns_hillslope(gi),1)
+       else
+          ncols = 1
+       endif
+       ! Assume that each PFT present in the grid cell is present in every column
+       npatches = ncols*npatches
+
     else
        ! As noted in natveg_patch_exists, we expect a naturally vegetated landunit in
        ! every grid cell. This means that npatches should be at least 1 in every grid
@@ -220,7 +234,7 @@ contains
 
   ! -----------------------------------------------------------------------------
 
-  subroutine subgrid_get_info_cohort(gi, ncohorts)
+  subroutine subgrid_get_info_cohort(gi, ncols, ncohorts)
     !
     ! !DESCRIPTION:
     ! Obtain cohort counts per each gridcell.
@@ -230,6 +244,7 @@ contains
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
+    integer, intent(in)  :: ncols     ! number of nat veg columns in this grid cell
     integer, intent(out) :: ncohorts  ! number of cohorts in this grid cell
     !
     ! !LOCAL VARIABLES:
@@ -248,10 +263,9 @@ contains
     ! restart vector will just be a little sparse.
     ! -------------------------------------------------------------------------
     
-    ncohorts = fates_maxElementsPerSite
+    ncohorts = ncols*fates_maxElementsPerSite
     
  end subroutine subgrid_get_info_cohort
-
 
   !-----------------------------------------------------------------------
   subroutine subgrid_get_info_urban_tbd(gi, npatches, ncols, nlunits)

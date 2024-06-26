@@ -33,6 +33,8 @@ module DUSTMod
   use PatchType            , only : patch
   use pftconMod            , only : noveg
   use PrigentRoughnessStreamType    , only : prigent_roughness_stream_type
+  use ZenderSoilErodStreamType,  only : soil_erod_stream_type
+  use clm_varctl           , only : dust_emis_method
   !  
   ! !PUBLIC TYPES
   implicit none
@@ -62,7 +64,8 @@ module DUSTMod
      real(r8), pointer, private :: vlc_trb_2_patch           (:)   ! turbulent deposition velocity 2(m/s)
      real(r8), pointer, private :: vlc_trb_3_patch           (:)   ! turbulent deposition velocity 3(m/s)
      real(r8), pointer, private :: vlc_trb_4_patch           (:)   ! turbulent deposition velocity 4(m/s)
-     real(r8), pointer, private :: mbl_bsn_fct_col           (:)   ! basin factor
+     type(soil_erod_stream_type), private :: soil_erod_stream ! Zender soil erodibility stream data
+     real(r8), pointer, private :: mbl_bsn_fct_col           (:)   ! [dimensionless] basin factor, or soil erodibility, time-constant
 
      real(r8), pointer, private :: dst_emiss_coeff_patch     (:)   ! dust emission coefficient (unitless)
      real(r8), pointer, private :: wnd_frc_thr_patch         (:)   ! wet fluid threshold (m/s)
@@ -108,9 +111,10 @@ contains
   subroutine Init(this, bounds, NLFilename)
 
     class(dust_type) :: this
-    type(bounds_type), intent(in) :: bounds
+    type(bounds_type), intent(in) :: bounds  
     character(len=*),  intent(in) :: NLFilename
 
+    call this%soil_erod_stream%Init( bounds, NLFilename )
     call this%InitAllocate (bounds)
     call this%InitHistory  (bounds)
     call this%prigent_roughness_stream%Init( bounds, NLFilename )
@@ -164,6 +168,7 @@ contains
     allocate(this%frc_thr_rghn_fct_patch    (begp:endp))        ; this%frc_thr_rghn_fct_patch    (:)   = nan
     allocate(this%wnd_frc_thr_std_patch     (begp:endp))        ; this%wnd_frc_thr_std_patch     (:)   = nan
     allocate(this%dpfct_rock_patch          (begp:endp))        ; this%dpfct_rock_patch          (:)   = nan
+
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -179,9 +184,11 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp,endp
+    integer :: begc,endc
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
+    begc = bounds%begc; endc = bounds%endc
 
     this%flx_mss_vrt_dst_tot_patch(begp:endp) = spval
     call hist_addfld1d (fname='DSTFLXT', units='kg/m2/s',  &
@@ -297,6 +304,15 @@ contains
          avgflag='A', long_name='rock drag partition factor', &
          ptr_patch=this%dpfct_rock_patch)
 
+    if (dust_emis_method == 'Zender_2003') then
+       if ( this%soil_erod_stream%UseStreams() )then
+          this%mbl_bsn_fct_col(begc:endc) = spval
+          call hist_addfld1d (fname='LND_MBL', units='fraction',  &
+               avgflag='A', long_name='Soil erodibility factor', &
+               ptr_col=this%mbl_bsn_fct_col, default='inactive')
+       end if
+    end if
+
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -313,13 +329,26 @@ contains
 
     ! Set basin factor to 1 for now
 
-    do c = bounds%begc, bounds%endc
-       l = col%landunit(c)
+    if (dust_emis_method == 'Leung_2023') then
+       !do c = bounds%begc, bounds%endc
+       !   l = col%landunit(c)
 
-       if (.not.lun%lakpoi(l)) then
-          this%mbl_bsn_fct_col(c) = 1.0_r8
+       !   if (.not.lun%lakpoi(l)) then
+       !      this%mbl_bsn_fct_col(c) = 1.0_r8
+       !   end if
+       !end do
+       call endrun( msg="Leung_2023 dust_emis_method is currently not available"//errMsg(sourcefile, __LINE__))
+    else if (dust_emis_method == 'Zender_2003') then
+       if ( this%soil_erod_stream%UseStreams() )then
+          call this%soil_erod_stream%CalcDustSource( bounds, &
+                                   this%mbl_bsn_fct_col(bounds%begc:bounds%endc) )
+       else
+          this%mbl_bsn_fct_col(:) = 1.0_r8
        end if
-    end do
+    else
+       write(iulog,*) 'dust_emis_method not recognized = ', trim(dust_emis_method)
+       call endrun( msg="dust_emis_method namelist item is not valid "//errMsg(sourcefile, __LINE__))
+    end if
 
       ! Caulculate Drag Partition factor (Marticorena and Bergametti 1995 formulation)
       if ( this%prigent_roughness_stream%useStreams() )then !if usestreams == true, and it should be always true
@@ -441,7 +470,7 @@ contains
          fv                  => frictionvel_inst%fv_patch            , & ! Input:  [real(r8) (:)   ]  friction velocity (m/s) (for dust model)          
          u10                 => frictionvel_inst%u10_patch           , & ! Input:  [real(r8) (:)   ]  10-m wind (m/s) (created for dust model)          
          
-         mbl_bsn_fct         => dust_inst%mbl_bsn_fct_col            , & ! Input:  [real(r8) (:)   ]  basin factor                                      
+         mbl_bsn_fct         => dust_inst%mbl_bsn_fct_col            , & ! Input:  [real(r8) (:)   ]  basin factor
          flx_mss_vrt_dst     => dust_inst%flx_mss_vrt_dst_patch      , & ! Output: [real(r8) (:,:) ]  surface dust emission (kg/m**2/s)               
          flx_mss_vrt_dst_tot => dust_inst%flx_mss_vrt_dst_tot_patch  , & ! Output: [real(r8) (:)   ]  total dust flux back to atmosphere (pft)
          ! below variables are defined in Kok et al. (2014) or (mostly) Leung et al. (2023) dust emission scheme. dmleung 16 Feb 2024
@@ -1023,10 +1052,6 @@ contains
     real(r8), parameter :: dns_slt = 2650.0_r8         ! [kg m-3] Density of optimal saltation particles
     !------------------------------------------------------------------------
 
-    associate(& 
-         mbl_bsn_fct  =>  this%mbl_bsn_fct_col   & ! Output:  [real(r8) (:)] basin factor                                       
-         )
-
       ! allocate module variable
       allocate (ovr_src_snk_mss(dst_src_nbr,ndst))  
       allocate (dmt_vwr(ndst))
@@ -1261,8 +1286,6 @@ contains
       do m = 1, ndst
          stk_crc(m) = vlc_grv(m) / vlc_stk(m)
       end do
-
-    end associate 
 
   end subroutine InitDustVars
 

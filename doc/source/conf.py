@@ -189,4 +189,4 @@ numfig_format = {'figure': 'Figure %s',
 numfig_secnum_depth = 2
 
 def setup(app):
-    app.add_stylesheet('css/custom.css')
+    app.add_css_file('css/custom.css')
