@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+tmp-240620.n03.ctsm5.2.007 samrabin 06/27/2024 Set upland hillslope column fsat values to zero
 tmp-240620.n02.ctsm5.2.007     erik 06/21/2024 Another update of git-fleximod
 tmp-240620.n01.ctsm5.2.007   slevis 06/21/2024 Merge b4b-dev (full tag name is tmp-240620.n01.ctsm5.2.007)
        ctsm5.2.007 multiple 05/31/2024 Rm manage_externals and update documentation accordingly

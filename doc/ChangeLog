@@ -1,4 +1,63 @@
 ===============================================================
+Tag name: tmp-240620.n03.ctsm5.2.007
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Thu Jun 27 14:17:02 MDT 2024
+One-line Summary: Set upland hillslope column fsat values to zero
+
+Purpose and description of changes
+----------------------------------
+
+The topmodel-based fsat surface runoff scheme is not appropriate for upland hillslope columns, so set upland hillslope column fsat values to zero. User can revert this behavior by setting hillslope_fsat_equals_zero to false.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- Added parameter hillslope_fsat_equals_zero (default true). Set to false for previous behavior.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- DIFF
+    izumi ------- DIFF
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, but only for hillslope tests.
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2600 (https://github.com/ESCOMP/CTSM/pull/2600)
+
+===============================================================
+===============================================================
 Tag name: tmp-240620.n02.ctsm5.2.007
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Fri 21 Jun 2024 10:21:01 PM MDT
