@@ -41,7 +41,7 @@ In addition for the build: python, bash-shell, CMake and GNU-Make are required
 These libraries need to be built such that they can all work together in the
 same executable. Hence, the above order may be required in building them.
 
-CTSM externals that are required are: cime and ccs_config. See [Building](#building-the-executable) on getting
+CTSM submodules that are required are: cime and ccs_config. See [Building](#building-the-executable) on getting
 those. A python environment that includes particular packages is also required
 we demonstrate how to use the ctsm_pylib environment that we support in CTSM.
 
