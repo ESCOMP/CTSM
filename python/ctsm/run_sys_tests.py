@@ -576,12 +576,12 @@ def _record_git_status(testroot, retry, dry_run):
     if git_status.count("\n") == 1:
         # Only line in git status is the branch info
         output += "(clean sandbox)\n"
-    manic = os.path.join("manage_externals", "checkout_externals")
-    manage_externals_status = subprocess.check_output(
-        [manic, "--status", "--verbose"], cwd=ctsm_root, universal_newlines=True
+    fleximod = os.path.join("bin", "git-fleximod")
+    fleximod_status = subprocess.check_output(
+        [fleximod, "status"], cwd=ctsm_root, universal_newlines=True
     )
-    output += 72 * "-" + "\n" + "manage_externals status:" + "\n"
-    output += manage_externals_status
+    output += 72 * "-" + "\n" + "git-fleximod status:" + "\n"
+    output += fleximod_status
     output += 72 * "-" + "\n"
 
     print(output)
