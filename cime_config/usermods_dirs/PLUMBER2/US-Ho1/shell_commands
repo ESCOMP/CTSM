@@ -1,10 +1,10 @@
+./xmlchange PLUMBER2SITE=US-Ho1
 ./xmlchange PTS_LON=-68.740204
 ./xmlchange PTS_LAT=45.204102
 ./xmlchange DATM_YR_END=2004
 ./xmlchange START_TOD=18000
 ./xmlchange ATM_NCPL=48
 
-echo "fsurdat='\$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/PLUMBER2/surfdata_1x1_PLUMBER2_US-Ho1_hist_2000_16pfts_c240326.nc'  " >> user_nl_clm 
 echo "CLM_USRDAT.PLUMBER2:datafiles= \$DIN_LOC_ROOT/atm/datm7/CLM1PT_data/PLUMBER2/US-Ho1/CLM1PT_data/CTSM_DATM_US-Ho1_1996-2004.nc " >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_first=1996" >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_last=2004" >> user_nl_datm_streams 
