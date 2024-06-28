@@ -734,15 +734,16 @@ Toggle to turn on no competition mode (only relevant if FATES is being used).
 Toggle to turn on FATES satellite phenology mode (only relevant if FATES is being used).                        
 </entry>
 
-<entry id="fates_harvest_mode" type="char*13" category="physics"
-        group="clm_inparm" valid_values="no_harvest,event_code,surfdata_file,luhdata_area,luhdata_mass">
+<entry id="fates_harvest_mode" type="char*18" category="physics"
+        group="clm_inparm" valid_values="no_harvest,event_code,landuse_timeseries,luhdata_area,luhdata_mass">
 Set FATES harvesting mode by setting fates_harvest_mode to a valid string option.
 Allowed values are:
  no_harvest: no fates harvesting of any kind
  event_code: fates logging via fates logging event codes (see fates parameter file) only
- surfdata_file: fates harvest driven by CLM landuse timeseries data (dynHarvestMod)
+ landuse_timeseries: fates harvest driven by CLM flanduse_timeseries file (dynHarvestMod)
  luhdata_area: fates harvest driven by LUH2 raw harvest data, area-based (dynFATESLandUseChangeMod)
  luhdata_mass: fates harvest driven by LUH2 raw harvest data, mass-based (dynFATESLandUseChangeMod)
+Note that the landuse_timeseries option is not the same as the FATES fluh_timeseries data file.
 </entry>
 
 <entry id="use_fates_planthydro" type="logical" category="physics"

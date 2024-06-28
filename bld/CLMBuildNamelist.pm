@@ -4652,7 +4652,7 @@ sub setup_logic_fates {
               if ( ! &value_is_true($nl->get_value('use_fates_luh')) ) {
                 $log->fatal_error("use_fates_luh is required to be true when $var is luhdata_mass or luhdata_area" );
               }
-           } elsif ( $mode  eq 'surfdata_file' ) {
+           } elsif ( $mode  eq 'landuse_timeseries' ) {
               # Check to make sure that the user set the flanduse_timeseries file
               # Since the flanduse_timeseries logic checking is upstream of the fates logic,
               # don't add the default here.  The onus is on the user to match the correct timeseries
@@ -4660,7 +4660,7 @@ sub setup_logic_fates {
               my $var = "flanduse_timeseries";
               my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
               if ( ! defined($nl->get_value($var))  ) {
-                $log->fatal_error("$var is required when fates_harvest_mode is surfdata_file" );
+                $log->fatal_error("$var is required when fates_harvest_mode is landuse_timeseries" );
               } elsif ( ! -f "$fname" ) {
                 $log->fatal_error("$var does NOT point to a valid filename" );
               }
