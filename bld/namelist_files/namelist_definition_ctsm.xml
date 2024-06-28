@@ -806,7 +806,7 @@ This is enabled by default if fates_harvest_mode is set to use the raw LUH2 harv
 </entry>
 
 <entry id="use_fates_lupft" type="logical" category="physics"
-       group="elm_inparm" valid_values="" value=".false.">
+       group="clm_inparm" valid_values="" value=".false.">
 If TRUE, enable use of fates land use x pft mapping data file.
 (Only valid for use_fates = true and is incompatible with transient runs currently.)
 </entry>
