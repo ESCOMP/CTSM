@@ -72,7 +72,6 @@ def write_usermods(
         "./xmlchange START_TOD=" + str(start_tod) + "\n"
         "./xmlchange ATM_NCPL=" + str(atm_ncpl) + "\n"
         "\n"
-
         'echo "CLM_USRDAT.PLUMBER2:datafiles= \$DIN_LOC_ROOT/atm/datm7/CLM1PT_data/PLUMBER2/'
         + site
         + "/CLM1PT_data/CTSM_DATM_"
@@ -117,7 +116,6 @@ def write_usermods(
         "\n"
         "# Turn on LAI streams for a SP case \n"
         "if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then \n"
-
         "  echo \"stream_fldfilename_lai='" + lai_stream + "'\" >> user_nl_clm \n"
         '  echo "stream_year_last_lai=' + str(end_year) + '" >> user_nl_clm \n'
         "  if  [[ $compset =~ ^HIST ]]; then \n"
