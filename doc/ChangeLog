@@ -1,4 +1,72 @@
 ===============================================================
+Tag name: ctsm5.2.008
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri 28 Jun 2024 12:22:46 PM MDT
+One-line Summary: Bring changes on temp-branch to master: b4b-dev, git-fleximod, hillslope fsat
+
+Purpose and description of changes
+----------------------------------
+
+Bring in changes that came in on the tmp-240620 branch to master now that cesm3_0_beta01 has
+been made. The changes are documented in below but include the following tags:
+
+  tmp-240620.n03.ctsm5.2.007 samrabin -- upland hillslope column fsat values to zero
+  tmp-240620.n02.ctsm5.2.007 erik ------ Another update of git-fleximod
+  tmp-240620.n01.ctsm5.2.007 slevis ---- Merge b4b-dev
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+Notes of particular relevance for users
+---------------------------------------
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Testing summary:  
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit with branch_tags/tmp-240620.n03.ctsm5.2.007
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+===============================================================
+===============================================================
 Tag name: tmp-240620.n03.ctsm5.2.007
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Thu Jun 27 14:17:02 MDT 2024
