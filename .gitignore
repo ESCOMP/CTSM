@@ -1,7 +1,3 @@
-# ignore svn directories
-**/.svn/**
-.svn/
-
 # netcdf files
 *.nc
 # but don't ignore netcdf files here:
