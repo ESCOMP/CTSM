@@ -74,35 +74,17 @@ def write_usermods(
         + "-"
         + str(end_year)
         + '.nc " >> user_nl_datm_streams \n'
-        'echo "presaero.SSP3-7.0:year_first='
-        + str(start_year)
-        + '" >> user_nl_datm_streams \n'
-        'echo "presaero.SSP3-7.0:year_last='
-        + str(end_year)
-        + '" >> user_nl_datm_streams \n'
-        'echo "presaero.SSP3-7.0:year_align='
-        + str(start_year)
-        + '" >> user_nl_datm_streams \n'
+        'echo "presaero.SSP3-7.0:year_first=' + str(start_year) + '" >> user_nl_datm_streams \n'
+        'echo "presaero.SSP3-7.0:year_last=' + str(end_year) + '" >> user_nl_datm_streams \n'
+        'echo "presaero.SSP3-7.0:year_align=' + str(start_year) + '" >> user_nl_datm_streams \n'
         "\n"
-        'echo "presndep.SSP3-7.0:year_first='
-        + str(start_year)
-        + '" >> user_nl_datm_streams \n'
-        'echo "presndep.SSP3-7.0:year_last='
-        + str(end_year)
-        + '" >> user_nl_datm_streams \n'
-        'echo "presndep.SSP3-7.0:year_align='
-        + str(start_year)
-        + '" >> user_nl_datm_streams \n'
+        'echo "presndep.SSP3-7.0:year_first=' + str(start_year) + '" >> user_nl_datm_streams \n'
+        'echo "presndep.SSP3-7.0:year_last=' + str(end_year) + '" >> user_nl_datm_streams \n'
+        'echo "presndep.SSP3-7.0:year_align=' + str(start_year) + '" >> user_nl_datm_streams \n'
         "\n"
-        'echo "co2tseries.SSP3-7.0:year_first='
-        + str(start_year)
-        + '" >> user_nl_datm_streams \n'
-        'echo "co2tseries.SSP3-7.0:year_last='
-        + str(end_year)
-        + '" >> user_nl_datm_streams \n'
-        'echo "co2tseries.SSP3-7.0:year_align='
-        + str(start_year)
-        + '" >> user_nl_datm_streams \n'
+        'echo "co2tseries.SSP3-7.0:year_first=' + str(start_year) + '" >> user_nl_datm_streams \n'
+        'echo "co2tseries.SSP3-7.0:year_last=' + str(end_year) + '" >> user_nl_datm_streams \n'
+        'echo "co2tseries.SSP3-7.0:year_align=' + str(start_year) + '" >> user_nl_datm_streams \n'
         "\n"
         "compset=`./xmlquery COMPSET --value` \n"
         "CLM_USRDAT_NAME=`./xmlquery CLM_USRDAT_NAME --value` \n"
@@ -131,12 +113,8 @@ def write_usermods(
         '  echo "stream_year_last_lai=' + str(end_year) + '" >> user_nl_clm \n'
         "  if  [[ $compset =~ ^HIST ]]; then \n"
         "    # for transient case with a historical compset \n"
-        '    echo "model_year_align_lai='
-        + str(start_year_actual)
-        + '" >> user_nl_clm \n'
-        '    echo "stream_year_first_lai='
-        + str(start_year_actual)
-        + '" >> user_nl_clm \n'
+        '    echo "model_year_align_lai=' + str(start_year_actual) + '" >> user_nl_clm \n'
+        '    echo "stream_year_first_lai=' + str(start_year_actual) + '" >> user_nl_clm \n'
         "  else \n"
         "    # for a spinup case with a i2000 compset \n"
         '    echo "model_year_align_lai=1" >> user_nl_clm \n'
