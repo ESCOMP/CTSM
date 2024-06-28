@@ -814,7 +814,9 @@ If TRUE, enable use of fates land use x pft mapping data file.
 <entry id="use_fates_potentialveg" type="logical" category="physics"
        group="clm_inparm" valid_values="" >
 If TRUE, ignore the land-use state vector and transitions, and assert that all lands
-are primary, and that there is no harvest.
+are primary, and that there is no harvest.  This mode is only relevant for FATES
+spin-up workflows that are intending to use the spin-up restart output to start a
+FATES land use transient case using the use_fates_lupft namelist option.
 </entry>
 
 <!-- This could eventually be included in the "dynamic_subgrid" -->
