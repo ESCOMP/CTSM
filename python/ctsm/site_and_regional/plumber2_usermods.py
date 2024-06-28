@@ -32,6 +32,9 @@ def write_usermods(
     atm_ncpl,
     stop_n,
 ):
+    """
+    Write information to be added to user mods
+    """
 
     site_dir = os.path.join("../../cime_config/usermods_dirs/PLUMBER2/", site)
 
@@ -40,11 +43,13 @@ def write_usermods(
 
     # create files in each directory
     include = os.path.join(site_dir, "include_user_mods")
-    iFile = open(include, "w")  # or 'a' to add text instead of truncate
-    iFile.write("../defaults")
-    iFile.close()
 
-    LAIstream = (
+    i_file = open(include, "w")  # or 'a' to add text instead of truncate
+    i_file.write("../defaults")
+    i_file.close()
+
+    # pylint: disable=anomalous-backslash-in-string
+    lai_stream = (
         "\$DIN_LOC_ROOT/lnd/clm2/lai_streams/PLUMBER2/"
         + site
         + "/LAI_stream_"
@@ -56,8 +61,10 @@ def write_usermods(
         + ".nc"
     )
     shell = os.path.join(site_dir, "shell_commands")
-    sFile = open(shell, "w")  # or 'a' to add text instead of truncate
-    sFile.write(
+
+    s_file = open(shell, "w")  # or 'a' to add text instead of truncate
+    # pylint: disable=line-too-long
+    s_file.write(
         "./xmlchange PLUMBER2SITE=" + site + "\n"
         "./xmlchange PTS_LON=" + str(lon) + "\n"
         "./xmlchange PTS_LAT=" + str(lat) + "\n"
@@ -65,6 +72,7 @@ def write_usermods(
         "./xmlchange START_TOD=" + str(start_tod) + "\n"
         "./xmlchange ATM_NCPL=" + str(atm_ncpl) + "\n"
         "\n"
+
         'echo "CLM_USRDAT.PLUMBER2:datafiles= \$DIN_LOC_ROOT/atm/datm7/CLM1PT_data/PLUMBER2/'
         + site
         + "/CLM1PT_data/CTSM_DATM_"
@@ -109,7 +117,8 @@ def write_usermods(
         "\n"
         "# Turn on LAI streams for a SP case \n"
         "if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then \n"
-        "  echo \"stream_fldfilename_lai='" + LAIstream + "'\" >> user_nl_clm \n"
+
+        "  echo \"stream_fldfilename_lai='" + lai_stream + "'\" >> user_nl_clm \n"
         '  echo "stream_year_last_lai=' + str(end_year) + '" >> user_nl_clm \n'
         "  if  [[ $compset =~ ^HIST ]]; then \n"
         "    # for transient case with a historical compset \n"
@@ -124,7 +133,8 @@ def write_usermods(
         "\n"
     )
 
-    sFile.close()
+    # pylint: enable=line-too-long, anomalous-backslash-in-string
+    s_file.close()
 
     # add baseflow_scalar = 0 to user_nl_clm for wetland sites
     wetland = [
@@ -140,23 +150,27 @@ def write_usermods(
         "PL-wet",
     ]
     if any(x == site for x in wetland):
-        sFile = open(shell, "a")  # or 'a' to add text instead of truncate
-        sFile.write(
+        s_file = open(shell, "a")  # or 'a' to add text instead of truncate
+        s_file.write(
             "\n"
             "# set baseflow scalar to zero for wetland site \n"
             'echo "baseflow_scalar = 0" >> user_nl_clm'
         )
-        sFile.close()
+        s_file.close()
 
 
 # End write_usermods function
 
 
 def main():
+    """
+    Iterate through plumber2 sites and create usermod_dirs
+    """
+
     # For now we can just run the 'main' program as a loop
     plumber2_sites = pd.read_csv("PLUMBER2_sites.csv", skiprows=4)
 
-    for i, row in tqdm.tqdm(plumber2_sites.iterrows()):
+    for _, row in tqdm.tqdm(plumber2_sites.iterrows()):
         lat = row["Lat"]
         lon = row["Lon"]
         site = row["Site"]

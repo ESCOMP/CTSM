@@ -18,46 +18,20 @@
 
 <clm_demand >flanduse_timeseries</clm_demand>
 
-<irrigate use_crop=".true." phys="clm5_1"  use_cndv=".false.">.true.</irrigate>
-<irrigate use_crop=".true." phys="clm5_1"  use_cndv=".true." >.false.</irrigate>
-<irrigate use_crop=".true." phys="clm5_0" use_cndv=".false." >.true.</irrigate>
-<irrigate use_crop=".true." phys="clm5_0" use_cndv=".true."  >.false.</irrigate>
-<irrigate use_crop=".true." phys="clm4_5"                    >.false.</irrigate>
+<irrigate use_crop=".true."               use_cndv=".false.">.true.</irrigate>
+<irrigate use_crop=".true."               use_cndv=".true." >.false.</irrigate>
+<irrigate use_crop=".true." phys="clm4_5" use_cndv=".false.">.false.</irrigate>
 
-<stream_year_first_ndep phys="clm4_5" use_cn=".true."   >1850</stream_year_first_ndep>
-<stream_year_last_ndep  phys="clm4_5" use_cn=".true."   >2015</stream_year_last_ndep>
-<model_year_align_ndep  phys="clm4_5" use_cn=".true."   >1850</model_year_align_ndep>
+<stream_year_first_ndep use_cn=".true."   >1850</stream_year_first_ndep>
+<stream_year_last_ndep  use_cn=".true."   >2015</stream_year_last_ndep>
+<model_year_align_ndep  use_cn=".true."   >1850</model_year_align_ndep>
 
-<stream_year_first_ndep phys="clm5_0" use_cn=".true."   >1850</stream_year_first_ndep>
-<stream_year_last_ndep  phys="clm5_0" use_cn=".true."   >2015</stream_year_last_ndep>
-<model_year_align_ndep  phys="clm5_0" use_cn=".true."   >1850</model_year_align_ndep>
+<stream_year_first_popdens cnfireson=".true."   >1850</stream_year_first_popdens>
+<stream_year_last_popdens  cnfireson=".true."   >2016</stream_year_last_popdens>
+<model_year_align_popdens  cnfireson=".true."   >1850</model_year_align_popdens>
 
-<stream_year_first_ndep phys="clm5_1"  use_cn=".true."  >1850</stream_year_first_ndep>
-<stream_year_last_ndep  phys="clm5_1"  use_cn=".true."  >2015</stream_year_last_ndep>
-<model_year_align_ndep  phys="clm5_1"  use_cn=".true."  >1850</model_year_align_ndep>
-
-<stream_year_first_popdens phys="clm4_5" cnfireson=".true."   >1850</stream_year_first_popdens>
-<stream_year_last_popdens  phys="clm4_5" cnfireson=".true."   >2016</stream_year_last_popdens>
-<model_year_align_popdens  phys="clm4_5" cnfireson=".true."   >1850</model_year_align_popdens>
-
-<stream_year_first_popdens phys="clm5_0" cnfireson=".true."   >1850</stream_year_first_popdens>
-<stream_year_last_popdens  phys="clm5_0" cnfireson=".true."   >2016</stream_year_last_popdens>
-<model_year_align_popdens  phys="clm5_0" cnfireson=".true."   >1850</model_year_align_popdens>
-
-<stream_year_first_popdens phys="clm5_1"  cnfireson=".true."  >1850</stream_year_first_popdens>
-<stream_year_last_popdens  phys="clm5_1"  cnfireson=".true."  >2016</stream_year_last_popdens>
-<model_year_align_popdens  phys="clm5_1"  cnfireson=".true."  >1850</model_year_align_popdens>
-
-<stream_year_first_urbantv phys="clm4_5"  >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5"  >2106</stream_year_last_urbantv>
-<model_year_align_urbantv  phys="clm4_5"  >1850</model_year_align_urbantv>
-
-<stream_year_first_urbantv phys="clm5_0"  >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_0"  >2106</stream_year_last_urbantv>
-<model_year_align_urbantv  phys="clm5_0"  >1850</model_year_align_urbantv>
-
-<stream_year_first_urbantv phys="clm5_1"  >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_1"  >2106</stream_year_last_urbantv>
-<model_year_align_urbantv  phys="clm5_1"  >1850</model_year_align_urbantv>
+<stream_year_first_urbantv >1850</stream_year_first_urbantv>
+<stream_year_last_urbantv  >2106</stream_year_last_urbantv>
+<model_year_align_urbantv  >1850</model_year_align_urbantv>
 
 </namelist_defaults>

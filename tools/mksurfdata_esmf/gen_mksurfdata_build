@@ -127,7 +127,16 @@ if [ "$existing_bld" = "No" ]; then
    if [ "$verbose" != "YES" ]; then
      options="$options --silent"
    fi
-   $cwd/../../cime/CIME/scripts/configure --macros-format CMake --machine $MACH $options
+   # Try finding configure file assuming a CTSM standalone checkout and then try for a CESM checkout
+   configure="$cwd/../../cime/CIME/scripts/configure"
+   if [ ! -f "$configure" ]; then
+      configure="$cwd/../../../../cime/CIME/scripts/configure"
+      if [ ! -f "$configure" ]; then
+         echo "Error $configure file does NOT exist in expected location, either for a standalone checkout or CESM/CAM checkout"
+         exit 1
+      fi
+   fi
+   $configure --macros-format CMake --machine $MACH $options
 
    if [ $? != 0 ]; then
      echo "Error doing configure for machine name: $MACH"

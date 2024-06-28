@@ -20,7 +20,7 @@ module lnd2atmMod
   use lnd2atmType          , only : lnd2atm_type
   use atm2lndType          , only : atm2lnd_type
   use ch4Mod               , only : ch4_type
-  use DUSTMod              , only : dust_type
+  use DustEmisBase         , only : dust_emis_base_type
   use DryDepVelocity       , only : drydepvel_type
   use VocEmissionMod       , only : vocemis_type
   use CNFireEmissionsMod   , only : fireemis_type
@@ -150,7 +150,7 @@ contains
        atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &
        water_inst, &
        energyflux_inst, solarabs_inst, drydepvel_inst,  &
-       vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
+       vocemis_inst, fireemis_inst, dust_emis_inst, ch4_inst, glc_behavior, &
        lnd2atm_inst, &
        net_carbon_exchange_grc)
     !
@@ -173,7 +173,7 @@ contains
     type(drydepvel_type)        , intent(in)    :: drydepvel_inst
     type(vocemis_type)          , intent(in)    :: vocemis_inst
     type(fireemis_type)         , intent(in)    :: fireemis_inst
-    type(dust_type)             , intent(in)    :: dust_inst
+    class(dust_emis_base_type)  , intent(in)    :: dust_emis_inst
     type(ch4_type)              , intent(in)    :: ch4_inst
     type(glc_behavior_type)     , intent(in)    :: glc_behavior
     type(lnd2atm_type)          , intent(inout) :: lnd2atm_inst
@@ -332,7 +332,7 @@ contains
 
     ! dust emission flux
     call p2g(bounds, ndst, &
-         dust_inst%flx_mss_vrt_dst_patch(bounds%begp:bounds%endp, :), &
+         dust_emis_inst%flx_mss_vrt_dst_patch(bounds%begp:bounds%endp, :), &
          lnd2atm_inst%flxdst_grc        (bounds%begg:bounds%endg, :), &
          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 

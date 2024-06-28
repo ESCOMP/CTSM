@@ -17,6 +17,11 @@ module SoilStateInitTimeConstMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public  :: SoilStateInitTimeConst
   public  :: readParams
+
+  ! PRIVATE FUNCTIONS MADE PUBLIC Just for unit-testing:
+  public :: ThresholdSoilMoistZender2003
+  public :: ThresholdSoilMoistKok2014
+  public :: MassFracClay
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: ReadNL
@@ -702,8 +707,8 @@ contains
     do c = begc,endc
        g = col%gridcell(c)
 
-       soilstate_inst%gwc_thr_col(c) = 0.17_r8 + 0.14_r8 * clay3d(g,1) * 0.01_r8
-       soilstate_inst%mss_frc_cly_vld_col(c) = min(clay3d(g,1) * 0.01_r8, 0.20_r8)
+       soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoistZender2003( clay3d(g,1) )
+       soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay3d(g,1) )
     end do
 
     ! --------------------------------------------------------------------
@@ -714,5 +719,78 @@ contains
     deallocate(zisoifl, zsoifl)
 
   end subroutine SoilStateInitTimeConst
+
+  !------------------------------------------------------------------------------
+
+  real(r8) function ThresholdSoilMoistZender2003( clay )
+  !------------------------------------------------------------------------------
+  !
+  ! Calculate the threshold soil moisture needed for dust emission, based on clay content
+  ! This was the original equation with a = 1 / (%clay) being the tuning factor for soil
+  ! moisture effect in Zender's 2003 dust emission scheme.
+  !
+  ! 0.17 and 0.14 are fitting coefficients in Fecan et al. (1999), and 0.01 is used to
+  ! convert surface clay fraction from percentage to fraction.
+  !
+  !------------------------------------------------------------------------------
+  ! For future developments Danny M. Leung decided (Dec, 2023) that the Leung et al. (2023) o
+  ! dust emission scheme in the CESM will use Zender's tuning as well, which overall
+  ! encourages more dust emissions from seriamid and more marginal dust sources.
+  ! Another advantage of using this tuning factor instead of a = 1 is that the dust emission
+  ! threshold is linearly dependent on the clay fraction instead of parabolically dependent
+  ! on clay fraction as in the above line. This means that dust emission becomes a little
+  ! less sensitive to clay content (soil texture).
+  !
+  ! Also see the notes below for ThresholdSoilMoistKok2014.
+  !
+  ! Notes from: dmleung 19 Feb 2024.
+  !
+  !------------------------------------------------------------------------------
+      use abortUtils    , only : endrun
+      use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
+      real(r8), intent(IN) :: clay ! Fraction of clay in the soil (%)
+
+      if ( clay < 0.0_r8 .or. clay > 100.0_r8 )then
+         ThresholdSoilMoistZender2003 = nan
+         call endrun( 'Clay fraction is out of bounds (0 to 100)')
+         return
+      end if
+      ThresholdSoilMoistZender2003 = 0.17_r8 + 0.14_r8 * clay * 0.01_r8
+  end function ThresholdSoilMoistZender2003
+
+  !------------------------------------------------------------------------------
+
+  real(r8) function ThresholdSoilMoistKok2014( clay )
+  !------------------------------------------------------------------------------
+  ! Calculate the threshold soil moisture needed for dust emission, based on clay content
+  !
+  ! The below calculates the threshold gravimetric water content for the dust emission
+  ! calculation in DustEmis. The equation comes from Eq. 14 of Fecan et al.
+  ! (1999; https://doi.org/10.1007/s00585-999-0149-7).
+  ! gwc_thr_col = 0.17*clay3d + 0.0014*(clay3d**2), and we only concern the topmost
+  ! soil layer.  Charlie Zender later on added a tuning factor (a) such that the
+  ! equation becomes gwc_thr_col = a*[0.17*clay3d + 0.0014*(clay3d**2)].
+  ! (Zender et al., 2003a; https://doi.org/10.1029/2002JD002775)
+  ! Kok et al. (2014a, b) chose to use a = 1. Resulting in this function
+  ! Charlie Zender (2003a) chose:  a = 1/clay3d, which gives the ThresholdSoilMoistZender2003
+  ! function above.
+  !
+  ! Notes from: dmleung 24 May 2024.
+  !------------------------------------------------------------------------------
+      real(r8), intent(IN) :: clay ! Fraction of clay in the soil (%)
+
+      ThresholdSoilMoistKok2014 = 0.01_r8*(0.17_r8*clay + 0.0014_r8*clay*clay)
+  end function ThresholdSoilMoistKok2014
+
+  !------------------------------------------------------------------------------
+
+  real(r8) function MassFracClay( clay )
+  ! Calculate the mass fraction of clay needed for dust emission, based on clay content
+      real(r8), intent(IN) :: clay ! Fraction of lay in the soil (%)
+
+      MassFracClay = min(clay * 0.01_r8, 0.20_r8)
+  end function MassFracClay
+
+  !------------------------------------------------------------------------------
 
 end module SoilStateInitTimeConstMod

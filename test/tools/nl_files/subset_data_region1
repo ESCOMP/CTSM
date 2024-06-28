@@ -1,1 +1,0 @@
-region --lat1 -40 --lat2 15 --lon1 275 --lon2 330 --create-domain --create-surface --create-landuse --verbose --overwrite --reg test1 --inputdata-dir CSMDATA

@@ -12,7 +12,7 @@ import subprocess
 from datetime import datetime
 import netCDF4
 
-from ctsm.path_utils import path_to_ctsm_root
+from ctsm.path_utils import path_to_ctsm_root, path_to_cime
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 
 logger = logging.getLogger(__name__)
@@ -326,7 +326,7 @@ def main():
     )
 
     # determine output mesh
-    determine_output_mesh(res, force_model_mesh_file, input_path, rawdata_files, tool_path)
+    determine_output_mesh(res, force_model_mesh_file, input_path, rawdata_files)
 
     # Determine num_pft
     if nocrop_flag:
@@ -752,11 +752,11 @@ def handle_transient_run(
     return landuse_fname, must_run_download_input_data
 
 
-def determine_output_mesh(res, force_model_mesh_file, input_path, rawdata_files, tool_path):
+def determine_output_mesh(res, force_model_mesh_file, input_path, rawdata_files):
     """
     determine output mesh
     """
-    xml_path = os.path.join(tool_path, "../../ccs_config/component_grids_nuopc.xml")
+    xml_path = os.path.join(path_to_cime(), "../ccs_config/component_grids_nuopc.xml")
     tree2 = ET.parse(xml_path)
     root = tree2.getroot()
     model_mesh = ""

@@ -48,6 +48,7 @@ valid_scenarios = [
     "crop-global-SSP2-4.5-f19",
     "crop-global-SSP2-4.5-f10",
     "crop-global-SSP2-4.5-f45",
+    "crop-global-SSP2-4.5-ne0np4",
     "crop-global-SSP2-4.5-ne3",
     "crop-global-SSP2-4.5-ne16",
     "crop-global-SSP2-4.5-ne30",
@@ -204,6 +205,11 @@ def main():
         "ne3": ["ne3np4.pg3"],
         "ne16": ["ne16np4.pg3"],
         "ne30": ["ne30np4.pg3", "ne30np4.pg2", "ne30np4"],
+        "ne0np4": [
+            "ne0np4.ARCTICGRIS.ne30x8",
+            "ne0np4.ARCTIC.ne30x4",
+            "ne0np4CONUS.ne30x8",
+        ],
         "ne120": [
             "ne0np4.ARCTICGRIS.ne30x8",
             "ne0np4.ARCTIC.ne30x4",
@@ -332,6 +338,10 @@ def main():
         "crop-global-SSP2-4.5-f45": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
             "f45",
+        ),
+        "crop-global-SSP2-4.5-ne0np4": (
+            "--start-year 1979 --end-year 2026 --ssp-rcp SSP2-4.5 --res",
+            "ne0np4",
         ),
         "crop-global-SSP2-4.5-ne3": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",

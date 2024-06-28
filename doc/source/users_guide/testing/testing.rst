@@ -13,12 +13,6 @@ CIME Testing scripts
 
 We first introduce the test scripts that work for all CESM components. The CIME script **create_test** runs a specific type of test, at a given resolution, for a given compset using a given machine. See `CIME Chapter on Testing <http://esmci.github.io/cime/users_guide/testing.html>`_ for how to use it to run single tests as well as lists of tests. The standard testname for CLM is "aux_clm" for cheyenne with intel and gnu compilers as well as the CGD machine hobart for intel, nag, and pgi compilers. There's also a shorter test list called "clm_short". Also see the `CTSM Wiki on Testing <https://github.com/ESCOMP/ctsm/wiki/System-Testing-Guide>`_.
 
-CTSM Tools Testing
-==================
-
-.. include:: ../../../../test/tools/README
-   :literal:
-
 CTSM Fortran Unit Tests
 =======================
 

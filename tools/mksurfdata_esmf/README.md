@@ -93,7 +93,7 @@ https://github.com/ESCOMP/CTSM/issues/2341
 
 ``` shell
 # Assuming pwd is the tools/mksurfdata_esmf directory
- ./manage_externals/checkout_externals # Assuming at the top level of the CTSM/CESM checkout
+ ./bin/git-fleximod update  # Assuming at the top level of the CTSM/CESM checkout
 ```
 
 This will bring in CIME and ccs_config which are required for building.

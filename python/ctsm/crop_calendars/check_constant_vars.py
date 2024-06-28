@@ -382,4 +382,4 @@ def check_constant_vars(
         raise RuntimeError("Stopping due to failed check_constant_vars().")
 
     bad_patches = np.unique(bad_patches)
-    return [int(p) for p in bad_patches]
+    return [int(p) for p in bad_patches], any_bad

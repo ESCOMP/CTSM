@@ -89,6 +89,8 @@ module FrictionVelocityMod
      procedure, public :: FrictionVelocity       ! Calculate friction velocity
      procedure, public :: MoninObukIni           ! Initialization of the Monin-Obukhov length
 
+     procedure, public  :: InitForTesting        ! version of Init meant for unit testing
+
      ! Private procedures
      procedure, private :: InitAllocate
      procedure, private :: InitHistory
@@ -121,6 +123,22 @@ contains
     call this%ReadParams(params_ncid)
 
   end subroutine Init
+
+  !------------------------------------------------------------------------
+  subroutine InitForTesting(this, bounds)
+    ! Initialization for unit testing, hardcodes namelist and parameter file settings
+    class(frictionvel_type) :: this
+    type(bounds_type), intent(in) :: bounds
+
+    call this%InitAllocate(bounds)
+    call this%InitHistory(bounds)
+    call this%InitCold(bounds)
+    this%zetamaxstable = 0.5_r8
+    this%zsno = 0.00085_r8
+    this%zlnd = 0.000775_r8
+    this%zglc = 0.00230000005_r8
+
+  end subroutine InitForTesting
 
   !------------------------------------------------------------------------
   subroutine InitAllocate(this, bounds)

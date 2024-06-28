@@ -9,6 +9,7 @@ sourcelist_to_parent(clm_genf90_sources)
 list(APPEND clm_sources "${clm_genf90_sources}")
 
 list(APPEND clm_sources
+  unittestDustEmisInputs.F90
   unittestFilterBuilderMod.F90
   unittestGlcMec.F90
   unittestSimpleSubgridSetupsMod.F90

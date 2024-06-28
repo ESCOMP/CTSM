@@ -72,6 +72,8 @@ module CanopyStateType
      procedure, public  :: UpdateAccVars
      procedure, public  :: Restart
 
+     procedure, public  :: SetNMLForTesting ! Set namelist for unit-testing
+
   end type CanopyState_type
 
   character(len=*), parameter, private :: sourcefile = &
@@ -441,6 +443,21 @@ contains
     this%leaf_mr_vcm = leaf_mr_vcm
 
   end subroutine ReadNML
+
+ !-----------------------------------------------------------------------
+
+  subroutine SetNMLForTesting( this )
+     !
+     ! Set canopy parameter namelist control settings for unit-testing
+     !
+     class(canopystate_type)      :: this
+     ! LOCAL VARIABLES:
+     !-----------------------------------------------------------------------
+ 
+     
+     this%leaf_mr_vcm = 0.015_r8
+   
+   end subroutine SetNMLForTesting
 
   !-----------------------------------------------------------------------
   subroutine UpdateAccVars (this, bounds)

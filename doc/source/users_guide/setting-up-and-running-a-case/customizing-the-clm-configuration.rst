@@ -638,7 +638,7 @@ The output to the above command is as follows:
      -vichydro <name>       Turn VIC hydrologic parameterizations : [on | off] (default is off)
      -crop <name>           Toggle for prognostic crop model. [on | off] (default is off)
                             (can ONLY be turned on when BGC type is CN or CNDV)
-     -comp_intf <name>      Component interface to use (ESMF or MCT) (default MCT)
+     -comp_intf <name>      Component interface to use (default ESMF, currently no other option)
      -defaults <file>       Specify full path to a configuration file which will be used
                             to supply defaults instead of the defaults in bld/config_files.
                             This file is used to specify model configuration parameters only.

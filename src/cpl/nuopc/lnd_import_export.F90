@@ -248,7 +248,6 @@ contains
     if (shr_megan_mechcomps_n .ne. megan_nflds) call shr_sys_abort('ERROR: megan field count mismatch')
 
     ! CARMA volumetric soil water from land
-    ! TODO: is the following correct - the CARMA field exchange is very confusing in mct
     call shr_carma_readnl('drv_flds_in', carma_fields)
 
     ! export to atm
