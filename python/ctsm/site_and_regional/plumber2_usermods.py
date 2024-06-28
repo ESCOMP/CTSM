@@ -43,7 +43,6 @@ def write_usermods(
 
     # create files in each directory
     include = os.path.join(site_dir, "include_user_mods")
-
     i_file = open(include, "w")  # or 'a' to add text instead of truncate
     i_file.write("../defaults")
     i_file.close()
@@ -61,7 +60,6 @@ def write_usermods(
         + ".nc"
     )
     shell = os.path.join(site_dir, "shell_commands")
-
     s_file = open(shell, "w")  # or 'a' to add text instead of truncate
     # pylint: disable=line-too-long
     s_file.write(
@@ -130,8 +128,8 @@ def write_usermods(
         "fi \n"
         "\n"
     )
-
     # pylint: enable=line-too-long, anomalous-backslash-in-string
+
     s_file.close()
 
     # add baseflow_scalar = 0 to user_nl_clm for wetland sites
