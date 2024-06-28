@@ -2565,6 +2565,7 @@
   <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLUH2">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="fates-landuse"/>
       <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
     <options>
@@ -2574,6 +2575,7 @@
   <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLUH2HarvestArea">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="fates-landuse"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -2582,6 +2584,7 @@
   <test name="ERS_D_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLUH2HarvestEvent">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="fates-landuse"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -2590,6 +2593,7 @@
   <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLUH2HarvestMass">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="fates-landuse"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -2598,6 +2602,7 @@
   <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLUH2HarvestSurf">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="fates-landuse"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -2606,6 +2611,7 @@
   <test name="PVT_Lm3" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesLUPFT">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="fates-landuse"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
