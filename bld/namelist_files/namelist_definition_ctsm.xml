@@ -829,7 +829,8 @@ types to vary over time.
 Full pathname of fates landuse x pft association static data map.  
 The file associates land use types with pfts across a static global map.
 This file is necessary for running FATES with use_fates_luh, 
-use_fates_nocomp, and use_fates_fixedbiogeo engaged.  The file is output
+use_fates_nocomp, and use_fates_fixedbiogeo engaged (note that use_fates_lupft
+is provided as a namelist option to engage all necessary options).  The file is output
 by the FATES land use data tool (https://github.com/NGEET/tools-fates-landusedata)
 which processes the raw land use data from the THEMIS tool data sets
 (https://doi.org/10.5065/29s7-7b41)
