@@ -11,14 +11,26 @@ Creates individual usermod_dirs for each PLUMBER2 site with shell_commands
 from __future__ import print_function
 
 import os
+import sys
 import tqdm
+import logging
+import subprocess
 
 import pandas as pd
 
 
 # Big ugly function to create usermod_dirs for each site
 def write_usermods(
-    lat, lon, site, start_year, end_year, start_date, start_year_actual, start_tod, atm_ncpl, stop_n
+    lat,
+    lon,
+    site,
+    start_year,
+    end_year,
+    start_date,
+    start_year_actual,
+    start_tod,
+    atm_ncpl,
+    stop_n,
 ):
     """
     Write information to be added to user mods
@@ -51,20 +63,13 @@ def write_usermods(
     s_file = open(shell, "w")  # or 'a' to add text instead of truncate
     # pylint: disable=line-too-long
     s_file.write(
-        # TODO turn on following line after cdeps changes are added
-        #'./xmlchange PLUMBER2SITE='+site + '\n' \
+        "./xmlchange PLUMBER2SITE=" + site + "\n"
         "./xmlchange PTS_LON=" + str(lon) + "\n"
         "./xmlchange PTS_LAT=" + str(lat) + "\n"
         "./xmlchange DATM_YR_END=" + str(end_year) + "\n"
         "./xmlchange START_TOD=" + str(start_tod) + "\n"
         "./xmlchange ATM_NCPL=" + str(atm_ncpl) + "\n"
-        "\n"  # TODO, get working for CTSM5.1:
-        # remove the above line as it's redundant after PLUMBER2SITE is added
-        # Alternatively, we can take this out of default/user_nl_clm
-        # since doing it this way is works fine TODO for 5.2
-        "echo \"fsurdat='/glade/u/home/wwieder/CTSM/tools/site_and_regional/subset_data_single_point/surfdata_1x1_PLUMBER2_"
-        + site
-        + "_hist_16pfts_Irrig_CMIP6_simyr2000_c231005.nc ' \" >> user_nl_clm \n"
+        "\n"
         'echo "CLM_USRDAT.PLUMBER2:datafiles= \$DIN_LOC_ROOT/atm/datm7/CLM1PT_data/PLUMBER2/'
         + site
         + "/CLM1PT_data/CTSM_DATM_"
