@@ -8,7 +8,7 @@ fxDONOTUSEurl = https://github.com/NCAR/fates-release
 [submodule "cism"]
 path = components/cism
 url = https://github.com/ESCOMP/CISM-wrapper
-fxtag = cismwrap_2_2_001
+fxtag = cismwrap_2_2_002
 fxrequired = ToplevelRequired
 fxDONOTUSEurl = https://github.com/ESCOMP/CISM-wrapper
 
