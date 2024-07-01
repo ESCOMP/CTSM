@@ -1873,7 +1873,7 @@
       <option name="comment">Want to keep a little single-point testing on HPC machines</option>
     </options>
   </test>
-  <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60Bgc" testmods="clm/default--clm/NEON/NIWO">
+  <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60Bgc" testmods="clm/default--clm/NEON/HARV">
     <machines>
       <machine name="derecho"  compiler="gnu" category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
