@@ -1,0 +1,9 @@
+This test mod does not use cold start and is intended to 
+be used in conjunction with a test workflow that provides
+an initialization file.  Currently this is accomplished
+by using the test mod in conjunction with the PVT
+system test.  The PVT system test runs a FATES spin-up 
+case using the use_fates_potentialveg mode and then
+references the restart output to run a use_fates_lupft
+transient mode case.
+
