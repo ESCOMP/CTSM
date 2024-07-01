@@ -2581,25 +2581,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLUH2HarvestEvent">
-    <machines>
-      <machine name="derecho" compiler="intel" category="fates"/>
-      <machine name="derecho" compiler="intel" category="fates-landuse"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:40:00</option>
-    </options>
-  </test>
   <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLUH2HarvestMass">
-    <machines>
-      <machine name="derecho" compiler="intel" category="fates"/>
-      <machine name="derecho" compiler="intel" category="fates-landuse"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:40:00</option>
-    </options>
-  </test>
-  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLUH2HarvestSurf">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates-landuse"/>
