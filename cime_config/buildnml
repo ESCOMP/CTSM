@@ -182,7 +182,9 @@ def buildnml(case, caseroot, compname):
     clm_phys = case.get_value("CLM_PHYSICS_VERSION")
 
     config_cache_text = _config_cache_template.format(clm_phys=clm_phys)
-    config_cache_path = os.path.join(caseroot, "Buildconf", compname + "conf", "config_cache.xml")
+    config_cache_path = os.path.join(
+        caseroot, "Buildconf", compname + "conf", "config_cache.xml"
+    )
     with open(config_cache_path, "w") as config_cache_file:
         config_cache_file.write(config_cache_text)
 
@@ -224,16 +226,22 @@ def buildnml(case, caseroot, compname):
         clm_usrdat_name = case.get_value("CLM_USRDAT_NAME")
         clmusr = " -clm_usr_name %s " % clm_usrdat_name
         # Write warning about initial condition data
-        if ("NEON" in clm_usrdat_name) or ("PLUMBER" in clm_usrdat_name):
-            if clm_force_coldstart == "off":
-                if ("_transient" in clm_nml_use_case) and (
-                    re.fullmatch(r"\w\w\w\w\.transient", casename) is None
-                    or clm_usrdat_name is "NEON.PRISM"
-                ):
-                    logger.warning(
-                        "WARNING: Do you have appropriate initial conditions for this simulation?"
-                        + " Check that the finidat file used in the lnd_in namelist is appropriately spunup for your case"
-                    )
+        if "NEON" in clm_usrdat_name and clm_force_coldstart == "off":
+            if ("_transient" in clm_nml_use_case) and (
+                re.fullmatch(r"\w\w\w\w\.transient", casename) is None
+            ):
+                logger.warning(
+                    "WARNING: Do you have appropriate initial conditions for this simulation?"
+                    + " Check that the finidat file used in the lnd_in namelist is appropriately spunup for your case"
+                )
+        if "PLUMBER" in clm_usrdat_name and clm_force_coldstart == "off":
+            if ("_transient" in clm_nml_use_case) and (
+                re.fullmatch(r"\w\w-\w\w\w\.transient", casename) is None
+            ):
+                logger.warning(
+                    "WARNING: Do you have appropriate initial conditions for this simulation?"
+                    + " Check that the finidat file used in the lnd_in namelist is appropriately spunup for your case"
+                )
 
     if comp_atm != "datm":
         nomeg = "-no-megan"
@@ -302,7 +310,9 @@ def buildnml(case, caseroot, compname):
         lndfrac_file = os.path.join(lnd_domain_path, lnd_domain_file)
         lndfrac_setting = "-lnd_frac " + lndfrac_file
 
-    config_cache_file = os.path.join(caseroot, "Buildconf", compname + "conf", "config_cache.xml")
+    config_cache_file = os.path.join(
+        caseroot, "Buildconf", compname + "conf", "config_cache.xml"
+    )
 
     # -----------------------------------------------------
     # Clear out old data
@@ -317,7 +327,6 @@ def buildnml(case, caseroot, compname):
 
     ninst = int(ninst_lnd)
     for inst_counter in range(1, ninst + 1):
-
         # determine instance string
         inst_string = ""
         if ninst > 1:
@@ -365,7 +374,9 @@ def buildnml(case, caseroot, compname):
                         break
 
             if not os.path.exists(os.path.join(rundir, clm_startfile)):
-                logger.warning("WARNING: Could NOT find a start file to use using" + clm_startfile)
+                logger.warning(
+                    "WARNING: Could NOT find a start file to use using" + clm_startfile
+                )
             clm_icfile = "%s = '%s'" % (startfile_type, clm_startfile)
         else:
             clm_icfile = ""
@@ -376,7 +387,9 @@ def buildnml(case, caseroot, compname):
         user_nl_file = os.path.join(caseroot, "user_nl_clm" + inst_string)
         namelist_infile = os.path.join(ctsmconf, "namelist")
 
-        create_namelist_infile(case, user_nl_file, namelist_infile, "\n".join(infile_lines))
+        create_namelist_infile(
+            case, user_nl_file, namelist_infile, "\n".join(infile_lines)
+        )
 
         cmd = os.path.join(lnd_root, "bld", "build-namelist")
 
@@ -439,7 +452,6 @@ def buildnml(case, caseroot, compname):
 
 ###############################################################################
 def _main_func():
-
     caseroot = parse_input(sys.argv)
     with Case(caseroot) as case:
         compname = case.get_value("COMP_LND")
