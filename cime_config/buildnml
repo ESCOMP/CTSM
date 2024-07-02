@@ -182,7 +182,7 @@ def buildnml(case, caseroot, compname):
     clm_phys = case.get_value("CLM_PHYSICS_VERSION")
 
     config_cache_text = _config_cache_template.format(clm_phys=clm_phys)
-    config_cache_path = os.path.join(caseroot, "Buildconf", compname + "conf", "config_cache.xml" )
+    config_cache_path = os.path.join(caseroot, "Buildconf", compname + "conf", "config_cache.xml")
     with open(config_cache_path, "w") as config_cache_file:
         config_cache_file.write(config_cache_text)
 
@@ -324,6 +324,7 @@ def buildnml(case, caseroot, compname):
 
     ninst = int(ninst_lnd)
     for inst_counter in range(1, ninst + 1):
+
         # determine instance string
         inst_string = ""
         if ninst > 1:
@@ -445,6 +446,7 @@ def buildnml(case, caseroot, compname):
 
 ###############################################################################
 def _main_func():
+
     caseroot = parse_input(sys.argv)
     with Case(caseroot) as case:
         compname = case.get_value("COMP_LND")
