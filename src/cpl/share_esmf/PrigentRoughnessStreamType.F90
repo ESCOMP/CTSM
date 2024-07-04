@@ -27,6 +27,7 @@ module PrigentRoughnessStreamType
       procedure, public :: Init            ! Initialize and read data in
       procedure, public :: UseStreams      ! If Prigent rougness streams will be used
       procedure, public :: IsStreamInit    ! If the streams have been initialized and read in, so data can be used
+      procedure, public :: Clean           ! Clean and deallocate the object
 
       ! !PRIVATE MEMBER FUNCTIONS:
       procedure, private :: InitAllocate   ! Allocate data
@@ -176,13 +177,14 @@ contains
     !
     character(len=*), parameter :: subname = 'PrigentRoughnessStream::UseStreams'
     !
-    if ( .not. NMLRead )then
-       call endrun(msg=subname//' ERROR Namelist has NOT been read first, call Init before this')
-    end if
-    if ( trim(control%stream_fldFileName_prigentroughness) == '' )then
-       UseStreams = .false.  ! Prigent streams are off without a filename given
+    if ( this%IsStreamInit() )then
+       if ( trim(control%stream_fldFileName_prigentroughness) == '' )then
+          UseStreams = .false.  ! Prigent streams are off without a filename given
+       else
+          UseStreams = .true.
+       end if
     else
-       UseStreams = .true.
+       UseStreams = .false.  ! Prigent streams are off without a filename given
     end if
   end function UseStreams
 
@@ -209,6 +211,25 @@ contains
        IsStreamInit = .false.
     end if
   end function IsStreamInit
+
+  !==============================================================================
+  subroutine Clean(this)
+   !
+   ! Deallocate and clean the object
+   !
+   ! Uses:
+   !
+   ! arguments
+   implicit none
+   class(prigent_roughness_stream_type) :: this
+   !
+   ! local variables
+   !-----------------------------------------------------------------------
+   deallocate(this%prigent_rghn)
+   this%prigent_rghn => NULL()
+   InitDone = .false.
+
+  end subroutine Clean
 
   !==============================================================================
   subroutine InitAllocate(this, bounds)
