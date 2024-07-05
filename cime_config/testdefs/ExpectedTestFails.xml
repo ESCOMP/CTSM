@@ -44,14 +44,14 @@
   </test>
 
   <!-- aux_clm test suite failures -->
-  <test name="ERP_P64x2_Lm13.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn">
+  <test name="ERP_P64x2_Lm13.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_Hist">
     <phase name="BASELINE">
       <status>FAIL</status>
       <issue>#2619</issue>
       <comment>This failure relates to the following REP failure.</comment>
     </phase>
   </test>
-  <test name="REP_P64x2_Lm13.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn">
+  <test name="REP_P64x2_Lm13.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_Hist">
     <phase name="COMPARE_base_rep2">
       <status>FAIL</status>
       <issue>#2619</issue>
