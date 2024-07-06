@@ -207,6 +207,12 @@ contains
          for_testing_no_crop_seed_replenishment, &
          z0param_method, use_z0m_snowmelt
 
+    ! NOTE: EBK 02/26/2024: dust_emis_method is here in CTSM temporarily until it's moved to CMEPS
+    ! See: https://github.com/ESCOMP/CMEPS/pull/429
+    ! Normally this should also need error checking and a broadcast, but since
+    ! there is only one hardcoded option right now that is unneeded.
+    namelist /clm_inparm/ dust_emis_method
+
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
          som_adv_flux, max_depth_cryoturb
@@ -263,6 +269,8 @@ contains
     namelist /clm_inparm/ downscale_hillslope_meteorology
 
     namelist /clm_inparm/ use_hillslope_routing
+
+    namelist /clm_inparm/ hillslope_fsat_equals_zero
 
     namelist /clm_inparm/ use_hydrstress
 
@@ -834,6 +842,8 @@ contains
 
     call mpi_bcast (use_hillslope_routing, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+    call mpi_bcast (hillslope_fsat_equals_zero, 1, MPI_LOGICAL, 0, mpicom, ier)
+
     call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -1118,8 +1128,9 @@ contains
 
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
     write(iulog,*) '   hillslope hydrology    = ', use_hillslope
-    write(iulog,*) '   downscale hillslope meteorology    = ', downscale_hillslope_meteorology
+    write(iulog,*) '   downscale hillslope meteorology  = ', downscale_hillslope_meteorology
     write(iulog,*) '   hillslope routing      = ', use_hillslope_routing
+    write(iulog,*) '   hillslope_fsat_equals_zero       = ', hillslope_fsat_equals_zero
     write(iulog,*) '   pre-defined soil layer structure = ', soil_layerstruct_predefined
     write(iulog,*) '   user-defined soil layer structure = ', soil_layerstruct_userdefined
     write(iulog,*) '   user-defined number of soil layers = ', soil_layerstruct_userdefined_nlevsoi

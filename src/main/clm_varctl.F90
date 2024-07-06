@@ -115,7 +115,7 @@ module clm_varctl
   character(len=fname_len), public :: fsnowaging   = ' '      ! snow aging parameters file name
 
   character(len=fname_len), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
-                                                              ! only needed for LILAC and MCT drivers
+                                                              ! only needed for LILAC
 
   !----------------------------------------------------------
   ! Flag to read ndep rather than obtain it from coupler
@@ -277,6 +277,11 @@ module clm_varctl
   logical, public :: do_sno_oc = .false.  ! control to include organic carbon (OC) in snow
 
   !----------------------------------------------------------
+  ! DUST emission method
+  !----------------------------------------------------------
+  character(len=25), public :: dust_emis_method = 'Zender_2003'  ! Dust emisison method to use: Zender_2003 or Leung_2023
+
+  !----------------------------------------------------------
   ! C isotopes
   !----------------------------------------------------------
 
@@ -409,6 +414,8 @@ module clm_varctl
   logical, public :: use_hillslope = .false. ! true => use multi-column hillslope hydrology
   logical, public :: downscale_hillslope_meteorology = .false. ! true => downscale meteorological forcing in hillslope model
   logical, public :: use_hillslope_routing = .false. ! true => use surface water routing in hillslope hydrology
+  logical, public :: hillslope_fsat_equals_zero = .false. ! set saturated excess runoff to zero for hillslope columns
+
 
   !----------------------------------------------------------
   ! excess ice physics switch

@@ -1,0 +1,115 @@
+#! /bin/bash
+# Compare namelists made by the unit-tester to either themselves (for different physics versions)
+# or to a baseline also made by the unit-tester
+#
+
+#----------------------------------------------------------------------
+# Usage subroutine
+usage() {
+  echo ""
+  echo "***********************************************************************"
+  echo "usage:"
+  echo "./compare_namelists <options>"
+  echo ""
+  echo "valid options: "
+  echo "[-h|--help]  "
+  echo "     Displays this help message"
+  echo "[-v|--verbose]  "
+  echo "     Run in verbose mode"
+  echo "[-pa|--physicsA <physics-version>]  "
+  echo "     Namelists of first physics version for comparison"
+  echo "     (in baseline directory)"
+  echo "[-pb|--physicsB <physics-version>]  "
+  echo "     Namelists of second physics version to compare to the first one"
+  echo "     (in current directory)"
+  echo "[-b|--baseline <baseline>]  "
+  echo "     Baseline directory to compare to (default current directory)"
+  echo "  "
+  echo "NOTE: When --physicsA or --physicsB is chosen you must also set the other"
+  echo "***********************************************************************"
+}
+
+
+# Current working directory: the location of this script
+cwd=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+# Default settings
+verbose="No"
+PHYSA="all"
+PHYSB="all"
+baseline="."
+
+# Parse command-line options
+while [ $# -gt 0 ]; do
+   case $1 in
+       -h|--help )
+           usage
+           exit 0
+           ;;
+       -v|--verbose )
+           verbose="YES"
+           ;;
+       -pa|--physicsA )
+           PHYSA=$2
+           shift
+           ;;
+       -pb|--physicsB )
+           PHYSB=$2
+           shift
+           ;;
+       -b|--baseline )
+           baseline=$2
+           shift
+           ;;
+       * )
+           echo "ERROR:: invalid argument sent in: $2"
+           usage
+           exit 1
+           ;;
+   esac
+   shift
+done
+if [ "$PHYSA" = "all" ] && [ "$PHYSB" != "all" ]; then
+   echo "When setting --physicsB you MUST also set --physicsA"
+   echo "$PHYSA $PHYSB"
+   exit 1
+fi
+if [ "$PHYSB" = "all" ] && [ "$PHYSA" != "all" ]; then
+   echo "When setting --physicsA you MUST also set --physicsB"
+   exit 1
+fi
+
+if [ "$verbose" = "YES" ]; then echo "Get list of lnd_in.* files"; fi
+if [ "$verbose" = "YES" ]; then pwd; fi
+filepat="lnd_in.*"
+filenames=($filepat)
+if [ "$verbose" = "YES" ]; then echo "filename list = ${filenames[*]}"; fi
+if [ "${filenames[*]}" = "$filepat" ]; then
+   echo "No lnd_in files exist in the current directory -- run ./build-namelist_test.pl first"
+   exit 1
+fi
+for file in ${filenames[*]}
+do
+   fileA="$baseline/$file"
+   fileB="./$file"
+   # If physicsA option used and the file matches the physics input
+   if [[ "$fileA" =~ "-phys+$PHYSA" ]] || [ "$PHYSA" = "all" ]; then
+      # Replace physicsB for fileB
+      if [ ! "$PHYSA" = "all" ]; then
+         fileB=${fileB/-phys+$PHYSA/-phys+$PHYSB}
+      fi
+      if ! test -f $fileB; then
+         if [ "$verbose" = "YES" ]; then echo "$fileB does NOT exist -- skipping"; fi
+      else
+         if [ "$verbose" = "YES" ]; then echo "Compare namelists for $file"; fi
+         if [ "$fileA" = "$fileB" ]; then
+            echo "Comparing files to themself:"
+            echo "fileA = $fileA"
+            echo "fileB = $fileB"
+            exit 1
+         fi
+         $cwd/../../cime/CIME/Tools/compare_namelists $fileA $fileB
+      fi
+    fi
+done
+if [ "$verbose" = "YES" ]; then echo "Successfully ran through lnd_in files to compare"; fi

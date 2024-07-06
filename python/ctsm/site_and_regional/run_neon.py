@@ -41,7 +41,7 @@ To see the available options:
 # - [ ] Case dependency and the ability to check case status
 # - [ ] If Case dependency works we don't need finidat given explicilty for post-ad and transient.
 
-# - [ ] checkout_externals instead of using env varaiable
+# - [ ] "./bin/git-fleximod update" instead of using env variable
 # - [ ] wget the fields available and run for those available
 
 # - [ ] Matrix spin-up if (SASU) Eric merged it in
@@ -211,9 +211,9 @@ def main(description):
 
     res = "CLM_USRDAT"
     if run_type == "transient":
-        compset = "IHist1PtClm51Bgc"
+        compset = "IHist1PtClm60Bgc"
     else:
-        compset = "I1PtClm51Bgc"
+        compset = "I1PtClm60Bgc"
 
     # --  Looping over neon sites
 
@@ -228,15 +228,16 @@ def main(description):
                 )
             logger.info("-----------------------------------")
             logger.info("Running CTSM for neon site : %s", neon_site.name)
+
             neon_site.run_case(
                 base_case_root,
                 run_type,
                 prism,
                 run_length,
                 user_version,
-                overwrite,
-                setup_only,
-                no_batch,
-                rerun,
-                experiment,
+                overwrite=overwrite,
+                setup_only=setup_only,
+                no_batch=no_batch,
+                rerun=rerun,
+                experiment=experiment,
             )

@@ -15,7 +15,7 @@
 # make crop-numa
 #
 # NOTE: The default behavior is to parallelize data set creation using
-# the batch system by submitting jobs to the batch queue (on cheyenne).
+# the batch system by submitting jobs to the batch queue (on Derecho).
 #
 # In all cases where "--scenario $@" appears, the code executes the
 # recipe for the specific target/scenario that it finds in
@@ -275,6 +275,7 @@ crop-global-SSP2-4.5         : crop-global-SSP2-4.5-f09 \
                                crop-global-SSP2-4.5-hcru \
                                crop-global-SSP2-4.5-ne16 \
                                crop-global-SSP2-4.5-ne30 \
+                               crop-global-SSP2-4.5-ne0np4 \
                                crop-global-SSP2-4.5-C96 \
                                crop-global-SSP2-4.5-mpasa120
 
@@ -316,6 +317,10 @@ crop-global-SSP2-4.5-ne16 : FORCE
 
 crop-global-SSP2-4.5-ne30 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 9 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-SSP2-4.5-ne0np4 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 2 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
 	$(BATCHJOBS) $@.sh
 
 crop-global-SSP2-4.5-C96 : FORCE

@@ -71,7 +71,7 @@ REQUIRED OPTIONS
                               (if read they allow user_nl_clm and CLM_BLDNML_OPTS to expand
                                variables [for example to use \$DIN_LOC_ROOT])
                               (default current directory)
-     -lnd_frac "domainfile"   Land fraction file (the input domain file) (needed for MCT driver and LILAC)
+     -lnd_frac "domainfile"   Land fraction file (the input domain file) (needed for LILAC)
      -res "resolution"        Specify horizontal grid.  Use nlatxnlon for spectral grids;
                               dlatxdlon for fv grids (dlat and dlon are the grid cell size
                               in degrees for latitude and longitude respectively)
@@ -83,7 +83,7 @@ REQUIRED OPTIONS
                               (default 2000)
      -structure "structure"   The overall structure being used [ standard | fast ]
 OPTIONS
-     -driver "value"          CESM driver type you will run with [ mct | nuopc ]
+     -driver "value"          CESM driver type you will run with [ nuopc ]
      -bgc "value"             Build CLM with BGC package [ sp | bgc | fates ]
                               (default is sp).
                                 CLM Biogeochemistry mode
@@ -366,7 +366,7 @@ sub check_for_perl_utils {
     } else {
       die <<"EOF";
 ** Cannot find the root of the cime directory  enter it using the -cimeroot option
-   Did you run the checkout_externals scripts?
+   Did you run ./bin/git-fleximod update?
 EOF
     }
   }
@@ -651,9 +651,9 @@ sub process_namelist_commandline_options {
   setup_cmdl_dynamic_vegetation($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_fates_mode($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_vichydro($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_lnd_tuning($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_cmdl_run_type($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_output_reals($opts, $nl_flags, $definition, $defaults, $nl);
-  setup_logic_lnd_tuning($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 }
 
 #-------------------------------------------------------------------------------
@@ -1265,6 +1265,8 @@ sub setup_cmdl_simulation_year {
 
 sub setup_cmdl_run_type {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  # Set the clm_start_type and the st_year, start year
+  # This MUST be done after lnd_tuning_mode is set
 
   my $val;
   my $var = "clm_start_type";
@@ -1279,20 +1281,19 @@ sub setup_cmdl_run_type {
     my $group = $definition->get_group_name($date);
     $nl->set_variable_value($group, $date, $ic_date );
   }
+  my $set = undef;
   if (defined $opts->{$var}) {
-    if ($opts->{$var} eq "default" ) {
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                  'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'},
-                  'sim_year'=>$st_year, 'sim_year_range'=>$nl_flags->{'sim_year_range'},
-                  'bgc_spinup'=>$nl_flags->{'bgc_spinup'} );
-    } else {
+    if ($opts->{$var} ne "default" ) {
+      $set = 1;
       my $group = $definition->get_group_name($var);
       $nl->set_variable_value($group, $var, quote_string( $opts->{$var} ) );
     }
-  } else {
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                  'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'},
-                  'sim_year'=>$st_year );
+  }
+  if ( ! defined $set ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                 'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'},
+                 'sim_year'=>$st_year, 'sim_year_range'=>$nl_flags->{'sim_year_range'},
+                 'bgc_spinup'=>$nl_flags->{'bgc_spinup'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
   }
   $nl_flags->{'clm_start_type'} = $nl->get_value($var);
   $nl_flags->{'st_year'}        = $st_year;
@@ -1697,6 +1698,11 @@ sub process_namelist_inline_logic {
   #################################
   setup_logic_fire_emis($opts, $nl_flags, $definition, $defaults, $nl);
 
+  ######################################
+  # namelist options for dust emissions
+  ######################################
+  setup_logic_dust_emis($opts, $nl_flags, $definition, $defaults, $nl);
+
   #################################
   # namelist group: megan_emis_nl #
   #################################
@@ -1887,10 +1893,10 @@ sub setup_logic_lnd_frac {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
   #
-  # fatmlndfrc is required for the MCT driver (or LILAC), but uneeded for NUOPC
+  # fatmlndfrc is required for LILAC but uneeded for NUOPC
   #
   my $var = "lnd_frac";
-  if ( ($opts->{'driver'} eq "mct") || $opts->{'lilac'} ) {
+  if ( $opts->{'lilac'} ) {
      if ( defined($opts->{$var}) ) {
        if ( defined($nl->get_value('fatmlndfrc')) ) {
          $log->fatal_error("Can NOT set both -lnd_frac option (set via LND_DOMAIN_PATH/LND_DOMAIN_FILE " .
@@ -3519,6 +3525,7 @@ sub setup_logic_hillslope {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_pft_distribution_method' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_soil_profile_method' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_hillslope_routing', 'use_hillslope'=>$nl_flags->{'use_hillslope'} );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_fsat_equals_zero', 'use_hillslope'=>$nl_flags->{'use_hillslope'} );
   my $use_hillslope = $nl->get_value('use_hillslope');
   my $use_hillslope_routing = $nl->get_value('use_hillslope_routing');
   if ( (! &value_is_true($use_hillslope)) && &value_is_true($use_hillslope_routing) ) {
@@ -3832,9 +3839,7 @@ sub setup_logic_popd_streams {
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_popdens', 'phys'=>$nl_flags->{'phys'},
                  'cnfireson'=>$nl_flags->{'cnfireson'}, 'hgrid'=>"0.5x0.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
-     #
-     # TODO (mvertens, 2021-06-22) the following is needed for MCT since a use case enforces this  - so for now stream_meshfile_popdens will be added to the mct
-     # stream namelist but simply not used
+
     if ($opts->{'driver'} eq "nuopc" ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_popdens', 'hgrid'=>"0.5x0.5");
         my $inputdata_rootdir = $nl_flags->{'inputdata_rootdir'};
@@ -3848,12 +3853,6 @@ sub setup_logic_popd_streams {
             $val = &quote_string( $val );
             $nl->set_variable_value($group, $var, $val);
         }
-    } else {
-        my $var = 'stream_meshfile_popdens';
-        my $group = $definition->get_group_name($var);
-        my $val = "none";
-        $val = &quote_string( $val );
-        $nl->set_variable_value($group, $var, $val);
     }
   } else {
      # If bgc is NOT CN/CNDV or fire_method==nofire then make sure none of the popdens settings are set
@@ -3981,6 +3980,56 @@ sub setup_logic_fire_emis {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_dust_emis {
+  # Logic to handle the dust emissions
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  # First get the dust emission method
+  my $var = "dust_emis_method";
+  add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
+
+  my $dust_emis_method = remove_leading_and_trailing_quotes( $nl->get_value($var) );
+
+  my @zender_files_in_lnd_opts = ( "stream_fldfilename_zendersoilerod", "stream_meshfile_zendersoilerod",
+                                   "zendersoilerod_mapalgo" );
+  if ( $dust_emis_method eq "Zender_2003" ) {
+     # get the zender_soil_erod_source
+     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                 "zender_soil_erod_source", 'dust_emis_method'=>$dust_emis_method );
+
+     my $zender_source = remove_leading_and_trailing_quotes( $nl->get_value('zender_soil_erod_source') );
+     if ( $zender_source eq "lnd" ) {
+        foreach my $option ( @zender_files_in_lnd_opts ) {
+           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $option,
+                       'dust_emis_method'=>$dust_emis_method, 'zender_soil_erod_source'=>$zender_source,
+                       'hgrid'=>$nl_flags->{'res'}, 'lnd_tuning_mod'=>$nl_flags->{'lnd_tuning_mode'} );
+        }
+     } else {
+        foreach my $option ( @zender_files_in_lnd_opts ) {
+           if ( defined($nl->get_value($option)) ) {
+             $log->fatal_error("zender_soil_erod_source is NOT lnd, but the file option $option is being set" .
+                               " and should NOT be unless you want it handled here in the LAND model, " .
+                               "otherwise the equivalent option is set in CAM" );
+           }
+        }
+     }
+  } else {
+     # Verify that NONE of the Zender options are being set if Zender is NOT being used
+     push @zender_files_in_lnd_opts, "zender_soil_erod_source";
+     foreach my $option ( @zender_files_in_lnd_opts ) {
+        if ( defined($nl->get_value($option)) ) {
+          $log->fatal_error("dust_emis_method is NOT set to Zender_2003, but one of it's options " .
+                            "$option is being set, need to change one or the other" );
+        }
+     }
+     if ( $dust_emis_method eq "Leung_2023" ) {
+        $log->warning("dust_emis_method is Leung_2023 and that option has NOT been brought into CTSM yet");
+     }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_megan {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
@@ -4014,7 +4063,6 @@ sub setup_logic_megan {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_soilm_streams {
-  # prescribed soil moisture streams require clm4_5/clm5_0/clm5_1
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_soil_moisture_streams');
@@ -4491,6 +4539,10 @@ sub setup_logic_fates {
               if ( $nl->get_value('fates_spitfire_mode') > 0 ) {
                     $log->fatal_error('fates_spitfire_mode can NOT be set to greater than 0 when use_fates_sp is true');
               }
+              # hydro isn't currently supported to work when FATES SP mode is active
+              if (&value_is_true( $nl->get_value('use_fates_planthydro') )) {
+                    $log->fatal_error('fates sp mode is currently not supported to work with fates hydro');
+              }
            }
         }
         my $var = "use_fates_inventory_init";
@@ -4666,6 +4718,7 @@ sub write_output_files {
   push @groups, "exice_streams";
   push @groups, "soilbgc_decomp";
   push @groups, "clm_canopy_inparm";
+  push @groups, "zendersoilerod";
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
      push @groups, "scf_swenson_lawrence_2012_inparm";
   }
