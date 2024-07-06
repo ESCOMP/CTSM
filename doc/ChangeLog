@@ -1,4 +1,298 @@
 ===============================================================
+Tag name: ctsm5.2.008
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri 28 Jun 2024 12:22:46 PM MDT
+One-line Summary: Bring changes on temp-branch to master: b4b-dev, git-fleximod, hillslope fsat
+
+Purpose and description of changes
+----------------------------------
+
+Bring in changes that came in on the tmp-240620 branch to master now that cesm3_0_beta01 has
+been made. The changes are documented in below but include the following tags:
+
+  tmp-240620.n03.ctsm5.2.007 samrabin -- upland hillslope column fsat values to zero
+  tmp-240620.n02.ctsm5.2.007 erik ------ Another update of git-fleximod
+  tmp-240620.n01.ctsm5.2.007 slevis ---- Merge b4b-dev
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+Notes of particular relevance for users
+---------------------------------------
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Testing summary:  
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit with branch_tags/tmp-240620.n03.ctsm5.2.007
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+===============================================================
+===============================================================
+Tag name: tmp-240620.n03.ctsm5.2.007
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Thu Jun 27 14:17:02 MDT 2024
+One-line Summary: Set upland hillslope column fsat values to zero
+
+Purpose and description of changes
+----------------------------------
+
+The topmodel-based fsat surface runoff scheme is not appropriate for upland hillslope columns, so set upland hillslope column fsat values to zero. User can revert this behavior by setting hillslope_fsat_equals_zero to false.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- Added parameter hillslope_fsat_equals_zero (default true). Set to false for previous behavior.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- DIFF
+    izumi ------- DIFF
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, but only for hillslope tests.
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2600 (https://github.com/ESCOMP/CTSM/pull/2600)
+
+===============================================================
+===============================================================
+Tag name: tmp-240620.n02.ctsm5.2.007
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri 21 Jun 2024 10:21:01 PM MDT
+One-line Summary: Another update of git-fleximod
+
+Purpose and description of changes
+----------------------------------
+
+Just update the gitfleximod subtree to v0.7.8. This fixes an issue in identifying that a tag is out of sync in a submodule.
+An issue about recursion on a submodule. Allows untracked files, and fixes a MS Window Memory error. And
+also git-fleximod status marks optional submodules, which helps explain why they are marked as not-checked out.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed:
+  Fixes #2591 -- Start using submodule rather than external
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+   doc-builder checkout requires use of "git commit ." at the top level
+
+Changes to documentation:
+   Tweak some of the documentation around git-fleximod and use submodule rather than external.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   git-fleximod subtree updated
+
+Pull Requests that document the changes (include PR ids):
+  #2577 -- Update git-fleximod
+(https://github.com/ESCOMP/ctsm/pull)
+
+===============================================================
+===============================================================
+Tag name: tmp-240620.n01.ctsm5.2.007
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri 21 Jun 2024 09:42:26 AM MDT
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+ Fix long names #2512
+ Dust emissions moved to Object Oriented design #2552
+ Fix RXCROPMATURITY test #2599
+
+ NB: This is the first temporary tag (n01, see full tag name above) in
+ a series of temporary tags while we wait for the completion of the
+ beta01 cesm tag.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #2512
+ Fixes #2552
+ Fixes #2599
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Fix RXCROPMATURITY test #2599
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ----
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2604
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.007
 Originator(s): jedwards4b (Jim Edwards, UCAR/CGD) slevis (Sam Levis, UCAR/CGD)
 Date: Fri 31 May 2024 13:49:29 AM MDT

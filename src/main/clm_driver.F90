@@ -62,7 +62,6 @@ module clm_driver
   use ndepStreamMod          , only : ndep_interp
   use cropcalStreamMod       , only : cropcal_advance, cropcal_interp
   use ch4Mod                 , only : ch4, ch4_init_gridcell_balance_check, ch4_init_column_balance_check
-  use DUSTMod                , only : DustDryDep, DustEmission
   use VOCEmissionMod         , only : VOCEmission
   !
   use filterMod              , only : setFilters
@@ -806,15 +805,15 @@ contains
        call t_startf('bgc')
 
        ! Dust mobilization (C. Zender's modified codes)
-       call DustEmission(bounds_clump,                                       &
+       call dust_emis_inst%DustEmission(bounds_clump,                                       &
             filter(nc)%num_nolakep, filter(nc)%nolakep,                      &
             atm2lnd_inst, soilstate_inst, canopystate_inst, &
             water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-            frictionvel_inst, dust_inst)
+            frictionvel_inst)
 
        ! Dust dry deposition (C. Zender's modified codes)
-       call DustDryDep(bounds_clump, &
-            atm2lnd_inst, frictionvel_inst, dust_inst)
+       call dust_emis_inst%DustDryDep(bounds_clump, &
+            atm2lnd_inst, frictionvel_inst)
 
        ! VOC emission (A. Guenther's MEGAN (2006) model; Wang et al., 2022, 2024a, 2024b)
        call VOCEmission(bounds_clump,                                         &
@@ -1308,7 +1307,7 @@ contains
          atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &
          water_inst, &
          energyflux_inst, solarabs_inst, drydepvel_inst,       &
-         vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
+         vocemis_inst, fireemis_inst, dust_emis_inst, ch4_inst, glc_behavior, &
          lnd2atm_inst, &
          net_carbon_exchange_grc = net_carbon_exchange_grc(bounds_proc%begg:bounds_proc%endg))
     deallocate(net_carbon_exchange_grc)
