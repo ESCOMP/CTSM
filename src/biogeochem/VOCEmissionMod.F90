@@ -835,13 +835,13 @@ contains
     real(r8),intent(in) :: btran_in
     
     !!!------- the drought algorithm--------
-    real(r8), parameter :: a1 = -7.4463      
-    real(r8), parameter :: b1 = 3.2552       
+    real(r8), parameter :: a1 = -7.4463_r8
+    real(r8), parameter :: b1 = 3.2552_r8
     real(r8)            :: get_gamma_SM
-             if (btran_in >= 1.) then
+             if (btran_in >= 1._r8) then
                 get_gamma_SM = 1
              else
-                get_gamma_SM = 1/(1+b1*exp(a1*(btran_in-0.2)))
+                get_gamma_SM = 1._r8 / (1._r8 + b1 * exp(a1 * (btran_in - 0.2_r8)))
              endif 
   end function get_gamma_SM
  
@@ -968,9 +968,9 @@ contains
        topt = co1 + (co2 * (t_veg240_in-tstd0))
        if ( (ivt_in == nbrdlf_dcd_brl_shrub) ) then  ! boreal-deciduous-shrub
        ! coming from BEAR-oNS campaign willows results
-             Eopt = 7.9 * exp (0.217_r8 * (t_veg24_in-273.15_r8-24.0_r8))
+             Eopt = 7.9_r8 * exp (0.217_r8 * (t_veg24_in - 273.15_r8 - 24.0_r8))
        else if ( (ivt_in == nc3_arctic_grass ) ) then  ! boreal-grass
-             Eopt = exp(0.12*(t_veg240_in-288.15_r8))
+             Eopt = exp(0.12_r8 * (t_veg240_in - 288.15_r8))
        else
              Eopt = Ceo_in * exp (co4 * (t_veg24_in-tstd0)) * exp(co4 * (t_veg240_in -tstd0))
        endif
@@ -982,13 +982,13 @@ contains
     x = ( (1._r8/topt) - (1._r8/(t_veg_in)) ) / ct3
     ! for the boreal grass from BEAR-oNS campaign
     if ( (ivt_in == nc3_arctic_grass ) ) then  ! boreal-grass
-        bet_arc_c3  = 95+9.49*exp(0.53*(288.15_r8-t_veg240_in))
-        if (bet_arc_c3 .gt. 300) then
-            bet_arc_c3 = 300
+        bet_arc_c3 = 95._r8 + 9.49_r8 * exp(0.53_r8 * (288.15_r8 - t_veg240_in))
+        if (bet_arc_c3 > 300._r8) then
+            bet_arc_c3 = 300._r8
         endif
-        gamma_t_LDF = Eopt * exp(bet_arc_c3*((1/303.15_r8 - 1.0_r8/(t_veg_in))/ct3))
+        gamma_t_LDF = Eopt * exp(bet_arc_c3 * ((1._r8 / 303.15_r8 - 1.0_r8 / t_veg_in) / ct3))
     else
-        gamma_t_LDF = Eopt * ( ct2_in * exp(ct1_in * x)/(ct2_in - ct1_in * (1._r8 - exp(ct2_in * x))) )
+        gamma_t_LDF = Eopt * ( ct2_in * exp(ct1_in * x) / (ct2_in - ct1_in * (1._r8 - exp(ct2_in * x))) )
     endif
     
     
