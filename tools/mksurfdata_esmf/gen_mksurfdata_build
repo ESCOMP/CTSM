@@ -1,0 +1,191 @@
+#! /bin/bash -f
+
+#----------------------------------------------------------------------
+# Usage subroutine
+usage() {
+  echo ""
+  echo "***********************************************************************"
+  echo "usage:"
+  echo "./gen_mksurfdata_build"
+  echo ""
+  echo "valid arguments: "
+  echo "[-h|--help]  "
+  echo "     Displays this help message"
+  echo "[-v|--verbose]  "
+  echo "     Run in verbose mode"
+  echo "[-b|--blddir <blddir>]  "
+  echo "     Overrides default, which is /tool_bld in the same directory as ./gen_mksurfdata_build"
+  echo "[-m|--machine <machine>]  "
+  echo "     Overrides default MACH"
+  echo "***********************************************************************"
+}
+
+
+# Current working directory: the location of ./gen_mksurfdata_build
+cwd=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+# Default settings
+verbose="No"
+blddir=$cwd/tool_bld  # may overwrite this default with command-line option (below)
+
+# Define what machine to use that's been ported to cime
+# May overwrite this default with command-line option --machine
+hostname=`hostname --short`
+case $hostname in
+  derecho* | dec* )
+      export MACH="derecho"
+      pio_iotype=1
+      ;;
+  casper* )
+      export MACH="casper"
+      pio_iotype=1
+      ;;
+  izumi*)
+      export MACH="izumi"
+      pio_iotype=2
+      ;;
+  hobart*)
+      export MACH="hobart"
+      pio_iotype=2
+      ;;
+  ## Other machines
+  ## Assumption: pnetcdf is off; therefore, pio_iotype = 2
+  *)
+      export MACH="$hostname"
+      pio_iotype=2
+      ;;
+esac
+
+# Parse command-line options
+while [ $# -gt 0 ]; do
+   case $1 in
+       -h|--help )
+           usage
+           exit 0
+           ;;
+       -v|--verbose )
+           verbose="YES"
+           ;;
+       -b|--blddir )
+           blddir=$2
+           shift
+           ;;
+       -m|--machine )
+           MACH=$2
+           shift
+           ;;
+       * )
+           echo "ERROR:: invalid argument sent in: $2"
+           usage
+           exit 1
+           ;;
+   esac
+   shift
+done
+
+# Create /tool_bld directory
+if [ "$verbose" = "YES" ]; then
+   echo "cime Machine is: $MACH..."
+fi
+if [ -d "$blddir" ]; then
+  echo "Build directory exists so will skip the configure and cmake steps..."
+  existing_bld=YES
+else
+  if [ "$verbose" = "YES" ]; then echo "Build directory does NOT exist so do the configure and cmake steps"; fi
+  existing_bld=No
+fi
+if [ "$existing_bld" = "No" ]; then
+   mkdir $blddir
+fi
+cd $blddir
+
+# Write pio_iotype to file with name pio_iotype.txt
+pio_iotype_filepath=../pio_iotype.txt  # one up from /tool_bld
+if [ ! -f "$pio_iotype_filepath" ]; then
+   echo 'VALUE OF pio_iotype WRITTEN BY gen_mksurfdata_build AND USED BY mksurfdata (i.e. THE FORTRAN EXECUTABLE):' > $pio_iotype_filepath
+   echo $pio_iotype >> $pio_iotype_filepath
+else
+   echo "Use existing $pio_iotype_filepath file" 
+fi
+
+#
+# If NOT an existing build, run the configure
+#
+if [ "$existing_bld" = "No" ]; then
+   # Run the cime configure tool to figure out what modules need to be loaded
+   if [ "$verbose" = "YES" ]; then
+     echo "Run cime configure for machine $MACH..."
+   fi
+   # You can specify the non-default compiler and mpi-library by adding --compiler and --mpilib settings
+   if [ -z "$COMPILER" ] || [ -z "$MPILIB" ]; then
+     if [ "$verbose" = "YES" ]; then echo "configure for the default MPI-library and compiler..."; fi
+     options=""
+   else
+     if [ "$verbose" = "YES" ]; then echo "configure for the specific MPILIB=$MPILIB and COMPILER=$COMPILER..."; fi
+     options="-compiler $COMPILER --mpilib $MPILIB"
+   fi
+   if [ "$verbose" != "YES" ]; then
+     options="$options --silent"
+   fi
+   # Try finding configure file assuming a CTSM standalone checkout and then try for a CESM checkout
+   configure="$cwd/../../cime/CIME/scripts/configure"
+   if [ ! -f "$configure" ]; then
+      configure="$cwd/../../../../cime/CIME/scripts/configure"
+      if [ ! -f "$configure" ]; then
+         echo "Error $configure file does NOT exist in expected location, either for a standalone checkout or CESM/CAM checkout"
+         exit 1
+      fi
+   fi
+   $configure --macros-format CMake --machine $MACH $options
+
+   if [ $? != 0 ]; then
+     echo "Error doing configure for machine name: $MACH"
+     exit 1
+   fi
+fi
+
+#
+# Create the machine environment (always)
+#
+. ./.env_mach_specific.sh
+if [ $? != 0 ]; then
+  echo "Error sourcing the env_mach_specific.sh file"
+  exit 1
+fi
+if [ "$verbose" = "YES" ]; then echo "COMPILER = $COMPILER, MPILIB = $MPILIB, DEBUG = $DEBUG, OS = $OS"; fi
+if [ -z "$PIO" ]; then
+  echo "The PIO directory for the PIO build is required and was not set in the configure"
+  echo "Make sure a PIO build is provided for $MACH_$COMPILER with $MPILIB in config_machines"
+  exit 1
+fi
+
+# Build the cmake files (only if not an existing build)
+if [ "$existing_bld" = "No" ]; then
+   if [ "$verbose" = "YES" ]; then
+      echo "Do the cmake build..."
+      options="-Wno-dev"
+   else
+      options="-Wno-dev -Wno-error=dev -Wno-deprecated -Wno-error=deprecated"
+   fi
+   CC=mpicc FC=mpif90 cmake $options -DCMAKE_BUILD_TYPE=Debug $cwd/src
+   if [ $? != 0 ]; then
+     echo "Error doing cmake for $MACH $MPILIB $COMPILER"
+     exit 1
+   fi
+fi
+
+# Build the executable (always)
+if [ "$verbose" = "YES" ]; then
+  echo "Build mksurfdata_esmf..."
+  make VERBOSE=1
+else
+  make
+fi
+if [ $? != 0 ]; then
+  echo "Error doing make for $MACH $MPILIB $COMPILER"
+  exit 1
+fi
+echo ""
+echo ""
+echo ""
+echo "Successfully created mksurfdata_esmf executable for: ${MACH}_${COMPILER} for $MPILIB library"

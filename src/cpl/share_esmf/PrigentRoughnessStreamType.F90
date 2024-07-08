@@ -19,7 +19,7 @@ module PrigentRoughnessStreamType
   implicit none
   private
 
-  type, public :: prigentroughnessstream_type
+  type, public :: prigent_roughness_stream_type
      real(r8), pointer, public :: prigent_rghn  (:)         ! Prigent et al. (1997) roughness length (m)
   contains
 
@@ -31,7 +31,7 @@ module PrigentRoughnessStreamType
       ! !PRIVATE MEMBER FUNCTIONS:
       procedure, private :: InitAllocate   ! Allocate data
 
-  end type prigentroughnessstream_type
+  end type prigent_roughness_stream_type
 
   ! ! PRIVATE DATA:
   type, private :: streamcontrol_type
@@ -66,7 +66,7 @@ contains
    !
    ! arguments
    implicit none
-   class(prigentroughnessstream_type) :: this
+   class(prigent_roughness_stream_type) :: this
    type(bounds_type), intent(in)   :: bounds
    character(len=*),  intent(in)   :: NLFilename   ! Namelist filename
    !
@@ -172,7 +172,7 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    class(prigentroughnessstream_type) :: this
+    class(prigent_roughness_stream_type) :: this
     !
     character(len=*), parameter :: subname = 'PrigentRoughnessStream::UseStreams'
     !
@@ -196,7 +196,7 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    class(prigentroughnessstream_type) :: this
+    class(prigent_roughness_stream_type) :: this
     !
     character(len=*), parameter :: subname = 'PrigentRoughnessStream::IsStreamInit'
     !
@@ -221,7 +221,7 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    class(prigentroughnessstream_type) :: this
+    class(prigent_roughness_stream_type) :: this
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:

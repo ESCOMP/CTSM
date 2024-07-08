@@ -20,7 +20,7 @@ module lnd2glcMod
   use decompMod       , only : get_proc_bounds, bounds_type, subgrid_level_column
   use domainMod       , only : ldomain
   use clm_varpar      , only : maxpatch_glc
-  use clm_varctl      , only : iulog
+  use clm_varctl      , only : iulog, use_hillslope
   use clm_varcon      , only : spval, tfrz
   use column_varcon   , only : col_itype_to_ice_class
   use landunit_varcon , only : istice, istsoil
@@ -204,7 +204,16 @@ contains
       ! Make sure we haven't already assigned the coupling fields for this point
       ! (this could happen, for example, if there were multiple columns in the
       ! istsoil landunit, which we aren't prepared to handle)
-      if (fields_assigned(g,n)) then
+      !
+      ! BUG(wjs, 2022-07-17, ESCOMP/CTSM#204) We have a known bug in the handling of bare
+      ! land fluxes when we potentially have multiple vegetated columns in a grid cell.
+      ! The most common configuration where this is the case is when use_hillslope is
+      ! true. In order to allow hillslope hydrology runs to work for now, we are
+      ! bypassing this error check when use_hillslope is true - under the assumption
+      ! that, for now, people aren't going to be interested in SMB in a run with
+      ! hillslope hydrology. Once we resolve ESCOMP/CTSM#204, we should remove the '.and.
+      ! .not. use_hillslope' part of this conditional.
+      if (fields_assigned(g,n) .and. .not. use_hillslope) then
          write(iulog,*) subname//' ERROR: attempt to assign coupling fields twice for the same index.'
          write(iulog,*) 'One possible cause is having multiple columns in the istsoil landunit,'
          write(iulog,*) 'which this routine cannot handle.'

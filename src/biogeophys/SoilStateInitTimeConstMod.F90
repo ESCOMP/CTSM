@@ -369,7 +369,6 @@ contains
 
     call ncd_pio_closefile(ncid)
 
-
     ! --------------------------------------------------------------------
     ! get original soil depths to be used in interpolation of sand and clay
     ! --------------------------------------------------------------------
@@ -711,6 +710,7 @@ contains
 
     do c = begc,endc
        g = col%gridcell(c)
+
 
        ! dmleung++ added 24 May 2024: The below calculates the threshold gravimetric water content for the dust emission calculation in DUSTMod.F90. The equation comes from Eq. 14 of Fecan et al. (1999; https://doi.org/10.1007/s00585-999-0149-7).
        !gwc_thr_col = 0.17*clay3d + 0.0014*(clay3d**2), and we only concern the topmost soil layer. 

@@ -1,27 +1,20 @@
 tools/README.filecopies			      May/26/2011
 
 There are several files that are copies of the original files from
-either CTSM src/main, cime/src/share/utils,
-cime/src/share/unit_test_stubs, or copies from other tool
-directories. By having copies the tools can all be made stand-alone,
+either CTSM src/utils or src/main, or share/src.
+By having copies the tools can all be made stand-alone,
 but any changes to the originals will have to be put into the tool
 directories as well.
 
 I. Files that are IDENTICAL:
 
-   1. csm_share files copied that should be identical to cime/share/utils:
+   1. csm_share files copied that should be identical to share/src:
 
        shr_kind_mod.F90
        shr_const_mod.F90
-       shr_log_mod.F90
-       shr_timer_mod.F90
        shr_string_mod.F90
        shr_file_mod.F90
        
-   2. csm_share files copied that should be identical to cime/share/csm_share/unit_testers:
-
-       test_mod.F90
-
 II. Files with differences
 
    1. csm_share files copied with differences:
@@ -32,7 +25,7 @@ II. Files with differences
 
        fileutils.F90 --- Remove use of masterproc and spmdMod and endrun in abortutils.
 
-   3. Files in mksurfdata_map
+   3. Files in mksurfdata_esmf
 
        mkvarpar.F90
        nanMod.F90

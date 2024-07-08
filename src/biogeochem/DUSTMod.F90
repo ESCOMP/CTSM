@@ -32,7 +32,9 @@ module DUSTMod
   use ColumnType           , only : col
   use PatchType            , only : patch
   use pftconMod            , only : noveg
-  use PrigentRoughnessStreamType    , only : prigentroughnessstream_type
+  use PrigentRoughnessStreamType    , only : prigent_roughness_stream_type
+  use ZenderSoilErodStreamType,  only : soil_erod_stream_type
+  use clm_varctl           , only : dust_emis_method
   !  
   ! !PUBLIC TYPES
   implicit none
@@ -62,7 +64,8 @@ module DUSTMod
      real(r8), pointer, private :: vlc_trb_2_patch           (:)   ! turbulent deposition velocity 2(m/s)
      real(r8), pointer, private :: vlc_trb_3_patch           (:)   ! turbulent deposition velocity 3(m/s)
      real(r8), pointer, private :: vlc_trb_4_patch           (:)   ! turbulent deposition velocity 4(m/s)
-     real(r8), pointer, private :: mbl_bsn_fct_col           (:)   ! basin factor
+     type(soil_erod_stream_type), private :: soil_erod_stream ! Zender soil erodibility stream data
+     real(r8), pointer, private :: mbl_bsn_fct_col           (:)   ! [dimensionless] basin factor, or soil erodibility, time-constant
 
      real(r8), pointer, private :: dst_emiss_coeff_patch     (:)   ! dust emission coefficient (unitless)
      real(r8), pointer, private :: wnd_frc_thr_patch         (:)   ! wet fluid threshold (m/s)
@@ -85,7 +88,7 @@ module DUSTMod
      real(r8), pointer, private :: vai_Okin_patch             (:)   ! [m2 leaf /m2 land] LAI+SAI for calculating Okin drag partition
      real(r8), pointer, private :: frc_thr_rghn_fct_patch    (:)   ! [dimless] hybrid drag partition (or called roughness) factor
      real(r8), pointer, private :: wnd_frc_thr_std_patch     (:)   ! standardized fluid threshold friction velocity (m/s)
-     type(prigentroughnessstream_type), private :: prigent_roughness_stream      ! Prigent roughness stream data
+     type(prigent_roughness_stream_type), private :: prigent_roughness_stream      ! Prigent roughness stream data
      real(r8), pointer, private :: dpfct_rock_patch          (:)   ! [fraction] rock drag partition factor, time-constant
    contains
 
@@ -108,9 +111,10 @@ contains
   subroutine Init(this, bounds, NLFilename)
 
     class(dust_type) :: this
-    type(bounds_type), intent(in) :: bounds
+    type(bounds_type), intent(in) :: bounds  
     character(len=*),  intent(in) :: NLFilename
 
+    call this%soil_erod_stream%Init( bounds, NLFilename )
     call this%InitAllocate (bounds)
     call this%InitHistory  (bounds)
     call this%prigent_roughness_stream%Init( bounds, NLFilename )
@@ -164,6 +168,7 @@ contains
     allocate(this%frc_thr_rghn_fct_patch    (begp:endp))        ; this%frc_thr_rghn_fct_patch    (:)   = nan
     allocate(this%wnd_frc_thr_std_patch     (begp:endp))        ; this%wnd_frc_thr_std_patch     (:)   = nan
     allocate(this%dpfct_rock_patch          (begp:endp))        ; this%dpfct_rock_patch          (:)   = nan
+
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -179,9 +184,11 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp,endp
+    integer :: begc,endc
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
+    begc = bounds%begc; endc = bounds%endc
 
     this%flx_mss_vrt_dst_tot_patch(begp:endp) = spval
     call hist_addfld1d (fname='DSTFLXT', units='kg/m2/s',  &
@@ -297,6 +304,15 @@ contains
          avgflag='A', long_name='rock drag partition factor', &
          ptr_patch=this%dpfct_rock_patch)
 
+    if (dust_emis_method == 'Zender_2003') then
+       if ( this%soil_erod_stream%UseStreams() )then
+          this%mbl_bsn_fct_col(begc:endc) = spval
+          call hist_addfld1d (fname='LND_MBL', units='fraction',  &
+               avgflag='A', long_name='Soil erodibility factor', &
+               ptr_col=this%mbl_bsn_fct_col, default='inactive')
+       end if
+    end if
+
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -313,13 +329,20 @@ contains
 
     ! Set basin factor to 1 for now
 
-    do c = bounds%begc, bounds%endc
-       l = col%landunit(c)
-
-       if (.not.lun%lakpoi(l)) then
-          this%mbl_bsn_fct_col(c) = 1.0_r8
+    if (dust_emis_method == 'Leung_2023') then
+       write(iulog,*) 'Using the new Leung_2023 dust emission scheme'
+    else if (dust_emis_method == 'Zender_2003') then
+       if ( this%soil_erod_stream%UseStreams() )then
+          call this%soil_erod_stream%CalcDustSource( bounds, &
+                                   this%mbl_bsn_fct_col(bounds%begc:bounds%endc) )
+       else
+          this%mbl_bsn_fct_col(:) = 1.0_r8
        end if
-    end do
+       write(iulog,*) 'WARNING: Asked to use the old Zender_2003 dust emission scheme, which is not currently setup completely'
+    else
+       write(iulog,*) 'dust_emis_method not recognized = ', trim(dust_emis_method)
+       call endrun( msg="dust_emis_method namelist item is not valid "//errMsg(sourcefile, __LINE__))
+    end if
 
       ! Caulculate Drag Partition factor (Marticorena and Bergametti 1995 formulation)
       if ( this%prigent_roughness_stream%useStreams() )then !if usestreams == true, and it should be always true
@@ -373,7 +396,6 @@ contains
     real(r8) :: flx_mss_vrt_dst_ttl(bounds%begp:bounds%endp)
     real(r8) :: frc_thr_wet_fct
     real(r8) :: frc_thr_rgh_fct
-    real(r8) :: wnd_rfr_thr_slt
     real(r8) :: wnd_frc_slt
     real(r8) :: lnd_frc_mbl(bounds%begp:bounds%endp)
     real(r8) :: bd
@@ -399,7 +421,6 @@ contains
     !
     real(r8), parameter :: cst_slt = 2.61_r8           ! [frc] Saltation constant
     real(r8), parameter :: flx_mss_fdg_fct = 5.0e-4_r8 ! [frc] Empir. mass flx tuning eflx_lh_vegt
-    !real(r8), parameter :: vai_mbl_thr = 0.3_r8        ! [m2 m-2] VAI threshold quenching dust mobilization
     character(len=*),parameter :: subname = 'DUSTEmission'
     real(r8), parameter :: vai_mbl_thr = 1.0_r8        ! [m2 m-2] new VAI threshold; Danny M. Leung suggests 1, and Zender's scheme uses 0.3
     real(r8), parameter :: Cd0 = 4.4e-5_r8             ! [dimless] proportionality constant in calculation of dust emission coefficient
@@ -443,7 +464,7 @@ contains
          fv                  => frictionvel_inst%fv_patch            , & ! Input:  [real(r8) (:)   ]  friction velocity (m/s) (for dust model)          
          u10                 => frictionvel_inst%u10_patch           , & ! Input:  [real(r8) (:)   ]  10-m wind (m/s) (created for dust model)          
          
-         mbl_bsn_fct         => dust_inst%mbl_bsn_fct_col            , & ! Input:  [real(r8) (:)   ]  basin factor                                      
+         mbl_bsn_fct         => dust_inst%mbl_bsn_fct_col            , & ! Input:  [real(r8) (:)   ]  basin factor
          flx_mss_vrt_dst     => dust_inst%flx_mss_vrt_dst_patch      , & ! Output: [real(r8) (:,:) ]  surface dust emission (kg/m**2/s)               
          flx_mss_vrt_dst_tot => dust_inst%flx_mss_vrt_dst_tot_patch  , & ! Output: [real(r8) (:)   ]  total dust flux back to atmosphere (pft)
          ! below variables are defined in Kok et al. (2014) or (mostly) Leung et al. (2023) dust emission scheme. dmleung 16 Feb 2024
@@ -590,7 +611,7 @@ contains
          !####################################################################################################
          ! calculate soil moisture effect for dust emission threshold
          ! following Fecan, Marticorena et al. (1999)
-         ! also see Zender et al. (2003) for DEAD emission scheme and Kok et al. (2014b) for K14 emission scheme in CESM
+         ! also see Zender et al. (2003) for DUST emission scheme and Kok et al. (2014b) for K14 emission scheme in CESM
          bd = (1._r8-watsat(c,1))*dns_slt      ![kg m-3] Bulk density of dry surface soil (dmleung changed from 2700 to dns_slt, soil particle density, on 16 Feb 2024. Note that dns_slt=2650 kg m-3 so the value is changed by a tiny bit from 2700 to 2650. dns_slt has been here for many years so dns_slt should be used here instead of explicitly typing the value out. dmleung 16 Feb 2024)
 
          ! use emission threshold to calculate standardized threshold and dust emission coefficient
@@ -702,7 +723,7 @@ contains
 
          ! save soil friction velocity and roughness effect before the if-statement
          wnd_frc_soil(p) = wnd_frc_slt  ! save soil friction velocity for CLM output, which has drag partition and Owen effect
-         ! 20 Feb 2024: dmleung notes that Leung does not consider the Owen's effect. This is Jasper Kok's decision. The Owen's effect should be in Zender's DEAD emission scheme.
+         ! 20 Feb 2024: dmleung notes that Leung does not consider the Owen's effect. This is Jasper Kok's decision. The Owen's effect should be in Zender's DUST emission scheme.
 
          ! save land mobile fraction
          lnd_frc_mble(p) = lnd_frc_mbl(p)  ! save land mobile fraction first, before the if-statement
@@ -714,11 +735,6 @@ contains
             flx_mss_hrz_slt_ttl = 0.0_r8
             flx_mss_vrt_dst_ttl(p) = 0.0_r8
 
-            ! the following line comes from subr. dst_mbl
-            ! purpose: threshold saltation wind speed
-
-            wnd_rfr_thr_slt = u10(p) * wnd_frc_thr_slt / fv(p)     ! use if we want the default Z03 scheme; for Leung 2023 this is not needed
-
             ! the following comes from subr. flx_mss_hrz_slt_ttl_Whi79_get
             ! purpose: compute vertically integrated streamwise mass flux of particles
 
@@ -727,6 +743,7 @@ contains
                !################### for Leung et al. (2023) ################################################
                !################ uncomment the below block if want to use Leung's scheme ###################
 
+<<<<<<< HEAD
                !flx_mss_vrt_dst_ttl(p) = dst_emiss_coeff(p) * mss_frc_cly_vld(c) * forc_rho(c) * ((wnd_frc_slt**2.0_r8 - wnd_frc_thr_slt_it**2.0_r8) / wnd_frc_thr_slt_std) * (wnd_frc_slt / wnd_frc_thr_slt_it)**frag_expt  ! Leung et al. (2022) uses Kok et al. (2014) dust emission euqation for emission flux
 
                ! dmleung: instead of using mss_frc_cly_vld(c) with a range of [0,0.2] , which makes dust too sensitive to input clay surface dataset), for now use 0.1 + mss_frc_cly_vld(c) * 0.1 / 0.20 with a range of [0.1,0.2]. So, instead of scaling dust emission to 1/20 times for El Djouf (western Sahara) because of its 1 % clay fraction, scale its emission to 1/2 times. This reduces the sensitivity of dust emission to the clay input dataset. In particular, because dust emission is a small-scale process and the grid-averaged clay from the new WISE surface dataset over El Djouf is 1 %, much lower than the former FAO estimation of 5 %, dmleung is not sure if the clay value of 1 % suppresses too much of El Djouf's small-scale dust emission process. Similar to Charlie Zender's feeling suspicious about the soil texture datasets (or the dust emission schemes' sandblasting process), dmleung feels the same and for now decides to still allow dust emission  to weakly scale with clay fraction, however limiting the scaling factor to 0.1-0.2. See modification in SoilStateInitTimeConst.F90. dmleung 5 Jul 2024
@@ -1034,10 +1051,6 @@ contains
     real(r8), parameter :: dns_slt = 2650.0_r8         ! [kg m-3] Density of optimal saltation particles
     !------------------------------------------------------------------------
 
-    associate(& 
-         mbl_bsn_fct  =>  this%mbl_bsn_fct_col   & ! Output:  [real(r8) (:)] basin factor                                       
-         )
-
       ! allocate module variable
       allocate (ovr_src_snk_mss(dst_src_nbr,ndst))  
       allocate (dmt_vwr(ndst))
@@ -1273,8 +1286,6 @@ contains
          stk_crc(m) = vlc_grv(m) / vlc_stk(m)
       end do
 
-    end associate 
-
   end subroutine InitDustVars
 
   !==============================================================================
@@ -1300,7 +1311,7 @@ contains
     implicit none
     class(dust_type) , intent(inout) :: this
     type(bounds_type), intent(in) :: bounds
-    type(prigentroughnessstream_type), intent(in) :: prigent_roughness_stream
+    type(prigent_roughness_stream_type), intent(in) :: prigent_roughness_stream
     !
     ! !LOCAL VARIABLES:
     integer  :: g, p, fp, l    ! Indices

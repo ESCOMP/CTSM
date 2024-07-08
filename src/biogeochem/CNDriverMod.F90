@@ -285,9 +285,9 @@ contains
             nvegnpool, &
             num_bgc_vegp, filter_bgc_vegp, 0._r8, &
             num_bgc_soilc, filter_bgc_soilc, 0._r8)
+       call t_stopf('CNZero-vegbgc-nflux')
     end if
        
-    call t_stopf('CNZero-vegbgc-nflux')
     call t_startf('CNZero-soilbgc-nflux')
     call soilbiogeochem_nitrogenflux_inst%SetValues( &
          num_bgc_soilc, filter_bgc_soilc, 0._r8)
