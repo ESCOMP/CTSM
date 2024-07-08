@@ -697,7 +697,16 @@ contains
     end do
 
     ! --------------------------------------------------------------------
-    ! Initialize threshold soil moisture and mass fracion of clay limited to 0.20
+    ! Initialize threshold soil moisture, and mass fraction of clay as 
+    ! scaling coefficient of dust emission flux (kg/m2/s) in DUSTMod.F90
+    ! dmleung modified 5 Jul 2024, reducing sensitivity of dust emission 
+    ! flux to clay fraction.
+    ! Also, for threshold soil moisture, dmleung followed Zender (2003)
+    ! DEAD scheme to again avoid dust flux being too sensitive to the choice
+    ! of clay dataset. This is different from what Leung et al. (2023)
+    ! intended to do.
+    ! Both decisions are based on tuning preference and could subject to
+    ! future changes. dmleung 5 Jul 2024
     ! --------------------------------------------------------------------
 
     do c = begc,endc
@@ -709,7 +718,11 @@ contains
        ! There are different options: E.g., a = 1 gives the first line below. E.g., Kok et al. (2014a, b) chose to use a = 1. A second choice is proposed by Charlie Zender (2003a):  a = 1/clay3d, which gives the second line below. 
        !soilstate_inst%gwc_thr_col(c) = 0.01_r8*(0.17_r8*clay3d(g,1) + 0.0014_r8*clay3d(g,1)*clay3d(g,1))  ! Jasper Kok et al. (2014) modified the equation of soil moisture effect for dust emissions using a tuning factor of a = 1. 0.01 is to convert the threshold gravimetric soil moisture from % to fraction. Danny M. Leung et al. (2023) followed K14 and used this equation for offline dust emission calculations using MERRA-2 met fields. Later, Leung et al. (2024) changed to a = 2 for CESM2 simulations. However, Danny Leung later (Dec 2023) decided to revert to Zender's choice and use a = 1 / (clay3d), which overall encourages more dust emissions from seriamid and more marginal dust sources. This note should probably be on the CLM tech note since dmleung has made a different decision for CESM than his own paper. dmleung added this detailed comment on 19 Feb 2024; edited 24 May 2024.
        soilstate_inst%gwc_thr_col(c) = 0.17_r8 + 0.14_r8 * clay3d(g,1) * 0.01_r8 ! This was the original equation with a = 1 / (%clay) being the tuning factor for soil moisture effect in Zender's dust emission scheme. Danny M. Leung decided (Dec, 2023) that the Leung et al. (2023) dust emission scheme in the CESM will use Zender's tuning of a = 1 / (%clay), which overall encourages more dust emissions from seriamid and more marginal dust sources. Another advantage of using this tuning factor instead of a = 1 is that the dust emission threshold is linearly dependent on the clay fraction instead of parabolically dependent on clay fraction as in the above line. This means that dust emission becomes a little less sensitive to clay content (soil texture). 0.17 and 0.14 are fitting coefficients in Fecan et al. (1999), and 0.01 is used to convert surface clay fraction from percentage to fraction. dmleung added this detailed comment on 19 Feb 2024.
+
+       ! dust emission scaling factor dependent on clay fraction
        soilstate_inst%mss_frc_cly_vld_col(c) = min(clay3d(g,1) * 0.01_r8, 0.20_r8)
+       soilstate_inst%mss_frc_cly_vld_col(c) = 0.1_r8 + soilstate_inst%mss_frc_cly_vld_col(c) * 0.1_r8 / 0.20_r8   ! dmleung added this line to reduce the sensitivity of dust emission flux to clay fraction in DUSTMod. 5 Jul 2024
+
     end do
 
     ! --------------------------------------------------------------------

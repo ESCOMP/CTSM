@@ -693,8 +693,9 @@ contains
             frc_thr_rghn_fct(p) = frc_thr_rgh_fct   ! save and output hybrid drag partition factor
 
          else    ! for lnd_frc_mbl=0, do not change friction velocity and assume drag partition factor = 0
-            wnd_frc_slt = fv(p)                     ! The value here is not important since once lnd_frc_mbl(p) <= 0.0_r8 there will be no emission.
+            !wnd_frc_slt = fv(p)                     ! The value here is not important since once lnd_frc_mbl(p) <= 0.0_r8 there will be no emission.
             frc_thr_rghn_fct(p) = 0.0_r8            ! When LAI > 1, the drag partition effect is zero. dmleung 16 Feb 2024.
+            wnd_frc_slt = fv(p) * frc_thr_rghn_fct(p) ! The value here is not important since once lnd_frc_mbl(p) <= 0.0_r8 there will be no emission. dmleung added 5 Jul 2024
          end if
 
          !########## end of drag partition effect #######################################################
@@ -727,7 +728,10 @@ contains
                !################ uncomment the below block if want to use Leung's scheme ###################
 
                !flx_mss_vrt_dst_ttl(p) = dst_emiss_coeff(p) * mss_frc_cly_vld(c) * forc_rho(c) * ((wnd_frc_slt**2.0_r8 - wnd_frc_thr_slt_it**2.0_r8) / wnd_frc_thr_slt_std) * (wnd_frc_slt / wnd_frc_thr_slt_it)**frag_expt  ! Leung et al. (2022) uses Kok et al. (2014) dust emission euqation for emission flux
+
+               ! dmleung: instead of using mss_frc_cly_vld(c) with a range of [0,0.2] , which makes dust too sensitive to input clay surface dataset), for now use 0.1 + mss_frc_cly_vld(c) * 0.1 / 0.20 with a range of [0.1,0.2]. So, instead of scaling dust emission to 1/20 times for El Djouf (western Sahara) because of its 1 % clay fraction, scale its emission to 1/2 times. This reduces the sensitivity of dust emission to the clay input dataset. In particular, because dust emission is a small-scale process and the grid-averaged clay from the new WISE surface dataset over El Djouf is 1 %, much lower than the former FAO estimation of 5 %, dmleung is not sure if the clay value of 1 % suppresses too much of El Djouf's small-scale dust emission process. Similar to Charlie Zender's feeling suspicious about the soil texture datasets (or the dust emission schemes' sandblasting process), dmleung feels the same and for now decides to still allow dust emission  to weakly scale with clay fraction, however limiting the scaling factor to 0.1-0.2. See modification in SoilStateInitTimeConst.F90. dmleung 5 Jul 2024
                flx_mss_vrt_dst_ttl(p) = dst_emiss_coeff(p) * mss_frc_cly_vld(c) * forc_rho(c) * ((wnd_frc_slt**2.0_r8 - wnd_frc_thr_slt_it**2.0_r8) / wnd_frc_thr_slt_it) * (wnd_frc_slt / wnd_frc_thr_slt_it)**frag_expt  ! Leung et al. (2022) uses Kok et al. (2014) dust emission euqation for emission flux
+               !flx_mss_vrt_dst_ttl(p) = dst_emiss_coeff(p) * ( 0.1_r8 + mss_frc_cly_vld(c) * 0.1_r8 / 0.20_r8 ) * forc_rho(c) * ((wnd_frc_slt**2.0_r8 - wnd_frc_thr_slt_it**2.0_r8) / wnd_frc_thr_slt_it) * (wnd_frc_slt / wnd_frc_thr_slt_it)**frag_expt 
 
                ! account for bare soil fraction, frozen soil fraction, and apply global tuning parameter (Kok et al. 2014)
                flx_mss_vrt_dst_ttl(p) = flx_mss_vrt_dst_ttl(p) * lnd_frc_mbl(p) * C_tune * liqfrac
