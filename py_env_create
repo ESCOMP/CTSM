@@ -122,7 +122,7 @@ if [ "$verbose" == "Yes" ]; then
   verbosity="--verbose"
   loglevel="INFO"
 fi
-cmd="conda install --yes $verbosity --channel conda-forge --name $ctsm_python $condadir/$condafile $option"
+cmd="conda install --yes $verbosity --channel conda-forge --name $ctsm_python --file $condadir/$condafile $option"
 echo "$cmd"
 $cmd
 if [ $? != 0 ]; then
