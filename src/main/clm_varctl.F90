@@ -119,7 +119,7 @@ module clm_varctl
 
   ! RSL psihat look-up tables
 
-  character(len=256), public :: rslfile = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/rsl_lookup_tables/psihat.nc'
+  character(len=256), public :: rslfile = '/fs/cgd/csm/inputdata/lnd/clm2/rsl_lookup_tables/psihat.nc'
 
   !----------------------------------------------------------
   ! Flag to read ndep rather than obtain it from coupler

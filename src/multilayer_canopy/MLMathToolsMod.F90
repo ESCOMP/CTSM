@@ -16,6 +16,7 @@ module MLMathToolsMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public  :: hybrid                       ! Solve for the root of a function using secant and Brent's methods
   public  :: zbrent                       ! Use Brent's method to find the root of a function
+  public  :: bisection                    ! Use bisection to find the root of a function
   public  :: quadratic                    ! Solve a quadratic equation for its two roots
   public  :: tridiag                      ! Solve a tridiagonal system of equations
   public  :: tridiag_2eq                  ! Solve a tridiagonal system of equations with two coupled equations
@@ -242,6 +243,69 @@ contains
     end if
 
   end function zbrent
+
+  !-----------------------------------------------------------------------
+  function bisection (msg, p, ic, il, mlcanopy_inst, func, xa, xb, tol) result(root)
+    !
+    ! !DESCRIPTION:
+    ! Use bisection to find the root of a function, which is known to exist
+    ! between xa and xb. The root is updated until its accuracy is tol.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    implicit none
+    character(len=*) :: msg           ! String to be printed
+    integer, intent(in) :: p          ! Patch index for CLM g/l/c/p hierarchy
+    integer, intent(in) :: ic         ! Canopy layer index
+    integer, intent(in) :: il         ! Sunlit (1) or shaded (2) leaf index
+    real(r8), intent(in) :: xa, xb    ! Minimum and maximum of the variable domain to search
+    real(r8), intent(in) :: tol       ! Error tolerance
+    external :: func                  ! Function to solve
+    type(mlcanopy_type), intent(inout) :: mlcanopy_inst
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: root                  ! Returned value for root
+    integer  :: iter                  ! Iteration loop index
+    real(r8) :: a,b,c,fa,fb,fc
+
+    integer, parameter :: itmax = 20  ! Maximum number of iterations
+    !---------------------------------------------------------------------
+
+    a = xa
+    b = xb
+    call func (p, ic, il, mlcanopy_inst, a, fa)
+    call func (p, ic, il, mlcanopy_inst, b, fb)
+
+    if (fa * fb > 0._r8) then
+       write (iulog,*) 'bisection error: Root must be bracketed'
+       write (iulog,*) 'called from: ',msg
+       write (iulog,*) xa, fa
+       write (iulog,*) xb, fb
+       call endrun (msg=' ERROR: bisection error')
+    end if
+
+    iter = 1
+    do while (abs(b-a) > tol .and. iter <= itmax)
+       c = (a + b) / 2._r8
+       call func (p, ic, il, mlcanopy_inst, c, fc)
+       if (fa * fc < 0._r8) then
+          b = c; fb = fc
+       else
+          a = c; fa = fc
+       end if
+       iter = iter + 1
+    end do
+
+    if (iter > itmax) then
+       write (iulog,*) 'bisection error: Maximum number of iterations exceeded'
+       write (iulog,*) 'called from: ',msg
+       call endrun (msg=' ERROR: bisection error')
+    end if
+
+    root = c
+
+  end function bisection
 
   !-----------------------------------------------------------------------
   subroutine quadratic (a, b, c, r1, r2)

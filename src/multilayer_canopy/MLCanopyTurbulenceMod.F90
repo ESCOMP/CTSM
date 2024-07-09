@@ -6,7 +6,7 @@ module MLCanopyTurbulenceMod
   !
   ! !USES:
   use abortutils, only : endrun
-  use clm_varctl, only : iulog
+  use clm_varctl, only : iulog, rslfile
   use shr_kind_mod, only : r8 => shr_kind_r8
   !
   ! !PUBLIC TYPES:
@@ -28,9 +28,11 @@ module MLCanopyTurbulenceMod
   private :: psim_monin_obukhov     ! Monin-Obukhov psi stability function for momentum
   private :: psic_monin_obukhov     ! Monin-Obukhov psi stability function for scalars
   private :: LookupPsihat           ! Determines the RSL function psihat as provided through a look-up table
+  private :: RoughnessLength        ! Roughness length for momentum
   private :: WindProfile            ! Wind speed profile above and within canopy
   private :: AerodynamicConductance ! Aerodynamic conductances above and within canopy
   private :: FluxProfileSolution    ! Scalar source/sink fluxes and concentration profiles using implicit solution
+  private :: VerticalVelocity       ! Vertical velocity profile
 
 contains
 
@@ -268,7 +270,7 @@ contains
     real(r8) :: dummy                   ! Dummy argument
     real(r8) :: lm                      ! Length scale for momentum (m)
     real(r8) :: lm_over_beta            ! lm / beta
-    real(r8) :: eta                     ! Used to limit value for lm / beta
+    real(r8) :: eta                     ! Parameter for wind profile (Massman and Weil, 1999)
     !---------------------------------------------------------------------
 
     associate ( &
@@ -336,12 +338,17 @@ contains
     ustar     => mlcanopy_inst%ustar_canopy     , &  ! Friction velocity (m/s)
     gac_to_hc => mlcanopy_inst%gac_to_hc_canopy , &  ! Aerodynamic conductance for a scalar above canopy (mol/m2/s)
     obu       => mlcanopy_inst%obu_canopy       , &  ! Obukhov length (m)
+    ! From Roughness length
+    z0m       => mlcanopy_inst%z0m_canopy       , &  ! Roughness length for momentum (m)
     ! From WindProfile
     uaf       => mlcanopy_inst%uaf_canopy       , &  ! Wind speed at canopy top (m/s)
     wind      => mlcanopy_inst%wind_profile     , &  ! Canopy layer wind speed (m/s)
+    ! From VerticalVelocity
+    sigma_w   => mlcanopy_inst%sigma_w_profile  , &  ! Canopy layer vertical velocity (m/s)
     ! From AerodynamicConductance
     gac0      => mlcanopy_inst%gac0_soil        , &  ! Aerodynamic conductance for soil fluxes (mol/m2/s)
     gac       => mlcanopy_inst%gac_profile      , &  ! Canopy layer aerodynamic conductance for scalars (mol/m2/s)
+    kc_eddy   => mlcanopy_inst%kc_eddy_profile  , &  ! Canopy layer eddy diffusivity from Harman and Finnigan (m2/s)
     ! From ScalarProfile
     tair      => mlcanopy_inst%tair_profile     , &  ! Canopy layer air temperature (K)
     eair      => mlcanopy_inst%eair_profile     , &  ! Canopy layer vapor pressure (Pa)
@@ -402,6 +409,10 @@ contains
 !         call ObuFunc (p, ic, il, mlcanopy_inst, obu(p), dummy)
 !      end if
 
+       ! Calculate roughness length for momentum
+
+       call RoughnessLength (p, mlcanopy_inst)
+
        ! The roughness sublayer parameterization uses the expression lm / beta
        ! to calculate wind speed and conductances. Use a constrained value for
        ! lm / beta based on maximum value for eta.
@@ -427,6 +438,10 @@ contains
              mflx(p,ic) = -(ustar(p)**2) * exp(2._r8*(zw(p,ic) - ztop(p)) / lm_over_beta)
           end if
        end do
+
+       ! Vertical velocity profile
+
+       call VerticalVelocity (p, eta, mlcanopy_inst)
 
        ! Aerodynamic conductances
 
@@ -482,9 +497,10 @@ contains
     real(r8) :: obu_new                     ! New value for Obukhov length
     real(r8) :: c1                          ! Parameter to calculate beta_neutral
     real(r8) :: beta_neutral                ! Neutral value for beta = u*/u(h)
-    real(r8) :: h_minus_d                   ! Displacement height below canopy top (ztop - zdisp)
+    real(r8) :: hc_minus_d                  ! Displacement height below canopy top (ztop - zdisp)
     real(r8) :: zeta                        ! Monin-Obukhov stability parameter (z-d)/L
     real(r8) :: psim, psic                  ! psi functions for momentum and scalars
+    real(r8) :: dum1, dum2                  ! dummy variables (not used)
     real(r8) :: zlog                        ! log((zref-zdisp)/(ztop-zdisp))
     real(r8) :: tstar                       ! Temperature scale (K)
     real(r8) :: qstar                       ! Water vapor scale (kg/kg)
@@ -533,13 +549,13 @@ contains
 
     ! Displacement height, and then adjust for canopy sparseness
 
-    h_minus_d = beta(p)**2 * Lc(p)
+    hc_minus_d = beta(p)**2 * Lc(p)
     select case (sparse_canopy_type)
     case (1)
-       h_minus_d = h_minus_d * (1._r8 - exp(-0.25_r8*(lai(p)+sai(p))/beta(p)**2))
+       hc_minus_d = hc_minus_d * (1._r8 - exp(-0.25_r8*(lai(p)+sai(p))/beta(p)**2))
     end select
-    h_minus_d = min(ztop(p), h_minus_d)
-    zdisp(p) = ztop(p) - h_minus_d
+    hc_minus_d = min(ztop(p), hc_minus_d)
+    zdisp(p) = ztop(p) - hc_minus_d
 
     if ((zref(p) - zdisp(p)) < 0._r8) then
        call endrun (msg=' ERROR: ObuFunc: zdisp height > zref')
@@ -565,7 +581,7 @@ contains
     end if
     obu_cur = (zref(p) - zdisp(p)) / zeta
 
-    call GetPsiRSL (zref(p), ztop(p), zdisp(p), obu_cur, beta(p), PrSc(p), psim, psic)
+    call GetPsiRSL (zref(p), ztop(p), zdisp(p), obu_cur, beta(p), PrSc(p), psim, psic, dum1, dum2)
 
     ! Friction velocity
 
@@ -697,7 +713,7 @@ contains
   end subroutine GetPrSc
 
   !-----------------------------------------------------------------------
-  subroutine GetPsiRSL (za, hc, disp, obu, beta, PrSc, psim, psic)
+  subroutine GetPsiRSL (za, hc, disp, obu, beta, PrSc, psim, psic, psim2, psim_hat2)
     !
     ! !DESCRIPTION:
     ! Calculate the stability functions psi for momentum and scalars. The
@@ -719,16 +735,18 @@ contains
     real(r8), intent(in)  :: PrSc      ! Prandtl (Schmidt) number at canopy top
     real(r8), intent(out) :: psim      ! psi function for momentum including RSL influence
     real(r8), intent(out) :: psic      ! psi function for scalars  including RSL influence
+    real(r8), intent(out) :: psim2     ! Monin-Obukhov psi function for momentum evaluated at hc
+    real(r8), intent(out) :: psim_hat2 ! RSL psihat function for momentum evaluated at hc
     !
     ! !LOCAL VARIABLES:
     real(r8) :: dt                     ! Displacement height below canopy top (dt = ztop - zdisp)
     real(r8) :: phim                   ! Monin-Obukhov phi function for momentum at canopy top
     real(r8) :: phic                   ! Monin-Obukhov phi function for scalars at canopy top
     real(r8) :: c1                     ! RSL magnitude multiplier
-    real(r8) :: psihat1                ! RSL psihat function evaluated at za
-    real(r8) :: psihat2                ! RSL psihat function evaluated at hc
-    real(r8) :: psi1                   ! Monin-Obukhov psi function evaluated at za
-    real(r8) :: psi2                   ! Monin-Obukhov psi function evaluated at hc
+    real(r8) :: psim1, psic1           ! Monin-Obukhov psi functions (momentum, scalars) evaluated at za
+    real(r8) :: psic2                  ! Monin-Obukhov psi function (scalars) evaluated at hc
+    real(r8) :: psim_hat1, psic_hat1   ! RSL psihat functions (momentum, scalars) evaluated at za
+    real(r8) :: psic_hat2              ! RSL psihat function (scalars) evaluated at hc
     !---------------------------------------------------------------------
 
     dt = hc - disp
@@ -766,35 +784,35 @@ contains
     ! This means that the returned psihat value needs to be scaled (multiplied) by
     ! c1 before it fully represents psihat as it appears in the RSL equations.
 
-    call LookupPsihat ((za-hc)/dt, dt/obu, zdtgridM, dtLgridM, psigridM, psihat1)
-    call LookupPsihat ((hc-hc)/dt, dt/obu, zdtgridM, dtLgridM, psigridM, psihat2)
-    psihat1 = psihat1 * c1
-    psihat2 = psihat2 * c1
+    call LookupPsihat ((za-hc)/dt, dt/obu, zdtgridM, dtLgridM, psigridM, psim_hat1)
+    call LookupPsihat ((hc-hc)/dt, dt/obu, zdtgridM, dtLgridM, psigridM, psim_hat2)
+    psim_hat1 = psim_hat1 * c1
+    psim_hat2 = psim_hat2 * c1
 
     ! Evaluate the Monin-Obukhov psi function for momentum at the height za
     ! and at the canopy height hc
 
-    psi1 = psim_monin_obukhov((za-disp)/obu)
-    psi2 = psim_monin_obukhov((hc-disp)/obu)
+    psim1 = psim_monin_obukhov((za-disp)/obu)
+    psim2 = psim_monin_obukhov((hc-disp)/obu)
 
     ! psi function for momentum including RSL influence
 
-    psim = -psi1 + psi2 + psihat1 - psihat2 + vkc / beta
+    psim = -psim1 + psim2 + psim_hat1 - psim_hat2 + vkc / beta
 
     ! Now do the same for scalars
 
     phic = phic_monin_obukhov((hc-disp)/obu)
     c1 = (1._r8 - PrSc*vkc / (2._r8 * beta * phic)) * exp(0.5_r8*c2)
 
-    call LookupPsihat ((za-hc)/dt, dt/obu, zdtgridH, dtLgridH, psigridH, psihat1)
-    call LookupPsihat ((hc-hc)/dt, dt/obu, zdtgridH, dtLgridH, psigridH, psihat2)
-    psihat1 = psihat1 * c1
-    psihat2 = psihat2 * c1
+    call LookupPsihat ((za-hc)/dt, dt/obu, zdtgridH, dtLgridH, psigridH, psic_hat1)
+    call LookupPsihat ((hc-hc)/dt, dt/obu, zdtgridH, dtLgridH, psigridH, psic_hat2)
+    psic_hat1 = psic_hat1 * c1
+    psic_hat2 = psic_hat2 * c1
 
-    psi1 = psic_monin_obukhov((za-disp)/obu)
-    psi2 = psic_monin_obukhov((hc-disp)/obu)
+    psic1 = psic_monin_obukhov((za-disp)/obu)
+    psic2 = psic_monin_obukhov((hc-disp)/obu)
 
-    psic = -psi1 + psi2 + psihat1 - psihat2
+    psic = -psic1 + psic2 + psic_hat1 - psic_hat2
 
   end subroutine GetPsiRSL
 
@@ -993,6 +1011,106 @@ contains
   end subroutine LookupPsihat
 
   !-----------------------------------------------------------------------
+  subroutine RoughnessLength (p, mlcanopy_inst)
+    !
+    ! !DESCRIPTION:
+    ! Calculate roughness length for momentum
+    !
+    ! !USES:
+    use clm_varcon, only : vkc
+    use MLCanopyFluxesType, only : mlcanopy_type
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: p                ! Patch index for CLM g/l/c/p hierarchy
+    type(mlcanopy_type), intent(inout) :: mlcanopy_inst
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: hc_minus_d                  ! Displacement height below canopy top (ztop - zdisp)
+    real(r8) :: psim, psic                  ! psi functions for momentum and scalars
+    real(r8) :: psim_hc                     ! Monin-Obukhov psi function for momentum evaluated at hc
+    real(r8) :: psim_hat_hc                 ! RSL psihat function for momentum evaluated at hc
+    real(r8) :: exp1, exp2                  ! Exponential terms
+    real(r8) :: aval, bval                  ! Bracketed estimates for roughness length (m)
+    real(r8) :: cval                        ! Refined roughness length (m)
+    real(r8) :: z0m_aval                    ! z0m evaluated with aval
+    real(r8) :: z0m_bval                    ! z0m evaluated with bval
+    real(r8) :: z0m_cval                    ! z0m evaluated with cval
+    real(r8) :: psim_z0m_aval               ! Monin-Obukhov psi function for momentum evaluated at z0m = aval
+    real(r8) :: psim_z0m_bval               ! Monin-Obukhov psi function for momentum evaluated at z0m = bval
+    real(r8) :: psim_z0m_cval               ! Monin-Obukhov psi function for momentum evaluated at z0m = cval
+    real(r8) :: fa, fb, fc                  ! Error (m)
+    real(r8) :: err                         ! Error tolerance (m)
+    integer  :: n                           ! Iteration counter
+    integer  :: nmax                        ! Maximum number of iterations
+    !---------------------------------------------------------------------
+
+    associate ( &
+                                                    ! *** Input ***
+    zref      => mlcanopy_inst%zref_forcing    , &  ! Atmospheric reference height (m)
+    ztop      => mlcanopy_inst%ztop_canopy     , &  ! Canopy foliage top height (m)
+    zdisp     => mlcanopy_inst%zdisp_canopy    , &  ! Displacement height (m)
+    obu       => mlcanopy_inst%obu_canopy      , &  ! Obukhov length (m)
+    beta      => mlcanopy_inst%beta_canopy     , &  ! Value of u* / u at canopy top (-)
+    PrSc      => mlcanopy_inst%PrSc_canopy     , &  ! Prandtl (Schmidt) number at canopy top (-)
+                                                    ! *** Output ***
+    z0m       => mlcanopy_inst%z0m_canopy        &  ! Roughness length for momentum (m)
+    )
+
+    ! Get psi and psi_hat terms at canopy top
+
+    call GetPsiRSL (zref(p), ztop(p), zdisp(p), obu(p), beta(p), PrSc(p), psim, psic, psim_hc, psim_hat_hc)
+
+    ! Other common terms
+
+    hc_minus_d = ztop(p) - zdisp(p)
+    exp1 = exp(-vkc / beta(p))
+    exp2 = exp(psim_hat_hc)
+
+    ! Use bisection to find z0m, which lies between aval and bval, and refine the
+    ! estimate until the difference is less than err or after nmax itertions
+
+    aval = ztop(p)
+    bval = 0._r8
+    err = 0.001_r8
+    nmax = 20
+
+    psim_z0m_aval = psim_monin_obukhov(aval/obu(p))
+    z0m_aval = hc_minus_d * exp1 * exp(-psim_hc + psim_z0m_aval) * exp2
+    fa = z0m_aval - aval
+
+    psim_z0m_bval = psim_monin_obukhov(bval/obu(p))
+    z0m_bval = hc_minus_d * exp1 * exp(-psim_hc + psim_z0m_bval) * exp2
+    fb = z0m_bval - bval
+
+    if (fa * fb > 0._r8) then
+       call endrun (msg=' ERROR: RoughnessLength: bisection error - f(a) and f(b) do not have opposite signs')
+    end if
+
+    n = 1
+    do while (abs(bval-aval) > err .and. n <= nmax)
+       cval = (aval + bval) / 2._r8
+       psim_z0m_cval = psim_monin_obukhov(cval/obu(p))
+       z0m_cval = hc_minus_d * exp1 * exp(-psim_hc + psim_z0m_cval) * exp2
+       fc = z0m_cval - cval
+       if (fa * fc < 0._r8) then
+          bval = cval; fb = fc
+       else
+          aval = cval; fa = fc
+       end if
+       n = n + 1
+    end do
+
+    if (n > nmax) then
+       call endrun (msg=' ERROR: RoughnessLength: maximum iteration exceeded')
+    end if 
+
+    z0m(p) = cval
+
+    end associate
+  end subroutine RoughnessLength
+
+  !-----------------------------------------------------------------------
   subroutine WindProfile (p, lm_over_beta, mlcanopy_inst)
     !
     ! !DESCRIPTION:
@@ -1013,6 +1131,7 @@ contains
     integer  :: ic                        ! Aboveground layer index
     real(r8) :: psim                      ! psi function for momentum
     real(r8) :: psic                      ! psi function for scalars
+    real(r8) :: dum1, dum2                ! dummy variables (not used)
     real(r8) :: zlog_m                    ! log height
     real(r8) :: ave                       ! Average wind speed in canopy (m/s)
     !---------------------------------------------------------------------
@@ -1037,7 +1156,7 @@ contains
     ! Above-canopy wind profile: wind speed is defined at zs
 
     do ic = ntop(p)+1, ncan(p)
-       call GetPsiRSL (zs(p,ic), ztop(p), zdisp(p), obu(p), beta(p), PrSc(p), psim, psic)
+       call GetPsiRSL (zs(p,ic), ztop(p), zdisp(p), obu(p), beta(p), PrSc(p), psim, psic, dum1, dum2)
        zlog_m = log((zs(p,ic)-zdisp(p)) / (ztop(p)-zdisp(p)))
        wind(p,ic) = ustar(p) / vkc * (zlog_m + psim)
     end do
@@ -1089,6 +1208,7 @@ contains
     integer  :: ic                        ! Aboveground layer index
     real(r8) :: psim1, psim2              ! psi function for momentum
     real(r8) :: psic, psic1, psic2        ! psi function for scalars
+    real(r8) :: dum1, dum2                ! dummy variables (not used)
     real(r8) :: zlog_m, zlog_c            ! log height
     real(r8) :: zu, zl                    ! Upper and lower heights for within canopy resistances (m)
     real(r8) :: res                       ! Resistance (s/m)
@@ -1116,7 +1236,8 @@ contains
     wind      => mlcanopy_inst%wind_profile     , &  ! Canopy layer wind speed (m/s)
                                                      ! *** Output ***
     gac0      => mlcanopy_inst%gac0_soil        , &  ! Aerodynamic conductance for soil fluxes (mol/m2/s)
-    gac       => mlcanopy_inst%gac_profile        &  ! Canopy layer aerodynamic conductance for scalars (mol/m2/s)
+    gac       => mlcanopy_inst%gac_profile      , &  ! Canopy layer aerodynamic conductance for scalars (mol/m2/s)
+    kc_eddy   => mlcanopy_inst%kc_eddy_profile    &  ! Canopy layer eddy diffusivity from Harman and Finnigan (m2/s)
     )
 
     ! -------------------------------------
@@ -1125,8 +1246,8 @@ contains
     ! -------------------------------------
 
     do ic = ntop(p)+1, ncan(p)-1
-       call GetPsiRSL (zs(p,ic),   ztop(p), zdisp(p), obu(p), beta(p), PrSc(p), psim1, psic1)
-       call GetPsiRSL (zs(p,ic+1), ztop(p), zdisp(p), obu(p), beta(p), PrSc(p), psim2, psic2)
+       call GetPsiRSL (zs(p,ic),   ztop(p), zdisp(p), obu(p), beta(p), PrSc(p), psim1, psic1, dum1, dum2)
+       call GetPsiRSL (zs(p,ic+1), ztop(p), zdisp(p), obu(p), beta(p), PrSc(p), psim2, psic2, dum1, dum2)
        ! equivalent to: -psi_c_z2 + psi_c_z1 + psi_c_rsl_z2 - psi_c_rsl_z1
        psic = psic2 - psic1
        zlog_c = log((zs(p,ic+1)-zdisp(p)) / (zs(p,ic)-zdisp(p)))
@@ -1136,8 +1257,8 @@ contains
     ! Special case for the top layer to the reference height
 
     ic = ncan(p)
-    call GetPsiRSL (zs(p,ic), ztop(p), zdisp(p), obu(p), beta(p), PrSc(p), psim1, psic1)
-    call GetPsiRSL (zref(p),  ztop(p), zdisp(p), obu(p), beta(p), PrSc(p), psim2, psic2)
+    call GetPsiRSL (zs(p,ic), ztop(p), zdisp(p), obu(p), beta(p), PrSc(p), psim1, psic1, dum1, dum2)
+    call GetPsiRSL (zref(p),  ztop(p), zdisp(p), obu(p), beta(p), PrSc(p), psim2, psic2, dum1, dum2)
     psic = psic2 - psic1
     zlog_c = log((zref(p)-zdisp(p)) / (zs(p,ic)-zdisp(p)))
     gac(p,ic) = rhomol(p) * vkc * ustar(p) / (zlog_c + psic)
@@ -1147,8 +1268,8 @@ contains
     ! immediately above it at height zs(ntop+1)
 
     ic = ntop(p)
-    call GetPsiRSL (ztop(p),    ztop(p), zdisp(p), obu(p), beta(p), PrSc(p), psim1, psic1)
-    call GetPsiRSL (zs(p,ic+1), ztop(p), zdisp(p), obu(p), beta(p), PrSc(p), psim2, psic2)
+    call GetPsiRSL (ztop(p),    ztop(p), zdisp(p), obu(p), beta(p), PrSc(p), psim1, psic1, dum1, dum2)
+    call GetPsiRSL (zs(p,ic+1), ztop(p), zdisp(p), obu(p), beta(p), PrSc(p), psim2, psic2, dum1, dum2)
     psic = psic2 - psic1
     zlog_c = log((zs(p,ic+1)-zdisp(p)) / (ztop(p)-zdisp(p)))
     gac_above_foliage = rhomol(p) * vkc * ustar(p) / (zlog_c + psic)
@@ -1232,6 +1353,16 @@ contains
     do ic = 1, ncan(p)
        res = min (rhomol(p)/gac(p,ic), ra_max)
        gac(p,ic) = rhomol(p) / res
+    end do
+
+    ! Eddy diffusivity diagnosed from conductance
+
+    do ic = 1, ncan(p)
+       if (ic == ncan(p)) then
+          kc_eddy(p,ic) = gac(p,ic) / rhomol(p) * (zref(p) - zs(p,ic))
+       else
+          kc_eddy(p,ic) = gac(p,ic) / rhomol(p) * (zs(p,ic+1) - zs(p,ic))
+       end if
     end do
 
     end associate
@@ -1812,7 +1943,6 @@ contains
     use ncdio_pio, only : ncd_io, ncd_pio_closefile, ncd_pio_openfile, file_desc_t
     use ncdio_pio, only : ncd_inqdid, ncd_inqdlen
     use spmdMod, only : masterproc
-    use clm_varctl, only : rslfile
     use MLclm_varcon, only : nZ, nL, dtLgridM, zdtgridM, psigridM, dtLgridH, zdtgridH, psigridH
     !
     ! !ARGUMENTS:
@@ -1912,5 +2042,90 @@ contains
     return
 
   end subroutine LookupPsihatINI
+
+  !-----------------------------------------------------------------------
+  subroutine VerticalVelocity (p, eta, mlcanopy_inst)
+    !
+    ! !DESCRIPTION:
+    ! Vertical velocity profile within canopy from Massman and Weil (1999).
+    ! Vertical velocity is calculated at the interface height (not the source height)
+    ! because it is used for the non-local transport between two layers at heights
+    ! zs(i) and zs(i+1).
+    !
+    ! !USES:
+    use MLCanopyFluxesType, only : mlcanopy_type
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: p              ! Patch index for CLM g/l/c/p hierarchy
+    real(r8), intent(in) :: eta           ! eta parameter for wind profile (Massman and Weil, 1999)
+    type(mlcanopy_type), intent(inout) :: mlcanopy_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: ic                        ! Aboveground layer index
+    real(r8) :: gamma1, gamma2, gamma3    ! Parameters for Massman and Weil (1999)
+    real(r8) :: temp, v1, v2, v3          ! Terms for Massman and Weil (1999)
+    real(r8) :: alpha, lambda, b1         ! Terms for Massman and Weil (1999)
+    real(r8) :: candrag                   ! cd * (lai + sai)
+    real(r8) :: zrel                      ! relative depth below canopy top
+    real(r8) :: sigmae_over_ustar         ! Massman and Weil (1999), eq. (10)
+    real(r8) :: sigmaw_over_ustar         ! Massman and Weil (1999), eq. (11)
+    !---------------------------------------------------------------------
+
+    associate ( &
+                                                   ! *** Input ***
+    ncan      => mlcanopy_inst%ncan_canopy    , &  ! Number of aboveground layers
+    ntop      => mlcanopy_inst%ntop_canopy    , &  ! Index for top leaf layer
+    ztop      => mlcanopy_inst%ztop_canopy    , &  ! Canopy foliage top height (m)
+    Lc        => mlcanopy_inst%Lc_canopy      , &  ! Canopy density length scale (m)
+    beta      => mlcanopy_inst%beta_canopy    , &  ! Value of u* / u at canopy top (-)
+    ustar     => mlcanopy_inst%ustar_canopy   , &  ! Friction velocity (m/s)
+    zw        => mlcanopy_inst%zw_profile     , &  ! Canopy height at interface between two adjacent layers (m)
+                                                   ! *** Output ***
+    sigma_w   => mlcanopy_inst%sigma_w_profile  &  ! Canopy layer vertical velocity (m/s)
+    )
+
+    ! Initialize to zero at all levels
+
+    sigma_w(p,:) = 0._r8
+
+    ! Define terms for Massman and Weil (1999)
+
+    gamma1 = 2.40_r8
+    gamma2 = 1.90_r8
+    gamma3 = 1.25_r8
+
+    temp = gamma1**2 + gamma2**2 + gamma3**2
+    v1 = temp**-0.5_r8
+    v3 = temp**1.5_r8
+    v2 = v3 / 6._r8 - gamma3**2 / (2._r8 * v1)
+
+!   alpha = 0.05_r8              ! Constant value (Massman and Weil, 1999, p. 90)
+    alpha = 2._r8 * beta(p)**3   ! HF: lm = 2*beta**3*Lc. MW eq.(8): lm = alpha * Lc
+!   write (6,'(a8,f10.4)') 'alpha = ',alpha
+
+    lambda = sqrt(3._r8 * v1**2 / alpha**2)
+    b1 = -9._r8 * beta(p) / (2._r8 * alpha * v1 * (9._r8 / 4._r8 - lambda**2 * beta(p)**4))
+
+    ! Vertical velocity profile within canopy: defined at interface height (zw)
+    ! not source height (zs)
+
+    candrag = ztop(p) / Lc(p)    ! cd * (a * h)
+    do ic = 1, ntop(p)
+       zrel = 1._r8 - zw(p,ic) / ztop(p)
+       sigmae_over_ustar = ((v3 - b1) * exp(-lambda * candrag * zrel) + b1 * exp(-3._r8 * eta * zrel))**(1._r8/3._r8)
+       sigmaw_over_ustar = gamma3 * v1 * sigmae_over_ustar
+       sigma_w(p,ic) = sigmaw_over_ustar * ustar(p)
+    end do
+
+    ! Vertical velocity profile above canopy: constant at canopy top value (zrel = 0)
+
+    do ic = ntop(p)+1, ncan(p)
+       sigmaw_over_ustar = gamma3
+       sigma_w(p,ic) = sigmaw_over_ustar * ustar(p)
+    end do
+
+    end associate
+  end subroutine VerticalVelocity
 
 end module MLCanopyTurbulenceMod

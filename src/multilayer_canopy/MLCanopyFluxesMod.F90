@@ -31,8 +31,8 @@ module MLCanopyFluxesMod
   implicit none
   !
   ! !PRIVATE TYPES:
-  integer, parameter :: nvar1d = 12     ! Number of single-level fluxes to accumulate over sub-time steps
-  integer, parameter :: nvar2d = 5      ! Number of multi-level profile fluxes to accumulate over sub-time steps
+  integer, parameter :: nvar1d = 15     ! Number of single-level fluxes to accumulate over sub-time steps
+  integer, parameter :: nvar2d = 8      ! Number of multi-level profile fluxes to accumulate over sub-time steps
   integer, parameter :: nvar3d = 10     ! Number of multi-level leaf fluxes to accumulate over sub-time steps
   !
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -120,7 +120,7 @@ module MLCanopyFluxesMod
     ! The last dimension is the number of variables
 
     real(r8) :: flux_accumulator(bounds%begp:bounds%endp,nvar1d)                          ! Single-level fluxes
-    real(r8) :: flux_accumulator_profile(bounds%begp:bounds%endp,1:nlevmlcan,nvar2d)      ! Multi-level profile fluxes
+    real(r8) :: flux_accumulator_profile(bounds%begp:bounds%endp,1:nlevmlcan+1,nvar2d)    ! Multi-level profile fluxes
     real(r8) :: flux_accumulator_leaf(bounds%begp:bounds%endp,1:nlevmlcan,1:nleaf,nvar3d) ! Multi-level leaf fluxes
     !---------------------------------------------------------------------
 
@@ -134,8 +134,9 @@ module MLCanopyFluxesMod
     forc_v         => atm2lnd_inst%forc_v_grc                       , &  ! INPUT: Atmospheric wind speed in north direction (m/s)
     forc_pco2      => atm2lnd_inst%forc_pco2_grc                    , &  ! INPUT: Atmospheric CO2 partial pressure (Pa)
     forc_po2       => atm2lnd_inst%forc_po2_grc                     , &  ! INPUT: Atmospheric O2 partial pressure (Pa)
-    forc_solad     => atm2lnd_inst%forc_solad_not_downscaled_grc    , &  ! INPUT: Atmospheric direct beam radiation (W/m2)
+    forc_solad_col => atm2lnd_inst%forc_solad_downscaled_col        , &  ! INPUT: Atmospheric direct beam radiation (W/m2)
     forc_solai     => atm2lnd_inst%forc_solai_grc                   , &  ! INPUT: Atmospheric diffuse radiation (W/m2)
+    coszen_col     => surfalb_inst%coszen_col                       , &  ! INPUT: CLM cosine of solar zenith angle
     forc_t         => atm2lnd_inst%forc_t_downscaled_col            , &  ! INPUT: Atmospheric temperature (K)
     forc_q         => wateratm2lndbulk_inst%forc_q_downscaled_col   , &  ! INPUT: Atmospheric specific humidity (kg/kg)
     forc_pbot      => atm2lnd_inst%forc_pbot_downscaled_col         , &  ! INPUT: Atmospheric pressure (Pa)
@@ -299,9 +300,9 @@ module MLCanopyFluxesMod
        ! Atmospheric forcing: CLM grid cell (g) variables -> patch (p) variables
 
        uref(p) = max (wind_forc_min, sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
-       swskyb(p,ivis) = forc_solad(g,ivis)
+       swskyb(p,ivis) = forc_solad_col(c,ivis)
        swskyd(p,ivis) = forc_solai(g,ivis)
-       swskyb(p,inir) = forc_solad(g,inir)
+       swskyb(p,inir) = forc_solad_col(c,inir)
        swskyd(p,inir) = forc_solai(g,inir)
 
        ! Re-partition direct and diffuse radiation if desired
@@ -362,19 +363,19 @@ module MLCanopyFluxesMod
        p = filter_mlcan(fp)
        c = patch%column(p)
        g = patch%gridcell(p)
-       lat = grc%lat(g)
-       lon = grc%lon(g)
+       lat = grc%latdeg(g) * pi / 180._r8
+       lon = grc%londeg(g) * pi / 180._r8
        coszen = shr_orb_cosz (caldaym1, lat, lon, declinm1)
        solar_zen(p) = acos(max(0.01_r8,coszen))
 
        ! Compare coszen to that expected from CLM
 
-       if (abs(coszen-surfalb_inst%coszen_col(c)) > 1.e-2_r8) then
+       if (abs(coszen-coszen_col(c)) .gt. 1.e-03_r8) then
           write (iulog,*) 'ERROR: MLCanopyFluxes: coszen diagnostic timestepping error'
           write (iulog,*) 'nstep: ',nstep
           write (iulog,*) 'coszen: ',coszen
-          write (iulog,*) 'CLM coszen: ',surfalb_inst%coszen_col(c)
-          call endrun (msg=' MLCanopyFluxes: stopping on coszen error')
+          write (iulog,*) 'CLM coszen: ',coszen_col(c)
+!         call endrun (msg=' MLCanopyFluxes: stopping on coszen error')
        end if
     end do
 
@@ -400,6 +401,14 @@ module MLCanopyFluxesMod
 
        lai(p) = elai(p)
        sai(p) = esai(p)
+
+       write (iulog,*) ' '
+       write (iulog,*) 'nstep = ',nstep
+       write (iulog,*) 'htop, zref, ncan'
+       write (iulog,*) htop(p),zref(p),ncan(p)
+       write (iulog,*) 'lai, sai, nbot, ntop'
+       write (iulog,*) lai(p),sai(p),mlcanopy_inst%nbot_canopy(p),mlcanopy_inst%ntop_canopy(p)
+       write (iulog,*) ' '
 
        ! Vertical profiles
 
@@ -607,7 +616,11 @@ module MLCanopyFluxesMod
     !---------------------------------------------------------------------
 
     associate ( &
+    ncan        => mlcanopy_inst%ncan_canopy          , &  ! Number of aboveground layers
     ustar       => mlcanopy_inst%ustar_canopy         , &  ! Friction velocity (m/s)
+    beta        => mlcanopy_inst%beta_canopy          , &  ! Value of u* / u at canopy top (-)
+    z0m         => mlcanopy_inst%z0m_canopy           , &  ! Roughness length for momentum (m)
+    zdisp       => mlcanopy_inst%zdisp_canopy         , &  ! Displacement height (m)
     lwup        => mlcanopy_inst%lwup_canopy          , &  ! Upward longwave radiation above canopy (W/m2)
     qflx_intr   => mlcanopy_inst%qflx_intr_canopy     , &  ! Intercepted precipitation (kg H2O/m2/s)
     qflx_tflrain => mlcanopy_inst%qflx_tflrain_canopy , &  ! Total rain throughfall onto ground (kg H2O/m2/s)
@@ -623,7 +636,10 @@ module MLCanopyFluxesMod
     etair       => mlcanopy_inst%etair_profile        , &  ! Canopy layer air water vapor flux (mol H2O/m2/s)
     stair       => mlcanopy_inst%stair_profile        , &  ! Canopy layer air storage heat flux (W/m2)
     mflx        => mlcanopy_inst%mflx_profile         , &  ! Canopy layer momentum flux (m2/s2)
+    kc_eddy     => mlcanopy_inst%kc_eddy_profile      , &  ! Canopy layer eddy diffusivity from Harman and Finnigan (m2/s)
     gac         => mlcanopy_inst%gac_profile          , &  ! Canopy layer aerodynamic conductance for scalars (mol/m2/s)
+    lwupw       => mlcanopy_inst%lwupw_profile        , &  ! Upward longwave flux above canopy layer (W/m2)
+    lwdwn       => mlcanopy_inst%lwdwn_profile        , &  ! Downward longwave flux above canopy layer (W/m2)
     lwleaf      => mlcanopy_inst%lwleaf_leaf          , &  ! Leaf absorbed longwave radiation (W/m2 leaf)
     rnleaf      => mlcanopy_inst%rnleaf_leaf          , &  ! Leaf net radiation (W/m2 leaf)
     shleaf      => mlcanopy_inst%shleaf_leaf          , &  ! Leaf sensible heat flux (W/m2 leaf)
@@ -647,10 +663,14 @@ module MLCanopyFluxesMod
           flux_accumulator_leaf(p,:,:,:) = 0._r8
        end if
 
-       ! Accumulate fluxes over sub-time steps
+       ! Accumulate fluxes over sub-time steps for temporal averaging
+       ! NOTE: State variables are not averaged over sub-time steps
 
        i = 0
        i = i + 1; flux_accumulator(p,i) = flux_accumulator(p,i) + ustar(p)
+       i = i + 1; flux_accumulator(p,i) = flux_accumulator(p,i) + beta(p)
+       i = i + 1; flux_accumulator(p,i) = flux_accumulator(p,i) + z0m(p)
+       i = i + 1; flux_accumulator(p,i) = flux_accumulator(p,i) + zdisp(p)
        i = i + 1; flux_accumulator(p,i) = flux_accumulator(p,i) + lwup(p)
        i = i + 1; flux_accumulator(p,i) = flux_accumulator(p,i) + lwsoi(p)
        i = i + 1; flux_accumulator(p,i) = flux_accumulator(p,i) + rnsoi(p)
@@ -664,11 +684,16 @@ module MLCanopyFluxesMod
        i = i + 1; flux_accumulator(p,i) = flux_accumulator(p,i) + qflx_tflsnow(p)
 
        j = 0
-       j = j + 1; flux_accumulator_profile(p,:,j) = flux_accumulator_profile(p,:,j) + shair(p,:)
-       j = j + 1; flux_accumulator_profile(p,:,j) = flux_accumulator_profile(p,:,j) + etair(p,:)
-       j = j + 1; flux_accumulator_profile(p,:,j) = flux_accumulator_profile(p,:,j) + stair(p,:)
-       j = j + 1; flux_accumulator_profile(p,:,j) = flux_accumulator_profile(p,:,j) + mflx(p,:)
-       j = j + 1; flux_accumulator_profile(p,:,j) = flux_accumulator_profile(p,:,j) + gac(p,:)
+       j = j + 1; flux_accumulator_profile(p,1:ncan(p),j) = flux_accumulator_profile(p,1:ncan(p),j) + shair(p,1:ncan(p))
+       j = j + 1; flux_accumulator_profile(p,1:ncan(p),j) = flux_accumulator_profile(p,1:ncan(p),j) + etair(p,1:ncan(p))
+       j = j + 1; flux_accumulator_profile(p,1:ncan(p),j) = flux_accumulator_profile(p,1:ncan(p),j) + stair(p,1:ncan(p))
+       j = j + 1; flux_accumulator_profile(p,1:ncan(p),j) = flux_accumulator_profile(p,1:ncan(p),j) + mflx(p,1:ncan(p))
+       j = j + 1; flux_accumulator_profile(p,1:ncan(p),j) = flux_accumulator_profile(p,1:ncan(p),j) + kc_eddy(p,1:ncan(p))
+       j = j + 1; flux_accumulator_profile(p,1:ncan(p),j) = flux_accumulator_profile(p,1:ncan(p),j) + gac(p,1:ncan(p))
+
+       ! Note special indexing for radiative fluxes, which are dimensioned 0 to ncan
+       j = j + 1; flux_accumulator_profile(p,1:ncan(p)+1,j) = flux_accumulator_profile(p,1:ncan(p)+1,j) + lwupw(p,0:ncan(p))
+       j = j + 1; flux_accumulator_profile(p,1:ncan(p)+1,j) = flux_accumulator_profile(p,1:ncan(p)+1,j) + lwdwn(p,0:ncan(p))
 
        k = 0
        k = k + 1; flux_accumulator_leaf(p,:,:,k) = flux_accumulator_leaf(p,:,:,k) + lwleaf(p,:,:)
@@ -700,6 +725,9 @@ module MLCanopyFluxesMod
 
           i = 0
           i = i + 1; ustar(p) = flux_accumulator(p,i)
+          i = i + 1; beta(p) = flux_accumulator(p,i)
+          i = i + 1; z0m(p) = flux_accumulator(p,i)
+          i = i + 1; zdisp(p) = flux_accumulator(p,i)
           i = i + 1; lwup(p) = flux_accumulator(p,i)
           i = i + 1; lwsoi(p) = flux_accumulator(p,i)
           i = i + 1; rnsoi(p) = flux_accumulator(p,i)
@@ -713,11 +741,16 @@ module MLCanopyFluxesMod
           i = i + 1; qflx_tflsnow(p) = flux_accumulator(p,i)
 
           j = 0
-          j = j + 1; shair(p,:) = flux_accumulator_profile(p,:,j)
-          j = j + 1; etair(p,:) = flux_accumulator_profile(p,:,j)
-          j = j + 1; stair(p,:) = flux_accumulator_profile(p,:,j)
-          j = j + 1; mflx(p,:) = flux_accumulator_profile(p,:,j)
-          j = j + 1; gac(p,:) = flux_accumulator_profile(p,:,j)
+          j = j + 1; shair(p,1:ncan(p)) = flux_accumulator_profile(p,1:ncan(p),j)
+          j = j + 1; etair(p,1:ncan(p)) = flux_accumulator_profile(p,1:ncan(p),j)
+          j = j + 1; stair(p,1:ncan(p)) = flux_accumulator_profile(p,1:ncan(p),j)
+          j = j + 1; mflx(p,1:ncan(p)) = flux_accumulator_profile(p,1:ncan(p),j)
+          j = j + 1; kc_eddy(p,1:ncan(p)) = flux_accumulator_profile(p,1:ncan(p),j)
+          j = j + 1; gac(p,1:ncan(p)) = flux_accumulator_profile(p,1:ncan(p),j)
+
+          ! Note special indexing for radiative fluxes, which are dimensioned 0 to ncan
+          j = j + 1; lwupw(p,0:ncan(p)) = flux_accumulator_profile(p,1:ncan(p)+1,j)
+          j = j + 1; lwdwn(p,0:ncan(p)) = flux_accumulator_profile(p,1:ncan(p)+1,j)
 
           k = 0
           k = k + 1; lwleaf(p,:,:) = flux_accumulator_leaf(p,:,:,k)
@@ -801,6 +834,11 @@ module MLCanopyFluxesMod
     shair       => mlcanopy_inst%shair_profile      , &  ! Canopy layer air sensible heat flux (W/m2)
     etair       => mlcanopy_inst%etair_profile      , &  ! Canopy layer air water vapor flux (mol H2O/m2/s)
     stair       => mlcanopy_inst%stair_profile      , &  ! Canopy layer air storage heat flux (W/m2)
+    lwupw       => mlcanopy_inst%lwupw_profile      , &  ! Upward longwave flux above canopy layer (W/m2)
+    lwdwn       => mlcanopy_inst%lwdwn_profile      , &  ! Downward longwave flux above canopy layer (W/m2)
+    swupw       => mlcanopy_inst%swupw_profile      , &  ! Upward diffuse solar flux above canopy layer (W/m2)
+    swdwn       => mlcanopy_inst%swdwn_profile      , &  ! Downward diffuse solar flux above canopy layer (W/m2)
+    swbeam      => mlcanopy_inst%swbeam_profile     , &  ! Direct beam solar flux above canopy layer (W/m2)
     fracsun     => mlcanopy_inst%fracsun_profile    , &  ! Canopy layer sunlit fraction (-)
     vcmax25_profile => mlcanopy_inst%vcmax25_profile, &  ! Canopy layer leaf maximum carboxylation rate at 25C (umol/m2/s)
     lwleaf      => mlcanopy_inst%lwleaf_leaf        , &  ! Leaf absorbed longwave radiation (W/m2 leaf)
@@ -991,7 +1029,7 @@ module MLCanopyFluxesMod
           vcmax25veg(p) = vcmax25veg(p) + vcmax25_profile(p,ic) * dpai(p,ic)
        end do
 
-       ! Check energy balance for conservation
+       ! Check vegetation energy balance for conservation
 
        err = swveg(p,ivis) + swveg(p,inir) + lwveg(p) - shveg(p) - lhveg(p) - stflx(p)
        if (abs(err) >= 1.e-03_r8) then
@@ -1029,7 +1067,7 @@ module MLCanopyFluxesMod
        radout = albcan(p,ivis)*(swskyb(p,ivis)+swskyd(p,ivis)) + albcan(p,inir)*(swskyb(p,inir)+swskyd(p,inir)) + lwup(p)
 
        err = rnet(p) - (radin - radout)
-       if (abs(err) > 0.01_r8) then
+       if (abs(err) > 0.001_r8) then
           call endrun (msg=' ERROR: CanopyFluxesDiagnostics: energy conservation error (2)')
        end if
 
@@ -1038,6 +1076,16 @@ module MLCanopyFluxesMod
        err = avail - flux
        if (abs(err) > 0.01_r8) then
           call endrun (msg=' ERROR: CanopyFluxesDiagnostics: energy conservation error (3)')
+       end if
+
+       ! Check radiative fluxes at top of canopy
+
+       ic = ntop(p)
+       radin = swbeam(p,ic,ivis) + swbeam(p,ic,inir) + swdwn(p,ic,ivis) + swdwn(p,ic,inir) + lwdwn(p,ic)
+       radout = swupw(p,ic,ivis) + swupw(p,ic,inir) + lwupw(p,ic)
+       err = (radin - radout) - rnet(p)
+       if (abs(err) > 0.001_r8) then
+          call endrun (msg=' ERROR: CanopyFluxesDiagnostics: energy conservation error (4)')
        end if
 
        ! Sunlit and shaded canopy fluxes

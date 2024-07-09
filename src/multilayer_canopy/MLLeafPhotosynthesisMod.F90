@@ -882,7 +882,7 @@ contains
     ! !USES:
     use PatchType, only : patch
     use pftconMod, only : pftcon
-    use MLMathToolsMod, only : zbrent
+    use MLMathToolsMod, only : zbrent, bisection
     use MLCanopyFluxesType, only : mlcanopy_type
     !
     ! !ARGUMENTS:
@@ -895,7 +895,7 @@ contains
     ! !LOCAL VARIABLES:
     real(r8) :: gs1, gs2                  ! Initial guess for gs (mol H2O/m2/s)
     real(r8) :: check1, check2            ! Water-use efficiency check for gs1 and gs2
-    real(r8), parameter :: tol = 0.004_r8 ! gs is updated to accuracy tol (mol H2O/m2/s)
+    real(r8), parameter :: tol = 0.001_r8 ! gs is updated to accuracy tol (mol H2O/m2/s)
     !---------------------------------------------------------------------
 
     associate ( &
@@ -925,7 +925,8 @@ contains
           ! Calculate gs using the function StomataEfficiency to iterate gs
           ! to an accuracy of tol (mol H2O/m2/s)
 
-          gs(p,ic,il) = zbrent ('StomataOptimization', p, ic, il, mlcanopy_inst, StomataEfficiency, gs1, gs2, tol)
+!         gs(p,ic,il) = zbrent ('StomataOptimization', p, ic, il, mlcanopy_inst, StomataEfficiency, gs1, gs2, tol)
+          gs(p,ic,il) = bisection ('StomataOptimization', p, ic, il, mlcanopy_inst, StomataEfficiency, gs1, gs2, tol)
 
        else
 

@@ -147,6 +147,7 @@ module MLCanopyFluxesType
     real(r8), pointer :: PrSc_canopy(:)          ! Prandtl (Schmidt) number at canopy top (-)
     real(r8), pointer :: Lc_canopy(:)            ! Canopy density length scale (m)
     real(r8), pointer :: zdisp_canopy(:)         ! Displacement height (m)
+    real(r8), pointer :: z0m_canopy(:)           ! Roughness length for momentum (m)
 
     ! Canopy stomatal conductance variables: dimension is (patch)
 
@@ -242,6 +243,8 @@ module MLCanopyFluxesType
     real(r8), pointer :: stair_profile(:,:)      ! Canopy layer air storage heat flux (W/m2)
     real(r8), pointer :: mflx_profile(:,:)       ! Canopy layer momentum flux (m2/s2)
     real(r8), pointer :: gac_profile(:,:)        ! Canopy layer aerodynamic conductance for scalars (mol/m2/s)
+    real(r8), pointer :: kc_eddy_profile(:,:)    ! Canopy layer eddy diffusivity from Harman and Finnigan (m2/s)
+    real(r8), pointer :: sigma_w_profile(:,:)    ! Canopy layer vertical velocity (m/s)
 
     real(r8), pointer :: swleaf_mean_profile(:,:,:) ! Canopy layer weighted mean: leaf absorbed solar radiation (W/m2 leaf)
     real(r8), pointer :: lwleaf_mean_profile(:,:)   ! Canopy layer weighted mean: leaf absorbed longwave radiation (W/m2 leaf)
@@ -464,6 +467,7 @@ contains
     allocate (this%PrSc_canopy         (begp:endp))                              ; this%PrSc_canopy         (:)       = spval
     allocate (this%Lc_canopy           (begp:endp))                              ; this%Lc_canopy           (:)       = spval
     allocate (this%zdisp_canopy        (begp:endp))                              ; this%zdisp_canopy        (:)       = spval
+    allocate (this%z0m_canopy          (begp:endp))                              ; this%z0m_canopy          (:)       = spval
 
     ! Canopy stomatal conductance variables
 
@@ -559,6 +563,8 @@ contains
     allocate (this%stair_profile       (begp:endp,1:nlevmlcan))                  ; this%stair_profile       (:,:)     = spval
     allocate (this%mflx_profile        (begp:endp,1:nlevmlcan))                  ; this%mflx_profile        (:,:)     = spval
     allocate (this%gac_profile         (begp:endp,1:nlevmlcan))                  ; this%gac_profile         (:,:)     = spval
+    allocate (this%kc_eddy_profile     (begp:endp,1:nlevmlcan))                  ; this%kc_eddy_profile     (:,:)     = spval
+    allocate (this%sigma_w_profile     (begp:endp,1:nlevmlcan))                  ; this%sigma_w_profile     (:,:)     = spval
 
     allocate (this%swleaf_mean_profile (begp:endp,1:nlevmlcan,1:numrad))         ; this%swleaf_mean_profile (:,:,:)   = spval
     allocate (this%lwleaf_mean_profile (begp:endp,1:nlevmlcan))                  ; this%lwleaf_mean_profile (:,:)     = spval

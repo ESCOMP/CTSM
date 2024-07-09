@@ -66,7 +66,7 @@ contains
 
     real(r8) :: unit_lai = 1.0_r8                          ! Unit leaf area index of canopy (m2/m2)
     real(r8) :: unit_sai = 1.0_r8                          ! Unit stem area index of canopy (m2/m2)
-    real(r8) :: dpai_min = 0.001_r8                        ! Minimum plant area index to be considered a vegetation layer (m2/m2)
+    real(r8) :: dpai_min = 0.01_r8                         ! Minimum plant area index to be considered a vegetation layer (m2/m2)
     !---------------------------------------------------------------------
 
     associate ( &
