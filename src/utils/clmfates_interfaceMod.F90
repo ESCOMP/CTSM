@@ -3915,8 +3915,6 @@ module CLMFatesInterfaceMod
    deallocate(arraylocal_bareground)
    call ncd_pio_closefile(ncid)
 
-   ! Check that sums equal to unity
-
  end subroutine GetLandusePFTData
 
 
