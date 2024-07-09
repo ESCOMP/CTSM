@@ -45,6 +45,8 @@ Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
    New FATES namelist option: fates_harvest_mode
       - This new option provides five harvest modes
       - The 'event_code' mode takes over the now defunct use_fates_logging option
+      - The 'landuse_timeseries' option supersedes the use of do_harvest option
+	with FATES.  Using do_harvest is no longer compatible with FATES.
 
    New FATES namelist option: use_fates_lupft
       - This option enables the necessary namelist options and data sets to run
