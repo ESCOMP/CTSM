@@ -1558,7 +1558,7 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 
 <!-- This one is just for testing until Issue #2304 is resolved -->
 <fluh_timeseries hgrid="4x5" sim_year_range="constant" use_fates=".true."
- >lnd/clm2/surfdata_map/fates-sci.1.68.3_api.31.0.0_tools.1.0.1/LUH2_states_transitions_management.timeseries_4x5_hist_simyr1650-2015_c240216.nc</fluh_timeseries>
+ >lnd/clm2/surfdata_map/fates-sci.1.68.3_api.31.0.0_tools.1.0.1/LUH2_states_transitions_management.timeseries_4x5_hist_simyr0850-2015_c240216.nc</fluh_timeseries>
 
 <!-- Fixation and Uptake of Nitrogen Model (FUN2.0) -->
 <use_fun                                                            >.false.</use_fun>
