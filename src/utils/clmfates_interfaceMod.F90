@@ -182,7 +182,6 @@ module CLMFatesInterfaceMod
    use dynFATESLandUseChangeMod, only : num_landuse_transition_vars, num_landuse_state_vars
    use dynFATESLandUseChangeMod, only : landuse_transitions, landuse_states
    use dynFATESLandUseChangeMod, only : landuse_transition_varnames, landuse_state_varnames
-   use dynFATESLandUseChangeMod, only : dynFatesLandUseInterp
    use dynFATESLandUseChangeMod, only : num_landuse_harvest_vars
    use dynFATESLandUseChangeMod, only : fates_harvest_no_logging
    use dynFATESLandUseChangeMod, only : fates_harvest_clmlanduse
