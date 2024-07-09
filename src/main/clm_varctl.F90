@@ -414,6 +414,8 @@ module clm_varctl
   logical, public :: use_hillslope = .false. ! true => use multi-column hillslope hydrology
   logical, public :: downscale_hillslope_meteorology = .false. ! true => downscale meteorological forcing in hillslope model
   logical, public :: use_hillslope_routing = .false. ! true => use surface water routing in hillslope hydrology
+  logical, public :: hillslope_fsat_equals_zero = .false. ! set saturated excess runoff to zero for hillslope columns
+
 
   !----------------------------------------------------------
   ! excess ice physics switch and params
