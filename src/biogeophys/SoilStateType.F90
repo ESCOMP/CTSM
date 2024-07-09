@@ -9,7 +9,7 @@ module SoilStateType
   use abortutils      , only : endrun
   use clm_varpar      , only : nlevsoi, nlevgrnd, nlevlak, nlayer, nlevsno, nlevmaxurbgrnd
   use clm_varcon      , only : spval
-  use clm_varctl      , only : use_hydrstress, use_cn, use_lch4, use_dynroot, use_fates
+  use clm_varctl      , only : use_hydrstress, use_cn, use_lch4, use_fates
   use clm_varctl      , only : iulog, hist_wrtch4diag
   use LandunitType    , only : lun                
   use ColumnType      , only : col                
@@ -231,20 +231,6 @@ contains
             ptr_col=this%bsw_col, default='inactive')
     end if
 
-    if (use_dynroot) then
-       this%rootfr_patch(begp:endp,:) = spval
-       call hist_addfld2d (fname='ROOTFR', units='proportion', type2d='levgrnd', &
-            avgflag='A', long_name='fraction of roots in each soil layer', &
-            ptr_patch=this%rootfr_patch, default='active')
-    end if
-
-    if ( use_dynroot ) then
-       this%root_depth_patch(begp:endp) = spval
-        call hist_addfld1d (fname='ROOT_DEPTH', units="m", &
-             avgflag='A', long_name='rooting depth', &
-             ptr_patch=this%root_depth_patch )
-     end if
-
     if (use_cn) then
        this%rootr_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='ROOTR', units='proportion', type2d='levgrnd', &
@@ -393,15 +379,7 @@ contains
          scale_by_thickness=.true., &
          interpinic_flag='interp', readvar=readvar, data=this%hk_l_col)
 
-     if( use_dynroot ) then
-         call restartvar(ncid=ncid, flag=flag, varname='rootfr', xtype=ncd_double,  &
-              dim1name='pft', dim2name='levgrnd', switchdim=.true., &
-              long_name='root fraction', units='', &
-              scale_by_thickness=.false., &
-              interpinic_flag='interp', readvar=readrootfr, data=this%rootfr_patch)
-     else
-         readrootfr = .false.
-     end if
+     readrootfr = .false.
      if (flag=='read' .and. .not. readrootfr ) then
             if (masterproc) then
                write(iulog,*) "can't find rootfr in restart (or initial) file..."
