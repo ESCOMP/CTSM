@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.2.009 glemieux 07/09/2024 FATES Land Use V2
        ctsm5.2.008     erik 06/28/2024 Bring changes on temp-branch to master: b4b-dev, git-fleximod, hillslope fsat
 tmp-240620.n03.ctsm5.2.007  06/27/2024 Set upland hillslope column fsat values to zero (samrabin)
 tmp-240620.n02.ctsm5.2.007  06/21/2024 Another update of git-fleximod (erik)
