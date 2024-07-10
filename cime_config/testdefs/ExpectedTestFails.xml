@@ -44,7 +44,7 @@
     </phase>
   </test>
 
-  <test name="PEM_D_Ld9.ne30pg3_t232.I1850Clm60BgcCropG.derecho_intel.clm-clm60cam6LndTuningMode">
+  <test name="PEM_D_Ld9.ne30pg3_t232.I1850Clm60BgcCropG.derecho_intel.clm-clm60cam7LndTuningMode">
     <phase name="COMPARE_base_modpes">
       <status>FAIL</status>
       <issue>#2542</issue>
