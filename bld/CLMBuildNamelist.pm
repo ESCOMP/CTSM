@@ -4650,14 +4650,13 @@ sub setup_logic_cnmatrix {
                 , 'spinup_matrixcn'=>$nl_flags->{'spinup_matrixcn'}, 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
     }
     @matrixlist = ( "use_matrixcn", "use_soil_matrixcn", "hist_wrt_matrixcn_diag", "spinup_matrixcn" );
-    # Matrix items can't be on for NTHRDS_LND > 1
-    my $var_xml = "NTHRDS_LND";
-    my $val_xml = int($envxml_ref->{$var_xml});
-    print "$var_xml = $val_xml";
+    # Matrix items can't be on for OMP_NUM_THREADS (also known as NTHRDS_LND) > 1
+    my $var_xml = "OMP_NUM_THREADS";
+    my $val_xml = $ENV{$var_xml};
     if ( $val_xml > 1) {
        foreach my $var ( @matrixlist ) {
           if ( &value_is_true($nl->get_value($var)) ) {
-             $log->warning("$var and $var_xml > 1 causes a clm threading test to FAIL (as of 2024/7/10), so use at your own risk." );
+             $log->warning("$var and $var_xml > 1 (in this case $val_xml) causes a clm threading test to FAIL (as of 2024/7/10), so use at your own risk." );
           }
        }
     }
