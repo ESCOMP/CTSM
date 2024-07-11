@@ -235,8 +235,16 @@ class MeshType:
             lons_size = self.center_lons.size
 
             # -- convert center points from 1d to 2d
-            self.center_lat2d = np.broadcast_to(self.center_lats[:], (lons_size, lats_size))
-            self.center_lon2d = np.broadcast_to(self.center_lons[:], (lons_size, lats_size))
+            try:
+                self.center_lat2d = np.broadcast_to(self.center_lats[:], (lons_size, lats_size))
+                self.center_lon2d = np.broadcast_to(self.center_lons[:], (lons_size, lats_size))
+            except ValueError:
+                self.center_lat2d = np.broadcast_to(
+                    np.expand_dims(self.center_lats[:], 0), (lons_size, lats_size)
+                )
+                self.center_lon2d = np.broadcast_to(
+                    np.expand_dims(self.center_lons[:], 1), (lons_size, lats_size)
+                )
         elif self.lat_dims == 2:
             # -- 2D lats and lons
             dims = self.center_lons.shape
