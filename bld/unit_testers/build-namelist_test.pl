@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 2515;
+my $ntests = 3259;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1545;
+   $ntests += 2001;
 }
 plan( tests=>$ntests );
 
@@ -314,7 +314,7 @@ print "Test configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, te
 print "=================================================================================\n";
 
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
-foreach my $driver ( "mct", "nuopc" ) {
+foreach my $driver ( "nuopc" ) {
    print "   For $driver driver\n\n";
    # configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, test, sim_year, use_case
    foreach my $options ( "-res 0.9x1.25 -configuration nwp",
@@ -335,13 +335,7 @@ foreach my $driver ( "mct", "nuopc" ) {
       my $file = $startfile;
       &make_env_run();
       my $base_options = "-envxml_dir . -driver $driver";
-      if ( $driver eq "mct" ) {
-         $base_options = "$base_options -lnd_frac $DOMFILE";
-         # Skip the MCT test for excess ice streams
-         if ( $options =~ /use_excess_ice_streams=.true./ ) {
-           next;
-         }
-      } else {
+      if ( $driver eq "nuopc" ) {
          $base_options = "$base_options -namelist '&a force_send_to_atm = .false./'";
       }
       eval{ system( "$bldnml $base_options $options > $tempfile 2>&1 " ); };
@@ -500,447 +494,342 @@ system( "touch $finidat" );
 my %failtest = (
      "coldstart but with IC file"=>{ options=>"-clm_start_type cold -envxml_dir .",
                                      namelst=>"finidat='$finidat'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "clm_demand on finidat"     =>{ options=>"-clm_demand finidat -envxml_dir .",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "blank IC file, not cold"   =>{ options=>"-clm_start_type startup -envxml_dir .",
                                      namelst=>"finidat=' '",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "startup without interp"    =>{ options=>"-clm_start_type startup -envxml_dir . -bgc sp -sim_year 1850",
                                      namelst=>"use_init_interp=.false., start_ymd=19200901",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "use_crop without -crop"    =>{ options=>" -envxml_dir .",
                                      namelst=>"use_crop=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "soilm_stream off w file"      =>{ options=>"-res 0.9x1.25 -envxml_dir .",
                                      namelst=>"use_soil_moisture_streams = .false.,stream_fldfilename_soilm='file_provided_when_off'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "exice_stream off w file"  =>{ options=>"-res 0.9x1.25 -envxml_dir .",
                                      namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.,stream_fldfilename_exice='file_provided_when_off'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "exice_stream off w mesh"  =>{ options=>"-res 0.9x1.25 -envxml_dir .",
                                      namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.,stream_meshfile_exice='file_provided_when_off'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "exice off, but stream on"  =>{ options=>"-res 0.9x1.25 -envxml_dir .",
                                      namelst=>"use_excess_ice=.false., use_excess_ice_streams = .true.,stream_fldfilename_exice='file_provided', stream_meshfile_exice='file_provided'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "exice stream off, but setmap"=>{ options=>"-res 0.9x1.25 -envxml_dir .",
                                      namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.,stream_mapalgo_exice='bilinear'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
-     "exice stream on, but mct"    =>{ options=>"--res 0.9x1.25 --envxml_dir . --driver mct --lnd_frac $DOMFILE ",
-                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "clm50CNDVwtransient"       =>{ options=>" -envxml_dir . -use_case 20thC_transient -dynamic_vegetation -res 10x15 -ignore_warnings",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "decomp_without_cn"         =>{ options=>" -envxml_dir . -bgc sp",
                                      namelst=>"soil_decomp_method='CENTURYKoven2013'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "bgc_with_no_decomp"        =>{ options=>" -envxml_dir . -bgc bgc",
                                      namelst=>"soil_decomp_method='None'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "reseed without CN"         =>{ options=>" -envxml_dir . -bgc sp",
                                      namelst=>"reseed_dead_plants=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "onset_threh w SP"          =>{ options=>" -envxml_dir . -bgc sp",
                                      namelst=>"onset_thresh_depends_on_veg=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "dribble_crphrv w/o CN"     =>{ options=>" -envxml_dir . -bgc sp",
                                      namelst=>"dribble_crophrv_xsmrpool_2atm=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "dribble_crphrv w/o crop"   =>{ options=>" -envxml_dir . -bgc bgc -no-crop",
                                      namelst=>"dribble_crophrv_xsmrpool_2atm=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "CNDV with flanduse_timeseries - clm4_5"=>{ options=>"-bgc bgc -dynamic_vegetation -envxml_dir . -ignore_warnings",
                                      namelst=>"flanduse_timeseries='my_flanduse_timeseries_file.nc'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "use_cndv=T without bldnml op"=>{ options=>"-bgc bgc -envxml_dir . -ignore_warnings",
                                      namelst=>"use_cndv=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "use_cndv=F with dyn_veg op"=>{ options=>"-bgc bgc -dynamic_vegetation -envxml_dir . -ignore_warnings",
                                      namelst=>"use_cndv=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "crop with use_crop false"  =>{ options=>"-crop -bgc bgc -envxml_dir .",
                                      namelst=>"use_crop=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "crop without CN"           =>{ options=>"-crop -bgc sp -envxml_dir .",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "toosmall soil w trans"     =>{ options=>"-envxml_dir .",
                                      namelst=>"toosmall_soil=10, dyn_transient_pfts=T",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "toosmall lake w trans"     =>{ options=>"-envxml_dir .",
                                      namelst=>"toosmall_lake=10, dyn_transient_pfts=T",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "toosmall crop w trans"     =>{ options=>"-bgc bgc -crop -envxml_dir .",
                                      namelst=>"toosmall_crop=10, dyn_transient_pfts=T",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "toosmall wetl w trans"     =>{ options=>"-bgc bgc -envxml_dir .",
                                      namelst=>"toosmall_wetland=10, dyn_transient_pfts=T",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "toosmall glc  w trans"     =>{ options=>"-bgc sp  -envxml_dir .",
                                      namelst=>"toosmall_glacier=10, dyn_transient_pfts=T",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "toosmall urban w trans"    =>{ options=>"-bgc sp  -envxml_dir .",
                                      namelst=>"toosmall_urban=10, dyn_transient_pfts=T",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "collapse_urban w trans"    =>{ options=>"-bgc sp  -envxml_dir .",
                                      namelst=>"collapse_urban=T, dyn_transient_crops=T",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "n_dom_landunits w trans"    =>{ options=>"-bgc sp  -envxml_dir .",
                                      namelst=>"n_dom_landunits=2, dyn_transient_crops=T",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "n_dom_pfts w trans"         =>{ options=>"-bgc sp  -envxml_dir .",
                                      namelst=>"n_dom_pfts=2, dyn_transient_crops=T",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "baset_map without crop"    =>{ options=>"-bgc bgc -envxml_dir . -no-crop",
                                      namelst=>"baset_mapping='constant'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "mapvary var w/o varymap"   =>{ options=>"-crop -bgc bgc -envxml_dir . -crop",
                                      namelst=>"baset_mapping='constant', baset_latvary_slope=1.0, baset_latvary_intercept=10.0",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "grainproductWOcrop"       =>{ options=>"-bgc bgc -no-crop -envxml_dir .",
                                     namelst=>"use_grainproduct=.true.",
-                                    GLC_TWO_WAY_COUPLING=>"FALSE",
                                     phys=>"clm4_5",
                                    },
      "interp without finidat"    =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"use_init_interp=.true. finidat=' '",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "sp and c13"                =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"use_c13=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "sp and c14"                =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"use_c14=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "bombspike no c14"          =>{ options=>"-bgc bgc -envxml_dir .",
                                      namelst=>"use_c14=.false. use_c14_bombspike=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "use c13 timeseries no cn"  =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"use_c13_timeseries=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "use c13 timeseries no c13"=>{ options=>"-bgc bgc -envxml_dir .",
                                      namelst=>"use_c13=.false. use_c13_timeseries=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "bombspike no cn"           =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"use_c14_bombspike=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "lightres no cn"            =>{ options=>"-bgc sp -envxml_dir . -light_res 360x720",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "NEONlightresButGlobal"     =>{ options=>"--res 4x5 --bgc bgc --envxml_dir . --light_res 106x740",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "spno-fire"                 =>{ options=>"-bgc sp -envxml_dir . -use_case 2000_control",
                                      namelst=>"fire_method='nofire'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "lightres no fire"          =>{ options=>"-bgc bgc -envxml_dir . -light_res 360x720",
                                      namelst=>"fire_method='nofire'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "lightres none bgc"         =>{ options=>"-bgc bgc -envxml_dir . -light_res none",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "lightresnotnone-nofire"    =>{ options=>"-bgc bgc -envxml_dir . -light_res 94x192",
                                      namelst=>"fire_method='nofire'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "lightresnonenofirelightfil"=>{ options=>"-bgc bgc -envxml_dir . -light_res none",
                                      namelst=>"fire_method='nofire',stream_fldfilename_lightng='build-namelist_test.pl'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "lightrescontradictlightfil"=>{ options=>"-bgc bgc -envxml_dir . -light_res 360x720",
                                      namelst=>"stream_fldfilename_lightng='build-namelist_test.pl'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "finundated and not methane"=>{ options=>"-bgc bgc -envxml_dir .",
                                      namelst=>"use_lch4=.false.,finundation_method='h2osfc'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "use_cn=true bgc=sp"        =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"use_cn=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "freeliv wo fun"            =>{ options=>"-bgc bgc -envxml_dir .",
                                      namelst=>"freelivfix_intercept=9.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "use_cn=false bgc=bgc"      =>{ options=>"-bgc bgc -envxml_dir .",
                                      namelst=>"use_cn=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "lower=aqu-45 with/o Zeng"  =>{ options=>"-envxml_dir .",
                                      namelst=>"lower_boundary_condition=4,soilwater_movement_method=1,use_bedrock=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "Zeng w lower=flux"         =>{ options=>"-envxml_dir .",
                                      namelst=>"lower_boundary_condition=1,soilwater_movement_method=0,use_bedrock=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "Zeng w lower=zeroflux"     =>{ options=>"-envxml_dir .",
                                      namelst=>"lower_boundary_condition=2,soilwater_movement_method=0",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "Zeng w lower=table"        =>{ options=>"-envxml_dir .",
                                      namelst=>"lower_boundary_condition=3,soilwater_movement_method=0,use_bedrock=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "use_vic=F with -vic op"    =>{ options=>"-vichydro -envxml_dir .",
                                      namelst=>"use_vichydro=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "-vic with l_bnd=flux"      =>{ options=>"-vichydro -envxml_dir .",
                                      namelst=>"lower_boundary_condition=1",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "-vic with l_bnd=zeroflux"  =>{ options=>"-vichydro -envxml_dir .",
                                      namelst=>"lower_boundary_condition=2",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "bedrock with l_bnc=flux"   =>{ options=>"-envxml_dir .",
                                      namelst=>"use_bedrock=.true., lower_boundary_condition=1",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "bedrock with l_bnc=tabl"   =>{ options=>"-envxml_dir .",
                                      namelst=>"use_bedrock=.true., lower_boundary_condition=3",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "bedrock with l_bnc=aqui"   =>{ options=>"-envxml_dir .",
                                      namelst=>"use_bedrock=.true., lower_boundary_condition=4",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "zengdeck with l_bnc=flux"  =>{ options=>"-envxml_dir .",
                                      namelst=>"soilwater_movement_method=0, lower_boundary_condition=1",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "zengdeck with l_bnc=z-flux"=>{ options=>"-envxml_dir .",
                                      namelst=>"soilwater_movement_method=0, lower_boundary_condition=2",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "zengdeck with l_bnc=tabl"  =>{ options=>"-envxml_dir .",
                                      namelst=>"soilwater_movement_method=0, lower_boundary_condition=3",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "l_bnd=tabl with h2osfcfl=0"=>{ options=>"-envxml_dir .",
                                      namelst=>"h2osfcflag=0, lower_boundary_condition=3",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "l_bnd=flux with h2osfcfl=0"=>{ options=>"-envxml_dir .",
                                      namelst=>"h2osfcflag=0, lower_boundary_condition=1",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "l_bnd=zflux with h2osfcfl=0"=>{ options=>"-envxml_dir .",
                                      namelst=>"h2osfcflag=0, lower_boundary_condition=2",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "h2osfcfl=0 with clm5.0"    =>{ options=>"-envxml_dir .",
                                      namelst=>"h2osfcflag=0",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "45bad lnd_tuning_mode value" =>{ options=>"-lnd_tuning_mode clm5_0_GSWP3  -envxml_dir .",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "50bad lnd_tuning_mode value" =>{ options=>"-lnd_tuning_mode clm4_5_CRUNCEP  -envxml_dir .",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "bgc_spinup without cn"     =>{ options=>"-clm_accelerated_spinup on -bgc sp -envxml_dir .",
                                      namelst=>"spinup_state=1",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "spinup=1 without bldnml op"=>{ options=>"-clm_accelerated_spinup off -bgc bgc -envxml_dir .",
                                      namelst=>"spinup_state=1",,
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "bgc_spinup without cn"     =>{ options=>"-clm_accelerated_spinup on -bgc sp -envxml_dir .",
                                      namelst=>"spinup_state=1",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "baseflow w aquifer"        =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"baseflow_scalar=1.0, lower_boundary_condition=4,use_bedrock=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "baseflow w table"          =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"baseflow_scalar=1.0, lower_boundary_condition=3,use_bedrock=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "br_root and bgc=sp"        =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"br_root=1.0",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "both co2_type and on nml"  =>{ options=>"-co2_type constant -envxml_dir .",
                                      namelst=>"co2_type='prognostic'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
-                                   },
-     "both lnd_frac and on nml"  =>{ options=>"-driver mct -lnd_frac $DOMFILE -envxml_dir .",
-                                     namelst=>"fatmlndfrc='frac.nc'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
-     "lnd_frac set to UNSET"     =>{ options=>"-driver mct -lnd_frac UNSET -envxml_dir .",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm6_0",
                                    },
      "lnd_frac set but nuopc"    =>{ options=>"-driver nuopc -lnd_frac $DOMFILE -envxml_dir .",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "lnd_frac not set but lilac"=>{ options=>"-driver nuopc -lilac -envxml_dir . -lnd_frac UNSET",
                                      namelst=>"fsurdat='surfdata.nc'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "fatmlndfrc set but nuopc"  =>{ options=>"-driver nuopc -envxml_dir .",
                                      namelst=>"fatmlndfrc='frac.nc'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm6_0",
-                                   },
-     "force_send but not nuopc"  =>{ options=>"-driver mct -lnd_frac $DOMFILE -envxml_dir .",
-                                     namelst=>"force_send_to_atm = .false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "branch but NO nrevsn"      =>{ options=>"-clm_start_type branch -envxml_dir .",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "glc_nec inconsistent"      =>{ options=>"-envxml_dir .",
                                      namelst=>"maxpatch_glc=5",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "NoGLCMec"                  =>{ options=>"-envxml_dir . -glc_nec 0",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "UpdateGlcContradict"       =>{ options=>"-envxml_dir .",
@@ -950,309 +839,259 @@ my %failtest = (
                                    },
      "useFATESContradict"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_fates=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "useFATESContradict2"       =>{ options=>"-envxml_dir . -no-megan",
                                      namelst=>"use_fates=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "useFATESWCN"               =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_cn=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "useFATESWcrop"             =>{ options=>"-bgc fates -envxml_dir . -no-megan -crop",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "useFATESWcreatecrop"       =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"create_crop_landunit=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "useFATESWn_dom_pft"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"n_dom_pfts = 1",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "useFATESWbMH"              =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_biomass_heat_storage=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "FireNoneButFATESfireon"    =>{ options=>"-bgc fates -envxml_dir . -no-megan -light_res none",
                                      namelst=>"fates_spitfire_mode=4",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "FATESwspitfireOffLigtOn"    =>{ options=>"-bgc fates -envxml_dir . -no-megan -light_res 360x720",
                                      namelst=>"fates_spitfire_mode=0",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "useFATESWluna"             =>{ options=>"--bgc fates --envxml_dir . --no-megan",
                                      namelst=>"use_luna=TRUE",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "useFATESWfun"              =>{ options=>"--bgc fates --envxml_dir . --no-megan",
                                      namelst=>"use_fun=TRUE",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "useFATESWOsuplnitro"       =>{ options=>"--bgc fates --envxml_dir . --no-megan",
                                      namelst=>"suplnitro='NONE'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "FireNoneButBGCfireon"    =>{ options=>"-bgc bgc -envxml_dir . -light_res none",
                                      namelst=>"fire_method='li2021gswpfrc'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "createcropFalse"           =>{ options=>"-bgc bgc -envxml_dir . -no-megan",
                                      namelst=>"create_crop_landunit=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "usespitfireButNOTFATES"    =>{ options=>"-envxml_dir . -no-megan",
                                      namelst=>"fates_spitfire_mode=1",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "usespitfireusefatessp"    =>{ options=>"-envxml_dir . --bgc fates",
                                      namelst=>"fates_spitfire_mode=1,use_fates_sp=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "usefatesspusefateshydro"   =>{ options=>"-envxml_dir . --bgc fates",
                                      namelst=>"use_fates_sp=.true.,use_fates_planthydro=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "useloggingButNOTFATES"     =>{ options=>"-envxml_dir . -no-megan",
                                      namelst=>"use_fates_logging=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "useinventorybutnotfile"    =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_fates_inventory_init=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "inventoryfileDNE"          =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_fates_inventory_init=.true., fates_inventory_ctrl_filename='zztop'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "useinventorybutnotfile"    =>{ options=>"--res 0.9x1.25 --bgc fates --envxml_dir . --no-megan",
                                      namelst=>"use_fates_luh=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "inventoryfileDNE"          =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_fates_luh=.true., fluh_timeseries='zztop'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "useMEGANwithFATES"         =>{ options=>"-bgc fates -envxml_dir . -megan",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "useFIREEMISwithFATES"      =>{ options=>"-bgc fates -envxml_dir . -fire_emis --no-megan",
                                     namelst=>"",
-                                    GLC_TWO_WAY_COUPLING=>"FALSE",
                                     phys=>"clm4_5",
                                  },
      "useDRYDEPwithFATES"        =>{ options=>"--bgc fates --envxml_dir . --no-megan --drydep",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
      "useFATESSPWONOCOMP"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_fates_sp=T,use_fates_nocomp=F",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "useFATESTRANSWdynPFT"      =>{ options=>"-bgc fates -envxml_dir . -use_case 20thC_transient -no-megan",
                                      namelst=>"do_transient_pfts=T",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "useHYDSTwithFATES"         =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_hydrstress=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
-     "useHYDSTwithdynroot"       =>{ options=>"-bgc bgc -envxml_dir . -megan",
-                                     namelst=>"use_hydrstress=.true., use_dynroot=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "specWOfireemis"            =>{ options=>"-envxml_dir . -no-fire_emis",
                                      namelst=>"fire_emis_specifier='bc_a1 = BC'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "elevWOfireemis"            =>{ options=>"-envxml_dir . -no-fire_emis",
                                      namelst=>"fire_emis_elevated=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "noanthro_w_crop"            =>{ options=>"-envxml_dir . -res 0.9x1.25 -bgc bgc -crop -use_case 1850_noanthro_control",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "noanthro_w_irrig"           =>{ options=>"-envxml_dir . -res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control",
                                      namelst=>"irrigate=T",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "spdotransconflict"          =>{ options=>"-envxml_dir . -bgc sp -use_case 20thC_transient",
                                      namelst=>"do_transient_pfts=T,do_transient_crops=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "dogrossandsp"               =>{ options=>"--envxml_dir . --bgc sp --use_case 20thC_transient",
                                      namelst=>"do_grossunrep=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "dogrossandfates"            =>{ options=>"--envxml_dir . --bgc fates --use_case 20thC_transient --no-megan",
                                      namelst=>"do_grossunrep=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "dogrossandnottrans"         =>{ options=>"--envxml_dir . --bgc bgc --use_case 2000_control",
                                      namelst=>"do_grossunrep=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "nocropwfert"                =>{ options=>"-envxml_dir . -bgc sp -no-crop",
                                      namelst=>"use_fertilizer=T",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "lmr1WOcn"                   =>{ options=>"-envxml_dir . -bgc sp",
                                      namelst=>"leafresp_method=1",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "lmr2WOcn"                   =>{ options=>"-envxml_dir . -bgc sp",
                                      namelst=>"leafresp_method=2",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "lmr0Wcn"                    =>{ options=>"-envxml_dir . -bgc bgc",
                                      namelst=>"leafresp_method=0",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "nofireButSetcli_scale"     =>{ options=>"-envxml_dir . -bgc bgc",
                                      namelst=>"fire_method='nofire', cli_scale=5.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "nocnButSetrh_low"          =>{ options=>"-envxml_dir . -bgc sp",
                                      namelst=>"rh_low=5.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "funWOcn"                   =>{ options=>"-envxml_dir . -bgc sp",
                                      namelst=>"use_fun=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "flexCNWOcn"                =>{ options=>"-envxml_dir . -bgc sp",
                                      namelst=>"use_flexibleCN=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "flexCNFUNwcarbonresp"      =>{ options=>"-envxml_dir . -bgc bgc",
                                      namelst=>"use_flexibleCN=.true.,use_FUN=.true.,carbon_resp_opt=1",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "funWOnitrif"               =>{ options=>"-envxml_dir .",
                                      namelst=>"use_fun=.true., use_nitrif_denitrif=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "SPModeWNitrifNMethane"     =>{ options=>"-envxml_dir . -bgc sp",
                                      namelst=>"use_lch4=.true., use_nitrif_denitrif=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "knitrmaxWOnitrif"          =>{ options=>"-envxml_dir . -bgc bgc",
                                      namelst=>"use_nitrif_denitrif=.false., k_nitr_max=1.0",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "respcoefWOnitrif"          =>{ options=>"-envxml_dir . -bgc bgc",
                                      namelst=>"use_nitrif_denitrif=.false., denitrif_respiration_coefficient=1.0",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "respexpWOnitrif"           =>{ options=>"-envxml_dir . -bgc bgc",
                                      namelst=>"use_nitrif_denitrif=.false., denitrif_respiration_exponent=1.0",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "lunaWSPandlnctrue"         =>{ options=>"-envxml_dir . -bgc sp",
                                      namelst=>"use_luna=.true., lnc_opt=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "NOlunabutsetJmaxb1"        =>{ options=>"-envxml_dir . -bgc sp",
                                      namelst=>"use_luna=.false., jmaxb1=1.0",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "envxml_not_dir"            =>{ options=>"-envxml_dir myuser_nl_clm",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "envxml_emptydir"           =>{ options=>"-envxml_dir xFail",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
      "fates_non_sp_laistreams"   =>{ options=>"--envxml_dir . --bgc fates",
                                      namelst=>"use_lai_streams=.true., use_fates_sp=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                      },
      "bgc_non_sp_laistreams"     =>{ options=>"--envxml_dir . -bgc bgc",
                                      namelst=>"use_lai_streams=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                      },
      "bgc_laistreams_input"     =>{ options=>"--envxml_dir . --bgc bgc",
                                      namelst=>"stream_year_first_lai=1999",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                      },
      "crop_laistreams_input"     =>{ options=>"--envxml_dir . --bgc sp --crop",
                                      namelst=>"use_lai_streams=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                      },
      "soil_erod_wo_Zender"      =>{ options=>"--envxml_dir . --ignore_warnings",
                                      namelst=>"dust_emis_method='Leung_2023', " .
                                      "stream_meshfile_zendersoilerod = '/dev/null'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                      },
      "soil_erod_wo_lnd_source"  =>{ options=>"--envxml_dir .",
                                      namelst=>"dust_emis_method='Zender_2003', " .
                                      "stream_fldfilename_zendersoilerod = '/dev/null', zender_soil_erod_source='atm'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                     },
+     "soil_erod_none_w_Zender"  =>{ options=>"--envxml_dir .",
+                                     namelst=>"dust_emis_method='Zender_2003', " .
+                                     "zender_soil_erod_source='none'",
+                                     phys=>"clm5_1",
+                                     },
+     "soil_erod_bad_w_Zender"   =>{ options=>"--envxml_dir .",
+                                     namelst=>"dust_emis_method='Zender_2003', " .
+                                     "zender_soil_erod_source='zztop'",
+                                     phys=>"clm5_1",
+                                     },
+     "Set_Dust_When_CAM_Sets"   =>{ options=>"--envxml_dir .",
+                                     namelst=>"dust_emis_method='Zender_2003'",
+                                     LND_SETS_DUST_EMIS_DRV_FLDS=>"FALSE",
                                      phys=>"clm5_1",
                                      },
      "soil_erod_none_w_Zender"  =>{ options=>"--envxml_dir .",
@@ -1273,7 +1112,13 @@ foreach my $key ( keys(%failtest) ) {
    &make_config_cache($failtest{$key}{"phys"});
    my $options  = $failtest{$key}{"options"};
    my $namelist = $failtest{$key}{"namelst"};
-   &make_env_run( GLC_TWO_WAY_COUPLING=>$failtest{$key}{"GLC_TWO_WAY_COUPLING"} );
+   my %settings;
+   foreach my $xmlvar ( "GLC_TWO_WAY_COUPLING", "LND_SETS_DUST_EMIS_DRV_FLDS") {
+      if ( defined($failtest{$key}{$xmlvar}) ) {
+         $settings{$xmlvar} = $failtest{$key}{$xmlvar};
+      }
+   }
+   &make_env_run( %settings );
    eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
    isnt( $?, 0, $key );
    system( "cat $tempfile" );
@@ -1433,30 +1278,166 @@ foreach my $res ( @resolutions ) {
 }
 
 print "\n==================================================\n";
-print " Rest all use-cases \n";
+print " Test all use-cases over all physics options\n";
 print "==================================================\n";
 
-# Run over all use-cases...
+# Run over all use-cases for f09 and all physics...
 my $list = `$bldnml -use_case list 2>&1 | grep "use case"`;
 my @usecases;
 if ( $list =~ /build-namelist : use cases : (.+)$/ ) {
-  my @usecases  = split( / /, $list );
+  @usecases  = split( / /, $1 );
 } else {
   die "ERROR:: Trouble getting list of use-cases\n";
 }
-foreach my $usecase ( @usecases ) {
-   $options = "-use_case $usecase  -envxml_dir .";
+if ( $#usecases != 15 ) {
+  print "use-cases = @usecases\n";
+  die "ERROR:: Number of use-cases isn't what's expected\n";
+}
+my @expect_fails = ( "1850-2100_SSP5-3.4_transient", "1850-2100_SSP4-3.4_transient", "2018-PD_transient", "1850-2100_SSP1-1.9_transient",
+                      "1850-2100_SSP4-6.0_transient", "2018_control" );
+foreach my $phys ( "clm4_5", "clm5_0", "clm5_1", "clm6_0" ) {
+   print "physics = $phys\n";
+   &make_config_cache($phys);
+   foreach my $usecase ( @usecases ) {
+      print "usecase = $usecase\n";
+      $options = "-res 0.9x1.25 -use_case $usecase  -envxml_dir .";
+      &make_env_run();
+      my $expect_fail = undef;
+      foreach my $failusecase ( @expect_fails ) {
+         if ( $failusecase eq $usecase ) {
+            $expect_fail = 1;
+            last;
+         }
+      }
+      eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
+      if ( ! defined($expect_fail) ) {
+         is( $@, '', "options: $options" );
+         $cfiles->checkfilesexist( "$options", $mode );
+         $cfiles->shownmldiff( "default", "standard" );
+         if ( defined($opts{'compare'}) ) {
+            $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+            $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+         }
+         if ( defined($opts{'generate'}) ) {
+            $cfiles->copyfiles( "$options", $mode );
+         }
+      } else {
+         isnt( $@, 0, "options: $options" );
+      }
+      &cleanup();
+   }
+}
+
+print "\n=======================================================================================\n";
+print " Test the seperate initial condition files, for ones not tested elsewhere\n";
+print "=========================================================================================\n";
+
+my %finidat_files = (
+     "f091850Clm45BgcGSW"        =>{ phys =>"clm4_5",
+                                     atm_forc=>"GSWP3v1",
+                                     res => "0.9x1.25",
+                                     bgc => "bgc",
+                                     crop => "--no-crop",
+                                     use_case => "1850_control",
+                                     start_ymd => "18500101",
+                                     namelist => "irrigate=T",
+                                   },
+     "f091850Clm45BgcCRU"        =>{ phys =>"clm4_5",
+                                     atm_forc=>"CRUv7",
+                                     res => "0.9x1.25",
+                                     bgc => "bgc",
+                                     crop => "--no-crop",
+                                     use_case => "1850_control",
+                                     start_ymd => "18500101",
+                                     namelist => "irrigate=T",
+                                   },
+     "f091850Clm45BgcCAM6"       =>{ phys =>"clm4_5",
+                                     atm_forc=>"cam6.0",
+                                     res => "0.9x1.25",
+                                     bgc => "bgc",
+                                     crop => "--crop",
+                                     use_case => "1850_control",
+                                     start_ymd => "18500101",
+                                     namelist => "irrigate=F",
+                                   },
+     "f091850Clm50BgcGSW"        =>{ phys =>"clm5_0",
+                                     atm_forc=>"GSWP3v1",
+                                     res => "0.9x1.25",
+                                     bgc => "bgc",
+                                     crop => "--crop",
+                                     use_case => "1850_control",
+                                     start_ymd => "18500101",
+                                     namelist => "irrigate=F",
+                                   },
+     "f091850Clm50SpGSW"         =>{ phys =>"clm5_0",
+                                     atm_forc=>"GSWP3v1",
+                                     res => "0.9x1.25",
+                                     bgc => "sp",
+                                     crop => "--no-crop",
+                                     use_case => "1850_control",
+                                     start_ymd => "18500101",
+                                     namelist => "irrigate=T",
+                                   },
+     "f091850Clm50BgcCRU"        =>{ phys =>"clm5_0",
+                                     atm_forc=>"CRUv7",
+                                     res => "0.9x1.25",
+                                     bgc => "bgc",
+                                     crop => "--crop",
+                                     use_case => "1850_control",
+                                     start_ymd => "18500101",
+                                     namelist => "irrigate=F",
+                                   },
+     "f091850Clm50SpCRU"         =>{ phys =>"clm5_0",
+                                     atm_forc=>"CRUv7",
+                                     res => "0.9x1.25",
+                                     bgc => "sp",
+                                     crop => "--no-crop",
+                                     use_case => "1850_control",
+                                     start_ymd => "18500101",
+                                     namelist => "irrigate=T",
+                                   },
+     "f091850Clm50BgcCAM6"       =>{ phys =>"clm5_0",
+                                     atm_forc=>"cam6.0",
+                                     res => "0.9x1.25",
+                                     bgc => "bgc",
+                                     crop => "--crop",
+                                     use_case => "1850_control",
+                                     start_ymd => "18500101",
+                                     namelist => "irrigate=F",
+                                   },
+   );
+
+foreach my $key ( keys(%finidat_files) ) {
+   print( "$key\n" );
+   my $phys = $finidat_files{$key}{'phys'};
+   print "physics = $phys\n";
+   &make_config_cache($phys);
+   my $usecase = $finidat_files{$key}{'use_case'};
+   my $bgc = $finidat_files{$key}{'bgc'};
+   my $res = $finidat_files{$key}{'res'};
+   my $crop = $finidat_files{$key}{'crop'};
+   my $namelist = $finidat_files{$key}{'namelist'};
+   my $start_ymd = $finidat_files{$key}{'start_ymd'};
+   my $lnd_tuning_mode = "${phys}_" . $finidat_files{$key}{'atm_forc'};
+   $options = "-bgc $bgc -res $res -use_case $usecase -envxml_dir . $crop --lnd_tuning_mode $lnd_tuning_mode " . 
+              "-namelist '&a start_ymd=$start_ymd, $namelist/'";
    &make_env_run();
    eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
+   my $finidat = `grep finidat lnd_in`;
+   if ( $finidat =~ /initdata_map/ ) {
+      my $result;
+      eval( $result = `grep use_init_interp lnd_in` );
+      is ( $result =~ /.true./, 1, "use_init_interp needs to be true here: $result");
+   }
    $cfiles->checkfilesexist( "$options", $mode );
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
-      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+         $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+         $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
    if ( defined($opts{'generate'}) ) {
-      $cfiles->copyfiles( "$options", $mode );
+         $cfiles->copyfiles( "$options", $mode );
    }
    &cleanup();
 }
@@ -1515,7 +1496,7 @@ print "==================================================\n";
 # cases; I'm not sure if it's actually important to test this with all
 # of the different use cases.
 my @glc_res = ( "0.9x1.25", "1.9x2.5" );
-my @use_cases = ( 
+my @use_cases = (
                   "1850-2100_SSP2-4.5_transient",
                   "1850_control",
                   "2000_control",
@@ -1523,7 +1504,7 @@ my @use_cases = (
                   "20thC_transient",
                  );
 foreach my $res ( @glc_res ) {
-   foreach my $usecase ( @usecases ) {
+   foreach my $usecase ( @use_cases ) {
       my $startymd = undef;
       if ( ($usecase eq "1850_control") || ($usecase eq "20thC_transient") ) {
          $startymd = 18500101;
@@ -1595,43 +1576,6 @@ foreach my $usecase ( "1850-2100_SSP2-4.5_transient" ) {
 #
 # End loop over versions
 #
-#
-# Test ALL SSP's for f09...
-#
-$phys = "clm6_0";
-$mode = "-phys $phys";
-&make_config_cache($phys);
-my $res = "0.9x1.25";
-foreach my $usecase ( "1850-2100_SSP5-8.5_transient", "1850-2100_SSP2-4.5_transient", "1850-2100_SSP1-2.6_transient", "1850-2100_SSP3-7.0_transient" ) {
-      $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . -namelist '&a start_ymd=20150101/'";
-      &make_env_run();
-      eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
-      is( $@, '', "$options" );
-      $cfiles->checkfilesexist( "$options", $mode );
-      $cfiles->shownmldiff( "default", "standard" );
-      if ( defined($opts{'compare'}) ) {
-         $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-         $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
-      }
-      if ( defined($opts{'generate'}) ) {
-         $cfiles->copyfiles( "$options", $mode );
-      }
-      &cleanup();
-}
-
-# The SSP's that fail because of missing ndep files...
-$phys = "clm5_0";
-$mode = "-phys $phys";
-&make_config_cache($phys);
-my $res = "0.9x1.25";
-foreach my $usecase ( "1850-2100_SSP5-3.4_transient", "1850-2100_SSP4-3.4", "1850-2100_SSP1-1.9_transient",
-                      "1850-2100_SSP4-6.0_transient" ) {
-      $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . -namelist '&a start_ymd=20150101/'";
-      &make_env_run();
-      eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
-      isnt( $?, 0, $usecase );
-      system( "cat $tempfile" );
-}
 
 print "\n==================================================\n";
 print "Test clm4.5/clm5.0/clm5_1/clm6_0 resolutions \n";

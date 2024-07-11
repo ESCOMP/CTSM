@@ -207,12 +207,6 @@ contains
          for_testing_no_crop_seed_replenishment, &
          z0param_method, use_z0m_snowmelt
 
-    ! NOTE: EBK 02/26/2024: dust_emis_method is here in CTSM temporarily until it's moved to CMEPS
-    ! See: https://github.com/ESCOMP/CMEPS/pull/429
-    ! Normally this should also need error checking and a broadcast, but since
-    ! there is only one hardcoded option right now that is unneeded.
-    namelist /clm_inparm/ dust_emis_method
-
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
          som_adv_flux, max_depth_cryoturb
@@ -271,8 +265,6 @@ contains
     namelist /clm_inparm/ use_hillslope_routing
 
     namelist /clm_inparm/ use_hydrstress
-
-    namelist /clm_inparm/ use_dynroot
 
     namelist /clm_inparm/  &
          use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
@@ -613,11 +605,6 @@ contains
             errMsg(sourcefile, __LINE__))
     end if
 
-    if ( use_dynroot .and. use_hydrstress ) then
-       call endrun(msg=' ERROR:: dynroot and hydrstress can NOT be on at the same time'//&
-            errMsg(sourcefile, __LINE__))
-    end if
-
     ! Check on run type
     if (nsrest == iundef) then
        call endrun(msg=' ERROR:: must set nsrest'//&
@@ -841,8 +828,6 @@ contains
     call mpi_bcast (use_hillslope_routing, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
-
-    call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     if (use_cn .or. use_fates) then
        ! vertical soil mixing variables
@@ -1130,7 +1115,6 @@ contains
     write(iulog,*) '   user-defined soil layer structure = ', soil_layerstruct_userdefined
     write(iulog,*) '   user-defined number of soil layers = ', soil_layerstruct_userdefined_nlevsoi
     write(iulog,*) '   plant hydraulic stress = ', use_hydrstress
-    write(iulog,*) '   dynamic roots          = ', use_dynroot
     if (nsrest == nsrContinue) then
        write(iulog,*) 'restart warning:'
        write(iulog,*) '   Namelist not checked for agreement with initial run.'

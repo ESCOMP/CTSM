@@ -59,7 +59,7 @@ contains
     @assertFalse(not_init)
 
   end subroutine check_when_initialized_runs
- 
+
    @Test
   subroutine check_dust_emis(this)
     ! Test that the dust_emis logical functions work as expected
@@ -75,7 +75,6 @@ contains
 
   end subroutine check_dust_emis
 
-   
   @Test
   subroutine check_zender_soil(this)
     ! Test that the dust_emis_Zender logical functions work as expected
@@ -91,7 +90,6 @@ contains
 
   end subroutine check_zender_soil
 
-     
   @Test
   subroutine check_options(this)
     ! Test that the check_options subroutine catches errors that should die
@@ -110,5 +108,5 @@ contains
     @assertExceptionRaised(endrun_msg('(check_options_finish_init) ERROR: zender_soil_erod_source can only be lnd or atm'))
 
   end subroutine check_options
- 
+
 end module test_shr_dust_emis

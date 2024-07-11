@@ -115,7 +115,7 @@ module clm_varctl
   character(len=fname_len), public :: fsnowaging   = ' '      ! snow aging parameters file name
 
   character(len=fname_len), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
-                                                              ! only needed for LILAC and MCT drivers
+                                                              ! only needed for LILAC
 
   !----------------------------------------------------------
   ! Flag to read ndep rather than obtain it from coupler
@@ -277,11 +277,6 @@ module clm_varctl
   logical, public :: do_sno_oc = .false.  ! control to include organic carbon (OC) in snow
 
   !----------------------------------------------------------
-  ! DUST emission method
-  !----------------------------------------------------------
-  character(len=25), public :: dust_emis_method = 'Zender_2003'  ! Dust emisison method to use: Zender_2003 or Leung_2023
-
-  !----------------------------------------------------------
   ! C isotopes
   !----------------------------------------------------------
 
@@ -425,12 +420,6 @@ module clm_varctl
   !----------------------------------------------------------
 
   logical, public :: use_hydrstress = .false. ! true => use plant hydraulic stress calculation
-
-  !----------------------------------------------------------
-  ! dynamic root switch
-  !----------------------------------------------------------
-
-  logical, public :: use_dynroot = .false. ! true => use dynamic root module
 
   !----------------------------------------------------------
   ! glacier_mec control variables: default values (may be overwritten by namelist)
