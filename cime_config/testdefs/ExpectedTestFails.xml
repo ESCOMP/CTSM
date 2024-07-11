@@ -44,7 +44,7 @@
     </phase>
   </test>
 
-  <test name="PEM_D_Ld9.ne30pg3_t232.I1850Clm60BgcCropG.derecho_intel.clm-clm60cam6LndTuningMode">
+  <test name="PEM_D_Ld9.ne30pg3_t232.I1850Clm60BgcCropG.derecho_intel.clm-clm60cam7LndTuningMode">
     <phase name="COMPARE_base_modpes">
       <status>FAIL</status>
       <issue>#2542</issue>
@@ -246,7 +246,7 @@
     </phase>
   </test>
 
-  <!-- Other external test list failures (MOSART, RTM, etc. -->
+  <!-- Other submodule test list failures (MOSART, RTM, etc. -->
 
   <test name="SMS_Lh3.f10_f10_mg37.I2000Clm51Sp.derecho_intel.mosart-clmAccelSpinupIgnoreWarn">
     <phase name="CREATE_NEWCASE">
