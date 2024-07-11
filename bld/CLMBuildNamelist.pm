@@ -1655,7 +1655,7 @@ sub process_namelist_inline_logic {
   if ( remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) ne "branch" ) {
     setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   }
-  setup_logic_cnmatrix($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_cnmatrix($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_spinup($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
@@ -4640,7 +4640,7 @@ sub setup_logic_cnmatrix {
     #
     # Set some default options related to the CN Matrix options
     #
-    my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+    my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
     my @matrixlist = ( "use_matrixcn", "hist_wrt_matrixcn_diag" );
     foreach my $var ( @matrixlist ) {
@@ -4650,6 +4650,18 @@ sub setup_logic_cnmatrix {
                 , 'spinup_matrixcn'=>$nl_flags->{'spinup_matrixcn'}, 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
     }
     @matrixlist = ( "use_matrixcn", "use_soil_matrixcn", "hist_wrt_matrixcn_diag", "spinup_matrixcn" );
+    # Matrix items can't be on for NTHRDS_LND > 1
+    my $var_xml = "NTHRDS_LND";
+    my $val_xml = int($envxml_ref->{$var_xml});
+    print "$var_xml = $val_xml";
+    if ( $val_xml > 1) {
+       foreach my $var ( @matrixlist ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+             $log->warning("$var and $var_xml > 1 causes a clm threading test to FAIL (as of 2024/7/10), so use at your own risk." );
+          }
+       }
+    }
+
     # Matrix items can't be on for transient
     if (not string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
        foreach my $var ( @matrixlist ) {
