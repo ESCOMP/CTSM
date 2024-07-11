@@ -1,4 +1,4 @@
-import shutil
+import shutil, os
 from pathlib import Path
 from configparser import RawConfigParser, ConfigParser
 from .lstripreader import LstripReader
@@ -59,7 +59,7 @@ class GitModules(RawConfigParser):
         Uses the parent class's get method to access the value.
         Handles potential errors if the section or option doesn't exist.
         """
-        self.logger.debug("get called {} {}".format(name, option))
+        self.logger.debug("git get called {} {}".format(name, option))
         section = f'submodule "{name}"'
         try:
             return ConfigParser.get(
