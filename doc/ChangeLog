@@ -1,4 +1,81 @@
 ===============================================================
+Tag name: ctsm5.2.010
+Originator(s): @cathyxinchangli (Cathy Xinchang Li, U of Illinois - Urbana-Champaign), @Face2sea, @olyson, @fang-bowen, @keerzhang1
+Date: Wed 10 Jul 2024 05:00:24 PM MDT
+One-line Summary: Explicit A/C adoption
+
+Purpose and description of changes
+----------------------------------
+
+ Code changes for adding an explicit air-conditioning (AC) adoption parameterization scheme in CLMU. This includes adding a new time-varying input variable (AC adoption rate, p_ac), changes to building energy calculations, and a toggle (new namelist variable urban_explicit_ac)
+
+ In this tag we keep the change off by default in order to show that answers do not change:
+ - If explicit AC adoption is off, the p_ac_[TBD/HD/MD] variables are set to 1 universally, and the building interior setpoints (tbuildmax_[TBD/HD/MD]) remain unchanged, to ensure the model reproduces previous results.
+ - If explicit AC adoption is on, the p_ac_[TBD/HD/MD] variables take on actual AC adoption rate values (present-day global data were developed together with the code change), and tbuildmax_[TBD/HD/MD] are set to 300K/27°C universally.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #2254 Explicitly representing air-conditioning adoption in CESM
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New namelist variable urban_explicit_ac = .false. by default
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ The default urban time-varying input data file (namelist variable stream_fldfilename_urbantv) now includes p_ac_[TBD/HD/MD] variables, whether or not the explicit-AC-adoption scheme is on and the new file has been rimported to svn: CTSM52_urbantv_Li_2024_0.9x1.25_simyr1849-2106_c20230621.nc
+
+Changes to documentation:
+
+Substantial timing or memory changes:
+[e.g., check PFS test in the test suite and look at timings, if you
+expect possible significant timing changes]
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- IN PROGRESS
+    izumi -------
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+ No, because we have introduced the changes as default .false. at this time
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2275
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.009
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed 10 Jul 2024 12:21:23 PM MDT
