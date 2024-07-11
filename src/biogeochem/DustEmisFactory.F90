@@ -28,9 +28,9 @@ contains
         !---------------------------------------------------------------------------
         use DustEmisBase      , only : dust_emis_base_type
         use DustEmisZender2003, only : dust_emis_zender2003_type
-        use clm_varctl        , only : dust_emis_method
         use decompMod         , only : bounds_type
         use shr_kind_mod      , only : CL => shr_kind_cl
+        use shr_dust_emis_mod , only : is_dust_emis_zender, is_dust_emis_leung
         implicit none
         ! Arguments
         class(dust_emis_base_type), allocatable :: dust_emis
@@ -38,20 +38,18 @@ contains
         character(len=*),  intent(in) :: NLFilename
         ! Local variables
 
-        select case ( trim(dust_emis_method) )
-
-        case( "Zender_2003" )
+        if ( is_dust_emis_zender() )then
            allocate(dust_emis, source=dust_emis_zender2003_type() )
         
         ! This will be added when the Leung2023 comes in
-        !case( "Leung_2023" )
+        !else if ( is_dust_emis_leung() )
         !  allocate(dust_emis, source=dust_emis_zender2003_type() )
-        case default
-           write(iulog,*) 'ERROR: unknown dust_emis_method: ', dust_emis_method, &
+        else
+           write(iulog,*) 'ERROR: unknown dust_emis_method: ', &
                            errMsg(sourcefile, __LINE__)
            call endrun( "Unrecognized dust_emis_method"  )
 
-        end select
+        end if
 
         call dust_emis%Init(bounds, NLFilename)
 

@@ -31,7 +31,6 @@ module DustEmisBase
   use LandunitType         , only : lun
   use ColumnType           , only : col
   use PatchType            , only : patch
-  use clm_varctl           , only : dust_emis_method
   !
   ! !PUBLIC TYPES
   implicit none
