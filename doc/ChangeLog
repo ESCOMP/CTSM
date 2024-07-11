@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.2.010
 Originator(s): @cathyxinchangli (Cathy Xinchang Li, U of Illinois - Urbana-Champaign), @Face2sea, @olyson, @fang-bowen, @keerzhang1
-Date: Wed 10 Jul 2024 05:00:24 PM MDT
+Date: Thu 11 Jul 2024 11:57:15 AM MDT
 One-line Summary: Explicit A/C adoption
 
 Purpose and description of changes
@@ -48,10 +48,6 @@ Changes to the datasets (e.g., parameter, surface or initial files):
 
 Changes to documentation:
 
-Substantial timing or memory changes:
-[e.g., check PFS test in the test suite and look at timings, if you
-expect possible significant timing changes]
-
 
 Testing summary:
 ----------------
@@ -60,8 +56,8 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho ----- IN PROGRESS
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
 Answer changes
 --------------
