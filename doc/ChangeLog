@@ -1,4 +1,70 @@
 ===============================================================
+Tag name: ctsm5.2.013
+Originator(s): sacks (Bill Sacks, UCAR/NCAR/CGD)
+Date: Thu 11 Jul 2024 03:38:12 PM MDT
+One-line Summary: Relax tolerance for truncating small snocan values in CanopyFluxes
+
+Purpose and description of changes
+----------------------------------
+
+Details in the PR #2457.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Fixes #2444 Failing water isotope test on the ctsm5.2 branch
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation: None
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+ Yes, roundoff.
+
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: Changes start roundoff level and grow over time.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2457
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.008
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Fri 28 Jun 2024 12:22:46 PM MDT
