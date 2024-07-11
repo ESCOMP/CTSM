@@ -17,6 +17,9 @@ file_list_in = [
     "swindow_starts_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.nc",
     "swindow_ends_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.nc",
     "gdds_20230829_161011.nc",
+    "gdd20bl.copied_from.gdds_20230829_161011.v2.nc",
+    "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.nc",
+    "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.nc",
 ]
 file_mesh_in = (
     "/glade/campaign/cesm/cesmdata/inputdata/share/meshes/360x720_120830_ESMFmesh_c20210507_cdf5.nc"
