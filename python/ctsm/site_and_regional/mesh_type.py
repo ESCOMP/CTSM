@@ -359,7 +359,7 @@ class MeshType:
         )
         # Longitudes should stay within 0 to 360
         if np.any(self.corner_lons > 360.0):
-            abort("Corners have longitudes greater than 360")
+            abort(f"Corners have longitudes greater than 360 (max: {np.max(self.corner_lons)})")
         if np.any(self.corner_lons < 0.0):
             logger.warning(
                 "Corners have longitudes less than zero -- %s %s",
