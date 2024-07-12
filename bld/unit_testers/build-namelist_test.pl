@@ -1063,7 +1063,7 @@ my %failtest = (
                                      phys=>"clm5_0",
                                    },
      "useFATESPOTVEGwithHARVEST" =>{ options=>"-bgc fates -envxml_dir . -no-megan",
-                                     namelst=>"use_fates_potentialveg=T,fates_harvest_mode='event_code'",
+                                     namelst=>"use_fates_potentialveg=T,fates_harvest_mode='event_code',use_fates_luh=T",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
