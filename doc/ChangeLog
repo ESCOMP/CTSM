@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.2.011
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Thu 11 Jul 2024 01:14:12 PM MDT
+Date: Fri 12 Jul 2024 09:45:59 AM MDT
 One-line Summary: Merge b4b-dev
 
 Purpose and description of changes
@@ -56,8 +56,8 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho ----- IN PROG
-    izumi ------- NOT STARTED
+    derecho ----- OK
+    izumi ------- OK
 
 Answer changes
 --------------
