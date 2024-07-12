@@ -743,7 +743,7 @@ Allowed values are:
  landuse_timeseries: fates harvest driven by CLM flanduse_timeseries file (dynHarvestMod)**
  luhdata_area: fates harvest driven by LUH2 raw harvest data, area-based (dynFATESLandUseChangeMod)
  luhdata_mass: fates harvest driven by LUH2 raw harvest data, mass-based (dynFATESLandUseChangeMod)
-Note that the landuse_timeseries option is not the same as the FATES fluh_timeseries data file.
+**Note that the landuse_timeseries option is not the same as the FATES fluh_timeseries data file.
 This option is older than the luhdata options and may be depricated at some point in the future.
 </entry>
 
