@@ -41,7 +41,7 @@ sub make_env_run {
 #
     my %settings = @_;
 
-    # Set default settings
+    # Set default settings  TODO slevis: NTHRDS_LND fails, OMP_NUM_THREADS fails
     my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE", NTHRDS_LND=>"1", NEONSITE=>"" );
     # Set any settings that came in from function call
     foreach my $item ( keys(%settings) ) {
@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3306;
+my $ntests = 3309;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2045;
@@ -1320,6 +1320,12 @@ print "=========================================================================
 
 my %warntest = (
      # Warnings without the -ignore_warnings option given
+     "matrixcnOn_with_threading" =>{ options=>"-envxml_dir . -bgc bgc",
+                                     namelst=>"use_matrixcn=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     NTHRDS_LND=>"2",
+                                     phys=>"clm5_0",
+                                   },
      "dustemisLeung"             =>{ options=>"-envxml_dir .",
                                      namelst=>"dust_emis_method = 'Leung_2023'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1376,7 +1382,13 @@ foreach my $key ( keys(%warntest) ) {
    &make_config_cache($warntest{$key}{"phys"});
    my $options  = $warntest{$key}{"options"};
    my $namelist = $warntest{$key}{"namelst"};
-   &make_env_run( GLC_TWO_WAY_COUPLING=>$warntest{$key}{"GLC_TWO_WAY_COUPLING"} );
+   my %settings;
+   foreach my $xmlvar ( "GLC_TWO_WAY_COUPLING", "NTHRDS_LND") {
+      if ( defined($failtest{$key}{$xmlvar}) ) {
+         $settings{$xmlvar} = $failtest{$key}{$xmlvar};
+      }
+   }
+   &make_env_run( %settings );
    eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
    isnt( $?, 0, $key );
    system( "cat $tempfile" );
