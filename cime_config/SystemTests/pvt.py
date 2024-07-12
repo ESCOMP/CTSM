@@ -30,9 +30,8 @@ class PVT(SystemTestsCommon):
             error_message = (f"Only call PVT with testmod FatesLUPFT. {casebaseid} selected.")
 
         # Only allow to run if resolution is 4x5 for now
-        # Eventually we could set this up to generate the necessary land use x pft mapping
-        # on the fly, although this would also require generating the land use timeseries
-        # regridding on the fly which is a more time consuming endevour currently
+        # Other grid resolutions will be pre-processed and included in the namelist defaults at a future date.
+        # Potentially we could generate these on the fly although doing so would result in increased build time
         lnd_grid = self._case.get_value("LND_GRID")
         if lnd_grid != "4x5":
             error_message = (f"PVT can currently only be run with 4x5 resolution. {lnd_grid} selected.")
