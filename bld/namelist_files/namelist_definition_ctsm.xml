@@ -1374,11 +1374,6 @@ Percentage threshold above which the model keeps the urban landunits. Selecting 
 <default>Default: 0</default>
 </entry>
 
-<entry id="use_dynroot" type="logical" category="physics"
-       group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on the dynamic root model
-</entry>
-
 <entry id="use_SSRE" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on on diagnostic Snow Radiative Effect
