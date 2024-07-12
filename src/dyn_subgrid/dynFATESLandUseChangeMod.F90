@@ -50,6 +50,7 @@ module dynFATESLandUseChangeMod
   type(dyn_file_type), target   :: dynFatesLandUse_file
 
   ! LUH2 raw wood harvest area fraction
+  ! LUH2 data set variable names can be found at https://luh.umd.edu/LUH2/LUH2_v2h_README.pdf
   character(len=10), target :: landuse_harvest_area_varnames(num_landuse_harvest_vars) = &
        [character(len=10) :: 'primf_harv', 'primn_harv', 'secmf_harv', 'secyf_harv', 'secnf_harv']
 
