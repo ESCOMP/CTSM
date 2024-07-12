@@ -828,6 +828,11 @@ Toggle to turn on meteorological downscaling in hillslope model
 Toggle to turn on surface water routing in the hillslope hydrology model
 </entry>
 
+<entry id="hillslope_fsat_equals_zero" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".true.">
+If true, set fsat to zero for hillslope columns
+</entry>
+
 <entry id="hillslope_head_gradient_method" type="char*256" category="physics"
         group="hillslope_hydrology_inparm" valid_values="Kinematic,Darcy">
 Method for calculating hillslope saturated head gradient
@@ -1068,6 +1073,11 @@ Turn urban air conditioning/heating ON or OFF and add wasteheat:
     OFF          = Air conditioning/heating is OFF in buildings, internal temperature allowed to float freely
     ON           = Air conditioning/heating is ON in buildings, internal temperature constrained
     ON_WASTEHEAT = Air conditioning/heating is ON and waste-heat sent to urban canyon
+</entry>
+
+<entry id="urban_explicit_ac" type="logical" category="clm_physics"
+       group="clmu_inparm" valid_values="" >
+If TRUE, use explicit, time-varying AC adoption rate for air-conditioning flux and interior building temperature calculations.
 </entry>
 
 <entry id="urban_traffic" type="logical" category="clm_physics"
@@ -2030,10 +2040,10 @@ hist means do NOT use a future scenario, just use historical data.
 Land mask description
 </entry> 
 
-<!-- lnd_tuning_mode, there needs to be a setting for: CRUv7, GSWP3v1, and cam6.0 for each valid physics option -->
+<!-- lnd_tuning_mode, there needs to be a setting for: CRUv7, GSWP3v1, cam6.0, and cam7.0 for each valid physics option -->
 <entry id="lnd_tuning_mode" type="char*20" category="default_settings"
        group="default_settings"
-       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm4_5_cam5.0,clm4_5_cam4.0,clm5_0_cam6.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_1_GSWP3v1,clm5_1_CRUv7,clm5_1_cam6.0,clm5_1_cam5.0,clm5_1_cam4.0,clm6_0_GSWP3v1,clm6_0_cam6.0,clm6_0_cam5.0,clm6_0_cam4.0">
+       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam7.0,clm4_5_cam6.0,clm4_5_cam5.0,clm4_5_cam4.0,clm5_0_cam7.0,clm5_0_cam6.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_1_GSWP3v1,clm5_1_CRUv7,clm5_1_cam7.0,clm5_1_cam6.0,clm5_1_cam5.0,clm5_1_cam4.0,clm6_0_GSWP3v1,clm6_0_cam7.0,clm6_0_cam6.0,clm6_0_cam5.0,clm6_0_cam4.0">
 General configuration of model version and atmospheric forcing to tune the model to run under.
 This sets the model to run with constants and initial conditions that were set to run well under 
 the configuration of model version and atmospheric forcing. To run well constants would need to be changed
