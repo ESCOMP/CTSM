@@ -20,6 +20,8 @@ file_list_in = [
     "gdd20bl.copied_from.gdds_20230829_161011.v2.nc",
     "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.nc",
     "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.nc",
+    "/glade/work/samrabin/cropCals_testing_20240626/gdds_20240712_114642_10x15_interpd_halfdeg.nc",
+    "/glade/work/samrabin/gdd20_baselines/gswp3.10x15_interpd_halfdeg.1980-2009.nc",
 ]
 file_mesh_in = (
     "/glade/campaign/cesm/cesmdata/inputdata/share/meshes/360x720_120830_ESMFmesh_c20210507_cdf5.nc"
@@ -27,19 +29,43 @@ file_mesh_in = (
 
 file_list_out = []
 coord_list = ["lat", "lon"]
+COORD_DATATYPE = np.float64
 
-# %%
+# %% Define functions
 
+def get_ds(topdir, file_in):
+    if not os.path.exists(file_in):
+        file_in = os.path.join(topdir, file_in)
+    ds = xr.open_dataset(file_in)
+    return file_in, ds
 
-def apply_tweak(ds, coord_str, tweak=1e-6):
-    # Apply tweak
-    da = ds[coord_str]
-    coord2 = da.values
+def get_tweak(ds_in, coord_str, init_tweak):
+    """
+    Get the tweak that will be applied to all datasets' lat/lon coordinates
+    """
+    da = ds_in[coord_str]
+    coord2_orig = da.values.astype(COORD_DATATYPE)
+    coord2 = coord2_orig
+    tweak = init_tweak
     coord2 += tweak
+
+    # This is necessary if precision is lower than float64
+    max_tweak = 1e-2
     while np.any(coord2 == da.values):
         tweak *= 10
-        coord2 = da.values
+        if tweak > max_tweak:
+            raise RuntimeError(f"Tweaking by +{max_tweak} failed to 'take'")
+        coord2 = coord2_orig
         coord2 += tweak
+    return tweak
+
+def apply_tweak(ds_in, coord_str, tweak):
+    # Apply tweak
+    da = ds_in[coord_str]
+    coord2 = da.values.astype(COORD_DATATYPE)
+    coord2 += tweak
+    if np.any(coord2 == da.values):
+        raise RuntimeError('Tweak didn''t "take"')
     coord_tweak = np.full_like(coord2, tweak)
 
     # Ensure that no value is above maximum in input data. This is needed for mesh_maker to work.
@@ -61,19 +87,22 @@ def apply_tweak(ds, coord_str, tweak=1e-6):
     )
 
     # Replace coordinate in dataset
-    ds[coord_str] = da2
+    ds_in[coord_str] = da2
 
     # Add a variable with the amount of the tweak
     tweak_attrs = {}
-    if "standard_name" in da:
+    if "standard_name" in da.attrs:
         coord_name = da.attrs["standard_name"]
-    else:
+    elif "long_name" in da.attrs:
         coord_name = da.attrs["long_name"].replace("coordinate_", "")
+    else:
+        coord_name = coord_str
     tweak_attrs["standard_name"] = coord_name + "_tweak"
     tweak_attrs[
         "long_name"
     ] = f"Amount {coord_name} was shifted to avoid ambiguous nearest neighbors"
-    tweak_attrs["units"] = da.attrs["units"]
+    if "units" in da.attrs:
+        tweak_attrs["units"] = da.attrs["units"]
     da_tweak = xr.DataArray(
         data=coord_tweak,
         coords=new_coords_dict,
@@ -81,19 +110,48 @@ def apply_tweak(ds, coord_str, tweak=1e-6):
         attrs=tweak_attrs,
     )
     tweak_name = coord_str + "_tweak"
-    ds[tweak_name] = da_tweak
+    ds_in[tweak_name] = da_tweak
 
-    return ds
+    return ds_in
 
+def check(ds, f0_base, ds2, f_base, var):
+    if not np.array_equal(ds[var].values, ds2[var].values):
+        if not np.array_equal(ds[var].shape, ds2[var].shape):
+            msg = f"{var} shapes differ b/w {f0_base} ({ds[var].shape}) and {f_base} ({ds2[var].shape})"
+            raise RuntimeError(msg)
+        max_diff = np.max(np.abs(ds[var].values - ds2[var].values))
+        msg = f"{var}s differ between {f0_base} and {f_base}; max = {max_diff}"
+        type0 = type(ds[var].values[0])
+        type2 = type(ds2[var].values[0])
+        if type0 != type2:
+            msg += f"\nTypes also differ: {type0} vs. {type2}"
+        raise RuntimeError(msg)
 
 # %% Apply tweak to all files
 
-for filename in file_list_in:
-    file_in = os.path.join(topdir, filename)
-    ds = xr.open_dataset(file_in)
+# Set up empty dicts
+tweak_dict = {}
+coord_type_dict = {}
+for coord in coord_list:
+    tweak_dict[coord] = -np.inf
+
+# Get tweaks
+for file_in in file_list_in:
+    file_in, ds = get_ds(topdir, file_in)
+    for coord in coord_list:
+        this_tweak = get_tweak(ds, coord, init_tweak=1e-6)
+        if this_tweak > tweak_dict[coord]:
+            tweak_dict[coord] = this_tweak
+for coord in coord_list:
+    print(f"Tweaking {coord} by {tweak_dict[coord]}")
+print(" ")
+
+# Apply tweaks
+for file_in in file_list_in:
+    file_in, ds = get_ds(topdir, file_in)
 
     for coord in coord_list:
-        ds = apply_tweak(ds, coord, tweak=1e-6)
+        ds = apply_tweak(ds, coord, tweak_dict[coord])
 
     # Set up for save
     file_out = file_in.replace(".nc", ".tweaked_latlons.nc")
@@ -110,16 +168,14 @@ print("Done")
 # %% Ensure all files got the same tweaks
 
 ds = xr.open_dataset(file_list_out[0])
+f0_base = os.path.basename(file_list_out[0])
 
 for filename in file_list_out[1:]:
     ds2 = xr.open_dataset(filename)
+    f_base = os.path.basename(filename)
     for coord in coord_list:
-        # Ensure that coordinates are the same
-        var = coord
-        assert np.array_equal(ds[var].values, ds2[var].values)
-        # Ensure that tweaks were the same
-        var = coord + "_tweak"
-        assert np.array_equal(ds[var].values, ds2[var].values)
+        check(ds, f0_base, ds2, f_base, coord)
+        check(ds, f0_base, ds2, f_base, coord + "_tweak")
 print("All good!")
 
 
@@ -168,4 +224,3 @@ if netcdf_format_in != netcdf_format_out:
 
 
 print("Done")
-# %%
