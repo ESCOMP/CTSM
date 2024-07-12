@@ -147,7 +147,7 @@ module CNVegetationFacade
      ! - ch4_inst
      !   - probably not: really seems to belong in soilbiogeochem
      ! - crop_inst
-     ! - dust_inst
+     ! - dust_emis_inst
      ! - vocemis_inst
      ! - fireemis_inst
      ! - drydepvel_inst

@@ -276,9 +276,9 @@ contains
 
     namelist /clm_inparm/ use_hillslope_routing
 
-    namelist /clm_inparm/ use_hydrstress
+    namelist /clm_inparm/ hillslope_fsat_equals_zero
 
-    namelist /clm_inparm/ use_dynroot
+    namelist /clm_inparm/ use_hydrstress
 
     namelist /clm_inparm/  &
          use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
@@ -627,11 +627,6 @@ contains
             errMsg(sourcefile, __LINE__))
     end if
 
-    if ( use_dynroot .and. use_hydrstress ) then
-       call endrun(msg=' ERROR:: dynroot and hydrstress can NOT be on at the same time'//&
-            errMsg(sourcefile, __LINE__))
-    end if
-
     ! Check on run type
     if (nsrest == iundef) then
        call endrun(msg=' ERROR:: must set nsrest'//&
@@ -854,9 +849,8 @@ contains
 
     call mpi_bcast (use_hillslope_routing, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (hillslope_fsat_equals_zero, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_soil_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (hist_wrt_matrixcn_diag, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -864,6 +858,7 @@ contains
     call mpi_bcast (nyr_forcing, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (nyr_sasu, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (iloop_avg, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     if (use_cn .or. use_fates) then
        ! vertical soil mixing variables
@@ -1145,13 +1140,13 @@ contains
 
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
     write(iulog,*) '   hillslope hydrology    = ', use_hillslope
-    write(iulog,*) '   downscale hillslope meteorology    = ', downscale_hillslope_meteorology
+    write(iulog,*) '   downscale hillslope meteorology  = ', downscale_hillslope_meteorology
     write(iulog,*) '   hillslope routing      = ', use_hillslope_routing
+    write(iulog,*) '   hillslope_fsat_equals_zero       = ', hillslope_fsat_equals_zero
     write(iulog,*) '   pre-defined soil layer structure = ', soil_layerstruct_predefined
     write(iulog,*) '   user-defined soil layer structure = ', soil_layerstruct_userdefined
     write(iulog,*) '   user-defined number of soil layers = ', soil_layerstruct_userdefined_nlevsoi
     write(iulog,*) '   plant hydraulic stress = ', use_hydrstress
-    write(iulog,*) '   dynamic roots          = ', use_dynroot
     if (nsrest == nsrContinue) then
        write(iulog,*) 'restart warning:'
        write(iulog,*) '   Namelist not checked for agreement with initial run.'

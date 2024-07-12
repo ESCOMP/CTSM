@@ -427,6 +427,8 @@ module clm_varctl
   logical, public :: use_hillslope = .false. ! true => use multi-column hillslope hydrology
   logical, public :: downscale_hillslope_meteorology = .false. ! true => downscale meteorological forcing in hillslope model
   logical, public :: use_hillslope_routing = .false. ! true => use surface water routing in hillslope hydrology
+  logical, public :: hillslope_fsat_equals_zero = .false. ! set saturated excess runoff to zero for hillslope columns
+
 
   !----------------------------------------------------------
   ! excess ice physics switch
@@ -438,12 +440,6 @@ module clm_varctl
   !----------------------------------------------------------
 
   logical, public :: use_hydrstress = .false. ! true => use plant hydraulic stress calculation
-
-  !----------------------------------------------------------
-  ! dynamic root switch
-  !----------------------------------------------------------
-
-  logical, public :: use_dynroot = .false. ! true => use dynamic root module
 
   !----------------------------------------------------------
   ! glacier_mec control variables: default values (may be overwritten by namelist)
