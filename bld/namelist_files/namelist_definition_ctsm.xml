@@ -740,7 +740,7 @@ Set FATES harvesting mode by setting fates_harvest_mode to a valid string option
 Allowed values are:
  no_harvest: no fates harvesting of any kind
  event_code: fates logging via fates logging event codes (see fates parameter file) only
- landuse_timeseries: fates harvest driven by CLM flanduse_timeseries file (dynHarvestMod)
+ landuse_timeseries: fates harvest driven by CLM flanduse_timeseries file (dynHarvestMod)**
  luhdata_area: fates harvest driven by LUH2 raw harvest data, area-based (dynFATESLandUseChangeMod)
  luhdata_mass: fates harvest driven by LUH2 raw harvest data, mass-based (dynFATESLandUseChangeMod)
 Note that the landuse_timeseries option is not the same as the FATES fluh_timeseries data file.
