@@ -1,43 +1,22 @@
-# %%
-import numpy as np
-import xarray as xr
+"""
+'Tweak' the latitude and longitude coordinates to avoid ambiguous nearest neighbors
+"""
 import os
 import sys
-from netCDF4 import Dataset
 import contextlib
+import argparse
+import numpy as np
+import xarray as xr
+from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
 # -- add python/ctsm  to path (needed if we want to run this stand-alone)
-_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
+_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python")
 sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
 from ctsm.mesh_maker import main as mesh_maker
 
-topdir = "/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/cropdata/calendars/processed/"
-file_list_in = [
-    "swindow_starts_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.nc",
-    "swindow_ends_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.nc",
-    "gdds_20230829_161011.nc",
-    "gdd20bl.copied_from.gdds_20230829_161011.v2.nc",
-    "sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.nc",
-    "hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.nc",
-    "/glade/work/samrabin/cropCals_testing_20240626/gdds_20240712_114642_10x15_interpd_halfdeg.nc",
-    "/glade/work/samrabin/gdd20_baselines/gswp3.10x15_interpd_halfdeg.1980-2009.nc",
-]
-file_mesh_in = (
-    "/glade/campaign/cesm/cesmdata/inputdata/share/meshes/360x720_120830_ESMFmesh_c20210507_cdf5.nc"
-)
-
-file_list_out = []
-coord_list = ["lat", "lon"]
+COORD_LIST = ["lat", "lon"]
 COORD_DATATYPE = np.float64
-
-# %% Define functions
-
-def get_ds(topdir, file_in):
-    if not os.path.exists(file_in):
-        file_in = os.path.join(topdir, file_in)
-    ds = xr.open_dataset(file_in)
-    return file_in, ds
 
 def get_tweak(ds_in, coord_str, init_tweak):
     """
@@ -73,7 +52,9 @@ def apply_tweak(ds_in, coord_str, tweak):
     where_toohigh = np.where(coord2 > max_coord)
     Ntoohigh = len(where_toohigh[0])
     if Ntoohigh != 1:
-        raise RuntimeError(f"Expected 1 coordinate value too high; got {Ntoohigh}")
+        raise RuntimeError(
+            f"Expected 1 coordinate value too high; got {Ntoohigh}"
+        )
     coord2[where_toohigh] = max_coord
     coord_tweak[where_toohigh] = max_coord
 
@@ -127,100 +108,162 @@ def check(ds, f0_base, ds2, f_base, var):
             msg += f"\nTypes also differ: {type0} vs. {type2}"
         raise RuntimeError(msg)
 
-# %% Apply tweak to all files
-
-# Set up empty dicts
-tweak_dict = {}
-coord_type_dict = {}
-for coord in coord_list:
-    tweak_dict[coord] = -np.inf
-
-# Get tweaks
-for file_in in file_list_in:
-    file_in, ds = get_ds(topdir, file_in)
-    for coord in coord_list:
-        this_tweak = get_tweak(ds, coord, init_tweak=1e-6)
-        if this_tweak > tweak_dict[coord]:
-            tweak_dict[coord] = this_tweak
-for coord in coord_list:
-    print(f"Tweaking {coord} by {tweak_dict[coord]}")
-print(" ")
-
-# Apply tweaks
-for file_in in file_list_in:
-    file_in, ds = get_ds(topdir, file_in)
-
-    for coord in coord_list:
-        ds = apply_tweak(ds, coord, tweak_dict[coord])
-
-    # Set up for save
-    file_out = file_in.replace(".nc", ".tweaked_latlons.nc")
-    with Dataset(file_in, "r") as netcdf_file:
-        netcdf_format = netcdf_file.data_model
-
-    # Save
-    print(f"Saving {file_out}")
-    ds.to_netcdf(file_out, format=netcdf_format)
-    file_list_out.append(file_out)
-print("Done")
-
-
-# %% Ensure all files got the same tweaks
-
-ds = xr.open_dataset(file_list_out[0])
-f0_base = os.path.basename(file_list_out[0])
-
-for filename in file_list_out[1:]:
-    ds2 = xr.open_dataset(filename)
-    f_base = os.path.basename(filename)
-    for coord in coord_list:
-        check(ds, f0_base, ds2, f_base, coord)
-        check(ds, f0_base, ds2, f_base, coord + "_tweak")
-print("All good!")
-
-
-# %% Save new mesh file
-
-outfile_name = os.path.basename(file_mesh_in)
-outfile_name = outfile_name.replace(".nc", ".tweaked_latlons.nc")
-outdir = os.path.dirname(file_list_out[0])
-file_mesh_out = os.path.join(outdir, outfile_name)
-
 @contextlib.contextmanager
 def redirect_argv(arglist):
+    """
+    Preserve actual arg list while giving a new one to mesh_maker
+    """
     argv_tmp = sys.argv[:]
-    sys.argv=arglist
+    sys.argv = arglist
     yield
     sys.argv = argv_tmp
 
+def main(input_files, mesh_file_in, output_files):
+    """
+    Apply tweak to all files
+    """
 
-mesh_maker_args = [
-    "mesh_maker",
-    "--input",
-    file_list_out[0],
-    "--output",
-    file_mesh_out,
-    "--lat",
-    "lat",
-    "--lon",
-    "lon",
-    "--overwrite",
-]
-print(f"Saving {file_mesh_out}...")
-with redirect_argv(mesh_maker_args):
-    mesh_maker()
+    # Set up
+    tweak_dict = {}
+    for coord in COORD_LIST:
+        tweak_dict[coord] = -np.inf
+    mesh_file_out = output_files[-1]
+    output_files = output_files[:-1]
 
-# Change format, if needed
-with Dataset(file_mesh_in, "r") as netcdf_file:
-    netcdf_format_in = netcdf_file.data_model
-with Dataset(file_mesh_out, "r") as netcdf_file:
-    netcdf_format_out = netcdf_file.data_model
-if netcdf_format_in != netcdf_format_out:
-    file_mesh_out_tmp = file_mesh_out + ".tmp"
-    os.rename(file_mesh_out, file_mesh_out_tmp)
-    ds = xr.open_dataset(file_mesh_out_tmp)
-    ds.to_netcdf(file_mesh_out, format=netcdf_format_in)
-    os.remove(file_mesh_out_tmp)
+    # Get tweaks
+    for file_in in input_files:
+        ds = xr.open_dataset(file_in)
+        for coord in COORD_LIST:
+            this_tweak = get_tweak(ds, coord, init_tweak=1e-6)
+            if this_tweak > tweak_dict[coord]:
+                tweak_dict[coord] = this_tweak
+    for coord in COORD_LIST:
+        print(f"Tweaking {coord} by {tweak_dict[coord]}")
+    print(" ")
+
+    # Apply tweaks
+    for i, file_in in enumerate(input_files):
+        ds = xr.open_dataset(file_in)
+
+        for coord in COORD_LIST:
+            ds = apply_tweak(ds, coord, tweak_dict[coord])
+
+        # Set up for save
+        file_out = output_files[i]
+        with Dataset(file_in, "r") as netcdf_file:
+            netcdf_format = netcdf_file.data_model
+
+        # Make output dir, if needed
+        output_dir = os.path.dirname(file_out)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        # Save
+        print(f"Saving {file_out}")
+        ds.to_netcdf(file_out, format=netcdf_format)
+    print("Done")
 
 
-print("Done")
+    # Ensure all files got the same tweaks
+    ds = xr.open_dataset(output_files[0])
+    f0_base = os.path.basename(output_files[0])
+    for file_out in output_files[1:]:
+        ds2 = xr.open_dataset(file_out)
+        f_base = os.path.basename(file_out)
+        for coord in COORD_LIST:
+            check(ds, f0_base, ds2, f_base, coord)
+            check(ds, f0_base, ds2, f_base, coord + "_tweak")
+
+
+    # Save new mesh file
+    mesh_maker_args = [
+        "mesh_maker",
+        "--input",
+        output_files[0],
+        "--output",
+        mesh_file_out,
+        "--lat",
+        "lat",
+        "--lon",
+        "lon",
+        "--overwrite",
+    ]
+    print(f"Saving {mesh_file_out}...")
+    with redirect_argv(mesh_maker_args):
+        mesh_maker()
+
+    # Change format, if needed
+    with Dataset(mesh_file_in, "r") as netcdf_file:
+        netcdf_format_in = netcdf_file.data_model
+    with Dataset(mesh_file_out, "r") as netcdf_file:
+        netcdf_format_out = netcdf_file.data_model
+    if netcdf_format_in != netcdf_format_out:
+        mesh_file_out_tmp = mesh_file_out + ".tmp"
+        os.rename(mesh_file_out, mesh_file_out_tmp)
+        ds = xr.open_dataset(mesh_file_out_tmp)
+        ds.to_netcdf(mesh_file_out, format=netcdf_format_in)
+        os.remove(mesh_file_out_tmp)
+
+    print("Done")
+
+
+
+
+if __name__ == "__main__":
+    ###############################
+    ### Process input arguments ###
+    ###############################
+    parser = argparse.ArgumentParser(
+        description="'Tweak' the latitude and longitude coordinates to avoid ambiguous nearest neighbors",
+    )
+
+    # Required
+    parser.add_argument(
+        "-i",
+        "--input-files",
+        help="Comma-separated stream files whose coordinates need tweaking",
+        required=True,
+    )
+    parser.add_argument(
+        "-m",
+        "--mesh-file",
+        help="Mesh file associated with input files",
+        required=True,
+    )
+
+    # Optional
+    parser.add_argument(
+        "--overwrite",
+        help="Overwrite any existing output files",
+        action="store_true",
+        default=False,
+    )
+    default_output_dir = os.getcwd()
+    parser.add_argument(
+        "-o",
+        "--output-dir",
+        help=f"Directory where output files should be saved. Default is current working directory: {default_output_dir}",
+        default=default_output_dir,
+    )
+
+    # Get arguments
+    args = parser.parse_args(sys.argv[1:])
+
+    # Check/process input and output files
+    _input_files = args.input_files.split(",")
+    _output_files = []
+    for file in _input_files + [args.mesh_file]:
+        if not os.path.exists(file):
+            raise FileNotFoundError(f"File not found: {file}")
+
+        filename, ext = os.path.splitext(os.path.basename(file))
+        output_file = os.path.join(
+            args.output_dir, filename + ".tweaked_latlons" + ext
+        )
+        if os.path.exists(output_file) and not args.overwrite:
+            raise FileExistsError(
+                f"Output file exists but --overwrite not specified: {output_file}"
+            )
+        _output_files.append(output_file)
+
+    main(_input_files, args.mesh_file, _output_files)
