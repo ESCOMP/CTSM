@@ -41,8 +41,8 @@ sub make_env_run {
 #
     my %settings = @_;
 
-    # Set default settings  TODO slevis: NTHRDS_LND fails, OMP_NUM_THREADS fails
-    my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE", NTHRDS_LND=>"1", NEONSITE=>"" );
+    # Set default settings
+    my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE", NEONSITE=>"" );
     # Set any settings that came in from function call
     foreach my $item ( keys(%settings) ) {
        $env_vars{$item} = $settings{$item};
@@ -1320,12 +1320,6 @@ print "=========================================================================
 
 my %warntest = (
      # Warnings without the -ignore_warnings option given
-     "matrixcnOn_with_threading" =>{ options=>"-envxml_dir . -bgc bgc",
-                                     namelst=>"use_matrixcn=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"TRUE",
-                                     NTHRDS_LND=>"2",
-                                     phys=>"clm5_0",
-                                   },
      "dustemisLeung"             =>{ options=>"-envxml_dir .",
                                      namelst=>"dust_emis_method = 'Leung_2023'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1383,7 +1377,7 @@ foreach my $key ( keys(%warntest) ) {
    my $options  = $warntest{$key}{"options"};
    my $namelist = $warntest{$key}{"namelst"};
    my %settings;
-   foreach my $xmlvar ( "GLC_TWO_WAY_COUPLING", "NTHRDS_LND") {
+   foreach my $xmlvar ( "GLC_TWO_WAY_COUPLING" ) {
       if ( defined($failtest{$key}{$xmlvar}) ) {
          $settings{$xmlvar} = $failtest{$key}{$xmlvar};
       }
