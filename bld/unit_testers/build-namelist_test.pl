@@ -1095,8 +1095,7 @@ my %failtest = (
                                      phys=>"clm5_1",
                                      },
      "soil_erod_none_w_Zender"  =>{ options=>"--envxml_dir .",
-                                     namelst=>"dust_emis_method='Zender_2003', " .
-                                     "zender_soil_erod_source='none'",
+                                     namelst=>"dust_emis_method='Zender_2003', zender_soil_erod_source='none'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                      },
