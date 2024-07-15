@@ -1072,39 +1072,27 @@ my %failtest = (
      "soil_erod_wo_Zender"      =>{ options=>"--envxml_dir . --ignore_warnings",
                                      namelst=>"dust_emis_method='Leung_2023', " .
                                      "stream_meshfile_zendersoilerod = '/dev/null'",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                      },
      "soil_erod_wo_lnd_source"  =>{ options=>"--envxml_dir .",
                                      namelst=>"dust_emis_method='Zender_2003', " .
                                      "stream_fldfilename_zendersoilerod = '/dev/null', zender_soil_erod_source='atm'",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                      },
      "soil_erod_none_w_Zender"  =>{ options=>"--envxml_dir .",
                                      namelst=>"dust_emis_method='Zender_2003', " .
                                      "zender_soil_erod_source='none'",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                      },
      "soil_erod_bad_w_Zender"   =>{ options=>"--envxml_dir .",
                                      namelst=>"dust_emis_method='Zender_2003', " .
                                      "zender_soil_erod_source='zztop'",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                      },
      "Set_Dust_When_CAM_Sets"   =>{ options=>"--envxml_dir .",
                                      namelst=>"dust_emis_method='Zender_2003'",
                                      LND_SETS_DUST_EMIS_DRV_FLDS=>"FALSE",
-                                     phys=>"clm5_1",
-                                     },
-     "soil_erod_none_w_Zender"  =>{ options=>"--envxml_dir .",
-                                     namelst=>"dust_emis_method='Zender_2003', " .
-                                     "zender_soil_erod_source='none'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
-                                     },
-     "soil_erod_bad_w_Zender"   =>{ options=>"--envxml_dir .",
-                                     namelst=>"dust_emis_method='Zender_2003', " .
-                                     "zender_soil_erod_source='zztop'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                      },
                );
 foreach my $key ( keys(%failtest) ) {
