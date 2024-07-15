@@ -1582,7 +1582,6 @@ sub process_namelist_inline_logic {
   setup_logic_hillslope($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_o3_veg_stress_method($opts, $nl_flags, $definition, $defaults, $nl,$physv);
   setup_logic_hydrstress($opts,  $nl_flags, $definition, $defaults, $nl);
-  setup_logic_dynamic_roots($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_params_file($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_create_crop_landunit($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl);
@@ -3579,25 +3578,6 @@ sub setup_logic_grainproduct {
    if ( (! &value_is_true($nl_flags->{'use_crop'})) && &value_is_true($nl->get_value('use_grainproduct') ) ) {
       $log->fatal_error("use_grainproduct can NOT be on without prognostic crop\n" );
    }
-}
-
-#-------------------------------------------------------------------------------
-
-sub setup_logic_dynamic_roots {
-  #
-  # dynamic root model
-  #
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
-
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_dynroot', 'phys'=>$physv->as_string(), 'bgc_mode'=>$nl_flags->{'bgc_mode'});
-  my $use_dynroot = $nl->get_value('use_dynroot');
-  if ( &value_is_true($use_dynroot) && ($nl_flags->{'bgc_mode'} eq "sp") ) {
-     $log->fatal_error("Cannot turn dynroot mode on mode bgc=sp\n" .
-                       "Set the bgc mode to 'bgc'.");
-  }
-  if ( &value_is_true( $use_dynroot ) && &value_is_true( $nl_flags->{'use_hydrstress'} ) ) {
-     $log->fatal_error("Cannot turn use_dynroot on when use_hydrstress is on" );
-  }
 }
 
 #-------------------------------------------------------------------------------

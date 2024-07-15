@@ -6,7 +6,7 @@ module CNDriverMod
   !
   ! !USES:
   use shr_kind_mod                    , only : r8 => shr_kind_r8
-  use clm_varctl                      , only : use_c13, use_c14, use_fates,  use_fates_bgc, use_dynroot
+  use clm_varctl                      , only : use_c13, use_c14, use_fates, use_fates_bgc
   use dynSubgridControlMod            , only : get_do_harvest, get_do_grossunrep
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
@@ -147,7 +147,6 @@ contains
     use SoilBiogeochemNitrifDenitrifMod   , only: SoilBiogeochemNitrifDenitrif
     use SoilBiogeochemNStateUpdate1Mod    , only: SoilBiogeochemNStateUpdate1
     use NutrientCompetitionMethodMod      , only: nutrient_competition_method_type
-    use CNRootDynMod                      , only: CNRootDyn
     use CNPrecisionControlMod             , only: CNPrecisionControl
     !
     ! !ARGUMENTS:
@@ -563,20 +562,6 @@ contains
          cnveg_carbonflux_inst, canopystate_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)  
          
     call t_stopf('CNGResp')
-
-    !--------------------------------------------
-    ! Dynamic Roots
-    !--------------------------------------------
-
-    if( use_dynroot ) then
-        call t_startf('CNRootDyn')
-
-        call CNRootDyn(bounds, num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
-             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst,  &
-             cnveg_state_inst, crop_inst,  soilstate_inst, soilbiogeochem_nitrogenstate_inst)
-
-        call t_stopf('CNRootDyn')
-     end if
 
     !--------------------------------------------------------------------------
     ! CNUpdate0

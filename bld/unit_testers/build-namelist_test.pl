@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3278;
+my $ntests = 3277;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 1981;
@@ -1059,11 +1059,6 @@ my %failtest = (
                                    },
      "useHYDSTwithFATES"         =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_hydrstress=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
-     "useHYDSTwithdynroot"       =>{ options=>"-bgc bgc -envxml_dir . -megan",
-                                     namelst=>"use_hydrstress=.true., use_dynroot=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },

@@ -429,12 +429,6 @@ module clm_varctl
   logical, public :: use_hydrstress = .false. ! true => use plant hydraulic stress calculation
 
   !----------------------------------------------------------
-  ! dynamic root switch
-  !----------------------------------------------------------
-
-  logical, public :: use_dynroot = .false. ! true => use dynamic root module
-
-  !----------------------------------------------------------
   ! glacier_mec control variables: default values (may be overwritten by namelist)
   !----------------------------------------------------------
 

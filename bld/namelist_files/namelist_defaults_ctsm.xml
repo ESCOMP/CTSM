@@ -586,9 +586,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Whether to use subgrid fluxes for snow -->
 <use_subgrid_fluxes>.true.</use_subgrid_fluxes>
 
-<!-- dynamic roots -->
-<use_dynroot >.false.</use_dynroot>
-
 <!-- Guardrail for ensuring leaf-Nitrogen doesn't go too small or negative on updates -->
 <use_nguardrail                use_cn=".false.">.false.</use_nguardrail>
 <use_nguardrail                use_cn=".true." >.true.</use_nguardrail>
