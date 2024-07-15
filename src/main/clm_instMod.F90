@@ -316,7 +316,8 @@ contains
          em_wall_lun=urbanparams_inst%em_wall(begl:endl),    &
          em_improad_lun=urbanparams_inst%em_improad(begl:endl), &
          em_perroad_lun=urbanparams_inst%em_perroad(begl:endl), &
-         is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp() )
+         is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp(), &
+         exice_init_stream_col=exice_init_stream_col(bounds%begc:bounds%endc) )
 
     call active_layer_inst%Init(bounds)
 
