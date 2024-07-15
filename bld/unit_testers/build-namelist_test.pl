@@ -1070,23 +1070,19 @@ my %failtest = (
                                      phys=>"clm5_0",
                                      },
      "soil_erod_wo_Zender"      =>{ options=>"--envxml_dir . --ignore_warnings",
-                                     namelst=>"dust_emis_method='Leung_2023', " .
-                                     "stream_meshfile_zendersoilerod = '/dev/null'",
+                                     namelst=>"dust_emis_method='Leung_2023', stream_meshfile_zendersoilerod = '/dev/null'",
                                      phys=>"clm6_0",
                                      },
      "soil_erod_wo_lnd_source"  =>{ options=>"--envxml_dir .",
-                                     namelst=>"dust_emis_method='Zender_2003', " .
-                                     "stream_fldfilename_zendersoilerod = '/dev/null', zender_soil_erod_source='atm'",
+                                     namelst=>"dust_emis_method='Zender_2003', stream_fldfilename_zendersoilerod = '/dev/null', zender_soil_erod_source='atm'",
                                      phys=>"clm6_0",
                                      },
      "soil_erod_none_w_Zender"  =>{ options=>"--envxml_dir .",
-                                     namelst=>"dust_emis_method='Zender_2003', " .
-                                     "zender_soil_erod_source='none'",
+                                     namelst=>"dust_emis_method='Zender_2003', zender_soil_erod_source='none'",
                                      phys=>"clm6_0",
                                      },
      "soil_erod_bad_w_Zender"   =>{ options=>"--envxml_dir .",
-                                     namelst=>"dust_emis_method='Zender_2003', " .
-                                     "zender_soil_erod_source='zztop'",
+                                     namelst=>"dust_emis_method='Zender_2003', zender_soil_erod_source='zztop'",
                                      phys=>"clm6_0",
                                      },
      "Set_Dust_When_CAM_Sets"   =>{ options=>"--envxml_dir .",
