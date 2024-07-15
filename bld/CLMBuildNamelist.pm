@@ -2248,6 +2248,7 @@ sub setup_logic_urban {
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'building_temp_method');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urban_hac');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urban_explicit_ac');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urban_traffic');
 }
 
@@ -3524,6 +3525,7 @@ sub setup_logic_hillslope {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_pft_distribution_method' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_soil_profile_method' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_hillslope_routing', 'use_hillslope'=>$nl_flags->{'use_hillslope'} );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_fsat_equals_zero', 'use_hillslope'=>$nl_flags->{'use_hillslope'} );
   my $use_hillslope = $nl->get_value('use_hillslope');
   my $use_hillslope_routing = $nl->get_value('use_hillslope_routing');
   if ( (! &value_is_true($use_hillslope)) && &value_is_true($use_hillslope_routing) ) {
@@ -3868,7 +3870,7 @@ sub setup_logic_urbantv_streams {
                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
   }
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_urbantv', 'phys'=>$nl_flags->{'phys'},
-              'hgrid'=>"0.9x1.25" );
+              'hgrid'=>"0.9x1.25", 'urban_explicit_ac'=>$nl->get_value('urban_explicit_ac') );
   if ($opts->{'driver'} eq "nuopc" ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_urbantv', 'phys'=>$nl_flags->{'phys'},
                   'hgrid'=>"0.9x1.25" );
@@ -3981,7 +3983,7 @@ sub setup_logic_dust_emis {
         foreach my $option ( @zender_files_in_lnd_opts ) {
            add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $option,
                        'dust_emis_method'=>$dust_emis_method, 'zender_soil_erod_source'=>$zender_source,
-                       'hgrid'=>$nl_flags->{'res'}, 'lnd_tuning_mod'=>$nl_flags->{'lnd_tuning_mode'} );
+                       'hgrid'=>$nl_flags->{'res'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
         }
      } else {
         foreach my $option ( @zender_files_in_lnd_opts ) {

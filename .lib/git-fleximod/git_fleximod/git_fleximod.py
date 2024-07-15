@@ -252,6 +252,8 @@ def submodules_update(gitmodules, root_dir, requiredlist, force):
 
                 submodules_update(gitsubmodules, repodir, newrequiredlist, force=force)
 
+
+
 def local_mods_output():
     text = """\
     The submodules labeled with 'M' above are not in a clean state.

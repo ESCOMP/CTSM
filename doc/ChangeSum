@@ -1,6 +1,12 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-tmp-240620.n01.cts   slevis 06/21/2024 Merge b4b-dev (full tag name is tmp-240620.n01.ctsm5.2.007)
+       ctsm5.2.011   slevis 07/12/2024 Merge b4b-dev
+       ctsm5.2.010 multiple 07/11/2024 Explicit A/C adoption
+       ctsm5.2.009     erik 07/10/2024 Allow for CAM7 in lnd_tuning_mode and handle C or E in long compset names
+       ctsm5.2.008     erik 06/28/2024 Bring changes on temp-branch to master: b4b-dev, git-fleximod, hillslope fsat
+tmp-240620.n03.ctsm5.2.007  06/27/2024 Set upland hillslope column fsat values to zero (samrabin)
+tmp-240620.n02.ctsm5.2.007  06/21/2024 Another update of git-fleximod (erik)
+tmp-240620.n01.ctsm5.2.007  06/21/2024 Merge b4b-dev (slevis)
        ctsm5.2.007 multiple 05/31/2024 Rm manage_externals and update documentation accordingly
        ctsm5.2.006   slevis 05/28/2024 Update externals to cesm2_3_beta17, remove mct, retire /test/tools
        ctsm5.2.005     erik 05/13/2024 Fix clm6_0 defaults and CESM testing issues, add tests to detect these problems
