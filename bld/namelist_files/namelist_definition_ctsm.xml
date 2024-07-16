@@ -829,7 +829,7 @@ Toggle to turn on surface water routing in the hillslope hydrology model
 </entry>
 
 <entry id="hillslope_fsat_equals_zero" type="logical" category="physics"
-        group="clm_inparm" valid_values="" value=".true.">
+        group="clm_inparm" valid_values="" value=".false.">
 If true, set fsat to zero for hillslope columns
 </entry>
 
