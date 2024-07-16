@@ -63,6 +63,7 @@
   </test>
   <test name="SMS_Ln9" grid="f09_f09_mg17" compset="I1850Clm45Bgc" testmods="clm/clm45cam4LndTuningModeZDustSoilErod">
     <machines>
+
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
@@ -80,22 +81,22 @@
       <option name="comment">Simple test use soil eroditability in CTSM for CAM5 tuning</option>
     </options>
   </test>
-  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningModeZDustSoilErod">
+  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution, use soil eroditability in CTSM</option>
+      <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution</option>
     </options>
   </test>
-    <test name="ERP_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningModeZDustSoilErod">
+    <test name="ERP_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">CESM3 development Exact restart test with change in the processor count at f10, for izumi nag, use soil eroditability in CTSM</option>
+      <option name="comment">CESM3 development Exact restart test with change in the processor count at f10, for izumi nag</option>
     </options>
   </test>
   <!-- this will be removed when CESM no longer needs it-->
@@ -109,7 +110,7 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="IHistClm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
+  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="IHistClm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -118,7 +119,7 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution for transient</option>
     </options>
   </test>
-  <test name="PEM_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
+  <test name="PEM_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -127,7 +128,7 @@
       <option name="comment">CESM3 development test with change in the processor count at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="ERS_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
+  <test name="ERS_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -136,7 +137,7 @@
       <option name="comment">CESM3 development simple exact restart test at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="ERI_D" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
+  <test name="ERI_D" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -145,7 +146,7 @@
       <option name="comment">CESM3 development Exact restart test for all startup types at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="SMS_Lm1" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Lm1" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
@@ -155,7 +156,7 @@
       <option name="comment">CESM3 development test at the standard coupled resolution for a month</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30pg3_t232" compset="I2000Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS" grid="ne30pg3_t232" compset="I2000Clm60BgcCrop" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -182,7 +183,7 @@
       <option name="comment"  >CTSM science test list for the half degree grid with latest CLM version for historical</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="C96_t061" compset="I2000Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="C96_t061" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -191,7 +192,7 @@
       <option name="comment">We have one C96 test in aux_clm; this is another that uses a different compset. No needn't run this additional C96 test with every tag, but include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I1850Clm60SpRs" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I1850Clm60SpRs" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -200,7 +201,7 @@
       <option name="comment">mpasa low resolution grid, tested in CAM, so do both 1850 and 2000 with latest CLM version and include in the CTSM science test list</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I2000Clm60SpRs" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I2000Clm60SpRs" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -209,7 +210,7 @@
       <option name="comment">mpasa low resolution grid, tested in CAM, so do both 1850 and 2000 with latest CLM version and include in the CTSM science test list</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="IHistClm60Sp" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -218,7 +219,7 @@
       <option name="comment">Test that the workhorse mpasa resolution functions for CAM, for both Hist and 2000 with latest CLM version. No need to run this test with every tag, but include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="I2000Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -227,7 +228,7 @@
       <option name="comment">Test that the workhorse mpasa resolution functions for CAM, for both Hist and 2000 with latest CLM version. No need to run this test with every tag, but include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa60_mpasa60" compset="I2000Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="mpasa60_mpasa60" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -236,7 +237,7 @@
       <option name="comment">Higher resolution mpasa grid for CAM with latest CLM version. Include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa15_mpasa15" compset="I2000Clm60SpRs" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="mpasa15_mpasa15" compset="I2000Clm60SpRs" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -246,7 +247,7 @@
     </options>
   </test>
 <!--
-  <test name="SMS_P36x128_Ln9" grid="mpasa15-3-conus_mpasa15-3-conus" compset="I2000Clm60SpRs" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_P36x128_Ln9" grid="mpasa15-3-conus_mpasa15-3-conus" compset="I2000Clm60SpRs" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -329,22 +330,22 @@
       <option name="comment"  >Science support for 1850 with clm6_0 for SP mode at f19</option>
     </options>
   </test>
-  <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Science support for 1850 with clm6_0 for SP mode at f09 with CAM6</option>
+      <option name="comment"  >Science support for 1850 with clm6_0 for SP mode at f09 with CAM7</option>
     </options>
   </test>
-  <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Science support for 1850 with clm6_0 for SP mode at f19 with CAM6</option>
+      <option name="comment"  >Science support for 1850 with clm6_0 for SP mode at f19 with CAM7</option>
     </options>
   </test>
   <test name="ERP_D_Ld3_PS" grid="f09_g17" compset="I2000Clm50Sp" testmods="clm/prescribed">
@@ -576,7 +577,7 @@
       <option name="wallclock">00:60:00</option>
     </options>
   </test>
-  <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="IHistClm60SpRs" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="IHistClm60SpRs" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -585,7 +586,7 @@
       <option name="comment">Low resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="I2000Clm60SpRs" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="I2000Clm60SpRs" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -594,7 +595,7 @@
       <option name="comment">Low resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I1850Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -603,7 +604,7 @@
       <option name="comment">Medium resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, test both 1850 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I2000Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -612,7 +613,7 @@
       <option name="comment">Medium resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, test both 1850 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="IHistClm60Sp" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -621,7 +622,7 @@
       <option name="comment">Medium resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, test IHist</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30_g17" compset="I2000Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS" grid="ne30_g17" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -630,7 +631,7 @@
       <option name="comment">Workhorse SE grid for running with CAM with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="I1850Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -639,7 +640,7 @@
       <option name="comment">Workhorse SE grid for running with CAM with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="I2000Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -648,7 +649,7 @@
       <option name="comment">Workhorse SE grid for running with CAM with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-   <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="IHistClm60Sp" testmods="clm/clm60cam6LndTuningMode">
+   <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -657,7 +658,7 @@
       <option name="comment">Workhorse SE grid for running with CAM with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="I2000Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -666,7 +667,7 @@
       <option name="comment">Workhorse SE grid for running with CAM and with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="ne120pg3_t13" compset="I2000Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="ne120pg3_t13" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -675,7 +676,7 @@
       <option name="comment">High resolution SE grid for running with CAM and with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="ne120pg3_t13" compset="I2000Clm60Sp" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="ne120pg3_t13" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1289,7 +1290,7 @@
       <option name="comment"  >Test transient PFTs (via HIST) in conjunction with changing glacier area. This test also covers the reset_dynbal_baselines option. CISM is not answer preserving across processor changes, but short test length should be OK.</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="C96_C96_mg17" compset="IHistClm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="C96_C96_mg17" compset="IHistClm60BgcCrop" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1340,15 +1341,6 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="clm_short"/>
       <machine name="derecho" compiler="gnu" category="clm_short"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="ERS_D_Ld3" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/clm50dynroots">
-    <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="izumi"  compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1646,7 +1638,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam6LndTuningMode_1979Start">
+  <test name="SMS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode_1979Start">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1655,7 +1647,7 @@
       <option name="comment"  >Run ARCTIC for transient case starting in 1979 as for AMIP CAM cases (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam6LndTuningMode_1979Start">
+  <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode_1979Start">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1664,7 +1656,7 @@
       <option name="comment"  >Run ARCTICGRIS for transient case starting in 1979 as for AMIP CAM cases (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1673,7 +1665,7 @@
       <option name="comment"  >Run ARCTICGRIS for 1850 case (do not run this expensive test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam6LndTuningMode_2013Start">
+  <test name="SMS_Ln9" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode_2013Start">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1873,7 +1865,7 @@
       <option name="comment">Want to keep a little single-point testing on HPC machines</option>
     </options>
   </test>
-  <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60Bgc" testmods="clm/default--clm/NEON/NIWO">
+  <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60Bgc" testmods="clm/default--clm/NEON/HARV">
     <machines>
       <machine name="derecho"  compiler="gnu" category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
@@ -2132,14 +2124,6 @@
     <options>
       <option name="wallclock">01:30:00</option>
       <option name="comment"  >Long enough test for SMB to be generated in bare land areas; add a month beyond the 3rd year to allow time for CLM to respond to CISM forcing from the 3rd year. (Note: if we had spun-up initial conditions for an IG compset, we could test this with much shorter test, if it also used the glc override options - much of the need for this long test is to allow the snow pack to spin up.)</option>
-    </options>
-  </test>
-  <test name="SMS_Ly3_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/clm50dynroots">
-    <machines>
-      <machine name="izumi" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">01:40:00</option>
     </options>
   </test>
   <test name="SMS_Ly3_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm60BgcCropQianRs" testmods="clm/monthly">

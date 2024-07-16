@@ -1582,7 +1582,6 @@ sub process_namelist_inline_logic {
   setup_logic_hillslope($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_o3_veg_stress_method($opts, $nl_flags, $definition, $defaults, $nl,$physv);
   setup_logic_hydrstress($opts,  $nl_flags, $definition, $defaults, $nl);
-  setup_logic_dynamic_roots($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_params_file($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_create_crop_landunit($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl);
@@ -2249,6 +2248,7 @@ sub setup_logic_urban {
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'building_temp_method');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urban_hac');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urban_explicit_ac');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urban_traffic');
 }
 
@@ -3582,25 +3582,6 @@ sub setup_logic_grainproduct {
 
 #-------------------------------------------------------------------------------
 
-sub setup_logic_dynamic_roots {
-  #
-  # dynamic root model
-  #
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
-
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_dynroot', 'phys'=>$physv->as_string(), 'bgc_mode'=>$nl_flags->{'bgc_mode'});
-  my $use_dynroot = $nl->get_value('use_dynroot');
-  if ( &value_is_true($use_dynroot) && ($nl_flags->{'bgc_mode'} eq "sp") ) {
-     $log->fatal_error("Cannot turn dynroot mode on mode bgc=sp\n" .
-                       "Set the bgc mode to 'bgc'.");
-  }
-  if ( &value_is_true( $use_dynroot ) && &value_is_true( $nl_flags->{'use_hydrstress'} ) ) {
-     $log->fatal_error("Cannot turn use_dynroot on when use_hydrstress is on" );
-  }
-}
-
-#-------------------------------------------------------------------------------
-
 sub setup_logic_c_isotope {
   #
   # Error checking for C-isotope options
@@ -3889,7 +3870,7 @@ sub setup_logic_urbantv_streams {
                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
   }
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_urbantv', 'phys'=>$nl_flags->{'phys'},
-              'hgrid'=>"0.9x1.25" );
+              'hgrid'=>"0.9x1.25", 'urban_explicit_ac'=>$nl->get_value('urban_explicit_ac') );
   if ($opts->{'driver'} eq "nuopc" ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_urbantv', 'phys'=>$nl_flags->{'phys'},
                   'hgrid'=>"0.9x1.25" );
@@ -4002,7 +3983,7 @@ sub setup_logic_dust_emis {
         foreach my $option ( @zender_files_in_lnd_opts ) {
            add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $option,
                        'dust_emis_method'=>$dust_emis_method, 'zender_soil_erod_source'=>$zender_source,
-                       'hgrid'=>$nl_flags->{'res'}, 'lnd_tuning_mod'=>$nl_flags->{'lnd_tuning_mode'} );
+                       'hgrid'=>$nl_flags->{'res'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
         }
      } else {
         foreach my $option ( @zender_files_in_lnd_opts ) {

@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3254;
+my $ntests = 3277;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 2001;
+   $ntests += 1981;
 }
 plan( tests=>$ntests );
 
@@ -414,17 +414,17 @@ foreach my $phys ( "clm4_5", "clm5_0" ) {
    $mode = "-phys $phys";
    &make_config_cache($phys);
    foreach my $options (
-                      "-res ne0np4.ARCTIC.ne30x4 -bgc sp -use_case 2000_control -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam6.0",
-                      "-res ne0np4.ARCTICGRIS.ne30x8 -bgc sp -use_case 1850_control -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam6.0",
-                      "-res 1.9x2.5 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam6.0",
-                      "-res 0.9x1.25 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam6.0",
-                      "-res 0.9x1.25 -bgc bgc -crop -use_case 20thC_transient -namelist '&a start_ymd=19500101/' -lnd_tuning_mode ${phys}_cam6.0",
-                      "-res ne0np4CONUS.ne30x8 -bgc sp -use_case 2000_control  -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam6.0",
-                      "-res 1.9x2.5 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20030101/' -lnd_tuning_mode ${phys}_cam6.0",
-                      "-res 1.9x2.5 -bgc sp -use_case 2010_control -namelist '&a start_ymd=20100101/' -lnd_tuning_mode ${phys}_cam6.0",
+                      "-res ne0np4.ARCTIC.ne30x4 -bgc sp -use_case 2000_control -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam7.0",
+                      "-res ne0np4.ARCTICGRIS.ne30x8 -bgc sp -use_case 1850_control -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam7.0",
+                      "-res 1.9x2.5 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam7.0",
+                      "-res 0.9x1.25 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam7.0",
+                      "-res 0.9x1.25 -bgc bgc -crop -use_case 20thC_transient -namelist '&a start_ymd=19500101/' -lnd_tuning_mode ${phys}_cam7.0",
+                      "-res ne0np4CONUS.ne30x8 -bgc sp -use_case 2000_control  -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam7.0",
+                      "-res 1.9x2.5 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20030101/' -lnd_tuning_mode ${phys}_cam7.0",
+                      "-res 1.9x2.5 -bgc sp -use_case 2010_control -namelist '&a start_ymd=20100101/' -lnd_tuning_mode ${phys}_cam7.0",
                       "-res 1x1_brazil -no-megan -use_case 2000_control -lnd_tuning_mode ${phys}_CRUv7",
-                      "-res C96 -bgc sp -use_case 2010_control -namelist '&a start_ymd=20100101/' -lnd_tuning_mode ${phys}_cam6.0",
-                      "-res ne0np4.ARCTIC.ne30x4 -bgc sp -use_case 2000_control -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam6.0",
+                      "-res C96 -bgc sp -use_case 2010_control -namelist '&a start_ymd=20100101/' -lnd_tuning_mode ${phys}_cam7.0",
+                      "-res ne0np4.ARCTIC.ne30x4 -bgc sp -use_case 2000_control -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam7.0",
                      ) {
       &make_env_run();
       eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
@@ -1059,11 +1059,6 @@ my %failtest = (
                                    },
      "useHYDSTwithFATES"         =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_hydrstress=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
-     "useHYDSTwithdynroot"       =>{ options=>"-bgc bgc -envxml_dir . -megan",
-                                     namelst=>"use_hydrstress=.true., use_dynroot=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
@@ -1802,7 +1797,7 @@ foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1', 'clm6_0' ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
   my @forclist = ();
-  @forclist = ( "CRUv7", "GSWP3v1", "cam6.0", "cam5.0", "cam4.0" );
+  @forclist = ( "CRUv7", "GSWP3v1", "cam7.0", "cam6.0", "cam5.0", "cam4.0" );
   foreach my $forc ( @forclist ) {
      foreach my $bgc ( "sp", "bgc" ) {
         my $lndtuningmode = "${phys}_${forc}";
