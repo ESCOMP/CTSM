@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.2.012
 Originator(s): sacks (Bill Sacks, UCAR/NCAR/CGD)
-Date: Mon 15 Jul 2024 11:55:45 AM MDT
+Date: Tue 16 Jul 2024 08:57:42 AM MDT
 One-line Summary: Relax tolerance for truncating small snocan values in CanopyFluxes
 
 Purpose and description of changes
