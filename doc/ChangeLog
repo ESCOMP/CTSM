@@ -79,7 +79,6 @@ Changes to tests or testing:
    and use_fates_lupft namelist options.  Additoinally a new system text prefix,
    PVT, has been added to test the use_fates_potentialveg spin-up to use_fates_lupft
    transient workflow.  These have been added to the fates test suite.
-=======
 
 Bugs fixed
 ----------
@@ -153,6 +152,19 @@ Does this tag change answers significantly for any of the following physics conf
 [ ] ctsm5_0-nwp
 
 [ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Fixes #2444 Failing water isotope test on the ctsm5.2 branch
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation: None
+
+Testing summary:
+----------------
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
