@@ -16,9 +16,10 @@ import shutil, glob, os
 
 logger = logging.getLogger(__name__)
 
+
 class PVT(SystemTestsCommon):
-    def __init__(self,case):
-        SystemTestsCommon.__init__(self,case)
+    def __init__(self, case):
+        SystemTestsCommon.__init__(self, case)
 
         # Do not allow PVT to be run with certain testmods
         # Should this be targeted to a specific testmod for simplicity for now?
@@ -27,14 +28,16 @@ class PVT(SystemTestsCommon):
         casebaseid = self._case.get_value("CASEBASEID")
         casebaseid = casebaseid.split("-")[-1]
         if casebaseid[0:10] != "FatesLUPFT":
-            error_message = (f"Only call PVT with testmod FatesLUPFT. {casebaseid} selected.")
+            error_message = f"Only call PVT with testmod FatesLUPFT. {casebaseid} selected."
 
         # Only allow to run if resolution is 4x5 for now
         # Other grid resolutions will be pre-processed and included in the namelist defaults at a future date.
         # Potentially we could generate these on the fly although doing so would result in increased build time
         lnd_grid = self._case.get_value("LND_GRID")
         if lnd_grid != "4x5":
-            error_message = (f"PVT can currently only be run with 4x5 resolution. {lnd_grid} selected.")
+            error_message = (
+                f"PVT can currently only be run with 4x5 resolution. {lnd_grid} selected."
+            )
 
         if error_message is not None:
             logger.error(error_message)
@@ -79,7 +82,7 @@ class PVT(SystemTestsCommon):
         # Turn off fates_harvest_mode for the spin up.
 
         logger.info("PVT log:  modify user_nl_clm file for spin up run")
-        added_content = ["use_fates_potentialveg = .true.","fates_harvest_mode = 'no_harvest'"]
+        added_content = ["use_fates_potentialveg = .true.", "fates_harvest_mode = 'no_harvest'"]
         append_to_user_nl_files(clone_path, "clm", added_content)
 
         # Run the spin up case
@@ -100,7 +103,7 @@ class PVT(SystemTestsCommon):
         # obtain rpointer files and necessary restart files from short term archiving directory
         rundir = self._case.get_value("RUNDIR")
 
-        refdate = str(refcase_year) + '-01-01-00000'
+        refdate = str(refcase_year) + "-01-01-00000"
         rest_path = os.path.join(dout_sr, "rest", "{}".format(refdate))
 
         for item in glob.glob("{}/*{}*".format(rest_path, refdate)):
