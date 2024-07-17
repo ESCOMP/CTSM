@@ -1,6 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-       ctsm5.2.012 glemieux 07/15/2024 FATES Land Use V2
+       ctsm5.2.013 glemieux 07/17/2024 FATES Land Use V2
+       ctsm5.2.012    sacks 07/16/2024 Relax tolerance for truncating small snocan values in CanopyFluxes
        ctsm5.2.011   slevis 07/12/2024 Merge b4b-dev
        ctsm5.2.010 multiple 07/11/2024 Explicit A/C adoption
        ctsm5.2.009     erik 07/10/2024 Allow for CAM7 in lnd_tuning_mode and handle C or E in long compset names
