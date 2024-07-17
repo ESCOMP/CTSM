@@ -1911,6 +1911,16 @@
     </options>
   </test>
 
+  <test name="SMS_Lm49" grid="f10_f10_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdAllVarsMonthly">
+    <machines>
+      <machine name="derecho" compiler="intel"   category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">03:00:00</option>
+      <option name="comment"  >This is a long fates test with a lot of variables being written.</option>
+    </options>
+  </test>
+
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60Fates" testmods="clm/FatesFireLightningPopDens--clm/NEON/FATES/NIWO">
     <machines>
       <machine name="derecho"  compiler="intel" category="aux_clm"/>
