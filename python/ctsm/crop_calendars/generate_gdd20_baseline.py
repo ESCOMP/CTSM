@@ -247,7 +247,7 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
     )
     dummy_da = _add_time_axis(dummy_da)
 
-    # Process all crops
+    # Set up output Dataset
     data_var_dict = {}
     for gridding_var in GRIDDING_VAR_LIST:
         data_var_dict[gridding_var] = ds_in[gridding_var]
@@ -258,6 +258,14 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
             "created": dt.datetime.now().astimezone().isoformat(),
         },
     )
+    all_files_in_same_dir = len(np.unique([os.path.dirname(file) for file in input_files])) == 1
+    if all_files_in_same_dir:
+        ds_out.attrs["input_files_dir"] = os.path.dirname(input_files[0])
+        ds_out.attrs["input_files"] = ", ".join([os.path.basename(file) for file in input_files])
+    else:
+        ds_out.attrs["input_files"] = ", ".join(input_files)
+
+    # Process all crops
     encoding_dict = {}
     for cft_str in utils.define_mgdcrop_list():
         cft_int = utils.vegtype_str2int(cft_str)[0]
