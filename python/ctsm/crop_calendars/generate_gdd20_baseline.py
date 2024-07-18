@@ -23,7 +23,7 @@ from ctsm.crop_calendars.cropcal_module import MISSING_RX_GDD_VAL
 GRIDDING_VAR_LIST = ["patches1d_ixy", "patches1d_jxy", "lat", "lon"]
 STREAM_YEAR = 2000  # The year specified for stream_yearFirst and stream_yearLast in the call of
 # shr_strdata_init_from_inline() for sdat_cropcal_gdd20_baseline
-MGDCROP_LIST = utils.define_mgdcrop_list_withgrasses()
+MGDCROP_LIST = utils.define_crop_list()
 
 
 def _parse_args():
