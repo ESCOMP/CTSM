@@ -787,9 +787,10 @@ sub setup_cmdl_fates_mode {
        # dis-allow fates specific namelist items with non-fates runs
        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                       "use_fates_cohort_age_tracking","use_fates_inventory_init","use_fates_fixed_biogeog",
-                      "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging",
-                      "fates_parteh_mode","use_fates_tree_damage","fates_history_dimlevel","fates_seeddisp_cadence",
-		      "use_fates_luh","fluh_timeseries" );
+                      "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","fates_harvest_mode",
+                      "fates_parteh_mode","use_fates_tree_damage","fates_seeddisp_cadence","use_fates_luh","fluh_timeseries",
+                      "flandusepftdat","use_fates_potentialveg","use_fates_lupft","fates_history_dimlevel" );
+
        # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
           if ( defined($nl->get_value($var)) ) {
@@ -3075,8 +3076,8 @@ sub setup_logic_do_harvest {
          $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
       }
 
-      elsif (!&value_is_true($nl->get_value('use_cn')) && !&value_is_true($nl->get_value('use_fates'))) {
-         $cannot_be_true = "$var can only be set to true when running with either CN or FATES";
+      elsif (!&value_is_true($nl->get_value('use_cn'))) {
+         $cannot_be_true = "$var can only be set to true when running with CN.  Please set use_cn to true.";
       }
 
       if ($cannot_be_true) {
@@ -4550,13 +4551,27 @@ sub setup_logic_fates {
     if (&value_is_true( $nl_flags->{'use_fates'})  ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
         my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
-                       "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp","fates_seeddisp_cadence",
-                       "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage",
-		       "use_fates_luh","fates_history_dimlevel" );
+                       "use_fates_inventory_init","fates_seeddisp_cadence","fates_history_dimlevel",
+                       "fates_harvest_mode","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage" );
+
         foreach my $var ( @list ) {
- 	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
-                      'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
+                       'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
         }
+
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_potentialveg', 'use_fates'=>$nl_flags->{'use_fates'});
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_lupft', 'use_fates'=>$nl_flags->{'use_fates'});
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_luh', 'use_fates'=>$nl_flags->{'use_fates'},
+                    'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
+                    'use_fates_potentialveg'=>$nl->get_value('use_fates_potentialveg'),
+                    'fates_harvest_mode'=>remove_leading_and_trailing_quotes($nl->get_value('fates_harvest_mode')) );
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_nocomp', 'use_fates'=>$nl_flags->{'use_fates'},
+                    'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
+                    'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_fixed_biogeog', 'use_fates'=>$nl_flags->{'use_fates'},
+                    'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
+                    'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+
         my $suplnitro = $nl->get_value('suplnitro');
         my $parteh_mode = $nl->get_value('fates_parteh_mode');
         if ( ($parteh_mode == 1) &&  ($suplnitro !~ /ALL/) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
@@ -4564,7 +4579,7 @@ sub setup_logic_fates {
                             "but and FATES-SP is not active, but fates_parteh_mode is 1, so Nitrogen is not active" . 
                             "Change suplnitro back to ALL");
         }
-        #
+
         # For FATES SP mode make sure no-competetiion, and fixed-biogeography are also set
         # And also check for other settings that can't be trigged on as well
         #
@@ -4581,6 +4596,12 @@ sub setup_logic_fates {
               if ( $nl->get_value('fates_spitfire_mode') > 0 ) {
                     $log->fatal_error('fates_spitfire_mode can NOT be set to greater than 0 when use_fates_sp is true');
               }
+
+              # fates landuse can't be on with FATES SP mode is active
+              if ( &value_is_true($nl->get_value('use_fates_luh')) ) {
+                   $log->fatal_error('use_fates_luh can NOT be true when use_fates_sp is true');
+              }
+
               # hydro isn't currently supported to work when FATES SP mode is active
               if (&value_is_true( $nl->get_value('use_fates_planthydro') )) {
                     $log->fatal_error('fates sp mode is currently not supported to work with fates hydro');
@@ -4599,16 +4620,92 @@ sub setup_logic_fates {
               }
            }
         }
+        # make sure that fates landuse x pft mode has the necessary run mode configurations
+        my $var = "use_fates_lupft";
+        if ( defined($nl->get_value($var))  ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+            my @list = ( "use_fates_luh", "use_fates_nocomp", "use_fates_fixed_biogeog" );
+            foreach my $var ( @list ) {
+              if ( ! &value_is_true($nl->get_value($var)) ) {
+                $log->fatal_error("$var is required when use_fates_lupft is true" );
+              }
+            }
+          }
+        }
+        # check that fates landuse change mode has the necessary luh2 landuse timeseries data
+        # and add the default if not defined.  Do not add default if use_fates_potentialveg is true.
+        # If fixed biogeography is on, make sure that flandusepftdat is avilable.
         my $var = "use_fates_luh";
         if ( defined($nl->get_value($var))  ) {
            if ( &value_is_true($nl->get_value($var)) ) {
-              $var = "fluh_timeseries";
-              add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'phys'=>$nl_flags->{'phys'}, 'hgrid'=>$nl_flags->{'res'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, nofail=>1 );
+              $var = "use_fates_potentialveg";
+              if ( defined($nl->get_value($var))  ) {
+                 if ( ! &value_is_true($nl->get_value($var)) ) {
+                    $var = "fluh_timeseries";
+                    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
+                                'hgrid'=>$nl_flags->{'res'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
+                    my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
+                    if ( ! defined($nl->get_value($var))  ) {
+                       $log->fatal_error("$var is required when use_fates_luh is set and use_fates_potentialveg is false" );
+                    } elsif ( ! -f "$fname" ) {
+                       $log->fatal_error("$var does NOT point to a valid filename" );
+                    }
+                 }
+              }
+              $var = "use_fates_fixed_biogeog";
+              if ( defined($nl->get_value($var))  ) {
+                 if ( &value_is_true($nl->get_value($var)) ) {
+                    $var = "flandusepftdat";
+                    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
+                                'phys'=>$nl_flags->{'phys'}, 'hgrid'=>$nl_flags->{'res'}, nofail=>1 );
+                    my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
+                    if ( ! defined($nl->get_value($var))  ) {
+                      $log->fatal_error("$var is required when use_fates_luh and use_fates_fixed_biogeog is set" );
+                    } elsif ( ! -f "$fname" ) {
+                      $log->fatal_error("$var does NOT point to a valid filename" );
+                    }
+                 }
+              }
+           }
+        }
+        # check that fates landuse is on and harvest mode is off when potential veg switch is true
+        my $var = "use_fates_potentialveg";
+        if ( defined($nl->get_value($var))  ) {
+           if ( &value_is_true($nl->get_value($var)) ) {
+              if ( ! &value_is_true($nl->get_value('use_fates_luh')) ) {
+                $log->fatal_error("use_fates_luh must be true when $var is true" );
+              }
+              my $var = remove_leading_and_trailing_quotes($nl->get_value('fates_harvest_mode'));
+              if ( $var ne 'no_harvest') {
+                $log->fatal_error("fates_harvest_mode set to $var.  It must set to no_harvest when use_potential_veg is true." );
+              }
+              my $var = "fluh_timeseries";
+              if ( defined($nl->get_value($var))  ) {
+                 $log->fatal_error("fluh_timeseries can not be defined when use_fates_potentialveg is true" );
+              }
+            }
+        }
+        # Check fates_harvest_mode compatibility
+        my $var = "fates_harvest_mode";
+        if ( defined($nl->get_value($var))  ) {
+           # using fates_harvest mode with raw luh2 harvest data
+           my $mode = remove_leading_and_trailing_quotes($nl->get_value($var));
+           if ( $mode eq 'luhdata_area' || $mode  eq 'luhdata_mass' ) {
+              # Make sure that use_fates_luh is true when using raw fates luh2 harvest data
+              if ( ! &value_is_true($nl->get_value('use_fates_luh')) ) {
+                $log->fatal_error("use_fates_luh is required to be true when $var is luhdata_mass or luhdata_area" );
+              }
+           } elsif ( $mode  eq 'landuse_timeseries' ) {
+              # Check to make sure that the user set the flanduse_timeseries file
+              # Since the flanduse_timeseries logic checking is upstream of the fates logic,
+              # don't add the default here.  The onus is on the user to match the correct timeseries
+              # data to the correct surface dataset resolution
+              my $var = "flanduse_timeseries";
               my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
               if ( ! defined($nl->get_value($var))  ) {
-                 $log->fatal_error("$var is required when use_fates_luh is set" );
+                $log->fatal_error("$var is required when fates_harvest_mode is landuse_timeseries" );
               } elsif ( ! -f "$fname" ) {
-                 $log->fatal_error("$fname does NOT point to a valid filename" );
+                $log->fatal_error("$var does NOT point to a valid filename" );
               }
            }
         }

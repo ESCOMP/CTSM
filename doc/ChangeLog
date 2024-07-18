@@ -1,4 +1,129 @@
 ===============================================================
+Tag name: ctsm5.2.013
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+	       glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Thu Jul 18 10:51:11 MDT 2024
+One-line Summary: FATES Land Use V2
+
+Purpose and description of changes
+----------------------------------
+This tag enables FATES to utilize its land use mode with fixed
+biogeography and no competition mode engaged.  To facilitate
+this update, the host land model reads in a new static map data
+set that associates land use with FATES plant functional types.
+This tag also updates the pre-existing FATES dynamic land use
+module to provide access to the raw LUH2 harvest data from the
+FATES LUH2 timeseries data set (added in ctsm5.1.dev160).
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   FATES satellite phenology mode and land use mode are currently incompatible
+   and trying to engage both will result in a graceful build failure message
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New FATES namelist option: fates_harvest_mode
+      - This new option provides five harvest modes
+      - The 'event_code' mode takes over the now defunct use_fates_logging option
+      - The 'landuse_timeseries' option supersedes the use of do_harvest option
+	with FATES.  Using do_harvest is no longer compatible with FATES.
+
+   New FATES namelist option: use_fates_lupft
+      - This option enables the necessary namelist options and data sets to run
+	FATES with land use, no competition, and fixed biogeography modes.
+
+   New FATES namelist option: flandusepftdat
+      - This data set is necessary for running with use_fates_lupft.
+
+   New FATES namelist option: use_potential_veg
+      - This option is only necessary for use with FATES spin-up to transient
+	workflows that will engage the use_fates_lupft mode for the transient case
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   The default FATES parameter file has been updated to account for the new
+   parameters necessary for land use v2.
+
+   A new default data set has been provided for flandusepftdat.  Only a 4x5 grid
+   resolution is currently provided.
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   The FATES land use timeseries data set, fluh_timeseries, has been updated to
+   provide a wider timeseries range, from 0850-2015.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+
+   New FATES testmods have been added to account for the additional harvest mode
+   and use_fates_lupft namelist options.  Additoinally a new system text prefix,
+   PVT, has been added to test the use_fates_potentialveg spin-up to use_fates_lupft
+   transient workflow.  These have been added to the fates test suite.
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Fixes #2444 Failing water isotope test on the ctsm5.2 branch
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation: None
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- TBD
+    izumi ------- TBD
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+   fates tested against fates-sci.1.76.4_api.35.1.0-ctsm5.2.008
+
+
+Answer changes
+--------------
+Changes answers relative to baseline: Only for FATES test mods, otherwise B4B
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   FATES: sci.1.73.0_api.35.0.0 -> sci.1.77.0_api.36.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+ #2507 -- FATES land use v2 API update (CTSM-side)
+ NGEET#1116 -- V2 Land Use Change
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.012
 Originator(s): sacks (Bill Sacks, UCAR/NCAR/CGD)
 Date: Tue 16 Jul 2024 08:57:42 AM MDT
