@@ -23,6 +23,7 @@ from ctsm.crop_calendars.cropcal_module import MISSING_RX_GDD_VAL
 GRIDDING_VAR_LIST = ["patches1d_ixy", "patches1d_jxy", "lat", "lon"]
 STREAM_YEAR = 2000  # The year specified for stream_yearFirst and stream_yearLast in the call of
 # shr_strdata_init_from_inline() for sdat_cropcal_gdd20_baseline
+MGDCROP_LIST = utils.define_mgdcrop_list_nograsses()
 
 
 def _parse_args():
@@ -144,10 +145,9 @@ def _get_cft_list(crop_list):
                              "cotton", "irrigated_cotton"]
     """
 
-    mgdcrop_list = utils.define_mgdcrop_list_nograsses()
     cft_str_list = []
     for crop_str in crop_list:
-        cft_str_list += [x for x in mgdcrop_list if crop_str in x]
+        cft_str_list += [x for x in MGDCROP_LIST if crop_str in x]
     return cft_str_list
 
 
@@ -276,7 +276,7 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
 
     # Process all crops
     encoding_dict = {}
-    for cft_str in utils.define_mgdcrop_list_nograsses():
+    for cft_str in MGDCROP_LIST:
         cft_int = utils.vegtype_str2int(cft_str)[0]
         print(f"{cft_str} ({cft_int})")
 
