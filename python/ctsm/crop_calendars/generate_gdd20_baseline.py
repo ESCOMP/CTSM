@@ -257,6 +257,7 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
             "author": author,
             "created": dt.datetime.now().astimezone().isoformat(),
             "input_year_range": f"{year_args[0]}-{year_args[1]}",
+            "input_variable": variable,
         },
     )
     all_files_in_same_dir = len(np.unique([os.path.dirname(file) for file in input_files])) == 1
