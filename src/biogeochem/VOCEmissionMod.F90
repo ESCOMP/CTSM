@@ -423,7 +423,6 @@ contains
     type(photosyns_type)   , intent(in)    :: photosyns_inst
     type(temperature_type) , intent(in)    :: temperature_inst
     type(vocemis_type)     , intent(inout) :: vocemis_inst
-    !by Hui,
     type(energyflux_type)  , intent(in)    :: energyflux_inst
     !
     ! !REVISION HISTORY:
@@ -479,15 +478,7 @@ contains
     end if
 
     associate(                                                    & 
-         !dz           => col%dz                                , & ! Input:  [real(r8) (:,:) ]  depth of layer (m)                              
-         !bsw          => soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b" (nlevgrnd)             
-         !clayfrac     => soilstate_inst%clayfrac_col           , & ! Input:  [real(r8) (:)   ]  fraction of soil that is clay                     
-         !sandfrac     => soilstate_inst%sandfrac_col           , & ! Input:  [real(r8) (:)   ]  fraction of soil that is sand                     
-         !watsat       => soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity) (nlevgrnd)
-         !sucsat       => soilstate_inst%sucsat_col             , & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm) (nlevgrnd)            
-         !h2osoi_vol   => waterstate_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (m3/m3)                   
-         !h2osoi_ice   => waterstate_inst%h2osoi_ice_col        , & ! Input:  [real(r8) (:,:) ]  ice soil content (kg/m3)                        
-         btran         => energyflux_inst%btran_patch           , & ! Input: [real(r8) (:)    ]  transpiration wetness factor (0 to 1)
+         btran         => energyflux_inst%btran_patch           , & ! Input:  [real(r8) (:)   ]  transpiration wetness factor (0 to 1)
          
          forc_solad    => atm2lnd_inst%forc_solad_downscaled_col, & ! Input:  [real(r8) (:,:) ]  direct beam radiation (visible only)            
          forc_solai    => atm2lnd_inst%forc_solai_grc           , & ! Input:  [real(r8) (:,:) ]  diffuse radiation     (visible only)            
@@ -573,12 +564,8 @@ contains
           ! Activity factor for LAI (Guenther et al., 2006): all species
           gamma_l = get_gamma_L(fsun240(p), elai(p))
 
-          !gamma_sm = 1.0_r8
-          !Impact of soil moisture on isoprene emission
+          ! Impact of soil moisture on isoprene emission
           gamma_sm = get_gamma_SM(btran(p))
-          ! Activity factor for soil moisture: all species (commented out for now)
-          !          gamma_sm = get_gamma_SM(clayfrac(p), sandfrac(p), h2osoi_vol(c,:), h2osoi_ice(c,:), &
-          !               col%dz(c,:), soilstate_inst%bsw_col(c,:), watsat(c,:), sucsat(c,:), root_depth(patch%itype(p)))
 
           ! Loop through VOCs for light, temperature and leaf age activity factor & apply
           ! all final activity factors to baseline emission factors
@@ -825,105 +812,38 @@ contains
 
   !-----------------------------------------------------------------------
   function get_gamma_SM(btran_in)
+
     !---------------------------------------
     ! May 22, 2024
     ! Activity factor for soil moisture of Isoprene (Wang et al., 2022, JAMES)
     ! It is based on eq. (11) in the paper. Because the temperature response
-    ! of isoprene has been explicitly included in CLM; 
+    ! of isoprene has been explicitly included in CLM;
+
     !ARGUMENTS:
     implicit none
     real(r8),intent(in) :: btran_in
-    
+
     !!!------- the drought algorithm--------
-    real(r8), parameter :: a1 = -7.4463      
-    real(r8), parameter :: b1 = 3.2552       
+    real(r8), parameter :: a1 = -7.4463_r8
+    real(r8), parameter :: b1 = 3.2552_r8
     real(r8)            :: get_gamma_SM
-             if (btran_in >= 1.) then
-                get_gamma_SM = 1
-             else
-                get_gamma_SM = 1/(1+b1*exp(a1*(btran_in-0.2)))
-             endif 
+    !---------------------------------------
+
+    if (btran_in >= 1._r8) then
+       get_gamma_SM = 1._r8
+    else
+       get_gamma_SM = 1._r8 / (1._r8 + b1 * exp(a1 * (btran_in - 0.2_r8)))
+    endif
+
   end function get_gamma_SM
- 
-  !function get_gamma_SM(clayfrac_in, sandfrac_in, h2osoi_vol_in, h2osoi_ice_in, dz_in, &
-  !     bsw_in, watsat_in, sucsat_in, root_depth_in)
-  !  !
-  !  ! Activity factor for soil moisture (Guenther et al., 2006): all species
-  !  !----------------------------------
-  !  ! Calculate the mean scaling factor throughout the root depth.
-  !  ! wilting point potential is in units of matric potential (mm) 
-  !  ! (1 J/Kg = 0.001 MPa, approx = 0.1 m)
-  !  ! convert to volumetric soil water using equation 7.118 of the CLM4 Technical Note
-  !  !
-  !  ! !USES:
-  !  use clm_varcon , only : denice
-  !  use clm_varpar , only : nlevsoi
-  !  !
-  !  ! !ARGUMENTS:
-  !  implicit none
-  !  real(r8),intent(in) :: clayfrac_in
-  !  real(r8),intent(in) :: sandfrac_in
-  !  real(r8),intent(in) :: h2osoi_vol_in(nlevsoi)
-  !  real(r8),intent(in) :: h2osoi_ice_in(nlevsoi)
-  !  real(r8),intent(in) :: dz_in(nlevsoi)
-  !  real(r8),intent(in) :: bsw_in(nlevsoi)
-  !  real(r8),intent(in) :: watsat_in(nlevsoi)
-  !  real(r8),intent(in) :: sucsat_in(nlevsoi)
-  !  real(r8),intent(in) :: root_depth_in
-  !  !
-  !  ! !LOCAL VARIABLES:
-  !  real(r8)            :: get_gamma_SM
-  !  integer  :: j
-  !  real(r8) :: nl                      ! temporary number of soil levels
-  !  real(r8) :: theta_ice               ! water content in ice in m3/m3
-  !  real(r8) :: wilt                    ! wilting point in m3/m3
-  !  real(r8) :: theta1                  ! temporary
-  !  real(r8), parameter :: deltheta1=0.06_r8               ! empirical coefficient
-  !  real(r8), parameter :: smpmax = 2.57e5_r8              ! maximum soil matrix potential
-  !  !-----------------------------------------------------------------------
 
-  !  if ((clayfrac_in > 0) .and. (sandfrac_in > 0)) then 
-  !     get_gamma_SM = 0._r8
-  !     nl=0._r8
-  !     
-  !     do j = 1,nlevsoi
-  !        if  (sum(dz_in(1:j)) < root_depth_in)  then
-  !           theta_ice = h2osoi_ice_in(j)/(dz_in(j)*denice)
-  !           wilt = ((smpmax/sucsat_in(j))**(-1._r8/bsw_in(j))) * (watsat_in(j) - theta_ice)
-  !           theta1 = wilt + deltheta1
-  !           if (h2osoi_vol_in(j) >= theta1) then 
-  !              get_gamma_SM = get_gamma_SM + 1._r8
-  !           else if ( (h2osoi_vol_in(j) > wilt) .and. (h2osoi_vol_in(j) < theta1) ) then
-  !              get_gamma_SM = get_gamma_SM + ( h2osoi_vol_in(j) - wilt ) / deltheta1
-  !           else
-  !              get_gamma_SM = get_gamma_SM + 0._r8
-  !           end if
-  !           nl=nl+1._r8
-  !        end if
-  !     end do
-  !     
-  !     if (nl > 0._r8) then
-  !        get_gamma_SM = get_gamma_SM/nl
-  !     endif
-
-  !     if (get_gamma_SM > 1.0_r8) then 
-  !        write(iulog,*) 'healdSM > 1: gamma_SM, nl', get_gamma_SM, nl
-  !        get_gamma_SM=1.0_r8
-  !     endif
-
-  !  else
-  !     get_gamma_SM = 1.0_r8
-  !  end if
-
-  !end function get_gamma_SM
-  
   !-----------------------------------------------------------------------
   function get_gamma_T(t_veg240_in, t_veg24_in,t_veg_in, ct1_in, ct2_in, betaT_in, LDF_in, Ceo_in, Eopt, topt, ivt_in)
 
-    ! Activity factor for temperature 
+    ! Activity factor for temperature
     !--------------------------------
-    ! May 24, 2024 Hui updated the temperature response curves of isoprene for 
-    ! Boreal Broadleaf Deciduous Shrub and Arctic C3 grass based on 
+    ! May 24, 2024 Hui updated the temperature response curves of isoprene for
+    ! Boreal Broadleaf Deciduous Shrub and Arctic C3 grass based on
     ! Wang et al., 2024 (GRL) and Wang et al., 2024 (Nature Communications)
     !--------------------------------
     ! Calculate both a light-dependent fraction as in Guenther et al., 2006 for isoprene
@@ -931,6 +851,9 @@ contains
     ! form of an exponential. Final activity factor depends on light dependent fraction
     ! of compound type.
     !
+    ! !USES:
+    use clm_varcon, only: tfrz
+
     ! !ARGUMENTS:
     implicit none
     integer,intent(in)  :: ivt_in
@@ -951,6 +874,7 @@ contains
     real(r8) :: gamma_t_LIF             ! activity factor for temperature
     real(r8) :: x                       ! temporary i
     real(r8) :: bet_arc_c3
+    real(r8), parameter :: bet_arc_c3_max = 300._r8
     real(r8), parameter :: co1 = 313._r8                   ! empirical coefficient
     real(r8), parameter :: co2 = 0.6_r8                    ! empirical coefficient
     real(r8), parameter :: co4 = 0.05_r8                   ! empirical coefficient
@@ -968,11 +892,11 @@ contains
        topt = co1 + (co2 * (t_veg240_in-tstd0))
        if ( (ivt_in == nbrdlf_dcd_brl_shrub) ) then  ! boreal-deciduous-shrub
        ! coming from BEAR-oNS campaign willows results
-             Eopt = 7.9 * exp (0.217_r8 * (t_veg24_in-273.15_r8-24.0_r8))
+             Eopt = 7.9_r8 * exp (0.217_r8 * (t_veg24_in - tfrz - 24.0_r8))
        else if ( (ivt_in == nc3_arctic_grass ) ) then  ! boreal-grass
-             Eopt = exp(0.12*(t_veg240_in-288.15_r8))
+             Eopt = exp(0.12_r8 * (t_veg240_in - tfrz - 15._r8))
        else
-             Eopt = Ceo_in * exp (co4 * (t_veg24_in-tstd0)) * exp(co4 * (t_veg240_in -tstd0))
+             Eopt = Ceo_in * exp (co4 * (t_veg24_in - tstd0)) * exp(co4 * (t_veg240_in - tstd0))
        endif
 
     else
@@ -982,13 +906,11 @@ contains
     x = ( (1._r8/topt) - (1._r8/(t_veg_in)) ) / ct3
     ! for the boreal grass from BEAR-oNS campaign
     if ( (ivt_in == nc3_arctic_grass ) ) then  ! boreal-grass
-        bet_arc_c3  = 95+9.49*exp(0.53*(288.15_r8-t_veg240_in))
-        if (bet_arc_c3 .gt. 300) then
-            bet_arc_c3 = 300
-        endif
-        gamma_t_LDF = Eopt * exp(bet_arc_c3*((1/303.15_r8 - 1.0_r8/(t_veg_in))/ct3))
+        bet_arc_c3 = 95._r8 + 9.49_r8 * exp(0.53_r8 * (tfrz + 15._r8 - t_veg240_in))
+        bet_arc_c3 = min(bet_arc_c3, bet_arc_c3_max)
+        gamma_t_LDF = Eopt * exp(bet_arc_c3 * ((1._r8 / (tfrz + 30._r8) - 1._r8 / t_veg_in) / ct3))
     else
-        gamma_t_LDF = Eopt * ( ct2_in * exp(ct1_in * x)/(ct2_in - ct1_in * (1._r8 - exp(ct2_in * x))) )
+        gamma_t_LDF = Eopt * ( ct2_in * exp(ct1_in * x) / (ct2_in - ct1_in * (1._r8 - exp(ct2_in * x))) )
     endif
     
     
