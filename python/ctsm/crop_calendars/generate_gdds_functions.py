@@ -282,9 +282,9 @@ def import_and_process_1yr(
 
     # Get list of crops to include
     if skip_crops is not None:
-        crops_to_read = [c for c in utils.define_mgdcrop_list() if c not in skip_crops]
+        crops_to_read = [c for c in utils.define_mgdcrop_list_nograsses() if c not in skip_crops]
     else:
-        crops_to_read = utils.define_mgdcrop_list()
+        crops_to_read = utils.define_mgdcrop_list_nograsses()
 
     print(h1_filelist)
     dates_ds = import_ds(

@@ -345,7 +345,7 @@ def import_output(
     my_vars,
     year_1=None,
     year_n=None,
-    my_vegtypes=utils.define_mgdcrop_list(),
+    my_vegtypes=utils.define_mgdcrop_list_nograsses(),
     sdates_rx_ds=None,
     gdds_rx_ds=None,
     verbose=False,

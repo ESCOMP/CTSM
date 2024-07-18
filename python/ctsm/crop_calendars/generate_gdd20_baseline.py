@@ -144,7 +144,7 @@ def _get_cft_list(crop_list):
                              "cotton", "irrigated_cotton"]
     """
 
-    mgdcrop_list = utils.define_mgdcrop_list()
+    mgdcrop_list = utils.define_mgdcrop_list_nograsses()
     cft_str_list = []
     for crop_str in crop_list:
         cft_str_list += [x for x in mgdcrop_list if crop_str in x]
@@ -276,7 +276,7 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
 
     # Process all crops
     encoding_dict = {}
-    for cft_str in utils.define_mgdcrop_list():
+    for cft_str in utils.define_mgdcrop_list_nograsses():
         cft_int = utils.vegtype_str2int(cft_str)[0]
         print(f"{cft_str} ({cft_int})")
 
