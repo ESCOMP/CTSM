@@ -246,16 +246,18 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice):
         if gddn is None:
             # Crop not handled yet? Fill it entirely with missing value
             this_da = dummy_da
-            long_name = "Dummy GDD20"
             print("   dummy GDD20")
         else:
             # this_da = ds_in[gddn].fillna(MISSING_FILL)
             this_da = ds_in[gddn]
             this_da = _add_time_axis(this_da)
-            long_name = gddn.replace("X", "20")
             print(f"   {gddn}")
 
-        # Add attributes
+        # Add attributes of output file
+        if gddn is None:
+            long_name = "Dummy GDD20"
+        else:
+            long_name = gddn.replace("X", "20")
         this_da.attrs["long_name"] = long_name + f" baseline for {cft_str}"
         this_da.attrs["units"] = "°C days"
         # this_da.attrs["_FillValue"] = MISSING_FILL
