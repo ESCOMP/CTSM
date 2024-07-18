@@ -1,4 +1,148 @@
 ===============================================================
+Tag name: ctsm5.2.014
+Originator(s): chrislxj (Xingjie Lu, Northern Arizona U., xingjie.lu@nau.edu)
+Date: Thu 18 Jul 2024 03:50:56 PM MDT
+One-line Summary: use_matrixcn, use_soil_matrixcn come in but as default .false.
+
+Purpose and description of changes
+----------------------------------
+
+ Currently set as default .false.:
+ - Add matrix module for vegetation and soil C and N cycle
+ - Add diagnostic variables C and N storage capacity in history files
+ - Add Sparse matrix module to increase the code efficiency
+ - Create spin-up switch, and be ready for matrix spin up development
+
+ Additional contributors: Yuanyuan Huang, Zhenggang Du, and Yiqi Luo from
+ Professor Yiqi Luo's EcoLab at Northern Arizona University, now at Cornell U.
+
+ In TSS/CGD/NCAR, contributors in the last year include slevis, ekluzek, wwieder.
+ Others may have been involved prior. I apologize for omissions.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #903  Bring CN-Matrix solution into CTSM
+ Fixes #2450 Cn-matrix testing in the aux_clm test-suites
+ Fixes #2621 matrixcn does not work with nrepr != 1 (number of crop reproductive pools)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+ use_matrixcn and use_soil_matrixcn ARE recommended for accelerating bgc spin-ups
+ and NOT recommended for
+ - transient simulations (e.g. IHist)
+ - simulations that use threading (e.g. see tests with P64x2)
+ - NWP compsets
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New: use_matrixcn, use_soil_matrixcn, hist_wrt_matrixcn_diag.
+ All three are default .false. at this time.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ Changed hillslope_fsat_equals_zero to default .false. when
+ use_hillslope = .false. as per issue #2652
+ clm_accelerated_spinup can be set to off, on, sasu, the latter being
+ the setting that uses matrixcn
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ No.
+
+Changes to documentation:
+ None at this time. A description of the spinup procedure appears in
+ https://github.com/NCAR/LMWG_dev/issues/58
+
+Substantial timing or memory changes:
+ ***Check PFS test in the test suite and look at timings
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ - Future changes to the bgc will likely require changes in both
+ matrix and non-matrix parts of the code.
+ - I have found matrixcn to be sensitive to changes in the subgrid
+ heterogeneity and other subtleties. For example, matrixcn simulations
+ have failed from using a finidat file from a different simulation (#2592),
+ from running in transient mode (#2592), from running with threading (#2619),
+ and from setting hillslope_fsat_equals_zero = .true. (issue #2652).
+ - We recommend using matrixcn to accelerate bgc spin-ups and not for
+ most (possibly any) other purposes.
+
+Changes to tests or testing:
+ Numerous new tests in aux_clm and in build-namelist_test.pl that can be
+ identified by searching "matr"
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- IN PROG
+    izumi ------- IN PROG
+
+  ctsm_sci
+     derecho ---- IN PROG
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, roundoff
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: roundoff
+      use_matrixcn and use_soil_matrixcn are default .false.. We get
+      roundoff diffs due to order-of-operation changes in a few locations,
+      done to improve code readability and streamlining in the presence of matrix.
+
+ Testing with the non-default use_matrixcn = .true. and use_soil_matrixcn = .true.
+ appears here: https://github.com/NCAR/LMWG_dev/issues/58
+
+ PR #640 associated with this tag explains how answers are expected to
+ change from non-matrix to matrix simulations.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/640
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.013
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 	       glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
