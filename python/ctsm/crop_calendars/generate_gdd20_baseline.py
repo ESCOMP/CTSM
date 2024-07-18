@@ -210,7 +210,7 @@ def _add_time_axis(da_in):
     return da_out
 
 
-def generate_gdd20_baseline(input_files, output_file, author, time_slice, variable):
+def generate_gdd20_baseline(input_files, output_file, author, time_slice, variable, year_args):
     """
     Generate stream_fldFileName_gdd20_baseline file from CTSM outputs
     """
@@ -256,6 +256,7 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
         attrs={
             "author": author,
             "created": dt.datetime.now().astimezone().isoformat(),
+            "input_year_range": f"{year_args[0]}-{year_args[1]}",
         },
     )
     all_files_in_same_dir = len(np.unique([os.path.dirname(file) for file in input_files])) == 1
@@ -324,4 +325,5 @@ def main():
         args.author,
         time_slice,
         args.variable,
+        [args.first_year, args.last_year],
     )
