@@ -160,7 +160,7 @@ def _get_gddn_for_cft(cft_str, variable):
         cft_str (str): E.g., "irrigated_temperate_corn"
 
     Returns:
-        str or None: Name of variable to use (e.g., "GDD8X"). If crop isn't yet handled, return None.
+        str or None: Name of variable to use (e.g., "GDD8X"). If crop not yet handled, return None.
     """
 
     gddn = None
@@ -249,8 +249,8 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
 
     # Process all crops
     data_var_dict = {}
-    for v in GRIDDING_VAR_LIST:
-        data_var_dict[v] = ds_in[v]
+    for gridding_var in GRIDDING_VAR_LIST:
+        data_var_dict[gridding_var] = ds_in[gridding_var]
     ds_out = xr.Dataset(
         data_vars=data_var_dict,
         attrs={
