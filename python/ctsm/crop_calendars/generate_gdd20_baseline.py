@@ -18,10 +18,9 @@ sys.path.insert(1, _CTSM_PYTHON)
 from ctsm.crop_calendars.import_ds import import_ds
 import ctsm.crop_calendars.cropcal_utils as utils
 from ctsm.crop_calendars.grid_one_variable import grid_one_variable
+from ctsm.crop_calendars.cropcal_module import MISSING_RX_GDD_VAL
 
 GRIDDING_VAR_LIST = ["patches1d_ixy", "patches1d_jxy", "lat", "lon"]
-MISSING_FILL = -1  # Something impossible to ensure that you can mark it as a missing value, to be
-# bilinear-interpolated
 STREAM_YEAR = 2000  # The year specified for stream_yearFirst and stream_yearLast in the call of
 # shr_strdata_init_from_inline() for sdat_cropcal_gdd20_baseline
 
@@ -266,7 +265,7 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
 
     # Set up a dummy DataArray to use for crops without an assigned GDDN variable
     dummy_da = xr.DataArray(
-        data=MISSING_FILL * np.ones_like(ds_in[var_list_in[0]].values),
+        data=np.full_like(ds_in[var_list_in[0]].values, MISSING_RX_GDD_VAL),
         dims=ds_in[var_list_in[0]].dims,
         coords=ds_in[var_list_in[0]].coords,
     )
@@ -284,10 +283,10 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
         # Which GDDN history variable does this crop use? E.g., GDD0, GDD10
         gddn, gddn_str = _get_gddn_for_cft(cft_str, variable)
 
-        # Fill any missing values with MISSING_FILL. This will mean that gddmaturity in these cells
+        # Fill any missing values with MISSING_RX_GDD_VAL. This will mean that gddmaturity there
         # never changes.
         if gddn_str is None:
-            # Crop not handled yet? Fill it entirely with missing value
+            # Crop not handled yet? It's already filled with missing value
             this_da = dummy_da
             print("   dummy GDD20")
         else:
@@ -295,6 +294,7 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
             this_da = ds_in[gddn_str]
             this_da = _add_time_axis(this_da)
             print(f"   {gddn_str}")
+            this_da = this_da.fillna(MISSING_RX_GDD_VAL)
 
         # Add attributes of output file
         if (gddn is None) != (gddn_str is None):
@@ -305,7 +305,6 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
             long_name = f"GDD{gddn}20"
         this_da.attrs["long_name"] = long_name + f" baseline for {cft_str}"
         this_da.attrs["units"] = "°C days"
-        # this_da.attrs["_FillValue"] = MISSING_FILL
 
         # Copy that to ds_out
         var_out = _get_output_varname(cft_str)
