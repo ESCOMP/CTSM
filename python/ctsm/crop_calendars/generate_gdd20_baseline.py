@@ -210,6 +210,31 @@ def _add_time_axis(da_in):
     return da_out
 
 
+def setup_output_dataset(input_files, author, variable, year_args, ds_in):
+    """
+    Set up output Dataset
+    """
+    data_var_dict = {}
+    for gridding_var in GRIDDING_VAR_LIST:
+        data_var_dict[gridding_var] = ds_in[gridding_var]
+    ds_out = xr.Dataset(
+        data_vars=data_var_dict,
+        attrs={
+            "author": author,
+            "created": dt.datetime.now().astimezone().isoformat(),
+            "input_year_range": f"{year_args[0]}-{year_args[1]}",
+            "input_variable": variable,
+        },
+    )
+    all_files_in_same_dir = len(np.unique([os.path.dirname(file) for file in input_files])) == 1
+    if all_files_in_same_dir:
+        ds_out.attrs["input_files_dir"] = os.path.dirname(input_files[0])
+        ds_out.attrs["input_files"] = ", ".join([os.path.basename(file) for file in input_files])
+    else:
+        ds_out.attrs["input_files"] = ", ".join(input_files)
+    return ds_out
+
+
 def generate_gdd20_baseline(input_files, output_file, author, time_slice, variable, year_args):
     """
     Generate stream_fldFileName_gdd20_baseline file from CTSM outputs
@@ -248,24 +273,7 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
     dummy_da = _add_time_axis(dummy_da)
 
     # Set up output Dataset
-    data_var_dict = {}
-    for gridding_var in GRIDDING_VAR_LIST:
-        data_var_dict[gridding_var] = ds_in[gridding_var]
-    ds_out = xr.Dataset(
-        data_vars=data_var_dict,
-        attrs={
-            "author": author,
-            "created": dt.datetime.now().astimezone().isoformat(),
-            "input_year_range": f"{year_args[0]}-{year_args[1]}",
-            "input_variable": variable,
-        },
-    )
-    all_files_in_same_dir = len(np.unique([os.path.dirname(file) for file in input_files])) == 1
-    if all_files_in_same_dir:
-        ds_out.attrs["input_files_dir"] = os.path.dirname(input_files[0])
-        ds_out.attrs["input_files"] = ", ".join([os.path.basename(file) for file in input_files])
-    else:
-        ds_out.attrs["input_files"] = ", ".join(input_files)
+    ds_out = setup_output_dataset(input_files, author, variable, year_args, ds_in)
 
     # Process all crops
     encoding_dict = {}
