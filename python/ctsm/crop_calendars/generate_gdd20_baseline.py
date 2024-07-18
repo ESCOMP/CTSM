@@ -19,7 +19,6 @@ from ctsm.crop_calendars.import_ds import import_ds
 import ctsm.crop_calendars.cropcal_utils as utils
 from ctsm.crop_calendars.grid_one_variable import grid_one_variable
 
-VAR_LIST_IN = ["GDD0X", "GDD8X", "GDD10X"]
 GRIDDING_VAR_LIST = ["patches1d_ixy", "patches1d_jxy", "lat", "lon"]
 MISSING_FILL = -1  # Something impossible to ensure that you can mark it as a missing value, to be
 # bilinear-interpolated
@@ -88,6 +87,16 @@ def _parse_args():
         type=int,
         required=False,
     )
+    parser.add_argument(
+        "-v",
+        "--variable",
+        help=(
+            "Which type of variable should be processed?"
+        ),
+        required=False,
+        default="GDDBX",
+        choices=["GDDBX", "GDDB20"],
+    )
 
     # Get arguments
     args = parser.parse_args(sys.argv[1:])
@@ -95,6 +104,12 @@ def _parse_args():
     # Check arguments
     if os.path.exists(args.output_file) and not args.overwrite:
         raise FileExistsError("Output file exists but --overwrite is not specified")
+
+    # Get and check input files
+    args.input_files = args.input_files.split(" ")
+    for filename in args.input_files:
+        if not os.path.exists(filename):
+            raise FileNotFoundError(f"Input file not found: {filename}")
 
     # Process time slice
     # Assumes CESM behavior where data for e.g. 1987 is saved as 1988-01-01.
@@ -137,7 +152,7 @@ def _get_cft_list(crop_list):
     return cft_str_list
 
 
-def _get_gddn_for_cft(cft_str):
+def _get_gddn_for_cft(cft_str, variable):
     """
     Given a CFT name, return the GDDN variable it uses.
 
@@ -149,6 +164,7 @@ def _get_gddn_for_cft(cft_str):
     """
 
     gddn = None
+    gddn_str = None
 
     gdd0_list_str = ["wheat", "cotton", "rice"]
     if cft_str in _get_cft_list(gdd0_list_str):
@@ -163,9 +179,9 @@ def _get_gddn_for_cft(cft_str):
         gddn = 10
 
     if gddn is not None:
-        gddn = f"GDD{gddn}X"
+        gddn_str = variable.replace("B", str(gddn))
 
-    return gddn
+    return gddn, gddn_str
 
 
 def _get_output_varname(cft_str):
@@ -194,19 +210,28 @@ def _add_time_axis(da_in):
     return da_out
 
 
-def generate_gdd20_baseline(input_files, output_file, author, time_slice):
+def generate_gdd20_baseline(input_files, output_file, author, time_slice, variable):
     """
     Generate stream_fldFileName_gdd20_baseline file from CTSM outputs
     """
 
-    # Get input file list
-    input_files = input_files.split(sep=" ")
+    # Define variables to process
+    if variable == "GDDBX":
+        suffix = "X"
+    elif variable == "GDDB20":
+        suffix = "20"
+    else:
+        raise ValueError(f"-v/--variable {variable} not recoginzed")
+    var_list_in = []
+    for base_temp in [0, 8, 10]:
+        var_list_in.append(f"GDD{base_temp}{suffix}")
+
     # Get unique values and sort
     input_files = list(set(input_files))
     input_files.sort()
 
     # Import history files and ensure they have lat/lon dims
-    ds_in = import_ds(input_files, VAR_LIST_IN + GRIDDING_VAR_LIST, time_slice=time_slice)
+    ds_in = import_ds(input_files, var_list_in + GRIDDING_VAR_LIST, time_slice=time_slice)
     if not all(x in ds_in.dims for x in ["lat", "lon"]):
         raise RuntimeError("Input files must have lat and lon dimensions")
 
@@ -216,9 +241,9 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice):
 
     # Set up a dummy DataArray to use for crops without an assigned GDDN variable
     dummy_da = xr.DataArray(
-        data=MISSING_FILL * np.ones_like(ds_in[VAR_LIST_IN[0]].values),
-        dims=ds_in[VAR_LIST_IN[0]].dims,
-        coords=ds_in[VAR_LIST_IN[0]].coords,
+        data=MISSING_FILL * np.ones_like(ds_in[var_list_in[0]].values),
+        dims=ds_in[var_list_in[0]].dims,
+        coords=ds_in[var_list_in[0]].coords,
     )
     dummy_da = _add_time_axis(dummy_da)
 
@@ -239,25 +264,27 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice):
         print(f"{cft_str} ({cft_int})")
 
         # Which GDDN history variable does this crop use? E.g., GDD0, GDD10
-        gddn = _get_gddn_for_cft(cft_str)
+        gddn, gddn_str = _get_gddn_for_cft(cft_str, variable)
 
         # Fill any missing values with MISSING_FILL. This will mean that gddmaturity in these cells
         # never changes.
-        if gddn is None:
+        if gddn_str is None:
             # Crop not handled yet? Fill it entirely with missing value
             this_da = dummy_da
             print("   dummy GDD20")
         else:
             # this_da = ds_in[gddn].fillna(MISSING_FILL)
-            this_da = ds_in[gddn]
+            this_da = ds_in[gddn_str]
             this_da = _add_time_axis(this_da)
-            print(f"   {gddn}")
+            print(f"   {gddn_str}")
 
         # Add attributes of output file
-        if gddn is None:
+        if (gddn is None) != (gddn_str is None):
+            raise RuntimeError("gddn and gddn_str must either both be None or both be not None")
+        if gddn_str is None:
             long_name = "Dummy GDD20"
         else:
-            long_name = gddn.replace("X", "20")
+            long_name = f"GDD{gddn}20"
         this_da.attrs["long_name"] = long_name + f" baseline for {cft_str}"
         this_da.attrs["units"] = "°C days"
         # this_da.attrs["_FillValue"] = MISSING_FILL
@@ -287,5 +314,6 @@ def main():
         args.input_files,
         args.output_file,
         args.author,
-        time_slice
+        time_slice,
+        args.variable,
     )
