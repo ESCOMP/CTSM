@@ -1812,10 +1812,15 @@ sub process_namelist_inline_logic {
   #########################################
   setup_logic_initinterp($opts, $nl_flags, $definition, $defaults, $nl);
 
-  ###############################
-  # namelist group: exice_streams   #
-  ###############################
+  #################################
+  # namelist group: exice_streams #
+  #################################
   setup_logic_exice($opts, $nl_flags, $definition, $defaults, $nl);
+
+  ##########################################
+  # namelist group: clm_temperature_inparm #
+  ##########################################
+  setup_logic_coldstart_temp($opts,$nl_flags, $definition, $defaults, $nl);
 }
 
 #-------------------------------------------------------------------------------
@@ -4599,7 +4604,7 @@ sub setup_logic_exice {
      }
   # Otherwise if ice streams are off
   } else {
-     my @list = ( "stream_meshfile_exice", "stream_fldfilename_exice" , "excess_ice_coldstart_temp" , "excess_ice_coldstart_depth");
+     my @list = ( "stream_meshfile_exice", "stream_fldfilename_exice" );
      # fail is excess ice streams files are set
      foreach my $var ( @list ) {
         if ( defined($nl->get_value($var)) ) {
@@ -4618,8 +4623,6 @@ sub setup_logic_exice {
      if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_exice');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_mapalgo_exice');
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_temp');
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_depth');
        # If excess ice streams on, but NOT the NUOPC driver fail
        if ( not $opts->{'driver'} eq "nuopc" ) {
           $log->fatal_error("nuopc driver is required when use_excess_ice_streams is set to true" );
@@ -4632,6 +4635,33 @@ sub setup_logic_exice {
 
 
 } # end exice streams
+
+sub setup_logic_coldstart_temp {
+
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  # set initial temperatures for excess ice gridcells:
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_temp');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_depth');
+
+  my $use_exice = $nl->get_value( 'use_excess_ice' );
+  my $use_exice_streams = $nl->get_value( 'use_excess_ice_streams' );
+  my $exice_cs_temp = $nl->get_value( 'excess_ice_coldstart_temp' );
+  my $exice_cs_depth = $nl->get_value( 'excess_ice_coldstart_depth' );
+
+  if (defined($use_exice) && value_is_true($use_exice)) {
+     # Checking this setting only needed IF excess ice streams are on get the stream defaults
+     if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
+      if (defined($exice_cs_depth) && $exice_cs_depth <= 0.0 ) {
+        $log->fatal_error("excess_ice_coldstart_depth is <= 0.0" );
+      }
+      if (defined($exice_cs_temp) && $exice_cs_temp >= 0.0 ) {
+        $log->fatal_error("excess_ice_coldstart_temp is >= 0.0, no excess ice will be present in this run" );
+      }
+     }
+  }
+}
 
 #-------------------------------------------------------------------------------
 
@@ -4728,6 +4758,7 @@ sub write_output_files {
   push @groups, "lifire_inparm";
   push @groups, "ch4finundated";
   push @groups, "exice_streams";
+  push @groups, "clm_temperature_inparm";
   push @groups, "soilbgc_decomp";
   push @groups, "clm_canopy_inparm";
   push @groups, "zendersoilerod";

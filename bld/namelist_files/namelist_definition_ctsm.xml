@@ -2825,13 +2825,14 @@ If TRUE turn on the excess ice physics, (Lee et al., 2014; Cai et al., 2020)
 </entry>
 
 <entry id="excess_ice_coldstart_temp" type="real" category="clm_physics"
-       group="clm_inparm" >
-Initial soil temperature to use for gridcells with excess ice present during a run starting with coldstart (deg C)
+       group="clm_temperature_inparm" >
+Initial soil temperature to use for gridcells with excess ice present during a run starting with coldstart (deg C). Value is only apply if use_excess_ice is true.
 </entry>
 
 <entry id="excess_ice_coldstart_depth" type="real" category="clm_physics"
-       group="clm_inparm" >
-Soil depth below which initial excess ice concentration will be applied during a run starting with coldstart (m)
+       group="clm_temperature_inparm" >
+Soil depth below which initial excess ice concentration will be applied during a run starting with coldstart (m). Value is only apply if use_excess_ice is true. 
+If this is set below depth of the soil depth, only the last soil layer will get excess ice.
 </entry>
 
 

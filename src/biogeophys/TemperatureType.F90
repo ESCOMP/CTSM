@@ -118,6 +118,10 @@ module TemperatureType
      real(r8), pointer    :: xmf_h2osfc_col        (:)   ! latent heat of phase change of surface water
      real(r8), pointer    :: fact_col              (:,:) ! used in computing tridiagonal matrix
      real(r8), pointer    :: c_h2osfc_col          (:)   ! heat capacity of surface water
+
+     ! Namelist parameters for initialization
+     real(r8), private    :: excess_ice_coldstart_depth  ! depth below which excess ice will be present
+     real(r8), private    :: excess_ice_coldstart_temp   ! coldstart temperature of layers with excess ice present
      
    contains
 
@@ -130,6 +134,8 @@ module TemperatureType
      procedure, public  :: InitAccVars
      procedure, public  :: UpdateAccVars
 
+     procedure, private :: ReadNL
+
   end type temperature_type
 
   character(len=*), parameter, private :: sourcefile = &
@@ -141,7 +147,7 @@ contains
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, &
        em_roof_lun,  em_wall_lun, em_improad_lun, em_perroad_lun, &
-       is_simple_buildtemp, is_prog_buildtemp, exice_init_stream_col)
+       is_simple_buildtemp, is_prog_buildtemp, exice_init_stream_col, NLFileName)
     !
     ! !DESCRIPTION:
     !
@@ -157,7 +163,10 @@ contains
     logical           , intent(in) :: is_simple_buildtemp  ! Simple building temp is being used
     logical           , intent(in) :: is_prog_buildtemp    ! Prognostic building temp is being used
     real(r8)          , intent(in) :: exice_init_stream_col(bounds%begc:)  ! initial excess ice concentration from the stream file
+    character(len=*)  , intent(in) :: NLFilename ! Namelist filename
 
+
+    call this%ReadNL(NLFilename)
     call this%InitAllocate ( bounds )
     call this%InitHistory ( bounds, is_simple_buildtemp, is_prog_buildtemp )
     call this%InitCold ( bounds,                  &
@@ -654,7 +663,7 @@ contains
     use column_varcon  , only : icol_road_imperv, icol_roof, icol_sunwall
     use column_varcon  , only : icol_shadewall, icol_road_perv
     use clm_varctl     , only : iulog, use_vancouver, use_mexicocity
-    use clm_varctl     , only : use_excess_ice, excess_ice_coldstart_depth, excess_ice_coldstart_temp
+    use clm_varctl     , only : use_excess_ice
     use initVerticalMod , only : find_soil_layer_containing_depth
     !
     ! !ARGUMENTS:
@@ -750,12 +759,21 @@ contains
                this%t_soisno_col(c,1:nlevgrnd) = 272._r8
                if (use_excess_ice .and. exice_init_stream_col(c) > 0.0_r8) then
                   nexice_start = nlevsoi - 1
-                  if (zisoi(nlevsoi) >= excess_ice_coldstart_depth) then
-                     call find_soil_layer_containing_depth(0.5_r8,nexice_start)
+                  if (this%excess_ice_coldstart_depth <= 0.0_r8) then
+                     ! we double check this here, and when building namelists
+                      call endrun(msg="ERROR excess_ice_coldstart_depth <= 0.0. Set a positive value in the namelist"//errmsg(sourcefile, __LINE__))
+                  endif
+                  if (zisoi(nlevsoi) >= this%excess_ice_coldstart_depth) then
+                     call find_soil_layer_containing_depth(this%excess_ice_coldstart_depth,nexice_start)
                   else
                        nexice_start=nlevsoi-1
                   endif
-                  this%t_soisno_col(c,nexice_start:nlevgrnd) = SHR_CONST_TKFRZ + excess_ice_coldstart_temp !needs to be below freezing to properly initiate excess ice
+                  if (this%excess_ice_coldstart_temp >= 0.0_r8) then
+                     ! this is here, since we care about excess_ice_coldstart_temp only when there is excess ice in the gridcell
+                     ! which happens only when the streams are read.
+                     call endrun(msg="ERROR excess_ice_coldstart_temp is not below freezing point"//errmsg(sourcefile, __LINE__))
+                  endif
+                  this%t_soisno_col(c,nexice_start:nlevgrnd) = SHR_CONST_TKFRZ + this%excess_ice_coldstart_temp
                end if
             endif
          endif
@@ -1645,5 +1663,68 @@ contains
      deallocate(this%gdd1020_patch)
   
    end subroutine Clean
+
+   !-----------------------------------------------------------------------
+   subroutine ReadNL( this, NLFilename )
+     !
+     ! !DESCRIPTION:
+     ! Read namelist for Temperature type
+     ! right now (17.07.2024) it only reads variables related to excess ice coldstart initialization
+     ! but can be extended to replace hardocded values in InitCold by namelist variables
+     !
+     ! !USES:
+     use shr_mpi_mod    , only : shr_mpi_bcast
+     use shr_log_mod    , only : errMsg => shr_log_errMsg
+     use spmdMod        , only : masterproc, mpicom
+     use fileutils      , only : getavu, relavu, opnfil
+     use clm_nlUtilsMod , only : find_nlgroup_name
+     use clm_varctl     , only : iulog 
+     use abortutils     , only : endrun
+     !
+     ! !ARGUMENTS:
+     class(temperature_type) :: this
+     character(len=*), intent(in) :: NLFilename ! Namelist filename
+     !
+     ! !LOCAL VARIABLES:
+     integer  :: ierr                          ! error code
+     integer  :: unitn                         ! unit for namelist file
+     real(r8) :: excess_ice_coldstart_temp = spval ! coldstart temperature of layers with excess ice present (deg C)
+     real(r8) :: excess_ice_coldstart_depth = spval        ! depth below which excess ice will be present (m)
+     character(len=32) :: subname = 'Temperature_readnl'  ! subroutine name
+     !-----------------------------------------------------------------------
+
+     namelist / clm_temperature_inparm / excess_ice_coldstart_depth, excess_ice_coldstart_temp
+
+     if ( masterproc )then
+
+        unitn = getavu()
+        write(iulog,*) 'Read in clm_temperature_inparm  namelist'
+        call opnfil (NLFilename, unitn, 'F')
+        call find_nlgroup_name(unitn, 'clm_temperature_inparm', status=ierr)
+        if (ierr == 0) then
+           read(unitn, nml=clm_temperature_inparm, iostat=ierr)
+           if (ierr /= 0) then
+              call endrun(msg="ERROR reading clm_temperature_inparm namelist"//errmsg(sourcefile, __LINE__))
+           end if
+        else
+           call endrun(msg="ERROR finding clm_temperature_inparm namelist"//errmsg(sourcefile, __LINE__))
+        end if
+        call relavu( unitn )
+        ! namelist might be read but the values not properly set
+       if ( excess_ice_coldstart_depth == spval ) then
+          call endrun(msg="ERROR exice_coldstart_depth namelist value is not properly set"//errmsg(sourcefile, __LINE__))
+       endif
+       if ( excess_ice_coldstart_temp == spval ) then
+          call endrun(msg="ERROR exice_coldstart_temp namelist value is not properly set"//errmsg(sourcefile, __LINE__))
+       endif
+     end if
+
+     call shr_mpi_bcast(excess_ice_coldstart_depth, mpicom)
+     call shr_mpi_bcast(excess_ice_coldstart_temp, mpicom)
+
+     this%excess_ice_coldstart_depth = excess_ice_coldstart_depth
+     this%excess_ice_coldstart_temp = excess_ice_coldstart_temp
+
+   end subroutine ReadNL
 
 end module TemperatureType

@@ -222,7 +222,7 @@ contains
     type(file_desc_t)     :: params_ncid  ! pio netCDF file id for parameter file
     real(r8), allocatable :: h2osno_col(:)
     real(r8), allocatable :: snow_depth_col(:)
-    real(r8), allocatable :: exice_init_stream_col(:)
+    real(r8), allocatable :: exice_init_stream_col(:) ! initial concentration of excess ice in the soil (-)
     type(excessicestream_type)  :: exice_stream
 
     integer :: dummy_to_make_pgi_happy
@@ -317,7 +317,7 @@ contains
          em_improad_lun=urbanparams_inst%em_improad(begl:endl), &
          em_perroad_lun=urbanparams_inst%em_perroad(begl:endl), &
          is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp(), &
-         exice_init_stream_col=exice_init_stream_col(bounds%begc:bounds%endc) )
+         exice_init_stream_col=exice_init_stream_col(bounds%begc:bounds%endc) , NLFileName=NLFilename)
 
     call active_layer_inst%Init(bounds)
 

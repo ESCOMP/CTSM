@@ -256,8 +256,8 @@ contains
 
     namelist /clm_inparm/ use_soil_moisture_streams
 
-    ! excess ice flag and parameters
-    namelist /clm_inparm/ use_excess_ice , excess_ice_coldstart_depth, excess_ice_coldstart_temp
+    ! excess ice flag
+    namelist /clm_inparm/ use_excess_ice 
 
     namelist /clm_inparm/ use_lai_streams
 
@@ -829,10 +829,6 @@ contains
 
     call mpi_bcast (use_excess_ice, 1, MPI_LOGICAL, 0, mpicom,ier)
 
-    call mpi_bcast (excess_ice_coldstart_depth, 1, MPI_REAL8, 0, mpicom, ier)
-
-    call mpi_bcast (excess_ice_coldstart_temp, 1, MPI_REAL8, 0, mpicom, ier)
-
     call mpi_bcast (use_lai_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_cropcal_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -989,10 +985,6 @@ contains
     write(iulog,*) '    use_extralakelayers = ', use_extralakelayers
     write(iulog,*) '    use_vichydro = ', use_vichydro
     write(iulog,*) '    use_excess_ice = ', use_excess_ice
-    if (use_excess_ice) then
-       write(iulog,*) '    excess_ice_coldstart_depth = ', excess_ice_coldstart_depth
-       write(iulog,*) '    excess_ice_coldstart_temp = ', excess_ice_coldstart_temp
-    endif
     write(iulog,*) '    use_cn = ', use_cn
     write(iulog,*) '    use_cndv = ', use_cndv
     write(iulog,*) '    use_crop = ', use_crop
