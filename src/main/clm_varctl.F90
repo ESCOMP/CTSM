@@ -321,7 +321,7 @@ module clm_varctl
                                                                         ! > 1 for external data (lightning and/or anthropogenic ignitions)
                                                                         ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
   logical, public            :: use_fates_tree_damage = .false.         ! true => turn on tree damage module
-  logical, public            :: use_fates_logging = .false.             ! true => turn on logging module
+  character(len=256), public :: fates_harvest_mode = ''                 ! five different harvest modes; see namelist definition
   logical, public            :: use_fates_planthydro = .false.          ! true => turn on fates hydro
   logical, public            :: use_fates_cohort_age_tracking = .false. ! true => turn on cohort age tracking
   logical, public            :: use_fates_ed_st3   = .false.            ! true => static stand structure
@@ -344,7 +344,10 @@ module clm_varctl
   integer, dimension(2), public   :: fates_history_dimlevel = (/2,2/)
   
   logical, public            :: use_fates_luh = .false.                 ! true => use FATES landuse data mode
+  logical, public            :: use_fates_lupft = .false.               ! true => use FATES landuse x pft static mapping mode
+  logical, public            :: use_fates_potentialveg = .false.        ! true => FATES potential veg only
   character(len=256), public :: fluh_timeseries = ''                    ! filename for fates landuse timeseries data
+  character(len=256), public :: flandusepftdat = ''                     ! filename for fates landuse x pft data
   character(len=256), public :: fates_inventory_ctrl_filename = ''      ! filename for inventory control
 
   ! FATES SP AND FATES BGC are MUTUTALLY EXCLUSIVE, THEY CAN'T BOTH BE ON

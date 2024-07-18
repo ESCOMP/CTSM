@@ -734,10 +734,17 @@ Toggle to turn on no competition mode (only relevant if FATES is being used).
 Toggle to turn on FATES satellite phenology mode (only relevant if FATES is being used).                        
 </entry>
 
-<entry id="use_fates_logging" type="logical" category="physics"
-        group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on the logging module
-(Only relevant if FATES is on)
+<entry id="fates_harvest_mode" type="char*18" category="physics"
+        group="clm_inparm" valid_values="no_harvest,event_code,landuse_timeseries,luhdata_area,luhdata_mass">
+Set FATES harvesting mode by setting fates_harvest_mode to a valid string option.
+Allowed values are:
+ no_harvest: no fates harvesting of any kind
+ event_code: fates logging via fates logging event codes (see fates parameter file) only
+ landuse_timeseries: fates harvest driven by CLM flanduse_timeseries file (dynHarvestMod)**
+ luhdata_area: fates harvest driven by LUH2 raw harvest data, area-based (dynFATESLandUseChangeMod)
+ luhdata_mass: fates harvest driven by LUH2 raw harvest data, mass-based (dynFATESLandUseChangeMod)
+**Note that the landuse_timeseries option is not the same as the FATES fluh_timeseries data file.
+This option is older than the luhdata options and may be depricated at some point in the future.
 </entry>
 
 <entry id="use_fates_planthydro" type="logical" category="physics"
@@ -794,7 +801,25 @@ Full pathname to the inventory initialization control file.
 <entry id="use_fates_luh" type="logical" category="physics"
        group="clm_inparm" valid_values="" >
 If TRUE, enable use of land use harmonization (LUH) state and transition data from luh_timeseries file.
+This is enabled by default if fates_harvest_mode is set to use the raw LUH2 harvest data
 (Also, only valid for use_fates = true and is incompatible with transient runs currently.)
+</entry>
+
+<entry id="use_fates_lupft" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+If TRUE, enable use of FATES land use with no competition and fixed biogeography.  This mode
+requires the use of the land use x pft association static data map file.  See the
+flandusepftdat definition entry in this file for more information.
+(Only valid for use_fates = true and is incompatible with transient runs currently.)
+</entry>
+
+<entry id="use_fates_potentialveg" type="logical" category="physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, ignore the land-use state vector and transitions, and assert that all lands
+are primary, and that there is no harvest.  This mode is only relevant for FATES
+spin-up workflows that are intending to use the spin-up restart output to start a
+FATES land use transient case using the use_fates_lupft namelist option.  The option
+should be set to true for the spin-up case and false for the transient case.
 </entry>
 
 <!-- This could eventually be included in the "dynamic_subgrid" -->
@@ -804,6 +829,18 @@ Full pathname of unified land use harmonization (LUH) data file. This causes the
 types to vary over time.
 (Required, if use_fates_luh=T)
 (Only relevant if FATES is on).
+</entry>
+
+<entry id="flandusepftdat" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname of fates landuse x pft association static data map.  
+The file associates land use types with pfts across a static global map.
+This file is necessary for running FATES with use_fates_luh, 
+use_fates_nocomp, and use_fates_fixedbiogeo engaged (note that use_fates_lupft
+is provided as a namelist option to engage all necessary options).  The file is output
+by the FATES land use data tool (https://github.com/NGEET/tools-fates-landusedata)
+which processes the raw land use data from the THEMIS tool data sets
+(https://doi.org/10.5065/29s7-7b41)
 </entry>
 
 <entry id="use_luna" type="logical" category="physics"

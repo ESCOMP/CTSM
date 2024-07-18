@@ -150,6 +150,20 @@
 
   <!-- fates test suite failures -->
 
+  <test name="ERS_D_Ld3.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLUH2">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2653</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdLUH2HarvestEvent">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>FATES#1216</issue>
+    </phase>
+  </test>
+
   <test name="SMS_D_Ld3.f09_g17.I2000Clm60FatesSpCruRsGs.derecho_gnu.clm-FatesColdSatPhen_prescribed">
     <phase name="RUN">
       <status>FAIL</status>
@@ -162,20 +176,6 @@
       <status>FAIL</status>
       <issue>#2373</issue>
     </phase>
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>FATES#701</issue>
-    </phase>
-  </test>
-
-  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdHydro">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2373</issue>
-    </phase>
-  </test>
-
-  <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdHydro">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>FATES#701</issue>
