@@ -39,8 +39,9 @@ module controlMod
   use UrbanParamsType                  , only: UrbanReadNML
   use HumanIndexMod                    , only: HumanIndexReadNML
   use CNPrecisionControlMod            , only: CNPrecisionControlReadNML
-  use CNSharedParamsMod                , only: use_fun
+  use CNSharedParamsMod                , only: use_fun, use_matrixcn
   use CIsoAtmTimeseriesMod             , only: use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
+  use SoilBiogeochemDecompCascadeConType, only : use_soil_matrixcn
   use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: surfprof_exp
@@ -121,6 +122,7 @@ contains
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
     use landunit_varcon                  , only : max_lunit
+    use CNSoilMatrixMod                  , only : CNSoilMatrixInit
     !
     ! ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
@@ -184,6 +186,10 @@ contains
 
     namelist /clm_inparm / &
          deepmixing_depthcrit, deepmixing_mixfact, lake_melt_icealb
+
+    ! CN Matrix solution
+    namelist /clm_inparm / &
+         use_matrixcn, use_soil_matrixcn, hist_wrt_matrixcn_diag, spinup_matrixcn, nyr_forcing, nyr_sasu, iloop_avg
 
     ! lake_melt_icealb is of dimension numrad
 
@@ -326,6 +332,14 @@ contains
     runtyp(nsrStartup  + 1) = 'initial'
     runtyp(nsrContinue + 1) = 'restart'
     runtyp(nsrBranch   + 1) = 'branch '
+
+    if(use_fates)then
+       use_matrixcn = .false.
+       use_soil_matrixcn = .false.
+       hist_wrt_matrixcn_diag = .false.
+       spinup_matrixcn = .false.
+    end if
+    nyr_forcing = 10
 
     ! Set clumps per procoessor
 
@@ -601,9 +615,9 @@ contains
        call CNPhenologyReadNML       ( NLFilename )
     end if
 
-    ! ----------------------------------------------------------------------
-    ! Initialize the CN soil matrix namelist items
-    ! ----------------------------------------------------------------------
+    ! CN soil matrix
+
+    call CNSoilMatrixInit()
 
     ! ----------------------------------------------------------------------
     ! consistency checks
@@ -844,6 +858,13 @@ contains
 
     call mpi_bcast (hillslope_fsat_equals_zero, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+    call mpi_bcast (use_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_soil_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (hist_wrt_matrixcn_diag, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (spinup_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (nyr_forcing, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (nyr_sasu, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (iloop_avg, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     if (use_cn .or. use_fates) then

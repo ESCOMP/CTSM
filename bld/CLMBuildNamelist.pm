@@ -101,17 +101,21 @@ OPTIONS
                               (Only for CLM4.5/CLM5.0)
      -[no-]chk_res            Also check [do NOT check] to make sure the resolution and
                               land-mask is valid.
-     -clm_accelerated_spinup "on|off" Setup in a configuration to run as fast as possible for doing a throw-away
+     -clm_accelerated_spinup "on|sasu|off" Setup in a configuration to run as fast as possible for doing a throw-away
                               simulation in order to get the model to a spun-up state. So do things like
                               turn off expensive options and setup for a low level of history output.
 
                               If CLM4.5/CLM5.0 and bgc it also includes a prognostic Carbon model (cn or bgc)
                               , also by default turn on Accelerated Decomposition mode which
-                              is controlled by the namelist variable spinup_state.
+                              is controlled by the namelist variable spinup_state (when soil matrix CN is off).
 
-                              Turn on given spinup mode for BGC setting of CN
+                              Turn on given spinup mode for BGC setting of CN (soil matrix CN off)
                                   on : Turn on Accelerated Decomposition   (spinup_state = 1 or 2)
                                   off : run in normal mode                 (spinup_state = 0)
+
+                              To spinup using the CN soil matrix method use "sasu" SemiAnalytic Spin-Up (SASU)
+                                  sasu: Turn on matrix spinup               (spinup_matrixcn=T)
+                              Normal spinup sequence is: on, sasu, off
 
                               Default is set by clm_accelerated_spinup mode.
 
@@ -895,6 +899,7 @@ sub setup_cmdl_bgc {
               'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'},
               'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
   my $soil_decomp_method = remove_leading_and_trailing_quotes( $nl->get_value( $var ) );
+  $nl_flags->{$var} = $soil_decomp_method;
 
   if (      &value_is_true($nl_flags->{'use_cn'}) ) {
      if ( $soil_decomp_method eq "None" ) {
@@ -952,6 +957,30 @@ sub setup_cmdl_bgc {
   }
   if ( (! &value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) && &value_is_true($nl->get_value('use_fun')) ) {
      $log->fatal_error("When FUN is on, use_nitrif_denitrif MUST also be on!");
+  }
+  #
+  # Make sure clm_accelerate_spinup is set correctly
+  #
+  $var = "clm_accelerated_spinup";
+  if ( $opts->{$var} ne "default" ) {
+    $val = $opts->{$var};
+  } else {
+    $val = $defaults->get_value($var);
+  }
+  $nl_flags->{$var} = $val;
+  # Set soil matrix (which is needed later for spinup)
+  $var = "use_soil_matrixcn";
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+              , 'use_fates'=>$nl_flags->{'use_fates'}, 
+              , 'soil_decomp_method'=>$nl_flags->{'soil_decomp_method'},
+              , 'phys'=>$nl_flags->{'phys'}, clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'} );
+  if ( &value_is_true($nl->get_value($var)) ) {
+     $nl_flags->{$var} = ".true.";
+  } else {
+     $nl_flags->{$var} = ".false.";
+  }
+  if ( &value_is_true($nl->get_value($var)) && $nl_flags->{'soil_decomp_method'} ne "CENTURYKoven2013" ) {
+     $log->fatal_error("$var can only be on with CENTURYKoven2013 soil decomposition");
   }
 } # end bgc
 
@@ -1157,32 +1186,40 @@ sub setup_cmdl_spinup {
   my $val;
   my $var;
   $nl_flags->{'spinup'} = undef;
+  # clm_accelerated_spinup will already have been set in setup_cmdl_bgc
   $var = "clm_accelerated_spinup";
-  if ( $opts->{$var} ne "default" ) {
-    $val = $opts->{$var};
-  } else {
-    $val = $defaults->get_value($var);
-  }
-  $nl_flags->{$var} = $val;
+  $val = $nl_flags->{'clm_accelerated_spinup'};
   my $group = $definition->get_group_name($var);
   $nl->set_variable_value($group, $var, quote_string($val) );
   if (  ! $definition->is_valid_value( $var, $val , 'noquotes' => 1) ) {
     my @valid_values   = $definition->get_valid_values( $var );
     $log->fatal_error("$var has an invalid value ($val). Valid values are: @valid_values");
   }
+  if ( $nl_flags->{'clm_accelerated_spinup'} eq "sasu" ) {
+     if ( ! &value_is_true($nl_flags->{'use_cn'}) ) {
+        $log->fatal_error("If clm_accelerated_spinup is sasu, use_cn MUST be on" );
+     }
+     if ( ! &value_is_true($nl_flags->{'use_soil_matrixcn'}) ) {
+        $log->fatal_error("If clm_accelerated_spinup is sasu, use_soil_matrixcn MUST be on" );
+     }
+  }
   $log->verbose_message("CLM accelerated spinup mode is $val");
   if ( &value_is_true($nl_flags->{'use_cn'}) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition,
-                $defaults, $nl, "spinup_state", clm_accelerated_spinup=>$nl_flags->{$var},
-                use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'} );
+                $defaults, $nl, "spinup_state", clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'},
+                use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'}, 
+                use_soil_matrixcn=>$nl_flags->{"use_soil_matrixcn"} );
     if ( $nl->get_value("spinup_state") ne 0 ) {
        $nl_flags->{'bgc_spinup'} = "on";
+       if ( &value_is_true($nl_flags->{'use_soil_matrixcn'}) ) {
+          $log->fatal_error("spinup_state is accelerated (=1 or 2), but use_soil_matrixcn is also true" .
+                            ", change one or the other");
+       }
        if ( $nl_flags->{'clm_accelerated_spinup'} eq "off" ) {
           $log->fatal_error("spinup_state is accelerated, but clm_accelerated_spinup is off, change one or the other");
        }
     } else {
        $nl_flags->{'bgc_spinup'} = "off";
-       $val = $defaults->get_value($var);
     }
     # For AD spinup mode by default reseed dead plants
     if ( $nl_flags->{$var} ne "off" ) {
@@ -1197,6 +1234,27 @@ sub setup_cmdl_spinup {
     }
   }
   $nl_flags->{$var} = $val;
+  if ( &value_is_true($nl_flags->{'use_soil_matrixcn'}) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "spinup_matrixcn",
+                 , 'use_fates'=>$nl_flags->{'use_fates'}, 'bgc_mode'=>$nl_flags->{'bgc_mode'}
+                 , 'phys'=>$nl_flags->{'phys'}, 'use_soil_matrixcn'=>$nl_flags->{'use_soil_matrixcn'},
+                 , clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'} );
+     my $spinup;
+     if ( &value_is_true($nl->get_value("spinup_matrixcn") ) ) {
+        $spinup = ".true.";
+     } else {
+        $spinup = ".false.";
+     }
+     $nl_flags->{'spinup_matrixcn'} = $spinup;
+     if ( &value_is_true($nl_flags->{'spinup_matrixcn'}) ) {
+        $nl_flags->{'bgc_spinup'} = "on";
+        if ( $nl_flags->{'clm_accelerated_spinup'} eq "off" ) {
+           $log->fatal_error("matrix spinup (spinup_matrixcn) is True, but clm_accelerated_spinup is off, change one or the other");
+        }
+     } else {
+        $nl_flags->{'bgc_spinup'} = "off";
+     }
+  }
   my $group = $definition->get_group_name($var);
   $nl->set_variable_value($group, $var, quote_string($val) );
   if (  ! $definition->is_valid_value( $var, $val , 'noquotes' => 1) ) {
@@ -1206,11 +1264,13 @@ sub setup_cmdl_spinup {
   if ( $nl_flags->{'bgc_spinup'} eq "on" && (not &value_is_true( $nl_flags->{'use_cn'} ))  && (not &value_is_true($nl_flags->{'use_fates'})) ) {
      $log->fatal_error("$var can not be '$nl_flags->{'bgc_spinup'}' if neither CN nor FATES is turned on (use_cn=$nl_flags->{'use_cn'}, use_fates=$nl_flags->{'use_fates'}).");
   }
-  if ( $nl->get_value("spinup_state") eq 0 && $nl_flags->{'bgc_spinup'} eq "on" ) {
-     $log->fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
-  }
-  if ( $nl->get_value("spinup_state") eq 1 && $nl_flags->{'bgc_spinup'} eq "off" ) {
-     $log->fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
+  if ( ! &value_is_true($nl_flags->{'use_soil_matrixcn'}) ) {
+     if ( $nl->get_value("spinup_state") eq 0 && $nl_flags->{'bgc_spinup'} eq "on" ) {
+        $log->fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
+     }
+     if ( $nl->get_value("spinup_state") eq 1 && $nl_flags->{'bgc_spinup'} eq "off" ) {
+        $log->fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
+     }
   }
 
   $val = $nl_flags->{'bgc_spinup'};
@@ -1595,6 +1655,7 @@ sub process_namelist_inline_logic {
   if ( remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) ne "branch" ) {
     setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   }
+  setup_logic_cnmatrix($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_spinup($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
@@ -3103,7 +3164,7 @@ sub setup_logic_spinup {
   if ( $nl_flags->{'bgc_mode'} eq "sp" && defined($nl->get_value('override_bgc_restart_mismatch_dump'))) {
      $log->fatal_error("CN must be on if override_bgc_restart_mismatch_dump is set.");
   }
-  if ( $nl_flags->{'clm_accelerated_spinup'} eq "on" ) {
+  if ( $nl_flags->{'clm_accelerated_spinup'} =~ /on|sasu/ ) {
      foreach my $var ( "hist_nhtfrq", "hist_fincl1", "hist_empty_htapes", "hist_mfilt" ) {
          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
                      $var, use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'},
@@ -4648,6 +4709,118 @@ sub setup_logic_fates {
               }
            }
         }
+    }
+}
+
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_cnmatrix {
+    #
+    # Set some default options related to the CN Matrix options
+    #
+    my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
+
+    my @matrixlist = ( "use_matrixcn", "hist_wrt_matrixcn_diag" );
+    foreach my $var ( @matrixlist ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var
+                , 'use_fates'=>$nl_flags->{'use_fates'}, 'bgc_mode'=>$nl_flags->{'bgc_mode'}
+                , 'phys'=>$nl_flags->{'phys'}, 'use_soil_matrixcn'=>$nl_flags->{'use_soil_matrixcn'},
+                , 'spinup_matrixcn'=>$nl_flags->{'spinup_matrixcn'}, 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
+    }
+    @matrixlist = ( "use_matrixcn", "use_soil_matrixcn", "hist_wrt_matrixcn_diag", "spinup_matrixcn" );
+    # Matrix items can't be on for OMP_NUM_THREADS (also known as NTHRDS_LND) > 1
+    my $var_xml = "OMP_NUM_THREADS";
+    my $val_xml = $ENV{$var_xml};
+    if ( $val_xml > 1) {
+       foreach my $var ( @matrixlist ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+             $log->warning("$var and $var_xml > 1 (in this case $val_xml) causes a clm threading test to FAIL (as of 2024/7/10), so use at your own risk." );
+          }
+       }
+    }
+
+    # Matrix items can't be on for transient
+    if (not string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
+       foreach my $var ( @matrixlist ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+             $log->warning("$var may FAIL with balance error in transient mode" );
+          }
+       }
+    }
+    # Matrix items can't be on for SP mode
+    if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
+       foreach my $var ( @matrixlist ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+             $log->fatal_error("$var can NOT be on for SP mode" );
+          }
+       }
+    # Matrix items can't be on for FATES
+    } elsif ( $nl_flags->{'bgc_mode'} eq "fates" ) {
+       foreach my $var ( @matrixlist ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+             $log->fatal_error("$var can NOT be on with FATES" );
+          }
+       }
+    # Otherwise for CN or BGC mode
+    } else {
+      # TODO (slevis 2023/12/1) The next two if statements do nothing. Erik K and Sam L found that
+      #      for_testing_use_second_grain_pool and for_testing_use_repr_structure_pool
+      #      are empty rather than .true. or .false., but we did not get to the bottom
+      #      of why, yet. The same error-check in the code does get triggered at run-time,
+      #      so we will not pursue fixing this right now.
+      # If matrixcn is on, for_testing_use_second_grain_pool and for_testing_use_repr_structure_pool must be off
+      if ( &value_is_true($nl->get_value("use_matrixcn")) && &value_is_true($nl_flags->{"for_testing_use_second_grain_pool"}) ) {
+         $log->fatal_error("for_testing_use_second_grain_pool can NOT be on when use_matrixcn is on" );
+      }
+      if ( &value_is_true($nl->get_value("use_matrixcn")) && &value_is_true($nl_flags->{"for_testing_use_repr_structure_pool"}) ) {
+         $log->fatal_error("for_testing_use_repr_structure_pool can NOT be on when use_matrixcn is on" );
+      }
+      # If both matrixcn and soil_matrix are off hist_wrt_matrixcn_diag can't be on
+      if ( ! &value_is_true($nl->get_value("use_matrixcn")) && ! &value_is_true($nl_flags->{"use_soil_matrixcn"}) ) {
+         my $var = "hist_wrt_matrixcn_diag";
+         if ( &value_is_true($nl->get_value($var)) ) {
+            $log->fatal_error("$var can NOT be on when both use_matrixcn and use_soil_matrixcn are off" );
+         }
+      }
+      # If soil_matrix is off spinup_matrixcn can't be on
+      if ( ! &value_is_true($nl_flags->{"use_soil_matrixcn"}) ) {
+         my $var = "spinup_matrixcn";
+         if ( &value_is_true($nl->get_value($var)) ) {
+            $log->fatal_error("$var can NOT be on when use_soil_matrixcn is off" );
+         }
+      }
+    }
+    # if soil matrix is on and spinup is on, set spinup specific variables
+    my @spinup_vars = ( "nyr_forcing", "nyr_sasu", "iloop_avg" );
+    foreach my $var ( @spinup_vars ) {
+       if ( &value_is_true($nl_flags->{"use_soil_matrixcn"}) && &value_is_true($nl_flags->{'spinup_matrixcn'}) ) {
+          if ( $var ne "nyr_sasu" ) {
+             add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                       , 'phys'=>$nl_flags->{'phys'}, 'spinup_matrixcn'=>$nl_flags->{'spinup_matrixcn'} );
+          } else {
+             # Set SASU spinup period to nyr_forcing (slow mode) by default
+             add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                       , 'val'=>$nl->get_value("nyr_forcing") );
+          }
+          my $val = $nl->get_value($var);
+          if ( $val == -999 && ($var eq "iloop_avg") ) { next; }  # iloop_avg can be special flag value
+          if ( $val < 1 ) {
+            $log->fatal_error("$var can NOT be negative or zero" );
+          }
+       } else {
+          my $val = $nl->get_value($var);
+          if ( defined($val) ) {
+             $log->fatal_error("$var can NOT be set when use_soil_matrixcn and isspsinup are off" );
+          }
+       }
+    }
+    if ( &value_is_true($nl_flags->{"use_soil_matrixcn"}) && &value_is_true($nl_flags->{'spinup_matrixcn'}) ) {
+       my $nyr_forcing = $nl->get_value('nyr_forcing');
+       my $nyr_sasu    = $nl->get_value('nyr_sasu');
+       if ( $nyr_sasu > $nyr_forcing ) {
+          $log->fatal_error("nyr_sasu can NOT be greater than nyr_forcing" );
+       }
     }
 }
 
