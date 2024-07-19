@@ -87,10 +87,11 @@
       <value compset="DATM%CRU_CLM45"    >clm4_5_CRUv7</value>
       <value compset="DATM%GSWP3v1_CLM45">clm4_5_GSWP3v1</value>
       <value compset="CAM[^_]+_CLM45"    >clm4_5_cam6.0</value>
-      <value compset="CAM40.*_CLM45"     >clm4_5_cam4.0</value>
-      <value compset="CAM50.*_CLM45"     >clm4_5_cam5.0</value>
-      <value compset="CAM7[^_]+_CLM45"   >clm4_5_cam7.0</value>
-      <value compset="DATM%CPLHIST_CLM45">clm4_5_cam6.0</value>
+      <value compset="CAM40[^_]*_CLM45"  >clm4_5_cam4.0</value>
+      <value compset="CAM50[^_]*_CLM45"  >clm4_5_cam5.0</value>
+      <value compset="CAM60[^_]*_CLM45"  >clm4_5_cam6.0</value>
+      <value compset="CAM70[^_]*_CLM45"  >clm4_5_cam7.0</value>
+      <value compset="DATM%CPLHIST_CLM45">clm4_5_cam5.0</value>
       <value compset="DATM%QIA_CLM45"    >clm4_5_QIAN</value>
       <value compset="DATM%WISOQIA_CLM45">clm4_5_QIAN</value>
       <value compset="DATM%1PT_CLM45"    >clm4_5_1PT</value>
@@ -102,9 +103,10 @@
       <value compset="SATM_CLM50"        >clm5_0_GSWP3v1</value>
       <value compset="DATM%GSWP3v1_CLM50">clm5_0_GSWP3v1</value>
       <value compset="CAM[^_]+_CLM50"    >clm5_0_cam6.0</value>
-      <value compset="CAM40.*_CLM50"     >clm5_0_cam4.0</value>
-      <value compset="CAM50.*_CLM50"     >clm5_0_cam5.0</value>
-      <value compset="CAM7[^_]+_CLM50"   >clm5_0_cam7.0</value>
+      <value compset="CAM40[^_]*_CLM50"  >clm5_0_cam4.0</value>
+      <value compset="CAM50[^_]*_CLM50"  >clm5_0_cam5.0</value>
+      <value compset="CAM60[^_]*_CLM50"  >clm5_0_cam6.0</value>
+      <value compset="CAM70[^_]*_CLM50"  >clm5_0_cam7.0</value>
       <value compset="DATM%CPLHIST_CLM50">clm5_0_cam6.0</value>
       <value compset="DATM%QIA_CLM50"    >clm5_0_QIAN</value>
       <value compset="DATM%WISOQIA_CLM50">clm5_0_QIAN</value>
@@ -112,22 +114,24 @@
       <value compset="DATM%NLDAS2_CLM50" >clm5_0_NLDAS2</value>
       <value compset="DATM%ERA5_CLM50"   >clm5_0_ERA5</value>
       <!-- All the clm5_1 physics options -->
-      <value compset="SATM_CLM51"        >clm5_1_GSWP3v1</value>
       <value compset="DATM%GSWP3v1_CLM51">clm5_1_GSWP3v1</value>
-      <value compset="CAM[^_]+_CLM51"    >clm5_1_cam6.0</value>
-      <value compset="CAM40.*_CLM51"     >clm5_1_cam4.0</value>
-      <value compset="CAM50.*_CLM51"     >clm5_1_cam5.0</value>
-      <value compset="DATM%CPLHIST_CLM51">clm5_1_cam6.0</value>
+      <value compset="CAM[^_]*_CLM51"    >INVALID_USE_CLM60_NOT_CLM51</value>
+      <value compset="CAM40[^_]*_CLM51"  >clm5_1_cam4.0</value>
+      <value compset="CAM50[^_]*_CLM51"  >clm5_1_cam5.0</value>
+      <value compset="CAM60[^_]*_CLM51"  >clm5_1_cam6.0</value>
+      <value compset="CAM70[^_]*_CLM51"  >INVALID_USE_CLM60_NOT_CLM51_FOR_CAM70</value>
+      <value compset="DATM%CPLHIST_CLM51">INVALID_USE_CLM60_NOT_CLM51_FOR_CPLHIST</value>
       <!-- All the clm6_0 physics options -->
       <value compset="DATM%CRUv7_CLM60"  >clm6_0_CRUv7</value>
       <value compset="DATM%CRU_CLM60"    >clm6_0_CRUv7</value>
       <value compset="SATM_CLM60"        >clm6_0_GSWP3v1</value>
       <value compset="DATM%GSWP3v1_CLM60">clm6_0_GSWP3v1</value>
       <value compset="CAM[^_]+_CLM60"    >clm6_0_cam6.0</value>
-      <value compset="CAM40.*_CLM60"     >clm6_0_cam4.0</value>
-      <value compset="CAM50.*_CLM60"     >clm6_0_cam5.0</value>
-      <value compset="CAM7[^_]+_CLM60"   >clm6_0_cam7.0</value>
-      <value compset="DATM%CPLHIST_CLM60">clm6_0_cam6.0</value>
+      <value compset="CAM40[^_]*_CLM60"  >clm6_0_cam4.0</value>
+      <value compset="CAM50[^_]*_CLM60"  >clm6_0_cam5.0</value>
+      <value compset="CAM60[^_]*_CLM60"  >clm6_0_cam6.0</value>
+      <value compset="CAM70[^_]*_CLM60"  >clm6_0_cam7.0</value>
+      <value compset="DATM%CPLHIST_CLM60">clm6_0_cam7.0</value>
       <value compset="DATM%QIA_CLM60"    >clm6_0_QIAN</value>
       <value compset="DATM%WISOQIA_CLM60">clm6_0_QIAN</value>
       <value compset="DATM%1PT_CLM60"    >clm6_0_1PT</value>
@@ -199,24 +203,24 @@
     <default_value>UNSET</default_value>
     <values>
       <!-- Use SSP5-8.5 for PI to PDAY so will have data up to the current year available (for WACCM compsets that use PDAY) -->
-      <value compset="^2010_"                       >2010_control</value>
-      <value compset="^2000_"                	    >2000_control</value>
-      <value compset="^1850_"		            >1850_control</value>
+      <value compset="^2010[CE]?_" >2010_control</value>
+      <value compset="^2000[CE]?_" >2000_control</value>
+      <value compset="^1850[CE]?_" >1850_control</value>
       <value compset="^1850_.*_CLM60%[^_]*NOANTHRO" >1850_noanthro_control</value>
       <value compset="^1850_.*_CLM50%[^_]*NOANTHRO" >1850_noanthro_control</value>
-      <value compset="^HIST_"                       >20thC_transient</value>
-      <value compset="^SSP585_"	                    >1850-2100_SSP5-8.5_transient</value>
-      <value compset="^SSP126_"	                    >1850-2100_SSP1-2.6_transient</value>
-      <value compset="^SSP370_"	                    >1850-2100_SSP3-7.0_transient</value>
-      <value compset="^SSP534_"	                    >1850-2100_SSP5-3.4_transient</value>
-      <value compset="^SSP245_"	                    >1850-2100_SSP2-4.5_transient</value>
-      <value compset="^HIST" grid="ne0np4"          >1850-2100_SSP2-4.5_transient</value>
-      <value compset="^SSP119_"	                    >1850-2100_SSP1-1.9_transient</value>
-      <value compset="^SSP434_"	                    >1850-2100_SSP4-3.4_transient</value>
-      <value compset="^SSP460_"	                    >1850-2100_SSP4-6.0_transient</value>
-      <value compset="^SSP585_"	                    >1850-2100_SSP5-8.5_transient</value>
-      <value compset="^AMIP_"	                    >20thC_transient</value>
-      <value compset="^PIPD_"                       >1850-2100_SSP5-8.5_transient</value>
+      <value compset="^HIST[CE]?_" >20thC_transient</value>
+      <value compset="^SSP585[CE]?_" >1850-2100_SSP5-8.5_transient</value>
+      <value compset="^SSP126[CE]?_" >1850-2100_SSP1-2.6_transient</value>
+      <value compset="^SSP370[CE]?_" >1850-2100_SSP3-7.0_transient</value>
+      <value compset="^SSP534[CE]?_" >1850-2100_SSP5-3.4_transient</value>
+      <value compset="^SSP245[CE]?_" >1850-2100_SSP2-4.5_transient</value>
+      <value compset="^HIST" grid="ne0np4" >1850-2100_SSP2-4.5_transient</value>
+      <value compset="^SSP119[CE]?_" >1850-2100_SSP1-1.9_transient</value>
+      <value compset="^SSP434[CE]?_" >1850-2100_SSP4-3.4_transient</value>
+      <value compset="^SSP460[CE]?_" >1850-2100_SSP4-6.0_transient</value>
+      <value compset="^SSP585[CE]?_" >1850-2100_SSP5-8.5_transient</value>
+      <value compset="^AMIP_" >20thC_transient</value>
+      <value compset="^PIPD_" >1850-2100_SSP5-8.5_transient</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
@@ -293,11 +297,11 @@
 
   <entry id="CLM_ACCELERATED_SPINUP">
     <type>char</type>
-    <valid_values>on,off</valid_values>
+    <valid_values>on,sasu,off</valid_values>
     <default_value>off</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Turn on any settings for accellerating the model spinup.
+    <desc>Turn on any settings for accellerating the model spinup. SASU is to run the Semi-Analytic Spin-Up with the CN soil matrix method.
     </desc>
   </entry>
 

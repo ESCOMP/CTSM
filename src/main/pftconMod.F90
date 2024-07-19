@@ -280,9 +280,6 @@ module pftconMod
      real(r8), allocatable :: FUN_fracfixers(:)   ! Fraction of C that can be used for fixation.    
 
 
-     ! pft parameters for dynamic root code
-     real(r8), allocatable :: root_dmx(:)     !maximum root depth
-
    contains
 
      procedure, public  :: Init
@@ -494,7 +491,6 @@ contains
     allocate( this%kn_nonmyc     (0:mxpft) )
     allocate( this%kr_resorb     (0:mxpft) )
     allocate( this%perecm        (0:mxpft) )
-    allocate( this%root_dmx      (0:mxpft) )
     allocate( this%fun_cn_flex_a (0:mxpft) )
     allocate( this%fun_cn_flex_b (0:mxpft) )
     allocate( this%fun_cn_flex_c (0:mxpft) )
@@ -520,7 +516,7 @@ contains
     use fileutils   , only : getfil
     use ncdio_pio   , only : ncd_io, ncd_pio_closefile, ncd_pio_openfile, file_desc_t
     use ncdio_pio   , only : ncd_inqdid, ncd_inqdlen
-    use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_dynroot, use_biomass_heat_storage, z0param_method
+    use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_biomass_heat_storage, z0param_method
     use spmdMod     , only : masterproc
     use CLMFatesParamInterfaceMod, only : FatesReadPFTs
     use SoilBiogeochemDecompCascadeConType, only : mimics_decomp, decomp_method
@@ -1105,13 +1101,8 @@ contains
     end if
 
     !
-    ! Dynamic Root variables for crops
     !
-    if ( use_crop .and. use_dynroot )then
-       call ncd_io('root_dmx', this%root_dmx, 'read', ncid, readvar=readv)
-       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
-    end if
-   
+    !
     call ncd_io('nstem',this%nstem, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
     call ncd_io('taper',this%taper, 'read', ncid, readvar=readv)
@@ -1583,7 +1574,6 @@ contains
     deallocate( this%kn_nonmyc)
     deallocate( this%kr_resorb)
     deallocate( this%perecm)
-    deallocate( this%root_dmx)
     deallocate( this%fun_cn_flex_a)
     deallocate( this%fun_cn_flex_b)
     deallocate( this%fun_cn_flex_c)
