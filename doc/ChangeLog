@@ -1,4 +1,131 @@
 ===============================================================
+Tag name: ctsm5.2.015
+Originator(s): multiple (Samuel Levis,UCAR/TSS,303-665-1310, @mvertens, @jedwards4b, @billsacks, @Katetc)
+Date: Fri 19 Jul 2024 06:02:22 PM MDT
+One-line Summary: Update submodule tags to pass runoff from cism to rof
+
+Purpose and description of changes
+----------------------------------
+
+ - Update MOSART, CMEPS, and CISM so CISM runoff goes to ROF rather than CTSM
+ - Update RTM with fix needed for Paleo LGM work
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #2590 Update CMEPS/MOSART/CISM/RTM tags
+ Fixes https://github.com/ESCOMP/RTM/issues/50 Likely wrong RTM river flux to MOM6 within cesm2_3_beta17
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+ Issue https://github.com/ESCOMP/RTM/issues/50
+ Likely wrong RTM river flux to MOM6 within cesm2_3_beta17 is now fixed with
+ https://github.com/ESCOMP/RTM/pull/51
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ Differences in namelist 'mosart_inparm':
+  missing variable: 'do_rtmflood'
+  missing variable: 'finidat_rtm'
+  missing variable: 'frivinp_rtm'
+  missing variable: 'rtmhist_fexcl1'
+  missing variable: 'rtmhist_fexcl2'
+  missing variable: 'rtmhist_fexcl3'
+  missing variable: 'rtmhist_fincl1'
+  missing variable: 'rtmhist_fincl2'
+  missing variable: 'rtmhist_fincl3'
+  missing variable: 'rtmhist_mfilt'
+  missing variable: 'rtmhist_ndens'
+  missing variable: 'rtmhist_nhtfrq'
+  found extra variable: 'budget_frq'
+  found extra variable: 'fexcl1'
+  found extra variable: 'fexcl2'
+  found extra variable: 'fexcl3'
+  found extra variable: 'fincl1'
+  found extra variable: 'fincl2'
+  found extra variable: 'fincl3'
+  found extra variable: 'finidat'
+  found extra variable: 'frivinp'
+  found extra variable: 'mfilt'
+  found extra variable: 'mosart_euler_calc'
+  found extra variable: 'mosart_tracers'
+  found extra variable: 'ndens'
+  found extra variable: 'nhtfrq'
+  found extra variable: 'use_halo_option'
+
+Changes to documentation:
+ Not that I am aware of
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  ctsm_sci
+     derecho ---- OK (while in tag ctsm5.2.007; I did not repeat with the latest; see checklist in #2590)
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: mosart and rtm
+    - what platforms/compilers: all
+    - nature of change: mosart roundoff; rtm larger than roundoff due to bug fix
+
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ See .gitmodules: cism, rtm, mosart, ccs_config, cmeps
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2605
+ https://github.com/ESCOMP/RTM/pull/51
+ https://github.com/ESCOMP/MOSART/pull/94
+ https://github.com/ESCOMP/CISM-wrapper/pull/100
+ https://github.com/ESCOMP/CMEPS/pull/463
+ https://github.com/ESMCI/ccs_config_cesm/pull/174
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.014
 Originator(s): chrislxj (Xingjie Lu, Northern Arizona U., xingjie.lu@nau.edu)
 Date: Fri 19 Jul 2024 11:04:17 AM MDT
@@ -51,7 +178,8 @@ Notes of particular relevance for users
 ---------------------------------------
 
 Caveats for users (e.g., need to interpolate initial conditions):
- use_matrixcn and use_soil_matrixcn ARE recommended for accelerating bgc
+ use_matrixcn and use_soil_matrixcn ARE NOT available for clm4_5
+ and ARE recommended for accelerating bgc
  spin-ups (keep reading for more info) and NOT recommended for
  - transient simulations (e.g. IHist)
  - simulations that use threading (e.g. see tests with P64x2)
