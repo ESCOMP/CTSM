@@ -4589,13 +4589,13 @@ sub setup_logic_exice {
   my $finidat = $nl->get_value('finidat');
   # If coldstart and use_excess_ice is on:
   if ( ( (not defined($use_exice_streams)) && value_is_true($use_exice) ) && string_is_undef_or_empty($finidat) ) {
-   $nl->set_variable_value('exice_streams', 'use_excess_ice_streams' , '.true.');
-   $use_exice_streams = '.true.';
-   # if excess ice is turned off
-   } elsif ( (not defined($use_exice_streams)) && (not value_is_true($use_exice)) ) {
-   $nl->set_variable_value('exice_streams', 'use_excess_ice_streams' , '.false.');
-   $use_exice_streams = '.false.';
-   }
+     $nl->set_variable_value('exice_streams', 'use_excess_ice_streams' , '.true.');
+     $use_exice_streams = '.true.';
+     # if excess ice is turned off
+  } elsif ( (not defined($use_exice_streams)) && (not value_is_true($use_exice)) ) {
+     $nl->set_variable_value('exice_streams', 'use_excess_ice_streams' , '.false.');
+     $use_exice_streams = '.false.';
+  }
   # If excess ice streams is on
   if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
      # Can only be true if excess ice is also on, otherwise fail
