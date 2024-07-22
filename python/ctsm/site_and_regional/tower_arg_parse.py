@@ -204,6 +204,14 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
             if site not in valid_neon_sites:
                 raise ValueError("Invalid site name {}".format(site))
 
+    if "all" in args.plumber_sites:
+        plumber_sites = valid_plumber_sites
+    else:
+        plumber_sites = args.plumber_sites
+        for site in plumber_sites:
+            if site not in valid_plumber_sites:
+                raise ValueError("Invalid site name {}".format(site))
+
     if "CIME_OUTPUT_ROOT" in args.output_root:
         args.output_root = None
 
@@ -221,6 +229,7 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
 
     return (
         neon_sites,
+        plumber_sites,
         args.output_root,
         args.run_type,
         args.experiment,

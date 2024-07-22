@@ -183,15 +183,17 @@ def check_plumber_data(valid_plumber_sites):
     for site_name in valid_plumber_sites:
 
         # TODO: figure out start_year and end_year from shell commands
-        start_year = 'DUMMY_START_YEAR'
-        end_year = 'DUMMY_END_YEAR'
+        start_year = "DUMMY_START_YEAR"
+        end_year = "DUMMY_END_YEAR"
         start_month = "DUMMY_START_MONTH"
         end_month = "DUMMY_END_MONTH"
 
         logger.debug("Valid plumber site %s found!", site_name)
-        finidat = None  # TODO: may need to update? 
+        finidat = None  # TODO: may need to update?
 
-        plumber_site = Plumber2Site(site_name, start_year, end_year, start_month, end_month, finidat)
+        plumber_site = Plumber2Site(
+            site_name, start_year, end_year, start_month, end_month, finidat
+        )
         available_list.append(plumber_site)
 
     return available_list
@@ -217,11 +219,9 @@ def main(description):
     )
     valid_plumber_sites = sorted([v.split("/")[-1] for v in valid_plumber_sites])
 
-    # TODO: change to use neon or plumber valid sites based on tower_type?
-    # if left as is, could run both neon and plumber from one command
-
     (
-        site_list,
+        neon_site_list,
+        plumber_site_list,
         output_root,
         run_type,
         experiment,
@@ -234,9 +234,6 @@ def main(description):
         rerun,
         user_version,
     ) = get_parser(sys.argv, description, valid_neon_sites, valid_plumber_sites)
-
-    # TODO: add in a tower_type argument (that has default NEON?) and
-    # include if statements to differentiate PLUMBER vs NEON
 
     if output_root:
         logger.debug("output_root : %s", output_root)
@@ -258,7 +255,7 @@ def main(description):
 
     # --  Looping over neon sites
     for neon_site in available_list:
-        if neon_site.name in site_list:
+        if neon_site.name in neon_site_list:
             if run_from_postad:
                 neon_site.finidat = None
             if not base_case_root:
@@ -286,7 +283,7 @@ def main(description):
 
     # --  Looping over plumber sites
     for plumber_site in available_plumber_list:
-        if plumber_site.name in site_list:
+        if plumber_site.name in plumber_site_list:
             if run_from_postad:
                 plumber_site.finidat = None
             if not base_case_root:
