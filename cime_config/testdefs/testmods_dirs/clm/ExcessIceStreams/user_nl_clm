@@ -1,2 +1,4 @@
  use_excess_ice = .true.
  use_excess_ice_streams = .true.
+ excess_ice_coldstart_depth = 0.5
+ excess_ice_coldstart_temp = -5.0
