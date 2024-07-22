@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.2.015
 Originator(s): multiple (Samuel Levis,UCAR/TSS,303-665-1310, @mvertens, @jedwards4b, @billsacks, @Katetc)
-Date: Fri 19 Jul 2024 06:02:22 PM MDT
+Date: Mon 22 Jul 2024 12:46:17 PM MDT
 One-line Summary: Update submodule tags to pass runoff from cism to rof
 
 Purpose and description of changes
@@ -110,6 +110,8 @@ Changes answers relative to baseline: Yes
     - what platforms/compilers: all
     - nature of change: mosart roundoff; rtm larger than roundoff due to bug fix
 
+ We are ignoring strange diffs from baseline in two tests in variable
+ FATES_TRANSITION_MATRIX_LULU as explained in issue #2656.
 
 Other details
 -------------
