@@ -1,6 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-       ctsm5.2.014 chrislxj 07/19/2024 use_matrixcn, use_soil_matrixcn come in as default .false.
+       ctsm5.2.015 multiple 07/22/2024 Update submodule tags to pass runoff from cism to rof
+       ctsm5.2.014 multiple 07/19/2024 use_matrixcn, use_soil_matrixcn come in as default .false.
        ctsm5.2.013 glemieux 07/18/2024 FATES Land Use V2
        ctsm5.2.012    sacks 07/16/2024 Relax tolerance for truncating small snocan values in CanopyFluxes
        ctsm5.2.011   slevis 07/12/2024 Merge b4b-dev
