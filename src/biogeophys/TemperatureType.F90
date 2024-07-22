@@ -120,8 +120,8 @@ module TemperatureType
      real(r8), pointer    :: c_h2osfc_col          (:)   ! heat capacity of surface water
 
      ! Namelist parameters for initialization
-     real(r8), private    :: excess_ice_coldstart_depth  ! depth below which excess ice will be present
-     real(r8), private    :: excess_ice_coldstart_temp   ! coldstart temperature of layers with excess ice present
+     real(r8)    :: excess_ice_coldstart_depth  ! depth below which excess ice will be present
+     real(r8)    :: excess_ice_coldstart_temp   ! coldstart temperature of layers with excess ice present
      
    contains
 
@@ -147,7 +147,7 @@ contains
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, &
        em_roof_lun,  em_wall_lun, em_improad_lun, em_perroad_lun, &
-       is_simple_buildtemp, is_prog_buildtemp, exice_init_stream_col, NLFileName)
+       is_simple_buildtemp, is_prog_buildtemp, exice_init_conc_col, NLFileName)
     !
     ! !DESCRIPTION:
     !
@@ -162,7 +162,7 @@ contains
     real(r8)          , intent(in) :: em_perroad_lun(bounds%begl:)
     logical           , intent(in) :: is_simple_buildtemp  ! Simple building temp is being used
     logical           , intent(in) :: is_prog_buildtemp    ! Prognostic building temp is being used
-    real(r8)          , intent(in) :: exice_init_stream_col(bounds%begc:)  ! initial excess ice concentration from the stream file
+    real(r8)          , intent(in) :: exice_init_conc_col(bounds%begc:)  ! initial coldstart excess ice concentration (from the stream file)
     character(len=*)  , intent(in) :: NLFilename ! Namelist filename
 
 
@@ -175,7 +175,7 @@ contains
          em_improad_lun(bounds%begl:bounds%endl), &
          em_perroad_lun(bounds%begl:bounds%endl), &
          is_simple_buildtemp, is_prog_buildtemp,  &
-         exice_init_stream_col(bounds%begc:bounds%endc) )
+         exice_init_conc_col(bounds%begc:bounds%endc) )
 
   end subroutine Init
 
@@ -650,7 +650,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine InitCold(this, bounds, &
        em_roof_lun,  em_wall_lun, em_improad_lun, em_perroad_lun, &
-       is_simple_buildtemp, is_prog_buildtemp, exice_init_stream_col)
+       is_simple_buildtemp, is_prog_buildtemp, exice_init_conc_col)
     !
     ! !DESCRIPTION:
     ! Initialize cold start conditions for module variables
@@ -675,7 +675,7 @@ contains
     real(r8)          , intent(in) :: em_perroad_lun(bounds%begl:)
     logical           , intent(in) :: is_simple_buildtemp  ! Simple building temp is being used
     logical           , intent(in) :: is_prog_buildtemp    ! Prognostic building temp is being used
-    real(r8)          , intent(in) :: exice_init_stream_col(bounds%begc:) ! initial ammount of excess ice from the stream file
+    real(r8)          , intent(in) :: exice_init_conc_col(bounds%begc:) ! initial coldstart excess ice concentration (from the stream file)
     !
     ! !LOCAL VARIABLES:
     integer  :: j,l,c,p ! indices
@@ -757,7 +757,7 @@ contains
                end if
             else
                this%t_soisno_col(c,1:nlevgrnd) = 272._r8
-               if (use_excess_ice .and. exice_init_stream_col(c) > 0.0_r8) then
+               if (use_excess_ice .and. exice_init_conc_col(c) > 0.0_r8) then
                   nexice_start = nlevsoi - 1
                   if (this%excess_ice_coldstart_depth <= 0.0_r8) then
                      ! we double check this here, and when building namelists

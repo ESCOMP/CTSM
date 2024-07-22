@@ -222,7 +222,7 @@ contains
     type(file_desc_t)     :: params_ncid  ! pio netCDF file id for parameter file
     real(r8), allocatable :: h2osno_col(:)
     real(r8), allocatable :: snow_depth_col(:)
-    real(r8), allocatable :: exice_init_stream_col(:) ! initial concentration of excess ice in the soil (-)
+    real(r8), allocatable :: exice_init_conc_col(:) ! initial coldstart excess ice concentration (from the stream file or 0.0) (-)
     type(excessicestream_type)  :: exice_stream
 
     integer :: dummy_to_make_pgi_happy
@@ -302,12 +302,12 @@ contains
     ! Initialization of public data types
 
     ! If excess ice is read from the stream, it has to be read before we coldstart the temperature
-    allocate(exice_init_stream_col(bounds%begc:bounds%endc))
-    exice_init_stream_col(bounds%begc:bounds%endc) = 0.0_r8
+    allocate(exice_init_conc_col(bounds%begc:bounds%endc))
+    exice_init_conc_col(bounds%begc:bounds%endc) = 0.0_r8
     if (use_excess_ice) then
        call exice_stream%Init(bounds, NLFilename)
        if (UseExcessIceStreams()) then
-          call exice_stream%CalcExcessIce(bounds, exice_init_stream_col(bounds%begc:bounds%endc))
+          call exice_stream%CalcExcessIce(bounds, exice_init_conc_col(bounds%begc:bounds%endc))
        endif
     endif
 
@@ -317,7 +317,7 @@ contains
          em_improad_lun=urbanparams_inst%em_improad(begl:endl), &
          em_perroad_lun=urbanparams_inst%em_perroad(begl:endl), &
          is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp(), &
-         exice_init_stream_col=exice_init_stream_col(bounds%begc:bounds%endc) , NLFileName=NLFilename)
+         exice_init_conc_col=exice_init_conc_col(bounds%begc:bounds%endc) , NLFileName=NLFilename)
 
     call active_layer_inst%Init(bounds)
 
@@ -332,7 +332,8 @@ contains
          watsat_col = soilstate_inst%watsat_col(begc:endc, 1:), &
          t_soisno_col = temperature_inst%t_soisno_col(begc:endc, -nlevsno+1:), &
          use_aquifer_layer = use_aquifer_layer(), &
-         exice_init_stream_col = exice_init_stream_col(begc:endc))
+         exice_coldstart_depth = temperature_inst%excess_ice_coldstart_depth, &
+         exice_init_conc_col = exice_init_conc_col(begc:endc))
 
     call glacier_smb_inst%Init(bounds)
 
@@ -470,7 +471,7 @@ contains
 
     deallocate (h2osno_col)
     deallocate (snow_depth_col)
-    deallocate (exice_init_stream_col)
+    deallocate (exice_init_conc_col)
 
     ! ------------------------------------------------------------------------
     ! Initialize accumulated fields

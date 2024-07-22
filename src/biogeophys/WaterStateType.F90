@@ -80,7 +80,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, info, tracer_vars, &
-       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer, NLFilename, exice_init_stream_col)
+       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer, exice_coldstart_depth, exice_init_conc_col)
 
     class(waterstate_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds  
@@ -90,8 +90,8 @@ contains
     real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     logical           , intent(in) :: use_aquifer_layer ! whether an aquifer layer is used in this run
-    character(len=*)  , intent(in) :: NLFilename ! Namelist filename
-    real(r8)          , intent(in) :: exice_init_stream_col(bounds%begc:bounds%endc) ! initial ammount of excess ice from stream
+    real(r8)          , intent(in) :: exice_coldstart_depth ! depth below which excess ice will be present
+    real(r8)          , intent(in) :: exice_init_conc_col(bounds%begc:bounds%endc) ! initial coldstart excess ice concentration (from the stream file)
 
     this%info => info
 
@@ -103,7 +103,7 @@ contains
       watsat_col = watsat_col, &
       t_soisno_col = t_soisno_col, &
       use_aquifer_layer = use_aquifer_layer, &
-      NLFilename = NLFilename, exice_init_stream_col = exice_init_stream_col)
+      exice_coldstart_depth = exice_coldstart_depth , exice_init_conc_col = exice_init_conc_col)
 
   end subroutine Init
 
@@ -322,7 +322,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine InitCold(this, bounds, &
-       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer, NLFilename, exice_init_stream_col)
+       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer, exice_coldstart_depth, exice_init_conc_col)
     !
     ! !DESCRIPTION:
     ! Initialize time constant variables and cold start conditions 
@@ -342,12 +342,12 @@ contains
     real(r8)              , intent(in)    :: watsat_col(bounds%begc:, 1:)            ! volumetric soil water at saturation (porosity)
     real(r8)              , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     logical               , intent(in)    :: use_aquifer_layer                       ! whether an aquifer layer is used in this run
-    character(len=*)      , intent(in)    :: NLFilename                              ! Namelist filename
-    real(r8)              , intent(in)    :: exice_init_stream_col(bounds%begc:bounds%endc) ! initial ammount of excess ice from stream
+    real(r8)              , intent(in)    :: exice_coldstart_depth ! depth below which excess ice will be present
+    real(r8)              , intent(in)    :: exice_init_conc_col(bounds%begc:bounds%endc) ! initial coldstart excess ice concentration (from the stream file)
     !
     ! !LOCAL VARIABLES:
     integer            :: c,j,l,nlevs,g 
-    integer            :: nbedrock, n05m ! layer containing 0.5 m
+    integer            :: nbedrock, nexice ! layer containing 0.5 m
     real(r8)           :: ratio
     !-----------------------------------------------------------------------
 
@@ -550,7 +550,7 @@ contains
       this%dynbal_baseline_ice_col(bounds%begc:bounds%endc) = 0._r8
 
       !Initialize excess ice
-      this%exice_bulk_init(bounds%begc:bounds%endc) = exice_init_stream_col(bounds%begc:bounds%endc)
+      this%exice_bulk_init(bounds%begc:bounds%endc) = exice_init_conc_col(bounds%begc:bounds%endc)
       this%excess_ice_col(bounds%begc:bounds%endc,:) = 0.0_r8
       if (use_excess_ice) then
          do c = bounds%begc,bounds%endc
@@ -558,10 +558,10 @@ contains
             l = col%landunit(c)
             if (.not. lun%lakpoi(l)) then  !not lake
                if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-                  if (zisoi(nlevsoi) >= 0.5_r8) then
-                     call find_soil_layer_containing_depth(0.5_r8,n05m)
+                  if (zisoi(nlevsoi) >= exice_coldstart_depth) then
+                     call find_soil_layer_containing_depth(exice_coldstart_depth,nexice)
                   else
-                     n05m=nlevsoi-1
+                     nexice=nlevsoi-1
                   endif
                   if (use_bedrock .and. col%nbedrock(c) <=nlevsoi) then
                      nbedrock = col%nbedrock(c)
@@ -569,8 +569,8 @@ contains
                      nbedrock = nlevsoi
                   endif
                   do j = 2, nlevmaxurbgrnd ! ignore first layer
-                     if (n05m<nbedrock) then ! bedrock below 1 m
-                        if (j >= n05m .and. j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
+                     if (nexice<nbedrock) then ! bedrock below 1 m
+                        if (j >= nexice .and. j<nbedrock .and. t_soisno_col(c,j) <= tfrz ) then
                            this%excess_ice_col(c,j) = col%dz(c,j)*denice*(this%exice_bulk_init(c))
                         else
                            this%excess_ice_col(c,j) = 0.0_r8
