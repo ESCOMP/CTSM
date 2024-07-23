@@ -163,10 +163,15 @@ contains
     logical           , intent(in) :: is_simple_buildtemp  ! Simple building temp is being used
     logical           , intent(in) :: is_prog_buildtemp    ! Prognostic building temp is being used
     real(r8)          , intent(in) :: exice_init_conc_col(bounds%begc:)  ! initial coldstart excess ice concentration (from the stream file)
-    character(len=*)  , intent(in) :: NLFilename ! Namelist filename
+    character(len=*)  , intent(in), optional :: NLFilename ! Namelist filename
 
 
-    call this%ReadNL(NLFilename)
+    if ( present(NLFilename) ) then
+       call this%ReadNL(NLFilename)
+    else ! this is needed for testing
+       this%excess_ice_coldstart_depth = 0.5_r8
+       this%excess_ice_coldstart_temp  = -5.0_r8
+    endif
     call this%InitAllocate ( bounds )
     call this%InitHistory ( bounds, is_simple_buildtemp, is_prog_buildtemp )
     call this%InitCold ( bounds,                  &

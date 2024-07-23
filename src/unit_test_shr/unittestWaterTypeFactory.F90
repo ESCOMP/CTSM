@@ -140,7 +140,7 @@ contains
     end if
 
     if (present(exice_init_conc_col)) then
-       SHR_ASSERT_ALL_FL((ubound(exice_init_conc_col,1) == bounds%enc), sourcefile, __LINE__)
+       SHR_ASSERT_ALL_FL((ubound(exice_init_conc_col,1) == bounds%endc), sourcefile, __LINE__)
     endif
 
     if (present(enable_consistency_checks)) then
@@ -177,9 +177,9 @@ contains
        l_exice_coldstart_depth = 0.5_r8
     endif
     if (present(exice_init_conc_col)) then
-       l_exice_init_conc_col(:,:) = exice_init_conc_col
+       l_exice_init_conc_col(:) = exice_init_conc_col
     else
-       l_exice_init_conc_col(:,:) = 0.01_r8
+       l_exice_init_conc_col(:) = 0.0_r8
     endif
 
     call water_inst%InitForTesting(bounds, params, &
