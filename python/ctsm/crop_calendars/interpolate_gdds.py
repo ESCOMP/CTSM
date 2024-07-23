@@ -70,7 +70,7 @@ def _setup_process_args():
         help="Interpolate variables whose names start with this string",
         type=str,
         required=False,
-        default="gdd1_"
+        default="gdd1_",
     )
     parser.add_argument(
         "--overwrite",

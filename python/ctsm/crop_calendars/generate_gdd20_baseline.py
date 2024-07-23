@@ -72,27 +72,21 @@ def _parse_args():
     parser.add_argument(
         "-y1",
         "--first-year",
-        help=(
-            "First calendar year to include"
-        ),
+        help=("First calendar year to include"),
         type=int,
         required=False,
     )
     parser.add_argument(
         "-yN",
         "--last-year",
-        help=(
-            "Last calendar year to include"
-        ),
+        help=("Last calendar year to include"),
         type=int,
         required=False,
     )
     parser.add_argument(
         "-v",
         "--variable",
-        help=(
-            "Which type of variable should be processed?"
-        ),
+        help=("Which type of variable should be processed?"),
         required=False,
         default="GDDBX",
         choices=["GDDBX", "GDDB20"],

@@ -651,10 +651,7 @@ def import_and_process_1yr(
             )
         if save_figs and np.any(np.isnan(gddharv_atharv_p)):
             if np.all(np.isnan(gddharv_atharv_p)):
-                log(
-                    logger,
-                    "         ❗ All GDDHARV are NaN; should only affect figure"
-                )
+                log(logger, "         ❗ All GDDHARV are NaN; should only affect figure")
                 check_gddharv = False
             else:
                 log(
@@ -744,9 +741,15 @@ def import_and_process_1yr(
                     )
                 else:
                     error(logger, "Unexpected NaN for last season's GDD accumulation.")
-            if save_figs and check_gddharv and np.any(
-                np.isnan(
-                    gddharv_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices]
+            if (
+                save_figs
+                and check_gddharv
+                and np.any(
+                    np.isnan(
+                        gddharv_yp_list[var][
+                            year_index - 1, active_this_year_where_gs_lastyr_indices
+                        ]
+                    )
                 )
             ):
                 if incorrectly_daily:
