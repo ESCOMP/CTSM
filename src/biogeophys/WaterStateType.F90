@@ -724,6 +724,17 @@ contains
     ! Restart excess ice vars
     if (.not. use_excess_ice) then
        ! no need to even define the restart vars
+       call RestartExcessIceIssue( &
+            ncid = ncid, &
+            flag = flag, &
+            excess_ice_on_restart = excess_ice_on_restart)
+       if( excess_ice_on_restart ) then
+          if (masterproc) then
+             write(iulog,*) '--WARNING-- Starting from initial conditions with excess ice present.'
+             write(iulog,*) 'But use_excess_ice=.false.'
+             write(iulog,*) 'This will cause soil moisture and temperature not being in equilibrium'
+          endif
+       endif
        this%excess_ice_col(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)=0.0_r8
     else
        call RestartExcessIceIssue( &
