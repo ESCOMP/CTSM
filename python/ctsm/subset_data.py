@@ -197,7 +197,7 @@ def get_parser():
     # -- region-specific parser options
     rg_parser.add_argument(
         "--lat1",
-        help="Region start latitude. [default: %(default)s]",
+        help="Region southernmost latitude. [default: %(default)s]",
         action="store",
         dest="lat1",
         required=False,
@@ -206,7 +206,7 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--lat2",
-        help="Region end latitude. [default: %(default)s]",
+        help="Region northernmost latitude. [default: %(default)s]",
         action="store",
         dest="lat2",
         required=False,
@@ -215,7 +215,7 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--lon1",
-        help="Region start longitude. [default: %(default)s]",
+        help="Region westernmost longitude. [default: %(default)s]",
         action="store",
         dest="lon1",
         required=False,
@@ -224,7 +224,7 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--lon2",
-        help="Region end longitude. [default: %(default)s]",
+        help="Region easternmost longitude. [default: %(default)s]",
         action="store",
         dest="lon2",
         required=False,
@@ -251,14 +251,6 @@ def get_parser():
     # -- common options between both subparsers
     for subparser in [pt_parser, rg_parser]:
         subparser.add_argument(
-            "--create-domain",
-            help="Create CLM domain file at single point/region. \
-            Domain files are not needed for NUOPC cases.",
-            action="store_true",
-            dest="create_domain",
-            required=False,
-        )
-        subparser.add_argument(
             "--create-surface",
             help="Create surface data file at single point/region.",
             action="store_true",
@@ -266,17 +258,36 @@ def get_parser():
             required=False,
         )
         subparser.add_argument(
+            "--surf-year",
+            help="Year for surface data file at single point/region \
+            (and start year for land-use timeseries).",
+            action="store",
+            dest="surf_year",
+            type=int,
+            default=2000,
+            required=False,
+        )
+        subparser.add_argument(
             "--create-landuse",
-            help="Create landuse data file at single point/region.",
+            help="Create landuse data file at a single point/region.",
             action="store_true",
             dest="create_landuse",
             required=False,
         )
         subparser.add_argument(
             "--create-datm",
-            help="Create DATM forcing data at single point.",
+            help="Create DATM forcing data at a single point/region.",
             action="store_true",
             dest="create_datm",
+            required=False,
+        )
+        subparser.add_argument(
+            "--create-domain",
+            help="Create CLM domain file for a single point/region \
+            Domain files are not needed for NUOPC cases, \
+            but are needed to create mesh files that are needed for NUOPC cases.",
+            action="store_true",
+            dest="create_domain",
             required=False,
         )
         subparser.add_argument(
@@ -394,19 +405,12 @@ def check_args(args):
         )
         raise argparse.ArgumentError(None, err_msg)
 
-    if not any(
-        [
-            args.create_surfdata,
-            args.create_domain,
-            args.create_landuse,
-            args.create_datm,
-        ]
-    ):
+    if not any([args.create_surfdata, args.create_landuse, args.create_datm, args.create_domain]):
         err_msg = textwrap.dedent(
             """\
                 \n ------------------------------------
                 \n Must supply one of:
-                \n --create-surface \n --create-landuse \n --create-datm \n --create-domain \n
+                \n --create-surface \n --create-landuse \n --create-datm \n --create-domain \n \n
                 """
         )
         raise argparse.ArgumentError(None, err_msg)
@@ -429,6 +433,43 @@ def check_args(args):
         )
         raise argparse.ArgumentError(None, err_msg)
 
+    if args.create_landuse and not args.create_surfdata:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n --create-landuse option requires the --create-surface option:
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+    if args.surf_year != 2000 and not args.create_surfdata:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n --surf-year option is set to something besides the default of 2000
+                \n without the --create-surface option"
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
+    if args.surf_year != 1850 and args.create_landuse:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n --surf-year option is NOT set to 1850 and the --create-landuse option
+                \n is selected which requires it to be 1850
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
+    if args.surf_year != 1850 and args.surf_year != 2000:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n --surf-year option can only be set to 1850 or 2000
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
     if args.out_surface and os.path.exists(args.out_surface) and not args.overwrite:
         err_msg = textwrap.dedent(
             """\
@@ -437,6 +478,32 @@ def check_args(args):
                 """
         )
         raise argparse.ArgumentError(None, err_msg)
+
+    if args.run_type == "region" and args.create_user_mods:
+        if not args.create_mesh:
+            err_msg = textwrap.dedent(
+                """\
+                      \n ------------------------------------
+                      \nERROR: For regional cases, you can not create user_mods
+                      \nwithout creating the mesh file.
+
+                      \nPlease rerun the script adding --create-mesh to subset the mesh file."
+                      """
+            )
+            raise argparse.ArgumentError(None, err_msg)
+
+    if args.run_type == "region" and args.create_mesh:
+        if not args.create_domain:
+            err_msg = textwrap.dedent(
+                """\
+                      \n ------------------------------------
+                      \nERROR: For regional cases, you can not create mesh files
+                      \nwithout creating the domain file.
+
+                      \nPlease rerun the script adding --create-domain to subset the domain file."
+                      """
+            )
+            raise argparse.ArgumentError(None, err_msg)
 
 
 def setup_user_mods(user_mods_dir, cesmroot):
@@ -530,6 +597,10 @@ def setup_files(args, defaults, cesmroot):
             clmforcingindir,
             os.path.join(defaults.get("surfdat", "dir")),
         ),
+        "mesh_dir": os.path.join(
+            clmforcingindir,
+            os.path.join(defaults.get("surfdat", "mesh_dir")),
+        ),
         "fluse_dir": os.path.join(
             clmforcingindir,
             os.path.join(defaults.get("landuse", "dir")),
@@ -537,6 +608,7 @@ def setup_files(args, defaults, cesmroot):
         "fsurf_in": fsurf_in,
         "fsurf_out": fsurf_out,
         "fluse_in": fluse_in,
+        "mesh_surf": defaults.get("surfdat", "mesh_surf"),
         "datm_tuple": DatmFiles(
             dir_input_datm,
             dir_output_datm,
@@ -591,10 +663,6 @@ def subset_point(args, file_dict: dict):
 
     logger.debug(single_point)
 
-    # --  Create CTSM domain file
-    if single_point.create_domain:
-        single_point.create_domain_at_point(file_dict["main_dir"], file_dict["fdomain_in"])
-
     # --  Create CTSM surface data file
     if single_point.create_surfdata:
         single_point.create_surfdata_at_point(
@@ -648,6 +716,7 @@ def subset_region(args, file_dict: dict):
         create_landuse=args.create_landuse,
         create_datm=args.create_datm,
         create_user_mods=args.create_user_mods,
+        create_mesh=args.create_mesh,
         out_dir=args.out_dir,
         overwrite=args.overwrite,
     )
@@ -667,10 +736,25 @@ def subset_region(args, file_dict: dict):
             specify_fsurf_out=file_dict["fsurf_out"],
         )
 
+    # if region.create_mesh:
+    #    region.create_mesh_at_reg (file_dict["mesh_dir"], file_dict["mesh_surf"])
+
     # --  Create CTSM transient landuse data file
     if region.create_landuse:
         region.create_landuse_at_reg(
             file_dict["fluse_dir"], file_dict["fluse_in"], args.user_mods_dir
+        )
+
+    # -- Write shell commands
+    if region.create_user_mods:
+        region.write_shell_commands(os.path.join(args.user_mods_dir, "shell_commands"))
+
+        print("\nFor running this regional case with the created user_mods : ")
+        print(
+            "./create_newcase --case case --res CLM_USRDAT --compset I2000Clm51BgcCrop",
+            "--run-unsupported --user-mods-dirs ",
+            args.user_mods_dir,
+            "\n\n",
         )
 
     logger.info("Successfully ran script for a regional case.")

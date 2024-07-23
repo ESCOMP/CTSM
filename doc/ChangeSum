@@ -1,5 +1,22 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.2.015 multiple 07/22/2024 Update submodule tags to pass runoff from cism to rof
+       ctsm5.2.014 multiple 07/19/2024 use_matrixcn, use_soil_matrixcn come in as default .false.
+       ctsm5.2.013 glemieux 07/18/2024 FATES Land Use V2
+       ctsm5.2.012    sacks 07/16/2024 Relax tolerance for truncating small snocan values in CanopyFluxes
+       ctsm5.2.011   slevis 07/12/2024 Merge b4b-dev
+       ctsm5.2.010 multiple 07/11/2024 Explicit A/C adoption
+       ctsm5.2.009     erik 07/10/2024 Allow for CAM7 in lnd_tuning_mode and handle C or E in long compset names
+       ctsm5.2.008     erik 06/28/2024 Bring changes on temp-branch to master: b4b-dev, git-fleximod, hillslope fsat
+tmp-240620.n03.ctsm5.2.007  06/27/2024 Set upland hillslope column fsat values to zero (samrabin)
+tmp-240620.n02.ctsm5.2.007  06/21/2024 Another update of git-fleximod (erik)
+tmp-240620.n01.ctsm5.2.007  06/21/2024 Merge b4b-dev (slevis)
+       ctsm5.2.007 multiple 05/31/2024 Rm manage_externals and update documentation accordingly
+       ctsm5.2.006   slevis 05/28/2024 Update externals to cesm2_3_beta17, remove mct, retire /test/tools
+       ctsm5.2.005     erik 05/13/2024 Fix clm6_0 defaults and CESM testing issues, add tests to detect these problems
+       ctsm5.2.004 multiple 05/09/2024 CTSM5.2 1979 fsurdat and 1979-2026 landuse ne0np4 files + two fixes
+       ctsm5.2.003 samrabin 05/02/2024 Merge b4b-dev
+       ctsm5.2.002 glemieux 04/26/2024 FATES default allometry parameter file update
        ctsm5.2.001     erik 04/22/2024 Merge b4b-dev
          ctsm5.2.0     many 04/20/2024 New mksurfdata_esmf tool to create new surface datasets that are in place
     ctsm5.1.dev176  afoster 04/04/2024 Merge b4b-dev
