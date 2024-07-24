@@ -2699,7 +2699,7 @@ contains
          did_rx_gdds = .true.
          if (adapt_cropcal_rx_cultivar_gdds .and. crop_inst%gdd20_baseline_patch(p) > min_gdd20_baseline) then
             gddmaturity(p) = gddmaturity(p) * gdd20 / crop_inst%gdd20_baseline_patch(p)
-            !TODO SSR: Set maximum and minimum gddmaturity
+            !TODO Sam Rabin: Set maximum and minimum gddmaturity
          end if
       else if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
          gddmaturity(p) = hybgdd(ivt(p))
@@ -2716,11 +2716,11 @@ contains
                ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
                ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
             gddmaturity(p) = max(950._r8, min(gdd20*0.85_r8, hybgdd(ivt(p))))
-            if (do_plant_normal) then  ! TODO SSR: Add ".and. .not. do_plant_prescribed"?
+            if (do_plant_normal) then  ! TODO Sam Rabin: Add ".and. .not. do_plant_prescribed"?
                gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
             end if
          else
-            ! TODO SSR: Add more descriptive error message
+            ! TODO Sam Rabin: Add more descriptive error message
             call endrun(msg="Stopping")
          end if
 
