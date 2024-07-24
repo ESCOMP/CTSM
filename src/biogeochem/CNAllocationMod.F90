@@ -86,6 +86,7 @@ contains
     !
     ! !USES:
     use CNSharedParamsMod           , only : use_matrixcn
+    !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds
     integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter

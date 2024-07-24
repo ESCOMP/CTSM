@@ -45,7 +45,7 @@ module clm_instMod
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use CropType                        , only : crop_type
   use DryDepVelocity                  , only : drydepvel_type
-  use DUSTMod                         , only : dust_type
+  use DustEmisBase                    , only : dust_emis_base_type
   use EnergyFluxType                  , only : energyflux_type
   use FrictionVelocityMod             , only : frictionvel_type
   use GlacierSurfaceMassBalanceMod    , only : glacier_smb_type
@@ -151,7 +151,7 @@ module clm_instMod
   ! General biogeochem types
   type(ch4_type)      , public            :: ch4_inst
   type(crop_type)     , public            :: crop_inst
-  type(dust_type)     , public            :: dust_inst
+  class(dust_emis_base_type), public, allocatable :: dust_emis_inst
   type(vocemis_type)  , public            :: vocemis_inst
   type(fireemis_type) , public            :: fireemis_inst
   type(drydepvel_type), public            :: drydepvel_inst
@@ -200,9 +200,11 @@ contains
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
     use BalanceCheckMod                    , only : GetBalanceCheckSkipSteps
+    use clm_varctl                         , only : flandusepftdat
     use clm_varctl                         , only : use_hillslope
     use HillslopeHydrologyMod              , only : SetHillslopeSoilThickness
     use initVerticalMod                    , only : setSoilLayerClass
+    use DustEmisFactory                    , only : create_dust_emissions
     !
     ! !ARGUMENTS    
     type(bounds_type), intent(in) :: bounds  ! processor bounds
@@ -296,11 +298,11 @@ contains
     ! Initialization of public data types
 
     call temperature_inst%Init(bounds,           &
-         urbanparams_inst%em_roof(begl:endl),    &
-         urbanparams_inst%em_wall(begl:endl),    &
-         urbanparams_inst%em_improad(begl:endl), &
-         urbanparams_inst%em_perroad(begl:endl), &
-         IsSimpleBuildTemp(), IsProgBuildTemp() )
+         em_roof_lun=urbanparams_inst%em_roof(begl:endl),    &
+         em_wall_lun=urbanparams_inst%em_wall(begl:endl),    &
+         em_improad_lun=urbanparams_inst%em_improad(begl:endl), &
+         em_perroad_lun=urbanparams_inst%em_perroad(begl:endl), &
+         is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp() )
 
     call active_layer_inst%Init(bounds)
 
@@ -350,7 +352,7 @@ contains
 
     call surfrad_inst%Init(bounds)
 
-    call dust_inst%Init(bounds, NLFilename)
+    allocate(dust_emis_inst, source = create_dust_emissions(bounds, NLFilename))
 
     allocate(scf_method, source = CreateAndInitSnowCoverFraction( &
          snow_cover_fraction_method = snow_cover_fraction_method, &
@@ -447,7 +449,7 @@ contains
     ! Initialize the Functionaly Assembled Terrestrial Ecosystem Simulator (FATES)
     ! 
     if (use_fates) then
-       call clm_fates%Init(bounds)
+       call clm_fates%Init(bounds, flandusepftdat)
     end if
 
     deallocate (h2osno_col)

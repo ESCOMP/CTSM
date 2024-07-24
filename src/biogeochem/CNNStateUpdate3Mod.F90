@@ -146,10 +146,14 @@ contains
             ! native subroutines dealing with that field
             !
             else
+               nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp) = nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp) + &
+                 nf_veg%fire_mortality_n_to_cwdn_col(c,j) * dt
                ! Do above for the matrix solution
 
                ! patch-level wood to column-level litter (uncombusted wood)
                do k = i_litr_min, i_litr_max
+                  nf_soil%matrix_Ninput%V(c,j+(k-1)*nlevdecomp) = nf_soil%matrix_Ninput%V(c,j+(k-1)*nlevdecomp) + &
+                    nf_veg%m_n_to_litr_fire_col(c,j,k)* dt
                end do
             end if ! not use_soil_matrix
          end do ! end of column loop
