@@ -169,6 +169,9 @@ contains
          em_perroad_lun(bounds%begl:bounds%endl), &
          is_simple_buildtemp, is_prog_buildtemp)
 
+    ! Finish up
+    this%flush_gdd20 = flush_gdd20
+
   end subroutine Init
 
   !------------------------------------------------------------------------
@@ -1693,13 +1696,13 @@ contains
        ! Accumulate and extract running 20-year means
        if (is_end_curr_year()) then
           ! Flush, if needed
-          if (flush_gdd20 .or. this%flush_gdd20) then
+          if (this%flush_gdd20) then
               write(iulog, *) 'Flushing GDD20 variables'
               call markreset_accum_field('GDD020')
               call markreset_accum_field('GDD820')
               call markreset_accum_field('GDD1020')
               this%flush_gdd20 = .false.
-              flush_gdd20 = .false.
+              flush_gdd20 = .false.  ! Shouldn't be necessary, because flush_gdd20 shouldn't be considered after Init and Restart. But just in case...
           end if
           call update_accum_field  ('GDD020', this%gdd0_patch, nstep)
           call extract_accum_field ('GDD020', this%gdd020_patch, nstep)
