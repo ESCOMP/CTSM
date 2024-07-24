@@ -3794,7 +3794,7 @@
     </options>
   </test>
 
-  <test name="SMS_Ld65" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/GddGen--clm/cropAnnOutputMonthly">
+  <test name="SMS_Ld65" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/GddGen">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
@@ -3803,7 +3803,7 @@
     </options>
   </test>
 
-  <test name="SMS_Ld65" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/GddGen--clm/cropAnnOutputMonthly--clm/StreamGdd20Seasons">
+  <test name="SMS_Ld65" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/GddGen--clm/StreamGdd20Seasons">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
