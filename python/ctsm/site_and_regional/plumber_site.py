@@ -44,7 +44,7 @@ class Plumber2Site(TowerSite):
     ):
         if user_mods_dirs is None:
             user_mods_dirs = [
-                os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "PLUMBER", self.name)
+                os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "PLUMBER2", self.name)
             ]
             print("in plumbersite adding usermodsdirs")
         print("usermodsdirs: {}".format(user_mods_dirs))
@@ -95,7 +95,7 @@ class Plumber2Site(TowerSite):
             name of experiment, default False
         """
         user_mods_dirs = [
-            os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "PLUMBER", self.name)
+            os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "PLUMBER2", self.name)
         ]
         tower_type = "PLUMBER"
         super().run_case(
