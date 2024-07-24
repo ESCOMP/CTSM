@@ -59,7 +59,6 @@ def manual_mfdataset(filelist, my_vars, my_vegtypes, time_slice):
                 compat="override",
                 coords="all",
                 dim="time",
-                # combine="nested",
             )
     return ds_out
 
