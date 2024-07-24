@@ -909,7 +909,7 @@ contains
     logical          , intent(in)    :: is_prog_buildtemp    ! Prognostic building temp is being used
     !
     ! !LOCAL VARIABLES:
-    integer :: j,c,p     ! indices
+    integer :: j,c       ! indices
     logical :: readvar   ! determine if variable is on initial file
     integer :: idata
     !-----------------------------------------------------------------------
