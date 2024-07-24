@@ -6,6 +6,7 @@ import os
 import sys
 import argparse
 import logging
+import re
 import xarray as xr
 
 # -- add python/ctsm  to path (needed if we want to run this stand-alone)
@@ -121,7 +122,7 @@ def interpolate_gdds(args):
         if "lat" not in ds_in[var].dims and "lon" not in ds_in[var].dims:
             print(f"Skipping variable {var} with dimensions {ds_in[var].dims}")
             continue
-        elif args.variable_prefix not in var:
+        if not re.compile("^" + args.variable_prefix).match(var)
             print(f"Unexpected variable {var} on input file. Skipping.")
             continue
         if args.dry_run:
