@@ -54,7 +54,7 @@ module CropType
      real(r8), pointer :: rx_cultivar_gdds_thisyr_patch (:,:) ! all cultivar GDD targets for this patch this year (ddays) [patch, mxsowings]
      real(r8), pointer :: gdd20_baseline_patch          (:)   ! GDD20 baseline for this patch (ddays) [patch]
      real(r8), pointer :: gdd20_season_start_patch(:) ! gdd20 season start date for this patch (day of year) [patch]. Real to enable history field.
-     real(r8), pointer :: gdd20_season_end_patch  (:) ! gdd20 season end   date for this patch (day of year) [patch]/ Real to enable history field.
+     real(r8), pointer :: gdd20_season_end_patch  (:) ! gdd20 season end   date for this patch (day of year) [patch]. Real to enable history field.
      real(r8), pointer :: sdates_thisyr_patch     (:,:) ! all actual sowing dates for this patch this year (day of year) [patch, mxsowings]
      real(r8), pointer :: swindow_starts_thisyr_patch(:,:) ! all sowing window start dates for this patch this year (day of year) [patch, mxsowings]
      real(r8), pointer :: swindow_ends_thisyr_patch  (:,:) ! all sowing window end   dates for this patch this year (day of year) [patch, mxsowings]
