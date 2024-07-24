@@ -1148,10 +1148,10 @@ contains
             long_name='Flag indicating that GDD20 values need to be flushed', &
             units='none', interpinic_flag='copy', readvar=readvar, data=idata)
        if (flag == 'read') then
-          if (readvar .and. idata == 0) then
-             this%flush_gdd20 = .false.
+          if (readvar) then
+             this%flush_gdd20 = flush_gdd20 .or. idata == 1
           else
-             this%flush_gdd20 = .true.
+             this%flush_gdd20 = flush_gdd20
           end if
        end if
     end if
