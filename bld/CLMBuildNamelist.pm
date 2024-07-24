@@ -4200,7 +4200,6 @@ sub setup_logic_cropcal_streams {
     my $gdd20_season_end_file = $nl->get_value('stream_fldFileName_gdd20_season_end') ;
     if ( &string_is_undef_or_empty($gdd20_season_start_file) or &string_is_undef_or_empty($gdd20_season_end_file) ) {
       $log->message($gdd20_season_start_file);
-      $log->message('abcd');
       $log->message($gdd20_season_end_file);
       $log->fatal_error("If stream_gdd20_seasons is true, gdd20 season start and end files must be provided." );
     }
