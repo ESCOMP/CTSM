@@ -736,7 +736,7 @@ def _check_py_env(test_attributes):
     # whether import is possible.
     # pylint: disable=import-error disable
 
-    # Check requirements for using modify_fsurdat, if needed
+    # Check requirements for using modify_fsurdat Python module, if needed
     modify_fsurdat_users = ["FSURDATMODIFYCTSM", "RXCROPMATURITY"]
     if any(any(u in t for u in modify_fsurdat_users) for t in test_attributes):
         try:
