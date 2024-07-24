@@ -46,8 +46,6 @@ class Plumber2Site(TowerSite):
             user_mods_dirs = [
                 os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "PLUMBER2", self.name)
             ]
-            print("in plumbersite adding usermodsdirs")
-        print("usermodsdirs: {}".format(user_mods_dirs))
         case_path = super().build_base_case(cesmroot, output_root, res, compset, user_mods_dirs)
 
         return case_path

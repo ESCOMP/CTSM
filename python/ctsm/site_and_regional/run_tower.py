@@ -254,53 +254,55 @@ def main(description):
         compset = "I1PtClm60Bgc"
 
     # --  Looping over neon sites
-    for neon_site in available_list:
-        if neon_site.name in neon_site_list:
-            if run_from_postad:
-                neon_site.finidat = None
-            if not base_case_root:
-                user_mods_dirs = None
-                base_case_root = neon_site.build_base_case(
-                    cesmroot, output_root, res, compset, user_mods_dirs, overwrite, setup_only
-                )
-            logger.info("-----------------------------------")
-            logger.info("Running CTSM for neon site : %s", neon_site.name)
+    if neon_site_list:
+        for neon_site in available_list:
+            if neon_site.name in neon_site_list:
+                if run_from_postad:
+                    neon_site.finidat = None
+                if not base_case_root:
+                    user_mods_dirs = None
+                    base_case_root = neon_site.build_base_case(
+                        cesmroot, output_root, res, compset, user_mods_dirs, overwrite, setup_only
+                    )
+                logger.info("-----------------------------------")
+                logger.info("Running CTSM for neon site : %s", neon_site.name)
 
-            neon_site.run_case(
-                base_case_root,
-                run_type,
-                prism,
-                user_version,
-                overwrite=overwrite,
-                setup_only=setup_only,
-                no_batch=no_batch,
-                rerun=rerun,
-                experiment=experiment,
-            )
+                neon_site.run_case(
+                    base_case_root,
+                    run_type,
+                    prism,
+                    user_version,
+                    overwrite=overwrite,
+                    setup_only=setup_only,
+                    no_batch=no_batch,
+                    rerun=rerun,
+                    experiment=experiment,
+                )
 
     # -- check for available plumber data:
     available_plumber_list = check_plumber_data(valid_plumber_sites)
 
     # --  Looping over plumber sites
-    for plumber_site in available_plumber_list:
-        if plumber_site.name in plumber_site_list:
-            if run_from_postad:
-                plumber_site.finidat = None
-            if not base_case_root:
-                user_mods_dirs = None
-                base_case_root = plumber_site.build_base_case(
-                    cesmroot, output_root, res, compset, user_mods_dirs, overwrite, setup_only
+    if plumber_site_list:
+        for plumber_site in available_plumber_list:
+            if plumber_site.name in plumber_site_list:
+                if run_from_postad:
+                    plumber_site.finidat = None
+                if not base_case_root:
+                    user_mods_dirs = None
+                    base_case_root = plumber_site.build_base_case(
+                        cesmroot, output_root, res, compset, user_mods_dirs, overwrite, setup_only
+                    )
+                logger.info("-----------------------------------")
+                logger.info("Running CTSM for plumber site : %s", plumber_site.name)
+                plumber_site.run_case(
+                    base_case_root,
+                    run_type,
+                    prism,
+                    user_version,
+                    overwrite,
+                    setup_only,
+                    no_batch,
+                    rerun,
+                    experiment,
                 )
-            logger.info("-----------------------------------")
-            logger.info("Running CTSM for plumber site : %s", plumber_site.name)
-            plumber_site.run_case(
-                base_case_root,
-                run_type,
-                prism,
-                user_version,
-                overwrite,
-                setup_only,
-                no_batch,
-                rerun,
-                experiment,
-            )
