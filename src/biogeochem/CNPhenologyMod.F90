@@ -2716,7 +2716,7 @@ contains
                ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
                ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
             gddmaturity(p) = max(950._r8, min(gdd20*0.85_r8, hybgdd(ivt(p))))
-            if (do_plant_normal) then  ! TODO Sam Rabin: Add ".and. .not. do_plant_prescribed"?
+            if (do_plant_normal) then
                gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
             end if
          else
