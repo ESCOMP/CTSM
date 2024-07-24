@@ -74,11 +74,11 @@ class TowerSite:
     ):
         """
         Function for building a base_case to clone.
-        To spend less time on building ctsm for the neon cases,
+        To spend less time on building ctsm for the neon and plumber cases,
         all the other cases are cloned from this case
         Args:
         self:
-            The NeonSite object
+            The TowerSite object
         base_root (str):
             root of the base_case CIME
         res (str):

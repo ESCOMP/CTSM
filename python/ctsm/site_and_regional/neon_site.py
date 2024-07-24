@@ -99,7 +99,6 @@ class NeonSite(TowerSite):
             base_case_root,
             run_type,
             prism,
-            run_length,
             user_version,
             tower_type,
             user_mods_dirs,
