@@ -130,7 +130,7 @@ def parse_neon_listing(listing_file, valid_neon_sites):
             # versions = tmp_df[7].unique()
             # print ("all versions available for ", site_name,":", *versions)
             latest_version = tmp_df[7].iloc[-1]
-            # print ("latests version available for ", site_name,":", latest_version)
+            # print ("latest version available for ", site_name,":", latest_version)
 
             tmp_df = tmp_df[tmp_df[7].str.contains(latest_version)]
             # -- remove .nc from the file names
@@ -214,8 +214,9 @@ def main(description):
 
     # Get the list of supported plumber sites from usermods
     valid_plumber_sites = glob.glob(
-        os.path.join(cesmroot, "cime_config", "usermods_dirs", "PLUMBER", "[!Fd]*")
+        os.path.join(cesmroot, "cime_config", "usermods_dirs", "PLUMBER2", "[!d]*")
     )
+
     valid_plumber_sites = sorted([v.split("/")[-1] for v in valid_plumber_sites])
 
     (
