@@ -897,7 +897,7 @@ contains
     use shr_log_mod     , only : errMsg => shr_log_errMsg
     use spmdMod         , only : masterproc
     use abortutils      , only : endrun
-    use ncdio_pio       , only : file_desc_t, ncd_double, ncd_int, ncd_log
+    use ncdio_pio       , only : file_desc_t, ncd_double, ncd_int
     use restUtilMod
     !
     ! !ARGUMENTS:
