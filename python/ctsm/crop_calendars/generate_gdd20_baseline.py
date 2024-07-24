@@ -284,8 +284,7 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
             this_da = dummy_da
             print("   dummy GDD20")
         else:
-            # this_da = ds_in[gddn].fillna(MISSING_FILL)
-            this_da = ds_in[gddn_str]
+            this_da = ds_in[gddn_str]  # Already did ds_in.mean(dim="time") above
             this_da = _add_time_axis(this_da)
             print(f"   {gddn_str}")
             this_da = this_da.fillna(MISSING_RX_GDD_VAL)
