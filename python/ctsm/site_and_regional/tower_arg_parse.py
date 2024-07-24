@@ -37,7 +37,7 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
         required=False,
         choices=valid_neon_sites + ["all"] + [None],
         dest="neon_sites",
-        default=[None],
+        default=None,
         nargs="+",
     )
 
@@ -203,7 +203,7 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
             neon_sites = args.neon_sites
             for site in neon_sites:
                 if site not in valid_neon_sites:
-                    raise ValueError("Invalid site name {}".format(site))
+                    raise ValueError("Invalid neon site name {}".format(site))
     else:
         neon_sites = None
     if args.plumber_sites:
@@ -213,7 +213,7 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
             plumber_sites = args.plumber_sites
             for site in plumber_sites:
                 if site not in valid_plumber_sites:
-                    raise ValueError("Invalid site name {}".format(site))
+                    raise ValueError("Invalid plumber site name {}".format(site))
     else:
         plumber_sites = None
 
