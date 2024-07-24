@@ -2720,7 +2720,7 @@ contains
                gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
             end if
          else
-            ! TODO Sam Rabin: Add more descriptive error message
+            write(iulog, *) 'ERROR: PlantCrop(): unrecognized ivt for GDD target: ',ivt(p)
             call endrun(msg="Stopping")
          end if
 
@@ -2729,7 +2729,7 @@ contains
       if (gddmaturity(p) < min_gddmaturity) then
          if (use_cropcal_rx_cultivar_gdds .or. generate_crop_gdds) then
              if (did_rx_gdds) then
-                 write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gddmaturity',gddmaturity(p),'; using min_gddmaturity instead (',min_gddmaturity,')'
+                 write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gddmaturity ',gddmaturity(p),'; using min_gddmaturity instead (',min_gddmaturity,')'
              end if
              gddmaturity(p) = min_gddmaturity
          else
