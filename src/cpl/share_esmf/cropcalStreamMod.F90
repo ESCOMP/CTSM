@@ -793,9 +793,10 @@ contains
 
      ! Handle invalid gdd20 season values
      if (any(gdd20_season_starts(begp:endp) < 1._r8 .or. gdd20_season_ends(begp:endp) < 1._r8)) then
-         ! Fail if not allowing fallback to paramfile sowing windows
+         ! Fail if not allowing fallback to paramfile sowing windows. Only need to check for
+         ! values < 1 because values outside [1, 366] are set to -1 above.
          if ((.not. allow_invalid_gdd20_season_inputs) .and. any(gdd20_season_starts(begp:endp) < 1._r8 .and. patch%wtgcell(begp:endp) > 0._r8 .and. patch%itype(begp:endp) >= npcropmin)) then
-             write(iulog, *) 'At least one crop in one gridcell has invalid gdd20 season start date(s). To ignore and fall back to paramfile sowing windows, set allow_invalid_gdd20_season_inputs to .true.'
+             write(iulog, *) 'At least one crop in one gridcell has invalid gdd20 season start and/or end date(s). To ignore and fall back to paramfile sowing windows for such crop-gridcells, set allow_invalid_gdd20_season_inputs to .true.'
              write(iulog, *) 'Affected crops:'
              do ivt = npcropmin, mxpft
                  do fp = 1, num_pcropp
