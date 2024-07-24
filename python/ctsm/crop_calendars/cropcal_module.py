@@ -425,7 +425,7 @@ def import_output(
     # Check that e.g., GDDACCUM <= HUI
     for var_list in [["GDDACCUM", "HUI"], ["SYEARS", "HYEARS"]]:
         if all(v in this_ds_gs for v in var_list):
-            any_bad = check_v0_le_v1(
+            any_bad = any_bad or check_v0_le_v1(
                 this_ds_gs, var_list, both_nan_ok=True, throw_error=throw_errors
             )
 
