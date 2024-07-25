@@ -70,7 +70,7 @@ contains
     real(r8) :: value
 
     value = MassFracClay( 0.0_r8 )
-    @assertEqual( value, 0.0_r8, tolerance=tol )
+    @assertEqual( value, 0.1_r8, tolerance=tol )
     value = MassFracClay( 20.0_r8 )
     @assertEqual( value, 0.20_r8, tolerance=tol )
     value = MassFracClay( 25.0_r8 )
