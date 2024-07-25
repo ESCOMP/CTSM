@@ -47,11 +47,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <clm_accelerated_spinup>off</clm_accelerated_spinup>
 
 <!-- Spinup state for BGC -->
-<spinup_state clm_accelerated_spinup="on"  use_cn=".true."                  >2</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_cn=".true." phys="clm4_5"    >1</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_fates=".true."               >2</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm4_5" >1</spinup_state>
-<spinup_state clm_accelerated_spinup="off"                                  >0</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_cn=".true."                  use_soil_matrixcn=".false.">2</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_cn=".true."    phys="clm4_5" use_soil_matrixcn=".false.">1</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_fates=".true."               use_soil_matrixcn=".false.">2</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm4_5" use_soil_matrixcn=".false.">1</spinup_state>
+<spinup_state clm_accelerated_spinup="sasu"                                                            >0</spinup_state>
+<spinup_state                                                               use_soil_matrixcn=".true." >0</spinup_state>
+<spinup_state clm_accelerated_spinup="off"                                                             >0</spinup_state>
 
 <!-- Reseeding of dead plants normally only done for AD spinup -->
 <reseed_dead_plants clm_accelerated_spinup="on" use_cn=".true.">.true.</reseed_dead_plants>
@@ -66,7 +68,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hist_fields_list_file>.false.</hist_fields_list_file>
 
 <!-- In accelerated spinup mode reduce the amount of history output -->
-<hist_empty_htapes clm_accelerated_spinup="on">.true.</hist_empty_htapes>
+<hist_empty_htapes clm_accelerated_spinup="on"  >.true.</hist_empty_htapes>
+<hist_empty_htapes clm_accelerated_spinup="sasu">.true.</hist_empty_htapes>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".true." use_cndv=".true."
 >'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','NPP','TWS','TSAI','HTOP','HBOT'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".true."
@@ -75,8 +78,18 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >'TOTSOMC','TOTSOMN','TLAI','GPP','NPP','TWS'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".false."
 >'TLAI','TWS'</hist_fincl1>
-<hist_nhtfrq clm_accelerated_spinup="on">-8760</hist_nhtfrq>
-<hist_mfilt  clm_accelerated_spinup="on">20</hist_mfilt>
+<hist_fincl1 clm_accelerated_spinup="sasu" use_cn=".true." use_cndv=".true."
+>'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','NPP','TWS','TSAI','HTOP','HBOT'</hist_fincl1>
+<hist_fincl1 clm_accelerated_spinup="sasu" use_cn=".true."
+>'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','CPOOL','NPP','TWS'</hist_fincl1>
+<hist_fincl1 clm_accelerated_spinup="sasu" use_fates=".true."
+>'TOTSOMC','TOTSOMN','TLAI','GPP','NPP','TWS'</hist_fincl1>
+<hist_fincl1 clm_accelerated_spinup="sasu" use_cn=".false."
+>'TLAI','TWS'</hist_fincl1>
+<hist_nhtfrq clm_accelerated_spinup="on"  >-8760</hist_nhtfrq>
+<hist_nhtfrq clm_accelerated_spinup="sasu">-8760</hist_nhtfrq>
+<hist_mfilt  clm_accelerated_spinup="on"  >20</hist_mfilt>
+<hist_mfilt  clm_accelerated_spinup="sasu">20</hist_mfilt>
 
 <!-- Root and stem acclimation (could depend on the physics version) -->
 <rootstem_acc               >.false.</rootstem_acc>
@@ -124,9 +137,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <crop_fsat_equals_zero>.false.</crop_fsat_equals_zero>
 
 <!-- MEGAN model -->
-<megan                             >1</megan>
-<megan clm_accelerated_spinup="on" >0</megan>
-<megan configuration="nwp"         >0</megan>
+<megan                              >1</megan>
+<megan clm_accelerated_spinup="on"  >0</megan>
+<megan clm_accelerated_spinup="sasu">0</megan>
+<megan configuration="nwp"          >0</megan>
 
 <!-- Supplmental Nitrogen mode -->
 <suplnitro use_cn=".true." >NONE</suplnitro>
@@ -499,7 +513,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- FATES default parameter file                                       -->
 <!-- ================================================================== -->
 
-<fates_paramfile>lnd/clm2/paramdata/fates_params_api.35.0.0_12pft_c240326.nc</fates_paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params_api.36.0.0_12pft_c240517.nc</fates_paramfile>
 
 <!-- ================================================================== -->
 <!-- Default surface roughness parameterization                         -->
@@ -611,12 +625,35 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hillslope_pft_distribution_method           >Standard</hillslope_pft_distribution_method>
 <hillslope_soil_profile_method               >Uniform</hillslope_soil_profile_method>
 <downscale_hillslope_meteorology             >.true.</downscale_hillslope_meteorology>
-<hillslope_fsat_equals_zero                  >.true.</hillslope_fsat_equals_zero>
+<hillslope_fsat_equals_zero>.false.</hillslope_fsat_equals_zero>
+<hillslope_fsat_equals_zero use_hillslope=".true.">.true.</hillslope_fsat_equals_zero>
 
 <!-- Plant hydraulic stress -->
 <use_hydrstress                                                       >.false.</use_hydrstress>
 <use_hydrstress                use_fates=".false." configuration="clm">.true.</use_hydrstress>
 <use_hydrstress phys="clm4_5"  use_fates=".false." configuration="clm">.false.</use_hydrstress>
+
+
+<!-- CN Matrix options -->
+<use_matrixcn>.false.</use_matrixcn>
+<use_matrixcn clm_accelerated_spinup="sasu" use_fates=".false." bgc_mode="bgc" >.true.</use_matrixcn>
+
+<use_soil_matrixcn>.false.</use_soil_matrixcn>
+<use_soil_matrixcn clm_accelerated_spinup="sasu" use_fates=".false." soil_decomp_method="CENTURYKoven2013" >.true.</use_soil_matrixcn>
+
+<hist_wrt_matrixcn_diag clm_accelerated_spinup="on"                             >.false.</hist_wrt_matrixcn_diag>
+<hist_wrt_matrixcn_diag clm_accelerated_spinup="sasu"                           >.false.</hist_wrt_matrixcn_diag>
+<hist_wrt_matrixcn_diag clm_accelerated_spinup="off"                            >.false.</hist_wrt_matrixcn_diag>
+<spinup_matrixcn     clm_accelerated_spinup="on"   use_soil_matrixcn=".true.">.true.</spinup_matrixcn>
+<spinup_matrixcn     clm_accelerated_spinup="sasu" use_soil_matrixcn=".true.">.true.</spinup_matrixcn>
+<spinup_matrixcn     clm_accelerated_spinup="off"                            >.false.</spinup_matrixcn>
+<nyr_forcing                                                          >1</nyr_forcing>
+<nyr_forcing  spinup_matrixcn=".true."             use_soil_matrixcn=".true.">20</nyr_forcing>
+<!-- for SASU spinup nyr_sasu will normally be set to nyr_forcing (slow mode spinup) -->
+<nyr_sasu                                                             >1</nyr_sasu>
+<iloop_avg                                                            >-999</iloop_avg>
+<iloop_avg    spinup_matrixcn=".true."             use_soil_matrixcn=".true.">-999</iloop_avg>
+
 
 <!-- General CN options -->
 <!-- Turn this on all of the time, eventually this namelist item should be removed -->
@@ -1298,7 +1335,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm6_0_GSWP3v1"
->lnd/clm2/initdata_esmf/ctsm5.2/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
+>lnd/clm2/initdata_esmf/ctsm5.2/clmi.I2000Clm52BgcCrop.2000-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240515.nc
 </finidat>
 
 
@@ -2013,14 +2050,17 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <!-- SSP5-RCP3.4 - relative to {csmdata}) -->
 <!--- currently empty until needed, we can't test because of lack of ndep files for this SSP -->
 
-<!-- Land Use Harmonization unified data sets for dynamic FATES land use change -->
+<!-- Land Use Harmonization unified timeseries data sets for dynamic FATES land use change -->
 
 <fluh_timeseries hgrid="4x5" sim_year_range="1850-2000" use_fates=".true."
  >lnd/clm2/surfdata_map/fates-sci.1.68.3_api.31.0.0_tools.1.0.1/LUH2_states_transitions_management.timeseries_4x5_hist_simyr1850-2015_c231101.nc</fluh_timeseries>
 
+<!-- Land Use Harmonization static landuse x pft mapping data sets for FATES land use change -->
+<flandusepftdat hgrid="4x5" use_fates=".true." >lnd/clm2/surfdata_map/fates-sci.1.77.0_api.36.0.0/fates_landuse_pft_map_4x5_240206.nc</flandusepftdat>
+
 <!-- This one is just for testing until Issue #2304 is resolved -->
 <fluh_timeseries hgrid="4x5" sim_year_range="constant" use_fates=".true."
- >lnd/clm2/surfdata_map/fates-sci.1.68.3_api.31.0.0_tools.1.0.1/LUH2_states_transitions_management.timeseries_4x5_hist_simyr1850-2015_c231101.nc</fluh_timeseries>
+ >lnd/clm2/surfdata_map/fates-sci.1.68.3_api.31.0.0_tools.1.0.1/LUH2_states_transitions_management.timeseries_4x5_hist_simyr0850-2015_c240216.nc</fluh_timeseries>
 
 <!-- Fixation and Uptake of Nitrogen Model (FUN2.0) -->
 <use_fun                                                            >.false.</use_fun>
@@ -2514,22 +2554,31 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 
 <!-- ===== FATES DEFAULTS =========== -->
 <fates_spitfire_mode           use_fates=".true.">0</fates_spitfire_mode>
+<fates_harvest_mode            use_fates=".true.">no_harvest</fates_harvest_mode>
 <use_fates_planthydro          use_fates=".true.">.false.</use_fates_planthydro>
 <use_fates_tree_damage         use_fates=".true.">.false.</use_fates_tree_damage>
 <use_fates_cohort_age_tracking use_fates=".true.">.false.</use_fates_cohort_age_tracking>
 <use_fates_ed_st3              use_fates=".true.">.false.</use_fates_ed_st3>
 <use_fates_ed_prescribed_phys  use_fates=".true.">.false.</use_fates_ed_prescribed_phys>
-<use_fates_logging             use_fates=".true.">.false.</use_fates_logging>
 <use_fates_inventory_init      use_fates=".true.">.false.</use_fates_inventory_init>
 <use_fates_sp                  use_fates=".true.">.false.</use_fates_sp>
-<use_fates_luh                 use_fates=".true.">.false.</use_fates_luh>
+<use_fates_lupft               use_fates=".true.">.false.</use_fates_lupft>
+<use_fates_potentialveg        use_fates=".true.">.false.</use_fates_potentialveg>
+<use_fates_luh                 use_fates=".true." fates_harvest_mode="luhdata_area"  >.true.</use_fates_luh>
+<use_fates_luh                 use_fates=".true." fates_harvest_mode="luhdata_mass"  >.true.</use_fates_luh>
+<use_fates_luh                 use_fates=".true." use_fates_lupft=".true.">.true.</use_fates_luh>
+<use_fates_luh                 use_fates=".true." use_fates_potentialveg=".true.">.true.</use_fates_luh>
+<use_fates_luh                 use_fates=".true."                                >.false.</use_fates_luh>
 <fates_parteh_mode             use_fates=".true.">1</fates_parteh_mode>
 <fates_seeddisp_cadence        use_fates=".true.">0</fates_seeddisp_cadence>
+<use_fates_nocomp              use_fates=".true." use_fates_sp=".true."   >.true.</use_fates_nocomp>
+<use_fates_nocomp              use_fates=".true." use_fates_lupft=".true.">.true.</use_fates_nocomp>
+<use_fates_nocomp              use_fates=".true."                         >.false.</use_fates_nocomp>
+<use_fates_fixed_biogeog       use_fates=".true." use_fates_sp=".true."   >.true.</use_fates_fixed_biogeog>
+<use_fates_fixed_biogeog       use_fates=".true." use_fates_lupft=".true.">.true.</use_fates_fixed_biogeog>
+<use_fates_fixed_biogeog       use_fates=".true."                         >.false.</use_fates_fixed_biogeog>
 <fates_history_dimlevel        use_fates=".true.">2,2</fates_history_dimlevel>
-<use_fates_nocomp              use_fates=".true." use_fates_sp=".true.">.true.</use_fates_nocomp>
-<use_fates_nocomp              use_fates=".true."                      >.false.</use_fates_nocomp>
-<use_fates_fixed_biogeog       use_fates=".true." use_fates_sp=".true.">.true.</use_fates_fixed_biogeog>
-<use_fates_fixed_biogeog       use_fates=".true."                      >.false.</use_fates_fixed_biogeog>
+
 
 <!-- =========================================  -->
 <!-- Defaults for dynamic subgrid               -->
