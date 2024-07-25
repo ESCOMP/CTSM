@@ -3560,7 +3560,7 @@
     </options>
   </test>
 
-  <test name="SMS_Lm25" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/RxCropCals">
+  <test name="SMS_Lm25" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/RxCropCalsNoAdapt">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
       <machine name="izumi" compiler="intel" category="crop_calendars"/>
