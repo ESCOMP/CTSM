@@ -95,7 +95,6 @@ module TemperatureType
      real(r8), pointer :: gdd020_patch            (:)   ! patch 20-year average of gdd0                     (ddays)
      real(r8), pointer :: gdd820_patch            (:)   ! patch 20-year average of gdd8                     (ddays)
      real(r8), pointer :: gdd1020_patch           (:)   ! patch 20-year average of gdd10                    (ddays)
-     logical           :: flush_gdd20 = .false.         ! whether accumulated GDD20s need to be flushed
 
      ! Heat content
      real(r8), pointer :: beta_col                 (:)   ! coefficient of convective velocity [-]
@@ -168,9 +167,6 @@ contains
          em_improad_lun(bounds%begl:bounds%endl), &
          em_perroad_lun(bounds%begl:bounds%endl), &
          is_simple_buildtemp, is_prog_buildtemp)
-
-    ! Finish up
-    this%flush_gdd20 = flush_gdd20
 
   end subroutine Init
 
@@ -1139,26 +1135,6 @@ contains
        end if
     end if
 
-    if (use_crop) then
-       if (flag == 'write') then
-          if (this%flush_gdd20) then
-             idata = 1
-          else
-             idata = 0
-          end if
-       end if
-       call restartvar(ncid=ncid, flag=flag,  varname='flush_gdd20', xtype=ncd_int,  &
-            long_name='Flag indicating that GDD20 values need to be flushed', &
-            units='none', interpinic_flag='copy', readvar=readvar, data=idata)
-       if (flag == 'read') then
-          if (readvar) then
-             this%flush_gdd20 = flush_gdd20 .or. idata == 1
-          else
-             this%flush_gdd20 = flush_gdd20
-          end if
-       end if
-    end if
-
 
   end subroutine Restart
 
@@ -1696,13 +1672,12 @@ contains
        ! Accumulate and extract running 20-year means
        if (is_end_curr_year()) then
           ! Flush, if needed
-          if (this%flush_gdd20) then
+          if (flush_gdd20) then
               write(iulog, *) 'Flushing GDD20 variables'
               call markreset_accum_field('GDD020')
               call markreset_accum_field('GDD820')
               call markreset_accum_field('GDD1020')
-              this%flush_gdd20 = .false.
-              flush_gdd20 = .false.  ! Shouldn't be necessary, because flush_gdd20 shouldn't be considered after Init and Restart. But just in case...
+              flush_gdd20 = .false.
           end if
           call update_accum_field  ('GDD020', this%gdd0_patch, nstep)
           call extract_accum_field ('GDD020', this%gdd020_patch, nstep)
