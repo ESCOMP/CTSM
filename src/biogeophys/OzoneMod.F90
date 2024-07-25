@@ -15,14 +15,18 @@ module OzoneMod
   !
   ! !USES:
 #include "shr_assert.h"
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use decompMod   , only : bounds_type
-  use clm_varcon  , only : spval
-  use clm_varctl  , only : iulog
-  use OzoneBaseMod, only : ozone_base_type
-  use abortutils  , only : endrun
-  use PatchType   , only : patch
-  use pftconMod   , only : pftcon
+  use shr_kind_mod           , only : r8 => shr_kind_r8
+  use decompMod              , only : bounds_type
+  use clm_varcon             , only : spval
+  use clm_varctl             , only : iulog
+  use OzoneBaseMod           , only : ozone_base_type
+  use abortutils             , only : endrun
+  use PatchType              , only : patch
+  use pftconMod              , only : pftcon
+  use shr_ozone_coupling_mod , only : atm_ozone_frequency_multiday_average, shr_ozone_coupling_readnl
+  use DiurnalOzoneType       , only : diurnal_ozone_anom_type
+  use diurnalOzoneStreamMod  , only : read_O3_stream
+  use controlMod             , only : use_do3_streams
 
   implicit none
   save
@@ -33,9 +37,11 @@ module OzoneMod
      private
      ! Private data members
      integer :: stress_method  ! Which ozone stress parameterization we're using in this run
+     integer :: atm_ozone_freq ! Which ozone input frequency are we receiving?
 
      real(r8), pointer :: o3uptakesha_patch(:) ! ozone dose, shaded leaves (mmol O3/m^2)
      real(r8), pointer :: o3uptakesun_patch(:) ! ozone dose, sunlit leaves (mmol O3/m^2)
+     real(r8), pointer :: o3force_grid(:)      ! ozone forcing (mol/mol)
 
      ! NOTE(wjs, 2014-09-29) tlai_old_patch really belongs alongside tlai_patch in
      ! CanopyStateType.  But there are problems with any way I can think to implement
@@ -53,9 +59,10 @@ module OzoneMod
      !   Then the setter method would also set tlai_old. This feels like the most robust
      !   solution, but we don't have any precedent for using getters and setters for data
      !   arrays.
-     real(r8), pointer :: tlai_old_patch(:)  ! tlai from last time step
+     real(r8), pointer             :: tlai_old_patch(:)  ! tlai from last time step
+     type(diurnal_ozone_anom_type) :: diurnalOzoneAnomInst
 
-   contains
+  contains
      ! Public routines
      procedure, public :: Init
      procedure, public :: Restart
@@ -139,13 +146,27 @@ contains
     ! Initialize ozone data structure
     !
     ! !USES:
-   use clm_varctl   , only : use_luna
+    use clm_varctl   , only : use_luna
     !
     ! !ARGUMENTS:
     class(ozone_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
     character(len=*),  intent(in)    :: o3_veg_stress_method
+
+    ! Local variables
+    integer                          :: atm_ozone_frequency_val
     !-----------------------------------------------------------------------
+
+    ! read what atm ozone frequency we have
+    call shr_ozone_coupling_readnl("drv_flds_in", atm_ozone_frequency_val)
+    this%atm_ozone_freq = atm_ozone_frequency_val
+
+    ! if we have multi-day average input ozone, we need to convert to sub-daily using
+    ! an input anomaly file
+    if (this%atm_ozone_freq == atm_ozone_frequency_multiday_average .and. use_do3_streams) then
+      ! initialize and read in data for diurnal O3 anomaly stream
+      call read_O3_stream(this%diurnalOzoneAnomInst, bounds)
+    end if
 
     if (o3_veg_stress_method=='stress_lombardozzi2015') then
        this%stress_method = stress_method_lombardozzi2015
@@ -178,16 +199,20 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
+    integer :: begg, endg
     !-----------------------------------------------------------------------
 
     begp = bounds%begp
     endp = bounds%endp
+    begg = bounds%begg
+    endg = bounds%endg
 
     call this%InitAllocateBase(bounds)
 
     allocate(this%o3uptakesha_patch(begp:endp)) ; this%o3uptakesha_patch(:) = nan
     allocate(this%o3uptakesun_patch(begp:endp)) ; this%o3uptakesun_patch(:) = nan
     allocate(this%tlai_old_patch(begp:endp))    ; this%tlai_old_patch(:) = nan
+    allocate(this%o3force_grid(begg:endg))      ; this%o3force_grid(:) = nan
 
   end subroutine InitAllocate
 
@@ -206,12 +231,15 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
+    integer :: begg, endg
 
     character(len=*), parameter :: subname = 'InitHistory'
     !-----------------------------------------------------------------------
 
     begp = bounds%begp
     endp = bounds%endp
+    begg = bounds%begg
+    endg = bounds%endg
 
     this%o3uptakesun_patch(begp:endp) = spval
     call hist_addfld1d (fname='O3UPTAKESUN', units='mmol/m^2', &
@@ -222,6 +250,11 @@ contains
     call hist_addfld1d (fname='O3UPTAKESHA', units='mmol/m^2', &
          avgflag='A', long_name='total ozone flux into shaded leaves', &
          ptr_patch=this%o3uptakesha_patch)
+
+    this%o3force_grid(begg:endg) = spval
+    call hist_addfld1d (fname='FORCE_O3', units='mol/mol', &
+              avgflag='A', long_name='ozone partial pressure', &
+              ptr_lnd=this%o3force_grid)
 
     if (this%stress_method==stress_method_lombardozzi2015) then
        ! For this and the following variables: how should we include leaf area in the
@@ -294,18 +327,22 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
+    integer :: begg, endg
 
     character(len=*), parameter :: subname = 'InitCold'
     !-----------------------------------------------------------------------
 
     begp = bounds%begp
     endp = bounds%endp
+    begg = bounds%begg
+    endg = bounds%endg
 
     call this%InitColdBase(bounds)
 
     this%o3uptakesha_patch(begp:endp) = 0._r8
     this%o3uptakesun_patch(begp:endp) = 0._r8
     this%tlai_old_patch(begp:endp) = 0._r8
+    this%o3force_grid(begg:endg) = 0._r8
 
   end subroutine InitCold
 
@@ -346,6 +383,11 @@ contains
          long_name='ozone uptake for sunlit leaves', units='mmol m^-3', &
          readvar=readvar, interpinic_flag='interp', data=this%o3uptakesun_patch)
 
+    call restartvar(ncid=ncid, flag=flag, varname='o3force', xtype=ncd_double, &
+         dim1name='gridcell', &
+         long_name='ozone forcing', units='mol mol^-1', &
+         readvar=readvar, interpinic_flag='interp', data=this%o3force_grid)
+
   end subroutine Restart
 
   ! ========================================================================
@@ -374,10 +416,11 @@ contains
     real(r8) , intent(in) :: forc_o3( bounds%begg: )   ! ozone partial pressure (mol/mol)
     !
     ! !LOCAL VARIABLES:
-    integer  :: fp             ! filter index
-    integer  :: p              ! patch index
-    integer  :: c              ! column index
-    integer  :: g              ! gridcell index
+    real(r8)          :: forc_o3_down(bounds%begg:bounds%endg) ! downscaled ozone partial pressure (mol/mol)
+    integer           :: fp                                    ! filter index
+    integer           :: p                                     ! patch index
+    integer           :: c                                     ! column index
+    integer           :: g                                     ! gridcell index
 
     character(len=*), parameter :: subname = 'CalcOzoneUptake'
     !-----------------------------------------------------------------------
@@ -398,28 +441,36 @@ contains
          tlai_old    => this%tlai_old_patch                     & ! Output: [real(r8) (:)] tlai from last time step
          )
 
-      do fp = 1, num_exposedvegp
-         p = filter_exposedvegp(fp)
-         c = patch%column(p)
-         g = patch%gridcell(p)
+    if (this%atm_ozone_freq == atm_ozone_frequency_multiday_average .and. use_do3_streams) then
+      call this%diurnalOzoneAnomInst%Interp(bounds, forc_o3, forc_o3_down)
+    else
+      forc_o3_down(bounds%begg:bounds%endg) = forc_o3(bounds%begg:bounds%endg)
+    end if
+    
+    this%o3force_grid(bounds%begg:bounds%endg) = forc_o3_down(bounds%begg:bounds%endg)
 
-         ! Ozone uptake for shaded leaves
-         call CalcOzoneUptakeOnePoint( &
-              forc_ozone=forc_o3(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
-              rs=rssha(p), rb=rb(p), ram=ram(p), &
-              tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
-              o3uptake=o3uptakesha(p))
+    do fp = 1, num_exposedvegp
+        p = filter_exposedvegp(fp)
+        c = patch%column(p)
+        g = patch%gridcell(p)
 
-         ! Ozone uptake for sunlit leaves
-         call CalcOzoneUptakeOnePoint( &
-              forc_ozone=forc_o3(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
-              rs=rssun(p), rb=rb(p), ram=ram(p), &
-              tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
-              o3uptake=o3uptakesun(p))
+        ! Ozone uptake for shaded leaves
+        call CalcOzoneUptakeOnePoint( &
+            forc_ozone=forc_o3_down(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+            rs=rssha(p), rb=rb(p), ram=ram(p), &
+            tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
+            o3uptake=o3uptakesha(p))
 
-         tlai_old(p) = tlai(p)
+        ! Ozone uptake for sunlit leaves
+        call CalcOzoneUptakeOnePoint( &
+            forc_ozone=forc_o3_down(g), forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+            rs=rssun(p), rb=rb(p), ram=ram(p), &
+            tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
+            o3uptake=o3uptakesun(p))
 
-      end do
+        tlai_old(p) = tlai(p)
+
+    end do
 
     end associate
 

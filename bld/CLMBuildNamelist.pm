@@ -1642,6 +1642,7 @@ sub process_namelist_inline_logic {
   setup_logic_luna($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_hillslope($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_o3_veg_stress_method($opts, $nl_flags, $definition, $defaults, $nl,$physv);
+  setup_logic_do3_streams($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_hydrstress($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_params_file($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_create_crop_landunit($opts,  $nl_flags, $definition, $defaults, $nl);
@@ -1778,6 +1779,11 @@ sub process_namelist_inline_logic {
   # namelist group: cropcal_streams  #
   ##################################
   setup_logic_cropcal_streams($opts,  $nl_flags, $definition, $defaults, $nl);
+
+  ##################################
+  # namelist group: dO3_streams  #
+  ##################################
+  setup_logic_do3_streams($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ##########################################
   # namelist group: soil_moisture_streams  #
@@ -4259,6 +4265,31 @@ sub setup_logic_cropcal_streams {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_do3_streams {
+  # input file for creating diurnal ozone from >daily data
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_do3_streams');
+      if ( &value_is_true( $nl->get_value('use_do3_streams') ) ) {
+          if ($opts->{'driver'} ne "nuopc") {
+            $log->fatal_error("Cannot use do3_streams=.true. with MCT.");
+          }
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_do3',
+                      'hgrid'=>"360x720cru" );
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_do3',
+                      'hgrid'=>"360x720cru" );
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'do3_mapalgo',
+                      'hgrid'=>$nl_flags->{'res'} );
+      } else {
+         if ( defined($nl->get_value('stream_fldfilename_do3'))) {
+             $log->fatal_error("One of the do3 streams namelist items (stream_fldfilename_do3, " .
+                                " is defined, but use_do3_streams option set to false");
+         }
+      }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_soilwater_movement {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
@@ -4947,7 +4978,7 @@ sub write_output_files {
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm hillslope_hydrology_inparm hillslope_properties_inparm
                cnprecision_inparm clm_glacier_behavior crop_inparm irrigation_inparm
-               surfacealbedo_inparm water_tracers_inparm tillage_inparm);
+               surfacealbedo_inparm water_tracers_inparm tillage_inparm do3_streams);
 
   #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm
   #             finidat_consistency_checks dynpft_consistency_checks);

@@ -241,9 +241,15 @@ module clm_varctl
   ! atmospheric CO2 molar ratio (by volume) (umol/mol)
   real(r8), public :: co2_ppmv     = 355._r8            !
 
-  ! ozone vegitation stress method, valid values: unset, stress_lombardozzi2015, stress_falk
+  ! ozone vegetation stress method, valid values: unset, stress_lombardozzi2015, stress_falk
   character(len=64), public    :: o3_veg_stress_method = 'unset'
-
+  
+ ! o3_streams parameters
+  logical, public :: use_do3_streams = .true.
+  character(len=fname_len), public :: stream_fldfilename_do3
+  character(len=fname_len), public :: stream_meshfile_do3
+  character(len=fname_len), public :: do3_mapalgo
+  
   real(r8), public  :: o3_ppbv = 100._r8
 
   ! number of wavelength bands used in SNICAR snow albedo calculation

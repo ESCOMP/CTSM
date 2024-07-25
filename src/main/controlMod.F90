@@ -253,9 +253,10 @@ contains
           use_fates_tree_damage,                        &
           fates_history_dimlevel
 
-    ! Ozone vegetation stress method
-    namelist / clm_inparm / o3_veg_stress_method
-
+    ! Ozone vegetation stress method and streams file
+    namelist / clm_inparm / o3_veg_stress_method, use_do3_streams,  &
+      stream_fldfilename_do3, stream_meshfile_do3, do3_mapalgo
+   
     ! CLM 5.0 nitrogen flags
     namelist /clm_inparm/ use_flexibleCN, use_luna
 
@@ -1010,6 +1011,10 @@ contains
     write(iulog,*) '    use_grainproduct = ', use_grainproduct
     write(iulog,*) '    crop_residue_removal_frac = ', crop_residue_removal_frac
     write(iulog,*) '    o3_veg_stress_method = ', o3_veg_stress_method
+    write(iulog,*) '    use_do3_streams = ', use_do3_streams
+    write(iulog,*) '    stream_fldfilename_do3 = ', stream_fldfilename_do3
+    write(iulog,*) '    stream_meshfile_do3 = ', stream_meshfile_do3
+    write(iulog,*) '    do3_mapalgo = ', do3_mapalgo
     write(iulog,*) '    use_snicar_frc = ', use_snicar_frc
     write(iulog,*) '    snicar_use_aerosol = ',snicar_use_aerosol
     write(iulog,*) '    use_vancouver = ', use_vancouver
