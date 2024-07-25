@@ -122,7 +122,7 @@ def interpolate_gdds(args):
         if "lat" not in ds_in[var].dims and "lon" not in ds_in[var].dims:
             print(f"Skipping variable {var} with dimensions {ds_in[var].dims}")
             continue
-        if not re.compile("^" + args.variable_prefix).match(var)
+        if not re.compile("^" + args.variable_prefix).match(var):
             print(f"Unexpected variable {var} on input file. Skipping.")
             continue
         if args.dry_run:
