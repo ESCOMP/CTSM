@@ -36,7 +36,9 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         full_test = "RXCROPMATURITY_" in casebaseid
         skipgen_test = "RXCROPMATURITYSKIPGEN_" in casebaseid
 
-        # Ensure run length is at least 5 years. Minimum to produce one complete growing season (i.e., two complete calendar years) actually 4 years, but that only gets you 1 season usable for GDD generation, so you can't check for season-to-season consistency.
+        # Ensure run length is at least 5 years. Minimum to produce one complete growing season
+        # (i.e., two complete calendar years) actually 4 years, but that only gets you 1 season
+        # usable for GDD generation, so you can't check for season-to-season consistency.
         stop_n = self._case.get_value("STOP_N")
         stop_option = self._case.get_value("STOP_OPTION")
         stop_n_orig = stop_n
@@ -68,7 +70,10 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
                 + f"{stop_n_orig} {stop_option_orig[1:]}"
             )
         elif skipgen_test and stop_n < 3:
-            # First year is discarded because crops are already in the ground at restart, and those aren't affected by the new crop calendar inputs. The second year is useable, but we need a third year so that all crops planted in the second year have a chance to finish.
+            # First year is discarded because crops are already in the ground at restart, and those
+            # aren't affected by the new crop calendar inputs. The second year is useable, but we
+            # need a third year so that all crops planted in the second year have a chance to
+            # finish.
             error_message = (
                 "RXCROPMATURITYSKIPGEN (both-forced part) must be run for at least 3 years; you requested "
                 + f"{stop_n_orig} {stop_option_orig[1:]}"
@@ -426,6 +431,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         hdates_file = self._hdatefile
 
         # It'd be much nicer to call generate_gdds.main(), but I can't import generate_gdds.
+        # See https://github.com/ESCOMP/CTSM/issues/2603
         tool_path = os.path.join(
             self._ctsm_root, "python", "ctsm", "crop_calendars", "generate_gdds.py"
         )
@@ -457,10 +463,11 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         self._gdds_file = generated_gdd_files[0]
 
     def _run_interpolate_gdds(self):
-        # Save where?
+        # File where interpolated GDDs should be saved
         self._gdds_file = os.path.join(self._get_caseroot(), "interpolated_gdds.nc")
 
         # It'd be much nicer to call interpolate_gdds.main(), but I can't import interpolate_gdds.
+        # See https://github.com/ESCOMP/CTSM/issues/2603
         tool_path = os.path.join(
             self._ctsm_root, "python", "ctsm", "crop_calendars", "interpolate_gdds.py"
         )

@@ -124,7 +124,7 @@ def run_sys_tests(
     cime_path (str): path to root of cime
     skip_testroot_creation (bool): if True, assume the testroot directory has already been
         created, so don't try to recreate it or re-make the link to it
-    skip_git_status (bool): if True, skip printing git and manage_externals status
+    skip_git_status (bool): if True, skip printing git and git-fleximod status
     dry_run (bool): if True, print commands to be run but don't run them
     suite_name (str): name of test suite/category to run
     testfile (str): path to file containing list of tests to run
@@ -476,11 +476,11 @@ or tests listed individually on the command line (via the -t/--testname argument
     parser.add_argument(
         "--skip-git-status",
         action="store_true",
-        help="Skip printing git and manage_externals status,\n"
+        help="Skip printing git and git-fleximod status,\n"
         "both to screen and to the SRCROOT_GIT_STATUS file in TESTROOT.\n"
         "This printing can often be helpful, but this option can be used to\n"
         "avoid extraneous output, to reduce the time needed to run this script,\n"
-        "or if git or manage_externals are currently broken in your sandbox.\n",
+        "or if git or git-fleximod are currently broken in your sandbox.\n",
     )
 
     parser.add_argument(
@@ -576,12 +576,12 @@ def _record_git_status(testroot, retry, dry_run):
     if git_status.count("\n") == 1:
         # Only line in git status is the branch info
         output += "(clean sandbox)\n"
-    manic = os.path.join("manage_externals", "checkout_externals")
-    manage_externals_status = subprocess.check_output(
-        [manic, "--status", "--verbose"], cwd=ctsm_root, universal_newlines=True
+    fleximod = os.path.join("bin", "git-fleximod")
+    fleximod_status = subprocess.check_output(
+        [fleximod, "status"], cwd=ctsm_root, universal_newlines=True
     )
-    output += 72 * "-" + "\n" + "manage_externals status:" + "\n"
-    output += manage_externals_status
+    output += 72 * "-" + "\n" + "git-fleximod status:" + "\n"
+    output += fleximod_status
     output += 72 * "-" + "\n"
 
     print(output)
