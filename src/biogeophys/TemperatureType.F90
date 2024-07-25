@@ -8,7 +8,7 @@ module TemperatureType
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
   use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop, use_biomass_heat_storage
-  use clm_varctl      , only : stream_gdd20_seasons, flush_gdd20
+  use clm_varctl      , only : flush_gdd20
   use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevurb, nlevmaxurbgrnd
   use clm_varcon      , only : spval, ispval
   use GridcellType    , only : grc
@@ -1401,6 +1401,7 @@ contains
     real(r8) :: lat  ! latitude
     integer :: gdd20_season_start, gdd20_season_end
     integer :: jday  ! Julian day of year (1, ..., 366)
+    logical :: stream_gdd20_seasons_tt  ! Local derivation of this to avoid circular dependency
 
     associate( &
      gdd20_season_starts => crop_inst%gdd20_season_start_patch, &
@@ -1432,6 +1433,8 @@ contains
     end if
     write(field_name, format_string) "GDD",basetemp_int
 
+    stream_gdd20_seasons_tt = any(gdd20_season_starts(begp:endp) > 0.5_r8) .and. any(gdd20_season_starts(begp:endp) < 366.5_r8)
+
     do p = begp,endp
 
        ! Avoid unnecessary calculations over inactive points
@@ -1447,7 +1450,7 @@ contains
           ((month > 9 .or.  month < 4)  .and. lat <  0._r8)
        ! Replace with read-in gdd20 accumulation season, if needed and valid
        ! (If these aren't being read in or they're invalid, they'll be -1)
-       if (stream_gdd20_seasons .and. patch%itype(p) >= npcropmin) then
+       if (stream_gdd20_seasons_tt .and. patch%itype(p) >= npcropmin) then
           gdd20_season_start = int(gdd20_season_starts(p))
           gdd20_season_end = int(gdd20_season_ends(p))
           if (gdd20_season_start >= 1 .and. gdd20_season_end >= 1) then

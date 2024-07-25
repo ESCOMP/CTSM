@@ -16,7 +16,6 @@ module cropcalStreamMod
   use clm_varctl       , only : iulog
   use clm_varctl       , only : use_cropcal_rx_swindows, use_cropcal_rx_cultivar_gdds, use_cropcal_streams
   use clm_varctl       , only : adapt_cropcal_rx_cultivar_gdds
-  use clm_varctl       , only : stream_gdd20_seasons
   use clm_varpar       , only : mxpft
   use clm_varpar       , only : mxsowings
   use perf_mod         , only : t_startf, t_stopf
@@ -53,6 +52,7 @@ module cropcalStreamMod
   character(len=CL)       :: stream_fldFileName_gdd20_baseline ! GDD20 baseline stream filename to read
   logical                 :: cropcals_rx ! Used only for setting input files in namelist; does nothing in code, but needs to be here so namelist read doesn't crash
   logical                 :: cropcals_rx_adapt ! Used only for setting input files in namelist; does nothing in code, but needs to be here so namelist read doesn't crash
+  logical :: stream_gdd20_seasons  ! Read start and end dates for gdd20 seasons from streams instead of using hemisphere-specific values
   logical                     :: allow_invalid_gdd20_season_inputs ! Fall back on hemisphere "warm periods" in cases of invalid values in stream_fldFileName_gdd20_season_start and _end?
   character(len=CL)       :: stream_fldFileName_gdd20_season_start ! Stream filename to read for start of gdd20 season
   character(len=CL)       :: stream_fldFileName_gdd20_season_end ! Stream filename to read for end of gdd20 season
@@ -113,6 +113,7 @@ contains
          stream_meshfile_cropcal, &
          cropcals_rx, &
          cropcals_rx_adapt, &
+         stream_gdd20_seasons, &
          allow_invalid_gdd20_season_inputs, &
          stream_fldFileName_gdd20_season_start, &
          stream_fldFileName_gdd20_season_end
@@ -130,6 +131,7 @@ contains
     stream_fldFileName_swindow_end   = ''
     stream_fldFileName_cultivar_gdds = ''
     stream_fldFileName_gdd20_baseline = ''
+    stream_gdd20_seasons = .false.
     allow_invalid_gdd20_season_inputs = .false.
     stream_fldFileName_gdd20_season_start = ''
     stream_fldFileName_gdd20_season_end = ''
@@ -173,6 +175,7 @@ contains
     call shr_mpi_bcast(stream_fldFileName_cultivar_gdds, mpicom)
     call shr_mpi_bcast(stream_fldFileName_gdd20_baseline, mpicom)
     call shr_mpi_bcast(stream_meshfile_cropcal    , mpicom)
+    call shr_mpi_bcast(stream_gdd20_seasons, mpicom)
     call shr_mpi_bcast(allow_invalid_gdd20_season_inputs, mpicom)
     call shr_mpi_bcast(stream_fldFileName_gdd20_season_start, mpicom)
     call shr_mpi_bcast(stream_fldFileName_gdd20_season_end, mpicom)

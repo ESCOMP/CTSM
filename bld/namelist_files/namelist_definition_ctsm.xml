@@ -1839,7 +1839,7 @@ Filename of input stream data for baseline GDD20 values
 </entry>
 
 <entry id="stream_gdd20_seasons" type="logical" category="datasets"
-       group="clm_inparm" valid_values="" >
+       group="cropcal_streams" valid_values="" >
 Set this to true to read gdd20 accumulation season start and end dates from stream files, rather than using hard-coded hemisphere-specific "warm seasons."
 </entry>
 
