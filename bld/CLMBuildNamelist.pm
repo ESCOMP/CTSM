@@ -1842,9 +1842,10 @@ sub setup_logic_site_specific {
      $nl->set_variable_value($group, $var, $val);
   }
 
-  if ($nl_flags->{'res'} eq "1x1_smallvilleIA") {
+  my $res = $nl_flags->{'res'};
+  if ($res eq "1x1_smallvilleIA" or $res eq "1x1_cidadinhoBR") {
     if (! &value_is_true($nl_flags->{'use_cn'}) || ! &value_is_true($nl_flags->{'use_crop'})) {
-      $log->fatal_error("1x1_smallvilleIA grids must use a compset with CN and CROP turned on.");
+      $log->fatal_error("${res} grids must use a compset with CN and CROP turned on.");
     }
   }
 
@@ -4175,8 +4176,11 @@ sub setup_logic_cropcal_streams {
   # Set up other crop calendar parameters
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'cropcals_rx');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'cropcals_rx_adapt');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_gdd20_seasons');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'flush_gdd20');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'generate_crop_gdds');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_mxmat');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_cropcal');
 
   # These can't both be true
   my $cropcals_rx = $nl->get_value('cropcals_rx') ;
@@ -4185,12 +4189,27 @@ sub setup_logic_cropcal_streams {
     $log->fatal_error("cropcals_rx and cropcals_rx_adapt may not both be true" );
   }
 
+  # Add defaults if reading gdd20 seasons from stream files
+  my $stream_gdd20_seasons = $nl->get_value('stream_gdd20_seasons') ;
+  if ( &value_is_true($stream_gdd20_seasons)) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_gdd20_season_start');
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_gdd20_season_end');
+
+    # Check
+    my $gdd20_season_start_file = $nl->get_value('stream_fldFileName_gdd20_season_start') ;
+    my $gdd20_season_end_file = $nl->get_value('stream_fldFileName_gdd20_season_end') ;
+    if ( &string_is_undef_or_empty($gdd20_season_start_file) or &string_is_undef_or_empty($gdd20_season_end_file) ) {
+      $log->message($gdd20_season_start_file);
+      $log->message($gdd20_season_end_file);
+      $log->fatal_error("If stream_gdd20_seasons is true, gdd20 season start and end files must be provided." );
+    }
+  }
+
   # Add defaults if using prescribed crop calendars
   if ( &value_is_true($cropcals_rx) or &value_is_true($cropcals_rx_adapt) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_swindow_start');
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_swindow_end');
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_cultivar_gdds');
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_cropcal');
     if ( &value_is_true($cropcals_rx_adapt) ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_gdd20_baseline');
     }
@@ -4202,7 +4221,7 @@ sub setup_logic_cropcal_streams {
   my $gdd_file = $nl->get_value('stream_fldFileName_cultivar_gdds') ;
   my $gdd20_baseline_file = $nl->get_value('stream_fldFileName_gdd20_baseline') ;
   my $mesh_file = $nl->get_value('stream_meshfile_cropcal') ;
-  if ( !&string_is_undef_or_empty($swindow_start_file) or !&string_is_undef_or_empty($swindow_end_file) or !&string_is_undef_or_empty($gdd_file) or !&string_is_undef_or_empty($gdd20_baseline_file) or !&string_is_undef_or_empty($mesh_file)) {
+  if ( !&string_is_undef_or_empty($swindow_start_file) or !&string_is_undef_or_empty($swindow_end_file) or !&string_is_undef_or_empty($gdd_file) or !&string_is_undef_or_empty($gdd20_baseline_file)) {
 
     # User gave an input file without specifying cropcals_rx or cropcals_rx_adapt = .true.
     # Requiring this means nothing to the code, but helps namelist make more sense

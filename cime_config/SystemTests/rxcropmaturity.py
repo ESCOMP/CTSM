@@ -20,15 +20,21 @@ import subprocess
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
 from CIME.XML.standard_module_setup import *
 from CIME.SystemTests.test_utils.user_nl_utils import append_to_user_nl_files
+from CIME.case import Case
 import shutil, glob
 
 logger = logging.getLogger(__name__)
 
 
-class RXCROPMATURITY(SystemTestsCommon):
+class RXCROPMATURITYSHARED(SystemTestsCommon):
     def __init__(self, case):
         # initialize an object interface to the SMS system test
         SystemTestsCommon.__init__(self, case)
+
+        # Is this a real RXCROPMATURITY test or not?
+        casebaseid = self._case.get_value("CASEBASEID")
+        full_test = "RXCROPMATURITY_" in casebaseid
+        skipgen_test = "RXCROPMATURITYSKIPGEN_" in casebaseid
 
         # Ensure run length is at least 5 years. Minimum to produce one complete growing season (i.e., two complete calendar years) actually 4 years, but that only gets you 1 season usable for GDD generation, so you can't check for season-to-season consistency.
         stop_n = self._case.get_value("STOP_N")
@@ -56,9 +62,15 @@ class RXCROPMATURITY(SystemTestsCommon):
                 f"STOP_OPTION ({stop_option_orig}) must be nsecond(s), nminute(s), "
                 + "nhour(s), nday(s), nmonth(s), or nyear(s)"
             )
-        elif stop_n < 5:
+        elif full_test and stop_n < 5:
             error_message = (
                 "RXCROPMATURITY must be run for at least 5 years; you requested "
+                + f"{stop_n_orig} {stop_option_orig[1:]}"
+            )
+        elif skipgen_test and stop_n < 3:
+            # First year is discarded because crops are already in the ground at restart, and those aren't affected by the new crop calendar inputs. The second year is useable, but we need a third year so that all crops planted in the second year have a chance to finish.
+            error_message = (
+                "RXCROPMATURITYSKIPGEN (both-forced part) must be run for at least 3 years; you requested "
                 + f"{stop_n_orig} {stop_option_orig[1:]}"
             )
         if error_message is not None:
@@ -69,7 +81,6 @@ class RXCROPMATURITY(SystemTestsCommon):
         self._run_Nyears = int(stop_n)
 
         # Only allow RXCROPMATURITY to be called with test cropMonthOutput
-        casebaseid = self._case.get_value("CASEBASEID")
         if casebaseid.split("-")[-1] != "cropMonthOutput":
             error_message = (
                 "Only call RXCROPMATURITY with test cropMonthOutput "
@@ -81,10 +92,16 @@ class RXCROPMATURITY(SystemTestsCommon):
         # Get files with prescribed sowing and harvest dates
         self._get_rx_dates()
 
+        # Get cultivar maturity requirement file to fall back on if not generating it here
+        self._gdds_file = None
+        self._fallback_gdds_file = os.path.join(
+            os.path.dirname(self._sdatefile), "gdds_20230829_161011.nc"
+        )
+
         # Which conda environment should we use?
         self._get_conda_env()
 
-    def run_phase(self):
+    def _run_phase(self, skip_gen=False):
         # Modeling this after the SSP test, we create a clone to be the case whose outputs we don't
         # want to be saved as baseline.
 
@@ -113,6 +130,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         logger.info("RXCROPMATURITY log:  modify user_nl files: generate GDDs")
         self._append_to_user_nl_clm(
             [
+                "stream_fldFileName_cultivar_gdds = ''",
                 "generate_crop_gdds = .true.",
                 "use_mxmat = .false.",
                 " ",
@@ -133,6 +151,12 @@ class RXCROPMATURITY(SystemTestsCommon):
             # Download files from the server, if needed
             case_gddgen.check_all_input_data()
 
+            # Copy needed file from original to gddgen directory
+            shutil.copyfile(
+                os.path.join(caseroot, ".env_mach_specific.sh"),
+                os.path.join(self._path_gddgen, ".env_mach_specific.sh"),
+            )
+
             # Make custom version of surface file
             logger.info("RXCROPMATURITY log:  run fsurdat_modifier")
             self._run_fsurdat_modifier()
@@ -146,9 +170,19 @@ class RXCROPMATURITY(SystemTestsCommon):
         # "No history files expected, set suffix=None to avoid compare error"
         # We *do* expect history files here, but anyway. This works.
         self._skip_pnl = False
-        self.run_indv(suffix=None, st_archive=True)
 
-        self._run_generate_gdds(case_gddgen)
+        # If not generating GDDs, only run a few days of this.
+        if skip_gen:
+            with Case(self._path_gddgen, read_only=False) as case:
+                case.set_value("STOP_N", 5)
+                case.set_value("STOP_OPTION", "ndays")
+
+        self.run_indv(suffix=None, st_archive=True)
+        if skip_gen:
+            # Interpolate an existing GDD file. Needed to check obedience to GDD inputs.
+            self._run_interpolate_gdds()
+        else:
+            self._run_generate_gdds(case_gddgen)
 
         # -------------------------------------------------------------------
         # (3) Set up and perform Prescribed Calendars run
@@ -174,7 +208,7 @@ class RXCROPMATURITY(SystemTestsCommon):
         # (4) Check Prescribed Calendars run
         # -------------------------------------------------------------------
         logger.info("RXCROPMATURITY log:  output check: Prescribed Calendars")
-        self._run_check_rxboth_run()
+        self._run_check_rxboth_run(skip_gen)
 
     # Get sowing and harvest dates for this resolution.
     def _get_rx_dates(self):
@@ -331,11 +365,16 @@ class RXCROPMATURITY(SystemTestsCommon):
             cfg_out.write("PCT_OCEAN   = 0.0\n")
             cfg_out.write("PCT_URBAN   = 0.0 0.0 0.0\n")
 
-    def _run_check_rxboth_run(self):
+    def _run_check_rxboth_run(self, skip_gen):
 
         output_dir = os.path.join(self._get_caseroot(), "run")
-        first_usable_year = self._run_startyear + 2
-        last_usable_year = self._run_startyear + self._run_Nyears - 2
+
+        if skip_gen:
+            first_usable_year = self._run_startyear + 1
+            last_usable_year = first_usable_year
+        else:
+            first_usable_year = self._run_startyear + 2
+            last_usable_year = self._run_startyear + self._run_Nyears - 2
 
         tool_path = os.path.join(
             self._ctsm_root, "python", "ctsm", "crop_calendars", "check_rxboth_run.py"
@@ -357,6 +396,7 @@ class RXCROPMATURITY(SystemTestsCommon):
 
     def _modify_user_nl_allruns(self):
         nl_additions = [
+            "cropcals_rx = .true.",
             "stream_meshfile_cropcal = '{}'".format(self._case.get_value("LND_DOMAIN_MESH")),
             "stream_fldFileName_swindow_start = '{}'".format(self._sdatefile),
             "stream_fldFileName_swindow_end   = '{}'".format(self._sdatefile),
@@ -398,7 +438,7 @@ class RXCROPMATURITY(SystemTestsCommon):
                 f"--sdates-file {sdates_file}",
                 f"--hdates-file {hdates_file}",
                 f"--output-dir generate_gdds_out",
-                f"--skip-crops miscanthus,irrigated_miscanthus",
+                f"--skip-crops miscanthus,irrigated_miscanthus,switchgrass,irrigated_switchgrass",
             ]
         )
         stu.run_python_script(
@@ -415,6 +455,30 @@ class RXCROPMATURITY(SystemTestsCommon):
             logger.error(error_message)
             raise RuntimeError(error_message)
         self._gdds_file = generated_gdd_files[0]
+
+    def _run_interpolate_gdds(self):
+        # Save where?
+        self._gdds_file = os.path.join(self._get_caseroot(), "interpolated_gdds.nc")
+
+        # It'd be much nicer to call interpolate_gdds.main(), but I can't import interpolate_gdds.
+        tool_path = os.path.join(
+            self._ctsm_root, "python", "ctsm", "crop_calendars", "interpolate_gdds.py"
+        )
+        command = " ".join(
+            [
+                f"python3 {tool_path}",
+                f"--input-file {self._fallback_gdds_file}",
+                f"--target-file {self._sdatefile}",
+                f"--output-file {self._gdds_file}",
+                "--overwrite",
+            ]
+        )
+        stu.run_python_script(
+            self._get_caseroot(),
+            self._this_conda_env,
+            command,
+            tool_path,
+        )
 
     def _get_conda_env(self):
         conda_setup_commands = stu.cmds_to_setup_conda(self._get_caseroot())
@@ -442,3 +506,8 @@ class RXCROPMATURITY(SystemTestsCommon):
                 if flanduse_timeseries_in:
                     self._flanduse_timeseries_in = flanduse_timeseries_in.group(1)
                     break
+
+
+class RXCROPMATURITY(RXCROPMATURITYSHARED):
+    def run_phase(self):
+        self._run_phase()

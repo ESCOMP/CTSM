@@ -1811,7 +1811,7 @@ contains
     use clm_varctl       , only : use_fertilizer 
     use clm_varctl       , only : use_c13, use_c14
     use clm_varcon       , only : c13ratio, c14ratio
-    use clm_varctl       , only : use_cropcal_rx_swindows, use_cropcal_streams
+    use clm_varctl       , only : use_cropcal_rx_swindows
     !
     ! !ARGUMENTS:
     integer                        , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
@@ -1976,7 +1976,7 @@ contains
                cnveg_state_inst%gddmaturity_thisyr(p,s) = -1._r8
                crop_inst%gddaccum_thisyr_patch(p,s) = -1._r8
                crop_inst%hui_thisyr_patch(p,s) = -1._r8
-               crop_inst%sowing_reason_perharv_patch = -1._r8
+               crop_inst%sowing_reason_perharv_patch(p,s) = -1._r8
                crop_inst%harvest_reason_thisyr_patch(p,s) = -1._r8
                do k = repr_grain_min, repr_grain_max
                   cnveg_carbonflux_inst%repr_grainc_to_food_perharv_patch(p,s,k) = 0._r8
@@ -2245,7 +2245,7 @@ contains
                 do_harvest = .true.
                 fake_harvest = .true.
                 harvest_reason = HARVEST_REASON_SOWNBADDEC31
-            else if (use_cropcal_streams .and. do_plant .and. .not. did_plant) then
+            else if (use_cropcal_rx_swindows .and. do_plant .and. .not. did_plant) then
                 ! Today was supposed to be the planting day, but the previous crop still hasn't been harvested.
                 do_harvest = .true.
                 harvest_reason = HARVEST_REASON_SOWTODAY
@@ -2562,7 +2562,7 @@ contains
 
     ! !USES:
     use clm_varctl       , only : use_c13, use_c14
-    use clm_varctl       , only : use_cropcal_rx_cultivar_gdds, use_cropcal_streams, adapt_cropcal_rx_cultivar_gdds
+    use clm_varctl       , only : use_cropcal_rx_cultivar_gdds, adapt_cropcal_rx_cultivar_gdds
     use clm_varcon       , only : c13ratio, c14ratio
     use clm_varpar       , only : mxsowings
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
@@ -2699,7 +2699,7 @@ contains
          did_rx_gdds = .true.
          if (adapt_cropcal_rx_cultivar_gdds .and. crop_inst%gdd20_baseline_patch(p) > min_gdd20_baseline) then
             gddmaturity(p) = gddmaturity(p) * gdd20 / crop_inst%gdd20_baseline_patch(p)
-            !TODO SSR: Set maximum and minimum gddmaturity
+            !TODO Sam Rabin: Set maximum and minimum gddmaturity
          end if
       else if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
          gddmaturity(p) = hybgdd(ivt(p))
@@ -2726,12 +2726,17 @@ contains
 
       endif
 
-      if (use_cropcal_streams .and. gddmaturity(p) < min_gddmaturity) then
-          if (did_rx_gdds) then
-              write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gddmaturity',gddmaturity(p),'; using min_gddmaturity instead (',min_gddmaturity,')'
-          endif
-          gddmaturity(p) = min_gddmaturity
-      endif
+      if (gddmaturity(p) < min_gddmaturity) then
+         if (use_cropcal_rx_cultivar_gdds .or. generate_crop_gdds) then
+             if (did_rx_gdds) then
+                 write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gddmaturity ',gddmaturity(p),'; using min_gddmaturity instead (',min_gddmaturity,')'
+             end if
+             gddmaturity(p) = min_gddmaturity
+         else
+            write(iulog, *) 'ERROR: PlantCrop(): gddmaturity < minimum for ivt ',ivt(p)
+            call endrun(msg="Stopping")
+         end if
+      end if
 
       ! Initialize allocation coefficients.
       ! Because crops have no live carbon pools when planted but not emerged, this shouldn't

@@ -3660,13 +3660,36 @@
     </options>
   </test>
 
-  <test name="RXCROPMATURITY_Lm61" grid="f09_g17" compset="IHistClm50BgcCrop"  testmods="clm/cropMonthOutput">
+  <test name="RXCROPMATURITY_Lm61" grid="f09_g17" compset="IHistClm60BgcCrop"  testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">12:00:00</option>
       <option name="comment">This test is designed to test the ability to prescribe crop sowing dates and maturity requirements. It first performs a GDD-generating run, then calls Python code to generate the maturity requirement file. This is then used in a sowing+maturity forced run, which finally is tested to ensure correct behavior.</option>
+    </options>
+  </test>
+
+  <test name="RXCROPMATURITY_Lm61" grid="f10_f10_mg37" compset="IHistClm60BgcCrop"  testmods="clm/cropMonthOutput">
+    <machines>
+      <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">6:00:00</option>
+      <option name="comment">This test is designed to test the ability to prescribe crop sowing dates and maturity requirements. It first performs a GDD-generating run, then calls Python code to generate the maturity requirement file. This is then used in a sowing+maturity forced run, which finally is tested to ensure correct behavior.</option>
+    </options>
+  </test>
+
+  <test name="RXCROPMATURITYSKIPGEN_Ld1097" grid="f10_f10_mg37" compset="IHistClm60BgcCrop"  testmods="clm/cropMonthOutput">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:45:00</option>
+      <option name="comment">This test is designed to test the ability to prescribe crop sowing dates and maturity requirements. Unlike the RXCROPMATURITY test, however, it does not generate its own maturity requirements, instead interpolating a pre-existing maturity requirement file. (This allows the "GDD-generating" run to be mostly skipped.) This is then used in a sowing+maturity forced run, which finally is tested to ensure correct behavior.</option>
     </options>
   </test>
 
@@ -3730,10 +3753,60 @@
 
   <test name="ERS_P128x1_Lm25" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/RxCropCalsAdapt">
     <machines>
+      <machine name="derecho" compiler="gnu" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_P128x1_Lm25" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/RxCropCalsAdaptGGCMI">
+    <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
+      <machine name="izumi" compiler="nag" category="crop_calendars"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
+    </options>
+  </test>
+
+  <test name="ERP_D_P128x1_Ld26" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/midDecStart--clm/RxCropCalsAdaptGGCMI">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+    </options>
+  </test>
+
+  <test name="PEM_D_P128x1_Ld26" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/midDecStart--clm/RxCropCalsAdaptGGCMI">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment">This test is potentially duplicative of the equivalent ERP test. However, ambiguous nearest neighbors can result in different pixels being chosen based on number of processors. Because crop calendar inputs are only updated at beginning of year, this can cause PEM test to fail where ERP test passes.</option>
+    </options>
+  </test>
+
+  <test name="SMS_Ld65" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/GddGen">
+    <machines>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_Ld65" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/GddGen--clm/StreamGdd20Seasons">
+    <machines>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
     </options>
   </test>
 

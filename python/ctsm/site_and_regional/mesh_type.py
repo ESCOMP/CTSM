@@ -235,8 +235,16 @@ class MeshType:
             lons_size = self.center_lons.size
 
             # -- convert center points from 1d to 2d
-            self.center_lat2d = np.broadcast_to(self.center_lats[:], (lons_size, lats_size))
-            self.center_lon2d = np.broadcast_to(self.center_lons[:], (lons_size, lats_size))
+            try:
+                self.center_lat2d = np.broadcast_to(self.center_lats[:], (lons_size, lats_size))
+                self.center_lon2d = np.broadcast_to(self.center_lons[:], (lons_size, lats_size))
+            except ValueError:
+                self.center_lat2d = np.broadcast_to(
+                    np.expand_dims(self.center_lats[:], 0), (lons_size, lats_size)
+                )
+                self.center_lon2d = np.broadcast_to(
+                    np.expand_dims(self.center_lons[:], 1), (lons_size, lats_size)
+                )
         elif self.lat_dims == 2:
             # -- 2D lats and lons
             dims = self.center_lons.shape
@@ -351,7 +359,7 @@ class MeshType:
         )
         # Longitudes should stay within 0 to 360
         if np.any(self.corner_lons > 360.0):
-            abort("Corners have longitudes greater than 360")
+            abort(f"Corners have longitudes greater than 360 (max: {np.max(self.corner_lons)})")
         if np.any(self.corner_lons < 0.0):
             logger.warning(
                 "Corners have longitudes less than zero -- %s %s",
