@@ -170,6 +170,13 @@
     </phase>
   </test>
 
+  <test name="SMS_P128x1_Lm25.f10_f10_mg37.IHistClm60BgcCrop.izumi_nag.clm-RxCropCalsAdaptGGCMI">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2659</issue>
+    </phase>
+  </test>
+
   <!-- fates test suite failures -->
 
   <test name="SMS_D_Ld3.f09_g17.I2000Clm60FatesSpCruRsGs.derecho_gnu.clm-FatesColdSatPhen_prescribed">
