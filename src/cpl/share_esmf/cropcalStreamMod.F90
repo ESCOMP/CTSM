@@ -545,9 +545,9 @@ contains
 
     ! Read prescribed sowing window start dates from input files
     allocate(dataptr2d_swindow_start(lsize, ncft))
-    dataptr2d_swindow_start(:,:) = -1._r8
+    dataptr2d_swindow_start(begp:endp,:) = -1._r8
     allocate(dataptr2d_swindow_end  (lsize, ncft))
-    dataptr2d_swindow_end(:,:) = -1._r8
+    dataptr2d_swindow_end(begp:endp,:) = -1._r8
     if (use_cropcal_rx_swindows) then
        ! Starting with npcropmin will skip generic crops
        do n = 1, ncft
@@ -742,9 +742,9 @@ contains
 
   ! Read prescribed gdd20 season start dates from input files
   allocate(dataptr2d_gdd20_season_start(lsize, ncft))
-  dataptr2d_gdd20_season_start(:,:) = -1._r8
+  dataptr2d_gdd20_season_start(begp:endp,:) = -1._r8
   allocate(dataptr2d_gdd20_season_end  (lsize, ncft))
-  dataptr2d_gdd20_season_end(:,:) = -1._r8
+  dataptr2d_gdd20_season_end(begp:endp,:) = -1._r8
   if (stream_gdd20_seasons) then
      ! Starting with npcropmin will skip generic crops
      do n = 1, ncft
