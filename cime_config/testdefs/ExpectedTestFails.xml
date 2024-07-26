@@ -163,7 +163,7 @@
     </phase>
   </test>
 
-  <test name="SMS_P128x1_Lm25.f10_f10_mg37.IHistClm60BgcCrop.izumi_nag.clm-RxCropCalsAdaptGGCMI">
+  <test name="SMS_Lm25.f10_f10_mg37.IHistClm60BgcCrop.izumi_nag.clm-RxCropCalsAdaptGGCMI">
     <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
       <issue>#2659</issue>
