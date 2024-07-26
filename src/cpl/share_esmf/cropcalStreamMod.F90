@@ -544,10 +544,10 @@ contains
     dayspyr = get_curr_days_per_year()
 
     ! Read prescribed sowing window start dates from input files
-    allocate(dataptr2d_swindow_start(begp:endp, ncft))
-    dataptr2d_swindow_start(begp:endp,:) = -1._r8
-    allocate(dataptr2d_swindow_end  (begp:endp, ncft))
-    dataptr2d_swindow_end(begp:endp,:) = -1._r8
+    allocate(dataptr2d_swindow_start(bounds%begg:bounds%endg, ncft))
+    dataptr2d_swindow_start(bounds%begg:bounds%endg,:) = -1._r8
+    allocate(dataptr2d_swindow_end  (bounds%begg:bounds%endg, ncft))
+    dataptr2d_swindow_end(bounds%begg:bounds%endg,:) = -1._r8
     if (use_cropcal_rx_swindows) then
        ! Starting with npcropmin will skip generic crops
        do n = 1, ncft
@@ -563,7 +563,7 @@ contains
           end if
           ! Note that the size of dataptr1d includes ocean points so it will be around 3x larger than lsize
           ! So an explicit loop is required here
-          do g = 1,lsize
+          do g = bounds%begg, bounds%endg
 
              ! If read-in value is invalid, set to -1. Will be handled later in this subroutine.
              if (dataptr1d_swindow_start(g) <= 0 .or. dataptr1d_swindow_start(g) > dayspyr &
@@ -631,7 +631,7 @@ contains
     deallocate(dataptr2d_swindow_start)
     deallocate(dataptr2d_swindow_end)
    
-    allocate(dataptr2d_cultivar_gdds(begp:endp, ncft))
+    allocate(dataptr2d_cultivar_gdds(bounds%begg:bounds%endg, ncft))
     if (use_cropcal_rx_cultivar_gdds) then
        ! Read prescribed cultivar GDDs from input files
        ! Starting with npcropmin will skip generic crops
@@ -688,7 +688,7 @@ contains
 
    deallocate(dataptr2d_cultivar_gdds)
 
-   allocate(dataptr2d_gdd20_baseline(begp:endp, ncft))
+   allocate(dataptr2d_gdd20_baseline(bounds%begg:bounds%endg, ncft))
    if (adapt_cropcal_rx_cultivar_gdds) then
       ! Read GDD20 baselines from input files
       ! Starting with npcropmin will skip generic crops
@@ -741,10 +741,10 @@ contains
 
 
   ! Read prescribed gdd20 season start dates from input files
-  allocate(dataptr2d_gdd20_season_start(begp:endp, ncft))
-  dataptr2d_gdd20_season_start(begp:endp,:) = -1._r8
-  allocate(dataptr2d_gdd20_season_end  (begp:endp, ncft))
-  dataptr2d_gdd20_season_end(begp:endp,:) = -1._r8
+  allocate(dataptr2d_gdd20_season_start(bounds%begg:bounds%endg, ncft))
+  dataptr2d_gdd20_season_start(bounds%begg:bounds%endg,:) = -1._r8
+  allocate(dataptr2d_gdd20_season_end  (bounds%begg:bounds%endg, ncft))
+  dataptr2d_gdd20_season_end(bounds%begg:bounds%endg,:) = -1._r8
   if (stream_gdd20_seasons) then
      ! Starting with npcropmin will skip generic crops
      do n = 1, ncft
