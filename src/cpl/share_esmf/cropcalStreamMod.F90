@@ -14,6 +14,7 @@ module cropcalStreamMod
   use decompMod        , only : bounds_type
   use abortutils       , only : endrun
   use clm_varctl       , only : iulog
+  use clm_varctl       , only : use_crop
   use clm_varctl       , only : use_cropcal_rx_swindows, use_cropcal_rx_cultivar_gdds, use_cropcal_streams
   use clm_varctl       , only : adapt_cropcal_rx_cultivar_gdds
   use clm_varpar       , only : mxpft
