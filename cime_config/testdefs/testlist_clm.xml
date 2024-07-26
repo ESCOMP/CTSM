@@ -863,6 +863,14 @@
   <test name="ERS_D" grid="f19_g17" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:20:00</option>
+      <option name="comment"  >Run in DEBUG with the matrix solution on for spinup with all options it interacts with (requires Bgc, but also turn on Crop and Carbon isotopes)</option>
+    </options>
+  </test>
+  <test name="ERS_D" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
+    <machines>
       <machine name="izumi"    compiler="nag" category="aux_clm"/>
     </machines>
     <options>
@@ -1016,6 +1024,7 @@
   <test name="ERP_D_Ld10_P64x2" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3560,7 +3569,7 @@
     </options>
   </test>
 
-  <test name="SMS_P128x1_Lm25" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/RxCropCals">
+  <test name="SMS_Lm25" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/RxCropCalsNoAdapt">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
@@ -3569,16 +3578,7 @@
     </options>
   </test>
 
-  <test name="ERS_P128x1_Lm25" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/RxCropCalsAdapt">
-    <machines>
-      <machine name="derecho" compiler="gnu" category="crop_calendars"/>
-    </machines>
-    <options>
-      <option name="wallclock">02:00:00</option>
-    </options>
-  </test>
-
-  <test name="SMS_P128x1_Lm25" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/RxCropCalsAdaptGGCMI">
+  <test name="SMS_Lm25" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/RxCropCalsAdaptGGCMI">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
       <machine name="izumi" compiler="nag" category="crop_calendars"/>
@@ -3622,6 +3622,24 @@
   <test name="SMS_Ld65" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/GddGen--clm/StreamGdd20Seasons">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_Lm37" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/cropMonthOutput--clm/oldCropCals">
+    <machines>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:30:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_Ld32" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/crop--clm/oldCropCals">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="crop_calendars"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>

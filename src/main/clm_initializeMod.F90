@@ -659,19 +659,21 @@ contains
     end if
 
     ! Initialize crop calendars
-    call t_startf('init_cropcal')
-    call cropcal_init(bounds_proc)
-    if (use_cropcal_streams) then
-      call cropcal_advance( bounds_proc )
-      !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
-      do nc = 1,nclumps
-         call get_clump_bounds(nc, bounds_clump)
-         call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, &
-              filter_inactive_and_active(nc)%pcropp, .true., crop_inst)
-      end do
-      !$OMP END PARALLEL DO
+    if (use_crop) then
+      call t_startf('init_cropcal')
+      call cropcal_init(bounds_proc)
+      if (use_cropcal_streams) then
+        call cropcal_advance( bounds_proc )
+        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+        do nc = 1,nclumps
+           call get_clump_bounds(nc, bounds_clump)
+           call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, &
+                filter_inactive_and_active(nc)%pcropp, .true., crop_inst)
+        end do
+        !$OMP END PARALLEL DO
+      end if
+      call t_stopf('init_cropcal')
     end if
-    call t_stopf('init_cropcal')
 
     ! Initialize active history fields.
     ! This is only done if not a restart run. If a restart run, then this

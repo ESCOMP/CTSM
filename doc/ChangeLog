@@ -1,4 +1,141 @@
 ===============================================================
+Tag name: ctsm5.2.016
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Fri Jul 26 12:20:46 MDT 2024
+One-line Summary: Enable new crop calendars for clm60 compsets
+
+Purpose and description of changes
+----------------------------------
+
+This commit switches clm60 compsets (really, any compset other than clm45, clm50, and clm51) to use:
+- Per-gridcell and -crop sowing windows derived from the GGCMI phase 3b group II static growing seasons
+- Per-gridcell and -crop maturity requirements derived from those same growing seasons, over the 1980-2009 growing seasons
+- Code to adjust those prescribed maturity requirements based on recent climate
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[X] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[?] ctsm5_0-nwp: Probably? Haven't tested, but didn't exclude that setup.
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- Fixes ESCOMP/CTSM#2584: Reset accumulators to initval instead of 0 (https://github.com/ESCOMP/CTSM/issues/2584)
+- Fixes ESCOMP/CTSM#2667: Change out a f19 resolution test on Izumi for f10 (https://github.com/ESCOMP/CTSM/issues/2667)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- Add cropcals_rx, default false.
+- Add cropcals_rx_adapt, default true. This is what changes default behavior.
+- Rename stream_year_first_cropcal to stream_year_first_cropcal_swindows
+- Rename stream_year_last_cropcal to stream_year_last_cropcal_swindows
+- Rename model_year_align_cropcal to model_year_align_cropcal_swindows
+- Add stream_year_first_cropcal_cultivar_gdds
+- Add stream_year_last_cropcal_cultivar_gdds
+- Add model_year_align_cropcal_cultivar_gdds
+- Add stream_fldFileName_gdd20_baseline
+- Add stream_gdd20_seasons (experimental)
+- Add flush_gdd20 (experimental)
+- Add stream_fldFileName_gdd20_season_start (experimental)
+- Add stream_fldFileName_gdd20_season_end (experimental)
+- Add allow_invalid_gdd20_season_inputs
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+- Many new default and optional stream files added.
+
+Changes to documentation:
+- None yet.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers:
+- tools/contrib/tweak_latlons.py: This is a script I made to avoid the "ambiguous nearest neighbor" issue described in the discussion at https://github.com/orgs/esmf-org/discussions/261. It's hopefully just a temporary thing as we wait for ESMF to fix that bug. If they end up deciding not to, then this should be moved into python/ctsm/ and fully tested.
+- Unit and system testing needs to be added for generate_gdd20_baseline.py.
+- RXCROPMATURITY SystemTest should be updated to also call generate_gdd20_baseline.py.
+
+Changes to tests or testing:
+- Adds testmods:
+  - midDecStart: Like decStart, except starts Dec. 15 instead of 30. Useful for ERP/ERS tests where you want the split in December.
+  - GddGen
+  - oldCropCals: To recreate previous crop calendars
+  - RxCropCalsAdaptGGCMI (experimental)
+  - RxCropCalsNoAdapt
+  - StreamGDD20Seasons (experimental)
+- Removes sowingWindows testmod
+- Adds and changes various tests related to crop calendars
+- Changes one Izumi test from f19 to 10x15 resolution:
+  - Was: ERS_D.f19_g17.I1850Clm50BgcCrop.izumi_nag.clm-ciso_monthly_matrixcn_spinup
+  - Now: ERS_D.f10_f10_mg37.I1850Clm50BgcCrop.izumi_nag.clm-ciso_monthly_matrixcn_spinup
+
+Note that testmods marked "experimental" are fine to be marked as expected failures, if needed.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - FAIL
+       1x1_cidadinhoBR tests only. That's fine. Filed Issue #2666: 1x1_cidadinhoBR tests fail in build-namelist_test.pl (https://github.com/ESCOMP/CTSM/issues/2666).
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: crop-enabled compsets with clm60 (or more specifically, other than clm45, clm50, clm51)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): new climate
+    
+   Probably? At least, there can be large regional shifts in crop growing season. Results are similar to those for the Prescribed Calendars setup in Rabin et al. (2023; https://gmd.copernicus.org/articles/16/7253/2023/gmd-16-7253-2023.html).
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - None
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2560: Allow prescribed gddmaturity to vary based on recent climate (initial work, v2) (https://github.com/ESCOMP/CTSM/pull/2560)
+- ESCOMP/CTSM#2585: Allow "manual" resets of all accumulator types (https://github.com/ESCOMP/CTSM/pull/2585)
+- ESCOMP/CTSM#2593: Optionally base GDD20 on per-gridcell windows, not per-hemisphere (https://github.com/ESCOMP/CTSM/pull/2593)
+- ESCOMP/CTSM#2661: Merge ctsm5.2.015 into scale-maturity-reqs (https://github.com/ESCOMP/CTSM/pull/2661)
+- ESCOMP/CTSM#2664: Enable new crop calendars for clm60 compsets (https://github.com/ESCOMP/CTSM/pull/2664)
+- ESCOMP/CTSM#2665: Merge new crop calendars into master (https://github.com/ESCOMP/CTSM/pull/2665)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.015
 Originator(s): multiple (Samuel Levis,UCAR/TSS,303-665-1310, @mvertens, @jedwards4b, @billsacks, @Katetc)
 Date: Mon 22 Jul 2024 12:46:17 PM MDT

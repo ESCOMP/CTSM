@@ -2199,7 +2199,10 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 
 <!-- crop calendars: default settings -->
 <cropcals_rx>.false.</cropcals_rx>
-<cropcals_rx_adapt>.false.</cropcals_rx_adapt>
+<cropcals_rx_adapt>.true.</cropcals_rx_adapt>
+<cropcals_rx_adapt phys="clm4_5">.false.</cropcals_rx_adapt>
+<cropcals_rx_adapt phys="clm5_0">.false.</cropcals_rx_adapt>
+<cropcals_rx_adapt phys="clm5_1">.false.</cropcals_rx_adapt>
 <stream_gdd20_seasons>.false.</stream_gdd20_seasons>
 <flush_gdd20>.false.</flush_gdd20>
 <stream_year_first_cropcal_swindows  >2000</stream_year_first_cropcal_swindows>
