@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.2.016
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
-Date: Fri 26 Jul 2024 09:11:52 AM MDT
+Date: Fri Jul 26 12:20:46 MDT 2024
 One-line Summary: Enable new crop calendars for clm60 compsets
 
 Purpose and description of changes
@@ -35,12 +35,10 @@ Bugs fixed
 
 List of CTSM issues fixed (include CTSM Issue # and description):
 - Fixes ESCOMP/CTSM#2584: Reset accumulators to initval instead of 0 (https://github.com/ESCOMP/CTSM/issues/2584)
+- Fixes ESCOMP/CTSM#2667: Change out a f19 resolution test on Izumi for f10 (https://github.com/ESCOMP/CTSM/issues/2667)
 
 Notes of particular relevance for users
 ---------------------------------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
-
-Caveats for users (e.g., need to interpolate initial conditions):
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
 - Add cropcals_rx, default false.
@@ -82,6 +80,9 @@ Changes to tests or testing:
   - StreamGDD20Seasons (experimental)
 - Removes sowingWindows testmod
 - Adds and changes various tests related to crop calendars
+- Changes one Izumi test from f19 to 10x15 resolution:
+  - Was: ERS_D.f19_g17.I1850Clm50BgcCrop.izumi_nag.clm-ciso_monthly_matrixcn_spinup
+  - Now: ERS_D.f10_f10_mg37.I1850Clm50BgcCrop.izumi_nag.clm-ciso_monthly_matrixcn_spinup
 
 Note that testmods marked "experimental" are fine to be marked as expected failures, if needed.
 
