@@ -507,7 +507,6 @@ contains
     integer :: nc, fp
     integer :: dayspyr
     integer           :: n, g
-    integer           :: lsize
     integer           :: rc
     integer           :: begp, endp
     real(r8), pointer :: dataptr1d_swindow_start(:)
@@ -536,7 +535,6 @@ contains
 
     ! Get pointer for stream data that is time and spatially interpolate to model time and grid
     ! Place all data from each type into a temporary 2d array
-    lsize = bounds%endg - bounds%begg + 1
 
     begp = bounds%begp
     endp = bounds%endp
@@ -644,7 +642,7 @@ contains
 
           ! Note that the size of dataptr1d includes ocean points so it will be around 3x larger than lsize
           ! So an explicit loop is required here
-          do g = 1,lsize
+          do g = bounds%begg, bounds%endg
    
              !  If read-in value is invalid, have PlantCrop() set gddmaturity to PFT-default value.
              if (dataptr1d_cultivar_gdds(g) < 0 .or. dataptr1d_cultivar_gdds(g) > 1000000._r8) then
@@ -672,8 +670,8 @@ contains
              ! vegetated pft
              ig = g_to_ig(patch%gridcell(p))
 
-             if (ig > lsize) then
-                 write(iulog,'(a,i0,a,i0,a)') 'ig (',ig,') > lsize (',lsize,')'
+             if (ig < bounds%begg .or. ig > bounds%endg) then
+                 write(iulog,'(a,i0,a,i0,a)') 'ig (',ig,')  < begg (',bounds%begg,') or > endg (',bounds%endg,')'
                  call ESMF_Finalize(endflag=ESMF_END_ABORT)
              end if
 
@@ -701,7 +699,7 @@ contains
 
          ! Note that the size of dataptr1d includes ocean points so it will be around 3x larger than lsize
          ! So an explicit loop is required here
-         do g = 1,lsize
+         do g = bounds%begg, bounds%endg
             dataptr2d_gdd20_baseline(g,n) = dataptr1d_gdd20_baseline(g)
          end do
       end do
@@ -723,8 +721,8 @@ contains
             ! vegetated pft
             ig = g_to_ig(patch%gridcell(p))
 
-            if (ig > lsize) then
-                write(iulog,'(a,i0,a,i0,a)') 'ig (',ig,') > lsize (',lsize,')'
+            if (ig < bounds%begg .or. ig > bounds%endg) then
+                write(iulog,'(a,i0,a,i0,a)') 'ig (',ig,')  < begg (',bounds%begg,') or > endg (',bounds%endg,')'
                 call ESMF_Finalize(endflag=ESMF_END_ABORT)
             end if
 
@@ -760,7 +758,7 @@ contains
         end if
         ! Note that the size of dataptr1d includes ocean points so it will be around 3x larger than lsize
         ! So an explicit loop is required here
-        do g = 1,lsize
+        do g = bounds%begg, bounds%endg
 
            ! If read-in value is invalid, set to -1. Will be handled later in this subroutine.
            if (dataptr1d_gdd20_season_start(g) <= 0 .or. dataptr1d_gdd20_season_start(g) > 366 &
