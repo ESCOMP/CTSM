@@ -422,6 +422,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: g, ig   ! Indices
+    integer :: begg, endg  ! gridcell bounds
     integer :: year    ! year (0, ...) for nstep+1
     integer :: mon     ! month (1, ..., 12) for nstep+1
     integer :: day     ! day of month (1, ..., 31) for nstep+1
@@ -429,6 +430,9 @@ contains
     integer :: mcdate  ! Current model date (yyyymmdd)
     integer :: rc
     !-----------------------------------------------------------------------
+
+    begg = bounds%begg
+    endg = bounds%endg
 
     call get_curr_date(year, mon, day, sec)
     mcdate = year*10000 + mon*100 + day
@@ -471,9 +475,9 @@ contains
     end if
 
     if ( .not. allocated(g_to_ig) )then
-       allocate (g_to_ig(bounds%begg:bounds%endg) )
+       allocate (g_to_ig(begg:endg) )
        ig = 0
-       do g = bounds%begg,bounds%endg
+       do g = begg,endg
           ig = ig+1
           g_to_ig(g) = ig
        end do
@@ -508,6 +512,7 @@ contains
     integer :: dayspyr
     integer           :: n, g
     integer           :: rc
+    integer           :: begg, endg
     integer           :: begp, endp
     real(r8), pointer :: dataptr1d_swindow_start(:)
     real(r8), pointer :: dataptr1d_swindow_end  (:)
@@ -530,8 +535,10 @@ contains
          gdd20_season_ends   => crop_inst%gdd20_season_end_patch    &
          )
 
-    SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
-    SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
+    begg = bounds%begg
+    endg = bounds%endg
+    SHR_ASSERT_FL( (lbound(g_to_ig,1) <= begg ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(g_to_ig,1) >= endg ), sourcefile, __LINE__)
 
     ! Get pointer for stream data that is time and spatially interpolate to model time and grid
     ! Place all data from each type into a temporary 2d array
@@ -542,10 +549,10 @@ contains
     dayspyr = get_curr_days_per_year()
 
     ! Read prescribed sowing window start dates from input files
-    allocate(dataptr2d_swindow_start(bounds%begg:bounds%endg, ncft))
-    dataptr2d_swindow_start(bounds%begg:bounds%endg,:) = -1._r8
-    allocate(dataptr2d_swindow_end  (bounds%begg:bounds%endg, ncft))
-    dataptr2d_swindow_end(bounds%begg:bounds%endg,:) = -1._r8
+    allocate(dataptr2d_swindow_start(begg:endg, ncft))
+    dataptr2d_swindow_start(begg:endg,:) = -1._r8
+    allocate(dataptr2d_swindow_end  (begg:endg, ncft))
+    dataptr2d_swindow_end(begg:endg,:) = -1._r8
     if (use_cropcal_rx_swindows) then
        ! Starting with npcropmin will skip generic crops
        do n = 1, ncft
@@ -561,7 +568,7 @@ contains
           end if
           ! Note that the size of dataptr1d includes ocean points so it will be around 3x larger than lsize
           ! So an explicit loop is required here
-          do g = bounds%begg, bounds%endg
+          do g = begg, endg
 
              ! If read-in value is invalid, set to -1. Will be handled later in this subroutine.
              if (dataptr1d_swindow_start(g) <= 0 .or. dataptr1d_swindow_start(g) > dayspyr &
@@ -629,7 +636,7 @@ contains
     deallocate(dataptr2d_swindow_start)
     deallocate(dataptr2d_swindow_end)
    
-    allocate(dataptr2d_cultivar_gdds(bounds%begg:bounds%endg, ncft))
+    allocate(dataptr2d_cultivar_gdds(begg:endg, ncft))
     if (use_cropcal_rx_cultivar_gdds) then
        ! Read prescribed cultivar GDDs from input files
        ! Starting with npcropmin will skip generic crops
@@ -642,7 +649,7 @@ contains
 
           ! Note that the size of dataptr1d includes ocean points so it will be around 3x larger than lsize
           ! So an explicit loop is required here
-          do g = bounds%begg, bounds%endg
+          do g = begg, endg
    
              !  If read-in value is invalid, have PlantCrop() set gddmaturity to PFT-default value.
              if (dataptr1d_cultivar_gdds(g) < 0 .or. dataptr1d_cultivar_gdds(g) > 1000000._r8) then
@@ -670,8 +677,8 @@ contains
              ! vegetated pft
              ig = g_to_ig(patch%gridcell(p))
 
-             if (ig < bounds%begg .or. ig > bounds%endg) then
-                 write(iulog,'(a,i0,a,i0,a)') 'ig (',ig,')  < begg (',bounds%begg,') or > endg (',bounds%endg,')'
+             if (ig < begg .or. ig > endg) then
+                 write(iulog,'(a,i0,a,i0,a)') 'ig (',ig,')  < begg (',begg,') or > endg (',endg,')'
                  call ESMF_Finalize(endflag=ESMF_END_ABORT)
              end if
 
@@ -686,7 +693,7 @@ contains
 
    deallocate(dataptr2d_cultivar_gdds)
 
-   allocate(dataptr2d_gdd20_baseline(bounds%begg:bounds%endg, ncft))
+   allocate(dataptr2d_gdd20_baseline(begg:endg, ncft))
    if (adapt_cropcal_rx_cultivar_gdds) then
       ! Read GDD20 baselines from input files
       ! Starting with npcropmin will skip generic crops
@@ -699,7 +706,7 @@ contains
 
          ! Note that the size of dataptr1d includes ocean points so it will be around 3x larger than lsize
          ! So an explicit loop is required here
-         do g = bounds%begg, bounds%endg
+         do g = begg, endg
             dataptr2d_gdd20_baseline(g,n) = dataptr1d_gdd20_baseline(g)
          end do
       end do
@@ -721,8 +728,8 @@ contains
             ! vegetated pft
             ig = g_to_ig(patch%gridcell(p))
 
-            if (ig < bounds%begg .or. ig > bounds%endg) then
-                write(iulog,'(a,i0,a,i0,a)') 'ig (',ig,')  < begg (',bounds%begg,') or > endg (',bounds%endg,')'
+            if (ig < begg .or. ig > endg) then
+                write(iulog,'(a,i0,a,i0,a)') 'ig (',ig,')  < begg (',begg,') or > endg (',endg,')'
                 call ESMF_Finalize(endflag=ESMF_END_ABORT)
             end if
 
@@ -739,10 +746,10 @@ contains
 
 
   ! Read prescribed gdd20 season start dates from input files
-  allocate(dataptr2d_gdd20_season_start(bounds%begg:bounds%endg, ncft))
-  dataptr2d_gdd20_season_start(bounds%begg:bounds%endg,:) = -1._r8
-  allocate(dataptr2d_gdd20_season_end  (bounds%begg:bounds%endg, ncft))
-  dataptr2d_gdd20_season_end(bounds%begg:bounds%endg,:) = -1._r8
+  allocate(dataptr2d_gdd20_season_start(begg:endg, ncft))
+  dataptr2d_gdd20_season_start(begg:endg,:) = -1._r8
+  allocate(dataptr2d_gdd20_season_end  (begg:endg, ncft))
+  dataptr2d_gdd20_season_end(begg:endg,:) = -1._r8
   if (stream_gdd20_seasons) then
      ! Starting with npcropmin will skip generic crops
      do n = 1, ncft
@@ -758,7 +765,7 @@ contains
         end if
         ! Note that the size of dataptr1d includes ocean points so it will be around 3x larger than lsize
         ! So an explicit loop is required here
-        do g = bounds%begg, bounds%endg
+        do g = begg, endg
 
            ! If read-in value is invalid, set to -1. Will be handled later in this subroutine.
            if (dataptr1d_gdd20_season_start(g) <= 0 .or. dataptr1d_gdd20_season_start(g) > 366 &
