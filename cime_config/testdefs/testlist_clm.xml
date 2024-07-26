@@ -3563,7 +3563,6 @@
   <test name="SMS_Lm25" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/RxCropCalsNoAdapt">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
-      <machine name="izumi" compiler="intel" category="crop_calendars"/>
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
@@ -3573,7 +3572,6 @@
   <test name="SMS_Lm25" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/RxCropCalsAdaptGGCMI">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
-      <machine name="izumi" compiler="intel" category="crop_calendars"/>
       <machine name="izumi" compiler="nag" category="crop_calendars"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
@@ -3592,15 +3590,6 @@
     </options>
   </test>
 
-  <test name="ERP_D_P96x1_Ld26" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/midDecStart--clm/RxCropCalsAdaptGGCMI">
-    <machines>
-      <machine name="izumi" compiler="intel" category="crop_calendars"/>
-    </machines>
-    <options>
-      <option name="wallclock">01:30:00</option>
-    </options>
-  </test>
-
   <test name="PEM_D_P128x1_Ld26" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/midDecStart--clm/RxCropCalsAdaptGGCMI">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -3612,20 +3601,9 @@
     </options>
   </test>
 
-  <test name="PEM_D_P96x1_Ld26" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/midDecStart--clm/RxCropCalsAdaptGGCMI">
-    <machines>
-      <machine name="izumi" compiler="intel" category="crop_calendars"/>
-    </machines>
-    <options>
-      <option name="wallclock">01:30:00</option>
-      <option name="comment">This test is potentially duplicative of the equivalent ERP test. However, ambiguous nearest neighbors can result in different pixels being chosen based on number of processors. Because crop calendar inputs are only updated at beginning of year, this can cause PEM test to fail where ERP test passes.</option>
-    </options>
-  </test>
-
   <test name="SMS_Ld65" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/GddGen">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
-      <machine name="izumi" compiler="intel" category="crop_calendars"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3635,7 +3613,6 @@
   <test name="SMS_Ld65" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/GddGen--clm/StreamGdd20Seasons">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
-      <machine name="izumi" compiler="intel" category="crop_calendars"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3657,15 +3634,6 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-
-  <test name="SMS_Ld32" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/crop--clm/oldCropCals">
-    <machines>
-      <machine name="izumi" compiler="gnu" category="crop_calendars"/>
-    </machines>
-    <options>
-      <option name="wallclock">01:00:00</option>
     </options>
   </test>
 
