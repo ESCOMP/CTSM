@@ -16,6 +16,8 @@ module unittestDustEmisInputs
   use FrictionVelocityMod, only : frictionvel_type
   use unittestWaterTypeFactory, only : unittest_water_type_factory_type
   use SoilStateInitTimeConstMod, only : ThresholdSoilMoistZender2003, MassFracClay
+  use SoilStateInitTimeConstMod, only : MassFracClayLeung2023
+  use abortutils, only : endrun
 
   implicit none
   private
@@ -43,9 +45,10 @@ contains
 
   !-----------------------------------------------------------------------
 
-  subroutine setUp(this)
+  subroutine setUp(this, dust_emis_method)
     use ColumnType, only : col
     class(unittest_dust_emis_input_type), intent(inout) :: this
+    character(len=*), intent(in), optional :: dust_emis_method
     ! Allocate and initiatlize the test object for input objects dust-emission needs
 
     character(len=5) :: NLFilename = 'none'
@@ -54,6 +57,14 @@ contains
     integer :: c
     type(atm2lnd_params_type) :: atm2lnd_params
     integer, parameter :: snl = 3
+    character(len=50) :: in_dust_emis_method
+
+    !-----------------------------------------------------------------------
+    if ( present(dust_emis_method) )then
+       in_dust_emis_method = trim(dust_emis_method)
+    else
+       in_dust_emis_method = "Zender_2003"
+    end if
 
     ! Settings needed for clm_varpar
     soil_layerstruct_predefined = '20SL_8.5m'
@@ -83,7 +94,7 @@ contains
     call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
     ! Water and soil state -- after the subgrid setup
     call this%water_factory%setup_after_subgrid(snl = snl)
-    call this%setupSoilState( )   ! This needs to happen before the water_type object creation
+    call this%setupSoilState( in_dust_emis_method )   ! This needs to happen before the water_type object creation
     call this%water_factory%create_water_type(this%water_inst, watsat_col=this%soilstate_inst%watsat_col)
     ! Canopy state, friction velocity, and temperature state ojects
     call this%canopystate_inst%SetNMLForTesting()
@@ -113,7 +124,7 @@ contains
 
   !-----------------------------------------------------------------------
 
-  subroutine setupSoilState(this)
+  subroutine setupSoilState(this, dust_emis_method)
     !
     ! !DESCRIPTION:
     ! Sets up the external environment used by Dust emissions - i.e., things accessed via
@@ -125,6 +136,7 @@ contains
     use ColumnType, only : col
     use GridcellType, only : grc
     class(unittest_dust_emis_input_type), intent(in) :: this
+    character(len=*), intent(in) :: dust_emis_method
     !
     integer :: c,j
     real(r8), parameter :: clay = 10.0_r8
@@ -145,7 +157,14 @@ contains
     ! These are needed for dust emissions initialization
     do c = bounds%begc, bounds%endc
        this%soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoistZender2003( clay )
-       this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay )
+       if ( trim(dust_emis_method) == "Zender_2003")then
+          this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay )
+       else if ( trim(dust_emis_method) == "Leung_2023")then
+          this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClayLeung2023( clay )
+       else
+          print *, 'dust_emis_method = ', trim(dust_emis_method)
+          call endrun("ERROR: do NOT know about this dust_emis_method")
+       end if
     end do
 
   end subroutine setupSoilState

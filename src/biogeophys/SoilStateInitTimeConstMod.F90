@@ -10,6 +10,8 @@ module SoilStateInitTimeConstMod
   use LandunitType  , only : lun                
   use ColumnType    , only : col                
   use PatchType     , only : patch                
+  use abortUtils    , only : endrun
+  use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
   !
   implicit none
   private
@@ -22,6 +24,7 @@ module SoilStateInitTimeConstMod
   public :: ThresholdSoilMoistZender2003
   public :: ThresholdSoilMoistKok2014
   public :: MassFracClay
+  public :: MassFracClayLeung2023
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: ReadNL
@@ -177,6 +180,7 @@ contains
     use clm_varcon          , only : secspday, denh2o, denice, grlnd
     use clm_varctl          , only : use_cn, use_lch4, use_fates
     use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct_predefined
+    use clm_varctl          , only : dust_emis_method
     use landunit_varcon     , only : istdlak, istwet, istsoil, istcrop, istice
     use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv 
     use fileutils           , only : getfil
@@ -717,7 +721,11 @@ contains
        g = col%gridcell(c)
 
        soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoistZender2003( clay3d(g,1) )
-       soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay3d(g,1) )
+       if ( trim(dust_emis_method) == "Leung_2023" ) then
+          soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClayLeung2023( clay3d(g,1) )
+       else
+          soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay3d(g,1) )
+       end if
 
     end do
 
@@ -757,8 +765,6 @@ contains
   ! Notes from: dmleung 19 Feb 2024.
   !
   !------------------------------------------------------------------------------
-      use abortUtils    , only : endrun
-      use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
       real(r8), intent(IN) :: clay ! Fraction of clay in the soil (%)
 
       if ( clay < 0.0_r8 .or. clay > 100.0_r8 )then
@@ -800,8 +806,18 @@ contains
       real(r8), intent(IN) :: clay ! Fraction of lay in the soil (%)
 
       MassFracClay = min(clay * 0.01_r8, 0.20_r8)
-      MassFracClay = 0.1_r8 + MassFracClay * 0.1_r8 / 0.20_r8   ! dmleung added this line to reduce the sensitivity of dust emission flux to clay fraction in DUSTMod. 5 Jul 2024
   end function MassFracClay
+
+  !------------------------------------------------------------------------------
+
+  real(r8) function MassFracClayLeung2023( clay )
+  ! Calculate the mass fraction of clay needed for dust emission, based on clay content
+  ! Based on the base Zender_2003 version, with a slight modification for Leung_2023
+      real(r8), intent(IN) :: clay ! Fraction of lay in the soil (%)
+
+      MassFracClayLeung2023 = MassFracClay( clay )
+      MassFracClayLeung2023 = 0.1_r8 + MassFracClayLeung2023 * 0.1_r8 / 0.20_r8   ! dmleung added this line to reduce the sensitivity of dust emission flux to clay fraction in DUSTMod. 5 Jul 2024
+  end function MassFracClayLeung2023
 
   !------------------------------------------------------------------------------
 

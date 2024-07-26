@@ -35,10 +35,10 @@ contains
     ! Allocate and initialize the test object for input objects dust-emission needs
     character(len=5) :: NLFilename = 'none'
 
-    call this%input%setUp()
+    dust_emis_method = 'Leung_2023'
+    call this%input%setUp( dust_emis_method=dust_emis_method )
  
     ! Create the dust emission object last
-    dust_emis_method = 'Leung_2023'
     allocate(this%dust_emis, source = create_dust_emissions(bounds, NLFilename))
   end subroutine setUp
 
