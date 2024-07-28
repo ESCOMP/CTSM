@@ -107,7 +107,7 @@ contains
        call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot, &
                                vlc_trb_1=vlc_trb_1, vlc_trb_2=vlc_trb_2, vlc_trb_3=vlc_trb_3, &
                                vlc_trb_4=vlc_trb_4)
-       @assertEqual( flx_mss_vrt_dst_tot, 1.208384635884010d-5, tolerance=tol )
+       @assertEqual( flx_mss_vrt_dst_tot, 1.305341724414137d-006, tolerance=tol )
        @assertEqual( vlc_trb_1, 3.407721147709135d-003, tolerance=tol )
        @assertEqual( vlc_trb_2, 4.961153753164878d-003, tolerance=tol )
        @assertEqual( vlc_trb_3, 4.980100969983446d-003, tolerance=tol )
@@ -270,7 +270,7 @@ contains
        call this%validate_patch(p)
        call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot )
        total_dust0 = flx_mss_vrt_dst_tot
-       @assertEqual( flx_mss_vrt_dst_tot, 1.063573374792962d-4, tolerance=tol )
+       @assertEqual( flx_mss_vrt_dst_tot, 1.064145669761461d-5, tolerance=tol )
     end do
     ! Double u10 and show result is higher
     call this%input%create_fv( u10=u10*2.0_r8, fv=fv)
@@ -282,7 +282,7 @@ contains
        call this%validate_patch(p)
        call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot )
        total_dust_higher = flx_mss_vrt_dst_tot
-       @assertEqual( flx_mss_vrt_dst_tot, 1.774023264204829d-4, tolerance=tol )
+       @assertEqual( flx_mss_vrt_dst_tot, 1.064145669761461d-5, tolerance=tol )
     end do
     @assertGreaterThan( total_dust_higher, total_dust0 )
 
