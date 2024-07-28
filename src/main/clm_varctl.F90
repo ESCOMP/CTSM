@@ -407,6 +407,8 @@ module clm_varctl
   logical, public :: use_cropcal_streams = .false.
   logical, public :: use_cropcal_rx_swindows = .false.
   logical, public :: use_cropcal_rx_cultivar_gdds = .false.
+  logical, public :: adapt_cropcal_rx_cultivar_gdds = .false.
+  logical, public :: flush_gdd20 = .false.
 
   !----------------------------------------------------------
   ! biomass heat storage switch

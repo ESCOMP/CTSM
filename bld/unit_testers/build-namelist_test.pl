@@ -1675,21 +1675,23 @@ print "Test crop resolutions \n";
 print "==================================================\n";
 
 # Check for crop resolutions
-my $crop1850_res = "1x1_smallvilleIA";
-$options = "-bgc bgc -crop -res $crop1850_res -use_case 1850_control -envxml_dir .";
-&make_env_run();
-eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
-is( $@, '', "$options" );
-$cfiles->checkfilesexist( "$options", $mode );
-$cfiles->shownmldiff( "default", "standard" );
-if ( defined($opts{'compare'}) ) {
-   $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-   $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+my @crop1850_res = ( "1x1_smallvilleIA", "1x1_cidadinhoBR" );
+foreach my $res ( @crop1850_res ) {
+   $options = "-bgc bgc -crop -res $res -use_case 1850_control -envxml_dir .";
+   &make_env_run();
+   eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
+   is( $@, '', "$options" );
+   $cfiles->checkfilesexist( "$options", $mode );
+   $cfiles->shownmldiff( "default", "standard" );
+   if ( defined($opts{'compare'}) ) {
+      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+   }
+   if ( defined($opts{'generate'}) ) {
+      $cfiles->copyfiles( "$options", $mode );
+   }
+   &cleanup();
 }
-if ( defined($opts{'generate'}) ) {
-   $cfiles->copyfiles( "$options", $mode );
-}
-&cleanup();
 
 my @crop_res = ( "1x1_numaIA", "4x5", "10x15", "0.9x1.25", "1.9x2.5", "ne3np4.pg3", "ne30np4", "ne30np4.pg3", "C96", "mpasa120" );
 foreach my $res ( @crop_res ) {

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.2.016 samrabin 07/27/2024 Enable new crop calendars for clm60 compsets
        ctsm5.2.015 multiple 07/22/2024 Update submodule tags to pass runoff from cism to rof
        ctsm5.2.014 multiple 07/19/2024 use_matrixcn, use_soil_matrixcn come in as default .false.
        ctsm5.2.013 glemieux 07/18/2024 FATES Land Use V2

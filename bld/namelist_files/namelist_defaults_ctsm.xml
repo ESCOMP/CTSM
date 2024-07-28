@@ -1909,6 +1909,8 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne3np4.pg3_hist_1850_78pfts_c240216.nc
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_C96_hist_1850_78pfts_c240216.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" >
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_smallvilleIA_hist_1850_78pfts_c240221.nc</fsurdat>
+<fsurdat hgrid="1x1_cidadinhoBR" sim_year="2000" >
+lnd/clm2/surfdata_esmf/surfdata_1x1_cidadinhoBR_hist_2000_78pfts_c240613.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"       sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_brazil_hist_1850_78pfts_c240221.nc</fsurdat>
 
@@ -1980,10 +1982,13 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_C96_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
 
 
-<!-- Note that this transient file only goes up to year 1855.
+<!-- Note that these transient files only go up to year 1855.
      This is sufficient for testing purposes, but could cause problems if you try to run beyond 1855. -->
 <flanduse_timeseries hgrid="1x1_smallvilleIA" sim_year_range="1850-2000"
 >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_1x1_smallvilleIA_SSP2-4.5_1850-1855_78pfts_c240221.nc</flanduse_timeseries>
+
+<!-- Cidadinho test site has no transient data. -->
+<flanduse_timeseries hgrid="1x1_cidadinhoBR" sim_year_range="1850-2000"></flanduse_timeseries>
 
 <!-- Future scenarios - landuse time series files with crop on -->
 
@@ -2192,10 +2197,34 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
 
-<!-- crop calendar streams namelist defaults -->
-<stream_year_first_cropcal  >1850</stream_year_first_cropcal>
-<stream_year_last_cropcal   >2100</stream_year_last_cropcal>
-<model_year_align_cropcal   >1850</model_year_align_cropcal>
+<!-- crop calendars: default settings -->
+<cropcals_rx>.false.</cropcals_rx>
+<cropcals_rx_adapt>.true.</cropcals_rx_adapt>
+<cropcals_rx_adapt phys="clm4_5">.false.</cropcals_rx_adapt>
+<cropcals_rx_adapt phys="clm5_0">.false.</cropcals_rx_adapt>
+<cropcals_rx_adapt phys="clm5_1">.false.</cropcals_rx_adapt>
+<stream_gdd20_seasons>.false.</stream_gdd20_seasons>
+<flush_gdd20>.false.</flush_gdd20>
+<stream_year_first_cropcal_swindows  >2000</stream_year_first_cropcal_swindows>
+<stream_year_last_cropcal_swindows   >2000</stream_year_last_cropcal_swindows>
+<model_year_align_cropcal_swindows   >2000</model_year_align_cropcal_swindows>
+<stream_year_first_cropcal_cultivar_gdds  >2000</stream_year_first_cropcal_cultivar_gdds>
+<stream_year_last_cropcal_cultivar_gdds   >2000</stream_year_last_cropcal_cultivar_gdds>
+<model_year_align_cropcal_cultivar_gdds   >2000</model_year_align_cropcal_cultivar_gdds>
+
+<!-- crop calendars: default input files -->
+<stream_fldFileName_swindow_start cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/swindow_starts_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_start>
+<stream_fldFileName_swindow_end cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/swindow_ends_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_end>
+<stream_fldfilename_cultivar_gdds cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
+<stream_meshfile_cropcal cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/360x720_120830_ESMFmesh_c20210507_cdf5.tweaked_latlons.nc</stream_meshfile_cropcal>
+<stream_fldFileName_swindow_start cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/swindow_starts_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_start>
+<stream_fldFileName_swindow_end cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/swindow_ends_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_end>
+<stream_fldfilename_cultivar_gdds cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
+<stream_fldFileName_gdd20_baseline cropcals_rx_adapt=".true." stream_gdd20_seasons=".false.">lnd/clm2/cropdata/calendars/processed/20230714_cropcals_pr2_1deg.actually2deg.1980-2009.from_GDDB20.interpd_halfdeg.tweaked_latlons.nc</stream_fldFileName_gdd20_baseline>
+<stream_fldFileName_gdd20_baseline cropcals_rx_adapt=".true." stream_gdd20_seasons=".true.">lnd/clm2/cropdata/calendars/processed/gdd20bl.copied_from.gdds_20230829_161011.v2.tweaked_latlons.nc</stream_fldFileName_gdd20_baseline>
+<stream_fldFileName_gdd20_season_start stream_gdd20_seasons=".true.">lnd/clm2/cropdata/calendars/processed/sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.tweaked_latlons.nc</stream_fldFileName_gdd20_season_start>
+<stream_fldFileName_gdd20_season_end stream_gdd20_seasons=".true.">lnd/clm2/cropdata/calendars/processed/hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.tweaked_latlons.nc</stream_fldFileName_gdd20_season_end>
+<stream_meshfile_cropcal cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/360x720_120830_ESMFmesh_c20210507_cdf5.tweaked_latlons.nc</stream_meshfile_cropcal>
 
 <!-- lightning streams namelist defaults -->
 
