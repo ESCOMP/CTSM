@@ -1532,7 +1532,11 @@ print "==================================================\n";
 # Check for crop resolutions
 my @crop1850_res = ( "1x1_smallvilleIA", "1x1_cidadinhoBR" );
 foreach my $res ( @crop1850_res ) {
-   $options = "-bgc bgc -crop -res $res -use_case 1850_control -envxml_dir .";
+   my $use_case = "1850_control";
+   if ( $res =~ /1x1_cidadinhoBR/ ) {
+      $use_case = "2000_control";
+   }
+   $options = "-bgc bgc -crop -res $res -use_case $use_case -envxml_dir .";
    &make_env_run();
    eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
    is( $@, '', "$options" );
