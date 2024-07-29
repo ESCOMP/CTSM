@@ -1815,7 +1815,7 @@ sub process_namelist_inline_logic {
   #################################
   # namelist group: exice_streams #
   #################################
-  setup_logic_exice($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_exice($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 
   ##########################################
   # namelist group: clm_temperature_inparm #
@@ -2322,7 +2322,6 @@ sub setup_logic_soilstate {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'organic_frac_squared' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_bedrock',
               'use_fates'=>$nl_flags->{'use_fates'}, 'vichydro'=>$nl_flags->{'vichydro'} );
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice'); # excess ice flag should be read before stream vars
 
   my $var1 = "soil_layerstruct_predefined";
   my $var2 = "soil_layerstruct_userdefined";
@@ -4583,7 +4582,8 @@ sub setup_logic_exice {
   #
   # excess ice streams
   #
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice', 'phys'=>$physv->as_string()); 
   my $use_exice = $nl->get_value( 'use_excess_ice' );
   my $use_exice_streams = $nl->get_value( 'use_excess_ice_streams' );
   my $finidat = $nl->get_value('finidat');
@@ -4642,10 +4642,13 @@ sub setup_logic_coldstart_temp {
 
   # set initial temperatures for excess ice gridcells:
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_temp');
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_depth');
-
   my $use_exice = $nl->get_value( 'use_excess_ice' );
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_temp',
+             'use_excess_ice'=>$use_exice);
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_depth',
+             'use_excess_ice'=>$use_exice);
+
   my $use_exice_streams = $nl->get_value( 'use_excess_ice_streams' );
   my $exice_cs_temp = $nl->get_value( 'excess_ice_coldstart_temp' );
   my $exice_cs_depth = $nl->get_value( 'excess_ice_coldstart_depth' );
