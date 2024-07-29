@@ -307,7 +307,6 @@ def buildnml(cime_path, rundir):
     # remove temporary files in rundir
     os.remove(os.path.join(rundir, "config_cache.xml"))
     os.remove(os.path.join(rundir, "env_lilac.xml"))
-    os.remove(os.path.join(rundir, "drv_flds_in"))
     os.remove(infile)
 
 

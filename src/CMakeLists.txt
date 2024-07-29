@@ -107,5 +107,6 @@ add_subdirectory(${CLM_ROOT}/src/init_interp/test clm_init_interp_test)
 add_subdirectory(${CLM_ROOT}/src/self_tests/test clm_self_tests_test)
 
 # Add driver unit test directories
+# (these should be moved to the appropriate submodule)
 add_subdirectory(${CLM_ROOT}/src/drv_test drv_test)
 
