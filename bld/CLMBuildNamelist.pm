@@ -97,7 +97,7 @@ OPTIONS
 				        CENTURY or MIMICS decomposition
                                         This toggles on the namelist variables:
 				        use_fates. use_lch4 and use_nitrif_denitrif are optional
-				 
+
                               (Only for CLM4.5/CLM5.0)
      -[no-]chk_res            Also check [do NOT check] to make sure the resolution and
                               land-mask is valid.
@@ -521,6 +521,7 @@ sub read_namelist_defaults {
                             "$cfgdir/namelist_files/namelist_defaults_ctsm.xml",
                             "$cfgdir/namelist_files/namelist_defaults_drv.xml",
                             "$cfgdir/namelist_files/namelist_defaults_fire_emis.xml",
+                            "$cfgdir/namelist_files/namelist_defaults_dust_emis.xml",
                             "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
 
   # Add the location of the use case defaults files to the options hash
@@ -1041,7 +1042,7 @@ sub setup_cmdl_fire_light_res {
      if ( ! &value_is_true($nl_flags->{'neon'}) ) {
          if ( defined($opts->{'clm_usr_name'}) ) {
             $log->warning("The NEON lightning dataset does NOT cover the entire globe, make sure it covers the region for your grid");
-         } else { 
+         } else {
             $log->fatal_error("The NEON lightning dataset can NOT be used for global grids or regions or points outside of its area as it does NOT cover the entire globe.");
          }
      }
@@ -1762,7 +1763,7 @@ sub process_namelist_inline_logic {
   ######################################
   # namelist options for dust emissions
   ######################################
-  setup_logic_dust_emis($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_dust_emis($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref);
 
   #################################
   # namelist group: megan_emis_nl #
@@ -2335,7 +2336,7 @@ sub setup_logic_crop_inparm {
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "initial_seed_at_planting",
                  'use_crop'=>$nl->get_value('use_crop') );
-     
+
      my $crop_residue_removal_frac = $nl->get_value('crop_residue_removal_frac');
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'crop_residue_removal_frac' );
      if ( $crop_residue_removal_frac < 0.0 or $crop_residue_removal_frac > 1.0 ) {
@@ -2676,8 +2677,8 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
                 if ( defined($use_init_interp_default) ) {
                    $log->fatal_error($err_msg." but can't find one without $useinitvar being set to true, change it to true in your user_nl_clm file in your case");
                 } else {
-                   my $set = "Relevent settings: use_cndv = ". $nl_flags->{'use_cndv'} . " phys = " . 
-                              $physv->as_string() . " hgrid = " . $nl_flags->{'res'} . " sim_year = " . 
+                   my $set = "Relevent settings: use_cndv = ". $nl_flags->{'use_cndv'} . " phys = " .
+                              $physv->as_string() . " hgrid = " . $nl_flags->{'res'} . " sim_year = " .
                               $settings{'sim_year'} . " lnd_tuning_mode = " . $nl_flags->{'lnd_tuning_mode'} .
                               "use_fates = " . $nl_flags->{'use_fates'};
                    $log->fatal_error($err_msg." but the default setting of $useinitvar is false, so set both $var to a startup file and $useinitvar==TRUE, or developers should modify the namelist_defaults file".$set);
@@ -3220,7 +3221,6 @@ sub setup_logic_supplemental_nitrogen {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
 		  'suplnitro', 'use_fates'=>$nl_flags->{'use_fates'});
   }
-  
   #
   # Error checking for suplnitro
   #
@@ -3727,10 +3727,10 @@ sub setup_logic_nitrogen_deposition {
                 'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_taxmode', 'phys'=>$nl_flags->{'phys'},
-		'use_cn'=>$nl_flags->{'use_cn'}, 
+		'use_cn'=>$nl_flags->{'use_cn'},
 		'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_varlist', 'phys'=>$nl_flags->{'phys'},
-		'use_cn'=>$nl_flags->{'use_cn'}, 
+		'use_cn'=>$nl_flags->{'use_cn'},
 		'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_ndep', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
@@ -4025,50 +4025,65 @@ sub setup_logic_fire_emis {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_dust_emis {
-  # Logic to handle the dust emissions
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  # Logic to handle the dust emissions namelists, both drv_flds_in and lnd_in files
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
-  # First get the dust emission method
-  my $var = "dust_emis_method";
-  add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
+  # Only set dust emission settings -- if not connected to CAM
+  my $lnd_sets_dust = logical_to_fortran($envxml_ref->{'LND_SETS_DUST_EMIS_DRV_FLDS'});
+  if ( &value_is_true( $lnd_sets_dust)) {
 
-  my $dust_emis_method = remove_leading_and_trailing_quotes( $nl->get_value($var) );
+      # First get the dust emission method
+      my $var = "dust_emis_method";
+      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
+      my $dust_emis_method = remove_leading_and_trailing_quotes( $nl->get_value($var) );
 
-  my @zender_files_in_lnd_opts = ( "stream_fldfilename_zendersoilerod", "stream_meshfile_zendersoilerod",
-                                   "zendersoilerod_mapalgo" );
-  if ( $dust_emis_method eq "Zender_2003" ) {
-     # get the zender_soil_erod_source
-     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                 "zender_soil_erod_source", 'dust_emis_method'=>$dust_emis_method );
+      my @zender_files_in_lnd_opts = ( "stream_fldfilename_zendersoilerod", "stream_meshfile_zendersoilerod",
+                                       "zendersoilerod_mapalgo" );
+      if ( $dust_emis_method eq "Zender_2003" ) {
+         # get the zender_soil_erod_source
+         add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                     "zender_soil_erod_source", 'dust_emis_method'=>$dust_emis_method );
 
-     my $zender_source = remove_leading_and_trailing_quotes( $nl->get_value('zender_soil_erod_source') );
-     if ( $zender_source eq "lnd" ) {
-        foreach my $option ( @zender_files_in_lnd_opts ) {
-           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $option,
-                       'dust_emis_method'=>$dust_emis_method, 'zender_soil_erod_source'=>$zender_source,
-                       'hgrid'=>$nl_flags->{'res'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
-        }
-     } else {
-        foreach my $option ( @zender_files_in_lnd_opts ) {
-           if ( defined($nl->get_value($option)) ) {
-             $log->fatal_error("zender_soil_erod_source is NOT lnd, but the file option $option is being set" .
-                               " and should NOT be unless you want it handled here in the LAND model, " .
-                               "otherwise the equivalent option is set in CAM" );
-           }
-        }
-     }
+         my $zender_source = remove_leading_and_trailing_quotes( $nl->get_value('zender_soil_erod_source') );
+         if ( $zender_source eq "lnd" ) {
+            foreach my $option ( @zender_files_in_lnd_opts ) {
+               add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $option,
+                           'dust_emis_method'=>$dust_emis_method, 'zender_soil_erod_source'=>$zender_source,
+                           'hgrid'=>$nl_flags->{'res'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
+            }
+         } elsif ( $zender_source eq "atm" ) {
+            foreach my $option ( @zender_files_in_lnd_opts ) {
+               if ( defined($nl->get_value($option)) ) {
+                  $log->fatal_error("zender_soil_erod_source is atm, and the file option $option is being set" .
+                                    " which should NOT be unless you want it handled here in the LAND model, " .
+                                    "otherwise the equivalent option is set in CAM" );
+               }
+            }
+         } elsif ( $zender_source eq "none" ) {
+            $log->fatal_error("zender_soil_erod_source is set to none and only atm or lnd should be used when $var is Zender_2002" );
+         }
+      } else {
+         # Verify that NONE of the Zender options are being set if Zender is NOT being used
+         push @zender_files_in_lnd_opts, "zender_soil_erod_source";
+         foreach my $option ( @zender_files_in_lnd_opts ) {
+            if ( defined($nl->get_value($option)) ) {
+               $log->fatal_error("dust_emis_method is NOT set to Zender_2003, but one of it's options " .
+                                 "$option is being set, need to change one or the other" );
+            }
+         }
+         if ( $dust_emis_method eq "Leung_2023" ) {
+            $log->warning("dust_emis_method is Leung_2023 and that option has NOT been brought into CTSM yet");
+         }
+      }
+  # Otherwise make sure dust settings are NOT being set in CLM
   } else {
-     # Verify that NONE of the Zender options are being set if Zender is NOT being used
-     push @zender_files_in_lnd_opts, "zender_soil_erod_source";
-     foreach my $option ( @zender_files_in_lnd_opts ) {
-        if ( defined($nl->get_value($option)) ) {
-          $log->fatal_error("dust_emis_method is NOT set to Zender_2003, but one of it's options " .
-                            "$option is being set, need to change one or the other" );
-        }
-     }
-     if ( $dust_emis_method eq "Leung_2023" ) {
-        $log->warning("dust_emis_method is Leung_2023 and that option has NOT been brought into CTSM yet");
-     }
+      my @vars = ( "dust_emis_method", "zender_soil_erod_source" );
+      foreach my $option ( @vars ) {
+         if ( defined($nl->get_value($option)) ) {
+            $log->fatal_error("Dust emission variable is being set in CTSM, which should NOT be done when" .
+                              " connected to CAM as CAM should set them");
+         }
+      }
   }
 }
 
@@ -4661,8 +4676,8 @@ sub setup_logic_fates {
         my $suplnitro = $nl->get_value('suplnitro');
         my $parteh_mode = $nl->get_value('fates_parteh_mode');
         if ( ($parteh_mode == 1) &&  ($suplnitro !~ /ALL/) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
-          $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to ALL, FATES is on, " . 
-                            "but and FATES-SP is not active, but fates_parteh_mode is 1, so Nitrogen is not active" . 
+          $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to ALL, FATES is on, " .
+                            "but and FATES-SP is not active, but fates_parteh_mode is 1, so Nitrogen is not active" .
                             "Change suplnitro back to ALL");
         }
 
@@ -5066,7 +5081,7 @@ sub write_output_files {
   $log->verbose_message("Writing clm namelist to $outfile");
 
   # Drydep, fire-emission or MEGAN namelist for driver
-  @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl carma_inparm);
+  @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl carma_inparm dust_emis_inparm);
   $outfile = "$opts->{'dir'}/drv_flds_in";
   $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
   $log->verbose_message("Writing @groups namelists to $outfile");
