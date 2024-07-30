@@ -184,7 +184,7 @@ contains
           UseStreams = .true.
        end if
     else
-       UseStreams = .false.  ! Prigent streams are off without a filename given
+       UseStreams = .true.
     end if
   end function UseStreams
 
