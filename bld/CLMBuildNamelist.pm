@@ -4595,6 +4595,11 @@ sub setup_logic_exice {
   } elsif ( (not defined($use_exice_streams)) && (not value_is_true($use_exice)) ) {
      $nl->set_variable_value('exice_streams', 'use_excess_ice_streams' , '.false.');
      $use_exice_streams = '.false.';
+  # Checking for cold clm_start_type and not finidat here since finidat can be not set set in branch/hybrid runs and
+  # These cases are handled in the restart routines in the model
+  } elsif ( defined($use_exice_streams) && (not value_is_true($use_exice_streams)) && value_is_true($use_exice) &&
+          ( $nl_flags->{'clm_start_type'} eq "'cold'" || $nl_flags->{'clm_start_type'} eq "'arb_ic'" )) {
+     $log->fatal_error("use_excess_ice_streams can NOT be FALSE when use_excess_ice is TRUE on the cold start" );
   }
   # If excess ice streams is on
   if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
