@@ -105,6 +105,12 @@ Answer changes
 
 Changes answers relative to baseline: No bit-for-bit
 
+  The following tests compared different to baseline because of reproducability issues:
+     ERP_P64x2_Lm13.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings
+     SMS_D.1x1_brazil.I2000Clm60FatesSpCruRsGs.derecho_gnu.clm-FatesColdDryDepSatPhen
+     SMS_D.1x1_brazil.I2000Clm60FatesSpCruRsGs.derecho_gnu.clm-FatesColdMeganSatPhen
+  The CN-MATRIX issue is because of #2619 and FATES because of #2656
+
 Other details
 -------------
 
