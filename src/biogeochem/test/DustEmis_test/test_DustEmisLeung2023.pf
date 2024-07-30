@@ -234,7 +234,7 @@ contains
    patch%itype(bounds%begp:bounds%endp) = 1
    call this%input%create_atm2lnd()
    call this%input%create_fv( )
-   this%input%canopystate_inst%tlai_patch(:) = 0.3_r8
+   this%input%canopystate_inst%tlai_patch(:) = 1.0_r8
    call this%dust_emis%DustEmission(bounds, this%input%num_nolakep, this%input%filter_nolakep, this%input%atm2lnd_inst, &
                      this%input%soilstate_inst, this%input%canopystate_inst, this%input%water_inst%waterstatebulk_inst, &
                      this%input%water_inst%waterdiagnosticbulk_inst, this%input%frictionvel_inst)
@@ -250,8 +250,8 @@ contains
   !-----------------------------------------------------------------------
 
   @Test
-  subroutine check_dust_emis_increasing_wind(this)
-    ! Check dust emissions with increasing wind
+  subroutine check_dust_emis_increasing_fv(this)
+    ! Check dust emissions with increasing friction velocity
     class(TestDustEmisLeung2023), intent(inout) :: this
     integer :: p, c
     real(r8) :: flx_mss_vrt_dst_tot
@@ -259,7 +259,7 @@ contains
     real(r8) :: u10 = 10._r8
     real(r8) :: total_dust0, total_dust_higher
 
-    ! Run baseline u10
+    ! Run baseline fv
     call this%input%create_atm2lnd()
     call this%input%create_fv( u10=u10, fv=fv )
     call this%dust_emis%DustEmission(bounds, this%input%num_nolakep, this%input%filter_nolakep, this%input%atm2lnd_inst, &
@@ -272,8 +272,8 @@ contains
        total_dust0 = flx_mss_vrt_dst_tot
        @assertEqual( flx_mss_vrt_dst_tot, 1.064145669761461d-5, tolerance=tol )
     end do
-    ! Double u10 and show result is higher
-    call this%input%create_fv( u10=u10*2.0_r8, fv=fv)
+    ! Double fv and show result is higher
+    call this%input%create_fv( u10=u10, fv=fv*2.0_r8)
     call this%dust_emis%DustEmission(bounds, this%input%num_nolakep, this%input%filter_nolakep, this%input%atm2lnd_inst, &
                       this%input%soilstate_inst, this%input%canopystate_inst, this%input%water_inst%waterstatebulk_inst, &
                       this%input%water_inst%waterdiagnosticbulk_inst, this%input%frictionvel_inst)
@@ -282,11 +282,11 @@ contains
        call this%validate_patch(p)
        call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot )
        total_dust_higher = flx_mss_vrt_dst_tot
-       @assertEqual( flx_mss_vrt_dst_tot, 1.064145669761461d-5, tolerance=tol )
+       @assertEqual( flx_mss_vrt_dst_tot, 8.309603073613188d-5, tolerance=tol )
     end do
     @assertGreaterThan( total_dust_higher, total_dust0 )
 
-  end subroutine check_dust_emis_increasing_wind
+  end subroutine check_dust_emis_increasing_fv
 
   !-----------------------------------------------------------------------
 
