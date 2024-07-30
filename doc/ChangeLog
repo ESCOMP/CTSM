@@ -1,4 +1,119 @@
 ===============================================================
+Tag name: ctsm5.2.017
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue 30 Jul 2024 08:39:20 AM MDT
+One-line Summary: Dust emissions control moved to cmeps
+
+Purpose and description of changes
+----------------------------------
+
+Remove the dust emissions namelist items from CTSM and use the namelist in the drv_flds_in for CMEPS.
+
+This updates CTSM to use the namelist control in CMEPS (in ESCOMP/CMEPS#429). So the CMEPS external needs to be updated, and the
+namelist control in CTSM changed to use CMEPS rather than the internal CTSM control settings and the CTSM ones removed.
+
+The new XML variable:
+
+   LND_SETS_DUST_EMIS_DRV_FLDS
+
+controls whether dust emission settings are set by CTSM or by CAM. Only one or the other can set them, and it's required so when CAM
+and CTSM are running together they need to know which one will select.
+
+This required some changes for LILAC. The drv_flds_in namelist file is now required for LILAC, and read for dust emissions
+(and dust emissions only) at the LILAC lnd_comp_esmf.F90 level.
+
+Add a unit test for the CMEPS code to make sure it's working correctly. This validates the code both for CAM and CTSM.
+
+Fix the cidinahoBR test in the build-namelist unit tester.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+  Fixes #2376 -- Update CTSM with CMEPS that controls dust emission options
+  Fixes #2150 -- Ability to flip between different dust emission methods
+  Fixes #2524 -- Add option to NOT set dust emission settings when coupled to CAM
+  Fixes #2666 -- cidinahoBR test in build-namelist 
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   dust_emis_method can NOT be set to Leung_2023 -- yet.
+   See below about LND_SETS_DUST_EMIS_DRV_FLDS
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  CTSM namelist items moved to the dust_emis_inparm namelist in drv_flds_in:
+  zender_soil_erod_source and dust_emis_method
+
+  New logical XML variable:
+     LND_SETS_DUST_EMIS_DRV_FLDS
+  If TRUE CTSM sets the dust emission namelist, otherwise CAM will (when coupled to CAM) 
+  If you are NOT coupled to CAM and LND_SETS_DUST_EMIS_DRV_FLDS==FALSE, the model will abort
+  trying to read the dust_emis_inparm namelist in drv_flds_in.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Added a PF unit test for CMEPS dust emission code. This should be moved to CMEPS, but still run here.
+   Control design in DustEmisFactory, uses a Functional Programming design pattern with pure functions
+   from CMEPS for CTSM to know the drv_flds_in settings. Design notes were added in that regard.
+
+Testing summary: Regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS (1006 are different because of the namelist changes)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  #2545 -- Dust emission control moved to CMEPS
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.016
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Sat 27 Jul 2024 05:13:08 PM MDT
