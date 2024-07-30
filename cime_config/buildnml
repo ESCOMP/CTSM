@@ -233,7 +233,7 @@ def buildnml(case, caseroot, compname):
                     "WARNING: Do you have appropriate initial conditions for this simulation?"
                     + " Check that the finidat file used in the lnd_in namelist is appropriately spunup for your case"
                 )
-        if "PLUMBER" in clm_usrdat_name and clm_force_coldstart == "off":
+        if "PLUMBER2" in clm_usrdat_name and clm_force_coldstart == "off":
             if ("_transient" in clm_nml_use_case) and (
                 re.fullmatch(r"\w\w-\w\w\w\.transient", casename) is None
             ):
