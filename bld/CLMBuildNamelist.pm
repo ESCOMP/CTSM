@@ -4645,9 +4645,22 @@ sub setup_logic_coldstart_temp {
 
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  # set initial temperatures for excess ice gridcells:
+  # set initial temperatures for excess ice gridcells: needs to be set whether excess ice is on or not
 
   my $use_exice = $nl->get_value( 'use_excess_ice' );
+  my $finidat = $nl->get_value('finidat');
+
+  my @list = ( "excess_ice_coldstart_temp", "excess_ice_coldstart_depth" );
+
+  # Only needs to be set if it's a coldstart
+  if ( ! string_is_undef_or_empty($finidat) ) {
+     foreach my $var ( @list ) {
+        my $val = $nl->get_value( $var );
+        if ( defined($val) ) {
+           $log->warning("$var only needs to be set if this is a cold-start, although InitCold is always called");
+        }
+     }
+  }
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_temp',
              'use_excess_ice'=>$use_exice);
@@ -4658,15 +4671,12 @@ sub setup_logic_coldstart_temp {
   my $exice_cs_temp = $nl->get_value( 'excess_ice_coldstart_temp' );
   my $exice_cs_depth = $nl->get_value( 'excess_ice_coldstart_depth' );
 
-  if (defined($use_exice) && value_is_true($use_exice)) {
-     # Checking this setting only needed IF excess ice streams are on get the stream defaults
-     if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
-      if (defined($exice_cs_depth) && $exice_cs_depth <= 0.0 ) {
-        $log->fatal_error("excess_ice_coldstart_depth is <= 0.0" );
-      }
-      if (defined($exice_cs_temp) && $exice_cs_temp >= 0.0 ) {
-        $log->fatal_error("excess_ice_coldstart_temp is >= 0.0, no excess ice will be present in this run" );
-      }
+  if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
+     if (defined($exice_cs_depth) && $exice_cs_depth <= 0.0 ) {
+       $log->fatal_error("excess_ice_coldstart_depth is <= 0.0" );
+     }
+     if (defined($exice_cs_temp) && $exice_cs_temp >= 0.0 ) {
+       $log->fatal_error("excess_ice_coldstart_temp is >= 0.0, no excess ice will be present in this run" );
      }
   }
 }
