@@ -4593,7 +4593,6 @@ sub setup_logic_exice {
      $use_exice_streams = '.true.';
      # if excess ice is turned off
   } elsif ( (not defined($use_exice_streams)) && (not value_is_true($use_exice)) ) {
-     $nl->set_variable_value('exice_streams', 'use_excess_ice_streams' , '.false.');
      $use_exice_streams = '.false.';
   # Checking for cold clm_start_type and not finidat here since finidat can be not set set in branch/hybrid runs and
   # These cases are handled in the restart routines in the model
@@ -4601,6 +4600,9 @@ sub setup_logic_exice {
           ( $nl_flags->{'clm_start_type'} eq "'cold'" || $nl_flags->{'clm_start_type'} eq "'arb_ic'" )) {
      $log->fatal_error("use_excess_ice_streams can NOT be FALSE when use_excess_ice is TRUE on the cold start" );
   }
+
+  # Put use_exice_streams into nl_flags so can be referenced later
+  $nl_flags->{'use_excice_streams'} = $use_exice_streams;
   # If excess ice streams is on
   if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
      # Can only be true if excess ice is also on, otherwise fail
@@ -4652,7 +4654,7 @@ sub setup_logic_coldstart_temp {
 
   my @list = ( "excess_ice_coldstart_temp", "excess_ice_coldstart_depth" );
 
-  # Only needs to be set if it's a coldstart
+  # Only needs to be set by the user if it's a coldstart
   if ( ! string_is_undef_or_empty($finidat) ) {
      foreach my $var ( @list ) {
         my $val = $nl->get_value( $var );
@@ -4667,7 +4669,7 @@ sub setup_logic_coldstart_temp {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_depth',
              'use_excess_ice'=>$use_exice);
 
-  my $use_exice_streams = $nl->get_value( 'use_excess_ice_streams' );
+  my $use_exice_streams = $nl_flags->{'use_excice_streams'};
   my $exice_cs_temp = $nl->get_value( 'excess_ice_coldstart_temp' );
   my $exice_cs_depth = $nl->get_value( 'excess_ice_coldstart_depth' );
 
