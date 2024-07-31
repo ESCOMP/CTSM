@@ -47,6 +47,12 @@ _ENV_LILAC_TEMPLATE = """
       <valid_values>TRUE,FALSE</valid_values>
     </entry>
   </group>
+  <group id="run_cpl">
+    <entry id="LND_SETS_DUST_EMIS_DRV_FLDS" value="TRUE">
+      <type>logical</type>
+      <valid_values>TRUE,FALSE</valid_values>
+    </entry>
+  </group>
 </file>
 """
 
@@ -301,7 +307,6 @@ def buildnml(cime_path, rundir):
     # remove temporary files in rundir
     os.remove(os.path.join(rundir, "config_cache.xml"))
     os.remove(os.path.join(rundir, "env_lilac.xml"))
-    os.remove(os.path.join(rundir, "drv_flds_in"))
     os.remove(infile)
 
 

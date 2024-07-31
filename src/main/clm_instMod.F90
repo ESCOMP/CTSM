@@ -203,6 +203,7 @@ contains
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
     use BalanceCheckMod                    , only : GetBalanceCheckSkipSteps
+    use clm_varctl                         , only : flandusepftdat
     use clm_varctl                         , only : use_hillslope
     use HillslopeHydrologyMod              , only : SetHillslopeSoilThickness
     use initVerticalMod                    , only : setSoilLayerClass
@@ -466,7 +467,7 @@ contains
     ! Initialize the Functionaly Assembled Terrestrial Ecosystem Simulator (FATES)
     ! 
     if (use_fates) then
-       call clm_fates%Init(bounds)
+       call clm_fates%Init(bounds, flandusepftdat)
     end if
 
     deallocate (h2osno_col)

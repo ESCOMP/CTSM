@@ -178,6 +178,7 @@ def main(
                 mxmats,
                 cc.get_gs_len_da,
                 skip_crops,
+                outdir_figs,
                 logger,
             )
 

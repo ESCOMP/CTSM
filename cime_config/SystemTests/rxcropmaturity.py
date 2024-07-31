@@ -135,6 +135,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         logger.info("RXCROPMATURITY log:  modify user_nl files: generate GDDs")
         self._append_to_user_nl_clm(
             [
+                "stream_fldFileName_cultivar_gdds = ''",
                 "generate_crop_gdds = .true.",
                 "use_mxmat = .false.",
                 " ",
@@ -400,12 +401,14 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
 
     def _modify_user_nl_allruns(self):
         nl_additions = [
+            "cropcals_rx = .true.",
+            "cropcals_rx_adapt = .false.",
             "stream_meshfile_cropcal = '{}'".format(self._case.get_value("LND_DOMAIN_MESH")),
             "stream_fldFileName_swindow_start = '{}'".format(self._sdatefile),
             "stream_fldFileName_swindow_end   = '{}'".format(self._sdatefile),
-            "stream_year_first_cropcal = 2000",
-            "stream_year_last_cropcal = 2000",
-            "model_year_align_cropcal = 2000",
+            "stream_year_first_cropcal_swindows = 2000",
+            "stream_year_last_cropcal_swindows = 2000",
+            "model_year_align_cropcal_swindows = 2000",
             " ",
             "! (h1) Annual outputs on sowing or harvest axis",
             "hist_fincl2 = 'GRAINC_TO_FOOD_PERHARV', 'GRAINC_TO_FOOD_ANN', 'SDATES', 'SDATES_PERHARV', 'SYEARS_PERHARV', 'HDATES', 'GDDHARV_PERHARV', 'GDDACCUM_PERHARV', 'HUI_PERHARV', 'SOWING_REASON_PERHARV', 'HARVEST_REASON_PERHARV'",
@@ -442,7 +445,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
                 f"--sdates-file {sdates_file}",
                 f"--hdates-file {hdates_file}",
                 f"--output-dir generate_gdds_out",
-                f"--skip-crops miscanthus,irrigated_miscanthus",
+                f"--skip-crops miscanthus,irrigated_miscanthus,switchgrass,irrigated_switchgrass",
             ]
         )
         stu.run_python_script(

@@ -97,21 +97,25 @@ OPTIONS
 				        CENTURY or MIMICS decomposition
                                         This toggles on the namelist variables:
 				        use_fates. use_lch4 and use_nitrif_denitrif are optional
-				 
+
                               (Only for CLM4.5/CLM5.0)
      -[no-]chk_res            Also check [do NOT check] to make sure the resolution and
                               land-mask is valid.
-     -clm_accelerated_spinup "on|off" Setup in a configuration to run as fast as possible for doing a throw-away
+     -clm_accelerated_spinup "on|sasu|off" Setup in a configuration to run as fast as possible for doing a throw-away
                               simulation in order to get the model to a spun-up state. So do things like
                               turn off expensive options and setup for a low level of history output.
 
                               If CLM4.5/CLM5.0 and bgc it also includes a prognostic Carbon model (cn or bgc)
                               , also by default turn on Accelerated Decomposition mode which
-                              is controlled by the namelist variable spinup_state.
+                              is controlled by the namelist variable spinup_state (when soil matrix CN is off).
 
-                              Turn on given spinup mode for BGC setting of CN
+                              Turn on given spinup mode for BGC setting of CN (soil matrix CN off)
                                   on : Turn on Accelerated Decomposition   (spinup_state = 1 or 2)
                                   off : run in normal mode                 (spinup_state = 0)
+
+                              To spinup using the CN soil matrix method use "sasu" SemiAnalytic Spin-Up (SASU)
+                                  sasu: Turn on matrix spinup               (spinup_matrixcn=T)
+                              Normal spinup sequence is: on, sasu, off
 
                               Default is set by clm_accelerated_spinup mode.
 
@@ -517,6 +521,7 @@ sub read_namelist_defaults {
                             "$cfgdir/namelist_files/namelist_defaults_ctsm.xml",
                             "$cfgdir/namelist_files/namelist_defaults_drv.xml",
                             "$cfgdir/namelist_files/namelist_defaults_fire_emis.xml",
+                            "$cfgdir/namelist_files/namelist_defaults_dust_emis.xml",
                             "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
 
   # Add the location of the use case defaults files to the options hash
@@ -783,9 +788,10 @@ sub setup_cmdl_fates_mode {
        # dis-allow fates specific namelist items with non-fates runs
        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                       "use_fates_cohort_age_tracking","use_fates_inventory_init","use_fates_fixed_biogeog",
-                      "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging",
-                      "fates_parteh_mode","use_fates_tree_damage","fates_history_dimlevel","fates_seeddisp_cadence",
-		      "use_fates_luh","fluh_timeseries" );
+                      "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","fates_harvest_mode",
+                      "fates_parteh_mode","use_fates_tree_damage","fates_seeddisp_cadence","use_fates_luh","fluh_timeseries",
+                      "flandusepftdat","use_fates_potentialveg","use_fates_lupft","fates_history_dimlevel" );
+
        # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
           if ( defined($nl->get_value($var)) ) {
@@ -894,6 +900,7 @@ sub setup_cmdl_bgc {
               'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'},
               'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
   my $soil_decomp_method = remove_leading_and_trailing_quotes( $nl->get_value( $var ) );
+  $nl_flags->{$var} = $soil_decomp_method;
 
   if (      &value_is_true($nl_flags->{'use_cn'}) ) {
      if ( $soil_decomp_method eq "None" ) {
@@ -951,6 +958,30 @@ sub setup_cmdl_bgc {
   }
   if ( (! &value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) && &value_is_true($nl->get_value('use_fun')) ) {
      $log->fatal_error("When FUN is on, use_nitrif_denitrif MUST also be on!");
+  }
+  #
+  # Make sure clm_accelerate_spinup is set correctly
+  #
+  $var = "clm_accelerated_spinup";
+  if ( $opts->{$var} ne "default" ) {
+    $val = $opts->{$var};
+  } else {
+    $val = $defaults->get_value($var);
+  }
+  $nl_flags->{$var} = $val;
+  # Set soil matrix (which is needed later for spinup)
+  $var = "use_soil_matrixcn";
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+              , 'use_fates'=>$nl_flags->{'use_fates'}, 
+              , 'soil_decomp_method'=>$nl_flags->{'soil_decomp_method'},
+              , 'phys'=>$nl_flags->{'phys'}, clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'} );
+  if ( &value_is_true($nl->get_value($var)) ) {
+     $nl_flags->{$var} = ".true.";
+  } else {
+     $nl_flags->{$var} = ".false.";
+  }
+  if ( &value_is_true($nl->get_value($var)) && $nl_flags->{'soil_decomp_method'} ne "CENTURYKoven2013" ) {
+     $log->fatal_error("$var can only be on with CENTURYKoven2013 soil decomposition");
   }
 } # end bgc
 
@@ -1011,7 +1042,7 @@ sub setup_cmdl_fire_light_res {
      if ( ! &value_is_true($nl_flags->{'neon'}) ) {
          if ( defined($opts->{'clm_usr_name'}) ) {
             $log->warning("The NEON lightning dataset does NOT cover the entire globe, make sure it covers the region for your grid");
-         } else { 
+         } else {
             $log->fatal_error("The NEON lightning dataset can NOT be used for global grids or regions or points outside of its area as it does NOT cover the entire globe.");
          }
      }
@@ -1156,32 +1187,40 @@ sub setup_cmdl_spinup {
   my $val;
   my $var;
   $nl_flags->{'spinup'} = undef;
+  # clm_accelerated_spinup will already have been set in setup_cmdl_bgc
   $var = "clm_accelerated_spinup";
-  if ( $opts->{$var} ne "default" ) {
-    $val = $opts->{$var};
-  } else {
-    $val = $defaults->get_value($var);
-  }
-  $nl_flags->{$var} = $val;
+  $val = $nl_flags->{'clm_accelerated_spinup'};
   my $group = $definition->get_group_name($var);
   $nl->set_variable_value($group, $var, quote_string($val) );
   if (  ! $definition->is_valid_value( $var, $val , 'noquotes' => 1) ) {
     my @valid_values   = $definition->get_valid_values( $var );
     $log->fatal_error("$var has an invalid value ($val). Valid values are: @valid_values");
   }
+  if ( $nl_flags->{'clm_accelerated_spinup'} eq "sasu" ) {
+     if ( ! &value_is_true($nl_flags->{'use_cn'}) ) {
+        $log->fatal_error("If clm_accelerated_spinup is sasu, use_cn MUST be on" );
+     }
+     if ( ! &value_is_true($nl_flags->{'use_soil_matrixcn'}) ) {
+        $log->fatal_error("If clm_accelerated_spinup is sasu, use_soil_matrixcn MUST be on" );
+     }
+  }
   $log->verbose_message("CLM accelerated spinup mode is $val");
   if ( &value_is_true($nl_flags->{'use_cn'}) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition,
-                $defaults, $nl, "spinup_state", clm_accelerated_spinup=>$nl_flags->{$var},
-                use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'} );
+                $defaults, $nl, "spinup_state", clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'},
+                use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'}, 
+                use_soil_matrixcn=>$nl_flags->{"use_soil_matrixcn"} );
     if ( $nl->get_value("spinup_state") ne 0 ) {
        $nl_flags->{'bgc_spinup'} = "on";
+       if ( &value_is_true($nl_flags->{'use_soil_matrixcn'}) ) {
+          $log->fatal_error("spinup_state is accelerated (=1 or 2), but use_soil_matrixcn is also true" .
+                            ", change one or the other");
+       }
        if ( $nl_flags->{'clm_accelerated_spinup'} eq "off" ) {
           $log->fatal_error("spinup_state is accelerated, but clm_accelerated_spinup is off, change one or the other");
        }
     } else {
        $nl_flags->{'bgc_spinup'} = "off";
-       $val = $defaults->get_value($var);
     }
     # For AD spinup mode by default reseed dead plants
     if ( $nl_flags->{$var} ne "off" ) {
@@ -1196,6 +1235,27 @@ sub setup_cmdl_spinup {
     }
   }
   $nl_flags->{$var} = $val;
+  if ( &value_is_true($nl_flags->{'use_soil_matrixcn'}) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "spinup_matrixcn",
+                 , 'use_fates'=>$nl_flags->{'use_fates'}, 'bgc_mode'=>$nl_flags->{'bgc_mode'}
+                 , 'phys'=>$nl_flags->{'phys'}, 'use_soil_matrixcn'=>$nl_flags->{'use_soil_matrixcn'},
+                 , clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'} );
+     my $spinup;
+     if ( &value_is_true($nl->get_value("spinup_matrixcn") ) ) {
+        $spinup = ".true.";
+     } else {
+        $spinup = ".false.";
+     }
+     $nl_flags->{'spinup_matrixcn'} = $spinup;
+     if ( &value_is_true($nl_flags->{'spinup_matrixcn'}) ) {
+        $nl_flags->{'bgc_spinup'} = "on";
+        if ( $nl_flags->{'clm_accelerated_spinup'} eq "off" ) {
+           $log->fatal_error("matrix spinup (spinup_matrixcn) is True, but clm_accelerated_spinup is off, change one or the other");
+        }
+     } else {
+        $nl_flags->{'bgc_spinup'} = "off";
+     }
+  }
   my $group = $definition->get_group_name($var);
   $nl->set_variable_value($group, $var, quote_string($val) );
   if (  ! $definition->is_valid_value( $var, $val , 'noquotes' => 1) ) {
@@ -1205,11 +1265,13 @@ sub setup_cmdl_spinup {
   if ( $nl_flags->{'bgc_spinup'} eq "on" && (not &value_is_true( $nl_flags->{'use_cn'} ))  && (not &value_is_true($nl_flags->{'use_fates'})) ) {
      $log->fatal_error("$var can not be '$nl_flags->{'bgc_spinup'}' if neither CN nor FATES is turned on (use_cn=$nl_flags->{'use_cn'}, use_fates=$nl_flags->{'use_fates'}).");
   }
-  if ( $nl->get_value("spinup_state") eq 0 && $nl_flags->{'bgc_spinup'} eq "on" ) {
-     $log->fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
-  }
-  if ( $nl->get_value("spinup_state") eq 1 && $nl_flags->{'bgc_spinup'} eq "off" ) {
-     $log->fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
+  if ( ! &value_is_true($nl_flags->{'use_soil_matrixcn'}) ) {
+     if ( $nl->get_value("spinup_state") eq 0 && $nl_flags->{'bgc_spinup'} eq "on" ) {
+        $log->fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
+     }
+     if ( $nl->get_value("spinup_state") eq 1 && $nl_flags->{'bgc_spinup'} eq "off" ) {
+        $log->fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
+     }
   }
 
   $val = $nl_flags->{'bgc_spinup'};
@@ -1582,7 +1644,6 @@ sub process_namelist_inline_logic {
   setup_logic_hillslope($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_o3_veg_stress_method($opts, $nl_flags, $definition, $defaults, $nl,$physv);
   setup_logic_hydrstress($opts,  $nl_flags, $definition, $defaults, $nl);
-  setup_logic_dynamic_roots($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_params_file($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_create_crop_landunit($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl);
@@ -1595,6 +1656,7 @@ sub process_namelist_inline_logic {
   if ( remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) ne "branch" ) {
     setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   }
+  setup_logic_cnmatrix($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_spinup($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
@@ -1701,7 +1763,7 @@ sub process_namelist_inline_logic {
   ######################################
   # namelist options for dust emissions
   ######################################
-  setup_logic_dust_emis($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_dust_emis($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref);
 
   #################################
   # namelist group: megan_emis_nl #
@@ -1847,9 +1909,10 @@ sub setup_logic_site_specific {
      $nl->set_variable_value($group, $var, $val);
   }
 
-  if ($nl_flags->{'res'} eq "1x1_smallvilleIA") {
+  my $res = $nl_flags->{'res'};
+  if ($res eq "1x1_smallvilleIA" or $res eq "1x1_cidadinhoBR") {
     if (! &value_is_true($nl_flags->{'use_cn'}) || ! &value_is_true($nl_flags->{'use_crop'})) {
-      $log->fatal_error("1x1_smallvilleIA grids must use a compset with CN and CROP turned on.");
+      $log->fatal_error("${res} grids must use a compset with CN and CROP turned on.");
     }
   }
 
@@ -2254,6 +2317,7 @@ sub setup_logic_urban {
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'building_temp_method');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urban_hac');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urban_explicit_ac');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urban_traffic');
 }
 
@@ -2277,7 +2341,7 @@ sub setup_logic_crop_inparm {
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "initial_seed_at_planting",
                  'use_crop'=>$nl->get_value('use_crop') );
-     
+
      my $crop_residue_removal_frac = $nl->get_value('crop_residue_removal_frac');
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'crop_residue_removal_frac' );
      if ( $crop_residue_removal_frac < 0.0 or $crop_residue_removal_frac > 1.0 ) {
@@ -2617,8 +2681,8 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
                 if ( defined($use_init_interp_default) ) {
                    $log->fatal_error($err_msg." but can't find one without $useinitvar being set to true, change it to true in your user_nl_clm file in your case");
                 } else {
-                   my $set = "Relevent settings: use_cndv = ". $nl_flags->{'use_cndv'} . " phys = " . 
-                              $physv->as_string() . " hgrid = " . $nl_flags->{'res'} . " sim_year = " . 
+                   my $set = "Relevent settings: use_cndv = ". $nl_flags->{'use_cndv'} . " phys = " .
+                              $physv->as_string() . " hgrid = " . $nl_flags->{'res'} . " sim_year = " .
                               $settings{'sim_year'} . " lnd_tuning_mode = " . $nl_flags->{'lnd_tuning_mode'} .
                               "use_fates = " . $nl_flags->{'use_fates'};
                    $log->fatal_error($err_msg." but the default setting of $useinitvar is false, so set both $var to a startup file and $useinitvar==TRUE, or developers should modify the namelist_defaults file".$set);
@@ -3018,8 +3082,8 @@ sub setup_logic_do_harvest {
          $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
       }
 
-      elsif (!&value_is_true($nl->get_value('use_cn')) && !&value_is_true($nl->get_value('use_fates'))) {
-         $cannot_be_true = "$var can only be set to true when running with either CN or FATES";
+      elsif (!&value_is_true($nl->get_value('use_cn'))) {
+         $cannot_be_true = "$var can only be set to true when running with CN.  Please set use_cn to true.";
       }
 
       if ($cannot_be_true) {
@@ -3106,7 +3170,7 @@ sub setup_logic_spinup {
   if ( $nl_flags->{'bgc_mode'} eq "sp" && defined($nl->get_value('override_bgc_restart_mismatch_dump'))) {
      $log->fatal_error("CN must be on if override_bgc_restart_mismatch_dump is set.");
   }
-  if ( $nl_flags->{'clm_accelerated_spinup'} eq "on" ) {
+  if ( $nl_flags->{'clm_accelerated_spinup'} =~ /on|sasu/ ) {
      foreach my $var ( "hist_nhtfrq", "hist_fincl1", "hist_empty_htapes", "hist_mfilt" ) {
          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
                      $var, use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'},
@@ -3161,7 +3225,6 @@ sub setup_logic_supplemental_nitrogen {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
 		  'suplnitro', 'use_fates'=>$nl_flags->{'use_fates'});
   }
-  
   #
   # Error checking for suplnitro
   #
@@ -3586,25 +3649,6 @@ sub setup_logic_grainproduct {
 
 #-------------------------------------------------------------------------------
 
-sub setup_logic_dynamic_roots {
-  #
-  # dynamic root model
-  #
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
-
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_dynroot', 'phys'=>$physv->as_string(), 'bgc_mode'=>$nl_flags->{'bgc_mode'});
-  my $use_dynroot = $nl->get_value('use_dynroot');
-  if ( &value_is_true($use_dynroot) && ($nl_flags->{'bgc_mode'} eq "sp") ) {
-     $log->fatal_error("Cannot turn dynroot mode on mode bgc=sp\n" .
-                       "Set the bgc mode to 'bgc'.");
-  }
-  if ( &value_is_true( $use_dynroot ) && &value_is_true( $nl_flags->{'use_hydrstress'} ) ) {
-     $log->fatal_error("Cannot turn use_dynroot on when use_hydrstress is on" );
-  }
-}
-
-#-------------------------------------------------------------------------------
-
 sub setup_logic_c_isotope {
   #
   # Error checking for C-isotope options
@@ -3687,10 +3731,10 @@ sub setup_logic_nitrogen_deposition {
                 'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_taxmode', 'phys'=>$nl_flags->{'phys'},
-		'use_cn'=>$nl_flags->{'use_cn'}, 
+		'use_cn'=>$nl_flags->{'use_cn'},
 		'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_varlist', 'phys'=>$nl_flags->{'phys'},
-		'use_cn'=>$nl_flags->{'use_cn'}, 
+		'use_cn'=>$nl_flags->{'use_cn'},
 		'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_ndep', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
@@ -3893,7 +3937,7 @@ sub setup_logic_urbantv_streams {
                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
   }
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_urbantv', 'phys'=>$nl_flags->{'phys'},
-              'hgrid'=>"0.9x1.25" );
+              'hgrid'=>"0.9x1.25", 'urban_explicit_ac'=>$nl->get_value('urban_explicit_ac') );
   if ($opts->{'driver'} eq "nuopc" ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_urbantv', 'phys'=>$nl_flags->{'phys'},
                   'hgrid'=>"0.9x1.25" );
@@ -3985,50 +4029,65 @@ sub setup_logic_fire_emis {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_dust_emis {
-  # Logic to handle the dust emissions
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  # Logic to handle the dust emissions namelists, both drv_flds_in and lnd_in files
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
-  # First get the dust emission method
-  my $var = "dust_emis_method";
-  add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
+  # Only set dust emission settings -- if not connected to CAM
+  my $lnd_sets_dust = logical_to_fortran($envxml_ref->{'LND_SETS_DUST_EMIS_DRV_FLDS'});
+  if ( &value_is_true( $lnd_sets_dust)) {
 
-  my $dust_emis_method = remove_leading_and_trailing_quotes( $nl->get_value($var) );
+      # First get the dust emission method
+      my $var = "dust_emis_method";
+      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
+      my $dust_emis_method = remove_leading_and_trailing_quotes( $nl->get_value($var) );
 
-  my @zender_files_in_lnd_opts = ( "stream_fldfilename_zendersoilerod", "stream_meshfile_zendersoilerod",
-                                   "zendersoilerod_mapalgo" );
-  if ( $dust_emis_method eq "Zender_2003" ) {
-     # get the zender_soil_erod_source
-     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                 "zender_soil_erod_source", 'dust_emis_method'=>$dust_emis_method );
+      my @zender_files_in_lnd_opts = ( "stream_fldfilename_zendersoilerod", "stream_meshfile_zendersoilerod",
+                                       "zendersoilerod_mapalgo" );
+      if ( $dust_emis_method eq "Zender_2003" ) {
+         # get the zender_soil_erod_source
+         add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                     "zender_soil_erod_source", 'dust_emis_method'=>$dust_emis_method );
 
-     my $zender_source = remove_leading_and_trailing_quotes( $nl->get_value('zender_soil_erod_source') );
-     if ( $zender_source eq "lnd" ) {
-        foreach my $option ( @zender_files_in_lnd_opts ) {
-           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $option,
-                       'dust_emis_method'=>$dust_emis_method, 'zender_soil_erod_source'=>$zender_source,
-                       'hgrid'=>$nl_flags->{'res'}, 'lnd_tuning_mod'=>$nl_flags->{'lnd_tuning_mode'} );
-        }
-     } else {
-        foreach my $option ( @zender_files_in_lnd_opts ) {
-           if ( defined($nl->get_value($option)) ) {
-             $log->fatal_error("zender_soil_erod_source is NOT lnd, but the file option $option is being set" .
-                               " and should NOT be unless you want it handled here in the LAND model, " .
-                               "otherwise the equivalent option is set in CAM" );
-           }
-        }
-     }
+         my $zender_source = remove_leading_and_trailing_quotes( $nl->get_value('zender_soil_erod_source') );
+         if ( $zender_source eq "lnd" ) {
+            foreach my $option ( @zender_files_in_lnd_opts ) {
+               add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $option,
+                           'dust_emis_method'=>$dust_emis_method, 'zender_soil_erod_source'=>$zender_source,
+                           'hgrid'=>$nl_flags->{'res'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
+            }
+         } elsif ( $zender_source eq "atm" ) {
+            foreach my $option ( @zender_files_in_lnd_opts ) {
+               if ( defined($nl->get_value($option)) ) {
+                  $log->fatal_error("zender_soil_erod_source is atm, and the file option $option is being set" .
+                                    " which should NOT be unless you want it handled here in the LAND model, " .
+                                    "otherwise the equivalent option is set in CAM" );
+               }
+            }
+         } elsif ( $zender_source eq "none" ) {
+            $log->fatal_error("zender_soil_erod_source is set to none and only atm or lnd should be used when $var is Zender_2002" );
+         }
+      } else {
+         # Verify that NONE of the Zender options are being set if Zender is NOT being used
+         push @zender_files_in_lnd_opts, "zender_soil_erod_source";
+         foreach my $option ( @zender_files_in_lnd_opts ) {
+            if ( defined($nl->get_value($option)) ) {
+               $log->fatal_error("dust_emis_method is NOT set to Zender_2003, but one of it's options " .
+                                 "$option is being set, need to change one or the other" );
+            }
+         }
+         if ( $dust_emis_method eq "Leung_2023" ) {
+            $log->warning("dust_emis_method is Leung_2023 and that option has NOT been brought into CTSM yet");
+         }
+      }
+  # Otherwise make sure dust settings are NOT being set in CLM
   } else {
-     # Verify that NONE of the Zender options are being set if Zender is NOT being used
-     push @zender_files_in_lnd_opts, "zender_soil_erod_source";
-     foreach my $option ( @zender_files_in_lnd_opts ) {
-        if ( defined($nl->get_value($option)) ) {
-          $log->fatal_error("dust_emis_method is NOT set to Zender_2003, but one of it's options " .
-                            "$option is being set, need to change one or the other" );
-        }
-     }
-     if ( $dust_emis_method eq "Leung_2023" ) {
-        $log->warning("dust_emis_method is Leung_2023 and that option has NOT been brought into CTSM yet");
-     }
+      my @vars = ( "dust_emis_method", "zender_soil_erod_source" );
+      foreach my $option ( @vars ) {
+         if ( defined($nl->get_value($option)) ) {
+            $log->fatal_error("Dust emission variable is being set in CTSM, which should NOT be done when" .
+                              " connected to CAM as CAM should set them");
+         }
+      }
   }
 }
 
@@ -4169,52 +4228,137 @@ sub setup_logic_lai_streams {
 sub setup_logic_cropcal_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  # Set first and last stream years
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal',
-              'sim_year'=>$nl_flags->{'sim_year'},
-              'sim_year_range'=>$nl_flags->{'sim_year_range'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal',
-              'sim_year'=>$nl_flags->{'sim_year'},
-              'sim_year_range'=>$nl_flags->{'sim_year_range'});
-
-  # Set align year, if first and last years are different
-  if ( $nl->get_value('stream_year_first_cropcal') !=
-      $nl->get_value('stream_year_last_cropcal') ) {
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                'model_year_align_cropcal', 'sim_year'=>$nl_flags->{'sim_year'},
-                'sim_year_range'=>$nl_flags->{'sim_year_range'});
-  }
-
   # Set up other crop calendar parameters
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'cropcals_rx');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'cropcals_rx_adapt');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_gdd20_seasons');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'flush_gdd20');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'generate_crop_gdds');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_mxmat');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_cropcal');
 
-  # Option checks
-  my $generate_crop_gdds = $nl->get_value('generate_crop_gdds') ;
-  my $use_mxmat = $nl->get_value('use_mxmat') ;
+  # These can't both be true
+  my $cropcals_rx = $nl->get_value('cropcals_rx') ;
+  my $cropcals_rx_adapt = $nl->get_value('cropcals_rx_adapt') ;
+  if (&value_is_true($cropcals_rx) and &value_is_true($cropcals_rx_adapt)) {
+    $log->fatal_error("cropcals_rx and cropcals_rx_adapt may not both be true" );
+  }
+
+  # Add defaults if reading gdd20 seasons from stream files
+  my $stream_gdd20_seasons = $nl->get_value('stream_gdd20_seasons') ;
+  if ( &value_is_true($stream_gdd20_seasons)) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_gdd20_season_start');
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_gdd20_season_end');
+
+    # Check
+    my $gdd20_season_start_file = $nl->get_value('stream_fldFileName_gdd20_season_start') ;
+    my $gdd20_season_end_file = $nl->get_value('stream_fldFileName_gdd20_season_end') ;
+    if ( &string_is_undef_or_empty($gdd20_season_start_file) or &string_is_undef_or_empty($gdd20_season_end_file) ) {
+      $log->message($gdd20_season_start_file);
+      $log->message($gdd20_season_end_file);
+      $log->fatal_error("If stream_gdd20_seasons is true, gdd20 season start and end files must be provided." );
+    }
+  }
+
+  # Add defaults if using prescribed crop calendars
+  if ( &value_is_true($cropcals_rx) or &value_is_true($cropcals_rx_adapt) ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_swindow_start');
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_swindow_end');
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_cultivar_gdds');
+    if ( &value_is_true($cropcals_rx_adapt) ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_gdd20_baseline', 'stream_gdd20_seasons'=>$stream_gdd20_seasons);
+    }
+  }
+
+  # Add defaults if using any crop calendar input files
   my $swindow_start_file = $nl->get_value('stream_fldFileName_swindow_start') ;
   my $swindow_end_file = $nl->get_value('stream_fldFileName_swindow_end') ;
   my $gdd_file = $nl->get_value('stream_fldFileName_cultivar_gdds') ;
+  my $gdd20_baseline_file = $nl->get_value('stream_fldFileName_gdd20_baseline') ;
   my $mesh_file = $nl->get_value('stream_meshfile_cropcal') ;
-  if ( ($swindow_start_file eq '' and $swindow_start_file ne '') or ($swindow_start_file ne '' and $swindow_start_file eq '') ) {
-    $log->fatal_error("When specifying sowing window dates, you must provide both swindow_start_file and swindow_end_file. To specify exact sowing dates, use the same file." );
+  if ( !&string_is_undef_or_empty($swindow_start_file) or !&string_is_undef_or_empty($swindow_end_file) or !&string_is_undef_or_empty($gdd_file) or !&string_is_undef_or_empty($gdd20_baseline_file)) {
+
+    # User gave an input file without specifying cropcals_rx or cropcals_rx_adapt = .true.
+    # Requiring this means nothing to the code, but helps namelist make more sense
+    if ( !&value_is_true($cropcals_rx) and !&value_is_true($cropcals_rx_adapt) ){
+      $log->fatal_error("If providing any crop calendar input file(s), cropcals_rx or cropcals_rx_adapt must be true" );
+    }
+
+    # User set cropcals_rx_adapt to true but set stream_fldFileName_gdd20_baseline to empty
+    if ( &value_is_true($cropcals_rx_adapt) and &string_is_undef_or_empty($gdd20_baseline_file) ) {
+      $log->fatal_error("If cropcals_rx_adapt is true, stream_fldFileName_gdd20_baseline must be provided" );
+    }
+
+    # cropcals_rx_adapt is false but user provided stream_fldFileName_gdd20_baseline
+    if ( !&value_is_true($cropcals_rx_adapt) and !&string_is_undef_or_empty($gdd20_baseline_file) ) {
+      $log->fatal_error("If stream_fldFileName_gdd20_baseline provided, cropcals_rx_adapt must be true" );
+    }
+
+    # User provided an input file but set mesh file to empty
+    if ( &string_is_undef_or_empty($mesh_file) ) {
+      $log->fatal_error("If providing any crop calendar input file(s), you must provide stream_meshfile_cropcal" );
+    }
+
+    # Set stream years
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal_swindows',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal_swindows',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_cropcal_swindows',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal_cultivar_gdds',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal_cultivar_gdds',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_cropcal_cultivar_gdds',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+
+    # Do not allow maturity requirements to change over time if stream_fldFileName_gdd20_baseline is provided. That would be nonsensical.
+    if ( $nl->get_value('stream_year_first_cropcal_cultivar_gdds') !=
+        $nl->get_value('stream_year_last_cropcal_cultivar_gdds')
+        and !&string_is_undef_or_empty($gdd20_baseline_file) ) {
+      $log->fatal_error("If cropcals_rx_adapt is true (i.e., stream_fldFileName_gdd20_baseline is provided), baseline maturity requirements are allowed to vary over time (i.e., stream_year_first_cropcal_cultivar_gdds and stream_year_last_cropcal_cultivar_gdds must be the same)." );
+    }
   }
-  if ( $generate_crop_gdds eq '.true.' ) {
-      if ( $use_mxmat eq '.true.' ) {
+
+  # If running with prescribed crop calendars, certain files must be provided
+  my $generate_crop_gdds = $nl->get_value('generate_crop_gdds') ;
+  if ( &value_is_true($cropcals_rx) or &value_is_true($cropcals_rx_adapt) ) {
+    if ( &string_is_undef_or_empty($swindow_start_file) or &string_is_undef_or_empty($swindow_end_file) ) {
+      $log->fatal_error("If cropcals_rx or cropcals_rx_adapt is true, sowing window start and end files must be provided. To specify exact sowing dates, use the same file." );
+    }
+    if ( &string_is_undef_or_empty($gdd_file) and (! &value_is_true($generate_crop_gdds)) ){
+      $log->fatal_error("If cropcals_rx or cropcals_rx_adapt is true and generate_crop_gdds is false, maturity requirement file stream_fldFileName_cultivar_gdds must be provided" );
+    }
+  }
+
+  # Option checks
+  if ( &string_is_undef_or_empty($gdd_file) and ! &string_is_undef_or_empty($gdd20_baseline_file) ) {
+      $log->fatal_error("If not providing stream_fldFileName_cultivar_gdds, don't provide stream_fldFileName_gdd20_baseline");
+  }
+  if ( &value_is_true($generate_crop_gdds) ) {
+      my $use_mxmat = $nl->get_value('use_mxmat') ;
+      if ( &value_is_true($use_mxmat) ) {
           $log->fatal_error("If generate_crop_gdds is true, you must also set use_mxmat to false" );
       }
-      if ( $swindow_start_file eq '' or $swindow_end_file eq '' ) {
+      if ( &string_is_undef_or_empty($swindow_start_file) or &string_is_undef_or_empty($swindow_end_file) ) {
           $log->fatal_error("If generate_crop_gdds is true, you must specify stream_fldFileName_swindow_start and stream_fldFileName_swindow_end")
       }
       if ( $swindow_start_file ne $swindow_end_file ) {
           $log->fatal_error("If generate_crop_gdds is true, you must specify exact sowing dates by setting stream_fldFileName_swindow_start and stream_fldFileName_swindow_end to the same file")
       }
-      if ( $gdd_file ne '' ) {
+      if ( ! &string_is_undef_or_empty($gdd_file) ) {
           $log->fatal_error("If generate_crop_gdds is true, do not specify stream_fldFileName_cultivar_gdds")
       }
-  }
-  if ( $mesh_file eq '' and ( $swindow_start_file ne '' or $gdd_file ne '' ) ) {
-      $log->fatal_error("If prescribing crop sowing dates and/or maturity requirements, you must specify stream_meshfile_cropcal")
+      if ( ! &string_is_undef_or_empty($gdd20_baseline_file) ) {
+          $log->fatal_error("If generate_crop_gdds is true, do not specify stream_fldFileName_gdd20_baseline")
+      }
   }
 }
 
@@ -4512,21 +4656,35 @@ sub setup_logic_fates {
     if (&value_is_true( $nl_flags->{'use_fates'})  ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
         my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
-                       "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp","fates_seeddisp_cadence",
-                       "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage",
-		       "use_fates_luh","fates_history_dimlevel" );
+                       "use_fates_inventory_init","fates_seeddisp_cadence","fates_history_dimlevel",
+                       "fates_harvest_mode","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage" );
+
         foreach my $var ( @list ) {
- 	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
-                      'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
+                       'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
         }
+
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_potentialveg', 'use_fates'=>$nl_flags->{'use_fates'});
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_lupft', 'use_fates'=>$nl_flags->{'use_fates'});
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_luh', 'use_fates'=>$nl_flags->{'use_fates'},
+                    'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
+                    'use_fates_potentialveg'=>$nl->get_value('use_fates_potentialveg'),
+                    'fates_harvest_mode'=>remove_leading_and_trailing_quotes($nl->get_value('fates_harvest_mode')) );
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_nocomp', 'use_fates'=>$nl_flags->{'use_fates'},
+                    'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
+                    'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_fixed_biogeog', 'use_fates'=>$nl_flags->{'use_fates'},
+                    'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
+                    'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+
         my $suplnitro = $nl->get_value('suplnitro');
         my $parteh_mode = $nl->get_value('fates_parteh_mode');
         if ( ($parteh_mode == 1) &&  ($suplnitro !~ /ALL/) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
-          $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to ALL, FATES is on, " . 
-                            "but and FATES-SP is not active, but fates_parteh_mode is 1, so Nitrogen is not active" . 
+          $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to ALL, FATES is on, " .
+                            "but and FATES-SP is not active, but fates_parteh_mode is 1, so Nitrogen is not active" .
                             "Change suplnitro back to ALL");
         }
-        #
+
         # For FATES SP mode make sure no-competetiion, and fixed-biogeography are also set
         # And also check for other settings that can't be trigged on as well
         #
@@ -4543,6 +4701,12 @@ sub setup_logic_fates {
               if ( $nl->get_value('fates_spitfire_mode') > 0 ) {
                     $log->fatal_error('fates_spitfire_mode can NOT be set to greater than 0 when use_fates_sp is true');
               }
+
+              # fates landuse can't be on with FATES SP mode is active
+              if ( &value_is_true($nl->get_value('use_fates_luh')) ) {
+                   $log->fatal_error('use_fates_luh can NOT be true when use_fates_sp is true');
+              }
+
               # hydro isn't currently supported to work when FATES SP mode is active
               if (&value_is_true( $nl->get_value('use_fates_planthydro') )) {
                     $log->fatal_error('fates sp mode is currently not supported to work with fates hydro');
@@ -4561,19 +4725,207 @@ sub setup_logic_fates {
               }
            }
         }
+        # make sure that fates landuse x pft mode has the necessary run mode configurations
+        my $var = "use_fates_lupft";
+        if ( defined($nl->get_value($var))  ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+            my @list = ( "use_fates_luh", "use_fates_nocomp", "use_fates_fixed_biogeog" );
+            foreach my $var ( @list ) {
+              if ( ! &value_is_true($nl->get_value($var)) ) {
+                $log->fatal_error("$var is required when use_fates_lupft is true" );
+              }
+            }
+          }
+        }
+        # check that fates landuse change mode has the necessary luh2 landuse timeseries data
+        # and add the default if not defined.  Do not add default if use_fates_potentialveg is true.
+        # If fixed biogeography is on, make sure that flandusepftdat is avilable.
         my $var = "use_fates_luh";
         if ( defined($nl->get_value($var))  ) {
            if ( &value_is_true($nl->get_value($var)) ) {
-              $var = "fluh_timeseries";
-              add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'phys'=>$nl_flags->{'phys'}, 'hgrid'=>$nl_flags->{'res'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, nofail=>1 );
-              my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
-              if ( ! defined($nl->get_value($var))  ) {
-                 $log->fatal_error("$var is required when use_fates_luh is set" );
-              } elsif ( ! -f "$fname" ) {
-                 $log->fatal_error("$fname does NOT point to a valid filename" );
+              $var = "use_fates_potentialveg";
+              if ( defined($nl->get_value($var))  ) {
+                 if ( ! &value_is_true($nl->get_value($var)) ) {
+                    $var = "fluh_timeseries";
+                    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
+                                'hgrid'=>$nl_flags->{'res'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
+                    my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
+                    if ( ! defined($nl->get_value($var))  ) {
+                       $log->fatal_error("$var is required when use_fates_luh is set and use_fates_potentialveg is false" );
+                    } elsif ( ! -f "$fname" ) {
+                       $log->fatal_error("$var does NOT point to a valid filename" );
+                    }
+                 }
+              }
+              $var = "use_fates_fixed_biogeog";
+              if ( defined($nl->get_value($var))  ) {
+                 if ( &value_is_true($nl->get_value($var)) ) {
+                    $var = "flandusepftdat";
+                    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
+                                'phys'=>$nl_flags->{'phys'}, 'hgrid'=>$nl_flags->{'res'}, nofail=>1 );
+                    my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
+                    if ( ! defined($nl->get_value($var))  ) {
+                      $log->fatal_error("$var is required when use_fates_luh and use_fates_fixed_biogeog is set" );
+                    } elsif ( ! -f "$fname" ) {
+                      $log->fatal_error("$var does NOT point to a valid filename" );
+                    }
+                 }
               }
            }
         }
+        # check that fates landuse is on and harvest mode is off when potential veg switch is true
+        my $var = "use_fates_potentialveg";
+        if ( defined($nl->get_value($var))  ) {
+           if ( &value_is_true($nl->get_value($var)) ) {
+              if ( ! &value_is_true($nl->get_value('use_fates_luh')) ) {
+                $log->fatal_error("use_fates_luh must be true when $var is true" );
+              }
+              my $var = remove_leading_and_trailing_quotes($nl->get_value('fates_harvest_mode'));
+              if ( $var ne 'no_harvest') {
+                $log->fatal_error("fates_harvest_mode set to $var.  It must set to no_harvest when use_potential_veg is true." );
+              }
+              my $var = "fluh_timeseries";
+              if ( defined($nl->get_value($var))  ) {
+                 $log->fatal_error("fluh_timeseries can not be defined when use_fates_potentialveg is true" );
+              }
+            }
+        }
+        # Check fates_harvest_mode compatibility
+        my $var = "fates_harvest_mode";
+        if ( defined($nl->get_value($var))  ) {
+           # using fates_harvest mode with raw luh2 harvest data
+           my $mode = remove_leading_and_trailing_quotes($nl->get_value($var));
+           if ( $mode eq 'luhdata_area' || $mode  eq 'luhdata_mass' ) {
+              # Make sure that use_fates_luh is true when using raw fates luh2 harvest data
+              if ( ! &value_is_true($nl->get_value('use_fates_luh')) ) {
+                $log->fatal_error("use_fates_luh is required to be true when $var is luhdata_mass or luhdata_area" );
+              }
+           } elsif ( $mode  eq 'landuse_timeseries' ) {
+              # Check to make sure that the user set the flanduse_timeseries file
+              # Since the flanduse_timeseries logic checking is upstream of the fates logic,
+              # don't add the default here.  The onus is on the user to match the correct timeseries
+              # data to the correct surface dataset resolution
+              my $var = "flanduse_timeseries";
+              my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
+              if ( ! defined($nl->get_value($var))  ) {
+                $log->fatal_error("$var is required when fates_harvest_mode is landuse_timeseries" );
+              } elsif ( ! -f "$fname" ) {
+                $log->fatal_error("$var does NOT point to a valid filename" );
+              }
+           }
+        }
+    }
+}
+
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_cnmatrix {
+    #
+    # Set some default options related to the CN Matrix options
+    #
+    my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
+
+    my @matrixlist = ( "use_matrixcn", "hist_wrt_matrixcn_diag" );
+    foreach my $var ( @matrixlist ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var
+                , 'use_fates'=>$nl_flags->{'use_fates'}, 'bgc_mode'=>$nl_flags->{'bgc_mode'}
+                , 'phys'=>$nl_flags->{'phys'}, 'use_soil_matrixcn'=>$nl_flags->{'use_soil_matrixcn'},
+                , 'spinup_matrixcn'=>$nl_flags->{'spinup_matrixcn'}, 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
+    }
+    @matrixlist = ( "use_matrixcn", "use_soil_matrixcn", "hist_wrt_matrixcn_diag", "spinup_matrixcn" );
+    # Matrix items can't be on for OMP_NUM_THREADS (also known as NTHRDS_LND) > 1
+    my $var_xml = "OMP_NUM_THREADS";
+    my $val_xml = $ENV{$var_xml};
+    if ( $val_xml > 1) {
+       foreach my $var ( @matrixlist ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+             $log->warning("$var and $var_xml > 1 (in this case $val_xml) causes a clm threading test to FAIL (as of 2024/7/10), so use at your own risk." );
+          }
+       }
+    }
+
+    # Matrix items can't be on for transient
+    if (not string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
+       foreach my $var ( @matrixlist ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+             $log->warning("$var may FAIL with balance error in transient mode" );
+          }
+       }
+    }
+    # Matrix items can't be on for SP mode
+    if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
+       foreach my $var ( @matrixlist ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+             $log->fatal_error("$var can NOT be on for SP mode" );
+          }
+       }
+    # Matrix items can't be on for FATES
+    } elsif ( $nl_flags->{'bgc_mode'} eq "fates" ) {
+       foreach my $var ( @matrixlist ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+             $log->fatal_error("$var can NOT be on with FATES" );
+          }
+       }
+    # Otherwise for CN or BGC mode
+    } else {
+      # TODO (slevis 2023/12/1) The next two if statements do nothing. Erik K and Sam L found that
+      #      for_testing_use_second_grain_pool and for_testing_use_repr_structure_pool
+      #      are empty rather than .true. or .false., but we did not get to the bottom
+      #      of why, yet. The same error-check in the code does get triggered at run-time,
+      #      so we will not pursue fixing this right now.
+      # If matrixcn is on, for_testing_use_second_grain_pool and for_testing_use_repr_structure_pool must be off
+      if ( &value_is_true($nl->get_value("use_matrixcn")) && &value_is_true($nl_flags->{"for_testing_use_second_grain_pool"}) ) {
+         $log->fatal_error("for_testing_use_second_grain_pool can NOT be on when use_matrixcn is on" );
+      }
+      if ( &value_is_true($nl->get_value("use_matrixcn")) && &value_is_true($nl_flags->{"for_testing_use_repr_structure_pool"}) ) {
+         $log->fatal_error("for_testing_use_repr_structure_pool can NOT be on when use_matrixcn is on" );
+      }
+      # If both matrixcn and soil_matrix are off hist_wrt_matrixcn_diag can't be on
+      if ( ! &value_is_true($nl->get_value("use_matrixcn")) && ! &value_is_true($nl_flags->{"use_soil_matrixcn"}) ) {
+         my $var = "hist_wrt_matrixcn_diag";
+         if ( &value_is_true($nl->get_value($var)) ) {
+            $log->fatal_error("$var can NOT be on when both use_matrixcn and use_soil_matrixcn are off" );
+         }
+      }
+      # If soil_matrix is off spinup_matrixcn can't be on
+      if ( ! &value_is_true($nl_flags->{"use_soil_matrixcn"}) ) {
+         my $var = "spinup_matrixcn";
+         if ( &value_is_true($nl->get_value($var)) ) {
+            $log->fatal_error("$var can NOT be on when use_soil_matrixcn is off" );
+         }
+      }
+    }
+    # if soil matrix is on and spinup is on, set spinup specific variables
+    my @spinup_vars = ( "nyr_forcing", "nyr_sasu", "iloop_avg" );
+    foreach my $var ( @spinup_vars ) {
+       if ( &value_is_true($nl_flags->{"use_soil_matrixcn"}) && &value_is_true($nl_flags->{'spinup_matrixcn'}) ) {
+          if ( $var ne "nyr_sasu" ) {
+             add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                       , 'phys'=>$nl_flags->{'phys'}, 'spinup_matrixcn'=>$nl_flags->{'spinup_matrixcn'} );
+          } else {
+             # Set SASU spinup period to nyr_forcing (slow mode) by default
+             add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                       , 'val'=>$nl->get_value("nyr_forcing") );
+          }
+          my $val = $nl->get_value($var);
+          if ( $val == -999 && ($var eq "iloop_avg") ) { next; }  # iloop_avg can be special flag value
+          if ( $val < 1 ) {
+            $log->fatal_error("$var can NOT be negative or zero" );
+          }
+       } else {
+          my $val = $nl->get_value($var);
+          if ( defined($val) ) {
+             $log->fatal_error("$var can NOT be set when use_soil_matrixcn and isspsinup are off" );
+          }
+       }
+    }
+    if ( &value_is_true($nl_flags->{"use_soil_matrixcn"}) && &value_is_true($nl_flags->{'spinup_matrixcn'}) ) {
+       my $nyr_forcing = $nl->get_value('nyr_forcing');
+       my $nyr_sasu    = $nl->get_value('nyr_sasu');
+       if ( $nyr_sasu > $nyr_forcing ) {
+          $log->fatal_error("nyr_sasu can NOT be greater than nyr_forcing" );
+       }
     }
 }
 
@@ -4792,7 +5144,7 @@ sub write_output_files {
   $log->verbose_message("Writing clm namelist to $outfile");
 
   # Drydep, fire-emission or MEGAN namelist for driver
-  @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl carma_inparm);
+  @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl carma_inparm dust_emis_inparm);
   $outfile = "$opts->{'dir'}/drv_flds_in";
   $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
   $log->verbose_message("Writing @groups namelists to $outfile");

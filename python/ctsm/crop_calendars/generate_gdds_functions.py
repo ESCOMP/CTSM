@@ -22,6 +22,7 @@ try:
     # pylint: disable=import-error
     from ctsm.crop_calendars.cropcal_figs_module import *
     from matplotlib.transforms import Bbox
+    import matplotlib.pyplot as plt
 
     warnings.filterwarnings(
         "ignore",
@@ -63,7 +64,7 @@ def error(logger, string):
     raise RuntimeError(string)
 
 
-def check_sdates(dates_ds, sdates_rx, logger, verbose=False):
+def check_sdates(dates_ds, sdates_rx, outdir_figs, logger, verbose=False):
     """
     Checking that input and output sdates match
     """
@@ -106,7 +107,27 @@ def check_sdates(dates_ds, sdates_rx, logger, verbose=False):
             log(logger, out_map_notnan[here][0:4])
             log(logger, "diff:")
             log(logger, diff_map_notnan[here][0:4])
+            first_diff = all_ok
             all_ok = False
+
+            if CAN_PLOT:
+                sdate_diffs_dir = os.path.join(outdir_figs, "sdate_diffs")
+                if first_diff:
+                    log(logger, f"Saving sdate difference figures to {sdate_diffs_dir}")
+                if not os.path.exists(sdate_diffs_dir):
+                    os.makedirs(sdate_diffs_dir)
+                in_map.where(~np.isnan(out_map)).plot()
+                plt.title(f"{vegtype_str} sdates in (masked)")
+                plt.savefig(os.path.join(sdate_diffs_dir, f"{vegtype_str}.in.png"))
+                plt.close()
+                out_map.plot()
+                plt.title(f"{vegtype_str} sdates out")
+                plt.savefig(os.path.join(sdate_diffs_dir, f"{vegtype_str}.out.png"))
+                plt.close()
+                diff_map.plot()
+                plt.title(f"{vegtype_str} sdates diff (out - in)")
+                plt.savefig(os.path.join(sdate_diffs_dir, f"{vegtype_str}.diff.png"))
+                plt.close()
 
     if not any_found:
         error(logger, "No matching variables found in sdates_rx!")
@@ -234,6 +255,7 @@ def import_and_process_1yr(
     mxmats,
     get_gs_len_da,
     skip_crops,
+    outdir_figs,
     logger,
 ):
     """
@@ -260,9 +282,9 @@ def import_and_process_1yr(
 
     # Get list of crops to include
     if skip_crops is not None:
-        crops_to_read = [c for c in utils.define_mgdcrop_list() if c not in skip_crops]
+        crops_to_read = [c for c in utils.define_mgdcrop_list_withgrasses() if c not in skip_crops]
     else:
-        crops_to_read = utils.define_mgdcrop_list()
+        crops_to_read = utils.define_mgdcrop_list_withgrasses()
 
     print(h1_filelist)
     dates_ds = import_ds(
@@ -272,6 +294,8 @@ def import_and_process_1yr(
         time_slice=slice(f"{this_year}-01-01", f"{this_year}-12-31"),
         chunks=chunks,
     )
+    for timestep in dates_ds["time"].values:
+        print(timestep)
 
     if dates_ds.dims["time"] > 1:
         if dates_ds.dims["time"] == 365:
@@ -466,7 +490,7 @@ def import_and_process_1yr(
     # Import expected sowing dates. This will also be used as our template output file.
     imported_sdates = isinstance(sdates_rx, str)
     sdates_rx = import_rx_dates("s", sdates_rx, incl_patches1d_itype_veg, mxsowings, logger)
-    check_sdates(dates_incl_ds, sdates_rx, logger)
+    check_sdates(dates_incl_ds, sdates_rx, outdir_figs, logger)
 
     # Import hdates, if needed
     imported_hdates = isinstance(hdates_rx, str)
@@ -575,6 +599,7 @@ def import_and_process_1yr(
         this_crop_gddaccum_da = this_crop_ds[clm_gdd_var]
         if save_figs:
             this_crop_gddharv_da = this_crop_ds["GDDHARV"]
+            check_gddharv = True
         if not this_crop_gddaccum_da.size:
             continue
         log(logger, f"      {vegtype_str}...")
@@ -625,11 +650,15 @@ def import_and_process_1yr(
                 + "NaN after extracting GDDs accumulated at harvest",
             )
         if save_figs and np.any(np.isnan(gddharv_atharv_p)):
-            log(
-                logger,
-                f"         ❗ {np.sum(np.isnan(gddharv_atharv_p))}/{len(gddharv_atharv_p)} "
-                + "NaN after extracting GDDHARV",
-            )
+            if np.all(np.isnan(gddharv_atharv_p)):
+                log(logger, "         ❗ All GDDHARV are NaN; should only affect figure")
+                check_gddharv = False
+            else:
+                log(
+                    logger,
+                    f"         ❗ {np.sum(np.isnan(gddharv_atharv_p))}/{len(gddharv_atharv_p)} "
+                    + "NaN after extracting GDDHARV",
+                )
 
         # Assign these to growing seasons based on whether gs crossed new year
         this_year_active_patch_indices = [
@@ -712,9 +741,15 @@ def import_and_process_1yr(
                     )
                 else:
                     error(logger, "Unexpected NaN for last season's GDD accumulation.")
-            if save_figs and np.any(
-                np.isnan(
-                    gddharv_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices]
+            if (
+                save_figs
+                and check_gddharv
+                and np.any(
+                    np.isnan(
+                        gddharv_yp_list[var][
+                            year_index - 1, active_this_year_where_gs_lastyr_indices
+                        ]
+                    )
                 )
             ):
                 if incorrectly_daily:
@@ -1160,9 +1195,13 @@ if CAN_PLOT:
             else:
                 error(logger, f"layout {layout} not recognized")
 
-            this_min = int(np.round(np.nanmin(gddharv_map_yx)))
-            this_max = int(np.round(np.nanmax(gddharv_map_yx)))
-            this_title = f"{run1_name} (range {this_min}–{this_max})"
+            gddharv_all_nan = np.all(np.isnan(gddharv_map_yx.values))
+            if gddharv_all_nan:
+                this_title = f"{run1_name} (GDDHARV all NaN?)"
+            else:
+                this_min = int(np.round(np.nanmin(gddharv_map_yx)))
+                this_max = int(np.round(np.nanmax(gddharv_map_yx)))
+                this_title = f"{run1_name} (range {this_min}–{this_max})"
             make_gengdd_map(
                 this_axis,
                 gddharv_map_yx,
@@ -1195,7 +1234,7 @@ if CAN_PLOT:
             )
 
             # Difference
-            if layout == "3x2":
+            if not gddharv_all_nan and layout == "3x2":
                 this_axis = fig.add_subplot(spec[2, 0], projection=ccrs.PlateCarree())
                 this_min = int(np.round(np.nanmin(gdd_map_yx)))
                 this_max = int(np.round(np.nanmax(gdd_map_yx)))

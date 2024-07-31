@@ -38,7 +38,7 @@ from CIME.XML.standard_module_setup import *
 
 logger = logging.getLogger(__name__)
 
-_LILAC_RUNTIME_FILES = ["lnd_in", "lnd_modelio.nml", "lilac_in"]
+_LILAC_RUNTIME_FILES = ["lnd_in", "lnd_modelio.nml", "drv_flds_in", "lilac_in"]
 
 
 class LILACSMOKE(SystemTestsCommon):
