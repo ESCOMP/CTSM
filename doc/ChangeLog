@@ -1,4 +1,108 @@
 ===============================================================
+Tag name: ctsm5.2.018
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed 31 Jul 2024 04:38:36 PM MDT
+One-line Summary: Fix/excess ice cold start
+
+Purpose and description of changes
+----------------------------------
+
+Changed the way soil temperature is initialized when excess ice is on and the model starts from cold.
+
+Specific notes
+
+Added 2 parameters: excess_ice_coldstart_depth and excess_ice_coldstart_temp which control top depth and soil temperature for soil layers in columns where excess ice is present. Other columns get their default soil temperature.
+
+excessicestream_type has been taken out of waterstate_type and its routines are called directly in clm_inst%Init. Checks for UseExcessIceStreams() are still in place in WaterStateType.F90 for double-checking.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #2384 -- Cold start temperature init when excess ice is on
+ Fixes #2373 -- SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_intel.clm-FatesColdHydro fails
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  Added: excess_ice_coldstart_temp and excess_ice_coldstart_depth
+
+Changes made to namelist defaults (e.g., changed parameter values):
+  Set new namelist items differently when excess ice is on or off
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  Note that the coldstart variables are always used even without excess ice or with an finidat file.
+  InitCold is always called so the variables are always set.
+
+Changes to tests or testing:
+   New tests for build-namelist unit tester
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS (998 are different from baseline)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho -----
+    izumi -------
+
+  any other testing (give details below):
+
+  SMS_Lm12.f09_f09_mg17.I1850Clm60Sp.derecho_intel.clm-ExcessIceStartup_output_sp_exice
+     derecho ---- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  #2465 -- fix excess ice cold starts
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.017
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Tue 30 Jul 2024 08:39:20 AM MDT
