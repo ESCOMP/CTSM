@@ -47,11 +47,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <clm_accelerated_spinup>off</clm_accelerated_spinup>
 
 <!-- Spinup state for BGC -->
-<spinup_state clm_accelerated_spinup="on"  use_cn=".true."                  >2</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_cn=".true." phys="clm4_5"    >1</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_fates=".true."               >2</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm4_5" >1</spinup_state>
-<spinup_state clm_accelerated_spinup="off"                                  >0</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_cn=".true."                  use_soil_matrixcn=".false.">2</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_cn=".true."    phys="clm4_5" use_soil_matrixcn=".false.">1</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_fates=".true."               use_soil_matrixcn=".false.">2</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm4_5" use_soil_matrixcn=".false.">1</spinup_state>
+<spinup_state clm_accelerated_spinup="sasu"                                                            >0</spinup_state>
+<spinup_state                                                               use_soil_matrixcn=".true." >0</spinup_state>
+<spinup_state clm_accelerated_spinup="off"                                                             >0</spinup_state>
 
 <!-- Reseeding of dead plants normally only done for AD spinup -->
 <reseed_dead_plants clm_accelerated_spinup="on" use_cn=".true.">.true.</reseed_dead_plants>
@@ -66,7 +68,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hist_fields_list_file>.false.</hist_fields_list_file>
 
 <!-- In accelerated spinup mode reduce the amount of history output -->
-<hist_empty_htapes clm_accelerated_spinup="on">.true.</hist_empty_htapes>
+<hist_empty_htapes clm_accelerated_spinup="on"  >.true.</hist_empty_htapes>
+<hist_empty_htapes clm_accelerated_spinup="sasu">.true.</hist_empty_htapes>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".true." use_cndv=".true."
 >'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','NPP','TWS','TSAI','HTOP','HBOT'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".true."
@@ -75,8 +78,18 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >'TOTSOMC','TOTSOMN','TLAI','GPP','NPP','TWS'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".false."
 >'TLAI','TWS'</hist_fincl1>
-<hist_nhtfrq clm_accelerated_spinup="on">-8760</hist_nhtfrq>
-<hist_mfilt  clm_accelerated_spinup="on">20</hist_mfilt>
+<hist_fincl1 clm_accelerated_spinup="sasu" use_cn=".true." use_cndv=".true."
+>'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','NPP','TWS','TSAI','HTOP','HBOT'</hist_fincl1>
+<hist_fincl1 clm_accelerated_spinup="sasu" use_cn=".true."
+>'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','CPOOL','NPP','TWS'</hist_fincl1>
+<hist_fincl1 clm_accelerated_spinup="sasu" use_fates=".true."
+>'TOTSOMC','TOTSOMN','TLAI','GPP','NPP','TWS'</hist_fincl1>
+<hist_fincl1 clm_accelerated_spinup="sasu" use_cn=".false."
+>'TLAI','TWS'</hist_fincl1>
+<hist_nhtfrq clm_accelerated_spinup="on"  >-8760</hist_nhtfrq>
+<hist_nhtfrq clm_accelerated_spinup="sasu">-8760</hist_nhtfrq>
+<hist_mfilt  clm_accelerated_spinup="on"  >20</hist_mfilt>
+<hist_mfilt  clm_accelerated_spinup="sasu">20</hist_mfilt>
 
 <!-- Root and stem acclimation (could depend on the physics version) -->
 <rootstem_acc               >.false.</rootstem_acc>
@@ -124,9 +137,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <crop_fsat_equals_zero>.false.</crop_fsat_equals_zero>
 
 <!-- MEGAN model -->
-<megan                             >1</megan>
-<megan clm_accelerated_spinup="on" >0</megan>
-<megan configuration="nwp"         >0</megan>
+<megan                              >1</megan>
+<megan clm_accelerated_spinup="on"  >0</megan>
+<megan clm_accelerated_spinup="sasu">0</megan>
+<megan configuration="nwp"          >0</megan>
 
 <!-- Supplmental Nitrogen mode -->
 <suplnitro use_cn=".true." >NONE</suplnitro>
@@ -499,7 +513,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- FATES default parameter file                                       -->
 <!-- ================================================================== -->
 
-<fates_paramfile>lnd/clm2/paramdata/fates_params_api.35.0.0_12pft_c240326.nc</fates_paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params_api.36.0.0_12pft_c240517.nc</fates_paramfile>
 
 <!-- ================================================================== -->
 <!-- Default surface roughness parameterization                         -->
@@ -611,12 +625,35 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hillslope_pft_distribution_method           >Standard</hillslope_pft_distribution_method>
 <hillslope_soil_profile_method               >Uniform</hillslope_soil_profile_method>
 <downscale_hillslope_meteorology             >.true.</downscale_hillslope_meteorology>
-<hillslope_fsat_equals_zero                  >.true.</hillslope_fsat_equals_zero>
+<hillslope_fsat_equals_zero>.false.</hillslope_fsat_equals_zero>
+<hillslope_fsat_equals_zero use_hillslope=".true.">.true.</hillslope_fsat_equals_zero>
 
 <!-- Plant hydraulic stress -->
 <use_hydrstress                                                       >.false.</use_hydrstress>
 <use_hydrstress                use_fates=".false." configuration="clm">.true.</use_hydrstress>
 <use_hydrstress phys="clm4_5"  use_fates=".false." configuration="clm">.false.</use_hydrstress>
+
+
+<!-- CN Matrix options -->
+<use_matrixcn>.false.</use_matrixcn>
+<use_matrixcn clm_accelerated_spinup="sasu" use_fates=".false." bgc_mode="bgc" >.true.</use_matrixcn>
+
+<use_soil_matrixcn>.false.</use_soil_matrixcn>
+<use_soil_matrixcn clm_accelerated_spinup="sasu" use_fates=".false." soil_decomp_method="CENTURYKoven2013" >.true.</use_soil_matrixcn>
+
+<hist_wrt_matrixcn_diag clm_accelerated_spinup="on"                             >.false.</hist_wrt_matrixcn_diag>
+<hist_wrt_matrixcn_diag clm_accelerated_spinup="sasu"                           >.false.</hist_wrt_matrixcn_diag>
+<hist_wrt_matrixcn_diag clm_accelerated_spinup="off"                            >.false.</hist_wrt_matrixcn_diag>
+<spinup_matrixcn     clm_accelerated_spinup="on"   use_soil_matrixcn=".true.">.true.</spinup_matrixcn>
+<spinup_matrixcn     clm_accelerated_spinup="sasu" use_soil_matrixcn=".true.">.true.</spinup_matrixcn>
+<spinup_matrixcn     clm_accelerated_spinup="off"                            >.false.</spinup_matrixcn>
+<nyr_forcing                                                          >1</nyr_forcing>
+<nyr_forcing  spinup_matrixcn=".true."             use_soil_matrixcn=".true.">20</nyr_forcing>
+<!-- for SASU spinup nyr_sasu will normally be set to nyr_forcing (slow mode spinup) -->
+<nyr_sasu                                                             >1</nyr_sasu>
+<iloop_avg                                                            >-999</iloop_avg>
+<iloop_avg    spinup_matrixcn=".true."             use_soil_matrixcn=".true.">-999</iloop_avg>
+
 
 <!-- General CN options -->
 <!-- Turn this on all of the time, eventually this namelist item should be removed -->
@@ -1298,7 +1335,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm6_0_GSWP3v1"
->lnd/clm2/initdata_esmf/ctsm5.2/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
+>lnd/clm2/initdata_esmf/ctsm5.2/clmi.I2000Clm52BgcCrop.2000-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240515.nc
 </finidat>
 
 
@@ -1872,6 +1909,8 @@ lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne3np4.pg3_hist_1850_78pfts_c240216.nc
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_C96_hist_1850_78pfts_c240216.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" >
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_smallvilleIA_hist_1850_78pfts_c240221.nc</fsurdat>
+<fsurdat hgrid="1x1_cidadinhoBR" sim_year="2000" >
+lnd/clm2/surfdata_esmf/surfdata_1x1_cidadinhoBR_hist_2000_78pfts_c240613.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"       sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_brazil_hist_1850_78pfts_c240221.nc</fsurdat>
 
@@ -1943,10 +1982,13 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_C96_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
 
 
-<!-- Note that this transient file only goes up to year 1855.
+<!-- Note that these transient files only go up to year 1855.
      This is sufficient for testing purposes, but could cause problems if you try to run beyond 1855. -->
 <flanduse_timeseries hgrid="1x1_smallvilleIA" sim_year_range="1850-2000"
 >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_1x1_smallvilleIA_SSP2-4.5_1850-1855_78pfts_c240221.nc</flanduse_timeseries>
+
+<!-- Cidadinho test site has no transient data. -->
+<flanduse_timeseries hgrid="1x1_cidadinhoBR" sim_year_range="1850-2000"></flanduse_timeseries>
 
 <!-- Future scenarios - landuse time series files with crop on -->
 
@@ -2013,14 +2055,17 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <!-- SSP5-RCP3.4 - relative to {csmdata}) -->
 <!--- currently empty until needed, we can't test because of lack of ndep files for this SSP -->
 
-<!-- Land Use Harmonization unified data sets for dynamic FATES land use change -->
+<!-- Land Use Harmonization unified timeseries data sets for dynamic FATES land use change -->
 
 <fluh_timeseries hgrid="4x5" sim_year_range="1850-2000" use_fates=".true."
  >lnd/clm2/surfdata_map/fates-sci.1.68.3_api.31.0.0_tools.1.0.1/LUH2_states_transitions_management.timeseries_4x5_hist_simyr1850-2015_c231101.nc</fluh_timeseries>
 
+<!-- Land Use Harmonization static landuse x pft mapping data sets for FATES land use change -->
+<flandusepftdat hgrid="4x5" use_fates=".true." >lnd/clm2/surfdata_map/fates-sci.1.77.0_api.36.0.0/fates_landuse_pft_map_4x5_240206.nc</flandusepftdat>
+
 <!-- This one is just for testing until Issue #2304 is resolved -->
 <fluh_timeseries hgrid="4x5" sim_year_range="constant" use_fates=".true."
- >lnd/clm2/surfdata_map/fates-sci.1.68.3_api.31.0.0_tools.1.0.1/LUH2_states_transitions_management.timeseries_4x5_hist_simyr1850-2015_c231101.nc</fluh_timeseries>
+ >lnd/clm2/surfdata_map/fates-sci.1.68.3_api.31.0.0_tools.1.0.1/LUH2_states_transitions_management.timeseries_4x5_hist_simyr0850-2015_c240216.nc</fluh_timeseries>
 
 <!-- Fixation and Uptake of Nitrogen Model (FUN2.0) -->
 <use_fun                                                            >.false.</use_fun>
@@ -2152,10 +2197,34 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
 
-<!-- crop calendar streams namelist defaults -->
-<stream_year_first_cropcal  >1850</stream_year_first_cropcal>
-<stream_year_last_cropcal   >2100</stream_year_last_cropcal>
-<model_year_align_cropcal   >1850</model_year_align_cropcal>
+<!-- crop calendars: default settings -->
+<cropcals_rx>.false.</cropcals_rx>
+<cropcals_rx_adapt>.true.</cropcals_rx_adapt>
+<cropcals_rx_adapt phys="clm4_5">.false.</cropcals_rx_adapt>
+<cropcals_rx_adapt phys="clm5_0">.false.</cropcals_rx_adapt>
+<cropcals_rx_adapt phys="clm5_1">.false.</cropcals_rx_adapt>
+<stream_gdd20_seasons>.false.</stream_gdd20_seasons>
+<flush_gdd20>.false.</flush_gdd20>
+<stream_year_first_cropcal_swindows  >2000</stream_year_first_cropcal_swindows>
+<stream_year_last_cropcal_swindows   >2000</stream_year_last_cropcal_swindows>
+<model_year_align_cropcal_swindows   >2000</model_year_align_cropcal_swindows>
+<stream_year_first_cropcal_cultivar_gdds  >2000</stream_year_first_cropcal_cultivar_gdds>
+<stream_year_last_cropcal_cultivar_gdds   >2000</stream_year_last_cropcal_cultivar_gdds>
+<model_year_align_cropcal_cultivar_gdds   >2000</model_year_align_cropcal_cultivar_gdds>
+
+<!-- crop calendars: default input files -->
+<stream_fldFileName_swindow_start cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/swindow_starts_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_start>
+<stream_fldFileName_swindow_end cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/swindow_ends_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_end>
+<stream_fldfilename_cultivar_gdds cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
+<stream_meshfile_cropcal cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/360x720_120830_ESMFmesh_c20210507_cdf5.tweaked_latlons.nc</stream_meshfile_cropcal>
+<stream_fldFileName_swindow_start cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/swindow_starts_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_start>
+<stream_fldFileName_swindow_end cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/swindow_ends_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_end>
+<stream_fldfilename_cultivar_gdds cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
+<stream_fldFileName_gdd20_baseline cropcals_rx_adapt=".true." stream_gdd20_seasons=".false.">lnd/clm2/cropdata/calendars/processed/20230714_cropcals_pr2_1deg.actually2deg.1980-2009.from_GDDB20.interpd_halfdeg.tweaked_latlons.nc</stream_fldFileName_gdd20_baseline>
+<stream_fldFileName_gdd20_baseline cropcals_rx_adapt=".true." stream_gdd20_seasons=".true.">lnd/clm2/cropdata/calendars/processed/gdd20bl.copied_from.gdds_20230829_161011.v2.tweaked_latlons.nc</stream_fldFileName_gdd20_baseline>
+<stream_fldFileName_gdd20_season_start stream_gdd20_seasons=".true.">lnd/clm2/cropdata/calendars/processed/sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.tweaked_latlons.nc</stream_fldFileName_gdd20_season_start>
+<stream_fldFileName_gdd20_season_end stream_gdd20_seasons=".true.">lnd/clm2/cropdata/calendars/processed/hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.tweaked_latlons.nc</stream_fldFileName_gdd20_season_end>
+<stream_meshfile_cropcal cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/360x720_120830_ESMFmesh_c20210507_cdf5.tweaked_latlons.nc</stream_meshfile_cropcal>
 
 <!-- lightning streams namelist defaults -->
 
@@ -2419,8 +2488,6 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <!-- Defaults for Zender's soil erodibility data  -->
 <!-- ===========================================  -->
 
-<dust_emis_method>Zender_2003</dust_emis_method>
-<zender_soil_erod_source dust_emis_method="Zender_2003">atm</zender_soil_erod_source>
 <zendersoilerod_mapalgo>bilinear</zendersoilerod_mapalgo>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm4_5_cam7.0"
 >lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
@@ -2514,22 +2581,31 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 
 <!-- ===== FATES DEFAULTS =========== -->
 <fates_spitfire_mode           use_fates=".true.">0</fates_spitfire_mode>
+<fates_harvest_mode            use_fates=".true.">no_harvest</fates_harvest_mode>
 <use_fates_planthydro          use_fates=".true.">.false.</use_fates_planthydro>
 <use_fates_tree_damage         use_fates=".true.">.false.</use_fates_tree_damage>
 <use_fates_cohort_age_tracking use_fates=".true.">.false.</use_fates_cohort_age_tracking>
 <use_fates_ed_st3              use_fates=".true.">.false.</use_fates_ed_st3>
 <use_fates_ed_prescribed_phys  use_fates=".true.">.false.</use_fates_ed_prescribed_phys>
-<use_fates_logging             use_fates=".true.">.false.</use_fates_logging>
 <use_fates_inventory_init      use_fates=".true.">.false.</use_fates_inventory_init>
 <use_fates_sp                  use_fates=".true.">.false.</use_fates_sp>
-<use_fates_luh                 use_fates=".true.">.false.</use_fates_luh>
+<use_fates_lupft               use_fates=".true.">.false.</use_fates_lupft>
+<use_fates_potentialveg        use_fates=".true.">.false.</use_fates_potentialveg>
+<use_fates_luh                 use_fates=".true." fates_harvest_mode="luhdata_area"  >.true.</use_fates_luh>
+<use_fates_luh                 use_fates=".true." fates_harvest_mode="luhdata_mass"  >.true.</use_fates_luh>
+<use_fates_luh                 use_fates=".true." use_fates_lupft=".true.">.true.</use_fates_luh>
+<use_fates_luh                 use_fates=".true." use_fates_potentialveg=".true.">.true.</use_fates_luh>
+<use_fates_luh                 use_fates=".true."                                >.false.</use_fates_luh>
 <fates_parteh_mode             use_fates=".true.">1</fates_parteh_mode>
 <fates_seeddisp_cadence        use_fates=".true.">0</fates_seeddisp_cadence>
+<use_fates_nocomp              use_fates=".true." use_fates_sp=".true."   >.true.</use_fates_nocomp>
+<use_fates_nocomp              use_fates=".true." use_fates_lupft=".true.">.true.</use_fates_nocomp>
+<use_fates_nocomp              use_fates=".true."                         >.false.</use_fates_nocomp>
+<use_fates_fixed_biogeog       use_fates=".true." use_fates_sp=".true."   >.true.</use_fates_fixed_biogeog>
+<use_fates_fixed_biogeog       use_fates=".true." use_fates_lupft=".true.">.true.</use_fates_fixed_biogeog>
+<use_fates_fixed_biogeog       use_fates=".true."                         >.false.</use_fates_fixed_biogeog>
 <fates_history_dimlevel        use_fates=".true.">2,2</fates_history_dimlevel>
-<use_fates_nocomp              use_fates=".true." use_fates_sp=".true.">.true.</use_fates_nocomp>
-<use_fates_nocomp              use_fates=".true."                      >.false.</use_fates_nocomp>
-<use_fates_fixed_biogeog       use_fates=".true." use_fates_sp=".true.">.true.</use_fates_fixed_biogeog>
-<use_fates_fixed_biogeog       use_fates=".true."                      >.false.</use_fates_fixed_biogeog>
+
 
 <!-- =========================================  -->
 <!-- Defaults for dynamic subgrid               -->

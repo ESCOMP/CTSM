@@ -39,8 +39,9 @@ module controlMod
   use UrbanParamsType                  , only: UrbanReadNML
   use HumanIndexMod                    , only: HumanIndexReadNML
   use CNPrecisionControlMod            , only: CNPrecisionControlReadNML
-  use CNSharedParamsMod                , only: use_fun
+  use CNSharedParamsMod                , only: use_fun, use_matrixcn
   use CIsoAtmTimeseriesMod             , only: use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
+  use SoilBiogeochemDecompCascadeConType, only : use_soil_matrixcn
   use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: surfprof_exp
@@ -121,6 +122,7 @@ contains
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
     use landunit_varcon                  , only : max_lunit
+    use CNSoilMatrixMod                  , only : CNSoilMatrixInit
     !
     ! ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
@@ -185,6 +187,10 @@ contains
     namelist /clm_inparm / &
          deepmixing_depthcrit, deepmixing_mixfact, lake_melt_icealb
 
+    ! CN Matrix solution
+    namelist /clm_inparm / &
+         use_matrixcn, use_soil_matrixcn, hist_wrt_matrixcn_diag, spinup_matrixcn, nyr_forcing, nyr_sasu, iloop_avg
+
     ! lake_melt_icealb is of dimension numrad
 
     ! Glacier_mec info
@@ -207,12 +213,6 @@ contains
          for_testing_no_crop_seed_replenishment, &
          z0param_method, use_z0m_snowmelt
 
-    ! NOTE: EBK 02/26/2024: dust_emis_method is here in CTSM temporarily until it's moved to CMEPS
-    ! See: https://github.com/ESCOMP/CMEPS/pull/429
-    ! Normally this should also need error checking and a broadcast, but since
-    ! there is only one hardcoded option right now that is unneeded.
-    namelist /clm_inparm/ dust_emis_method
-
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
          som_adv_flux, max_depth_cryoturb
@@ -228,7 +228,7 @@ contains
 
     ! FATES Flags
     namelist /clm_inparm/ fates_paramfile, use_fates,   &
-          fates_spitfire_mode, use_fates_logging,       &
+          fates_spitfire_mode, fates_harvest_mode,      &
           use_fates_planthydro, use_fates_ed_st3,       &
           use_fates_cohort_age_tracking,                &
           use_fates_ed_prescribed_phys,                 &
@@ -237,7 +237,10 @@ contains
           use_fates_nocomp,                             &
           use_fates_sp,                                 &
           use_fates_luh,                                &
+          use_fates_lupft,                              &
+          use_fates_potentialveg,                       &
           fluh_timeseries,                              &
+          flandusepftdat,                               &
           fates_inventory_ctrl_filename,                &
           fates_parteh_mode,                            &
           fates_seeddisp_cadence,                       &
@@ -302,7 +305,7 @@ contains
          use_lch4, use_nitrif_denitrif, use_extralakelayers, &
          use_vichydro, use_cn, use_cndv, use_crop, use_fertilizer, &
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
-         use_nguardrail, crop_residue_removal_frac
+         use_nguardrail, crop_residue_removal_frac, flush_gdd20
 
     ! SNICAR
     namelist /clm_inparm/ &
@@ -323,6 +326,14 @@ contains
     runtyp(nsrStartup  + 1) = 'initial'
     runtyp(nsrContinue + 1) = 'restart'
     runtyp(nsrBranch   + 1) = 'branch '
+
+    if(use_fates)then
+       use_matrixcn = .false.
+       use_soil_matrixcn = .false.
+       hist_wrt_matrixcn_diag = .false.
+       spinup_matrixcn = .false.
+    end if
+    nyr_forcing = 10
 
     ! Set clumps per procoessor
 
@@ -598,9 +609,9 @@ contains
        call CNPhenologyReadNML       ( NLFilename )
     end if
 
-    ! ----------------------------------------------------------------------
-    ! Initialize the CN soil matrix namelist items
-    ! ----------------------------------------------------------------------
+    ! CN soil matrix
+
+    call CNSoilMatrixInit()
 
     ! ----------------------------------------------------------------------
     ! consistency checks
@@ -706,6 +717,7 @@ contains
     call mpi_bcast (use_cndv, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_nguardrail, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_crop, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (flush_gdd20, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fertilizer, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_grainproduct, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (crop_residue_removal_frac, 1, MPI_REAL8, 0, mpicom, ier)
@@ -785,7 +797,7 @@ contains
     call mpi_bcast (for_testing_allow_interp_non_ciso_to_ciso, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (fates_spitfire_mode, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (use_fates_logging, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (fates_harvest_mode, len(fates_harvest_mode) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (use_fates_planthydro, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_tree_damage, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_cohort_age_tracking, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -796,10 +808,14 @@ contains
     call mpi_bcast (use_fates_nocomp, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_sp, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_luh, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_lupft, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_potentialveg, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_bgc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (fates_inventory_ctrl_filename, len(fates_inventory_ctrl_filename), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fluh_timeseries, len(fluh_timeseries) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (flandusepftdat, len(flandusepftdat) , MPI_CHARACTER, 0, mpicom, ier)
+
     call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (fates_seeddisp_cadence, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (fates_history_dimlevel, 2, MPI_INTEGER, 0, mpicom, ier)
@@ -837,6 +853,13 @@ contains
 
     call mpi_bcast (hillslope_fsat_equals_zero, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+    call mpi_bcast (use_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_soil_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (hist_wrt_matrixcn_diag, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (spinup_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (nyr_forcing, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (nyr_sasu, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (iloop_avg, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     if (use_cn .or. use_fates) then
@@ -978,6 +1001,7 @@ contains
     write(iulog,*) '    use_cn = ', use_cn
     write(iulog,*) '    use_cndv = ', use_cndv
     write(iulog,*) '    use_crop = ', use_crop
+    write(iulog,*) '    flush_gdd20 = ', flush_gdd20
     write(iulog,*) '    use_fertilizer = ', use_fertilizer
     write(iulog,*) '    use_grainproduct = ', use_grainproduct
     write(iulog,*) '    crop_residue_removal_frac = ', crop_residue_removal_frac
@@ -1169,7 +1193,7 @@ contains
     write(iulog, *) '    use_fates = ', use_fates
     if (use_fates) then
        write(iulog, *) '    fates_spitfire_mode = ', fates_spitfire_mode
-       write(iulog, *) '    use_fates_logging = ', use_fates_logging
+       write(iulog, *) '    fates_harvest_mode = ', fates_harvest_mode
        write(iulog, *) '    fates_paramfile = ', fates_paramfile
        write(iulog, *) '    fates_parteh_mode = ', fates_parteh_mode
        write(iulog, *) '    use_fates_planthydro = ', use_fates_planthydro
@@ -1182,7 +1206,10 @@ contains
        write(iulog, *) '    use_fates_nocomp = ', use_fates_nocomp
        write(iulog, *) '    use_fates_sp = ', use_fates_sp
        write(iulog, *) '    use_fates_luh= ', use_fates_luh
+       write(iulog, *) '    use_fates_lupft= ', use_fates_lupft
+       write(iulog, *) '    use_fates_potentialveg = ', use_fates_potentialveg
        write(iulog, *) '    fluh_timeseries = ', trim(fluh_timeseries)
+       write(iulog, *) '    flandusepftdat = ', trim(flandusepftdat)
        write(iulog, *) '    fates_seeddisp_cadence = ', fates_seeddisp_cadence
        write(iulog, *) '    fates_seeddisp_cadence: 0, 1, 2, 3 => off, daily, monthly, or yearly dispersal'
        write(iulog, *) '    fates_inventory_ctrl_filename = ', trim(fates_inventory_ctrl_filename)
