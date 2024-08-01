@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-       ctsm5.2.018 mvdebols 07/31/2024 Fix/excess ice cold start
+       ctsm5.2.018 mvdebols 08/01/2024 Fix/excess ice cold start
        ctsm5.2.017     erik 07/30/2024 Dust emissions control moved to cmeps
        ctsm5.2.016 samrabin 07/27/2024 Enable new crop calendars for clm60 compsets
        ctsm5.2.015 multiple 07/22/2024 Update submodule tags to pass runoff from cism to rof
