@@ -874,8 +874,8 @@ contains
     real(r8) :: gamma_t_LDF             ! activity factor for temperature
     real(r8) :: gamma_t_LIF             ! activity factor for temperature
     real(r8) :: x                       ! temporary i
-    real(r8) :: bet_arc_c3
-    real(r8), parameter :: bet_arc_c3_max = 300._r8
+    real(r8) :: bet_arc_c3  ! activity factor for temperature for arctic C3 grass
+    real(r8), parameter :: bet_arc_c3_max = 300._r8  ! max value, activity factor for temperature for arctic C3 graass
     real(r8), parameter :: co1 = 313._r8                   ! empirical coefficient
     real(r8), parameter :: co2 = 0.6_r8                    ! empirical coefficient
     real(r8), parameter :: co4 = 0.05_r8                   ! empirical coefficient
