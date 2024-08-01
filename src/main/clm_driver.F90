@@ -815,11 +815,11 @@ contains
        call dust_emis_inst%DustDryDep(bounds_clump, &
             atm2lnd_inst, frictionvel_inst)
 
-       ! VOC emission (A. Guenther's MEGAN (2006) model)
+       ! VOC emission (A. Guenther's MEGAN (2006) model; Wang et al., 2022, 2024a, 2024b)
        call VOCEmission(bounds_clump,                                         &
                filter(nc)%num_soilp, filter(nc)%soilp,                           &
                atm2lnd_inst, canopystate_inst, photosyns_inst, temperature_inst, &
-               vocemis_inst)
+               vocemis_inst, energyflux_inst)
 
        call t_stopf('bgc')
 

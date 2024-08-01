@@ -1,4 +1,74 @@
 ===============================================================
+Tag name: ctsm5.2.0??
+Originator(s): HuiWangWanderInGitHub (Hui Wang,huiw16@uci.edu)
+Date: Thu 01 Aug 2024 05:09:46 PM MDT
+One-line Summary: MEGAN updates (MEGAN-CLM6)
+
+Purpose and description of changes
+----------------------------------
+
+ We add new features to MEGANv2.1 for simulating isoprene emissions based on three recent studies conducted at the BAI lab in the University of California, Irvine. The first one is about the drought impact on isoprene (Wang et al., 2022). The second study investigates the effect of temperature history on the emission factors of boreal broadleaf deciduous shrubs (Wang et al., 2024a). The third study explores a different temperature response curve for C3 Arctic grass (Wang et al., 2024b, under press). These changes improved the model's representation of isoprene emissions during drought and in high-latitude ecosystems.
+
+ This work relates to issue #1323 and is based on the old MEGANv2.1 framework, but incorporates new scientific insights.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to documentation:
+ Hui Wang has offered to provide the modifications to the documentation that we need.
+ The PR https://github.com/ESCOMP/CTSM/pull/2588 includes a list of references.
+
+Substantial timing or memory changes:
+[e.g., check PFS test in the test suite and look at timings, if you
+expect possible significant timing changes]
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All that calculate BVOCs (so not FATES)
+    - what platforms/compilers: All
+    - nature of change: Larger than roundoff, only in BVOC output and specifically limited to MEG_ and _voc variables.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/2588
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.017
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Tue 30 Jul 2024 08:39:20 AM MDT
