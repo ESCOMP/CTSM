@@ -1,5 +1,5 @@
 """
-Argument parser to use throughout run_neon.py
+Argument parser to use throughout run_tower.py
 """
 
 import argparse
@@ -18,7 +18,7 @@ from CIME.utils import parse_args_and_handle_standard_logging_options
 from CIME.utils import setup_standard_logging_options
 
 
-def get_parser(args, description, valid_neon_sites):
+def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
     """
     Get parser object for this script.
     """
@@ -35,9 +35,20 @@ def get_parser(args, description, valid_neon_sites):
         help="4-letter neon site code.",
         action="store",
         required=False,
-        choices=valid_neon_sites + ["all"],
+        choices=valid_neon_sites + ["all"] + [None],
         dest="neon_sites",
-        default=["OSBS"],
+        default=None,
+        nargs="+",
+    )
+
+    parser.add_argument(
+        "--plumber-sites",
+        help="six character PLUMBER2 site code (eg, AR-SLu)",
+        action="store",
+        required=False,
+        choices=valid_plumber_sites + ["all"] + [None],
+        dest="plumber_sites",
+        default=None,
         nargs="+",
     )
 
@@ -185,31 +196,29 @@ def get_parser(args, description, valid_neon_sites):
 
     args = parse_args_and_handle_standard_logging_options(args, parser)
 
-    if "all" in args.neon_sites:
-        neon_sites = valid_neon_sites
+    if args.neon_sites:
+        if "all" in args.neon_sites:
+            neon_sites = valid_neon_sites
+        else:
+            neon_sites = args.neon_sites
+            for site in neon_sites:
+                if site not in valid_neon_sites:
+                    raise ValueError("Invalid neon site name {}".format(site))
     else:
-        neon_sites = args.neon_sites
-        for site in neon_sites:
-            if site not in valid_neon_sites:
-                raise ValueError("Invalid site name {}".format(site))
+        neon_sites = None
+    if args.plumber_sites:
+        if "all" in args.plumber_sites:
+            plumber_sites = valid_plumber_sites
+        else:
+            plumber_sites = args.plumber_sites
+            for site in plumber_sites:
+                if site not in valid_plumber_sites:
+                    raise ValueError("Invalid plumber site name {}".format(site))
+    else:
+        plumber_sites = None
 
     if "CIME_OUTPUT_ROOT" in args.output_root:
         args.output_root = None
-
-    if args.run_length == "0Y":
-        if args.run_type == "ad":
-            run_length = "100Y"
-        elif args.run_type == "postad":
-            run_length = "100Y"
-        else:
-            # The transient run length is set by cdeps atm buildnml to
-            # the last date of the available tower data
-            # this value is not used
-            run_length = "4Y"
-    else:
-        run_length = args.run_length
-
-    run_length = parse_isoduration(run_length)
 
     base_case_root = None
     if args.base_case_root:
@@ -225,12 +234,12 @@ def get_parser(args, description, valid_neon_sites):
 
     return (
         neon_sites,
+        plumber_sites,
         args.output_root,
         args.run_type,
         args.experiment,
         args.prism,
         args.overwrite,
-        run_length,
         base_case_root,
         args.run_from_postad,
         args.setup_only,
