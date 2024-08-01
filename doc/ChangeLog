@@ -11,9 +11,13 @@ Changed the way soil temperature is initialized when excess ice is on and the mo
 
 Specific notes
 
-Added 2 parameters: excess_ice_coldstart_depth and excess_ice_coldstart_temp which control top depth and soil temperature for soil layers in columns where excess ice is present. Other columns get their default soil temperature.
+TemperatureType now has a private ReadNL subroutine that reads two new namelist options: excess_ice_coldstart_depth and excess_ice_coldstart_temp which control top depth (higher layers get default initial temperature) and soil temperature for soil layers ONLY in columns where excess ice is present. Other columns get their default soil temperature. 
 
-excessicestream_type has been taken out of waterstate_type and its routines are called directly in clm_inst%Init. Checks for UseExcessIceStreams() are still in place in WaterStateType.F90 for double-checking.
+New namelist options belong to a new group "clm_temperature_inparm" with its own logic routine. This is done so in the future hardcoded cold start temperatures can be moved to the namelists. Two namelist tests have been added to check for invalid values logic as well as a test for use_excess_ice_streams logic. use_excess_ice_streams has no default value (due to options for restart) and default value set in the CLMBuildNamelist.pm.
+
+excessicestream_type has been taken out of waterstate_type and its routines are called directly in clm_inst%Init. Checks for UseExcessIceStreams() are still in place in WaterStateType.F90 for double-checking. clm_inst%Init now has a new local variable with excess ice concentration that are read from streams (or zeros if use_excess_ice is false). Arguments for temperature_type%Init and water_type%Init (and children types) have been changed to include this new variable. Fortran unit tests are also updated to account for these new arguments.
+
+
 
 
 Significant changes to scientifically-supported configurations
