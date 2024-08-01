@@ -826,13 +826,14 @@ contains
     !!!------- the drought algorithm--------
     real(r8), parameter :: a1 = -7.4463_r8
     real(r8), parameter :: b1 = 3.2552_r8
+    real(r8), parameter :: btran_threshold = 0.2_r8
     real(r8)            :: get_gamma_SM
     !---------------------------------------
 
     if (btran_in >= 1._r8) then
        get_gamma_SM = 1._r8
     else
-       get_gamma_SM = 1._r8 / (1._r8 + b1 * exp(a1 * (btran_in - 0.2_r8)))
+       get_gamma_SM = 1._r8 / (1._r8 + b1 * exp(a1 * (btran_in - btran_threshold)))
     endif
 
   end function get_gamma_SM
@@ -884,6 +885,12 @@ contains
     real(r8), parameter :: ct3 = 0.00831_r8                ! empirical coefficient (0.0083 in User's Guide)
     real(r8), parameter :: tstd = 303.15_r8                ! std temperature [K]
     real(r8), parameter :: bet = 0.09_r8                   ! beta empirical coefficient [K-1]
+    real(r8), parameter :: std_act_energy_isopr = 95._r8  ! standard activation energy for isoprene
+    real(r8), parameter :: empirical_param_1 = 9.49_r8  ! empirical param for the activation energy in response to 10-day temperature change
+    real(r8), parameter :: empirical_param_2 = 0.53_r8  ! empirical param for the activation energy in response to 10-day temperature change
+    real(r8), parameter :: empirical_param_3 = 0.12_r8  ! empirical param for the emission factors of arctic C3 grass in response to 10-day temperature change
+    real(r8), parameter :: empirical_param_4 = 7.9_r8  ! empirical param for the emission factors of broadleaf deciduous boreal shrubs in response to 10-day temperature change
+    real(r8), parameter :: empirical_param_5 = 0.217_r8  ! empirical param for the emission factors of broadleaf deciduous boreal shrubs in response to 10-day temperature change
     !-----------------------------------------------------------------------
 
     ! Light dependent fraction (Guenther et al., 2006)
@@ -892,11 +899,11 @@ contains
        topt = co1 + (co2 * (t_veg240_in-tstd0))
        if ( (ivt_in == nbrdlf_dcd_brl_shrub) ) then  ! boreal-deciduous-shrub
        ! coming from BEAR-oNS campaign willows results
-             Eopt = 7.9_r8 * exp (0.217_r8 * (t_veg24_in - tfrz - 24.0_r8))
+          Eopt = empirical_param_4 * exp (empirical_param_5 * (t_veg24_in - tfrz - 24.0_r8))
        else if ( (ivt_in == nc3_arctic_grass ) ) then  ! boreal-grass
-             Eopt = exp(0.12_r8 * (t_veg240_in - tfrz - 15._r8))
+          Eopt = exp(empirical_param_3 * (t_veg240_in - tfrz - 15._r8))
        else
-             Eopt = Ceo_in * exp (co4 * (t_veg24_in - tstd0)) * exp(co4 * (t_veg240_in - tstd0))
+          Eopt = Ceo_in * exp (co4 * (t_veg24_in - tstd0)) * exp(co4 * (t_veg240_in - tstd0))
        endif
 
     else
@@ -906,7 +913,7 @@ contains
     x = ( (1._r8/topt) - (1._r8/(t_veg_in)) ) / ct3
     ! for the boreal grass from BEAR-oNS campaign
     if ( (ivt_in == nc3_arctic_grass ) ) then  ! boreal-grass
-        bet_arc_c3 = 95._r8 + 9.49_r8 * exp(0.53_r8 * (tfrz + 15._r8 - t_veg240_in))
+        bet_arc_c3 = std_act_energy_isopr + empirical_param_1 * exp(empirical_param_2 * (tfrz + 15._r8 - t_veg240_in))
         bet_arc_c3 = min(bet_arc_c3, bet_arc_c3_max)
         gamma_t_LDF = Eopt * exp(bet_arc_c3 * ((1._r8 / (tfrz + 30._r8) - 1._r8 / t_veg_in) / ct3))
     else
