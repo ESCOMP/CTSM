@@ -463,16 +463,16 @@ def check_ssp_years(start_year, end_year):
     """
     Check years associated with SSP period
     """
-    if int(start_year) > 2022:
+    if int(start_year) > 2023:
         error_msg = (
-            "ERROR: if start-year > 2022 must add an --ssp_rcp "
+            "ERROR: if start-year > 2023 must add an --ssp_rcp "
             "argument that is not none: valid opts for ssp-rcp "
             f"are {valid_opts}"
         )
         sys.exit(error_msg)
-    elif int(end_year) > 2022:
+    elif int(end_year) > 2023:
         error_msg = (
-            "ERROR: if end-year > 2022 must add an --ssp-rcp "
+            "ERROR: if end-year > 2023 must add an --ssp-rcp "
             "argument that is not none: valid opts for ssp-rcp "
             f"are {valid_opts}"
         )
@@ -547,14 +547,14 @@ def determine_pft_years(start_year, end_year, potveg):
         pft_years = "2005"
     elif int(start_year) >= 850 and int(end_year) <= 1849:
         pft_years = "0850-1849"
-    elif int(start_year) >= 1700 and int(start_year) <= 2100 and int(end_year) <= 2022:
-        pft_years = "1700-2022"
+    elif int(start_year) >= 1700 and int(start_year) <= 2100 and int(end_year) <= 2023:
+        pft_years = "1700-2023"
     elif int(start_year) >= 1700 and int(start_year) <= 2100 and int(end_year) <= 2100:
-        pft_years = "1700-2022"
-        pft_years_ssp = "2023-2100"
+        pft_years = "1700-2023"
+        pft_years_ssp = "2024-2100"
     elif int(start_year) >= 2023 and int(start_year) <= 2100 and int(end_year) <= 2100:
         pft_years = "-999"
-        pft_years_ssp = "2023-2100"
+        pft_years_ssp = "2024-2100"
     else:
         error_msg = (
             f"ERROR: start_year is {start_year} and end_year is "
@@ -647,7 +647,7 @@ def write_nml_rawinput(
             # write everything else
             nlfile.write(f"  {key} = '{value}' \n")
 
-    if start_year <= 2022:
+    if start_year <= 2023:
         mksrf_fvegtyp = rawdata_files["mksrf_fvegtyp"]
         mksrf_fvegtyp_mesh = rawdata_files["mksrf_fvegtyp_mesh"]
         mksrf_fhrvtyp = rawdata_files["mksrf_fvegtyp"]
@@ -716,7 +716,7 @@ def handle_transient_run(
     with open(landuse_fname, "w", encoding="utf-8") as landuse_file:
         for year in range(start_year, end_year + 1):
             year_str = str(year)
-            if year <= 2022:
+            if year <= 2023:
                 file1 = rawdata_files["mksrf_fvegtyp"]
                 file2 = rawdata_files["mksrf_fvegtyp_urban"]
                 file3 = rawdata_files["mksrf_fvegtyp_lake"]
@@ -834,8 +834,8 @@ def determine_input_rawdata(start_year, input_path, attribute_list):
                     max_match_child = child2
 
         if max_match_child is None:
-            # For years greater than 2022 - mksrf_fvegtyp_ssp must have a match
-            if start_year > 2022:
+            # For years greater than 2023 - mksrf_fvegtyp_ssp must have a match
+            if start_year > 2023:
                 if "mksrf_fvegtyp_ssp" not in child1.tag:
                     error_msg = f"ERROR: {child1.tag} has no matches"
                     sys.exit(error_msg)
