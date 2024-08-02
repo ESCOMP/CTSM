@@ -50,6 +50,7 @@ contains
 
     character(len=5) :: NLFilename = 'none'
     real(r8), allocatable :: urb_em(:)
+    real(r8), allocatable :: exice_init_conc_col(:)
     integer :: begl, endl, begc, endc
     integer :: c
     type(atm2lnd_params_type) :: atm2lnd_params
@@ -91,12 +92,15 @@ contains
     call this%frictionvel_inst%InitForTesting(bounds)
     allocate( urb_em(begl:endl) )
     urb_em(begl:endl) = 0.99_r8  ! Arbitrary won't matter here
+    allocate( exice_init_conc_col(begc:endc) )
+    exice_init_conc_col(begc:endc) = 0.0_r8 ! zero, so it doesn't affect anything.
     call this%temperature_inst%Init(bounds,           &
                                em_roof_lun=urb_em(begl:endl), &
                                em_wall_lun=urb_em(begl:endl), &
                                em_improad_lun=urb_em(begl:endl), &
                                em_perroad_lun=urb_em(begl:endl), &
-                               is_simple_buildtemp=.true., is_prog_buildtemp=.false.)
+                               is_simple_buildtemp=.true., is_prog_buildtemp=.false., &
+                               exice_init_conc_col = exice_init_conc_col(begc:endc))
     deallocate( urb_em )
   end subroutine setUp
 

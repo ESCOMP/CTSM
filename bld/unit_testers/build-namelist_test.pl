@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3329;
+my $ntests = 3338;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 1999;
@@ -322,7 +322,7 @@ foreach my $driver ( "nuopc" ) {
                          "-res 0.9x1.25 -namelist '&a irrigate=.true./'", "-res 0.9x1.25 -verbose", "-res 0.9x1.25 -ssp_rcp SSP2-4.5", "-res 0.9x1.25 -test", "-res 0.9x1.25 -sim_year 1850",
                          "-res 0.9x1.25 -namelist '&a use_lai_streams=.true.,use_soil_moisture_streams=.true./'",
                          "-res 0.9x1.25 -namelist '&a use_excess_ice=.true. use_excess_ice_streams=.true./'",
-                         "-res 0.9x1.25 -namelist '&a use_excess_ice=.true. use_excess_ice_streams=.false./'",
+                         "-res 0.9x1.25 --clm_start_type cold -namelist '&a use_excess_ice=.true. use_excess_ice_streams=.true./'",
                          "-res 0.9x1.25 -use_case 1850_control",
                          "-res 1x1pt_US-UMB -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
                          "-res 1x1_brazil",
@@ -536,6 +536,21 @@ my %failtest = (
      "exice stream off, but setmap"=>{ options=>"-res 0.9x1.25 -envxml_dir .",
                                      namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.,stream_mapalgo_exice='bilinear'",
                                      phys=>"clm5_0",
+                                   },
+     "coldstart exice on wo stream"=>{ options=>"-res 0.9x1.25 -envxml_dir . --clm_start_type cold",
+                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm6_0",
+                                   },
+     "coldstart exice on bad temp" =>{ options=>"-res 0.9x1.25 -envxml_dir . --clm_start_type cold",
+                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams = .true., excess_ice_coldstart_temp=0.0",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm6_0",
+                                   },
+     "coldstart exice on bad depth" =>{ options=>"-res 0.9x1.25 -envxml_dir . --clm_start_type cold",
+                                     namelst=>"use_excess_ice=.true., use_excess_ice_streams = .true., excess_ice_coldstart_depth=0.0",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm6_0",
                                    },
      "clm50CNDVwtransient"       =>{ options=>" -envxml_dir . -use_case 20thC_transient -dynamic_vegetation -res 10x15 -ignore_warnings",
                                      namelst=>"",
@@ -1254,6 +1269,16 @@ my %warntest = (
                                    },
      "FUN_wo_flexCN"             =>{ options=>"-envxml_dir . -bgc bgc",
                                      namelst=>"use_fun=.true.,use_flexiblecn=.false.",
+                                     phys=>"clm6_0",
+                                   },
+     "Set coldtemp wo coldstart" =>{ options=>"-envxml_dir . --clm_start_type startup",
+                                     namelst=>"use_excess_ice=.true.,excess_ice_coldstart_temp=-10.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm6_0",
+                                   },
+     "Set colddepth wo coldstart" =>{ options=>"-envxml_dir . --clm_start_type startup",
+                                     namelst=>"use_excess_ice=.true.,excess_ice_coldstart_depth=0.5",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "NotNEONbutNEONlightres"    =>{ options=>"--res CLM_USRDAT --clm_usr_name regional --envxml_dir . --bgc bgc --light_res 106x174",
