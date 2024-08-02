@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.2.018
 Originator(s): mvdebolskiy
-Date: Thu 01 Aug 2024 02:53:41 PM MDT
+Date: Fri 02 Aug 2024 09:26:33 AM MDT
 One-line Summary: Fix/excess ice cold start
 
 Purpose and description of changes
@@ -86,7 +86,7 @@ Testing summary: regular
   any other testing (give details below):
 
   SMS_Lm12.f09_f09_mg17.I1850Clm60Sp.derecho_intel.clm-ExcessIceStartup_output_sp_exice
-     derecho ---- PASS (but different from baseline)
+     derecho ---- PASS
 
 Answer changes
 --------------
@@ -94,7 +94,7 @@ Answer changes
 Changes answers relative to baseline:
 
   Summarize any changes to answers, i.e.,
-    - what code configurations: excess ice on
+    - what code configurations: excess ice on, with coldstart or with finidat file interpolation
     - what platforms/compilers: all
     - nature of change: different at startup
         Different for cold-start and can be different for a few points where the cold-start
@@ -102,7 +102,6 @@ Changes answers relative to baseline:
 
   Tests that compare different to baseline:
   ERS_D.f10_f10_mg37.I1850Clm60Sp.izumi_nag.clm-ExcessIceStreams
-  SMS_Lm12.f09_f09_mg17.I1850Clm60Sp.derecho_intel.clm-ExcessIceStartup_output_sp_exice
          failed baseline comparison (though answers for default physics configurations have not changed).
 
 Other details
