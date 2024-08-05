@@ -871,6 +871,9 @@ contains
        call mpi_bcast (anoxia, 1, MPI_LOGICAL, 0, mpicom, ier)
     end if
 
+    ! dust emissions
+    call mpi_bcast (dust_emis_method, len(dust_emis_method), MPI_CHARACTER, 0, mpicom, ier)
+
     ! lakes
     call mpi_bcast (deepmixing_depthcrit,  1, MPI_REAL8, 0, mpicom, ier)
     call mpi_bcast (deepmixing_mixfact,    1, MPI_REAL8, 0, mpicom, ier)
