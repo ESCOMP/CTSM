@@ -3569,7 +3569,7 @@
     </options>
   </test>
 
-  <test name="SMS_Lm25" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/RxCropCalsNoAdapt">
+  <test name="SMS_Lm25" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput--clm/RxCropCalsNoAdapt">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
@@ -3578,7 +3578,7 @@
     </options>
   </test>
 
-  <test name="SMS_D_Lm25" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/RxCropCalsAdaptGGCMI">
+  <test name="SMS_D_Lm25" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput--clm/RxCropCalsAdaptGGCMI">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
       <machine name="izumi" compiler="nag" category="crop_calendars"/>
