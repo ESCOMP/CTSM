@@ -3526,6 +3526,7 @@ sub setup_logic_hillslope {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_pft_distribution_method' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_soil_profile_method' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_hillslope_routing', 'use_hillslope'=>$nl_flags->{'use_hillslope'} );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_fsat_equals_zero', 'use_hillslope'=>$nl_flags->{'use_hillslope'} );
   my $use_hillslope = $nl->get_value('use_hillslope');
   my $use_hillslope_routing = $nl->get_value('use_hillslope_routing');
   if ( (! &value_is_true($use_hillslope)) && &value_is_true($use_hillslope_routing) ) {
