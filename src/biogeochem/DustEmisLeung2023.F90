@@ -77,6 +77,8 @@ module DustEmisLeung2023
      procedure , private :: InitHistory     ! History initialization
      procedure , private :: InitCold
      procedure , private :: CalcDragPartition ! Calculate drag partitioning based on Prigent roughness stream
+     ! Public for unit testing
+     procedure , public  :: SetDragPartition  ! Set drag partitioning for testing
 
   end type dust_emis_leung2023_type
 
@@ -126,11 +128,9 @@ contains
    type(bounds_type), intent(in) :: bounds
    !
    ! !LOCAL VARIABLES:
-   integer :: begc,endc
    integer :: begp,endp
    !------------------------------------------------------------------------
 
-   begc = bounds%begc ; endc = bounds%endc
    begp = bounds%begp ; endp = bounds%endp
    allocate(this%dst_emiss_coeff_patch     (begp:endp))        ; this%dst_emiss_coeff_patch     (:)   = nan
    allocate(this%wnd_frc_thr_patch         (begp:endp))        ; this%wnd_frc_thr_patch         (:)   = nan
@@ -208,11 +208,9 @@ contains
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: begc,endc
     integer :: begp,endp
     !------------------------------------------------------------------------
 
-    begc = bounds%begc; endc = bounds%endc
     begp = bounds%begp; endp = bounds%endp
     this%dst_emiss_coeff_patch(begp:endp) = spval
     call hist_addfld1d (fname='DUST_EMIS_COEFF', units='dimensionless',  &
@@ -434,34 +432,34 @@ contains
          h2osoi_ice          => waterstatebulk_inst%h2osoi_ice_col   , & ! Input:  [real(r8) (:,:) ]  frozen soil water (kg/m2)
 
          fv                  => frictionvel_inst%fv_patch            , & ! Input:  [real(r8) (:)   ]  friction velocity (m/s) (for dust model)
-         u10                 => frictionvel_inst%u10_patch           , & ! Input:  [real(r8) (:)   ]  10-m wind (m/s) (created for dust model)
+         obu                 => frictionvel_inst%obu_patch           , & ! Input:  [real(r8) (:)   ] Monin-Obukhov length from the friction Velocity module          obu                 => frictionvel_inst%obu_patch             & ! Input:  [real(r8) (:)   ] Monin-Obukhov length from the friction Velocity module 
+
+         dpfct_rock          => this%dpfct_rock_patch                , & ! Input:  rock drag partition factor defined in Marticorena and Bergametti 1995. A fraction between 0 and 1.
 
          flx_mss_vrt_dst     => this%flx_mss_vrt_dst_patch           , & ! Output: [real(r8) (:,:) ]  surface dust emission (kg/m**2/s)
          flx_mss_vrt_dst_tot => this%flx_mss_vrt_dst_tot_patch       , & ! Output: [real(r8) (:)   ]  total dust flux back to atmosphere (pft)
          ! below variables are defined in Kok et al. (2014) or (mostly) Leung et al. (2023) dust emission scheme. dmleung 16 Feb 2024
-         dst_emiss_coeff     => this%dst_emiss_coeff_patch           , & ! Output dust emission coefficient
-         wnd_frc_thr         => this%wnd_frc_thr_patch               , & ! output fluid threshold
-         wnd_frc_thr_dry     => this%wnd_frc_thr_dry_patch           , & ! output dry fluid threshold
-         wnd_frc_thr_it      => this%wnd_frc_thr_it_patch            , & ! output impact threshold
-         lnd_frc_mble        => this%lnd_frc_mble_patch              , & ! output bare land fraction
-         wnd_frc_soil        => this%wnd_frc_soil_patch              , & ! soil friction velocity u_*s = (u_*)(f_eff)
-         gwc                 => this%gwc_patch                       , & ! output gravimetric water content
-         liq_frac            => this%liq_frac_patch                  , & ! output fraction of liquid moisture
-         intrmtncy_fct       => this%intrmtncy_fct_patch             , & ! output intermittency factor eta (fraction of time that dust emission is active within a timestep)
-         stblty              => this%stblty_patch                    , & ! stability in similarity theory (no need to output)
-         u_mean_slt          => this%u_mean_slt_patch                , & ! output mean wind speed at 0.1 m height translated from friction velocity using the log law of the wall, assuming neutral condition
-         u_sd_slt            => this%u_sd_slt_patch                  , & ! output standard deviation of wind speed from similarity theory
-         u_fld_thr           => this%u_fld_thr_patch                 , & ! output fluid threshold wind speed at 0.1 m height translated from the log law of the wall
-         u_impct_thr         => this%u_impct_thr_patch               , & ! output impact threshold wind speed at 0.1 m height translated from the log law of the wall
-         thr_crs_rate        => this%thr_crs_rate_patch              , & ! output threshold crossing rate in Comola 2019 intermittency parameterization
-         prb_crs_fld_thr     => this%prb_crs_fld_thr_patch           , & ! output probability of instantaneous wind crossing fluid threshold in Comola 2019 intermittency parameterization
-         prb_crs_impct_thr   => this%prb_crs_impct_thr_patch         , & ! output probability of instantaneous wind crossing impact threshold in Comola 2019 intermittency parameterization
-         ssr                 => this%ssr_patch                       , & ! output vegetation drag partition factor in Okin 2008 vegetation roughness effect (called shear stress ratio, SSR in Okin 2008)
-         vai_Okin            => this%vai_Okin_patch                  , & ! vegetation area index for calculating Okin-Pierre vegetation drag partitioning. vai=0 in the ssr equation will lead to infinity, so a small value is added into this vai dmleung defined. (no need to output) 16 Feb 2024
-         frc_thr_rghn_fct    => this%frc_thr_rghn_fct_patch          , & ! output hybrid/total drag partition factor considering both rock and vegetation drag partition factors.
-         wnd_frc_thr_std     => this%wnd_frc_thr_std_patch           , & ! standardized dust emission threshold friction velocity defined in Jasper Kok et al. (2014).
-         dpfct_rock          => this%dpfct_rock_patch                , & ! output rock drag partition factor defined in Marticorena and Bergametti 1995. A fraction between 0 and 1.
-         obu                 => frictionvel_inst%obu_patch             & ! Input:  [real(r8) (:)   ] Monin-Obukhov length from the friction Velocity module          obu                 => frictionvel_inst%obu_patch             & ! Input:  [real(r8) (:)   ] Monin-Obukhov length from the friction Velocity module 
+         dst_emiss_coeff     => this%dst_emiss_coeff_patch           , & ! Output: dust emission coefficient
+         wnd_frc_thr         => this%wnd_frc_thr_patch               , & ! Output: fluid threshold
+         wnd_frc_thr_dry     => this%wnd_frc_thr_dry_patch           , & ! Output: dry fluid threshold
+         wnd_frc_thr_it      => this%wnd_frc_thr_it_patch            , & ! Output: impact threshold
+         lnd_frc_mble        => this%lnd_frc_mble_patch              , & ! Output: bare land fraction
+         wnd_frc_soil        => this%wnd_frc_soil_patch              , & ! Output: soil friction velocity u_*s = (u_*)(f_eff)
+         gwc                 => this%gwc_patch                       , & ! output: gravimetric water content
+         liq_frac            => this%liq_frac_patch                  , & ! Output: fraction of liquid moisture
+         intrmtncy_fct       => this%intrmtncy_fct_patch             , & ! Output: intermittency factor eta (fraction of time that dust emission is active within a timestep)
+         stblty              => this%stblty_patch                    , & ! Output: stability in similarity theory (no need to output)
+         u_mean_slt          => this%u_mean_slt_patch                , & ! Output: mean wind speed at 0.1 m height translated from friction velocity using the log law of the wall, assuming neutral condition
+         u_sd_slt            => this%u_sd_slt_patch                  , & ! Output: standard deviation of wind speed from similarity theory
+         u_fld_thr           => this%u_fld_thr_patch                 , & ! Output: fluid threshold wind speed at 0.1 m height translated from the log law of the wall
+         u_impct_thr         => this%u_impct_thr_patch               , & ! Output: impact threshold wind speed at 0.1 m height translated from the log law of the wall
+         thr_crs_rate        => this%thr_crs_rate_patch              , & ! Output: threshold crossing rate in Comola 2019 intermittency parameterization
+         prb_crs_fld_thr     => this%prb_crs_fld_thr_patch           , & ! Output: probability of instantaneous wind crossing fluid threshold in Comola 2019 intermittency parameterization
+         prb_crs_impct_thr   => this%prb_crs_impct_thr_patch         , & ! Output: probability of instantaneous wind crossing impact threshold in Comola 2019 intermittency parameterization
+         ssr                 => this%ssr_patch                       , & ! Output: vegetation drag partition factor in Okin 2008 vegetation roughness effect (called shear stress ratio, SSR in Okin 2008)
+         vai_Okin            => this%vai_Okin_patch                  , & ! Output: vegetation area index for calculating Okin-Pierre vegetation drag partitioning. vai=0 in the ssr equation will lead to infinity, so a small value is added into this vai dmleung defined. (no need to output) 16 Feb 2024
+         frc_thr_rghn_fct    => this%frc_thr_rghn_fct_patch          , & ! Output: hybrid/total drag partition factor considering both rock and vegetation drag partition factors.
+         wnd_frc_thr_std     => this%wnd_frc_thr_std_patch             & ! Output: standardized dust emission threshold friction velocity defined in Jasper Kok et al. (2014).
          )
 
       ttlai(bounds%begp : bounds%endp) = 0._r8
@@ -868,6 +866,33 @@ contains
    end do
 
  end subroutine CalcDragPartition
+
+
+  !------------------------------------------------------------------------
+
+ subroutine SetDragPartition(this, bounds, drag_partition)
+   !
+   ! !DESCRIPTION:
+   ! Set the drag partition for testing
+   !
+   ! !USES:
+   !
+   ! !ARGUMENTS:
+   implicit none
+   class (dust_emis_leung2023_type) :: this
+   type(bounds_type), intent(in) :: bounds
+   real(r8), intent(in) :: drag_partition
+   !
+   ! !LOCAL VARIABLES:
+   integer  :: p     ! Indices
+
+   !---------------------------------------------------------------------
+
+   do p = bounds%begp,bounds%endp
+      this%dpfct_rock_patch(p) = drag_partition
+   end do
+
+ end subroutine SetDragPartition
 
  !==============================================================================
 
