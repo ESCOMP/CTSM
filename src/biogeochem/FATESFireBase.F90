@@ -206,7 +206,7 @@ module FATESFireBase
        atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, &
        waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
        waterstatebulk_inst, soilstate_inst, soil_water_retention_curve, &
-       cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
+       crop_inst, cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
     !
     ! !DESCRIPTION:
     ! Computes column-level burned area  (NOT USED FOR FATES)
@@ -220,6 +220,7 @@ module FATESFireBase
     use SoilStateType                      , only : soilstate_type
     use SoilWaterRetentionCurveMod         , only : soil_water_retention_curve_type
     use atm2lndType                        , only : atm2lnd_type
+    use CropType                           , only: crop_type
     !
     ! !ARGUMENTS:
     class(fates_fire_base_type)                           :: this
@@ -242,6 +243,8 @@ module FATESFireBase
     class(soil_water_retention_curve_type), intent(in)    :: soil_water_retention_curve
     type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
+    type(crop_type)                       , intent(in) :: crop_inst
+
     real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
     real(r8)                              , intent(in)    :: decomp_cpools_vr_col(bounds%begc:,1:,1:)
     real(r8)                              , intent(in)    :: t_soi17cm_col(bounds%begc:)
