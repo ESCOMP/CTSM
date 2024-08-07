@@ -319,6 +319,21 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <cmb_cmplt_fact_litter    fire_method="li2021gswpfrc" >0.5d00</cmb_cmplt_fact_litter>
 <cmb_cmplt_fact_cwd       fire_method="li2021gswpfrc" >0.28d00</cmb_cmplt_fact_cwd>
 
+<rh_low                   fire_method="li2024gswpfrc" >30.0d00</rh_low>
+<rh_hgh                   fire_method="li2024gswpfrc" >80.0d00</rh_hgh>
+<bt_min                   fire_method="li2024gswpfrc" >0.85d00</bt_min>
+<bt_max                   fire_method="li2024gswpfrc" >0.98d00</bt_max>
+<cli_scale                fire_method="li2024gswpfrc" >0.025d00</cli_scale>
+<boreal_peatfire_c        fire_method="li2024gswpfrc" >0.09d-4</boreal_peatfire_c>
+<pot_hmn_ign_counts_alpha fire_method="li2024gswpfrc" >0.010d00</pot_hmn_ign_counts_alpha>
+<non_boreal_peatfire_c    fire_method="li2024gswpfrc" >0.17d-3</non_boreal_peatfire_c>
+<cropfire_a1              fire_method="li2024gswpfrc" >1.6d-4</cropfire_a1>
+<occur_hi_gdp_tree        fire_method="li2024gswpfrc" >0.33d00</occur_hi_gdp_tree>
+<lfuel                    fire_method="li2024gswpfrc" >75.d00</lfuel>
+<ufuel                    fire_method="li2024gswpfrc" >1050.d00</ufuel>
+<cmb_cmplt_fact_litter    fire_method="li2024gswpfrc" >0.5d00</cmb_cmplt_fact_litter>
+<cmb_cmplt_fact_cwd       fire_method="li2024gswpfrc" >0.28d00</cmb_cmplt_fact_cwd>
+
 <!-- Canopy fluxes namelist defaults -->
 <use_undercanopy_stability               >.false.</use_undercanopy_stability>
 <use_undercanopy_stability phys="clm4_5" >.true.</use_undercanopy_stability>
