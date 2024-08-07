@@ -3582,12 +3582,20 @@
   <test name="SMS_D_Ld733" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput--clm/RxCropCalsAdaptGGCMI">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Ld65" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput--clm/RxCropCalsAdaptGGCMI">
+    <machines>
       <machine name="izumi" compiler="nag" category="crop_calendars"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="fix_nag_bld_2659"/>
     </machines>
     <options>
-      <option name="wallclock">08:00:00</option>
+      <option name="wallclock">00:30:00</option>
     </options>
   </test>
 
