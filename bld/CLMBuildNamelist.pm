@@ -4676,7 +4676,7 @@ sub setup_logic_prigent_roughness {
               'dust_emis_method'=>$dust_emis_method );
   my $use_prigent = $nl->get_value($var);
   if ( &value_is_true($use_prigent) ) {
-     if ( $dust_emis_method eq "Leung_2023" ) {
+     if ( $dust_emis_method ne "Leung_2023" ) {
        $log->warning( "$var does NOT need to be set without dust_emis_method being Leung_2023" );
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_prigentroughness' );
