@@ -356,7 +356,7 @@
       cold start (finidat will be set to blanks).
       A value of on forces the model to spin up from a cold-start
       (arbitrary initial conditions). Setting this value in the xml file will take
-      precedence over any settings for finidat in the $CASEROOT/user_nl_ctsm file.</desc>
+      precedence over any settings for finidat in the $CASEROOT/user_nl_clm file.</desc>
   </entry>
 
   <entry id="CLM_USER_MODS">
