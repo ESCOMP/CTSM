@@ -89,7 +89,7 @@ contains
        num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, &
        atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, &
        wateratm2lndbulk_inst, waterstatebulk_inst, soilstate_inst, soil_water_retention_curve, &
-       cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
+       crop_inst, cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
     !
     ! !DESCRIPTION:
     ! Computes column-level burned area
@@ -97,10 +97,11 @@ contains
     ! !USES:
     use clm_time_manager     , only: get_step_size_real, get_curr_days_per_year, get_curr_date, get_nstep
     use clm_varcon           , only: secspday, secsphr
-    use clm_varctl           , only: spinup_state
+    use clm_varctl           , only: spinup_state, use_crop
     use pftconMod            , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree
     use pftconMod            , only: nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree, nbrdlf_evr_shrub
     use dynSubgridControlMod , only : run_has_transient_landcover
+    use CropType             , only: crop_type
     !
     ! !ARGUMENTS:
     class(cnfire_li2024_type)                             :: this
@@ -123,6 +124,7 @@ contains
     class(soil_water_retention_curve_type), intent(in)    :: soil_water_retention_curve
     type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
+    type(crop_type)                       , intent(in)    :: crop_inst
     real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
     real(r8)                              , intent(in)    :: decomp_cpools_vr_col(bounds%begc:,1:,1:)
     real(r8)                              , intent(in)    :: t_soi17cm_col(bounds%begc:)
@@ -237,7 +239,8 @@ contains
          leafc_col          => cnveg_carbonstate_inst%leafc_col                , & ! Output: [real(r8) (:)     ]  leaf carbon at column level
          deadstemc_col      => cnveg_carbonstate_inst%deadstemc_col            , & ! Output: [real(r8) (:)     ]  deadstem carbon at column level
          fuelc              => cnveg_carbonstate_inst%fuelc_col                , & ! Output: [real(r8) (:)     ]  fuel load coutside cropland
-         fuelc_crop         => cnveg_carbonstate_inst%fuelc_crop_col             & ! Output: [real(r8) (:)     ]  fuel load for cropland
+         fuelc_crop         => cnveg_carbonstate_inst%fuelc_crop_col           ,  & ! Output: [real(r8) (:)     ]  fuel load for cropland
+         croplive              => crop_inst%croplive_patch                       & ! Input:  [logical  (:)   ]  flag, true if planted, not harvested
          )
 
       transient_landcover = run_has_transient_landcover()
@@ -522,21 +525,18 @@ contains
            hdmlf = this%forc_hdm(g)
 
            ! calculate human density impact on ag. fire
-           fhd = 0.04_r8+0.96_r8*exp(-1._r8*SHR_CONST_PI*(hdmlf/350._r8)**0.5_r8)
+           fhd = 0.2_r8+0.8_r8*exp(-1._r8*SHR_CONST_PI*(hdmlf/400._r8))
 
            ! calculate impact of GDP on ag. fire
-           fgdp = 0.01_r8+0.99_r8*exp(-1._r8*SHR_CONST_PI*(gdp_lf(c)/10._r8))
+           fgdp = 0.05_r8+0.95_r8*exp(-1._r8*SHR_CONST_PI*(gdp_lf(c)/20._r8))
 
            ! calculate burned area
-           fb   = max(0.0_r8,min(1.0_r8,(fuelc_crop(c)-lfuel)/(ufuel-lfuel)))
-
-           ! crop fire only for generic crop types at this time
-           ! managed crops are treated as grasses if crop model is turned on
-           baf_crop(c) = baf_crop(c) + cropfire_a1/secsphr*fhd*fgdp*patch%wtcol(p)
-           if( fb*fhd*fgdp*patch%wtcol(p)  >  0._r8)then
-              burndate(p)=kda
+            if((use_crop .and. (.not. croplive(p))) &
+                   .or. (.not. use_crop)) then
+                burndate(p) = kda
+                baf_crop(c) = baf_crop(c)+0.21_r8 / secsphr * fhd * fgdp * patch%wtcol(p)
            end if
-        end if
+       end if
      end do
      !
      ! calculate peatland fire
