@@ -2001,7 +2001,8 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <!-- Defaults for Prigent's roughness data      -->
 <!-- =========================================  -->
 
-<use_prigent_roughness>.true.</use_prigent_roughness>
+<use_prigent_roughness dust_emis_method="Leung_2023">.true.</use_prigent_roughness>
+<use_prigent_roughness                              >.false.</use_prigent_roughness>
 <stream_fldfilename_prigentroughness
 >lnd/clm2/dustemisdata/Prigent_2005_roughness_0.25x0.25_cdf5_c240127.nc</stream_fldfilename_prigentroughness>
 <stream_meshfile_prigentroughness

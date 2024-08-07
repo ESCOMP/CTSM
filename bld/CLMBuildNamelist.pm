@@ -1601,7 +1601,6 @@ sub process_namelist_inline_logic {
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_z0param($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_misc($opts, $nl_flags, $definition, $defaults, $nl);
-  setup_logic_prigent_roughness($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
   # namelist group: atm2lnd_inparm
@@ -1703,6 +1702,7 @@ sub process_namelist_inline_logic {
   # namelist options for dust emissions
   ######################################
   setup_logic_dust_emis($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_prigent_roughness($opts, $nl_flags, $definition, $defaults, $nl);
 
   #################################
   # namelist group: megan_emis_nl #
@@ -4671,12 +4671,17 @@ sub setup_logic_prigent_roughness {
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
   my $var = "use_prigent_roughness";
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
+  my $dust_emis_method = remove_leading_and_trailing_quotes( $nl->get_value('dust_emis_method') );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+              'dust_emis_method'=>$dust_emis_method );
   my $use_prigent = $nl->get_value($var);
   if ( &value_is_true($use_prigent) ) {
+     if ( $dust_emis_method eq "Leung_2023" ) {
+       $log->warning( "$var does NOT need to be set without dust_emis_method being Leung_2023" );
+     }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_prigentroughness' );
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_prigentroughness' );
-  } else {
+  } elsif ( $dust_emis_method eq "Leung_2023" ) {
     $log->fatal_error("variable \"$var\" MUST be true when Leung_2023 dust emission method is being used" );
   }
 }
