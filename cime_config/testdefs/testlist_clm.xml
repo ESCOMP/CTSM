@@ -2532,6 +2532,7 @@
   <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP126Clm50BgcCrop" testmods="clm/datm_ssp126_anom_forc">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ssp"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
