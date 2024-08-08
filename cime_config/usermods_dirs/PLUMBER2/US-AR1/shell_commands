@@ -1,11 +1,11 @@
+./xmlchange PLUMBER2SITE=US-AR1
 ./xmlchange PTS_LON=-99.419983
 ./xmlchange PTS_LAT=36.426701
 ./xmlchange DATM_YR_END=2012
+./xmlchange DATM_YR_START_FILENAME=2010
 ./xmlchange START_TOD=21600
 ./xmlchange ATM_NCPL=48
 
-echo "fsurdat='/glade/u/home/wwieder/CTSM/tools/site_and_regional/subset_data_single_point/surfdata_1x1_PLUMBER2_US-AR1_hist_16pfts_Irrig_CMIP6_simyr2000_c231005.nc ' " >> user_nl_clm 
-echo "CLM_USRDAT.PLUMBER2:datafiles= \$DIN_LOC_ROOT/atm/datm7/CLM1PT_data/PLUMBER2/US-AR1/CLM1PT_data/CTSM_DATM_US-AR1_2010-2012.nc " >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_first=2010" >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_last=2012" >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_align=2010" >> user_nl_datm_streams 
