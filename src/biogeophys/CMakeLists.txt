@@ -7,6 +7,7 @@ list(APPEND clm_sources
   BalanceCheckMod.F90
   CanopyStateType.F90
   EnergyFluxType.F90
+  FrictionVelocityMod.F90
   GlacierSurfaceMassBalanceMod.F90
   HillslopeHydrologyUtilsMod.F90
   HumanIndexMod.F90
@@ -24,6 +25,7 @@ list(APPEND clm_sources
   SoilHydrologyType.F90
   SoilStateType.F90
   SoilWaterRetentionCurveMod.F90
+  SoilStateInitTimeConstMod.F90
   SolarAbsorbedType.F90
   PhotosynthesisMod.F90
   SurfaceAlbedoType.F90

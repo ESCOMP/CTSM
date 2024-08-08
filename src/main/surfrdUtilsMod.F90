@@ -317,8 +317,8 @@ contains
           ! original sum of all the weights
           wt_sum(g) = sum(weight(g,:))
 
-          if (present(do_not_collapse) .and. do_not_collapse(g)) then
-             cycle
+          if (present(do_not_collapse)) then
+             if (do_not_collapse(g)) cycle
           end if
 
           max_indices = 0  ! initialize
