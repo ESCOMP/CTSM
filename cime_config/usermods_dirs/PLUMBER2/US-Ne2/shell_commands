@@ -2,10 +2,10 @@
 ./xmlchange PTS_LON=-96.470093
 ./xmlchange PTS_LAT=41.164902
 ./xmlchange DATM_YR_END=2012
+./xmlchange DATM_YR_START_FILENAME=2002
 ./xmlchange START_TOD=21600
 ./xmlchange ATM_NCPL=24
 
-echo "CLM_USRDAT.PLUMBER2:datafiles= \$DIN_LOC_ROOT/atm/datm7/CLM1PT_data/PLUMBER2/US-Ne2/CLM1PT_data/CTSM_DATM_US-Ne2_2002-2012.nc " >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_first=2002" >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_last=2012" >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_align=2002" >> user_nl_datm_streams 
