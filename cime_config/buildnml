@@ -372,7 +372,7 @@ def buildnml(case, caseroot, compname):
                         break
 
             if not os.path.exists(os.path.join(rundir, clm_startfile)):
-                logger.warning("WARNING: Could NOT find a start file to use using" + clm_startfile)
+                logger.warning("WARNING: Could NOT find a start file named" + clm_startfile)
             clm_icfile = "%s = '%s'" % (startfile_type, clm_startfile)
         else:
             clm_icfile = ""
