@@ -71,6 +71,7 @@ def buildnml(case, caseroot, compname):
     yr_start = int(yr_start)
     yr_end = int(yr_end)
 
+    clm_usrdat_name = case.get_value("CLM_USRDAT_NAME")
     comp_atm = case.get_value("COMP_ATM")
     lnd_grid = case.get_value("LND_GRID")
     ninst_lnd = case.get_value("NINST_LND")
@@ -80,6 +81,7 @@ def buildnml(case, caseroot, compname):
     run_refcase = case.get_value("RUN_REFCASE")
     run_refdate = case.get_value("RUN_REFDATE")
     run_reftod = case.get_value("RUN_REFTOD")
+    start_tod = case.get_value("START_TOD")
     glc_nec = case.get_value("GLC_NEC")
     glc_use_antarctica = case.get_value("GLC_USE_ANTARCTICA")
     mask = case.get_value("MASK_GRID")
@@ -348,13 +350,22 @@ def buildnml(case, caseroot, compname):
         if run_type == "hybrid" or run_type == "branch":
             compnames = ["clm4", "clm5", "clm2"]
             for comp in compnames:
-                clm_startfile = "%s.%s%s.r.%s-%s.nc" % (
-                    run_refcase,
-                    comp,
-                    inst_string,
-                    run_refdate,
-                    run_reftod,
-                )
+                if "PLUMBER2" in clm_usrdat_name:
+                    clm_startfile = "%s.%s%s.r.%s-%s.nc" % (
+                        run_refcase,
+                        comp,
+                        inst_string,
+                        run_refdate,
+                        start_tod,
+                    )
+                else:
+                    clm_startfile = "%s.%s%s.r.%s-%s.nc" % (
+                        run_refcase,
+                        comp,
+                        inst_string,
+                        run_refdate,
+                        run_reftod,
+                    )
                 if os.path.exists(os.path.join(rundir, clm_startfile)):
                     break
                 else:
@@ -372,7 +383,7 @@ def buildnml(case, caseroot, compname):
                         break
 
             if not os.path.exists(os.path.join(rundir, clm_startfile)):
-                logger.warning("WARNING: Could NOT find a start file named" + clm_startfile)
+                logger.warning("WARNING: Could NOT find a start file named " + clm_startfile)
             clm_icfile = "%s = '%s'" % (startfile_type, clm_startfile)
         else:
             clm_icfile = ""
