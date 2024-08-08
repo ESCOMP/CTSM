@@ -56,18 +56,10 @@ def write_usermods(
         "./xmlchange PTS_LON=" + str(lon) + "\n"
         "./xmlchange PTS_LAT=" + str(lat) + "\n"
         "./xmlchange DATM_YR_END=" + str(end_year) + "\n"
+        "./xmlchange DATM_YR_START_FILENAME=" + str(start_year) + "\n"
         "./xmlchange START_TOD=" + str(start_tod) + "\n"
         "./xmlchange ATM_NCPL=" + str(atm_ncpl) + "\n"
         "\n"
-        'echo "CLM_USRDAT.PLUMBER2:datafiles= \$DIN_LOC_ROOT/atm/datm7/CLM1PT_data/PLUMBER2/'
-        + site
-        + "/CLM1PT_data/CTSM_DATM_"
-        + site
-        + "_"
-        + str(start_year)
-        + "-"
-        + str(end_year)
-        + '.nc " >> user_nl_datm_streams \n'
         'echo "presaero.SSP3-7.0:year_first=' + str(start_year) + '" >> user_nl_datm_streams \n'
         'echo "presaero.SSP3-7.0:year_last=' + str(end_year) + '" >> user_nl_datm_streams \n'
         'echo "presaero.SSP3-7.0:year_align=' + str(start_year) + '" >> user_nl_datm_streams \n'
