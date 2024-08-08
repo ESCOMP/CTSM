@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3254;
+my $ntests = 3255;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 2001;
+   $ntests += 1965;
 }
 plan( tests=>$ntests );
 
@@ -1292,6 +1292,11 @@ my %warntest = (
                                    },
      "FUN_wo_flexCN"             =>{ options=>"-envxml_dir . -bgc bgc",
                                      namelst=>"use_fun=.true.,use_flexiblecn=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm6_0",
+                                   },
+     "PrigentOnWOLeung"          =>{ options=>"-envxml_dir . -bgc sp",
+                                     namelst=>"use_prigent_roughness=.true.,dust_emis_method='Zender_2003'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
