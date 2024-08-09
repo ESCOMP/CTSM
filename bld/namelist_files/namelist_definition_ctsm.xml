@@ -1695,6 +1695,25 @@ Mapping method from Nitrogen deposition input file to the model resolution
 </entry>
 
 <!-- ========================================================================================  -->
+<!-- Prigent roughness stream -->
+<!-- ========================================================================================  -->
+
+<entry id="use_prigent_roughness" type="logical" category="clm_physics"
+        group="prigentroughness" valid_values="" >
+If TRUE use the Prigent roughness dataset
+</entry>
+
+<entry id="stream_fldfilename_prigentroughness" type="char*256" category="datasets"
+       input_pathname="abs" group="prigentroughness" valid_values="" >
+Filename of input stream data for aeolian roughness length (from Prigent's roughness dataset)
+</entry>
+
+<entry id="stream_meshfile_prigentroughness" type="char*256" category="datasets"
+       input_pathname="abs" group="prigentroughness" valid_values="" >
+mesh filename of input stream data for aeolian roughness length (from Prigent's roughness dataset)
+</entry>
+
+<!-- ========================================================================================  -->
 <!-- Dust namelist and Zender soil erodibility stream                                          -->
 <!-- ========================================================================================  -->
 
@@ -1782,6 +1801,7 @@ should be set because it's vegetated, but the input soilm streams dataset shows 
 If true, will ignore the prescribed soilm data for that point and let the model run for that point without
 prescribed data.
 </entry>
+
 
 <!-- ========================================================================================  -->
 <!-- lai_streams streams Namelist (when phys = CLM4_5)                              -->

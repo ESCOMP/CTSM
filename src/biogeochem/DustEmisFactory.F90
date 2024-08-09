@@ -38,6 +38,7 @@ contains
         !---------------------------------------------------------------------------
         use DustEmisBase      , only : dust_emis_base_type
         use DustEmisZender2003, only : dust_emis_zender2003_type
+        use DustEmisLeung2023 , only : dust_emis_leung2023_type
         use decompMod         , only : bounds_type
         use shr_kind_mod      , only : CL => shr_kind_cl
         use shr_dust_emis_mod , only : is_dust_emis_zender, is_dust_emis_leung
@@ -46,14 +47,13 @@ contains
         class(dust_emis_base_type), allocatable :: dust_emis
         type(bounds_type), intent(in) :: bounds
         character(len=*),  intent(in) :: NLFilename
-        ! Local variables
 
         if ( is_dust_emis_zender() )then
            allocate(dust_emis, source=dust_emis_zender2003_type() )
-        
-        ! This will be added when the Leung2023 comes in
-        !else if ( is_dust_emis_leung() )
-        !  allocate(dust_emis, source=dust_emis_zender2003_type() )
+
+        else if ( is_dust_emis_leung() )then
+           allocate(dust_emis, source=dust_emis_leung2023_type() )
+
         else
            write(iulog,*) 'ERROR: unknown dust_emis_method: ', &
                            errMsg(sourcefile, __LINE__)

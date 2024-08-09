@@ -16,6 +16,8 @@ module unittestDustEmisInputs
   use FrictionVelocityMod, only : frictionvel_type
   use unittestWaterTypeFactory, only : unittest_water_type_factory_type
   use SoilStateInitTimeConstMod, only : ThresholdSoilMoistZender2003, MassFracClay
+  use SoilStateInitTimeConstMod, only : MassFracClayLeung2023
+  use abortutils, only : endrun
 
   implicit none
   private
@@ -56,6 +58,7 @@ contains
     type(atm2lnd_params_type) :: atm2lnd_params
     integer, parameter :: snl = 3
 
+    !-----------------------------------------------------------------------
     ! Settings needed for clm_varpar
     soil_layerstruct_predefined = '20SL_8.5m'
     create_crop_landunit = .true.
@@ -84,7 +87,7 @@ contains
     call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
     ! Water and soil state -- after the subgrid setup
     call this%water_factory%setup_after_subgrid(snl = snl)
-    call this%setupSoilState( )   ! This needs to happen before the water_type object creation
+    call this%setupSoilState( )
     call this%water_factory%create_water_type(this%water_inst, watsat_col=this%soilstate_inst%watsat_col)
     ! Canopy state, friction velocity, and temperature state ojects
     call this%canopystate_inst%SetNMLForTesting()
@@ -128,6 +131,7 @@ contains
     !
     use ColumnType, only : col
     use GridcellType, only : grc
+    use shr_dust_emis_mod , only : is_dust_emis_zender, is_dust_emis_leung
     class(unittest_dust_emis_input_type), intent(in) :: this
     !
     integer :: c,j
@@ -149,7 +153,13 @@ contains
     ! These are needed for dust emissions initialization
     do c = bounds%begc, bounds%endc
        this%soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoistZender2003( clay )
-       this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay )
+       if ( is_dust_emis_zender() )then
+          this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay )
+       else if ( is_dust_emis_leung() )then
+          this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClayLeung2023( clay )
+       else
+          call endrun("ERROR: do NOT know about this dust_emis_method")
+       end if
     end do
 
   end subroutine setupSoilState

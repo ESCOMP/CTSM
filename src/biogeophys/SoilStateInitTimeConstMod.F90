@@ -10,6 +10,8 @@ module SoilStateInitTimeConstMod
   use LandunitType  , only : lun                
   use ColumnType    , only : col                
   use PatchType     , only : patch                
+  use abortUtils    , only : endrun
+  use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
   !
   implicit none
   private
@@ -22,6 +24,7 @@ module SoilStateInitTimeConstMod
   public :: ThresholdSoilMoistZender2003
   public :: ThresholdSoilMoistKok2014
   public :: MassFracClay
+  public :: MassFracClayLeung2023
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: ReadNL
@@ -183,7 +186,8 @@ contains
     use organicFileMod      , only : organicrd 
     use FuncPedotransferMod , only : pedotransf, get_ipedof
     use RootBiophysMod      , only : init_vegrootfr
-    use GridcellType     , only : grc                
+    use GridcellType        , only : grc
+    use shr_dust_emis_mod   , only : is_dust_emis_zender, is_dust_emis_leung
     !
     ! !ARGUMENTS:
     type(bounds_type)    , intent(in)    :: bounds  
@@ -701,14 +705,28 @@ contains
     end do
 
     ! --------------------------------------------------------------------
-    ! Initialize threshold soil moisture and mass fracion of clay limited to 0.20
+    ! Initialize threshold soil moisture, and mass fraction of clay as
+    ! scaling coefficient of dust emission flux (kg/m2/s) in DUSTMod.F90
+    ! dmleung modified 5 Jul 2024, reducing sensitivity of dust emission
+    ! flux to clay fraction.
+    ! Also, for threshold soil moisture, dmleung followed Zender (2003)
+    ! DEAD scheme to again avoid dust flux being too sensitive to the choice
+    ! of clay dataset. This is different from what Leung et al. (2023)
+    ! intended to do.
+    ! Both decisions are based on tuning preference and could subject to
+    ! future changes. dmleung 5 Jul 2024
     ! --------------------------------------------------------------------
 
     do c = begc,endc
        g = col%gridcell(c)
 
        soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoistZender2003( clay3d(g,1) )
-       soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay3d(g,1) )
+       if ( is_dust_emis_leung() )then
+          soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClayLeung2023( clay3d(g,1) )
+       else
+          soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay3d(g,1) )
+       end if
+
     end do
 
     ! --------------------------------------------------------------------
@@ -725,12 +743,13 @@ contains
   real(r8) function ThresholdSoilMoistZender2003( clay )
   !------------------------------------------------------------------------------
   !
-  ! Calculate the threshold soil moisture needed for dust emission, based on clay content
+  ! Calculate the threshold gravimetric water content needed for dust emission, based on clay content
   ! This was the original equation with a = 1 / (%clay) being the tuning factor for soil
-  ! moisture effect in Zender's 2003 dust emission scheme.
+  ! moisture effect in Zender's 2003 dust emission scheme (only for top layer).
   !
   ! 0.17 and 0.14 are fitting coefficients in Fecan et al. (1999), and 0.01 is used to
   ! convert surface clay fraction from percentage to fraction.
+  ! The equation comes from Eq. 14 of Fecan et al. (1999; https://doi.org/10.1007/s00585-999-0149-7).
   !
   !------------------------------------------------------------------------------
   ! For future developments Danny M. Leung decided (Dec, 2023) that the Leung et al. (2023) o
@@ -746,8 +765,6 @@ contains
   ! Notes from: dmleung 19 Feb 2024.
   !
   !------------------------------------------------------------------------------
-      use abortUtils    , only : endrun
-      use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
       real(r8), intent(IN) :: clay ! Fraction of clay in the soil (%)
 
       if ( clay < 0.0_r8 .or. clay > 100.0_r8 )then
@@ -790,6 +807,17 @@ contains
 
       MassFracClay = min(clay * 0.01_r8, 0.20_r8)
   end function MassFracClay
+
+  !------------------------------------------------------------------------------
+
+  real(r8) function MassFracClayLeung2023( clay )
+  ! Calculate the mass fraction of clay needed for dust emission, based on clay content
+  ! Based on the base Zender_2003 version, with a slight modification for Leung_2023
+      real(r8), intent(IN) :: clay ! Fraction of lay in the soil (%)
+
+      MassFracClayLeung2023 = MassFracClay( clay )
+      MassFracClayLeung2023 = 0.1_r8 + MassFracClayLeung2023 * 0.1_r8 / 0.20_r8   ! dmleung added this line to reduce the sensitivity of dust emission flux to clay fraction in DUSTMod. 5 Jul 2024
+  end function MassFracClayLeung2023
 
   !------------------------------------------------------------------------------
 

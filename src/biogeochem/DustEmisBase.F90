@@ -16,7 +16,8 @@ module DustEmisBase
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_log_mod          , only : errMsg => shr_log_errMsg
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
-  use clm_varpar           , only : dst_src_nbr, ndst, sz_nbr
+  use clm_varpar           , only : dst_src_nbr, ndst, sz_nbr, &
+                                    natpft_lb, natpft_ub, natpft_size
   use clm_varcon           , only : grav, spval
   use landunit_varcon      , only : istcrop, istsoil
   use clm_varctl           , only : iulog
@@ -270,6 +271,7 @@ contains
    real(r8), optional, intent(out) :: vlc_trb_2
    real(r8), optional, intent(out) :: vlc_trb_3
    real(r8), optional, intent(out) :: vlc_trb_4
+
 
    if ( present(flx_mss_vrt_dst    ) ) flx_mss_vrt_dst     = this%flx_mss_vrt_dst_patch(p,:)
    if ( present(flx_mss_vrt_dst_tot) ) flx_mss_vrt_dst_tot = this%flx_mss_vrt_dst_tot_patch(p)
@@ -787,6 +789,6 @@ contains
 
   end subroutine InitDustVars
 
-  !------------------------------------------------------------------------
+  !==============================================================================
 
 end module DustEmisBase

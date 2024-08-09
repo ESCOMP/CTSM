@@ -24,7 +24,7 @@ module SoilStateType
 
      ! sand/ clay/ organic matter
      real(r8), pointer :: sandfrac_patch       (:)   ! patch sand fraction
-     real(r8), pointer :: clayfrac_patch       (:)   ! patch clay fraction
+     real(r8), pointer :: clayfrac_patch       (:)   ! patch clay fraction 
      real(r8), pointer :: mss_frc_cly_vld_col  (:)   ! col mass fraction clay limited to 0.20
      real(r8), pointer :: cellorg_col          (:,:) ! col organic matter for gridcell containing column (1:nlevsoi)
      real(r8), pointer :: cellsand_col         (:,:) ! sand value for gridcell containing column (1:nlevsoi)
