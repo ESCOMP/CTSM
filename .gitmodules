@@ -40,14 +40,14 @@ fxDONOTUSEurl = https://github.com/NCAR/fates-release
 [submodule "cice"]
 	path = components/cice
 	url = https://github.com/ESCOMP/CESM_CICE
-fxtag = cesm_cice6_5_0_9
+fxtag = cesm_cice6_5_0_10
 fxrequired = ToplevelRequired
 fxDONOTUSEurl = https://github.com/ESCOMP/CESM_CICE
 
 [submodule "cam"]
 path = components/cam
 url = https://github.com/ESCOMP/CAM
-fxtag = cam6_3_162
+fxtag = cam6_4_016
 fxrequired = ToplevelRequired
 fxDONOTUSEurl = https://github.com/ESCOMP/CAM
 #
