@@ -475,7 +475,7 @@ contains
 
     ! When crop calendar streams are being used
     ! NOTE: This call needs to happen outside loops over nclumps (as streams are not threadsafe)
-    if (use_cropcal_streams .and. is_beg_curr_year()) then
+    if (use_crop .and. use_cropcal_streams .and. is_beg_curr_year()) then
       call cropcal_advance( bounds_proc )
     end if
 
@@ -1073,11 +1073,12 @@ contains
             frictionvel_inst, photosyns_inst, drydepvel_inst)
        call t_stopf('depvel')
 
-       if (use_cropcal_streams .and. is_beg_curr_year()) then
+       if (use_crop .and. use_cropcal_streams .and. is_beg_curr_year()) then
           ! ============================================================================
           ! Update crop calendars
           ! ============================================================================
-          call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, filter_inactive_and_active(nc)%pcropp, crop_inst)
+          call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, &
+               filter_inactive_and_active(nc)%pcropp, .false., crop_inst)
        end if
 
        ! ============================================================================
@@ -1372,7 +1373,7 @@ contains
 
        call atm2lnd_inst%UpdateAccVars(bounds_proc)
 
-       call temperature_inst%UpdateAccVars(bounds_proc)
+       call temperature_inst%UpdateAccVars(bounds_proc, crop_inst)
 
        call canopystate_inst%UpdateAccVars(bounds_proc)
 

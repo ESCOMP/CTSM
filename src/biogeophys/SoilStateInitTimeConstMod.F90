@@ -180,14 +180,14 @@ contains
     use clm_varcon          , only : secspday, denh2o, denice, grlnd
     use clm_varctl          , only : use_cn, use_lch4, use_fates
     use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct_predefined
-    use clm_varctl          , only : dust_emis_method
     use landunit_varcon     , only : istdlak, istwet, istsoil, istcrop, istice
     use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv 
     use fileutils           , only : getfil
     use organicFileMod      , only : organicrd 
     use FuncPedotransferMod , only : pedotransf, get_ipedof
     use RootBiophysMod      , only : init_vegrootfr
-    use GridcellType     , only : grc                
+    use GridcellType        , only : grc
+    use shr_dust_emis_mod   , only : is_dust_emis_zender, is_dust_emis_leung
     !
     ! !ARGUMENTS:
     type(bounds_type)    , intent(in)    :: bounds  
@@ -721,7 +721,7 @@ contains
        g = col%gridcell(c)
 
        soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoistZender2003( clay3d(g,1) )
-       if ( trim(dust_emis_method) == "Leung_2023" ) then
+       if ( is_dust_emis_leung() )then
           soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClayLeung2023( clay3d(g,1) )
        else
           soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay3d(g,1) )

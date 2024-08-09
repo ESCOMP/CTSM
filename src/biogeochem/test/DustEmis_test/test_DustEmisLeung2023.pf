@@ -5,11 +5,11 @@ module test_DustEmisLeung2023
   use funit
   use unittestDustEmisInputs, only : unittest_dust_emis_input_type
   use unittestSubgridMod, only : bounds
-  use clm_varctl, only : dust_emis_method
   use DustEmisBase
   use DustEmisLeung2023
   use shr_kind_mod , only : r8 => shr_kind_r8
   use DustEmisFactory, only : create_dust_emissions
+  use shr_dust_emis_mod, only : dust_emis_set_options
 
   implicit none
 
@@ -35,8 +35,8 @@ contains
     ! Allocate and initialize the test object for input objects dust-emission needs
     character(len=5) :: NLFilename = 'none'
 
-    dust_emis_method = 'Leung_2023'
-    call this%input%setUp( dust_emis_method=dust_emis_method )
+    call dust_emis_set_options( 'Leung_2023', 'none')
+    call this%input%setUp( )
  
     ! Create the dust emission object last
     allocate(this%dust_emis, source = create_dust_emissions(bounds, NLFilename))

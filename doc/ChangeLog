@@ -1,4 +1,1085 @@
 ===============================================================
+Tag name: ctsm5.2.018
+Originator(s): mvdebolskiy
+Date: Fri 02 Aug 2024 09:26:33 AM MDT
+One-line Summary: Fix/excess ice cold start
+
+Purpose and description of changes
+----------------------------------
+
+Changed the way soil temperature is initialized when excess ice is on and the model starts from cold.
+
+Specific notes
+
+TemperatureType now has a private ReadNL subroutine that reads two new namelist options: excess_ice_coldstart_depth and excess_ice_coldstart_temp which control top depth (higher layers get default initial temperature) and soil temperature for soil layers ONLY in columns where excess ice is present. Other columns get their default soil temperature. 
+
+New namelist options belong to a new group "clm_temperature_inparm" with its own logic routine. This is done so in the future hardcoded cold start temperatures can be moved to the namelists. Two namelist tests have been added to check for invalid values logic as well as a test for use_excess_ice_streams logic. use_excess_ice_streams has no default value (due to options for restart) and default value set in the CLMBuildNamelist.pm.
+
+excessicestream_type has been taken out of waterstate_type and its routines are called directly in clm_inst%Init. Checks for UseExcessIceStreams() are still in place in WaterStateType.F90 for double-checking. clm_inst%Init now has a new local variable with excess ice concentration that are read from streams (or zeros if use_excess_ice is false). Arguments for temperature_type%Init and water_type%Init (and children types) have been changed to include this new variable. Fortran unit tests are also updated to account for these new arguments.
+
+
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #2384 -- Cold start temperature init when excess ice is on
+ Fixes #2373 -- SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_intel.clm-FatesColdHydro fails
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  Added: excess_ice_coldstart_temp and excess_ice_coldstart_depth
+
+Changes made to namelist defaults (e.g., changed parameter values):
+  Set new namelist items differently when excess ice is on or off
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  Note that the coldstart variables are always used even without excess ice or with an finidat file.
+  InitCold is always called so the variables are always set.
+
+Changes to tests or testing:
+   New tests for build-namelist unit tester
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS (998 are different from baseline)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  SMS_Lm12.f09_f09_mg17.I1850Clm60Sp.derecho_intel.clm-ExcessIceStartup_output_sp_exice
+     derecho ---- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: excess ice on, with coldstart or with finidat file interpolation
+    - what platforms/compilers: all
+    - nature of change: different at startup
+        Different for cold-start and can be different for a few points where the cold-start
+        values are still used on interpoaltion of an existing finidat file
+
+  Tests that compare different to baseline:
+  ERS_D.f10_f10_mg37.I1850Clm60Sp.izumi_nag.clm-ExcessIceStreams
+         failed baseline comparison (though answers for default physics configurations have not changed).
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  #2465 -- fix excess ice cold starts
+
+===============================================================
+===============================================================
+Tag name: ctsm5.2.017
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue 30 Jul 2024 08:39:20 AM MDT
+One-line Summary: Dust emissions control moved to cmeps
+
+Purpose and description of changes
+----------------------------------
+
+Remove the dust emissions namelist items from CTSM and use the namelist in the drv_flds_in for CMEPS.
+
+This updates CTSM to use the namelist control in CMEPS (in ESCOMP/CMEPS#429). So the CMEPS external needs to be updated, and the
+namelist control in CTSM changed to use CMEPS rather than the internal CTSM control settings and the CTSM ones removed.
+
+The new XML variable:
+
+   LND_SETS_DUST_EMIS_DRV_FLDS
+
+controls whether dust emission settings are set by CTSM or by CAM. Only one or the other can set them, and it's required so when CAM
+and CTSM are running together they need to know which one will select.
+
+This required some changes for LILAC. The drv_flds_in namelist file is now required for LILAC, and read for dust emissions
+(and dust emissions only) at the LILAC lnd_comp_esmf.F90 level.
+
+Add a unit test for the CMEPS code to make sure it's working correctly. This validates the code both for CAM and CTSM.
+
+Fix the cidinahoBR test in the build-namelist unit tester.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+  Fixes #2376 -- Update CTSM with CMEPS that controls dust emission options
+  Fixes #2150 -- Ability to flip between different dust emission methods
+  Fixes #2524 -- Add option to NOT set dust emission settings when coupled to CAM
+  Fixes #2666 -- cidinahoBR test in build-namelist 
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   dust_emis_method can NOT be set to Leung_2023 -- yet.
+   See below about LND_SETS_DUST_EMIS_DRV_FLDS
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  CTSM namelist items moved to the dust_emis_inparm namelist in drv_flds_in:
+  zender_soil_erod_source and dust_emis_method
+
+  New logical XML variable:
+     LND_SETS_DUST_EMIS_DRV_FLDS
+  If TRUE CTSM sets the dust emission namelist, otherwise CAM will (when coupled to CAM) 
+  If you are NOT coupled to CAM and LND_SETS_DUST_EMIS_DRV_FLDS==FALSE, the model will abort
+  trying to read the dust_emis_inparm namelist in drv_flds_in.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Added a PF unit test for CMEPS dust emission code. This should be moved to CMEPS, but still run here.
+   Control design in DustEmisFactory, uses a Functional Programming design pattern with pure functions
+   from CMEPS for CTSM to know the drv_flds_in settings. Design notes were added in that regard.
+
+Testing summary: Regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS (1006 are different because of the namelist changes)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+  The following tests compared different to baseline because of reproducability issues:
+     ERP_P64x2_Lm13.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings
+     SMS_D.1x1_brazil.I2000Clm60FatesSpCruRsGs.derecho_gnu.clm-FatesColdDryDepSatPhen
+     SMS_D.1x1_brazil.I2000Clm60FatesSpCruRsGs.derecho_gnu.clm-FatesColdMeganSatPhen
+  The CN-MATRIX issue is because of #2619 and FATES because of #2656
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  #2545 -- Dust emission control moved to CMEPS
+
+===============================================================
+===============================================================
+Tag name: ctsm5.2.016
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Sat 27 Jul 2024 05:13:08 PM MDT
+One-line Summary: Enable new crop calendars for clm60 compsets
+
+Purpose and description of changes
+----------------------------------
+
+This commit switches clm60 compsets (really, any compset other than clm45, clm50, and clm51) to use:
+- Per-gridcell and -crop sowing windows derived from the GGCMI phase 3b group II static growing seasons
+- Per-gridcell and -crop maturity requirements derived from those same growing seasons, over the 1980-2009 growing seasons
+- Code to adjust those prescribed maturity requirements based on recent climate
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[X] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[?] ctsm5_0-nwp: Probably? Haven't tested, but didn't exclude that setup.
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- Fixes ESCOMP/CTSM#2584: Reset accumulators to initval instead of 0 (https://github.com/ESCOMP/CTSM/issues/2584)
+- Fixes ESCOMP/CTSM#2667: Change out a f19 resolution test on Izumi for f10 (https://github.com/ESCOMP/CTSM/issues/2667)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- Add cropcals_rx, default false.
+- Add cropcals_rx_adapt, default true. This is what changes default behavior.
+- Rename stream_year_first_cropcal to stream_year_first_cropcal_swindows
+- Rename stream_year_last_cropcal to stream_year_last_cropcal_swindows
+- Rename model_year_align_cropcal to model_year_align_cropcal_swindows
+- Add stream_year_first_cropcal_cultivar_gdds
+- Add stream_year_last_cropcal_cultivar_gdds
+- Add model_year_align_cropcal_cultivar_gdds
+- Add stream_fldFileName_gdd20_baseline
+- Add stream_gdd20_seasons (experimental)
+- Add flush_gdd20 (experimental)
+- Add stream_fldFileName_gdd20_season_start (experimental)
+- Add stream_fldFileName_gdd20_season_end (experimental)
+- Add allow_invalid_gdd20_season_inputs
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+- Many new default and optional stream files added.
+
+Changes to documentation:
+- None yet.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers:
+- tools/contrib/tweak_latlons.py: This is a script I made to avoid the "ambiguous nearest neighbor" issue described in the discussion at https://github.com/orgs/esmf-org/discussions/261. It's hopefully just a temporary thing as we wait for ESMF to fix that bug. If they end up deciding not to, then this should be moved into python/ctsm/ and fully tested.
+- Unit and system testing needs to be added for generate_gdd20_baseline.py.
+- RXCROPMATURITY SystemTest should be updated to also call generate_gdd20_baseline.py.
+
+Changes to tests or testing:
+- Adds testmods:
+  - midDecStart: Like decStart, except starts Dec. 15 instead of 30. Useful for ERP/ERS tests where you want the split in December.
+  - GddGen
+  - oldCropCals: To recreate previous crop calendars
+  - RxCropCalsAdaptGGCMI (experimental)
+  - RxCropCalsNoAdapt
+  - StreamGDD20Seasons (experimental)
+- Removes sowingWindows testmod
+- Adds and changes various tests related to crop calendars
+- Changes one Izumi test from f19 to 10x15 resolution:
+  - Was: ERS_D.f19_g17.I1850Clm50BgcCrop.izumi_nag.clm-ciso_monthly_matrixcn_spinup
+  - Now: ERS_D.f10_f10_mg37.I1850Clm50BgcCrop.izumi_nag.clm-ciso_monthly_matrixcn_spinup
+
+Note that testmods marked "experimental" are fine to be marked as expected failures, if needed.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - FAIL
+       1x1_cidadinhoBR tests only. That's fine. Filed Issue #2666: 1x1_cidadinhoBR tests fail in build-namelist_test.pl (https://github.com/ESCOMP/CTSM/issues/2666).
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: crop-enabled compsets with clm60 (or more specifically, other than clm45, clm50, clm51)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): new climate
+    
+   Probably? At least, there can be large regional shifts in crop growing season. Results are similar to those for the Prescribed Calendars setup in Rabin et al. (2023; https://gmd.copernicus.org/articles/16/7253/2023/gmd-16-7253-2023.html).
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - None
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2560: Allow prescribed gddmaturity to vary based on recent climate (initial work, v2) (https://github.com/ESCOMP/CTSM/pull/2560)
+- ESCOMP/CTSM#2585: Allow "manual" resets of all accumulator types (https://github.com/ESCOMP/CTSM/pull/2585)
+- ESCOMP/CTSM#2593: Optionally base GDD20 on per-gridcell windows, not per-hemisphere (https://github.com/ESCOMP/CTSM/pull/2593)
+- ESCOMP/CTSM#2661: Merge ctsm5.2.015 into scale-maturity-reqs (https://github.com/ESCOMP/CTSM/pull/2661)
+- ESCOMP/CTSM#2664: Enable new crop calendars for clm60 compsets (https://github.com/ESCOMP/CTSM/pull/2664)
+- ESCOMP/CTSM#2665: Merge new crop calendars into master (https://github.com/ESCOMP/CTSM/pull/2665)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.2.015
+Originator(s): multiple (Samuel Levis,UCAR/TSS,303-665-1310, @mvertens, @jedwards4b, @billsacks, @Katetc)
+Date: Mon 22 Jul 2024 12:46:17 PM MDT
+One-line Summary: Update submodule tags to pass runoff from cism to rof
+
+Purpose and description of changes
+----------------------------------
+
+ - Update MOSART, CMEPS, and CISM so CISM runoff goes to ROF rather than CTSM
+ - Update RTM with fix needed for Paleo LGM work
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #2590 Update CMEPS/MOSART/CISM/RTM tags
+ Fixes https://github.com/ESCOMP/RTM/issues/50 Likely wrong RTM river flux to MOM6 within cesm2_3_beta17
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+ Issue https://github.com/ESCOMP/RTM/issues/50
+ Likely wrong RTM river flux to MOM6 within cesm2_3_beta17 is now fixed with
+ https://github.com/ESCOMP/RTM/pull/51
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ Differences in namelist 'mosart_inparm':
+  missing variable: 'do_rtmflood'
+  missing variable: 'finidat_rtm'
+  missing variable: 'frivinp_rtm'
+  missing variable: 'rtmhist_fexcl1'
+  missing variable: 'rtmhist_fexcl2'
+  missing variable: 'rtmhist_fexcl3'
+  missing variable: 'rtmhist_fincl1'
+  missing variable: 'rtmhist_fincl2'
+  missing variable: 'rtmhist_fincl3'
+  missing variable: 'rtmhist_mfilt'
+  missing variable: 'rtmhist_ndens'
+  missing variable: 'rtmhist_nhtfrq'
+  found extra variable: 'budget_frq'
+  found extra variable: 'fexcl1'
+  found extra variable: 'fexcl2'
+  found extra variable: 'fexcl3'
+  found extra variable: 'fincl1'
+  found extra variable: 'fincl2'
+  found extra variable: 'fincl3'
+  found extra variable: 'finidat'
+  found extra variable: 'frivinp'
+  found extra variable: 'mfilt'
+  found extra variable: 'mosart_euler_calc'
+  found extra variable: 'mosart_tracers'
+  found extra variable: 'ndens'
+  found extra variable: 'nhtfrq'
+  found extra variable: 'use_halo_option'
+
+Changes to documentation:
+ Not that I am aware of
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  ctsm_sci
+     derecho ---- OK (while in tag ctsm5.2.007; I did not repeat with the latest; see checklist in #2590)
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: mosart and rtm
+    - what platforms/compilers: all
+    - nature of change: mosart roundoff; rtm larger than roundoff due to bug fix
+
+ We are ignoring strange diffs from baseline in two tests in variable
+ FATES_TRANSITION_MATRIX_LULU as explained in issue #2656.
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ See .gitmodules: cism, rtm, mosart, ccs_config, cmeps
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2605
+ https://github.com/ESCOMP/RTM/pull/51
+ https://github.com/ESCOMP/MOSART/pull/94
+ https://github.com/ESCOMP/CISM-wrapper/pull/100
+ https://github.com/ESCOMP/CMEPS/pull/463
+ https://github.com/ESMCI/ccs_config_cesm/pull/174
+
+===============================================================
+===============================================================
+Tag name: ctsm5.2.014
+Originator(s): chrislxj (Xingjie Lu, Northern Arizona U., xingjie.lu@nau.edu)
+Date: Fri 19 Jul 2024 11:04:17 AM MDT
+One-line Summary: use_matrixcn, use_soil_matrixcn come in as default .false.
+
+Purpose and description of changes
+----------------------------------
+
+ Currently set as default .false.:
+ - Add matrix module for vegetation and soil C and N cycle
+ - Add diagnostic variables C and N storage capacity in history files
+ - Add Sparse matrix module to increase the code efficiency
+ - Create spin-up switch, and be ready for matrix spin up development
+
+ Additional contributors: Yuanyuan Huang, Zhenggang Du, and Yiqi Luo from
+ Professor Yiqi Luo's EcoLab at Northern Arizona University, now at Cornell U.
+
+ In TSS/CGD/NCAR/UCAR, contributors in the last year include slevis, ekluzek, wwieder.
+ I apologize if I have omitted others who may have been involved prior.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #903  Bring CN-Matrix solution into CTSM
+ Fixes #2450 Cn-matrix testing in the aux_clm test-suites
+ Fixes #2621 matrixcn does not work with nrepr != 1 (number of crop reproductive pools)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+ use_matrixcn and use_soil_matrixcn ARE NOT available for clm4_5
+ and ARE recommended for accelerating bgc
+ spin-ups (keep reading for more info) and NOT recommended for
+ - transient simulations (e.g. IHist)
+ - simulations that use threading (e.g. see tests with P64x2)
+ - NWP compsets
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New: use_matrixcn, use_soil_matrixcn, hist_wrt_matrixcn_diag.
+ All three are default .false. at this time.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ - hillslope_fsat_equals_zero is now default .false. when
+ use_hillslope = .false. as per issue #2652
+ - clm_accelerated_spinup can be set to on, sasu, off; matrixcn spin-up
+ is performed in that order (on, sasu, off); in the "on" phase, matrixcn
+ is not active, in the "sasu" phase matrixcn is active, and in the "off"
+ phase, matrixcn may be active
+
+Changes to documentation:
+ None at this time. A description of the spinup procedure appears in
+ https://github.com/NCAR/LMWG_dev/issues/58
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ - Future changes to the bgc will likely require changes in both
+ matrix and non-matrix parts of the code.
+ - matrixcn seems sensitive to changes in subgrid heterogeneity and
+ other subtleties. For example, matrixcn simulations have failed from
+ using a finidat file from a different simulation (#2592),
+ from running in transient mode (#2592), from running with threading (#2619),
+ and from setting hillslope_fsat_equals_zero = .true. (issue #2652).
+ - We recommend using matrixcn to accelerate bgc spin-ups and not for
+ most (any?) other purposes.
+
+Changes to tests or testing:
+ We introduced numerous new tests to the aux_clm and build-namelist_test.pl
+ test-suites that can be identified by searching "matrix"
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  ctsm_sci
+     derecho ---- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, roundoff
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Non-matrix
+    - what platforms/compilers: All
+    - nature of change: roundoff
+      use_matrixcn and use_soil_matrixcn are default .false.. We get
+      roundoff diffs due to order-of-operation changes in a few sections
+      of code, which improve readability and streamlining of the code
+      in the presence of matrix.
+
+ Testing with the non-default use_matrixcn and use_soil_matrixcn = .true.
+ appears here: https://github.com/NCAR/LMWG_dev/issues/58
+
+ PR #640 explains how answers are expected to
+ change from non-matrix to matrix simulations.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/640
+
+===============================================================
+===============================================================
+Tag name: ctsm5.2.013
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+	       glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Thu Jul 18 10:51:11 MDT 2024
+One-line Summary: FATES Land Use V2
+
+Purpose and description of changes
+----------------------------------
+This tag enables FATES to utilize its land use mode with fixed
+biogeography and no competition mode engaged.  To facilitate
+this update, the host land model reads in a new static map data
+set that associates land use with FATES plant functional types.
+This tag also updates the pre-existing FATES dynamic land use
+module to provide access to the raw LUH2 harvest data from the
+FATES LUH2 timeseries data set (added in ctsm5.1.dev160).
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   FATES satellite phenology mode and land use mode are currently incompatible
+   and trying to engage both will result in a graceful build failure message
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New FATES namelist option: fates_harvest_mode
+      - This new option provides five harvest modes
+      - The 'event_code' mode takes over the now defunct use_fates_logging option
+      - The 'landuse_timeseries' option supersedes the use of do_harvest option
+	with FATES.  Using do_harvest is no longer compatible with FATES.
+
+   New FATES namelist option: use_fates_lupft
+      - This option enables the necessary namelist options and data sets to run
+	FATES with land use, no competition, and fixed biogeography modes.
+
+   New FATES namelist option: flandusepftdat
+      - This data set is necessary for running with use_fates_lupft.
+
+   New FATES namelist option: use_potential_veg
+      - This option is only necessary for use with FATES spin-up to transient
+	workflows that will engage the use_fates_lupft mode for the transient case
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   The default FATES parameter file has been updated to account for the new
+   parameters necessary for land use v2.
+
+   A new default data set has been provided for flandusepftdat.  Only a 4x5 grid
+   resolution is currently provided.
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   The FATES land use timeseries data set, fluh_timeseries, has been updated to
+   provide a wider timeseries range, from 0850-2015.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+
+   New FATES testmods have been added to account for the additional harvest mode
+   and use_fates_lupft namelist options.  Additoinally a new system text prefix,
+   PVT, has been added to test the use_fates_potentialveg spin-up to use_fates_lupft
+   transient workflow.  These have been added to the fates test suite.
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Fixes #2444 Failing water isotope test on the ctsm5.2 branch
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation: None
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- TBD
+    izumi ------- TBD
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+   fates tested against fates-sci.1.76.4_api.35.1.0-ctsm5.2.008
+
+
+Answer changes
+--------------
+Changes answers relative to baseline: Only for FATES test mods, otherwise B4B
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   FATES: sci.1.73.0_api.35.0.0 -> sci.1.77.0_api.36.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+ #2507 -- FATES land use v2 API update (CTSM-side)
+ NGEET#1116 -- V2 Land Use Change
+
+===============================================================
+===============================================================
+Tag name: ctsm5.2.012
+Originator(s): sacks (Bill Sacks, UCAR/NCAR/CGD)
+Date: Tue 16 Jul 2024 08:57:42 AM MDT
+One-line Summary: Relax tolerance for truncating small snocan values in CanopyFluxes
+
+Purpose and description of changes
+----------------------------------
+
+Details in the PR #2457.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Fixes #2444 Failing water isotope test on the ctsm5.2 branch
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation: None
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+ Yes, roundoff.
+
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: Changes start roundoff level and grow over time.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2457
+
+===============================================================
+===============================================================
+Tag name: ctsm5.2.011
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri 12 Jul 2024 09:45:59 AM MDT
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+#2638 Remove use_dynroot and corresponding code and testing (slevis)
+#2623 Change a NIWO test to HARV and update expected failures (slevis)
+#2607 Fix py env create (wwieder)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Fixes #2451 Remove use_dynroot from clm codes and testing
+Fixes #2563 Unable to install ctsm_pylib environment for mksurfdata_esmf in CTSM5.2.005
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+Change a NIWO test to HARV and update expected failures
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2638
+ https://github.com/ESCOMP/ctsm/pull/2623
+ https://github.com/ESCOMP/ctsm/pull/2607
+
+===============================================================
+===============================================================
+Tag name: ctsm5.2.010
+Originator(s): @cathyxinchangli (Cathy Xinchang Li, U of Illinois - Urbana-Champaign), @Face2sea, @olyson, @fang-bowen, @keerzhang1
+Date: Thu 11 Jul 2024 11:57:15 AM MDT
+One-line Summary: Explicit A/C adoption
+
+Purpose and description of changes
+----------------------------------
+
+ Code changes for adding an explicit air-conditioning (AC) adoption parameterization scheme in CLMU. This includes adding a new time-varying input variable (AC adoption rate, p_ac), changes to building energy calculations, and a toggle (new namelist variable urban_explicit_ac)
+
+ In this tag we keep the change off by default in order to show that answers do not change:
+ - If explicit AC adoption is off, the p_ac_[TBD/HD/MD] variables are set to 1 universally, and the building interior setpoints (tbuildmax_[TBD/HD/MD]) remain unchanged, to ensure the model reproduces previous results.
+ - If explicit AC adoption is on, the p_ac_[TBD/HD/MD] variables take on actual AC adoption rate values (present-day global data were developed together with the code change), and tbuildmax_[TBD/HD/MD] are set to 300K/27°C universally.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #2254 Explicitly representing air-conditioning adoption in CESM
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New namelist variable urban_explicit_ac = .false. by default
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ The default urban time-varying input data file (namelist variable stream_fldfilename_urbantv) now includes p_ac_[TBD/HD/MD] variables, whether or not the explicit-AC-adoption scheme is on and the new file has been rimported to svn: CTSM52_urbantv_Li_2024_0.9x1.25_simyr1849-2106_c20230621.nc
+
+Changes to documentation:
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+ No, because we have introduced the changes as default .false. at this time
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2275
+
+===============================================================
+===============================================================
+Tag name: ctsm5.2.009
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed 10 Jul 2024 12:21:23 PM MDT
+One-line Summary: Allow for CAM7 in lnd_tuning_mode and handle C or E in long compset names
+
+Purpose and description of changes
+----------------------------------
+
+Changes so that CAM7 is allowed for the land-tuning mode. Allow "C" and "E" after period designation in long compset names. Fix an
+issue with Zender dust emission soil eroditability files.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes #2480 -- cam7 lnd_tuning_mode
+   Fixes #2634 -- allow period part of long-compset name to have a "C" or "E"
+   Fixes #2637 -- bad lnd_tuning_mode for Zender soil eroditability file settings
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   LND_TUNING_MODE will fail with an error for CAM (that's NOT cam4/cam5/cam6), or CPLHIST with CLM51
+   use CLM60 instead
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   Add lnd_tuning_mode options for cam7.0 to namelist defaults
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   lnd_tuning_mode options duplicate a bunch of XML code lines and should be refactored
+
+Changes to tests or testing:
+  Add cam7.0 test mod directories
+  Change tests for clm6_0_cam6.0 lnd_tuning_mode to clm6_0_cam7.0
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Only the cam4/cam5 lnd_tuning_mode tests
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: lnd_tuning_mode ending with _cam4.0 or _cam5.0 suffix with zender_soil_erod_source='lnd'
+    - what platforms/compilers: All
+    - nature of change: new dust emissions
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  #2632 -- Handle CAM7
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.008
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Fri 28 Jun 2024 12:22:46 PM MDT

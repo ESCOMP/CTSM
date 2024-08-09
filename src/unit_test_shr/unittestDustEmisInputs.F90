@@ -45,27 +45,20 @@ contains
 
   !-----------------------------------------------------------------------
 
-  subroutine setUp(this, dust_emis_method)
+  subroutine setUp(this)
     use ColumnType, only : col
     class(unittest_dust_emis_input_type), intent(inout) :: this
-    character(len=*), intent(in), optional :: dust_emis_method
     ! Allocate and initiatlize the test object for input objects dust-emission needs
 
     character(len=5) :: NLFilename = 'none'
     real(r8), allocatable :: urb_em(:)
+    real(r8), allocatable :: exice_init_conc_col(:)
     integer :: begl, endl, begc, endc
     integer :: c
     type(atm2lnd_params_type) :: atm2lnd_params
     integer, parameter :: snl = 3
-    character(len=50) :: in_dust_emis_method
 
     !-----------------------------------------------------------------------
-    if ( present(dust_emis_method) )then
-       in_dust_emis_method = trim(dust_emis_method)
-    else
-       in_dust_emis_method = "Zender_2003"
-    end if
-
     ! Settings needed for clm_varpar
     soil_layerstruct_predefined = '20SL_8.5m'
     create_crop_landunit = .true.
@@ -94,7 +87,7 @@ contains
     call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
     ! Water and soil state -- after the subgrid setup
     call this%water_factory%setup_after_subgrid(snl = snl)
-    call this%setupSoilState( in_dust_emis_method )   ! This needs to happen before the water_type object creation
+    call this%setupSoilState( )
     call this%water_factory%create_water_type(this%water_inst, watsat_col=this%soilstate_inst%watsat_col)
     ! Canopy state, friction velocity, and temperature state ojects
     call this%canopystate_inst%SetNMLForTesting()
@@ -102,12 +95,15 @@ contains
     call this%frictionvel_inst%InitForTesting(bounds)
     allocate( urb_em(begl:endl) )
     urb_em(begl:endl) = 0.99_r8  ! Arbitrary won't matter here
+    allocate( exice_init_conc_col(begc:endc) )
+    exice_init_conc_col(begc:endc) = 0.0_r8 ! zero, so it doesn't affect anything.
     call this%temperature_inst%Init(bounds,           &
                                em_roof_lun=urb_em(begl:endl), &
                                em_wall_lun=urb_em(begl:endl), &
                                em_improad_lun=urb_em(begl:endl), &
                                em_perroad_lun=urb_em(begl:endl), &
-                               is_simple_buildtemp=.true., is_prog_buildtemp=.false.)
+                               is_simple_buildtemp=.true., is_prog_buildtemp=.false., &
+                               exice_init_conc_col = exice_init_conc_col(begc:endc))
     deallocate( urb_em )
   end subroutine setUp
 
@@ -124,7 +120,7 @@ contains
 
   !-----------------------------------------------------------------------
 
-  subroutine setupSoilState(this, dust_emis_method)
+  subroutine setupSoilState(this)
     !
     ! !DESCRIPTION:
     ! Sets up the external environment used by Dust emissions - i.e., things accessed via
@@ -135,8 +131,8 @@ contains
     !
     use ColumnType, only : col
     use GridcellType, only : grc
+    use shr_dust_emis_mod , only : is_dust_emis_zender, is_dust_emis_leung
     class(unittest_dust_emis_input_type), intent(in) :: this
-    character(len=*), intent(in) :: dust_emis_method
     !
     integer :: c,j
     real(r8), parameter :: clay = 10.0_r8
@@ -157,12 +153,11 @@ contains
     ! These are needed for dust emissions initialization
     do c = bounds%begc, bounds%endc
        this%soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoistZender2003( clay )
-       if ( trim(dust_emis_method) == "Zender_2003")then
+       if ( is_dust_emis_zender() )then
           this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay )
-       else if ( trim(dust_emis_method) == "Leung_2023")then
+       else if ( is_dust_emis_leung() )then
           this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClayLeung2023( clay )
        else
-          print *, 'dust_emis_method = ', trim(dust_emis_method)
           call endrun("ERROR: do NOT know about this dust_emis_method")
        end if
     end do
