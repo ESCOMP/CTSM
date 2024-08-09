@@ -1228,9 +1228,9 @@ contains
             !**********  3. SNOWAGE SCALING (TURNED OFF BY DEFAULT)  *************
             !
             ! Multiply rate of change of effective radius by some constant, xdrdt
-            if (flg_snoage_scl) then
-               dr = dr*params_inst%xdrdt
-            endif
+!            if (flg_snoage_scl) then
+            dr = dr*params_inst%xdrdt
+!            endif
 
 
             !

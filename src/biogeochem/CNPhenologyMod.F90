@@ -57,7 +57,7 @@ module CNPhenologyMod
   ! !PRIVATE DATA MEMBERS:
   type, private :: params_type
      real(r8) :: crit_dayl       ! critical day length for senescence
-     real(r8) :: ndays_on     	 ! number of days to complete leaf onset
+!KO     real(r8) :: ndays_on     	 ! number of days to complete leaf onset
      real(r8) :: ndays_off	 ! number of days to complete leaf offset
      real(r8) :: fstor2tran      ! fraction of storage to move to transfer for each onset
      real(r8) :: crit_onset_fdd  ! critical number of freezing days to set gdd counter
@@ -75,7 +75,7 @@ module CNPhenologyMod
   real(r8) :: dt                            ! radiation time step delta t (seconds)
   real(r8) :: fracday                       ! dtime as a fraction of day
   real(r8) :: crit_dayl                     ! critical daylength for offset (seconds)
-  real(r8) :: ndays_on                      ! number of days to complete onset
+!KO  real(r8) :: ndays_on                      ! number of days to complete onset
   real(r8) :: ndays_off                     ! number of days to complete offset
   real(r8) :: fstor2tran                    ! fraction of storage to move to transfer on each onset
   real(r8) :: crit_onset_fdd                ! critical number of freezing days
@@ -194,7 +194,7 @@ contains
     !-----------------------------------------------------------------------
 
     call readNcdioScalar(ncid, 'crit_dayl', subname, params_inst%crit_dayl)
-    call readNcdioScalar(ncid, 'ndays_on', subname, params_inst%ndays_on)
+!KO    call readNcdioScalar(ncid, 'ndays_on', subname, params_inst%ndays_on)
     call readNcdioScalar(ncid, 'ndays_off', subname, params_inst%ndays_off)
     call readNcdioScalar(ncid, 'fstor2tran', subname, params_inst%fstor2tran)
     call readNcdioScalar(ncid, 'crit_onset_fdd', subname, params_inst%crit_onset_fdd)
@@ -340,7 +340,7 @@ contains
     crit_dayl=params_inst%crit_dayl
 
     ! Set constants for CNSeasonDecidPhenology and CNStressDecidPhenology
-    ndays_on=params_inst%ndays_on
+!KO    ndays_on=params_inst%ndays_on
     ndays_off=params_inst%ndays_off
 
     ! set transfer parameters
@@ -772,8 +772,10 @@ contains
          season_decid                        =>    pftcon%season_decid                                         , & ! Input:  binary flag for seasonal-deciduous leaf habit (0 or 1)
 !KO
          season_decid_temperate              =>    pftcon%season_decid_temperate                               , & ! Input:  binary flag for seasonal-deciduous temperate leaf habit (0 or 1)
+         crit_onset_gdd_sf                   =>    pftcon%crit_onset_gdd_sf                                    , & ! Input:  scale factor for crit_onset_gdd (unitless)
+         ndays_on                            =>    pftcon%ndays_on                                             , & ! Input:  number of days to complete leaf onset (days)
 !KO
-         
+
          t_soisno                            =>    temperature_inst%t_soisno_col                               , & ! Input:  [real(r8)  (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
          soila10                             =>    temperature_inst%soila10_patch                              , & ! Input:  [real(r8) (:)   ] 
          t_a5min                            =>    temperature_inst%t_a5min_patch                             , & ! input:  [real(r8) (:)   ]
@@ -907,7 +909,11 @@ contains
             lgsf(p) = 0._r8
 
             ! onset gdd sum from Biome-BGC, v4.1.2
-            crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) - SHR_CONST_TKFRZ))
+!KO            crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) - SHR_CONST_TKFRZ))
+!KO
+            crit_onset_gdd = crit_onset_gdd_sf(ivt(p)) * exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) &
+                             - SHR_CONST_TKFRZ))
+!KO
 
             ! set flag for solstice period (winter->summer = 1, summer->winter = 0)
             if (dayl(g) >= prev_dayl(g)) then
@@ -1049,8 +1055,10 @@ contains
                   onset_gddflag(p) = 0.0_r8
                   onset_gdd(p) = 0.0_r8
                   onset_thresh = 0.0_r8
-                  onset_counter(p) = ndays_on * secspday
-
+!KO                  onset_counter(p) = ndays_on * secspday
+!KO
+                  onset_counter(p) = ndays_on(ivt(p)) * secspday
+!KO
                   ! move all the storage pools into transfer pools,
                   ! where they will be transfered to displayed growth over the onset period.
                   ! this code was originally handled with call cn_storage_to_xfer(p)
@@ -1201,7 +1209,11 @@ contains
          stress_decid                        =>    pftcon%stress_decid                                         , & ! Input:  binary flag for stress-deciduous leaf habit (0 or 1)
          leafcn                              =>    pftcon%leafcn                                               , & ! Input:  leaf C:N (gC/gN)
          frootcn                             =>    pftcon%frootcn                                              , & ! Input:  fine root C:N (gC/gN) 
-         
+!KO
+         crit_onset_gdd_sf                   =>    pftcon%crit_onset_gdd_sf                                    , & ! Input:  scale factor for crit_onset_gdd (unitless)
+         ndays_on                            =>    pftcon%ndays_on                                             , & ! Input:  number of days to complete leaf onset (days)
+!KO
+
          soilpsi                             =>    soilstate_inst%soilpsi_col                                  , & ! Input:  [real(r8)  (:,:) ]  soil water potential in each soil layer (MPa)   
          
          t_soisno                            =>    temperature_inst%t_soisno_col                               , & ! Input:  [real(r8)  (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
@@ -1335,8 +1347,11 @@ contains
             psi = soilpsi(c, phenology_soil_layer)
 
             ! onset gdd sum from Biome-BGC, v4.1.2
-            crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) - SHR_CONST_TKFRZ))
-
+!KO            crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) - SHR_CONST_TKFRZ))
+!KO
+            crit_onset_gdd = crit_onset_gdd_sf(ivt(p)) * exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) &
+                             - SHR_CONST_TKFRZ))
+!KO
 
             ! update offset_counter and test for the end of the offset period
             if (offset_flag(p) == 1._r8) then
@@ -1476,7 +1491,10 @@ contains
                   onset_fdd(p) = 0._r8
                   onset_gdd(p) = 0._r8
                   onset_swi(p) = 0._r8
-                  onset_counter(p) = ndays_on * secspday
+!KO                  onset_counter(p) = ndays_on * secspday
+!KO
+                  onset_counter(p) = ndays_on(ivt(p)) * secspday
+!KO
 
                   ! call subroutine to move all the storage pools into transfer pools,
                   ! where they will be transfered to displayed growth over the onset period.

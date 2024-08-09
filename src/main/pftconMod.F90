@@ -154,7 +154,10 @@ module pftconMod
      real(r8), allocatable :: taper  (:)          ! tapering ratio of height:radius_breast_height
      real(r8), allocatable :: rstem_per_dbh  (:)  ! stem resistance per dbh (s/m/m)
      real(r8), allocatable :: wood_density  (:)   ! wood density (kg/m3)
-
+!KO
+     real(r8), allocatable :: crit_onset_gdd_sf(:)! scale factor for crit_onset_gdd
+     real(r8), allocatable :: ndays_on(:)         ! number of days to complete leaf onset
+!KO
      !  crop
 
      ! These arrays give information about the merge of unused crop types to the types CLM
@@ -489,7 +492,11 @@ contains
     allocate( this%taper         (0:mxpft) )
     allocate( this%rstem_per_dbh (0:mxpft) )
     allocate( this%wood_density  (0:mxpft) )
- 
+!KO
+    allocate( this%crit_onset_gdd_sf (0:mxpft) )
+    allocate( this%ndays_on      (0:mxpft) )
+!KO
+
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
@@ -773,6 +780,13 @@ contains
 
 !KO
     call ncd_io('season_decid_temperate', this%season_decid_temperate, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+!KO
+!KO
+    call ncd_io('crit_onset_gdd_sf', this%crit_onset_gdd_sf, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('ndays_on', this%ndays_on, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 !KO
 
@@ -1489,6 +1503,10 @@ contains
     deallocate( this%rstem_per_dbh)
     deallocate( this%wood_density)
     deallocate( this%taper)
+!KO
+    deallocate( this%crit_onset_gdd_sf)
+    deallocate( this%ndays_on)
+!KO
   end subroutine Clean
 
 end module pftconMod
