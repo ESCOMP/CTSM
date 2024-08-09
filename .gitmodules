@@ -33,27 +33,6 @@ fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/fates-release
 
-#
-# CAM and CICE in order to do F compsets along this brunch
-# (Remove before going to master)
-#
-[submodule "cice"]
-	path = components/cice
-	url = https://github.com/ESCOMP/CESM_CICE
-fxtag = cesm_cice6_5_0_10
-fxrequired = ToplevelRequired
-fxDONOTUSEurl = https://github.com/ESCOMP/CESM_CICE
-
-[submodule "cam"]
-path = components/cam
-url = https://github.com/ESCOMP/CAM
-fxtag = cam6_4_016
-fxrequired = ToplevelRequired
-fxDONOTUSEurl = https://github.com/ESCOMP/CAM
-#
-# End
-#
-
 [submodule "cism"]
 path = components/cism
 url = https://github.com/ESCOMP/CISM-wrapper
