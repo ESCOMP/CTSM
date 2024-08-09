@@ -3,6 +3,12 @@ module PrigentRoughnessStreamType
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! UNIT-TEST STUB for Prigent Roughtness Stream
+  !       This just allows the Leung dust emission code to be tested without
+  !       reading in the streams data, by faking it and setting it to a
+  !       constant value.
+  ! NOTE: THIS SHOULD BE REMOVED WHEN THE MAIN VERSION ALLOWS IT TO BE OFF.
+  !       https://github.com/ESCOMP/CTSM/issues/2381
+  ! Removing this version will remove testing code duplication.
   ! !USES
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_cl
   use shr_log_mod      , only : errMsg => shr_log_errMsg
@@ -50,7 +56,7 @@ contains
    ! local variables
    !-----------------------------------------------------------------------
    allocate(this%prigent_rghn(bounds%begg:bounds%endg))
-   this%prigent_rghn(:) = 1.0_r8
+   this%prigent_rghn(:) = 1.0_r8     ! This should likely be a smaller value like 0.1 based on the Prigent dataset average values
    InitDone = .true.
 
   end subroutine Init
