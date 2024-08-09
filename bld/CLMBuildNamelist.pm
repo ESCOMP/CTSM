@@ -5091,11 +5091,15 @@ sub setup_logic_prigent_roughness {
   my $use_prigent = $nl->get_value($var);
   if ( &value_is_true($use_prigent) ) {
      if ( $dust_emis_method ne "Leung_2023" ) {
-       $log->warning( "$var does NOT need to be set without dust_emis_method being Leung_2023" );
+       # The Prigent dataset could be used for other purposes
+       # (such as roughness as in https://github.com/ESCOMP/CTSM/issues/2349)
+       $log->warning( "$var does NOT need to on without dust_emis_method being Leung_2023, it simply won't be used" );
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_prigentroughness' );
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_prigentroughness' );
   } elsif ( $dust_emis_method eq "Leung_2023" ) {
+    # In the future we WILL allow it to be turned off for testing and Paleo work
+    # see: https://github.com/ESCOMP/CTSM/issues/2381)
     $log->fatal_error("variable \"$var\" MUST be true when Leung_2023 dust emission method is being used" );
   }
 }
