@@ -91,6 +91,8 @@
   <compset>
     <alias>I2000Clm60Sp</alias>
     <lname>2000_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <science_support grid="f09_g17"/>
+    <science_support grid="f19_g17"/>
   </compset>
 
   <!-- Primarily for testing -->
@@ -182,6 +184,8 @@
   <compset>
     <alias>I1850Clm60Sp</alias>
     <lname>1850_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <science_support grid="f09_g17"/>
+    <science_support grid="f19_g17"/>
   </compset>
 
   <compset>
@@ -291,22 +295,24 @@
 
   <compset>
      <alias>I1850Clm60BgcNoAnthro</alias>
-     <lname>1850_DATM%GSWP3v1_CLM60%BGC-NOANTHRO_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+     <lname>1850_DATM%GSWP3v1_CLM60%BGC-NOANTHRO_SICE_SOCN_RTM_SGLC_SWAV</lname>
+     <science_support grid="f09_g17"/>
    </compset>
 
   <compset>
      <alias>I1850Clm60SpNoAnthro</alias>
-     <lname>1850_DATM%GSWP3v1_CLM60%SP-NOANTHRO_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+     <lname>1850_DATM%GSWP3v1_CLM60%SP-NOANTHRO_SICE_SOCN_RTM_SGLC_SWAV</lname>
+     <science_support grid="f09_g17"/>
    </compset>
 
   <compset>
      <alias>I1850Clm50BgcNoAnthro</alias>
-     <lname>1850_DATM%GSWP3v1_CLM50%BGC-NOANTHRO_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+     <lname>1850_DATM%GSWP3v1_CLM50%BGC-NOANTHRO_SICE_SOCN_RTM_SGLC_SWAV</lname>
    </compset>
 
   <compset>
      <alias>I1850Clm50SpNoAnthro</alias>
-     <lname>1850_DATM%GSWP3v1_CLM50%SP-NOANTHRO_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+     <lname>1850_DATM%GSWP3v1_CLM50%SP-NOANTHRO_SICE_SOCN_RTM_SGLC_SWAV</lname>
    </compset>
 
 
@@ -319,12 +325,15 @@
 
   <compset>
      <alias>I1850Clm60SpNoAnthro</alias>
-     <lname>1850_DATM%GSWP3v1_CLM60%SP-NOANTHRO_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+     <lname>1850_DATM%GSWP3v1_CLM60%SP-NOANTHRO_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <science_support grid="f09_g17"/>
    </compset>
 
   <compset>
     <alias>IHistClm60Sp</alias>
     <lname>HIST_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <science_support grid="f09_g17"/>
+    <science_support grid="f19_g17"/>
   </compset>
 
   <!-- Needed for testing until CAM removes used of CLM51 in compsets-->
@@ -631,6 +640,17 @@
   <compset>
     <alias>I1850Clm60BgcCropG</alias>
     <lname>1850_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_CISM2%GRIS-EVOLVE_SWAV</lname>
+    <science_support grid="f09_g17"/>
+    <science_support grid="f19_g17"/>
+    <science_support grid="ne30pg3_t232"/>
+  </compset>
+
+  <compset>
+    <alias>IHistClm60BgcCropG</alias>
+    <lname>HIST_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_CISM2%GRIS-EVOLVE_SWAV</lname>
+    <science_support grid="f09_g17"/>
+    <science_support grid="f19_g17"/>
+    <science_support grid="ne30pg3_t232"/>
   </compset>
   <!-- Needed for testing until removed by CESM -->
   <compset>

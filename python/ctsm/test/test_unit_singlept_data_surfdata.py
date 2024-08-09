@@ -47,8 +47,8 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
     evenly_split_cropland = False
     pct_pft = None
     num_pft = 16
-    cth = [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9]
-    cbh = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+    cth = 0.9
+    cbh = 0.1
     include_nonveg = False
     uni_snow = True
     cap_saturation = True
@@ -668,8 +668,8 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
     evenly_split_cropland = False
     pct_pft = None
     num_pft = 78
-    cth = [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9]
-    cbh = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+    cth = 0.9
+    cbh = 0.1
     include_nonveg = False
     uni_snow = False
     cap_saturation = False
