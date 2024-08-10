@@ -84,10 +84,11 @@ contains
                                           glcmec_downscale_longwave = .false., &
                                           lapse_rate = 0.01_r8 &  ! arbitrary (this is unused for these tests)
     )
+
     call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
     ! Water and soil state -- after the subgrid setup
     call this%water_factory%setup_after_subgrid(snl = snl)
-    call this%setupSoilState( )
+    call this%setupSoilState( )   ! This needs to happen before the water_type object creation
     call this%water_factory%create_water_type(this%water_inst, watsat_col=this%soilstate_inst%watsat_col)
     ! Canopy state, friction velocity, and temperature state ojects
     call this%canopystate_inst%SetNMLForTesting()
