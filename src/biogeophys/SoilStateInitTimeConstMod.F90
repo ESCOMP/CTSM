@@ -706,15 +706,8 @@ contains
 
     ! --------------------------------------------------------------------
     ! Initialize threshold soil moisture, and mass fraction of clay as
-    ! scaling coefficient of dust emission flux (kg/m2/s) in DUSTMod.F90
-    ! dmleung modified 5 Jul 2024, reducing sensitivity of dust emission
-    ! flux to clay fraction.
-    ! Also, for threshold soil moisture, dmleung followed Zender (2003)
-    ! DEAD scheme to again avoid dust flux being too sensitive to the choice
-    ! of clay dataset. This is different from what Leung et al. (2023)
-    ! intended to do.
-    ! Both decisions are based on tuning preference and could subject to
-    ! future changes. dmleung 5 Jul 2024
+    ! scaling coefficient of dust emission flux (kg/m2/s) in each DustEmisType
+    ! module. See the comments in each function.
     ! --------------------------------------------------------------------
 
     do c = begc,endc
@@ -751,6 +744,7 @@ contains
   ! convert surface clay fraction from percentage to fraction.
   ! The equation comes from Eq. 14 of Fecan et al. (1999; https://doi.org/10.1007/s00585-999-0149-7).
   !
+  ! NOTE: dmleung 19 Feb 2024.
   !------------------------------------------------------------------------------
   ! For future developments Danny M. Leung decided (Dec, 2023) that the Leung et al. (2023) o
   ! dust emission scheme in the CESM will use Zender's tuning as well, which overall
@@ -762,7 +756,11 @@ contains
   !
   ! Also see the notes below for ThresholdSoilMoistKok2014.
   !
-  ! Notes from: dmleung 19 Feb 2024.
+  ! NOTE on Leung dust emissions: dmleung Jul 5 2024:
+  !
+  ! dmleung followed Zender (2003) DUST scheme to again avoid dust flux being too sensitive to the choice
+  ! of clay dataset. This is different from what Leung et al. (2023) intended to do.
+  ! NOTE: This might need to be adjusted for tuning in the future.
   !
   !------------------------------------------------------------------------------
       real(r8), intent(IN) :: clay ! Fraction of clay in the soil (%)
@@ -781,6 +779,8 @@ contains
   !------------------------------------------------------------------------------
   ! Calculate the threshold soil moisture needed for dust emission, based on clay content
   !
+  ! NOTE: dmleung 24 May 2024.
+  !
   ! The below calculates the threshold gravimetric water content for the dust emission
   ! calculation in DustEmis. The equation comes from Eq. 14 of Fecan et al.
   ! (1999; https://doi.org/10.1007/s00585-999-0149-7).
@@ -792,7 +792,6 @@ contains
   ! Charlie Zender (2003a) chose:  a = 1/clay3d, which gives the ThresholdSoilMoistZender2003
   ! function above.
   !
-  ! Notes from: dmleung 24 May 2024.
   !------------------------------------------------------------------------------
       real(r8), intent(IN) :: clay ! Fraction of clay in the soil (%)
 
@@ -813,10 +812,12 @@ contains
   real(r8) function MassFracClayLeung2023( clay )
   ! Calculate the mass fraction of clay needed for dust emission, based on clay content
   ! Based on the base Zender_2003 version, with a slight modification for Leung_2023
+  ! dmleung modified 5 Jul 2024, reducing sensitivity of dust emission
+  ! flux to clay fraction.
+  ! NOTE: This might need to be adjusted for tuning in the future.
       real(r8), intent(IN) :: clay ! Fraction of lay in the soil (%)
 
-      MassFracClayLeung2023 = MassFracClay( clay )
-      MassFracClayLeung2023 = 0.1_r8 + MassFracClayLeung2023 * 0.1_r8 / 0.20_r8   ! dmleung added this line to reduce the sensitivity of dust emission flux to clay fraction in DUSTMod. 5 Jul 2024
+      MassFracClayLeung2023 = 0.1_r8 + MassFracClay( clay ) * 0.1_r8 / 0.20_r8   ! dmleung added this line to reduce the sensitivity of dust emission flux to clay fraction in DUSTMod. 5 Jul 2024
   end function MassFracClayLeung2023
 
   !------------------------------------------------------------------------------
