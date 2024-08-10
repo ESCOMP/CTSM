@@ -718,6 +718,10 @@ contains
             ! mean lowpass-filtered wind speed at hgt_sal = 0.1 m saltation height (assuming aerodynamic roughness length z0a_glob = 1e-4 m globally for ease; also assuming neutral condition)
             u_mean_slt(p) = (wnd_frc_slt/k) * log(hgt_sal / z0a_glob)  ! translating from ustar (velocity scale) to actual wind
 
+            if ( obu(p) == 0.0_r8 )then
+               call endrun(msg='Input obu is zero and can NOT be' )
+               return
+            end if
             stblty(p) = zii / obu(p)   ! -dmleung 20 Feb 2024: use obu from CTSM and PBL height = zii (= 1000_r8) which is default in CTSM. Should we transfer PBL height from CAM?
             if ((12_r8 - 0.5_r8 * stblty(p)) .GE. 0.001_r8) then ! should have used 0 theoretically; used 0.001 here to avoid undefined values
                u_sd_slt(p) = wnd_frc_slt * (12_r8 - 0.5_r8 * stblty(p))**0.333_r8
@@ -751,7 +755,7 @@ contains
             intrmtncy_fct(p) = 1.0_r8 - prb_crs_fld_thr(p) + thr_crs_rate(p) * (prb_crs_fld_thr(p) - prb_crs_impct_thr(p))
 
             ! multiply dust emission flux by intermittency factor
-            if (intrmtncy_fct(p) /= intrmtncy_fct(p)) then  ! if intrmtncy_fct(p) is not NaN then multiply by intermittency factor; this statement is needed because dust emission flx_mss_vrt_dst_ttl(p) has to be non NaN (at least zero) to be outputted
+            if ( shr_infnan_isnan(intrmtncy_fct(p)) ) then  ! if intrmtncy_fct(p) is not NaN then multiply by intermittency factor; this statement is needed because dust emission flx_mss_vrt_dst_ttl(p) has to be non NaN (at least zero) to be outputted
                flx_mss_vrt_dst_ttl(p) = flx_mss_vrt_dst_ttl(p)
             else
                flx_mss_vrt_dst_ttl(p) = flx_mss_vrt_dst_ttl(p) * intrmtncy_fct(p)  ! multiply dust flux by intermittency
