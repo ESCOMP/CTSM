@@ -319,7 +319,8 @@ contains
       call this%CalcDragPartition( bounds )
     else
 
-      call endrun( "ERROR:: Drag partitioning MUST now use a streams file of aeolian roughness length to calculate, it can no longer read from the fsurdat file" )
+      call endrun( "ERROR:: dus_emis_Leung_2023 requires requires a streams file of aeolian roughness length to calculate drag partitioning" )
+
     end if
 
   end subroutine InitCold
