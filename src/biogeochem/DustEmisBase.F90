@@ -69,6 +69,8 @@ module DustEmisBase
      procedure , public   :: GetConstVars    ! Get important constant variables
      procedure , public   :: CleanBase       ! Base object deallocation (allows extension)
      procedure , public   :: Clean => CleanBase ! Deallocation used by callers
+     procedure , public   :: SetDragPartitionBase ! Base SetDragPartition method that just aborts
+     procedure , public   :: SetDragPartition => SetDragPartitionBase ! SetDrgPartiotion used by callers
      procedure , private  :: InitAllocateBase
      procedure , private  :: InitHistoryBase
      procedure , private  :: InitDustVars    ! Initialize variables used in DustEmission method
@@ -236,6 +238,23 @@ contains
          ptr_patch=this%vlc_trb_4_patch, default='inactive')
 
   end subroutine InitHistoryBase
+
+  !------------------------------------------------------------------------
+
+  subroutine SetDragPartitionBase(this, bounds, drag_partition)
+      !
+      ! !DESCRIPTION:
+      ! Set the drag partition for testing -- only aborts as only used by the Leung instance
+      !
+      ! !USES:
+      ! !ARGUMENTS:
+      class(dust_emis_base_type) :: this
+      type(bounds_type), intent(in) :: bounds
+      real(r8), intent(in) :: drag_partition
+
+      call endrun(msg="SetDragPartition is NOT allowed for this dust emission class type")
+
+  end subroutine SetDragPartitionBase
 
   !-----------------------------------------------------------------------
 

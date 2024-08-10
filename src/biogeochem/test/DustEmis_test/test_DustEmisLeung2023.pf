@@ -7,7 +7,9 @@ module test_DustEmisLeung2023
   use unittestSubgridMod, only : bounds
   use DustEmisBase
   use DustEmisLeung2023
+  use abortutils, only : endrun
   use shr_kind_mod , only : r8 => shr_kind_r8
+  use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
   use DustEmisFactory, only : create_dust_emissions
   use shr_dust_emis_mod, only : dust_emis_set_options
 
@@ -37,7 +39,7 @@ contains
 
     call dust_emis_set_options( 'Leung_2023', 'none')
     call this%input%setUp( )
- 
+
     ! Create the dust emission object last
     allocate(this%dust_emis, source = create_dust_emissions(bounds, NLFilename))
   end subroutine setUp
@@ -72,7 +74,7 @@ contains
        call this%dust_emis%WritePatchToLog( p )
     end do
   end subroutine print_values
-  
+
   !-----------------------------------------------------------------------
 
   subroutine validate_patch(this, p)
@@ -203,7 +205,7 @@ contains
     class(TestDustEmisLeung2023), intent(inout) :: this
     real(r8) :: flx_mss_vrt_dst_tot
     character(100) :: expected_msg
- 
+
     call this%input%create_atm2lnd()
     call this%input%create_fv( )
     ! Dust should abort with an error on dust mobility when snow fraction greater than 1
@@ -215,7 +217,7 @@ contains
     @assertExceptionRaised(expected_msg)
 
   end subroutine aborts_on_bad_dust_mobility
- 
+
   !-----------------------------------------------------------------------
 
  @Test
@@ -248,7 +250,44 @@ contains
   end subroutine dust_zero_when_tlai_high
 
   !-----------------------------------------------------------------------
+  @Test
+  subroutine dust_handles_dpfct_rock_nan(this)
+    use PatchType, only : patch
+    ! Check dust emissions can handle dpftc_rock being set to NaN
+    class(TestDustEmisLeung2023), intent(inout) :: this
+    integer :: p, i
+    real(r8) :: flx_mss_vrt_dst_tot, drag_partition, previous_dst_tot
 
+    call this%input%create_atm2lnd()
+    call this%input%create_fv( )
+    ! Loop over twice first with nan and then with the tiny value that nan should be changed to
+    do i = 1, 2
+       if ( i == 1 )then
+          drag_partition = nan
+       else if ( i == 2 ) then
+          drag_partition = 0.001
+       else
+          call endrun( "Looping over too many iterations should just be 2" )
+       end if
+       call this%dust_emis%SetDragPartition(bounds, drag_partition)
+       call this%dust_emis%DustEmission(bounds, this%input%num_nolakep, this%input%filter_nolakep, this%input%atm2lnd_inst, &
+                         this%input%soilstate_inst, this%input%canopystate_inst, this%input%water_inst%waterstatebulk_inst, &
+                         this%input%water_inst%waterdiagnosticbulk_inst, this%input%frictionvel_inst)
+       do p = bounds%begp, bounds%endp
+          call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot )
+          @assertEqual( flx_mss_vrt_dst_tot, 0.0_r8 )
+          if ( i == 1 )then
+             previous_dst_tot = flx_mss_vrt_dst_tot
+          else
+             ! Verify that the result with nan is equal to the result with the tiny value as expected
+             @assertEqual( flx_mss_vrt_dst_tot, previous_dst_tot )
+          end if
+       end do
+    end do
+
+  end subroutine dust_handles_dpfct_rock_nan
+
+   !-----------------------------------------------------------------------
   @Test
   subroutine check_dust_emis_increasing_fv(this)
     ! Check dust emissions with increasing friction velocity
