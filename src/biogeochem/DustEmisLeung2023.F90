@@ -640,7 +640,7 @@ contains
          ! purpose: compute factor by which surface roughness increases threshold
          !          friction velocity (currently a constant)
 
-         if (lnd_frc_mbl(p) > 0.0_r8  .AND. tlai_lu(l)<=1_r8) then
+         if (lnd_frc_mbl(p) > 0.0_r8  .AND. tlai_lu(l)<= vai_mbl_thr) then
             !if (lnd_frc_mbl(p) > 0.0_r8  .AND. ttlai(p)<=1_r8) then
             ! vegetation drag partition equation following Gregory Okin (2008) + Caroline Pierre et al. (2014)
             !lai(p) = tlai_lu(l)+0.1_r8       ! LAI+SAI averaged to landunit level; the equation is undefined at lai=0, and LAI in CTSM has some zeros over deserts, so we add in a small number.
@@ -687,7 +687,7 @@ contains
 
          else    ! for lnd_frc_mbl=0, do not change friction velocity and assume drag partition factor = 0
             wnd_frc_slt = fv(p) * frc_thr_rghn_fct(p) ! The value here is not important since once lnd_frc_mbl(p) <= 0.0_r8 there will be no emission. dmleung added 5 Jul 2024
-            frc_thr_rghn_fct(p) = 0.0_r8            ! When LAI > 1, the drag partition effect is zero. dmleung 16 Feb 2024.
+            frc_thr_rghn_fct(p) = 0.0_r8            ! When LAI > vai_mbl_thr, the drag partition effect is zero. dmleung 16 Feb 2024.
          end if
 
          !########## end of drag partition effect #######################################################
