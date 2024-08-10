@@ -641,17 +641,6 @@ contains
          !          friction velocity (currently a constant)
 
          if (lnd_frc_mbl(p) > 0.0_r8  .AND. tlai_lu(l)<= vai_mbl_thr) then
-            !if (lnd_frc_mbl(p) > 0.0_r8  .AND. ttlai(p)<=1_r8) then
-            ! vegetation drag partition equation following Gregory Okin (2008) + Caroline Pierre et al. (2014)
-            !lai(p) = tlai_lu(l)+0.1_r8       ! LAI+SAI averaged to landunit level; the equation is undefined at lai=0, and LAI in CTSM has some zeros over deserts, so we add in a small number.
-            !lai(p) = ttlai(p) + lai0_Okin     ! ttlai = tlai+tsai. Okin-Pierre's equation is undefined at lai=0, and LAI in CTSM has some zeros over deserts, so we add in a small number. On 26 Feb 2024, dmleung changed from tlai_lu(l) to ttlai(p)
-            !if (lai(p) > 1_r8) then
-            !   lai(p)  = 1_r8   ! setting LAI = 1 to be a max value (since K_length goes to negative when LAI>1)
-            !end if              !
-
-            !if (ttlai(p) + vai0_Okin <= 1_r8) then
-            !   vai_Okin(p) = ttlai(p) + vai0_Okin     ! ttlai = vai = tlai+tsai. Okin-Pierre's equation is undefined at vai=0, and VAI in CTSM has some zeros over deserts, so we add in a small number. On 26 Feb 2024, dmleung changed from tlai_lu(l) to ttlai(p)
-            !end if                                    ! In the Okin-Pierre formulation, VAI has to be 0 < VAI <= 1.
 
             vai_Okin(p) = tlai_lu(l)+vai0_Okin       ! LAI+SAI averaged to landunit level; the equation is undefined at lai=0, and LAI in CTSM has some zeros over deserts, so we add in a small number.
             if (vai_Okin(p) > 1_r8) then
@@ -667,13 +656,10 @@ contains
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                if (patch%itype(p) == noveg) then ! if bare, uses rock drag partition factor
                   if (dpfct_rock(p) /= dpfct_rock(p)) then ! dmleung added 24 May 2024: dpfct_rock(p) could be NaN; CLM could run when DEBUG=FALSE in env_build.xml but dies when DEBUG=TRUE (usually when checking if wnd_frc_slt > wnd_frc_thr_slt_it and if numer/denom < 30._r8 below)
-                     !write(iulog,*) 'dpfct_rock(p) == NaN; dpfct_rock(p) = ', dpfct_rock(p)
                      frc_thr_rgh_fct = 0.001_r8 ! Set drag partition effect to be a very small value (or zero) such that there is no emission whenever dpfct_rock(p) = NaN; dmleung 24 May 2024
                   else
-                     !write(iulog,*) 'dpfct_rock(p) = ', dpfct_rock(p)
                      frc_thr_rgh_fct = dpfct_rock(p)
                   end if
-               !frc_thr_rgh_fct = dpfct_rock(p) ! This should be the original code when dpfct_rock(p) has values everywhere
                else   ! if vegetation, uses vegetation drag partition factor
                   frc_thr_rgh_fct = ssr(p)
                end if
@@ -731,7 +717,6 @@ contains
             ! mean lowpass-filtered wind speed at hgt_sal = 0.1 m saltation height (assuming aerodynamic roughness length z0a_glob = 1e-4 m globally for ease; also assuming neutral condition)
             u_mean_slt(p) = (wnd_frc_slt/k) * log(hgt_sal / z0a_glob)  ! translating from ustar (velocity scale) to actual wind
 
-            !stblty(p) = 0_r8   ! -dmleung 2 Dec 2021: use stability = 0 for now, assuming no buoyancy contribution. Might uncomment the above lines in future revisions.
             stblty(p) = zii / obu(p)   ! -dmleung 20 Feb 2024: use obu from CTSM and PBL height = zii (= 1000_r8) which is default in CTSM. Should we transfer PBL height from CAM?
             if ((12_r8 - 0.5_r8 * stblty(p)) .GE. 0.001_r8) then ! should have used 0 theoretically; used 0.001 here to avoid undefined values
                u_sd_slt(p) = wnd_frc_slt * (12_r8 - 0.5_r8 * stblty(p))**0.333_r8
