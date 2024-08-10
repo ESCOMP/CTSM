@@ -14,7 +14,7 @@ module DustEmisLeung2023
   ! !USES:
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_log_mod          , only : errMsg => shr_log_errMsg
-  use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
+  use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=), shr_infnan_isnan
   use clm_varpar           , only : dst_src_nbr, ndst
   use clm_varcon           , only : grav, spval
   use landunit_varcon      , only : istcrop, istsoil
@@ -656,7 +656,7 @@ contains
             ! calculation of the hybrid/total drag partition effect considering both rock and vegetation drag partitioning using LUH2 bare and veg fractions within a grid
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                if (patch%itype(p) == noveg) then ! if bare, uses rock drag partition factor
-                  if (dpfct_rock(p) /= dpfct_rock(p)) then ! dmleung added 24 May 2024: dpfct_rock(p) could be NaN; CLM could run when DEBUG=FALSE in env_build.xml but dies when DEBUG=TRUE (usually when checking if wnd_frc_slt > wnd_frc_thr_slt_it and if numer/denom < 30._r8 below)
+                  if (shr_infnan_isnan(dpfct_rock(p)) ) then ! dmleung added 24 May 2024: dpfct_rock(p) could be NaN; CLM could run when DEBUG=FALSE in env_build.xml but dies when DEBUG=TRUE (usually when checking if wnd_frc_slt > wnd_frc_thr_slt_it and if numer/denom < 30._r8 below)
                      frc_thr_rgh_fct = 0.001_r8 ! Set drag partition effect to be a very small value (or zero) such that there is no emission whenever dpfct_rock(p) = NaN; dmleung 24 May 2024
                   else
                      frc_thr_rgh_fct = dpfct_rock(p)
