@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.2.019
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Sun 11 Aug 2024 03:05:01 AM MDT
+Date: Sun 11 Aug 2024 09:00:43 AM MDT
 One-line Summary: Add in an additional dust emission method Leung_2023, by default off
 
 Purpose and description of changes
@@ -101,6 +101,7 @@ Answer changes
 --------------
 
 Changes answers relative to baseline: no bit-for-bit (unless you turn the new dust scheme on)
+  Tests with BGC change answers because fieldlists are different (FV is no longer on history files by default)
 
 Other details
 -------------
