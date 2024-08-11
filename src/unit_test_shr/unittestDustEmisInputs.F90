@@ -202,17 +202,19 @@ contains
 
   !-----------------------------------------------------------------------
 
-  subroutine create_fv(this, fv, u10, ram1)
+  subroutine create_fv(this, fv, u10, ram1, obu)
     ! Initializes some fields needed for dust emissions in this%frictionvel_inst, and sets
     ! fields based on inputs. Excluded inputs are given a default value
     class(unittest_dust_emis_input_type), intent(inout) :: this
     real(r8), intent(in), optional :: fv
     real(r8), intent(in), optional :: u10
     real(r8), intent(in), optional :: ram1
+    real(r8), intent(in), optional :: obu
 
     real(r8), parameter :: fv_default = 2.0_r8
     real(r8), parameter :: u10_default = 4._r8
     real(r8), parameter :: ram1_default = 200._r8
+    real(r8), parameter :: obu_default = -100._r8
     ! ------------------------------------------------------------------------
 
     if (present(fv)) then
@@ -231,6 +233,12 @@ contains
        this%frictionvel_inst%ram1_patch(bounds%begp:bounds%endp) = ram1
     else
        this%frictionvel_inst%ram1_patch(bounds%begp:bounds%endp) = ram1_default
+    end if
+
+    if (present(obu)) then
+       this%frictionvel_inst%obu_patch(bounds%begp:bounds%endp) = obu
+    else
+       this%frictionvel_inst%obu_patch(bounds%begp:bounds%endp) = obu_default
     end if
 
   end subroutine create_fv
