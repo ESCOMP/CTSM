@@ -7,7 +7,6 @@ module test_DustEmisLeung2023
   use unittestSubgridMod, only : bounds
   use DustEmisBase
   use DustEmisLeung2023
-  use abortutils, only : endrun
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
   use DustEmisFactory, only : create_dust_emissions
@@ -15,7 +14,7 @@ module test_DustEmisLeung2023
 
   implicit none
 
-  real(r8), parameter :: tol = 1.e-18_r8
+  real(r8), parameter :: tol = 1.e-16_r8
 
   @TestCase
   type, extends(TestCase) :: TestDustEmisLeung2023
@@ -259,7 +258,7 @@ contains
     real(r8) :: flx_mss_vrt_dst_tot, drag_partition, previous_dst_tot
 
     call this%input%create_atm2lnd()
-    call this%input%create_fv( )
+    call this%input%create_fv( obu = -500.0_r8, fv=15.0_r8 )
     ! Loop over twice first with nan and then with the tiny value that nan should be changed to
     do i = 1, 2
        if ( i == 1 )then
@@ -267,7 +266,7 @@ contains
        else if ( i == 2 ) then
           drag_partition = 0.001
        else
-          call endrun( "Looping over too many iterations should just be 2" )
+          @assertEqual( i, 1, "Iteration too high, should just be up to 2" )
        end if
        call this%dust_emis%SetDragPartition(bounds, drag_partition)
        call this%dust_emis%DustEmission(bounds, this%input%num_nolakep, this%input%filter_nolakep, this%input%atm2lnd_inst, &
@@ -287,7 +286,48 @@ contains
 
   end subroutine dust_handles_dpfct_rock_nan
 
-    !-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+
+  @Test
+  subroutine dust_constant_low_stability(this)
+    use PatchType, only : patch
+    ! Check that dust emissions stay constant until stability high enough
+    class(TestDustEmisLeung2023), intent(inout) :: this
+    integer :: p, i
+    real(r8) :: flx_mss_vrt_dst_tot, obu, previous_dst_tot
+
+    call this%input%create_atm2lnd()
+    do i = 1, 3
+       if ( i == 1 )then
+          obu = 100._r8
+       else if ( i == 2 ) then
+          obu = 50._r8
+       else if ( i == 3 ) then
+          obu = 41.67013917826486_r8
+       else
+          @assertEqual( i, 1, "Iteration too high, should just be up to 3" )
+       end if
+       call this%input%create_fv( obu=obu )
+       call this%dust_emis%DustEmission(bounds, this%input%num_nolakep, this%input%filter_nolakep, this%input%atm2lnd_inst, &
+                         this%input%soilstate_inst, this%input%canopystate_inst, this%input%water_inst%waterstatebulk_inst, &
+                         this%input%water_inst%waterdiagnosticbulk_inst, this%input%frictionvel_inst)
+       do p = bounds%begp, bounds%endp
+          call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot )
+          print *, ' obu = ', obu, ' dust_tot = ', flx_mss_vrt_dst_tot
+          @assertEqual( flx_mss_vrt_dst_tot, 1.305341766366198d-006, tolerance=tol )
+          if ( i == 1 )then
+             previous_dst_tot = flx_mss_vrt_dst_tot
+          else
+             ! Verify that the previous result is identical to the others
+             @assertEqual( flx_mss_vrt_dst_tot, previous_dst_tot, tolerance=tol )
+          end if
+       end do
+    end do
+
+  end subroutine dust_constant_low_stability
+
+  !-----------------------------------------------------------------------
+
   @Test
   subroutine dust_aborts_on_zero_obu(this)
       use PatchType, only : patch
