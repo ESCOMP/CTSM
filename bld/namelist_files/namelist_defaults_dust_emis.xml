@@ -14,7 +14,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 -->
 
 <!-- Defaults for dust_emis_inparm namelist  -->
-<dust_emis_method>Leung_2023</dust_emis_method>
+<dust_emis_method>Zender_2003</dust_emis_method>
 
 <zender_soil_erod_source>atm</zender_soil_erod_source>
 
