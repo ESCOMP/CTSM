@@ -121,7 +121,7 @@ contains
 
  @Test
  subroutine dust_zero_for_fixed_ratio(this)
-   ! Check dust emissions are zero for a no wind
+   ! Check dust emissions are zero for a fixed ratio
    class(TestDustEmisLeung2023), intent(inout) :: this
    integer :: p
    real(r8) :: flx_mss_vrt_dst_tot
@@ -130,7 +130,7 @@ contains
 
    call this%input%create_atm2lnd()
    call this%dust_emis%GetConstVars( SaltationFactor )
-   ! Figure out what fv needs to be so that the wind threshold will be u10*(1/(1-eps))
+   ! Figure out what fv needs to be so that the wind threshold will result in zero dust emission
    fv = ( SaltationFactor / sqrt( this%input%atm2lnd_inst%forc_rho_downscaled_col(bounds%begc)) ) - 1.d-15
    call this%input%create_fv( fv=fv )
    call this%dust_emis%DustEmission(bounds, this%input%num_nolakep, this%input%filter_nolakep, this%input%atm2lnd_inst, &
@@ -274,6 +274,7 @@ contains
                          this%input%water_inst%waterdiagnosticbulk_inst, this%input%frictionvel_inst)
        do p = bounds%begp, bounds%endp
           call this%dust_emis%GetPatchVars( p, flx_mss_vrt_dst_tot=flx_mss_vrt_dst_tot )
+          ! TODO: To have a more robust test the input should be adjusted so that there is dust emissions rather than zero
           @assertEqual( flx_mss_vrt_dst_tot, 0.0_r8 )
           if ( i == 1 )then
              previous_dst_tot = flx_mss_vrt_dst_tot
@@ -352,12 +353,11 @@ contains
     integer :: p, c
     real(r8) :: flx_mss_vrt_dst_tot
     real(r8) :: fv = 4.0_r8
-    real(r8) :: u10 = 10._r8
     real(r8) :: total_dust0, total_dust_higher
 
     ! Run baseline fv
     call this%input%create_atm2lnd()
-    call this%input%create_fv( u10=u10, fv=fv )
+    call this%input%create_fv( fv=fv )
     call this%dust_emis%DustEmission(bounds, this%input%num_nolakep, this%input%filter_nolakep, this%input%atm2lnd_inst, &
                       this%input%soilstate_inst, this%input%canopystate_inst, this%input%water_inst%waterstatebulk_inst, &
                       this%input%water_inst%waterdiagnosticbulk_inst, this%input%frictionvel_inst)
@@ -369,7 +369,7 @@ contains
        @assertEqual( flx_mss_vrt_dst_tot, 1.064145664977026d-5, tolerance=tol )
     end do
     ! Double fv and show result is higher
-    call this%input%create_fv( u10=u10, fv=fv*2.0_r8)
+    call this%input%create_fv( fv=fv*2.0_r8)
     call this%dust_emis%DustEmission(bounds, this%input%num_nolakep, this%input%filter_nolakep, this%input%atm2lnd_inst, &
                       this%input%soilstate_inst, this%input%canopystate_inst, this%input%water_inst%waterstatebulk_inst, &
                       this%input%water_inst%waterdiagnosticbulk_inst, this%input%frictionvel_inst)

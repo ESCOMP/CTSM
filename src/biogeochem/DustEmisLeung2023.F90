@@ -215,87 +215,87 @@ contains
     this%dst_emiss_coeff_patch(begp:endp) = spval
     call hist_addfld1d (fname='DUST_EMIS_COEFF', units='dimensionless',  &
          avgflag='A', long_name='soil erodibility or dust emission coefficient for Kok emission scheme', &
-         ptr_patch=this%dst_emiss_coeff_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%dst_emiss_coeff_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%wnd_frc_thr_patch(begp:endp) = spval
     call hist_addfld1d (fname='WND_FRC_FT', units='m/s',  &
          avgflag='A', long_name='fluid threshold friction velocity', &
-         ptr_patch=this%wnd_frc_thr_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%wnd_frc_thr_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%wnd_frc_thr_dry_patch(begp:endp) = spval
     call hist_addfld1d (fname='WND_FRC_FT_DRY', units='m/s',  &
          avgflag='A', long_name='dry fluid threshold friction velocity', &
-         ptr_patch=this%wnd_frc_thr_dry_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%wnd_frc_thr_dry_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%wnd_frc_thr_it_patch(begp:endp) = spval
     call hist_addfld1d (fname='WND_FRC_IT', units='m/s',  &
          avgflag='A', long_name='impact threshold friction velocity', &
-         ptr_patch=this%wnd_frc_thr_it_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%wnd_frc_thr_it_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%wnd_frc_soil_patch(begp:endp) = spval
     call hist_addfld1d (fname='WND_FRC_SOIL', units='m/s',  &
          avgflag='A', long_name='soil surface wind friction velocity', &
-         ptr_patch=this%wnd_frc_soil_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%wnd_frc_soil_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%lnd_frc_mble_patch(begp:endp) = spval
     call hist_addfld1d (fname='LND_FRC_MBLE', units='dimensionless',  &
          avgflag='A', long_name='land mobile fraction', &
-         ptr_patch=this%lnd_frc_mble_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%lnd_frc_mble_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%gwc_patch(begp:endp) = spval
     call hist_addfld1d (fname='GWC', units='kg/kg',  &
          avgflag='A', long_name='gravimetric soil moisture at the topmost soil layer', &
-         ptr_patch=this%gwc_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%gwc_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%liq_frac_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIQ_FRAC', units='dimensionless',  &
          avgflag='A', long_name='fraction of total water that is liquid', &
-         ptr_patch=this%liq_frac_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%liq_frac_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%u_mean_slt_patch(begp:endp) = spval
     call hist_addfld1d (fname='U_S_MEAN', units='m/s',  &
          avgflag='A', long_name='mean wind velocity at saltation level', &
-         ptr_patch=this%u_mean_slt_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%u_mean_slt_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%u_sd_slt_patch(begp:endp) = spval
     call hist_addfld1d (fname='U_S_SIGMA', units='m/s',  &
          avgflag='A', long_name='sd of wind velocity at saltation level', &
-         ptr_patch=this%u_sd_slt_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%u_sd_slt_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%stblty_patch(begp:endp) = spval
     call hist_addfld1d (fname='ZETAOBU', units='',  &
          avgflag='A', long_name='stability parameter', &
-         ptr_patch=this%stblty_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%stblty_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%u_fld_thr_patch(begp:endp) = spval
     call hist_addfld1d (fname='U_FT', units='m/s',  &
          avgflag='A', long_name='fluid threshold velocity at saltation level', &
-         ptr_patch=this%u_fld_thr_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%u_fld_thr_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%u_impct_thr_patch(begp:endp) = spval
     call hist_addfld1d (fname='U_IT', units='m/s',  &
          avgflag='A', long_name='impact threshold velocity at saltation level', &
-         ptr_patch=this%u_impct_thr_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%u_impct_thr_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%thr_crs_rate_patch(begp:endp) = spval
     call hist_addfld1d (fname='ALPHA_TC_RATE', units='',  &
          avgflag='A', long_name='threshold crossing rate', &
-         ptr_patch=this%thr_crs_rate_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%thr_crs_rate_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%prb_crs_fld_thr_patch(begp:endp) = spval
     call hist_addfld1d (fname='P_FT', units='',  &
          avgflag='A', long_name='probability of winds crossing fluid threshold', &
-         ptr_patch=this%prb_crs_fld_thr_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%prb_crs_fld_thr_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%prb_crs_impct_thr_patch(begp:endp) = spval
     call hist_addfld1d (fname='P_IT', units='',  &
          avgflag='A', long_name='probability of winds crossing impact threshold', &
-         ptr_patch=this%prb_crs_impct_thr_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%prb_crs_impct_thr_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%intrmtncy_fct_patch(begp:endp) = spval
     call hist_addfld1d (fname='ETA', units='',  &
          avgflag='A', long_name='intermittency factor', &
-         ptr_patch=this%intrmtncy_fct_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%intrmtncy_fct_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%ssr_patch(begp:endp) = spval
     call hist_addfld1d (fname='SSR', units='m/s',  &
          avgflag='A', long_name='Okin-Pierre vegetation shear stress ratio (drag partition factor)', &
-         ptr_patch=this%ssr_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%ssr_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%vai_Okin_patch(begp:endp) = spval
     call hist_addfld1d (fname='VAI_OKIN', units='m/s',  &
          avgflag='A', long_name='vegetation area index used in the Okin-Pierre plant drag partition scheme', &
-         ptr_patch=this%vai_Okin_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%vai_Okin_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%frc_thr_rghn_fct_patch(begp:endp) = spval
     call hist_addfld1d (fname='FRC_THR_RGHN_FCT', units='dimensionless',  &
          avgflag='A', long_name='hybrid drag partition (or roughness) factor', &
-         ptr_patch=this%frc_thr_rghn_fct_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%frc_thr_rghn_fct_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%wnd_frc_thr_std_patch(begp:endp) = spval
     call hist_addfld1d (fname='WND_FRC_FT_STD', units='m/s',  &
          avgflag='A', long_name='standardized fluid threshold friction velocity', &
-         ptr_patch=this%wnd_frc_thr_std_patch, set_lake=0._r8, set_urb=0._r8)
+         ptr_patch=this%wnd_frc_thr_std_patch, set_lake=0.0_r8, set_urb=0.0_r8)
     this%dpfct_rock_patch(begp:endp) = spval
     call hist_addfld1d (fname='DPFCT_ROCK', units='m/s',  &
          avgflag='A', long_name='rock drag partition factor', &
@@ -414,7 +414,6 @@ contains
     real(r8), parameter :: zii = 1000.0_r8             ! [m] convective boundary layer height added by dmleung 20 Feb 2024, following other CTSM modules (e.g., CanopyFluxesMod). Should we transfer PBL height (PBLH) from CAM?
     real(r8) :: numer                                  ! Numerator term for threshold crossing rate
     real(r8) :: denom                                  ! Denominator term for threshold crossing rate
-    character(len=*),parameter :: subname = 'DUSTEmission'
     !------------------------------------------------------------------------
 
     associate(                                                         &
@@ -463,7 +462,7 @@ contains
          wnd_frc_thr_std     => this%wnd_frc_thr_std_patch             & ! Output: standardized dust emission threshold friction velocity defined in Jasper Kok et al. (2014).
          )
 
-      ttlai(bounds%begp : bounds%endp) = 0._r8
+      ttlai(bounds%begp : bounds%endp) = 0.0_r8
       ! make lai average at landunit level
       do fp = 1,num_nolakep
          p = filter_nolakep(fp)
@@ -471,12 +470,12 @@ contains
       enddo
 
       tlai_lu(bounds%begl : bounds%endl) = spval
-      sumwt(bounds%begl : bounds%endl) = 0._r8
+      sumwt(bounds%begl : bounds%endl) = 0.0_r8
       do p = bounds%begp,bounds%endp
-         if (ttlai(p) /= spval .and. patch%active(p) .and. patch%wtlunit(p) /= 0._r8) then
+         if (ttlai(p) /= spval .and. patch%active(p) .and. patch%wtlunit(p) /= 0.0_r8) then
             c = patch%column(p)
             l = patch%landunit(p)
-            if (sumwt(l) == 0._r8) tlai_lu(l) = 0._r8
+            if (sumwt(l) == 0.0_r8) tlai_lu(l) = 0.0_r8
             tlai_lu(l) = tlai_lu(l) + ttlai(p) * patch%wtlunit(p)
             sumwt(l) = sumwt(l) + patch%wtlunit(p)
          end if
@@ -487,19 +486,20 @@ contains
             found = .true.
             index = l
             exit
-         else if (sumwt(l) /= 0._r8) then
+         else if (sumwt(l) /= 0.0_r8) then
             tlai_lu(l) = tlai_lu(l)/sumwt(l)
          end if
       end do
       if (found) then
-         write(iulog,*) subname//':: error: sumwt is greater than 1.0 at l= ',index
+         write(iulog,*) 'error: sumwt is greater than 1.0 at l= ',index
          call endrun(subgrid_index=index, subgrid_level=subgrid_level_landunit, msg=errMsg(sourcefile, __LINE__))
+         return
       end if
 
       ! Loop through patches
 
       ! initialize variables which get passed to the atmosphere
-      flx_mss_vrt_dst(bounds%begp:bounds%endp,:)=0._r8
+      flx_mss_vrt_dst(bounds%begp:bounds%endp,:)=0.0_r8
 
       do fp = 1,num_nolakep
          p = filter_nolakep(fp)
@@ -584,7 +584,7 @@ contains
          ! calculate soil moisture effect for dust emission threshold
          ! following Fecan, Marticorena et al. (1999)
          ! also see Zender et al. (2003) for DUST emission scheme and Kok et al. (2014b) for K14 emission scheme in CESM
-         bd = (1._r8-watsat(c,1))*dns_slt      ![kg m-3] Bulk density of dry surface soil (dmleung changed from 2700 to dns_slt, soil particle density, on 16 Feb 2024. Note that dn s_slt=2650 kg m-3 so the value is changed by a tiny bit from 2700 to 2650. dns_slt has been here for many years so dns_slt should be used here instead of explicitly typing the value out. dmleung 16 Feb 2024)
+         bd = (1.0_r8-watsat(c,1))*dns_slt      ![kg m-3] Bulk density of dry surface soil (dmleung changed from 2700 to dns_slt, soil particle density, on 16 Feb 2024. Note that dn s_slt=2650 kg m-3 so the value is changed by a tiny bit from 2700 to 2650. dns_slt has been here for many years so dns_slt should be used here instead of explicitly typing the value out. dmleung 16 Feb 2024)
 
          ! use emission threshold to calculate standardized threshold and dust emission coefficient
 
@@ -644,19 +644,19 @@ contains
          if (lnd_frc_mbl(p) > 0.0_r8  .AND. tlai_lu(l)<= vai_mbl_thr) then
 
             vai_Okin(p) = tlai_lu(l)+vai0_Okin       ! LAI+SAI averaged to landunit level; the equation is undefined at lai=0, and LAI in CTSM has some zeros over deserts, so we add in a small number.
-            if (vai_Okin(p) > 1_r8) then
-               vai_Okin(p)  = 1_r8   ! setting LAI = 1 to be a max value (since K_length goes to negative when LAI>1) 
+            if (vai_Okin(p) > 1.0_r8) then
+               vai_Okin(p)  = 1.0_r8   ! setting LAI = 1 to be a max value (since K_length goes to negative when LAI>1) 
             end if
 
 
             ! calculate Okin's shear stress ratio (SSR, which is vegetation drag partition factor) using Pierre's equation
-            K_length = 2_r8 * (1_r8/vai_Okin(p) - 1_r8)   ! Here LAI has to be non-zero to avoid blowup, and < 1 to avoid -ve K_length. See this equation in Leung et al. (2023). This line is Okin's formulation
+            K_length = 2.0_r8 * (1.0_r8/vai_Okin(p) - 1.0_r8)   ! Here LAI has to be non-zero to avoid blowup, and < 1 to avoid -ve K_length. See this equation in Leung et al. (2023). This line is Okin's formulation
             ssr(p) = (K_length+f_0*c_e)/(K_length+c_e) ! see this equation in Caroline Pierre et al. (2014) or Leung et al. (2023). This line is Pierre's formulation.
 
             ! calculation of the hybrid/total drag partition effect considering both rock and vegetation drag partitioning using LUH2 bare and veg fractions within a grid
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                if (patch%itype(p) == noveg) then ! if bare, uses rock drag partition factor
-                  if (shr_infnan_isnan(dpfct_rock(p)) ) then ! dmleung added 24 May 2024: dpfct_rock(p) could be NaN; CLM could run when DEBUG=FALSE in env_build.xml but dies when DEBUG=TRUE (usually when checking if wnd_frc_slt > wnd_frc_thr_slt_it and if numer/denom < 30._r8 below)
+                  if (shr_infnan_isnan(dpfct_rock(p)) ) then ! dmleung added 24 May 2024: dpfct_rock(p) could be NaN; CLM could run when DEBUG=FALSE in env_build.xml but dies when DEBUG=TRUE (usually when checking if wnd_frc_slt > wnd_frc_thr_slt_it and if numer/denom < 30 below)
                      frc_thr_rgh_fct = 0.001_r8 ! Set drag partition effect to be a very small value (or zero) such that there is no emission whenever dpfct_rock(p) = NaN; dmleung 24 May 2024
                   else
                      frc_thr_rgh_fct = dpfct_rock(p)
@@ -723,8 +723,8 @@ contains
                return
             end if
             stblty(p) = zii / obu(p)   ! -dmleung 20 Feb 2024: use obu from CTSM and PBL height = zii (= 1000_r8) which is default in CTSM. Should we transfer PBL height from CAM?
-            if ((12_r8 - 0.5_r8 * stblty(p)) .GE. 0.001_r8) then ! should have used 0 theoretically; used 0.001 here to avoid undefined values
-               u_sd_slt(p) = wnd_frc_slt * (12_r8 - 0.5_r8 * stblty(p))**0.333_r8
+            if ((12.0_r8 - 0.5_r8 * stblty(p)) .GE. 0.001_r8) then ! should have used 0 theoretically; used 0.001 here to avoid undefined values
+               u_sd_slt(p) = wnd_frc_slt * (12.0_r8 - 0.5_r8 * stblty(p))**0.333_r8
             else
                u_sd_slt(p) = wnd_frc_slt * (0.001_r8)**0.333_r8   ! should have used 0 theoretically; used 0.001 here to avoid undefined values
             end if
@@ -740,7 +740,7 @@ contains
             numer = (u_fld_thr(p)**2.0_r8 - u_impct_thr(p)**2.0_r8 - 2.0_r8 * u_mean_slt(p) * (u_fld_thr(p) - u_impct_thr(p)))
             denom = (2.0_r8 * u_sd_slt(p)**2.0_r8) ! note that u_sd_slt should be always positive
             ! Truncate to zero if the expression inside exp is becoming too large
-            if ( numer/denom < 30._r8 ) then  ! set numer/denom to be < 30 given exp(30) below is already very large; also denom itself should be non-zero and non-negative given the standard deviation (u_sd_slt) of the subtimestep wind fluctuation is non-negative. dmleung 28 May 2024
+            if ( numer/denom < 30.0_r8 ) then  ! set numer/denom to be < 30 given exp(30) below is already very large; also denom itself should be non-zero and non-negative given the standard deviation (u_sd_slt) of the subtimestep wind fluctuation is non-negative. dmleung 28 May 2024
                thr_crs_rate(p) = (exp((u_fld_thr(p)**2.0_r8 - u_impct_thr(p)**2.0_r8 - 2.0_r8 * u_mean_slt(p) * (u_fld_thr(p) - u_impct_thr(p))) / (2.0_r8 * u_sd_slt(p)**2.0_r8)) + 1.0_r8)**(-1.0_r8)
             else
                thr_crs_rate(p) = 0.0_r8
@@ -829,20 +829,20 @@ contains
                                                     ! estimating roughness effect at a distance of 10 m following Leung et al. (2023)
    real(r8), parameter :: b1 = 0.7_r8               ! [dimless] first fitting coefficient for the drag partition equation by Marticorena and Bergametti (1995), later modified by Darmenova et al. (2009).
    real(r8), parameter :: b2 = 0.8_r8               ! [dimless] second fitting coefficient for the drag partition equation by Marticorena and Bergametti (1995), later modified by Darmenova et al. (2009).
-   character(len=*), parameter :: subname = 'PrigentRoughnessStream::CalcDragPartition'
    !---------------------------------------------------------------------
 
    ! Make sure we've initialized the Prigent roughness streams
    if ( .not. this%prigent_roughness_stream%IsStreamInit() )then
-      call endrun(msg=subname//' ERROR: Streams have not been initialized, make sure Init is called first' &
-                             //', and streams are on')
+      write(iulog,*)'Error : Prigent roughness stream is NOT on: ', errMsg(sourcefile, __LINE__)
+      call endrun(msg=' ERROR: Streams have not been initialized, make sure Init is called first' &
+                       //', and streams are on')
+      return
    end if
 
    ! dmleung: this loop calculates the drag partition effect (or roughness effect) of rocks.
    !          We save the drag partition factor as a patch level quantity.
    ! TODO: EBK 02/13/2024: Several magic numbers here that should become parameters so the meaning is preserved
-   !z0s = 2_r8/30_r8 * D_p   ! equation for smooth roughness length for soil grain. See Danny M. Leung et al. (2023) and Martina Klose et al. (2021) for instance. 1/15 is a coefficient that relates roughness to soil particle diameter D_p.
-   z0s = 2_r8 * D_p / 30_r8 ! equation for smooth roughness length for soil grain. See Danny M. Leung et al. (2023) and Martina Klose et al. (2021) for instance. 1/15 is a coefficient that relates roughness to soil particle diameter D_p.
+   z0s = 2.0_r8 * D_p / 30.0_r8 ! equation for smooth roughness length for soil grain. See Danny M. Leung et al. (2023) and Martina Klose et al. (2021) for instance. 1/15 is a coefficient that relates roughness to soil particle diameter D_p.
                             ! Here we assume soil medium size is a global constant, and so is smooth roughness length.
    do p = bounds%begp,bounds%endp
       g = patch%gridcell(p)
@@ -850,7 +850,7 @@ contains
       if (lun%itype(l) /= istdlak) then
          ! Calculating rock drag partition factor using the Marticorena and Bergametti (1995) formulation.
          ! 0.01 is used to convert Prigent's roughness length dataset from centimeter to meter.
-         this%dpfct_rock_patch(p) = 1._r8 - ( log(this%prigent_roughness_stream%prigent_rghn(g)*0.01_r8/z0s) &
+         this%dpfct_rock_patch(p) = 1.0_r8 - ( log(this%prigent_roughness_stream%prigent_rghn(g)*0.01_r8/z0s) &
                             / log(b1 * (X/z0s)**b2 ) )
       end if
    end do
