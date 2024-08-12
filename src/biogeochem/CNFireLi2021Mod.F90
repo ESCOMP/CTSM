@@ -124,7 +124,7 @@ contains
     class(soil_water_retention_curve_type), intent(in)    :: soil_water_retention_curve
     type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
-    type(crop_type)                       , intent(in)    :: crop_inst
+    type(crop_type)                       , intent(in)    :: crop_inst  ! Dummy argument; not used in this version of CNFireArea
     real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
     real(r8)                              , intent(in)    :: decomp_cpools_vr_col(bounds%begc:,1:,1:)
     real(r8)                              , intent(in)    :: t_soi17cm_col(bounds%begc:)
