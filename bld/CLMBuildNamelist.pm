@@ -1764,6 +1764,7 @@ sub process_namelist_inline_logic {
   # namelist options for dust emissions
   ######################################
   setup_logic_dust_emis($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref);
+  setup_logic_prigent_roughness($opts, $nl_flags, $definition, $defaults, $nl);
 
   #################################
   # namelist group: megan_emis_nl #
@@ -1874,10 +1875,15 @@ sub process_namelist_inline_logic {
   #########################################
   setup_logic_initinterp($opts, $nl_flags, $definition, $defaults, $nl);
 
-  ###############################
-  # namelist group: exice_streams   #
-  ###############################
-  setup_logic_exice($opts, $nl_flags, $definition, $defaults, $nl);
+  #################################
+  # namelist group: exice_streams #
+  #################################
+  setup_logic_exice($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  ##########################################
+  # namelist group: clm_temperature_inparm #
+  ##########################################
+  setup_logic_coldstart_temp($opts,$nl_flags, $definition, $defaults, $nl);
 }
 
 #-------------------------------------------------------------------------------
@@ -2381,7 +2387,6 @@ sub setup_logic_soilstate {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'organic_frac_squared' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_bedrock',
               'use_fates'=>$nl_flags->{'use_fates'}, 'vichydro'=>$nl_flags->{'vichydro'} );
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice'); # excess ice flag should be read before stream vars
 
   my $var1 = "soil_layerstruct_predefined";
   my $var2 = "soil_layerstruct_userdefined";
@@ -4071,9 +4076,6 @@ sub setup_logic_dust_emis {
                                  "$option is being set, need to change one or the other" );
             }
          }
-         if ( $dust_emis_method eq "Leung_2023" ) {
-            $log->warning("dust_emis_method is Leung_2023 and that option has NOT been brought into CTSM yet");
-         }
       }
   # Otherwise make sure dust settings are NOT being set in CLM
   } else {
@@ -4930,13 +4932,31 @@ sub setup_logic_exice {
   #
   # excess ice streams
   #
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice', 'phys'=>$physv->as_string()); 
   my $use_exice = $nl->get_value( 'use_excess_ice' );
   my $use_exice_streams = $nl->get_value( 'use_excess_ice_streams' );
-  # IF excess ice streams is on
+  my $finidat = $nl->get_value('finidat');
+  # If coldstart and use_excess_ice is on:
+  if ( ( (not defined($use_exice_streams)) && value_is_true($use_exice) ) && string_is_undef_or_empty($finidat) ) {
+     $nl->set_variable_value('exice_streams', 'use_excess_ice_streams' , '.true.');
+     $use_exice_streams = '.true.';
+     # if excess ice is turned off
+  } elsif ( (not defined($use_exice_streams)) && (not value_is_true($use_exice)) ) {
+     $use_exice_streams = '.false.';
+  # Checking for cold clm_start_type and not finidat here since finidat can be not set set in branch/hybrid runs and
+  # These cases are handled in the restart routines in the model
+  } elsif ( defined($use_exice_streams) && (not value_is_true($use_exice_streams)) && value_is_true($use_exice) &&
+          ( $nl_flags->{'clm_start_type'} eq "'cold'" || $nl_flags->{'clm_start_type'} eq "'arb_ic'" )) {
+     $log->fatal_error("use_excess_ice_streams can NOT be FALSE when use_excess_ice is TRUE on the cold start" );
+  }
+
+  # Put use_exice_streams into nl_flags so can be referenced later
+  $nl_flags->{'use_excice_streams'} = $use_exice_streams;
+  # If excess ice streams is on
   if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
      # Can only be true if excess ice is also on, otherwise fail
-     if (defined($use_exice) && not value_is_true($use_exice)) {
+     if ( defined($use_exice) && (not value_is_true($use_exice)) ) {
         $log->fatal_error("use_excess_ice_streams can NOT be TRUE when use_excess_ice is FALSE" );
      }
   # Otherwise if ice streams are off
@@ -4972,6 +4992,46 @@ sub setup_logic_exice {
 
 
 } # end exice streams
+
+sub setup_logic_coldstart_temp {
+
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  # set initial temperatures for excess ice gridcells: needs to be set whether excess ice is on or not
+
+  my $use_exice = $nl->get_value( 'use_excess_ice' );
+  my $finidat = $nl->get_value('finidat');
+
+  my @list = ( "excess_ice_coldstart_temp", "excess_ice_coldstart_depth" );
+
+  # Only needs to be set by the user if it's a coldstart
+  if ( ! string_is_undef_or_empty($finidat) ) {
+     foreach my $var ( @list ) {
+        my $val = $nl->get_value( $var );
+        if ( defined($val) ) {
+           $log->warning("$var only needs to be set if this is a cold-start, although InitCold is always called");
+        }
+     }
+  }
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_temp',
+             'use_excess_ice'=>$use_exice);
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_depth',
+             'use_excess_ice'=>$use_exice);
+
+  my $use_exice_streams = $nl_flags->{'use_excice_streams'};
+  my $exice_cs_temp = $nl->get_value( 'excess_ice_coldstart_temp' );
+  my $exice_cs_depth = $nl->get_value( 'excess_ice_coldstart_depth' );
+
+  if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
+     if (defined($exice_cs_depth) && $exice_cs_depth <= 0.0 ) {
+       $log->fatal_error("excess_ice_coldstart_depth is <= 0.0" );
+     }
+     if (defined($exice_cs_temp) && $exice_cs_temp >= 0.0 ) {
+       $log->fatal_error("excess_ice_coldstart_temp is >= 0.0, no excess ice will be present in this run" );
+     }
+  }
+}
 
 #-------------------------------------------------------------------------------
 
@@ -5015,6 +5075,33 @@ sub setup_logic_misc {
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_use_repr_structure_pool');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_no_crop_seed_replenishment');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hist_fields_list_file');
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_prigent_roughness {
+  #
+  # The Prigent roughness stream data set read in if needed
+  #
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  my $var = "use_prigent_roughness";
+  my $dust_emis_method = remove_leading_and_trailing_quotes( $nl->get_value('dust_emis_method') );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+              'dust_emis_method'=>$dust_emis_method );
+  my $use_prigent = $nl->get_value($var);
+  if ( &value_is_true($use_prigent) ) {
+     if ( $dust_emis_method ne "Leung_2023" ) {
+       # The Prigent dataset could be used for other purposes
+       # (such as roughness as in https://github.com/ESCOMP/CTSM/issues/2349)
+       $log->warning( "$var does NOT need to on without dust_emis_method being Leung_2023, it simply won't be used" );
+     }
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_prigentroughness' );
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_prigentroughness' );
+  } elsif ( $dust_emis_method eq "Leung_2023" ) {
+    # In the future we WILL allow it to be turned off for testing and Paleo work
+    # see: https://github.com/ESCOMP/CTSM/issues/2381)
+    $log->fatal_error("variable \"$var\" MUST be true when Leung_2023 dust emission method is being used" );
+  }
 }
 
 #-------------------------------------------------------------------------------
@@ -5068,8 +5155,10 @@ sub write_output_files {
   push @groups, "lifire_inparm";
   push @groups, "ch4finundated";
   push @groups, "exice_streams";
+  push @groups, "clm_temperature_inparm";
   push @groups, "soilbgc_decomp";
   push @groups, "clm_canopy_inparm";
+  push @groups, "prigentroughness";
   push @groups, "zendersoilerod";
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
      push @groups, "scf_swenson_lawrence_2012_inparm";

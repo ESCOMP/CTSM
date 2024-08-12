@@ -259,7 +259,8 @@ contains
 
     namelist /clm_inparm/ use_soil_moisture_streams
 
-    namelist /clm_inparm/ use_excess_ice
+    ! excess ice flag
+    namelist /clm_inparm/ use_excess_ice 
 
     namelist /clm_inparm/ use_lai_streams
 

@@ -431,7 +431,7 @@ module clm_varctl
 
 
   !----------------------------------------------------------
-  ! excess ice physics switch
+  ! excess ice physics switch and params
   !----------------------------------------------------------
   logical, public :: use_excess_ice = .false. ! true. => use excess ice physics
 

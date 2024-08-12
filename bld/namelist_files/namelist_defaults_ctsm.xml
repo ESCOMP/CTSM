@@ -2566,6 +2566,17 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 >lnd/clm2/dustemisdata/dust_2x2_ESMFmesh_cdf5_c230730.nc</stream_meshfile_zendersoilerod>
 
 <!-- =========================================  -->
+<!-- Defaults for Prigent's roughness data      -->
+<!-- =========================================  -->
+
+<use_prigent_roughness dust_emis_method="Leung_2023">.true.</use_prigent_roughness>
+<use_prigent_roughness                              >.false.</use_prigent_roughness>
+<stream_fldfilename_prigentroughness
+>lnd/clm2/dustemisdata/Prigent_2005_roughness_0.25x0.25_cdf5_c240127.nc</stream_fldfilename_prigentroughness>
+<stream_meshfile_prigentroughness
+>lnd/clm2/dustemisdata/dust_0.25x0.25_ESMFmesh_cdf5_c240222.nc</stream_meshfile_prigentroughness>
+
+<!-- =========================================  -->
 <!-- Defaults for different BGC/decomp modes    -->
 <!-- =========================================  -->
 
@@ -2635,7 +2646,10 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <!-- =========================================  -->
 
 <use_excess_ice>.false.</use_excess_ice>
-
+<excess_ice_coldstart_temp>-1.0</excess_ice_coldstart_temp>
+<excess_ice_coldstart_depth>0.5</excess_ice_coldstart_depth>
+<excess_ice_coldstart_temp use_excess_ice=".true.">-3.15</excess_ice_coldstart_temp>
+<excess_ice_coldstart_depth use_excess_ice=".true.">0.5</excess_ice_coldstart_depth>
 <stream_fldfilename_exice use_excess_ice=".true.">lnd/clm2/paramdata/exice_init_0.125x0.125_c20220516.nc</stream_fldfilename_exice>
 <stream_meshfile_exice    use_excess_ice=".true.">lnd/clm2/paramdata/exice_init_0.125x0.125_ESMFmesh_cdf5_c20220802.nc</stream_meshfile_exice>
 <stream_mapalgo_exice     use_excess_ice=".true.">bilinear</stream_mapalgo_exice>

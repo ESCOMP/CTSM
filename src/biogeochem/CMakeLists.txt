@@ -7,6 +7,7 @@ list(APPEND clm_sources
   CNSpeciesMod.F90
   CNDVType.F90
   DustEmisBase.F90
+  DustEmisLeung2023.F90
   DustEmisZender2003.F90
   DustEmisFactory.F90
   CropReprPoolsMod.F90

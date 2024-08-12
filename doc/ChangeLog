@@ -1,12 +1,11 @@
 ===============================================================
-Tag name: ctsm5.2.0??
+Tag name: ctsm5.2.020
 Originator(s): HuiWangWanderInGitHub (Hui Wang,huiw16@uci.edu)
-Date: Thu 01 Aug 2024 05:09:46 PM MDT
+Date: Mon 12 Aug 2024 10:51:04 AM MDT
 One-line Summary: MEGAN updates (MEGAN-CLM6)
 
 Purpose and description of changes
 ----------------------------------
-
  We add new features to MEGANv2.1 for simulating isoprene emissions based on three recent studies conducted at the BAI lab in the University of California, Irvine. The first one is about the drought impact on isoprene (Wang et al., 2022). The second study investigates the effect of temperature history on the emission factors of boreal broadleaf deciduous shrubs (Wang et al., 2024a). The third study explores a different temperature response curve for C3 Arctic grass (Wang et al., 2024b, under press). These changes improved the model's representation of isoprene emissions during drought and in high-latitude ecosystems.
 
  This work relates to issue #1323 and is based on the old MEGANv2.1 framework, but incorporates new scientific insights.
@@ -32,14 +31,9 @@ Does this tag change answers significantly for any of the following physics conf
 
 Notes of particular relevance for users
 ---------------------------------------
-
 Changes to documentation:
  Hui Wang has offered to provide the modifications to the documentation that we need.
  The PR https://github.com/ESCOMP/CTSM/pull/2588 includes a list of references.
-
-Substantial timing or memory changes:
-[e.g., check PFS test in the test suite and look at timings, if you
-expect possible significant timing changes]
 
 
 Testing summary:
@@ -58,14 +52,241 @@ Answer changes
 Changes answers relative to baseline: Yes
 
   Summarize any changes to answers, i.e.,
-    - what code configurations: All that calculate BVOCs (so not FATES)
+    - what code configurations: All that calculate BVOCs
     - what platforms/compilers: All
     - nature of change: Larger than roundoff, only in BVOC output and specifically limited to MEG_ and _voc variables.
 
 Other details
 -------------
 Pull Requests that document the changes (include PR ids):
- https://github.com/ESCOMP/CTSM/pull/2588
+ https://github.com/ESCOMP/CTSM/pull/2588 New updates on MEGANv2.1
+
+===============================================================
+===============================================================
+Tag name: ctsm5.2.019
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Sun 11 Aug 2024 09:00:43 AM MDT
+One-line Summary: Add in an additional dust emission method Leung_2023, by default off
+
+Purpose and description of changes
+----------------------------------
+
+Author: Danny Leung
+This is a scheme that builds upon a switch of CESM2's default dust emission scheme (Zender et al., 2003) to
+@jfkok's more physical and less empirical one (Kok et al., 2014). This brings in additional modifications and add new aeolian
+physics to the Kok's scheme, most notably, by adding the roughness effect (or called drag partition effect) which discounts surface
+soil erosion by winds due to the presence of local-scale land-surface roughness elements (mostly plants and rocks). We use a hybrid
+approach to account for both roughness from rocks (with a 2-D time-invariant dataset provided by Prigent et al., 2005; 2012) and
+roughness from plants (time-varying, as a function of CLM's LAI). We further include the dust emission intermittency effects due to
+boundary-layer turbulence.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   #1604 -- A new physically based dust emission scheme with more aeolian physics (updated) 
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): New namelist items
+   dust_emis_method can now be set to Leung_2023
+
+    use_prigent_roughness ---------------- Logical to use the Prigent dataset (default on when Leung_2023 is used)
+    stream_fldfilename_prigentroughness -- Prigent streams dataset
+    stream_meshile_prigentroughness ------ Mesh file for the dataset
+
+    History field FV can now be output for any compset, but it's default off
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+    New Prigent streams dataset with aeolian roughness length
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  Some issues will be worked on later
+
+    #2568 -- Turn on Leung by default for clm6_0 physics
+
+    #2381 -- Allow Prigent streams to be off in Leung_2023 dust emissions for Paleo work
+             (Fixing this will allow a unit-test module to be removed)
+
+    #2680 -- prigentroughnessmapalgo is hardcoded to bilinear add it to the namelist so it can change (change name to snake-case)
+
+    #2681 -- Add global dust variables to the DustEmisBase class that apply to both Zender and Leung dust emission methods bfb enhancement next
+
+    #2682 -- Small function and saved constants for convective velocity code cleanup enhancement priority
+
+Changes to tests or testing:
+   New test mod that explicitly turns on Leung_2023 dust emissions: clm60cam7LndTuningModeLDust
+   Some of the tests with clm60cam7LndTuningMode were converted to this test mod
+   PF unit tester was added for Leung_2023
+   More work could be done in the unit-testers to exercise more of the code
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS (1002 are different)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no bit-for-bit (unless you turn the new dust scheme on)
+  Tests with BGC change answers because fieldlists are different (FV is no longer on history files by default)
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #1897 -- A new physically based dust emission scheme with more aeolian physics (updated) 
+
+===============================================================
+===============================================================
+Tag name: ctsm5.2.018
+Originator(s): mvdebolskiy
+Date: Fri 02 Aug 2024 09:26:33 AM MDT
+One-line Summary: Fix/excess ice cold start
+
+Purpose and description of changes
+----------------------------------
+
+Changed the way soil temperature is initialized when excess ice is on and the model starts from cold.
+
+Specific notes
+
+TemperatureType now has a private ReadNL subroutine that reads two new namelist options: excess_ice_coldstart_depth and excess_ice_coldstart_temp which control top depth (higher layers get default initial temperature) and soil temperature for soil layers ONLY in columns where excess ice is present. Other columns get their default soil temperature. 
+
+New namelist options belong to a new group "clm_temperature_inparm" with its own logic routine. This is done so in the future hardcoded cold start temperatures can be moved to the namelists. Two namelist tests have been added to check for invalid values logic as well as a test for use_excess_ice_streams logic. use_excess_ice_streams has no default value (due to options for restart) and default value set in the CLMBuildNamelist.pm.
+
+excessicestream_type has been taken out of waterstate_type and its routines are called directly in clm_inst%Init. Checks for UseExcessIceStreams() are still in place in WaterStateType.F90 for double-checking. clm_inst%Init now has a new local variable with excess ice concentration that are read from streams (or zeros if use_excess_ice is false). Arguments for temperature_type%Init and water_type%Init (and children types) have been changed to include this new variable. Fortran unit tests are also updated to account for these new arguments.
+
+
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #2384 -- Cold start temperature init when excess ice is on
+ Fixes #2373 -- SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_intel.clm-FatesColdHydro fails
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  Added: excess_ice_coldstart_temp and excess_ice_coldstart_depth
+
+Changes made to namelist defaults (e.g., changed parameter values):
+  Set new namelist items differently when excess ice is on or off
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  Note that the coldstart variables are always used even without excess ice or with an finidat file.
+  InitCold is always called so the variables are always set.
+
+Changes to tests or testing:
+   New tests for build-namelist unit tester
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS (998 are different from baseline)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  SMS_Lm12.f09_f09_mg17.I1850Clm60Sp.derecho_intel.clm-ExcessIceStartup_output_sp_exice
+     derecho ---- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: excess ice on, with coldstart or with finidat file interpolation
+    - what platforms/compilers: all
+    - nature of change: different at startup
+        Different for cold-start and can be different for a few points where the cold-start
+        values are still used on interpoaltion of an existing finidat file
+
+  Tests that compare different to baseline:
+  ERS_D.f10_f10_mg37.I1850Clm60Sp.izumi_nag.clm-ExcessIceStreams
+         failed baseline comparison (though answers for default physics configurations have not changed).
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  #2465 -- fix excess ice cold starts
 
 ===============================================================
 ===============================================================

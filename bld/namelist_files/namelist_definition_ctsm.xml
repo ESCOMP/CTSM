@@ -1695,6 +1695,25 @@ Mapping method from Nitrogen deposition input file to the model resolution
 </entry>
 
 <!-- ========================================================================================  -->
+<!-- Prigent roughness stream -->
+<!-- ========================================================================================  -->
+
+<entry id="use_prigent_roughness" type="logical" category="clm_physics"
+        group="prigentroughness" valid_values="" >
+If TRUE use the Prigent roughness dataset
+</entry>
+
+<entry id="stream_fldfilename_prigentroughness" type="char*256" category="datasets"
+       input_pathname="abs" group="prigentroughness" valid_values="" >
+Filename of input stream data for aeolian roughness length (from Prigent's roughness dataset)
+</entry>
+
+<entry id="stream_meshfile_prigentroughness" type="char*256" category="datasets"
+       input_pathname="abs" group="prigentroughness" valid_values="" >
+mesh filename of input stream data for aeolian roughness length (from Prigent's roughness dataset)
+</entry>
+
+<!-- ========================================================================================  -->
 <!-- Dust namelist and Zender soil erodibility stream                                          -->
 <!-- ========================================================================================  -->
 
@@ -1782,6 +1801,7 @@ should be set because it's vegetated, but the input soilm streams dataset shows 
 If true, will ignore the prescribed soilm data for that point and let the model run for that point without
 prescribed data.
 </entry>
+
 
 <!-- ========================================================================================  -->
 <!-- lai_streams streams Namelist (when phys = CLM4_5)                              -->
@@ -2945,6 +2965,18 @@ use case.)
         group="clm_inparm" valid_values="" >
 If TRUE turn on the excess ice physics, (Lee et al., 2014; Cai et al., 2020)
 </entry>
+
+<entry id="excess_ice_coldstart_temp" type="real" category="clm_physics"
+       group="clm_temperature_inparm" >
+Initial soil temperature to use for gridcells with excess ice present during a run starting with coldstart (deg C). Value only applys if use_excess_ice is true.
+</entry>
+
+<entry id="excess_ice_coldstart_depth" type="real" category="clm_physics"
+       group="clm_temperature_inparm" >
+Soil depth below which initial excess ice concentration will be applied during a run starting with coldstart (m). Value only applys if use_excess_ice is true. 
+If this is set below depth of the soil depth, only the last soil layer will get excess ice.
+</entry>
+
 
 <entry id="use_excess_ice_streams" type="logical" category="clm_physics"
         group="exice_streams" valid_values="" >
