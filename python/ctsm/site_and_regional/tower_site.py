@@ -381,6 +381,7 @@ class TowerSite:
                 case.set_value("RUN_REFDATE", "0018-01-01")
                 case.set_value("RUN_STARTDATE", "0018-01-01")
                 case.set_value("RESUBMIT", 1)
+                case.case_setup()
 
             else:
                 case.set_value("CLM_FORCE_COLDSTART", "off")
