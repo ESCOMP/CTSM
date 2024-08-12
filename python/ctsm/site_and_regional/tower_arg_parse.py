@@ -133,7 +133,7 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
                         [default: %(default)s]
                         """,
         choices=["ad", "postad", "transient"],  # , "sasu"],
-        default="transient",
+        # default ad for plumber, transient for neon
     )
 
     parser.add_argument(
@@ -204,6 +204,8 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
             for site in neon_sites:
                 if site not in valid_neon_sites:
                     raise ValueError("Invalid neon site name {}".format(site))
+        if args.run_type is None:
+            args.run_type = "transient"
     else:
         neon_sites = None
     if args.plumber_sites:
@@ -214,6 +216,11 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
             for site in plumber_sites:
                 if site not in valid_plumber_sites:
                     raise ValueError("Invalid plumber site name {}".format(site))
+        if (
+            not args.neon_sites
+        ):  # default to not changing neon behavior if both neon and plumber are present
+            if args.run_type is None:
+                args.run_type = "ad"
     else:
         plumber_sites = None
 

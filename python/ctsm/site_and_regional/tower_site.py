@@ -270,7 +270,8 @@ class TowerSite:
         base_case_root: str, opt
             file path of base case
         run_type: str, opt
-            transient, post_ad, or ad case, default transient
+            transient, post_ad, or ad case
+            default transient for neon cases and ad for plumber cases
         prism: bool, opt
             if True, use PRISM precipitation, default False
         user_version: str, opt

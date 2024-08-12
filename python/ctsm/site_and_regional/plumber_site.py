@@ -76,7 +76,7 @@ class Plumber2Site(TowerSite):
         base_case_root: str, opt
             file path of base case
         run_type: str, opt
-            transient, post_ad, or ad case, default transient
+            transient, post_ad, or ad case, default ad
         prism: bool, opt   # TODO: remove?
             if True, use PRISM precipitation, default False
         user_version: str, opt  # TODO: is there an equivalent for PLUMBER?
