@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.2.021   rgknox 08/13/2024 Adding on-the-fly parameter settings for prescribed N and P in FATES
        ctsm5.2.020   slevis 08/12/2024 MEGAN updates (MEGAN-CLM6)
        ctsm5.2.019     erik 08/11/2024 Add in an additional dust emission method Leung_2023, by default off
        ctsm5.2.018 mvdebols 08/02/2024 Fix/excess ice cold start

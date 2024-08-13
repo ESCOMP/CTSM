@@ -1,4 +1,72 @@
 ===============================================================
+Tag name: ctsm5.2.021
+Originator(s): rgknox (Ryan Knox,LAWRENCE BERKELEY NATIONAL LABORATORY,510-495-2153)
+Date: Tue 13 Aug 2024 03:22:34 PM MDT
+One-line Summary: Adding on-the-fly parameter settings for prescribed N and P in FATES
+
+Purpose and description of changes
+----------------------------------
+
+This set of changes makes it so that the FATES PRT2 test is forced to have prescribed N and P uptake in FATES.
+
+This allows the default to be coupled N and P, which is less confusing to new FATES-CNP users.
+
+The FATES tag is also updated to sci.1.77.2_api.36.0.0 which has a bug-fix for the output variable FATES_TRANSITION_MATRIX_LULU.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? NO
+
+Bugs fixed
+----------
+
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+CLM-FATES with N and cycling is not fully coupled yet. Therefor, these changes are only relevant to the testing infrastructure.
+Users are not encouraged to use fates_parteh_mode = 2
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:  Existing scripting that FATES has used in other tests to update parameters in certain tests, is now
+being called for FatesColdPRT2 tests. This forces parameters fates_cnp_prescribed_nuptake and fates_cnp_prescribed_puptake to be 1.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NONE, except:
+
+FATES_TRANSITION_MATRIX_LULU reflects a BASELINE DIFF from a bug fix in two FATES tests.
+
+All other tests are B4B.
+
+
+Other details
+-------------
+
+FATES submodule was updated, pointing to tag sci.1.77.2_api.36.0.0
+
+Pull Requests that document the changes (include PR ids): https://github.com/ESCOMP/CTSM/pull/2624
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.020
 Originator(s): HuiWangWanderInGitHub (Hui Wang,huiw16@uci.edu)
 Date: Mon 12 Aug 2024 10:51:04 AM MDT
