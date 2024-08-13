@@ -1,4 +1,249 @@
 ===============================================================
+Tag name: ctsm5.2.021
+Originator(s): rgknox (Ryan Knox,LAWRENCE BERKELEY NATIONAL LABORATORY,510-495-2153)
+Date: Tue 13 Aug 2024 03:22:34 PM MDT
+One-line Summary: Adding on-the-fly parameter settings for prescribed N and P in FATES
+
+Purpose and description of changes
+----------------------------------
+
+This set of changes makes it so that the FATES PRT2 test is forced to have prescribed N and P uptake in FATES.
+
+This allows the default to be coupled N and P, which is less confusing to new FATES-CNP users.
+
+The FATES tag is also updated to sci.1.77.2_api.36.0.0 which has a bug-fix for the output variable FATES_TRANSITION_MATRIX_LULU.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? NO
+
+Bugs fixed
+----------
+
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+CLM-FATES with N and cycling is not fully coupled yet. Therefor, these changes are only relevant to the testing infrastructure.
+Users are not encouraged to use fates_parteh_mode = 2
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:  Existing scripting that FATES has used in other tests to update parameters in certain tests, is now
+being called for FatesColdPRT2 tests. This forces parameters fates_cnp_prescribed_nuptake and fates_cnp_prescribed_puptake to be 1.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NONE, except:
+
+FATES_TRANSITION_MATRIX_LULU reflects a BASELINE DIFF from a bug fix in two FATES tests.
+
+All other tests are B4B.
+
+
+Other details
+-------------
+
+FATES submodule was updated, pointing to tag sci.1.77.2_api.36.0.0
+
+Pull Requests that document the changes (include PR ids): https://github.com/ESCOMP/CTSM/pull/2624
+
+
+===============================================================
+===============================================================
+Tag name: ctsm5.2.020
+Originator(s): HuiWangWanderInGitHub (Hui Wang,huiw16@uci.edu)
+Date: Mon 12 Aug 2024 10:51:04 AM MDT
+One-line Summary: MEGAN updates (MEGAN-CLM6)
+
+Purpose and description of changes
+----------------------------------
+ We add new features to MEGANv2.1 for simulating isoprene emissions based on three recent studies conducted at the BAI lab in the University of California, Irvine. The first one is about the drought impact on isoprene (Wang et al., 2022). The second study investigates the effect of temperature history on the emission factors of boreal broadleaf deciduous shrubs (Wang et al., 2024a). The third study explores a different temperature response curve for C3 Arctic grass (Wang et al., 2024b, under press). These changes improved the model's representation of isoprene emissions during drought and in high-latitude ecosystems.
+
+ This work relates to issue #1323 and is based on the old MEGANv2.1 framework, but incorporates new scientific insights.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation:
+ Hui Wang has offered to provide the modifications to the documentation that we need.
+ The PR https://github.com/ESCOMP/CTSM/pull/2588 includes a list of references.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All that calculate BVOCs
+    - what platforms/compilers: All
+    - nature of change: Larger than roundoff, only in BVOC output and specifically limited to MEG_ and _voc variables.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/2588 New updates on MEGANv2.1
+
+===============================================================
+===============================================================
+Tag name: ctsm5.2.019
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Sun 11 Aug 2024 09:00:43 AM MDT
+One-line Summary: Add in an additional dust emission method Leung_2023, by default off
+
+Purpose and description of changes
+----------------------------------
+
+Author: Danny Leung
+This is a scheme that builds upon a switch of CESM2's default dust emission scheme (Zender et al., 2003) to
+@jfkok's more physical and less empirical one (Kok et al., 2014). This brings in additional modifications and add new aeolian
+physics to the Kok's scheme, most notably, by adding the roughness effect (or called drag partition effect) which discounts surface
+soil erosion by winds due to the presence of local-scale land-surface roughness elements (mostly plants and rocks). We use a hybrid
+approach to account for both roughness from rocks (with a 2-D time-invariant dataset provided by Prigent et al., 2005; 2012) and
+roughness from plants (time-varying, as a function of CLM's LAI). We further include the dust emission intermittency effects due to
+boundary-layer turbulence.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   #1604 -- A new physically based dust emission scheme with more aeolian physics (updated) 
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): New namelist items
+   dust_emis_method can now be set to Leung_2023
+
+    use_prigent_roughness ---------------- Logical to use the Prigent dataset (default on when Leung_2023 is used)
+    stream_fldfilename_prigentroughness -- Prigent streams dataset
+    stream_meshile_prigentroughness ------ Mesh file for the dataset
+
+    History field FV can now be output for any compset, but it's default off
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+    New Prigent streams dataset with aeolian roughness length
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  Some issues will be worked on later
+
+    #2568 -- Turn on Leung by default for clm6_0 physics
+
+    #2381 -- Allow Prigent streams to be off in Leung_2023 dust emissions for Paleo work
+             (Fixing this will allow a unit-test module to be removed)
+
+    #2680 -- prigentroughnessmapalgo is hardcoded to bilinear add it to the namelist so it can change (change name to snake-case)
+
+    #2681 -- Add global dust variables to the DustEmisBase class that apply to both Zender and Leung dust emission methods bfb enhancement next
+
+    #2682 -- Small function and saved constants for convective velocity code cleanup enhancement priority
+
+Changes to tests or testing:
+   New test mod that explicitly turns on Leung_2023 dust emissions: clm60cam7LndTuningModeLDust
+   Some of the tests with clm60cam7LndTuningMode were converted to this test mod
+   PF unit tester was added for Leung_2023
+   More work could be done in the unit-testers to exercise more of the code
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS (1002 are different)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no bit-for-bit (unless you turn the new dust scheme on)
+  Tests with BGC change answers because fieldlists are different (FV is no longer on history files by default)
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #1897 -- A new physically based dust emission scheme with more aeolian physics (updated) 
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.018
 Originator(s): mvdebolskiy
 Date: Fri 02 Aug 2024 09:26:33 AM MDT
