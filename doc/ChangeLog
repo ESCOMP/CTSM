@@ -1,4 +1,75 @@
 ===============================================================
+Tag name: ctsm5.2.022
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Wed Aug 14 12:24:27 MDT 2024
+One-line Summary: Rework crop_calendars suite and cropMonthOutput
+
+Purpose and description of changes
+----------------------------------
+
+- Changes cropMonthOutput testmod so that h2 files are actually monthly instead of daily
+- Changes a nag test to use debug mode (fixing a build error) and run for shorter (fixing cputime exceedance)
+- Reworks RxCropCals* testmods to not include crop testmod
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- Fixes ESCOMP/CTSM#2659: Test build failure: SMS_P128x1_Lm25.f10_f10_mg37.IHistClm60BgcCrop.izumi_nag.clm-RxCropCalsAdaptGGCMI (https://github.com/ESCOMP/CTSM/issues/2659)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+- Changes answers to all cropMonthOutput tests due to changed h2 file frequency. Also affects frequency of one other test.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+  - Only in testmods, not production runs
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2676: Rework crop_calendars suite and cropMonthOutput (https://github.com/ESCOMP/CTSM/pull/2676)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.021
 Originator(s): rgknox (Ryan Knox,LAWRENCE BERKELEY NATIONAL LABORATORY,510-495-2153)
 Date: Tue 13 Aug 2024 03:22:34 PM MDT
