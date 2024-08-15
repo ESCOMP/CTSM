@@ -1,0 +1,13 @@
+&drydep_inparm
+  dep_data_file = '/glade/campaign/cesm/cesmdata/inputdata/atm/cam/chem/trop_mozart/dvel/dep_data_c20221208.nc'
+/
+&dust_emis_inparm
+  dust_emis_method = 'Zender_2003'
+  zender_soil_erod_source = 'atm'
+/
+&lightning_coupling_nl
+  atm_provides_lightning = .true.
+/
+&ozone_coupling_nl
+  atm_ozone_frequency = 'multiday_average'
+/
