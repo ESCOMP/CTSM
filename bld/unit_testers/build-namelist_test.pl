@@ -454,8 +454,8 @@ foreach my $phys ( "clm5_0", "clm6_0" ) {
    $mode = "-phys $phys CAM_SETS_DRV_FLDS";
    &make_config_cache($phys);
    foreach my $options (
-                      "--res 1.9x2.5 --mask gx1v7 --bgc sp --no-megan --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam6.0",
-                      "--res 1.9x2.5 --mask gx1v7 --bgc sp --no-megan --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0",
+                      "--res 1.9x2.5 --mask gx1v7 --bgc sp --no-megan --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam6.0 --infile empty_user_nl_clm",
+                      "--res 1.9x2.5 --mask gx1v7 --bgc sp --no-megan --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
                      ) {
       &make_env_run( 'LND_SETS_DUST_EMIS_DRV_FLDS'=>"FALSE" );
       eval{ system( "$bldnml --envxml_dir . $options > $tempfile 2>&1 " ); };
