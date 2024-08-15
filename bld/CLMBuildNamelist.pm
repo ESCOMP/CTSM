@@ -2725,6 +2725,13 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
         $log->fatal_error("$useinitvar is being set for you but a $var was not found, so $useinitvar, init_interp_attributes, and finidat must not be set correctly for this configuration in the namelist_default file" );
      }
   }
+
+  # this check has to be here and not earlier since use_init_interp is set here and hillslope is already set above in setup_logic_hillslope
+  if ( &value_is_true($nl->get_value($useinitvar)) && value_is_true($nl->get_value("use_hillslope")) ) {
+     $log->warning("WARNING: You have set use_hillslope while $useinitvar is TRUE.\n This means all hillslope columns in a gridcell will read identical values" .
+                   " from initial conditions. If you are sure you want this behaviour:")
+  }
+
 } # end initial conditions
 
 #-------------------------------------------------------------------------------
