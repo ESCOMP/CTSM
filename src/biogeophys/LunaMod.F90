@@ -332,8 +332,8 @@ module LunaMod
     nrad          => surfalb_inst%nrad_patch                          , & ! Input:  [integer  (:)   ] pft number of canopy layers, above snow for radiative transfer
     lnc           => photosyns_inst%lnca_patch                        , & ! Input:  [real(r8) (:)   ] top leaf layer leaf N concentration (gN leaf/m^2)
     t10           => temperature_inst%t_a10_patch                     , & ! Input:  [real(r8) (:)   ] 10-day running mean of the 2 m temperature (K)  
-    t_veg_day     => temperature_inst%t_veg_day_patch                 , & ! Input:  [real(r8) (:)   ] daytime mean vegetation temperature (Kelvin)  
-    t_veg_night   => temperature_inst%t_veg_night_patch               , & ! Input:  [real(r8) (:)   ] nighttime mean vegetation temperature (Kelvin)
+    t_veg_day_acc     => temperature_inst%t_veg_day_acc_patch             , & ! Input:  [real(r8) (:)   ] daytime mean vegetation temperature (Kelvin)  
+    t_veg_night_acc   => temperature_inst%t_veg_night_acc_patch           , & ! Input:  [real(r8) (:)   ] nighttime mean vegetation temperature (Kelvin)
     t_veg10_day   => temperature_inst%t_veg10_day_patch               , & ! Input:  [real(r8) (:)   ] 10-day mean daytime vegetation temperature (Kelvin)  
     t_veg10_night => temperature_inst%t_veg10_night_patch             , & ! Input:  [real(r8) (:)   ] 10-day mean nighttime vegetation temperature (Kelvin)
     rh10_p	  => waterdiagnosticbulk_inst%rh10_af_patch               , & ! Input:  [real(r8) (:)   ] 10-day mean canopy air relative humidity at the pacth (unitless)
@@ -361,7 +361,7 @@ module LunaMod
      c  =  patch%column(p)
      !----------------------------------------------------
      !store the daily mean climate conditions
-     if(t_veg_day(p).ne.spval) then    !check whether it is the first day 
+     if(t_veg_day_acc(p).ne.spval) then    !check whether it is the first day 
          !------------------------------------------
          !get the climate driver    
          CO2a10 = CO2_p240(p)   
@@ -568,21 +568,21 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
     real (r8) :: dtime                                                    ! stepsize in seconds
     real (r8) :: TRad                                                     ! total short-wave radiation on the top of canopy (w/m2)
     real (r8) :: tlaii                                                    ! total leaf area index for a certain canopy layer     
-    real (r8) :: t_veg_dayi                                               ! daytime mean vegetation temperature (Kelvin)
-    real (r8) :: t_veg_nighti                                             ! nighttime mean vegetation temperature (Kelvin)
     real (r8) :: par24d_z_i(1:nlevcan)                                    ! daytime mean radiation (w/m**2)             
     !-------------------------------------------------------------------------------------------------------------------------------------------------       
     associate(                                                          &
     par24d_z      => solarabs_inst%par24d_z_patch                     , & ! Input:  [real(r8) (:,:) ] daily accumulated absorbed PAR for leaves in canopy layer (W/m**2) 
     par24x_z      => solarabs_inst%par24x_z_patch                     , & ! Input:  [real(r8) (:,:) ] daily maximum of patch absorbed PAR for leaves in canopy layer (W/m**2) 
     nrad          => surfalb_inst%nrad_patch                          , & ! Input:  [integer  (:)   ] pft number of canopy layers, above snow for radiative transfer
-    t_veg_day     => temperature_inst%t_veg_day_patch                 , & ! Input:  [real(r8) (:)   ] daytime accumulative vegetation temperature (Kelvin*nsteps)  
-    t_veg_night   => temperature_inst%t_veg_night_patch               , & ! Input:  [real(r8) (:)   ] nighttime accumulative vegetation temperature (Kelvin*nsteps)
+    t_veg_day_acc     => temperature_inst%t_veg_day_acc_patch         , & ! Input:  [real(r8) (:)   ] daytime accumulative vegetation temperature (Kelvin*nsteps)  
+    t_veg_night_acc   => temperature_inst%t_veg_night_acc_patch       , & ! Input:  [real(r8) (:)   ] nighttime accumulative vegetation temperature (Kelvin*nsteps)
+    t_veg_dayi     => temperature_inst%t_veg_day_patch                , & ! Input:  [real(r8) (:)   ] daytime mean vegetation temperature (Kelvin)  
+    t_veg_nighti   => temperature_inst%t_veg_night_patch              , & ! Input:  [real(r8) (:)   ] nighttime mean vegetation temperature (Kelvin)
     nnightsteps   => temperature_inst%nnightsteps_patch               , & ! Input:  [integer  (:)   ] number of nighttime steps in 24 hours from mid-night, LUNA specific
     ndaysteps     => temperature_inst%ndaysteps_patch                 , & ! Input:  [integer  (:)   ] number of daytime steps in 24 hours from mid-night, LUNA specific
     t_veg10_day   => temperature_inst%t_veg10_day_patch               , & ! Output: [real(r8) (:)   ] 10-day mean vegetation temperature (Kelvin)  
     t_veg10_night => temperature_inst%t_veg10_night_patch             , & ! Output: [real(r8) (:)   ] 10-day mean vegetation temperature (Kelvin)
-    rh10_p	  => waterdiagnosticbulk_inst%rh10_af_patch                    , & ! Output: [real(r8) (:)   ] 10-day mean canopy air relative humidity at the pacth (s/m)
+    rh10_p	      => waterdiagnosticbulk_inst%rh10_af_patch           , & ! Output: [real(r8) (:)   ] 10-day mean canopy air relative humidity at the pacth (s/m)
     rb10_p        => frictionvel_inst%rb10_patch                      , & ! Output: [real(r8) (:)   ] 10-day mean boundary layer resistance at the pacth (s/m)
     par240d_z     => solarabs_inst%par240d_z_patch                    , & ! Output:  [real(r8) (:,:) ] 10-day running mean of daytime patch absorbed PAR for leaves in canopy layer (W/m**2) 
     par240x_z     => solarabs_inst%par240x_z_patch                      & ! Output:  [real(r8) (:,:) ] 10-day running mean of maximum patch absorbed PAR for leaves in canopy layer (W/m**2)
@@ -598,7 +598,7 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
       ft =  patch%itype(p)
       g  =  patch%gridcell(p)
       c  =  patch%column(p)
-      if(t_veg_day(p).ne.spval) then    !check whether it is the first day            
+      if(t_veg_day_acc(p).ne.spval) then    !check whether it is the first day            
              !---------------------------------------------------------
              !calculate the 10 day running mean radiations
              if(ndaysteps(p)>0.0_r8) then
@@ -616,25 +616,25 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
              !-------------------------------------------------------
              !calculate the 10 day running mean daytime temperature
              if(ndaysteps(p)>0.0_r8)then
-                t_veg_dayi    =  t_veg_day(p)   / ndaysteps(p)
+                t_veg_dayi(p)    =  t_veg_day_acc(p)   / ndaysteps(p)
              else
-                t_veg_dayi    =  t_veg_night(p) / nnightsteps(p)
+                t_veg_dayi(p)    =  t_veg_night_acc(p) / nnightsteps(p)
              endif
              if(t_veg10_day(p).eq. spval)then
-                  t_veg10_day(p)  =  t_veg_dayi
+                  t_veg10_day(p)  =  t_veg_dayi(p)
              endif
-             t_veg10_day(p)  =  0.9_r8 * t_veg10_day(p)+ 0.1_r8 * t_veg_dayi
+             t_veg10_day(p)  =  0.9_r8 * t_veg10_day(p)+ 0.1_r8 * t_veg_dayi(p)
              !-------------------------------------------------------
              !calculate the 10 day running mean nighttime temperature
              if(nnightsteps(p)>0)then
-               t_veg_nighti  =  t_veg_night(p) / nnightsteps(p)
+               t_veg_nighti(p)  =  t_veg_night_acc(p) / nnightsteps(p)
              else
-               t_veg_nighti  =  t_veg_day(p)   / ndaysteps(p)
+               t_veg_nighti(p)  =  t_veg_day_acc(p)   / ndaysteps(p)
              endif
              if(t_veg10_night(p).eq. spval)then
-                  t_veg10_night(p)  =  t_veg_nighti
+                  t_veg10_night(p)  =  t_veg_nighti(p)
              endif
-             t_veg10_night(p)  =  0.9_r8 * t_veg10_night(p) + 0.1_r8 * t_veg_nighti
+             t_veg10_night(p)  =  0.9_r8 * t_veg10_night(p) + 0.1_r8 * t_veg_nighti(p)
              !--------------------------------------------------------------------
              if(rh10_p(p).eq. spval)then
                 rh10_p(p)  =  rh(p)
@@ -704,8 +704,8 @@ subroutine Acc24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns_i
     nrad          => surfalb_inst%nrad_patch                          , & ! Input:  [integer  (:)   ] pft number of canopy layers, above snow for radiative transfer
     gpp           => photosyns_inst%fpsn_patch                        , & ! Input:  [real(r8) (:)   ] patch instaneous gpp (umol CO2/m**2 ground/s) for canopy layer
     gpp_day       => photosyns_inst%fpsn24_patch                      , & ! Output: [real(r8) (:)   ] patch 24 hours acculative gpp(umol CO2/m**2 ground/day) from mid-night
-    t_veg_day     => temperature_inst%t_veg_day_patch                 , & ! Output: [real(r8) (:)   ] daytime mean vegetation temperature (Kelvin)  
-    t_veg_night   => temperature_inst%t_veg_night_patch               , & ! Output: [real(r8) (:)   ] nighttime mean vegetation temperature (Kelvin)
+    t_veg_day_acc     => temperature_inst%t_veg_day_acc_patch                 , & ! Output: [real(r8) (:)   ] daytime mean vegetation temperature (Kelvin)  
+    t_veg_night_acc   => temperature_inst%t_veg_night_acc_patch               , & ! Output: [real(r8) (:)   ] nighttime mean vegetation temperature (Kelvin)
     nnightsteps   => temperature_inst%nnightsteps_patch               , & ! Output: [integer  (:)   ] number of nighttime steps in 24 hours from mid-night, LUNA specific
     ndaysteps     => temperature_inst%ndaysteps_patch                   & ! Output: [integer  (:)   ] number of daytime steps in 24 hours from mid-night, LUNA specific
     )  
@@ -721,12 +721,12 @@ subroutine Acc24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns_i
       c  =  patch%column(p)
       !----------------------------------------------------
       !store the daily mean climate conditions
-      if(t_veg_day(p).ne.spval) then    !check whether it is the first day 
+      if(t_veg_day_acc(p).ne.spval) then    !check whether it is the first day 
          if(sabv(p)>0)then
-             t_veg_day(p)   = t_veg_day(p)   + t_veg(p)    
+             t_veg_day_acc(p)   = t_veg_day_acc(p)   + t_veg(p)    
              ndaysteps(p)   = ndaysteps(p)   + 1          
          else
-             t_veg_night(p) = t_veg_night(p) + t_veg(p) 
+             t_veg_night_acc(p) = t_veg_night_acc(p) + t_veg(p) 
              nnightsteps(p) = nnightsteps(p) + 1 
          endif
          do z = 1, nrad(p)
@@ -792,8 +792,8 @@ subroutine Clear24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns
     par24d_z      => solarabs_inst%par24d_z_patch                     , & ! Output:  [real(r8) (:,:) ] daily accumulated absorbed PAR for leaves in canopy layer (W/m**2) 
     par24x_z      => solarabs_inst%par24x_z_patch                     , & ! Output:  [real(r8) (:,:) ] daily maximum of patch absorbed PAR for leaves in canopy layer (W/m**2) 
     gpp_day       => photosyns_inst%fpsn24_patch                      , & ! Output: [real(r8) (:)   ] patch 24 hours acculative gpp(umol CO2/m**2 ground/day) from mid-night
-    t_veg_day     => temperature_inst%t_veg_day_patch                 , & ! Output: [real(r8) (:)   ] daytime mean vegetation temperature (Kelvin)  
-    t_veg_night   => temperature_inst%t_veg_night_patch               , & ! Output: [real(r8) (:)   ] nighttime mean vegetation temperature (Kelvin)
+    t_veg_day_acc     => temperature_inst%t_veg_day_acc_patch                 , & ! Output: [real(r8) (:)   ] daytime mean vegetation temperature (Kelvin)  
+    t_veg_night_acc   => temperature_inst%t_veg_night_acc_patch               , & ! Output: [real(r8) (:)   ] nighttime mean vegetation temperature (Kelvin)
     nnightsteps   => temperature_inst%nnightsteps_patch               , & ! Output: [integer  (:)   ] number of nighttime steps in 24 hours from mid-night, LUNA specific
     ndaysteps     => temperature_inst%ndaysteps_patch                   & ! Output: [integer  (:)   ] number of daytime steps in 24 hours from mid-night, LUNA specific
     )  
@@ -809,8 +809,8 @@ subroutine Clear24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns
       c  =  patch%column(p)
       !------------------------------------------------------------------------------
       !clear out the daily state variables at the begining of simulations 
-      t_veg_day(p)                      =  0.0_r8
-      t_veg_night(p)                    =  0.0_r8
+      t_veg_day_acc(p)                  =  0.0_r8
+      t_veg_night_acc(p)                =  0.0_r8
       par24d_z(p,:)                     =  0.0_r8
       par24x_z(p,:)                     =  0.0_r8
       gpp_day(p)                        =  0.0_r8 
