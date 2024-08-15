@@ -41,6 +41,28 @@ def compute_derived_vars(ds_in, var):
     return ds_in
 
 
+def manual_mfdataset(filelist, my_vars, my_vegtypes, time_slice):
+    """
+    Opening a list of files with Xarray's open_mfdataset requires dask. This function is a
+    workaround for Python environments that don't have dask.
+    """
+    ds_out = None
+    for filename in filelist:
+        ds_in = xr.open_dataset(filename)
+        ds_in = mfdataset_preproc(ds_in, my_vars, my_vegtypes, time_slice)
+        if ds_out is None:
+            ds_out = ds_in
+        else:
+            ds_out = xr.concat(
+                [ds_out, ds_in],
+                data_vars="minimal",
+                compat="override",
+                coords="all",
+                dim="time",
+            )
+    return ds_out
+
+
 def mfdataset_preproc(ds_in, vars_to_import, vegtypes_to_import, time_slice):
     """
     Function to drop unwanted variables in preprocessing of open_mfdataset().
@@ -221,22 +243,20 @@ def import_ds(
     if isinstance(filelist, list):
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore", category=DeprecationWarning)
-            if find_spec("dask") is None:
-                raise ModuleNotFoundError(
-                    "You have asked xarray to import a list of files as a single Dataset using"
-                    " open_mfdataset(), but this requires dask, which is not available.\nFile"
-                    f" list: {filelist}"
-                )
-        this_ds = xr.open_mfdataset(
-            sorted(filelist),
-            data_vars="minimal",
-            preprocess=mfdataset_preproc_closure,
-            compat="override",
-            coords="all",
-            concat_dim="time",
-            combine="nested",
-            chunks=chunks,
-        )
+            dask_unavailable = find_spec("dask") is None
+        if dask_unavailable:
+            this_ds = manual_mfdataset(filelist, my_vars, my_vegtypes, time_slice)
+        else:
+            this_ds = xr.open_mfdataset(
+                sorted(filelist),
+                data_vars="minimal",
+                preprocess=mfdataset_preproc_closure,
+                compat="override",
+                coords="all",
+                concat_dim="time",
+                combine="nested",
+                chunks=chunks,
+            )
     elif isinstance(filelist, str):
         this_ds = xr.open_dataset(filelist, chunks=chunks)
         this_ds = mfdataset_preproc(this_ds, my_vars, my_vegtypes, time_slice)

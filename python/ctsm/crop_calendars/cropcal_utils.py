@@ -207,11 +207,46 @@ def is_each_vegtype(this_vegtypelist, this_filter, this_method):
     return [is_this_vegtype(x, this_filter, this_method) for x in this_vegtypelist]
 
 
-def define_mgdcrop_list():
+def define_crop_list():
+    """
+    List (strings) of managed crops in CLM.
+    """
+    notcrop_list = [
+        "tree",
+        "c3_arctic_grass",
+        "c3_non-arctic_grass",
+        "c4_grass",
+        "shrub",
+        "not_vegetated",
+    ]
+    defined_pftlist = define_pftlist()
+    is_crop = is_each_vegtype(defined_pftlist, notcrop_list, "notok_contains")
+    return [defined_pftlist[i] for i, x in enumerate(is_crop) if x]
+
+
+def define_mgdcrop_list_nograsses():
     """
     List (strings) of managed crops in CLM.
     """
     notcrop_list = ["tree", "grass", "shrub", "unmanaged", "not_vegetated"]
+    defined_pftlist = define_pftlist()
+    is_crop = is_each_vegtype(defined_pftlist, notcrop_list, "notok_contains")
+    return [defined_pftlist[i] for i, x in enumerate(is_crop) if x]
+
+
+def define_mgdcrop_list_withgrasses():
+    """
+    List (strings) of managed crops in CLM.
+    """
+    notcrop_list = [
+        "tree",
+        "c3_arctic_grass",
+        "c3_non-arctic_grass",
+        "c4_grass",
+        "shrub",
+        "unmanaged",
+        "not_vegetated",
+    ]
     defined_pftlist = define_pftlist()
     is_crop = is_each_vegtype(defined_pftlist, notcrop_list, "notok_contains")
     return [defined_pftlist[i] for i, x in enumerate(is_crop) if x]
