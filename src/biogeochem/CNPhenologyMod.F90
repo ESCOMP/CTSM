@@ -274,7 +274,6 @@ contains
     params_inst%crit_dayl             = 39200._r8     ! Seconds
     params_inst%crit_dayl_at_high_lat = 54000._r8     ! Seconds
     params_inst%crit_dayl_lat_slope   = 720._r8       ! Seconds / degree
-    params_inst%ndays_on              = 15._r8        ! Days
     params_inst%ndays_off             = 30._r8        ! Days
     params_inst%fstor2tran            = 0.5           ! Fraction
     params_inst%crit_onset_fdd        = 15._r8        ! Days
