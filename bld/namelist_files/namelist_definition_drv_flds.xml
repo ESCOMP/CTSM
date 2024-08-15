@@ -123,6 +123,10 @@
     List of fluxes needed by the CARMA model, from CLM to CAM.
   </entry>
 
+  <!-- ========================================================================================  -->
+  <!-- DUST Emission fields                                                                      -->
+  <!-- ========================================================================================  -->
+
   <entry id="dust_emis_method" type="char*80" category="dust_emissions"
     group="dust_emis_inparm" valid_values="Zender_2003,Leung_2023" >
      Which dust emission method is going to be used. Either the Zender 2003 scheme or the Leung 2023 scheme.
@@ -134,6 +138,29 @@
      Option only applying for the Zender_2003 method for whether the soil erodibility file is handled
      in the active LAND model or in the ATM model.
      (only used when dust_emis_method is Zender_2003)
+  </entry>
+
+  <!-- ========================================================================================  -->
+  <!-- Ozone to surface                                                                          -->
+  <!-- ========================================================================================  -->
+
+  <entry id="atm_ozone_frequency" type="char*64" category="ozone_coupling"
+         group="ozone_coupling_nl" valid_values="subdaily,multiday_average">
+         Frequency of surface ozone field passed from CAM to surface components.
+         Surface ozone is passed every coupling interval, but this namelist flag
+         indicates whether the timestep-level values are interpolated from a
+         coarser temporal resolution.
+         Default: set by CAM
+  </entry>
+
+  <!-- ========================================================================================  -->
+  <!-- Lightning                                                                                 -->
+  <!-- ========================================================================================  -->
+
+  <entry id="atm_provides_lightning" type="logical" category="lightning_coupling"
+         group="lightning_coupling_nl" valid_values="">
+         If TRUE atmosphere model will provide prognosed lightning flash frequency.
+         (NOTE: NOT CONNECTED INTO CTSM YET)
   </entry>
 
 </namelist_definition>
