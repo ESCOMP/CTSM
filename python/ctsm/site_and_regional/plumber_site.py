@@ -77,7 +77,7 @@ class Plumber2Site(TowerSite):
             file path of base case
         run_type: str, opt
             transient, post_ad, or ad case, default ad
-        prism: bool, opt   # TODO: remove?
+        prism: bool, opt (ad case is default because PLUMBER requires spinup)
             if True, use PRISM precipitation, default False
         user_version: str, opt  # TODO: is there an equivalent for PLUMBER?
             default 'latest'
@@ -115,7 +115,10 @@ class Plumber2Site(TowerSite):
         return True  ### Check if super returns false, if this will still return True?
 
     def modify_user_nl(self, case_root, run_type, rundir, site_lines=None):
-        # TODO: include any plumber-specific user namelist lines, using this as just an example currently
+        """
+        This function can be used to include any plumber-specific user namelist lines
+        """
+        # This is just an example currently. TODO: remove?
         if site_lines is None:
             site_lines = [
                 """hist_fincl1 = 'TOTECOSYSC', 'TOTECOSYSN', 'TOTSOMC', 'TOTSOMN', 'TOTVEGC',
