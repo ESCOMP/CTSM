@@ -297,9 +297,9 @@ contains
         if( patch%itype(p) > nc4_grass )then
            cropf_col(c) = cropf_col(c) + patch%wtcol(p)
         end if
-        ! For natural vegetation (non-crop and non-bare-soil)
-        if( patch%itype(p) >= ndllf_evr_tmp_tree .and. patch%itype(p) <= nc4_grass )then
-           lfwt(c) = lfwt(c) + patch%wtcol(p)
+        ! For natural vegetation
+        if(patch%itype(p) <= nc4_grass )then
+           lfwt(c) = lfwt(c) + patch%wtgcell(p)
         end if
      end do
      !
@@ -589,7 +589,6 @@ contains
            end if
            fuelc(c) = fuelc(c)/(1._r8-cropf_col(c))
            fb       = max(0.0_r8,min(1.0_r8,(fuelc(c)-lfuel)/(ufuel-lfuel)))
-           if (trotr1_col(c)+trotr2_col(c)<=0.6_r8) then
               afuel  =min(1._r8,max(0._r8,(fuelc(c)-2500._r8)/(5000._r8-2500._r8)))
               arh=1._r8-max(0._r8, min(1._r8,(forc_rh(g)-rh_low)/(rh_hgh-rh_low)))
               arh30=1._r8-max(cnfire_params%prh30, min(1._r8,rh30_col(c)/90._r8))
@@ -601,19 +600,24 @@ contains
               end if
               lh       = pot_hmn_ign_counts_alpha*6.8_r8*hdmlf**(0.43_r8)/30._r8/24._r8
               fs       = 1._r8-(0.01_r8+0.98_r8*exp(-0.025_r8*hdmlf))
+              if (trotr1_col(c)+trotr2_col(c)<=0.6_r8) then
               ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
                      cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
-                         cnfire_params%ignition_efficiency)*(1._r8-fs)*(1._r8-cropf_col(c))
+                         cnfire_params%ignition_efficiency)*(1._r8-fs)* &
+                         (lfwt(c)**0.5)
+              else
+              ig       = this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
+                     cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
+                         cnfire_params%ignition_efficiency*(1._r8-fs)*  &
+                         (lfwt(c)**0.5)
+              end if
               nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) !fire counts/km2/sec
               Lb_lf    = 1._r8+10._r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
               spread_m = fire_m**0.5_r8
+              fd_col(c)=(lfwt(c)*lgdp1_col(c)*lpop_col(c))**0.5_r8 * fd_col(c)
               farea_burned(c) = min(1._r8,(cnfire_const%g0*spread_m*fsr_col(c)* &
-                   fd_col(c)/1000._r8)**2*lgdp1_col(c)* &
-                   lpop_col(c)*nfire(c)*SHR_CONST_PI*Lb_lf+ &
+                   fd_col(c)/1000._r8)**2*nfire(c)*SHR_CONST_PI*Lb_lf+ &
                    baf_crop(c)+baf_peatf(c))  ! fraction (0-1) per sec
-           else
-             farea_burned(c)=min(1._r8,baf_crop(c)+baf_peatf(c))
-           end if
            !
            ! if landuse change data is used, calculate deforestation fires and
            ! add it in the total of burned area fraction
