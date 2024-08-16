@@ -277,11 +277,6 @@ module clm_varctl
   logical, public :: do_sno_oc = .false.  ! control to include organic carbon (OC) in snow
 
   !----------------------------------------------------------
-  ! DUST emission method
-  !----------------------------------------------------------
-  character(len=25), public :: dust_emis_method = 'Zender_2003'  ! Dust emisison method to use: Zender_2003 or Leung_2023
-
-  !----------------------------------------------------------
   ! C isotopes
   !----------------------------------------------------------
 
@@ -407,6 +402,8 @@ module clm_varctl
   logical, public :: use_cropcal_streams = .false.
   logical, public :: use_cropcal_rx_swindows = .false.
   logical, public :: use_cropcal_rx_cultivar_gdds = .false.
+  logical, public :: adapt_cropcal_rx_cultivar_gdds = .false.
+  logical, public :: flush_gdd20 = .false.
 
   !----------------------------------------------------------
   ! biomass heat storage switch
@@ -434,7 +431,7 @@ module clm_varctl
 
 
   !----------------------------------------------------------
-  ! excess ice physics switch
+  ! excess ice physics switch and params
   !----------------------------------------------------------
   logical, public :: use_excess_ice = .false. ! true. => use excess ice physics
 

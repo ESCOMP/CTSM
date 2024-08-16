@@ -9,6 +9,7 @@ module test_DustEmisZender2003
   use DustEmisZender2003
   use shr_kind_mod , only : r8 => shr_kind_r8
   use DustEmisFactory, only : create_dust_emissions
+  use shr_dust_emis_mod, only : dust_emis_set_options
 
   implicit none
 
@@ -34,6 +35,7 @@ contains
     ! Allocate and initialize the test object for input objects dust-emission needs
     character(len=5) :: NLFilename = 'none'
 
+    call dust_emis_set_options( 'Zender_2003', 'atm')
     call this%input%setUp()
  
     ! Create the dust emission object last
