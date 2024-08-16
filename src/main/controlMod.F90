@@ -59,6 +59,7 @@ module controlMod
   public :: control_setNL ! Set namelist filename
   public :: control_init  ! initial run control information
   public :: control_print ! print run control information
+  public :: check_missing_initdata_status  ! check for missing finidat_interp_dest .status file
   !
   !
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -1219,6 +1220,38 @@ contains
 
 
   !-----------------------------------------------------------------------
+  subroutine check_missing_initdata_status(finidat_interp_dest)
+   !
+   ! !DESCRIPTION:
+   ! Checks that the finidat_interp_dest .status file was written (i.e., that write of
+   ! finidat_interp_dest succeeded)
+   !
+   ! !ARGUMENTS:
+   character(len=*), intent(in)    :: finidat_interp_dest
+   !
+   ! !LOCAL VARIABLES:
+   logical                    :: lexists
+   integer                    :: klen
+   character(len=SHR_KIND_CL) :: status_file
+   character(len=*), parameter :: subname = 'check_missing_initdata_status'
+   !-----------------------------------------------------------------------
+
+    klen = len_trim(finidat_interp_dest) - 3 ! remove the .nc
+    status_file = finidat_interp_dest(1:klen)//'.status'
+    inquire(file=trim(status_file), exist=lexists)
+    if (.not. lexists) then
+       if (masterproc) then
+          write(iulog,'(a)')' failed to find file '//trim(status_file)
+          write(iulog,'(a)')' this indicates a problem in creating '//trim(finidat_interp_dest)
+          write(iulog,'(a)')' remove '//trim(finidat_interp_dest)//' and try again'
+       end if
+       call endrun(subname//': finidat_interp_dest file exists but is probably bad')
+    end if
+
+  end subroutine check_missing_initdata_status
+
+
+  !-----------------------------------------------------------------------
   subroutine apply_use_init_interp(finidat_interp_dest, finidat, finidat_interp_source)
     !
     ! !DESCRIPTION:
@@ -1268,6 +1301,10 @@ contains
 
     inquire(file=trim(finidat_interp_dest), exist=lexists)
     if (lexists) then
+
+       ! Check that the status file also exists (i.e., that finidat_interp_dest was written successfully)
+       call check_missing_initdata_status(finidat_interp_dest)
+
        ! open the input file and check for the name of the input source file
        status = nf90_open(trim(finidat_interp_dest), 0, ncid)
        if (status /= nf90_noerr) call handle_err(status)
