@@ -1,4 +1,79 @@
 ===============================================================
+Tag name: ctsm5.2.023
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Fri Aug 16 11:00:32 MDT 2024
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+Brings in 3 PRs from b4b-dev to master:
+- Always check finidat_interp_dest.status (ESCOMP/CTSM#2679; Sam Rabin)
+- Remove broken assign-to-project Github workflow (ESCOMP/CTSM#2683; Sam Rabin)
+- [Fang summer '24 PR 1.1] Fix bugs and develop crop fire modeling (ESCOMP/CTSM#2684; Fang Li and Sam Rabin)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed:
+- Resolves ESCOMP/CTSM#2562: Fix or disable "Assign to High Priority project" workflow
+- Resolves ESCOMP/CTSM#2566: bug in crop fire modeling
+- Resolves ESCOMP/CTSM#2596: Check of finidat_interp_dest.status isn't reached 
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- Adds new fire_method option li2024gswpfrc; default hasn't changed.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing: Adds 4 tests:
+- SMS_D_Ld65.f10_f10_mg37.I2000Clm50BgcCru.derecho_gnu.clm-FireLi2016Cru
+- SMS_D_Ld65.f10_f10_mg37.I2000Clm45BgcCropQianRs.derecho_intel.clm-FireLi2014Qian
+- SMS_D_Ld65.f10_f10_mg37.I2000Clm50BgcCrop.izumi_intel.clm-FireLi2021GSWP
+- SMS_D_Ld65.f10_f10_mg37.I2000Clm60BgcCrop.izumi_nag.clm-FireLi2024GSWP
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Other details
+-------------
+
+Pull Requests that document the changes:
+- Always check finidat_interp_dest.status (ESCOMP/CTSM#2679; Sam Rabin): https://github.com/ESCOMP/CTSM/pull/2679
+- Remove broken assign-to-project Github workflow (ESCOMP/CTSM#2683; Sam Rabin): https://github.com/ESCOMP/CTSM/pull/2683
+- [Fang summer '24 PR 1.1] Fix bugs and develop crop fire modeling (ESCOMP/CTSM#2684; Fang Li and Sam Rabin): https://github.com/ESCOMP/CTSM/pull/2684
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.022
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Wed Aug 14 12:24:27 MDT 2024
