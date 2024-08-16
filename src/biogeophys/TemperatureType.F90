@@ -439,12 +439,12 @@ contains
     this%t_veg_day_patch(begp:endp) = spval
     call hist_addfld1d (fname='TVDAY', units='K',  &
          avgflag='A', long_name='average daytime vegetation temperature', &
-         ptr_patch=this%t_veg_day_patch)
+         ptr_patch=this%t_veg_day_patch, default='inactive')
 
     this%t_veg_night_patch(begp:endp) = spval
     call hist_addfld1d (fname='TVNIGHT', units='K',  &
          avgflag='A', long_name='average nighttime vegetation temperature', &
-         ptr_patch=this%t_veg_night_patch)
+         ptr_patch=this%t_veg_night_patch, default='inactive')
 
     this%t_skin_patch(begp:endp) = spval
     call hist_addfld1d(fname='TSKIN', units='K',  &
