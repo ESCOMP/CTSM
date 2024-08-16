@@ -192,8 +192,8 @@ contains
          forc_t             => atm2lnd_inst%forc_t_downscaled_col              , & ! Input:  [real(r8) (:)     ]  downscaled atmospheric temperature (Kelvin)
          forc_rain          => wateratm2lndbulk_inst%forc_rain_downscaled_col  , & ! Input:  [real(r8) (:)     ]  downscaled rain
          forc_snow          => wateratm2lndbulk_inst%forc_snow_downscaled_col  , & ! Input:  [real(r8) (:)     ]  downscaled snow
-         prec30             => wateratm2lndbulk_inst%prec30_patch              , & 
-         rh30               => wateratm2lndbulk_inst%rh30_patch                , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
+         prec30             => wateratm2lndbulk_inst%prec30_patch              , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
+         rh30               => wateratm2lndbulk_inst%rh30_patch                , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. relative humidity
          dwt_smoothed       => cnveg_state_inst%dwt_smoothed_patch             , & ! Input:  [real(r8) (:)     ]  change in patch weight (-1 to 1) on the gridcell, smoothed over the year
          cropf_col          => cnveg_state_inst%cropf_col                      , & ! Input:  [real(r8) (:)     ]  cropland fraction in veg column
          gdp_lf             => this%gdp_lf_col                                 , & ! Input:  [real(r8) (:)     ]  gdp data
@@ -298,7 +298,7 @@ contains
            cropf_col(c) = cropf_col(c) + patch%wtcol(p)
         end if
         ! For natural vegetation
-        if(patch%itype(p) <= nc4_grass )then
+        if (patch%itype(p) <= nc4_grass ) then
            lfwt(c) = lfwt(c) + patch%wtgcell(p)
         end if
      end do
@@ -538,12 +538,12 @@ contains
         c = filter_soilc(fc)
         g= col%gridcell(c)
         if(grc%latdeg(g) < cnfire_const%borealat )then
-          if((trotr1_col(c)+trotr2_col(c))*col%wtgcell(c)<=0.8_r8.and.trotr1_col(c)+trotr2_col(c)>0.0_r8) then
-           baf_peatf(c) = non_boreal_peatfire_c/secsphr*max(0._r8, &
-                min(1._r8,(1._r8-prec30_col(c)*secspday/6._r8)))*peatf_lf(c)
-          else
-            baf_peatf(c)=0._r8
-          end if
+            if ((trotr1_col(c)+trotr2_col(c))*col%wtgcell(c)<=0.8_r8.and.trotr1_col(c)+trotr2_col(c)>0.0_r8) then
+               baf_peatf(c) = non_boreal_peatfire_c/secsphr*max(0._r8, &
+                     min(1._r8,(1._r8-prec30_col(c)*secspday/6._r8)))*peatf_lf(c)
+            else
+               baf_peatf(c) = 0._r8
+            end if
         else
            baf_peatf(c) = boreal_peatfire_c/secsphr*exp(-SHR_CONST_PI*(max(wf2(c),0._r8)/0.3_r8))* &
                 max(0._r8,min(1._r8,(tsoi17(c)-SHR_CONST_TKFRZ)/10._r8))*peatf_lf(c)* &
@@ -601,15 +601,15 @@ contains
               lh       = pot_hmn_ign_counts_alpha*6.8_r8*hdmlf**(0.43_r8)/30._r8/24._r8
               fs       = 1._r8-(0.01_r8+0.98_r8*exp(-0.025_r8*hdmlf))
               if (trotr1_col(c)+trotr2_col(c)<=0.6_r8) then
-              ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
-                     cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
-                         cnfire_params%ignition_efficiency)*(1._r8-fs)* &
-                         (lfwt(c)**0.5)
+                 ig = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
+                      cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
+                      cnfire_params%ignition_efficiency)*(1._r8-fs)* &
+                      (lfwt(c)**0.5)
               else
-              ig       = this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
-                     cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
-                         cnfire_params%ignition_efficiency*(1._r8-fs)*  &
-                         (lfwt(c)**0.5)
+                 ig = this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
+                      cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
+                      cnfire_params%ignition_efficiency*(1._r8-fs)*  &
+                      (lfwt(c)**0.5)
               end if
               nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) !fire counts/km2/sec
               Lb_lf    = 1._r8+10._r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
@@ -633,7 +633,7 @@ contains
                     cli = max(0._r8,min(1._r8,1._r8-prec30_col(c)*secspday/cri))* &
                          (15._r8*min(0.0016_r8,dtrotr_col(c)/dt*dayspyr*secspday)+0.009_r8)* &
                          max(0._r8,min(1._r8,(0.25_r8-(forc_rain(c)+forc_snow(c))*secsphr)/0.25_r8))
-                    
+
                     farea_burned(c) = farea_burned(c)+fb*cli*(0.01_r8/secspday)
                     ! burned area out of conversion region due to land use fire
                     fbac1(c) = max(0._r8,fb*cli*(cli_scale/secspday) - 2.0_r8*lfc(c)/dt)

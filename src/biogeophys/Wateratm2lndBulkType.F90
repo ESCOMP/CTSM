@@ -35,7 +35,7 @@ module Wateratm2lndBulkType
      real(r8), pointer :: forc_rh_grc                   (:)   ! atmospheric relative humidity (%)
      real(r8) , pointer :: prec365_col                  (:)   ! col 365-day running mean of tot. precipitation (see comment in UpdateAccVars regarding why this is col-level despite other prec accumulators being patch-level)
      real(r8) , pointer :: prec60_patch                 (:)   ! patch 60-day running mean of tot. precipitation (mm/s)
-     real(r8) , pointer :: prec30_patch                 (:) 
+     real(r8) , pointer :: prec30_patch                 (:)
      real(r8) , pointer :: prec10_patch                 (:)   ! patch 10-day running mean of tot. precipitation (mm/s)
      real(r8) , pointer :: rh30_patch                   (:)   ! patch 30-day running mean of relative humidity
      real(r8) , pointer :: prec24_patch                 (:)   ! patch 24-hour running mean of tot. precipitation (mm/s)
@@ -337,7 +337,7 @@ contains
        call extract_accum_field ('PREC60', rbufslp, nstep)
        this%prec60_patch(begp:endp) = rbufslp(begp:endp)
 
-        call extract_accum_field ('PREC30', rbufslp, nstep)
+       call extract_accum_field ('PREC30', rbufslp, nstep)
        this%prec30_patch(begp:endp) = rbufslp(begp:endp)
 
        call extract_accum_field ('RH30', rbufslp, nstep)
