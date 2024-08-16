@@ -3600,6 +3600,16 @@
     </options>
   </test>
 
+  <test name="SMS_D_Ld65" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/FireLi2024CruJra">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="fire"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+    </options>
+  </test>
+
   <test name="SMS_Ld733" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput--clm/RxCropCalsNoAdapt">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
