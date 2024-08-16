@@ -466,30 +466,27 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Default glacier behavior is:
      Mountain glaciers: single_at_atm_topo
-     Greenland - inside CISM grid but outside Greenland itself: virtual
-     Greenland itself: virtual
+     Greenland: virtual
      Antarctica: multiple
 
      If CISM is running over Antarctica, then we change the Antarctica
      behavior to virtual. Note that the Greenland behavior is always
      virtual, even if Greenland isn't included in this run.
 -->
-<glacier_region_behavior glc_use_antarctica="0">'single_at_atm_topo','virtual','virtual','multiple'</glacier_region_behavior>
-<glacier_region_behavior glc_use_antarctica="1">'single_at_atm_topo','virtual','virtual','virtual' </glacier_region_behavior>
+<glacier_region_behavior glc_use_antarctica="0">'single_at_atm_topo','virtual','multiple'</glacier_region_behavior>
+<glacier_region_behavior glc_use_antarctica="1">'single_at_atm_topo','virtual','virtual' </glacier_region_behavior>
 
 <!-- Default glacier melt behavior is:
      Mountain glaciers: remains_in_place
-     Greenland - inside CISM grid but outside Greenland itself: replaced_by_ice
-     Greenland itself: replaced_by_ice
+     Greenland: replaced_by_ice
      Antarctica: replaced_by_ice -->
-<glacier_region_melt_behavior>'remains_in_place','replaced_by_ice','replaced_by_ice','replaced_by_ice'</glacier_region_melt_behavior>
+<glacier_region_melt_behavior>'remains_in_place','replaced_by_ice','replaced_by_ice'</glacier_region_melt_behavior>
 
 <!-- Default glacier ice runoff behavior is:
      Mountain glaciers: melted
-     Greenland - inside CISM grid but outside Greenland itself: melted
-     Greenland itself: remains_ice
+     Greenland: remains_ice
      Antarctica: remains_ice -->
-<glacier_region_ice_runoff_behavior>'melted','melted','remains_ice','remains_ice'</glacier_region_ice_runoff_behavior>
+<glacier_region_ice_runoff_behavior>'melted','remains_ice','remains_ice'</glacier_region_ice_runoff_behavior>
 
 <!-- This parameter is tied (in a scientific sense) to h2osno_max: For large
      values of h2osno_max, glc_snow_persistence_max_days should be 0; for small
