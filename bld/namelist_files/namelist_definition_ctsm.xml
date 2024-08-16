@@ -252,13 +252,14 @@ formulation (1).
 </entry>
 
 <entry id="fire_method" type="char*80" category="clm_physics"
-       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc,li2021gswpfrc" >
+       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc,li2021gswpfrc,li2024gswpfrc" >
 The method type to use for CNFire
 
 nofire:        Turn fire effects off
 li2014qianfrc: Reference paper Li, et. al.(2014) tuned with QIAN atmospheric forcing
 li2016crufrc:  Reference paper Li, et. al.(2016) tuned with CRU-NCEP atmospheric forcing
 li2021gswpfrc: Reference paper Li, et. al.(2021?) tuned with GSWP3 atmospheric forcing
+li2024gswpfrc: No reference paper yet
 </entry>
 
 <entry id="pot_hmn_ign_counts_alpha" type="real" category="clm_physics"
@@ -1695,22 +1696,27 @@ Mapping method from Nitrogen deposition input file to the model resolution
 </entry>
 
 <!-- ========================================================================================  -->
-<!-- Dust namelist and Zender soil erodibility stream                                          -->
+<!-- Prigent roughness stream -->
 <!-- ========================================================================================  -->
 
-<entry id="dust_emis_method" type="char*12" category="physics"
-       group="clm_inparm" valid_values="Zender_2003,Leung_2023" >
-Which dust emission method is going to be used. Either the Zender 2003 scheme or the Leung 2023
-scheme.
-(NOTE: The Leung 2023 method is NOT currently available)
+<entry id="use_prigent_roughness" type="logical" category="clm_physics"
+        group="prigentroughness" valid_values="" >
+If TRUE use the Prigent roughness dataset
 </entry>
 
-<entry id="zender_soil_erod_source" type="char*3" category="physics"
-       group="zendersoilerod" valid_values="lnd,atm" >
-Option only applying for the Zender_2003 method for whether the soil erodibility file is handled
-here in CTSM, or in the ATM model.
-(only used when dust_emis_method is Zender_2003)
+<entry id="stream_fldfilename_prigentroughness" type="char*256" category="datasets"
+       input_pathname="abs" group="prigentroughness" valid_values="" >
+Filename of input stream data for aeolian roughness length (from Prigent's roughness dataset)
 </entry>
+
+<entry id="stream_meshfile_prigentroughness" type="char*256" category="datasets"
+       input_pathname="abs" group="prigentroughness" valid_values="" >
+mesh filename of input stream data for aeolian roughness length (from Prigent's roughness dataset)
+</entry>
+
+<!-- ========================================================================================  -->
+<!-- Dust namelist and Zender soil erodibility stream                                          -->
+<!-- ========================================================================================  -->
 
 <entry id="zendersoilerod_mapalgo" type="char*256" category="physics"
        group="zendersoilerod" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
@@ -1797,6 +1803,7 @@ If true, will ignore the prescribed soilm data for that point and let the model 
 prescribed data.
 </entry>
 
+
 <!-- ========================================================================================  -->
 <!-- lai_streams streams Namelist (when phys = CLM4_5)                              -->
 <!-- ========================================================================================  -->
@@ -1859,19 +1866,44 @@ Mapping method from LAI input file to the model resolution
 <!-- ========================================================================================  -->
 
 <!-- Crop calendars -->
-<entry id="stream_year_first_cropcal" type="integer" category="datasets"
+<entry id="cropcals_rx" type="logical" category="datasets"
        group="cropcal_streams" valid_values="" >
-First year to loop over for crop calendar data
+Flag to enable prescribed crop calendars (sowing window dates and maturity requirement)
 </entry>
 
-<entry id="stream_year_last_cropcal" type="integer" category="datasets"
+<entry id="cropcals_rx_adapt" type="logical" category="datasets"
        group="cropcal_streams" valid_values="" >
-Last year to loop over for crop calendar data
+Flag to enable prescribed crop calendars (sowing window dates and maturity requirement), with maturity requirement adaptive based on recent climate
 </entry>
 
-<entry id="model_year_align_cropcal" type="integer" category="datasets"
+<entry id="stream_year_first_cropcal_swindows" type="integer" category="datasets"
        group="cropcal_streams" valid_values="" >
-Simulation year that aligns with stream_year_first_cropcal value
+First year to loop over for crop sowing windows
+</entry>
+
+<entry id="stream_year_last_cropcal_swindows" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Last year to loop over for crop sowing windows
+</entry>
+
+<entry id="model_year_align_cropcal_swindows" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Simulation year that aligns with stream_year_first_cropcal_swindows value
+</entry>
+
+<entry id="stream_year_first_cropcal_cultivar_gdds" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+First year to loop over for crop maturity requirements
+</entry>
+
+<entry id="stream_year_last_cropcal_cultivar_gdds" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Last year to loop over for crop maturity requirements
+</entry>
+
+<entry id="model_year_align_cropcal_cultivar_gdds" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Simulation year that aligns with stream_year_first_cropcal_cultivar_gdds value
 </entry>
 
 <entry id="allow_invalid_swindow_inputs" type="logical" category="datasets"
@@ -1892,6 +1924,36 @@ Filename of input stream data for date (day of year) of end of sowing window. Ce
 <entry id="stream_fldfilename_cultivar_gdds" type="char*256(30)" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
 Filename of input stream data for cultivar growing degree-day targets
+</entry>
+
+<entry id="stream_fldFileName_gdd20_baseline" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for baseline GDD20 values
+</entry>
+
+<entry id="stream_gdd20_seasons" type="logical" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Set this to true to read gdd20 accumulation season start and end dates from stream files, rather than using hard-coded hemisphere-specific "warm seasons."
+</entry>
+
+<entry id="flush_gdd20" type="logical" category="datasets"
+       group="clm_inparm" valid_values="" >
+Set this to true to flush the accumulated GDD20 variables as soon as possible.
+</entry>
+
+<entry id="allow_invalid_gdd20_season_inputs" type="logical" category="datasets"
+       group="cropcal_streams" valid_values="" >
+By default, a value in stream_fldFileName_gdd20_season_start or _end outside the range [1, 365] (or 366 in leap years) will cause the run to fail. Set this to .true. to instead have such cells fall back to the hard-coded hemisphere-specific "warm seasons."
+</entry>
+
+<entry id="stream_fldFileName_gdd20_season_start" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for date (day of year) of start of gdd20 accumulation season.
+</entry>
+
+<entry id="stream_fldFileName_gdd20_season_end" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for date (day of year) of end of gdd20 accumulation season.
 </entry>
 
 <entry id="stream_meshfile_cropcal" type="char*256" category="datasets"
@@ -2904,6 +2966,18 @@ use case.)
         group="clm_inparm" valid_values="" >
 If TRUE turn on the excess ice physics, (Lee et al., 2014; Cai et al., 2020)
 </entry>
+
+<entry id="excess_ice_coldstart_temp" type="real" category="clm_physics"
+       group="clm_temperature_inparm" >
+Initial soil temperature to use for gridcells with excess ice present during a run starting with coldstart (deg C). Value only applys if use_excess_ice is true.
+</entry>
+
+<entry id="excess_ice_coldstart_depth" type="real" category="clm_physics"
+       group="clm_temperature_inparm" >
+Soil depth below which initial excess ice concentration will be applied during a run starting with coldstart (m). Value only applys if use_excess_ice is true. 
+If this is set below depth of the soil depth, only the last soil layer will get excess ice.
+</entry>
+
 
 <entry id="use_excess_ice_streams" type="logical" category="clm_physics"
         group="exice_streams" valid_values="" >

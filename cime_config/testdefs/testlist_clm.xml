@@ -100,7 +100,7 @@
       <option name="comment">Simple test use soil eroditability in CTSM for CAM5 tuning</option>
     </options>
   </test>
-  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
+  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningModeLDust">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -109,7 +109,7 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution</option>
     </options>
   </test>
-    <test name="ERP_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam7LndTuningMode">
+    <test name="ERP_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam7LndTuningModeLDust">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
@@ -129,22 +129,13 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="IHistClm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
+  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="IHistClm60BgcCropG" testmods="clm/clm60cam7LndTuningModeLDust">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution for transient</option>
-    </options>
-  </test>
-  <test name="PEM_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
-    <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">CESM3 development test with change in the processor count at the standard coupled resolution</option>
     </options>
   </test>
   <test name="ERS_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
@@ -156,7 +147,7 @@
       <option name="comment">CESM3 development simple exact restart test at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="ERI_D" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
+  <test name="ERI_D" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningModeLDust">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -247,7 +238,7 @@
       <option name="comment">Test that the workhorse mpasa resolution functions for CAM, for both Hist and 2000 with latest CLM version. No need to run this test with every tag, but include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa60_mpasa60" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode">
+  <test name="SMS_Ln9" grid="mpasa60_mpasa60" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningModeLDust">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -863,6 +854,14 @@
   <test name="ERS_D" grid="f19_g17" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:20:00</option>
+      <option name="comment"  >Run in DEBUG with the matrix solution on for spinup with all options it interacts with (requires Bgc, but also turn on Crop and Carbon isotopes)</option>
+    </options>
+  </test>
+  <test name="ERS_D" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
+    <machines>
       <machine name="izumi"    compiler="nag" category="aux_clm"/>
     </machines>
     <options>
@@ -1016,6 +1015,7 @@
   <test name="ERP_D_Ld10_P64x2" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3478,7 +3478,7 @@
     </options>
   </test>
 
-  <test name="RXCROPMATURITY_Lm61" grid="f09_g17" compset="IHistClm50BgcCrop"  testmods="clm/cropMonthOutput">
+  <test name="RXCROPMATURITY_Lm61" grid="f09_g17" compset="IHistClm60BgcCrop"  testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -3488,9 +3488,10 @@
     </options>
   </test>
 
-  <test name="RXCROPMATURITY_Lm61" grid="f10_f10_mg37" compset="IHistClm50BgcCrop"  testmods="clm/cropMonthOutput">
+  <test name="RXCROPMATURITY_Lm61" grid="f10_f10_mg37" compset="IHistClm60BgcCrop"  testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
     <options>
       <option name="wallclock">6:00:00</option>
@@ -3498,10 +3499,11 @@
     </options>
   </test>
 
-  <test name="RXCROPMATURITYSKIPGEN_Ld1097" grid="f10_f10_mg37" compset="IHistClm50BgcCrop"  testmods="clm/cropMonthOutput">
+  <test name="RXCROPMATURITYSKIPGEN_Ld1097" grid="f10_f10_mg37" compset="IHistClm60BgcCrop"  testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
     <options>
       <option name="wallclock">00:45:00</option>
@@ -3552,6 +3554,131 @@
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="hillslope"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Ld65" grid="f10_f10_mg37" compset="I2000Clm45BgcCropQianRs" testmods="clm/FireLi2014Qian">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="fire"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Ld65" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/FireLi2016Cru">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="fire"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Ld65" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/FireLi2021GSWP">
+    <machines>
+      <machine name="izumi" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="fire"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Ld65" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/FireLi2024GSWP">
+    <machines>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="fire"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_Ld733" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput--clm/RxCropCalsNoAdapt">
+    <machines>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:00:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Ld733" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput--clm/RxCropCalsAdaptGGCMI">
+    <machines>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Ld65" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput--clm/RxCropCalsAdaptGGCMI">
+    <machines>
+      <machine name="izumi" compiler="nag" category="crop_calendars"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+    </options>
+  </test>
+
+  <test name="ERP_D_P128x1_Ld26" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/crop--clm/midDecStart--clm/RxCropCalsAdaptGGCMI">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+    </options>
+  </test>
+
+  <test name="PEM_D_P128x1_Ld26" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/crop--clm/midDecStart--clm/RxCropCalsAdaptGGCMI">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment">This test is potentially duplicative of the equivalent ERP test. However, ambiguous nearest neighbors can result in different pixels being chosen based on number of processors. Because crop calendar inputs are only updated at beginning of year, this can cause PEM test to fail where ERP test passes.</option>
+    </options>
+  </test>
+
+  <test name="SMS_Ld65" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/GddGen">
+    <machines>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_Ld65" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/GddGen--clm/StreamGdd20Seasons">
+    <machines>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_Lm37" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/cropMonthOutput--clm/oldCropCals">
+    <machines>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:30:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_Ld32" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/crop--clm/oldCropCals">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="crop_calendars"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
