@@ -181,14 +181,14 @@ def check_plumber_data(valid_plumber_sites):
 
     for site_name in valid_plumber_sites:
 
-        # TODO: check that start_year and end_year are set in shell commands so these should get overwritten
+        # start_year and end_year are set in shell commands, so these get overwritten
         start_year = 2018
         end_year = 2022
         start_month = 1
         end_month = 12
 
         logger.debug("Valid plumber site %s found!", site_name)
-        finidat = None  # TODO: may need to update?
+        finidat = None
 
         plumber_site = Plumber2Site(
             site_name, start_year, end_year, start_month, end_month, finidat
