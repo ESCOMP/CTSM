@@ -271,7 +271,7 @@ class TestRunSysTests(unittest.TestCase):
 
     def test_getTestmodList_suite(self):
         """Ensure that _get_testmod_list() works correctly with suite-style input"""
-        input = [
+        testmod_list_input = [
             "clm/default",
             "clm/default",
             "clm/crop",
@@ -283,12 +283,12 @@ class TestRunSysTests(unittest.TestCase):
             "clm-crop",
             "clm-cropMonthlyOutput",
         ]
-        output = _get_testmod_list(input, unique=False)
+        output = _get_testmod_list(testmod_list_input, unique=False)
         self.assertEqual(output, target)
 
     def test_getTestmodList_suite_unique(self):
         """Ensure that _get_testmod_list() works correctly with unique=True"""
-        input = [
+        testmod_list_input = [
             "clm/default",
             "clm/default",
             "clm/crop",
@@ -300,24 +300,29 @@ class TestRunSysTests(unittest.TestCase):
             "clm-cropMonthlyOutput",
         ]
 
-        output = _get_testmod_list(input, unique=True)
+        output = _get_testmod_list(testmod_list_input, unique=True)
         self.assertEqual(output, target)
 
     def test_getTestmodList_testname(self):
         """Ensure that _get_testmod_list() works correctly with full test name(s) specified"""
-        input = [
+        testmod_list_input = [
             "ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-crop",
             "ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-default",
         ]
         target = ["clm-crop", "clm-default"]
-        output = _get_testmod_list(input)
+        output = _get_testmod_list(testmod_list_input)
         self.assertEqual(output, target)
 
     def test_getTestmodList_twomods(self):
-        """Ensure that _get_testmod_list() works correctly with full test name(s) specified and two mods in one test"""
-        input = ["ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-default--clm-crop"]
+        """
+        Ensure that _get_testmod_list() works correctly with full test name(s) specified and two
+        mods in one test
+        """
+        testmod_list_input = [
+            "ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-default--clm-crop"
+        ]
         target = ["clm-default", "clm-crop"]
-        output = _get_testmod_list(input)
+        output = _get_testmod_list(testmod_list_input)
         self.assertEqual(output, target)
 
 

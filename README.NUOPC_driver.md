@@ -40,17 +40,3 @@ ESMF_PROFILING_LEVEL --- Verbosity level for ESMF profiling
 nuopc.runseq is a text file that determines how the driver operates. You can change the operation
 by having an updated copy in your case directory.
 
-
-## What if I want to use the previous MCT driver?
-
-The MCT driver will be available for sometime going forward, but
-new development won't go into it, and it will eventually be removed.
-But, if you have to...
-Use the "--driver mct" command line option to create_newcase
-You can set COMP_INTERFACE in a case as well, but it won't create it with everything needed
-so we recommend setting up a case from scratch.
-
-
-For more notes see:
-
-https://docs.google.com/presentation/d/1yjiKSEV53JDAJbYxhpY2T9GTxlWFzQAn

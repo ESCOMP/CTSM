@@ -1605,7 +1605,8 @@ bioms:   do f = 1, fn
          if (t_veg(p) > tfrz ) then ! above freezing, update accumulation in liqcan
             if ((qflx_evap_veg(p)-qflx_tran_veg(p))*dtime > liqcan(p)) then ! all liq evap
                ! In this case, all liqcan will evap. Take remainder from snocan
-               snocan(p)=snocan(p)+liqcan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime	 
+               snocan(p) = max(0._r8, &
+                  snocan(p) + liqcan(p) + (qflx_tran_veg(p) - qflx_evap_veg(p)) * dtime)
             end if
             liqcan(p) = max(0._r8,liqcan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime)
 
@@ -1623,7 +1624,8 @@ bioms:   do f = 1, fn
       ! snocan < rel_epsilon * snocan_baseline will be set to zero
       ! See NumericsMod for rel_epsilon value
       call truncate_small_values(fn, filterp, begp, endp, &
-         snocan_baseline(begp:endp), snocan(begp:endp))
+         snocan_baseline(begp:endp), snocan(begp:endp), &
+         custom_rel_epsilon=1.e-10_r8)
       
       if ( use_fates ) then
          

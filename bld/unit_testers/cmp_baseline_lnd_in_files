@@ -1,0 +1,71 @@
+#!/bin/bash
+#
+# A simple script to compare lnd_in namelists between two baselines on Derecho
+#
+
+#----------------------------------------------------------------------
+# Usage subroutine
+usage() {
+  echo ""
+  echo "***********************************************************************"
+  echo "usage:"
+  echo "./cmp_baseline_lnd_in_files <baseline> <comparison-baseline>"
+  echo "  "
+  echo "Compares lnd_in files between two baselines on Derecho"
+  echo "***********************************************************************"
+}
+
+#----------------------------------------------------------------------
+
+if [ "$#" -ne 2 ]; then
+   echo "Need to give two baseline directories to compare"
+   usage
+   exit 1
+fi
+baseline=$1
+compare=$2
+
+cwd=`pwd`
+if [ -z "$1" ]; then
+   echo "Need to enter a baseline directory tag name"
+   usage
+   exit 1
+fi
+if [ -z "$2" ]; then
+   echo "Need to enter a comparison directory tag name"
+   usage
+   exit 1
+fi
+
+BASELINE_ROOT=/glade/campaign/cgd/tss/ctsm_baselines
+root=$BASELINE_ROOT/$baseline
+if ! test -d "$root"; then
+   echo "Root directory of $root does NOT exist"
+   exit 1
+fi
+comp_root=$BASELINE_ROOT/$compare
+if ! test -d "$comp_root"; then
+   echo "Root comparison directory of $comp_root does NOT exist"
+   usage
+   exit 1
+fi
+cd $root
+filepat="*"
+dirnames=($filepat)
+if [ "${filenames[*]}" = "$filepat" ]; then
+   echo "No directoctories exist in this directory"
+   exit 1
+fi
+for dir in ${dirnames[*]}
+do
+   echo $dir
+   base=$dir/CaseDocs/lnd_in
+   comp=$BASELINE_ROOT/$compare/$dir/CaseDocs/lnd_in
+   if ! test -f "$base"; then
+      echo "$base, does NOT exist, skipping"
+   elif ! test -f "$comp"; then
+      echo "$comp, does NOT exist, skipping"
+   else
+      $cwd/../../cime/CIME/Tools/compare_namelists $base $comp
+   fi
+done

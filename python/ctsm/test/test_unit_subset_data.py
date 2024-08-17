@@ -31,7 +31,9 @@ class TestSubsetData(unittest.TestCase):
 
     def setUp(self):
         sys.argv = ["subset_data", "point", "--create-surface"]
-        DEFAULTS_FILE = os.path.join(os.getcwd(), "ctsm/test/testinputs/default_data.cfg")
+        DEFAULTS_FILE = os.path.join(
+            os.getcwd(), "../tools/site_and_regional/default_data_2000.cfg"
+        )
         self.parser = get_parser()
         self.args = self.parser.parse_args()
         self.cesmroot = path_to_ctsm_root()
@@ -46,7 +48,7 @@ class TestSubsetData(unittest.TestCase):
         files = setup_files(self.args, self.defaults, self.cesmroot)
         self.assertEqual(
             files["fsurf_in"],
-            "surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
+            "surfdata_0.9x1.25_hist_2000_16pfts_c240216.nc",
             "fsurf_in filename not whats expected",
         )
         self.assertEqual(
@@ -118,11 +120,61 @@ class TestSubsetData(unittest.TestCase):
         Test that check args does not allow an output surface dataset to be specified
         when create-surface is not on
         """
-        sys.argv = ["subset_data", "point", "--create-landuse", "--out-surface", "outputsurface.nc"]
+        sys.argv = ["subset_data", "point", "--create-datm", "--out-surface", "outputsurface.nc"]
         self.args = self.parser.parse_args()
         with self.assertRaisesRegex(
             argparse.ArgumentError,
             "out-surface option is given without the --create-surface option",
+        ):
+            check_args(self.args)
+
+    def test_check_args_fails_for_timeseries_without_correct_surface_year(self):
+        """
+        Test that check args does not allow landuse-timeseries to be used
+        without providing the correct start surface year
+        """
+        sys.argv = ["subset_data", "point", "--create-landuse", "--create-surface"]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentError,
+            "--surf-year option is NOT set to 1850 and the --create-landuse option",
+        ):
+            check_args(self.args)
+
+    def test_check_args_fails_for_surf_year_without_surface(self):
+        """
+        Test that check args does not allow surf_year to be set
+        without the create-surface option
+        """
+        sys.argv = ["subset_data", "point", "--create-datm", "--surf-year", "1850"]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentError,
+            "--surf-year option is set to something besides the default of 2000",
+        ):
+            check_args(self.args)
+
+    def test_check_args_fails_for_landuse_without_surface(self):
+        """
+        Test that check args does not allow landuse to be set
+        without the create-surface option
+        """
+        sys.argv = ["subset_data", "point", "--create-landuse"]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentError,
+            "--create-landuse option requires the --create-surface option",
+        ):
+            check_args(self.args)
+
+    def test_check_args_fails_bad_surface_year(self):
+        """
+        Test that check args does not allow --surf-year to be bad
+        """
+        sys.argv = ["subset_data", "point", "--create-surface", "--surf-year", "2305"]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentError, "--surf-year option can only be set to 1850 or 2000"
         ):
             check_args(self.args)
 
@@ -134,7 +186,7 @@ class TestSubsetData(unittest.TestCase):
         outfile = os.path.join(
             os.getcwd(),
             "ctsm/test/testinputs/",
-            "surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c221206.nc",
+            "surfdata_1x1_mexicocityMEX_hist_16pfts_CMIP6_2000_c231103.nc",
         )
         self.assertTrue(os.path.exists(outfile), str(outfile) + " outfile should exist")
 
@@ -154,6 +206,58 @@ class TestSubsetData(unittest.TestCase):
         self.args.inputdatadir = "/zztop"
         with self.assertRaisesRegex(SystemExit, "inputdata directory does not exist"):
             setup_files(self.args, self.defaults, self.cesmroot)
+
+    def test_create_user_mods_without_create_mesh(self):
+        """
+        Test that you can't run create user mods without also doing create_mesh
+        """
+        sys.argv = ["subset_data", "region", "--create-user-mods", "--create-surface"]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentError, "For regional cases, you can not create user_mods"
+        ):
+            check_args(self.args)
+
+    def test_create_mesh_without_domain(self):
+        """
+        Test that you can't run create mesh without domain
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-user-mods",
+            "--create-surface",
+            "--create-mesh",
+        ]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentError, "For regional cases, you can not create mesh files"
+        ):
+            check_args(self.args)
+
+    def test_complex_option_works(self):
+        """
+        Test that check_args won't flag a set of complex options that is valid
+        Do user-mods, surface and landuse-timeseries, as well as DATM, for verbose with crop
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--reg",
+            "testname",
+            "--create-user-mods",
+            "--create-surface",
+            "--create-landuse",
+            "--surf-year",
+            "1850",
+            "--create-mesh",
+            "--create-domain",
+            "--create-datm",
+            "--verbose",
+            "--crop",
+        ]
+        self.args = self.parser.parse_args()
+        check_args(self.args)
 
 
 if __name__ == "__main__":

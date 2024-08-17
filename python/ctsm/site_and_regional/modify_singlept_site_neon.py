@@ -54,11 +54,15 @@ from ctsm.path_utils import path_to_ctsm_root
 
 myname = getuser()
 
+# Seconds to wait before requests.get() times out
+TIMEOUT = 60
+
 
 # -- valid neon sites
-valid_neon_sites = glob.glob(
+valid = glob.glob(
     os.path.join(path_to_ctsm_root(), "cime_config", "usermods_dirs", "NEON", "[!d]*")
 )
+valid_neon_sites = [x[-4:] for x in valid]  # last 4 letters in each string
 
 
 def get_parser():
@@ -89,7 +93,7 @@ def get_parser():
         dest="surf_dir",
         type=str,
         required=False,
-        default="/glade/scratch/" + myname + "/single_point/",
+        default="/glade/derecho/scratch/" + myname + "/single_point/",
     )
     parser.add_argument(
         "--out_dir",
@@ -101,7 +105,7 @@ def get_parser():
         dest="out_dir",
         type=str,
         required=False,
-        default="/glade/scratch/" + myname + "/single_point_neon_updated/",
+        default="/glade/derecho/scratch/" + myname + "/single_point_neon_updated/",
     )
     parser.add_argument(
         "--inputdata-dir",
@@ -113,7 +117,7 @@ def get_parser():
         dest="inputdatadir",
         type=str,
         required=False,
-        default="/glade/p/cesmdata/cseg/inputdata",
+        default="/glade/campaign/cesm/cesmdata/cseg/inputdata",
     )
     parser.add_argument(
         "-d",
@@ -176,7 +180,7 @@ def get_neon(neon_dir, site_name):
             + site_name
             + "_surfaceData.csv"
         )
-        response = requests.get(url)
+        response = requests.get(url, timeout=TIMEOUT)
 
         with open(neon_file, "wb") as a_file:
             a_file.write(response.content)
@@ -220,9 +224,9 @@ def find_surffile(surf_dir, site_name, pft_16):
     """
 
     if pft_16:
-        sf_name = "surfdata_1x1_NEON_" + site_name + "*hist_16pfts_Irrig_CMIP6_simyr2000_*.nc"
+        sf_name = "surfdata_1x1_NEON_" + site_name + "*hist_2000_16pfts*.nc"
     else:
-        sf_name = "surfdata_1x1_NEON_" + site_name + "*hist_78pfts_CMIP6_simyr2000_*.nc"
+        sf_name = "surfdata_1x1_NEON_" + site_name + "*hist_2000_78pfts*.nc"
 
     print(os.path.join(surf_dir, sf_name))
     surf_file = sorted(glob.glob(os.path.join(surf_dir, sf_name)))
@@ -279,7 +283,9 @@ def find_soil_structure(args, surf_file):
     # print (f_1.attrs["Soil_texture_raw_data_file_name"])
 
     clm_input_dir = os.path.join(args.inputdatadir, "lnd/clm2/rawdata/")
-    surf_soildepth_file = os.path.join(clm_input_dir, f_1.attrs["Soil_texture_raw_data_file_name"])
+    surf_soildepth_file = os.path.join(
+        clm_input_dir, f_1.attrs["soil_texture_lookup_raw_data_file_name"]
+    )
 
     if os.path.exists(surf_soildepth_file):
         print(
@@ -430,7 +436,7 @@ def download_file(url, fname):
             file name to save the downloaded file.
     """
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=TIMEOUT)
 
         with open(fname, "wb") as a_file:
             a_file.write(response.content)
@@ -443,7 +449,7 @@ def download_file(url, fname):
     except Exception as err:
         print("The server could not fulfill the request.")
         print("Something went wrong in downloading", fname)
-        print("Error code:", err.code)
+        raise err
 
 
 def fill_interpolate(f_2, var, method):
@@ -470,6 +476,129 @@ def fill_interpolate(f_2, var, method):
     print("Variable after filling : ")
     print(f_2[var])
     print("=====================================")
+
+
+def print_neon_data_soil_structure(obs_bot, soil_bot, bin_index):
+    """
+    Print info about NEON data soil structure
+    """
+    print("================================")
+    print("  Neon data soil structure:     ")
+    print("================================")
+
+    print("------------", "ground", "------------")
+    for i, this_obs_bot in enumerate(obs_bot):
+        print("layer", i)
+        print("-------------", "{0:.2f}".format(this_obs_bot), "-------------")
+
+    print("================================")
+    print("Surface data soil structure:    ")
+    print("================================")
+
+    print("------------", "ground", "------------")
+    for this_bin in range(len(bin_index)):
+        print("layer", this_bin)
+        print("-------------", "{0:.2f}".format(soil_bot[this_bin]), "-------------")
+
+
+def print_soil_quality(
+    inorganic, bin_index, soil_lev, layer_depth, carbon_tot, estimated_oc, bulk_den, f_2
+):
+    """
+    Prints information about soil quality
+    """
+    print("~~~~~~~~~~~~~~~~~~~~~~~~")
+    print("inorganic:")
+    print("~~~~~~~~~~~~~~~~~~~~~~~~")
+    print(inorganic)
+    print("~~~~~~~~~~~~~~~~~~~~~~~~")
+
+    print("bin_index    : ", bin_index[soil_lev])
+    print("layer_depth  : ", layer_depth)
+    print("carbon_tot   : ", carbon_tot)
+    print("estimated_oc : ", estimated_oc)
+    print("bulk_den     : ", bulk_den)
+    print("organic      :", f_2["ORGANIC"][soil_lev].values)
+    print("--------------------------")
+
+
+def update_agri_site_info(site_name, f_2):
+    """
+    Updates agricultural sites
+    """
+    ag_sites = ["KONA", "STER"]
+    if site_name not in ag_sites:
+        return f_2
+
+    print("Updating PCT_NATVEG")
+    print("Original : ", f_2.PCT_NATVEG.values)
+    f_2.PCT_NATVEG.values = [[0.0]]
+    print("Updated  : ", f_2.PCT_NATVEG.values)
+
+    print("Updating PCT_CROP")
+    print("Original : ", f_2.PCT_CROP.values)
+    f_2.PCT_CROP.values = [[100.0]]
+    print("Updated  : ", f_2.PCT_CROP.values)
+
+    print("Updating PCT_NAT_PFT")
+    print(f_2.PCT_NAT_PFT.values[0])
+    print(f_2.PCT_NAT_PFT[0].values)
+
+    return f_2
+
+
+def update_fields_with_neon(f_1, d_f, bin_index):
+    """
+    update fields with neon
+    """
+    f_2 = f_1
+    soil_levels = f_2["PCT_CLAY"].size
+    for soil_lev in range(soil_levels):
+        print("--------------------------")
+        print("soil_lev:", soil_lev)
+        print(d_f["clayTotal"][bin_index[soil_lev]])
+        f_2["PCT_CLAY"][soil_lev] = d_f["clayTotal"][bin_index[soil_lev]]
+        f_2["PCT_SAND"][soil_lev] = d_f["sandTotal"][bin_index[soil_lev]]
+
+        bulk_den = d_f["bulkDensExclCoarseFrag"][bin_index[soil_lev]]
+        carbon_tot = d_f["carbonTot"][bin_index[soil_lev]]
+        estimated_oc = d_f["estimatedOC"][bin_index[soil_lev]]
+
+        # -- estimated_oc in neon data is rounded to the nearest integer.
+        # -- Check to make sure the rounded oc is not higher than carbon_tot.
+        # -- Use carbon_tot if estimated_oc is bigger than carbon_tot.
+
+        estimated_oc = min(estimated_oc, carbon_tot)
+
+        layer_depth = (
+            d_f["biogeoBottomDepth"][bin_index[soil_lev]]
+            - d_f["biogeoTopDepth"][bin_index[soil_lev]]
+        )
+
+        # f_2["ORGANIC"][soil_lev] = estimated_oc * bulk_den / 0.58
+
+        # -- after adding caco3 by NEON:
+        # -- if caco3 exists:
+        # -- inorganic = caco3/100.0869*12.0107
+        # -- organic = carbon_tot - inorganic
+        # -- else:
+        # -- organic = estimated_oc * bulk_den /0.58
+
+        caco3 = d_f["caco3Conc"][bin_index[soil_lev]]
+        inorganic = caco3 / 100.0869 * 12.0107
+        print("inorganic:", inorganic)
+
+        if not np.isnan(inorganic):
+            actual_oc = carbon_tot - inorganic
+        else:
+            actual_oc = estimated_oc
+
+        f_2["ORGANIC"][soil_lev] = actual_oc * bulk_den / 0.58
+
+        print_soil_quality(
+            inorganic, bin_index, soil_lev, layer_depth, carbon_tot, estimated_oc, bulk_den, f_2
+        )
+    return f_2
 
 
 def main():
@@ -532,88 +661,10 @@ def main():
     bins = d_f["biogeoTopDepth"] / 100
     bin_index = np.digitize(soil_mid, bins) - 1
 
-    """
-    print ("================================")
-    print ("  Neon data soil structure:     ")
-    print ("================================")
-
-    print ("------------","ground","------------")
-    for i in range(len(obs_bot)):
-        print ("layer",i)
-        print ("-------------",
-                "{0:.2f}".format(obs_bot[i]),
-                "-------------")
-
-    print ("================================")
-    print ("Surface data soil structure:    ")
-    print ("================================")
-
-    print ("------------","ground","------------")
-    for b in range(len(bin_index)):
-        print ("layer",b)
-        print ("-------------",
-                "{0:.2f}".format(soil_bot[b]),
-                "-------------")
-    """
+    print_neon_data_soil_structure(obs_bot, soil_bot, bin_index)
 
     # -- update fields with neon
-    f_2 = f_1
-    soil_levels = f_2["PCT_CLAY"].size
-    for soil_lev in range(soil_levels):
-        print("--------------------------")
-        print("soil_lev:", soil_lev)
-        print(d_f["clayTotal"][bin_index[soil_lev]])
-        f_2["PCT_CLAY"][soil_lev] = d_f["clayTotal"][bin_index[soil_lev]]
-        f_2["PCT_SAND"][soil_lev] = d_f["sandTotal"][bin_index[soil_lev]]
-
-        bulk_den = d_f["bulkDensExclCoarseFrag"][bin_index[soil_lev]]
-        carbon_tot = d_f["carbonTot"][bin_index[soil_lev]]
-        estimated_oc = d_f["estimatedOC"][bin_index[soil_lev]]
-
-        # -- estimated_oc in neon data is rounded to the nearest integer.
-        # -- Check to make sure the rounded oc is not higher than carbon_tot.
-        # -- Use carbon_tot if estimated_oc is bigger than carbon_tot.
-
-        estimated_oc = min(estimated_oc, carbon_tot)
-
-        layer_depth = (
-            d_f["biogeoBottomDepth"][bin_index[soil_lev]]
-            - d_f["biogeoTopDepth"][bin_index[soil_lev]]
-        )
-
-        # f_2["ORGANIC"][soil_lev] = estimated_oc * bulk_den / 0.58
-
-        # -- after adding caco3 by NEON:
-        # -- if caco3 exists:
-        # -- inorganic = caco3/100.0869*12.0107
-        # -- organic = carbon_tot - inorganic
-        # -- else:
-        # -- organic = estimated_oc * bulk_den /0.58
-
-        caco3 = d_f["caco3Conc"][bin_index[soil_lev]]
-        inorganic = caco3 / 100.0869 * 12.0107
-        print("inorganic:", inorganic)
-
-        if not np.isnan(inorganic):
-            actual_oc = carbon_tot - inorganic
-        else:
-            actual_oc = estimated_oc
-
-        f_2["ORGANIC"][soil_lev] = actual_oc * bulk_den / 0.58
-
-        print("~~~~~~~~~~~~~~~~~~~~~~~~")
-        print("inorganic:")
-        print("~~~~~~~~~~~~~~~~~~~~~~~~")
-        print(inorganic)
-        print("~~~~~~~~~~~~~~~~~~~~~~~~")
-
-        print("bin_index    : ", bin_index[soil_lev])
-        print("layer_depth  : ", layer_depth)
-        print("carbon_tot   : ", carbon_tot)
-        print("estimated_oc : ", estimated_oc)
-        print("bulk_den     : ", bulk_den)
-        print("organic      :", f_2["ORGANIC"][soil_lev].values)
-        print("--------------------------")
+    f_2 = update_fields_with_neon(f_1, d_f, bin_index)
 
     # -- Interpolate missing values
     method = "linear"
@@ -633,22 +684,8 @@ def main():
 
     sort_print_soil_layers(obs_bot, soil_bot)
 
-    # -- updates for ag sites : KONA and STER
-    ag_sites = ["KONA", "STER"]
-    if site_name in ag_sites:
-        print("Updating PCT_NATVEG")
-        print("Original : ", f_2.PCT_NATVEG.values)
-        f_2.PCT_NATVEG.values = [[0.0]]
-        print("Updated  : ", f_2.PCT_NATVEG.values)
-
-        print("Updating PCT_CROP")
-        print("Original : ", f_2.PCT_CROP.values)
-        f_2.PCT_CROP.values = [[100.0]]
-        print("Updated  : ", f_2.PCT_CROP.values)
-
-        print("Updating PCT_NAT_PFT")
-        print(f_2.PCT_NAT_PFT.values[0])
-        print(f_2.PCT_NAT_PFT[0].values)
+    # -- updates for ag sites
+    update_agri_site_info(site_name, f_2)
 
     out_dir = args.out_dir
 

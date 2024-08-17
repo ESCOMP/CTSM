@@ -115,7 +115,7 @@ module clm_varctl
   character(len=fname_len), public :: fsnowaging   = ' '      ! snow aging parameters file name
 
   character(len=fname_len), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
-                                                              ! only needed for LILAC and MCT drivers
+                                                              ! only needed for LILAC
 
   !----------------------------------------------------------
   ! Flag to read ndep rather than obtain it from coupler
@@ -152,6 +152,12 @@ module clm_varctl
   ! true => separate crop landunit is not created by default
   logical, public :: create_crop_landunit = .false.     
   
+  ! number of hillslopes per landunit
+  integer, public :: nhillslope = 0
+
+  ! maximum number of hillslope columns per landunit
+  integer, public :: max_columns_hillslope = 1
+
   ! do not irrigate by default
   logical, public :: irrigate = .false.            
 
@@ -170,6 +176,11 @@ module clm_varctl
 
   ! true => make ALL patches, cols & landunits active (even if weight is 0)
   logical, public :: all_active = .false.          
+
+  ! true => any ocean (i.e., "wetland") points on the surface dataset are converted to
+  ! bare ground (or whatever vegetation is given in that grid cell... but typically this
+  ! will be bare ground)
+  logical, public :: convert_ocean_to_land = .false.
 
   logical, public :: collapse_urban = .false.  ! true => collapse urban landunits to the dominant urban landunit; default = .false. means "do nothing" i.e. keep all urban landunits as found in the input data
   integer, public :: n_dom_landunits = -1  ! # of dominant landunits; determines the number of active landunits; default = 0 (set in namelist_defaults_ctsm.xml) means "do nothing"
@@ -271,6 +282,19 @@ module clm_varctl
 
   logical, public :: use_c13 = .false.                  ! true => use C-13 model
   logical, public :: use_c14 = .false.                  ! true => use C-14 model
+  !----------------------------------------------------------
+  ! CN matrix
+  !----------------------------------------------------------  
+  logical, public :: spinup_matrixcn = .false.  !.false.              ! true => use acc spinup
+  logical, public :: hist_wrt_matrixcn_diag = .false.!.false.              ! true => use acc spinup
+  ! SASU 
+  integer, public :: nyr_forcing  = 10   ! length of forcing years for the spin up. eg. if DATM_CLMNCEP_YR_START=1901;DATM_CLMNCEP_YR_END=1920, then nyr_forcing = 20
+  integer, public :: nyr_SASU     = 1    ! length of each semi-analytic solution. eg. nyr_SASU=5, analytic solutions will be calculated every five years.
+                                         ! nyr_SASU=1: the fastest SASU, but inaccurate; nyr_SASU=nyr_forcing(eg. 20): the lowest SASU but accurate
+  integer, public :: iloop_avg    = -999 ! The restart file will be based on the average of all analytic solutions within the iloop_avg^th loop. 
+                                         ! eg. if nyr_forcing = 20, iloop_avg = 8, the restart file in yr 160 will be based on analytic solutions from yr 141 to 160.
+                                         ! The number of the analytic solutions within one loop depends on ratio between nyr_forcing and nyr_SASU.
+                                         ! eg. if nyr_forcing = 20, nyr_SASU = 5, number of analytic solutions is 20/5=4
 
   ! BUG(wjs, 2018-10-25, ESCOMP/ctsm#67) There is a bug that causes incorrect values for C
   ! isotopes if running init_interp from a case without C isotopes to a case with C
@@ -305,7 +329,7 @@ module clm_varctl
                                                                         ! > 1 for external data (lightning and/or anthropogenic ignitions)
                                                                         ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
   logical, public            :: use_fates_tree_damage = .false.         ! true => turn on tree damage module
-  logical, public            :: use_fates_logging = .false.             ! true => turn on logging module
+  character(len=256), public :: fates_harvest_mode = ''                 ! five different harvest modes; see namelist definition
   logical, public            :: use_fates_planthydro = .false.          ! true => turn on fates hydro
   logical, public            :: use_fates_cohort_age_tracking = .false. ! true => turn on cohort age tracking
   logical, public            :: use_fates_ed_st3   = .false.            ! true => static stand structure
@@ -313,8 +337,25 @@ module clm_varctl
   logical, public            :: use_fates_inventory_init = .false.      ! true => initialize fates from inventory
   logical, public            :: use_fates_fixed_biogeog = .false.       ! true => use fixed biogeography mode
   logical, public            :: use_fates_nocomp = .false.              ! true => use no comopetition mode
+
+  ! FATES history dimension level
+  ! fates can produce history at either the daily timescale (dynamics)
+  ! and the model step timescale. It can also generate output on the extra dimension
+  ! Performing this output can be expensive, so we allow different history dimension
+  ! levels.
+  ! The first index is output at the model timescale
+  ! The second index is output at the dynamics (daily) timescale      
+  ! 0 - no output
+  ! 1 - include only column level means (3D)
+  ! 2 - include output that includes the 4th dimension
+  
+  integer, dimension(2), public   :: fates_history_dimlevel = (/2,2/)
+  
   logical, public            :: use_fates_luh = .false.                 ! true => use FATES landuse data mode
+  logical, public            :: use_fates_lupft = .false.               ! true => use FATES landuse x pft static mapping mode
+  logical, public            :: use_fates_potentialveg = .false.        ! true => FATES potential veg only
   character(len=256), public :: fluh_timeseries = ''                    ! filename for fates landuse timeseries data
+  character(len=256), public :: flandusepftdat = ''                     ! filename for fates landuse x pft data
   character(len=256), public :: fates_inventory_ctrl_filename = ''      ! filename for inventory control
 
   ! FATES SP AND FATES BGC are MUTUTALLY EXCLUSIVE, THEY CAN'T BOTH BE ON
@@ -361,6 +402,8 @@ module clm_varctl
   logical, public :: use_cropcal_streams = .false.
   logical, public :: use_cropcal_rx_swindows = .false.
   logical, public :: use_cropcal_rx_cultivar_gdds = .false.
+  logical, public :: adapt_cropcal_rx_cultivar_gdds = .false.
+  logical, public :: flush_gdd20 = .false.
 
   !----------------------------------------------------------
   ! biomass heat storage switch
@@ -378,7 +421,17 @@ module clm_varctl
   integer, public :: soil_layerstruct_userdefined_nlevsoi = iundef
 
   !----------------------------------------------------------
-  !excess ice physics switch
+  ! hillslope hydrology switch
+  !----------------------------------------------------------
+
+  logical, public :: use_hillslope = .false. ! true => use multi-column hillslope hydrology
+  logical, public :: downscale_hillslope_meteorology = .false. ! true => downscale meteorological forcing in hillslope model
+  logical, public :: use_hillslope_routing = .false. ! true => use surface water routing in hillslope hydrology
+  logical, public :: hillslope_fsat_equals_zero = .false. ! set saturated excess runoff to zero for hillslope columns
+
+
+  !----------------------------------------------------------
+  ! excess ice physics switch and params
   !----------------------------------------------------------
   logical, public :: use_excess_ice = .false. ! true. => use excess ice physics
 
@@ -387,12 +440,6 @@ module clm_varctl
   !----------------------------------------------------------
 
   logical, public :: use_hydrstress = .false. ! true => use plant hydraulic stress calculation
-
-  !----------------------------------------------------------
-  ! dynamic root switch
-  !----------------------------------------------------------
-
-  logical, public :: use_dynroot = .false. ! true => use dynamic root module
 
   !----------------------------------------------------------
   ! glacier_mec control variables: default values (may be overwritten by namelist)

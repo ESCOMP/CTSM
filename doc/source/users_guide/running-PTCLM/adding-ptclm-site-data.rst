@@ -38,7 +38,7 @@ There is a mechanism for giving site-specific land-use change in PTCLMmkdata. Ad
 
    trans_year,pft_f1,pft_c1,pft_f2,pft_c2,pft_f3,pft_c3,pft_f4,pft_c4,pft_f5,pft_c5,har_vh1,har_vh2,har_sh1,har_sh2,har_sh3,graze,hold_harv,hold_graze
 
-This file only requires a line for each year where a transition or harvest happens. As in the "pftdata" file above "pft_f" refers to the fraction and "pft_c" refers to the PFT index, and only up to five vegetation types are allowed to co-exist. The last eight columns have to do with harvesting and grazing. The last two columns are whether to hold harvesting and/or grazing constant until the next transition year and will just be either 1 or 0. This file will be converted by the **PTCLM_sitedata/cnvrt_trnsyrs2_pftdyntxtfile.pl** script in the PTCLMmkdata directory to a format that **mksurfdata_map** can read that has an entry for each year for the range of years valid for the compset in question.
+This file only requires a line for each year where a transition or harvest happens. As in the "pftdata" file above "pft_f" refers to the fraction and "pft_c" refers to the PFT index, and only up to five vegetation types are allowed to co-exist. The last eight columns have to do with harvesting and grazing. The last two columns are whether to hold harvesting and/or grazing constant until the next transition year and will just be either 1 or 0. This file will be converted by the **PTCLM_sitedata/cnvrt_trnsyrs2_pftdyntxtfile.pl** script in the PTCLMmkdata directory to a format that **mksurfdata_esmf** can read that has an entry for each year for the range of years valid for the compset in question.
 
 .. _converting-ameriflux-for-ptclmmkdata:
 

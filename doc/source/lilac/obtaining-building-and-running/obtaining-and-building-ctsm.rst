@@ -26,12 +26,12 @@ Obtain CTSM by running::
 
   git clone https://github.com/ESCOMP/CTSM.git
   cd CTSM
-  ./manage_externals/checkout_externals
+  ./bin/git-fleximod update
 
 Then build CTSM and its dependencies. On a machine that has been ported to CIME, the
-command will look like this (example given for NCAR's ``cheyenne`` machine)::
+command will look like this (example given for NCAR's ``derecho`` machine)::
 
-  ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --machine cheyenne --compiler intel
+  ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --machine derecho --compiler intel
 
 and then, before building the atmosphere model::
 
@@ -91,7 +91,7 @@ Building CTSM requires:
 
 - ESMF version 8 or later
 
-  - **ESMF is not needed in general for CTSM, but is needed for LILAC**
+  - **ESMF is needed for LILAC (and for CESM3 and later)**
 
 Obtaining CTSM
 ==============
@@ -101,11 +101,11 @@ above<building-ctsm-and-lilac-prerequisites>`) can be obtained with::
 
   git clone https://github.com/ESCOMP/CTSM.git
   cd CTSM
-  ./manage_externals/checkout_externals
+  ./bin/git-fleximod update
 
 By default, this will put you on the ``master`` branch of CTSM, which is the main
 development branch. You can checkout a different branch or tag using ``git checkout``;
-**be sure to rerun** ``./manage_externals/checkout_externals`` **after doing so.**
+**be sure to rerun** ``./bin/git-fleximod update`` **after doing so.**
 
 For more details, see
 https://github.com/ESCOMP/CTSM/wiki/Quick-start-to-CTSM-development-with-git
@@ -145,14 +145,15 @@ the `CIME documentation`_.
 Building on a CIME-supported machine
 ------------------------------------
 
-If you are using a machine that has been ported to CIME_ (for example, NCAR's ``cheyenne``
+If you are using a machine that has been ported to CIME_ (for example, NCAR's ``derecho``
 machine), then you do not need to specify much information to ``build_ctsm``. In addition,
 in this case, CIME will load the appropriate modules and set the appropriate environment
 variables at build time, so you do not need to do anything to set up your environment
-ahead of time. **Building CTSM with LILAC requires ESMF. ESMF is currently an optional
-CIME dependency, so many CIME-ported machines do not provide information on an ESMF
-installation. NCAR's cheyenne machine DOES provide ESMF, but for other machines, you may
-need to add this to your CIME port.**
+ahead of time. **Building CTSM with LILAC requires ESMF. ESMF is an optional
+CIME dependency before CESM3 and not optional for CESM3.
+NCAR's derecho machine DOES provide ESMF. For other machines, you may
+need to add this to your CIME port. Please see esmf.org for download and build
+instructions.**
 
 To build CTSM and its dependencies in this case, run::
 
@@ -231,7 +232,7 @@ Example usage for a Mac (a simple case) is::
 
   ./lilac/build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-mkfile-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default/esmf.mk --max-mpitasks-per-node 4 --no-pnetcdf
 
-Example usage for NCAR's ``cheyenne`` machine (a more complex case) is::
+Example usage for NCAR's ``derecho`` machine (a more complex case) is::
 
   module purge
   module load ncarenv/1.3 python/3.7.9 cmake intel/19.1.1 esmf_libs mkl
