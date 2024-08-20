@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""System tests for run_neon
+"""System tests for run_tower
 
 """
 
@@ -20,8 +20,8 @@ from ctsm.path_utils import path_to_ctsm_root
 # pylint: disable=invalid-name
 
 
-class TestSysRunNeon(unittest.TestCase):
-    """System tests for run_neon"""
+class TestSysRunTower(unittest.TestCase):
+    """System tests for run_tower"""
 
     def setUp(self):
         """
@@ -45,9 +45,9 @@ class TestSysRunNeon(unittest.TestCase):
         Run the tool, check that file structure is set up correctly
         """
 
-        # run the run_neon tool
+        # run the run_tower tool
         sys.argv = [
-            os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_neon"),
+            os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_tower"),
             "--neon-sites",
             "BART",
             "--setup-only",
@@ -66,9 +66,9 @@ class TestSysRunNeon(unittest.TestCase):
         Run the tool, check that file structure is set up correctly
         """
 
-        # run the run_neon tool
+        # run the run_tower tool
         sys.argv = [
-            os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_neon"),
+            os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_tower"),
             "--neon-sites",
             "ABBY",
             "--setup-only",
@@ -87,6 +87,27 @@ class TestSysRunNeon(unittest.TestCase):
         # Test use of base case root.
         # Test for using prism?
 
+
+    def test_plumber_site(self):
+        """
+        This test specifies a site to run a default plumber AD case with
+        experiment label 'TEST'. Run the tool, check that file structure is set up.
+        """
+
+        # run the run_tower tool for plumber site
+        sys.argv = [
+            os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_tower"),
+            "--plumber-sites",
+            "AR-SLu",
+            "--setup-only",
+            "--output-root",
+            "--experiment TEST",
+            self._tempdir,
+        ]
+        main("")
+
+        # assert that AR-SLu directories were created during setup
+        self.assertTrue("AR-SLu" in glob.glob(self._tempdir + "/AR-SLu*")[0])
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()

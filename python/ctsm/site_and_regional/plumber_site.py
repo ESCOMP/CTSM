@@ -1,5 +1,5 @@
 """
-This module contains the Plumber2Site class and class functions which are used in run_plumber.py
+This module contains the Plumber2Site class and class functions which are used in run_tower.py
 """
 
 # Import libraries
@@ -49,9 +49,6 @@ class Plumber2Site(TowerSite):
         case_path = super().build_base_case(cesmroot, output_root, res, compset, user_mods_dirs)
 
         return case_path
-
-    # def get_batch_query(self, case):
-    #    return super().get_batch_query(case)
 
     # pylint: disable=too-many-statements
     def run_case(

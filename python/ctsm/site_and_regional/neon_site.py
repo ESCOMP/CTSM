@@ -1,5 +1,5 @@
 """
-This module contains the NeonSite class and class functions which are used in run_neon.py
+This module contains the NeonSite class and class functions which are used in run_tower.py
 """
 
 # Import libraries
