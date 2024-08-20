@@ -87,7 +87,6 @@ class TestSysRunTower(unittest.TestCase):
         # Test use of base case root.
         # Test for using prism?
 
-
     def test_plumber_site(self):
         """
         This test specifies a site to run a default plumber AD case with
@@ -108,6 +107,7 @@ class TestSysRunTower(unittest.TestCase):
 
         # assert that AR-SLu directories were created during setup
         self.assertTrue("AR-SLu" in glob.glob(self._tempdir + "/AR-SLu*")[0])
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
