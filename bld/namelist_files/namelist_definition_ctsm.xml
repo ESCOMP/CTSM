@@ -333,6 +333,11 @@ Combustion completeness factor for litter (unitless)
 Combustion completeness factor for CWD[Course Woody Debris] (unitless)
 </entry>
 
+<entry id="max_rh30_affecting_fuel" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Value above which 30-day running relative humidity has no effect on fuel combustibility
+</entry>
+
 <entry id="ncrit" type="real" category="clm_physics"
        group="cnprecision_inparm" >
 Critical threshold for truncation of Nitrogen (truncate Nitrogen states to zero below this value)

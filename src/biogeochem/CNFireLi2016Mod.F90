@@ -179,6 +179,7 @@ contains
          non_boreal_peatfire_c => cnfire_const%non_boreal_peatfire_c           , & ! Input:  [real(r8)         ]  (/hr) c parameter for non-boreal peatland fire
          pot_hmn_ign_counts_alpha => cnfire_const%pot_hmn_ign_counts_alpha     , & ! Input:  [real(r8)         ]  (/person/month) Potential human ignition counts
          boreal_peatfire_c  => cnfire_const%boreal_peatfire_c                  , & ! Input:  [real(r8)         ]  (/hr) c parameter for boreal peatland fire
+         max_rh30_affecting_fuel  => cnfire_const%max_rh30_affecting_fuel      , & ! Input:  [real(r8)         ]  (%) Value above which 30-day running relative humidity has no effect on fuel combustibility
 
          fsr_pft            => pftcon%fsr_pft                                  , & ! Input:
          fd_pft             => pftcon%fd_pft                                   , & ! Input:
@@ -597,7 +598,7 @@ contains
            if (trotr1_col(c)+trotr2_col(c)<=0.6_r8) then
               afuel  =min(1._r8,max(0._r8,(fuelc(c)-2500._r8)/(5000._r8-2500._r8)))
               arh=1._r8-max(0._r8, min(1._r8,(forc_rh(g)-rh_low)/(rh_hgh-rh_low)))
-              arh30=1._r8-max(cnfire_params%prh30, min(1._r8,rh30_col(c)/90._r8))
+              arh30=1._r8-max(cnfire_params%prh30, min(1._r8,rh30_col(c)/max_rh30_affecting_fuel))
               if (forc_rh(g) < rh_hgh.and. wtlf(c) > 0._r8 .and. tsoi17(c)> SHR_CONST_TKFRZ)then
                 fire_m   = ((afuel*arh30+(1._r8-afuel)*arh)**1.5_r8)*((1._r8 -max(0._r8,&
                     min(1._r8,(btran_col(c)/wtlf(c)-bt_min)/(bt_max-bt_min))))**0.5_r8)
