@@ -258,8 +258,8 @@ The method type to use for CNFire
 nofire:        Turn fire effects off
 li2014qianfrc: Reference paper Li, et. al.(2014) tuned with QIAN atmospheric forcing
 li2016crufrc:  Reference paper Li, et. al.(2016) tuned with CRU-NCEP atmospheric forcing
-li2021gswpfrc: Reference paper Li, et. al.(2021?) tuned with GSWP3 atmospheric forcing
-li2024gswpfrc: No reference paper yet
+li2021gswpfrc: No reference paper yet, tuned with GSWP3 atmospheric forcing
+li2024gswpfrc: No reference paper yet, tuned with GSWP3 atmospheric forcing
 li2024crujra:  No reference paper yet, tuned with CRU-JRA forcing
 </entry>
 
