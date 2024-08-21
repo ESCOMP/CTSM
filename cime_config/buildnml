@@ -229,7 +229,7 @@ def buildnml(case, caseroot, compname):
         if (
             "NEON" in clm_usrdat_name
             or "PLUMBER2" in clm_usrdat_name
-            and clm_force_coldstart == "off":
+            and clm_force_coldstart == "off"
         ):
             warning_init_conditions = False
             if "NEON" in clm_usrdat_name:
