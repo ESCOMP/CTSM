@@ -1449,7 +1449,7 @@ sub setup_cmdl_vichydro {
 
 sub process_namelist_commandline_namelist {
   # Process the commandline '-namelist' arg.
-  my ($opts, $definition, $nl, $envxml_ref) = @_;
+  my ($opts, $definition, $nl, $envxml_ref, %settings) = @_;
 
   if (defined $opts->{'namelist'}) {
     # Parse commandline namelist
@@ -1471,7 +1471,7 @@ sub process_namelist_commandline_namelist {
 }
 
 sub process_namelist_infile {
-   my ($definition, $nl, $envxml_ref, $infile) = @_;
+   my ($definition, $nl, $envxml_ref, $infile, %settings) = @_;
 
    # Make sure a valid file was found
    if (    -f "$infile" ) {
@@ -1493,7 +1493,7 @@ sub process_namelist_infile {
 
    # Merge input values into namelist.  Previously specified values have higher precedence
    # and are not overwritten.
-   $nl->merge_nl($nl_infile_valid);
+   $nl->merge_nl($nl_infile_valid, %settings);
 }
 
 #-------------------------------------------------------------------------------
@@ -1756,6 +1756,12 @@ sub process_namelist_inline_logic {
   ##################################
   setup_logic_lightning_streams($opts,  $nl_flags, $definition, $defaults, $nl);
 
+  ######################################
+  # namelist options for dust emissions
+  ######################################
+  setup_logic_dust_emis($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref);
+  setup_logic_prigent_roughness($opts, $nl_flags, $definition, $defaults, $nl);
+
   #################################
   # namelist group: drydep_inparm #
   #################################
@@ -1765,12 +1771,6 @@ sub process_namelist_inline_logic {
   # namelist group: fire_emis_nl  #
   #################################
   setup_logic_fire_emis($opts, $nl_flags, $definition, $defaults, $nl);
-
-  ######################################
-  # namelist options for dust emissions
-  ######################################
-  setup_logic_dust_emis($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref);
-  setup_logic_prigent_roughness($opts, $nl_flags, $definition, $defaults, $nl);
 
   #################################
   # namelist group: megan_emis_nl #
@@ -3998,17 +3998,18 @@ sub setup_logic_lightning_streams {
 sub setup_logic_dry_deposition {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
+  my @list = ( "drydep_list", "dep_data_file");
   if ($opts->{'drydep'} ) {
-    if ( &value_is_true( $nl_flags->{'use_fates'}) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
-       $log->warning("DryDeposition can NOT be on when FATES is also on unless FATES-SP mode is on.\n" .
-                     "   Use the '--no-drydep' option when '-bgc fates' is activated");
-    }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'drydep_list');
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dep_data_file');
-  } else {
-    if ( defined($nl->get_value('drydep_list')) ) {
-      $log->fatal_error("drydep_list defined, but drydep option NOT set");
-    }
+  }
+  if ( &value_is_true( $nl_flags->{'use_fates'}) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
+     foreach my $var ( @list ) {
+        if ( defined($nl->get_value($var)) ) {
+           $log->warning("DryDeposition $var is being set and can NOT be on when FATES is also on unless FATES-SP mode is on.\n" .
+                         "   Use the '--no-drydep' option when '-bgc fates' is activated");
+        }
+     }
   }
 }
 
@@ -4017,20 +4018,20 @@ sub setup_logic_dry_deposition {
 sub setup_logic_fire_emis {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
+  my @list = ( "fire_emis_eleveated", "fire_emis_factors_file", "fire_emis_specifier");
+
   if ($opts->{'fire_emis'} ) {
-     if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
-       $log->warning("Fire emission can NOT be on when FATES is also on.\n" .
-                   "  DON'T use the '-fire_emis' option when '-bgc fates' is activated");
-    }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_emis_factors_file');
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_emis_specifier');
-  } else {
-    if ( defined($nl->get_value('fire_emis_elevated'))     ||
-         defined($nl->get_value('fire_emis_factors_file')) ||
-         defined($nl->get_value('fire_emis_specifier')) ) {
-      $log->fatal_error("fire_emission setting defined: fire_emis_elevated, fire_emis_factors_file, or fire_emis_specifier, but fire_emis option NOT set");
-    }
   }
+  foreach my $var ( @list ) {
+     if ( defined($nl->get_value($var)) ) {
+        if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
+          $log->warning("Fire emission option $var can NOT be on when FATES is also on.\n" .
+                      "  DON'T use the '--fire_emis' option when '--bgc fates' is activated");
+       }
+     }
+   }
 }
 
 #-------------------------------------------------------------------------------
@@ -4094,7 +4095,8 @@ sub setup_logic_dust_emis {
       }
       # Now process the CAM drv_flds_in to get the dust settings
       my $infile = $opts->{'envxml_dir'} . "/Buildconf/camconf/drv_flds_in";
-      process_namelist_infile( $definition, $nl, $envxml_ref, $infile );
+      $log->verbose_message("Read in the drv_flds_in file generated by CAM's build-namelist");
+      process_namelist_infile( $definition, $nl, $envxml_ref, $infile, 'die_on_conflict'=>1 );
   }
 }
 
@@ -4115,17 +4117,15 @@ sub setup_logic_megan {
   }
 
   if ($nl_flags->{'megan'} ) {
-    if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
-       $log->warning("MEGAN can NOT be on when FATES is also on.\n" .
-                   "   Use the '-no-megan' option when '-bgc fates' is activated");
-    }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_specifier');
-    check_megan_spec( $opts, $nl, $definition );
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_factors_file');
-  } else {
-    if ( defined($nl->get_value('megan_specifier')) ||
+  }
+  if ( defined($nl->get_value('megan_specifier')) ||
          defined($nl->get_value('megan_factors_file')) ) {
-      $log->fatal_error("megan_specifier or megan_factors_file defined, but megan option NOT set");
+    check_megan_spec( $opts, $nl, $definition );
+    if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
+      $log->warning("MEGAN can NOT be on when FATES is also on.\n" .
+                    "   Use the '-no-megan' option when '-bgc fates' is activated");
     }
   }
 }
