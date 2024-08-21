@@ -178,6 +178,8 @@ contains
          max_rh30_affecting_fuel  => cnfire_const%max_rh30_affecting_fuel      , & ! Input:  [real(r8)         ]  (%) Value above which 30-day running relative humidity has no effect on fuel combustibility
          defo_fire_precip_thresh_bet  => cnfire_const%defo_fire_precip_thresh_bet, & ! Input:  [real(r8)         ]  (mm/day) Max running mean daily precip allowing deforestation fire for broadleaf evergreen trees
          defo_fire_precip_thresh_bdt  => cnfire_const%defo_fire_precip_thresh_bdt, & ! Input:  [real(r8)         ]  (mm/day) Max running mean daily precip allowing deforestation fire for broadleaf deciduous trees
+         borpeat_fire_soilmoist_denom  => cnfire_const%borpeat_fire_soilmoist_denom, & ! Input:  [real(r8)         ]  (unitless) Denominator of exponential in soil moisture term of equation relating that and temperature to boreal peat fire (unitless)
+         nonborpeat_fire_precip_denom  => cnfire_const%nonborpeat_fire_precip_denom, & ! Input:  [real(r8)         ]  (unitless) Denominator of precipitation in equation relating that to non-boreal peat fire (unitless)
 
          fsr_pft            => pftcon%fsr_pft                                  , & ! Input:
          fd_pft             => pftcon%fd_pft                                   , & ! Input:
@@ -543,12 +545,12 @@ contains
         if(grc%latdeg(g) < cnfire_const%borealat )then
             if ((trotr1_col(c)+trotr2_col(c))*col%wtgcell(c)<=0.8_r8.and.trotr1_col(c)+trotr2_col(c)>0.0_r8) then
                baf_peatf(c) = non_boreal_peatfire_c/secsphr*max(0._r8, &
-                     min(1._r8,(1._r8-prec30_col(c)*secspday/6._r8)))*peatf_lf(c)
+                     min(1._r8,(1._r8-prec30_col(c)*secspday/nonborpeat_fire_precip_denom)))*peatf_lf(c)
             else
                baf_peatf(c) = 0._r8
             end if
         else
-           baf_peatf(c) = boreal_peatfire_c/secsphr*exp(-SHR_CONST_PI*(max(wf2(c),0._r8)/0.3_r8))* &
+           baf_peatf(c) = boreal_peatfire_c/secsphr*exp(-SHR_CONST_PI*(max(wf2(c),0._r8)/borpeat_fire_soilmoist_denom))* &
                 max(0._r8,min(1._r8,(tsoi17(c)-SHR_CONST_TKFRZ)/10._r8))*peatf_lf(c)* &
                 (1._r8-fsat(c))
         end if

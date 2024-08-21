@@ -348,6 +348,16 @@ Value (mm/d) above which running mean daily precipitation (10 or 60 days) does n
 Value (mm/d) above which running mean daily precipitation (10 or 60 days) does not allow deforestation fire for a column with broadleaf deciduous tropical trees but no broadleaf evergreen tropical trees. "PFT-dependent thresholds of P60d and P10d" in Li et al. (2013, doi:10.5194/bg-10-2293-2013).
 </entry>
 
+<entry id="nonborpeat_fire_precip_denom" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Denominator of precipitation in equation relating that to non-boreal peat fire (unitless). Eq. 9 in Li et al. (2013, doi:10.5194/bg-10-2293-2013).
+</entry>
+
+<entry id="borpeat_fire_soilmoist_denom" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Denominator of exponential in soil moisture term of equation relating that and temperature to boreal peat fire (unitless). Eq. 10 in Li et al. (2013, doi:10.5194/bg-10-2293-2013).
+</entry>
+
 <entry id="ncrit" type="real" category="clm_physics"
        group="cnprecision_inparm" >
 Critical threshold for truncation of Nitrogen (truncate Nitrogen states to zero below this value)

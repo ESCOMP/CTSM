@@ -247,6 +247,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <max_rh30_affecting_fuel>90.</max_rh30_affecting_fuel>
 <defo_fire_precip_thresh_bet>4.0</defo_fire_precip_thresh_bet>
 <defo_fire_precip_thresh_bdt>1.8</defo_fire_precip_thresh_bdt>
+<borpeat_fire_soilmoist_denom>0.3</borpeat_fire_soilmoist_denom>
+<nonborpeat_fire_precip_denom>1.0</nonborpeat_fire_precip_denom>
 
 <rh_low                   fire_method="li2014qianfrc" >30.0d00</rh_low>
 <rh_hgh                   fire_method="li2014qianfrc" >80.0d00</rh_hgh>
@@ -375,6 +377,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <max_rh30_affecting_fuel  fire_method="li2024gswpfrc" >90.</max_rh30_affecting_fuel>
 <defo_fire_precip_thresh_bet fire_method="li2024gswpfrc" >1.4</defo_fire_precip_thresh_bet>
 <defo_fire_precip_thresh_bdt fire_method="li2024gswpfrc" >0.5</defo_fire_precip_thresh_bdt>
+<nonborpeat_fire_precip_denom fire_method="li2024gswpfrc" >6.0</nonborpeat_fire_precip_denom>
 
 <rh_low                   fire_method="li2024crujra" >30.0d00</rh_low>
 <rh_hgh                   fire_method="li2024crujra" >85.0d00</rh_hgh>
@@ -393,6 +396,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <max_rh30_affecting_fuel  fire_method="li2024crujra" >95.</max_rh30_affecting_fuel>
 <defo_fire_precip_thresh_bet fire_method="li2024crujra" >1.8</defo_fire_precip_thresh_bet>
 <defo_fire_precip_thresh_bdt fire_method="li2024crujra" >0.6</defo_fire_precip_thresh_bdt>
+<borpeat_fire_soilmoist_denom fire_method="li2024crujra" > 0.35</borpeat_fire_soilmoist_denom>
+<nonborpeat_fire_precip_denom fire_method="li2024crujra" >6.5</nonborpeat_fire_precip_denom>
 
 
 <!-- Canopy fluxes namelist defaults -->
