@@ -228,9 +228,9 @@ def buildnml(case, caseroot, compname):
         # Write warning about initial condition data
         if ("NEON" in clm_usrdat_name) or ("PLUMBER2" in clm_usrdat_name) and clm_force_coldstart == "off":
             if "NEON" in clm_usrdat_name:
-                 match = "\w\w\w\w\"
+                 match = '\w\w\w\w\'
             if "PLUMBER2" in clm_usrdat_name:
-                 match = "\w\w-\w\w\w\"
+                 match = '\w\w-\w\w\w\'
             if ("_transient" in clm_nml_use_case) and (
                 re.fullmatch(r"{}.transient".format(match), casename) is None
                 or clm_usrdat_name is "NEON.PRISM"
