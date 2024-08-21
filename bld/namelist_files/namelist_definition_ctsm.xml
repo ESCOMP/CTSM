@@ -338,6 +338,16 @@ Combustion completeness factor for CWD[Course Woody Debris] (unitless)
 Value above which 30-day running relative humidity has no effect on fuel combustibility
 </entry>
 
+<entry id="defo_fire_precip_thresh_bet" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Value (mm/d) above which running mean daily precipitation (10 or 60 days) does not allow deforestation fire for a column with broadleaf evergreen tropical trees but no broadleaf deciduous tropical trees. "PFT-dependent thresholds of P60d and P10d" in Li et al. (2013, doi:10.5194/bg-10-2293-2013).
+</entry>
+
+<entry id="defo_fire_precip_thresh_bdt" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Value (mm/d) above which running mean daily precipitation (10 or 60 days) does not allow deforestation fire for a column with broadleaf deciduous tropical trees but no broadleaf evergreen tropical trees. "PFT-dependent thresholds of P60d and P10d" in Li et al. (2013, doi:10.5194/bg-10-2293-2013).
+</entry>
+
 <entry id="ncrit" type="real" category="clm_physics"
        group="cnprecision_inparm" >
 Critical threshold for truncation of Nitrogen (truncate Nitrogen states to zero below this value)

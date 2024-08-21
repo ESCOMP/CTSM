@@ -245,6 +245,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <fire_method phys="clm4_5" >li2014qianfrc</fire_method>
 
 <max_rh30_affecting_fuel>90.</max_rh30_affecting_fuel>
+<defo_fire_precip_thresh_bet>4.0</defo_fire_precip_thresh_bet>
+<defo_fire_precip_thresh_bdt>1.8</defo_fire_precip_thresh_bdt>
 
 <rh_low                   fire_method="li2014qianfrc" >30.0d00</rh_low>
 <rh_hgh                   fire_method="li2014qianfrc" >80.0d00</rh_hgh>
@@ -353,6 +355,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <cmb_cmplt_fact_litter    fire_method="li2021gswpfrc" >0.5d00</cmb_cmplt_fact_litter>
 <cmb_cmplt_fact_cwd       fire_method="li2021gswpfrc" >0.28d00</cmb_cmplt_fact_cwd>
 <max_rh30_affecting_fuel  fire_method="li2021gswpfrc" >90.</max_rh30_affecting_fuel>
+<defo_fire_precip_thresh_bet fire_method="li2021gswpfrc" >4.0</defo_fire_precip_thresh_bet>
+<defo_fire_precip_thresh_bdt fire_method="li2021gswpfrc" >1.8</defo_fire_precip_thresh_bdt>
 
 <rh_low                   fire_method="li2024gswpfrc" >30.0d00</rh_low>
 <rh_hgh                   fire_method="li2024gswpfrc" >80.0d00</rh_hgh>
@@ -369,6 +373,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <cmb_cmplt_fact_litter    fire_method="li2024gswpfrc" >0.5d00</cmb_cmplt_fact_litter>
 <cmb_cmplt_fact_cwd       fire_method="li2024gswpfrc" >0.28d00</cmb_cmplt_fact_cwd>
 <max_rh30_affecting_fuel  fire_method="li2024gswpfrc" >90.</max_rh30_affecting_fuel>
+<defo_fire_precip_thresh_bet fire_method="li2024gswpfrc" >1.4</defo_fire_precip_thresh_bet>
+<defo_fire_precip_thresh_bdt fire_method="li2024gswpfrc" >0.5</defo_fire_precip_thresh_bdt>
 
 <rh_low                   fire_method="li2024crujra" >30.0d00</rh_low>
 <rh_hgh                   fire_method="li2024crujra" >85.0d00</rh_hgh>
@@ -385,6 +391,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <cmb_cmplt_fact_litter    fire_method="li2024crujra" >0.5d00</cmb_cmplt_fact_litter>
 <cmb_cmplt_fact_cwd       fire_method="li2024crujra" >0.28d00</cmb_cmplt_fact_cwd>
 <max_rh30_affecting_fuel  fire_method="li2024crujra" >95.</max_rh30_affecting_fuel>
+<defo_fire_precip_thresh_bet fire_method="li2024crujra" >1.8</defo_fire_precip_thresh_bet>
+<defo_fire_precip_thresh_bdt fire_method="li2024crujra" >0.6</defo_fire_precip_thresh_bdt>
 
 
 <!-- Canopy fluxes namelist defaults -->

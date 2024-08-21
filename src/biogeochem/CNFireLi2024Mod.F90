@@ -176,6 +176,8 @@ contains
          pot_hmn_ign_counts_alpha => cnfire_const%pot_hmn_ign_counts_alpha     , & ! Input:  [real(r8)         ]  (/person/month) Potential human ignition counts
          boreal_peatfire_c  => cnfire_const%boreal_peatfire_c                  , & ! Input:  [real(r8)         ]  (/hr) c parameter for boreal peatland fire
          max_rh30_affecting_fuel  => cnfire_const%max_rh30_affecting_fuel      , & ! Input:  [real(r8)         ]  (%) Value above which 30-day running relative humidity has no effect on fuel combustibility
+         defo_fire_precip_thresh_bet  => cnfire_const%defo_fire_precip_thresh_bet, & ! Input:  [real(r8)         ]  (mm/day) Max running mean daily precip allowing deforestation fire for broadleaf evergreen trees
+         defo_fire_precip_thresh_bdt  => cnfire_const%defo_fire_precip_thresh_bdt, & ! Input:  [real(r8)         ]  (mm/day) Max running mean daily precip allowing deforestation fire for broadleaf deciduous trees
 
          fsr_pft            => pftcon%fsr_pft                                  , & ! Input:
          fd_pft             => pftcon%fd_pft                                   , & ! Input:
@@ -630,7 +632,11 @@ contains
                     fbac1(c)        = 0._r8
                     farea_burned(c) = baf_crop(c)+baf_peatf(c)
                  else
-                    cri = (1.4_r8*trotr1_col(c)+0.5_r8*trotr2_col(c))/(trotr1_col(c)+trotr2_col(c))
+                    ! Calculate the precip threshold as the area-weighted mean of that for BET and BDT
+                    cri = (defo_fire_precip_thresh_bet * trotr1_col(c) &
+                         + defo_fire_precip_thresh_bdt * trotr2_col(c)) &
+                         / (trotr1_col(c) + trotr2_col(c))
+
                     cli = max(0._r8,min(1._r8,1._r8-prec30_col(c)*secspday/cri))* &
                          (15._r8*min(0.0016_r8,dtrotr_col(c)/dt*dayspyr*secspday)+0.009_r8)* &
                          max(0._r8,min(1._r8,(0.25_r8-(forc_rain(c)+forc_snow(c))*secsphr)/0.25_r8))
