@@ -161,17 +161,6 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
     )
 
     parser.add_argument(
-        "--run-length",
-        help="""
-                How long to run (modified ISO 8601 duration)
-                [default: %(default)s]
-                """,
-        required=False,
-        type=str,
-        default="0Y",
-    )
-
-    parser.add_argument(
         "--run-from-postad",
         help="""
                         For transient runs only - should we start from the postad spinup or finidat?
