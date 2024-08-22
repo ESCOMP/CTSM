@@ -331,7 +331,8 @@
       to create_newcase.  The default value is UNSET.
       For NEON cases, this can be set to either NEON or NEON.PRISM, the latter of which would
       use PRISM precipitation instead of the default NEON precipitation. NEON cases then also
-      use the variable NEONSITE to specify the exact site.</desc>
+      use the variable NEONSITE to specify the exact site. PLUMBER cases use the variable 
+      PLUMBER2SITE to specify the exact site.</desc>
   </entry>
 
   <entry id="CLM_USRDAT_DIR">
@@ -356,7 +357,7 @@
       cold start (finidat will be set to blanks).
       A value of on forces the model to spin up from a cold-start
       (arbitrary initial conditions). Setting this value in the xml file will take
-      precedence over any settings for finidat in the $CASEROOT/user_nl_ctsm file.</desc>
+      precedence over any settings for finidat in the $CASEROOT/user_nl_clm file.</desc>
   </entry>
 
   <entry id="CLM_USER_MODS">
@@ -417,6 +418,28 @@
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Version id of Neon data</desc>
+  </entry>
+
+  <entry id="PLUMBER2SITE">
+    <type>char</type>
+    <!-- NOTE: Be sure to have a comma at the last site-name - otherwise there will be issues see CTSM github issue #1901 -->
+    <valid_values>
+      AR-SLu,AT-Neu,AU-ASM,AU-Cow,AU-Cpr,AU-Ctr,AU-Cum,AU-DaP,AU-DaS,AU-Dry,AU-Emr,AU-Gin,AU-GWW,AU-How,AU-Lit,
+      AU-Otw,AU-Rig,AU-Rob,AU-Sam,AU-Stp,AU-TTE,AU-Tum,AU-Whr,AU-Wrr,AU-Ync,BE-Bra,BE-Lon,BE-Vie,BR-Sa3,BW-Ma1,CA-NS1,
+      CA-NS2,CA-NS4,CA-NS5,CA-NS6,CA-NS7,CA-Qcu,CA-Qfo,CA-SF1,CA-SF2,CA-SF3,CH-Cha,CH-Dav,CH-Fru,CH-Oe1,CN-Cha,CN-Cng,
+      CN-Dan,CN-Din,CN-Du2,CN-HaM,CN-Qia,CZ-wet,DE-Bay,DE-Geb,DE-Gri,DE-Hai,DE-Kli,DE-Meh,DE-Obe,DE-Seh,DE-SfN,DE-Tha,
+      DE-Wet,DK-Fou,DK-Lva,DK-Ris,DK-Sor,DK-ZaH,ES-ES1,ES-ES2,ES-LgS,ES-LMa,ES-VDA,FI-Hyy,FI-Kaa,FI-Lom,FI-Sod,FR-Fon,
+      FR-Gri,FR-Hes,FR-LBr,FR-Lq1,FR-Lq2,FR-Pue,GF-Guy,HU-Bug,ID-Pag,IE-Ca1,IE-Dri,IT-Amp,IT-BCi,IT-CA1,IT-CA2,IT-CA3,
+      IT-Col,IT-Cpz,IT-Isp,IT-Lav,IT-LMa,IT-Mal,IT-MBo,IT-Noe,IT-Non,IT-PT1,IT-Ren,IT-Ro1,IT-Ro2,IT-SR2,IT-SRo,JP-SMF,
+      NL-Ca1,NL-Hor,NL-Loo,PL-wet,PT-Esp,PT-Mi1,PT-Mi2,RU-Che,RU-Fyo,RU-Zot,SD-Dem,SE-Deg,UK-Gri,UK-Ham,UK-PL3,US-AR1,
+      US-AR2,US-ARM,US-Aud,US-Bar,US-Bkg,US-Blo,US-Bo1,US-Cop,US-FPe,US-GLE,US-Goo,US-Ha1,US-Ho1,US-KS2,US-Los,US-Me2,
+      US-Me4,US-Me6,US-MMS,US-MOz,US-Myb,US-Ne1,US-Ne2,US-Ne3,US-NR1,US-PFa,US-Prr,US-SP1,US-SP2,US-SP3,US-SRG,US-SRM,
+      US-Syv,US-Ton,US-Tw4,US-Twt,US-UMB,US-Var,US-WCr,US-Whs,US-Wkg,ZA-Kru,ZM-Mon,
+    </valid_values>
+    <default_value/>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Name of site for PLUMBER tower data</desc>
   </entry>
 
 <help>
