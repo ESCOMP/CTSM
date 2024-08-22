@@ -1,4 +1,71 @@
 ===============================================================
+Tag name: ctsm5.2.024
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Thu Aug 22 11:07:11 MDT 2024
+One-line Summary: Improve li2024 fire methods
+
+Purpose and description of changes
+----------------------------------
+
+For fire methods li2024gswpfrc and (new) li2024crujra:
+- Improves peat burning dependence on climate
+- Improves dependence of deforestation burning on climate.
+- Allows lightning ignitions in tropical closed forest. (Human ignitions, other than deforestation, still not allowed.)
+- Adds effect of landscape fragmentation on ignitions and fire duration.
+- Recalibrates some parameters.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- Adds optional fire_method li2024crujra.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- DIFF
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only with optional fire_method li2024gswpfrc
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): new climate, probably
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2711: [Fang summer '24 PR 2.1] More improvements to fire model (https://github.com/ESCOMP/CTSM/pull/2711)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.023
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Fri Aug 16 11:00:32 MDT 2024
